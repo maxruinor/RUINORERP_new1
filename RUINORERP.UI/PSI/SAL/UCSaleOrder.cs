@@ -48,6 +48,7 @@ using RUINORERP.Global.EnumExt;
 using Fireasy.Common.Configuration;
 using RUINORERP.UI.Monitoring.Auditing;
 using NPOI.SS.Formula.Functions;
+using System.Text.RegularExpressions;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -345,7 +346,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //LoadDataToGrid(new List<tb_SaleOrderDetail>());
                 sgh.LoadItemDataToGrid<tb_SaleOrderDetail>(grid1, sgd, new List<tb_SaleOrderDetail>(), c => c.ProdDetailID);
             }
-            toolStripButton付款调整.ToolTipText = "当付款状态或付款方式发生变化时，需要进行付款调整才会显示。";
+           // toolStripButton付款调整.ToolTipText = "当付款状态或付款方式发生变化时，需要进行付款调整才会显示。";
 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
@@ -357,13 +358,28 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) || s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID))
                 {
-                    toolStripButton付款调整.Enabled = true;
-                    UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton付款调整);
+                  //  toolStripButton付款调整.Enabled = true;
+                   // UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton付款调整);
                 }
 
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Notes))
+                    {
+                        // 提取订单编号
+                        string orderNumber = ExtractOrderNumber(entity.Notes);
+
+                        if (!string.IsNullOrEmpty(orderNumber))
+                        {
+                            entity.PlatformOrderNo = orderNumber;
+                            entity.IsFromPlatform = true;
+                        }
+                        else
+                        {
+                            entity.PlatformOrderNo = string.Empty;
+                        }
+                    }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.FreightIncome))
                     {
@@ -632,6 +648,32 @@ using var binder = new UIStateBinder(..., customEvaluator);
              
              */
         }
+
+
+        /// <summary>
+        /// 从文本中提取订单编号
+        /// </summary>
+        /// <param name="text">包含订单信息的文本</param>
+        /// <returns>提取到的订单编号，若未找到则返回null</returns>
+        static string ExtractOrderNumber(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            // 使用正则表达式匹配订单号
+            // 匹配"订单号："或"订单编号："后面的数字
+            System.Text.RegularExpressions.Match match = Regex.Match(text, @"订单(号|编号)：\s*(\d+)", RegexOptions.IgnoreCase);
+
+            if (match.Success && match.Groups.Count > 2)
+            {
+                return match.Groups[2].Value;
+            }
+
+            return null;
+        }
+
+
+
         //protected override tb_SaleOrder AddByCopy()
         //{
         //    EditEntity = base.AddByCopy();
@@ -1572,7 +1614,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
         }
 
         #region 付款调整
-        ToolStripButton toolStripButton付款调整 = new System.Windows.Forms.ToolStripButton();
+       // ToolStripButton toolStripButton付款调整 = new System.Windows.Forms.ToolStripButton();
         ToolStripButton toolStripButton定制成本确认 = new System.Windows.Forms.ToolStripButton();
 
         /// <summary>
@@ -1591,14 +1633,14 @@ using var binder = new UIStateBinder(..., customEvaluator);
             toolStripButton定制成本确认.Click += new System.EventHandler(this.toolStripButton定制成本确认_Click);
 
 
-            toolStripButton付款调整.Text = "付款调整";
-            toolStripButton付款调整.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
-            toolStripButton付款调整.ImageTransparentColor = System.Drawing.Color.Magenta;
-            toolStripButton付款调整.Name = "付款调整";
-            toolStripButton付款调整.Visible = false;//默认隐藏
-            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton付款调整);
-            toolStripButton付款调整.ToolTipText = "客户付款情况变动时，使用本功能。";
-            toolStripButton付款调整.Click += new System.EventHandler(this.toolStripButton付款调整_Click);
+            //toolStripButton付款调整.Text = "付款调整";
+            //toolStripButton付款调整.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+            //toolStripButton付款调整.ImageTransparentColor = System.Drawing.Color.Magenta;
+            //toolStripButton付款调整.Name = "付款调整";
+            //toolStripButton付款调整.Visible = false;//默认隐藏
+            //UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton付款调整);
+            //toolStripButton付款调整.ToolTipText = "客户付款情况变动时，使用本功能。";
+            //toolStripButton付款调整.Click += new System.EventHandler(this.toolStripButton付款调整_Click);
 
 
             toolStripButton反结案.Text = "反结案";
@@ -1611,7 +1653,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             toolStripButton反结案.Click += new System.EventHandler(this.toolStripButton反结案_Click);
 
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
-            { toolStripButton付款调整,
+            { 
                 toolStripButton定制成本确认,
                 toolStripButton反结案 };
 

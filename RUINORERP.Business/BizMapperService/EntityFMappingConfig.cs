@@ -19,6 +19,8 @@ namespace RUINORERP.Business.BizMapperService
         public string IdField { get; set; }
         public string NoField { get; set; }
         public string DetailProperty { get; set; }
+
+        //如果还要关联查询其它子表可以多一个属性
         //public DiscriminatorConfig Discriminator { get; set; }
 
         //// 添加子表配置
@@ -40,19 +42,7 @@ namespace RUINORERP.Business.BizMapperService
     }
 
 
-    //// 区分器配置
-    //public class DiscriminatorConfig
-    //{
-    //    public string Field { get; set; }
-    //    public Dictionary<int, BizType> Mappings { get; set; } = new Dictionary<int, BizType>();
-    //}
-
-
-    //// 子表配置模型
-    //public class DetailTableConfig
-    //{
-    //    public Type EntityType { get; set; }
-    //    public string NavigationProperty { get; set; }
-    //}
+ 
+ 
 
 }

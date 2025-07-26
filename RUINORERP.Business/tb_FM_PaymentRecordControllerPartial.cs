@@ -654,7 +654,6 @@ namespace RUINORERP.Business
                 }
 
 
-
                 if (oldPaymentUpdateList.Any())
                 {
                     //更新原来的上一个预付记录
@@ -1382,7 +1381,13 @@ namespace RUINORERP.Business
                     }
 
                     //只更新指定列
-                    var result = _unitOfWorkManage.GetDbClient().Updateable(entitys).UpdateColumns(it => new { it.PaymentStatus, it.ApprovalOpinions, it.ApprovalResults, it.Approver_at, it.Approver_by }).ExecuteCommandHasChangeAsync();
+                    var result = _unitOfWorkManage.GetDbClient().Updateable(entitys).UpdateColumns(it => new { 
+                        it.PaymentStatus, 
+                        it.ApprovalOpinions,
+                        it.ApprovalResults, 
+                        it.ApprovalStatus,
+                        it.Approver_at, 
+                        it.Approver_by }).ExecuteCommandHasChangeAsync();
                 }
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();

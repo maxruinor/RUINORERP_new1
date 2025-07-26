@@ -24,7 +24,6 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.BaseForm;
-
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using SqlSugar;
@@ -39,7 +38,6 @@ using static StackExchange.Redis.Role;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Business.Security;
-
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Monitoring.Auditing;
@@ -68,7 +66,95 @@ namespace RUINORERP.UI.PSI.SAL
             BindData(Entity as tb_SaleOut, actionStatus);
         }
 
+        #region 平台退款动作
 
+        ToolStripButton toolStripButton平台退款 = new System.Windows.Forms.ToolStripButton();
+
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+
+            toolStripButton平台退款.Text = "平台退款";
+            toolStripButton平台退款.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+            toolStripButton平台退款.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton平台退款.Name = "平台退款";
+            toolStripButton平台退款.Visible = false;//默认隐藏
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton平台退款);
+            toolStripButton平台退款.ToolTipText = "平台订单退款时，会强制校验是否生成销售退货单，如果没有，则会自动预生成。";
+            toolStripButton平台退款.Click += new System.EventHandler(this.toolStripButton平台退款_Click);
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
+            { toolStripButton平台退款};
+
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+        }
+
+        private async void toolStripButton平台退款_Click(object sender, EventArgs e)
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+
+            if (EditEntity != null)
+            {
+                tb_SaleOut saleOut = EditEntity as tb_SaleOut;
+                //只有审核状态才可以转换
+                if (EditEntity.DataStatus >= (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
+                {
+                    //判断是否为平台订单
+                    if (!saleOut.IsFromPlatform || saleOut.PlatformOrderNo.IsNullOrEmpty())
+                    {
+                        MessageBox.Show($"当前【销售出库单】对应订单为不是平台订单，无法进行平台退款", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        toolStripButton平台退款.Enabled = false;
+                        return;
+                    }
+
+                    //判断是否已经退款
+                    //if (EditEntity.RefundStatus.HasValue && EditEntity.RepairStatus.Value != (int)RepairStatus.待维修)
+                    //{
+                    //    MessageBox.Show($"当前【维修工单】的维修状态为:{(RepairStatus)EditEntity.RepairStatus.Value}，无法重复进行平台退款", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //    toolStripButton平台退款.Enabled = false;
+                    //    return;
+                    //}
+
+                    //if (EditEntity.PayStatus == (int)PayStatus.未付款)
+                    //{
+                    //    if (MessageBox.Show($"当前【维修工单】的付款状态为:{(PayStatus)EditEntity.PayStatus}，你确定仍要进行【平台退款】吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
+                    //    {
+                    //        return;
+                    //    }
+                    //}
+
+                    //var ctr = Startup.GetFromFac<tb_AS_RepairOrderController<tb_AS_RepairOrder>>();
+                    //ReturnResults<tb_AS_RepairOrder> rrs = await ctr.RepairProcessAsync(EditEntity);
+                    //if (rrs.Succeeded)
+                    //{
+                    //    toolStripButton平台退款.Enabled = false;
+                    //    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_RepairOrder>("平台退款", EditEntity);
+                    //    MessageBox.Show($"当前【维修工单】的产品，将从【售后暂存仓】出库，【全部】交由维修人员处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+
+                    //}
+                    //else
+                    //{
+                    //    MessageBox.Show($"当前【维修工单】平台退款失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //}
+                    return;
+                }
+                else
+                {
+                    MessageBox.Show($"当前【维修工单】未审核，无法进行【平台退款】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+
+        #endregion
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
@@ -79,7 +165,6 @@ namespace RUINORERP.UI.PSI.SAL
            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
             .ToExpression();
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
-
         }
 
         protected override void LoadRelatedDataToDropDownItems()
@@ -129,7 +214,6 @@ namespace RUINORERP.UI.PSI.SAL
         {
             if (entity == null)
             {
-
                 return;
             }
 

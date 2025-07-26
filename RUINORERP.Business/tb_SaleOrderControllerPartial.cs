@@ -245,44 +245,14 @@ namespace RUINORERP.Business
                                 else
                                 {
                                     FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", rmrs.ReturnObject as tb_FM_PreReceivedPayment);
+                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
 
-                                    //按配置自动审核收款单
-                                    if (_appContext.FMConfig.AutoAuditReceivePayment)
-                                    {
-                                        if (autoApproval.ReturnObjectAsOtherEntity is tb_FM_PaymentRecord paymentRecord)
-                                        {
-                                            if (paymentRecord.IsFromPlatform.HasValue && paymentRecord.IsFromPlatform.Value)
-                                            {
-                                                //自动审核收款单
-                                                paymentRecord.ApprovalOpinions = "系统自动审核";
-                                                paymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                                paymentRecord.ApprovalResults = true;
-                                                var ctrPaymentRecord = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                                                ReturnResults<tb_FM_PaymentRecord> rr = await ctrPaymentRecord.ApprovalAsync(paymentRecord);
-                                                if (!rr.Succeeded)
-                                                {
-                                                    rmrs.ErrorMsg = "系统自动审核收款单失败，预收款单审核也同时失败!";
-                                                    rmrs.Succeeded = false;
-                                                    rmrs.ReturnObject = entity as T;
-                                                    return rmrs;
-                                                }
-                                                else
-                                                {
-                                                    fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("收款单自动审核成功", rr.ReturnObject as tb_FM_PaymentRecord);
-                                                }
-                                            }
-                                        }
-                                    }
-
-
+                                   
                                 }
                                 #endregion
                             }
-
                         }
                     }
-
                     #endregion
                 }
 

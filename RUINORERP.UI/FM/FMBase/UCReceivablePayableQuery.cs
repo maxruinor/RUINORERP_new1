@@ -219,14 +219,14 @@ namespace RUINORERP.UI.FM
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】 无法生成收款单。").Append("\r\n");
+                    msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】 无法生成{PaymentType.ToString()}单。").Append("\r\n");
                     counter++;
                 }
             }
             //多选时。要相同客户才能合并到一个收款单
             if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
             {
-                msg.Append("多选时，要相同客户才能合并到一个收款单");
+                msg.Append($"多选时，要相同客户才能合并到一个{PaymentType.ToString()}单");
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -241,7 +241,7 @@ namespace RUINORERP.UI.FM
 
             if (RealList.Count == 0)
             {
-                msg.Append("请至少选择一行数据转为收款单");
+                msg.Append($"请至少选择一行数据转为收{PaymentType.ToString()}单");
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -360,9 +360,7 @@ namespace RUINORERP.UI.FM
                     selector.ConfigureColumn(x => x.PrePayDate, "付款日期");
                     selector.ConfigureSummaryColumn(x => x.LocalPrepaidAmount);
                     selector.ConfigureSummaryColumn(x => x.LocalBalanceAmount);
-
                     selector.InitializeSelector(availableAdvances, $"选择预{PaymentType}单");
-
 
                     // 设置金额格式化
                     //selector.SetColumnFormatter("Amount", value => $"{value:N2}");

@@ -150,33 +150,10 @@ namespace RUINORERP.Extensions
 
                     db.Aop.OnError = (e) =>
                     {
-                        //try
-                        //{
-
-                        //    string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
-
-                        //    Console.WriteLine(errorsql);
-
-                        //    logger.LogError("db.Aop.OnError:" + e.Message + errorsql);
-                        //}
-                        //catch (Exception exx)
-                        //{
-                        //    Console.WriteLine(exx.Message);
-                        //}
-                        if (RemindEvent != null)
-                        {
-                            //kimi查询到说这个性能更好
-                            if (RemindEvent(e))
-                            {
-                                return;
-                            }
-
-                        }
-
                         try
                         {
                             string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
-                            logger.LogError("db.Aop.OnError:" + errorsql);
+                            logger.LogError("SQL执行错误:" + e.Message + errorsql);
                             Exception exception = e.GetBaseException();
                             logger.Error("Error" + errorsql, e);
                             if (e.InnerException != null && e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
@@ -215,6 +192,11 @@ namespace RUINORERP.Extensions
                         {
                             Console.WriteLine($"日志记录失败: {ex.Message}\n原始错误: {e.Message}");
                             logger.Error("记录SQL日志时出错了", ex);
+                        }
+                        if (RemindEvent != null)
+                        {
+                            //kimi查询到说这个性能更好
+                            RemindEvent(e);
                         }
                     };
 

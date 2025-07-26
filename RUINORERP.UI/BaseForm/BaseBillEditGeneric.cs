@@ -2560,7 +2560,7 @@ namespace RUINORERP.UI.BaseForm
                                     //平台订单才处理
                                     if (payable.IsFromPlatform.HasValue && payable.IsFromPlatform.Value)
                                     {
-                                        payable.ApprovalOpinions = "系统自动审核";
+                                        payable.ApprovalOpinions = "平台退款，货回仓库时，系统自动审核";
                                         payable.ApprovalStatus = (int)ApprovalStatus.已审核;
                                         payable.ApprovalResults = true;
                                         ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable);
@@ -2572,6 +2572,8 @@ namespace RUINORERP.UI.BaseForm
                                         else
                                         {
                                             MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                            //自动退款？
+
                                         }
                                     }
 

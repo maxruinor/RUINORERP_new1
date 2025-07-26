@@ -83,7 +83,9 @@ namespace RUINORERP.Business.BizMapperService
         public void RegisterSharedTableDiscriminator<TEntity, TValue>(
             Expression<Func<TEntity, object>> discriminatorSelector,
             Func<TValue, BizType> typeResolver,//公共表用来区分时的字段的类型
-              Expression<Func<TEntity, object>> detailsSelector = null)
+            Expression<Func<TEntity, long>> idSelector,
+            Expression<Func<TEntity, string>> noSelector,
+            Expression<Func<TEntity, object>> detailsSelector = null)
             where TEntity : class
         {
             var entityType = typeof(TEntity);
@@ -109,14 +111,19 @@ namespace RUINORERP.Business.BizMapperService
                     return BizType.未知类型;
                 }
             };
-
+            var fieldConfig = new EntityFieldConfig
+            {
+                IdField = GetMemberName(idSelector),
+                NoField = GetMemberName(noSelector),
+                DetailProperty = detailsSelector != null ? GetMemberName(detailsSelector) : null
+            };
 
             _sharedTableConfigs[entityType] = new SharedTableConfig
             {
                 DiscriminatorField = discriminatorField,
+                entityFieldConfig = fieldConfig,
                 TypeResolver = resolver
             };
-
 
             // 注册业务类型到实体类型的映射
             foreach (var bizType in Enum.GetValues(typeof(BizType)).Cast<BizType>())
@@ -138,8 +145,6 @@ namespace RUINORERP.Business.BizMapperService
                     // 忽略转换错误
                 }
             }
-
-
 
 
         }
@@ -200,6 +205,14 @@ namespace RUINORERP.Business.BizMapperService
             if (_entityConfigs.TryGetValue(entityType, out var config))
             {
                 return config;
+            }
+           
+            if (_sharedTableConfigs.TryGetValue(entityType, out var _config))
+            {
+                if (_config!=null)
+                {
+                    return _config.entityFieldConfig;
+                }
             }
 
             // 自动探测字段
@@ -352,7 +365,7 @@ namespace RUINORERP.Business.BizMapperService
 
 
 
-            RegisterMapping<tb_Stocktake>(
+    RegisterMapping<tb_Stocktake>(
     BizType.盘点单,
     e => e.MainID,
     e => e.CheckNo,
@@ -411,9 +424,6 @@ namespace RUINORERP.Business.BizMapperService
             e => e.PDID,
             e => e.PDNo,
             e => e.tb_ProductionDemandDetails);
-
-
-
 
 
             RegisterMapping<tb_FinishedGoodsInv>(
@@ -515,12 +525,7 @@ e => e.tb_AS_RepairInStockDetails);
 
 
 
-            // 付款/收款共用表配置
-            RegisterMapping<tb_FM_PaymentRecord>(
-                BizType.付款单, // 默认业务类型
-                e => e.PaymentId,
-                e => e.PaymentNo,
-                e => e.tb_FM_PaymentRecordDetails);
+
 
 
             // 字符串型字段
@@ -533,42 +538,71 @@ e => e.tb_AS_RepairInStockDetails);
             //    });
 
 
+            // 付款/收款共用表配置
+            RegisterMapping<tb_FM_PaymentRecord>(
+                BizType.付款单, // 默认业务类型
+                e => e.PaymentId,
+                e => e.PaymentNo,
+                e => e.tb_FM_PaymentRecordDetails);
+
 
             RegisterSharedTableDiscriminator<tb_FM_OtherExpense, bool>(
         e => e.EXPOrINC,
-        value => value == false ? BizType.其他费用支出 : BizType.其他费用收入);
+        value => value == false ? BizType.其他费用支出 : BizType.其他费用收入,
+        e => e.ExpenseMainID,
+        e => e.ExpenseNo,
+        e=>e.tb_FM_OtherExpenseDetails
+        );
 
 
-            RegisterSharedTableDiscriminator<tb_FM_PriceAdjustment, int>(e => e.ReceivePaymentType, value => value == (int)ReceivePaymentType.收款 ? BizType.销售价格调整单 : BizType.采购价格调整单);
+            RegisterSharedTableDiscriminator<tb_FM_PriceAdjustment, int>(e => e.ReceivePaymentType,
+                value => value == (int)ReceivePaymentType.收款 ? BizType.销售价格调整单 : BizType.采购价格调整单,
+                 e => e.AdjustId,
+        e => e.AdjustNo,
+        e => e.tb_FM_PriceAdjustmentDetails
+
+
+                );
 
 
             // 添加共用表区分器
             RegisterSharedTableDiscriminator<tb_FM_PaymentRecord, int>(
                 e => e.ReceivePaymentType,
-                value => value == (int)ReceivePaymentType.收款 ? BizType.收款单 : BizType.付款单);
+                value => value == (int)ReceivePaymentType.收款 ? BizType.收款单 : BizType.付款单,
+                   e => e.PaymentId,
+        e => e.PaymentNo,
+        e => e.tb_FM_PaymentRecordDetails
+
+                );
 
 
             // 添加共用表区分器
             RegisterSharedTableDiscriminator<tb_FM_PreReceivedPayment, int>(
                 e => e.ReceivePaymentType,
-                value => value == (int)ReceivePaymentType.收款 ? BizType.预收款单 : BizType.预付款单);
+                value => value == (int)ReceivePaymentType.收款 ? BizType.预收款单 : BizType.预付款单,
+                                   e => e.PreRPID,
+                e => e.PreRPNO
+        );
 
 
             // 添加共用表区分器
             RegisterSharedTableDiscriminator<tb_FM_ReceivablePayable, int>(
                 e => e.ReceivePaymentType,
-                value => value == (int)ReceivePaymentType.收款 ? BizType.应收款单 : BizType.应付款单);
+                value => value == (int)ReceivePaymentType.收款 ? BizType.应收款单 : BizType.应付款单,
+                  e => e.ARAPId,
+        e => e.ARAPNo,
+        e => e.tb_FM_ReceivablePayableDetails
+        );
 
-
-            // 添加共用表区分器
-            //RegisterSharedTableDiscriminator<tb_FM_PaymentSettlement, int>(
-            //    e => e.ReceivePaymentType,
-            //    value => value == (int)ReceivePaymentType.收款 ? BizType.收款核销 : BizType.付款核销);
 
             // 添加共用表区分器
             RegisterSharedTableDiscriminator<tb_FM_PaymentSettlement, ReceivePaymentType>(
                 e => e.ReceivePaymentType,
-                value => value == ReceivePaymentType.收款 ? BizType.收款核销 : BizType.付款核销);
+                value => value == ReceivePaymentType.收款 ? BizType.收款核销 : BizType.付款核销,
+                  e => e.SettlementId,
+        e => e.SettlementNo,
+        e => e.tb_FM_PaymentSettlements
+        );
 
 
             // 显式注册共用表业务类型到实体类型的映射

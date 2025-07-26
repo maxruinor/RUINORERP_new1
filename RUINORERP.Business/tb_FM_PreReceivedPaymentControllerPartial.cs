@@ -123,6 +123,7 @@ namespace RUINORERP.Business
                 {
                     it.PrePaymentStatus,
                     it.ApprovalResults,
+                    it.ApprovalStatus,
                     it.Approver_at,
                     it.Approver_by,
                     it.ApprovalOpinions,
@@ -230,11 +231,14 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
 
                 BusinessHelper.Instance.ApproverEntity(entity);
+
+
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new
                 {
                     it.PrePaymentStatus,
                     it.ApprovalResults,
+                    it.ApprovalStatus,
                     it.Approver_at,
                     it.Approver_by,
                     it.ApprovalOpinions,
@@ -243,6 +247,39 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
+                try
+                {
+                    //按配置自动审核收款单
+                    if (_appContext.FMConfig.AutoAuditReceivePayment && entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                    {
+                        if (entity.IsFromPlatform.HasValue && entity.IsFromPlatform.Value)
+                        {
+                            //自动审核收款单
+                            paymentRecord.ApprovalOpinions = "系统自动审核";
+                            paymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                            paymentRecord.ApprovalResults = true;
+                            var ctrPaymentRecord = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            ReturnResults<tb_FM_PaymentRecord> rr = await ctrPaymentRecord.ApprovalAsync(paymentRecord);
+                            if (!rr.Succeeded)
+                            {
+                                rmrs.ErrorMsg = $"预收款单{entity.PreRPNO}审核成功，系统自动审核收款单{paymentRecord.PaymentNo}时失败!";
+                                rmrs.Succeeded = false;
+                                rmrs.ReturnObject = entity as T;
+                                return rmrs;
+                            }
+                            else
+                            {
+                                FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("收款单自动审核成功", rr.ReturnObject as tb_FM_PaymentRecord);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                }
+
                 return rmrs;
             }
             catch (Exception ex)

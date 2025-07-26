@@ -169,7 +169,13 @@ namespace RUINORERP.Business
                 //只更新指定列
             
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
-                                           .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                           .UpdateColumns(it => new { 
+                                               it.DataStatus, 
+                                               it.ApprovalOpinions, 
+                                               it.ApprovalResults,
+                                               it.ApprovalStatus,
+                                               it.Approver_at,
+                                               it.Approver_by })
                                            .ExecuteCommandHasChangeAsync();
 
 

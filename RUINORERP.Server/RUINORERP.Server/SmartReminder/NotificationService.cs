@@ -8,6 +8,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
 using RUINORERP.Model.ReminderModel;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.ServerSession;
@@ -81,10 +82,8 @@ namespace RUINORERP.Server.SmartReminder
 
                 frmMain.Instance.PrintInfoLog($"智能提醒：{message}");
                 // 获取通知渠道
-                // List<NotifyChannel> channels = SmartReminderHelper.ParseChannels(rule.NotifyChannel);
+                List<NotifyChannel> channels = SmartReminderHelper.ParseChannels(rule.NotifyChannels);
 
-                List<NotifyChannel> channels = new List<NotifyChannel>();
-                channels.Add((NotifyChannel)rule.NotifyChannel);
                 foreach (var channel in channels)
                 {
                     if (channel == NotifyChannel.Realtime)

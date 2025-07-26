@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/26/2025 12:18:33
+// 时间：07/26/2025 12:18:31
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,32 +29,32 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 提醒规则
+    /// 用户接收提醒内容
     /// </summary>
-    public partial class tb_ReminderRuleController<T>:BaseController<T> where T : class
+    public partial class tb_ReminderResultController<T>:BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
         /// </summary>
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
-        public Itb_ReminderRuleServices _tb_ReminderRuleServices { get; set; }
+        public Itb_ReminderResultServices _tb_ReminderResultServices { get; set; }
        // private readonly ApplicationContext _appContext;
        
-        public tb_ReminderRuleController(ILogger<tb_ReminderRuleController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ReminderRuleServices tb_ReminderRuleServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ReminderResultController(ILogger<tb_ReminderResultController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ReminderResultServices tb_ReminderResultServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
-           _tb_ReminderRuleServices = tb_ReminderRuleServices;
+           _tb_ReminderResultServices = tb_ReminderResultServices;
             _appContext = appContext;
         }
       
         
-        public ValidationResult Validator(tb_ReminderRule info)
+        public ValidationResult Validator(tb_ReminderResult info)
         {
 
-           // tb_ReminderRuleValidator validator = new tb_ReminderRuleValidator();
-           tb_ReminderRuleValidator validator = _appContext.GetRequiredService<tb_ReminderRuleValidator>();
+           // tb_ReminderResultValidator validator = new tb_ReminderResultValidator();
+           tb_ReminderResultValidator validator = _appContext.GetRequiredService<tb_ReminderResultValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -77,26 +77,26 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async Task<ReturnResults<tb_ReminderRule>> SaveOrUpdate(tb_ReminderRule entity)
+        public async Task<ReturnResults<tb_ReminderResult>> SaveOrUpdate(tb_ReminderResult entity)
         {
-            ReturnResults<tb_ReminderRule> rr = new ReturnResults<tb_ReminderRule>();
-            tb_ReminderRule Returnobj;
+            ReturnResults<tb_ReminderResult> rr = new ReturnResults<tb_ReminderResult>();
+            tb_ReminderResult Returnobj;
             try
             {
                 //生成时暂时只考虑了一个主键的情况
-                if (entity.RuleId > 0)
+                if (entity.ResultId > 0)
                 {
-                    bool rs = await _tb_ReminderRuleServices.Update(entity);
+                    bool rs = await _tb_ReminderResultServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(entity);
+                        MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
-                    Returnobj = await _tb_ReminderRuleServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(entity);
+                    Returnobj = await _tb_ReminderResultServices.AddReEntityAsync(entity);
+                    MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -120,24 +120,24 @@ namespace RUINORERP.Business
         public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
-            tb_ReminderRule entity = model as tb_ReminderRule;
+            tb_ReminderResult entity = model as tb_ReminderResult;
             T Returnobj;
             try
             {
                 //生成时暂时只考虑了一个主键的情况
-                if (entity.RuleId > 0)
+                if (entity.ResultId > 0)
                 {
-                    bool rs = await _tb_ReminderRuleServices.Update(entity);
+                    bool rs = await _tb_ReminderResultServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(entity);
+                        MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
-                    Returnobj = await _tb_ReminderRuleServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(entity);
+                    Returnobj = await _tb_ReminderResultServices.AddReEntityAsync(entity) as T ;
+                    MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -154,10 +154,10 @@ namespace RUINORERP.Business
         
         public async override Task<List<T>> BaseQueryAsync(string wheresql) 
         {
-            List<T> list = await _tb_ReminderRuleServices.QueryAsync(wheresql) as List<T>;
+            List<T> list = await _tb_ReminderResultServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
             {
-                tb_ReminderRule entity = item as tb_ReminderRule;
+                tb_ReminderResult entity = item as tb_ReminderResult;
                 entity.HasChanged = false;
             }
             if (list != null)
@@ -169,10 +169,10 @@ namespace RUINORERP.Business
         
         public async override Task<List<T>> BaseQueryAsync() 
         {
-            List<T> list = await _tb_ReminderRuleServices.QueryAsync() as List<T>;
+            List<T> list = await _tb_ReminderResultServices.QueryAsync() as List<T>;
             foreach (var item in list)
             {
-                tb_ReminderRule entity = item as tb_ReminderRule;
+                tb_ReminderResult entity = item as tb_ReminderResult;
                 entity.HasChanged = false;
             }
             if (list != null)
@@ -185,12 +185,12 @@ namespace RUINORERP.Business
         
         public async override Task<bool> BaseDeleteAsync(T model)
         {
-            tb_ReminderRule entity = model as tb_ReminderRule;
-            bool rs = await _tb_ReminderRuleServices.Delete(entity);
+            tb_ReminderResult entity = model as tb_ReminderResult;
+            bool rs = await _tb_ReminderResultServices.Delete(entity);
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                MyCacheManager.Instance.DeleteEntityList<tb_ReminderRule>(entity);
+                MyCacheManager.Instance.DeleteEntityList<tb_ReminderResult>(entity);
             }
             return rs;
         }
@@ -198,23 +198,23 @@ namespace RUINORERP.Business
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
             bool rs=false;
-            List<tb_ReminderRule> entitys = models as List<tb_ReminderRule>;
-            int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_ReminderRule>(entitys).ExecuteCommandAsync();
+            List<tb_ReminderResult> entitys = models as List<tb_ReminderResult>;
+            int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_ReminderResult>(entitys).ExecuteCommandAsync();
             if (c>0)
             {
                 rs=true;
                 ////生成时暂时只考虑了一个主键的情况
-                 long[] result = entitys.Select(e => e.RuleId).ToArray();
-                MyCacheManager.Instance.DeleteEntityList<tb_ReminderRule>(result);
+                 long[] result = entitys.Select(e => e.ResultId).ToArray();
+                MyCacheManager.Instance.DeleteEntityList<tb_ReminderResult>(result);
             }
             return rs;
         }
         
         public override ValidationResult BaseValidator(T info)
         {
-            //tb_ReminderRuleValidator validator = new tb_ReminderRuleValidator();
-           tb_ReminderRuleValidator validator = _appContext.GetRequiredService<tb_ReminderRuleValidator>();
-            ValidationResult results = validator.Validate(info as tb_ReminderRule);
+            //tb_ReminderResultValidator validator = new tb_ReminderResultValidator();
+           tb_ReminderResultValidator validator = _appContext.GetRequiredService<tb_ReminderResultValidator>();
+            ValidationResult results = validator.Validate(info as tb_ReminderResult);
             return results;
         }
         
@@ -235,7 +235,7 @@ namespace RUINORERP.Business
             try
             {
 
-                tb_ReminderRule entity = model as tb_ReminderRule;
+                tb_ReminderResult entity = model as tb_ReminderResult;
                 command.UndoOperation = delegate ()
                 {
                     //Undo操作会执行到的代码
@@ -244,27 +244,32 @@ namespace RUINORERP.Business
                        // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 
-            if (entity.RuleId > 0)
+            if (entity.ResultId > 0)
             {
             
-                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ReminderRule>(entity as tb_ReminderRule)
-                        .Include(m => m.tb_ReminderResults)
+                                 var result= await _unitOfWorkManage.GetDbClient().Updateable<tb_ReminderResult>(entity as tb_ReminderResult)
                     .ExecuteCommandAsync();
-                 }
+                    if (result > 0)
+                    {
+                        rs = true;
+                    }
+            }
         else    
         {
-                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ReminderRule>(entity as tb_ReminderRule)
-                .Include(m => m.tb_ReminderResults)
-         
-                .ExecuteCommandAsync();
-                                          
+                                  var result= await _unitOfWorkManage.GetDbClient().Insertable<tb_ReminderResult>(entity as tb_ReminderResult)
+                    .ExecuteReturnSnowflakeIdAsync();
+                    if (result > 0)
+                    {
+                        rs = true;
+                    }
+                                              
                      
         }
         
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rsms.ReturnObject = entity as T ;
-                entity.PrimaryKeyID = entity.RuleId;
+                entity.PrimaryKeyID = entity.ResultId;
                 rsms.Succeeded = rs;
             }
             catch (Exception ex)
@@ -287,19 +292,21 @@ namespace RUINORERP.Business
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>()
-                                .Includes(m => m.tb_ReminderResults)
-                                        .WhereCustom(useLike, dto);;
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderResult>()
+                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                                .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
 
         public async override Task<bool> BaseDeleteByNavAsync(T model) 
         {
-            tb_ReminderRule entity = model as tb_ReminderRule;
-             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ReminderRule>(m => m.RuleId== entity.RuleId)
-                                .Include(m => m.tb_ReminderResults)
-                                        .ExecuteCommandAsync();
+            tb_ReminderResult entity = model as tb_ReminderResult;
+             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ReminderResult>(m => m.ResultId== entity.ResultId)
+                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                                .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
@@ -311,60 +318,60 @@ namespace RUINORERP.Business
         
         
         
-        public tb_ReminderRule AddReEntity(tb_ReminderRule entity)
+        public tb_ReminderResult AddReEntity(tb_ReminderResult entity)
         {
-            tb_ReminderRule AddEntity =  _tb_ReminderRuleServices.AddReEntity(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(AddEntity);
+            tb_ReminderResult AddEntity =  _tb_ReminderResultServices.AddReEntity(entity);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
         
-         public async Task<tb_ReminderRule> AddReEntityAsync(tb_ReminderRule entity)
+         public async Task<tb_ReminderResult> AddReEntityAsync(tb_ReminderResult entity)
         {
-            tb_ReminderRule AddEntity = await _tb_ReminderRuleServices.AddReEntityAsync(entity);
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(AddEntity);
+            tb_ReminderResult AddEntity = await _tb_ReminderResultServices.AddReEntityAsync(entity);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
         
-        public async Task<long> AddAsync(tb_ReminderRule entity)
+        public async Task<long> AddAsync(tb_ReminderResult entity)
         {
-            long id = await _tb_ReminderRuleServices.Add(entity);
+            long id = await _tb_ReminderResultServices.Add(entity);
             if(id>0)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(entity);
+                 MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(entity);
             }
             return id;
         }
         
-        public async Task<List<long>> AddAsync(List<tb_ReminderRule> infos)
+        public async Task<List<long>> AddAsync(List<tb_ReminderResult> infos)
         {
-            List<long> ids = await _tb_ReminderRuleServices.Add(infos);
+            List<long> ids = await _tb_ReminderResultServices.Add(infos);
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(infos);
+                 MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(infos);
             }
             return ids;
         }
         
         
-        public async Task<bool> DeleteAsync(tb_ReminderRule entity)
+        public async Task<bool> DeleteAsync(tb_ReminderResult entity)
         {
-            bool rs = await _tb_ReminderRuleServices.Delete(entity);
+            bool rs = await _tb_ReminderResultServices.Delete(entity);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ReminderRule>(entity);
+                MyCacheManager.Instance.DeleteEntityList<tb_ReminderResult>(entity);
                 
             }
             return rs;
         }
         
-        public async Task<bool> UpdateAsync(tb_ReminderRule entity)
+        public async Task<bool> UpdateAsync(tb_ReminderResult entity)
         {
-            bool rs = await _tb_ReminderRuleServices.Update(entity);
+            bool rs = await _tb_ReminderResultServices.Update(entity);
             if (rs)
             {
-                 MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(entity);
+                 MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -372,65 +379,65 @@ namespace RUINORERP.Business
         
         public async Task<bool> DeleteAsync(long id)
         {
-            bool rs = await _tb_ReminderRuleServices.DeleteById(id);
+            bool rs = await _tb_ReminderResultServices.DeleteById(id);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ReminderRule>(id);
+                MyCacheManager.Instance.DeleteEntityList<tb_ReminderResult>(id);
             }
             return rs;
         }
         
          public async Task<bool> DeleteAsync(long[] ids)
         {
-            bool rs = await _tb_ReminderRuleServices.DeleteByIds(ids);
+            bool rs = await _tb_ReminderResultServices.DeleteByIds(ids);
             if (rs)
             {
-                MyCacheManager.Instance.DeleteEntityList<tb_ReminderRule>(ids);
+                MyCacheManager.Instance.DeleteEntityList<tb_ReminderResult>(ids);
             }
             return rs;
         }
         
-        public virtual async Task<List<tb_ReminderRule>> QueryAsync()
+        public virtual async Task<List<tb_ReminderResult>> QueryAsync()
         {
-            List<tb_ReminderRule> list = await  _tb_ReminderRuleServices.QueryAsync();
+            List<tb_ReminderResult> list = await  _tb_ReminderResultServices.QueryAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(list);
             return list;
         }
         
-        public virtual List<tb_ReminderRule> Query()
+        public virtual List<tb_ReminderResult> Query()
         {
-            List<tb_ReminderRule> list =  _tb_ReminderRuleServices.Query();
+            List<tb_ReminderResult> list =  _tb_ReminderResultServices.Query();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(list);
             return list;
         }
         
-        public virtual List<tb_ReminderRule> Query(string wheresql)
+        public virtual List<tb_ReminderResult> Query(string wheresql)
         {
-            List<tb_ReminderRule> list =  _tb_ReminderRuleServices.Query(wheresql);
+            List<tb_ReminderResult> list =  _tb_ReminderResultServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(list);
             return list;
         }
         
-        public virtual async Task<List<tb_ReminderRule>> QueryAsync(string wheresql) 
+        public virtual async Task<List<tb_ReminderResult>> QueryAsync(string wheresql) 
         {
-            List<tb_ReminderRule> list = await _tb_ReminderRuleServices.QueryAsync(wheresql);
+            List<tb_ReminderResult> list = await _tb_ReminderResultServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(list);
             return list;
         }
         
@@ -441,14 +448,14 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="exp"></param>
         /// <returns></returns>
-        public async Task<List<tb_ReminderRule>> QueryAsync(Expression<Func<tb_ReminderRule, bool>> exp)
+        public async Task<List<tb_ReminderResult>> QueryAsync(Expression<Func<tb_ReminderResult, bool>> exp)
         {
-            List<tb_ReminderRule> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>().Where(exp).ToListAsync();
+            List<tb_ReminderResult> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderResult>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(list);
             return list;
         }
         
@@ -458,18 +465,18 @@ namespace RUINORERP.Business
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_ReminderRule>> QueryByNavAsync()
+         public virtual async Task<List<tb_ReminderResult>> QueryByNavAsync()
         {
-            List<tb_ReminderRule> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>()
-                                            .Includes(t => t.tb_ReminderResults )
-                        .ToListAsync();
+            List<tb_ReminderResult> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderResult>()
+                               .Includes(t => t.tb_reminderrule )
+                                    .ToListAsync();
             
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(list);
             return list;
         }
 
@@ -478,18 +485,18 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_ReminderRule>> QueryByNavAsync(Expression<Func<tb_ReminderRule, bool>> exp)
+         public virtual async Task<List<tb_ReminderResult>> QueryByNavAsync(Expression<Func<tb_ReminderResult, bool>> exp)
         {
-            List<tb_ReminderRule> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>().Where(exp)
-                                            .Includes(t => t.tb_ReminderResults )
-                        .ToListAsync();
+            List<tb_ReminderResult> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderResult>().Where(exp)
+                               .Includes(t => t.tb_reminderrule )
+                                    .ToListAsync();
             
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(list);
             return list;
         }
         
@@ -498,18 +505,18 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual List<tb_ReminderRule> QueryByNav(Expression<Func<tb_ReminderRule, bool>> exp)
+         public virtual List<tb_ReminderResult> QueryByNav(Expression<Func<tb_ReminderResult, bool>> exp)
         {
-            List<tb_ReminderRule> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>().Where(exp)
-                                        .Includes(t => t.tb_ReminderResults )
-                        .ToList();
+            List<tb_ReminderResult> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderResult>().Where(exp)
+                            .Includes(t => t.tb_reminderrule )
+                                    .ToList();
             
             foreach (var item in list)
             {
                 item.HasChanged = false;
             }
             
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(list);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(list);
             return list;
         }
         
@@ -519,9 +526,9 @@ namespace RUINORERP.Business
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<tb_ReminderRule>> QueryByAdvancedAsync(bool useLike,object dto)
+        public async Task<List<tb_ReminderResult>> QueryByAdvancedAsync(bool useLike,object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>().WhereCustom(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderResult>().WhereCustom(useLike,dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -529,7 +536,7 @@ namespace RUINORERP.Business
 
         public async override Task<T> BaseQueryByIdAsync(object id)
         {
-            T entity = await _tb_ReminderRuleServices.QueryByIdAsync(id) as T;
+            T entity = await _tb_ReminderResultServices.QueryByIdAsync(id) as T;
             return entity;
         }
         
@@ -537,15 +544,15 @@ namespace RUINORERP.Business
         
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
-            tb_ReminderRule entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>().Where(w => w.RuleId == (long)id)
-                                         .Includes(t => t.tb_ReminderResults )
-                        .FirstAsync();
+            tb_ReminderResult entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderResult>().Where(w => w.ResultId == (long)id)
+                             .Includes(t => t.tb_reminderrule )
+                                    .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;
             }
 
-            MyCacheManager.Instance.UpdateEntityList<tb_ReminderRule>(entity);
+            MyCacheManager.Instance.UpdateEntityList<tb_ReminderResult>(entity);
             return entity as T;
         }
         

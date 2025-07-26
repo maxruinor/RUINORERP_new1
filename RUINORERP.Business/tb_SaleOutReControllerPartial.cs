@@ -329,6 +329,9 @@ namespace RUINORERP.Business
                     ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
                     if (rmr.Succeeded)
                     {
+
+                        rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+
                         //已经是等审核。 审核时会核销预收付款
                         //应收 负 在 就是退款 审核时还要仔细跟进一下
 

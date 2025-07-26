@@ -2678,6 +2678,12 @@
     </Compile>
     <Compile Include="Settings.cs" />
     <Compile Include="SingleInstanceChecker.cs" />
+    <Compile Include="SmartReminderClient\UCDocumentApprovalConfigEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SmartReminderClient\UCDocumentApprovalConfigEdit.designer.cs">
+      <DependentUpon>UCDocumentApprovalConfigEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="SmartReminderClient\UCSafetyStockConfigEdit.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -4185,6 +4191,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Report\UCPrintConfigQuery.resx">
       <DependentUpon>UCPrintConfigQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SmartReminderClient\UCDocumentApprovalConfigEdit.resx">
+      <DependentUpon>UCDocumentApprovalConfigEdit.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SmartReminderClient\UCSafetyStockConfigEdit.resx">
       <DependentUpon>UCSafetyStockConfigEdit.cs</DependentUpon>

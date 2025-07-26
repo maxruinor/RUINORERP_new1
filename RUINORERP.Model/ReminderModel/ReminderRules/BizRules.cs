@@ -1,58 +1,13 @@
 ﻿using Newtonsoft.Json;
-using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Model.ReminderModel
+namespace RUINORERP.Model.ReminderModel.ReminderRules
 {
- 
-
-
-
-    public class SafetyStockConfig : IRuleConfig
-    {
-        // 辅助属性，不参与JSON序列化
-        [JsonIgnore]
-        public string _ProductIds
-        {
-            get => string.Join(",", ProductIds);
-            set => ProductIds = value?.Split(',')
-                                 .Select(long.Parse)
-                                 .ToList() ?? new List<long>();
-        }
-
-        public List<long> ProductIds { get; set; } = new List<long>();
-        public int MinStock { get; set; }
-        public int MaxStock { get; set; }
-
-        // 实现IRuleConfig接口
-        public int ReminderIntervalMinutes { get; set; } = 60; // 默认每小时提醒一次
-
-        private bool Is_enabled = true;
-        // 修正属性名与接口一致
-        public bool IsEnabled
-        {
-            get => Is_enabled;
-            set => Is_enabled = value;
-        }
-
-        public string RuleId { get; set; } = Guid.NewGuid().ToString();
-        public DateTime? StartTime { get; set; }
-        public DateTime? EndTime { get; set; }
-        public ReminderPriority Priority { get; set; } = ReminderPriority.Medium;
-
-        public bool Validate()
-        {
-            return ProductIds?.Any() == true
-                && MinStock >= 0
-                && MaxStock > MinStock
-                && ReminderIntervalMinutes > 0;
-        }
-    }
-
 
     // 库存积压提醒规则模型
     public class StockOverstockRule : tb_ReminderRule
@@ -183,14 +138,9 @@ namespace RUINORERP.Model.ReminderModel
     // 单据审批提醒规则模型
     public class DocumentApprovalRule : tb_ReminderRule
     {
-        public DocumentApprovalConfig BusinessConfig { get; set; }
+        public DocApprovalConfig BusinessConfig { get; set; }
     }
 
-    public class DocumentApprovalConfig
-    {
-        public List<int> DocumentTypes { get; set; } // 单据类型
-        public int ApprovalThreshold { get; set; } // 审批金额阈值
-        public List<string> Approvers { get; set; } // 审批人
-        public bool EnableDelegateApproval { get; set; } // 启用委托审批
-    }
+
+   
 }

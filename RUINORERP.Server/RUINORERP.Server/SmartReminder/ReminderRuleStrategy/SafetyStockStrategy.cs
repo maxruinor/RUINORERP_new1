@@ -5,6 +5,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -124,6 +125,7 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
                 }
             }
 
+       
             await _notification.SendNotificationAsync(policy, sb.ToString(), null);
             return true;
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/26/2025 12:18:33
+// 时间：07/26/2025 12:18:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,12 +24,12 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 提醒规则数据查询
+    /// 用户接收提醒内容数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_ReminderRuleQuery), "提醒规则数据查询", true)]
-    public partial class tb_ReminderRuleQuery:UserControl
+     [MenuAttribute(typeof(tb_ReminderResultQuery), "用户接收提醒内容数据查询", true)]
+    public partial class tb_ReminderResultQuery:UserControl
     {
-     public tb_ReminderRuleQuery() {
+     public tb_ReminderResultQuery() {
      
          
                 
@@ -37,38 +37,12 @@ namespace RUINORERP.UI
 
             InitializeComponent();
 
-       // RuleFor(tb_ReminderRule => tb_ReminderRule.RuleId).NotEmpty();
+       // RuleFor(tb_ReminderResult => tb_ReminderResult.ResultId).NotEmpty();
        
        
        //===============
        
           
-    
-        
-    
-        
-    
-        
-    
-        
-    
-        
-    
-        
-    
-        
-    
-        
-    
-        
-    
-        
-    
-        
-    
-        
-    
-        
     
         
     
@@ -94,6 +68,7 @@ namespace RUINORERP.UI
 
         public void LoadDroplistData()
         {
+          // DataBindingHelper.InitDataToCmb<tb_ReminderRule>(k => k.RuleId, v=>v.XXNAME, cmbRuleId);
         }
         
 

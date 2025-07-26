@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Model.ReminderModel
+namespace RUINORERP.Model.ReminderModel.ReminderRules
 {
     public interface IReminderRule
     {
@@ -13,16 +13,22 @@ namespace RUINORERP.Model.ReminderModel
 
         //脚本的代码，可能要用一个方法从数据库中的来转？
         string Condition { get; set; }
-       
+
         int ReminderBizType { get; set; }
-        int NotifyChannel { get; set; }
-        
+
+
+        //通过修复部分类中另一个字段来显示
+        string NotifyChannels { get; set; }
+
         int RuleEngineType { get; set; }
+
+        // 新增离线消息处理属性
+        bool PersistUntilDelivered { get; set; }
 
         ///// <summary>
         ///// long类型的userid，用逗号隔开
         ///// </summary>
-         string NotifyRecipients { get; set; }
+        string NotifyRecipients { get; set; }
 
         IRuleConfig GetConfig<T>();
 

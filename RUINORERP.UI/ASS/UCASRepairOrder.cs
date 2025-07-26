@@ -192,7 +192,7 @@ namespace RUINORERP.UI.ASS
                 }
                 else
                 {
-                    MessageBox.Show($"当前【维修工单】{EditEntity.ASApplyNo}：未审核，无法进行【维修领料】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"当前【维修工单】{EditEntity.ASApplyNo}：状态为：{(DataStatus)EditEntity.DataStatus}，无法进行【维修领料】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/04/2025 18:54:59
+// 时间：07/26/2025 12:18:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,6 +65,8 @@ this.lblIsEnabled = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.chkIsEnabled = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
 this.chkIsEnabled.Values.Text ="";
 
+this.lblNotifyChannel = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtNotifyChannel = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblEffectiveDate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpEffectiveDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
@@ -99,6 +101,10 @@ this.dtpCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker(
 this.lblModified_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
 
+
+this.lblIsEnabled3 = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.chkIsEnabled3 = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.chkIsEnabled3.Values.Text ="";
 
     //for end
     this.SuspendLayout();
@@ -154,7 +160,19 @@ this.chkIsEnabled.TabIndex = 7;
 this.Controls.Add(this.lblIsEnabled);
 this.Controls.Add(this.chkIsEnabled);
 
-           //#####NotifyChannel###Int32
+           //#####50NotifyChannel###String
+this.lblNotifyChannel.AutoSize = true;
+this.lblNotifyChannel.Location = new System.Drawing.Point(100,200);
+this.lblNotifyChannel.Name = "lblNotifyChannel";
+this.lblNotifyChannel.Size = new System.Drawing.Size(41, 12);
+this.lblNotifyChannel.TabIndex = 8;
+this.lblNotifyChannel.Text = "通知渠道";
+this.txtNotifyChannel.Location = new System.Drawing.Point(173,196);
+this.txtNotifyChannel.Name = "txtNotifyChannel";
+this.txtNotifyChannel.Size = new System.Drawing.Size(100, 21);
+this.txtNotifyChannel.TabIndex = 8;
+this.Controls.Add(this.lblNotifyChannel);
+this.Controls.Add(this.txtNotifyChannel);
 
            //#####EffectiveDate###DateTime
 this.lblEffectiveDate.AutoSize = true;
@@ -295,6 +313,20 @@ this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
 
+           //#####IsEnabled3###Boolean
+this.lblIsEnabled3.AutoSize = true;
+this.lblIsEnabled3.Location = new System.Drawing.Point(100,500);
+this.lblIsEnabled3.Name = "lblIsEnabled3";
+this.lblIsEnabled3.Size = new System.Drawing.Size(41, 12);
+this.lblIsEnabled3.TabIndex = 20;
+this.lblIsEnabled3.Text = "是否启用";
+this.chkIsEnabled3.Location = new System.Drawing.Point(173,496);
+this.chkIsEnabled3.Name = "chkIsEnabled3";
+this.chkIsEnabled3.Size = new System.Drawing.Size(100, 21);
+this.chkIsEnabled3.TabIndex = 20;
+this.Controls.Add(this.lblIsEnabled3);
+this.Controls.Add(this.chkIsEnabled3);
+
           
     //for end
 
@@ -316,7 +348,9 @@ this.Controls.Add(this.txtDescription );
                 this.Controls.Add(this.lblIsEnabled );
 this.Controls.Add(this.chkIsEnabled );
 
-                
+                this.Controls.Add(this.lblNotifyChannel );
+this.Controls.Add(this.txtNotifyChannel );
+
                 this.Controls.Add(this.lblEffectiveDate );
 this.Controls.Add(this.dtpEffectiveDate );
 
@@ -346,6 +380,9 @@ this.Controls.Add(this.dtpCreated_at );
 this.Controls.Add(this.dtpModified_at );
 
                 
+                this.Controls.Add(this.lblIsEnabled3 );
+this.Controls.Add(this.chkIsEnabled3 );
+
                     
             this.Name = "tb_ReminderRuleQuery";
             this.Size = new System.Drawing.Size(911, 490);
@@ -385,7 +422,9 @@ private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkIsEnabled;
 
     
         
-              
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotifyChannel;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotifyChannel;
+
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblEffectiveDate;
@@ -437,6 +476,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
     
         
               
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblIsEnabled3;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkIsEnabled3;
+
     
     
    

@@ -1,6 +1,7 @@
 ﻿using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 using RUINORERP.Server.SmartReminder.InvReminder;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace RUINORERP.Server.SmartReminder
         bool PerformQuickCheck();
         Task CheckRemindersAsync();
         void StartMonitoring(TimeSpan interval);
-  
+
         void AddStrategy(IReminderStrategy strategy);
         Task<List<IReminderRule>> GetActiveRulesAsync();
     }

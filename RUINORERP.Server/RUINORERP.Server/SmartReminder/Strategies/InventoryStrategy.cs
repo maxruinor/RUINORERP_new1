@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 
 namespace RUINORERP.Server.SmartReminder.Strategies
 {

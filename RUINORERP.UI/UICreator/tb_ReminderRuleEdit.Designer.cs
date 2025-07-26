@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/04/2025 18:54:59
+// 时间：07/26/2025 12:18:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -115,6 +115,10 @@ this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
 
 this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
 this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblIsEnabled3 = new Krypton.Toolkit.KryptonLabel();
+this.chkIsEnabled3 = new Krypton.Toolkit.KryptonCheckBox();
+this.chkIsEnabled3.Values.Text ="";
 
     
     //for end
@@ -241,7 +245,7 @@ this.chkIsEnabled.TabIndex = 7;
 this.Controls.Add(this.lblIsEnabled);
 this.Controls.Add(this.chkIsEnabled);
 
-           //#####NotifyChannel###Int32
+           //#####50NotifyChannel###String
 this.lblNotifyChannel.AutoSize = true;
 this.lblNotifyChannel.Location = new System.Drawing.Point(100,200);
 this.lblNotifyChannel.Name = "lblNotifyChannel";
@@ -418,6 +422,20 @@ this.txtModified_by.TabIndex = 19;
 this.Controls.Add(this.lblModified_by);
 this.Controls.Add(this.txtModified_by);
 
+           //#####IsEnabled3###Boolean
+this.lblIsEnabled3.AutoSize = true;
+this.lblIsEnabled3.Location = new System.Drawing.Point(100,500);
+this.lblIsEnabled3.Name = "lblIsEnabled3";
+this.lblIsEnabled3.Size = new System.Drawing.Size(41, 12);
+this.lblIsEnabled3.TabIndex = 20;
+this.lblIsEnabled3.Text = "是否启用";
+this.chkIsEnabled3.Location = new System.Drawing.Point(173,496);
+this.chkIsEnabled3.Name = "chkIsEnabled3";
+this.chkIsEnabled3.Size = new System.Drawing.Size(100, 21);
+this.chkIsEnabled3.TabIndex = 20;
+this.Controls.Add(this.lblIsEnabled3);
+this.Controls.Add(this.chkIsEnabled3);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -432,7 +450,7 @@ this.Controls.Add(this.txtModified_by);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 19;
+           // this.kryptonPanel1.TabIndex = 20;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -492,6 +510,9 @@ this.Controls.Add(this.dtpModified_at );
 
                 this.Controls.Add(this.lblModified_by );
 this.Controls.Add(this.txtModified_by );
+
+                this.Controls.Add(this.lblIsEnabled3 );
+this.Controls.Add(this.chkIsEnabled3 );
 
                             // 
             // "tb_ReminderRuleEdit"
@@ -609,6 +630,11 @@ private Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
         
               private Krypton.Toolkit.KryptonLabel lblModified_by;
 private Krypton.Toolkit.KryptonTextBox txtModified_by;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblIsEnabled3;
+private Krypton.Toolkit.KryptonCheckBox chkIsEnabled3;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

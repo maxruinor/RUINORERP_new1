@@ -20,6 +20,7 @@ using Newtonsoft.Json.Linq;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model.Base;
 using System.Linq;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 
 namespace RUINORERP.Model
 {
@@ -47,6 +48,15 @@ namespace RUINORERP.Model
         //    get; set;
         //}
 
+
+        /// <summary>
+        /// 离线消息处理属性
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        public bool PersistUntilDelivered { get; set; } = true;
+
+
+
         [SugarColumn(IsIgnore = true)]
         public List<NotifyChannel> Channels { get; set; }
 
@@ -54,6 +64,8 @@ namespace RUINORERP.Model
         public JObject Metadata { get; set; } // 扩展字段
       
         //int IReminderRule.RuleEngineType { get; set; }
+
+
 
         public IRuleConfig GetConfig<T>()
         {

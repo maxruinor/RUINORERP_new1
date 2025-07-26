@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/04/2025 18:55:01
+// 时间：07/26/2025 12:18:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -57,10 +57,8 @@ namespace RUINORERP.Business
  RuleFor(tb_ReminderRule =>tb_ReminderRule.ReminderPriority).NotNull().WithMessage("优先级:不能为空。");
 
 
-//***** 
- RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannel).NotNull().WithMessage("通知渠道:不能为空。");
-
-
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannels).MaximumLength(25).WithMessage("通知渠道:不能超过最大长度,25.");
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannels).NotEmpty().WithMessage("通知渠道:不能为空。");
 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.Condition).NotEmpty().WithMessage("规则条件:不能为空。");
 
@@ -79,6 +77,7 @@ namespace RUINORERP.Business
 
 //***** 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.Modified_by).NotNull().WithMessage("修改人:不能为空。");
+
 
            	        Initialize();
      }

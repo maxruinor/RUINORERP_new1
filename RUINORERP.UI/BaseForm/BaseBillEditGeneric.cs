@@ -2539,6 +2539,52 @@ namespace RUINORERP.UI.BaseForm
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
 
+                    #region 销售退货
+
+                    //如果是出库单审核，则上传到服务器 锁定订单无法修改
+                    if (ae.bizType == BizType.销售退回单)
+                    {
+
+                        #region 销售退回单 如果启用了财务模块
+
+                        AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
+                        if (authorizeController.EnableFinancialModule())
+                        {
+                            if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentable)
+                            {
+                                #region 自动审核应收款单
+                                //销售订单审核时自动将预付款单设为"已生效"状态
+                                var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                                if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
+                                {
+                                    //平台订单才处理
+                                    if (payable.IsFromPlatform.HasValue && payable.IsFromPlatform.Value)
+                                    {
+                                        payable.ApprovalOpinions = "系统自动审核";
+                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                        payable.ApprovalResults = true;
+                                        ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable);
+                                        if (!autoApproval.Succeeded)
+                                        {
+                                            autoApproval.Succeeded = false;
+                                            autoApproval.ErrorMsg = $"应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        }
+                                        else
+                                        {
+                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                        }
+                                    }
+
+                                }
+                                #endregion
+                            }
+                        }
+
+                        #endregion
+
+                    }
+
+                    #endregion
 
 
 

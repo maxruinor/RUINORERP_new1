@@ -18,10 +18,10 @@ using RUINORERP.Business;
 using RUINORERP.Business.Processor;
 using SqlSugar;
 using RUINORERP.Business.Security;
-using RUINORERP.Model.ReminderModel;
 using RUINORERP.Global;
 using RUINORERP.UI.UCSourceGrid;
 using static OpenTK.Graphics.OpenGL.GL;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 
 namespace RUINORERP.UI.SmartReminderClient
 {

@@ -1,6 +1,7 @@
 ﻿using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -611,6 +611,10 @@ namespace RUINORERP.Business
             }
 
             payable.Remark = $"销售出库单：{entity.SaleOut_NO}对应的销售退回单{entity.ReturnNo}的应付款";
+            if (payable.IsFromPlatform.HasValue && payable.IsFromPlatform.Value)
+            {
+                payable.Remark += " 平台单号:" + entity.PlatformOrderNo;
+            }
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
             return payable;
@@ -1607,6 +1611,10 @@ namespace RUINORERP.Business
                 payable.Remark = $"由销售出库单：{entity.SaleOutNo}【货款】生成的应收款单";
             }
 
+            if (payable.IsFromPlatform.HasValue && payable.IsFromPlatform.Value)
+            {
+                payable.Remark += " 平台单号:" + entity.PlatformOrderNo;
+            }
 
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;

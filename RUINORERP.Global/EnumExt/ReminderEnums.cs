@@ -55,6 +55,9 @@ namespace RUINORERP.Global.EnumExt
     }
 
 
+    //左边是tab 右边是窗体grid？来显示消息？ 识出 5未读？
+
+
     /*
      典型业务提醒场景
 库存相关提醒
@@ -91,6 +94,23 @@ namespace RUINORERP.Global.EnumExt
 
         [Description("工作流提醒")]
         Workflow = 8
+    }
+
+
+    /// <summary>
+    /// 提醒优先级
+    /// </summary>
+    public enum ReminderPriority
+    {
+        [Description("低")]
+        Low = 1,
+        [Description("中")]
+        Medium = 2,
+        [Description("高")]
+        High = 3,
+        [Description("紧急")]
+        Critical = 4
+
     }
 
     //public enum HealthStatus

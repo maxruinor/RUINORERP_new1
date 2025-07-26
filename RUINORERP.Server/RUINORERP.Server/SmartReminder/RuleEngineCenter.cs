@@ -18,6 +18,7 @@ using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model;
 using RUINORERP.Global.EnumExt;
 using System.Reflection;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 
 namespace RUINORERP.Server.SmartReminder
 {

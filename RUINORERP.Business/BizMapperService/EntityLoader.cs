@@ -224,7 +224,7 @@ namespace RUINORERP.Business.BizMapperService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"加载实体数据失败: {entityType.Name}, BillNo: {billNo}");
+                _logger.LogError(ex, $"EntityLoader加载实体数据失败: {entityType.Name}, BillNo: {billNo}");
                 return null;
             }
         }

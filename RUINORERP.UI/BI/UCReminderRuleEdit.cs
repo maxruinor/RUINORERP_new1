@@ -25,6 +25,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business.CommService;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 
 namespace RUINORERP.UI.BI
 {
@@ -54,7 +55,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, ReminderBizType>(entity, k => k.ReminderBizType, cmbReminderBizType, false);
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, ReminderPriority>(entity, k => k.ReminderPriority, cmbPriority, false);
             DataBindingHelper.BindData4CheckBox<tb_ReminderRule>(entity, t => t.IsEnabled, chkIsEnabled, false);
-            DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, NotifyChannel>(entity, k => k.NotifyChannel, cmbNotifyChannels, false);
+           // DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, NotifyChannel>(entity, k => k.NotifyChannel, cmbNotifyChannels, false);
 
             DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.EffectiveDate, dtpEffectiveDate, false);
             DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.ExpireDate, dtpExpireDate, false);

@@ -17,6 +17,7 @@ using CacheManager.Core;
 using RUINORERP.Common;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Model.ReminderModel.ReminderRules;
 
 namespace RUINORERP.Server.SmartReminder
 {

@@ -556,12 +556,8 @@ namespace RUINORERP.Business
             MyCacheManager.Instance.UpdateEntityList<tb_SaleOut>(entity);
             return entity as T;
         }
-        
-        
-        
-        
-        
-        
+
+    
     }
 }
 

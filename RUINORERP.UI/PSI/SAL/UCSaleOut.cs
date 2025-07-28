@@ -45,6 +45,8 @@ using SourceGrid;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using RUINORERP.UI.BusinessService.CalculationService;
 using System.Threading;
+using RUINORERP.UI.ToolForm;
+using Netron.GraphLib;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -114,41 +116,76 @@ namespace RUINORERP.UI.PSI.SAL
                         return;
                     }
 
-                    //判断是否已经退款
-                    //if (EditEntity.RefundStatus.HasValue && EditEntity.RepairStatus.Value != (int)RepairStatus.待维修)
-                    //{
-                    //    MessageBox.Show($"当前【维修工单】的维修状态为:{(RepairStatus)EditEntity.RepairStatus.Value}，无法重复进行平台退款", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    //    toolStripButton平台退款.Enabled = false;
-                    //    return;
-                    //}
+                    //判断是否已经创建退款单 ，如果有则显示，没有则预建
+                    if (saleOut.tb_SaleOutRes != null && saleOut.tb_SaleOutRes.Count > 0)
+                    {
 
-                    //if (EditEntity.PayStatus == (int)PayStatus.未付款)
-                    //{
-                    //    if (MessageBox.Show($"当前【维修工单】的付款状态为:{(PayStatus)EditEntity.PayStatus}，你确定仍要进行【平台退款】吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
-                    //    {
-                    //        return;
-                    //    }
-                    //}
+                        //if (entity.RefundStatus.HasValue)
+                        //{
+                        //    if (entity.RefundStatus == (int)RefundStatus.已退款等待退货)
+                        //    {
+                        //        entity.RefundStatus = (int)RefundStatus.退款退货完成;
+                        //    }
 
-                    //var ctr = Startup.GetFromFac<tb_AS_RepairOrderController<tb_AS_RepairOrder>>();
-                    //ReturnResults<tb_AS_RepairOrder> rrs = await ctr.RepairProcessAsync(EditEntity);
-                    //if (rrs.Succeeded)
-                    //{
-                    //    toolStripButton平台退款.Enabled = false;
-                    //    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_AS_RepairOrder>("平台退款", EditEntity);
-                    //    MessageBox.Show($"当前【维修工单】的产品，将从【售后暂存仓】出库，【全部】交由维修人员处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        //    if (entity.RefundStatus == (int)RefundStatus.已退款未退货)
+                        //    {
+                        //        entity.RefundStatus = (int)RefundStatus.退款退货完成;
+                        //    }
+
+                        //    if (entity.RefundStatus == (int)RefundStatus.未退款等待退货)
+                        //    {
+                        //        entity.RefundStatus = (int)RefundStatus.未退款已退货;
+                        //    }
+
+                        //}
+                        //else
+                        //{
+                        //    entity.RefundStatus = (int)RefundStatus.未退款已退货;
+                        //}
+
+                        // 更新出库单状态
+                        //saleOut.RefundStatus = (int)RefundStatus.退款退货完成;
+                        //    var last = await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(saleOut).UpdateColumns(it => new
+                        //    {
+                        //        it.RefundStatus
+                        //    }).ExecuteCommandAsync();
+                        
+                        // 打开销售退回单，确认
+                        MenuPowerHelper menuPowerHelper;
+                        menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                        tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                        if (RelatedMenuInfo != null)
+                        {
+                            menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut.tb_SaleOutRes[0]);
+                            return;
+                        }
+
+                    }
+                    else
+                    {
+                        // 创建预退货单
+                        var ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
+                        ReturnResults<tb_SaleOutRe> rrs = await ctr.RefundProcessAsync(EditEntity);
+                        if (rrs.Succeeded)
+                        {
+                            toolStripButton平台退款.Enabled = false;
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOut>("平台退款,生成预退货单", EditEntity);
+                            MessageBox.Show($"平台退款后，已经成功预生成【销售退货单】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show($"当前【销售出库单】平台退款时，生成预退货单失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
 
 
-                    //}
-                    //else
-                    //{
-                    //    MessageBox.Show($"当前【维修工单】平台退款失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    //}
-                    return;
+                    }
+
+
+
                 }
                 else
                 {
-                    MessageBox.Show($"当前【维修工单】未审核，无法进行【平台退款】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"当前【销售出库单】的状态为{(DataStatus)EditEntity.DataStatus}，无法进行【平台退款】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }
@@ -258,6 +295,7 @@ namespace RUINORERP.UI.PSI.SAL
                     entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
                     lblExchangeRate.Visible = false;
                     txtExchangeRate.Visible = false;
+                    entity.RefundStatus = null;
                 }
             }
             if (entity.ApprovalStatus.HasValue)
@@ -267,6 +305,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             EditEntity = entity;
 
+            DataBindingHelper.BindData4CmbByEnum<tb_SaleOut, RefundStatus>(entity, k => k.RefundStatus, cmbRefundStatus, false);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == true);

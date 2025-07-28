@@ -175,6 +175,7 @@ namespace RUINORERP.Business
 
 
 
+                    //这里要更新状态！！！！！！！！！！
                     await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(entity.tb_saleout.tb_SaleOutDetails)
                         .UpdateColumns(t => new { t.TotalReturnedQty })
                         .ExecuteCommandAsync();
@@ -405,39 +406,17 @@ namespace RUINORERP.Business
 
                     #endregion
                 }
-                /*
-                 仅退款的财务处理
-                生成记账凭证：
-                记账凭证名称：通常称为“退款记账凭证”或“仅退款记账凭证”。
-                会计分录：
-                借：应收账款（红字）
-                贷：主营业务收入（红字）
-                贷：应交税费—销项税（红字）
-                生成报损清单：
-                报损清单：用于记录资产损失或费用支出，确保资产损失的合法性。
-                主要内容：包括退货申请单、能证明资产损失确属已实际发生的合法证据，如发票、收据等。
-                仅退款的特殊处理
-                核对账户余额：
-                完成记账后，核对账户余额，确保所有账目准确无误。
-                附上原始凭证：
-                每笔退款都需要附上相关的原始凭证，如发票、收据等，以证明交易的真实性。
-                生成报损清单：
-                商家应妥善留存电商平台的相关规则（网页截图等），把单笔“快速退货退款”业务、“仅退款不退货”业务的判定结论（通知）、退款单据、订货单、发货凭证、快递（物流）运输单据等资料（含电子资料），作为进行相关账务处理的凭证。
-                仅退款的会计分录示例
-                客户退回已支付的货款：
-                借：银行存款（红字）
-                贷：主营业务收入（红字）
-                贷：应交税费—销项税（红字）
-                商品退回结转营业成本：
-                借：营业成本（红字）
-                贷：库存商品（红字）
-                总结
-                在仅退款的情况下，财务处理需要生成“退款记账凭证”和“报损清单”，确保财务记录的准确性和合法性。通过附上原始凭证和报损清单，可以为后续的财务审核和税务检查提供依据。
-                 */
 
                 //更新累计退回数量
                 // await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutReDetail>(entity.tb_SaleOutReDetails).ExecuteCommandAsync();
-                //后面已经修改为
+
+                //这里要更新状态！！！！！！！！！！
+                if (entity.RefundStatus.HasValue && entity.RefundStatus.Value == (int)RefundStatus.退款退货完成)
+                {
+
+                }
+
+
                 entity.ApprovalResults = true;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.DataStatus = (int)DataStatus.确认;
@@ -747,6 +726,50 @@ namespace RUINORERP.Business
                     #endregion
                 }
 
+
+
+                //可能后面退部分这种，还需要进一步确认状态
+
+
+                if (entity.tb_saleout.RefundStatus == (int)RefundStatus.已退款未退货)
+                {
+                    entity.tb_saleout.RefundStatus = (int)RefundStatus.退款退货完成;
+                }
+
+                if (entity.tb_saleout.RefundStatus == (int)RefundStatus.未退款等待退货)
+                {
+                    entity.tb_saleout.RefundStatus = (int)RefundStatus.退款退货完成;
+                }
+
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity.tb_saleout)
+                 .UpdateColumns(t => new { t.RefundStatus })
+                 .ExecuteCommandAsync();
+
+
+                if (entity.RefundStatus.HasValue)
+                {
+                    if (entity.RefundStatus == (int)RefundStatus.已退款等待退货)
+                    {
+                        entity.RefundStatus = (int)RefundStatus.退款退货完成;
+                    }
+
+                    if (entity.RefundStatus == (int)RefundStatus.已退款未退货)
+                    {
+                        entity.RefundStatus = (int)RefundStatus.退款退货完成;
+                    }
+
+                    if (entity.RefundStatus == (int)RefundStatus.未退款等待退货)
+                    {
+                        entity.RefundStatus = (int)RefundStatus.未退款已退货;
+                    }
+                   
+                }
+                else
+                {
+                    entity.RefundStatus = (int)RefundStatus.未退款已退货;
+                }
+               
+
                 entity.ApprovalOpinions = "反审";
                 //后面已经修改为
                 entity.ApprovalResults = null;
@@ -756,6 +779,7 @@ namespace RUINORERP.Business
                 //只更新指定列
                 var last = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                 {
+                    it.RefundStatus,
                     it.ApprovalStatus,
                     it.DataStatus,
                     it.ApprovalResults,

@@ -69,9 +69,31 @@ namespace RUINORERP.Business
 
             RuleFor(x => x.ExchangeRate).GreaterThan(0).WithMessage("汇率:必须大于零。");
 
+            //RuleFor(tb_SaleOrder => tb_SaleOrder.ProjectGroup_ID).NotNull().WithMessage("项目组:不能为空。");
+
+
+            RuleFor(x => x.ProjectGroup_ID)
+             .Custom((value, context) =>
+             {
+                 var Order = context.InstanceToValidate as tb_SaleOrder;
+                 if (Order != null)
+                 {
+                     //根据配置判断
+                     if (ValidatorConfig.CurrentValue.NeedInputProjectGroup)
+                     {
+                         if (Order.ProjectGroup_ID == null)
+                         {
+                             context.AddFailure("项目组:不能为空。");
+                         }
+                     }
+                 }
+             });
+
+
+
 
             RuleFor(x => x.PayStatus)
-      .Custom((value, context) =>
+             .Custom((value, context) =>
       {
           var Order = context.InstanceToValidate as tb_SaleOrder;
           if (Order != null)

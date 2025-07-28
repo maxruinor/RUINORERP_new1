@@ -94,6 +94,8 @@
             this.txtTaxAmount = new Krypton.Toolkit.KryptonTextBox();
             this.txtFreightIncome = new Krypton.Toolkit.KryptonTextBox();
             this.lblFreightIncome = new Krypton.Toolkit.KryptonLabel();
+            this.cmbRefundStatus = new Krypton.Toolkit.KryptonComboBox();
+            this.lblRefundStatus = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -114,6 +116,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerGridAndSub.Panel2)).BeginInit();
             this.kryptonSplitContainerGridAndSub.Panel2.SuspendLayout();
             this.kryptonSplitContainerGridAndSub.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbRefundStatus)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -126,6 +129,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblRefundStatus);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbRefundStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtCustomerPONo);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblCustomerPONo);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblStore_ID);
@@ -183,14 +188,14 @@
             // 
             // txtCustomerPONo
             // 
-            this.txtCustomerPONo.Location = new System.Drawing.Point(939, 65);
+            this.txtCustomerPONo.Location = new System.Drawing.Point(939, 100);
             this.txtCustomerPONo.Name = "txtCustomerPONo";
             this.txtCustomerPONo.Size = new System.Drawing.Size(137, 23);
             this.txtCustomerPONo.TabIndex = 200;
             // 
             // lblCustomerPONo
             // 
-            this.lblCustomerPONo.Location = new System.Drawing.Point(860, 68);
+            this.lblCustomerPONo.Location = new System.Drawing.Point(859, 103);
             this.lblCustomerPONo.Name = "lblCustomerPONo";
             this.lblCustomerPONo.Size = new System.Drawing.Size(75, 20);
             this.lblCustomerPONo.TabIndex = 199;
@@ -198,7 +203,7 @@
             // 
             // lblStore_ID
             // 
-            this.lblStore_ID.Location = new System.Drawing.Point(335, 40);
+            this.lblStore_ID.Location = new System.Drawing.Point(335, 53);
             this.lblStore_ID.Name = "lblStore_ID";
             this.lblStore_ID.Size = new System.Drawing.Size(62, 20);
             this.lblStore_ID.TabIndex = 198;
@@ -208,14 +213,14 @@
             // 
             this.cmbProjectGroup.DropDownWidth = 100;
             this.cmbProjectGroup.IntegralHeight = false;
-            this.cmbProjectGroup.Location = new System.Drawing.Point(403, 40);
+            this.cmbProjectGroup.Location = new System.Drawing.Point(403, 53);
             this.cmbProjectGroup.Name = "cmbProjectGroup";
             this.cmbProjectGroup.Size = new System.Drawing.Size(132, 21);
             this.cmbProjectGroup.TabIndex = 197;
             // 
             // lblExchangeRate
             // 
-            this.lblExchangeRate.Location = new System.Drawing.Point(1106, 68);
+            this.lblExchangeRate.Location = new System.Drawing.Point(1106, 56);
             this.lblExchangeRate.Name = "lblExchangeRate";
             this.lblExchangeRate.Size = new System.Drawing.Size(36, 20);
             this.lblExchangeRate.TabIndex = 195;
@@ -223,14 +228,14 @@
             // 
             // txtExchangeRate
             // 
-            this.txtExchangeRate.Location = new System.Drawing.Point(1148, 65);
+            this.txtExchangeRate.Location = new System.Drawing.Point(1148, 53);
             this.txtExchangeRate.Name = "txtExchangeRate";
             this.txtExchangeRate.Size = new System.Drawing.Size(77, 23);
             this.txtExchangeRate.TabIndex = 196;
             // 
             // lblCurrency_ID
             // 
-            this.lblCurrency_ID.Location = new System.Drawing.Point(589, 91);
+            this.lblCurrency_ID.Location = new System.Drawing.Point(589, 104);
             this.lblCurrency_ID.Name = "lblCurrency_ID";
             this.lblCurrency_ID.Size = new System.Drawing.Size(36, 20);
             this.lblCurrency_ID.TabIndex = 193;
@@ -240,7 +245,7 @@
             // 
             this.cmbCurrency_ID.DropDownWidth = 100;
             this.cmbCurrency_ID.IntegralHeight = false;
-            this.cmbCurrency_ID.Location = new System.Drawing.Point(633, 91);
+            this.cmbCurrency_ID.Location = new System.Drawing.Point(633, 104);
             this.cmbCurrency_ID.Name = "cmbCurrency_ID";
             this.cmbCurrency_ID.Size = new System.Drawing.Size(162, 21);
             this.cmbCurrency_ID.TabIndex = 194;
@@ -248,7 +253,7 @@
             // chkIsCustomizedOrder
             // 
             this.chkIsCustomizedOrder.Enabled = false;
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(796, 39);
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(796, 52);
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 154;
@@ -256,7 +261,7 @@
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(335, 92);
+            this.kryptonLabel3.Location = new System.Drawing.Point(335, 105);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel3.TabIndex = 152;
@@ -267,7 +272,7 @@
             this.cmbPayStatus.DropDownWidth = 100;
             this.cmbPayStatus.Enabled = false;
             this.cmbPayStatus.IntegralHeight = false;
-            this.cmbPayStatus.Location = new System.Drawing.Point(403, 92);
+            this.cmbPayStatus.Location = new System.Drawing.Point(403, 105);
             this.cmbPayStatus.Name = "cmbPayStatus";
             this.cmbPayStatus.Size = new System.Drawing.Size(132, 21);
             this.cmbPayStatus.TabIndex = 153;
@@ -277,14 +282,14 @@
             this.cmbPaytype_ID.DropDownWidth = 100;
             this.cmbPaytype_ID.Enabled = false;
             this.cmbPaytype_ID.IntegralHeight = false;
-            this.cmbPaytype_ID.Location = new System.Drawing.Point(403, 116);
+            this.cmbPaytype_ID.Location = new System.Drawing.Point(403, 129);
             this.cmbPaytype_ID.Name = "cmbPaytype_ID";
             this.cmbPaytype_ID.Size = new System.Drawing.Size(132, 21);
             this.cmbPaytype_ID.TabIndex = 151;
             // 
             // txtShippingAddress
             // 
-            this.txtShippingAddress.Location = new System.Drawing.Point(82, 143);
+            this.txtShippingAddress.Location = new System.Drawing.Point(82, 156);
             this.txtShippingAddress.Multiline = true;
             this.txtShippingAddress.Name = "txtShippingAddress";
             this.txtShippingAddress.Size = new System.Drawing.Size(453, 88);
@@ -292,7 +297,7 @@
             // 
             // lblShippingAddress
             // 
-            this.lblShippingAddress.Location = new System.Drawing.Point(14, 144);
+            this.lblShippingAddress.Location = new System.Drawing.Point(14, 157);
             this.lblShippingAddress.Name = "lblShippingAddress";
             this.lblShippingAddress.Size = new System.Drawing.Size(62, 20);
             this.lblShippingAddress.TabIndex = 108;
@@ -300,7 +305,7 @@
             // 
             // lblPaytype_ID
             // 
-            this.lblPaytype_ID.Location = new System.Drawing.Point(335, 116);
+            this.lblPaytype_ID.Location = new System.Drawing.Point(335, 129);
             this.lblPaytype_ID.Name = "lblPaytype_ID";
             this.lblPaytype_ID.Size = new System.Drawing.Size(62, 20);
             this.lblPaytype_ID.TabIndex = 150;
@@ -308,14 +313,14 @@
             // 
             // txtPlatformOrderNo
             // 
-            this.txtPlatformOrderNo.Location = new System.Drawing.Point(632, 65);
+            this.txtPlatformOrderNo.Location = new System.Drawing.Point(632, 78);
             this.txtPlatformOrderNo.Name = "txtPlatformOrderNo";
             this.txtPlatformOrderNo.Size = new System.Drawing.Size(162, 23);
             this.txtPlatformOrderNo.TabIndex = 149;
             // 
             // lblPlatformOrderNo
             // 
-            this.lblPlatformOrderNo.Location = new System.Drawing.Point(563, 66);
+            this.lblPlatformOrderNo.Location = new System.Drawing.Point(563, 79);
             this.lblPlatformOrderNo.Name = "lblPlatformOrderNo";
             this.lblPlatformOrderNo.Size = new System.Drawing.Size(62, 20);
             this.lblPlatformOrderNo.TabIndex = 148;
@@ -325,7 +330,7 @@
             // 
             this.chkIsFromPlatform.Checked = true;
             this.chkIsFromPlatform.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkIsFromPlatform.Location = new System.Drawing.Point(797, 66);
+            this.chkIsFromPlatform.Location = new System.Drawing.Point(797, 79);
             this.chkIsFromPlatform.Name = "chkIsFromPlatform";
             this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
             this.chkIsFromPlatform.TabIndex = 147;
@@ -333,7 +338,7 @@
             // 
             // chk替代品出库
             // 
-            this.chk替代品出库.Location = new System.Drawing.Point(1037, 41);
+            this.chk替代品出库.Location = new System.Drawing.Point(1137, 79);
             this.chk替代品出库.Name = "chk替代品出库";
             this.chk替代品出库.Size = new System.Drawing.Size(88, 20);
             this.chk替代品出库.TabIndex = 146;
@@ -352,14 +357,14 @@
             // 
             // dtpOutDate
             // 
-            this.dtpOutDate.Location = new System.Drawing.Point(632, 39);
+            this.dtpOutDate.Location = new System.Drawing.Point(632, 52);
             this.dtpOutDate.Name = "dtpOutDate";
             this.dtpOutDate.Size = new System.Drawing.Size(162, 21);
             this.dtpOutDate.TabIndex = 144;
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(563, 39);
+            this.kryptonLabel1.Location = new System.Drawing.Point(563, 52);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
             this.kryptonLabel1.TabIndex = 143;
@@ -367,7 +372,7 @@
             // 
             // txtSaleOrder
             // 
-            this.txtSaleOrder.Location = new System.Drawing.Point(85, 66);
+            this.txtSaleOrder.Location = new System.Drawing.Point(85, 79);
             this.txtSaleOrder.Name = "txtSaleOrder";
             this.txtSaleOrder.ReadOnly = true;
             this.txtSaleOrder.Size = new System.Drawing.Size(234, 23);
@@ -376,7 +381,7 @@
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(589, 143);
+            this.lblNotes.Location = new System.Drawing.Point(589, 156);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 130;
@@ -384,7 +389,7 @@
             // 
             // txtNotes
             // 
-            this.txtNotes.Location = new System.Drawing.Point(632, 143);
+            this.txtNotes.Location = new System.Drawing.Point(632, 156);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
             this.txtNotes.Size = new System.Drawing.Size(444, 88);
@@ -392,7 +397,7 @@
             // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(1088, 113);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(1088, 133);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 132;
@@ -400,7 +405,7 @@
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(1088, 143);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(1088, 156);
             this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
             this.txtApprovalOpinions.Size = new System.Drawing.Size(137, 88);
@@ -408,7 +413,7 @@
             // 
             // chkApprovalResults
             // 
-            this.chkApprovalResults.Location = new System.Drawing.Point(1150, 41);
+            this.chkApprovalResults.Location = new System.Drawing.Point(1156, 131);
             this.chkApprovalResults.Name = "chkApprovalResults";
             this.chkApprovalResults.Size = new System.Drawing.Size(75, 20);
             this.chkApprovalResults.TabIndex = 137;
@@ -416,21 +421,21 @@
             // 
             // txtTrackNo
             // 
-            this.txtTrackNo.Location = new System.Drawing.Point(939, 116);
+            this.txtTrackNo.Location = new System.Drawing.Point(939, 76);
             this.txtTrackNo.Name = "txtTrackNo";
             this.txtTrackNo.Size = new System.Drawing.Size(137, 23);
             this.txtTrackNo.TabIndex = 113;
             // 
             // txtFreightCost
             // 
-            this.txtFreightCost.Location = new System.Drawing.Point(632, 114);
+            this.txtFreightCost.Location = new System.Drawing.Point(632, 127);
             this.txtFreightCost.Name = "txtFreightCost";
             this.txtFreightCost.Size = new System.Drawing.Size(162, 23);
             this.txtFreightCost.TabIndex = 103;
             // 
             // lblFreightCost
             // 
-            this.lblFreightCost.Location = new System.Drawing.Point(565, 114);
+            this.lblFreightCost.Location = new System.Drawing.Point(565, 127);
             this.lblFreightCost.Name = "lblFreightCost";
             this.lblFreightCost.Size = new System.Drawing.Size(62, 20);
             this.lblFreightCost.TabIndex = 102;
@@ -438,7 +443,7 @@
             // 
             // lblTrackNo
             // 
-            this.lblTrackNo.Location = new System.Drawing.Point(873, 120);
+            this.lblTrackNo.Location = new System.Drawing.Point(872, 80);
             this.lblTrackNo.Name = "lblTrackNo";
             this.lblTrackNo.Size = new System.Drawing.Size(62, 20);
             this.lblTrackNo.TabIndex = 112;
@@ -446,14 +451,14 @@
             // 
             // txtShippingWay
             // 
-            this.txtShippingWay.Location = new System.Drawing.Point(939, 91);
+            this.txtShippingWay.Location = new System.Drawing.Point(939, 49);
             this.txtShippingWay.Name = "txtShippingWay";
             this.txtShippingWay.Size = new System.Drawing.Size(137, 23);
             this.txtShippingWay.TabIndex = 111;
             // 
             // chkGenerateVouchers
             // 
-            this.chkGenerateVouchers.Location = new System.Drawing.Point(939, 39);
+            this.chkGenerateVouchers.Location = new System.Drawing.Point(1137, 104);
             this.chkGenerateVouchers.Name = "chkGenerateVouchers";
             this.chkGenerateVouchers.Size = new System.Drawing.Size(75, 20);
             this.chkGenerateVouchers.TabIndex = 125;
@@ -461,7 +466,7 @@
             // 
             // lblShippingWay
             // 
-            this.lblShippingWay.Location = new System.Drawing.Point(873, 94);
+            this.lblShippingWay.Location = new System.Drawing.Point(872, 52);
             this.lblShippingWay.Name = "lblShippingWay";
             this.lblShippingWay.Size = new System.Drawing.Size(62, 20);
             this.lblShippingWay.TabIndex = 110;
@@ -469,7 +474,7 @@
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(27, 118);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(27, 131);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
             this.lblEmployee_ID.TabIndex = 94;
@@ -479,14 +484,14 @@
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(85, 118);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(85, 131);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
             this.cmbEmployee_ID.Size = new System.Drawing.Size(234, 21);
             this.cmbEmployee_ID.TabIndex = 95;
             // 
             // lblCustomerVendor_ID
             // 
-            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(40, 92);
+            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(40, 105);
             this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
             this.lblCustomerVendor_ID.Size = new System.Drawing.Size(36, 20);
             this.lblCustomerVendor_ID.TabIndex = 96;
@@ -496,14 +501,14 @@
             // 
             this.cmbCustomerVendor_ID.DropDownWidth = 100;
             this.cmbCustomerVendor_ID.IntegralHeight = false;
-            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(85, 92);
+            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(85, 105);
             this.cmbCustomerVendor_ID.Name = "cmbCustomerVendor_ID";
             this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(234, 21);
             this.cmbCustomerVendor_ID.TabIndex = 97;
             // 
             // dtpDeliveryDate
             // 
-            this.dtpDeliveryDate.Location = new System.Drawing.Point(403, 66);
+            this.dtpDeliveryDate.Location = new System.Drawing.Point(403, 79);
             this.dtpDeliveryDate.Name = "dtpDeliveryDate";
             this.dtpDeliveryDate.ShowCheckBox = true;
             this.dtpDeliveryDate.Size = new System.Drawing.Size(132, 21);
@@ -511,7 +516,7 @@
             // 
             // lblDeliveryDate
             // 
-            this.lblDeliveryDate.Location = new System.Drawing.Point(335, 66);
+            this.lblDeliveryDate.Location = new System.Drawing.Point(335, 79);
             this.lblDeliveryDate.Name = "lblDeliveryDate";
             this.lblDeliveryDate.Size = new System.Drawing.Size(62, 20);
             this.lblDeliveryDate.TabIndex = 106;
@@ -519,7 +524,7 @@
             // 
             // lblOrder_ID
             // 
-            this.lblOrder_ID.Location = new System.Drawing.Point(14, 67);
+            this.lblOrder_ID.Location = new System.Drawing.Point(14, 80);
             this.lblOrder_ID.Name = "lblOrder_ID";
             this.lblOrder_ID.Size = new System.Drawing.Size(62, 20);
             this.lblOrder_ID.TabIndex = 98;
@@ -527,7 +532,7 @@
             // 
             // lblSaleOutNo
             // 
-            this.lblSaleOutNo.Location = new System.Drawing.Point(14, 40);
+            this.lblSaleOutNo.Location = new System.Drawing.Point(14, 53);
             this.lblSaleOutNo.Name = "lblSaleOutNo";
             this.lblSaleOutNo.Size = new System.Drawing.Size(62, 20);
             this.lblSaleOutNo.TabIndex = 100;
@@ -535,7 +540,7 @@
             // 
             // txtSaleOutNo
             // 
-            this.txtSaleOutNo.Location = new System.Drawing.Point(85, 39);
+            this.txtSaleOutNo.Location = new System.Drawing.Point(85, 52);
             this.txtSaleOutNo.Name = "txtSaleOutNo";
             this.txtSaleOutNo.Size = new System.Drawing.Size(234, 23);
             this.txtSaleOutNo.TabIndex = 101;
@@ -740,6 +745,23 @@
             this.lblFreightIncome.TabIndex = 102;
             this.lblFreightIncome.Values.Text = "运费收入";
             // 
+            // cmbRefundStatus
+            // 
+            this.cmbRefundStatus.DropDownWidth = 100;
+            this.cmbRefundStatus.IntegralHeight = false;
+            this.cmbRefundStatus.Location = new System.Drawing.Point(938, 127);
+            this.cmbRefundStatus.Name = "cmbRefundStatus";
+            this.cmbRefundStatus.Size = new System.Drawing.Size(138, 21);
+            this.cmbRefundStatus.TabIndex = 201;
+            // 
+            // lblRefundStatus
+            // 
+            this.lblRefundStatus.Location = new System.Drawing.Point(846, 128);
+            this.lblRefundStatus.Name = "lblRefundStatus";
+            this.lblRefundStatus.Size = new System.Drawing.Size(88, 20);
+            this.lblRefundStatus.TabIndex = 202;
+            this.lblRefundStatus.Values.Text = "退货退款状态";
+            // 
             // UCSaleOut
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -771,6 +793,7 @@
             this.kryptonSplitContainerGridAndSub.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerGridAndSub)).EndInit();
             this.kryptonSplitContainerGridAndSub.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbRefundStatus)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -844,5 +867,7 @@
         private Krypton.Toolkit.KryptonLabel lblCustomerPONo;
         private Krypton.Toolkit.KryptonTextBox txtTotalCommissionAmount;
         private Krypton.Toolkit.KryptonLabel lblTotalCommissionAmount;
+        private Krypton.Toolkit.KryptonLabel lblRefundStatus;
+        private Krypton.Toolkit.KryptonComboBox cmbRefundStatus;
     }
 }

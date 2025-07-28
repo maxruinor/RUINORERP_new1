@@ -132,7 +132,7 @@ namespace RUINORERP.Model
         /// 操作者
         /// </summary>
         [AdvQueryAttribute(ColName = "Operator", ColDesc = "操作者")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Operator", Length = 50, IsNullable = true, ColumnDescription = "操作者")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "Operator", Length = 200, IsNullable = true, ColumnDescription = "操作者")]
         public string Operator
         {
             get { return _Operator; }

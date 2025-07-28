@@ -341,7 +341,10 @@ namespace RUINORERP.UI.FM
                      { "LocalPrepaidAmount", "金额" },
                      { "LocalBalanceAmount", "可用金额" },
                      { "CustomerVendor_ID", "客户" },
-                     { "PrePayDate", "付款日期" }
+                     { "PrePayDate", "付款日期" },
+                    { "SourceBizType", "来源业务" },
+                    { "SourceBillNo", "来源单号" }
+
                 };
 
                 // 初始化选择器
@@ -358,6 +361,8 @@ namespace RUINORERP.UI.FM
                     selector.ConfigureColumn(x => x.LocalBalanceAmount, "可用金额");
                     selector.ConfigureColumn(x => x.CustomerVendor_ID, "客户");
                     selector.ConfigureColumn(x => x.PrePayDate, "付款日期");
+                    selector.ConfigureColumn(x => x.SourceBizType, "来源业务");
+                    selector.ConfigureColumn(x => x.SourceBillNo, "来源单号");
                     selector.ConfigureSummaryColumn(x => x.LocalPrepaidAmount);
                     selector.ConfigureSummaryColumn(x => x.LocalBalanceAmount);
                     selector.InitializeSelector(availableAdvances, $"选择预{PaymentType}单");

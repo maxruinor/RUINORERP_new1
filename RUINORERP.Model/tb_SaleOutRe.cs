@@ -113,7 +113,20 @@ namespace RUINORERP.Model
                 SetProperty(ref _Paytype_ID, value);
             }
         }
-
+        private int? _RefundStatus;
+        /// <summary>
+        /// 退货退款状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RefundStatus", ColDesc = "退货退款状态")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "RefundStatus", DecimalDigits = 0, IsNullable = true, ColumnDescription = "退货退款状态")]
+        public int? RefundStatus
+        {
+            get { return _RefundStatus; }
+            set
+            {
+                SetProperty(ref _RefundStatus, value);
+            }
+        }
 
         private string _PlatformOrderNo;
         /// <summary>

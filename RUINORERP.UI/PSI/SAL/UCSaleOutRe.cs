@@ -43,6 +43,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Common.Extensions;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -56,7 +57,84 @@ namespace RUINORERP.UI.PSI.SAL
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 
+        #region 平台退款动作
 
+        ToolStripButton toolStripButton平台退款 = new System.Windows.Forms.ToolStripButton();
+
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+
+            toolStripButton平台退款.Text = "平台退款";
+            toolStripButton平台退款.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
+            toolStripButton平台退款.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton平台退款.Name = "平台退款";
+            toolStripButton平台退款.Visible = false;//默认隐藏
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton平台退款);
+            toolStripButton平台退款.ToolTipText = "平台订单退款时，根据实际情况确认销售退回单的退货退款状态。";
+            toolStripButton平台退款.Click += new System.EventHandler(this.toolStripButton平台退款_Click);
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
+            { toolStripButton平台退款};
+
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+        }
+
+        private async void toolStripButton平台退款_Click(object sender, EventArgs e)
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+
+            if (EditEntity != null)
+            {
+                tb_SaleOutRe saleOutRe = EditEntity as tb_SaleOutRe;
+                //只有审核状态才可以转换
+                if (EditEntity.DataStatus >= (int)DataStatus.确认 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
+                {
+                    //判断是否为平台订单
+                    if (!saleOutRe.IsFromPlatform || saleOutRe.PlatformOrderNo.IsNullOrEmpty())
+                    {
+                        MessageBox.Show($"当前【销售出库单】对应的销售退回单为不是平台订单，无法进行平台退款", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        toolStripButton平台退款.Enabled = false;
+                        return;
+                    }
+                    if (!EditEntity.RefundStatus.HasValue)
+                    {
+                        System.Windows.Forms.MessageBox.Show("退货退款状态不能为空。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
+                    }
+                    if (saleOutRe.RefundStatus.HasValue && saleOutRe.RefundStatus.Value >= (int)RefundStatus.已退款等待退货)
+                    {
+                        // 更新出库单状态
+                        var last = await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutRe>(saleOutRe).UpdateColumns(it => new
+                        {
+                            it.RefundStatus
+                        }).ExecuteCommandAsync();
+                        toolStripButton平台退款.Enabled = false;
+                    }
+                    else
+                    {
+                        System.Windows.Forms.MessageBox.Show($"平台退款后，退货退款状态不能为{(RefundStatus)saleOutRe.RefundStatus}，请重试", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        toolStripButton平台退款.Enabled = true;
+                        return;
+                    }
+
+                }
+                else
+                {
+                    MessageBox.Show($"当前【销售出库单】的状态为{(DataStatus)EditEntity.DataStatus}，无法进行【平台退款】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+        }
+
+
+        #endregion
 
 
         public override void QueryConditionBuilder()
@@ -136,7 +214,7 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
                     }
-                     
+
                 }
 
             }
@@ -146,6 +224,9 @@ namespace RUINORERP.UI.PSI.SAL
                 lblReview.Text = ((ApprovalStatus)entity.ApprovalStatus).ToString();
             }
             EditEntity = entity;
+
+            DataBindingHelper.BindData4CmbByEnum<tb_SaleOutRe, RefundStatus>(entity, k => k.RefundStatus, cmbRefundStatus, false);
+
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOutRe, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false, PayStatus.全额预付, PayStatus.部分预付);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalCommissionAmount.ToString(), txtTotalCommissionAmount, BindDataType4TextBox.Money, false);
@@ -302,6 +383,67 @@ namespace RUINORERP.UI.PSI.SAL
         {
             DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
             DataBindingHelper.InitDataToCmb<tb_CustomerVendor>(k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, c => c.IsCustomer == true);
+        }
+
+        protected async override Task<ReturnResults<tb_SaleOutRe>> Delete()
+        {
+            ReturnResults<tb_SaleOutRe> rss = new ReturnResults<tb_SaleOutRe>();
+            if (EditEntity == null)
+            {
+                //提示一下删除成功
+                MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
+                return rss;
+            }
+
+            if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            {
+                //https://www.runoob.com/w3cnote/csharp-enum.html
+                var dataStatus = (DataStatus)(EditEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+                {
+                    //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
+                    if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
+                    {
+                        if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
+                        {
+                            MessageBox.Show("只能删除自己创建的销售退回单。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            rss.ErrorMsg = "只能删除自己创建的销售退回单。";
+                            rss.Succeeded = false;
+                            return rss;
+                        }
+                    }
+
+                    tb_SaleOutReController<tb_SaleOutRe> ctr = Startup.GetFromFac<tb_SaleOutReController<tb_SaleOutRe>>();
+                    bool rs = await ctr.BaseLogicDeleteAsync(EditEntity as tb_SaleOutRe);
+                    if (rs)
+                    {
+                        //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", EditEntity);
+                        //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
+                        //{
+                        //    //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
+                        //}
+                        // bindingSourceSub.Clear();
+
+                        ////删除远程图片及本地图片
+                        ///暂时使用了逻辑删除所以不执行删除远程图片操作。
+                        //await DeleteRemoteImages();
+
+                        //提示一下删除成功
+                        MainForm.Instance.uclog.AddLog("提示", "删除成功");
+
+                        //加载一个空的显示的UI
+                        // bindingSourceSub.Clear();
+                        //base.OnBindDataToUIEvent(EditEntity as tb_SaleOutRe, ActionStatus.删除);
+                        Exit(this);
+                    }
+                }
+                else
+                {
+                    //
+                    MainForm.Instance.uclog.AddLog("提示", $"单据状态为{dataStatus},无法删除");
+                }
+            }
+            return rss;
         }
 
         /*
@@ -693,6 +835,12 @@ namespace RUINORERP.UI.PSI.SAL
                     System.Windows.Forms.MessageBox.Show("退货日期不能为空。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
+
+                if (!EditEntity.RefundStatus.HasValue)
+                {
+                    System.Windows.Forms.MessageBox.Show("退货退款状态不能为空。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return false;
+                }
                 bool rs = await base.Submit();
                 return rs;
             }
@@ -809,7 +957,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                 tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
                 tb_SaleOutRe saleOutre = ctr.SaleOutToSaleOutRe(saleout);
-                  
+
                 BindData(saleOutre as tb_SaleOutRe);
             }
             else

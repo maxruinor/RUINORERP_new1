@@ -35,10 +35,7 @@ namespace RUINORERP.Model.ConfigModel
         [Description("预完工日期必填设置为必须填写。")]
         public bool 预完工日期必填 { get; set; }
 
-        [JsonProperty("销售订单默认平台单为真")]
-        [Category("销售模块")]
-        [Description("销售订单默认平台单为真")]
-        public bool IsFromPlatform { get; set; }
+
 
         [JsonProperty("返工提醒天数")]
         [Category("生产模块")]
@@ -58,6 +55,8 @@ namespace RUINORERP.Model.ConfigModel
         #endregion
 
         #region 销售模块
+
+
         /// <summary>
         /// JsonProperty这个属性值要与真的属性值名称一样。不然不起作用。读取出错。
         /// </summary>
@@ -65,6 +64,20 @@ namespace RUINORERP.Model.ConfigModel
         [Category("销售模块")]
         [Description("销售出库中金额的精度。")]
         public int MoneyDataPrecision { get; set; } = 4;
+
+
+
+        [JsonProperty("IsFromPlatform")]
+        [Category("销售模块")]
+        [Description("销售订单默认平台单为真")]
+        public bool IsFromPlatform { get; set; } = true;
+
+
+
+        [JsonProperty("IsFromPlatform")]
+        [Category("销售模块")]
+        [Description("销售订单默认项目组必填写")]
+        public bool NeedInputProjectGroup { get; set; } = true;
         #endregion
 
 

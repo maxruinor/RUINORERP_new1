@@ -146,7 +146,45 @@ namespace RUINORERP.UI.PSI.SAL
             base.ChildInvisibleCols.Add(c => c.SaleOutDetail_ID);
         }
 
+        protected async override void Delete(List<tb_SaleOutRe> Datas)
+        {
+            if (Datas == null || Datas.Count == 0)
+            {
+                //提示一下删除成功
+                MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
+                return;
+            }
 
+            if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            {
+                int counter = 0;
+                foreach (var item in Datas)
+                {
+                    //https://www.runoob.com/w3cnote/csharp-enum.html
+                    var dataStatus = (DataStatus)(item.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                    if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+                    {
+                        if (item.Created_by.HasValue && item.Created_by.Value != MainForm.Instance.AppContext.CurUserInfo.Id)
+                        {
+                            MessageBox.Show("只能删除自己创建的销售退回单。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            continue;
+                        }
+
+                        BaseController<tb_SaleOutRe> ctr = Startup.GetFromFacByName<BaseController<tb_SaleOutRe>>(typeof(tb_SaleOutRe).Name + "Controller");
+                        bool rs = await ctr.BaseDeleteAsync(item);
+                        if (rs)
+                        {
+                            counter++;
+                        }
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog("提示", $"单据状态为{dataStatus}无法删除");
+                    }
+                }
+                MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");
+            }
+        }
 
         public override void BuildLimitQueryConditions()
         {

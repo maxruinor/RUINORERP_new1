@@ -9,45 +9,24 @@ namespace RUINORERP.Global
 {
 
     /// <summary>
-    /// 销售出库单退款状态
+    /// 销售出库单退货退款状态
     /// </summary>
     public enum RefundStatus
     {
+        未退款等待退货 = 1,
 
-    //    None = 0,
+        未退款已退货=2,
 
-    //    RefundWaitReturn，
+        已退款等待退货 = 3,
 
-    //         /// <summary>无退款退货</summary>
-    //None = 0,
-
-    //    /// <summary>退款等待退货（平台已退款，退货流程未完成）</summary>
-    //    RefundWaitReturn = 1,
-
-    //    /// <summary>退货未退款（退货已完成，未退款）</summary>
-    //    ReturnWithoutRefund = 2,
-
-    //    /// <summary>仅退款（退款完成，无需退货）</summary>
-    //    OnlyRefund = 3,
-
-    //    /// <summary>仅退货（退货完成，无需退款）</summary>
-    //    OnlyReturn = 4,
-
-    //    /// <summary>退款退货完成</summary>
-    //    Completed = 5
+        /// <summary>
+        /// 超时完成
+        /// </summary>
+        [Description("仅退款")]
+        已退款未退货 = 4,
 
 
-    //        [Description("已退款但未收到货")]
-    //    待退货,
-
-    //    [Description("已退款并收到货")]
-    //    已退货（已收到货并入库）,
-
-    //    [Description("已关闭")]
-    //    已关闭（未收到货，关闭）,
-
-    //    [Description("已退款")]
-    //    已退货、已关闭,
+        退款退货完成 = 5
     }
 
     // 岗位类型枚举（仅用于菜单推荐逻辑）

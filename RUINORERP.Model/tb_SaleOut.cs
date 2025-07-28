@@ -299,7 +299,20 @@ namespace RUINORERP.Model
                 SetProperty(ref _TotalAmount, value);
             }
         }
-
+        private int? _RefundStatus;
+        /// <summary>
+        /// 退货退款状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RefundStatus", ColDesc = "退货退款状态")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "RefundStatus", DecimalDigits = 0, IsNullable = true, ColumnDescription = "退货退款状态")]
+        public int? RefundStatus
+        {
+            get { return _RefundStatus; }
+            set
+            {
+                SetProperty(ref _RefundStatus, value);
+            }
+        }
         private DateTime _OutDate;
         /// <summary>
         /// 出库日期-以这个日期为标准来计算回款时间 如果是账期时

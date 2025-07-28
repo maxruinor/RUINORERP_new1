@@ -3,12 +3,12 @@
 	<Description>企业数字化集成ERP autoUpdate</Description>
 	<Updater>
 		<Url>http://smarterp.7766.org:1688/updaterFiler/</Url>
-		<LastUpdateTime>2025-01-22</LastUpdateTime>
+		<LastUpdateTime>2025-07-22</LastUpdateTime>
 	</Updater>
 	<Application applicationId="企业数字化集成ERP">
 		<EntryPoint>企业数字化集成ERP.exe</EntryPoint>
 		<Location>.</Location>
-		<Version>1.0.0.2</Version>
+		<Version>2.0.0.3</Version>
 	</Application>
 	<Files>
 		<File Ver="2.0.0.122" Name="Autofac.dll" />

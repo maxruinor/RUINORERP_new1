@@ -150,10 +150,23 @@ namespace RUINORERP.Extensions
 
                     db.Aop.OnError = (e) =>
                     {
+
+                       //try
+                       //{
+                       
+                       //    string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
+                       //    logger.LogError("db.Aop.OnError:" + e.Message + errorsql);
+                       //}
+                       //catch (Exception exx)
+                       //{
+                       //    Console.WriteLine(exx.Message);
+                       //}
+
+
                         try
                         {
                             string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
-                            logger.LogError("SQL执行错误:" + e.Message + errorsql);
+                            logger.LogError("SQL执行错误:" + e.Message, errorsql);
                             Exception exception = e.GetBaseException();
                             logger.Error("Error" + errorsql, e);
                             if (e.InnerException != null && e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)

@@ -568,9 +568,6 @@ namespace RUINORERP.UI.Common
     {
 
 
-
-
-
         public static List<EnumItem> GetTimeSelectTypeItems(Type enumType)
         {
             var items = new List<EnumItem>();
@@ -1595,6 +1592,13 @@ namespace RUINORERP.UI.Common
             ComboBoxHelper.InitDropList(bs, cmbBox, keyName, "Name", ComboBoxStyle.DropDown, false);
 
         }
+
+        #region 绑定CheckedListBox
+
+
+        #endregion
+
+
 
 
         #region by watson 2025-06-26  一个新的绑定枚举的方法更友好

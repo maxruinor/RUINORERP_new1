@@ -1141,7 +1141,9 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
-                if (NeedValidated)
+
+
+                if (NeedValidated && AppContext.GlobalVariableConfig.OpenProdTypeForSaleCheck)
                 {
                     StringBuilder forSaleTips = new StringBuilder();
 

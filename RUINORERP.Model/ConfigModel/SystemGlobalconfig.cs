@@ -28,6 +28,15 @@ namespace RUINORERP.Model.ConfigModel
         [Description("销售订单默认平台单为真")]
         public bool IsFromPlatform { get; set; }
 
+
+
+        [JsonProperty("OpenProdTypeForSaleCheck")]
+        [Category("销售模块")]
+        [Description("销售订单时开启产品待销型检测")]
+        public bool OpenProdTypeForSaleCheck { get; set; } = true;
+
+
+
         [JsonProperty("DirectPrinting")]
         [Category("打印设置")]
         [Description("是否直接打印，如果否则会先打开设计功能再打印")]

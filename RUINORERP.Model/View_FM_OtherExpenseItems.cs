@@ -358,18 +358,18 @@ namespace RUINORERP.Model
         private decimal? _TaxAmount;
 
 
-        private decimal _SingleAmount = ((0));
+        private decimal _SingleTotalAmount = ((0));
         /// <summary>
-        /// 单项金额
+        /// 单项总金额
         /// </summary>
-        [AdvQueryAttribute(ColName = "SingleAmount", ColDesc = "单项金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SingleAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "单项金额")]
-        public decimal SingleAmount
+        [AdvQueryAttribute(ColName = "SingleTotalAmount", ColDesc = "单项总金额")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SingleTotalAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "单项总金额")]
+        public decimal SingleTotalAmount
         {
-            get { return _SingleAmount; }
+            get { return _SingleTotalAmount; }
             set
             {
-                SetProperty(ref _SingleAmount, value);
+                SetProperty(ref _SingleTotalAmount, value);
             }
         }
  

@@ -231,7 +231,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                         SaleOutDetailrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                                         SaleOutDetailrow.Cells[6].Value = "出库";//$"{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                                         SaleOutDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOut.DataStatus), SaleOut.DataStatus).ToString();
-                                        #region 销售退货单
+                                        #region 销售退回单
                                         LoadSaleOutReData(SaleOut, SaleOutDetailrow, SaleOrderDetail, prodDetail, productType);
                                         #endregion
                                         #region 采购订单

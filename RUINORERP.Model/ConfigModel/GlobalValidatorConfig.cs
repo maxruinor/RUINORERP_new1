@@ -74,12 +74,12 @@ namespace RUINORERP.Model.ConfigModel
 
 
 
-        [JsonProperty("IsFromPlatform")]
+
+        [JsonProperty("NeedInputProjectGroup")]
         [Category("销售模块")]
         [Description("销售订单默认项目组必填写")]
         public bool NeedInputProjectGroup { get; set; } = true;
         #endregion
-
 
 
         /// <summary>

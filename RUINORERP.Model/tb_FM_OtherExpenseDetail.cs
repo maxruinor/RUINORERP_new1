@@ -184,17 +184,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _TotalAmount= ((0));
+        private decimal _SingleTotalAmount= ((0));
         /// <summary>
-        /// 总金额
+        /// 单项总金额
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "总金额" )]
-        public decimal TotalAmount
+        [AdvQueryAttribute(ColName = "SingleTotalAmount",ColDesc = "单项总金额")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SingleTotalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "单项总金额")]
+        public decimal SingleTotalAmount
         { 
-            get{return _TotalAmount;}
+            get{return _SingleTotalAmount;}
             set{
-            SetProperty(ref _TotalAmount, value);
+            SetProperty(ref _SingleTotalAmount, value);
                         }
         }
 

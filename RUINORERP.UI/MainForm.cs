@@ -1483,7 +1483,14 @@ namespace RUINORERP.UI
                 if (config.Count > 0)
                 {
                     AppContext.SysConfig = config[0];
-                    AppContext.FMConfig = JsonConvert.DeserializeObject<FMConfiguration>(config[0].FMConfig);
+                    try
+                    {
+                        AppContext.FMConfig = JsonConvert.DeserializeObject<FMConfiguration>(config[0].FMConfig);
+                    }
+                    catch (Exception)
+                    {
+                        logger.LogError("请对财务模块参数进行正确的配置。");
+                    }
                 }
                 var ctrBillNoRule = Startup.GetFromFac<tb_sys_BillNoRuleController<tb_sys_BillNoRule>>();
                 List<tb_sys_BillNoRule> BillNoRules = ctrBillNoRule.Query();

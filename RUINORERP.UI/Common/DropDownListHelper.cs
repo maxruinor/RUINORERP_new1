@@ -261,10 +261,58 @@ namespace RUINORERP.UI.Common
         }
 
 
+        /// <summary>
+        /// 下拉列表的绑定
+        /// </summary>
+        /// <param name="ds">要绑定的数据源(集)</param>
+        /// <param name="cmb">要绑定的控件名</param>
+        /// <param name="ValueMember">值的列名</param>
+        /// <param name="DisplayMember">显示的列名</param>
+        /// <param name="DropStyle">下拉类别</param>
+        /// <param name="auto">是否有自动完成功能</param>
+        /// <param name="add请选择">  是数据源绑定形式不可以自由添加，只能在数据源上做文章 ("请选择", "-1")</param>
+        public static void InitDropList(BindingSource bs, CheckBoxComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto)
+        {
+            cmb.BeginUpdate();
+
+            #region 自动补全
+
+            AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
+            foreach (var dr in bs.List)
+            {
+                // sc.Add(dr[DisplayMember].ToString());
+                sc.Add(ReflectionHelper.GetPropertyValue(dr, DisplayMember).ToString());
+            }
+
+            if (auto)
+            {
+                if (DropStyle == ComboBoxStyle.DropDown)
+                {
+
+                    cmb.AutoCompleteCustomSource = sc;
+                    cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                    cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+                }
+            }
+            #endregion
 
 
+            cmb.DataSource = bs;
+            cmb.DropDownStyle = DropStyle;
+            cmb.DisplayMember = DisplayMember;
+            if (string.IsNullOrEmpty(cmb.ValueMember))
+            {
+                cmb.ValueMember = ValueMember;
+            }
+            else
+            {
 
+            }
 
+            cmb.EndUpdate();
+            cmb.SelectedIndex = -1;
+
+        }
 
 
 

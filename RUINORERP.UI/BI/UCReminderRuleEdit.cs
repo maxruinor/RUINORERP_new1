@@ -55,9 +55,11 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, ReminderBizType>(entity, k => k.ReminderBizType, cmbReminderBizType, false);
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, ReminderPriority>(entity, k => k.ReminderPriority, cmbPriority, false);
             DataBindingHelper.BindData4CheckBox<tb_ReminderRule>(entity, t => t.IsEnabled, chkIsEnabled, false);
-           // DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, NotifyChannel>(entity, k => k.NotifyChannel, cmbNotifyChannels, false);
-
             DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.EffectiveDate, dtpEffectiveDate, false);
+
+            //CheckedListBoxHelper.BindData4CheckedListByEnum<tb_ReminderRule, NotifyChannel>(entity, c => c.NotifyChannels, chkNotifyChannels, false);
+            CheckedListBoxHelper.BindData4CheckedListBox<tb_ReminderRule, NotifyChannel>(entity, t => t.NotifyChannels, chkNotifyChannels, NotifyChannel.Workflow, NotifyChannel.SMS);
+
             DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.ExpireDate, dtpExpireDate, false);
             DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.Condition, txtCondition, BindDataType4TextBox.Text, false);
 

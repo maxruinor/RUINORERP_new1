@@ -71,7 +71,7 @@ namespace RUINORERP.UI.PSI.SAL
             List<tb_SaleOutRe> selectlist = GetSelectResult();
             if (selectlist.Count > 1)
             {
-                MessageBox.Show("生成红冲应收款单每次只能选择一个销售退货单。");
+                MessageBox.Show("生成红冲应收款单每次只能选择一个销售退回单。");
                 return;
             }
             List<tb_SaleOutRe> RealList = new List<tb_SaleOutRe>();
@@ -88,7 +88,7 @@ namespace RUINORERP.UI.PSI.SAL
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前销售退货单 {item.ReturnNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【红冲】应收款单。").Append("\r\n");
+                    msg.Append($"当前销售退回单 {item.ReturnNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【红冲】应收款单。").Append("\r\n");
                     counter++;
                 }
             }

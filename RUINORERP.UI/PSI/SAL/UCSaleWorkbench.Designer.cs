@@ -301,7 +301,7 @@
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(88, 20);
             this.kryptonLabel2.TabIndex = 26;
-            this.kryptonLabel2.Values.Text = "销售退货单号";
+            this.kryptonLabel2.Values.Text = "销售退回单号";
             // 
             // txtSaleOutReNO
             // 

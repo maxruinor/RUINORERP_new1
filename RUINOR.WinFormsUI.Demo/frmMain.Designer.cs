@@ -28,6 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
+            RUINOR.WinFormsUI.ChkComboBox.CheckBoxProperties checkBoxProperties1 = new RUINOR.WinFormsUI.ChkComboBox.CheckBoxProperties();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMain));
             this.button1 = new System.Windows.Forms.Button();
             this.txtAutoCreatCode = new System.Windows.Forms.TextBox();
             this.button2 = new System.Windows.Forms.Button();
@@ -35,8 +37,8 @@
             this.kryptonButton1 = new Krypton.Toolkit.KryptonButton();
             this.btnTest平铺chk = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.tileListView = new RUINOR.WinFormsUI.TileListView.TileListView();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.checkBox2 = new System.Windows.Forms.CheckBox();
@@ -45,6 +47,8 @@
             this.checkBox5 = new System.Windows.Forms.CheckBox();
             this.checkBox6 = new System.Windows.Forms.CheckBox();
             this.checkBox7 = new System.Windows.Forms.CheckBox();
+            this.popupComboBox1 = new RUINOR.WinFormsUI.ChkComboBox.PopupComboBox();
+            this.checkBoxComboBox1 = new RUINOR.WinFormsUI.ChkComboBox.CheckBoxComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -113,25 +117,28 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(635, 250);
             this.kryptonPanel1.TabIndex = 10;
             // 
-            // checkBox1
-            // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(3, 3);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(78, 16);
-            this.checkBox1.TabIndex = 11;
-            this.checkBox1.Text = "checkBox1";
-            this.checkBox1.UseVisualStyleBackColor = true;
-            // 
             // tileListView
             // 
             this.tileListView.AutoScroll = true;
             this.tileListView.AutoSize = true;
             this.tileListView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.tileListView.Location = new System.Drawing.Point(40, 27);
+            this.tileListView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tileListView.Location = new System.Drawing.Point(0, 0);
             this.tileListView.Name = "tileListView";
-            this.tileListView.Size = new System.Drawing.Size(551, 198);
+            this.tileListView.Size = new System.Drawing.Size(635, 250);
             this.tileListView.TabIndex = 0;
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(3, 3);
+            this.checkBox1.MaximumSize = new System.Drawing.Size(78, 16);
+            this.checkBox1.MinimumSize = new System.Drawing.Size(78, 16);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(78, 16);
+            this.checkBox1.TabIndex = 11;
+            this.checkBox1.Text = "checkBox1";
+            this.checkBox1.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
@@ -220,11 +227,38 @@
             this.checkBox7.Text = "checkBox7";
             this.checkBox7.UseVisualStyleBackColor = true;
             // 
+            // popupComboBox1
+            // 
+            this.popupComboBox1.DropDownControl = this.checkBox1;
+            this.popupComboBox1.FormattingEnabled = true;
+            this.popupComboBox1.Location = new System.Drawing.Point(614, 122);
+            this.popupComboBox1.Name = "popupComboBox1";
+            this.popupComboBox1.Size = new System.Drawing.Size(121, 20);
+            this.popupComboBox1.TabIndex = 13;
+            // 
+            // checkBoxComboBox1
+            // 
+            checkBoxProperties1.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.checkBoxComboBox1.CheckBoxProperties = checkBoxProperties1;
+            this.checkBoxComboBox1.DisplayMemberSingleItem = "";
+            this.checkBoxComboBox1.FormattingEnabled = true;
+            this.checkBoxComboBox1.Items.AddRange(new object[] {
+            "a",
+            "bc",
+            "aa"});
+            this.checkBoxComboBox1.Location = new System.Drawing.Point(614, 205);
+            this.checkBoxComboBox1.MultiChoiceResults = ((System.Collections.Generic.List<object>)(resources.GetObject("checkBoxComboBox1.MultiChoiceResults")));
+            this.checkBoxComboBox1.Name = "checkBoxComboBox1";
+            this.checkBoxComboBox1.Size = new System.Drawing.Size(121, 20);
+            this.checkBoxComboBox1.TabIndex = 14;
+            // 
             // frmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(907, 758);
+            this.Controls.Add(this.checkBoxComboBox1);
+            this.Controls.Add(this.popupComboBox1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.kryptonPanel1);
             this.Controls.Add(this.btnTest平铺chk);
@@ -267,5 +301,7 @@
         private System.Windows.Forms.CheckBox checkBox5;
         private System.Windows.Forms.CheckBox checkBox6;
         private System.Windows.Forms.CheckBox checkBox7;
+        private ChkComboBox.PopupComboBox popupComboBox1;
+        private ChkComboBox.CheckBoxComboBox checkBoxComboBox1;
     }
 }

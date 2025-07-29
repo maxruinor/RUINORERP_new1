@@ -31,10 +31,10 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.txtNotifyRecipients = new Krypton.Toolkit.KryptonTextBox();
             this.btnSelectNotifyRecipients = new Krypton.Toolkit.KryptonButton();
             this.txtNotifyRecipientNames = new Krypton.Toolkit.KryptonTextBox();
             this.btnConfigParser = new Krypton.Toolkit.KryptonButton();
-            this.cmbNotifyChannels = new Krypton.Toolkit.KryptonComboBox();
             this.cmbPriority = new Krypton.Toolkit.KryptonComboBox();
             this.cmbReminderBizType = new Krypton.Toolkit.KryptonComboBox();
             this.lblRuleName = new Krypton.Toolkit.KryptonLabel();
@@ -59,11 +59,10 @@
             this.lblJsonConfig = new Krypton.Toolkit.KryptonLabel();
             this.txtJsonConfig = new Krypton.Toolkit.KryptonTextBox();
             this.cmbRuleEngineType = new Krypton.Toolkit.KryptonComboBox();
-            this.txtNotifyRecipients = new Krypton.Toolkit.KryptonTextBox();
+            this.chkNotifyChannels = new System.Windows.Forms.CheckedListBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbNotifyChannels)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPriority)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbReminderBizType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbRuleEngineType)).BeginInit();
@@ -71,7 +70,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(336, 597);
+            this.btnOk.Location = new System.Drawing.Point(344, 721);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -80,7 +79,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(454, 597);
+            this.btnCancel.Location = new System.Drawing.Point(462, 721);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -89,11 +88,11 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkNotifyChannels);
             this.kryptonPanel1.Controls.Add(this.txtNotifyRecipients);
             this.kryptonPanel1.Controls.Add(this.btnSelectNotifyRecipients);
             this.kryptonPanel1.Controls.Add(this.txtNotifyRecipientNames);
             this.kryptonPanel1.Controls.Add(this.btnConfigParser);
-            this.kryptonPanel1.Controls.Add(this.cmbNotifyChannels);
             this.kryptonPanel1.Controls.Add(this.cmbPriority);
             this.kryptonPanel1.Controls.Add(this.cmbReminderBizType);
             this.kryptonPanel1.Controls.Add(this.lblRuleName);
@@ -123,12 +122,21 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(904, 634);
+            this.kryptonPanel1.Size = new System.Drawing.Size(958, 758);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // txtNotifyRecipients
+            // 
+            this.txtNotifyRecipients.Location = new System.Drawing.Point(777, 303);
+            this.txtNotifyRecipients.Multiline = true;
+            this.txtNotifyRecipients.Name = "txtNotifyRecipients";
+            this.txtNotifyRecipients.Size = new System.Drawing.Size(30, 18);
+            this.txtNotifyRecipients.TabIndex = 49;
+            this.txtNotifyRecipients.Visible = false;
             // 
             // btnSelectNotifyRecipients
             // 
-            this.btnSelectNotifyRecipients.Location = new System.Drawing.Point(777, 206);
+            this.btnSelectNotifyRecipients.Location = new System.Drawing.Point(777, 272);
             this.btnSelectNotifyRecipients.Name = "btnSelectNotifyRecipients";
             this.btnSelectNotifyRecipients.Size = new System.Drawing.Size(87, 25);
             this.btnSelectNotifyRecipients.TabIndex = 48;
@@ -137,7 +145,7 @@
             // 
             // txtNotifyRecipientNames
             // 
-            this.txtNotifyRecipientNames.Location = new System.Drawing.Point(144, 206);
+            this.txtNotifyRecipientNames.Location = new System.Drawing.Point(144, 272);
             this.txtNotifyRecipientNames.Multiline = true;
             this.txtNotifyRecipientNames.Name = "txtNotifyRecipientNames";
             this.txtNotifyRecipientNames.Size = new System.Drawing.Size(627, 53);
@@ -145,21 +153,12 @@
             // 
             // btnConfigParser
             // 
-            this.btnConfigParser.Location = new System.Drawing.Point(777, 374);
+            this.btnConfigParser.Location = new System.Drawing.Point(777, 440);
             this.btnConfigParser.Name = "btnConfigParser";
             this.btnConfigParser.Size = new System.Drawing.Size(87, 25);
             this.btnConfigParser.TabIndex = 46;
             this.btnConfigParser.Values.Text = "配置解析器";
             this.btnConfigParser.Click += new System.EventHandler(this.btnConfigParser_Click);
-            // 
-            // cmbNotifyChannels
-            // 
-            this.cmbNotifyChannels.DropDownWidth = 100;
-            this.cmbNotifyChannels.IntegralHeight = false;
-            this.cmbNotifyChannels.Location = new System.Drawing.Point(591, 101);
-            this.cmbNotifyChannels.Name = "cmbNotifyChannels";
-            this.cmbNotifyChannels.Size = new System.Drawing.Size(180, 21);
-            this.cmbNotifyChannels.TabIndex = 44;
             // 
             // cmbPriority
             // 
@@ -260,7 +259,7 @@
             // 
             // lblEffectiveDate
             // 
-            this.lblEffectiveDate.Location = new System.Drawing.Point(79, 103);
+            this.lblEffectiveDate.Location = new System.Drawing.Point(79, 118);
             this.lblEffectiveDate.Name = "lblEffectiveDate";
             this.lblEffectiveDate.Size = new System.Drawing.Size(62, 20);
             this.lblEffectiveDate.TabIndex = 30;
@@ -268,14 +267,14 @@
             // 
             // dtpEffectiveDate
             // 
-            this.dtpEffectiveDate.Location = new System.Drawing.Point(144, 103);
+            this.dtpEffectiveDate.Location = new System.Drawing.Point(144, 118);
             this.dtpEffectiveDate.Name = "dtpEffectiveDate";
             this.dtpEffectiveDate.Size = new System.Drawing.Size(122, 21);
             this.dtpEffectiveDate.TabIndex = 31;
             // 
             // lblExpireDate
             // 
-            this.lblExpireDate.Location = new System.Drawing.Point(315, 105);
+            this.lblExpireDate.Location = new System.Drawing.Point(76, 160);
             this.lblExpireDate.Name = "lblExpireDate";
             this.lblExpireDate.Size = new System.Drawing.Size(62, 20);
             this.lblExpireDate.TabIndex = 32;
@@ -283,14 +282,14 @@
             // 
             // dtpExpireDate
             // 
-            this.dtpExpireDate.Location = new System.Drawing.Point(383, 103);
+            this.dtpExpireDate.Location = new System.Drawing.Point(144, 158);
             this.dtpExpireDate.Name = "dtpExpireDate";
             this.dtpExpireDate.Size = new System.Drawing.Size(122, 21);
             this.dtpExpireDate.TabIndex = 33;
             // 
             // lblCondition
             // 
-            this.lblCondition.Location = new System.Drawing.Point(79, 141);
+            this.lblCondition.Location = new System.Drawing.Point(79, 207);
             this.lblCondition.Name = "lblCondition";
             this.lblCondition.Size = new System.Drawing.Size(62, 20);
             this.lblCondition.TabIndex = 34;
@@ -298,7 +297,7 @@
             // 
             // txtCondition
             // 
-            this.txtCondition.Location = new System.Drawing.Point(144, 141);
+            this.txtCondition.Location = new System.Drawing.Point(144, 207);
             this.txtCondition.Multiline = true;
             this.txtCondition.Name = "txtCondition";
             this.txtCondition.Size = new System.Drawing.Size(627, 59);
@@ -306,7 +305,7 @@
             // 
             // lblNotifyRecipients
             // 
-            this.lblNotifyRecipients.Location = new System.Drawing.Point(53, 204);
+            this.lblNotifyRecipients.Location = new System.Drawing.Point(53, 270);
             this.lblNotifyRecipients.Name = "lblNotifyRecipients";
             this.lblNotifyRecipients.Size = new System.Drawing.Size(88, 20);
             this.lblNotifyRecipients.TabIndex = 36;
@@ -314,7 +313,7 @@
             // 
             // lblNotifyMessage
             // 
-            this.lblNotifyMessage.Location = new System.Drawing.Point(50, 272);
+            this.lblNotifyMessage.Location = new System.Drawing.Point(50, 338);
             this.lblNotifyMessage.Name = "lblNotifyMessage";
             this.lblNotifyMessage.Size = new System.Drawing.Size(88, 20);
             this.lblNotifyMessage.TabIndex = 38;
@@ -322,7 +321,7 @@
             // 
             // txtNotifyMessage
             // 
-            this.txtNotifyMessage.Location = new System.Drawing.Point(144, 271);
+            this.txtNotifyMessage.Location = new System.Drawing.Point(144, 337);
             this.txtNotifyMessage.Multiline = true;
             this.txtNotifyMessage.Name = "txtNotifyMessage";
             this.txtNotifyMessage.Size = new System.Drawing.Size(627, 94);
@@ -330,7 +329,7 @@
             // 
             // lblJsonConfig
             // 
-            this.lblJsonConfig.Location = new System.Drawing.Point(49, 374);
+            this.lblJsonConfig.Location = new System.Drawing.Point(49, 440);
             this.lblJsonConfig.Name = "lblJsonConfig";
             this.lblJsonConfig.Size = new System.Drawing.Size(92, 20);
             this.lblJsonConfig.TabIndex = 40;
@@ -338,7 +337,7 @@
             // 
             // txtJsonConfig
             // 
-            this.txtJsonConfig.Location = new System.Drawing.Point(144, 374);
+            this.txtJsonConfig.Location = new System.Drawing.Point(144, 440);
             this.txtJsonConfig.Multiline = true;
             this.txtJsonConfig.Name = "txtJsonConfig";
             this.txtJsonConfig.Size = new System.Drawing.Size(627, 200);
@@ -353,27 +352,25 @@
             this.cmbRuleEngineType.Size = new System.Drawing.Size(180, 21);
             this.cmbRuleEngineType.TabIndex = 7;
             // 
-            // txtNotifyRecipients
+            // chkNotifyChannels
             // 
-            this.txtNotifyRecipients.Location = new System.Drawing.Point(777, 237);
-            this.txtNotifyRecipients.Multiline = true;
-            this.txtNotifyRecipients.Name = "txtNotifyRecipients";
-            this.txtNotifyRecipients.Size = new System.Drawing.Size(30, 18);
-            this.txtNotifyRecipients.TabIndex = 49;
-            this.txtNotifyRecipients.Visible = false;
+            this.chkNotifyChannels.FormattingEnabled = true;
+            this.chkNotifyChannels.Location = new System.Drawing.Point(591, 102);
+            this.chkNotifyChannels.Name = "chkNotifyChannels";
+            this.chkNotifyChannels.Size = new System.Drawing.Size(180, 100);
+            this.chkNotifyChannels.TabIndex = 50;
             // 
             // UCReminderRuleEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(904, 634);
+            this.ClientSize = new System.Drawing.Size(958, 758);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCReminderRuleEdit";
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbNotifyChannels)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPriority)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbReminderBizType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbRuleEngineType)).EndInit();
@@ -408,12 +405,12 @@
         private Krypton.Toolkit.KryptonTextBox txtNotifyMessage;
         private Krypton.Toolkit.KryptonLabel lblJsonConfig;
         private Krypton.Toolkit.KryptonTextBox txtJsonConfig;
-        private Krypton.Toolkit.KryptonComboBox cmbNotifyChannels;
         private Krypton.Toolkit.KryptonComboBox cmbPriority;
         private Krypton.Toolkit.KryptonComboBox cmbReminderBizType;
         private Krypton.Toolkit.KryptonButton btnConfigParser;
         private Krypton.Toolkit.KryptonTextBox txtNotifyRecipientNames;
         private Krypton.Toolkit.KryptonButton btnSelectNotifyRecipients;
         private Krypton.Toolkit.KryptonTextBox txtNotifyRecipients;
+        private System.Windows.Forms.CheckedListBox chkNotifyChannels;
     }
 }

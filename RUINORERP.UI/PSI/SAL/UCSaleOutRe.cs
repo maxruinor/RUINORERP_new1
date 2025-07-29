@@ -927,7 +927,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
         /// <summary>
-        /// 将销售订单转换为销售退货单
+        /// 将销售订单转换为销售退回单
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>

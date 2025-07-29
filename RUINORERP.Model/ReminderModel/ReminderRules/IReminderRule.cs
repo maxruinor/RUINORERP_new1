@@ -16,10 +16,6 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
 
         int ReminderBizType { get; set; }
 
-
-        //通过修复部分类中另一个字段来显示
-        string NotifyChannels { get; set; }
-
         int RuleEngineType { get; set; }
 
         // 新增离线消息处理属性

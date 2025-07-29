@@ -46,7 +46,7 @@ namespace RUINORERP.Business.Processor
                          .And(t => t.isdeleted == false)
                          .And(t => t.IsCustomer == true)
                          .And(t => t.Is_enabled == true)
-                         .AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                         //.AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                          .ToExpression();//注意 这一句 不能少
 
             queryFilter.SetQueryField<tb_AS_RepairOrder, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);

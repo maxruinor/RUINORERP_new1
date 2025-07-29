@@ -552,7 +552,7 @@ namespace RUINORERP.Business
         public virtual ValidationResult BaseValidator(T model)
         {
             //子类重写
-            throw new Exception("子类要重写BaseDeleteAsync");
+            throw new Exception("子类要重写BaseValidator");
             //return null;
 
         }

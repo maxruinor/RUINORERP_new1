@@ -27,76 +27,98 @@ namespace RUINORERP.Model
 
     public partial class tb_ReminderRule : BaseEntity, ICloneable, IReminderRule
     {
-
-        // 用于存储特定业务场景的配置
-        //[JsonConverter(typeof(ReminderBizTypeJsonConverter))]
-        //[SugarColumn(IsIgnore = true)]
-        //public virtual object BusinessConfig { get; set; }
-
-        // 序列化为 JSON 字符串保存到数据库
-        //  public string JsonConfig => JsonConvert.SerializeObject(BusinessConfig);
-
-        // 辅助属性，用于处理JSON配置
-        //[SugarColumn(IsIgnore = true)]
-        //public ReminderConfig Config { get; set; }
-
-        //// 辅助属性，不参与JSON序列化
-        //[JsonIgnore]
-        //[SugarColumn(IsIgnore = true)]
-        //public string NotifyRecipientNames
+        //private string _NotifyChannels;
+        ///// <summary>
+        ///// 通知渠道
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "NotifyChannels", ColDesc = "通知渠道")]
+        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "NotifyChannels", Length = 50, IsNullable = false, ColumnDescription = "通知渠道")]
+        //public string NotifyChannels
         //{
-        //    get; set;
+        //    get { return _NotifyChannels; }
+        //    set
+        //    {
+        //        SetProperty(ref _NotifyChannels, value);
+        //    }
         //}
 
-
         /// <summary>
-        /// 离线消息处理属性
+        /// 存储多选枚举值（数据库中为逗号分隔字符串）
         /// </summary>
-        [SugarColumn(IsIgnore = true)]
-        public bool PersistUntilDelivered { get; set; } = true;
+        [AdvQueryAttribute(ColName = "NotifyChannels", ColDesc = "通知渠道")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = typeof(ListIntToStringConverter), ColumnName = "NotifyChannels", Length = 50, IsNullable = false, ColumnDescription = "通知渠道")]
+        public List<int> NotifyChannels { get; set; } = new List<int>();
+
+
+    // 用于存储特定业务场景的配置
+    //[JsonConverter(typeof(ReminderBizTypeJsonConverter))]
+    //[SugarColumn(IsIgnore = true)]
+    //public virtual object BusinessConfig { get; set; }
+
+    // 序列化为 JSON 字符串保存到数据库
+    //  public string JsonConfig => JsonConvert.SerializeObject(BusinessConfig);
+
+    // 辅助属性，用于处理JSON配置
+    //[SugarColumn(IsIgnore = true)]
+    //public ReminderConfig Config { get; set; }
+
+    //// 辅助属性，不参与JSON序列化
+    //[JsonIgnore]
+    //[SugarColumn(IsIgnore = true)]
+    //public string NotifyRecipientNames
+    //{
+    //    get; set;
+    //}
+
+
+    /// <summary>
+    /// 离线消息处理属性
+    /// </summary>
+    [SugarColumn(IsIgnore = true)]
+    public bool PersistUntilDelivered { get; set; } = true;
 
 
 
-        [SugarColumn(IsIgnore = true)]
-        public List<NotifyChannel> Channels { get; set; }
+    [SugarColumn(IsIgnore = true)]
+    public List<NotifyChannel> Channels { get; set; }
 
-        [SugarColumn(IsIgnore = true)]
-        public JObject Metadata { get; set; } // 扩展字段
-      
-        //int IReminderRule.RuleEngineType { get; set; }
+    [SugarColumn(IsIgnore = true)]
+    public JObject Metadata { get; set; } // 扩展字段
+
+    //int IReminderRule.RuleEngineType { get; set; }
 
 
 
-        public IRuleConfig GetConfig<T>()
+    public IRuleConfig GetConfig<T>()
+    {
+        // 使用示例
+        JObject obj = SafeParseJson(JsonConfig);
+        SafetyStockConfig safetyStockConfig = obj.ToObject<SafetyStockConfig>();
+        if (safetyStockConfig == null)
         {
-            // 使用示例
-            JObject obj = SafeParseJson(JsonConfig);
-            SafetyStockConfig safetyStockConfig = obj.ToObject<SafetyStockConfig>();
-            if (safetyStockConfig == null)
-            {
-                safetyStockConfig = new SafetyStockConfig();
-            }
-
-            return safetyStockConfig as IRuleConfig;
+            safetyStockConfig = new SafetyStockConfig();
         }
 
-
-        
-
-        public JObject SafeParseJson(string json)
-        {
-            try
-            {
-                return JObject.Parse(json);
-            }
-            catch (JsonReaderException)
-            {
-                return new JObject(); // 返回空对象或 null
-            }
-        }
-
-
+        return safetyStockConfig as IRuleConfig;
     }
+
+
+
+
+    public JObject SafeParseJson(string json)
+    {
+        try
+        {
+            return JObject.Parse(json);
+        }
+        catch (JsonReaderException)
+        {
+            return new JObject(); // 返回空对象或 null
+        }
+    }
+
+
+}
 
 }
 

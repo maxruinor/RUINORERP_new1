@@ -268,7 +268,7 @@ namespace RUINORERP.Common.CollectionExtension
                         {
                             colType = colType.GetGenericArguments()[0];
                         }
-                        if (columns != null || columns.Length > 0)
+                        if (columns != null && columns.Length > 0)
                         {
                             if (columns.Contains(pi.Name))
                             {
@@ -386,7 +386,7 @@ namespace RUINORERP.Common.CollectionExtension
                     }
                     else
                     {
-                        dr[col.ColumnName] =DBNull.Value;
+                        dr[col.ColumnName] = DBNull.Value;
                     }
                 }
 

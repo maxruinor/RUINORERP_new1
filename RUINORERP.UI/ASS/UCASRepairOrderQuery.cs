@@ -155,7 +155,7 @@ namespace RUINORERP.UI.ASS
             var lambda = Expressionable.Create<tb_AS_RepairOrder>()
                              // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
                              .And(t => t.isdeleted == false)
-                               .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                              // .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                             .ToExpression();//注意 这一句 不能少
             base.LimitQueryConditions = lambda;
         }
@@ -167,7 +167,7 @@ namespace RUINORERP.UI.ASS
         {
             base.BuildQueryCondition();
             var lambda = Expressionable.Create<tb_AS_RepairOrder>()
-            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+            //.AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
             .ToExpression();
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }

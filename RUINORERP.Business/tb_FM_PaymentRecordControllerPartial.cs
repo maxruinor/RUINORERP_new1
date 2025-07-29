@@ -547,7 +547,8 @@ namespace RUINORERP.Business
 
                                     //要调式
                                     tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
-                                    .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId) && c.PaymentStatus == (int)PaymentStatus.已支付)
+                                    .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId) 
+                                    && c.PaymentStatus == (int)PaymentStatus.已支付)
                                      .SingleAsync();
                                     if (oldPayment != null)
                                     {

@@ -38,13 +38,13 @@ namespace RUINORERP.Business
         //    Globalconfig = _Globalconfig;
         //}
 
-        
+
         public override void Initialize()
         {
             RuleFor(x => x.tb_PurOrderDetails).NotNull().WithMessage("订单明细:不能为空。");
             RuleFor(x => x.tb_PurOrderDetails).Must(list => list.Count > 0).WithMessage("订单明细不能为空。");
 
-            RuleFor(x => x.TotalAmount).Equal(x => x.tb_PurOrderDetails.Sum(c => (c.UnitPrice+c.CustomizedCost) * c.Quantity) + x.ShipCost).WithMessage("总金额：要等于成交价*数量，包含运费。");
+            RuleFor(x => x.TotalAmount).Equal(x => x.tb_PurOrderDetails.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity) + x.ShipCost).WithMessage("总金额：要等于成交价*数量，包含运费。");
 
             RuleFor(customer => customer.PreDeliveryDate)
            .Custom((value, context) =>
@@ -56,7 +56,7 @@ namespace RUINORERP.Business
                    //实际情况是 保存时可能不清楚交期，保存后截图发给供应商后才知道。这时提交才要求
                    if (ValidatorConfig.CurrentValue.预交日期必填)
                    {
-                       if (purOrder.PreDeliveryDate==null || purOrder.PreDeliveryDate.HasValue)
+                       if (purOrder.PreDeliveryDate == null || purOrder.PreDeliveryDate.HasValue)
                        {
                            context.AddFailure("预交日期：必须填写。");
                        }
@@ -70,10 +70,34 @@ namespace RUINORERP.Business
                    //}
                }
            });
+
+
             //RuleFor(tb_PurOrder => tb_PurOrder.cu).NotNull().WithMessage("付款状态:不能为空。");
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).WithMessage("付款方式:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款方式:有付款的情况下，付款方式不能为空。");
+
+
+            RuleFor(x => x.PayStatus)
+             .Custom((value, context) =>
+             {
+                 var purOrder = context.InstanceToValidate as tb_PurOrder;
+                 if (purOrder != null)
+                 {
+                     if (purOrder.PayStatus == (int)PayStatus.全额预付 || purOrder.PayStatus == (int)PayStatus.部分预付)
+                     {
+                         if (purOrder.PayeeInfoID == null)
+                         {
+                             context.AddFailure($"收款信息：{(PayStatus)purOrder.PayStatus}款时，请填写对方的收款账号。");
+                         }
+                         else if (purOrder.PayeeInfoID.Value <= 0)
+                         {
+                             context.AddFailure($"收款信息：{(PayStatus)purOrder.PayStatus}款时，下拉选择值不正确。");
+                         }
+                     }
+                 }
+             });
+
 
             // 这里添加额外的初始化代码
             RuleFor(x => x.PreDeliveryDate).GreaterThan(x => x.PurDate)

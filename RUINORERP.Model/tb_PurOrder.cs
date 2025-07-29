@@ -160,7 +160,21 @@ namespace RUINORERP.Model
                 SetProperty(ref _Paytype_ID, value);
             }
         }
-
+        private long? _PayeeInfoID;
+        /// <summary>
+        /// 收款信息
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayeeInfoID", ColDesc = "收款信息")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "PayeeInfoID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "收款信息")]
+        [FKRelationAttribute("tb_FM_PayeeInfo", "PayeeInfoID")]
+        public long? PayeeInfoID
+        {
+            get { return _PayeeInfoID; }
+            set
+            {
+                SetProperty(ref _PayeeInfoID, value);
+            }
+        }
 
         private long _Currency_ID;
         /// <summary>

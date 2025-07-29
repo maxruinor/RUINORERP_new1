@@ -797,7 +797,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, $"销售退货单：{entity.SaleOut_NO}");
+                _logger.Error(ex, $"销售退回单：{entity.SaleOut_NO}");
                 rrs.Succeeded = false;
                 rrs.ErrorMsg = ex.Message;
                 return rrs;

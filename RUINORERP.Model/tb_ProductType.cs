@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 17:35:22
+// 时间：07/28/2025 16:58:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -121,13 +121,7 @@ namespace RUINORERP.Model
         //Type_ID.FK_TB_PRODConvertiondetail_REFE_TB_PRODU_typeFrom)
         //tb_ProductType.Type_ID_from)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ProdConversionDetail.Type_ID_to))]
-        public virtual List<tb_ProdConversionDetail> tb_ProdConversionDetails_to { get; set; }
-        //tb_ProdConversionDetail.Type_ID)
-        //Type_ID.FK_TB_PRODConvertiondetail_REFE_TB_PRODU_typeTo)
-        //tb_ProductType.Type_ID_to)
+  
 
 
         #endregion

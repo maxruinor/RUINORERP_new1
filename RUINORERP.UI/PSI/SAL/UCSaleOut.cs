@@ -85,7 +85,7 @@ namespace RUINORERP.UI.PSI.SAL
             toolStripButton平台退款.Name = "平台退款";
             toolStripButton平台退款.Visible = false;//默认隐藏
             UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton平台退款);
-            toolStripButton平台退款.ToolTipText = "平台订单退款时，会强制校验是否生成销售退货单，如果没有，则会自动预生成。";
+            toolStripButton平台退款.ToolTipText = "平台订单退款时，会强制校验是否生成销售退回单，如果没有，则会自动预生成。";
             toolStripButton平台退款.Click += new System.EventHandler(this.toolStripButton平台退款_Click);
 
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
@@ -149,7 +149,7 @@ namespace RUINORERP.UI.PSI.SAL
                         //    {
                         //        it.RefundStatus
                         //    }).ExecuteCommandAsync();
-                        
+
                         // 打开销售退回单，确认
                         MenuPowerHelper menuPowerHelper;
                         menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -163,25 +163,24 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                     else
                     {
+                        if (MessageBox.Show($"系统检测到无对应的销售退回单，系统将自动预生成销售退回单，\r\n确定继续吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+                        {
+                            return;
+                        }
                         // 创建预退货单
                         var ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
                         ReturnResults<tb_SaleOutRe> rrs = await ctr.RefundProcessAsync(EditEntity);
                         if (rrs.Succeeded)
                         {
                             toolStripButton平台退款.Enabled = false;
-                            MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOut>("平台退款,生成预退货单", EditEntity);
-                            MessageBox.Show($"平台退款后，已经成功预生成【销售退货单】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOut>("平台退款,生成预销售退回单", EditEntity);
+                            MessageBox.Show($"平台退款后，已经成功预生成【销售退回单】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         else
                         {
                             MessageBox.Show($"当前【销售出库单】平台退款时，生成预退货单失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
-
-
                     }
-
-
-
                 }
                 else
                 {

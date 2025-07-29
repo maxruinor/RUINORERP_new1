@@ -317,7 +317,7 @@ namespace RUINORERP.UI.FM.FMBase
 
 
             listCols.SetCol_Format<tb_FM_OtherExpenseDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
-            listCols.SetCol_Format<tb_FM_OtherExpenseDetail>(c => c.TotalAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_OtherExpenseDetail>(c => c.SingleTotalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_OtherExpenseDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_OtherExpenseDetail>(c => c.UntaxedAmount, CustomFormatType.CurrencyFormat);
             sgd = new SourceGridDefine(grid1, listCols, true);
@@ -330,12 +330,12 @@ namespace RUINORERP.UI.FM.FMBase
                 //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.TransactionPrice);
                 //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.SubtotalPirceAmount);
             }*/
-            listCols.SetCol_Summary<tb_FM_OtherExpenseDetail>(c => c.TotalAmount);
+            listCols.SetCol_Summary<tb_FM_OtherExpenseDetail>(c => c.SingleTotalAmount);
             listCols.SetCol_Summary<tb_FM_OtherExpenseDetail>(c => c.TaxAmount);
             listCols.SetCol_Summary<tb_FM_OtherExpenseDetail>(c => c.UntaxedAmount);
 
-            listCols.SetCol_Formula<tb_FM_OtherExpenseDetail>((a, b, c) => a.TotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
-            listCols.SetCol_Formula<tb_FM_OtherExpenseDetail>((a, b) => a.TotalAmount - b.TaxAmount, c => c.UntaxedAmount);
+            listCols.SetCol_Formula<tb_FM_OtherExpenseDetail>((a, b, c) => a.SingleTotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
+            listCols.SetCol_Formula<tb_FM_OtherExpenseDetail>((a, b) => a.SingleTotalAmount - b.TaxAmount, c => c.UntaxedAmount);
      
 
             //应该只提供一个结构
@@ -363,14 +363,14 @@ namespace RUINORERP.UI.FM.FMBase
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_OtherExpenseDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_OtherExpenseDetail>;
-                details = details.Where(c => c.TotalAmount != 0).ToList();
+                details = details.Where(c => c.SingleTotalAmount != 0).ToList();
                 if (details.Count == 0)
                 {
                     MainForm.Instance.uclog.AddLog("金额必须大于0");
                     return;
                 }
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
-                EditEntity.TotalAmount = details.Sum(c => c.TotalAmount);
+                EditEntity.TotalAmount = details.Sum(c => c.SingleTotalAmount);
 
             }
             catch (Exception ex)
@@ -398,7 +398,7 @@ namespace RUINORERP.UI.FM.FMBase
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
                 //产品ID有值才算有效值
-                details = detailentity.Where(t => t.TotalAmount > 0).ToList();
+                details = detailentity.Where(t => t.SingleTotalAmount > 0).ToList();
                 //details = details.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0 && NeedValidated)
@@ -418,7 +418,7 @@ namespace RUINORERP.UI.FM.FMBase
                 }
 
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
-                EditEntity.TotalAmount = details.Sum(c => c.TotalAmount);
+                EditEntity.TotalAmount = details.Sum(c => c.SingleTotalAmount);
                 if (NeedValidated)
                 {//处理图片
                     bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_OtherExpenseDetails);

@@ -188,7 +188,6 @@ namespace RUINORERP.Business
                     }
                 }
 
-
                 var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
 
                 var records = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()

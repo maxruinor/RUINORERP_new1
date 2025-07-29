@@ -208,7 +208,11 @@ namespace Netron.Neon
 
                 RefreshChanges();
                 PerformLayout();
-                DockPanel.RefreshActiveWindow();
+
+                if (DockPanel != null)
+                {
+                    DockPanel.RefreshActiveWindow();
+                }
 
                 if (m_activeContent != null)
                     TabStripControl.EnsureTabVisible(m_activeContent);

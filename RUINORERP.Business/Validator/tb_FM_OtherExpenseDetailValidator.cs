@@ -62,7 +62,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Subject_id).NotEmpty().When(x => x.Subject_id.HasValue);
 
 
- RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
+ RuleFor(x => x.SingleTotalAmount).PrecisionScale(19,4,true).WithMessage("单项总金额:小数位不能超过4。");
 
 
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Summary).MaximumLength(50).WithMessage("摘要:不能超过最大长度,50.");

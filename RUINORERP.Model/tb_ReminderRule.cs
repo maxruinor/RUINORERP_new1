@@ -157,20 +157,20 @@ namespace RUINORERP.Model
             }
         }
 
-        private string _NotifyChannels;
-        /// <summary>
-        /// 通知渠道
-        /// </summary>
-        [AdvQueryAttribute(ColName = "NotifyChannels", ColDesc = "通知渠道")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "NotifyChannels", Length = 50, IsNullable = false, ColumnDescription = "通知渠道")]
-        public string NotifyChannels
-        {
-            get { return _NotifyChannels; }
-            set
-            {
-                SetProperty(ref _NotifyChannels, value);
-            }
-        }
+        //private string _NotifyChannels;
+        ///// <summary>
+        ///// 通知渠道
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "NotifyChannels", ColDesc = "通知渠道")]
+        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "NotifyChannels", Length = 50, IsNullable = false, ColumnDescription = "通知渠道")]
+        //public string NotifyChannels
+        //{
+        //    get { return _NotifyChannels; }
+        //    set
+        //    {
+        //        SetProperty(ref _NotifyChannels, value);
+        //    }
+        //}
 
         private DateTime _EffectiveDate;
         /// <summary>

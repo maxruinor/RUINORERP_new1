@@ -346,7 +346,7 @@ namespace RUINORERP.Business
             List<tb_BOM_SDetail> bOM_SDetails = _appContext.Db.CopyNew().Queryable<tb_BOM_SDetail>()
                 .Includes(c => c.tb_proddetail, d => d.tb_bom_s)
                 .Includes(c => c.tb_proddetail, d => d.tb_prod)
-                .Includes(c => c.view_ProdDetail)
+                .Includes(c => c.view_ProdInfo)
                 .Includes(c => c.tb_proddetail, d => d.tb_Inventories)
                   .Includes(c => c.tb_bom_s)
                 .Where(c => c.BOM_ID == _bomID).ToList();
@@ -480,7 +480,7 @@ namespace RUINORERP.Business
                 long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
                 NewDetail.ID = sid;
                 NewDetail.ParentId = 0;//一级数据
-                NewDetail.property = item.view_ProdDetail.prop;
+                NewDetail.property = item.view_ProdInfo.prop;
 
                 //    NewDetail. = item.ProdDetailName;
                 //    NewDetail.ProdDetailCode = item.ProdDetailCode;
@@ -652,7 +652,7 @@ namespace RUINORERP.Business
             NewDetail.ParentId = PID;//一级数据
             NewDetail.BOM_ID = BOM_ID;//再下级由这个BOMID作为父级去找
             NewDetail.ProdDetailID = detail.ProdDetailID;
-            NewDetail.property = detail.view_ProdDetail.prop;
+            NewDetail.property = detail.view_ProdInfo.prop;
             NewDetail.Location_ID = Location_ID;//TODO 需求要仓库。BOM不用库仓库
             NewDetail.RequirementDate = RequirementDate;
             NewDetail.tb_proddetail = detail.tb_proddetail;
@@ -799,7 +799,7 @@ namespace RUINORERP.Business
                     }
                     temp.ParentId = PID;
                     temp.RequirementDate = RequirementDate;
-                    temp.property = detail.view_ProdDetail.prop;
+                    temp.property = detail.view_ProdInfo.prop;
                     needQtyList.TryAdd(detail.ProdDetailID, temp);
                 }
                 else

@@ -30,6 +30,10 @@ namespace RUINORERP.Business
     public partial class View_ProdDetailController<T>
     {
 
+ 
+
+
+
         /// <summary>
         /// 高级查询
         /// </summary>

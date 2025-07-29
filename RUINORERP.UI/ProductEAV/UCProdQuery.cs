@@ -38,6 +38,7 @@ using static System.Windows.Forms.ListViewItem;
 using Image = System.Drawing.Image;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using Netron.NetronLight;
+using RUINORERP.Business.CommService;
 namespace RUINORERP.UI.ProductEAV
 {
     [MenuAttrAssemblyInfo("产品查询", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
@@ -397,7 +398,7 @@ namespace RUINORERP.UI.ProductEAV
                             frmShow.ShowDialog();
                         }
                     }
-                   
+
                 }
             }
         }
@@ -582,7 +583,7 @@ namespace RUINORERP.UI.ProductEAV
                     // .Includes(a => a.tb_producttype)
                     //.Includes(a => a.tb_BOM_SDetails)
                     .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
-                    .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
+                    .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdInfo)
                     .Where(a => allIds.ToArray().Contains(a.ProdDetailID))
                     .ToList();
             foreach (View_ProdDetail row in listDetails)
@@ -606,34 +607,38 @@ namespace RUINORERP.UI.ProductEAV
                 itemRow.SubItems.Add(row.Alert_Quantity.ToString());
                 treeListView1.Items.Add(itemRow);
                 tb_BOM_S bOM_S = listboms.Where(c => c.ProdDetailID == row.ProdDetailID).FirstOrDefault();
-                Loadbom(bOM_S, row.ProdDetailID, itemRow);
+                Loadbom(bOM_S, row.ProdDetailID, row.Location_ID.Value, itemRow);
             }
         }
 
 
-        private void Loadbom(tb_BOM_S bOM_S, long ProdDetailID, TreeListViewItem listViewItem)
+        private void Loadbom(tb_BOM_S bOM_S, long ProdDetailID, long Location_ID, TreeListViewItem listViewItem)
         {
             if (bOM_S != null && bOM_S.tb_BOM_SDetails != null)
             {
                 listViewItem.ImageIndex = 1;//如果有配方，则图标不一样
                 foreach (var BOM_SDetail in bOM_S.tb_BOM_SDetails)
                 {
-                    TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdDetail.CNName, 0);
-                    itemSub.Tag = BOM_SDetail.view_ProdDetail;
+                    TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdInfo.CNName, 0);
+                    itemSub.Tag = BOM_SDetail.view_ProdInfo;
                     itemSub.SubItems.Add(BOM_SDetail.SKU);//subitems只是从属于itemRow的子项。目前是四列
-                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.prop);//subitems只是从属于itemRow的子项。目前是四列
-                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Model);
-                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Specifications);
-                    string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.view_ProdDetail.Type_ID);
+                    itemSub.SubItems.Add(BOM_SDetail.view_ProdInfo.prop);//subitems只是从属于itemRow的子项。目前是四列
+                    itemSub.SubItems.Add(BOM_SDetail.view_ProdInfo.Model);
+                    itemSub.SubItems.Add(BOM_SDetail.view_ProdInfo.Specifications);
+                    string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.view_ProdInfo.Type_ID);
                     itemSub.SubItems.Add(prodType);
-                    if (BOM_SDetail.view_ProdDetail != null)
+                    if (BOM_SDetail.view_ProdInfo != null)
                     {
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Quantity.ToString());
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Sale_Qty.ToString());
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.MakingQty.ToString());
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.On_the_way_Qty.ToString());
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.NotOutQty.ToString());
-                        itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Alert_Quantity.ToString());
+                        var view_ProdDetail = MainForm.Instance.list.FirstOrDefault(c => c.ProdDetailID == BOM_SDetail.ProdDetailID && c.Location_ID == Location_ID);
+                        if (view_ProdDetail != null)
+                        {
+                            itemSub.SubItems.Add(view_ProdDetail.Quantity.ToString());
+                            itemSub.SubItems.Add(view_ProdDetail.Sale_Qty.ToString());
+                            itemSub.SubItems.Add(view_ProdDetail.MakingQty.ToString());
+                            itemSub.SubItems.Add(view_ProdDetail.On_the_way_Qty.ToString());
+                            itemSub.SubItems.Add(view_ProdDetail.NotOutQty.ToString());
+                            itemSub.SubItems.Add(view_ProdDetail.Alert_Quantity.ToString());
+                        }
                     }
                     else
                     {

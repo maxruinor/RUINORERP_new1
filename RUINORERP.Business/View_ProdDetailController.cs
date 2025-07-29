@@ -72,17 +72,11 @@ namespace RUINORERP.Business
         {
             return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
         }
-      
-        
-       
 
 
 
-        public async override Task<T> BaseQueryByIdAsync(object id)
-        {
-            T entity = await _View_ProdDetailServices.QueryByIdAsync(id) as T;
-            return entity;
-        }
+
+ 
         
         
 

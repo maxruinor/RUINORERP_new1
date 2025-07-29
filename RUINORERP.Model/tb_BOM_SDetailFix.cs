@@ -7,7 +7,7 @@
 // 时间：12/27/2024 11:23:51
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -20,20 +20,25 @@ namespace RUINORERP.Model
     /// <summary>
     /// 标准物料表BOM明细-要适当冗余
     /// </summary>
-    public partial class tb_BOM_SDetail: BaseEntity, ICloneable
+    public partial class tb_BOM_SDetail : BaseEntity, ICloneable
     {
 
         #region 扩展属性
-         
-         [SugarColumn(IsIgnore = true)]
-         [Browsable(false)]
-         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
-         public virtual View_ProdDetail view_ProdDetail { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
+        public virtual View_ProdInfo view_ProdInfo { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        [Navigate(NavigateType.OneToMany, nameof(ProdDetailID))]
+        public virtual List<View_ProdDetail> view_ProdDetails { get; set; }
 
         #endregion
 
 
- 
+
     }
 }
 

@@ -2040,7 +2040,7 @@ protected async override Task<ApprovalEntity> ReReview()
                     subMaking.ParentId = PID;//一级数据
                     subMaking.BOM_ID = detail.tb_proddetail.BOM_ID;
                     subMaking.ProdDetailID = detail.ProdDetailID;
-                    subMaking.property = detail.view_ProdDetail.prop;
+                    subMaking.property = detail.view_ProdInfo.prop;
                     subMaking.Location_ID = Location_ID;
                     //  subMaking.PreEndDate=
                     tb_Inventory inventory = detail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == Location_ID);
@@ -2099,7 +2099,7 @@ protected async override Task<ApprovalEntity> ReReview()
                         subMaking.ParentId = PID;//一级数据
                         subMaking.BOM_ID = detail.tb_proddetail.BOM_ID;
                         subMaking.ProdDetailID = detail.ProdDetailID;
-                        subMaking.property = detail.view_ProdDetail.prop;
+                        subMaking.property = detail.view_ProdInfo.prop;
                         subMaking.Location_ID = Location_ID;
 
                         //计划还要看有不有物料 。没有还要算出采购时间，还要按产品排程所以这里计算复杂。

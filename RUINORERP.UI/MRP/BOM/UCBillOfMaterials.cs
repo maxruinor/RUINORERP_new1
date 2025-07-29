@@ -1265,15 +1265,15 @@ namespace RUINORERP.UI.MRP.BOM
 
                 if (EditEntity.ProdDetailID > 0)
                 {
-                    if (EditEntity.view_ProdDetail == null)
+                    if (EditEntity.view_ProdInfo == null)
                     {
-                        var detail = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == EditEntity.ProdDetailID).Single();
-                        EditEntity.view_ProdDetail = detail;
+                        var detail = MainForm.Instance.AppContext.Db.Queryable<View_ProdInfo>().Where(c => c.ProdDetailID == EditEntity.ProdDetailID).Single();
+                        EditEntity.view_ProdInfo = detail;
                     }
                     txtProdDetailID.Text = EditEntity.SKU.ToString();
-                    txtSpec.Text = EditEntity.view_ProdDetail.Specifications;
-                    txtProp.Text = EditEntity.view_ProdDetail.prop;
-                    cmbType.SelectedValue = EditEntity.view_ProdDetail.Type_ID;
+                    txtSpec.Text = EditEntity.view_ProdInfo.Specifications;
+                    txtProp.Text = EditEntity.view_ProdInfo.prop;
+                    cmbType.SelectedValue = EditEntity.view_ProdInfo.Type_ID;
                     BindToTree(EditEntity);
                 }
                 if (EditEntity.tb_BOM_SDetails != null && EditEntity.tb_BOM_SDetails.Count > 0)
@@ -1420,7 +1420,7 @@ namespace RUINORERP.UI.MRP.BOM
                         kryptonTreeView1.TreeView.Nodes.Clear();
                         //BaseController<tb_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<tb_ProdDetail>>(typeof(tb_ProdDetail).Name + "Controller");
                         //var bomprod = await ctrProdDetail.BaseQueryByIdAsync(EditEntity.ProdDetailID);
-                        BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
+                        BaseController<View_ProdInfo> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdInfo>>(typeof(View_ProdInfo).Name + "Controller");
                         var vp = await ctrProdDetail.BaseQueryByIdAsync(EditEntity.ProdDetailID);
                         if (vp.BOM_ID != null)
                         {
@@ -1561,10 +1561,10 @@ namespace RUINORERP.UI.MRP.BOM
             .RightJoin<tb_ProdDetail>((a, b) => a.ProdDetailID == b.ProdDetailID)
              .Includes(b => b.tb_proddetail, c => c.tb_prod, d => d.tb_producttype)
              // .Includes(a => a.tb_producttype)
-             .Includes(a => a.view_ProdDetail)
+             .Includes(a => a.view_ProdInfo)
             .Includes(a => a.tb_BOM_SDetails, b => b.tb_BOM_SDetailSubstituteMaterials)
             .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
-            .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
+            .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdInfo)
             .Where(a => a.BOM_ID == _bom.BOM_ID)
            .Single();
 
@@ -1589,8 +1589,8 @@ namespace RUINORERP.UI.MRP.BOM
                                                 ////一定会有值
                                                 //tb_BOM_S bOM_S = listboms.Where(c => c.ProdDetailID == row.ProdDetailID).FirstOrDefault();
                                                 //itemRow.SubItems[0].Tag = bOM_S;
-            itemRow.SubItems.Add(bom.view_ProdDetail.Specifications);
-            string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", bom.view_ProdDetail.Type_ID);
+            itemRow.SubItems.Add(bom.view_ProdInfo.Specifications);
+            string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", bom.view_ProdInfo.Type_ID);
 
             itemRow.SubItems.Add(prodType);
             itemRow.SubItems.Add("产出量:" + bom.OutputQty.ToString());
@@ -1608,12 +1608,12 @@ namespace RUINORERP.UI.MRP.BOM
                 listViewItem.ImageIndex = 1;//如果有配方，则图标不一样
                 foreach (var BOM_SDetail in bOM_S.tb_BOM_SDetails)
                 {
-                    TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdDetail.CNName, 0);
+                    TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdInfo.CNName, 0);
                     itemSub.Tag = bOM_S;
-                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.prop);//subitems只是从属于itemRow的子项。目前是四列
+                    itemSub.SubItems.Add(BOM_SDetail.view_ProdInfo.prop);//subitems只是从属于itemRow的子项。目前是四列
                     itemSub.SubItems.Add(BOM_SDetail.SKU);//subitems只是从属于itemRow的子项。目前是四列
-                    itemSub.SubItems.Add(BOM_SDetail.view_ProdDetail.Specifications);
-                    string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.view_ProdDetail.Type_ID);
+                    itemSub.SubItems.Add(BOM_SDetail.view_ProdInfo.Specifications);
+                    string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.view_ProdInfo.Type_ID);
                     itemSub.SubItems.Add(prodType);
                     itemSub.SubItems.Add(BOM_SDetail.UsedQty.ToString());
 
@@ -1622,10 +1622,10 @@ namespace RUINORERP.UI.MRP.BOM
                     var bomsub = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_BOM_S>()
                    //.RightJoin<tb_ProdDetail>((a, b) => a.ProdDetailID == b.ProdDetailID)
                    // .Includes(b => b.tb_proddetail, c => c.tb_prod, d => d.tb_producttype)
-                   .Includes(a => a.view_ProdDetail)
+                   .Includes(a => a.view_ProdInfo)
                    .Includes(a => a.tb_BOM_SDetails, b => b.tb_BOM_SDetailSubstituteMaterials)  //查出他的子级是不是BOM并且带出他的子项
                                                                                                 //.Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
-                    .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdDetail)
+                    .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdInfo)
                    .Where(a => a.ProdDetailID == BOM_SDetail.ProdDetailID)
                    .ToList();
                     if (bomsub.Count > 0)

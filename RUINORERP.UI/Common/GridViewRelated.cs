@@ -567,7 +567,7 @@ namespace RUINORERP.UI.Common
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
                     .Includes(c => c.tb_BOM_SDetails, d => d.tb_BOM_SDetailSubstituteMaterials)
-                    .Includes(c => c.view_ProdDetail)
+                    .Includes(c => c.view_ProdInfo)
                     .Includes(c => c.tb_BOM_SDetailSecondaries)
                     .WhereIF(billno.GetType() == typeof(long), c => c.BOM_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.BOM_No == billno.ToString())

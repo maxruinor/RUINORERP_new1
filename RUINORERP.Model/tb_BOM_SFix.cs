@@ -31,7 +31,7 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
-        public virtual View_ProdDetail view_ProdDetail { get; set; }
+        public virtual View_ProdInfo view_ProdInfo { get; set; }
 
 
         #endregion

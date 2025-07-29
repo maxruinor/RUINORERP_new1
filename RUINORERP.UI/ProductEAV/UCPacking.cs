@@ -221,12 +221,15 @@ namespace RUINORERP.UI.ProductEAV
                         }
                         else
                         {
-                            BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
+                            BaseController<View_ProdInfo> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdInfo>>(typeof(View_ProdInfo).Name + "Controller");
                             if (entity.ProdDetailID.HasValue)
                             {
                                 var prodDetail = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
+
                                 entity.property = prodDetail.prop;
                                 entity.SKU = prodDetail.SKU;
+
+
                             }
                         }
                     }

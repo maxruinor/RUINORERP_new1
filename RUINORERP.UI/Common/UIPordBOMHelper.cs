@@ -67,7 +67,7 @@ namespace RUINORERP.UI.Common
             {
                 var node = new TreeNode();
                 node.Name = nodeObj.SubID.ToString();
-                node.Text = nodeObj.view_ProdDetail.Specifications;
+                node.Text = nodeObj.view_ProdInfo.Specifications;
                 node.Tag = nodeObj;
                 Nodes.Add(node);
                 if (nodeObj.tb_proddetail.BOM_ID.HasValue)
@@ -80,13 +80,13 @@ namespace RUINORERP.UI.Common
         //递归方法
         private static void Bind(TreeNode parNode, List<tb_BOM_SDetail> list, long nodeId)
         {
-            var childList = list.FindAll(t => t.BOM_ID == nodeId).OrderBy(t => t.view_ProdDetail.Type_ID).ThenBy(c => c.Sort);
+            var childList = list.FindAll(t => t.BOM_ID == nodeId).OrderBy(t => t.view_ProdInfo.Type_ID).ThenBy(c => c.Sort);
             foreach (var nodeObj in childList)
             {
                 var node = new TreeNode();
                 node.Name = nodeObj.SubID.ToString();
-                node.Text = nodeObj.view_ProdDetail.CNName+"【"+ nodeObj.view_ProdDetail.Specifications+"】";
-                node.ToolTipText = nodeObj.view_ProdDetail.Specifications;
+                node.Text = nodeObj.view_ProdInfo.CNName+"【"+ nodeObj.view_ProdInfo.Specifications+"】";
+                node.ToolTipText = nodeObj.view_ProdInfo.Specifications;
                 node.Tag = nodeObj;
                 parNode.Nodes.Add(node);
                 //实际看是不能导航出来 如果有子件。带不出就要查询 一下

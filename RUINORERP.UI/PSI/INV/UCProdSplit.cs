@@ -106,8 +106,8 @@ namespace RUINORERP.UI.PSI.INV
 
                 /*加载临时数据*/
                 #region
-                BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
-                var vpprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
+
+                var vpprod = await MainForm.Instance.AppContext.Db.Queryable<View_ProdInfo>().Where(c => c.ProdDetailID == entity.ProdDetailID).FirstAsync();
 
                 txtSpecifications.Text = vpprod.Specifications;
                 entity.property = vpprod.prop;
@@ -250,9 +250,7 @@ namespace RUINORERP.UI.PSI.INV
 
                     if (entity.ProdDetailID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProdSplit>(c => c.ProdDetailID))
                     {
-
-                        BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
-                        var vpprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
+                        var vpprod = await MainForm.Instance.AppContext.Db.Queryable<View_ProdInfo>().Where(c => c.ProdDetailID == entity.ProdDetailID).FirstAsync();
 
                         txtSpecifications.Text = vpprod.Specifications;
                         entity.property = vpprod.prop;
@@ -414,7 +412,7 @@ namespace RUINORERP.UI.PSI.INV
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
             grid1.Enter += Grid1_Enter;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
         private void Grid1_Enter(object sender, EventArgs e)
@@ -447,7 +445,7 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_ProdSplitDetail> details = new List<tb_ProdSplitDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_ProdSplitDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdSplitDetail>(item);
@@ -763,7 +761,7 @@ namespace RUINORERP.UI.PSI.INV
             List<tb_BOM_SDetail> RowDetails = new List<tb_BOM_SDetail>();
             if (cmbBOM_ID.SelectedValue.ToString() != "-1")
             {
-                if (EditEntity.Location_ID == -1)
+                if (EditEntity.Location_ID <=0)
                 {
                     MessageBox.Show("请选择【所在库位】。");
                     EditEntity.tb_ProdSplitDetails = new List<tb_ProdSplitDetail>();
@@ -783,14 +781,14 @@ namespace RUINORERP.UI.PSI.INV
                     if (RowDetails != null)
                     {
                         List<tb_ProdSplitDetail> details = new List<tb_ProdSplitDetail>();
-                        
+
                         decimal bomOutQty = EditEntity.tb_bom_s.OutputQty;
                         foreach (var item in RowDetails)
                         {
                             tb_ProdSplitDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdSplitDetail>(item);
                             bOM_SDetail.Location_ID = EditEntity.Location_ID;
                             bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID
-                           
+
                             ).UsedQty * EditEntity.SplitParentQty / bomOutQty).ToInt();
                             View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(item.ProdDetailID);
                             if (obj != null)

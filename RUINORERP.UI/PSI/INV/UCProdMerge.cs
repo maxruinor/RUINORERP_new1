@@ -93,7 +93,7 @@ namespace RUINORERP.UI.PSI.INV
                 }
                 /*加载临时数据*/
                 #region
-                BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
+                BaseController<View_ProdInfo> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdInfo>>(typeof(View_ProdInfo).Name + "Controller");
                 var vpprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
 
                 txtSpecifications.Text = vpprod.Specifications;
@@ -226,7 +226,7 @@ namespace RUINORERP.UI.PSI.INV
                     if (entity.ProdDetailID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ProdMerge>(c => c.ProdDetailID))
                     {
 
-                        BaseController<View_ProdDetail> ctrProdDetail = Startup.GetFromFacByName<BaseController<View_ProdDetail>>(typeof(View_ProdDetail).Name + "Controller");
+                        var ctrProdDetail = Startup.GetFromFac<View_ProdInfoController<View_ProdInfo>>();
 
                         var vpprod = await ctrProdDetail.BaseQueryByIdAsync(entity.ProdDetailID);
                         //txtSpecifications.Text = string.Empty;

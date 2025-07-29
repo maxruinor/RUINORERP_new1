@@ -43,7 +43,7 @@ namespace RUINORERP.Business
             List<tb_BOM_SDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>().Where(exp)
 
                            // .Includes(t => t.tb_producttype)
-                           .Includes(t => t.view_ProdDetail)
+                           .Includes(t => t.view_ProdInfo)
                             .Includes(t => t.tb_unit)
                             .Includes(t => t.tb_unit_conversion)
                             .Includes(t => t.tb_bom_s)

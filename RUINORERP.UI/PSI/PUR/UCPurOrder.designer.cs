@@ -167,7 +167,7 @@
             // 
             // lblPayeeInfoID
             // 
-            this.lblPayeeInfoID.Location = new System.Drawing.Point(393, 118);
+            this.lblPayeeInfoID.Location = new System.Drawing.Point(343, 118);
             this.lblPayeeInfoID.Name = "lblPayeeInfoID";
             this.lblPayeeInfoID.Size = new System.Drawing.Size(62, 20);
             this.lblPayeeInfoID.TabIndex = 221;
@@ -177,14 +177,14 @@
             // 
             this.cmbPayeeInfoID.DropDownWidth = 100;
             this.cmbPayeeInfoID.IntegralHeight = false;
-            this.cmbPayeeInfoID.Location = new System.Drawing.Point(457, 119);
+            this.cmbPayeeInfoID.Location = new System.Drawing.Point(407, 119);
             this.cmbPayeeInfoID.Name = "cmbPayeeInfoID";
-            this.cmbPayeeInfoID.Size = new System.Drawing.Size(195, 21);
+            this.cmbPayeeInfoID.Size = new System.Drawing.Size(492, 21);
             this.cmbPayeeInfoID.TabIndex = 222;
             // 
             // btnInfo
             // 
-            this.btnInfo.Location = new System.Drawing.Point(654, 119);
+            this.btnInfo.Location = new System.Drawing.Point(905, 119);
             this.btnInfo.Name = "btnInfo";
             this.btnInfo.Size = new System.Drawing.Size(21, 21);
             this.btnInfo.TabIndex = 220;
@@ -228,7 +228,7 @@
             // 
             // lblExchangeRate
             // 
-            this.lblExchangeRate.Location = new System.Drawing.Point(712, 94);
+            this.lblExchangeRate.Location = new System.Drawing.Point(957, 183);
             this.lblExchangeRate.Name = "lblExchangeRate";
             this.lblExchangeRate.Size = new System.Drawing.Size(36, 20);
             this.lblExchangeRate.TabIndex = 193;
@@ -236,14 +236,14 @@
             // 
             // txtExchangeRate
             // 
-            this.txtExchangeRate.Location = new System.Drawing.Point(754, 92);
+            this.txtExchangeRate.Location = new System.Drawing.Point(999, 181);
             this.txtExchangeRate.Name = "txtExchangeRate";
-            this.txtExchangeRate.Size = new System.Drawing.Size(143, 23);
+            this.txtExchangeRate.Size = new System.Drawing.Size(133, 23);
             this.txtExchangeRate.TabIndex = 194;
             // 
             // lblShipCost
             // 
-            this.lblShipCost.Location = new System.Drawing.Point(685, 119);
+            this.lblShipCost.Location = new System.Drawing.Point(685, 95);
             this.lblShipCost.Name = "lblShipCost";
             this.lblShipCost.Size = new System.Drawing.Size(62, 20);
             this.lblShipCost.TabIndex = 115;
@@ -268,7 +268,7 @@
             // 
             // lblStore_ID
             // 
-            this.lblStore_ID.Location = new System.Drawing.Point(393, 70);
+            this.lblStore_ID.Location = new System.Drawing.Point(343, 70);
             this.lblStore_ID.Name = "lblStore_ID";
             this.lblStore_ID.Size = new System.Drawing.Size(62, 20);
             this.lblStore_ID.TabIndex = 131;
@@ -278,7 +278,7 @@
             // 
             this.cmbProjectGroup.DropDownWidth = 100;
             this.cmbProjectGroup.IntegralHeight = false;
-            this.cmbProjectGroup.Location = new System.Drawing.Point(457, 68);
+            this.cmbProjectGroup.Location = new System.Drawing.Point(407, 68);
             this.cmbProjectGroup.Name = "cmbProjectGroup";
             this.cmbProjectGroup.Size = new System.Drawing.Size(195, 21);
             this.cmbProjectGroup.TabIndex = 130;
@@ -293,7 +293,7 @@
             // 
             // txtShipCost
             // 
-            this.txtShipCost.Location = new System.Drawing.Point(754, 118);
+            this.txtShipCost.Location = new System.Drawing.Point(754, 94);
             this.txtShipCost.Name = "txtShipCost";
             this.txtShipCost.Size = new System.Drawing.Size(143, 23);
             this.txtShipCost.TabIndex = 116;
@@ -304,7 +304,7 @@
             this.cmbPayStatus.IntegralHeight = false;
             this.cmbPayStatus.Location = new System.Drawing.Point(83, 119);
             this.cmbPayStatus.Name = "cmbPayStatus";
-            this.cmbPayStatus.Size = new System.Drawing.Size(290, 21);
+            this.cmbPayStatus.Size = new System.Drawing.Size(227, 21);
             this.cmbPayStatus.TabIndex = 129;
             // 
             // lblDataStatus
@@ -335,7 +335,7 @@
             // 
             // lblPaytype_ID
             // 
-            this.lblPaytype_ID.Location = new System.Drawing.Point(393, 43);
+            this.lblPaytype_ID.Location = new System.Drawing.Point(343, 43);
             this.lblPaytype_ID.Name = "lblPaytype_ID";
             this.lblPaytype_ID.Size = new System.Drawing.Size(62, 20);
             this.lblPaytype_ID.TabIndex = 97;
@@ -360,7 +360,7 @@
             // 
             this.cmbPaytype_ID.DropDownWidth = 100;
             this.cmbPaytype_ID.IntegralHeight = false;
-            this.cmbPaytype_ID.Location = new System.Drawing.Point(457, 43);
+            this.cmbPaytype_ID.Location = new System.Drawing.Point(407, 43);
             this.cmbPaytype_ID.Name = "cmbPaytype_ID";
             this.cmbPaytype_ID.Size = new System.Drawing.Size(195, 21);
             this.cmbPaytype_ID.TabIndex = 98;
@@ -416,7 +416,7 @@
             // 
             this.txtPurOrderNo.Location = new System.Drawing.Point(83, 43);
             this.txtPurOrderNo.Name = "txtPurOrderNo";
-            this.txtPurOrderNo.Size = new System.Drawing.Size(288, 23);
+            this.txtPurOrderNo.Size = new System.Drawing.Size(225, 23);
             this.txtPurOrderNo.TabIndex = 90;
             // 
             // lblCustomerVendor_ID
@@ -433,7 +433,7 @@
             this.cmbCustomerVendor_ID.IntegralHeight = false;
             this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(83, 69);
             this.cmbCustomerVendor_ID.Name = "cmbCustomerVendor_ID";
-            this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(288, 21);
+            this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(225, 21);
             this.cmbCustomerVendor_ID.TabIndex = 92;
             // 
             // lblEmployee_ID
@@ -450,12 +450,12 @@
             this.cmbEmployee_ID.IntegralHeight = false;
             this.cmbEmployee_ID.Location = new System.Drawing.Point(83, 94);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
-            this.cmbEmployee_ID.Size = new System.Drawing.Size(288, 21);
+            this.cmbEmployee_ID.Size = new System.Drawing.Size(225, 21);
             this.cmbEmployee_ID.TabIndex = 94;
             // 
             // lblDepartmentID
             // 
-            this.lblDepartmentID.Location = new System.Drawing.Point(393, 93);
+            this.lblDepartmentID.Location = new System.Drawing.Point(343, 93);
             this.lblDepartmentID.Name = "lblDepartmentID";
             this.lblDepartmentID.Size = new System.Drawing.Size(62, 20);
             this.lblDepartmentID.TabIndex = 95;
@@ -465,7 +465,7 @@
             // 
             this.cmbDepartmentID.DropDownWidth = 100;
             this.cmbDepartmentID.IntegralHeight = false;
-            this.cmbDepartmentID.Location = new System.Drawing.Point(457, 94);
+            this.cmbDepartmentID.Location = new System.Drawing.Point(407, 94);
             this.cmbDepartmentID.Name = "cmbDepartmentID";
             this.cmbDepartmentID.Size = new System.Drawing.Size(195, 21);
             this.cmbDepartmentID.TabIndex = 96;

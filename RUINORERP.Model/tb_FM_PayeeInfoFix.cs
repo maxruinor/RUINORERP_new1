@@ -17,6 +17,7 @@ using RUINORERP.Global.CustomAttribute;
 using System.Drawing;
 using RUINORERP.Global;
 using RUINORERP.Global.Model;
+using RUINORERP.Global.EnumExt;
 namespace RUINORERP.Model
 {
     /// <summary>
@@ -27,8 +28,29 @@ namespace RUINORERP.Model
     /// </summary>
     public partial class tb_FM_PayeeInfo : BaseEntity, ICloneable
     {
+        // 组合显示的属性
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(true)]//如果为false绑定时取不到值？
+        public string DisplayText
+        {
+            get
+            {
+                // 处理"请选择"的特殊情况
+                if (PayeeInfoID == -1)
+                {
+                    return "请选择";
+                }
 
-       
+                // 处理可能为null的字段，使用空值合并运算符提供默认值
+                string accountType = ((AccountType)Account_type).ToString();
+                string accountName = Account_name ?? "未命名";
+                string accountNo = Account_No ?? "无账号";
+                string belongingBank = BelongingBank ?? "无银行信息";
+
+                // 组合所有字段
+                return $"{accountType}-{accountName}-{accountNo}-{belongingBank}";
+            }
+        }
     }
 }
 

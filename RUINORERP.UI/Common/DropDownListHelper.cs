@@ -225,7 +225,12 @@ namespace RUINORERP.UI.Common
                 foreach (var dr in bs.List)
                 {
                     // sc.Add(dr[DisplayMember].ToString());
-                    sc.Add(ReflectionHelper.GetPropertyValue(dr, DisplayMember).ToString());
+                    var item = ReflectionHelper.GetPropertyValue(dr, DisplayMember);
+                    if (item != null)
+                    {
+                        sc.Add(item.ToString());
+                    }
+                    
                 }
 
                 if (auto)

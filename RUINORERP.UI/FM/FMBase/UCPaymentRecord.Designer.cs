@@ -32,14 +32,11 @@ namespace RUINORERP.UI.FM
             {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.lblBelongingBank = new Krypton.Toolkit.KryptonLabel();
-            this.lblOpeningbank = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
             this.cmbPaytype_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblPaytype_ID = new Krypton.Toolkit.KryptonLabel();
             this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
             this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
-            this.txtPayeeAccountNo = new Krypton.Toolkit.KryptonTextBox();
-            this.lblPayeeAccountNo = new Krypton.Toolkit.KryptonLabel();
             this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
             this.lblDueDate = new Krypton.Toolkit.KryptonLabel();
             this.dtpDueDate = new Krypton.Toolkit.KryptonDateTimePicker();
@@ -53,8 +50,6 @@ namespace RUINORERP.UI.FM
             this.lblCustomerVendor_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.txtPaymentNo = new Krypton.Toolkit.KryptonTextBox();
-            this.lblAccount_type = new Krypton.Toolkit.KryptonLabel();
-            this.cmbAccount_type = new Krypton.Toolkit.KryptonComboBox();
             this.lblBillText = new Krypton.Toolkit.KryptonLabel();
             this.btnInfo = new Krypton.Toolkit.KryptonButton();
             this.lblPayeeInfoID = new Krypton.Toolkit.KryptonLabel();
@@ -79,7 +74,6 @@ namespace RUINORERP.UI.FM
             this.lblTotalLocalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalForeignAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -93,7 +87,6 @@ namespace RUINORERP.UI.FM
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_type)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayeeInfoID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
@@ -127,14 +120,10 @@ namespace RUINORERP.UI.FM
             // kryptonPanel1
             // 
             this.kryptonPanel1.Controls.Add(this.chkIsFromPlatform);
-            this.kryptonPanel1.Controls.Add(this.lblBelongingBank);
-            this.kryptonPanel1.Controls.Add(this.lblOpeningbank);
             this.kryptonPanel1.Controls.Add(this.cmbPaytype_ID);
             this.kryptonPanel1.Controls.Add(this.lblPaytype_ID);
             this.kryptonPanel1.Controls.Add(this.lblAccount_id);
             this.kryptonPanel1.Controls.Add(this.cmbAccount_id);
-            this.kryptonPanel1.Controls.Add(this.txtPayeeAccountNo);
-            this.kryptonPanel1.Controls.Add(this.lblPayeeAccountNo);
             this.kryptonPanel1.Controls.Add(this.lblEmployee_ID);
             this.kryptonPanel1.Controls.Add(this.lblDueDate);
             this.kryptonPanel1.Controls.Add(this.dtpDueDate);
@@ -148,8 +137,6 @@ namespace RUINORERP.UI.FM
             this.kryptonPanel1.Controls.Add(this.lblCustomerVendor_ID);
             this.kryptonPanel1.Controls.Add(this.cmbCustomerVendor_ID);
             this.kryptonPanel1.Controls.Add(this.txtPaymentNo);
-            this.kryptonPanel1.Controls.Add(this.lblAccount_type);
-            this.kryptonPanel1.Controls.Add(this.cmbAccount_type);
             this.kryptonPanel1.Controls.Add(this.lblBillText);
             this.kryptonPanel1.Controls.Add(this.btnInfo);
             this.kryptonPanel1.Controls.Add(this.lblPayeeInfoID);
@@ -174,34 +161,26 @@ namespace RUINORERP.UI.FM
             this.kryptonPanel1.Size = new System.Drawing.Size(1133, 251);
             this.kryptonPanel1.TabIndex = 4;
             // 
-            // lblBelongingBank
+            // chkIsFromPlatform
             // 
-            this.lblBelongingBank.Location = new System.Drawing.Point(318, 153);
-            this.lblBelongingBank.Name = "lblBelongingBank";
-            this.lblBelongingBank.Size = new System.Drawing.Size(6, 2);
-            this.lblBelongingBank.TabIndex = 207;
-            this.lblBelongingBank.Values.Text = "";
-            // 
-            // lblOpeningbank
-            // 
-            this.lblOpeningbank.Location = new System.Drawing.Point(79, 170);
-            this.lblOpeningbank.Name = "lblOpeningbank";
-            this.lblOpeningbank.Size = new System.Drawing.Size(6, 2);
-            this.lblOpeningbank.TabIndex = 206;
-            this.lblOpeningbank.Values.Text = "";
+            this.chkIsFromPlatform.Location = new System.Drawing.Point(588, 113);
+            this.chkIsFromPlatform.Name = "chkIsFromPlatform";
+            this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
+            this.chkIsFromPlatform.TabIndex = 226;
+            this.chkIsFromPlatform.Values.Text = "平台单";
             // 
             // cmbPaytype_ID
             // 
             this.cmbPaytype_ID.DropDownWidth = 100;
             this.cmbPaytype_ID.IntegralHeight = false;
-            this.cmbPaytype_ID.Location = new System.Drawing.Point(588, 138);
+            this.cmbPaytype_ID.Location = new System.Drawing.Point(77, 109);
             this.cmbPaytype_ID.Name = "cmbPaytype_ID";
             this.cmbPaytype_ID.Size = new System.Drawing.Size(135, 21);
             this.cmbPaytype_ID.TabIndex = 205;
             // 
             // lblPaytype_ID
             // 
-            this.lblPaytype_ID.Location = new System.Drawing.Point(528, 138);
+            this.lblPaytype_ID.Location = new System.Drawing.Point(12, 109);
             this.lblPaytype_ID.Name = "lblPaytype_ID";
             this.lblPaytype_ID.Size = new System.Drawing.Size(62, 20);
             this.lblPaytype_ID.TabIndex = 204;
@@ -224,25 +203,9 @@ namespace RUINORERP.UI.FM
             this.cmbAccount_id.Size = new System.Drawing.Size(153, 21);
             this.cmbAccount_id.TabIndex = 203;
             // 
-            // txtPayeeAccountNo
-            // 
-            this.txtPayeeAccountNo.Location = new System.Drawing.Point(79, 136);
-            this.txtPayeeAccountNo.Name = "txtPayeeAccountNo";
-            this.txtPayeeAccountNo.ReadOnly = true;
-            this.txtPayeeAccountNo.Size = new System.Drawing.Size(232, 23);
-            this.txtPayeeAccountNo.TabIndex = 201;
-            // 
-            // lblPayeeAccountNo
-            // 
-            this.lblPayeeAccountNo.Location = new System.Drawing.Point(12, 137);
-            this.lblPayeeAccountNo.Name = "lblPayeeAccountNo";
-            this.lblPayeeAccountNo.Size = new System.Drawing.Size(62, 20);
-            this.lblPayeeAccountNo.TabIndex = 200;
-            this.lblPayeeAccountNo.Values.Text = "收款账号";
-            // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(511, 114);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(511, 84);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(75, 20);
             this.lblEmployee_ID.TabIndex = 195;
@@ -319,7 +282,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblCustomerVendor_ID
             // 
-            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(8, 84);
+            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(12, 84);
             this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
             this.lblCustomerVendor_ID.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerVendor_ID.TabIndex = 176;
@@ -341,23 +304,6 @@ namespace RUINORERP.UI.FM
             this.txtPaymentNo.Size = new System.Drawing.Size(137, 23);
             this.txtPaymentNo.TabIndex = 175;
             // 
-            // lblAccount_type
-            // 
-            this.lblAccount_type.Location = new System.Drawing.Point(249, 115);
-            this.lblAccount_type.Name = "lblAccount_type";
-            this.lblAccount_type.Size = new System.Drawing.Size(62, 20);
-            this.lblAccount_type.TabIndex = 173;
-            this.lblAccount_type.Values.Text = "账户类型";
-            // 
-            // cmbAccount_type
-            // 
-            this.cmbAccount_type.DropDownWidth = 100;
-            this.cmbAccount_type.IntegralHeight = false;
-            this.cmbAccount_type.Location = new System.Drawing.Point(311, 111);
-            this.cmbAccount_type.Name = "cmbAccount_type";
-            this.cmbAccount_type.Size = new System.Drawing.Size(151, 21);
-            this.cmbAccount_type.TabIndex = 174;
-            // 
             // lblBillText
             // 
             this.lblBillText.LabelStyle = Krypton.Toolkit.LabelStyle.TitlePanel;
@@ -371,7 +317,7 @@ namespace RUINORERP.UI.FM
             // 
             // btnInfo
             // 
-            this.btnInfo.Location = new System.Drawing.Point(222, 112);
+            this.btnInfo.Location = new System.Drawing.Point(724, 135);
             this.btnInfo.Name = "btnInfo";
             this.btnInfo.Size = new System.Drawing.Size(21, 21);
             this.btnInfo.TabIndex = 168;
@@ -383,7 +329,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblPayeeInfoID
             // 
-            this.lblPayeeInfoID.Location = new System.Drawing.Point(8, 111);
+            this.lblPayeeInfoID.Location = new System.Drawing.Point(12, 136);
             this.lblPayeeInfoID.Name = "lblPayeeInfoID";
             this.lblPayeeInfoID.Size = new System.Drawing.Size(62, 20);
             this.lblPayeeInfoID.TabIndex = 166;
@@ -393,16 +339,16 @@ namespace RUINORERP.UI.FM
             // 
             this.cmbPayeeInfoID.DropDownWidth = 100;
             this.cmbPayeeInfoID.IntegralHeight = false;
-            this.cmbPayeeInfoID.Location = new System.Drawing.Point(79, 111);
+            this.cmbPayeeInfoID.Location = new System.Drawing.Point(77, 136);
             this.cmbPayeeInfoID.Name = "cmbPayeeInfoID";
-            this.cmbPayeeInfoID.Size = new System.Drawing.Size(137, 21);
+            this.cmbPayeeInfoID.Size = new System.Drawing.Size(646, 21);
             this.cmbPayeeInfoID.TabIndex = 167;
             // 
             // cmbEmployee_ID
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(588, 114);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(588, 84);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
             this.cmbEmployee_ID.Size = new System.Drawing.Size(135, 21);
             this.cmbEmployee_ID.TabIndex = 138;
@@ -421,7 +367,7 @@ namespace RUINORERP.UI.FM
             // 
             this.cmbCurrency_ID.DropDownWidth = 100;
             this.cmbCurrency_ID.IntegralHeight = false;
-            this.cmbCurrency_ID.Location = new System.Drawing.Point(588, 87);
+            this.cmbCurrency_ID.Location = new System.Drawing.Point(327, 108);
             this.cmbCurrency_ID.Name = "cmbCurrency_ID";
             this.cmbCurrency_ID.Size = new System.Drawing.Size(135, 21);
             this.cmbCurrency_ID.TabIndex = 136;
@@ -438,7 +384,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblCurrency_ID
             // 
-            this.lblCurrency_ID.Location = new System.Drawing.Point(550, 87);
+            this.lblCurrency_ID.Location = new System.Drawing.Point(289, 108);
             this.lblCurrency_ID.Name = "lblCurrency_ID";
             this.lblCurrency_ID.Size = new System.Drawing.Size(36, 20);
             this.lblCurrency_ID.TabIndex = 135;
@@ -454,7 +400,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblClaimNo
             // 
-            this.lblClaimNo.Location = new System.Drawing.Point(8, 57);
+            this.lblClaimNo.Location = new System.Drawing.Point(12, 57);
             this.lblClaimNo.Name = "lblClaimNo";
             this.lblClaimNo.Size = new System.Drawing.Size(62, 20);
             this.lblClaimNo.TabIndex = 133;
@@ -470,7 +416,7 @@ namespace RUINORERP.UI.FM
             // 
             // txtRemark
             // 
-            this.txtRemark.Location = new System.Drawing.Point(78, 170);
+            this.txtRemark.Location = new System.Drawing.Point(77, 165);
             this.txtRemark.Multiline = true;
             this.txtRemark.Name = "txtRemark";
             this.txtRemark.Size = new System.Drawing.Size(645, 68);
@@ -486,7 +432,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(33, 168);
+            this.lblNotes.Location = new System.Drawing.Point(38, 168);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 141;
@@ -584,14 +530,6 @@ namespace RUINORERP.UI.FM
             this.lblTotalForeignAmount.TabIndex = 202;
             this.lblTotalForeignAmount.Values.Text = "支付金额外币";
             // 
-            // chkIsFromPlatform
-            // 
-            this.chkIsFromPlatform.Location = new System.Drawing.Point(746, 138);
-            this.chkIsFromPlatform.Name = "chkIsFromPlatform";
-            this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
-            this.chkIsFromPlatform.TabIndex = 226;
-            this.chkIsFromPlatform.Values.Text = "平台单";
-            // 
             // UCPaymentRecord
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -615,7 +553,6 @@ namespace RUINORERP.UI.FM
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_type)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayeeInfoID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
@@ -656,8 +593,6 @@ namespace RUINORERP.UI.FM
             private Krypton.Toolkit.KryptonLabel lblPayeeInfoID;
             private Krypton.Toolkit.KryptonComboBox cmbPayeeInfoID;
             private Krypton.Toolkit.KryptonButton btnInfo;
-            private Krypton.Toolkit.KryptonLabel lblAccount_type;
-            private Krypton.Toolkit.KryptonComboBox cmbAccount_type;
             internal Krypton.Toolkit.KryptonPanel kryptonPanel1;
             private Krypton.Toolkit.KryptonTextBox txtPaymentNo;
             private Krypton.Toolkit.KryptonLabel lblCustomerVendor_ID;
@@ -676,14 +611,10 @@ namespace RUINORERP.UI.FM
             private Krypton.Toolkit.KryptonTextBox txtTotalLocalAmount;
             private Krypton.Toolkit.KryptonLabel lblTotalForeignAmount;
             private Krypton.Toolkit.KryptonTextBox txtTotalForeignAmount;
-            private Krypton.Toolkit.KryptonTextBox txtPayeeAccountNo;
-            private Krypton.Toolkit.KryptonLabel lblPayeeAccountNo;
             private Krypton.Toolkit.KryptonLabel lblAccount_id;
             private Krypton.Toolkit.KryptonComboBox cmbAccount_id;
         private Krypton.Toolkit.KryptonComboBox cmbPaytype_ID;
         private Krypton.Toolkit.KryptonLabel lblPaytype_ID;
-        private Krypton.Toolkit.KryptonLabel lblBelongingBank;
-        private Krypton.Toolkit.KryptonLabel lblOpeningbank;
         private Krypton.Toolkit.KryptonCheckBox chkIsFromPlatform;
     }
     }

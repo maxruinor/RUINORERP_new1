@@ -57,6 +57,29 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<tb_ReminderRule>(entity, t => t.IsEnabled, chkIsEnabled, false);
             DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.EffectiveDate, dtpEffectiveDate, false);
 
+
+            // 创建数据源
+            BindingList<string> itemsSource = new BindingList<string>() { "Item 1", "Item 2", "Item 3" };
+            // 设置CheckedListBox的数据源
+            chkNotifyChannels.DataSource = null; // 清除原有绑定
+            chkNotifyChannels.DataSource = itemsSource;
+            chkNotifyChannels.ValueMember = "Value";
+            // 创建表达式绑定
+            Binding binding = new Binding("SelectedValue", new BindingSource(itemsSource, null), "Value", true);
+            binding.Format += (sender, e) =>
+            {
+                // 在获取值之前进行格式化（例如转换为大写）
+                e.Value = ((string)e.Value).ToUpper();
+            };
+            binding.Parse += (sender, e) =>
+            {
+                // 在设置值之前进行解析（例如将输入转换为小写）
+                e.Value = ((string)e.Value).ToLower();
+            };
+            chkNotifyChannels.DataBindings.Add(binding);
+
+
+
             //CheckedListBoxHelper.BindData4CheckedListByEnum<tb_ReminderRule, NotifyChannel>(entity, c => c.NotifyChannels, chkNotifyChannels, false);
             CheckedListBoxHelper.BindData4CheckedListBox<tb_ReminderRule, NotifyChannel>(entity, t => t.NotifyChannels, chkNotifyChannels, NotifyChannel.Workflow, NotifyChannel.SMS);
 

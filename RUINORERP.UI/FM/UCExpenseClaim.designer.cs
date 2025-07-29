@@ -32,12 +32,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCExpenseClaim));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.lblAccount_type = new Krypton.Toolkit.KryptonLabel();
             this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
-            this.cmbAccount_type = new Krypton.Toolkit.KryptonComboBox();
             this.lbl盘点单 = new Krypton.Toolkit.KryptonLabel();
-            this.lblAccount_No = new Krypton.Toolkit.KryptonLabel();
-            this.txtAccount_No = new Krypton.Toolkit.KryptonTextBox();
             this.btnInfo = new Krypton.Toolkit.KryptonButton();
             this.dtpDocumentDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.lblPayeeInfoID = new Krypton.Toolkit.KryptonLabel();
@@ -78,7 +74,6 @@
             this.kryptonSplitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_type)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayeeInfoID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
@@ -112,12 +107,8 @@
             // 
             // kryptonPanel1
             // 
-            this.kryptonPanel1.Controls.Add(this.lblAccount_type);
             this.kryptonPanel1.Controls.Add(this.lblPrintStatus);
-            this.kryptonPanel1.Controls.Add(this.cmbAccount_type);
             this.kryptonPanel1.Controls.Add(this.lbl盘点单);
-            this.kryptonPanel1.Controls.Add(this.lblAccount_No);
-            this.kryptonPanel1.Controls.Add(this.txtAccount_No);
             this.kryptonPanel1.Controls.Add(this.btnInfo);
             this.kryptonPanel1.Controls.Add(this.dtpDocumentDate);
             this.kryptonPanel1.Controls.Add(this.lblPayeeInfoID);
@@ -144,14 +135,6 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(1133, 243);
             this.kryptonPanel1.TabIndex = 4;
             // 
-            // lblAccount_type
-            // 
-            this.lblAccount_type.Location = new System.Drawing.Point(14, 122);
-            this.lblAccount_type.Name = "lblAccount_type";
-            this.lblAccount_type.Size = new System.Drawing.Size(62, 20);
-            this.lblAccount_type.TabIndex = 173;
-            this.lblAccount_type.Values.Text = "账户类型";
-            // 
             // lblPrintStatus
             // 
             this.lblPrintStatus.Location = new System.Drawing.Point(592, 17);
@@ -161,15 +144,6 @@
             this.lblPrintStatus.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 20F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lblPrintStatus.TabIndex = 164;
             this.lblPrintStatus.Values.Text = "打印状态";
-            // 
-            // cmbAccount_type
-            // 
-            this.cmbAccount_type.DropDownWidth = 100;
-            this.cmbAccount_type.IntegralHeight = false;
-            this.cmbAccount_type.Location = new System.Drawing.Point(81, 121);
-            this.cmbAccount_type.Name = "cmbAccount_type";
-            this.cmbAccount_type.Size = new System.Drawing.Size(182, 21);
-            this.cmbAccount_type.TabIndex = 174;
             // 
             // lbl盘点单
             // 
@@ -182,24 +156,9 @@
             this.lbl盘点单.TabIndex = 45;
             this.lbl盘点单.Values.Text = "费用报销单";
             // 
-            // lblAccount_No
-            // 
-            this.lblAccount_No.Location = new System.Drawing.Point(325, 119);
-            this.lblAccount_No.Name = "lblAccount_No";
-            this.lblAccount_No.Size = new System.Drawing.Size(36, 20);
-            this.lblAccount_No.TabIndex = 171;
-            this.lblAccount_No.Values.Text = "账号";
-            // 
-            // txtAccount_No
-            // 
-            this.txtAccount_No.Location = new System.Drawing.Point(363, 119);
-            this.txtAccount_No.Name = "txtAccount_No";
-            this.txtAccount_No.Size = new System.Drawing.Size(433, 23);
-            this.txtAccount_No.TabIndex = 172;
-            // 
             // btnInfo
             // 
-            this.btnInfo.Location = new System.Drawing.Point(269, 94);
+            this.btnInfo.Location = new System.Drawing.Point(800, 117);
             this.btnInfo.Name = "btnInfo";
             this.btnInfo.Size = new System.Drawing.Size(21, 21);
             this.btnInfo.TabIndex = 168;
@@ -211,15 +170,15 @@
             // 
             // dtpDocumentDate
             // 
-            this.dtpDocumentDate.Location = new System.Drawing.Point(614, 63);
+            this.dtpDocumentDate.Location = new System.Drawing.Point(363, 88);
             this.dtpDocumentDate.Name = "dtpDocumentDate";
             this.dtpDocumentDate.ShowCheckBox = true;
-            this.dtpDocumentDate.Size = new System.Drawing.Size(182, 21);
+            this.dtpDocumentDate.Size = new System.Drawing.Size(155, 21);
             this.dtpDocumentDate.TabIndex = 140;
             // 
             // lblPayeeInfoID
             // 
-            this.lblPayeeInfoID.Location = new System.Drawing.Point(13, 94);
+            this.lblPayeeInfoID.Location = new System.Drawing.Point(13, 118);
             this.lblPayeeInfoID.Name = "lblPayeeInfoID";
             this.lblPayeeInfoID.Size = new System.Drawing.Size(62, 20);
             this.lblPayeeInfoID.TabIndex = 166;
@@ -227,7 +186,7 @@
             // 
             // lblDocumentDate
             // 
-            this.lblDocumentDate.Location = new System.Drawing.Point(546, 64);
+            this.lblDocumentDate.Location = new System.Drawing.Point(295, 89);
             this.lblDocumentDate.Name = "lblDocumentDate";
             this.lblDocumentDate.Size = new System.Drawing.Size(62, 20);
             this.lblDocumentDate.TabIndex = 139;
@@ -237,18 +196,18 @@
             // 
             this.cmbPayeeInfoID.DropDownWidth = 100;
             this.cmbPayeeInfoID.IntegralHeight = false;
-            this.cmbPayeeInfoID.Location = new System.Drawing.Point(81, 94);
+            this.cmbPayeeInfoID.Location = new System.Drawing.Point(81, 118);
             this.cmbPayeeInfoID.Name = "cmbPayeeInfoID";
-            this.cmbPayeeInfoID.Size = new System.Drawing.Size(182, 21);
+            this.cmbPayeeInfoID.Size = new System.Drawing.Size(713, 21);
             this.cmbPayeeInfoID.TabIndex = 167;
             // 
             // cmbEmployee_ID
             // 
             this.cmbEmployee_ID.DropDownWidth = 100;
             this.cmbEmployee_ID.IntegralHeight = false;
-            this.cmbEmployee_ID.Location = new System.Drawing.Point(363, 91);
+            this.cmbEmployee_ID.Location = new System.Drawing.Point(81, 91);
             this.cmbEmployee_ID.Name = "cmbEmployee_ID";
-            this.cmbEmployee_ID.Size = new System.Drawing.Size(155, 21);
+            this.cmbEmployee_ID.Size = new System.Drawing.Size(182, 21);
             this.cmbEmployee_ID.TabIndex = 138;
             // 
             // lblDataStatus
@@ -263,7 +222,7 @@
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(308, 94);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(26, 94);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
             this.lblEmployee_ID.TabIndex = 137;
@@ -316,7 +275,7 @@
             // 
             // lblApprovalResults
             // 
-            this.lblApprovalResults.Location = new System.Drawing.Point(546, 91);
+            this.lblApprovalResults.Location = new System.Drawing.Point(592, 62);
             this.lblApprovalResults.Name = "lblApprovalResults";
             this.lblApprovalResults.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalResults.TabIndex = 159;
@@ -332,7 +291,7 @@
             // 
             // chkApprovalResults
             // 
-            this.chkApprovalResults.Location = new System.Drawing.Point(614, 91);
+            this.chkApprovalResults.Location = new System.Drawing.Point(660, 62);
             this.chkApprovalResults.Name = "chkApprovalResults";
             this.chkApprovalResults.Size = new System.Drawing.Size(19, 13);
             this.chkApprovalResults.TabIndex = 160;
@@ -492,7 +451,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_type)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayeeInfoID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
@@ -544,10 +502,6 @@
         private Krypton.Toolkit.KryptonLabel lblPayeeInfoID;
         private Krypton.Toolkit.KryptonComboBox cmbPayeeInfoID;
         private Krypton.Toolkit.KryptonButton btnInfo;
-        private Krypton.Toolkit.KryptonLabel lblAccount_No;
-        private Krypton.Toolkit.KryptonTextBox txtAccount_No;
-        private Krypton.Toolkit.KryptonLabel lblAccount_type;
-        private Krypton.Toolkit.KryptonComboBox cmbAccount_type;
         internal Krypton.Toolkit.KryptonPanel kryptonPanel1;
     }
 }

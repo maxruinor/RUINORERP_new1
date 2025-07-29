@@ -146,8 +146,8 @@ namespace RUINORERP.UI.FM
                     QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
                     queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 
-                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
-                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.Account_name, queryFilterPayeeInfo, true);
+                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
+                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
 
 
                     #endregion
@@ -210,10 +210,7 @@ namespace RUINORERP.UI.FM
                 cmbPayeeInfoID.DataSource = null;
                 cmbPayeeInfoID.DataBindings.Clear();
                 cmbPayeeInfoID.Items.Clear();
-                cmbAccount_type.DataSource = null;
-                cmbAccount_type.Items.Clear();
-                cmbAccount_type.DataBindings.Clear();
-                txtPayeeAccountNo.Text = "";
+                
             }
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
@@ -245,7 +242,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.ApprovalResults, chkApprovalResults, false);
-            DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, c => c.CustomerVendor_ID.HasValue && c.CustomerVendor_ID.Value == entity.CustomerVendor_ID);
+            DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, c => c.CustomerVendor_ID.HasValue && c.CustomerVendor_ID.Value == entity.CustomerVendor_ID);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ReceivablePayable>(entity, t => t.ARAPStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(ARAPStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ReceivablePayable>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             //显示 打印状态 如果是草稿状态 不显示打印
@@ -309,7 +306,7 @@ namespace RUINORERP.UI.FM
                 QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
                 queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 
-                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.Account_name, queryFilterPayeeInfo, true);
+                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
 
                 #endregion
 
@@ -375,12 +372,7 @@ namespace RUINORERP.UI.FM
                             }
                             if (payeeInfo != null)
                             {
-                                DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(payeeInfo, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
-                                //添加收款信息。展示给财务看
-                                txtPayeeAccountNo.Text = payeeInfo.Account_No;
-                                lblBelongingBank.Text = payeeInfo.BelongingBank;
-                                lblOpeningbank.Text = payeeInfo.OpeningBank;
-                                cmbAccount_type.SelectedItem = payeeInfo.Account_type;
+                                 
                                 if (!string.IsNullOrEmpty(payeeInfo.PaymentCodeImagePath))
                                 {
                                     btnInfo.Tag = payeeInfo;
@@ -393,12 +385,7 @@ namespace RUINORERP.UI.FM
                                 }
                             }
                         }
-                        else
-                        {
-                            txtPayeeAccountNo.Text = "";
-                            lblBelongingBank.Text = "";
-                            lblOpeningbank.Text = "";
-                        }
+                        
                     }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.ShippingFee))
@@ -454,24 +441,17 @@ namespace RUINORERP.UI.FM
 
             if (PaymentType == ReceivePaymentType.收款)
             {
-                lblAccount_type.Visible = false;
-                cmbAccount_type.Visible = false;
+              
                 btnInfo.Visible = false;
                 lblPayeeInfoID.Visible = false;
                 cmbPayeeInfoID.Visible = false;
-                lblPayeeAccountNo.Visible = false;
-                txtPayeeAccountNo.Visible = false;
+              
             }
             else
             {
                 if (entity.tb_fm_payeeinfo != null)
                 {
-                    DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(entity.tb_fm_payeeinfo, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
-                    //添加收款信息。展示给财务看
-                    txtPayeeAccountNo.Text = entity.tb_fm_payeeinfo.Account_No;
-                    lblBelongingBank.Text = entity.tb_fm_payeeinfo.BelongingBank;
-                    lblOpeningbank.Text = entity.tb_fm_payeeinfo.OpeningBank;
-                    cmbAccount_type.SelectedItem = entity.tb_fm_payeeinfo.Account_type;
+                   
                     if (!string.IsNullOrEmpty(entity.tb_fm_payeeinfo.PaymentCodeImagePath))
                     {
                         btnInfo.Tag = entity.tb_fm_payeeinfo;
@@ -557,13 +537,12 @@ namespace RUINORERP.UI.FM
                     lblBillText.Text = "应收款单";
                     lblAccount_id.Text = "收款账号";
                     lblCustomerVendor_ID.Text = "应付单位";
-                    lblAccount_type.Visible = false;
-                    cmbAccount_type.Visible = false;
+                    
+                   
                     btnInfo.Visible = false;
                     lblPayeeInfoID.Visible = false;
                     cmbPayeeInfoID.Visible = false;
-                    lblPayeeAccountNo.Visible = false;
-                    txtPayeeAccountNo.Visible = false;
+                  
                     break;
                 case ReceivePaymentType.付款:
                     lblBillText.Text = "应付款单";

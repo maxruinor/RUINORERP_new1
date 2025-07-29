@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCPreReceivedPayment));
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
             this.cmbBizType = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.lblIsAvailable = new Krypton.Toolkit.KryptonLabel();
@@ -38,14 +39,6 @@
             this.lblPayeeInfoID = new Krypton.Toolkit.KryptonLabel();
             this.cmbPayeeInfoID = new Krypton.Toolkit.KryptonComboBox();
             this.btnInfo = new Krypton.Toolkit.KryptonButton();
-            this.kryptonGroupBox收款账号信息 = new Krypton.Toolkit.KryptonGroupBox();
-            this.lblPayeeAccountName = new Krypton.Toolkit.KryptonLabel();
-            this.txtPayeeAccountNo = new Krypton.Toolkit.KryptonTextBox();
-            this.lblPayeeAccountNo = new Krypton.Toolkit.KryptonLabel();
-            this.cmbAccount_type = new Krypton.Toolkit.KryptonComboBox();
-            this.lblBelongingBank = new Krypton.Toolkit.KryptonLabel();
-            this.lblAccount_type = new Krypton.Toolkit.KryptonLabel();
-            this.lblOpeningbank = new Krypton.Toolkit.KryptonLabel();
             this.lblSourceBill_BizType = new Krypton.Toolkit.KryptonLabel();
             this.lblSourceBillNo = new Krypton.Toolkit.KryptonLabel();
             this.txtSourceBillNo = new Krypton.Toolkit.KryptonTextBox();
@@ -95,18 +88,12 @@
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblRemark = new Krypton.Toolkit.KryptonLabel();
             this.txtRemark = new Krypton.Toolkit.KryptonTextBox();
-            this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayeeInfoID)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox收款账号信息)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox收款账号信息.Panel)).BeginInit();
-            this.kryptonGroupBox收款账号信息.Panel.SuspendLayout();
-            this.kryptonGroupBox收款账号信息.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_type)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
@@ -127,7 +114,6 @@
             this.kryptonPanel1.Controls.Add(this.lblPayeeInfoID);
             this.kryptonPanel1.Controls.Add(this.cmbPayeeInfoID);
             this.kryptonPanel1.Controls.Add(this.btnInfo);
-            this.kryptonPanel1.Controls.Add(this.kryptonGroupBox收款账号信息);
             this.kryptonPanel1.Controls.Add(this.lblSourceBill_BizType);
             this.kryptonPanel1.Controls.Add(this.lblSourceBillNo);
             this.kryptonPanel1.Controls.Add(this.txtSourceBillNo);
@@ -184,6 +170,14 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(1144, 696);
             this.kryptonPanel1.TabIndex = 2;
             // 
+            // chkIsFromPlatform
+            // 
+            this.chkIsFromPlatform.Location = new System.Drawing.Point(1044, 217);
+            this.chkIsFromPlatform.Name = "chkIsFromPlatform";
+            this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
+            this.chkIsFromPlatform.TabIndex = 224;
+            this.chkIsFromPlatform.Values.Text = "平台单";
+            // 
             // cmbBizType
             // 
             this.cmbBizType.DropDownWidth = 100;
@@ -231,12 +225,12 @@
             this.cmbPayeeInfoID.IntegralHeight = false;
             this.cmbPayeeInfoID.Location = new System.Drawing.Point(105, 142);
             this.cmbPayeeInfoID.Name = "cmbPayeeInfoID";
-            this.cmbPayeeInfoID.Size = new System.Drawing.Size(392, 21);
+            this.cmbPayeeInfoID.Size = new System.Drawing.Size(608, 21);
             this.cmbPayeeInfoID.TabIndex = 219;
             // 
             // btnInfo
             // 
-            this.btnInfo.Location = new System.Drawing.Point(506, 143);
+            this.btnInfo.Location = new System.Drawing.Point(732, 142);
             this.btnInfo.Name = "btnInfo";
             this.btnInfo.Size = new System.Drawing.Size(21, 21);
             this.btnInfo.TabIndex = 217;
@@ -245,82 +239,6 @@
             this.btnInfo.Values.Image = global::RUINORERP.UI.Properties.Resources.info;
             this.btnInfo.Values.Text = "";
             this.btnInfo.Click += new System.EventHandler(this.btnInfo_Click_1);
-            // 
-            // kryptonGroupBox收款账号信息
-            // 
-            this.kryptonGroupBox收款账号信息.Location = new System.Drawing.Point(106, 167);
-            this.kryptonGroupBox收款账号信息.Name = "kryptonGroupBox收款账号信息";
-            // 
-            // kryptonGroupBox收款账号信息.Panel
-            // 
-            this.kryptonGroupBox收款账号信息.Panel.Controls.Add(this.lblPayeeAccountName);
-            this.kryptonGroupBox收款账号信息.Panel.Controls.Add(this.txtPayeeAccountNo);
-            this.kryptonGroupBox收款账号信息.Panel.Controls.Add(this.lblPayeeAccountNo);
-            this.kryptonGroupBox收款账号信息.Panel.Controls.Add(this.cmbAccount_type);
-            this.kryptonGroupBox收款账号信息.Panel.Controls.Add(this.lblBelongingBank);
-            this.kryptonGroupBox收款账号信息.Panel.Controls.Add(this.lblAccount_type);
-            this.kryptonGroupBox收款账号信息.Panel.Controls.Add(this.lblOpeningbank);
-            this.kryptonGroupBox收款账号信息.Size = new System.Drawing.Size(605, 99);
-            this.kryptonGroupBox收款账号信息.TabIndex = 216;
-            this.kryptonGroupBox收款账号信息.Values.Heading = "收款信息";
-            // 
-            // lblPayeeAccountName
-            // 
-            this.lblPayeeAccountName.Location = new System.Drawing.Point(749, 18);
-            this.lblPayeeAccountName.Name = "lblPayeeAccountName";
-            this.lblPayeeAccountName.Size = new System.Drawing.Size(6, 2);
-            this.lblPayeeAccountName.TabIndex = 177;
-            this.lblPayeeAccountName.Values.Text = "";
-            // 
-            // txtPayeeAccountNo
-            // 
-            this.txtPayeeAccountNo.Location = new System.Drawing.Point(335, 8);
-            this.txtPayeeAccountNo.Name = "txtPayeeAccountNo";
-            this.txtPayeeAccountNo.ReadOnly = true;
-            this.txtPayeeAccountNo.Size = new System.Drawing.Size(248, 23);
-            this.txtPayeeAccountNo.TabIndex = 93;
-            // 
-            // lblPayeeAccountNo
-            // 
-            this.lblPayeeAccountNo.Location = new System.Drawing.Point(268, 9);
-            this.lblPayeeAccountNo.Name = "lblPayeeAccountNo";
-            this.lblPayeeAccountNo.Size = new System.Drawing.Size(62, 20);
-            this.lblPayeeAccountNo.TabIndex = 92;
-            this.lblPayeeAccountNo.Values.Text = "收款账号";
-            // 
-            // cmbAccount_type
-            // 
-            this.cmbAccount_type.DropDownWidth = 100;
-            this.cmbAccount_type.Enabled = false;
-            this.cmbAccount_type.IntegralHeight = false;
-            this.cmbAccount_type.Location = new System.Drawing.Point(88, 8);
-            this.cmbAccount_type.Name = "cmbAccount_type";
-            this.cmbAccount_type.Size = new System.Drawing.Size(166, 21);
-            this.cmbAccount_type.TabIndex = 176;
-            // 
-            // lblBelongingBank
-            // 
-            this.lblBelongingBank.Location = new System.Drawing.Point(21, 37);
-            this.lblBelongingBank.Name = "lblBelongingBank";
-            this.lblBelongingBank.Size = new System.Drawing.Size(6, 2);
-            this.lblBelongingBank.TabIndex = 172;
-            this.lblBelongingBank.Values.Text = "";
-            // 
-            // lblAccount_type
-            // 
-            this.lblAccount_type.Location = new System.Drawing.Point(21, 9);
-            this.lblAccount_type.Name = "lblAccount_type";
-            this.lblAccount_type.Size = new System.Drawing.Size(62, 20);
-            this.lblAccount_type.TabIndex = 175;
-            this.lblAccount_type.Values.Text = "账户类型";
-            // 
-            // lblOpeningbank
-            // 
-            this.lblOpeningbank.Location = new System.Drawing.Point(376, 37);
-            this.lblOpeningbank.Name = "lblOpeningbank";
-            this.lblOpeningbank.Size = new System.Drawing.Size(6, 2);
-            this.lblOpeningbank.TabIndex = 171;
-            this.lblOpeningbank.Values.Text = "";
             // 
             // lblSourceBill_BizType
             // 
@@ -731,14 +649,6 @@
             this.txtRemark.Size = new System.Drawing.Size(294, 114);
             this.txtRemark.TabIndex = 32;
             // 
-            // chkIsFromPlatform
-            // 
-            this.chkIsFromPlatform.Location = new System.Drawing.Point(1044, 217);
-            this.chkIsFromPlatform.Name = "chkIsFromPlatform";
-            this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
-            this.chkIsFromPlatform.TabIndex = 224;
-            this.chkIsFromPlatform.Values.Text = "平台单";
-            // 
             // UCPreReceivedPayment
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -755,12 +665,6 @@
             this.kryptonPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayeeInfoID)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox收款账号信息.Panel)).EndInit();
-            this.kryptonGroupBox收款账号信息.Panel.ResumeLayout(false);
-            this.kryptonGroupBox收款账号信息.Panel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox收款账号信息)).EndInit();
-            this.kryptonGroupBox收款账号信息.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_type)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
@@ -825,14 +729,6 @@
         private Krypton.Toolkit.KryptonLabel lblSourceBill_BizType;
         private Krypton.Toolkit.KryptonLabel lblSourceBillNo;
         private Krypton.Toolkit.KryptonTextBox txtSourceBillNo;
-        private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox收款账号信息;
-        private Krypton.Toolkit.KryptonLabel lblPayeeAccountName;
-        private Krypton.Toolkit.KryptonTextBox txtPayeeAccountNo;
-        private Krypton.Toolkit.KryptonLabel lblPayeeAccountNo;
-        private Krypton.Toolkit.KryptonComboBox cmbAccount_type;
-        private Krypton.Toolkit.KryptonLabel lblBelongingBank;
-        private Krypton.Toolkit.KryptonLabel lblAccount_type;
-        private Krypton.Toolkit.KryptonLabel lblOpeningbank;
         private Krypton.Toolkit.KryptonButton btnInfo;
         private Krypton.Toolkit.KryptonLabel lblPayeeInfoID;
         private Krypton.Toolkit.KryptonComboBox cmbPayeeInfoID;

@@ -48,6 +48,7 @@ using Krypton.Toolkit;
 using Fireasy.Common.Extensions;
 using RUINORERP.Global.Model;
 using RUINORERP.UI.BI;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -173,8 +174,8 @@ namespace RUINORERP.UI.PSI.PUR
                     QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
                     queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 
-                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
-                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.Account_name, queryFilterPayeeInfo, true);
+                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
+                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
 
 
                     #endregion
@@ -331,10 +332,10 @@ namespace RUINORERP.UI.PSI.PUR
                     QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
                     queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 
-                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.Account_name, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
+                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
 
 
-                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.Account_name, queryFilterPayeeInfo, true);
+                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
 
 
                     #endregion
@@ -350,8 +351,8 @@ namespace RUINORERP.UI.PSI.PUR
                             {
                                 if (payeeInfoList.FirstOrDefault(c => c.IsDefault) != null)
                                 {
-                                    entity.PayeeInfoID= payeeInfoList.FirstOrDefault(c => c.IsDefault).PayeeInfoID;
-                                    btnInfo.Tag= payeeInfoList.FirstOrDefault(c => c.IsDefault);
+                                    entity.PayeeInfoID = payeeInfoList.FirstOrDefault(c => c.IsDefault).PayeeInfoID;
+                                    btnInfo.Tag = payeeInfoList.FirstOrDefault(c => c.IsDefault);
                                 }
                             }
                         }
@@ -406,7 +407,7 @@ namespace RUINORERP.UI.PSI.PUR
                             if (payeeInfo != null)
                             {
                                 btnInfo.Tag = payeeInfo;
-
+                                
                                 //DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(payeeInfo, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                                 //添加收款信息。展示给财务看
                                 //entity.PayeeAccountNo = payeeInfo.Account_No;

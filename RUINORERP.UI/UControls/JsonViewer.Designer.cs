@@ -1,6 +1,6 @@
 ﻿namespace RUINORERP.UI.Monitoring.Auditing
 {
-    partial class AuditLogViewer
+    partial class JsonViewer
     {
         /// <summary> 
         /// 必需的设计器变量。

@@ -1,4 +1,5 @@
-﻿using RUINORERP.Global;
+﻿using AutoMapper.Internal;
+using RUINORERP.Global;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,6 +24,7 @@ namespace RUINORERP.Model.Base
 
         public void OnPropertyChanged<T>(Expression<Func<T>> expr)
         {
+           // expr.GetMember().Name
             this.OnPropertyChanged(Utils.GetMemberName(expr));
         }
 

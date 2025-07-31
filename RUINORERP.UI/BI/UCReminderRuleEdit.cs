@@ -26,6 +26,8 @@ using Newtonsoft.Json;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model.ReminderModel.ReminderRules;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
+using NPOI.OpenXmlFormats.Spreadsheet;
 
 namespace RUINORERP.UI.BI
 {
@@ -40,6 +42,7 @@ namespace RUINORERP.UI.BI
 
         public tb_ReminderRule entity { get; set; }
 
+        List<tb_UserInfo> UserInfos = new List<tb_UserInfo>();
         public override void BindData(BaseEntity _entity)
         {
             entity = _entity as tb_ReminderRule;
@@ -47,54 +50,48 @@ namespace RUINORERP.UI.BI
             {
                 entity.EffectiveDate = System.DateTime.Now;
                 entity.ExpireDate = System.DateTime.Now.AddDays(60);
+                entity.Created_at = DateTime.UtcNow;
+                entity.ReminderPriority = (int)ReminderPriority.Medium;
+                BusinessHelper.Instance.InitEntity(entity);
             }
+            else
+            {
+                BusinessHelper.Instance.EditEntity(entity);
+            }
+
+            UserInfos = BizCacheHelper.Manager.GetEntityList<tb_UserInfo>();
+
             DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.RuleName, txtRuleName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, RuleEngineType>(entity, k => k.RuleEngineType, cmbRuleEngineType, false);
 
             DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text, false);
+
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, ReminderBizType>(entity, k => k.ReminderBizType, cmbReminderBizType, false);
+
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, ReminderPriority>(entity, k => k.ReminderPriority, cmbPriority, false);
+
             DataBindingHelper.BindData4CheckBox<tb_ReminderRule>(entity, t => t.IsEnabled, chkIsEnabled, false);
             DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.EffectiveDate, dtpEffectiveDate, false);
 
+            CheckedListBoxHelper.BindData4CheckedListBox<tb_ReminderRule, NotifyChannel>(entity, t => t.NotifyChannels, clbNotifyChannels, NotifyChannel.Workflow, NotifyChannel.SMS);
 
-            // 创建数据源
-            BindingList<string> itemsSource = new BindingList<string>() { "Item 1", "Item 2", "Item 3" };
-            // 设置CheckedListBox的数据源
-            chkNotifyChannels.DataSource = null; // 清除原有绑定
-            chkNotifyChannels.DataSource = itemsSource;
-            chkNotifyChannels.ValueMember = "Value";
-            // 创建表达式绑定
-            Binding binding = new Binding("SelectedValue", new BindingSource(itemsSource, null), "Value", true);
-            binding.Format += (sender, e) =>
-            {
-                // 在获取值之前进行格式化（例如转换为大写）
-                e.Value = ((string)e.Value).ToUpper();
-            };
-            binding.Parse += (sender, e) =>
-            {
-                // 在设置值之前进行解析（例如将输入转换为小写）
-                e.Value = ((string)e.Value).ToLower();
-            };
-            chkNotifyChannels.DataBindings.Add(binding);
-
-
-
-            //CheckedListBoxHelper.BindData4CheckedListByEnum<tb_ReminderRule, NotifyChannel>(entity, c => c.NotifyChannels, chkNotifyChannels, false);
-            CheckedListBoxHelper.BindData4CheckedListBox<tb_ReminderRule, NotifyChannel>(entity, t => t.NotifyChannels, chkNotifyChannels, NotifyChannel.Workflow, NotifyChannel.SMS);
+            // 绑定到CheckedListBox
+            CheckedListBoxHelper.BindData4CheckedListBox(
+                entity: entity,
+                propertyExpression: e => e.NotifyRecipients,
+                checkedList: txtNotifyRecipientNames,
+                dataSource: UserInfos,
+                idExpression: u => u.User_ID,
+                displayExpression: u => u.UserName,
+                excludeIds: 0   // 排除系统用户
+            );
 
             DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.ExpireDate, dtpExpireDate, false);
-            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.Condition, txtCondition, BindDataType4TextBox.Text, false);
 
-            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.NotifyRecipients, txtNotifyRecipients, BindDataType4TextBox.Text, false);
-
-            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.NotifyRecipientNames, txtNotifyRecipientNames, BindDataType4TextBox.Text, false);
-            txtNotifyRecipientNames.ReadOnly = true;
-
-            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.NotifyMessage, txtNotifyMessage, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.JsonConfig, txtJsonConfig, BindDataType4TextBox.Text, false);
-            txtJsonConfig.ReadOnly = true;//要配置不能手输入。不然格式错误
-
+            if (entity != null && !string.IsNullOrEmpty(entity.JsonConfig))
+            {
+                jsonViewer1.LoadAuditData(entity.JsonConfig);
+            }
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
@@ -136,7 +133,12 @@ namespace RUINORERP.UI.BI
                 case ReminderBizType.安全库存提醒:
                     var ucSafetyStockConfigEdit = new UCSafetyStockConfigEdit();
                     ucSafetyStockConfigEdit.Text = "安全库存提醒配置";
-                    // 使用示例
+
+                    if (entity.JsonConfig.IsNullOrEmpty())
+                    {
+                        entity.JsonConfig = "{}";
+                    }
+
                     JObject obj = JsonHelper.SafeParseJson(entity.JsonConfig);
 
                     SafetyStockConfig safetyStockConfig = obj.ToObject<SafetyStockConfig>();
@@ -172,6 +174,16 @@ namespace RUINORERP.UI.BI
             if (base.Validator())
             {
                 bindingSourceEdit.EndEdit();
+
+                if (bindingSourceEdit.Current is tb_ReminderRule reminderRule)
+                {
+                    if (reminderRule.NotifyRecipients.Count == 0)
+                    {
+                        MessageBox.Show("通知接收人员不能为空", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
+                    }
+                }
+
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
@@ -179,6 +191,13 @@ namespace RUINORERP.UI.BI
 
         private void btnConfigParser_Click(object sender, EventArgs e)
         {
+
+            if (entity.ReminderBizType == 0)
+            {
+                MessageBox.Show("请选择提醒业务类型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             var ConfigObject = LoadBusinessConfig(entity.ReminderBizType);
             if (ConfigObject != null)
             {
@@ -189,7 +208,8 @@ namespace RUINORERP.UI.BI
                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
                    });
 
-                txtJsonConfig.Text = json;
+                entity.JsonConfig = json;
+                jsonViewer1.LoadAuditData(entity.JsonConfig);
             }
         }
 
@@ -226,16 +246,23 @@ namespace RUINORERP.UI.BI
                     string SelectedNames = string.Join(", ", SelectUsers.Take(5000).Select(item => item.UserName));
                     SelectedNames = SelectedNames.TrimEnd(',');
 
-                    string SelectedIds = string.Join(", ", SelectUsers.Take(5000).Select(item => item.User_ID));
-                    SelectedIds = SelectedIds.TrimEnd(',');
+                    //string SelectedIds = string.Join(", ", SelectUsers.Take(5000).Select(item => item.User_ID));
+                    //SelectedIds = SelectedIds.TrimEnd(',');
 
                     if (SelectUsers.Count > 0)
                     {
-                        entity.NotifyRecipientNames = SelectedNames;
-                        entity.NotifyRecipients = SelectedIds;
+                        entity.NotifyRecipientDisplayText = SelectedNames;
+                        entity.NotifyRecipients = SelectUsers.Take(5000).Select(item => item.User_ID).ToList();
                     }
                 }
             }
+        }
+
+
+
+        private async void UCReminderRuleEdit_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

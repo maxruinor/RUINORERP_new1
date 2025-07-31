@@ -48,7 +48,7 @@ using RUINORERP.Business.Security;
 using System.Configuration;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Model.CommonModel;
-using RUINORERP.Business.FMService;
+using RUINORERP.Business.StatusManagerService;
 
 namespace RUINORERP.UI.FM
 {
@@ -134,7 +134,6 @@ namespace RUINORERP.UI.FM
                 //如果审核了，审核要灰色
                 if (entity.CustomerVendor_ID > 0)
                 {
-                    //如果线索引入相关数据
                     #region 收款信息可以根据往来单位带出 ，并且可以添加
 
                     //创建表达式
@@ -153,7 +152,7 @@ namespace RUINORERP.UI.FM
                     #endregion
                 }
                 else
-                {
+                {   
                     //清空
                     cmbPayeeInfoID.DataBindings.Clear();
                 }
@@ -210,7 +209,7 @@ namespace RUINORERP.UI.FM
                 cmbPayeeInfoID.DataSource = null;
                 cmbPayeeInfoID.DataBindings.Clear();
                 cmbPayeeInfoID.Items.Clear();
-                
+
             }
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
@@ -347,6 +346,40 @@ namespace RUINORERP.UI.FM
                     EditEntity.ActionStatus = ActionStatus.修改;
                 }
 
+                #region 收款信息可以根据往来单位带出 ，并且可以添加
+
+                //创建表达式
+                var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
+                            .And(t => t.Is_enabled == true)
+                            .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
+                            .ToExpression();//注意 这一句 不能少
+                BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
+                QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+                queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
+
+                DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
+                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
+
+
+                #endregion
+                if (entity.PayeeInfoID == null && (entity.ARAPStatus == (int)ARAPStatus.草稿) || (true && entity.ARAPStatus == (int)ARAPStatus.待审核))
+                {
+
+                    //设置一个默认值 如果有默认收款账号时
+                    //如果原来的值，在下拉集合中，则不变。说明是对应厂商的收款信息。如果不是，则看有不有设置默认值
+                    var payeeInfoList = cmbPayeeInfoID.Items.CastToList<tb_FM_PayeeInfo>().Where(c => c.PayeeInfoID != -1).ToList();
+                    if (!payeeInfoList.Any(c => c.PayeeInfoID == entity.PayeeInfoID))
+                    {
+                        if (payeeInfoList.FirstOrDefault(c => c.IsDefault) != null)
+                        {
+                            entity.PayeeInfoID = payeeInfoList.FirstOrDefault(c => c.IsDefault).PayeeInfoID;
+                            btnInfo.Tag = payeeInfoList.FirstOrDefault(c => c.IsDefault);
+                        }
+                    }
+                }
+
+
+
                 //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
@@ -372,7 +405,7 @@ namespace RUINORERP.UI.FM
                             }
                             if (payeeInfo != null)
                             {
-                                 
+
                                 if (!string.IsNullOrEmpty(payeeInfo.PaymentCodeImagePath))
                                 {
                                     btnInfo.Tag = payeeInfo;
@@ -385,7 +418,7 @@ namespace RUINORERP.UI.FM
                                 }
                             }
                         }
-                        
+
                     }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.ShippingFee))
@@ -441,17 +474,17 @@ namespace RUINORERP.UI.FM
 
             if (PaymentType == ReceivePaymentType.收款)
             {
-              
+
                 btnInfo.Visible = false;
                 lblPayeeInfoID.Visible = false;
                 cmbPayeeInfoID.Visible = false;
-              
+
             }
             else
             {
                 if (entity.tb_fm_payeeinfo != null)
                 {
-                   
+
                     if (!string.IsNullOrEmpty(entity.tb_fm_payeeinfo.PaymentCodeImagePath))
                     {
                         btnInfo.Tag = entity.tb_fm_payeeinfo;
@@ -537,12 +570,12 @@ namespace RUINORERP.UI.FM
                     lblBillText.Text = "应收款单";
                     lblAccount_id.Text = "收款账号";
                     lblCustomerVendor_ID.Text = "应付单位";
-                    
-                   
+
+
                     btnInfo.Visible = false;
                     lblPayeeInfoID.Visible = false;
                     cmbPayeeInfoID.Visible = false;
-                  
+
                     break;
                 case ReceivePaymentType.付款:
                     lblBillText.Text = "应付款单";
@@ -772,7 +805,7 @@ namespace RUINORERP.UI.FM
                     return;
                 }
                 //EditEntity.TotalForeignPayableAmount = details.Sum(c => c.ForeignPayableAmount);
-                EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount)+EditEntity.ShippingFee;
+                EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee;
             }
             catch (Exception ex)
             {

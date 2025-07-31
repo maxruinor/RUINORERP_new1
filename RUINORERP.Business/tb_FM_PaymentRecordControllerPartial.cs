@@ -29,7 +29,7 @@ using RUINORERP.Global;
 using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using AutoMapper;
-using RUINORERP.Business.FMService;
+using RUINORERP.Business.StatusManagerService;
 using MapsterMapper;
 using IMapper = AutoMapper.IMapper;
 using System.Text;
@@ -85,7 +85,8 @@ namespace RUINORERP.Business
 
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
                 {
-                    if (!entity.PayeeInfoID.HasValue)
+                    // 非平台来源且没有收款信息时，返回错误
+                    if (!entity.IsFromPlatform.GetValueOrDefault() && !entity.PayeeInfoID.HasValue)
                     {
                         rmrs.ErrorMsg = "付款时，对方的收款信息必填!";
                         rmrs.Succeeded = false;
@@ -93,7 +94,6 @@ namespace RUINORERP.Business
                         return rmrs;
                     }
                 }
-
 
 
                 //不能直接将实体entity重新查询赋值，否则反应到UI时不是相同对象了。
@@ -547,7 +547,7 @@ namespace RUINORERP.Business
 
                                     //要调式
                                     tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
-                                    .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId) 
+                                    .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId)
                                     && c.PaymentStatus == (int)PaymentStatus.已支付)
                                      .SingleAsync();
                                     if (oldPayment != null)
@@ -1091,8 +1091,8 @@ namespace RUINORERP.Business
             {
                 paymentRecordDetail.Summary += entity.PrePaymentReason;
             }
-          
-          
+
+
 
             paymentRecord.TotalLocalAmount = paymentRecordDetail.LocalAmount;
             paymentRecord.TotalForeignAmount = paymentRecordDetail.ForeignAmount;
@@ -1382,13 +1382,15 @@ namespace RUINORERP.Business
                     }
 
                     //只更新指定列
-                    var result = _unitOfWorkManage.GetDbClient().Updateable(entitys).UpdateColumns(it => new { 
-                        it.PaymentStatus, 
+                    var result = _unitOfWorkManage.GetDbClient().Updateable(entitys).UpdateColumns(it => new
+                    {
+                        it.PaymentStatus,
                         it.ApprovalOpinions,
-                        it.ApprovalResults, 
+                        it.ApprovalResults,
                         it.ApprovalStatus,
-                        it.Approver_at, 
-                        it.Approver_by }).ExecuteCommandHasChangeAsync();
+                        it.Approver_at,
+                        it.Approver_by
+                    }).ExecuteCommandHasChangeAsync();
                 }
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();

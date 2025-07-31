@@ -44,6 +44,7 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Business.StatusManagerService;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -109,8 +110,22 @@ namespace RUINORERP.UI.PSI.SAL
                         System.Windows.Forms.MessageBox.Show("退货退款状态不能为空。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
                     }
-                    if (saleOutRe.RefundStatus.HasValue && saleOutRe.RefundStatus.Value >= (int)RefundStatus.已退款等待退货)
+                    if (saleOutRe.RefundStatus.Value >= (int)RefundStatus.未退款等待退货)
                     {
+
+                        //如果销售退回单都审核过了，则为  退货退款，否则是已退款等待退货。后面审核时根据这个状态。判断是否已退货， 已退货
+                        if (saleOutRe.DataStatus == (int)DataStatus.确认 && saleOutRe.ApprovalStatus == (int)ApprovalStatus.已审核)
+                        {
+                            saleOutRe.RefundStatus = (int)RefundStatus.已退款已退货;
+                        }
+                        if (saleOutRe.DataStatus == (int)DataStatus.完结 && saleOutRe.ApprovalStatus == (int)ApprovalStatus.已审核)
+                        {
+                            saleOutRe.RefundStatus = (int)RefundStatus.已退款已退货;
+                        }
+                        if (saleOutRe.DataStatus == (int)DataStatus.草稿 && (saleOutRe.DataStatus == (int)DataStatus.新建))
+                        {
+                            saleOutRe.RefundStatus = (int)RefundStatus.已退款等待退货;
+                        }
                         // 更新出库单状态
                         var last = await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutRe>(saleOutRe).UpdateColumns(it => new
                         {
@@ -214,7 +229,7 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
                     }
-
+                    entity.RefundStatus = (int)RefundStatus.未退款等待退货;
                 }
 
             }
@@ -805,6 +820,19 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     System.Windows.Forms.MessageBox.Show(" 退回总数量和金额不能为零，请检查记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
+                }
+
+
+                if (NeedValidated)
+                {
+                    RefundStatus oldRefundStatus = (RefundStatus)EditEntity.GetOriginalValue(nameof(EditEntity.RefundStatus));
+                    RefundStatus newRefundStatus = (RefundStatus)EditEntity.RefundStatus;
+                    if (!RefundStatusHelper.TryValidateTransition(oldRefundStatus, newRefundStatus, out var error))
+                    {
+                        System.Windows.Forms.MessageBox.Show(error, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+
                 }
 
                 ReturnMainSubResults<tb_SaleOutRe> SaveResult = new ReturnMainSubResults<tb_SaleOutRe>();

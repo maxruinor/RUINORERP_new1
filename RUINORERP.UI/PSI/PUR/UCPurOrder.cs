@@ -320,7 +320,6 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.CustomerVendor_ID))
                 {
-                    //如果线索引入相关数据
                     #region 收款信息可以根据往来单位带出 ，并且可以添加
 
                     //创建表达式

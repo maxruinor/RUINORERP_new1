@@ -54,7 +54,7 @@ namespace RUINORERP.Business
                 if (saleout != null)
                 {
                     entity = mapper.Map<tb_SaleOutRe>(saleout);
-                    entity.ApprovalOpinions = "平台退款时预转单";
+                    entity.ApprovalOpinions = "同意平台退款时预转单";
                     entity.ApprovalResults = null;
                     entity.DataStatus = (int)DataStatus.草稿;
                     entity.ApprovalStatus = (int)ApprovalStatus.未审核;

@@ -31,13 +31,15 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
+            this.txtCheckIntervalByMinutes = new Krypton.Toolkit.KryptonTextBox();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.clbLocation_IDs = new Krypton.Toolkit.KryptonCheckedListBox();
+            this.clbProds = new Krypton.Toolkit.KryptonCheckedListBox();
             this.btnSeleted = new Krypton.Toolkit.KryptonButton();
             this.lblMaxStock = new Krypton.Toolkit.KryptonLabel();
             this.txtMaxStock = new Krypton.Toolkit.KryptonTextBox();
-            this.lblIs_enabled = new Krypton.Toolkit.KryptonLabel();
-            this.chkIs_enabled = new Krypton.Toolkit.KryptonCheckBox();
             this.lb作用对象列表 = new Krypton.Toolkit.KryptonLabel();
-            this.txt_ProductIds = new Krypton.Toolkit.KryptonTextBox();
             this.lblMinStock = new Krypton.Toolkit.KryptonLabel();
             this.txtMinStock = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
@@ -47,7 +49,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(196, 466);
+            this.btnOk.Location = new System.Drawing.Point(306, 516);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -56,7 +58,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(314, 466);
+            this.btnCancel.Location = new System.Drawing.Point(424, 516);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -65,13 +67,15 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
+            this.kryptonPanel1.Controls.Add(this.txtCheckIntervalByMinutes);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanel1.Controls.Add(this.clbLocation_IDs);
+            this.kryptonPanel1.Controls.Add(this.clbProds);
             this.kryptonPanel1.Controls.Add(this.btnSeleted);
             this.kryptonPanel1.Controls.Add(this.lblMaxStock);
             this.kryptonPanel1.Controls.Add(this.txtMaxStock);
-            this.kryptonPanel1.Controls.Add(this.lblIs_enabled);
-            this.kryptonPanel1.Controls.Add(this.chkIs_enabled);
             this.kryptonPanel1.Controls.Add(this.lb作用对象列表);
-            this.kryptonPanel1.Controls.Add(this.txt_ProductIds);
             this.kryptonPanel1.Controls.Add(this.lblMinStock);
             this.kryptonPanel1.Controls.Add(this.txtMinStock);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
@@ -79,12 +83,49 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(643, 543);
+            this.kryptonPanel1.Size = new System.Drawing.Size(774, 553);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // kryptonLabel2
+            // 
+            this.kryptonLabel2.Location = new System.Drawing.Point(431, 213);
+            this.kryptonLabel2.Name = "kryptonLabel2";
+            this.kryptonLabel2.Size = new System.Drawing.Size(96, 20);
+            this.kryptonLabel2.TabIndex = 56;
+            this.kryptonLabel2.Values.Text = "检测频率(分钟)";
+            // 
+            // txtCheckIntervalByMinutes
+            // 
+            this.txtCheckIntervalByMinutes.Location = new System.Drawing.Point(537, 210);
+            this.txtCheckIntervalByMinutes.Name = "txtCheckIntervalByMinutes";
+            this.txtCheckIntervalByMinutes.Size = new System.Drawing.Size(97, 23);
+            this.txtCheckIntervalByMinutes.TabIndex = 57;
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(465, 12);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel1.TabIndex = 55;
+            this.kryptonLabel1.Values.Text = "提醒库位";
+            // 
+            // clbLocation_IDs
+            // 
+            this.clbLocation_IDs.Location = new System.Drawing.Point(537, 12);
+            this.clbLocation_IDs.Name = "clbLocation_IDs";
+            this.clbLocation_IDs.Size = new System.Drawing.Size(185, 117);
+            this.clbLocation_IDs.TabIndex = 54;
+            // 
+            // clbProds
+            // 
+            this.clbProds.Location = new System.Drawing.Point(140, 12);
+            this.clbProds.Name = "clbProds";
+            this.clbProds.Size = new System.Drawing.Size(216, 427);
+            this.clbProds.TabIndex = 53;
             // 
             // btnSeleted
             // 
-            this.btnSeleted.Location = new System.Drawing.Point(541, 300);
+            this.btnSeleted.Location = new System.Drawing.Point(140, 445);
             this.btnSeleted.Name = "btnSeleted";
             this.btnSeleted.Size = new System.Drawing.Size(90, 25);
             this.btnSeleted.TabIndex = 51;
@@ -93,7 +134,7 @@
             // 
             // lblMaxStock
             // 
-            this.lblMaxStock.Location = new System.Drawing.Point(6, 348);
+            this.lblMaxStock.Location = new System.Drawing.Point(452, 179);
             this.lblMaxStock.Name = "lblMaxStock";
             this.lblMaxStock.Size = new System.Drawing.Size(75, 20);
             this.lblMaxStock.TabIndex = 49;
@@ -101,46 +142,22 @@
             // 
             // txtMaxStock
             // 
-            this.txtMaxStock.Location = new System.Drawing.Point(91, 345);
+            this.txtMaxStock.Location = new System.Drawing.Point(537, 176);
             this.txtMaxStock.Name = "txtMaxStock";
-            this.txtMaxStock.Size = new System.Drawing.Size(214, 23);
+            this.txtMaxStock.Size = new System.Drawing.Size(97, 23);
             this.txtMaxStock.TabIndex = 50;
-            // 
-            // lblIs_enabled
-            // 
-            this.lblIs_enabled.Location = new System.Drawing.Point(19, 374);
-            this.lblIs_enabled.Name = "lblIs_enabled";
-            this.lblIs_enabled.Size = new System.Drawing.Size(62, 20);
-            this.lblIs_enabled.TabIndex = 37;
-            this.lblIs_enabled.Values.Text = "是否启用";
-            // 
-            // chkIs_enabled
-            // 
-            this.chkIs_enabled.Location = new System.Drawing.Point(92, 374);
-            this.chkIs_enabled.Name = "chkIs_enabled";
-            this.chkIs_enabled.Size = new System.Drawing.Size(19, 13);
-            this.chkIs_enabled.TabIndex = 38;
-            this.chkIs_enabled.Values.Text = "";
             // 
             // lb作用对象列表
             // 
-            this.lb作用对象列表.Location = new System.Drawing.Point(3, 12);
+            this.lb作用对象列表.Location = new System.Drawing.Point(12, 12);
             this.lb作用对象列表.Name = "lb作用对象列表";
-            this.lb作用对象列表.Size = new System.Drawing.Size(88, 20);
+            this.lb作用对象列表.Size = new System.Drawing.Size(114, 20);
             this.lb作用对象列表.TabIndex = 7;
-            this.lb作用对象列表.Values.Text = "作用对象列表";
-            // 
-            // txt_ProductIds
-            // 
-            this.txt_ProductIds.Location = new System.Drawing.Point(93, 12);
-            this.txt_ProductIds.Multiline = true;
-            this.txt_ProductIds.Name = "txt_ProductIds";
-            this.txt_ProductIds.Size = new System.Drawing.Size(538, 282);
-            this.txt_ProductIds.TabIndex = 8;
+            this.lb作用对象列表.Values.Text = "要检测的产品对象";
             // 
             // lblMinStock
             // 
-            this.lblMinStock.Location = new System.Drawing.Point(6, 319);
+            this.lblMinStock.Location = new System.Drawing.Point(452, 138);
             this.lblMinStock.Name = "lblMinStock";
             this.lblMinStock.Size = new System.Drawing.Size(75, 20);
             this.lblMinStock.TabIndex = 17;
@@ -148,16 +165,16 @@
             // 
             // txtMinStock
             // 
-            this.txtMinStock.Location = new System.Drawing.Point(91, 316);
+            this.txtMinStock.Location = new System.Drawing.Point(537, 135);
             this.txtMinStock.Name = "txtMinStock";
-            this.txtMinStock.Size = new System.Drawing.Size(214, 23);
+            this.txtMinStock.Size = new System.Drawing.Size(97, 23);
             this.txtMinStock.TabIndex = 18;
             // 
             // UCSafetyStockConfigEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(643, 543);
+            this.ClientSize = new System.Drawing.Size(774, 553);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCSafetyStockConfigEdit";
             this.Load += new System.EventHandler(this.UCBoxRulesEdit_Load);
@@ -174,14 +191,16 @@
         private Krypton.Toolkit.KryptonButton btnOk;
         private Krypton.Toolkit.KryptonButton btnCancel;
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
-        private Krypton.Toolkit.KryptonLabel lb作用对象列表;
-        private Krypton.Toolkit.KryptonTextBox txt_ProductIds;
         private Krypton.Toolkit.KryptonLabel lblMinStock;
         private Krypton.Toolkit.KryptonTextBox txtMinStock;
-        private Krypton.Toolkit.KryptonLabel lblIs_enabled;
-        private Krypton.Toolkit.KryptonCheckBox chkIs_enabled;
         private Krypton.Toolkit.KryptonLabel lblMaxStock;
         private Krypton.Toolkit.KryptonTextBox txtMaxStock;
         private Krypton.Toolkit.KryptonButton btnSeleted;
+        private Krypton.Toolkit.KryptonCheckedListBox clbProds;
+        private Krypton.Toolkit.KryptonLabel lb作用对象列表;
+        private Krypton.Toolkit.KryptonCheckedListBox clbLocation_IDs;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel2;
+        private Krypton.Toolkit.KryptonTextBox txtCheckIntervalByMinutes;
     }
 }

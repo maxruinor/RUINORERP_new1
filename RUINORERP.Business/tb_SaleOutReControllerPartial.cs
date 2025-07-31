@@ -76,7 +76,7 @@ namespace RUINORERP.Business
                                     .Includes(t => t.tb_saleorder, b => b.tb_SaleOrderDetails)
                                     .Includes(t => t.tb_saleorder, b => b.tb_SaleOuts, c => c.tb_SaleOutDetails)
                             .FirstAsync();
-
+                    entity.tb_saleout.AcceptChanges();
 
 
                     //如果采购订单的供应商和这里入库的供应商不相同，要提示
@@ -315,6 +315,7 @@ namespace RUINORERP.Business
                 }
 
 
+
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
@@ -335,72 +336,7 @@ namespace RUINORERP.Business
 
                         //已经是等审核。 审核时会核销预收付款
                         //应收 负 在 就是退款 审核时还要仔细跟进一下
-
-                        //下面冲销逻辑应该放到付款的审核时处理
-                        /*
-                        tb_FM_ReceivablePayable returnpayable = results.ReturnObject;
-                        //如果这个客户要退款，则去找这个客户名下是否还有应收款。找到所有的。倒算自动红冲 余额
-                        var PositivePayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == returnpayable.CustomerVendor_ID
-                        && (c.ARAPStatus == (int)ARAPStatus.待支付 || c.ARAPStatus == (int)ARAPStatus.部分支付)
-                        &&
-                        (c.LocalBalanceAmount > 0 && c.ForeignBalanceAmount > 0)
-                        );
-                        PositivePayableList = PositivePayableList.OrderBy(c => c.Created_at.Value).ToList();
-
-                        for (int i = 0; i < PositivePayableList.Count; i++)
-                        {
-                            var OriginalPayable = PositivePayableList[i];
-                            #region 如果原始应收没有核销付款，则直接生成 红字应收核销
-
-                            //判断 如果出库的应收金额和未核销余额一样。说明 客户还没有支付任何款，则可以直接全额红冲
-
-                            OriginalPayable.LocalBalanceAmount -= entity.TotalAmount;
-                            //-500 加上退款500 应该为0
-                            returnpayable.LocalBalanceAmount += entity.TotalAmount;
-
-                            OriginalPayable.ForeignBalanceAmount -= entity.ForeignTotalAmount;
-                            //-500 加上退款500 应该为0
-                            returnpayable.ForeignBalanceAmount += entity.ForeignTotalAmount;
-
-
-                            OriginalPayable.ARAPStatus = (int)ARAPStatus.已冲销;
-                            returnpayable.ARAPStatus = (int)ARAPStatus.已冲销;
-                            //生成核销记录证明正负抵消应收应付
-                            //生成一笔核销记录  应收红冲
-                            tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
-                            await settlementController.GenerateSettlement(OriginalPayable, returnpayable);
-
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(OriginalPayable).ExecuteCommandAsync();
-                            await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(returnpayable).ExecuteCommandAsync();
-
-                            #endregion
-                        }
-
-                        if (Math.Abs(returnpayable.LocalBalanceAmount) > 0 || Math.Abs(returnpayable.ForeignBalanceAmount) > 0)
-                        {
-                            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                            #region 通过负数的应收，生成退款单
-
-                            //找到支付记录
-                            //通过负数的应收，生成退款单
-                            await paymentController.CreatePaymentRecord(new List<tb_FM_ReceivablePayable> { returnpayable }, false);
-                            //退款单生成成功等待 财务审核
-                            #endregion
-                        }
-                        else
-                        {
-                            entity.PayStatus = (int)PayStatus.全部付款;
-                        }
-                        */
-                        //财务审核应收红单后 看如何核销
-                        /*
-                          生成退款单	- 手动录入：选择退款方式（现金/原支付渠道）	生成 退款单（RefundMaster），金额为退货金额，关联原收款单	退款单状态：草稿 → 财务审核 → 已审核
-                                                5. 更新资金账户	- 现金退款：直接减少现金账户余额
-                                                - 原渠道退款：生成红字收款单并关联银行流水	更新 PaymentDetail 或生成红字收款单（IsRed=1）	现金账户余额减少
-                                                红字收款单状态为 已审核
-
-                         */
-
+                        //如果是平台订单 则自动审核
 
                     }
 
@@ -411,11 +347,42 @@ namespace RUINORERP.Business
                 // await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutReDetail>(entity.tb_SaleOutReDetails).ExecuteCommandAsync();
 
                 //这里要更新状态！！！！！！！！！！
-                if (entity.RefundStatus.HasValue && entity.RefundStatus.Value == (int)RefundStatus.退款退货完成)
+                if (entity.RefundStatus.HasValue && ((RefundStatus)entity.RefundStatus.Value).ToString().Contains("已退款"))
                 {
-
+                    entity.RefundStatus = (int)RefundStatus.已退款已退货;
+                    if (entity.RefundOnly)
+                    {
+                        entity.RefundStatus = (int)RefundStatus.已退款未退货;
+                    }
+                    if (entity.tb_saleout != null)
+                    {
+                        if (entity.tb_saleout.RefundStatus == (int)RefundStatus.已退款未退货 || entity.tb_saleout.RefundStatus == (int)RefundStatus.已退款等待退货)
+                        {
+                            entity.tb_saleout.RefundStatus = (int)RefundStatus.已退款已退货;
+                        }
+                    }
                 }
 
+                if (entity.RefundStatus.HasValue && ((RefundStatus)entity.RefundStatus.Value).ToString().Contains("未退款"))
+                {
+                    entity.RefundStatus = (int)RefundStatus.未退款已退货;
+
+                    if (entity.tb_saleout != null)
+                    {
+                        if (entity.tb_saleout.RefundStatus == (int)RefundStatus.未退款等待退货)
+                        {
+                            entity.tb_saleout.RefundStatus = (int)RefundStatus.未退款已退货;
+                        }
+                    }
+                }
+
+
+                if (entity.tb_saleout != null && entity.tb_saleout.HasChanged)
+                {
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity.tb_saleout)
+                         .UpdateColumns(t => new { t.RefundStatus })
+                         .ExecuteCommandAsync();
+                }
 
                 entity.ApprovalResults = true;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
@@ -430,6 +397,7 @@ namespace RUINORERP.Business
                     it.Approver_at,
                     it.Approver_by,
                     it.ApprovalOpinions,
+                    it.RefundStatus,
                 }).ExecuteCommandAsync();
 
                 _unitOfWorkManage.CommitTran();
@@ -486,6 +454,7 @@ namespace RUINORERP.Business
                                     .Includes(t => t.tb_saleorder, b => b.tb_SaleOrderDetails)
                                     .Includes(t => t.tb_saleorder, b => b.tb_SaleOuts, c => c.tb_SaleOutDetails)
                             .FirstAsync();
+                    entity.tb_saleout.AcceptChanges();
 
                     if (entity.tb_saleout.TotalAmount < entity.TotalAmount || entity.tb_saleout.ForeignTotalAmount < entity.ForeignTotalAmount)
                     {
@@ -730,45 +699,47 @@ namespace RUINORERP.Business
 
                 //可能后面退部分这种，还需要进一步确认状态
 
-
-                if (entity.tb_saleout.RefundStatus == (int)RefundStatus.已退款未退货)
+                //反审
+                if (entity.RefundStatus.HasValue && ((RefundStatus)entity.RefundStatus.Value).ToString().Contains("已退款"))
                 {
-                    entity.tb_saleout.RefundStatus = (int)RefundStatus.退款退货完成;
-                }
-
-                if (entity.tb_saleout.RefundStatus == (int)RefundStatus.未退款等待退货)
-                {
-                    entity.tb_saleout.RefundStatus = (int)RefundStatus.退款退货完成;
-                }
-
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity.tb_saleout)
-                 .UpdateColumns(t => new { t.RefundStatus })
-                 .ExecuteCommandAsync();
-
-
-                if (entity.RefundStatus.HasValue)
-                {
-                    if (entity.RefundStatus == (int)RefundStatus.已退款等待退货)
+                    entity.RefundStatus = (int)RefundStatus.已退款未退货;
+                    if (entity.RefundOnly)
                     {
-                        entity.RefundStatus = (int)RefundStatus.退款退货完成;
+                        entity.RefundStatus = (int)RefundStatus.已退款未退货;
                     }
-
-                    if (entity.RefundStatus == (int)RefundStatus.已退款未退货)
+                    if (entity.tb_saleout != null)
                     {
-                        entity.RefundStatus = (int)RefundStatus.退款退货完成;
+                        if (entity.tb_saleout.RefundStatus == (int)RefundStatus.已退款已退货)
+                        {
+                            entity.tb_saleout.RefundStatus = (int)RefundStatus.已退款等待退货;
+                        }
                     }
-
-                    if (entity.RefundStatus == (int)RefundStatus.未退款等待退货)
-                    {
-                        entity.RefundStatus = (int)RefundStatus.未退款已退货;
-                    }
-                   
                 }
-                else
+
+                if (entity.RefundStatus.HasValue && ((RefundStatus)entity.RefundStatus.Value).ToString().Contains("未退款"))
                 {
-                    entity.RefundStatus = (int)RefundStatus.未退款已退货;
+                    entity.RefundStatus = (int)RefundStatus.未退款等待退货;
+                    if (entity.RefundOnly)
+                    {
+                        entity.RefundStatus = (int)RefundStatus.已退款未退货;
+                    }
+                    if (entity.tb_saleout != null)
+                    {
+                        if (entity.tb_saleout.RefundStatus == (int)RefundStatus.未退款等待退货)
+                        {
+                            entity.tb_saleout.RefundStatus = (int)RefundStatus.未退款等待退货;
+                        }
+                    }
                 }
-               
+
+                if (entity.tb_saleout != null && entity.tb_saleout.HasChanged)
+                {
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOut>(entity.tb_saleout)
+                         .UpdateColumns(t => new { t.RefundStatus })
+                         .ExecuteCommandAsync();
+                }
+
+
 
                 entity.ApprovalOpinions = "反审";
                 //后面已经修改为

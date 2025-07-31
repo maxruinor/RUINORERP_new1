@@ -22,6 +22,9 @@ using RUINORERP.Global;
 using RUINORERP.UI.UCSourceGrid;
 using static OpenTK.Graphics.OpenGL.GL;
 using RUINORERP.Model.ReminderModel.ReminderRules;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Business.CommService;
+using Netron.GraphLib;
 
 namespace RUINORERP.UI.SmartReminderClient
 {
@@ -42,13 +45,45 @@ namespace RUINORERP.UI.SmartReminderClient
             {
                 entity = new SafetyStockConfig();
             }
-            entity._ProductIds = safetyStockConfig.ProductIds.ToJson();
-            DataBindingHelper.BindData4TextBox<SafetyStockConfig>(entity, t => t._ProductIds, txt_ProductIds, BindDataType4TextBox.Text, false);
-            txt_ProductIds.ReadOnly = true;//要选取，不能手输入。不然格式错误
+            //entity._ProductIds = safetyStockConfig.ProductIds.ToJson();
+
+            DataBindingHelper.BindData4TextBox<SafetyStockConfig>(entity, t => t.CheckIntervalByMinutes, txtCheckIntervalByMinutes, BindDataType4TextBox.Qty, false);
+
+            //txt_ProductIds.ReadOnly = true;//要选取，不能手输入。不然格式错误
+            // 绑定到CheckedListBox
+
+            //CheckedListBoxHelper.BindData4CheckedListBox<SafetyStockConfig, long, View_ProdDetail>(
+            //    entity: entity,
+            //    propertyExpression: e => e.ProductIds,
+            //    checkedList: clbProds,
+            //    dataSource: MainForm.Instance.list,
+            //    idExpression: u => u.ProdDetailID,
+            //    displayExpression: u => u.CNName
+            //);
+
+            CheckedListBoxHelper.BindData4CheckedListBox<SafetyStockConfig, long, View_ProdDetail>(
+                entity,
+                e => e.ProductIds,
+                clbProds,
+                MainForm.Instance.list,
+                u => u.ProdDetailID,
+                u => u.CNName
+                );
+
+
+
+            CheckedListBoxHelper.BindData4CheckedListBox<SafetyStockConfig, long, tb_Location>(
+            entity,
+            e => e.ProductIds,
+            clbLocation_IDs,
+           BizCacheHelper.Manager.GetEntityList<tb_Location>(),
+            u => u.Location_ID,
+            u => u.Name
+            );
+
 
             DataBindingHelper.BindData4TextBox<SafetyStockConfig>(entity, t => t.MinStock, txtMinStock, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<SafetyStockConfig>(entity, t => t.MaxStock, txtMaxStock, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4CheckBox<SafetyStockConfig>(entity, t => t.IsEnabled, chkIs_enabled, false);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -61,8 +96,19 @@ namespace RUINORERP.UI.SmartReminderClient
         private void btnOk_Click(object sender, EventArgs e)
         {
             bindingSourceEdit.EndEdit();
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            if (bindingSourceEdit.Current is SafetyStockConfig stockConfig)
+            {
+                if (stockConfig.Validate())
+                {
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("请检查数据是否填写正确。");
+                }
+            }
+
         }
 
         private void UCBoxRulesEdit_Load(object sender, EventArgs e)
@@ -94,7 +140,7 @@ namespace RUINORERP.UI.SmartReminderClient
                 }
             }
             //将集合用,号隔开后拼起来
-            txt_ProductIds.Text = safetyStockConfig.ProductIds.ToJson();
+            //txt_ProductIds.Text = safetyStockConfig.ProductIds.ToJson();
         }
     }
 }

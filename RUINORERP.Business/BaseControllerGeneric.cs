@@ -36,7 +36,7 @@ using RUINORERP.Business.CommService;
 using System.Web.UI.WebControls;
 using AutoMapper;
 using RUINORERP.Global.EnumExt;
-using RUINORERP.Business.FMService;
+using RUINORERP.Business.StatusManagerService;
 
 namespace RUINORERP.Business
 {

@@ -11,9 +11,6 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
     {
         long RuleId { get; set; }
 
-        //脚本的代码，可能要用一个方法从数据库中的来转？
-        string Condition { get; set; }
-
         int ReminderBizType { get; set; }
 
         int RuleEngineType { get; set; }
@@ -21,10 +18,13 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
         // 新增离线消息处理属性
         bool PersistUntilDelivered { get; set; }
 
-        ///// <summary>
-        ///// long类型的userid，用逗号隔开
-        ///// </summary>
-        string NotifyRecipients { get; set; }
+        /// <summary>
+        /// 通知渠道，枚举值
+        /// </summary>
+        List<int> NotifyChannels { get; set; }
+
+        List<long> NotifyRecipients { get; set; }
+
 
         IRuleConfig GetConfig<T>();
 

@@ -52,7 +52,7 @@
             this.lblNotes = new Krypton.Toolkit.KryptonLabel();
             this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
             this.lblDataContent = new Krypton.Toolkit.KryptonLabel();
-            this.auditLogViewer1 = new RUINORERP.UI.Monitoring.Auditing.AuditLogViewer();
+            this.auditLogViewer1 = new RUINORERP.UI.Monitoring.Auditing.JsonViewer();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -322,6 +322,6 @@
         private Krypton.Toolkit.KryptonTextBox txtNotes;
         private Krypton.Toolkit.KryptonLabel lblDataContent;
         private Krypton.Toolkit.KryptonTextBox txtActionTime;
-        private Monitoring.Auditing.AuditLogViewer auditLogViewer1;
+        private Monitoring.Auditing.JsonViewer auditLogViewer1;
     }
 }

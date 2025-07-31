@@ -12,11 +12,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Business.FMService
+namespace RUINORERP.Business.StatusManagerService
 {
     public static class FMPaymentStatusHelper
     {
-
 
         /// <summary>获取实体的状态类型</summary>
         public static Type GetStatusType(BaseEntity entity)
@@ -35,8 +34,6 @@ namespace RUINORERP.Business.FMService
 
             return null;
         }
-
-
 
 
         /// <summary>是否是终态（不可修改状态）</summary>

@@ -60,13 +60,9 @@ namespace RUINORERP.Business
 // RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannels).MaximumLength(25).WithMessage("通知渠道:不能超过最大长度,25.");
  RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannels).NotEmpty().WithMessage("通知渠道:不能为空。");
 
- RuleFor(tb_ReminderRule =>tb_ReminderRule.Condition).NotEmpty().WithMessage("规则条件:不能为空。");
 
- RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipientNames).NotEmpty().WithMessage("通知接收人员:不能为空。");
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipients).NotEmpty().WithMessage("通知接收人员:不能为空。");
 
- RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipients).NotEmpty().WithMessage("通知接收人员ID:不能为空。");
-
- RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyMessage).NotEmpty().WithMessage("通知消息模板:不能为空。");
 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.JsonConfig).NotEmpty().WithMessage("扩展JSON配置:不能为空。");
 

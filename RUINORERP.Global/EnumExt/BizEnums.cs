@@ -22,11 +22,11 @@ namespace RUINORERP.Global
         /// <summary>
         /// 超时完成
         /// </summary>
-        [Description("仅退款")]
+       // [Description("仅退款")]
         已退款未退货 = 4,
 
 
-        退款退货完成 = 5
+        已退款已退货 = 5
     }
 
     // 岗位类型枚举（仅用于菜单推荐逻辑）

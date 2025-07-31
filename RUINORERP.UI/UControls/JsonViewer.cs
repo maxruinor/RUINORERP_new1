@@ -13,14 +13,17 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.Monitoring.Auditing
 {
-    public partial class AuditLogViewer : KryptonPanel
+    /// <summary>
+    /// Json查看器
+    /// </summary>
+    public partial class JsonViewer : KryptonPanel
     {
         private KryptonTreeView treeView;
         private KryptonButton btnExpandAll;
         private KryptonButton btnCollapseAll;
         private KryptonButton btnFormatJson;
 
-        public AuditLogViewer()
+        public JsonViewer()
         {
             InitializeComponent();
             // 初始化控件

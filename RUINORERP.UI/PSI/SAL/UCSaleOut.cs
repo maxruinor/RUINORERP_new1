@@ -68,7 +68,7 @@ namespace RUINORERP.UI.PSI.SAL
             BindData(Entity as tb_SaleOut, actionStatus);
         }
 
-        #region 平台退款动作
+        #region 同意平台退款动作
 
         ToolStripButton toolStripButton平台退款 = new System.Windows.Forms.ToolStripButton();
 
@@ -79,13 +79,13 @@ namespace RUINORERP.UI.PSI.SAL
         public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
 
-            toolStripButton平台退款.Text = "平台退款";
+            toolStripButton平台退款.Text = "同意平台退款";
             toolStripButton平台退款.Image = global::RUINORERP.UI.Properties.Resources.Assignment;
             toolStripButton平台退款.ImageTransparentColor = System.Drawing.Color.Magenta;
-            toolStripButton平台退款.Name = "平台退款";
+            toolStripButton平台退款.Name = "同意平台退款";
             toolStripButton平台退款.Visible = false;//默认隐藏
             UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton平台退款);
-            toolStripButton平台退款.ToolTipText = "平台订单退款时，会强制校验是否生成销售退回单，如果没有，则会自动预生成。";
+            toolStripButton平台退款.ToolTipText = "同意平台订单退款时，会强制校验是否生成销售退回单，如果没有，则会自动预生成。";
             toolStripButton平台退款.Click += new System.EventHandler(this.toolStripButton平台退款_Click);
 
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
@@ -120,35 +120,6 @@ namespace RUINORERP.UI.PSI.SAL
                     if (saleOut.tb_SaleOutRes != null && saleOut.tb_SaleOutRes.Count > 0)
                     {
 
-                        //if (entity.RefundStatus.HasValue)
-                        //{
-                        //    if (entity.RefundStatus == (int)RefundStatus.已退款等待退货)
-                        //    {
-                        //        entity.RefundStatus = (int)RefundStatus.退款退货完成;
-                        //    }
-
-                        //    if (entity.RefundStatus == (int)RefundStatus.已退款未退货)
-                        //    {
-                        //        entity.RefundStatus = (int)RefundStatus.退款退货完成;
-                        //    }
-
-                        //    if (entity.RefundStatus == (int)RefundStatus.未退款等待退货)
-                        //    {
-                        //        entity.RefundStatus = (int)RefundStatus.未退款已退货;
-                        //    }
-
-                        //}
-                        //else
-                        //{
-                        //    entity.RefundStatus = (int)RefundStatus.未退款已退货;
-                        //}
-
-                        // 更新出库单状态
-                        //saleOut.RefundStatus = (int)RefundStatus.退款退货完成;
-                        //    var last = await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(saleOut).UpdateColumns(it => new
-                        //    {
-                        //        it.RefundStatus
-                        //    }).ExecuteCommandAsync();
 
                         // 打开销售退回单，确认
                         MenuPowerHelper menuPowerHelper;
@@ -174,17 +145,17 @@ namespace RUINORERP.UI.PSI.SAL
                         {
                             toolStripButton平台退款.Enabled = false;
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOut>("平台退款,生成预销售退回单", EditEntity);
-                            MessageBox.Show($"平台退款后，已经成功预生成【销售退回单】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show($"同意平台退款后，已经成功预生成【销售退回单】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         else
                         {
-                            MessageBox.Show($"当前【销售出库单】平台退款时，生成预退货单失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show($"当前【销售出库单】同意平台退款时，生成预退货单失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                 }
                 else
                 {
-                    MessageBox.Show($"当前【销售出库单】的状态为{(DataStatus)EditEntity.DataStatus}，无法进行【平台退款】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"当前【销售出库单】的状态为{(DataStatus)EditEntity.DataStatus}，无法进行【同意平台退款】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }

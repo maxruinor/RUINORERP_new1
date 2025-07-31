@@ -2053,9 +2053,9 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Monitoring\Auditing\AuditLogViewer.cs" />
-    <Compile Include="Monitoring\Auditing\AuditLogViewer.Designer.cs">
-      <DependentUpon>AuditLogViewer.cs</DependentUpon>
+    <Compile Include="UControls\JsonViewer.cs" />
+    <Compile Include="UControls\JsonViewer.Designer.cs">
+      <DependentUpon>JsonViewer.cs</DependentUpon>
     </Compile>
     <Compile Include="Monitoring\Auditing\EntityDataExtractor.cs" />
     <Compile Include="Monitoring\Auditing\EntityDataRestorer.cs" />

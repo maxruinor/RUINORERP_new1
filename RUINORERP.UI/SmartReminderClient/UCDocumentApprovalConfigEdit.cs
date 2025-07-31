@@ -42,13 +42,13 @@ namespace RUINORERP.UI.SmartReminderClient
             {
                 entity = new DocApprovalConfig();
             }
-            entity._DocumentTypeNames = DocumentApprovalConfig.DocumentTypes.ToJson();
-            DataBindingHelper.BindData4TextBox<DocApprovalConfig>(entity, t => t._DocumentTypeNames, txt_ProductIds, BindDataType4TextBox.Text, false);
+            //entity._DocumentTypeNames = DocumentApprovalConfig.DocumentTypes.ToJson();
+            //DataBindingHelper.BindData4TextBox<DocApprovalConfig>(entity, t => t._DocumentTypeNames, txt_ProductIds, BindDataType4TextBox.Text, false);
             txt_ProductIds.ReadOnly = true;//要选取，不能手输入。不然格式错误
 
             //DataBindingHelper.BindData4TextBox<DocumentApprovalConfig>(entity, t => t.MinStock, txtMinStock, BindDataType4TextBox.Qty, false);
             //DataBindingHelper.BindData4TextBox<DocumentApprovalConfig>(entity, t => t.MaxStock, txtMaxStock, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4CheckBox<DocApprovalConfig>(entity, t => t.IsEnabled, chkIs_enabled, false);
+  
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

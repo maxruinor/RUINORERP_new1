@@ -169,6 +169,48 @@ namespace RUINORERP.Extensions.Middlewares
         }
 
 
+        public List<T> GetEntityList<T>()
+        {
+            string tableName = typeof(T).Name;
+            List<T> tlist = new List<T>();
+            if (NewTableList.ContainsKey(tableName))
+            {
+                var cachelist = CacheEntityList.Get(tableName);
+
+                Type listType = cachelist.GetType();
+                if (TypeHelper.IsGenericList(listType))
+                {
+                    if (listType.FullName.Contains("System.Collections.Generic.List`1[[System.Object"))
+                    {
+                        List<T> lastOKList = new List<T>();
+                        var lastlist = ((IEnumerable<dynamic>)cachelist).ToList();
+                        foreach (var item in lastlist)
+                        {
+                            lastOKList.Add(item);
+                        }
+                        tlist = lastOKList;
+                    }
+                    else
+                    {
+                        tlist = cachelist as List<T>;
+                    }
+                }
+                else if (TypeHelper.IsJArrayList(listType))
+                {
+                    List<T> lastOKList = new List<T>();
+
+                    var objlist = TypeHelper.ConvertJArrayToList(typeof(T), cachelist as JArray);
+                    var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
+                    foreach (var item in lastlist)
+                    {
+                        lastOKList.Add(item);
+                    }
+                    tlist = lastOKList;
+                }
+            }
+            return tlist;
+        }
+
         /*
         public void AddCacheEntity<T>(object entity, Expression<Func<T, int>> expkey, Expression<Func<T, string>> expvalue)
         {

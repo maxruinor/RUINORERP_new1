@@ -31,7 +31,7 @@ using RUINORERP.Business.CommService;
 using AutoMapper;
 using System.IO.IsolatedStorage;
 using StackExchange.Redis;
-using RUINORERP.Business.FMService;
+using RUINORERP.Business.StatusManagerService;
 using System.Drawing.Drawing2D;
 using System.Collections;
 

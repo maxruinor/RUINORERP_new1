@@ -621,6 +621,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdInfo.CNName, 0);
                     itemSub.Tag = BOM_SDetail.view_ProdInfo;
+
                     itemSub.SubItems.Add(BOM_SDetail.SKU);//subitems只是从属于itemRow的子项。目前是四列
                     itemSub.SubItems.Add(BOM_SDetail.view_ProdInfo.prop);//subitems只是从属于itemRow的子项。目前是四列
                     itemSub.SubItems.Add(BOM_SDetail.view_ProdInfo.Model);
@@ -1252,21 +1253,32 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
+
+        /// <summary>
+        /// 配方显示下拉。但是又与库存挂沟了
+        /// 所以默认是优先显示库存最多的。如果一个产品View_ProdDetail在有多行的话。
+        /// </summary>
+        /// <param name="listViewItem"></param>
         private void GetBOMResults(TreeListViewItem listViewItem)
         {
             if (listViewItem.Items.Count > 0)
             {
                 foreach (TreeListViewItem dr in listViewItem.Items)
                 {
-                    if (!(dr.Tag is View_ProdDetail))
-                    {
-                        MessageBox.Show("TODO:请调试这里");
-                    }
                     if (dr.Checked)
                     {
+                        View_ProdDetail prodDetail = null;
+                        if (dr.Tag is View_ProdInfo prodInfo)
+                        {
+                            prodDetail = MainForm.Instance.list.FirstOrDefault(c => c.ProdDetailID == prodInfo.ProdDetailID);
+                        }
+                        else if (dr.Tag is View_ProdDetail  _ProdDetail)
+                        {
+                            prodDetail = _ProdDetail;
+                        }
                         if (dr.CheckStatus == CheckState.Checked)
                         {
-                            QueryObjects.Add((View_ProdDetail)dr.Tag);
+                            QueryObjects.Add(prodDetail);
                         }
                     }
                 }

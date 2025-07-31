@@ -8,6 +8,7 @@ using RUINORERP.Global.Model;
 using RUINORERP.Model.Base;
 using SharpYaml.Tokens;
 using SqlSugar;
+using SqlSugar.Extensions;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -765,6 +766,7 @@ namespace RUINORERP.Model
 
         protected virtual void OnPropertyChanged<T>(Expression<Func<T>> expr)
         {
+            
             this.OnPropertyChanged(Utils.GetMemberName(expr));
         }
 

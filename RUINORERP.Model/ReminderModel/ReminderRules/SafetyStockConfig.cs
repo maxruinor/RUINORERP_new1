@@ -11,16 +11,17 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
 {
     public class SafetyStockConfig : RuleConfigBase
     {
-        // 辅助属性，不参与JSON序列化
-        [JsonIgnore]
-        public string _ProductIds
-        {
-            get => string.Join(",", ProductIds);
-            set => ProductIds = value?.Split(',')
-                                 .Select(long.Parse)
-                                 .ToList() ?? new List<long>();
-        }
+        //// 辅助属性，不参与JSON序列化
+        //[JsonIgnore]
+        //public string _ProductIds
+        //{
+        //    get => string.Join(",", ProductIds);
+        //    set => ProductIds = value?.Split(',')
+        //                         .Select(long.Parse)
+        //                         .ToList() ?? new List<long>();
+        //}
 
+        [Description("要检测的产品对象")]
         public List<long> ProductIds { get; set; } = new List<long>();
 
         [Description("最小安全库存")]
@@ -28,24 +29,24 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
 
         [Description("最大安全库存")]
         public int MaxStock { get; set; }
- 
+
         [Description("补货数量")]
         public long ReorderQuantity { get; set; }
-     
 
 
-        //提醒库位
         [Description("提醒库位")]
         public List<long> LocationIds { get; set; } = new List<long>();
- 
+
 
         public override bool Validate()
         {
             return ProductIds?.Any() == true
+                && LocationIds?.Any() == true
                 && MinStock >= 0
                 && MaxStock > MinStock
-                && ReminderIntervalMinutes > 0;
+                && CheckIntervalByMinutes > 30;
         }
+
 
         //public override void Validate()
         //{

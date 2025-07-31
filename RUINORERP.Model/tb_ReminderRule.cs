@@ -201,66 +201,7 @@ namespace RUINORERP.Model
                 SetProperty(ref _ExpireDate, value);
             }
         }
-
-        private string _Condition;
-        /// <summary>
-        /// 规则条件
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Condition", ColDesc = "规则条件")]
-        [SugarColumn(ColumnDataType = "text", SqlParameterDbType = "String", ColumnName = "Condition", Length = 2147483647, IsNullable = false, ColumnDescription = "规则条件")]
-        public string Condition
-        {
-            get { return _Condition; }
-            set
-            {
-                SetProperty(ref _Condition, value);
-            }
-        }
-
-        private string _NotifyRecipientNames;
-        /// <summary>
-        /// 通知接收人员
-        /// </summary>
-        [AdvQueryAttribute(ColName = "NotifyRecipientNames", ColDesc = "通知接收人员")]
-        [SugarColumn(ColumnDataType = "text", SqlParameterDbType = "String", ColumnName = "NotifyRecipientNames", Length = 2147483647, IsNullable = false, ColumnDescription = "通知接收人员")]
-        public string NotifyRecipientNames
-        {
-            get { return _NotifyRecipientNames; }
-            set
-            {
-                SetProperty(ref _NotifyRecipientNames, value);
-            }
-        }
-
-        private string _NotifyRecipients;
-        /// <summary>
-        /// 通知接收人员ID
-        /// </summary>
-        [AdvQueryAttribute(ColName = "NotifyRecipients", ColDesc = "通知接收人员ID")]
-        [SugarColumn(ColumnDataType = "text", SqlParameterDbType = "String", ColumnName = "NotifyRecipients", Length = 2147483647, IsNullable = false, ColumnDescription = "通知接收人员ID")]
-        public string NotifyRecipients
-        {
-            get { return _NotifyRecipients; }
-            set
-            {
-                SetProperty(ref _NotifyRecipients, value);
-            }
-        }
-
-        private string _NotifyMessage;
-        /// <summary>
-        /// 通知消息模板
-        /// </summary>
-        [AdvQueryAttribute(ColName = "NotifyMessage", ColDesc = "通知消息模板")]
-        [SugarColumn(ColumnDataType = "text", SqlParameterDbType = "String", ColumnName = "NotifyMessage", Length = 2147483647, IsNullable = false, ColumnDescription = "通知消息模板")]
-        public string NotifyMessage
-        {
-            get { return _NotifyMessage; }
-            set
-            {
-                SetProperty(ref _NotifyMessage, value);
-            }
-        }
+       
 
         private string _JsonConfig;
         /// <summary>
@@ -350,10 +291,7 @@ namespace RUINORERP.Model
         //RuleId.FK_TB_REMINDERRESULT_REF_TB_REMINDERRULE)
         //tb_ReminderRule.RuleId)
 
-
         #endregion
-
-
 
         //如果为false,则不可以。
         private bool PK_FK_ID_Check()

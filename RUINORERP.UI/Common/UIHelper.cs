@@ -36,6 +36,7 @@ using RUINORERP.UI.ATechnologyStack;
 using FluentValidation.Results;
 using RUINORERP.Global;
 using RUINORERP.Model.Dto;
+using RUINORERP.Model.Utilities;
 
 namespace RUINORERP.UI.Common
 {
@@ -1397,6 +1398,22 @@ namespace RUINORERP.UI.Common
                         //}
                     }
 
+                    if (attributes.Contains(new DisplayTextAttribute(false)))
+                    {
+                        Browsable = false;
+                        continue;
+                        // Checks to see if the value of the BrowsableAttribute is Yes.
+                        //if (attributes[typeof(BrowsableAttribute)].Equals(BrowsableAttribute.No))
+                        //{
+                        //    brow = false;
+                        //}
+                    }
+
+                    if (attributes.Contains(new DisplayTextAttribute(true)))
+                    {
+                        Browsable = true;
+                    }
+
 
                     var objects = attributes.Where(x => x is SugarColumn).ToArray();
                     if (objects.Length == 0)
@@ -1419,7 +1436,10 @@ namespace RUINORERP.UI.Common
                         entityAttr = attr as SugarColumn;
                         if (null != entityAttr)
                         {
-                            col.DataPropertyName = entityAttr.SqlParameterDbType.ToString();
+                            if (entityAttr.SqlParameterDbType != null)
+                            {
+                                col.DataPropertyName = entityAttr.SqlParameterDbType.ToString();
+                            }
                             col.BelongingObjectName = type.Name;
                             //类型
                             if (entityAttr.ColumnDescription == null)
@@ -1434,12 +1454,15 @@ namespace RUINORERP.UI.Common
                             }
                             if (entityAttr.IsIgnore)
                             {
-
                                 col.ColDisplayText = entityAttr.ColumnDescription;
                                 col.ColDisplayIndex = columnDisplayControllers.Count;
                                 col.Visible = false;//默认不显示主键
                                 col.ColName = field.Name;
                                 col.Disable = true;
+                                if (Browsable)
+                                {
+                                    col.Disable = false;
+                                }
                                 columnDisplayControllers.Add(col);
                                 continue;
                             }

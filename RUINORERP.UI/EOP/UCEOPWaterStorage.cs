@@ -178,9 +178,8 @@ namespace RUINORERP.UI.EOP
 
 
                 ReturnMainSubResults<tb_EOP_WaterStorage> SaveResult = new ReturnMainSubResults<tb_EOP_WaterStorage>();
-                if (NeedValidated)
+                if (NeedValidated && EditEntity.HasChanged)
                 {
-
                     //保存图片
                     #region 
 
@@ -224,6 +223,8 @@ namespace RUINORERP.UI.EOP
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
+                        EditEntity.AcceptChanges();
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_EOP_WaterStorage>("保存", EditEntity);
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.WSRNo}。");
                     }
                     else

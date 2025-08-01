@@ -74,6 +74,8 @@ namespace RUINORERP.UI.FM
             this.lblTotalLocalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalForeignAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalForeignAmount = new Krypton.Toolkit.KryptonLabel();
+            this.lblReimburser = new Krypton.Toolkit.KryptonLabel();
+            this.cmbReimburser = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -96,6 +98,7 @@ namespace RUINORERP.UI.FM
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbReimburser)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -119,6 +122,8 @@ namespace RUINORERP.UI.FM
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.lblReimburser);
+            this.kryptonPanel1.Controls.Add(this.cmbReimburser);
             this.kryptonPanel1.Controls.Add(this.chkIsFromPlatform);
             this.kryptonPanel1.Controls.Add(this.cmbPaytype_ID);
             this.kryptonPanel1.Controls.Add(this.lblPaytype_ID);
@@ -163,7 +168,7 @@ namespace RUINORERP.UI.FM
             // 
             // chkIsFromPlatform
             // 
-            this.chkIsFromPlatform.Location = new System.Drawing.Point(588, 113);
+            this.chkIsFromPlatform.Location = new System.Drawing.Point(731, 85);
             this.chkIsFromPlatform.Name = "chkIsFromPlatform";
             this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
             this.chkIsFromPlatform.TabIndex = 226;
@@ -173,14 +178,14 @@ namespace RUINORERP.UI.FM
             // 
             this.cmbPaytype_ID.DropDownWidth = 100;
             this.cmbPaytype_ID.IntegralHeight = false;
-            this.cmbPaytype_ID.Location = new System.Drawing.Point(77, 109);
+            this.cmbPaytype_ID.Location = new System.Drawing.Point(79, 86);
             this.cmbPaytype_ID.Name = "cmbPaytype_ID";
             this.cmbPaytype_ID.Size = new System.Drawing.Size(135, 21);
             this.cmbPaytype_ID.TabIndex = 205;
             // 
             // lblPaytype_ID
             // 
-            this.lblPaytype_ID.Location = new System.Drawing.Point(12, 109);
+            this.lblPaytype_ID.Location = new System.Drawing.Point(14, 86);
             this.lblPaytype_ID.Name = "lblPaytype_ID";
             this.lblPaytype_ID.Size = new System.Drawing.Size(62, 20);
             this.lblPaytype_ID.TabIndex = 204;
@@ -205,7 +210,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblEmployee_ID
             // 
-            this.lblEmployee_ID.Location = new System.Drawing.Point(511, 84);
+            this.lblEmployee_ID.Location = new System.Drawing.Point(508, 84);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
             this.lblEmployee_ID.Size = new System.Drawing.Size(75, 20);
             this.lblEmployee_ID.TabIndex = 195;
@@ -213,7 +218,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblDueDate
             // 
-            this.lblDueDate.Location = new System.Drawing.Point(537, 54);
+            this.lblDueDate.Location = new System.Drawing.Point(534, 54);
             this.lblDueDate.Name = "lblDueDate";
             this.lblDueDate.Size = new System.Drawing.Size(49, 20);
             this.lblDueDate.TabIndex = 193;
@@ -267,7 +272,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblExchangeRate
             // 
-            this.lblExchangeRate.Location = new System.Drawing.Point(886, 137);
+            this.lblExchangeRate.Location = new System.Drawing.Point(887, 137);
             this.lblExchangeRate.Name = "lblExchangeRate";
             this.lblExchangeRate.Size = new System.Drawing.Size(36, 20);
             this.lblExchangeRate.TabIndex = 180;
@@ -282,7 +287,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblCustomerVendor_ID
             // 
-            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(12, 84);
+            this.lblCustomerVendor_ID.Location = new System.Drawing.Point(12, 111);
             this.lblCustomerVendor_ID.Name = "lblCustomerVendor_ID";
             this.lblCustomerVendor_ID.Size = new System.Drawing.Size(62, 20);
             this.lblCustomerVendor_ID.TabIndex = 176;
@@ -292,9 +297,9 @@ namespace RUINORERP.UI.FM
             // 
             this.cmbCustomerVendor_ID.DropDownWidth = 100;
             this.cmbCustomerVendor_ID.IntegralHeight = false;
-            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(79, 84);
+            this.cmbCustomerVendor_ID.Location = new System.Drawing.Point(79, 111);
             this.cmbCustomerVendor_ID.Name = "cmbCustomerVendor_ID";
-            this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(383, 21);
+            this.cmbCustomerVendor_ID.Size = new System.Drawing.Size(385, 21);
             this.cmbCustomerVendor_ID.TabIndex = 177;
             // 
             // txtPaymentNo
@@ -317,7 +322,7 @@ namespace RUINORERP.UI.FM
             // 
             // btnInfo
             // 
-            this.btnInfo.Location = new System.Drawing.Point(724, 135);
+            this.btnInfo.Location = new System.Drawing.Point(731, 136);
             this.btnInfo.Name = "btnInfo";
             this.btnInfo.Size = new System.Drawing.Size(21, 21);
             this.btnInfo.TabIndex = 168;
@@ -339,7 +344,7 @@ namespace RUINORERP.UI.FM
             // 
             this.cmbPayeeInfoID.DropDownWidth = 100;
             this.cmbPayeeInfoID.IntegralHeight = false;
-            this.cmbPayeeInfoID.Location = new System.Drawing.Point(77, 136);
+            this.cmbPayeeInfoID.Location = new System.Drawing.Point(79, 136);
             this.cmbPayeeInfoID.Name = "cmbPayeeInfoID";
             this.cmbPayeeInfoID.Size = new System.Drawing.Size(646, 21);
             this.cmbPayeeInfoID.TabIndex = 167;
@@ -367,9 +372,9 @@ namespace RUINORERP.UI.FM
             // 
             this.cmbCurrency_ID.DropDownWidth = 100;
             this.cmbCurrency_ID.IntegralHeight = false;
-            this.cmbCurrency_ID.Location = new System.Drawing.Point(327, 108);
+            this.cmbCurrency_ID.Location = new System.Drawing.Point(311, 85);
             this.cmbCurrency_ID.Name = "cmbCurrency_ID";
-            this.cmbCurrency_ID.Size = new System.Drawing.Size(135, 21);
+            this.cmbCurrency_ID.Size = new System.Drawing.Size(153, 21);
             this.cmbCurrency_ID.TabIndex = 136;
             // 
             // lblReview
@@ -384,7 +389,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblCurrency_ID
             // 
-            this.lblCurrency_ID.Location = new System.Drawing.Point(289, 108);
+            this.lblCurrency_ID.Location = new System.Drawing.Point(269, 85);
             this.lblCurrency_ID.Name = "lblCurrency_ID";
             this.lblCurrency_ID.Size = new System.Drawing.Size(36, 20);
             this.lblCurrency_ID.TabIndex = 135;
@@ -416,7 +421,7 @@ namespace RUINORERP.UI.FM
             // 
             // txtRemark
             // 
-            this.txtRemark.Location = new System.Drawing.Point(77, 165);
+            this.txtRemark.Location = new System.Drawing.Point(79, 165);
             this.txtRemark.Multiline = true;
             this.txtRemark.Name = "txtRemark";
             this.txtRemark.Size = new System.Drawing.Size(645, 68);
@@ -424,7 +429,7 @@ namespace RUINORERP.UI.FM
             // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(865, 165);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(861, 165);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 157;
@@ -440,15 +445,15 @@ namespace RUINORERP.UI.FM
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(933, 170);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(929, 168);
             this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
-            this.txtApprovalOpinions.Size = new System.Drawing.Size(135, 59);
+            this.txtApprovalOpinions.Size = new System.Drawing.Size(140, 59);
             this.txtApprovalOpinions.TabIndex = 158;
             // 
             // lblIncludeTax
             // 
-            this.lblIncludeTax.Location = new System.Drawing.Point(886, 51);
+            this.lblIncludeTax.Location = new System.Drawing.Point(887, 51);
             this.lblIncludeTax.Name = "lblIncludeTax";
             this.lblIncludeTax.Size = new System.Drawing.Size(36, 20);
             this.lblIncludeTax.TabIndex = 147;
@@ -530,6 +535,23 @@ namespace RUINORERP.UI.FM
             this.lblTotalForeignAmount.TabIndex = 202;
             this.lblTotalForeignAmount.Values.Text = "支付金额外币";
             // 
+            // lblReimburser
+            // 
+            this.lblReimburser.Location = new System.Drawing.Point(521, 109);
+            this.lblReimburser.Name = "lblReimburser";
+            this.lblReimburser.Size = new System.Drawing.Size(62, 20);
+            this.lblReimburser.TabIndex = 228;
+            this.lblReimburser.Values.Text = "报销人员";
+            // 
+            // cmbReimburser
+            // 
+            this.cmbReimburser.DropDownWidth = 100;
+            this.cmbReimburser.IntegralHeight = false;
+            this.cmbReimburser.Location = new System.Drawing.Point(588, 110);
+            this.cmbReimburser.Name = "cmbReimburser";
+            this.cmbReimburser.Size = new System.Drawing.Size(135, 21);
+            this.cmbReimburser.TabIndex = 227;
+            // 
             // UCPaymentRecord
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -563,6 +585,7 @@ namespace RUINORERP.UI.FM
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbReimburser)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -616,5 +639,7 @@ namespace RUINORERP.UI.FM
         private Krypton.Toolkit.KryptonComboBox cmbPaytype_ID;
         private Krypton.Toolkit.KryptonLabel lblPaytype_ID;
         private Krypton.Toolkit.KryptonCheckBox chkIsFromPlatform;
+        private Krypton.Toolkit.KryptonLabel lblReimburser;
+        private Krypton.Toolkit.KryptonComboBox cmbReimburser;
     }
     }

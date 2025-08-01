@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:01
+// 时间：08/01/2025 12:16:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -73,14 +73,28 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long _CustomerVendor_ID;
+        private long? _Reimburser;
+        /// <summary>
+        /// 报销人员
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Reimburser",ColDesc = "报销人员")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Reimburser",IsNullable = true,ColumnDescription = "报销人员" )]
+        [FKRelationAttribute("tb_Employee","Reimburser")]
+        public long? Reimburser 
+        { 
+            get{return _Reimburser;}
+            set{SetProperty(ref _Reimburser, value);}
+        }
+     
+
+        private long? _CustomerVendor_ID;
         /// <summary>
         /// 往来单位
         /// </summary>
         [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "往来单位")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "CustomerVendor_ID",IsNullable = false,ColumnDescription = "往来单位" )]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "CustomerVendor_ID",IsNullable = true,ColumnDescription = "往来单位" )]
         [FKRelationAttribute("tb_CustomerVendor","CustomerVendor_ID")]
-        public long CustomerVendor_ID 
+        public long? CustomerVendor_ID 
         { 
             get{return _CustomerVendor_ID;}
             set{SetProperty(ref _CustomerVendor_ID, value);}
@@ -199,7 +213,6 @@ namespace RUINORERP.Model.QueryDto
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")]
         [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Employee_ID",IsNullable = true,ColumnDescription = "经办人" )]
-        [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long? Employee_ID 
         { 
             get{return _Employee_ID;}

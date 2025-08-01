@@ -1683,6 +1683,10 @@ namespace RUINORERP.Business
             {
                 payable.Currency_ID = entity.Currency_ID.Value;
             }
+            else
+            {
+                payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
+            }
 
             //如果销售订单中付款方式不为空，并且是账期时
             if (entity.tb_purorder.Paytype_ID.HasValue && entity.tb_purorder.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
@@ -1848,6 +1852,10 @@ namespace RUINORERP.Business
             if (entity.Currency_ID.HasValue)
             {
                 payable.Currency_ID = entity.Currency_ID.Value;
+            }
+            else
+            {
+                payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
             }
             //if (entity.tb_saleorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
             //{

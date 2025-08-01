@@ -407,7 +407,7 @@ namespace RUINORERP.UI.PSI.INV
                     EditEntity.Employee_ID = null;
                 }
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (NeedValidated && aa.Count > 1)
+                if (NeedValidated && aa.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;

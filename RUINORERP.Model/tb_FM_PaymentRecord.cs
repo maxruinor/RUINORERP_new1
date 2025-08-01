@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:01
+// 时间：08/01/2025 12:16:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -94,14 +94,29 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long _CustomerVendor_ID;
+        private long? _Reimburser;
+        /// <summary>
+        /// 报销人员
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Reimburser",ColDesc = "报销人员")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Reimburser" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "报销人员" )]
+        [FKRelationAttribute("tb_Employee","Reimburser")]
+        public long? Reimburser
+        { 
+            get{return _Reimburser;}
+            set{
+            SetProperty(ref _Reimburser, value);
+                        }
+        }
+
+        private long? _CustomerVendor_ID;
         /// <summary>
         /// 往来单位
         /// </summary>
         [AdvQueryAttribute(ColName = "CustomerVendor_ID",ColDesc = "往来单位")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "往来单位" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "CustomerVendor_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "往来单位" )]
         [FKRelationAttribute("tb_CustomerVendor","CustomerVendor_ID")]
-        public long CustomerVendor_ID
+        public long? CustomerVendor_ID
         { 
             get{return _CustomerVendor_ID;}
             set{
@@ -229,7 +244,6 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "Employee_ID",ColDesc = "经办人")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Employee_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "经办人" )]
-        [FKRelationAttribute("tb_Employee","Employee_ID")]
         public long? Employee_ID
         { 
             get{return _Employee_ID;}
@@ -556,6 +570,12 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(Reimburser))]
+        public virtual tb_Employee tb_employee_Reimburser { get; set; }
+
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(PayeeInfoID))]
         public virtual tb_FM_PayeeInfo tb_fm_payeeinfo { get; set; }
 
@@ -582,14 +602,6 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecordDetail.PaymentId))]
-        public virtual List<tb_FM_PaymentRecordDetail> tb_FM_PaymentRecordDetails { get; set; }
-        //tb_FM_PaymentRecordDetail.PaymentId)
-        //PaymentId.FK_FM_PaymentRecordDetail_REF_TB_FM_PAymentRecord)
-        //tb_FM_PaymentRecord.PaymentId)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.ReversedByPaymentId))]
         public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords_Reverseds { get; set; }
         //tb_FM_PaymentRecord.PaymentId)
@@ -604,6 +616,14 @@ namespace RUINORERP.Model
         //PaymentId.FK_TB_FM_PA_REFERENCE_TB_FM_PA_ReversedOriginalId)
         //tb_FM_PaymentRecord.ReversedOriginalId)
 
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecordDetail.PaymentId))]
+        public virtual List<tb_FM_PaymentRecordDetail> tb_FM_PaymentRecordDetails { get; set; }
+        //tb_FM_PaymentRecordDetail.PaymentId)
+        //PaymentId.FK_FM_PaymentRecordDetail_REF_TB_FM_PAymentRecord)
+        //tb_FM_PaymentRecord.PaymentId)
+
 
         #endregion
 
@@ -614,6 +634,10 @@ namespace RUINORERP.Model
 private bool PK_FK_ID_Check()
 {
   bool rs=true;
+         if("Employee_ID"!="Reimburser")
+        {
+        // rs=false;
+        }
          if("PaymentId"!="ReversedByPaymentId")
         {
         // rs=false;

@@ -647,15 +647,17 @@ namespace RUINORERP.UI.FM
             }
         }
 
-        private void btnInfo_Click(object sender, EventArgs e)
+        public override void QueryConditionBuilder()
         {
-
+            base.QueryConditionBuilder();
+            var lambda = Expressionable.Create<tb_FM_PreReceivedPayment>()
+             .And(t => t.ReceivePaymentType == (int)PaymentType)
+            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+            .ToExpression();
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
-        private void txtTotalAmount_TextChanged(object sender, EventArgs e)
-        {
-
-        }
+ 
 
         private void btnInfo_Click_1(object sender, EventArgs e)
         {

@@ -916,7 +916,8 @@ namespace RUINORERP.Business
 
             paymentRecord.PaymentDate = entity.DocumentDate;
 
-            paymentRecord.CustomerVendor_ID = entity.Employee_ID;
+            paymentRecord.Reimburser = entity.Employee_ID;
+            paymentRecord.CustomerVendor_ID = null;
             paymentRecord.PayeeInfoID = entity.PayeeInfoID;
             //paymentRecord.PaymentImagePath = entity.CloseCaseImagePath;
             if (entity.tb_fm_payeeinfo != null)
@@ -977,13 +978,19 @@ namespace RUINORERP.Business
 
             paymentRecordDetail.SourceBillNo = entity.ExpenseNo;
             paymentRecordDetail.SourceBilllId = entity.ExpenseMainID;
-            paymentRecordDetail.Currency_ID = entity.Currency_ID.Value;
+            if (entity.Currency_ID.HasValue)
+            {
+                paymentRecordDetail.Currency_ID = entity.Currency_ID.GetValueOrDefault();
+            }
+            else
+            {
+                paymentRecordDetail.Currency_ID = _appContext.BaseCurrency.Currency_ID;
+            }
 
             if (paymentRecord.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 paymentRecordDetail.SourceBizType = (int)BizType.其他费用收入;
                 paymentRecordDetail.Summary = $"由其他费用收入单{entity.ExpenseNo}转换自动生成。";
-
             }
             else
             {

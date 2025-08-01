@@ -70,7 +70,7 @@ namespace RUINORERP.UI.FM
                               .And(t => t.isdeleted == false)
                              .And(t => t.ReceivePaymentType == (int)PaymentType)
                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
-                             t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                             t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
 

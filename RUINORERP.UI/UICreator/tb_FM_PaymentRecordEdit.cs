@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:26:59
+// 时间：08/01/2025 12:16:46
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,6 +68,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -78,6 +79,7 @@ namespace RUINORERP.UI
                      entity.PaymentNo = txtPaymentNo.Text ;
                        entity.ReceivePaymentType = Int32.Parse(txtReceivePaymentType.Text);
                         entity.Account_id = Int64.Parse(txtAccount_id.Text);
+                        entity.Reimburser = Int64.Parse(txtReimburser.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.PayeeInfoID = Int64.Parse(txtPayeeInfoID.Text);
                         entity.PayeeAccountNo = txtPayeeAccountNo.Text ;
@@ -120,39 +122,40 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentNo, txtPaymentNo, BindDataType4TextBox.Text,false);
-          ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
-          // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
+          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
+          Reimburser主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Reimburser, txtReimburser, BindDataType4TextBox.Qty,false);
+          // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
+Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          Reimburser主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
 ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.SourceBillNos, txtSourceBillNos, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalForeignAmount.ToString(), txtTotalForeignAmount, BindDataType4TextBox.Money,false);
+Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。           DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalForeignAmount.ToString(), txtTotalForeignAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalLocalAmount.ToString(), txtTotalLocalAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.PaymentDate, dtpPaymentDate,false);
-          // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentStatus, txtPaymentStatus, BindDataType4TextBox.Qty,false);
+          Reimburser主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          Reimburser主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentStatus, txtPaymentStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentImagePath, txtPaymentImagePath, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReferenceNo, txtReferenceNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsReversed, chkIsReversed, false);
-          ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedOriginalId, txtReversedOriginalId, BindDataType4TextBox.Qty,false);
+          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedOriginalId, txtReversedOriginalId, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedOriginalNo, txtReversedOriginalNo, BindDataType4TextBox.Text,false);
-          ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedByPaymentId, txtReversedByPaymentId, BindDataType4TextBox.Qty,false);
+          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedByPaymentId, txtReversedByPaymentId, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ReversedByPaymentNo, txtReversedByPaymentNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Created_at, dtpCreated_at,false);
-          ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Modified_at, dtpModified_at,false);
-          ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
+          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
-          ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
+          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.ApprovalResults, chkApprovalResults, false);
-          ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
+          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
 }
 
 

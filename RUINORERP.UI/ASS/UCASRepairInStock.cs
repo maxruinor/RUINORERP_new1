@@ -65,7 +65,6 @@ namespace RUINORERP.UI.ASS
             .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
             .ToExpression();
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
-
         }
 
 
@@ -469,7 +468,7 @@ namespace RUINORERP.UI.ASS
 
 
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (NeedValidated && aa.Count > 1)
+                if (NeedValidated && aa.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;

@@ -166,9 +166,8 @@ namespace RUINORERP.Extensions
                         try
                         {
                             string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
-                            logger.LogError("SQL执行错误:" + e.Message, errorsql);
                             Exception exception = e.GetBaseException();
-                            logger.Error("Error" + errorsql, e);
+                            logger.Error("SQL执行错误" + errorsql, e);
                             if (e.InnerException != null && e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
                             {
                                 var deadlockInfo = new
@@ -178,7 +177,7 @@ namespace RUINORERP.Extensions
                                     StackTrace = e.StackTrace,
                                     Sql = errorsql
                                 };
-                                logger.Error("deadlock", JsonConvert.SerializeObject(deadlockInfo) + "\n");
+                                logger.Error("deadlock:", JsonConvert.SerializeObject(deadlockInfo) + "\n");
 
                                 // 自动重试逻辑
                                 //int retryCount = 0;

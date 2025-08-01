@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RUINORERP.Business.Security;
+using WinLib.Line;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -68,7 +69,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         public List<ConditionGroup> GetCommonConditionGroups(BizType bizType)
         {
 
-            var grouplist = new List<ConditionGroup>
+            var ConditionGrouplist = new List<ConditionGroup>
         {
             new ConditionGroup
             {
@@ -117,14 +118,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     // 添加销售限制条件（如果有权限限制）
                     if (AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext))
                     {
-                        AddEmployeeIdCondition(grouplist);
+                        AddEmployeeIdCondition(ConditionGrouplist);
                     }
                     break;
                 case BizType.采购订单:
                     // 添加销售限制条件（如果有权限限制）
                     if (AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext))
                     {
-                        AddEmployeeIdCondition(grouplist);
+                        AddEmployeeIdCondition(ConditionGrouplist);
                     }
                     break;
                 case BizType.采购退货单:
@@ -139,7 +140,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     // 添加销售限制条件（如果有权限限制）
                     if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
                     {
-                        AddEmployeeIdCondition(grouplist);
+                        AddEmployeeIdCondition(ConditionGrouplist);
                     }
 
                     break;
@@ -148,7 +149,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
 
-            return grouplist;
+            return ConditionGrouplist;
         }
 
         private void AddEmployeeIdCondition(List<ConditionGroup> grouplist)
@@ -187,6 +188,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
 
+
+        /// <summary>
+        /// 预收付
+        /// </summary>
+        /// <param name="paymentType"></param>
+        /// <returns></returns>
         public List<ConditionGroup> GetPrePaymentConditionGroups(ReceivePaymentType paymentType)
         {
 
@@ -205,7 +212,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 identifier = SharedFlag.Flag1.ToString();
             }
 
-            return new List<ConditionGroup>
+            var ConditionGrouplist = new List<ConditionGroup>
         {
            new ConditionGroup
             {
@@ -300,6 +307,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
             }
         };
+
+            // 添加销售限制条件（如果有权限限制）
+            if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
+            {
+                AddEmployeeIdCondition(ConditionGrouplist);
+            }
+            return ConditionGrouplist;
         }
 
 
@@ -419,6 +433,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         };
 
+
+            // 添加销售限制条件（如果有权限限制） 要在下面条件前？
+            if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
+            {
+                AddEmployeeIdCondition(arapGroupList);
+            }
+
             List<IConditionalModel> conModels = arapGroupList.FirstOrDefault(c => c.StatusName == StatusNameDescription).Conditions;
             conModels.Clear();
             conModels.Add(new ConditionalCollections()
@@ -433,7 +454,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                WhereType.Or,
                                new ConditionalModel() {FieldName ="ARAPStatus",ConditionalType=ConditionalType.Equal,FieldValue=((int)ARAPStatus.待支付).ToString(), CSharpTypeName = "int"}),
 
-
                                new KeyValuePair<WhereType, ConditionalModel> (
                                WhereType.
                                And,new ConditionalModel() {FieldName="ReceivePaymentType",ConditionalType=ConditionalType.Equal,FieldValue= ((int)paymentType).ToString(), CSharpTypeName = "int"}),
@@ -444,9 +464,17 @@ namespace RUINORERP.UI.UserCenter.DataParts
                               }
             });
 
+  
             return arapGroupList;
+
+         
         }
 
+        /// <summary>
+        /// 收付款单
+        /// </summary>
+        /// <param name="paymentType"></param>
+        /// <returns></returns>
         public List<ConditionGroup> GetPaymentConditionGroups(ReceivePaymentType paymentType)
         {
             string StatusNameDescription = string.Empty;
@@ -520,9 +548,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         };
 
-
-
+            // 添加销售限制条件（如果有权限限制）
+            if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
+            {
+                AddEmployeeIdCondition(grouplist);
+            }
             return grouplist;
+
+           
         }
 
         public List<ConditionGroup> GetPurchaseOrderSpecialConditions()

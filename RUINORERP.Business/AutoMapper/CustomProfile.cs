@@ -77,6 +77,8 @@ namespace RUINORERP.Business.AutoMapper
             //费用报销单生成收款记录表
             CreateMap<tb_FM_ExpenseClaim, tb_FM_PaymentRecord>();
 
+            //其它费用收入和支出生成收款记录表
+            CreateMap<tb_FM_OtherExpense, tb_FM_PaymentRecord>();
 
             //预收单生成收款记录表
             CreateMap<tb_FM_PreReceivedPayment, tb_FM_PaymentRecord>();

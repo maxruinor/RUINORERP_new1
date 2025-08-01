@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:00
+// 时间：08/01/2025 12:16:49
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -248,15 +248,13 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_PaymentRecord>(entity as tb_FM_PaymentRecord)
-                        .Include(m => m.tb_FM_PaymentRecordDetails)
-                   
+                    .Include(m => m.tb_FM_PaymentRecordDetails)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_PaymentRecord>(entity as tb_FM_PaymentRecord)
                 .Include(m => m.tb_FM_PaymentRecordDetails)
-          
          
                 .ExecuteCommandAsync();
                                           
@@ -290,8 +288,7 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
-                                .Includes(m => m.tb_FM_PaymentRecordDetails)
-                     
+                        .Includes(m => m.tb_FM_PaymentRecordDetails)
                                         .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -301,8 +298,7 @@ namespace RUINORERP.Business
         {
             tb_FM_PaymentRecord entity = model as tb_FM_PaymentRecord;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_PaymentRecord>(m => m.PaymentId== entity.PaymentId)
-                                .Include(m => m.tb_FM_PaymentRecordDetails)
-                  
+                        .Include(m => m.tb_FM_PaymentRecordDetails)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -471,11 +467,7 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_fm_payeeinfo )
                                .Includes(t => t.tb_paymentmethod )
                                .Includes(t => t.tb_fm_account )
-                               .Includes(t => t.tb_fm_paymentrecord_Original )
-                               .Includes(t => t.tb_fm_paymentrecord_Reversed )
-                                            .Includes(t => t.tb_FM_PaymentRecordDetails )
-                                .Includes(t => t.tb_FM_PaymentRecords_Originals )
-                                .Includes(t => t.tb_FM_PaymentRecords_Reverseds )
+                                .Includes(t => t.tb_FM_PaymentRecordDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -501,11 +493,7 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_fm_payeeinfo )
                                .Includes(t => t.tb_paymentmethod )
                                .Includes(t => t.tb_fm_account )
-                                           .Includes(t => t.tb_fm_paymentrecord_Original)
-                               .Includes(t => t.tb_fm_paymentrecord_Reversed)
-                                            .Includes(t => t.tb_FM_PaymentRecordDetails)
-                                .Includes(t => t.tb_FM_PaymentRecords_Originals)
-                                .Includes(t => t.tb_FM_PaymentRecords_Reverseds)
+                                .Includes(t => t.tb_FM_PaymentRecordDetails )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -531,11 +519,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_fm_payeeinfo )
                             .Includes(t => t.tb_paymentmethod )
                             .Includes(t => t.tb_fm_account )
-                                             .Includes(t => t.tb_fm_paymentrecord_Original)
-                               .Includes(t => t.tb_fm_paymentrecord_Reversed)
-                                            .Includes(t => t.tb_FM_PaymentRecordDetails)
-                                .Includes(t => t.tb_FM_PaymentRecords_Originals)
-                                .Includes(t => t.tb_FM_PaymentRecords_Reverseds)
+                            .Includes(t => t.tb_FM_PaymentRecordDetails )
                         .ToList();
             
             foreach (var item in list)
@@ -578,11 +562,7 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_fm_payeeinfo )
                             .Includes(t => t.tb_paymentmethod )
                             .Includes(t => t.tb_fm_account )
-                                           .Includes(t => t.tb_fm_paymentrecord_Original)
-                               .Includes(t => t.tb_fm_paymentrecord_Reversed)
-                                            .Includes(t => t.tb_FM_PaymentRecordDetails)
-                                .Includes(t => t.tb_FM_PaymentRecords_Originals)
-                                .Includes(t => t.tb_FM_PaymentRecords_Reverseds)
+                            .Includes(t => t.tb_FM_PaymentRecordDetails )
                         .FirstAsync();
             if(entity!=null)
             {

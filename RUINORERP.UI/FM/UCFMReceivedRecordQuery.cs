@@ -58,6 +58,6 @@ namespace RUINORERP.UI.FM
             base.BuildInvisibleCols();
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }
-
+        
     }
 }

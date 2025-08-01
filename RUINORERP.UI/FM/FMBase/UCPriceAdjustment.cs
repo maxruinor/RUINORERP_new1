@@ -381,8 +381,9 @@ namespace RUINORERP.UI.FM
 
             //创建表达式
             var lambda = Expressionable.Create<tb_FM_PriceAdjustment>()
-                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
-                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
+                               //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
+                               // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
+                               .And(t => t.ReceivePaymentType == (int)PaymentType)
                              .And(t => t.isdeleted == false)
                             //报销人员限制，财务不限制 自己的只能查自己的
                             .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
@@ -390,6 +391,10 @@ namespace RUINORERP.UI.FM
             QueryConditionFilter.SetFieldLimitCondition(lambda);
 
         }
+
+
+       
+
 
         private void Grid1_BindingContextChanged(object sender, EventArgs e)
         {

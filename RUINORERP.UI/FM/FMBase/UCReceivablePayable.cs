@@ -530,20 +530,23 @@ namespace RUINORERP.UI.FM
         /// </summary>
         public override void QueryConditionBuilder()
         {
-            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_ReceivablePayable).Name + "Processor");
-            QueryConditionFilter = baseProcessor.GetQueryFilter();
-
+            //BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_ReceivablePayable).Name + "Processor");
+            //QueryConditionFilter = baseProcessor.GetQueryFilter();
+            base.QueryConditionBuilder();
             //创建表达式
             var lambda = Expressionable.Create<tb_FM_ReceivablePayable>()
-                             //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
-                             // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
+                              //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
+                              // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
+                              .And(t => t.ReceivePaymentType == (int)PaymentType)
                              .And(t => t.isdeleted == false)
                             //报销人员限制，财务不限制 自己的只能查自己的
-                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext), t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                             .ToExpression();//注意 这一句 不能少
             QueryConditionFilter.SetFieldLimitCondition(lambda);
 
         }
+
+        
 
         private void Grid1_BindingContextChanged(object sender, EventArgs e)
         {
@@ -1018,9 +1021,7 @@ namespace RUINORERP.UI.FM
                 return false;
             }
         }
-
-
-
+      
         protected override async Task<bool> Submit()
         {
             bool result = await Submit(ARAPStatus.待审核);

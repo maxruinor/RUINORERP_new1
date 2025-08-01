@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:01
+// 时间：08/01/2025 12:16:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,7 +47,10 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("公司账户:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Reimburser).NotEmpty().When(x => x.Reimburser.HasValue);
+
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("往来单位:下拉选择值不正确。");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PayeeInfoID).Must(CheckForeignKeyValueCanNull).WithMessage("收款信息:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
@@ -64,7 +67,6 @@ namespace RUINORERP.Business
  RuleFor(x => x.TotalLocalAmount).PrecisionScale(19,4,true).WithMessage("支付金额本币:小数位不能超过4。");
 
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("经办人:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款方式:下拉选择值不正确。");

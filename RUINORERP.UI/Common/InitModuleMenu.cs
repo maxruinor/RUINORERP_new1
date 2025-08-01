@@ -517,18 +517,22 @@ namespace RUINORERP.UI.Common
 
                     if (!exists)
                     {
-                        newButtonInfos.Add(new tb_ButtonInfo
+                        if (!newButtonInfos.Exists(c => c.BtnName == name && c.MenuID == menuInfo.MenuID && c.ButtonType == buttonTypeStr))
                         {
-                            BtnName = name,
-                            BtnText = text,
-                            FormName = info.ClassName,
-                            ClassPath = info.ClassPath,
-                            MenuID = menuInfo.MenuID,
-                            IsEnabled = true,
-                            ButtonType = buttonTypeStr,
-                            Created_at = System.DateTime.Now,
-                            Created_by = _appContext.CurUserInfo?.Id
-                        });
+                            newButtonInfos.Add(new tb_ButtonInfo
+                            {
+                                BtnName = name,
+                                BtnText = text,
+                                FormName = info.ClassName,
+                                ClassPath = info.ClassPath,
+                                MenuID = menuInfo.MenuID,
+                                IsEnabled = true,
+                                ButtonType = buttonTypeStr,
+                                Created_at = System.DateTime.Now,
+                                Created_by = _appContext.CurUserInfo?.Id
+                            });
+                        }
+
                     }
                 }
 

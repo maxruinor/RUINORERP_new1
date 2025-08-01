@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:00
+// 时间：08/01/2025 12:16:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -111,6 +111,8 @@ namespace RUINORERP.UI
         
     
         
+    
+        
 
   
    
@@ -123,14 +125,14 @@ namespace RUINORERP.UI
         public void LoadDroplistData()
         {
           // DataBindingHelper.InitDataToCmb<tb_Currency>(k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_CustomerVendor>(k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_FM_PayeeInfo>(k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_FM_Account>(k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
-ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          ReversedByPaymentId主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_PaymentRecord>(k => k.PaymentId, v=>v.XXNAME, cmbPaymentId);
+Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_CustomerVendor>(k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
+Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          Reimburser主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          Reimburser主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_PayeeInfo>(k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          Reimburser主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          Reimburser主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_Account>(k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
+ReversedByPaymentId主外字段不一致。ReversedOriginalId主外字段不一致。          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_PaymentRecord>(k => k.PaymentId, v=>v.XXNAME, cmbPaymentId);
 ReversedOriginalId主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_PaymentRecord>(k => k.PaymentId, v=>v.XXNAME, cmbPaymentId);
-          ReversedByPaymentId主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_PaymentRecord>(k => k.PaymentId, v=>v.XXNAME, cmbPaymentId);
+          Reimburser主外字段不一致。ReversedByPaymentId主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_PaymentRecord>(k => k.PaymentId, v=>v.XXNAME, cmbPaymentId);
 ReversedOriginalId主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_PaymentRecord>(k => k.PaymentId, v=>v.XXNAME, cmbPaymentId);
         }
         

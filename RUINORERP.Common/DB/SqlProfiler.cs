@@ -55,7 +55,17 @@ namespace RUINORERP.Common.DB
                         break;
 
                     case System.Data.DbType.Boolean:
-                        valueLiteral = Convert.ToBoolean(p.Value) ? "1" : "0";
+                        //valueLiteral = Convert.ToBoolean(p.Value) ? "1" : "0";
+                        //DBNull.Value 是表示数据库中的 NULL 值，它与 C# 中的 null 是不同的
+                        // 同时检查 null 和 DBNull.Value 
+                        if (p.Value == null || p.Value == DBNull.Value)
+                        {
+                            valueLiteral = "NULL";
+                        }
+                        else
+                        {
+                            valueLiteral = Convert.ToBoolean(p.Value) ? "1" : "0";
+                        }
                         break;
 
                     default:

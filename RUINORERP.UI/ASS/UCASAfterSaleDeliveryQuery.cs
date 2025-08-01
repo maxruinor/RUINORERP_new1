@@ -49,13 +49,17 @@ namespace RUINORERP.UI.ASS
         public UCASAfterSaleDeliveryQuery()
         {
             InitializeComponent();
-            base.RelatedBillEditCol = (c => c.ASApplyNo);
+            base.RelatedBillEditCol = (c => c.ASDeliveryNo);
+        }
+
+        public override void SetGridViewDisplayConfig()
+        {
+            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_AS_AfterSaleDelivery, tb_AS_AfterSaleApply>(c => c.ASApplyNo, r => r.ASApplyNo);
+            base.SetGridViewDisplayConfig();
         }
 
 
 
-    
-       
 
         public List<RuleResultWithFilter> ExecuteRulesWithFilter(RulesEngine.RulesEngine re, tb_UserInfo user, tb_MenuInfo menu)
         {
@@ -70,9 +74,9 @@ namespace RUINORERP.UI.ASS
         }
 
 
-       
 
- 
+
+
 
 
         /// <summary>
@@ -106,8 +110,8 @@ namespace RUINORERP.UI.ASS
         }
 
 
-      
-  
+
+
 
         public async override Task<bool> CloseCase(List<tb_AS_AfterSaleDelivery> EditEntitys)
         {

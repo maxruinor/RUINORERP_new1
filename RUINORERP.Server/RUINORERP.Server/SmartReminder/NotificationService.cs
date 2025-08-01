@@ -76,7 +76,7 @@ namespace RUINORERP.Server.SmartReminder
                 await Task.FromResult(0);
 
                 //获取接收人员集合
-                var Recipients = GetNotifyRecipientIds(rule.NotifyRecipients);
+                var Recipients = rule.NotifyRecipients;
                 if (Recipients == null || Recipients.Count == 0)
                     return;
 

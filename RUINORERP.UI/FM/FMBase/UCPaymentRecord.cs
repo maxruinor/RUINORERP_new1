@@ -52,7 +52,22 @@ namespace RUINORERP.UI.FM
             // usedActionStatus = true;
 
         }
+        public override void QueryConditionBuilder()
+        {
 
+            base.QueryConditionBuilder();
+            //创建表达式
+            var lambda = Expressionable.Create<tb_FM_PaymentRecord>()
+                              //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
+                              // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
+                              .And(t => t.ReceivePaymentType == (int)PaymentType)
+                             .And(t => t.isdeleted == false)
+                            //报销人员限制，财务不限制 自己的只能查自己的
+                            .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                            .ToExpression();//注意 这一句 不能少
+            QueryConditionFilter.SetFieldLimitCondition(lambda);
+
+        }
         public override void AddExcludeMenuList()
         {
             base.AddExcludeMenuList(MenuItemEnums.反结案);
@@ -61,6 +76,73 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.复制性新增);
             base.AddExcludeMenuList(MenuItemEnums.新增);
         }
+
+
+        private void LoadPayeeInfo(tb_FM_PaymentRecord entity)
+        {
+            if (entity.CustomerVendor_ID.HasValue && entity.CustomerVendor_ID.Value > 0)
+            {
+                //如果线索引入相关数据
+                if (PaymentType == ReceivePaymentType.付款)
+                {
+                    #region 收款信息可以根据往来单位带出 ，并且可以添加
+
+                    //创建表达式
+                    var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
+                                .And(t => t.Is_enabled == true)
+                                .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
+                                .ToExpression();//注意 这一句 不能少
+                    BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
+                    QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+                    queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
+
+                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
+                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
+
+                    #endregion
+                    lblCustomerVendor_ID.Visible = true;
+                    cmbCustomerVendor_ID.Visible = true;
+                    lblReimburser.Visible = false;
+                    cmbReimburser.Visible = false;
+
+                }
+                else
+                {
+                    lblPayeeInfoID.Visible = false;
+                    cmbPayeeInfoID.Visible = false;
+                    btnInfo.Visible = false;
+                }
+            }
+            else if (entity.Reimburser.HasValue && entity.Reimburser.Value > 0)
+            {
+                #region 收款信息可以根据往来单位带出 ，并且可以添加
+
+                //创建表达式
+                var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
+                            .And(t => t.Is_enabled == true)
+                            .And(t => t.Employee_ID == entity.Reimburser)
+                            .ToExpression();//注意 这一句 不能少
+                BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
+                QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+                queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
+
+                DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
+                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
+
+                lblCustomerVendor_ID.Visible = false;
+                cmbCustomerVendor_ID.Visible = false;
+                lblReimburser.Visible = true;
+                cmbReimburser.Visible = true;
+                #endregion
+            }
+            else
+            {
+                //清空
+                cmbPayeeInfoID.DataBindings.Clear();
+            }
+
+        }
+
 
         /// <summary>
         /// 收付款方式决定对应的菜单功能
@@ -80,42 +162,7 @@ namespace RUINORERP.UI.FM
             {
                 entity.PrimaryKeyID = entity.PaymentId;
                 entity.ActionStatus = ActionStatus.加载;
-                if (entity.CustomerVendor_ID > 0)
-                {
-                    //如果线索引入相关数据
-                    if (PaymentType == ReceivePaymentType.付款)
-                    {
-                        #region 收款信息可以根据往来单位带出 ，并且可以添加
-
-                        //创建表达式
-                        var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
-                                    .And(t => t.Is_enabled == true)
-                                    .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
-                                    .ToExpression();//注意 这一句 不能少
-                        BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
-                        QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                        queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
-
-                        DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
-                        DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
-
-
-                        #endregion
-                    }
-                    else
-                    {
-                        lblPayeeInfoID.Visible = false;
-                        cmbPayeeInfoID.Visible = false;
-                        btnInfo.Visible = false;
-                        // kryptonGroupBox收款账号信息.Visible = false;
-                    }
-                }
-                else
-                {
-                    //清空
-                    cmbPayeeInfoID.DataBindings.Clear();
-                }
-                //根据币别如果是外币才显示外币相关的字段
+                LoadPayeeInfo(entity);
                 ControlCurrency(entity);
 
             }
@@ -147,33 +194,17 @@ namespace RUINORERP.UI.FM
                 cmbPayeeInfoID.DataSource = null;
                 cmbPayeeInfoID.DataBindings.Clear();
                 cmbPayeeInfoID.Items.Clear();
-                
-
                 //如果是转单过来的
-
-                if (PaymentType == ReceivePaymentType.付款)
-                {
-                    //如果线索引入相关数据
-                    #region 收款信息可以根据往来单位带出 ，并且可以添加
-
-                    //创建表达式
-                    var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
-                                .And(t => t.Is_enabled == true)
-                                .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
-                                .ToExpression();//注意 这一句 不能少
-                    BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
-                    QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                    queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
-                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
-                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
-
-                    #endregion
-                }
+                LoadPayeeInfo(entity);
 
             }
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+
+            DataBindingHelper.BindData4Cmb<tb_Employee, tb_FM_PaymentRecord>(entity, k => k.Employee_ID, v => v.Employee_Name,
+                t => t.Reimburser.Value, cmbEmployee_ID, false);
+
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.PaymentNo, txtPaymentNo, BindDataType4TextBox.Text, false);
@@ -258,27 +289,13 @@ namespace RUINORERP.UI.FM
                 {
                     entity.ActionStatus = ActionStatus.修改;
                 }
-
+                if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentRecord>(c => c.Reimburser))
+                {
+                    LoadPayeeInfo(entity);
+                }
                 if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentRecord>(c => c.CustomerVendor_ID))
                 {
-                    if (PaymentType == ReceivePaymentType.付款)
-                    {
-                        //如果线索引入相关数据
-                        #region 收款信息可以根据往来单位带出 ，并且可以添加
-
-                        //创建表达式
-                        var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
-                                    .And(t => t.Is_enabled == true)
-                                    .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
-                                    .ToExpression();//注意 这一句 不能少
-                        BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
-                        QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                        queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
-                        DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
-                        DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
-
-                        #endregion
-                    }
+                    LoadPayeeInfo(entity);
                 }
                 //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
@@ -307,7 +324,7 @@ namespace RUINORERP.UI.FM
                             {
                                 //添加收款信息。展示给财务看
                                 entity.PayeeAccountNo = payeeInfo.Account_No;
-                               
+
                                 if (!string.IsNullOrEmpty(payeeInfo.PaymentCodeImagePath))
                                 {
                                     btnInfo.Tag = payeeInfo;
@@ -320,7 +337,7 @@ namespace RUINORERP.UI.FM
                                 }
                             }
                         }
-                        
+
                     }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentRecord>(c => c.Currency_ID))
@@ -353,7 +370,6 @@ namespace RUINORERP.UI.FM
                             btnInfo.Visible = false;
                         }
                     }
-                   
                 }
             }
 
@@ -712,11 +728,11 @@ namespace RUINORERP.UI.FM
                     lblBillText.Text = "应收款单";
                     lblAccount_id.Text = "收款账号";
                     lblCustomerVendor_ID.Text = "应付单位";
-                  
+
                     btnInfo.Visible = false;
                     lblPayeeInfoID.Visible = false;
                     cmbPayeeInfoID.Visible = false;
-                    
+
                     break;
                 case ReceivePaymentType.付款:
                     lblBillText.Text = "应付款单";
@@ -728,11 +744,13 @@ namespace RUINORERP.UI.FM
             }
 
             #endregion
-
-            MainForm.Instance.LoginWebServer();
-            if (CurMenuInfo != null)
+            if (!this.DesignMode)
             {
-                lblBillText.Text = CurMenuInfo.CaptionCN;
+                MainForm.Instance.LoginWebServer();
+                if (CurMenuInfo != null)
+                {
+                    lblBillText.Text = CurMenuInfo.CaptionCN;
+                }
             }
 
             base.ToolBarEnabledControl(MenuItemEnums.刷新);

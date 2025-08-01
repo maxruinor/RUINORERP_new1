@@ -156,7 +156,7 @@ namespace RUINORERP.Business
                         .Sum(c => c.Qty))
                     {
                         entity.tb_prodborrowing.DataStatus = (int)DataStatus.完结;
-                        entity.tb_prodborrowing.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核归还单时:" + entity.ReturnNo + "结案。"; ;
+                        entity.tb_prodborrowing.CloseCaseOpinions = "【归还单审核时，借出单系统自动结案】-" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name ;
                         await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_prodborrowing).UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions }).ExecuteCommandAsync();
                     }
 
@@ -283,7 +283,7 @@ namespace RUINORERP.Business
                 BusinessHelper.Instance.ApproverEntity(entity);
 
                 #region 审核 通过时
-            
+
                 entity.tb_prodborrowing = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBorrowing>()
                     .Includes(a => a.tb_ProdReturnings, b => b.tb_ProdReturningDetails)
                     .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用

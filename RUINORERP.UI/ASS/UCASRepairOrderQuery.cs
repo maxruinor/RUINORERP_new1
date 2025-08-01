@@ -39,6 +39,18 @@ namespace RUINORERP.UI.ASS
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.RepairOrderNo);
         }
+
+        public override void SetGridViewDisplayConfig()
+        {
+            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_AS_RepairOrder, tb_AS_AfterSaleApply>(c => c.ASApplyNo, r => r.ASApplyNo);
+            base.SetGridViewDisplayConfig();
+        }
+        //public override void SetGridViewDisplayConfig()
+        //{
+        //    _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_AS_RepairOrder, tb_AS_AfterSaleApply>(c => c.RepairOrderNo, r => r.ASApplyNo);
+        //    base.SetGridViewDisplayConfig();
+        //}
+
         #region 转为收付款单
         public override List<ContextMenuController> AddContextMenu()
         {
@@ -132,11 +144,7 @@ namespace RUINORERP.UI.ASS
             }
         }
         #endregion
-        public override void SetGridViewDisplayConfig()
-        {
-            _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_AS_RepairOrder, tb_AS_AfterSaleApply>(c => c.RepairOrderNo, r => r.ASApplyNo);
-            base.SetGridViewDisplayConfig();
-        }
+
 
         public override void BuildInvisibleCols()
         {

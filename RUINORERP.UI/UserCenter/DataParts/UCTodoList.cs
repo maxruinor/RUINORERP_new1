@@ -641,22 +641,33 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
                         for (int i = 0; i < item.Conditions.Count; i++)
                         {
-                            ConditionalCollections ccs = item.Conditions[i] as ConditionalCollections;
-                            for (int c = 0; c < ccs.ConditionalList.Count; c++)
+                            #region ConditionalCollections
+                            if (item.Conditions[i] is ConditionalCollections)
                             {
-                                //如果是第一个条件是。要转为or 因为要将按组的条件 合在一起查
-                                if (ccs.ConditionalList[c].Key == WhereType.And && c == 0)
+                                ConditionalCollections ccs = item.Conditions[i] as ConditionalCollections;
+                                for (int c = 0; c < ccs.ConditionalList.Count; c++)
                                 {
-                                    KeyValuePair<WhereType, ConditionalModel> kv = new KeyValuePair<WhereType, ConditionalModel>(WhereType.Or, ccs.ConditionalList[c].Value);
-                                    ConditionalList.Add(kv);
+                                    //如果是第一个条件是。要转为or 因为要将按组的条件 合在一起查
+                                    if (ccs.ConditionalList[c].Key == WhereType.And && c == 0)
+                                    {
+                                        KeyValuePair<WhereType, ConditionalModel> kv = new KeyValuePair<WhereType, ConditionalModel>(WhereType.Or, ccs.ConditionalList[c].Value);
+                                        ConditionalList.Add(kv);
+                                    }
+                                    else
+                                    {
+                                        KeyValuePair<WhereType, ConditionalModel> kv = new KeyValuePair<WhereType, ConditionalModel>(ccs.ConditionalList[c].Key, ccs.ConditionalList[c].Value);
+                                        ConditionalList.Add(kv);
+                                    }
                                 }
-                                else
-                                {
-                                    KeyValuePair<WhereType, ConditionalModel> kv = new KeyValuePair<WhereType, ConditionalModel>(ccs.ConditionalList[c].Key, ccs.ConditionalList[c].Value);
-                                    ConditionalList.Add(kv);
-                                }
+                            }
+                            else
+                            {
 
                             }
+
+
+                            #endregion
+
 
                         }
                         combinedStatusCondition.ConditionalList = ConditionalList;
@@ -695,222 +706,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return conModels;
         }
 
-
-        #region 构建查询条件
-
-
-        /*
-        /// <summary>
-        /// 公共查询
-        /// </summary>
-        /// <returns></returns>
-        private Dictionary<string, List<IConditionalModel>> GetCommonStatusConditions()
-        {
-            var conditions = new Dictionary<string, List<IConditionalModel>>();
-
-            // 未提交条件
-            var conModel未提交 = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "1", CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            // 添加销售限制条件
-            AddSaleLimitedCondition(conModel未提交);
-
-            conditions.Add("未提交", conModel未提交);
-
-            // 未审核条件
-            var conModel未审核 = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "0", CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "2", CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            // 添加销售限制条件
-            AddSaleLimitedCondition(conModel未审核);
-
-            conditions.Add("未审核", conModel未审核);
-
-            return conditions;
-        }
-
-        private Dictionary<string, List<IConditionalModel>> GetPrePaymentStatusConditions(ReceivePaymentType paymentType)
-        {
-            var conditions = new Dictionary<string, List<IConditionalModel>>();
-
-            // 未提交条件
-            var conModel未提交 = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PrePaymentStatus.草稿).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            // 添加销售限制条件
-            AddSaleLimitedCondition(conModel未提交);
-            conditions.Add("未提交", conModel未提交);
-
-            // 未审核条件
-            var conModel未审核 = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PrePaymentStatus.待审核).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            // 添加销售限制条件
-            AddSaleLimitedCondition(conModel未审核);
-            conditions.Add("未审核", conModel未审核);
-
-            // 待核销条件
-            var conModel待核销 = new List<IConditionalModel>
-            {new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PrePaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PrePaymentStatus.待核销).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            // 添加销售限制条件
-            AddSaleLimitedCondition(conModel待核销);
-
-            conditions.Add("待核销", conModel待核销);
-
-            return conditions;
-        }
-
-        private Dictionary<string, List<IConditionalModel>> GetARAPStatusConditions(ReceivePaymentType paymentType)
-        {
-            var conditions = new Dictionary<string, List<IConditionalModel>>();
-
-            // 未提交条件
-            var conModel未提交 = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)ARAPStatus.草稿).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            // 添加销售限制条件
-            AddSaleLimitedCondition(conModel未提交);
-
-            conditions.Add("未提交", conModel未提交);
-
-            // 未审核条件
-            var conModel未审核 = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)ARAPStatus.待审核).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            // 添加销售限制条件
-            AddSaleLimitedCondition(conModel未审核);
-
-            conditions.Add("未审核", conModel未审核);
-
-            // 等待回款/付款条件
-            var conModel等待回款付款 = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "ARAPStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)ARAPStatus.待支付).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            // 添加销售限制条件
-            AddSaleLimitedCondition(conModel等待回款付款);
-
-            conditions.Add("待回款", conModel等待回款付款);
-
-            return conditions;
-        }
-
-        private Dictionary<string, List<IConditionalModel>> GetPaymentStatusConditions(ReceivePaymentType paymentType)
-        {
-            var conditions = new Dictionary<string, List<IConditionalModel>>();
-
-            // 未提交条件
-            var conModel未提交 = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PaymentStatus.草稿).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            // 添加销售限制条件
-            AddSaleLimitedCondition(conModel未提交);
-
-            conditions.Add("未提交", conModel未提交);
-
-            // 未审核条件
-            var conModel未审核 = new List<IConditionalModel>
-            {
-                new ConditionalModel { FieldName = "ReceivePaymentType", ConditionalType = ConditionalType.Equal, FieldValue = ((int)paymentType).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "PaymentStatus", ConditionalType = ConditionalType.Equal, FieldValue = ((int)PaymentStatus.待审核).ToString(), CSharpTypeName = "int" },
-                new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
-            };
-
-            // 添加销售限制条件
-            AddSaleLimitedCondition(conModel未审核);
-
-            conditions.Add("未审核", conModel未审核);
-
-
-
-            return conditions;
-        }
-
-
-        /// <summary>
-        /// 未提交、未审核的条件
-        /// </summary>
-        /// <returns></returns>
-        private List<ConditionGroup> GetCommonConditionGroups()
-        {
-            return new List<ConditionGroup>
-        {
-            new ConditionGroup
-            {
-                StatusName = "未提交",
-                Conditions = new List<IConditionalModel>
-                {
-                    new ConditionalModel{FieldName = "DataStatus",ConditionalType = ConditionalType.Equal,FieldValue =((int)DataStatus.草稿).ToString()  ,CSharpTypeName = "int"},
-                    new ConditionalModel{FieldName = "isdeleted",ConditionalType = ConditionalType.Equal,FieldValue = "False",CSharpTypeName = "bool"}
-                }
-            },
-            new ConditionGroup
-            {
-                StatusName = "未审核",
-                Conditions = new List<IConditionalModel>
-                {
-                    new ConditionalModel
-                    {
-                        FieldName = "ApprovalStatus",
-                        ConditionalType = ConditionalType.Equal,
-                        FieldValue = "0",
-                        CSharpTypeName = "int"
-                    },
-                    new ConditionalModel
-                    {
-                        FieldName = "DataStatus",
-                        ConditionalType = ConditionalType.Equal,
-                        FieldValue = ((int)DataStatus.新建).ToString(),
-                        CSharpTypeName = "int"
-                    },
-                    new ConditionalModel
-                    {
-                        FieldName = "isdeleted",
-                        ConditionalType = ConditionalType.Equal,
-                        FieldValue = "False",
-                        CSharpTypeName = "bool"
-                    }
-                }
-            }
-        };
-        }
-           */
-        #endregion
-
+ 
 
 
 
@@ -1226,6 +1022,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return queryList.Rows.Count;
         }
 
+        /*
         private async Task<int> AddSpecialStatusNodes(TreeNode node, Type tableType, BizType bizType)
         {
             int Counter = 0;
@@ -1276,7 +1073,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
             return Counter;
         }
-
+        */
 
 
         private List<IConditionalModel> GetNotEndConditions()

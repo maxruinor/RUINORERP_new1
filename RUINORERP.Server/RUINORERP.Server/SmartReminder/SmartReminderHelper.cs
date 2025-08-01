@@ -25,5 +25,18 @@ namespace RUINORERP.Server.SmartReminder
             }
             return channels;
         }
+
+
+        public static List<NotifyChannel> ParseChannels(List<int> NotifyChannels)
+        {
+            List<NotifyChannel> channels = new List<NotifyChannel>();
+            foreach (var flag in NotifyChannels)
+            {
+                channels.Add((NotifyChannel)flag);
+            }
+
+            return channels;
+        }
+
     }
 }

@@ -370,7 +370,7 @@ namespace RUINORERP.UI.PSI.INV
             //                  // StringBuilder sb = new StringBuilder();
             ///// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
             //list = await dc.BaseQueryByWhereAsync(exp);
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd.SetDependencyObject<ProductSharePart, tb_ProdBorrowingDetail>(list);
 
             sgd.HasRowHeader = true;

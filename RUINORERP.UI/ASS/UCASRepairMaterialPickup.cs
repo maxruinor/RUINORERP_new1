@@ -354,7 +354,7 @@ namespace RUINORERP.UI.ASS
             sgd.BindingSourceLines = bindingSourceSub;
 
 
-            sgd.SetDependencyObject<ProductSharePart, tb_AS_RepairMaterialPickupDetail>(MainForm.Instance.list);
+            sgd.SetDependencyObject<ProductSharePart, tb_AS_RepairMaterialPickupDetail>(MainForm.Instance.View_ProdDetailList);
 
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_AS_RepairMaterialPickupDetail));

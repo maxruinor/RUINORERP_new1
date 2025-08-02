@@ -146,7 +146,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// 这个用来缓存，录入表单时的详情产品数据。后面看优化为一个全局缓存。
         /// </summary>
-        public List<View_ProdDetail> list = new List<View_ProdDetail>();
+        public List<View_ProdDetail> View_ProdDetailList = new List<View_ProdDetail>();
 
         //一个消息缓存列表，有处理过的。未处理的。未看的。临时性还是固定到表的？
         public Queue<ReminderData> MessageList = new Queue<ReminderData>();
@@ -2973,12 +2973,12 @@ namespace RUINORERP.UI
                         //}
 
                         //提取产品视图缓存转为强类型
-                        if (info != null && IsView_ProdDetail && !list.Count.Equals(oldlist.Count))
+                        if (info != null && IsView_ProdDetail && !View_ProdDetailList.Count.Equals(oldlist.Count))
                         {
-                            list.Clear();
+                            View_ProdDetailList.Clear();
                             foreach (var item in oldlist)
                             {
-                                list.Add(item as View_ProdDetail);
+                                View_ProdDetailList.Add(item as View_ProdDetail);
                             }
                         }
 
@@ -2997,12 +2997,12 @@ namespace RUINORERP.UI
                         List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 
                         //提取产品视图缓存转为强类型
-                        if (info != null && IsView_ProdDetail && !list.Count.Equals(myList.Count))
+                        if (info != null && IsView_ProdDetail && !View_ProdDetailList.Count.Equals(myList.Count))
                         {
-                            list.Clear();
+                            View_ProdDetailList.Clear();
                             foreach (var item in myList)
                             {
-                                list.Add(item as View_ProdDetail);
+                                View_ProdDetailList.Add(item as View_ProdDetail);
                             }
                             #region  jsonlist
                             if (myList.Count == 0 || myList.Count != info.CacheCount)

@@ -348,7 +348,7 @@ namespace RUINORERP.UI.PSI.PUR
             //      .ToExpression();//注意 这一句 不能少
 
             //list = dc.BaseQueryByWhere(exp);
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd.SetDependencyObject<ProductSharePart, tb_PurEntryReDetail>(list);
 
             sgd.HasRowHeader = true;

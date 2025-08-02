@@ -4,6 +4,7 @@ using DevAge.Windows.Forms;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Utils;
 using Google.Protobuf.Reflection;
+using MathNet.Numerics.LinearAlgebra.Factorization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 //using Google.Protobuf.Reflection;
@@ -512,11 +513,14 @@ namespace RUINORERP.UI.UCSourceGrid
                 //将行的数据设置到每个格子中显示出来
                 #region 优化
 
-
-
+                // 获取当前详情的prodetailID和Location_ID
+                //var locationID = ReflectionHelper.GetPropertyValue(detail, "Location_ID");
                 //公共部分
                 var prodetailID = ReflectionHelper.GetPropertyValue(detail, key);
+
+                //什么情况下会到这里？
                 var v_ProductSharePart = sgdefine.SourceList.Find(x => ReflectionHelper.GetPropertyValue(x, key).ToString() == prodetailID.ToString());
+                //&& ReflectionHelper.GetPropertyValue(x, "Location_ID").ToString() == locationID.ToString());
                 if (v_ProductSharePart == null)
                 {
                     //从数据库取？
@@ -609,7 +613,6 @@ namespace RUINORERP.UI.UCSourceGrid
                         }
                         else
                         {
-
                             if (v_ProductSharePart != null)
                             {
                                 object cellvalue = ReflectionHelper.GetPropertyValue(v_ProductSharePart, dc.ColName);
@@ -671,9 +674,6 @@ namespace RUINORERP.UI.UCSourceGrid
                                 }
 
                             }
-
-
-
                         }
 
                     }
@@ -2561,6 +2561,37 @@ namespace RUINORERP.UI.UCSourceGrid
                                 var lastlist = ((IEnumerable<dynamic>)rows).ToList();
                                 if (lastlist != null && lastlist.Count > 1)
                                 {
+
+
+                                    #region 通过查询到的多选结果更新缓存
+                                    if (lastlist[0] is View_ProdDetail)
+                                    {
+                                        foreach (var item in lastlist)
+                                        {
+                                            // 获取当前详情的prodetailID和Location_ID
+                                            var locationID = ReflectionHelper.GetPropertyValue(item, "Location_ID");
+                                            //公共部分
+                                            var prodetailID = ReflectionHelper.GetPropertyValue(item, "ProdDetailID");
+
+                                            var v_ProductSharePart = SGDefine.SourceList.Find(x =>
+                                                   ReflectionHelper.GetPropertyValue(x, "ProdDetailID").ToString() == prodetailID.ToString() &&
+                                                           ReflectionHelper.GetPropertyValue(x, "Location_ID").ToString() == locationID.ToString()
+                                               );
+
+                                            if (v_ProductSharePart == null)
+                                            {
+                                                SGDefine.SourceList.Add(item);
+                                            }
+                                            else
+                                            {
+                                                v_ProductSharePart = item;
+                                            }
+
+                                        }
+                                    }
+
+                                    #endregion
+
                                     //多选
                                     if (OnLoadMultiRowData != null)
                                     {
@@ -2969,6 +3000,34 @@ namespace RUINORERP.UI.UCSourceGrid
                                             var lastlist = ((IEnumerable<dynamic>)rows).ToList();
                                             if (lastlist != null && lastlist.Count > 1)
                                             {
+                                                #region 通过查询到的多选结果更新缓存
+                                                if (lastlist[0] is View_ProdDetail)
+                                                {
+                                                    foreach (var item in lastlist)
+                                                    {
+                                                        // 获取当前详情的prodetailID和Location_ID
+                                                        var locationID = ReflectionHelper.GetPropertyValue(item, "Location_ID");
+                                                        //公共部分
+                                                        var prodetailID = ReflectionHelper.GetPropertyValue(item, "ProdDetailID");
+
+                                                        var v_ProductSharePart = SGDefine.SourceList.Find(x =>
+                                                               ReflectionHelper.GetPropertyValue(x, "ProdDetailID").ToString() == prodetailID.ToString() &&
+                                                                       ReflectionHelper.GetPropertyValue(x, "Location_ID").ToString() == locationID.ToString()
+                                                           );
+
+                                                        if (v_ProductSharePart == null)
+                                                        {
+                                                            SGDefine.SourceList.Add(item);
+                                                        }
+                                                        else
+                                                        {
+                                                            v_ProductSharePart = item;
+                                                        }
+
+                                                    }
+                                                }
+
+                                                #endregion
                                                 //多选
                                                 if (OnLoadMultiRowData != null)
                                                 {
@@ -3171,6 +3230,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                             #endregion
 
                                             #region 手动输入的
+
                                             if (sendControl.Tag == null)
                                             {
                                                 foreach (var Source in dci.ParentGridDefine.SourceList)
@@ -3183,6 +3243,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                                     }
                                                 }
                                             }
+
                                             #endregion
 
 

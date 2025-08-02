@@ -126,11 +126,16 @@ namespace RUINORERP.UI.PSI.SAL
                         {
                             saleOutRe.RefundStatus = (int)RefundStatus.已退款等待退货;
                         }
-                        // 更新出库单状态
+                        // 更新销售退回单的状态
                         var last = await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutRe>(saleOutRe).UpdateColumns(it => new
                         {
                             it.RefundStatus
                         }).ExecuteCommandAsync();
+
+                        // 更新出库单状态
+                        var Outlast = await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>().Where(c => c.SaleOut_MainID == saleOutRe.SaleOut_MainID).SetColumns(it => it.RefundStatus == saleOutRe.RefundStatus
+                        ).ExecuteCommandAsync();
+
                         toolStripButton平台退款.Enabled = false;
                     }
                     else
@@ -563,7 +568,7 @@ namespace RUINORERP.UI.PSI.SAL
             //                // StringBuilder sb = new StringBuilder();
             //    /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
             //    list = dc.BaseQueryByWhere(exp);
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd.SetDependencyObject<ProductSharePart, tb_SaleOutReDetail>(list);
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_SaleOutReDetail));
@@ -635,7 +640,7 @@ namespace RUINORERP.UI.PSI.SAL
             //                // StringBuilder sb = new StringBuilder();
             //    /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
             //    list = dc.BaseQueryByWhere(exp);
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd2.SetDependencyObject<ProductSharePart, tb_SaleOutReRefurbishedMaterialsDetail>(list);
             sgd2.HasRowHeader = true;
             sgh2.InitGrid(grid2, sgd2, true, nameof(tb_SaleOutReRefurbishedMaterialsDetail));

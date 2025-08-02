@@ -721,7 +721,7 @@ namespace RUINORERP.UI.PSI.PUR
             List<tb_PurOrderDetail> lines = new List<tb_PurOrderDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
-            sgd.SetDependencyObject<ProductSharePart, tb_PurOrderDetail>(MainForm.Instance.list);
+            sgd.SetDependencyObject<ProductSharePart, tb_PurOrderDetail>(MainForm.Instance.View_ProdDetailList);
 
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_PurOrderDetail));

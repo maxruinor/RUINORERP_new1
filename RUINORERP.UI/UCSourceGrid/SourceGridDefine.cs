@@ -579,54 +579,54 @@ namespace RUINORERP.UI.UCSourceGrid
         public List<object> SourceList { get => sourceList; set => sourceList = value; }
 
 
-        /// <summary>
-        /// 设置关联的查询相关参数 
-        /// </summary>
-        /// <typeparam name="Prod">产品明细视图,数据来源</typeparam>
-        /// <typeparam name="Share">共享部分</typeparam>
-        /// <typeparam name="BillDetail">目标类型，就是单据明细</typeparam>
-        /// <param name="list"></param>
-        /// <param name="targetColExp">产品详情的ID表达式</param>
-        public void sSetDependencyObject<Prod, Share, BillDetail>(List<Prod> list, Expression<Func<BillDetail, long?>> targetColExp)
-        {
-            //这显然与装箱/拆箱有关。 返回需要装箱的值类型的Lambda表达式将表示为UnaryExpressions，而返回引用类型的Lambda表达式将表示为MemberExpressions。
-            //因为用了object为了兼容性
-            //var bodyExpr = targetCol.Body as System.Linq.Expressions.MemberExpression;
-            //if (bodyExpr == null)
-            //{
-            //    throw new ArgumentException("Expression must be a MemberExpression!", "expr");
-            //}
-            //var SugarColumnAttr = AttributeHelper.SetAttribute<SugarColumn>();
-            //var colDesc = SugarColumnAttr.Get<T>(targetCol);
+        ///// <summary>
+        ///// 设置关联的查询相关参数 
+        ///// </summary>
+        ///// <typeparam name="Prod">产品明细视图,数据来源</typeparam>
+        ///// <typeparam name="Share">共享部分</typeparam>
+        ///// <typeparam name="BillDetail">目标类型，就是单据明细</typeparam>
+        ///// <param name="list"></param>
+        ///// <param name="targetColExp">产品详情的ID表达式</param>
+        //public void sSetDependencyObject<Prod, Share, BillDetail>(List<Prod> list, Expression<Func<BillDetail, long?>> targetColExp)
+        //{
+        //    //这显然与装箱/拆箱有关。 返回需要装箱的值类型的Lambda表达式将表示为UnaryExpressions，而返回引用类型的Lambda表达式将表示为MemberExpressions。
+        //    //因为用了object为了兼容性
+        //    //var bodyExpr = targetCol.Body as System.Linq.Expressions.MemberExpression;
+        //    //if (bodyExpr == null)
+        //    //{
+        //    //    throw new ArgumentException("Expression must be a MemberExpression!", "expr");
+        //    //}
+        //    //var SugarColumnAttr = AttributeHelper.SetAttribute<SugarColumn>();
+        //    //var colDesc = SugarColumnAttr.Get<T>(targetCol);
 
-            var mb = targetColExp.GetMemberInfo();
-            string key = mb.Name;
+        //    var mb = targetColExp.GetMemberInfo();
+        //    string key = mb.Name;
 
-            SGDefineColumnItem tagcol = this.DefineColumns.FirstOrDefault(d => d.ColName == key);
-            //设置关联列。以及主要的目标列
+        //    SGDefineColumnItem tagcol = this.DefineColumns.FirstOrDefault(d => d.ColName == key);
+        //    //设置关联列。以及主要的目标列
 
-            //DependColumn TargCol = new DependColumn();
-            //TargCol.ColCaption = tagcol.ColCaption;
-            //TargCol.ColName = tagcol.ColName;
-            //TargCol.IsPrimaryBizKeyColumn = true;
-            //TargCol.Visible = false;
+        //    //DependColumn TargCol = new DependColumn();
+        //    //TargCol.ColCaption = tagcol.ColCaption;
+        //    //TargCol.ColName = tagcol.ColName;
+        //    //TargCol.IsPrimaryBizKeyColumn = true;
+        //    //TargCol.Visible = false;
 
-            //DependencyQuery dq = new DependencyQuery();
-            //dq.RelatedCols = dq.SetDependencys<Share>();
-            //dq.RelatedCols.Add(TargCol);//添加目标列
+        //    //DependencyQuery dq = new DependencyQuery();
+        //    //dq.RelatedCols = dq.SetDependencys<Share>();
+        //    //dq.RelatedCols.Add(TargCol);//添加目标列
 
-            this.SourceList = new List<object>();// ((IEnumerable<dynamic>)list) as List<object>;
-            if (list != null)
-            {
-                for (int i = 0; i < list.Count; i++)
-                {
-                    this.SourceList.Add(list[i]);
-                }
-            }
-            // DependQuery = dq;
+        //    this.SourceList = new List<object>();// ((IEnumerable<dynamic>)list) as List<object>;
+        //    if (list != null)
+        //    {
+        //        for (int i = 0; i < list.Count; i++)
+        //        {
+        //            this.SourceList.Add(list[i]);
+        //        }
+        //    }
+        //    // DependQuery = dq;
 
-            BindingSourceLines.ListChanged += BindingSourceLines_ListChanged;
-        }
+        //    BindingSourceLines.ListChanged += BindingSourceLines_ListChanged;
+        //}
 
 
 

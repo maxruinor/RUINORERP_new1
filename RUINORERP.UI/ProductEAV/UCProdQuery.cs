@@ -87,7 +87,7 @@ namespace RUINORERP.UI.ProductEAV
 
 
 
-         
+
             kryptonNavigator1.SelectedPageChanged += KryptonNavigator1_SelectedPageChanged;
             newSumDataGridView产品.CellPainting += KryptonDataGridView产品_CellPainting;
             newSumDataGridView产品.CellMouseMove += KryptonDataGridView产品_CellMouseMove;
@@ -616,7 +616,7 @@ namespace RUINORERP.UI.ProductEAV
                     itemSub.SubItems.Add(prodType);
                     if (BOM_SDetail.view_ProdInfo != null)
                     {
-                        var view_ProdDetail = MainForm.Instance.list.FirstOrDefault(c => c.ProdDetailID == BOM_SDetail.ProdDetailID && c.Location_ID == Location_ID);
+                        var view_ProdDetail = MainForm.Instance.View_ProdDetailList.FirstOrDefault(c => c.ProdDetailID == BOM_SDetail.ProdDetailID && c.Location_ID == Location_ID);
                         if (view_ProdDetail != null)
                         {
                             itemSub.SubItems.Add(view_ProdDetail.Quantity.ToString());
@@ -1023,6 +1023,21 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         QueryValue = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(QueryObjects[0], QueryField).ToString();
                     }
+
+                    //更新缓存
+                    for (int i = 0; i < QueryObjects.Count; i++)
+                    {
+                        var queryObjectItem = QueryObjects[i];
+                        var v_ProductSharePart = MainForm.Instance.View_ProdDetailList.Find(x => x.ProdDetailID == queryObjectItem.ProdDetailID && x.Location_ID == queryObjectItem.Location_ID);
+                        if (v_ProductSharePart != null)
+                        {
+                            v_ProductSharePart= queryObjectItem;
+                        }
+                        else
+                        {
+                            MainForm.Instance.View_ProdDetailList.Add(queryObjectItem);
+                        }
+                    }
                 }
 
                 //退出
@@ -1256,9 +1271,9 @@ namespace RUINORERP.UI.ProductEAV
                         View_ProdDetail prodDetail = null;
                         if (dr.Tag is View_ProdInfo prodInfo)
                         {
-                            prodDetail = MainForm.Instance.list.FirstOrDefault(c => c.ProdDetailID == prodInfo.ProdDetailID);
+                            prodDetail = MainForm.Instance.View_ProdDetailList.FirstOrDefault(c => c.ProdDetailID == prodInfo.ProdDetailID);
                         }
-                        else if (dr.Tag is View_ProdDetail  _ProdDetail)
+                        else if (dr.Tag is View_ProdDetail _ProdDetail)
                         {
                             prodDetail = _ProdDetail;
                         }

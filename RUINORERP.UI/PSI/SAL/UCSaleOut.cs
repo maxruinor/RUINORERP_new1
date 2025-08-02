@@ -672,7 +672,7 @@ namespace RUINORERP.UI.PSI.SAL
             sgd.BindingSourceLines = bindingSourceSub;
 
 
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd.SetDependencyObject<ProductSharePart, tb_SaleOutDetail>(list);
             sgd.HasRowHeader = true;
 

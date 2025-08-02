@@ -601,7 +601,7 @@ namespace RUINORERP.UI.ASS
             //                // StringBuilder sb = new StringBuilder();
             //    /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
             //    list = dc.BaseQueryByWhere(exp);
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd.SetDependencyObject<ProductSharePart, tb_AS_RepairOrderDetail>(list);
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_AS_RepairOrderDetail));
@@ -678,7 +678,7 @@ namespace RUINORERP.UI.ASS
             //                // StringBuilder sb = new StringBuilder();
             //    /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
             //    list = dc.BaseQueryByWhere(exp);
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd2.SetDependencyObject<ProductSharePart, tb_AS_RepairOrderMaterialDetail>(list);
             sgd2.HasRowHeader = true;
             sgh2.InitGrid(grid2, sgd2, true, nameof(tb_AS_RepairOrderMaterialDetail));

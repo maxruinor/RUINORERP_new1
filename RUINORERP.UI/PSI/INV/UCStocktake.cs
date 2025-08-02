@@ -41,6 +41,8 @@ using RUINORERP.Model.Base;
 using RUINORERP.Business.Processor;
 using StackExchange.Redis;
 using RUINORERP.Global.EnumExt;
+using static Google.Protobuf.Reflection.SourceCodeInfo.Types;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace RUINORERP.UI.PSI.INV
 {
@@ -105,14 +107,14 @@ namespace RUINORERP.UI.PSI.INV
             InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Stocktake>(typeof(CheckMode), e => e.CheckMode, cmbCheckMode, true);
             DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_Stocktake>(typeof(Adjust_Type), e => e.Adjust_Type, cmb调整类型, false);
 
-         
+
             //枚举过滤了一下
             //EnumBindingHelper bindingHelper = new EnumBindingHelper();
             //List<string> listStr = new List<string>();
             //List<EnumEntityMember> list = new List<EnumEntityMember>();
             //list = typeof(CheckMode).GetListByEnum<CheckMode>(selectedItem: 2);
             //bindingHelper.InitDataToCmbByEnumOnWhere(list, "CheckMode", cmbCheckMode);
-           
+
 
         }
 
@@ -392,7 +394,7 @@ namespace RUINORERP.UI.PSI.INV
             List<tb_StocktakeDetail> lines = new List<tb_StocktakeDetail>();
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd.SetDependencyObject<ProductSharePart, tb_StocktakeDetail>(list);
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_StocktakeDetail));
@@ -461,6 +463,7 @@ namespace RUINORERP.UI.PSI.INV
 
                     details.Add(Detail);
                 }
+
                 sgh.InsertItemDataToGrid<tb_StocktakeDetail>(grid1, sgd, details, c => c.ProdDetailID, position);
             }
         }
@@ -589,7 +592,7 @@ namespace RUINORERP.UI.PSI.INV
 
                 if (NeedValidated && aa.Count > 0)
                 {
-                    var prod = MainForm.Instance.list.FirstOrDefault(c => c.ProdDetailID.ToString() == aa[0].ToString());
+                    var prod = MainForm.Instance.View_ProdDetailList.FirstOrDefault(c => c.ProdDetailID.ToString() == aa[0].ToString());
                     System.Windows.Forms.MessageBox.Show($"明细中，SKU{prod.SKU},{prod.CNName}\r\n相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                     {

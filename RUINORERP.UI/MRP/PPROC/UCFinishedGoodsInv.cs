@@ -382,7 +382,7 @@ namespace RUINORERP.UI.PSI.PUR
             bindingSourceSub.DataSource = lines;
             sgd.BindingSourceLines = bindingSourceSub;
 
-            sgd.SetDependencyObject<ProductSharePart, tb_FinishedGoodsInvDetail>(MainForm.Instance.list);
+            sgd.SetDependencyObject<ProductSharePart, tb_FinishedGoodsInvDetail>(MainForm.Instance.View_ProdDetailList);
 
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FinishedGoodsInvDetail));

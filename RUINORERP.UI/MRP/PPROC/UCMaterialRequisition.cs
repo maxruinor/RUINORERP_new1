@@ -438,7 +438,7 @@ namespace RUINORERP.UI.MRP.MP
             sgd.BindingSourceLines = bindingSourceSub;
 
 
-            sgd.SetDependencyObject<ProductSharePart, tb_MaterialRequisitionDetail>(MainForm.Instance.list);
+            sgd.SetDependencyObject<ProductSharePart, tb_MaterialRequisitionDetail>(MainForm.Instance.View_ProdDetailList);
 
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_MaterialRequisitionDetail));

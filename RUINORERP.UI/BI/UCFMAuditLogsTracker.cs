@@ -66,7 +66,7 @@ namespace RUINORERP.UI.BI
 
             AuditLogs = AuditLogs.OrderBy(c => c.ActionTime).ToList();
             BindingSortCollection<TrackerResult> ListDataSoure = new BindingSortCollection<TrackerResult>();
-            var prodDetail = MainForm.Instance.list.Where(c => c.SKU == txtSKU.Text).FirstOrDefault();
+            var prodDetail = MainForm.Instance.View_ProdDetailList.Where(c => c.SKU == txtSKU.Text).FirstOrDefault();
             if (prodDetail != null)
             {
                 // 过滤出包含指定ProdDetailID且是审核操作的记录

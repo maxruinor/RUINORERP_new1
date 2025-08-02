@@ -581,7 +581,7 @@ namespace RUINORERP.UI.ASS
             sgd.BindingSourceLines = bindingSourceSub;
 
             //list = dc.BaseQueryByWhere(exp);
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
 
             sgd.SetDependencyObject<ProductSharePart, tb_AS_AfterSaleApplyDetail>(list);
             sgd.HasRowHeader = true;

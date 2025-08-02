@@ -434,7 +434,7 @@ namespace RUINORERP.UI.ProductEAV
 
             //list = dc.BaseQueryByWhere(exp);
 
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
 
             sgd1.SetDependencyObject<ProductSharePart, tb_PackingDetail>(list);
 
@@ -543,7 +543,7 @@ namespace RUINORERP.UI.ProductEAV
             //    /// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
             //    list = dc.BaseQueryByWhere(exp);
 
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
 
             sgd2.SetDependencyObject<ProductSharePart, tb_BoxRules>(list);
             sgd2.HasRowHeader = true;

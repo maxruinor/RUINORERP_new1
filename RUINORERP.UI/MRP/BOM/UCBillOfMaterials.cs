@@ -1745,7 +1745,7 @@ namespace RUINORERP.UI.MRP.BOM
             //要在初始化添加前
             sgh.OnAddRightClick += Sgh_OnAddRightClick;
 
-            sgd.SetDependencyObject<ProductSharePart, tb_BOM_SDetail>(MainForm.Instance.list);
+            sgd.SetDependencyObject<ProductSharePart, tb_BOM_SDetail>(MainForm.Instance.View_ProdDetailList);
             sgd.HasRowHeader = true;
             sgh.InitGrid(grid1, sgd, true, nameof(tb_BOM_SDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
@@ -1887,7 +1887,7 @@ namespace RUINORERP.UI.MRP.BOM
             sgd2.BindingSourceLines = BsSubstituteMaterial;
 
 
-            sgd2.SetDependencyObject<ProductSharePart, tb_BOM_SDetailSubstituteMaterial>(MainForm.Instance.list);
+            sgd2.SetDependencyObject<ProductSharePart, tb_BOM_SDetailSubstituteMaterial>(MainForm.Instance.View_ProdDetailList);
             sgd2.HasRowHeader = true;
             sgh2.InitGrid(gridSubstituteMaterial, sgd2, true, nameof(tb_BOM_SDetailSubstituteMaterial));
 

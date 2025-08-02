@@ -35,7 +35,7 @@ namespace RUINORERP.UI.PSI.INV
         public override void BuildColNameDataDictionary()
         {
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
-            foreach (var item in MainForm.Instance.list)
+            foreach (var item in MainForm.Instance.View_ProdDetailList)
             {
                 proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
             }

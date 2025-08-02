@@ -338,7 +338,7 @@ namespace RUINORERP.UI.MRP.PQC
             List<tb_MRP_ReworkReturnDetail> lines = new List<tb_MRP_ReworkReturnDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd.SetDependencyObject<ProductSharePart, tb_MRP_ReworkReturnDetail>(list);
 
             sgd.HasRowHeader = true;

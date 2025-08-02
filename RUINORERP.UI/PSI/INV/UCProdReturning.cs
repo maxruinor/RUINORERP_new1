@@ -304,7 +304,7 @@ namespace RUINORERP.UI.PSI.INV
 
             // sw.Start();
             //list = await dc.BaseQueryByWhereAsync(exp);
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             // sw.Stop();
             //MainForm.Instance.uclog.AddLog("Load加载数据耗时：" + sw.ElapsedMilliseconds + "毫秒");
 

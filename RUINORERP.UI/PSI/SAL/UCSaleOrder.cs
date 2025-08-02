@@ -810,7 +810,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             sgd.BindingSourceLines = bindingSourceSub;
 
             //list = dc.BaseQueryByWhere(exp);
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
 
             sgd.SetDependencyObject<ProductSharePart, tb_SaleOrderDetail>(list);
             sgd.HasRowHeader = true;

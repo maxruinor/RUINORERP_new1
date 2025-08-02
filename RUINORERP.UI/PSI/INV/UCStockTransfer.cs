@@ -243,7 +243,7 @@ namespace RUINORERP.UI.PSI.INV
             //                  // StringBuilder sb = new StringBuilder();
             ///// sb.Append(string.Format("{0}='{1}'", item.ColName, valValue));
             //list = dc.BaseQueryByWhere(exp);
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd.SetDependencyObject<ProductSharePart, tb_StockTransferDetail>(list);
 
             sgd.HasRowHeader = true;

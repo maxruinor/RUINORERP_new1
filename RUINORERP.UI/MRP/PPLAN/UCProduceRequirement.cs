@@ -560,7 +560,7 @@ namespace RUINORERP.UI.MRP.MP
             bindingSourceTarget.DataSource = lines;
             sgdTarget.BindingSourceLines = bindingSourceTarget;
 
-            sgdTarget.SetDependencyObject<ProductSharePart, tb_ProductionDemandTargetDetail>(MainForm.Instance.list);
+            sgdTarget.SetDependencyObject<ProductSharePart, tb_ProductionDemandTargetDetail>(MainForm.Instance.View_ProdDetailList);
             sgdTarget.HasRowHeader = true;
             sghTarget.InitGrid(gridTargetItems, sgdTarget, true, nameof(tb_ProductionDemandTargetDetail));
         }
@@ -664,7 +664,7 @@ namespace RUINORERP.UI.MRP.MP
             bindingSourcePurchase.DataSource = lines;
             sgdPur.BindingSourceLines = bindingSourcePurchase;
 
-            sgdPur.SetDependencyObject<ProductSharePart, tb_PurGoodsRecommendDetail>(MainForm.Instance.list);
+            sgdPur.SetDependencyObject<ProductSharePart, tb_PurGoodsRecommendDetail>(MainForm.Instance.View_ProdDetailList);
             sgdPur.HasRowHeader = true;
             sghPur.InitGrid(gridPurItems, sgdPur, true, nameof(tb_PurGoodsRecommendDetail));
             sghPur.OnCalculateColumnValue += SghPur_OnCalculateColumnValue;
@@ -1589,7 +1589,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
 
             //将产品详情转换为基本信息列表
-            List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.list);
+            List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.View_ProdDetailList);
 
             //合并的实体中有指定的业务主键关联，不然无法给值  TODO:不科学，后面要修改完善！！！数据太多查出来性能不好。
             DataTable dtAll = lastNeedIitems.ToDataTable<BaseProductInfo, tb_ProductionDemandDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID);
@@ -1655,7 +1655,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
 
             //将产品详情转换为基本信息列表
-            List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.list);
+            List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(MainForm.Instance.View_ProdDetailList);
 
             //合并的实体中有指定的业务主键关联，不然无法给值
             DataTable dtAll = lastNeeditems.ToDataTable<BaseProductInfo, tb_ProduceGoodsRecommendDetail>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID);

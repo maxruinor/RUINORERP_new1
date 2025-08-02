@@ -677,7 +677,7 @@ namespace RUINORERP.UI.FM
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
             sgd.BindingSourceLines = bindingSourceSub;
 
-            list = MainForm.Instance.list;
+            list = MainForm.Instance.View_ProdDetailList;
             sgd.SetDependencyObject<ProductSharePart, tb_FM_ReceivablePayableDetail>(list);
 
             sgd.HasRowHeader = true;

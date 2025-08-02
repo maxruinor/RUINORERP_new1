@@ -65,7 +65,7 @@ namespace RUINORERP.UI.SmartReminderClient
                 entity,
                 e => e.ProductIds,
                 clbProds,
-                MainForm.Instance.list,
+                MainForm.Instance.View_ProdDetailList,
                 u => u.ProdDetailID,
                 u => u.CNName
                 );

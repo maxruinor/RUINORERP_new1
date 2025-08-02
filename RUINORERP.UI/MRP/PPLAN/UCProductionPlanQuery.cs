@@ -60,14 +60,7 @@ namespace RUINORERP.UI.MRP.MP
             System.Linq.Expressions.Expression<Func<tb_ProductionPlan, int?>> exprPriority;
             exprPriority = (p) => p.Priority;
             base.MasterColNameDataDictionary.TryAdd(exprPriority.GetMemberInfo().Name, Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
-
-            //List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
-            //kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
-            //kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-            //System.Linq.Expressions.Expression<Func<tb_ProductionPlanDetail, bool?>> expr2;
-            //expr2 = (p) => p.Gift;// == name;
-            //base.ChildColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
-
+ 
             
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
             foreach (var item in MainForm.Instance.list)

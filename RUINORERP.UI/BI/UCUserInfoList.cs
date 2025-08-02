@@ -31,19 +31,7 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
             base.EditForm = typeof(UCUserInfoEdit);
-            /* 添加了这个。反面 checkbox 没有勾出来。
-            List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-            kvlist.Add(new KeyValuePair<object, string>(true, "是"));
-            kvlist.Add(new KeyValuePair<object, string>(false, "否"));
-            System.Linq.Expressions.Expression<Func<tb_UserInfo, bool?>> expr1;
-            expr1 = (p) => p.is_available;// == name;
-            System.Linq.Expressions.Expression<Func<tb_UserInfo, bool?>> expr2;
-            expr2 = (p) => p.is_enabled;// == name;
-            string colName1 = expr1.GetMemberInfo().Name;
-            string colName2 = expr2.GetMemberInfo().Name;
-            base.ColNameDataDictionary.TryAdd(colName1, kvlist);
-            base.ColNameDataDictionary.TryAdd(colName2, kvlist);
-            */
+           
         }
 
         public override void BuildInvisibleCols()

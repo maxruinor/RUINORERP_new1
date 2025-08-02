@@ -227,9 +227,9 @@ namespace RUINORERP.UI.CRM
                         frmaddg.bindingSourceEdit.DataSource = new List<tb_CustomerVendor>();
                         object obj = frmaddg.bindingSourceEdit.AddNew();
                         tb_CustomerVendor EntityInfo = obj as tb_CustomerVendor;
-                       
+
                         MainForm.Instance.mapper.Map(sourceEntity, EntityInfo);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
-                                                               // EntityInfo = mapper.Map<tb_CustomerVendor>(sourceEntity);
+                                                                                 // EntityInfo = mapper.Map<tb_CustomerVendor>(sourceEntity);
                         EntityInfo.Customer_id = sourceEntity.Customer_id;
                         EntityInfo.Employee_ID = sourceEntity.Employee_ID;
                         BusinessHelper.Instance.InitEntity(EntityInfo);
@@ -355,7 +355,7 @@ namespace RUINORERP.UI.CRM
                     toolStripButton分配.Visible = false;//默认隐藏
                 }
 
-                UIHelper.ControlButton< ToolStripButton>(CurMenuInfo, toolStripButton分配);
+                UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton分配);
                 toolStripButton分配.ToolTipText = "分配给指定业务员。";
                 toolStripButton分配.Click += new System.EventHandler(this.toolStripButton分配_Click);
 
@@ -436,7 +436,7 @@ namespace RUINORERP.UI.CRM
                     msg += "【" + item.CustomerName + "】" + "\r\n";
                     if (counter > 10)
                     {
-                        msg += $".... 等 {counter}位客户";
+                        msg += $".... 等 {updateList.Count}位客户";
                         break;
                     }
                 }
@@ -446,7 +446,7 @@ namespace RUINORERP.UI.CRM
                 if (MessageBox.Show($"您确定将：{msg}回收到公海吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
                 {
                     updateList.ForEach(c => c.Employee_ID = null);
-                    int result = await MainForm.Instance.AppContext.Db.Updateable(updateList).ExecuteCommandAsync();
+                    int result = await MainForm.Instance.AppContext.Db.Updateable(updateList).UpdateColumns(it => new { it.Employee_ID }).ExecuteCommandAsync();
                     if (result > 0)
                     {
                         MainForm.Instance.ShowStatusText($"回收成功{result}条数据!");
@@ -507,7 +507,7 @@ namespace RUINORERP.UI.CRM
                         msg += "【" + item.CustomerName + "】" + "\r\n";
                         if (counter > 10)
                         {
-                            msg += $".... 等 {counter}位客户";
+                            msg += $".... 等 {updateList.Count}位客户";
                             break;
                         }
                     }
@@ -516,11 +516,27 @@ namespace RUINORERP.UI.CRM
                     updateList.ForEach(c => c.Employee_ID = empID);
                     if (MessageBox.Show($"您确定将：{msg}分配给【{frm.SelectItemText}】吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
                     {
-                        int result = await MainForm.Instance.AppContext.Db.Updateable(updateList).ExecuteCommandAsync();
-                        if (result > 0)
+                        try
                         {
-                            MainForm.Instance.ShowStatusText($"分配成功{result}条数据!");
-                            Query();
+                            await MainForm.Instance.AppContext.Db.Ado.BeginTranAsync();
+                            int result = await MainForm.Instance.AppContext.Db.Updateable(updateList).UpdateColumns(it => new { it.Employee_ID }).ExecuteCommandAsync();
+                            if (result > 0)
+                            {
+                                //同时重新分配客户表中的责任人
+                                long[] Crm_cusids = updateList.Select(c => c.Customer_id).ToArray();
+                                var CustomerVendors = await MainForm.Instance.AppContext.Db.Queryable<tb_CustomerVendor>().Where(c => Crm_cusids.Contains(c.Customer_id.Value)).ToListAsync();
+                                CustomerVendors.ForEach(c => c.Employee_ID = empID);
+                                await MainForm.Instance.AppContext.Db.Updateable(CustomerVendors).UpdateColumns(it => new { it.Employee_ID }).ExecuteCommandAsync();
+                                await MainForm.Instance.AppContext.Db.Ado.CommitTranAsync();
+                                MainForm.Instance.ShowStatusText($"分配成功{result}条数据!");
+                                Query();
+                            }
+
+                        }
+                        catch (Exception ex)
+                        {
+                            await MainForm.Instance.AppContext.Db.Ado.RollbackTranAsync();
+                            MainForm.Instance.logManager.AddLog("错误", $"分配失败{ex.Message}!");
                         }
                     }
                     else

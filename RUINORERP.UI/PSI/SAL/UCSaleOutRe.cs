@@ -779,7 +779,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //产品ID有值才算有效值
                 LastRefurbishedMaterials = RefurbishedMaterials.Where(t => t.ProdDetailID > 0).ToList();
                 var bb = LastRefurbishedMaterials.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                if (NeedValidated && bb.Count >0)
+                if (NeedValidated && bb.Count > 0)
                 {
                     System.Windows.Forms.MessageBox.Show("翻新物料明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;

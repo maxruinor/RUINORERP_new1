@@ -546,21 +546,26 @@ namespace RUINORERP.Business
                                     #region 通过他的来源单据，找到对应的预收付单的收款单。标记为已关闭 !!!!!!!!!! 收款单 有是否反冲标记， 预收付中有退回金额
 
                                     //要调式
+                                    //tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
+                                    //.Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId)
+                                    //&& c.PaymentStatus == (int)PaymentStatus.已支付)
+                                    // .SingleAsync();
+
                                     tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
                                     .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId)
                                     && c.PaymentStatus == (int)PaymentStatus.已支付)
-                                     .SingleAsync();
+                                     .FirstAsync();
                                     if (oldPayment != null)
                                     {
                                         // 更新原始记录 指向[负数]冲销记录
                                         oldPayment.ReversedByPaymentId = entity.PaymentId;
                                         oldPayment.ReversedByPaymentNo = entity.PaymentNo;
                                         oldPaymentUpdateList.Add(oldPayment);
+                                        // 指向原始记录
+                                        entity.ReversedOriginalId = oldPayment.PaymentId;
+                                        entity.ReversedOriginalNo = oldPayment.PaymentNo;
                                     }
                                     entity.IsReversed = true;
-                                    // 指向原始记录
-                                    entity.ReversedOriginalId = oldPayment.PaymentId;
-                                    entity.ReversedOriginalNo = oldPayment.PaymentNo;
 
                                     #endregion
 
@@ -578,11 +583,9 @@ namespace RUINORERP.Business
                                             if (saleOrder != null)
                                             {
 
-                                                saleOrder.ApprovalOpinions += $" 订金退款，订单取消";
+                                                saleOrder.ApprovalOpinions += $" 订金退款，订单取消作废";
                                                 saleOrder.DataStatus = (int)DataStatus.作废;
-
                                                 saleOrderUpdateList.Add(saleOrder);
-
 
                                             }
 

@@ -85,23 +85,9 @@ namespace RUINORERP.UI.ProductEAV
             newSumDataGridView产品.NeedSaveColumnsXml = true;
             newSumDataGridView产品组合.NeedSaveColumnsXml = true;
 
-            List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-            kvlist.Add(new KeyValuePair<object, string>(true, "男"));
-            kvlist.Add(new KeyValuePair<object, string>(false, "女"));
-            Expression<Func<tb_Employee, bool?>> expr;
-            expr = (p) => p.Gender;// == name;
-            var mb = expr.GetMemberInfo();
-            string colName = mb.Name;
-            ColNameDataDictionary.TryAdd(colName, kvlist);
 
 
-            List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
-            kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
-            kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-            System.Linq.Expressions.Expression<Func<tb_Employee, bool?>> expr2;
-            expr2 = (p) => p.Is_enabled;// == name;
-            string colName2 = expr2.GetMemberInfo().Name;
-            ColNameDataDictionary.TryAdd(colName2, kvlist1);
+         
             kryptonNavigator1.SelectedPageChanged += KryptonNavigator1_SelectedPageChanged;
             newSumDataGridView产品.CellPainting += KryptonDataGridView产品_CellPainting;
             newSumDataGridView产品.CellMouseMove += KryptonDataGridView产品_CellMouseMove;

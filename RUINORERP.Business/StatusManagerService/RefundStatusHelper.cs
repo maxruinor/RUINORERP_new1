@@ -60,7 +60,11 @@ namespace RUINORERP.Business.StatusManagerService
                 errorMessage = "终态单据禁止状态变更";
                 return false;
             }
-
+            if (current == target)
+            {
+                //没有改变
+                return true;
+            }
             // 状态转换规则验证
             switch (current)
             {

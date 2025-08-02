@@ -93,6 +93,7 @@ namespace RUINORERP.UI.FM
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
+                
                 //默认优化报销自己
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
                 {
@@ -354,10 +355,11 @@ namespace RUINORERP.UI.FM
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             listCols.SetCol_NeverVisible<tb_FM_ExpenseClaimDetail>(c => c.ClaimMainID);
             listCols.SetCol_NeverVisible<tb_FM_ExpenseClaimDetail>(c => c.ClaimSubID);
+            listCols.SetCol_DefaultValue<tb_FM_ExpenseClaimDetail>(c => c.TaxRate, 0.00);
             listCols.SetCol_DefaultValue<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, 0.00M);
 
-            //listCols.SetCol_ReadOnly<tb_FM_OtherExpenseDetail>(c => c.CNName);
-
+            listCols.SetCol_ReadOnly<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount);
+            listCols.SetCol_ReadOnly<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.SingleAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
@@ -628,6 +630,8 @@ namespace RUINORERP.UI.FM
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
+                        EditEntity.AcceptChanges();
+                        EditEntity.tb_FM_ExpenseClaimDetails.ForEach(c => c.AcceptChanges());
 
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ClaimNo}。");
                     }

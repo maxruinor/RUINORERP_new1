@@ -53,12 +53,12 @@ namespace RUINORERP.UI.PSI.PUR
             base.MasterColNameDataDictionary.TryAdd(exprDataStatus.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
 
 
-            List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
-            kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
-            kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-            System.Linq.Expressions.Expression<Func<tb_SaleOrderDetail, bool?>> expr2;
-            expr2 = (p) => p.Gift;// == name;
-            base.ChildColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
+            //List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
+            //kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
+            //kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
+            //System.Linq.Expressions.Expression<Func<tb_SaleOrderDetail, bool?>> expr2;
+            //expr2 = (p) => p.Gift;// == name;
+            //base.ChildColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
 
             
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();

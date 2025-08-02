@@ -295,12 +295,7 @@ namespace RUINORERP.UI.BaseForm
             MasterColNameDataDictionary.TryAdd(nameof(Priority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
             MasterColNameDataDictionary.TryAdd(nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay)));
 
-            //List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
-            //kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
-            //kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-            //System.Linq.Expressions.Expression<Func<tb_SaleOrderDetail, bool?>> expr2;
-            //expr2 = (p) => p.Gift;
-            //MasterColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
+          
         }
 
 

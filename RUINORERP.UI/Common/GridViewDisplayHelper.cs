@@ -222,16 +222,16 @@ namespace RUINORERP.UI.Common
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName, Genderkvlist));
                 }
 
-                List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
-                kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
-                kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
-                System.Linq.Expressions.Expression<Func<tb_Employee, bool?>> expr2;
-                expr2 = (p) => p.Is_enabled;// == name;
-                string colName2 = expr2.GetMemberInfo().Name;
-                if (typeof(tb_Employee).Name == _type.Name && prop.Name == colName2)
-                {
-                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName2, kvlist1));
-                }
+                //List<KeyValuePair<object, string>> kvlist1 = new List<KeyValuePair<object, string>>();
+                //kvlist1.Add(new KeyValuePair<object, string>(true, "是"));
+                //kvlist1.Add(new KeyValuePair<object, string>(false, "否"));
+                //System.Linq.Expressions.Expression<Func<tb_Employee, bool?>> expr2;
+                //expr2 = (p) => p.Is_enabled;// == name;
+                //string colName2 = expr2.GetMemberInfo().Name;
+                //if (typeof(tb_Employee).Name == _type.Name && prop.Name == colName2)
+                //{
+                //    FixedDictionaryMappings.Add(new FixedDictionaryMapping(typeof(tb_Employee).Name, colName2, kvlist1));
+                //}
             }
         }
 

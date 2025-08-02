@@ -38,15 +38,8 @@ namespace RUINORERP.UI.BI
             InitializeComponent();
             base.EditForm = typeof(UCProductCategoriesEdit);
 
-            //base<tb_ProductCategories>(t => t.);
-            /*
-            List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-            kvlist.Add(new KeyValuePair<object, string>(false, "否"));
-            kvlist.Add(new KeyValuePair<object, string>(true, "是"));
-            System.Linq.Expressions.Expression<Func<tb_ProdCategories, bool?>> expr;
-            expr = (p) => p.Is_enabled;
-            string colName = expr.GetMemberInfo().Name;
-            ColNameDataDictionary.TryAdd(colName, kvlist);*/
+        
+           
         }
 
         tb_ProdCategoriesController<tb_ProdCategories> ctr = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();

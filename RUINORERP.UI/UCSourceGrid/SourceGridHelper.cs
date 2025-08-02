@@ -740,6 +740,15 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 grid1.Rows[ii].RowData = null;
             }
+
+            foreach (C item in _details)
+            {
+                if (item is BaseEntity detail)
+                {
+                    detail.AcceptChanges();
+                }
+            }
+
             /*
             List<int> deleteRows = new List<int>();
             for (int r = 1; r < grid1.Rows.Count - 1; r++)

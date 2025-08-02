@@ -320,6 +320,7 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4ControlByEnum<tb_SaleOut>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             if (entity.tb_SaleOutDetails != null && entity.tb_SaleOutDetails.Count > 0)
             {
+                entity.tb_SaleOutDetails.ForEach(c => c.AcceptChanges());
                 details = entity.tb_SaleOutDetails;
             }
             sgh.LoadItemDataToGrid<tb_SaleOutDetail>(grid1, sgd, details, c => c.ProdDetailID);
@@ -764,32 +765,6 @@ namespace RUINORERP.UI.PSI.SAL
                 EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalTaxAmount = EditEntity.TotalTaxAmount.ToRoundDecimalPlaces(MainForm.Instance.authorizeController.GetMoneyDataPrecision());
-                /*
-                #region 计算运费总额
-                try
-                {
-                    // 如果正在计算中，则跳过本次处理，避免循环
-                    if (!_isCalculating)
-                    {
-                        // 设置计算状态
-                        _isCalculating = true;
-                        EditEntity.FreightCost = details.Sum(c => c.AllocatedFreightCost);
-                        EditEntity.FreightIncome = details.Sum(c => c.AllocatedFreightIncome);
-                    }
-
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError("计算出错", ex);
-                    MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
-                }
-                finally
-                {
-                    // 无论是否发生异常，都要重置计算状态
-                    _isCalculating = false;
-                }
-                #endregion
-                */
 
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
@@ -799,6 +774,8 @@ namespace RUINORERP.UI.PSI.SAL
                     //
                     EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
                 }
+
+                //如果单据可以审核，这时修改子表，没保存直接审核。则出错。修改了，就要保存再提交 再审核
 
             }
             catch (Exception ex)
@@ -1030,6 +1007,8 @@ namespace RUINORERP.UI.PSI.SAL
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
+                        EditEntity.AcceptChanges();
+                        EditEntity.tb_SaleOutDetails.ForEach(c => c.AcceptChanges());
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SaleOutNo}。");
                     }
                     else

@@ -364,7 +364,10 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity"></param>
         public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
-
+            if(entity is BaseEntity baseEntity)
+            {
+                baseEntity.AcceptChanges();
+            }
             toolStripbtnRelatedQuery.DropDownItems.Clear();
             LoadRelatedDataToDropDownItems();
             if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
@@ -3629,6 +3632,7 @@ namespace RUINORERP.UI.BaseForm
             rmr = await ctr.BaseSaveOrUpdateWithChild<T>(entity);
             if (rmr.Succeeded)
             {
+                
                 if (ReflectionHelper.ExistPropertyName<T>(typeof(ActionStatus).Name))
                 {
                     //注意這里保存的是枚举

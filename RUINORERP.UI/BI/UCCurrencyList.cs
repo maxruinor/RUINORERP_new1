@@ -35,18 +35,7 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
             base.EditForm = typeof(UCCurrencyEdit);
-            /*
-            List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-            kvlist.Add(new KeyValuePair<object, string>(true, "是"));
-            kvlist.Add(new KeyValuePair<object, string>(false, "否"));
-            Expression<Func<tb_Currency, bool?>> expr1;
-            expr1 = (p) => p.Is_available;// == name;
-            Expression<Func<tb_Currency, bool?>> expr2;
-            expr2 = (p) => p.Is_enabled;// == name;
-            string colName1 = expr1.GetMemberInfo().Name;
-            string colName2 = expr2.GetMemberInfo().Name;
-            base.ColNameDataDictionary.TryAdd(colName1, kvlist);
-            base.ColNameDataDictionary.TryAdd(colName2, kvlist);*/
+           
         }
         protected override async void Add()
         {

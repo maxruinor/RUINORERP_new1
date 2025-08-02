@@ -95,6 +95,14 @@ namespace RUINORERP.Business
                              context.AddFailure($"收款信息：{(PayStatus)purOrder.PayStatus}款时，下拉选择值不正确。");
                          }
                      }
+                     else if (purOrder.PayStatus == (int)PayStatus.未付款)
+                     {
+                         //未付款时
+                         if (purOrder.PayeeInfoID <= 0)
+                         {
+                             purOrder.PayeeInfoID = null;
+                         }
+                     }
                  }
              });
 

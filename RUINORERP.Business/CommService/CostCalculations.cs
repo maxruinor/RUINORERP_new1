@@ -95,7 +95,7 @@ namespace RUINORERP.Business.CommService
             // 负库存检查（如果不允许负库存）
             if (!allowNegativeInventory && newQty < 0)
             {
-                throw new InvalidOperationException($"库存数量不能为负（操作后数量：{newQty}）");
+                throw new InvalidOperationException($"成本计算时，库存数量不能为负（操作后数量：{newQty}）");
             }
 
 

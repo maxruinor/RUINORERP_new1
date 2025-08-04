@@ -30,6 +30,10 @@
         {
             this.components = new System.ComponentModel.Container();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.kryptonLabel4 = new Krypton.Toolkit.KryptonLabel();
+            this.cmbProjectGroup = new Krypton.Toolkit.KryptonComboBox();
+            this.lblRefundStatus = new Krypton.Toolkit.KryptonLabel();
+            this.cmbRefundStatus = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.cmbPayStatus = new Krypton.Toolkit.KryptonComboBox();
             this.cmbPaytype_ID = new Krypton.Toolkit.KryptonComboBox();
@@ -88,8 +92,6 @@
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.bindingSourceOtherSub = new System.Windows.Forms.BindingSource(this.components);
-            this.lblRefundStatus = new Krypton.Toolkit.KryptonLabel();
-            this.cmbRefundStatus = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -98,6 +100,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbRefundStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
@@ -117,7 +121,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceOtherSub)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbRefundStatus)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -130,6 +133,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel4);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbProjectGroup);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblRefundStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbRefundStatus);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel1);
@@ -183,6 +188,40 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1211, 777);
             this.kryptonSplitContainer1.SplitterDistance = 213;
             this.kryptonSplitContainer1.TabIndex = 0;
+            // 
+            // kryptonLabel4
+            // 
+            this.kryptonLabel4.Location = new System.Drawing.Point(663, 41);
+            this.kryptonLabel4.Name = "kryptonLabel4";
+            this.kryptonLabel4.Size = new System.Drawing.Size(62, 20);
+            this.kryptonLabel4.TabIndex = 212;
+            this.kryptonLabel4.Values.Text = "项目小组";
+            // 
+            // cmbProjectGroup
+            // 
+            this.cmbProjectGroup.DropDownWidth = 100;
+            this.cmbProjectGroup.IntegralHeight = false;
+            this.cmbProjectGroup.Location = new System.Drawing.Point(731, 41);
+            this.cmbProjectGroup.Name = "cmbProjectGroup";
+            this.cmbProjectGroup.Size = new System.Drawing.Size(157, 21);
+            this.cmbProjectGroup.TabIndex = 211;
+            // 
+            // lblRefundStatus
+            // 
+            this.lblRefundStatus.Location = new System.Drawing.Point(637, 94);
+            this.lblRefundStatus.Name = "lblRefundStatus";
+            this.lblRefundStatus.Size = new System.Drawing.Size(88, 20);
+            this.lblRefundStatus.TabIndex = 210;
+            this.lblRefundStatus.Values.Text = "退货退款状态";
+            // 
+            // cmbRefundStatus
+            // 
+            this.cmbRefundStatus.DropDownWidth = 100;
+            this.cmbRefundStatus.IntegralHeight = false;
+            this.cmbRefundStatus.Location = new System.Drawing.Point(731, 92);
+            this.cmbRefundStatus.Name = "cmbRefundStatus";
+            this.cmbRefundStatus.Size = new System.Drawing.Size(157, 21);
+            this.cmbRefundStatus.TabIndex = 209;
             // 
             // kryptonLabel1
             // 
@@ -286,7 +325,7 @@
             // chkIsCustomizedOrder
             // 
             this.chkIsCustomizedOrder.Enabled = false;
-            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(1036, 62);
+            this.chkIsCustomizedOrder.Location = new System.Drawing.Point(896, 175);
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 155;
@@ -302,9 +341,10 @@
             // 
             // lblFreightIncome
             // 
-            this.lblFreightIncome.Location = new System.Drawing.Point(974, 91);
+            this.lblFreightIncome.Location = new System.Drawing.Point(974, 41);
             this.lblFreightIncome.Name = "lblFreightIncome";
             this.lblFreightIncome.Size = new System.Drawing.Size(62, 20);
+            this.lblFreightIncome.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
             this.lblFreightIncome.TabIndex = 104;
             this.lblFreightIncome.Values.Text = "需退运费";
             // 
@@ -318,7 +358,7 @@
             // 
             // txtFreightIncome
             // 
-            this.txtFreightIncome.Location = new System.Drawing.Point(1042, 90);
+            this.txtFreightIncome.Location = new System.Drawing.Point(1042, 40);
             this.txtFreightIncome.Name = "txtFreightIncome";
             this.txtFreightIncome.Size = new System.Drawing.Size(157, 23);
             this.txtFreightIncome.TabIndex = 105;
@@ -351,7 +391,7 @@
             // 
             // lblNotes
             // 
-            this.lblNotes.Location = new System.Drawing.Point(975, 145);
+            this.lblNotes.Location = new System.Drawing.Point(1000, 145);
             this.lblNotes.Name = "lblNotes";
             this.lblNotes.Size = new System.Drawing.Size(36, 20);
             this.lblNotes.TabIndex = 114;
@@ -362,12 +402,12 @@
             this.txtNotes.Location = new System.Drawing.Point(1042, 145);
             this.txtNotes.Multiline = true;
             this.txtNotes.Name = "txtNotes";
-            this.txtNotes.Size = new System.Drawing.Size(165, 62);
+            this.txtNotes.Size = new System.Drawing.Size(157, 62);
             this.txtNotes.TabIndex = 115;
             // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(663, 42);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(974, 71);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 116;
@@ -375,9 +415,10 @@
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(731, 41);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(1042, 71);
+            this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
-            this.txtApprovalOpinions.Size = new System.Drawing.Size(157, 23);
+            this.txtApprovalOpinions.Size = new System.Drawing.Size(157, 68);
             this.txtApprovalOpinions.TabIndex = 117;
             // 
             // lblApprover_at
@@ -398,7 +439,7 @@
             // 
             // chkApprovalResults
             // 
-            this.chkApprovalResults.Location = new System.Drawing.Point(1063, 124);
+            this.chkApprovalResults.Location = new System.Drawing.Point(896, 145);
             this.chkApprovalResults.Name = "chkApprovalResults";
             this.chkApprovalResults.Size = new System.Drawing.Size(75, 20);
             this.chkApprovalResults.TabIndex = 109;
@@ -406,7 +447,7 @@
             // 
             // chkIsIncludeTax
             // 
-            this.chkIsIncludeTax.Location = new System.Drawing.Point(1131, 62);
+            this.chkIsIncludeTax.Location = new System.Drawing.Point(896, 91);
             this.chkIsIncludeTax.Name = "chkIsIncludeTax";
             this.chkIsIncludeTax.Size = new System.Drawing.Size(49, 20);
             this.chkIsIncludeTax.TabIndex = 111;
@@ -414,7 +455,7 @@
             // 
             // chkGenerateVouchers
             // 
-            this.chkGenerateVouchers.Location = new System.Drawing.Point(1132, 47);
+            this.chkGenerateVouchers.Location = new System.Drawing.Point(896, 69);
             this.chkGenerateVouchers.Name = "chkGenerateVouchers";
             this.chkGenerateVouchers.Size = new System.Drawing.Size(75, 20);
             this.chkGenerateVouchers.TabIndex = 113;
@@ -668,6 +709,7 @@
             this.lblTotalAmount.Location = new System.Drawing.Point(649, 11);
             this.lblTotalAmount.Name = "lblTotalAmount";
             this.lblTotalAmount.Size = new System.Drawing.Size(75, 20);
+            this.lblTotalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
             this.lblTotalAmount.TabIndex = 102;
             this.lblTotalAmount.Values.Text = "退款总金额";
             // 
@@ -693,23 +735,6 @@
             this.txtTotalQty.Size = new System.Drawing.Size(100, 23);
             this.txtTotalQty.TabIndex = 107;
             // 
-            // lblRefundStatus
-            // 
-            this.lblRefundStatus.Location = new System.Drawing.Point(637, 94);
-            this.lblRefundStatus.Name = "lblRefundStatus";
-            this.lblRefundStatus.Size = new System.Drawing.Size(88, 20);
-            this.lblRefundStatus.TabIndex = 210;
-            this.lblRefundStatus.Values.Text = "退货退款状态";
-            // 
-            // cmbRefundStatus
-            // 
-            this.cmbRefundStatus.DropDownWidth = 100;
-            this.cmbRefundStatus.IntegralHeight = false;
-            this.cmbRefundStatus.Location = new System.Drawing.Point(731, 92);
-            this.cmbRefundStatus.Name = "cmbRefundStatus";
-            this.cmbRefundStatus.Size = new System.Drawing.Size(157, 21);
-            this.cmbRefundStatus.TabIndex = 209;
-            // 
             // UCSaleOutRe
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -728,6 +753,8 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbRefundStatus)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayStatus)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
@@ -749,7 +776,6 @@
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceOtherSub)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbRefundStatus)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -818,5 +844,7 @@
         private Krypton.Toolkit.KryptonLabel lblPaytype_ID;
         private Krypton.Toolkit.KryptonLabel lblRefundStatus;
         private Krypton.Toolkit.KryptonComboBox cmbRefundStatus;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel4;
+        private Krypton.Toolkit.KryptonComboBox cmbProjectGroup;
     }
 }

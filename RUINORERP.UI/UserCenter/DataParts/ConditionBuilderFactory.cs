@@ -440,6 +440,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 AddEmployeeIdCondition(arapGroupList);
             }
 
+
+            //下面是因为要 支付状态 有两种情况。要合并查询。
             List<IConditionalModel> conModels = arapGroupList.FirstOrDefault(c => c.StatusName == StatusNameDescription).Conditions;
             conModels.Clear();
             conModels.Add(new ConditionalCollections()
@@ -464,10 +466,22 @@ namespace RUINORERP.UI.UserCenter.DataParts
                               }
             });
 
-  
+            //单独为这个混合状态or的情况再加一个限制
+            if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
+            {
+                var employeeIdCondition = new ConditionalModel
+                {
+                    FieldName = "Employee_ID",
+                    ConditionalType = ConditionalType.Equal,
+                    FieldValue = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_ID.ToString(),
+                    CSharpTypeName = "long"
+                };
+                conModels.Add(employeeIdCondition);
+            }
+
             return arapGroupList;
 
-         
+
         }
 
         /// <summary>
@@ -555,7 +569,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
             return grouplist;
 
-           
+
         }
 
         public List<ConditionGroup> GetPurchaseOrderSpecialConditions()

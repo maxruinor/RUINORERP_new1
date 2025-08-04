@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:20
+// 时间：08/04/2025 11:58:54
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -469,8 +469,8 @@ namespace RUINORERP.Business
         {
             List<tb_FM_ReceivablePayableDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayableDetail>()
                                .Includes(t => t.tb_proddetail )
-                               .Includes(t => t.tb_unit )
                                .Includes(t => t.tb_fm_receivablepayable )
+                               .Includes(t => t.tb_fm_expensetype )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -491,8 +491,8 @@ namespace RUINORERP.Business
         {
             List<tb_FM_ReceivablePayableDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayableDetail>().Where(exp)
                                .Includes(t => t.tb_proddetail )
-                               .Includes(t => t.tb_unit )
                                .Includes(t => t.tb_fm_receivablepayable )
+                               .Includes(t => t.tb_fm_expensetype )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -513,8 +513,8 @@ namespace RUINORERP.Business
         {
             List<tb_FM_ReceivablePayableDetail> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayableDetail>().Where(exp)
                             .Includes(t => t.tb_proddetail )
-                            .Includes(t => t.tb_unit )
                             .Includes(t => t.tb_fm_receivablepayable )
+                            .Includes(t => t.tb_fm_expensetype )
                                     .ToList();
             
             foreach (var item in list)
@@ -552,8 +552,8 @@ namespace RUINORERP.Business
         {
             tb_FM_ReceivablePayableDetail entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayableDetail>().Where(w => w.ARAPDetailID == (long)id)
                              .Includes(t => t.tb_proddetail )
-                            .Includes(t => t.tb_unit )
                             .Includes(t => t.tb_fm_receivablepayable )
+                            .Includes(t => t.tb_fm_expensetype )
                                     .FirstAsync();
             if(entity!=null)
             {

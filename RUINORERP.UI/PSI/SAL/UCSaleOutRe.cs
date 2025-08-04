@@ -246,7 +246,7 @@ namespace RUINORERP.UI.PSI.SAL
             EditEntity = entity;
 
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOutRe, RefundStatus>(entity, k => k.RefundStatus, cmbRefundStatus, false);
-
+            DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOutRe, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false, PayStatus.全额预付, PayStatus.部分预付);
             DataBindingHelper.BindData4TextBox<tb_SaleOutRe>(entity, t => t.TotalCommissionAmount.ToString(), txtTotalCommissionAmount, BindDataType4TextBox.Money, false);
@@ -341,6 +341,11 @@ namespace RUINORERP.UI.PSI.SAL
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOutRe>(c => c.FreightIncome))
+                    {
+                        Summation();
+                    }
+
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOutRe>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
                     {
                         //默认为账期
@@ -434,7 +439,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
 
                     tb_SaleOutReController<tb_SaleOutRe> ctr = Startup.GetFromFac<tb_SaleOutReController<tb_SaleOutRe>>();
-                    bool rs = await ctr.BaseLogicDeleteAsync(EditEntity as tb_SaleOutRe);
+                    bool rs = await ctr.BaseDeleteByNavAsync(EditEntity as tb_SaleOutRe);
                     if (rs)
                     {
                         //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", EditEntity);
@@ -700,6 +705,12 @@ namespace RUINORERP.UI.PSI.SAL
                 MainForm.Instance.uclog.AddLog("请先使用新增或查询加载数据");
                 return;
             }
+            Summation();
+        }
+
+
+        private void Summation()
+        {
             try
             {
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
@@ -726,7 +737,8 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-        List<tb_SaleOutReDetail> details = new List<tb_SaleOutReDetail>();
+
+                List<tb_SaleOutReDetail> details = new List<tb_SaleOutReDetail>();
         /// <summary>
         /// 查询结果 选中行的变化事件
         /// </summary>

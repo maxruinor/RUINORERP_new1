@@ -346,7 +346,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //LoadDataToGrid(new List<tb_SaleOrderDetail>());
                 sgh.LoadItemDataToGrid<tb_SaleOrderDetail>(grid1, sgd, new List<tb_SaleOrderDetail>(), c => c.ProdDetailID);
             }
-           // toolStripButton付款调整.ToolTipText = "当付款状态或付款方式发生变化时，需要进行付款调整才会显示。";
+            // toolStripButton付款调整.ToolTipText = "当付款状态或付款方式发生变化时，需要进行付款调整才会显示。";
 
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
@@ -358,8 +358,8 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) || s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID))
                 {
-                  //  toolStripButton付款调整.Enabled = true;
-                   // UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton付款调整);
+                    //  toolStripButton付款调整.Enabled = true;
+                    // UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton付款调整);
                 }
 
                 //权限允许
@@ -1201,6 +1201,8 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 if (NeedValidated && !MainForm.Instance.AppContext.SysConfig.CheckNegativeInventory)
                 {
                     list = await dc.BaseGetQueryableAsync().ToListAsync();
+
+                    StringBuilder NegativeInventorymsg = new StringBuilder();
                     foreach (var item in details)
                     {
                         var detail = list.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
@@ -1208,15 +1210,20 @@ using var binder = new UIStateBinder(..., customEvaluator);
                         {
                             if (NeedValidated && (detail.Quantity - item.Quantity) < 0)
                             {
-                                if (MessageBox.Show($"产品{detail.SKU},{detail.CNName},{detail.prop}的库存不足\r\n实际数量为：{detail.Quantity} ，拟销数量为： {item.Quantity}，是否继续保存？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel)
-                                {
-                                    if (toolStripbtnPrint.Enabled)
-                                    {
-                                        toolStripbtnPrint.Enabled = false;
-                                    }
-                                    return false;
-                                }
+                                NegativeInventorymsg.Append($"{detail.SKU},{detail.CNName},{detail.prop}库存不足,实际库存：{detail.Quantity} ，拟销数： {item.Quantity}\r\n");
                             }
+                        }
+                    }
+
+                    if (NegativeInventorymsg.Length > 1)
+                    {
+                        if (MessageBox.Show($"{NegativeInventorymsg.ToString()}确定继续保存吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel)
+                        {
+                            if (toolStripbtnPrint.Enabled)
+                            {
+                                toolStripbtnPrint.Enabled = false;
+                            }
+                            return false;
                         }
                     }
                 }
@@ -1616,7 +1623,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
         }
 
         #region 付款调整
-       // ToolStripButton toolStripButton付款调整 = new System.Windows.Forms.ToolStripButton();
+        // ToolStripButton toolStripButton付款调整 = new System.Windows.Forms.ToolStripButton();
         ToolStripButton toolStripButton定制成本确认 = new System.Windows.Forms.ToolStripButton();
 
         /// <summary>
@@ -1655,7 +1662,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             toolStripButton反结案.Click += new System.EventHandler(this.toolStripButton反结案_Click);
 
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
-            { 
+            {
                 toolStripButton定制成本确认,
                 toolStripButton反结案 };
 

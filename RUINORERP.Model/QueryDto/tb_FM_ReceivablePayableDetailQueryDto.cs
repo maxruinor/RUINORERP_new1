@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:20
+// 时间：08/04/2025 11:58:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -84,6 +84,33 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Specifications;}
             set{SetProperty(ref _Specifications, value);}
+        }
+     
+
+        private long? _ExpenseType_id;
+        /// <summary>
+        /// 费用类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ExpenseType_id",ColDesc = "费用类型")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ExpenseType_id",IsNullable = true,ColumnDescription = "费用类型" )]
+        [FKRelationAttribute("tb_FM_ExpenseType","ExpenseType_id")]
+        public long? ExpenseType_id 
+        { 
+            get{return _ExpenseType_id;}
+            set{SetProperty(ref _ExpenseType_id, value);}
+        }
+     
+
+        private string _ExpenseDescription;
+        /// <summary>
+        /// 费用说明
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ExpenseDescription",ColDesc = "费用说明")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ExpenseDescription",Length=300,IsNullable = true,ColumnDescription = "费用说明" )]
+        public string ExpenseDescription 
+        { 
+            get{return _ExpenseDescription;}
+            set{SetProperty(ref _ExpenseDescription, value);}
         }
      
 

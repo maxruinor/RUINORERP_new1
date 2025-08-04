@@ -43,13 +43,13 @@ using RUINORERP.Model.CommonModel;
 namespace RUINORERP.UI.MRP.MP
 {
     [MenuAttrAssemblyInfo("制令单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.制令单)]
-    public partial class UCManufacturingOrder : BaseBillEditGeneric<tb_ManufacturingOrder, tb_ManufacturingOrder>
+    public partial class UCManufacturingOrder : BaseBillEditGeneric<tb_ManufacturingOrder, tb_ManufacturingOrderDetail>
     {
         public UCManufacturingOrder()
         {
             InitializeComponent();
-            //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ManufacturingOrder>(typeof(Priority), e => e.Priority, cmbPriority, false);
         }
+
         protected override void LoadRelatedDataToDropDownItems()
         {
             if (base.EditEntity is tb_ManufacturingOrder ManufacturingOrder)
@@ -141,6 +141,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
                 else
                 {
+                    entity.Priority = (int)Priority.正常;
                     entity.ActionStatus = ActionStatus.新增;
                     entity.DataStatus = (int)DataStatus.草稿;
                     if (entity.MONO.IsNullOrEmpty())

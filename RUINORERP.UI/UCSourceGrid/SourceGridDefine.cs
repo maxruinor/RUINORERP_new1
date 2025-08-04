@@ -325,6 +325,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
         /// <summary>
         /// 表格对应的列集合 ， 为了能右键 加载默认设置将第一次的保存在这个集合中。
+        /// 并不是重复！！！！
         /// </summary>
         public List<SGDefineColumnItem> InitDefineColumns { get; set; } = new List<SGDefineColumnItem>();
 
@@ -718,7 +719,6 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         public void SetDependTargetValue(object value, SourceGrid.Position currPosition, object productSharePart, string currentColName)
         {
-
             //清空所有 不要删除
             if (value == null)
             {

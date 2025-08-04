@@ -1086,9 +1086,9 @@ namespace RUINORERP.Business
             BaseController<tb_BuyingRequisition> ctrBuy = _appContext.GetRequiredServiceByName<BaseController<tb_BuyingRequisition>>(typeof(tb_BuyingRequisition).Name + "Controller");
             rmr = await ctrBuy.BaseSaveOrUpdateWithChild<tb_BuyingRequisition>(BuyingRequisition);
             return rmr;
-          
+
         }
-        
+
 
         //IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
 
@@ -1155,7 +1155,7 @@ namespace RUINORERP.Business
             if (MakingItem.tb_proddetail == null)
             {
                 var viewdetail = await _appContext.Db.CopyNew().Queryable<tb_ProdDetail>()
-                    .Where(c => c.ProdDetailID == MakingItem.ProdDetailID )
+                    .Where(c => c.ProdDetailID == MakingItem.ProdDetailID)
                     .Includes(c => c.tb_prod)
                     .FirstAsync();
                 MakingItem.tb_proddetail = viewdetail;
@@ -1197,13 +1197,19 @@ namespace RUINORERP.Business
                 if (demand.tb_productionplan.tb_saleorder.tb_SaleOrderDetails != null)
                 {
                     tb_SaleOrderDetail saleOrderDetail = demand.tb_productionplan.tb_saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == ManufacturingOrder.ProdDetailID
-                    && c.Location_ID==ManufacturingOrder.Location_ID);
+                    && c.Location_ID == ManufacturingOrder.Location_ID);
                     if (saleOrderDetail != null)
                     {
                         ManufacturingOrder.CustomerPartNo = saleOrderDetail.CustomerPartNo;
+                        
                     }
                 }
                 ManufacturingOrder.IsCustomizedOrder = demand.tb_productionplan.tb_saleorder.IsCustomizedOrder;
+                ManufacturingOrder.CustomerVendor_ID= demand.tb_productionplan.tb_saleorder.CustomerVendor_ID;
+            }
+            else
+            {
+                ManufacturingOrder.Priority = (int)Priority.正常;
             }
 
             // ManufacturingOrder.PeopleQty = bom.PeopleQty * item.RecommendQty;

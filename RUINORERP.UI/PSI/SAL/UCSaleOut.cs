@@ -115,11 +115,19 @@ namespace RUINORERP.UI.PSI.SAL
                         toolStripButton平台退款.Enabled = false;
                         return;
                     }
-
+                    if (saleOut.tb_SaleOutRes == null)
+                    {
+                        saleOut.tb_SaleOutRes = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutRe>().Where(c => c.SaleOut_MainID == saleOut.SaleOut_MainID).ToListAsync();
+                    }
                     //判断是否已经创建退款单 ，如果有则显示，没有则预建
                     if (saleOut.tb_SaleOutRes != null && saleOut.tb_SaleOutRes.Count > 0)
                     {
 
+                        //if (saleOut.tb_SaleOutDetails.Sum(c => c.TotalReturnedQty) != saleOut.TotalQty && MessageBox.Show($"系统检测到已经存在【销售退回单】，确认要继续生成销售退回单吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+                        if (MessageBox.Show($"系统检测到已经存在【销售退回单】，确认要继续生成销售退回单吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+                        {
+                            return;
+                        }
 
                         // 打开销售退回单，确认
                         MenuPowerHelper menuPowerHelper;

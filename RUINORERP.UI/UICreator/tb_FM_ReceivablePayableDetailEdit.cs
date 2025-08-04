@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:19
+// 时间：08/04/2025 11:58:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,6 +49,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -60,6 +62,8 @@ namespace RUINORERP.UI
                         entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
                         entity.property = txtproperty.Text ;
                        entity.Specifications = txtSpecifications.Text ;
+                       entity.ExpenseType_id = Int64.Parse(txtExpenseType_id.Text);
+                        entity.ExpenseDescription = txtExpenseDescription.Text ;
                        entity.Unit_ID = Int64.Parse(txtUnit_ID.Text);
                         entity.IncludeTax = Boolean.Parse(txtIncludeTax.Text);
                         entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
@@ -85,6 +89,8 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text,false);
+          // DataBindingHelper.BindData4Cmb<tb_FM_ExpenseType>(entity, k => k.ExpenseType_id, v=>v.XXNAME, cmbExpenseType_id);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.ExpenseDescription, txtExpenseDescription, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_Unit>(entity, k => k.Unit_ID, v=>v.XXNAME, cmbUnit_ID);
            DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayableDetail>(entity, t => t.IncludeTax, chkIncludeTax, false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayableDetail>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);

@@ -121,61 +121,9 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             //SynchronizeColumnOrder(sgdefine.InitDefineColumns);
             ////显示 宽度 排序 生效
-            SynchronizeColumnOrder(ColumnDisplays);
+            UIBizSrvice.SynchronizeColumnOrder(sgdefine, ColumnDisplays);
         }
 
-        /// <summary>
-        /// 加载默认顺序
-        /// </summary>
-        private void SynchronizeColumnOrder(List<SGColDisplayHandler> ColumnDisplays)
-        {
-            //保存所有列
-            List<ColumnInfo> columnInfos = new List<ColumnInfo>();
-            for (int i = 0; i < sgdefine.grid.Columns.Count; i++)
-            {
-                columnInfos.Add(sgdefine.grid.Columns[i]);
-            }
-
-            //放在后面
-            List<ColumnInfo> OtherColumnInfos = new List<ColumnInfo>();
-
-            //根据这些重新更新ColumnDisplays的顺序
-            sgdefine.grid.Columns.Clear();
-
-            for (int i = 0; i < ColumnDisplays.Count; i++)
-            {
-                //先处理掉 项 和 选择
-                if (ColumnDisplays[i].ColCaption == "项" || ColumnDisplays[i].ColCaption == "选择")
-                {
-                    var colInfoItem = columnInfos.FirstOrDefault(c => c.Tag as SGDefineColumnItem != null && c.Tag is SGDefineColumnItem columnItem && columnItem.ColName == ColumnDisplays[i].ColName);
-                    sgdefine.grid.Columns.Add(colInfoItem);
-                    continue;
-                }
-                var colInfo = columnInfos.FirstOrDefault(c => c.Tag as SGDefineColumnItem != null
-                && c.Tag is SGDefineColumnItem columnItem
-                && columnItem.BelongingObjectType != null
-                && columnItem.ColName == ColumnDisplays[i].ColName
-                && columnItem.BelongingObjectType.Name == ColumnDisplays[i].BelongingObjectName
-                );
-                //如果存在 就直接添加 不需要重新创建列对象
-                if (colInfo != null)
-                {
-                    colInfo.Visible = ColumnDisplays[i].Visible;
-                    sgdefine.grid.Columns.Add(colInfo);
-                }
-                else
-                {
-                    OtherColumnInfos.Add(sgdefine.grid.Columns[i]);
-                }
-            }
-
-            foreach (var item in OtherColumnInfos)
-            {
-                item.Visible = item.Tag as SGDefineColumnItem != null && (item.Tag as SGDefineColumnItem).Visible;
-                sgdefine.grid.Columns.Add(item);
-            }
-
-        }
 
 
         #region 拖放处理逻辑

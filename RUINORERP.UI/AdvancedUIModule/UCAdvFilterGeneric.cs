@@ -50,7 +50,6 @@ namespace RUINORERP.UI.AdvancedUIModule
         /// 在初始化这个高级查询的菜单时要提供的他上级业务窗体的所属模块
         /// </summary>
         public long ModuleID { get; set; }
-
         public UCAdvFilterGeneric()
         {
             InitializeComponent();
@@ -72,6 +71,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             ColNameDataDictionary.TryAdd("PayStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus)));
             ColNameDataDictionary.TryAdd("DataStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(DataStatus)));
             ColNameDataDictionary.TryAdd("Priority", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
+            ColNameDataDictionary.TryAdd("OrderPriority", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority)));
             ColNameDataDictionary.TryAdd("RepairStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(RepairStatus)));
             ColNameDataDictionary.TryAdd("ASProcessStatus", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ASProcessStatus)));
 

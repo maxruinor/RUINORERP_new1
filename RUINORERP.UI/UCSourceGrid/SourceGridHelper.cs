@@ -749,13 +749,6 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
             }
 
-            /*
-            List<int> deleteRows = new List<int>();
-            for (int r = 1; r < grid1.Rows.Count - 1; r++)
-            {
-                deleteRows.Add(grid1.Rows[r].Index);
-            }
-            DeleteRow(sgdefine, deleteRows.ToArray());*/
 
 
             //清空明细表格

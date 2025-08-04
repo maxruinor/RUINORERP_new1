@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:14
+// 时间：08/04/2025 11:58:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -74,6 +74,9 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
 
          }
 /*
@@ -87,12 +90,15 @@ namespace RUINORERP.UI
                         entity.SourceBillNo = txtSourceBillNo.Text ;
                        entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
+                        entity.IsExpenseType = Boolean.Parse(txtIsExpenseType.Text);
                         entity.IsFromPlatform = Boolean.Parse(txtIsFromPlatform.Text);
-                        entity.Account_id = Int64.Parse(txtAccount_id.Text);
+                        entity.PlatformOrderNo = txtPlatformOrderNo.Text ;
+                       entity.Account_id = Int64.Parse(txtAccount_id.Text);
                         entity.PayeeInfoID = Int64.Parse(txtPayeeInfoID.Text);
                         entity.PayeeAccountNo = txtPayeeAccountNo.Text ;
                        entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.ReceivePaymentType = Int32.Parse(txtReceivePaymentType.Text);
+                        entity.ShippingFee = Decimal.Parse(txtShippingFee.Text);
                         entity.TotalForeignPayableAmount = Decimal.Parse(txtTotalForeignPayableAmount.Text);
                         entity.TotalLocalPayableAmount = Decimal.Parse(txtTotalLocalPayableAmount.Text);
                         entity.ForeignPaidAmount = Decimal.Parse(txtForeignPaidAmount.Text);
@@ -137,12 +143,15 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
+           DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsExpenseType, chkIsExpenseType, false);
            DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
           // DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ShippingFee.ToString(), txtShippingFee, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.TotalForeignPayableAmount.ToString(), txtTotalForeignPayableAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.TotalLocalPayableAmount.ToString(), txtTotalLocalPayableAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ForeignPaidAmount.ToString(), txtForeignPaidAmount, BindDataType4TextBox.Money,false);

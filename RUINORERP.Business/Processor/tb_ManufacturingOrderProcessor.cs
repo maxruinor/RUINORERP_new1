@@ -53,6 +53,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.BOM_No);
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.CNName);
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.SKU);
+            queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.IsOutSourced);
             //queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.ProdDetailID);
             queryFilter.SetQueryField<tb_ManufacturingOrder, View_ProdDetail>(c => c.ProdDetailID, c => c.SKU, r => r.SKU);
             queryFilter.SetQueryField<tb_ManufacturingOrder>(c => c.Type_ID);

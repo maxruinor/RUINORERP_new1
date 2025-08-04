@@ -152,12 +152,12 @@ namespace RUINORERP.UI.FM
                     #endregion
                 }
                 else
-                {   
+                {
                     //清空
                     cmbPayeeInfoID.DataBindings.Clear();
                 }
 
-
+                chkIsExpenseType.Enabled = false;
 
 
                 //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
@@ -188,7 +188,7 @@ namespace RUINORERP.UI.FM
                 entity.ActionStatus = ActionStatus.新增;
 
                 //到期日期应该是根据对应客户的账期的天数来算
-
+                chkIsExpenseType.Enabled = true;
                 //entity.DueDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.ARAPNo))
                 {
@@ -211,6 +211,9 @@ namespace RUINORERP.UI.FM
                 cmbPayeeInfoID.Items.Clear();
 
             }
+
+
+            DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsExpenseType, chkIsExpenseType, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ARAPNo, txtARAPNo, BindDataType4TextBox.Qty, false);
@@ -311,7 +314,8 @@ namespace RUINORERP.UI.FM
 
 
             }
-
+            LoadItems(entity.IsExpenseType);
+            InitLoadGrid();
             if (entity.tb_FM_ReceivablePayableDetails != null && entity.tb_FM_ReceivablePayableDetails.Count > 0)
             {
                 //新建和草稿时子表编辑也可以保存。
@@ -383,6 +387,12 @@ namespace RUINORERP.UI.FM
                 //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.IsExpenseType))
+                    {
+                        LoadItems(entity.IsExpenseType);
+                        UIBizSrvice.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
+                    }
+
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.PayeeInfoID))
                     {
                         cmbPayeeInfoID.Enabled = true;
@@ -525,6 +535,76 @@ namespace RUINORERP.UI.FM
         }
 
 
+        public void LoadItems(bool? IsExpenseTypeValue)
+        {
+            bool IsExpenseType = IsExpenseTypeValue.GetValueOrDefault();
+            //产品
+
+            listCols.SetCol_DefaultHide<ProductSharePart>(c => c.CNName, !IsExpenseType);
+            listCols.SetCol_DefaultHide<ProductSharePart>(c => c.Location_ID, !IsExpenseType);
+            listCols.SetCol_DefaultHide<ProductSharePart>(c => c.Rack_ID, !IsExpenseType);
+            listCols.SetCol_DefaultHide<ProductSharePart>(c => c.prop, !IsExpenseType);
+            listCols.SetCol_DefaultHide<ProductSharePart>(c => c.SKU, !IsExpenseType);
+            listCols.SetCol_DefaultHide<ProductSharePart>(c => c.Specifications, !IsExpenseType);
+            listCols.SetCol_DefaultHide<ProductSharePart>(c => c.Model, !IsExpenseType);
+            listCols.SetCol_DefaultHide<ProductSharePart>(c => c.Unit_ID, !IsExpenseType);
+            listCols.SetCol_DefaultHide<ProductSharePart>(c => c.ProductNo, !IsExpenseType);
+            listCols.SetCol_DefaultHide<ProductSharePart>(c => c.Type_ID, !IsExpenseType);
+            listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.property, !IsExpenseType);
+            listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.CustomerPartNo, !IsExpenseType);
+
+            listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.CNName)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.Location_ID)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.Rack_ID)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.prop)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.SKU)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.Specifications)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.Model)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.Unit_ID)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.ProductNo)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.Type_ID)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(tb_FM_ReceivablePayableDetail.property)).Visible = !IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(tb_FM_ReceivablePayableDetail.CustomerPartNo)).Visible = !IsExpenseType;
+
+            listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.ExpenseType_id, !IsExpenseType);
+            listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.ExpenseDescription, !IsExpenseType);
+
+            listCols.FirstOrDefault(c => c.ColName == nameof(tb_FM_ReceivablePayableDetail.ExpenseType_id)).Visible = IsExpenseType;
+            listCols.FirstOrDefault(c => c.ColName == nameof(tb_FM_ReceivablePayableDetail.ExpenseDescription)).Visible = IsExpenseType;
+
+        }
+
+        private void InitLoadGrid()
+        {
+
+            sgd = new SourceGridDefine(grid1, listCols, true);
+            listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.LocalPayableAmount);//-->成交价是结果列
+
+            sgd.GridMasterData = EditEntity;
+
+            listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount);
+            listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount);
+
+            listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b, c) => a.TaxLocalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxLocalAmount);
+            //bool IsExpenseType = EditEntity.IsExpenseType.GetValueOrDefault();
+            //公共到明细的映射 源 ，左边会隐藏
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
+            //sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.prop, t => t.property);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.Model, t => t.CustomerPartNo);
+
+            //应该只提供一个结构
+            List<tb_FM_ReceivablePayableDetail> lines = new List<tb_FM_ReceivablePayableDetail>();
+            bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
+            sgd.BindingSourceLines = bindingSourceSub;
+
+            list = MainForm.Instance.View_ProdDetailList;
+            sgd.SetDependencyObject<ProductSharePart, tb_FM_ReceivablePayableDetail>(list);
+
+            sgd.HasRowHeader = true;
+            sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ReceivablePayableDetail));
+        }
+
+
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
@@ -546,7 +626,7 @@ namespace RUINORERP.UI.FM
 
         }
 
-        
+
 
         private void Grid1_BindingContextChanged(object sender, EventArgs e)
         {
@@ -610,9 +690,9 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ARAPDetailID);
             listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ProdDetailID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Brand);
-            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Model);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Images);
@@ -620,6 +700,8 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
 
+            //listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ExpenseType_id);
+            //listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ExpenseDescription);
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
@@ -637,51 +719,10 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
             //listCols.SetCol_Format<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount, CustomFormatType.CurrencyFormat);
 
-            sgd = new SourceGridDefine(grid1, listCols, true);
-            listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.LocalPayableAmount);//-->成交价是结果列
-
-            sgd.GridMasterData = EditEntity;
-            /*
-            //具体审核权限的人才显示
-            if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
-            {
-                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.UnitPrice);
-                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.TransactionPrice);
-                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.SubtotalPirceAmount);
-            }*/
+            InitLoadGrid();
 
 
-            //listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.EvidenceImage);//后面会删除这一列
-            //listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.ForeignPayableAmount);
-            listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount);
-            listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount);
 
-            listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b, c) => a.TaxLocalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxLocalAmount);
-            //listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b) => a.TotalAmount - b.TaxAmount, c => cLocalPayableAmount);
-
-            ////反算成交单价，目标列能重复添加。已经优化好了。
-            //listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b) => a.SubtotalAmount / b.Quantity, c => c.TransactionPrice);//-->成交价是结果列
-            ////反算折扣
-            //listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b) => a.TransactionPrice / b.UnitPrice, c => c.Discount);
-            //listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);
-
-
-            //公共到明细的映射 源 ，左边会隐藏
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.Specifications, t => t.Specifications);
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.Unit_ID, t => t.Unit_ID);
-            //sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.Standard_Price, t => t.UnitPrice);
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_ReceivablePayableDetail>(sgd, f => f.prop, t => t.property);
-
-            //应该只提供一个结构
-            List<tb_FM_ReceivablePayableDetail> lines = new List<tb_FM_ReceivablePayableDetail>();
-            bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");
-            sgd.BindingSourceLines = bindingSourceSub;
-
-            list = MainForm.Instance.View_ProdDetailList;
-            sgd.SetDependencyObject<ProductSharePart, tb_FM_ReceivablePayableDetail>(list);
-
-            sgd.HasRowHeader = true;
-            sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ReceivablePayableDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnAddDataRow += Sgh_OnAddDataRow;
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
@@ -1021,7 +1062,7 @@ namespace RUINORERP.UI.FM
                 return false;
             }
         }
-      
+
         protected override async Task<bool> Submit()
         {
             bool result = await Submit(ARAPStatus.待审核);

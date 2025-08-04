@@ -127,6 +127,7 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 col.NeverVisible = NeverVisible;
                 col.DisplayController.Disable = NeverVisible;
+                col.DisplayController.Visible = !NeverVisible;
             }
         }
 
@@ -136,6 +137,7 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 col.NeverVisible = true;
                 col.DisplayController.Disable = true;
+                col.DisplayController.Visible = false;
             }
         }
 
@@ -172,7 +174,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <typeparam name="T"></typeparam>
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
-        public static void SetCol_DefaultHide<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp)
+        public static void SetCol_DefaultHide<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, bool Hide = true)
         {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
@@ -181,14 +183,14 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     continue;
                 }
-                item.SetCol_DefaultHide(minfo.Name);
+                item.SetCol_DefaultHide(minfo.Name, Hide);
             }
         }
-        public static void SetCol_DefaultHide(this SGDefineColumnItem col, string colName)
+        public static void SetCol_DefaultHide(this SGDefineColumnItem col, string colName, bool Hide = true)
         {
             if (col.ColName == colName)
             {
-                col.DefaultHide = true;
+                col.DefaultHide = Hide;
             }
         }
 

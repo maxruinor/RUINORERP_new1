@@ -85,6 +85,10 @@ namespace SourceGrid
 
             for (int c = 0; c < columns.Length; c++)
             {
+                if (columns[c] == null)
+                {
+                    continue;
+                }
                 m_List.Insert(p_StartIndex + c, columns[c]);
             }
 

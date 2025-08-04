@@ -76,6 +76,8 @@ namespace RUINORERP.Business
                     }
                     entity.Paytype_ID = null;
                     entity.RefundStatus = (int)RefundStatus.已退款等待退货;
+                    entity.SaleOut_MainID = saleout.SaleOut_MainID;
+                    entity.SaleOut_NO = saleout.SaleOutNo;
                     List<string> tipsMsg = new List<string>();
                     List<tb_SaleOutReDetail> details = mapper.Map<List<tb_SaleOutReDetail>>(saleout.tb_SaleOutDetails);
                     List<tb_SaleOutReDetail> NewDetails = new List<tb_SaleOutReDetail>();

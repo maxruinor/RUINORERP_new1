@@ -92,7 +92,8 @@ namespace RUINORERP.UI.FM.FMBase
 
         public override void BuildSummaryCols()
         {
-            base.MasterSummaryCols.Add(c => c.TotalAmount);
+            base.MasterSummaryCols.Add(c => c.SingleTotalAmount);
+            base.MasterSummaryCols.Add(c => c.UntaxedAmount);
         }
 
         public override void BuildInvisibleCols()

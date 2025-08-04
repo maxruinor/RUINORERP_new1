@@ -662,7 +662,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             }
                             else
                             {
-
+                                KeyValuePair<WhereType, ConditionalModel> kv = new KeyValuePair<WhereType, ConditionalModel>(WhereType.And, item.Conditions[i] as ConditionalModel);
+                                ConditionalList.Add(kv);
                             }
 
 

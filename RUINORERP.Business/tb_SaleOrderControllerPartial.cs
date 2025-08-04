@@ -802,7 +802,7 @@ namespace RUINORERP.Business
                                         _unitOfWorkManage.RollbackTran();
                                         rmrs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，反审失败\r\n" +
                                             $"需将预收款单【退款】，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
-                                            $"取消当前订单后，重新录入正确的销售订单。";
+                                            $"当前订单【作废】后，重新录入正确的销售订单。";
                                         rmrs.Succeeded = false;
                                         return rmrs;
                                     }

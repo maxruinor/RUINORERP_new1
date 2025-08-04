@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:20
+// 时间：08/04/2025 11:58:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -95,34 +95,38 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Specifications;
+        
+
+        private long? _ExpenseType_id;
         /// <summary>
-        /// 规格
+        /// 费用类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "Specifications",ColDesc = "规格")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Specifications" ,Length=1000,IsNullable = true,ColumnDescription = "规格" )]
-        public string Specifications
+        [AdvQueryAttribute(ColName = "ExpenseType_id",ColDesc = "费用类型")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ExpenseType_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "费用类型" )]
+        [FKRelationAttribute("tb_FM_ExpenseType","ExpenseType_id")]
+        public long? ExpenseType_id
         { 
-            get{return _Specifications;}
+            get{return _ExpenseType_id;}
             set{
-            SetProperty(ref _Specifications, value);
+            SetProperty(ref _ExpenseType_id, value);
                         }
         }
 
-        private long? _Unit_ID;
+        private string _ExpenseDescription;
         /// <summary>
-        /// 单位
+        /// 费用说明
         /// </summary>
-        [AdvQueryAttribute(ColName = "Unit_ID",ColDesc = "单位")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Unit_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "单位" )]
-        [FKRelationAttribute("tb_Unit","Unit_ID")]
-        public long? Unit_ID
+        [AdvQueryAttribute(ColName = "ExpenseDescription",ColDesc = "费用说明")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ExpenseDescription" ,Length=300,IsNullable = true,ColumnDescription = "费用说明" )]
+        public string ExpenseDescription
         { 
-            get{return _Unit_ID;}
+            get{return _ExpenseDescription;}
             set{
-            SetProperty(ref _Unit_ID, value);
+            SetProperty(ref _ExpenseDescription, value);
                         }
         }
+
+ 
 
         private bool _IncludeTax= false;
         /// <summary>
@@ -194,19 +198,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Description;
-        /// <summary>
-        /// 描述
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Description",ColDesc = "描述")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Description" ,Length=300,IsNullable = true,ColumnDescription = "描述" )]
-        public string Description
-        { 
-            get{return _Description;}
-            set{
-            SetProperty(ref _Description, value);
-                        }
-        }
+       
 
         private decimal _TaxRate= ((0));
         /// <summary>
@@ -274,13 +266,13 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
-        public virtual tb_Unit tb_unit { get; set; }
+        [Navigate(NavigateType.OneToOne, nameof(ARAPId))]
+        public virtual tb_FM_ReceivablePayable tb_fm_receivablepayable { get; set; }
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(ARAPId))]
-        public virtual tb_FM_ReceivablePayable tb_fm_receivablepayable { get; set; }
+        [Navigate(NavigateType.OneToOne, nameof(ExpenseType_id))]
+        public virtual tb_FM_ExpenseType tb_fm_expensetype { get; set; }
 
 
 

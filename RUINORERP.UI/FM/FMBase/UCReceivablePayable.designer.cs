@@ -86,6 +86,7 @@
             this.lblLocalPaidAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtLocalBalanceAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblLocalBalanceAmount = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsExpenseType = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -133,6 +134,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkIsExpenseType);
             this.kryptonPanel1.Controls.Add(this.lblShippingFee);
             this.kryptonPanel1.Controls.Add(this.txtShippingFee);
             this.kryptonPanel1.Controls.Add(this.chkIsFromPlatform);
@@ -198,7 +200,7 @@
             // 
             // chkIsFromPlatform
             // 
-            this.chkIsFromPlatform.Location = new System.Drawing.Point(794, 178);
+            this.chkIsFromPlatform.Location = new System.Drawing.Point(773, 175);
             this.chkIsFromPlatform.Name = "chkIsFromPlatform";
             this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
             this.chkIsFromPlatform.TabIndex = 225;
@@ -666,6 +668,14 @@
             this.lblLocalBalanceAmount.TabIndex = 206;
             this.lblLocalBalanceAmount.Values.Text = "未核销本币";
             // 
+            // chkIsExpenseType
+            // 
+            this.chkIsExpenseType.Location = new System.Drawing.Point(81, 159);
+            this.chkIsExpenseType.Name = "chkIsExpenseType";
+            this.chkIsExpenseType.Size = new System.Drawing.Size(75, 20);
+            this.chkIsExpenseType.TabIndex = 228;
+            this.chkIsExpenseType.Values.Text = "费用单据";
+            // 
             // UCReceivablePayable
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -766,5 +776,6 @@
         private Krypton.Toolkit.KryptonCheckBox chkIsFromPlatform;
         private Krypton.Toolkit.KryptonLabel lblShippingFee;
         private Krypton.Toolkit.KryptonTextBox txtShippingFee;
+        private Krypton.Toolkit.KryptonCheckBox chkIsExpenseType;
     }
 }

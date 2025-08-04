@@ -65,20 +65,6 @@ namespace RUINORERP.Model
             get{return _DocumentDate;}            set{                SetProperty(ref _DocumentDate, value);                }
         }
 
-        private decimal? _TotalAmount;
-        
-        
-        /// <summary>
-        /// 总金额
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "TotalAmount",ColDesc = "总金额")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalAmount" ,IsNullable = true,ColumnDescription = "总金额" )]
-        [Display(Name = "总金额")]
-        public decimal? TotalAmount 
-        { 
-            get{return _TotalAmount;}            set{                SetProperty(ref _TotalAmount, value);                }
-        }
 
         private bool? _EXPOrINC;
         

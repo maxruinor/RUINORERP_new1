@@ -2609,22 +2609,25 @@ namespace RUINORERP.UI.BaseForm
 
                                                         tb_FM_PaymentRecord newPaymentRecord = paymentController.BuildPaymentRecord(receivablePayables);
                                                         newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红冲";
-
-                                                        //自动审核收款单
-                                                        newPaymentRecord.ApprovalOpinions = "【平台单】已退款，销售退回单审核时，系统自动审核";
-                                                        newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                                        newPaymentRecord.ApprovalResults = true;
-
-                                                        ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
-                                                        if (!rrRecord.Succeeded)
+                                                        var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(newPaymentRecord, false);
+                                                        if (rrs.Succeeded)
                                                         {
-                                                            // rrRecord.ErrorMsg = $"收款单（负数）红冲审核失败，系统自动审核收款单{paymentRecord.PaymentNo}时失败!";
-                                                        }
-                                                        else
-                                                        {
+                                                            //自动审核收款单
+                                                            newPaymentRecord.ApprovalOpinions = "【平台单】已退款，销售退回单审核时，系统自动审核";
+                                                            newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                                            newPaymentRecord.ApprovalResults = true;
+                                                            ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
+                                                            if (!rrRecord.Succeeded)
+                                                            {
+                                                                // rrRecord.ErrorMsg = $"收款单（负数）红冲审核失败，系统自动审核收款单{paymentRecord.PaymentNo}时失败!";
+                                                            }
+                                                            else
+                                                            {
 
-                                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("【平台退款】销售退回时，收款单自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                                                                MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("【平台退款】销售退回时，收款单自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                                                            }
                                                         }
+                                                        
                                                     }
                                                 }
                                             }

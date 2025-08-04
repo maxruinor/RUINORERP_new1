@@ -439,14 +439,7 @@ namespace RUINORERP.Business
                 details[i].ExchangeRate = 1;
                 details[i].ActionStatus = ActionStatus.新增;
 
-                View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                {
-                    if (prodDetail != null && obj.Unit_ID != null && obj.Unit_ID.HasValue)
-                    {
-                        details[i].Unit_ID = obj.Unit_ID.Value;
-                    }
-                }
+                
                 details[i].Quantity = details[i].Quantity;
                 details[i].TaxLocalAmount = details[i].TaxLocalAmount;
                 details[i].LocalPayableAmount = details[i].UnitPrice.Value * details[i].Quantity.Value;
@@ -461,9 +454,8 @@ namespace RUINORERP.Business
                 {
                     ProdDetailID = null,
                     //property = "人工费",
-                    Specifications = "",
                     ExchangeRate = 1,
-                    Description = "人工费",
+                    ExpenseDescription = "人工费",
                     UnitPrice = entity.LaborCost,
                     Quantity = 1,
                     TaxRate = 0.0m, // 假设运费税率为9%
@@ -570,14 +562,7 @@ namespace RUINORERP.Business
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
 
-                View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                {
-                    if (prodDetail != null && obj.Unit_ID != null && obj.Unit_ID.HasValue)
-                    {
-                        details[i].Unit_ID = obj.Unit_ID.Value;
-                    }
-                }
+               
                 //数量标负数，单价保持正数是标准做法
                 details[i].Quantity = -details[i].Quantity;
                 details[i].TaxLocalAmount = -details[i].TaxLocalAmount;
@@ -740,14 +725,7 @@ namespace RUINORERP.Business
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
 
-                View_ProdDetail Prodobj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                if (Prodobj != null && Prodobj.GetType().Name != "Object" && Prodobj is View_ProdDetail prodDetail)
-                {
-                    if (prodDetail != null && Prodobj.Unit_ID != null && Prodobj.Unit_ID.HasValue)
-                    {
-                        details[i].Unit_ID = Prodobj.Unit_ID.Value;
-                    }
-                }
+             
             }
 
             payable.tb_FM_ReceivablePayableDetails = details;
@@ -1561,14 +1539,7 @@ namespace RUINORERP.Business
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
 
-                View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                {
-                    if (prodDetail != null && obj.Unit_ID != null && obj.Unit_ID.HasValue)
-                    {
-                        details[i].Unit_ID = obj.Unit_ID.Value;
-                    }
-                }
+               
             }
 
             #region 单独处理运费 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。佣金不需要
@@ -1731,14 +1702,7 @@ namespace RUINORERP.Business
                 }
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
-                View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                {
-                    if (prodDetail != null && obj.Unit_ID != null && obj.Unit_ID.HasValue)
-                    {
-                        details[i].Unit_ID = obj.Unit_ID.Value;
-                    }
-                }
+               
             }
 
             payable.tb_FM_ReceivablePayableDetails = details;
@@ -1882,15 +1846,7 @@ namespace RUINORERP.Business
                 }
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
-
-                View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
-                if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
-                {
-                    if (prodDetail != null && obj.Unit_ID != null && obj.Unit_ID.HasValue)
-                    {
-                        details[i].Unit_ID = obj.Unit_ID.Value;
-                    }
-                }
+                
             }
             payable.tb_FM_ReceivablePayableDetails = details;
             //如果是外币时，则由外币算出本币

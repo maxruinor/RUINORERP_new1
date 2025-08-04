@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:18
+// 时间：08/04/2025 11:58:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -137,6 +137,20 @@ namespace RUINORERP.Model
                         }
         }
 
+        private bool? _IsExpenseType;
+        /// <summary>
+        /// 费用单据
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsExpenseType",ColDesc = "费用单据")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExpenseType" ,IsNullable = true,ColumnDescription = "费用单据" )]
+        public bool? IsExpenseType
+        { 
+            get{return _IsExpenseType;}
+            set{
+            SetProperty(ref _IsExpenseType, value);
+                        }
+        }
+
         private bool? _IsFromPlatform;
         /// <summary>
         /// 平台单
@@ -148,6 +162,20 @@ namespace RUINORERP.Model
             get{return _IsFromPlatform;}
             set{
             SetProperty(ref _IsFromPlatform, value);
+                        }
+        }
+
+        private string _PlatformOrderNo;
+        /// <summary>
+        /// 平台单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PlatformOrderNo",ColDesc = "平台单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PlatformOrderNo" ,Length=100,IsNullable = true,ColumnDescription = "平台单号" )]
+        public string PlatformOrderNo
+        { 
+            get{return _PlatformOrderNo;}
+            set{
+            SetProperty(ref _PlatformOrderNo, value);
                         }
         }
 
@@ -223,21 +251,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _ShippingFee = ((0));
+        private decimal _ShippingFee= ((0));
         /// <summary>
         /// 运费
         /// </summary>
-        [AdvQueryAttribute(ColName = "ShippingFee", ColDesc = "运费")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ShippingFee", DecimalDigits = 4, IsNullable = false, ColumnDescription = "运费")]
+        [AdvQueryAttribute(ColName = "ShippingFee",ColDesc = "运费")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ShippingFee" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "运费" )]
         public decimal ShippingFee
-        {
-            get { return _ShippingFee; }
-            set
-            {
-                SetProperty(ref _ShippingFee, value);
-            }
+        { 
+            get{return _ShippingFee;}
+            set{
+            SetProperty(ref _ShippingFee, value);
+                        }
         }
-
 
         private decimal _TotalForeignPayableAmount= ((0));
         /// <summary>

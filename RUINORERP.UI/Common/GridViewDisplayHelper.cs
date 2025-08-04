@@ -111,11 +111,15 @@ namespace RUINORERP.UI.Common
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PayStatus), CommonHelper.Instance.GetKeyValuePairs(typeof(PayStatus))));
                 }
                 // 检查类型 T 是否包含 Priority 列
+                else if (prop.Name == "OrderPriority" || prop.Name == "Priority")
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(Priority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority))));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "OrderPriority", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority))));
+                }
                 else if (prop.Name == nameof(Priority))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(Priority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority))));
                 }
-
                 // 检查类型 T 是否包含 PurReProcessWay 列
                 else if (prop.Name == nameof(PurReProcessWay))
                 {

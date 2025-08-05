@@ -736,9 +736,17 @@ namespace RUINORERP.Business
                         crm_customer.TotalPurchaseAmount += entity.tb_SaleOutDetails.Sum(c => c.Quantity * c.TransactionPrice);
                         if (crm_customer.FirstPurchaseDate.HasValue)
                         {
-                            TimeSpan duration = entity.OutDate-crm_customer.LastPurchaseDate.Value;
-                            int days = duration.Days;
-                            crm_customer.DaysSinceLastPurchase = days; //这个可以反审时倒算出来。
+                            if (crm_customer.LastPurchaseDate.HasValue)
+                            {
+                                TimeSpan duration = entity.OutDate - crm_customer.LastPurchaseDate.Value;
+                                int days = duration.Days;
+                                crm_customer.DaysSinceLastPurchase = days; //这个可以反审时倒算出来。
+                            }
+                            else
+                            {
+                                crm_customer.DaysSinceLastPurchase = 0;
+                            }
+
                         }
                         else
                         {

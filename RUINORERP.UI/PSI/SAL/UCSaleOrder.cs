@@ -375,10 +375,10 @@ namespace RUINORERP.UI.PSI.SAL
                             entity.PlatformOrderNo = orderNumber;
                             entity.IsFromPlatform = true;
                         }
-                        else
-                        {
-                            entity.PlatformOrderNo = string.Empty;
-                        }
+                        //else
+                        //{
+                        //    entity.PlatformOrderNo = string.Empty;
+                        //}
                     }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.FreightIncome))

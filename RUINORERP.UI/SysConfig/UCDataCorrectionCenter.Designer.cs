@@ -50,6 +50,7 @@
             System.Windows.Forms.TreeNode treeNode19 = new System.Windows.Forms.TreeNode("佣金数据修复[tb_SaleOut]");
             System.Windows.Forms.TreeNode treeNode20 = new System.Windows.Forms.TreeNode("采购订单未交数量修复");
             System.Windows.Forms.TreeNode treeNode21 = new System.Windows.Forms.TreeNode("采购退货数量回写修复");
+            System.Windows.Forms.TreeNode treeNode22 = new System.Windows.Forms.TreeNode("生产计划结案子单状态检测");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCDataCorrectionCenter));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.treeViewTableList = new Krypton.Toolkit.KryptonTreeView();
@@ -251,6 +252,8 @@
             treeNode20.Text = "采购订单未交数量修复";
             treeNode21.Name = "采购退货数量回写修复";
             treeNode21.Text = "采购退货数量回写修复";
+            treeNode22.Name = "生产计划结案子单状态检测";
+            treeNode22.Text = "生产计划结案子单状态检测";
             this.treeView1.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode1,
             treeNode2,
@@ -272,7 +275,8 @@
             treeNode18,
             treeNode19,
             treeNode20,
-            treeNode21});
+            treeNode21,
+            treeNode22});
             this.treeView1.Size = new System.Drawing.Size(177, 356);
             this.treeView1.TabIndex = 0;
             this.treeView1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.treeView1_MouseDoubleClick);

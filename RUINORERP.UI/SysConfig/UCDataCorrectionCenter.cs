@@ -690,6 +690,84 @@ namespace RUINORERP.UI.SysConfig
                 }
 
 
+                if (treeView1.SelectedNode.Text == "生产计划结案子单状态检测")
+                {
+                    //要回写到采购入库及退货中
+                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_ProductionPlan).Name)
+                    {
+                        #region 生产计划结案子单状态检测
+
+                        List<tb_ProductionDemand> needupdateProductionDemands = new List<tb_ProductionDemand>();
+                        List<tb_ManufacturingOrder> needupdateManufacturingOrders = new List<tb_ManufacturingOrder>();
+
+                        var Plans = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionPlan>()
+                                  .Includes(c => c.tb_ProductionDemands, d => d.tb_ManufacturingOrders)
+                                   .Where(c => c.DataStatus == (int)DataStatus.完结)
+                                    .ToListAsync();
+
+                        foreach (var Plan in Plans)
+                        {
+                            var Demands = Plan.tb_ProductionDemands.Where(c => c.DataStatus != (int)DataStatus.完结).ToList();
+                            for (int a = 0; a < Demands.Count; a++)
+                            {
+                                var Demand = Demands[a];
+                                Demand.DataStatus = (int)DataStatus.完结;
+                                if (!needupdateProductionDemands.Contains(Demand))
+                                {
+                                    needupdateProductionDemands.Add(Demand);
+                                }
+
+
+                                #region 存在制令单时才处理
+                                //存在退回单时才处理
+                                if (Demand.tb_ManufacturingOrders.Any())
+                                {
+                                    foreach (var item in Demand.tb_ManufacturingOrders)
+                                    {
+                                        if (item.DataStatus != (int)DataStatus.完结)
+                                        {
+                                            item.DataStatus = (int)DataStatus.完结;
+                                            if (!needupdateManufacturingOrders.Contains(item))
+                                            {
+                                                needupdateManufacturingOrders.Add(item);
+                                            }
+                                        }
+                                    }
+                                }
+                                #endregion
+                            }
+
+                        }
+
+
+                        if (chkTestMode.Checked)
+                        {
+                            richTextBoxLog.AppendText($"生产计划结案子单状态检测修复 需求:{needupdateProductionDemands.Count}" + "\r\n");
+                            richTextBoxLog.AppendText($"生产计划结案子单状态检测修复 制令单:{needupdateManufacturingOrders.Count}" + "\r\n");
+                        }
+                        else
+                        {
+                            int entrycounter = 0;
+                            int ordercounter = 0;
+
+                            if (needupdateProductionDemands.Any())
+                            {
+                                entrycounter = await MainForm.Instance.AppContext.Db.Updateable(needupdateProductionDemands).UpdateColumns(it => new { it.DataStatus }).ExecuteCommandAsync();
+                            }
+
+                            if (needupdateManufacturingOrders.Any())
+                            {
+                                ordercounter = await MainForm.Instance.AppContext.Db.Updateable(needupdateManufacturingOrders).UpdateColumns(it => new { it.DataStatus }).ExecuteCommandAsync();
+                            }
+
+                            richTextBoxLog.AppendText($"生产计划结案子单状态检测修复成功行数需求：{entrycounter} " + "\r\n");
+                            richTextBoxLog.AppendText($"生产计划结案子单状态检测修复成功行数计划：{ordercounter} " + "\r\n");
+                        }
+
+                        #endregion
+                    }
+
+                }
                 if (treeView1.SelectedNode.Text == "采购退货数量回写修复")
                 {
                     //要回写到采购入库及退货中
@@ -764,7 +842,7 @@ namespace RUINORERP.UI.SysConfig
                                     if (purEntry.tb_PurEntryRes.Any())
                                     {
                                         var detail = purEntry.tb_PurEntryDetails.FirstOrDefault(c => c.ProdDetailID == purorderdetail.ProdDetailID && c.Location_ID == purorderdetail.Location_ID);
-                                        if (detail==null)
+                                        if (detail == null)
                                         {
                                             continue;
                                         }

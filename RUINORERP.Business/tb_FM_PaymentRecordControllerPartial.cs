@@ -812,7 +812,7 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = true;
                 //等待真正支付
                 entity.PaymentStatus = (int)PaymentStatus.已支付;
-
+                
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(entity).UpdateColumns(it => new

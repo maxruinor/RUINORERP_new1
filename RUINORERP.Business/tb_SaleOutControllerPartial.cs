@@ -734,10 +734,9 @@ namespace RUINORERP.Business
                             crm_customer.TotalPurchaseAmount = 0;
                         }
                         crm_customer.TotalPurchaseAmount += entity.tb_SaleOutDetails.Sum(c => c.Quantity * c.TransactionPrice);
-                        crm_customer.LastPurchaseDate = entity.OutDate;
                         if (crm_customer.FirstPurchaseDate.HasValue)
                         {
-                            TimeSpan duration = crm_customer.LastPurchaseDate.Value - crm_customer.FirstPurchaseDate.Value;
+                            TimeSpan duration = entity.OutDate-crm_customer.LastPurchaseDate.Value;
                             int days = duration.Days;
                             crm_customer.DaysSinceLastPurchase = days; //这个可以反审时倒算出来。
                         }
@@ -745,7 +744,8 @@ namespace RUINORERP.Business
                         {
                             crm_customer.FirstPurchaseDate = entity.OutDate;
                         }
-
+                        crm_customer.LastPurchaseDate = entity.OutDate;
+                        crm_customer.Converted = true;
                         //这个是结案时才算次数
                         if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) == entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.Quantity))
                         {

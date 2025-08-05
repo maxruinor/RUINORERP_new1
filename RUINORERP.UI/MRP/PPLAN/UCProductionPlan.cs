@@ -807,6 +807,10 @@ namespace RUINORERP.UI.MRP.MP
         }
         */
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         protected async override Task<bool> CloseCaseAsync()
         {
             if (EditEntity == null)
@@ -839,7 +843,7 @@ namespace RUINORERP.UI.MRP.MP
                 List<tb_ProductionPlan> needCloseCases = EditEntitys.Where(c => c.DataStatus == (int)DataStatus.确认 && c.ApprovalStatus == (int)ApprovalStatus.已审核 && c.ApprovalResults.HasValue && c.ApprovalResults.Value).ToList();
                 if (needCloseCases.Count == 0)
                 {
-                    MainForm.Instance.PrintInfoLog($"要结案的数据为：{needCloseCases.Count}:请检查数据！");
+                    MessageBox.Show($"要结案的数据行数为：{needCloseCases.Count}:请检查数据！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
                 tb_ProductionPlanController<tb_ProductionPlan> ctr = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();

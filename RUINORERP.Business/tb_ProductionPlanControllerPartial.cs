@@ -18,6 +18,7 @@ using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using System.Linq;
 using AutoMapper;
+using System.Numerics;
 
 namespace RUINORERP.Business
 {
@@ -170,46 +171,71 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 批量结案  销售订单标记结案，数据状态为8,可以更新销售订单付款状态， 如果还没有出库。但是结案的订单时。修正拟出库数量。
-        /// 目前暂时是这个逻辑。后面再处理凭证财务相关的
-        /// 目前认为结案 是仓库和业务确定这个订单不再执行的一个确认过程。
+        /// 批量结案   
+        /// 计划单结案，则相关的需求单，制令单， 都会结案 
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        /// 
         public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> NeedCloseCaseList)
         {
             List<tb_ProductionPlan> entitys = new List<tb_ProductionPlan>();
             entitys = NeedCloseCaseList as List<tb_ProductionPlan>;
-
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
+                long[] ids = entitys.Select(c => c.PPID).ToArray();
+
+                var Plans = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProductionPlan>()
+                          .Includes(c => c.tb_ProductionDemands, d => d.tb_ManufacturingOrders)
+                          .Where(d => ids.Contains(d.PPID)).ToListAsync();
+                Plans.ForEach(c => c.CloseCaseOpinions = entitys[0].CloseCaseOpinions);
+
+                List<tb_ProductionDemand> needupdateProductionDemands = new List<tb_ProductionDemand>();
+                List<tb_ManufacturingOrder> needupdateManufacturingOrders = new List<tb_ManufacturingOrder>();
+
                 #region 结案
                 //更新拟销售量  减少
-                for (int m = 0; m < entitys.Count; m++)
+                for (int m = 0; m < Plans.Count; m++)
                 {
+                    var plan = Plans[m];
                     //判断 能结案的 是确认审核过的。
-                    if (entitys[m].DataStatus != (int)DataStatus.确认 || !entitys[m].ApprovalResults.HasValue)
+                    if (plan.DataStatus != (int)DataStatus.确认 || !plan.ApprovalResults.HasValue)
                     {
                         //return false;
                         continue;
                     }
-                    for (int c = 0; c < entitys[m].tb_ProductionPlanDetails.Count; c++)
+
+                    if (plan.tb_ProductionDemands != null)
                     {
+                        plan.tb_ProductionDemands.ForEach(c => c.DataStatus = (int)DataStatus.完结);
+                        plan.tb_ProductionDemands.ForEach(c => c.ApprovalOpinions += entitys[0].CloseCaseOpinions);
+
+                        needupdateProductionDemands.AddRange(plan.tb_ProductionDemands);
 
 
+                        plan.tb_ProductionDemands.ForEach(c =>
+                        {
+                            if (c.tb_ManufacturingOrders != null)
+                            {
+                                c.tb_ManufacturingOrders.ForEach(d => d.CloseCaseOpinions = entitys[0].CloseCaseOpinions);
+                                c.tb_ManufacturingOrders.ForEach(d => d.DataStatus = (int)DataStatus.完结);
+                                needupdateManufacturingOrders.AddRange(c.tb_ManufacturingOrders);
+                            }
+
+                        });
                     }
-                    
-                    //这部分是否能提出到上一级公共部分？
-                    entitys[m].DataStatus = (int)DataStatus.完结;
-                    BusinessHelper.Instance.EditEntity(entitys[m]);
 
-                    //只更新指定列
-                    var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_ProductionPlan>(entitys[m]).UpdateColumns(it => new { it.DataStatus, it.Modified_by, it.Modified_at, it.Notes }).ExecuteCommandAsync();
+                    //这部分是否能提出到上一级公共部分？
+                    plan.DataStatus = (int)DataStatus.完结;
                 }
+
+                var MORows = await _unitOfWorkManage.GetDbClient().Updateable(needupdateManufacturingOrders).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions }).ExecuteCommandAsync();
+
+                var DemandsaffectedRows = await _unitOfWorkManage.GetDbClient().Updateable(needupdateProductionDemands).UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions }).ExecuteCommandAsync();
+
+                var PlansaffectedRows = await _unitOfWorkManage.GetDbClient().Updateable(Plans).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions }).ExecuteCommandAsync();
 
                 #endregion
                 // 注意信息的完整性
@@ -256,7 +282,7 @@ namespace RUINORERP.Business
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 

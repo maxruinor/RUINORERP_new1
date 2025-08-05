@@ -122,23 +122,25 @@ namespace RUINORERP.UI.PSI.SAL
                     //判断是否已经创建退款单 ，如果有则显示，没有则预建
                     if (saleOut.tb_SaleOutRes != null && saleOut.tb_SaleOutRes.Count > 0)
                     {
+                        string msg = string.Empty;
 
-                        //if (saleOut.tb_SaleOutDetails.Sum(c => c.TotalReturnedQty) != saleOut.TotalQty && MessageBox.Show($"系统检测到已经存在【销售退回单】，确认要继续生成销售退回单吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
-                        if (MessageBox.Show($"系统检测到已经存在【销售退回单】，确认要继续生成销售退回单吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+                        if (saleOut.tb_SaleOutRes.Count > 1)
                         {
-                            return;
+                            msg = "第一个";
                         }
 
-                        // 打开销售退回单，确认
-                        MenuPowerHelper menuPowerHelper;
-                        menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                        tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
-                        if (RelatedMenuInfo != null)
+                        if (MessageBox.Show($"系统检测到已存在【销售退回单】，是否打开存在的{msg}单据？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
                         {
-                            menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut.tb_SaleOutRes[0]);
-                            return;
+                            // 打开销售退回单，确认
+                            MenuPowerHelper menuPowerHelper;
+                            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                            if (RelatedMenuInfo != null)
+                            {
+                                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut.tb_SaleOutRes[0]);
+                                return;
+                            }
                         }
-
                     }
                     else
                     {

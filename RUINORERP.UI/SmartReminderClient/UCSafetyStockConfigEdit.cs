@@ -46,7 +46,7 @@ namespace RUINORERP.UI.SmartReminderClient
                 entity = new SafetyStockConfig();
             }
             //entity._ProductIds = safetyStockConfig.ProductIds.ToJson();
-
+            safetyStockConfig = entity;
             DataBindingHelper.BindData4TextBox<SafetyStockConfig>(entity, t => t.CheckIntervalByMinutes, txtCheckIntervalByMinutes, BindDataType4TextBox.Qty, false);
 
             //txt_ProductIds.ReadOnly = true;//要选取，不能手输入。不然格式错误

@@ -147,6 +147,7 @@ namespace RUINORERP.UI.BI
                         safetyStockConfig = new SafetyStockConfig();
                     }
                     ucSafetyStockConfigEdit.safetyStockConfig = safetyStockConfig;
+                    ucSafetyStockConfigEdit.bindingSourceEdit.DataSource = new List<SafetyStockConfig>() { safetyStockConfig };
                     if (ucSafetyStockConfigEdit.ShowDialog() == DialogResult.OK)
                     {
 

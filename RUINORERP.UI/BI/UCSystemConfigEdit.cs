@@ -95,7 +95,6 @@ namespace RUINORERP.UI.BI
             
             #endregion
 
-
             base.BindData(entity);
         }
 

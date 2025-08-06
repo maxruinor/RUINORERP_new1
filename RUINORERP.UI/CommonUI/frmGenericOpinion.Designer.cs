@@ -44,10 +44,10 @@
             this.lblOpinion = new Krypton.Toolkit.KryptonLabel();
             this.bindingSourceEdit = new System.Windows.Forms.BindingSource(this.components);
             this.kryptonGroupBoxCurrentNode = new Krypton.Toolkit.KryptonGroupBox();
+            this.panelAttachment = new Krypton.Toolkit.KryptonPanel();
             this.txtOpinion = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
-            this.panelAttachment = new Krypton.Toolkit.KryptonPanel();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picBoxAttachment)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).BeginInit();
@@ -55,10 +55,10 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxCurrentNode.Panel)).BeginInit();
             this.kryptonGroupBoxCurrentNode.Panel.SuspendLayout();
             this.kryptonGroupBoxCurrentNode.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
-            this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.panelAttachment)).BeginInit();
             this.panelAttachment.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
+            this.kryptonPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // openFileDialog4Img
@@ -122,6 +122,7 @@
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 12;
             this.btnOk.Values.Text = "确定";
+            this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // lblBillType
             // 
@@ -157,6 +158,15 @@
             this.kryptonGroupBoxCurrentNode.TabIndex = 14;
             this.kryptonGroupBoxCurrentNode.Values.Heading = "请输入结案的情况";
             // 
+            // panelAttachment
+            // 
+            this.panelAttachment.Controls.Add(this.picBoxAttachment);
+            this.panelAttachment.Controls.Add(this.lblAttachment);
+            this.panelAttachment.Location = new System.Drawing.Point(10, 221);
+            this.panelAttachment.Name = "panelAttachment";
+            this.panelAttachment.Size = new System.Drawing.Size(496, 193);
+            this.panelAttachment.TabIndex = 71;
+            // 
             // txtOpinion
             // 
             this.txtOpinion.Location = new System.Drawing.Point(74, 69);
@@ -184,24 +194,17 @@
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 13;
             this.btnCancel.Values.Text = "取消";
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
-            // panelAttachment
-            // 
-            this.panelAttachment.Controls.Add(this.picBoxAttachment);
-            this.panelAttachment.Controls.Add(this.lblAttachment);
-            this.panelAttachment.Location = new System.Drawing.Point(10, 221);
-            this.panelAttachment.Name = "panelAttachment";
-            this.panelAttachment.Size = new System.Drawing.Size(496, 193);
-            this.panelAttachment.TabIndex = 71;
-            // 
-            // frmOpinion
+            // frmGenericOpinion
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(583, 515);
             this.Controls.Add(this.kryptonPanel1);
-            this.Name = "frmOpinion";
+            this.Name = "frmGenericOpinion";
             this.Text = "frmGenericOpinion";
+            this.Click += new System.EventHandler(this.frmGenericOpinion_Load);
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picBoxAttachment)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).EndInit();
@@ -210,11 +213,11 @@
             this.kryptonGroupBoxCurrentNode.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxCurrentNode)).EndInit();
             this.kryptonGroupBoxCurrentNode.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
-            this.kryptonPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.panelAttachment)).EndInit();
             this.panelAttachment.ResumeLayout(false);
             this.panelAttachment.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
+            this.kryptonPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }

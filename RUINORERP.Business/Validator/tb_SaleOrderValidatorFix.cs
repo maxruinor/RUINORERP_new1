@@ -59,13 +59,18 @@ namespace RUINORERP.Business
             RuleFor(x => x.TotalCost).Equal(x => x.tb_SaleOrderDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity)).WithMessage("总金额，成本小计：要等于（成本价+定制成本）*数量。");
 
             RuleFor(x => x.PlatformOrderNo).NotEmpty().When(c => c.IsFromPlatform).WithMessage("平台单时，平台订单号不能为空。");
+            //RuleFor(x => x.IsFromPlatform).Equal(true).When(c => c.PlatformOrderNo.IsNotEmptyOrNull() && c.PlatformOrderNo.Length > 0).WithMessage("平台订单号不为空时，【平台单】必需勾选。");
+            RuleFor(x => x.IsFromPlatform)
+           .Equal(true) // 等同于 .Must(value => value == true)
+           .When(c => !string.IsNullOrEmpty(c.PlatformOrderNo) && c.PlatformOrderNo.Length > 0)
+           .WithMessage("平台订单号不为空时，【平台单】必需勾选。");
+
+
+
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款方式:有付款的情况下，付款方式不能为空。");
             RuleFor(x => x.Notes).MinimumLength(5).When(c => c.IsCustomizedOrder == true).WithMessage("备注:定制单时下，备注内容长度必须超过5。");
-            RuleFor(x => x.IsFromPlatform)
-            .Equal(true) // 等同于 .Must(value => value == true)
-            .When(c => !string.IsNullOrEmpty(c.PlatformOrderNo) && c.PlatformOrderNo.Length > 0)
-            .WithMessage("平台单号不为空时，平台来源必须勾选。");
+           
 
             RuleFor(x => x.ExchangeRate).GreaterThan(0).WithMessage("汇率:必须大于零。");
 

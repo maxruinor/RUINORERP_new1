@@ -119,7 +119,7 @@ namespace RUINORERP.UI.FM
                         #endregion
 
                     }
-                  
+
                 }
                 else
                 {
@@ -179,11 +179,11 @@ namespace RUINORERP.UI.FM
                 cmbPayeeInfoID.DataSource = null;
                 cmbPayeeInfoID.DataBindings.Clear();
                 cmbPayeeInfoID.Items.Clear();
-              
+
                 lblExchangeRate.Visible = false;
 
             }
-
+            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup_ID);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID, c => c.Cash == true);
             DataBindingHelper.BindData4CheckBox<tb_FM_PreReceivedPayment>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
@@ -237,7 +237,17 @@ namespace RUINORERP.UI.FM
             //带过滤的下拉绑定要这样
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-
+            
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                chkIsFromPlatform.Visible = true;
+                txtPlatformOrderNo.Visible = true;
+            }
+            else
+            {
+                chkIsFromPlatform.Visible = false;
+                txtPlatformOrderNo.Visible = false;
+            }
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
@@ -296,7 +306,7 @@ namespace RUINORERP.UI.FM
                             {
                                 //添加收款信息。展示给财务看
                                 entity.PayeeAccountNo = payeeInfo.Account_No;
-                               
+
                                 if (!string.IsNullOrEmpty(payeeInfo.PaymentCodeImagePath))
                                 {
                                     btnInfo.Tag = payeeInfo;
@@ -364,7 +374,7 @@ namespace RUINORERP.UI.FM
                     {
                         //添加收款信息。展示给财务看
                         entity.PayeeAccountNo = cv.Account_No;
-                        
+
                         if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
                         {
                             btnInfo.Tag = cv;
@@ -376,7 +386,7 @@ namespace RUINORERP.UI.FM
                             btnInfo.Visible = false;
                         }
                     }
-                   
+
                 }
             }
 
@@ -632,7 +642,7 @@ namespace RUINORERP.UI.FM
                     btnInfo.Visible = false;
                     cmbPayeeInfoID.Visible = false;
                     lblPayeeInfoID.Visible = false;
-                
+
 
                     break;
                 case ReceivePaymentType.付款:
@@ -657,7 +667,7 @@ namespace RUINORERP.UI.FM
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
- 
+
 
         private void btnInfo_Click_1(object sender, EventArgs e)
         {

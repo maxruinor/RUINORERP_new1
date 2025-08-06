@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkEnableAPAutoOffsetPrepay = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkEnableARAutoOffsetPreReceive = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonGroupBox1 = new Krypton.Toolkit.KryptonGroupBox();
             this.chkAutoAuditReceivePaymentable = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAutoAuditReceivePayment = new Krypton.Toolkit.KryptonCheckBox();
@@ -88,22 +90,21 @@
             this.kryptonCheckBox2 = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonCheckBox3 = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonCheckBox4 = new Krypton.Toolkit.KryptonCheckBox();
-            this.chkEnableARAutoOffsetPreReceive = new Krypton.Toolkit.KryptonCheckBox();
-            this.chkEnableAPAutoOffsetPrepay = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkEnablePaymentAutoOffsetAP = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkEnablePaymentAutoOffsetAR = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1.Panel)).BeginInit();
             this.kryptonGroupBox1.Panel.SuspendLayout();
+            this.kryptonGroupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.cmbFreightAllocationRules)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCostCalculationMethod)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
             // 
-            this.kryptonPanel1.Controls.Add(this.chkEnableAPAutoOffsetPrepay);
-            this.kryptonPanel1.Controls.Add(this.chkEnableARAutoOffsetPreReceive);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox1);
             this.kryptonPanel1.Controls.Add(this.cmbFreightAllocationRules);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel10);
@@ -152,16 +153,36 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(1022, 636);
             this.kryptonPanel1.TabIndex = 0;
             // 
+            // chkEnableAPAutoOffsetPrepay
+            // 
+            this.chkEnableAPAutoOffsetPrepay.Location = new System.Drawing.Point(22, 219);
+            this.chkEnableAPAutoOffsetPrepay.Name = "chkEnableAPAutoOffsetPrepay";
+            this.chkEnableAPAutoOffsetPrepay.Size = new System.Drawing.Size(153, 20);
+            this.chkEnableAPAutoOffsetPrepay.TabIndex = 203;
+            this.chkEnableAPAutoOffsetPrepay.Values.Text = "应付款自动核销预付款";
+            // 
+            // chkEnableARAutoOffsetPreReceive
+            // 
+            this.chkEnableARAutoOffsetPreReceive.Location = new System.Drawing.Point(22, 193);
+            this.chkEnableARAutoOffsetPreReceive.Name = "chkEnableARAutoOffsetPreReceive";
+            this.chkEnableARAutoOffsetPreReceive.Size = new System.Drawing.Size(153, 20);
+            this.chkEnableARAutoOffsetPreReceive.TabIndex = 202;
+            this.chkEnableARAutoOffsetPreReceive.Values.Text = "应收款自动核销预收款";
+            // 
             // kryptonGroupBox1
             // 
-            this.kryptonGroupBox1.Location = new System.Drawing.Point(681, 24);
+            this.kryptonGroupBox1.Location = new System.Drawing.Point(640, 24);
             this.kryptonGroupBox1.Name = "kryptonGroupBox1";
             // 
+            // kryptonGroupBox1.Panel
             // 
-            // 
+            this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnablePaymentAutoOffsetAP);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditReceivePaymentable);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnablePaymentAutoOffsetAR);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditReceivePayment);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableAPAutoOffsetPrepay);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditPreReceivePayment);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableARAutoOffsetPreReceive);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblEnableVoucherModule);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableFinancialModule);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblEnableFinancialModule);
@@ -172,7 +193,7 @@
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableInvoiceModule);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableContractModule);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblEnableInvoiceModule);
-            this.kryptonGroupBox1.Size = new System.Drawing.Size(302, 347);
+            this.kryptonGroupBox1.Size = new System.Drawing.Size(343, 385);
             this.kryptonGroupBox1.TabIndex = 201;
             this.kryptonGroupBox1.Values.Heading = "财务模块配置";
             // 
@@ -180,7 +201,7 @@
             // 
             this.chkAutoAuditReceivePaymentable.Checked = true;
             this.chkAutoAuditReceivePaymentable.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoAuditReceivePaymentable.Location = new System.Drawing.Point(61, 196);
+            this.chkAutoAuditReceivePaymentable.Location = new System.Drawing.Point(22, 126);
             this.chkAutoAuditReceivePaymentable.Name = "chkAutoAuditReceivePaymentable";
             this.chkAutoAuditReceivePaymentable.Size = new System.Drawing.Size(205, 20);
             this.chkAutoAuditReceivePaymentable.TabIndex = 204;
@@ -190,7 +211,7 @@
             // 
             this.chkAutoAuditReceivePayment.Checked = true;
             this.chkAutoAuditReceivePayment.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoAuditReceivePayment.Location = new System.Drawing.Point(61, 223);
+            this.chkAutoAuditReceivePayment.Location = new System.Drawing.Point(22, 153);
             this.chkAutoAuditReceivePayment.Name = "chkAutoAuditReceivePayment";
             this.chkAutoAuditReceivePayment.Size = new System.Drawing.Size(192, 20);
             this.chkAutoAuditReceivePayment.TabIndex = 202;
@@ -200,7 +221,7 @@
             // 
             this.chkAutoAuditPreReceivePayment.Checked = true;
             this.chkAutoAuditPreReceivePayment.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoAuditPreReceivePayment.Location = new System.Drawing.Point(61, 170);
+            this.chkAutoAuditPreReceivePayment.Location = new System.Drawing.Point(22, 100);
             this.chkAutoAuditPreReceivePayment.Name = "chkAutoAuditPreReceivePayment";
             this.chkAutoAuditPreReceivePayment.Size = new System.Drawing.Size(205, 20);
             this.chkAutoAuditPreReceivePayment.TabIndex = 200;
@@ -218,7 +239,7 @@
             // 
             this.chkEnableFinancialModule.Checked = true;
             this.chkEnableFinancialModule.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnableFinancialModule.Location = new System.Drawing.Point(129, 132);
+            this.chkEnableFinancialModule.Location = new System.Drawing.Point(295, 77);
             this.chkEnableFinancialModule.Name = "chkEnableFinancialModule";
             this.chkEnableFinancialModule.Size = new System.Drawing.Size(19, 13);
             this.chkEnableFinancialModule.TabIndex = 198;
@@ -226,7 +247,7 @@
             // 
             // lblEnableFinancialModule
             // 
-            this.lblEnableFinancialModule.Location = new System.Drawing.Point(22, 128);
+            this.lblEnableFinancialModule.Location = new System.Drawing.Point(188, 73);
             this.lblEnableFinancialModule.Name = "lblEnableFinancialModule";
             this.lblEnableFinancialModule.Size = new System.Drawing.Size(88, 20);
             this.lblEnableFinancialModule.TabIndex = 197;
@@ -236,7 +257,7 @@
             // 
             this.chkEnableMultiCurrency.Checked = true;
             this.chkEnableMultiCurrency.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnableMultiCurrency.Location = new System.Drawing.Point(129, 107);
+            this.chkEnableMultiCurrency.Location = new System.Drawing.Point(295, 52);
             this.chkEnableMultiCurrency.Name = "chkEnableMultiCurrency";
             this.chkEnableMultiCurrency.Size = new System.Drawing.Size(19, 13);
             this.chkEnableMultiCurrency.TabIndex = 196;
@@ -254,7 +275,7 @@
             // 
             // lblEnableMultiCurrency
             // 
-            this.lblEnableMultiCurrency.Location = new System.Drawing.Point(35, 102);
+            this.lblEnableMultiCurrency.Location = new System.Drawing.Point(201, 47);
             this.lblEnableMultiCurrency.Name = "lblEnableMultiCurrency";
             this.lblEnableMultiCurrency.Size = new System.Drawing.Size(75, 20);
             this.lblEnableMultiCurrency.TabIndex = 195;
@@ -270,7 +291,7 @@
             // 
             // chkEnableInvoiceModule
             // 
-            this.chkEnableInvoiceModule.Location = new System.Drawing.Point(129, 82);
+            this.chkEnableInvoiceModule.Location = new System.Drawing.Point(295, 27);
             this.chkEnableInvoiceModule.Name = "chkEnableInvoiceModule";
             this.chkEnableInvoiceModule.Size = new System.Drawing.Size(19, 13);
             this.chkEnableInvoiceModule.TabIndex = 194;
@@ -288,7 +309,7 @@
             // 
             // lblEnableInvoiceModule
             // 
-            this.lblEnableInvoiceModule.Location = new System.Drawing.Point(22, 80);
+            this.lblEnableInvoiceModule.Location = new System.Drawing.Point(188, 25);
             this.lblEnableInvoiceModule.Name = "lblEnableInvoiceModule";
             this.lblEnableInvoiceModule.Size = new System.Drawing.Size(88, 20);
             this.lblEnableInvoiceModule.TabIndex = 193;
@@ -669,21 +690,21 @@
             this.kryptonCheckBox4.TabIndex = 190;
             this.kryptonCheckBox4.Values.Text = "";
             // 
-            // chkEnableARAutoOffsetAdvance
+            // chkEnablePaymentAutoOffsetAP
             // 
-            this.chkEnableARAutoOffsetPreReceive.Location = new System.Drawing.Point(830, 387);
-            this.chkEnableARAutoOffsetPreReceive.Name = "chkEnableARAutoOffsetAdvance";
-            this.chkEnableARAutoOffsetPreReceive.Size = new System.Drawing.Size(153, 20);
-            this.chkEnableARAutoOffsetPreReceive.TabIndex = 202;
-            this.chkEnableARAutoOffsetPreReceive.Values.Text = "应收款自动核销预收款";
+            this.chkEnablePaymentAutoOffsetAP.Location = new System.Drawing.Point(22, 281);
+            this.chkEnablePaymentAutoOffsetAP.Name = "chkEnablePaymentAutoOffsetAP";
+            this.chkEnablePaymentAutoOffsetAP.Size = new System.Drawing.Size(153, 20);
+            this.chkEnablePaymentAutoOffsetAP.TabIndex = 205;
+            this.chkEnablePaymentAutoOffsetAP.Values.Text = "付款单自动核销应付款";
             // 
-            // chkEnableAPAutoOffsetPrepay
+            // chkEnablePaymentAutoOffsetAR
             // 
-            this.chkEnableAPAutoOffsetPrepay.Location = new System.Drawing.Point(830, 413);
-            this.chkEnableAPAutoOffsetPrepay.Name = "chkEnableAPAutoOffsetPrepay";
-            this.chkEnableAPAutoOffsetPrepay.Size = new System.Drawing.Size(153, 20);
-            this.chkEnableAPAutoOffsetPrepay.TabIndex = 203;
-            this.chkEnableAPAutoOffsetPrepay.Values.Text = "应付款自动核销预付款";
+            this.chkEnablePaymentAutoOffsetAR.Location = new System.Drawing.Point(22, 255);
+            this.chkEnablePaymentAutoOffsetAR.Name = "chkEnablePaymentAutoOffsetAR";
+            this.chkEnablePaymentAutoOffsetAR.Size = new System.Drawing.Size(153, 20);
+            this.chkEnablePaymentAutoOffsetAR.TabIndex = 204;
+            this.chkEnablePaymentAutoOffsetAR.Values.Text = "收款单自动核销应收款";
             // 
             // UCSystemConfigEdit
             // 
@@ -702,6 +723,7 @@
             this.kryptonGroupBox1.Panel.ResumeLayout(false);
             this.kryptonGroupBox1.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1)).EndInit();
+            this.kryptonGroupBox1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.cmbFreightAllocationRules)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCostCalculationMethod)).EndInit();
             this.ResumeLayout(false);
@@ -772,5 +794,7 @@
         private Krypton.Toolkit.KryptonCheckBox chkEnableARAutoOffsetPreReceive;
         private Krypton.Toolkit.KryptonCheckBox kryptonCheckBox4;
         private Krypton.Toolkit.KryptonCheckBox chkEnableAPAutoOffsetPrepay;
+        private Krypton.Toolkit.KryptonCheckBox chkEnablePaymentAutoOffsetAP;
+        private Krypton.Toolkit.KryptonCheckBox chkEnablePaymentAutoOffsetAR;
     }
 }

@@ -32,7 +32,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.SaleOutNo);
-       
+
 
         }
         public override List<ContextMenuController> AddContextMenu()
@@ -87,7 +87,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                     tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
                     tb_SaleOutRe saleOutre = ctr.SaleOutToSaleOutRe(item);
- 
+
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
@@ -131,7 +131,7 @@ namespace RUINORERP.UI.PSI.SAL
                     counter++;
                 }
             }
-            
+
             if (msg.ToString().Length > 0)
             {
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -148,6 +148,12 @@ namespace RUINORERP.UI.PSI.SAL
                 return;
             }
 
+            if (RealList[0].TotalAmount == 0 && RealList[0].ForeignTotalAmount == 0)
+            {
+                msg.Append("【应收款单】的总金额必需大于零。");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
             var ReceivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
             tb_FM_ReceivablePayable ReceivablePayable = await ReceivablePayableController.BuildReceivablePayable(RealList[0]);
             MenuPowerHelper menuPowerHelper;

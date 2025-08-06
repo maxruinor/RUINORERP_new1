@@ -88,6 +88,8 @@
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblRemark = new Krypton.Toolkit.KryptonLabel();
             this.txtRemark = new Krypton.Toolkit.KryptonTextBox();
+            this.txtPlatformOrderNo = new Krypton.Toolkit.KryptonTextBox();
+            this.lblPlatformOrderNo = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
@@ -106,6 +108,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.txtPlatformOrderNo);
+            this.kryptonPanel1.Controls.Add(this.lblPlatformOrderNo);
             this.kryptonPanel1.Controls.Add(this.chkIsFromPlatform);
             this.kryptonPanel1.Controls.Add(this.cmbBizType);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
@@ -172,7 +176,7 @@
             // 
             // chkIsFromPlatform
             // 
-            this.chkIsFromPlatform.Location = new System.Drawing.Point(1044, 217);
+            this.chkIsFromPlatform.Location = new System.Drawing.Point(1044, 160);
             this.chkIsFromPlatform.Name = "chkIsFromPlatform";
             this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
             this.chkIsFromPlatform.TabIndex = 224;
@@ -649,6 +653,21 @@
             this.txtRemark.Size = new System.Drawing.Size(294, 114);
             this.txtRemark.TabIndex = 32;
             // 
+            // txtPlatformOrderNo
+            // 
+            this.txtPlatformOrderNo.Location = new System.Drawing.Point(882, 159);
+            this.txtPlatformOrderNo.Name = "txtPlatformOrderNo";
+            this.txtPlatformOrderNo.Size = new System.Drawing.Size(156, 23);
+            this.txtPlatformOrderNo.TabIndex = 232;
+            // 
+            // lblPlatformOrderNo
+            // 
+            this.lblPlatformOrderNo.Location = new System.Drawing.Point(814, 160);
+            this.lblPlatformOrderNo.Name = "lblPlatformOrderNo";
+            this.lblPlatformOrderNo.Size = new System.Drawing.Size(62, 20);
+            this.lblPlatformOrderNo.TabIndex = 231;
+            this.lblPlatformOrderNo.Values.Text = "平台单号";
+            // 
             // UCPreReceivedPayment
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -737,5 +756,7 @@
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonComboBox cmbBizType;
         private Krypton.Toolkit.KryptonCheckBox chkIsFromPlatform;
+        private Krypton.Toolkit.KryptonTextBox txtPlatformOrderNo;
+        private Krypton.Toolkit.KryptonLabel lblPlatformOrderNo;
     }
 }

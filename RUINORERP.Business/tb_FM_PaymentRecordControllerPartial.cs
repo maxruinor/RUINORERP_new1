@@ -649,10 +649,61 @@ namespace RUINORERP.Business
 
                                 }
 
+                                #region  预收的收款确认时，可以自动核销应收的单据，基本是 销售订单的进款。去核销出库的应收。因为操作时间差。会有这种情况。正向反向都可以
+
+                                //如果是[预收款]的确认到账，则会自动去核销[应收款]一一对应的单据[订单对应出库单]。减少工作量，反过来。如果预收款等待核销。应收审核时也会自动
+                                if (_appContext.FMConfig.EnablePaymentAutoOffsetAR)
+                                {
+                                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                                    {
+                                        if (prePayment.SourceBizType == (int)BizType.销售订单)
+                                        {
+                                            var SaleOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
+                                                .Includes(c => c.tb_SaleOuts, b => b.tb_saleorder)
+                                            .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID && c.SOrder_ID == prePayment.SourceBillId)
+                                            .SingleAsync();
+
+                                            if (SaleOrder != null)
+                                            {
+                                                long[] SaleOutIds = SaleOrder.tb_SaleOuts.Select(c => c.SaleOut_MainID).ToArray();
+
+                                                //部分支付暂时不自动处理
+                                                var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                                                var receivablePayables = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                .Includes(c => c.tb_FM_ReceivablePayableDetails)
+                                                                .Where(c => c.ARAPStatus >= (int)ARAPStatus.待支付
+                                                                && c.CustomerVendor_ID == entity.CustomerVendor_ID
+                                                                && SaleOutIds.Contains(c.SourceBillId.Value))
+                                                                .ToListAsync();
+
+
+                                                var receivablePayableController = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+
+                                                //一切刚刚好时才能去核销
+                                                foreach (var receivablePayable in receivablePayables)
+                                                {
+                                                    if (receivablePayable.TotalLocalPayableAmount == entity.TotalLocalAmount &&
+                                                        receivablePayable.TotalForeignPayableAmount == prePayment.LocalBalanceAmount)
+                                                    {
+                                                        List<tb_FM_PreReceivedPayment> ProcessPreReceivablePayableList = new List<tb_FM_PreReceivedPayment>();
+                                                        ProcessPreReceivablePayableList.Add(prePayment);
+                                                        await receivablePayableController.ApplyManualPaymentAllocation(receivablePayable, ProcessPreReceivablePayableList);
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                }
+
+
+                                #endregion
+
                             }
                         }
                         //这里要测试哦！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！会不会更新的就是自己，
                         preReceivedPaymentUpdateList.AddRange(PreReceivablePayableList);
+
 
                     }
                 }
@@ -812,7 +863,7 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = true;
                 //等待真正支付
                 entity.PaymentStatus = (int)PaymentStatus.已支付;
-                
+
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PaymentRecord>(entity).UpdateColumns(it => new
@@ -1061,6 +1112,7 @@ namespace RUINORERP.Business
             paymentRecord.Modified_at = null;
             paymentRecord.Modified_by = null;
             paymentRecord.ReceivePaymentType = entity.ReceivePaymentType;
+            paymentRecord.Employee_ID = entity.Employee_ID;
             if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);

@@ -917,7 +917,7 @@ namespace RUINORERP.Business
                     {
                         if (ARAPList.Count == 1)
                         {
-                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(ARAPList[0], ReceivePaymentType.付款, false);
+                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(ARAPList[0], ReceivePaymentType.付款,true, false);
                         }
                         else
                         {

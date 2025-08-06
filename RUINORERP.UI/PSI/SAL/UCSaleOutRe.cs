@@ -113,6 +113,8 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                     if (saleOutRe.RefundStatus.Value >= (int)RefundStatus.未退款等待退货)
                     {
+
+                        //在回仓库后操作的情况，多数是审核动作。生成在退仓时生成了
                         if (
                             saleOutRe.DataStatus >= (int)DataStatus.确认
                             && saleOutRe.ApprovalStatus == (int)ApprovalStatus.已审核
@@ -120,7 +122,7 @@ namespace RUINORERP.UI.PSI.SAL
                             && saleOutRe.ApprovalResults.Value
                             && !((RefundStatus)saleOutRe.RefundStatus).ToString().Contains("已退款"))
                         {
-                            #region 销售退回单 如果启用了财务模块
+                            #region 销售退回单 如果启用了财务模块    这里有一个情况是仓库退回时已经生成。这里确认退款只是审核
 
                             AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
                             if (authorizeController.EnableFinancialModule())
@@ -143,16 +145,15 @@ namespace RUINORERP.UI.PSI.SAL
                                         {
                                             //自动生成销售退回单的对应的应该收款单（红冲的）对应的收款记录
                                             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                                            tb_FM_PaymentRecord newPaymentRecord = paymentController.BuildPaymentRecord(receivablePayables);
-                                            if (newPaymentRecord.TotalForeignAmount == 0 && newPaymentRecord.TotalLocalAmount == 0)
+
+                                            //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
+                                            var PendingApprovalDetails = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentRecordDetail>()
+                                                .Includes(c => c.tb_fm_paymentrecord)
+                                            .Where(c => c.tb_fm_paymentrecord.PaymentStatus <= (int)PaymentStatus.待审核).ToListAsync();
+                                            tb_FM_PaymentRecord newPaymentRecord = new tb_FM_PaymentRecord();
+                                            if (PendingApprovalDetails != null && PendingApprovalDetails.Count > 0)
                                             {
-                                                MessageBox.Show("平台订单，在【平台退款】时自动生成的【收款单】（负数）金额为零。请检查是否重复操作。实际已经【退款】。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                                return;
-                                            }
-                                            newPaymentRecord.Remark = "平台单，货已经退仓，【平台退款】时自动生成的收款单（负数）红冲";
-                                            var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(newPaymentRecord, false);
-                                            if (rrs.Succeeded)
-                                            {
+                                                newPaymentRecord = PendingApprovalDetails[0].tb_fm_paymentrecord;
                                                 //自动审核收款单
                                                 newPaymentRecord.ApprovalOpinions = "销售退回单【平台退款】时，系统自动审核";
                                                 newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
@@ -164,16 +165,40 @@ namespace RUINORERP.UI.PSI.SAL
                                                 }
                                                 else
                                                 {
-
                                                     MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("销售退回单【平台退款】时，系统自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
                                                 }
                                             }
+                                            else
+                                            {
+                                                //生成
+                                                newPaymentRecord = paymentController.BuildPaymentRecord(receivablePayables);
+                                                if (newPaymentRecord.TotalForeignAmount == 0 && newPaymentRecord.TotalLocalAmount == 0)
+                                                {
+                                                    MessageBox.Show("平台订单，在【平台退款】时自动生成的【收款单】（负数）金额为零。请检查是否重复操作。实际已经【退款】。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                                    return;
+                                                }
+                                                newPaymentRecord.Remark = "平台单，货已经退仓，【平台退款】时自动生成的收款单（负数）红冲";
+                                                var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(newPaymentRecord, false);
+                                                if (rrs.Succeeded)
+                                                {
+                                                    //自动审核收款单
+                                                    newPaymentRecord.ApprovalOpinions = "销售退回单【平台退款】时，系统自动审核";
+                                                    newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                                    newPaymentRecord.ApprovalResults = true;
+                                                    ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
+                                                    if (!rrRecord.Succeeded)
+                                                    {
+                                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("销售退回单【平台退款】时，系统自动审核失败：" + rrRecord.ErrorMsg, rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                                                    }
+                                                    else
+                                                    {
 
+                                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("销售退回单【平台退款】时，系统自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                                                    }
+                                                }
+                                            }
                                         }
-
-
                                     }
-
 
                                     #endregion
                                 }

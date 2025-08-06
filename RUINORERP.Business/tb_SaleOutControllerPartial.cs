@@ -804,19 +804,45 @@ namespace RUINORERP.Business
                     AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                     if (authorizeController.EnableFinancialModule())
                     {
-                        #region 生成应收 
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-
-                        tb_FM_ReceivablePayable Payable = await ctrpayable.BuildReceivablePayable(entity);
                         var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                        ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
-                        if (rmr.Succeeded)
+                        if (entity.TotalAmount > 0 || entity.ForeignTotalAmount > 0)
                         {
-                            //已经是等审核。 
-                            rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
-                        }
+                            #region 生成应收 
+                            tb_FM_ReceivablePayable Payable = await ctrpayable.BuildReceivablePayable(entity);
+                            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
+                            if (rmr.Succeeded)
+                            {
+                                //已经是等审核。 
+                                rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                                //平台订单会在  基类的审核事件完成后。自动处理
+                                //这里对非平台订单，如果是全额预付的订单 做一些自动审核处理
+                                if (!Payable.IsFromPlatform.GetValueOrDefault())
+                                {
+                                    if (entity.tb_saleorder.PayStatus == (int)PayStatus.全额预付 && entity.TotalAmount == entity.tb_saleorder.TotalAmount)
+                                    {
+                                        var payable = rmr.ReturnObject as tb_FM_ReceivablePayable;
+                                        payable.ApprovalOpinions = "全额预付,系统自动审核";
+                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                        payable.ApprovalResults = true;
+                                        ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable);
+                                        if (!autoApproval.Succeeded)
+                                        {
+                                            autoApproval.Succeeded = false;
+                                            autoApproval.ErrorMsg = $"全额预付，应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        }
+                                        else
+                                        {
+                                            FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                            fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>("全额预付,系统自动审核应收款单", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                        }
+                                    }
 
-                        #endregion
+                                }
+
+                            }
+                            #endregion
+                        }
 
                         #region 佣金生成应付
                         if (entity.TotalCommissionAmount > 0)
@@ -1181,7 +1207,7 @@ namespace RUINORERP.Business
                         receivableList = ARAPList.Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.收款).ToList();
                         if (receivableList.Count == 1)
                         {
-                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(receivableList[0], ReceivePaymentType.收款, false);
+                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(receivableList[0], ReceivePaymentType.收款, true, false);
                         }
                         else if (receivableList.Count > 1)
                         {
@@ -1198,7 +1224,7 @@ namespace RUINORERP.Business
                         PayableList = ARAPList.Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款).ToList();
                         if (PayableList.Count == 1)
                         {
-                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(PayableList[0], ReceivePaymentType.付款, true);
+                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(PayableList[0], ReceivePaymentType.付款, true, true);
                         }
                         else if (PayableList.Count > 1)
                         {

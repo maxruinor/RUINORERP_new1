@@ -79,13 +79,11 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
 
-
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
                 //如果是应收已经有收款记录，则生成反向收款，否则直接删除应收
-
-                var Antiresult = await AntiApplyManualPaymentAllocation(entity, (ReceivePaymentType)entity.ReceivePaymentType, false);
+                var Antiresult = await AntiApplyManualPaymentAllocation(entity, (ReceivePaymentType)entity.ReceivePaymentType,false, false);
                 if (!Antiresult)
                 {
                     _unitOfWorkManage.RollbackTran();
@@ -155,7 +153,6 @@ namespace RUINORERP.Business
             }
 
         }
-
 
         /// <summary>
         /// 这个审核可以由业务来审。后面还会有财务来定是否真实收付，这财务审核收款单前，还是可以反审的
@@ -826,9 +823,12 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 预收付款抵扣-的反操作
+        /// 这个反审有一个类型是 来自销售出库，采购入库的反操作，因为都是自动生成。他们的反操作时要删除。不然会重复生成。
+        /// 如果这反审是应收应付的财务反审，则不需要删除。会再次修改审核，所以这里需要一个开关
         /// </summary>
+        /// <param name="AutoAntiApproval">如果自动审核为真时，则会删除应收付款单据，否则保存用于人工修改</param>
         /// <param name="UseTransaction">外层有事务时这里传false</param>
-        public async Task<bool> AntiApplyManualPaymentAllocation(tb_FM_ReceivablePayable payable, ReceivePaymentType paymentType, bool UseTransaction = true)
+        public async Task<bool> AntiApplyManualPaymentAllocation(tb_FM_ReceivablePayable payable, ReceivePaymentType paymentType,bool AutoAntiApproval, bool UseTransaction = true)
         {
             bool result = false;
             try
@@ -850,7 +850,10 @@ namespace RUINORERP.Business
                 if (payable.ARAPStatus == (int)ARAPStatus.草稿
                     || payable.ARAPStatus == (int)ARAPStatus.待审核)
                 {
-                    await _appContext.Db.DeleteNav(payable).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
+                    if (AutoAntiApproval)
+                    {
+                        await _appContext.Db.DeleteNav(payable).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
+                    }
                     //这里还要判断 是否有付款单，还是只有预收付的核销。有付款单则用红冲?
                 }
                 else
@@ -949,7 +952,11 @@ namespace RUINORERP.Business
                             if (payable.LocalBalanceAmount == payable.TotalLocalPayableAmount)
                             {
                                 //没有核销过时。直接删除
-                                await _appContext.Db.DeleteNav(payable).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
+                                if (AutoAntiApproval)
+                                {
+                                    await _appContext.Db.DeleteNav(payable).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
+                                }
+                                
                             }
                             else
                             {

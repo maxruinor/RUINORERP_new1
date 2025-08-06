@@ -30,6 +30,7 @@
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkIsExpenseType = new Krypton.Toolkit.KryptonCheckBox();
             this.lblShippingFee = new Krypton.Toolkit.KryptonLabel();
             this.txtShippingFee = new Krypton.Toolkit.KryptonTextBox();
             this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
@@ -86,7 +87,8 @@
             this.lblLocalPaidAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtLocalBalanceAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblLocalBalanceAmount = new Krypton.Toolkit.KryptonLabel();
-            this.chkIsExpenseType = new Krypton.Toolkit.KryptonCheckBox();
+            this.txtPlatformOrderNo = new Krypton.Toolkit.KryptonTextBox();
+            this.lblPlatformOrderNo = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -134,6 +136,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.txtPlatformOrderNo);
+            this.kryptonPanel1.Controls.Add(this.lblPlatformOrderNo);
             this.kryptonPanel1.Controls.Add(this.chkIsExpenseType);
             this.kryptonPanel1.Controls.Add(this.lblShippingFee);
             this.kryptonPanel1.Controls.Add(this.txtShippingFee);
@@ -183,6 +187,14 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(1133, 265);
             this.kryptonPanel1.TabIndex = 4;
             // 
+            // chkIsExpenseType
+            // 
+            this.chkIsExpenseType.Location = new System.Drawing.Point(81, 159);
+            this.chkIsExpenseType.Name = "chkIsExpenseType";
+            this.chkIsExpenseType.Size = new System.Drawing.Size(75, 20);
+            this.chkIsExpenseType.TabIndex = 228;
+            this.chkIsExpenseType.Values.Text = "费用单据";
+            // 
             // lblShippingFee
             // 
             this.lblShippingFee.Location = new System.Drawing.Point(888, 164);
@@ -200,7 +212,7 @@
             // 
             // chkIsFromPlatform
             // 
-            this.chkIsFromPlatform.Location = new System.Drawing.Point(773, 175);
+            this.chkIsFromPlatform.Location = new System.Drawing.Point(765, 232);
             this.chkIsFromPlatform.Name = "chkIsFromPlatform";
             this.chkIsFromPlatform.Size = new System.Drawing.Size(62, 20);
             this.chkIsFromPlatform.TabIndex = 225;
@@ -345,7 +357,7 @@
             // 
             // chkIsIncludeTax
             // 
-            this.chkIsIncludeTax.Location = new System.Drawing.Point(811, 53);
+            this.chkIsIncludeTax.Location = new System.Drawing.Point(782, 53);
             this.chkIsIncludeTax.Name = "chkIsIncludeTax";
             this.chkIsIncludeTax.Size = new System.Drawing.Size(49, 20);
             this.chkIsIncludeTax.TabIndex = 186;
@@ -441,7 +453,7 @@
             // 
             // lblDataStatus
             // 
-            this.lblDataStatus.Location = new System.Drawing.Point(944, 17);
+            this.lblDataStatus.Location = new System.Drawing.Point(944, 11);
             this.lblDataStatus.Name = "lblDataStatus";
             this.lblDataStatus.Size = new System.Drawing.Size(125, 38);
             this.lblDataStatus.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
@@ -453,14 +465,14 @@
             // 
             this.cmbCurrency_ID.DropDownWidth = 100;
             this.cmbCurrency_ID.IntegralHeight = false;
-            this.cmbCurrency_ID.Location = new System.Drawing.Point(592, 231);
+            this.cmbCurrency_ID.Location = new System.Drawing.Point(930, 53);
             this.cmbCurrency_ID.Name = "cmbCurrency_ID";
-            this.cmbCurrency_ID.Size = new System.Drawing.Size(167, 21);
+            this.cmbCurrency_ID.Size = new System.Drawing.Size(139, 21);
             this.cmbCurrency_ID.TabIndex = 136;
             // 
             // lblReview
             // 
-            this.lblReview.Location = new System.Drawing.Point(773, 17);
+            this.lblReview.Location = new System.Drawing.Point(773, 11);
             this.lblReview.Name = "lblReview";
             this.lblReview.Size = new System.Drawing.Size(125, 38);
             this.lblReview.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
@@ -470,7 +482,7 @@
             // 
             // lblCurrency_ID
             // 
-            this.lblCurrency_ID.Location = new System.Drawing.Point(550, 231);
+            this.lblCurrency_ID.Location = new System.Drawing.Point(888, 53);
             this.lblCurrency_ID.Name = "lblCurrency_ID";
             this.lblCurrency_ID.Size = new System.Drawing.Size(36, 20);
             this.lblCurrency_ID.TabIndex = 135;
@@ -486,7 +498,7 @@
             // 
             // chkApprovalResults
             // 
-            this.chkApprovalResults.Location = new System.Drawing.Point(898, 56);
+            this.chkApprovalResults.Location = new System.Drawing.Point(782, 85);
             this.chkApprovalResults.Name = "chkApprovalResults";
             this.chkApprovalResults.Size = new System.Drawing.Size(75, 20);
             this.chkApprovalResults.TabIndex = 160;
@@ -526,7 +538,7 @@
             // 
             // lblPrintStatus
             // 
-            this.lblPrintStatus.Location = new System.Drawing.Point(592, 17);
+            this.lblPrintStatus.Location = new System.Drawing.Point(592, 11);
             this.lblPrintStatus.Name = "lblPrintStatus";
             this.lblPrintStatus.Size = new System.Drawing.Size(125, 38);
             this.lblPrintStatus.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
@@ -668,13 +680,20 @@
             this.lblLocalBalanceAmount.TabIndex = 206;
             this.lblLocalBalanceAmount.Values.Text = "未核销本币";
             // 
-            // chkIsExpenseType
+            // txtPlatformOrderNo
             // 
-            this.chkIsExpenseType.Location = new System.Drawing.Point(81, 159);
-            this.chkIsExpenseType.Name = "chkIsExpenseType";
-            this.chkIsExpenseType.Size = new System.Drawing.Size(75, 20);
-            this.chkIsExpenseType.TabIndex = 228;
-            this.chkIsExpenseType.Values.Text = "费用单据";
+            this.txtPlatformOrderNo.Location = new System.Drawing.Point(592, 229);
+            this.txtPlatformOrderNo.Name = "txtPlatformOrderNo";
+            this.txtPlatformOrderNo.Size = new System.Drawing.Size(167, 23);
+            this.txtPlatformOrderNo.TabIndex = 230;
+            // 
+            // lblPlatformOrderNo
+            // 
+            this.lblPlatformOrderNo.Location = new System.Drawing.Point(524, 230);
+            this.lblPlatformOrderNo.Name = "lblPlatformOrderNo";
+            this.lblPlatformOrderNo.Size = new System.Drawing.Size(62, 20);
+            this.lblPlatformOrderNo.TabIndex = 229;
+            this.lblPlatformOrderNo.Values.Text = "平台单号";
             // 
             // UCReceivablePayable
             // 
@@ -777,5 +796,7 @@
         private Krypton.Toolkit.KryptonLabel lblShippingFee;
         private Krypton.Toolkit.KryptonTextBox txtShippingFee;
         private Krypton.Toolkit.KryptonCheckBox chkIsExpenseType;
+        private Krypton.Toolkit.KryptonTextBox txtPlatformOrderNo;
+        private Krypton.Toolkit.KryptonLabel lblPlatformOrderNo;
     }
 }

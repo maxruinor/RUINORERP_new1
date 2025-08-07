@@ -127,7 +127,7 @@ namespace RUINORERP.UI.PSI.SAL
                             AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
                             if (authorizeController.EnableFinancialModule())
                             {
-                                if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentable)
+                                if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceiveable)
                                 {
                                     #region 自动审核应收款单
                                     //销售订单审核时自动将预付款单设为"已生效"状态
@@ -141,7 +141,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                                         //自动退款
                                         //平台订单 经过运费在 平台退款操作后，退回单状态中已经是 退款状态了。
-                                        if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePayment)
+                                        if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecord)
                                         {
                                             //自动生成销售退回单的对应的应该收款单（红冲的）对应的收款记录
                                             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
@@ -980,6 +980,14 @@ namespace RUINORERP.UI.PSI.SAL
                     System.Windows.Forms.MessageBox.Show("退货退款状态不能为空。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
+                if (EditEntity.FreightIncome > 0)
+                {
+                    if (System.Windows.Forms.MessageBox.Show($"你确定要退回运费{EditEntity.FreightIncome}元吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
+                    {
+                        return false;
+                    }
+                }
+
                 bool rs = await base.Submit();
                 return rs;
             }

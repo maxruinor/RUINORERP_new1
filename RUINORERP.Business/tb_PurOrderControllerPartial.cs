@@ -319,40 +319,49 @@ namespace RUINORERP.Business
                         // 生成预收款单前 检测
                         var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
                         var PreReceivedPayment = ctrpay.BuildPreReceivedPayment(entity);
-                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
-                        if (!rmpay.Succeeded)
+                        if (PreReceivedPayment.LocalPrepaidAmount > 0)
                         {
-                            // 处理预收款单生成失败的情况
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"预付款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
-                            if (_appContext.SysConfig.ShowDebugInfo)
+                            ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
+                            if (!rmpay.Succeeded)
                             {
-                                _logger.LogInformation(rmrs.ErrorMsg);
-                            }
-                            return rmrs;
-                        }
-                        else
-                        {
-                            //订单审核时自动将预付款单设为"已生效"状态
-                            //这里是程序设计，不是用户定义。 
-                            //审核方法中，对收款时才会判断是否自动审核收款单。这里是付款。不会执行。
-                            ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
-                            if (!autoApproval.Succeeded)
-                            {
+                                // 处理预收款单生成失败的情况
                                 rmrs.Succeeded = false;
                                 _unitOfWorkManage.RollbackTran();
-                                rmrs.ErrorMsg = $"预付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                rmrs.ErrorMsg = $"预付款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
                                     _logger.LogInformation(rmrs.ErrorMsg);
                                 }
                                 return rmrs;
                             }
+                            else
+                            {
+                                if (_appContext.FMConfig.AutoAuditPrePayment)
+                                {
+                                    ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
+                                    if (!autoApproval.Succeeded)
+                                    {
+                                        rmrs.Succeeded = false;
+                                        _unitOfWorkManage.RollbackTran();
+                                        rmrs.ErrorMsg = $"预付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        if (_appContext.SysConfig.ShowDebugInfo)
+                                        {
+                                            _logger.LogInformation(rmrs.ErrorMsg);
+                                        }
+                                        return rmrs;
+                                    }
+                                    else
+                                    {
+                                        FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预付单依系统设置自动审核", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
+                                    }
+                                }
+                            }
                         }
+                      
 
                         #endregion
-                      
+
                     }
 
                     #endregion
@@ -363,7 +372,7 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
- 
+
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                     .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                     .ExecuteCommandHasChangeAsync();
@@ -498,7 +507,7 @@ namespace RUINORERP.Business
                 if (authorizeController.EnableFinancialModule())
                 {
                     #region  预付款单处理
-                   
+
                     var PrePaymentQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
                         .Where(p => p.SourceBillId == entity.SOrder_ID && p.SourceBizType == (int)BizType.采购订单 && p.Currency_ID == entity.Currency_ID);
                     var PrePaymentList = await PrePaymentQueryable.ToListAsync();

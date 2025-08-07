@@ -271,6 +271,7 @@ namespace RUINORERP.UI.FM
 
             if (entity.tb_FM_PriceAdjustmentDetails != null && entity.tb_FM_PriceAdjustmentDetails.Count > 0)
             {
+                details = entity.tb_FM_PriceAdjustmentDetails;
                 //新建和草稿时子表编辑也可以保存。
                 foreach (var item in entity.tb_FM_PriceAdjustmentDetails)
                 {

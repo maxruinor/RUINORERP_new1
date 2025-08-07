@@ -683,7 +683,7 @@ namespace RUINORERP.Business
                                                 foreach (var receivablePayable in receivablePayables)
                                                 {
                                                     if (receivablePayable.TotalLocalPayableAmount == entity.TotalLocalAmount &&
-                                                        receivablePayable.TotalForeignPayableAmount == prePayment.LocalBalanceAmount)
+                                                        receivablePayable.TotalLocalPayableAmount == prePayment.LocalBalanceAmount)
                                                     {
                                                         List<tb_FM_PreReceivedPayment> ProcessPreReceivablePayableList = new List<tb_FM_PreReceivedPayment>();
                                                         ProcessPreReceivablePayableList.Add(prePayment);
@@ -696,6 +696,51 @@ namespace RUINORERP.Business
                                     }
                                 }
 
+
+                                //预付的确认时，可以核销应付
+                                if (_appContext.FMConfig.EnablePaymentAutoOffsetAP)
+                                {
+                                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                                    {
+                                        if (prePayment.SourceBizType == (int)BizType.采购订单)
+                                        {
+                                            var PurOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurOrder>()
+                                                .Includes(c => c.tb_PurEntries, b => b.tb_purorder)
+                                            .Where(c => c.CustomerVendor_ID == entity.CustomerVendor_ID && c.SOrder_ID == prePayment.SourceBillId)
+                                            .SingleAsync();
+
+                                            if (PurOrder != null)
+                                            {
+                                                long[] PurEntryIDs = PurOrder.tb_PurEntries.Select(c => c.PurEntryID).ToArray();
+
+                                                //部分支付暂时不自动处理
+                                                var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                                                var receivablePayables = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                .Includes(c => c.tb_FM_ReceivablePayableDetails)
+                                                                .Where(c => c.ARAPStatus >= (int)ARAPStatus.待支付
+                                                                && c.CustomerVendor_ID == entity.CustomerVendor_ID
+                                                                && PurEntryIDs.Contains(c.SourceBillId.Value))
+                                                                .ToListAsync();
+
+
+                                                var receivablePayableController = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+
+                                                //一切刚刚好时才能去核销
+                                                foreach (var receivablePayable in receivablePayables)
+                                                {
+                                                    if (receivablePayable.TotalLocalPayableAmount == entity.TotalLocalAmount &&
+                                                        receivablePayable.TotalLocalPayableAmount == prePayment.LocalBalanceAmount)
+                                                    {
+                                                        List<tb_FM_PreReceivedPayment> ProcessPreReceivablePayableList = new List<tb_FM_PreReceivedPayment>();
+                                                        ProcessPreReceivablePayableList.Add(prePayment);
+                                                        await receivablePayableController.ApplyManualPaymentAllocation(receivablePayable, ProcessPreReceivablePayableList);
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                }
 
                                 #endregion
 

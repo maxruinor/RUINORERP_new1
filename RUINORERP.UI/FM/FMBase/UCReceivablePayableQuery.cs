@@ -39,6 +39,7 @@ using Netron.GraphLib;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.Model;
 using RUINORERP.UI.ToolForm;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.UI.FM
 {
@@ -80,12 +81,10 @@ namespace RUINORERP.UI.FM
         {
             base.AddExcludeMenuList("批量处理");
             base.AddExcludeMenuList(MenuItemEnums.反结案);
-            base.AddExcludeMenuList(MenuItemEnums.反审);
             base.AddExcludeMenuList(MenuItemEnums.复制性新增);
             base.AddExcludeMenuList(MenuItemEnums.数据特殊修正);
             base.AddExcludeMenuList(MenuItemEnums.结案);
             base.AddExcludeMenuList(MenuItemEnums.删除);
-            base.AddExcludeMenuList(MenuItemEnums.审核);
             base.AddExcludeMenuList(MenuItemEnums.提交);
             base.AddExcludeMenuList(MenuItemEnums.新增);
             base.AddExcludeMenuList(MenuItemEnums.导入);
@@ -179,6 +178,7 @@ namespace RUINORERP.UI.FM
             }
             list.Add(new ContextMenuController("【生成对账单】", true, false, "NewSumDataGridView_生成对账单"));
             list.Add(new ContextMenuController($"【预{PaymentType}抵扣】", true, false, "NewSumDataGridView_预收预付抵扣"));
+            list.Add(new ContextMenuController($"【批量智能预{PaymentType}抵扣】", true, false, "NewSumDataGridView_批量智能预收预付抵扣"));
             return list;
         }
         public override void BuildContextMenuController()
@@ -187,6 +187,8 @@ namespace RUINORERP.UI.FM
             ContextClickList.Add(NewSumDataGridView_转为收付款单);
             ContextClickList.Add(NewSumDataGridView_生成对账单);
             ContextClickList.Add(NewSumDataGridView_预收预付抵扣);
+            ContextClickList.Add(NewSumDataGridView_批量智能预收预付抵扣);
+
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
@@ -404,6 +406,98 @@ namespace RUINORERP.UI.FM
 
             }
         }
+
+
+
+        //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
+        private async void NewSumDataGridView_批量智能预收预付抵扣(object sender, EventArgs e)
+        {
+            //1,查找能抵扣的待核销或部分核销的预收付款单数据集合
+            //2,抵扣，更新预收付款单和应收应付记录表
+            //3,核销记录
+
+            try
+            {
+                List<tb_FM_ReceivablePayable> selectlist = GetSelectResult();
+                List<tb_FM_ReceivablePayable> RealList = new List<tb_FM_ReceivablePayable>();
+                StringBuilder msg = new StringBuilder();
+                int counter = 1;
+                foreach (var item in selectlist)
+                {
+                    //只有审核状态才可以转换为收款单
+                    bool canConvert = item.ARAPStatus == (int)ARAPStatus.待支付 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                    if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
+                    {
+                        RealList.Add(item);
+                    }
+                    else
+                    {
+                        msg.Append(counter.ToString() + ") ");
+                        msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】 无法进行抵扣。").Append("\r\n");
+                        counter++;
+                    }
+                }
+                if (msg.ToString().Length > 0)
+                {
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (RealList.Count == 0)
+                    {
+                        return;
+                    }
+                }
+
+                if (RealList.Count == 0)
+                {
+                    msg.Append("请至少选择一行数据进行抵扣");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+
+                // 2. 查找可抵扣的预收付款单
+                var availableAdvances = await receivablePayableController.FindAvailableAdvances(RealList);
+                if (availableAdvances.Any())
+                {
+
+                    StringBuilder sbOffset = new StringBuilder();
+                    foreach (var item in availableAdvances)
+                    {
+                        sbOffset.Append($"{item.Key.ARAPNo}:金额{item.Key.LocalBalanceAmount.ToString("###.00")}===》{item.Value.PreRPNO}:金额：{item.Value.LocalBalanceAmount.ToString("###.00")}").Append("\r\n");
+                    }
+
+                    if (MessageBox.Show($"{sbOffset.ToString()}你确定进行对应抵扣吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                    {
+
+                        int OffsetCounter = availableAdvances.Count;
+                        decimal OffsetAmount = availableAdvances.Sum(c => c.Key.LocalBalanceAmount);
+                        for (int i = 0; i < availableAdvances.Count; i++)
+                        {
+                            var kv = availableAdvances.ElementAt(i);
+                            if (kv.Key.LocalBalanceAmount != kv.Value.LocalBalanceAmount)
+                            {
+                                OffsetCounter--;
+                                OffsetAmount= OffsetAmount - kv.Key.LocalBalanceAmount;
+                                MainForm.Instance.PrintInfoLog($"预收付款单抵扣金额不一致，跳过。{kv.Key.ARAPNo}:金额{kv.Key.LocalBalanceAmount.ToString("###.00")}===》{kv.Value.PreRPNO}:金额：{kv.Value.LocalBalanceAmount.ToString("###.00")}");
+                                continue;
+                            }
+                            await receivablePayableController.ApplyManualPaymentAllocation(kv.Key, new List<tb_FM_PreReceivedPayment> { kv.Value });
+                        }
+                        MessageBox.Show($"批量智能预收预付抵扣，成功匹配【{OffsetCounter}】组！，金额{OffsetAmount}");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("没有找到可抵扣的预收付款单！");
+                    return;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.Error(ex);
+            }
+        }
+
 
         //按客户生成对账单
         private void NewSumDataGridView_生成对账单(object sender, EventArgs e)

@@ -40,6 +40,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.Global.EnumExt;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace RUINORERP.UI.FM.FMBase
 {
@@ -134,6 +135,7 @@ namespace RUINORERP.UI.FM.FMBase
             DataBindingHelper.BindData4ControlByEnum<tb_FM_OtherExpense>(entity, t => t.DataStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(DataStatus));
             if (entity.tb_FM_OtherExpenseDetails != null && entity.tb_FM_OtherExpenseDetails.Count > 0)
             {
+                details = entity.tb_FM_OtherExpenseDetails;
                 sgh.LoadItemDataToGrid<tb_FM_OtherExpenseDetail>(grid1, sgd, entity.tb_FM_OtherExpenseDetails, c => c.ExpenseSubID);
             }
             else

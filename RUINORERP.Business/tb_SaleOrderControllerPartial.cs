@@ -210,48 +210,55 @@ namespace RUINORERP.Business
                         // 生成预收款单前 检测
                         var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
                         var PreReceivedPayment = ctrpay.BuildPreReceivedPayment(entity);
-                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
-                        if (!rmpay.Succeeded)
+                        if (PreReceivedPayment.LocalPrepaidAmount > 0)
                         {
-                            // 处理预收款单生成失败的情况
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
-                            if (_appContext.SysConfig.ShowDebugInfo)
+                            ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
+                            if (!rmpay.Succeeded)
                             {
-                                _logger.LogInformation(rmrs.ErrorMsg);
-                            }
-                        }
-                        else
-                        {
-                            if (_appContext.FMConfig.AutoAuditPreReceivePayment && PreReceivedPayment.IsFromPlatform.HasValue && PreReceivedPayment.IsFromPlatform.Value)
-                            {
-                                #region 自动审核预收款
-                                //销售订单审核时自动将预付款单设为"已生效"状态
-                                PreReceivedPayment.ApprovalOpinions = "系统自动审核";
-                                PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                PreReceivedPayment.ApprovalResults = true;
-                                ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
-                                if (!autoApproval.Succeeded)
+                                // 处理预收款单生成失败的情况
+                                rmrs.Succeeded = false;
+                                _unitOfWorkManage.RollbackTran();
+                                rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
+                                if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    rmrs.Succeeded = false;
-                                    _unitOfWorkManage.RollbackTran();
-                                    rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                                    if (_appContext.SysConfig.ShowDebugInfo)
+                                    _logger.LogInformation(rmrs.ErrorMsg);
+                                }
+                            }
+                            else
+                            {
+                                if (_appContext.FMConfig.AutoAuditPreReceive)
+                                {
+                                    #region 自动审核预收款
+                                    //销售订单审核时自动将预付款单设为"已生效"状态
+                                    PreReceivedPayment.ApprovalOpinions = "系统自动审核";
+                                    PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                    PreReceivedPayment.ApprovalResults = true;
+                                    ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
+                                    if (!autoApproval.Succeeded)
                                     {
-                                        _logger.LogInformation(rmrs.ErrorMsg);
+                                        rmrs.Succeeded = false;
+                                        _unitOfWorkManage.RollbackTran();
+                                        rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        if (_appContext.SysConfig.ShowDebugInfo)
+                                        {
+                                            _logger.LogInformation(rmrs.ErrorMsg);
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
+                                    else
+                                    {
+                                        FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
 
-                                   
+
+                                    }
+                                    #endregion
                                 }
-                                #endregion
+
+                             
+
                             }
                         }
+
                     }
                     #endregion
                 }

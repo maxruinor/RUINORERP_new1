@@ -195,7 +195,7 @@ namespace RUINORERP.UI.FM
                     if (PaymentType == ReceivePaymentType.收款)
                     {
                         entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
-                      
+
                     }
                     else
                     {
@@ -215,7 +215,7 @@ namespace RUINORERP.UI.FM
 
 
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsExpenseType, chkIsExpenseType, false);
-     
+
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ARAPNo, txtARAPNo, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
@@ -325,6 +325,7 @@ namespace RUINORERP.UI.FM
             InitLoadGrid();
             if (entity.tb_FM_ReceivablePayableDetails != null && entity.tb_FM_ReceivablePayableDetails.Count > 0)
             {
+                details = entity.tb_FM_ReceivablePayableDetails;
                 //新建和草稿时子表编辑也可以保存。
                 foreach (var item in entity.tb_FM_ReceivablePayableDetails)
                 {
@@ -398,6 +399,12 @@ namespace RUINORERP.UI.FM
                     {
                         LoadItems(entity.IsExpenseType);
                         UIBizSrvice.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
+                    }
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.ShippingFee))
+                    {
+                        EditEntity.LocalBalanceAmount = details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee;
+                        EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee;
                     }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.PayeeInfoID))
@@ -855,7 +862,8 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.uclog.AddLog("金额必须大于0");
                     return;
                 }
-                //EditEntity.TotalForeignPayableAmount = details.Sum(c => c.ForeignPayableAmount);
+
+
                 EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee;
             }
             catch (Exception ex)

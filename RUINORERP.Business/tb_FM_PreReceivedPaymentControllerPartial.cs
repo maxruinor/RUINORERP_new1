@@ -249,7 +249,7 @@ namespace RUINORERP.Business
                 try
                 {
                     //按配置自动审核收款单
-                    if (_appContext.FMConfig.AutoAuditReceivePayment && entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                    if (_appContext.FMConfig.AutoAuditReceivePaymentRecord && entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                     {
                         if (entity.IsFromPlatform.HasValue && entity.IsFromPlatform.Value)
                         {
@@ -379,11 +379,9 @@ namespace RUINORERP.Business
                     payable.LocalPrepaidAmount = entity.Deposit;
                 }
             }
-
             //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
             payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
             payable.IsAvailable = true;//默认可用
-
             payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款。";
             if (!string.IsNullOrEmpty(entity.PlatformOrderNo) && entity.PlatformOrderNo.Trim().Length > 3)
             {

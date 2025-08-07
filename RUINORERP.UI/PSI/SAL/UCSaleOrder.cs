@@ -671,47 +671,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
             return null;
         }
-
-
-
-        //protected override tb_SaleOrder AddByCopy()
-        //{
-        //    EditEntity = base.AddByCopy();
-        //    EditEntity.ActionStatus = ActionStatus.新增;
-        //    EditEntity.SOrder_ID = 0;
-        //    EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
-        //    EditEntity.DataStatus = (int)DataStatus.草稿;
-        //    EditEntity.Approver_at = null;
-        //    EditEntity.ApprovalResults = null;
-        //    EditEntity.tb_SaleOuts = null;
-        //    EditEntity.SOrderNo = string.Empty;
-        //    EditEntity.tb_PurOrders = null;
-        //    EditEntity.PrintStatus = 0;
-        //    BusinessHelper.Instance.InitEntity(EditEntity);
-        //    foreach (var item in EditEntity.tb_SaleOrderDetails)
-        //    {
-        //        item.SOrder_ID = 0;
-        //        item.SaleOrderDetail_ID = 0;
-        //        item.PrimaryKeyID = 0;
-        //        item.tb_saleorder = null;
-        //    }
-        //    return EditEntity;
-        //}
-
-        //public void InitDataTocmbbox()
-        //{
-        //    DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
-        //    DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
-        //    DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(PayStatus), e => e.PayStatus, cmbPayStatus, false);
-        //}
-
-        /*
-         重要思路提示，这个表格控件，数据源的思路是，
-        产品共享表 ProductSharePart+tb_SaleOrderDetail 有合体，SetDependencyObject 根据字段名相同的给值，值来自产品明细表
-         并且，表格中可以编辑的需要查询的列是唯一能查到详情的
-
-        SetDependencyObject<P, S, T>   P包含S字段包含T字段--》是有且包含
-         */
+ 
 
         // 在基类中定义静态属性
 

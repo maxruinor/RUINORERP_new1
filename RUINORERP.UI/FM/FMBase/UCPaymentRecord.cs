@@ -37,6 +37,7 @@ using RUINORERP.Model.Dto;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.StatusManagerService;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 
 namespace RUINORERP.UI.FM
@@ -230,6 +231,7 @@ namespace RUINORERP.UI.FM
 
             if (entity.tb_FM_PaymentRecordDetails != null && entity.tb_FM_PaymentRecordDetails.Count > 0)
             {
+                details = entity.tb_FM_PaymentRecordDetails;
                 sgh.LoadItemDataToGrid<tb_FM_PaymentRecordDetail>(grid1, sgd, entity.tb_FM_PaymentRecordDetails, c => c.PaymentDetailId);
             }
             else

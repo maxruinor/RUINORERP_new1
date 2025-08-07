@@ -82,17 +82,26 @@ namespace RUINORERP.UI.BI
             {
 
             }
-            
+
             if (fMConfiguration == null)
             {
                 fMConfiguration = new FMConfiguration();
             }
-            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditPreReceivePayment, chkAutoAuditPreReceivePayment, false);
-            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditReceivePayment, chkAutoAuditReceivePayment, false);
-            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditReceivePaymentable, chkAutoAuditReceivePaymentable, false);
+
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnableARAutoOffsetPreReceive, chkEnableARAutoOffsetPreReceive, false);
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnableAPAutoOffsetPrepay, chkEnableAPAutoOffsetPrepay, false);
-            
+
+            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnablePaymentAutoOffsetAP, chkEnablePaymentAutoOffsetAP, false);
+            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnablePaymentAutoOffsetAR, chkEnablePaymentAutoOffsetAR, false);
+
+            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditPreReceive, chkAutoAuditPreReceive, false);
+            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditPrePayment, chkAutoAuditPrePayment, false);
+
+
+            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditReceivePaymentRecord, chkAutoAuditReceivePaymentRecord, false);
+            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditReceiveable, chkAutoAuditReceiveable, false);
+            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditPaymentable, chkAutoAuditPaymentable, false);
+
             #endregion
 
             base.BindData(entity);
@@ -118,7 +127,7 @@ namespace RUINORERP.UI.BI
                 //这里不能用上面的SystemConfig，丢失？ 引用没传到值？
                 // 更新JSON数据
                 var jsonData = JsonConvert.SerializeObject(fMConfiguration);
-                if(bindingSourceEdit.Current is tb_SystemConfig sysconfig)
+                if (bindingSourceEdit.Current is tb_SystemConfig sysconfig)
                 {
                     sysconfig.FMConfig = jsonData;
                 }

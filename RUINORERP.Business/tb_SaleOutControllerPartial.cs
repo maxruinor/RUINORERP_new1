@@ -815,31 +815,6 @@ namespace RUINORERP.Business
                             {
                                 //已经是等审核。 
                                 rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
-                                //平台订单会在  基类的审核事件完成后。自动处理
-                                //这里对非平台订单，如果是全额预付的订单 做一些自动审核处理
-                                if (!Payable.IsFromPlatform.GetValueOrDefault())
-                                {
-                                    if (entity.tb_saleorder.PayStatus == (int)PayStatus.全额预付 && entity.TotalAmount == entity.tb_saleorder.TotalAmount)
-                                    {
-                                        var payable = rmr.ReturnObject as tb_FM_ReceivablePayable;
-                                        payable.ApprovalOpinions = "全额预付,系统自动审核";
-                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                        payable.ApprovalResults = true;
-                                        ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable);
-                                        if (!autoApproval.Succeeded)
-                                        {
-                                            autoApproval.Succeeded = false;
-                                            autoApproval.ErrorMsg = $"全额预付，应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                                        }
-                                        else
-                                        {
-                                            FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                            fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>("全额预付,系统自动审核应收款单", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
-                                        }
-                                    }
-
-                                }
-
                             }
                             #endregion
                         }

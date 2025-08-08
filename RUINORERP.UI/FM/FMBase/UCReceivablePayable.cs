@@ -625,7 +625,7 @@ namespace RUINORERP.UI.FM
 
             listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.LocalPayableAmount);
             listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.TaxLocalAmount);
-
+            listCols.SetCol_Summary<tb_FM_ReceivablePayableDetail>(c => c.Quantity);
             listCols.SetCol_Formula<tb_FM_ReceivablePayableDetail>((a, b, c) => a.TaxLocalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxLocalAmount);
             //bool IsExpenseType = EditEntity.IsExpenseType.GetValueOrDefault();
             //公共到明细的映射 源 ，左边会隐藏
@@ -740,7 +740,6 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
-
             //listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ExpenseType_id);
             //listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ExpenseDescription);
 
@@ -1029,7 +1028,7 @@ namespace RUINORERP.UI.FM
 
 
                 //如果主表的总金额和明细金额加总后不相等，则提示
-                if (NeedValidated && EditEntity.TotalLocalPayableAmount != details.Sum(c => c.LocalPayableAmount))
+                if (NeedValidated && EditEntity.TotalLocalPayableAmount != details.Sum(c => c.LocalPayableAmount)+EditEntity.ShippingFee)
                 {
                     if (MessageBox.Show("总金额和明细金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {
@@ -1043,14 +1042,7 @@ namespace RUINORERP.UI.FM
                         return false;
                     }
                 }
-
-                if (NeedValidated && EditEntity.TotalLocalPayableAmount != details.Sum(c => c.LocalPayableAmount))
-                {
-                    if (MessageBox.Show("核准总金额和明细金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
-                    {
-                        return false;
-                    }
-                }
+ 
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))

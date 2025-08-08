@@ -1213,6 +1213,16 @@ namespace RUINORERP.UI.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
+        internal static System.Drawing.Bitmap transferbill {
+            get {
+                object obj = ResourceManager.GetObject("transferbill", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
+        /// </summary>
         internal static System.Drawing.Bitmap trash_48x48 {
             get {
                 object obj = ResourceManager.GetObject("trash_48x48", resourceCulture);

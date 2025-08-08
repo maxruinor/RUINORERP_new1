@@ -3264,6 +3264,7 @@
     <None Include="ResourceFile\new_relatedquery.png" />
     <None Include="ResourceFile\toolbarmenu.png" />
     <None Include="ResourceFile\toolbarmenulist.png" />
+    <None Include="ResourceFile\transferbill.png" />
     <Content Include="ResourceFile\unlockbill.png" />
     <None Include="ResourceFile\user-available.png" />
     <Content Include="ResourceFile\人民币.png" />

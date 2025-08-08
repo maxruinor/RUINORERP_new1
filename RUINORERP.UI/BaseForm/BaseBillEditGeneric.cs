@@ -368,6 +368,8 @@ namespace RUINORERP.UI.BaseForm
             {
                 baseEntity.AcceptChanges();
             }
+            #region 联查
+
             toolStripbtnRelatedQuery.DropDownItems.Clear();
             LoadRelatedDataToDropDownItemsAsync();
             if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
@@ -378,6 +380,23 @@ namespace RUINORERP.UI.BaseForm
             {
                 toolStripbtnRelatedQuery.Visible = false;
             }
+            #endregion
+
+
+            #region 转单
+
+            toolStripbtnConvertDocuments.DropDownItems.Clear();
+            LoadRelatedDataToDropDownItemsAsync();
+            if (toolStripbtnConvertDocuments.DropDownItems.Count > 0)
+            {
+                toolStripbtnConvertDocuments.Visible = true;
+            }
+            else
+            {
+                toolStripbtnConvertDocuments.Visible = false;
+            }
+            #endregion
+
 
             InitializeStateManagement();
             ToolBarEnabledControl(entity);
@@ -3294,6 +3313,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 加载相关数据的
+        /// 联查数据
         /// </summary>
         protected virtual void LoadRelatedDataToDropDownItemsAsync()
         {
@@ -3303,6 +3323,14 @@ namespace RUINORERP.UI.BaseForm
             //    menuItem.Name = "加载最新数据";
             //    toolStripbtnRelatedQuery.DropDownItems.Add(menuItem);
             //}
+        }
+
+        /// <summary>
+        ///  加载转单功能
+        /// </summary>
+        protected virtual void LoadConvertDocToDropDownItemsAsync()
+        {
+            
         }
 
         protected virtual void RelatedQuery()

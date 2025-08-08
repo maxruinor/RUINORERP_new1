@@ -29,6 +29,8 @@ using RUINORERP.Business.Security;
 using System.Windows.Forms;
 using RUINORERP.Business.CommService;
 using System.Collections;
+using static StackExchange.Redis.Role;
+using System.Text;
 
 namespace RUINORERP.Business
 {
@@ -156,7 +158,7 @@ namespace RUINORERP.Business
                         .Sum(c => c.Qty))
                     {
                         entity.tb_prodborrowing.DataStatus = (int)DataStatus.完结;
-                        entity.tb_prodborrowing.CloseCaseOpinions = "【归还单审核时，借出单系统自动结案】-" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name ;
+                        entity.tb_prodborrowing.CloseCaseOpinions = "【归还单审核时，借出单系统自动结案】-" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
                         await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_prodborrowing).UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions }).ExecuteCommandAsync();
                     }
 
@@ -421,7 +423,82 @@ namespace RUINORERP.Business
             return list as List<T>;
         }
 
+        /// <summary>
+        /// 转换为销售退库单
+        /// </summary>
+        /// <param name="prodBorrowing"></param>
+        public tb_ProdReturning BorrowToProdReturning(tb_ProdBorrowing prodBorrowing)
+        {
+            tb_ProdReturning entity = new tb_ProdReturning();
+            //转单
+            if (prodBorrowing != null)
+            {
+                entity = mapper.Map<tb_ProdReturning>(prodBorrowing);
+                entity.ApprovalOpinions = "快捷转单";
+                entity.ApprovalResults = null;
+                entity.DataStatus = (int)DataStatus.草稿;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                entity.Approver_at = null;
+                entity.Approver_by = null;
+                entity.PrintStatus = 0;
+                entity.ActionStatus = ActionStatus.新增;
+                entity.ApprovalOpinions = "";
+                entity.Modified_at = null;
+                entity.Modified_by = null;
+                entity.BorrowID = prodBorrowing.BorrowID;
+                entity.BorrowNO = prodBorrowing.BorrowNo;
 
+                List<string> tipsMsg = new List<string>();
+                List<tb_ProdReturningDetail> details = mapper.Map<List<tb_ProdReturningDetail>>(prodBorrowing.tb_ProdBorrowingDetails);
+                List<tb_ProdReturningDetail> NewDetails = new List<tb_ProdReturningDetail>();
+
+                for (global::System.Int32 i = 0; i < details.Count; i++)
+                {
+                    #region 每行产品ID唯一
+
+                    tb_ProdBorrowingDetail item = prodBorrowing.tb_ProdBorrowingDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                    details[i].Qty = item.Qty - item.ReQty;// 已经交数量去掉
+                    details[i].SubtotalPirceAmount = details[i].Price * details[i].Qty;
+                    details[i].SubtotalCostAmount = details[i].Cost * details[i].Qty;
+                    if (details[i].Qty > 0)
+                    {
+                        NewDetails.Add(details[i]);
+                    }
+                    else
+                    {
+                        tipsMsg.Add($"借出单{prodBorrowing.BorrowNo}，{item.tb_proddetail.tb_prod.CNName}已归还数为{item.ReQty}，可归还数为{details[i].Qty}，当前行数据忽略！");
+                    }
+                    #endregion
+                }
+
+                if (NewDetails.Count == 0)
+                {
+                    tipsMsg.Add($"订单:{prodBorrowing.BorrowNo}已全部归还，请检查是否正在重复归还！");
+                }
+
+                StringBuilder msg = new StringBuilder();
+                foreach (var item in tipsMsg)
+                {
+                    msg.Append(item).Append("\r\n");
+                }
+                if (tipsMsg.Count > 0)
+                {
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                entity.tb_ProdReturningDetails = NewDetails;
+                entity.TotalAmount = NewDetails.Sum(c => c.SubtotalPirceAmount);
+                entity.TotalCost = NewDetails.Sum(c => c.SubtotalCostAmount);
+                entity.TotalQty = NewDetails.Sum(c => c.Qty);
+                entity.ReturnDate = System.DateTime.Now;
+                entity.ActionStatus = ActionStatus.新增;
+                BusinessHelper.Instance.InitEntity(entity);
+                entity.CustomerVendor_ID = prodBorrowing.CustomerVendor_ID;
+                entity.ReturnNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.归还单);
+                entity.tb_prodborrowing = prodBorrowing;
+
+            }
+            return entity;
+        }
 
     }
 }

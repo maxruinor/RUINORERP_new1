@@ -33,6 +33,7 @@ namespace RUINORERP.Global
 
         功能,
         联查,
+        转单,
         结案,
         反结案,
         属性,

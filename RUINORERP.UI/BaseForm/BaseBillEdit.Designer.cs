@@ -33,8 +33,6 @@
             this.toolTipBase = new System.Windows.Forms.ToolTip(this.components);
             this.timerForToolTip = new System.Windows.Forms.Timer(this.components);
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.toolStripbtnAdd = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnCancel = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnModify = new System.Windows.Forms.ToolStripButton();
@@ -46,6 +44,7 @@
             this.toolStripbtnPrint = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripbtnReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnReverseReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripButton结案 = new System.Windows.Forms.ToolStripButton();
@@ -56,8 +55,10 @@
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnClose = new System.Windows.Forms.ToolStripButton();
             this.tsBtnLocked = new System.Windows.Forms.ToolStripButton();
+            this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
+            this.toolStripbtnConvertDocuments = new System.Windows.Forms.ToolStripDropDownButton();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -86,6 +87,7 @@
             this.toolStripButton结案,
             this.toolStripDropDownbtnFuncation,
             this.toolStripbtnRelatedQuery,
+            this.toolStripbtnConvertDocuments,
             this.toolStripbtnProperty,
             this.toolStripbtnClose,
             this.tsBtnLocked});
@@ -94,16 +96,6 @@
             this.BaseToolStrip.Size = new System.Drawing.Size(1049, 25);
             this.BaseToolStrip.TabIndex = 3;
             this.BaseToolStrip.Text = "toolStrip1";
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-            // 
-            // bwRemoting
-            // 
-            this.bwRemoting.WorkerReportsProgress = true;
-            this.bwRemoting.WorkerSupportsCancellation = true;
             // 
             // toolStripbtnAdd
             // 
@@ -192,6 +184,11 @@
             this.toolStripMenuItem2.Size = new System.Drawing.Size(100, 22);
             this.toolStripMenuItem2.Text = "设计";
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            // 
             // toolStripbtnReview
             // 
             this.toolStripbtnReview.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnReview.Image")));
@@ -230,13 +227,13 @@
             // toolStripMenuItem3
             // 
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItem3.Text = "复制性新增";
             // 
             // toolStripMenuItem4
             // 
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-            this.toolStripMenuItem4.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(152, 22);
             this.toolStripMenuItem4.Text = "数据特殊修正";
             // 
             // toolStripbtnRelatedQuery
@@ -271,9 +268,22 @@
             this.tsBtnLocked.Text = "已锁定";
             this.tsBtnLocked.Visible = false;
             // 
+            // bwRemoting
+            // 
+            this.bwRemoting.WorkerReportsProgress = true;
+            this.bwRemoting.WorkerSupportsCancellation = true;
+            // 
             // errorProviderForAllInput
             // 
             this.errorProviderForAllInput.ContainerControl = this;
+            // 
+            // toolStripbtnConvertDocuments
+            // 
+            this.toolStripbtnConvertDocuments.Image = global::RUINORERP.UI.Properties.Resources.transferbill;
+            this.toolStripbtnConvertDocuments.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnConvertDocuments.Name = "toolStripbtnConvertDocuments";
+            this.toolStripbtnConvertDocuments.Size = new System.Drawing.Size(62, 22);
+            this.toolStripbtnConvertDocuments.Text = "转单";
             // 
             // BaseBillEdit
             // 
@@ -322,5 +332,6 @@
         public System.Windows.Forms.ToolStripDropDownButton toolStripDropDownbtnFuncation;
         public System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
+        public System.Windows.Forms.ToolStripDropDownButton toolStripbtnConvertDocuments;
     }
 }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/07/2024 19:06:30
+// 时间：08/08/2025 13:45:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -56,6 +56,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -66,6 +67,7 @@ namespace RUINORERP.UI
                      entity.BundleName = txtBundleName.Text ;
                        entity.Description = txtDescription.Text ;
                        entity.Unit_ID = Int64.Parse(txtUnit_ID.Text);
+                        entity.TargetQty = Int32.Parse(txtTargetQty.Text);
                         entity.ImagesPath = txtImagesPath.Text ;
                        entity.BundleImage = Binary.Parse(txtBundleImage.Text);
                         entity.Weight = Decimal.Parse(txtWeight.Text);
@@ -98,26 +100,27 @@ namespace RUINORERP.UI
                         DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.BundleName, txtBundleName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_Unit>(entity, k => k.Unit_ID, v=>v.XXNAME, cmbUnit_ID);
+           DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.TargetQty, txtTargetQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.ImagesPath, txtImagesPath, BindDataType4TextBox.Text,false);
            //default  DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.BundleImage.ToString(), txtBundleImage, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Weight.ToString(), txtWeight, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Market_Price.ToString(), txtMarket_Price, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdBundle>(entity, t => t.Is_enabled, chkIs_enabled, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdBundle>(entity, t => t.Is_enabled, chkIs_enabled, false);
 //有默认值
-           DataBindingHelper.BindData4CehckBox<tb_ProdBundle>(entity, t => t.Is_available, chkIs_available, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdBundle>(entity, t => t.Is_available, chkIs_available, false);
 //有默认值
            DataBindingHelper.BindData4DataTime<tb_ProdBundle>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ProdBundle>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdBundle>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdBundle>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ProdBundle>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdBundle>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdBundle>(entity, t => t.ApprovalResults, chkApprovalResults, false);
            DataBindingHelper.BindData4TextBox<tb_ProdBundle>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
 }
 

@@ -2293,7 +2293,7 @@ namespace RUINORERP.UI
             //tbunit.UnitName = "";
 
 
-            tb_UnitValidator validator = new tb_UnitValidator();
+            tb_UnitValidator validator = MainForm.Instance.AppContext.GetRequiredService<tb_UnitValidator>();
             ValidationResult results = validator.Validate(tbunit);
             bool validationSucceeded = results.IsValid;
             IList<ValidationFailure> failures = results.Errors;

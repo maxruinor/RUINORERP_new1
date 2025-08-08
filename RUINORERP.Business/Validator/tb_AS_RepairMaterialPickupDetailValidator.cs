@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:40
+// 时间：08/08/2025 13:45:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,7 +44,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_RepairMaterialPickupDetail =>tb_AS_RepairMaterialPickupDetail.RMRID).NotEmpty().When(x => x.RMRID.HasValue);
 
- RuleFor(tb_AS_RepairMaterialPickupDetail =>tb_AS_RepairMaterialPickupDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_AS_RepairMaterialPickupDetail =>tb_AS_RepairMaterialPickupDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
  RuleFor(x => x.ShouldSendQty).PrecisionScale(10,3,true).WithMessage("应发数:小数位不能超过3。");
 
@@ -53,7 +53,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_AS_RepairMaterialPickupDetail =>tb_AS_RepairMaterialPickupDetail.CanQuantity).NotNull().WithMessage("可发数:不能为空。");
 
- RuleFor(tb_AS_RepairMaterialPickupDetail =>tb_AS_RepairMaterialPickupDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
+ RuleFor(tb_AS_RepairMaterialPickupDetail =>tb_AS_RepairMaterialPickupDetail.Summary).MaximumMixedLength(255).WithMessage("摘要:不能超过最大长度,255.");
 
  RuleFor(x => x.Price).PrecisionScale(19,4,true).WithMessage("价格:小数位不能超过4。");
 

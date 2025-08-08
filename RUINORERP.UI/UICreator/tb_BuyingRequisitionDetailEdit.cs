@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:38
+// 时间：08/08/2025 13:45:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,7 +44,6 @@ namespace RUINORERP.UI
         
         
         
-        
 
          }
 /*
@@ -60,8 +59,7 @@ namespace RUINORERP.UI
                         entity.Quantity = Int32.Parse(txtQuantity.Text);
                         entity.EstimatedPrice = Decimal.Parse(txtEstimatedPrice.Text);
                         entity.DeliveredQuantity = Int32.Parse(txtDeliveredQuantity.Text);
-                        entity.Purpose = txtPurpose.Text ;
-                       entity.Notes = txtNotes.Text ;
+                        entity.Notes = txtNotes.Text ;
                        entity.Purchased = Boolean.Parse(txtPurchased.Text);
                                 return entity;
 }
@@ -81,9 +79,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_BuyingRequisitionDetail>(entity, t => t.Quantity, txtQuantity, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_BuyingRequisitionDetail>(entity, t => t.EstimatedPrice.ToString(), txtEstimatedPrice, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_BuyingRequisitionDetail>(entity, t => t.DeliveredQuantity, txtDeliveredQuantity, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_BuyingRequisitionDetail>(entity, t => t.Purpose, txtPurpose, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_BuyingRequisitionDetail>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_BuyingRequisitionDetail>(entity, t => t.Purchased, chkPurchased, false);
+           DataBindingHelper.BindData4CheckBox<tb_BuyingRequisitionDetail>(entity, t => t.Purchased, chkPurchased, false);
 }
 
 

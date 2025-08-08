@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:28
+// 时间：08/08/2025 13:45:46
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,12 +40,12 @@ namespace RUINORERP.Business
      
  RuleFor(tb_OrderPacking =>tb_OrderPacking.SOrder_ID).Must(CheckForeignKeyValue).WithMessage("订单:下拉选择值不正确。");
 
- RuleFor(tb_OrderPacking =>tb_OrderPacking.BoxNo).MaximumLength(25).WithMessage("箱号:不能超过最大长度,25.");
+ RuleFor(tb_OrderPacking =>tb_OrderPacking.BoxNo).MaximumMixedLength(50).WithMessage("箱号:不能超过最大长度,50.");
  RuleFor(tb_OrderPacking =>tb_OrderPacking.BoxNo).NotEmpty().WithMessage("箱号:不能为空。");
 
- RuleFor(tb_OrderPacking =>tb_OrderPacking.BoxMark).MaximumLength(50).WithMessage("箱唛:不能超过最大长度,50.");
+ RuleFor(tb_OrderPacking =>tb_OrderPacking.BoxMark).MaximumMixedLength(100).WithMessage("箱唛:不能超过最大长度,100.");
 
- RuleFor(tb_OrderPacking =>tb_OrderPacking.Remarks).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_OrderPacking =>tb_OrderPacking.Remarks).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_OrderPacking =>tb_OrderPacking.QuantityPerBox).NotNull().WithMessage("数量:不能为空。");
@@ -58,7 +58,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_OrderPacking =>tb_OrderPacking.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
 
- RuleFor(tb_OrderPacking =>tb_OrderPacking.BoxMaterial).MaximumLength(100).WithMessage("箱子材质:不能超过最大长度,100.");
+ RuleFor(tb_OrderPacking =>tb_OrderPacking.BoxMaterial).MaximumMixedLength(200).WithMessage("箱子材质:不能超过最大长度,200.");
 
  RuleFor(x => x.Volume).PrecisionScale(8,2,true).WithMessage("体积(CM):小数位不能超过2。");
 
@@ -70,7 +70,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.NetWeight).PrecisionScale(10,3,true).WithMessage("净重(KG):小数位不能超过3。");
 
- RuleFor(tb_OrderPacking =>tb_OrderPacking.PackingMethod).MaximumLength(50).WithMessage("打包方式:不能超过最大长度,50.");
+ RuleFor(tb_OrderPacking =>tb_OrderPacking.PackingMethod).MaximumMixedLength(100).WithMessage("打包方式:不能超过最大长度,100.");
 
            	        Initialize();
      }

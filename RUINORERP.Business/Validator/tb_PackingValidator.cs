@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:28
+// 时间：08/08/2025 13:45:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_Packing =>tb_Packing.PackagingName).MaximumLength(127).WithMessage("包装名称:不能超过最大长度,127.");
+ RuleFor(tb_Packing =>tb_Packing.PackagingName).MaximumMixedLength(255).WithMessage("包装名称:不能超过最大长度,255.");
 
  RuleFor(tb_Packing =>tb_Packing.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("产品详情:下拉选择值不正确。");
  RuleFor(tb_Packing =>tb_Packing.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);
@@ -51,12 +51,12 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Packing =>tb_Packing.Unit_ID).Must(CheckForeignKeyValue).WithMessage("包装单位:下拉选择值不正确。");
 
- RuleFor(tb_Packing =>tb_Packing.SKU).MaximumLength(40).WithMessage("SKU码:不能超过最大长度,40.");
+ RuleFor(tb_Packing =>tb_Packing.SKU).MaximumMixedLength(80).WithMessage("SKU码:不能超过最大长度,80.");
 
- RuleFor(tb_Packing =>tb_Packing.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_Packing =>tb_Packing.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 
- RuleFor(tb_Packing =>tb_Packing.BoxMaterial).MaximumLength(100).WithMessage("盒子材质:不能超过最大长度,100.");
+ RuleFor(tb_Packing =>tb_Packing.BoxMaterial).MaximumMixedLength(200).WithMessage("盒子材质:不能超过最大长度,200.");
 
  RuleFor(x => x.Length).PrecisionScale(8,2,true).WithMessage("长度(cm):小数位不能超过2。");
 
@@ -70,7 +70,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.GrossWeight).PrecisionScale(10,3,true).WithMessage("毛重G.Wt.(g):小数位不能超过3。");
 
- RuleFor(tb_Packing =>tb_Packing.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_Packing =>tb_Packing.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 //有默认值
 

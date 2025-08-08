@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:31
+// 时间：08/08/2025 13:46:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,7 +43,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品:下拉选择值不正确。");
 
- RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
  RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
@@ -58,6 +58,8 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.SubtotalTransAmount).PrecisionScale(19,4,true).WithMessage("成交小计:小数位不能超过4。");
 
+ RuleFor(x => x.CustomizedCost).PrecisionScale(19,4,true).WithMessage("定制成本:小数位不能超过4。");
+
  RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
 
  RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
@@ -65,20 +67,24 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.TotalDeliveredQty).NotNull().WithMessage("订单出库数:不能为空。");
 
- RuleFor(x => x.CommissionAmount).PrecisionScale(19,4,true).WithMessage("抽成金额:小数位不能超过4。");
+ RuleFor(x => x.UnitCommissionAmount).PrecisionScale(19,4,true).WithMessage("单品佣金:小数位不能超过4。");
+
+ RuleFor(x => x.CommissionAmount).PrecisionScale(19,4,true).WithMessage("佣金小计:小数位不能超过4。");
 
  RuleFor(x => x.TaxRate).PrecisionScale(5,3,true).WithMessage("税率:小数位不能超过3。");
 
  RuleFor(x => x.SubtotalTaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
 
 
- RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
+ RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
- RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.CustomerPartNo).MaximumLength(50).WithMessage("客户型号:不能超过最大长度,50.");
+ RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.CustomerPartNo).MaximumMixedLength(100).WithMessage("客户型号:不能超过最大长度,100.");
 
 
 //***** 
  RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.TotalReturnedQty).NotNull().WithMessage("订单退回数:不能为空。");
+
+ RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.SaleFlagCode).MaximumMixedLength(200).WithMessage("标识代码:不能超过最大长度,200.");
 
            	        Initialize();
      }

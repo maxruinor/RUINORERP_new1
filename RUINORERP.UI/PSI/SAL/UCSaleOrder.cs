@@ -150,7 +150,7 @@ namespace RUINORERP.UI.PSI.SAL
             MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity, $"结果:{(rr.Succeeded ? "成功" : "失败")},{rr.ErrorMsg}");
         }
 
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override async void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_SaleOrder saleOrder)
             {
@@ -189,8 +189,31 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
+                if (saleOrder.IsFromPlatform || saleOrder.Deposit > 0)
+                {
+                    var PreReceivedPayments = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PreReceivedPayment>()
+                                                                    .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.待审核
+                                                                    && c.CustomerVendor_ID == saleOrder.CustomerVendor_ID
+                                                                    && c.SourceBillId == saleOrder.SOrder_ID)
+                                                                    .ToListAsync();
+                    foreach (var item in PreReceivedPayments)
+                    {
+                        var rqp = new Model.CommonModel.RelatedQueryParameter();
+                        rqp.bizType = BizType.预收款单;
+                        rqp.billId = item.PreRPID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.PreRPNO}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.PreRPID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         public override void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
@@ -671,7 +694,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
 
             return null;
         }
- 
+
 
         // 在基类中定义静态属性
 

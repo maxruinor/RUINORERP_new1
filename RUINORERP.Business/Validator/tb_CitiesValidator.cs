@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：08/08/2025 13:45:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,9 +41,9 @@ namespace RUINORERP.Business
  RuleFor(tb_Cities =>tb_Cities.ProvinceID).Must(CheckForeignKeyValueCanNull).WithMessage("省:下拉选择值不正确。");
  RuleFor(tb_Cities =>tb_Cities.ProvinceID).NotEmpty().When(x => x.ProvinceID.HasValue);
 
- RuleFor(tb_Cities =>tb_Cities.CityCNName).MaximumLength(40).WithMessage("城市中文名:不能超过最大长度,40.");
+ RuleFor(tb_Cities =>tb_Cities.CityCNName).MaximumMixedLength(80).WithMessage("城市中文名:不能超过最大长度,80.");
 
- RuleFor(tb_Cities =>tb_Cities.CityENName).MaximumLength(40).WithMessage("城市英文名:不能超过最大长度,40.");
+ RuleFor(tb_Cities =>tb_Cities.CityENName).MaximumMixedLength(80).WithMessage("城市英文名:不能超过最大长度,80.");
 
            	        Initialize();
      }

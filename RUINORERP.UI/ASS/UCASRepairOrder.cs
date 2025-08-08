@@ -217,7 +217,7 @@ namespace RUINORERP.UI.ASS
         }
 
 
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_AS_RepairOrder RepairOrder)
             {
@@ -260,7 +260,7 @@ namespace RUINORERP.UI.ASS
 
 
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
         public override void BindData(tb_AS_RepairOrder entity, ActionStatus actionStatus = ActionStatus.无操作)
         {

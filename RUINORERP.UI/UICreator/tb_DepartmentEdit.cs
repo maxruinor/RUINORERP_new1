@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/07/2025 21:48:21
+// 时间：08/08/2025 13:45:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,6 +40,11 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
+        
 
          }
 /*
@@ -53,7 +58,12 @@ namespace RUINORERP.UI
                        entity.TEL = txtTEL.Text ;
                        entity.Notes = txtNotes.Text ;
                        entity.Director = txtDirector.Text ;
-                               return entity;
+                       entity.Created_at = DateTime.Parse(txtCreated_at.Text);
+                        entity.Created_by = Int64.Parse(txtCreated_by.Text);
+                        entity.Modified_at = DateTime.Parse(txtModified_at.Text);
+                        entity.Modified_by = Int64.Parse(txtModified_by.Text);
+                        entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
+                                return entity;
 }
         */
 
@@ -69,6 +79,11 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.TEL, txtTEL, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.Director, txtDirector, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4DataTime<tb_Department>(entity, t => t.Created_at, dtpCreated_at,false);
+           DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_Department>(entity, t => t.Modified_at, dtpModified_at,false);
+           DataBindingHelper.BindData4TextBox<tb_Department>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4CheckBox<tb_Department>(entity, t => t.isdeleted, chkisdeleted, false);
 }
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 22:58:13
+// 时间：08/08/2025 13:46:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,11 +41,11 @@ namespace RUINORERP.Business
  RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.UIMenuPID).Must(CheckForeignKeyValueCanNull).WithMessage("菜单设置:下拉选择值不正确。");
  RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.UIMenuPID).NotEmpty().When(x => x.UIMenuPID.HasValue);
 
- RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Caption).MaximumLength(50).WithMessage("查询条件名:不能超过最大长度,50.");
+ RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Caption).MaximumMixedLength(100).WithMessage("查询条件名:不能超过最大长度,100.");
 
- RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.FieldName).MaximumLength(50).WithMessage("查询字段名:不能超过最大长度,50.");
+ RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.FieldName).MaximumMixedLength(100).WithMessage("查询字段名:不能超过最大长度,100.");
 
- RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.ValueType).MaximumLength(25).WithMessage("值类型:不能超过最大长度,25.");
+ RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.ValueType).MaximumMixedLength(50).WithMessage("值类型:不能超过最大长度,50.");
 
 //***** 
  RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.ControlWidth).NotNull().WithMessage("控件宽度:不能为空。");
@@ -54,9 +54,9 @@ namespace RUINORERP.Business
  RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Sort).NotNull().WithMessage("排序:不能为空。");
 
 
- RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Default1).MaximumLength(127).WithMessage("默认值1:不能超过最大长度,127.");
+ RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Default1).MaximumMixedLength(255).WithMessage("默认值1:不能超过最大长度,255.");
 
- RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Default2).MaximumLength(127).WithMessage("默认值2:不能超过最大长度,127.");
+ RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Default2).MaximumMixedLength(255).WithMessage("默认值2:不能超过最大长度,255.");
 
 
 

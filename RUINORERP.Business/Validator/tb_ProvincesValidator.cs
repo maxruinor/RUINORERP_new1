@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:30
+// 时间：08/08/2025 13:46:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,11 +38,14 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_Provinces =>tb_Provinces.ProvinceCNName).MaximumLength(40).WithMessage("省份中文名:不能超过最大长度,40.");
+ RuleFor(tb_Provinces =>tb_Provinces.Region_ID).Must(CheckForeignKeyValueCanNull).WithMessage("地区:下拉选择值不正确。");
+ RuleFor(tb_Provinces =>tb_Provinces.Region_ID).NotEmpty().When(x => x.Region_ID.HasValue);
+
+ RuleFor(tb_Provinces =>tb_Provinces.ProvinceCNName).MaximumMixedLength(80).WithMessage("省份中文名:不能超过最大长度,80.");
 
  RuleFor(tb_Provinces =>tb_Provinces.CountryID).NotEmpty().When(x => x.CountryID.HasValue);
 
- RuleFor(tb_Provinces =>tb_Provinces.ProvinceENName).MaximumLength(40).WithMessage("省份英文名:不能超过最大长度,40.");
+ RuleFor(tb_Provinces =>tb_Provinces.ProvinceENName).MaximumMixedLength(80).WithMessage("省份英文名:不能超过最大长度,80.");
 
            	        Initialize();
      }

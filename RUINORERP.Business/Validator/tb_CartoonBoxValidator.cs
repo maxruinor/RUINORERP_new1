@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：08/08/2025 13:45:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,11 +38,11 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_CartoonBox =>tb_CartoonBox.CartonName).MaximumLength(50).WithMessage("纸箱名称:不能超过最大长度,50.");
+ RuleFor(tb_CartoonBox =>tb_CartoonBox.CartonName).MaximumMixedLength(100).WithMessage("纸箱名称:不能超过最大长度,100.");
 
- RuleFor(tb_CartoonBox =>tb_CartoonBox.Color).MaximumLength(50).WithMessage("颜色:不能超过最大长度,50.");
+ RuleFor(tb_CartoonBox =>tb_CartoonBox.Color).MaximumMixedLength(100).WithMessage("颜色:不能超过最大长度,100.");
 
- RuleFor(tb_CartoonBox =>tb_CartoonBox.Material).MaximumLength(50).WithMessage("材质:不能超过最大长度,50.");
+ RuleFor(tb_CartoonBox =>tb_CartoonBox.Material).MaximumMixedLength(100).WithMessage("材质:不能超过最大长度,100.");
 
  RuleFor(x => x.EmptyBoxWeight).PrecisionScale(10,3,true).WithMessage("空箱重(kg):小数位不能超过3。");
 
@@ -58,14 +58,14 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.Volume).PrecisionScale(10,3,true).WithMessage("体积Vol(cm³):小数位不能超过3。");
 
- RuleFor(tb_CartoonBox =>tb_CartoonBox.FluteType).MaximumLength(50).WithMessage("瓦楞类型:不能超过最大长度,50.");
+ RuleFor(tb_CartoonBox =>tb_CartoonBox.FluteType).MaximumMixedLength(100).WithMessage("瓦楞类型:不能超过最大长度,100.");
 
- RuleFor(tb_CartoonBox =>tb_CartoonBox.PrintType).MaximumLength(50).WithMessage("印刷类型:不能超过最大长度,50.");
+ RuleFor(tb_CartoonBox =>tb_CartoonBox.PrintType).MaximumMixedLength(100).WithMessage("印刷类型:不能超过最大长度,100.");
 
- RuleFor(tb_CartoonBox =>tb_CartoonBox.CustomPrint).MaximumLength(50).WithMessage("定制印刷:不能超过最大长度,50.");
+ RuleFor(tb_CartoonBox =>tb_CartoonBox.CustomPrint).MaximumMixedLength(100).WithMessage("定制印刷:不能超过最大长度,100.");
 
 
- RuleFor(tb_CartoonBox =>tb_CartoonBox.Description).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_CartoonBox =>tb_CartoonBox.Description).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 
 

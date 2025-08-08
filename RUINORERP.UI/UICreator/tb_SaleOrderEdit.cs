@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/24/2025 10:37:57
+// 时间：08/08/2025 13:46:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -85,6 +85,9 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
 
          }
 /*
@@ -101,10 +104,12 @@ namespace RUINORERP.UI
                         entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
-                        entity.ShipCost = Decimal.Parse(txtShipCost.Text);
+                        entity.ForeignFreightIncome = Decimal.Parse(txtForeignFreightIncome.Text);
+                        entity.FreightIncome = Decimal.Parse(txtFreightIncome.Text);
                         entity.TotalQty = Int32.Parse(txtTotalQty.Text);
                         entity.TotalCost = Decimal.Parse(txtTotalCost.Text);
                         entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);
+                        entity.TotalCommissionAmount = Decimal.Parse(txtTotalCommissionAmount.Text);
                         entity.TotalTaxAmount = Decimal.Parse(txtTotalTaxAmount.Text);
                         entity.PreDeliveryDate = DateTime.Parse(txtPreDeliveryDate.Text);
                         entity.SaleDate = DateTime.Parse(txtSaleDate.Text);
@@ -115,7 +120,8 @@ namespace RUINORERP.UI
                        entity.ForeignTotalAmount = Decimal.Parse(txtForeignTotalAmount.Text);
                         entity.CollectedMoney = Decimal.Parse(txtCollectedMoney.Text);
                         entity.PrePayMoney = Decimal.Parse(txtPrePayMoney.Text);
-                        entity.ForeignDeposit = Decimal.Parse(txtForeignDeposit.Text);
+                        entity.CustomerPONo = txtCustomerPONo.Text ;
+                       entity.ForeignDeposit = Decimal.Parse(txtForeignDeposit.Text);
                         entity.Deposit = Decimal.Parse(txtDeposit.Text);
                         entity.TaxRate = Decimal.Parse(txtTaxRate.Text);
                         entity.DeliveryDateConfirm = Boolean.Parse(txtDeliveryDateConfirm.Text);
@@ -155,17 +161,19 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.SOrderNo, txtSOrderNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.PayStatus, txtPayStatus, BindDataType4TextBox.Qty,false);
-          // DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
-          // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
-          // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
-          // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.Paytype_ID, txtPaytype_ID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.CustomerVendor_ID, txtCustomerVendor_ID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.Account_id, txtAccount_id, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.Currency_ID, txtCurrency_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
-          // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
-          // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
-           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ShipCost.ToString(), txtShipCost, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.Employee_ID, txtEmployee_ID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ProjectGroup_ID, txtProjectGroup_ID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignFreightIncome.ToString(), txtForeignFreightIncome, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.FreightIncome.ToString(), txtFreightIncome, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalCommissionAmount.ToString(), txtTotalCommissionAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TotalTaxAmount.ToString(), txtTotalTaxAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.PreDeliveryDate, dtpPreDeliveryDate,false);
            DataBindingHelper.BindData4DataTime<tb_SaleOrder>(entity, t => t.SaleDate, dtpSaleDate,false);
@@ -176,6 +184,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignTotalAmount.ToString(), txtForeignTotalAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.CollectedMoney.ToString(), txtCollectedMoney, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.PrePayMoney.ToString(), txtPrePayMoney, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.CustomerPONo, txtCustomerPONo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.ForeignDeposit.ToString(), txtForeignDeposit, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.Deposit.ToString(), txtDeposit, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrder>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);

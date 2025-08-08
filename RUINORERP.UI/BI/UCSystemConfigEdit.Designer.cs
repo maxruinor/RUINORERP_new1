@@ -35,7 +35,6 @@
             this.chkEnablePaymentAutoOffsetAP = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAutoAuditReceiveable = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnablePaymentAutoOffsetAR = new Krypton.Toolkit.KryptonCheckBox();
-            this.chkAutoAuditReceivePaymentRecord = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableAPAutoOffsetPrepay = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAutoAuditPreReceive = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableARAutoOffsetPreReceive = new Krypton.Toolkit.KryptonCheckBox();
@@ -48,6 +47,7 @@
             this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
             this.chkOwnershipControl = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkAutoAuditReceivePaymentRecordByPlatform = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
             this.chkIsDebug = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel7 = new Krypton.Toolkit.KryptonLabel();
@@ -107,7 +107,6 @@
             this.kryptonPanel1.Controls.Add(this.kryptonLabel10);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel9);
             this.kryptonPanel1.Controls.Add(this.chkOwnershipControl);
-            this.kryptonPanel1.Controls.Add(this.chkAutoAuditReceivePaymentRecord);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel8);
             this.kryptonPanel1.Controls.Add(this.chkIsDebug);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel7);
@@ -163,6 +162,7 @@
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnablePaymentAutoOffsetAP);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditReceiveable);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnablePaymentAutoOffsetAR);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditReceivePaymentRecordByPlatform);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableAPAutoOffsetPrepay);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditPreReceive);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableARAutoOffsetPreReceive);
@@ -220,16 +220,6 @@
             this.chkEnablePaymentAutoOffsetAR.Size = new System.Drawing.Size(153, 20);
             this.chkEnablePaymentAutoOffsetAR.TabIndex = 204;
             this.chkEnablePaymentAutoOffsetAR.Values.Text = "收款单自动核销应收款";
-            // 
-            // chkAutoAuditReceivePaymentRecord
-            // 
-            this.chkAutoAuditReceivePaymentRecord.Checked = true;
-            this.chkAutoAuditReceivePaymentRecord.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoAuditReceivePaymentRecord.Location = new System.Drawing.Point(442, 285);
-            this.chkAutoAuditReceivePaymentRecord.Name = "chkAutoAuditReceivePaymentRecord";
-            this.chkAutoAuditReceivePaymentRecord.Size = new System.Drawing.Size(192, 20);
-            this.chkAutoAuditReceivePaymentRecord.TabIndex = 202;
-            this.chkAutoAuditReceivePaymentRecord.Values.Text = "平台订单时，自动审核收款单";
             // 
             // chkEnableAPAutoOffsetPrepay
             // 
@@ -331,6 +321,16 @@
             this.chkOwnershipControl.Size = new System.Drawing.Size(19, 13);
             this.chkOwnershipControl.TabIndex = 188;
             this.chkOwnershipControl.Values.Text = "";
+            // 
+            // chkAutoAuditReceivePaymentRecordByPlatform
+            // 
+            this.chkAutoAuditReceivePaymentRecordByPlatform.Checked = true;
+            this.chkAutoAuditReceivePaymentRecordByPlatform.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkAutoAuditReceivePaymentRecordByPlatform.Location = new System.Drawing.Point(22, 283);
+            this.chkAutoAuditReceivePaymentRecordByPlatform.Name = "chkAutoAuditReceivePaymentRecordByPlatform";
+            this.chkAutoAuditReceivePaymentRecordByPlatform.Size = new System.Drawing.Size(192, 20);
+            this.chkAutoAuditReceivePaymentRecordByPlatform.TabIndex = 202;
+            this.chkAutoAuditReceivePaymentRecordByPlatform.Values.Text = "平台订单时，自动审核收款单";
             // 
             // kryptonLabel8
             // 
@@ -749,7 +749,7 @@
         private Krypton.Toolkit.KryptonLabel kryptonLabel11;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditReceiveable;
-        private Krypton.Toolkit.KryptonCheckBox chkAutoAuditReceivePaymentRecord;
+        private Krypton.Toolkit.KryptonCheckBox chkAutoAuditReceivePaymentRecordByPlatform;
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditPreReceive;
         private Krypton.Toolkit.KryptonCheckBox kryptonCheckBox1;
         private Krypton.Toolkit.KryptonCheckBox kryptonCheckBox2;

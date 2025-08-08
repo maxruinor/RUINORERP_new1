@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 09:38:35
+// 时间：08/08/2025 13:46:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -59,11 +59,8 @@ this.txtConfigValue = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.txtConfigValue.Multiline = true;
 
 this.lblDescription = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.chkDescription = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
-this.chkDescription.Values.Text ="";
+this.txtDescription = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-this.lblValueType = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtValueType = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblConfigType = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtConfigType = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -115,33 +112,21 @@ this.txtConfigValue.Multiline = true;
 this.Controls.Add(this.lblConfigValue);
 this.Controls.Add(this.txtConfigValue);
 
-           //#####Description###Boolean
+           //#####200Description###String
 this.lblDescription.AutoSize = true;
 this.lblDescription.Location = new System.Drawing.Point(100,75);
 this.lblDescription.Name = "lblDescription";
 this.lblDescription.Size = new System.Drawing.Size(41, 12);
 this.lblDescription.TabIndex = 3;
 this.lblDescription.Text = "配置描述";
-this.chkDescription.Location = new System.Drawing.Point(173,71);
-this.chkDescription.Name = "chkDescription";
-this.chkDescription.Size = new System.Drawing.Size(100, 21);
-this.chkDescription.TabIndex = 3;
+this.txtDescription.Location = new System.Drawing.Point(173,71);
+this.txtDescription.Name = "txtDescription";
+this.txtDescription.Size = new System.Drawing.Size(100, 21);
+this.txtDescription.TabIndex = 3;
 this.Controls.Add(this.lblDescription);
-this.Controls.Add(this.chkDescription);
+this.Controls.Add(this.txtDescription);
 
-           //#####50ValueType###String
-this.lblValueType.AutoSize = true;
-this.lblValueType.Location = new System.Drawing.Point(100,100);
-this.lblValueType.Name = "lblValueType";
-this.lblValueType.Size = new System.Drawing.Size(41, 12);
-this.lblValueType.TabIndex = 4;
-this.lblValueType.Text = "配置项的值类型";
-this.txtValueType.Location = new System.Drawing.Point(173,96);
-this.txtValueType.Name = "txtValueType";
-this.txtValueType.Size = new System.Drawing.Size(100, 21);
-this.txtValueType.TabIndex = 4;
-this.Controls.Add(this.lblValueType);
-this.Controls.Add(this.txtValueType);
+           //#####ValueType###Int32
 
            //#####100ConfigType###String
 this.lblConfigType.AutoSize = true;
@@ -222,11 +207,9 @@ this.Controls.Add(this.txtConfigKey );
 this.Controls.Add(this.txtConfigValue );
 
                 this.Controls.Add(this.lblDescription );
-this.Controls.Add(this.chkDescription );
+this.Controls.Add(this.txtDescription );
 
-                this.Controls.Add(this.lblValueType );
-this.Controls.Add(this.txtValueType );
-
+                
                 this.Controls.Add(this.lblConfigType );
 this.Controls.Add(this.txtConfigType );
 
@@ -264,13 +247,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtConfigValue;
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDescription;
-private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkDescription;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtDescription;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblValueType;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtValueType;
-
+              
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblConfigType;

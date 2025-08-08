@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:27
+// 时间：08/08/2025 13:45:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,9 @@ namespace RUINORERP.Business
  
         
      
+ RuleFor(tb_FlowchartLine =>tb_FlowchartLine.PointToString1).MaximumMixedLength(100).WithMessage("大小:不能超过最大长度,100.");
 
+ RuleFor(tb_FlowchartLine =>tb_FlowchartLine.PointToString2).MaximumMixedLength(100).WithMessage("位置:不能超过最大长度,100.");
 
            	        Initialize();
      }

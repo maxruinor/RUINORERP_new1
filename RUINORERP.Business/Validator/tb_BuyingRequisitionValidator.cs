@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：08/08/2025 13:45:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,8 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表
- 
+    /// 请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表验证类
     /// </summary>
     /*public partial class tb_BuyingRequisitionValidator:AbstractValidator<tb_BuyingRequisition>*/
     public partial class tb_BuyingRequisitionValidator:BaseValidatorGeneric<tb_BuyingRequisition>
@@ -39,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.PuRequisitionNo).MaximumLength(50).WithMessage("请购单号:不能超过最大长度,50.");
+ RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.PuRequisitionNo).MaximumMixedLength(100).WithMessage("请购单号:不能超过最大长度,100.");
  RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.PuRequisitionNo).NotEmpty().WithMessage("请购单号:不能为空。");
 
  RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.Employee_ID).Must(CheckForeignKeyValue).WithMessage("申请人:下拉选择值不正确。");
@@ -52,7 +51,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.RefBillID).NotEmpty().When(x => x.RefBillID.HasValue);
 
- RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.RefBillNO).MaximumLength(25).WithMessage("引用单据编号:不能超过最大长度,25.");
+ RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.RefBillNO).MaximumMixedLength(50).WithMessage("引用单据编号:不能超过最大长度,50.");
 
  RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.RefBizType).NotEmpty().When(x => x.RefBizType.HasValue);
 
@@ -61,12 +60,14 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.TotalQty).NotNull().WithMessage("总数量:不能为空。");
 
- RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
 //***** 
  RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.Purpose).MaximumMixedLength(200).WithMessage("用途:不能超过最大长度,200.");
+
+ RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
 
 
@@ -83,7 +84,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
- RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.CloseCaseOpinions).MaximumLength(100).WithMessage("结案情况:不能超过最大长度,100.");
+ RuleFor(tb_BuyingRequisition =>tb_BuyingRequisition.CloseCaseOpinions).MaximumMixedLength(200).WithMessage("结案情况:不能超过最大长度,200.");
 
            	                //long?
                 //PuRequisition_ID

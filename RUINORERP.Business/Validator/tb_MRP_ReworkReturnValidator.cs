@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 20:57:18
+// 时间：08/08/2025 13:45:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,21 +38,21 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ReworkReturnNo).MaximumLength(25).WithMessage("退库单号:不能超过最大长度,25.");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ReworkReturnNo).MaximumMixedLength(50).WithMessage("退库单号:不能超过最大长度,50.");
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ReworkReturnNo).NotEmpty().WithMessage("退库单号:不能为空。");
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("生产单位:下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("外发工厂:下拉选择值不正确。");
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("需求部门:下拉选择值不正确。");
+
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("生产部门:下拉选择值不正确。");
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.FG_ID).Must(CheckForeignKeyValueCanNull).WithMessage("缴库单:下拉选择值不正确。");
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.FG_ID).NotEmpty().When(x => x.FG_ID.HasValue);
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DeliveryBillNo).MaximumLength(50).WithMessage("制令单号:不能超过最大长度,50.");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.DeliveryBillNo).MaximumMixedLength(100).WithMessage("制令单号:不能超过最大长度,100.");
 
 //***** 
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.TotalQty).NotNull().WithMessage("数量:不能为空。");
@@ -63,7 +63,7 @@ namespace RUINORERP.Business
 
 
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ReasonForRework).MaximumLength(250).WithMessage("返工原因:不能超过最大长度,250.");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ReasonForRework).MaximumMixedLength(500).WithMessage("返工原因:不能超过最大长度,500.");
 
 
 
@@ -72,13 +72,13 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
 
 
- RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.CloseCaseOpinions).MaximumLength(100).WithMessage("结案情况:不能超过最大长度,100.");
+ RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.CloseCaseOpinions).MaximumMixedLength(200).WithMessage("结案情况:不能超过最大长度,200.");
 
  RuleFor(tb_MRP_ReworkReturn =>tb_MRP_ReworkReturn.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：08/08/2025 13:45:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,20 +41,28 @@ namespace RUINORERP.Business
  RuleFor(tb_ButtonInfo =>tb_ButtonInfo.MenuID).Must(CheckForeignKeyValueCanNull).WithMessage("所属菜单:下拉选择值不正确。");
  RuleFor(tb_ButtonInfo =>tb_ButtonInfo.MenuID).NotEmpty().When(x => x.MenuID.HasValue);
 
- RuleFor(tb_ButtonInfo =>tb_ButtonInfo.BtnName).MaximumLength(127).WithMessage("按钮名称:不能超过最大长度,127.");
+ RuleFor(tb_ButtonInfo =>tb_ButtonInfo.BtnName).MaximumMixedLength(255).WithMessage("按钮名称:不能超过最大长度,255.");
 
- RuleFor(tb_ButtonInfo =>tb_ButtonInfo.BtnText).MaximumLength(125).WithMessage("按钮文本:不能超过最大长度,125.");
+ RuleFor(tb_ButtonInfo =>tb_ButtonInfo.BtnText).MaximumMixedLength(250).WithMessage("按钮文本:不能超过最大长度,250.");
 
- RuleFor(tb_ButtonInfo =>tb_ButtonInfo.HotKey).MaximumLength(25).WithMessage("热键:不能超过最大长度,25.");
+ RuleFor(tb_ButtonInfo =>tb_ButtonInfo.HotKey).MaximumMixedLength(50).WithMessage("热键:不能超过最大长度,50.");
 
- RuleFor(tb_ButtonInfo =>tb_ButtonInfo.FormName).MaximumLength(127).WithMessage("窗体名称:不能超过最大长度,127.");
+ RuleFor(tb_ButtonInfo =>tb_ButtonInfo.ButtonType).MaximumMixedLength(100).WithMessage("按钮类型:不能超过最大长度,100.");
 
- RuleFor(tb_ButtonInfo =>tb_ButtonInfo.ClassPath).MaximumLength(250).WithMessage("类路径:不能超过最大长度,250.");
+ RuleFor(tb_ButtonInfo =>tb_ButtonInfo.FormName).MaximumMixedLength(255).WithMessage("窗体名称:不能超过最大长度,255.");
+
+ RuleFor(tb_ButtonInfo =>tb_ButtonInfo.ClassPath).MaximumMixedLength(500).WithMessage("类路径:不能超过最大长度,500.");
 
 
 //有默认值
 
- RuleFor(tb_ButtonInfo =>tb_ButtonInfo.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_ButtonInfo =>tb_ButtonInfo.Notes).MaximumMixedLength(200).WithMessage("备注:不能超过最大长度,200.");
+
+
+ RuleFor(tb_ButtonInfo =>tb_ButtonInfo.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
+ RuleFor(tb_ButtonInfo =>tb_ButtonInfo.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
            	        Initialize();
      }

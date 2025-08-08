@@ -2,6 +2,7 @@
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -69,7 +70,8 @@ namespace RUINORERP.UI.ToolForm
         /// <summary>
         /// 使用表达式树配置列映射
         /// </summary>
-        public void ConfigureColumn<TProperty>(Expression<Func<T, TProperty>> propertyExpression, string columnTitle)
+        /// <param name="columnTitle">如果有值，则按指定。没有，则按实体的字段描述</param>
+        public void ConfigureColumn<TProperty>(Expression<Func<T, TProperty>> propertyExpression, string columnTitle = "")
         {
             var propertyName = propertyExpression.GetMemberInfo().Name;
             _expressionColumnMappings[propertyName] = columnTitle;
@@ -132,7 +134,7 @@ namespace RUINORERP.UI.ToolForm
             DisplayTextResolver = new GridViewDisplayTextResolver(typeof(T));
             dgvItems.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
             dgvItems.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            dgvItems.XmlFileName = this.Name + typeof(T).Name + "frmAdvanceSelector";
+            dgvItems.XmlFileName = title + this.Name + typeof(T).Name + "frmAdvanceSelector";
             dgvItems.NeedSaveColumnsXml = true;
             //这里设置了指定列不可见
             foreach (var item in InvisibleCols)
@@ -140,22 +142,65 @@ namespace RUINORERP.UI.ToolForm
                 KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
                 dgvItems.FieldNameList.TryRemove(item, out kv);
             }
-            dgvItems.BizInvisibleCols = InvisibleCols;
-
-            DisplayTextResolver.Initialize(dgvItems);
-
-            #endregion
-
-            _dataSource = dataSource ?? throw new ArgumentNullException(nameof(dataSource));
 
             // 合并表达式配置和直接配置的列映射
             _columnMappings = _expressionColumnMappings.Any()
                 ? new Dictionary<string, string>(_expressionColumnMappings)
                 : GenerateDefaultColumns();
+            ReplaceColumnHeaders();
+
+            dgvItems.BizInvisibleCols = InvisibleCols;
+
+            DisplayTextResolver.Initialize(dgvItems);
+            #endregion
+
+            _dataSource = dataSource ?? throw new ArgumentNullException(nameof(dataSource));
 
             SelectorTitle = title;
             BindData();
             ConfigureDataGridView();
+        }
+
+        // 完善列头替换功能的方法
+        private void ReplaceColumnHeaders()
+        {
+            // 存储处理后的字段列表
+            var updatedFieldNames = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
+
+            foreach (var item in _columnMappings)
+            {
+                // 查找对应的字段信息
+                var existingKv = dgvItems.FieldNameList
+                    .FirstOrDefault(c => c.Key == item.Key);
+
+                // 如果找到对应字段
+                if (existingKv.Key != null)
+                {
+                    // 提取原有的布尔值
+                    bool originalBoolValue = existingKv.Value.Value;
+
+                    // 确定最终使用的列标题
+                    // 如果映射中有新标题则使用新标题，否则保留原有标题
+                    string columnHeader = !string.IsNullOrEmpty(item.Value)
+                        ? item.Value
+                        : existingKv.Value.Key;
+
+                    // 更新字段信息
+                    updatedFieldNames[item.Key] = new KeyValuePair<string, bool>(columnHeader, originalBoolValue);
+                }
+            }
+
+            // 处理那些在_columnMappings中没有对应配置的字段，保留其原有配置
+            foreach (var existingField in dgvItems.FieldNameList)
+            {
+                if (!updatedFieldNames.ContainsKey(existingField.Key))
+                {
+                    updatedFieldNames[existingField.Key] = existingField.Value;
+                }
+            }
+
+            // 将更新后的字段列表写回数据源
+            dgvItems.FieldNameList = updatedFieldNames;
         }
 
 

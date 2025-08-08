@@ -125,5 +125,34 @@ namespace RUINORERP.Business
             return Regex.IsMatch(phone, mobilePattern) || Regex.IsMatch(phone, landlinePattern);
         }
 
+
+
+        // 按UTF8字节数计算（中文通常占3字节，英文占1字节）
+        public static int CalculateByteLength(string value)
+        {
+            return Encoding.UTF8.GetByteCount(value);
+        }
+ 
+
+        /// <summary>
+        /// 计算混合长度的核心方法
+        /// </summary>
+        public static int CalculateMixedLength(string value)
+        {
+            int length = 0;
+            foreach (char c in value)
+            {
+                // 判断是否为中文字符（Unicode 范围）
+                if (c >= 0x4E00 && c <= 0x9FA5)
+                {
+                    length += 2; // 中文字符算2个长度
+                }
+                else
+                {
+                    length += 1; // 其他字符算1个长度
+                }
+            }
+            return length;
+        }
     }
 }

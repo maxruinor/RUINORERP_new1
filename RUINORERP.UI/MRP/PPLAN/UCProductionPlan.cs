@@ -51,7 +51,7 @@ namespace RUINORERP.UI.MRP.MP
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionPlan>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
 
         }
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_ProductionPlan ProductionPlan)
             {
@@ -91,7 +91,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         internal override void LoadDataToUI(object Entity)

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 13:38:38
+// 时间：08/08/2025 13:45:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -105,6 +105,9 @@ this.lblApprovalResults = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.chkApprovalResults = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
 this.chkApprovalResults.Values.Text ="";
 
+
+this.lblCloseCaseOpinions = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtCloseCaseOpinions = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
     //for end
     this.SuspendLayout();
@@ -371,6 +374,20 @@ this.Controls.Add(this.chkApprovalResults);
 //属性测试550PrintStatus
 //属性测试550PrintStatus
 
+           //#####200CloseCaseOpinions###String
+this.lblCloseCaseOpinions.AutoSize = true;
+this.lblCloseCaseOpinions.Location = new System.Drawing.Point(100,575);
+this.lblCloseCaseOpinions.Name = "lblCloseCaseOpinions";
+this.lblCloseCaseOpinions.Size = new System.Drawing.Size(41, 12);
+this.lblCloseCaseOpinions.TabIndex = 23;
+this.lblCloseCaseOpinions.Text = "审批意见";
+this.txtCloseCaseOpinions.Location = new System.Drawing.Point(173,571);
+this.txtCloseCaseOpinions.Name = "txtCloseCaseOpinions";
+this.txtCloseCaseOpinions.Size = new System.Drawing.Size(100, 21);
+this.txtCloseCaseOpinions.TabIndex = 23;
+this.Controls.Add(this.lblCloseCaseOpinions);
+this.Controls.Add(this.txtCloseCaseOpinions);
+
           
     //for end
 
@@ -431,6 +448,9 @@ this.Controls.Add(this.dtpApprover_at );
 this.Controls.Add(this.chkApprovalResults );
 
                 
+                this.Controls.Add(this.lblCloseCaseOpinions );
+this.Controls.Add(this.txtCloseCaseOpinions );
+
                     
             this.Name = "tb_ProdReturningQuery";
             this.Size = new System.Drawing.Size(911, 490);
@@ -537,6 +557,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkApprovalResults;
     
         
               
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCloseCaseOpinions;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtCloseCaseOpinions;
+
     
     
    

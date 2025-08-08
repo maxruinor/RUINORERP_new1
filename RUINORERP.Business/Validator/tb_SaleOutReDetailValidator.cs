@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:32
+// 时间：08/08/2025 13:46:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,20 +48,22 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.SaleOutRe_ID).NotNull().WithMessage("销售退回单:不能为空。");
 
- RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.Quantity).NotNull().WithMessage("退回数量:不能为空。");
 
- RuleFor(x => x.TransactionPrice).PrecisionScale(19,4,true).WithMessage("成交单价:小数位不能超过4。");
+ RuleFor(x => x.TransactionPrice).PrecisionScale(19,4,true).WithMessage("实际退款单价:小数位不能超过4。");
 
  RuleFor(x => x.SubtotalTransAmount).PrecisionScale(19,4,true).WithMessage("小计:小数位不能超过4。");
 
- RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
+ RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.Summary).MaximumMixedLength(255).WithMessage("摘要:不能超过最大长度,255.");
 
- RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.CustomerPartNo).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
+ RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.CustomerPartNo).MaximumMixedLength(50).WithMessage("客户型号:不能超过最大长度,50.");
 
  RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
+
+ RuleFor(x => x.CustomizedCost).PrecisionScale(19,4,true).WithMessage("定制成本:小数位不能超过4。");
 
  RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
 
@@ -72,7 +74,13 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.SubtotalTaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
 
- RuleFor(x => x.CommissionAmount).PrecisionScale(19,4,true).WithMessage("抽成返还:小数位不能超过4。");
+ RuleFor(x => x.UnitCommissionAmount).PrecisionScale(19,4,true).WithMessage("单品返还佣金:小数位不能超过4。");
+
+ RuleFor(x => x.CommissionAmount).PrecisionScale(19,4,true).WithMessage("返还佣金小计:小数位不能超过4。");
+
+ RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.SaleFlagCode).MaximumMixedLength(200).WithMessage("标识代码:不能超过最大长度,200.");
+
+ RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.SaleOutDetail_ID).NotEmpty().When(x => x.SaleOutDetail_ID.HasValue);
 
            	        Initialize();
      }

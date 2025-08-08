@@ -46,6 +46,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Business.StatusManagerService;
 using LiveChartsCore.Geo;
+using RUINORERP.UI.FM;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -119,8 +120,8 @@ namespace RUINORERP.UI.PSI.SAL
                             saleOutRe.DataStatus >= (int)DataStatus.确认
                             && saleOutRe.ApprovalStatus == (int)ApprovalStatus.已审核
                             && saleOutRe.ApprovalResults.HasValue
-                            && saleOutRe.ApprovalResults.Value
-                            && !((RefundStatus)saleOutRe.RefundStatus).ToString().Contains("已退款"))
+                            && saleOutRe.ApprovalResults.Value)
+
                         {
                             #region 销售退回单 如果启用了财务模块    这里有一个情况是仓库退回时已经生成。这里确认退款只是审核
 
@@ -130,42 +131,50 @@ namespace RUINORERP.UI.PSI.SAL
                                 if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceiveable)
                                 {
                                     #region 自动审核应收款单
+
+                                    //&& !((RefundStatus)saleOutRe.RefundStatus).ToString().Contains("已退款"))
                                     //销售订单审核时自动将预付款单设为"已生效"状态
-                                    var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                                    //var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
                                     var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
                                                     .Includes(c => c.tb_FM_ReceivablePayableDetails)
                                                     .Where(c => c.ARAPStatus >= (int)ARAPStatus.待支付 && c.SourceBillId == saleOutRe.SaleOutRe_ID)
                                                     .ToListAsync();
-                                    if (receivablePayables != null && receivablePayables.Count > 0)
-                                    {
 
+                                    //目前一个退回单对应一个应收款（负数）其它情况手动完成。暂时
+                                    if (receivablePayables != null && receivablePayables.Count > 0 && receivablePayables.Count == 1)
+                                    {
+                                        var receivablePayable = receivablePayables[0];
                                         //自动退款
                                         //平台订单 经过运费在 平台退款操作后，退回单状态中已经是 退款状态了。
-                                        if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecord)
+                                        if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
                                         {
                                             //自动生成销售退回单的对应的应该收款单（红冲的）对应的收款记录
                                             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
 
-                                            //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
-                                            var PendingApprovalDetails = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentRecordDetail>()
-                                                .Includes(c => c.tb_fm_paymentrecord)
-                                            .Where(c => c.tb_fm_paymentrecord.PaymentStatus <= (int)PaymentStatus.待审核).ToListAsync();
+                                            var PaymentList = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentRecord>()
+                                              .Includes(a => a.tb_FM_PaymentRecordDetails)
+                                              .Where(c => c.PaymentStatus <= (int)PaymentStatus.待审核)
+                                              .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == receivablePayable.ARAPId)).ToListAsync();
+
                                             tb_FM_PaymentRecord newPaymentRecord = new tb_FM_PaymentRecord();
-                                            if (PendingApprovalDetails != null && PendingApprovalDetails.Count > 0)
+                                            if (PaymentList != null && PaymentList.Count == 1)
                                             {
-                                                newPaymentRecord = PendingApprovalDetails[0].tb_fm_paymentrecord;
-                                                //自动审核收款单
-                                                newPaymentRecord.ApprovalOpinions = "销售退回单【平台退款】时，系统自动审核";
-                                                newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                                newPaymentRecord.ApprovalResults = true;
-                                                ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
-                                                if (!rrRecord.Succeeded)
+                                                newPaymentRecord = PaymentList[0];
+                                                if (newPaymentRecord.TotalLocalAmount== receivablePayable.TotalLocalPayableAmount)
                                                 {
-                                                    MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("销售退回单【平台退款】时，系统自动审核失败：" + rrRecord.ErrorMsg, rrRecord.ReturnObject as tb_FM_PaymentRecord);
-                                                }
-                                                else
-                                                {
-                                                    MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("销售退回单【平台退款】时，系统自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                                                    //自动审核收款单
+                                                    newPaymentRecord.ApprovalOpinions = "销售退回单【平台退款】时，系统自动审核";
+                                                    newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                                    newPaymentRecord.ApprovalResults = true;
+                                                    ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
+                                                    if (!rrRecord.Succeeded)
+                                                    {
+                                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("销售退回单【平台退款】时，系统自动审核失败：" + rrRecord.ErrorMsg, rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                                                    }
+                                                    else
+                                                    {
+                                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("销售退回单【平台退款】时，系统自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                                                    }
                                                 }
                                             }
                                             else
@@ -268,7 +277,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override async void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_SaleOutRe saleOutRe)
             {
@@ -288,8 +297,35 @@ namespace RUINORERP.UI.PSI.SAL
                         toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
                     }
                 }
+
+                //如果有出库，则查应收
+                if (saleOutRe.DataStatus >= (int)DataStatus.确认)
+                {
+                    var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                    .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
+                                                                    && c.CustomerVendor_ID == saleOutRe.CustomerVendor_ID
+                                                                    && c.SourceBizType == (int)BizType.销售退回单
+                                                                    && c.SourceBillId == saleOutRe.SaleOutRe_ID)
+                                                                    .ToListAsync();
+                    foreach (var item in receivablePayables)
+                    {
+                        var rqp = new Model.CommonModel.RelatedQueryParameter();
+                        rqp.bizType = BizType.应收款单;
+                        rqp.billId = item.ARAPId;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.ARAPNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
         public override void BindData(tb_SaleOutRe entity, ActionStatus actionStatus = ActionStatus.无操作)
         {

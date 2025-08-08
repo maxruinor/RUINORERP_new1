@@ -57,7 +57,7 @@ namespace RUINORERP.UI.PSI.INV
         }
 
 
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_ProdReturning returning)
             {
@@ -78,7 +78,7 @@ namespace RUINORERP.UI.PSI.INV
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
         internal override void LoadDataToUI(object Entity)
         {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：08/08/2025 13:45:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,9 +38,9 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_BatchNumber =>tb_BatchNumber.BatchNO).MaximumLength(25).WithMessage(":不能超过最大长度,25.");
+ RuleFor(tb_BatchNumber =>tb_BatchNumber.BatchNO).MaximumMixedLength(50).WithMessage(":不能超过最大长度,50.");
 
- RuleFor(tb_BatchNumber =>tb_BatchNumber.采购单号).MaximumLength(10).WithMessage(":不能超过最大长度,10.");
+ RuleFor(tb_BatchNumber =>tb_BatchNumber.采购单号).MaximumMixedLength(20).WithMessage(":不能超过最大长度,20.");
 
 
  RuleFor(tb_BatchNumber =>tb_BatchNumber.供应商).NotEmpty().When(x => x.供应商.HasValue);

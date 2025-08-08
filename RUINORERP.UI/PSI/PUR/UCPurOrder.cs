@@ -92,7 +92,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
         }
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override async void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_PurOrder purOrder)
             {
@@ -130,9 +130,31 @@ namespace RUINORERP.UI.PSI.PUR
                         }
                     }
                 }
-
+                if (purOrder.Deposit > 0)
+                {
+                    var PreReceivedPayments = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PreReceivedPayment>()
+                                                                    .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.待审核
+                                                                    && c.CustomerVendor_ID == purOrder.CustomerVendor_ID
+                                                                    && c.SourceBillId == purOrder.SOrder_ID)
+                                                                    .ToListAsync();
+                    foreach (var item in PreReceivedPayments)
+                    {
+                        var rqp = new Model.CommonModel.RelatedQueryParameter();
+                        rqp.bizType = BizType.预付款单;
+                        rqp.billId = item.PreRPID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.PreRPNO}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.PreRPID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
         public override void BindData(tb_PurOrder entity, ActionStatus actionStatus)
         {

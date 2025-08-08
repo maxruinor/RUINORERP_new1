@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 13:38:38
+// 时间：08/08/2025 13:45:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -33,6 +33,7 @@ namespace RUINORERP.UI
      
                          InitializeComponent();
       
+        
         
         
         
@@ -85,7 +86,8 @@ namespace RUINORERP.UI
                         entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
                         entity.ApprovalResults = Boolean.Parse(txtApprovalResults.Text);
                         entity.PrintStatus = Int32.Parse(txtPrintStatus.Text);
-                                return entity;
+                        entity.CloseCaseOpinions = txtCloseCaseOpinions.Text ;
+                               return entity;
 }
         */
 
@@ -109,14 +111,15 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_ProdReturning>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ProdReturning>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_ProdReturning>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdReturning>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdReturning>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_ProdReturning>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ProdReturning>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdReturning>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ProdReturning>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_ProdReturning>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdReturning>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdReturning>(entity, t => t.ApprovalResults, chkApprovalResults, false);
            DataBindingHelper.BindData4TextBox<tb_ProdReturning>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_ProdReturning>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text,false);
 }
 
 

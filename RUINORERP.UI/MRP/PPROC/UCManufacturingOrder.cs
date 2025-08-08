@@ -50,7 +50,7 @@ namespace RUINORERP.UI.MRP.MP
             InitializeComponent();
         }
 
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_ManufacturingOrder ManufacturingOrder)
             {
@@ -90,7 +90,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         internal override void LoadDataToUI(object Entity)

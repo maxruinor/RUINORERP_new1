@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:26:59
+// 时间：08/08/2025 13:45:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.ApplicationNo).MaximumLength(15).WithMessage("申请单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.ApplicationNo).MaximumMixedLength(30).WithMessage("申请单号:不能超过最大长度,30.");
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.ApplicationNo).NotEmpty().WithMessage("申请单号:不能为空。");
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
@@ -50,7 +50,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayeeInfoID).Must(CheckForeignKeyValue).WithMessage("收款信息:下拉选择值不正确。");
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayeeAccountNo).MaximumMixedLength(100).WithMessage("收款账号:不能超过最大长度,100.");
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayeeAccountNo).NotEmpty().WithMessage("收款账号:不能为空。");
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
@@ -61,15 +61,15 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PrePaymentBill_id).NotEmpty().When(x => x.PrePaymentBill_id.HasValue);
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayReasonItems).MaximumLength(500).WithMessage("付款项目/原因:不能超过最大长度,500.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayReasonItems).MaximumMixedLength(1000).WithMessage("付款项目/原因:不能超过最大长度,1000.");
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PayReasonItems).NotEmpty().WithMessage("付款项目/原因:不能为空。");
 
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Notes).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Notes).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("付款金额:小数位不能超过4。");
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PamountInWords).MaximumLength(50).WithMessage("大写金额:不能超过最大长度,50.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PamountInWords).MaximumMixedLength(100).WithMessage("大写金额:不能超过最大长度,100.");
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PamountInWords).NotEmpty().WithMessage("大写金额:不能为空。");
 
  RuleFor(x => x.OverpaymentAmount).PrecisionScale(19,4,true).WithMessage("超付金额:小数位不能超过4。");
@@ -81,7 +81,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.ApprovalOpinions).MaximumMixedLength(255).WithMessage("审批意见:不能超过最大长度,255.");
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 
@@ -93,9 +93,9 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.CloseCaseImagePath).MaximumLength(300).WithMessage("结案凭证:不能超过最大长度,300.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.CloseCaseImagePath).MaximumMixedLength(300).WithMessage("结案凭证:不能超过最大长度,300.");
 
- RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.CloseCaseOpinions).MaximumLength(100).WithMessage("结案意见:不能超过最大长度,100.");
+ RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.CloseCaseOpinions).MaximumMixedLength(200).WithMessage("结案意见:不能超过最大长度,200.");
 
            	        Initialize();
      }

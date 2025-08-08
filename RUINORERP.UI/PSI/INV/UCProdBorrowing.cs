@@ -55,7 +55,7 @@ namespace RUINORERP.UI.PSI.INV
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_ProdBorrowing borrowing)
             {
@@ -80,7 +80,7 @@ namespace RUINORERP.UI.PSI.INV
                 }
 
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         internal override void LoadDataToUI(object Entity)

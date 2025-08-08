@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 09:38:35
+// 时间：08/08/2025 13:46:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,9 +53,9 @@ namespace RUINORERP.UI
         tb_SysGlobalDynamicConfig entity = new tb_SysGlobalDynamicConfig();
                      entity.ConfigKey = txtConfigKey.Text ;
                        entity.ConfigValue = txtConfigValue.Text ;
-                       entity.Description = Boolean.Parse(txtDescription.Text);
-                        entity.ValueType = txtValueType.Text ;
-                       entity.ConfigType = txtConfigType.Text ;
+                       entity.Description = txtDescription.Text ;
+                       entity.ValueType = Int32.Parse(txtValueType.Text);
+                        entity.ConfigType = txtConfigType.Text ;
                        entity.IsActive = Boolean.Parse(txtIsActive.Text);
                         entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
@@ -73,10 +73,10 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_SysGlobalDynamicConfig>(entity, t => t.ConfigKey, txtConfigKey, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_SysGlobalDynamicConfig>(entity, t => t.ConfigValue, txtConfigValue, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_SysGlobalDynamicConfig>(entity, t => t.Description, chkDescription, false);
-           DataBindingHelper.BindData4TextBox<tb_SysGlobalDynamicConfig>(entity, t => t.ValueType, txtValueType, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_SysGlobalDynamicConfig>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_SysGlobalDynamicConfig>(entity, t => t.ValueType, txtValueType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_SysGlobalDynamicConfig>(entity, t => t.ConfigType, txtConfigType, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_SysGlobalDynamicConfig>(entity, t => t.IsActive, chkIsActive, false);
+           DataBindingHelper.BindData4CheckBox<tb_SysGlobalDynamicConfig>(entity, t => t.IsActive, chkIsActive, false);
 //有默认值
            DataBindingHelper.BindData4DataTime<tb_SysGlobalDynamicConfig>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_SysGlobalDynamicConfig>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);

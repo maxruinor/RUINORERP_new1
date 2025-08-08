@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/10/2024 14:15:51
+// 时间：08/08/2025 13:45:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -52,6 +52,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -64,7 +65,8 @@ namespace RUINORERP.UI
                         entity.ConversionNo = txtConversionNo.Text ;
                        entity.ConversionDate = DateTime.Parse(txtConversionDate.Text);
                         entity.TotalConversionQty = Int32.Parse(txtTotalConversionQty.Text);
-                        entity.Notes = txtNotes.Text ;
+                        entity.Reason = txtReason.Text ;
+                       entity.Notes = txtNotes.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
@@ -87,23 +89,24 @@ namespace RUINORERP.UI
         public void BindData(tb_ProdConversion entity)
         {
         _EditEntity = entity;
-                        DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.Employee_ID, txtEmployee_ID, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.Location_ID, txtLocation_ID, BindDataType4TextBox.Qty,false);
+                       // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
+          // DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
            DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.ConversionNo, txtConversionNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_ProdConversion>(entity, t => t.ConversionDate, dtpConversionDate,false);
            DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.TotalConversionQty, txtTotalConversionQty, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.Reason, txtReason, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_ProdConversion>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ProdConversion>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdConversion>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdConversion>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ProdConversion>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdConversion>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdConversion>(entity, t => t.ApprovalResults, chkApprovalResults, false);
            DataBindingHelper.BindData4TextBox<tb_ProdConversion>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
 }
 

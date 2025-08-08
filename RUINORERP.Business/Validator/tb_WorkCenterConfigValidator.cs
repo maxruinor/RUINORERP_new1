@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:33
+// 时间：08/08/2025 13:46:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,11 +45,11 @@ namespace RUINORERP.Business
 
 
 
- RuleFor(tb_WorkCenterConfig =>tb_WorkCenterConfig.ToDoList).MaximumLength(500).WithMessage("待办事项:不能超过最大长度,500.");
+ RuleFor(tb_WorkCenterConfig =>tb_WorkCenterConfig.ToDoList).MaximumMixedLength(500).WithMessage("待办事项:不能超过最大长度,500.");
 
- RuleFor(tb_WorkCenterConfig =>tb_WorkCenterConfig.FrequentlyMenus).MaximumLength(200).WithMessage("常用菜单:不能超过最大长度,200.");
+ RuleFor(tb_WorkCenterConfig =>tb_WorkCenterConfig.FrequentlyMenus).MaximumMixedLength(200).WithMessage("常用菜单:不能超过最大长度,200.");
 
- RuleFor(tb_WorkCenterConfig =>tb_WorkCenterConfig.DataOverview).MaximumLength(500).WithMessage("数据概览:不能超过最大长度,500.");
+ RuleFor(tb_WorkCenterConfig =>tb_WorkCenterConfig.DataOverview).MaximumMixedLength(500).WithMessage("数据概览:不能超过最大长度,500.");
 
            	        Initialize();
      }

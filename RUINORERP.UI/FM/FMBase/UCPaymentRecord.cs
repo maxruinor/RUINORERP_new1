@@ -429,7 +429,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_FM_PaymentRecord PaymentRecord)
             {
@@ -456,7 +456,7 @@ namespace RUINORERP.UI.FM
 
                 }
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
 
 

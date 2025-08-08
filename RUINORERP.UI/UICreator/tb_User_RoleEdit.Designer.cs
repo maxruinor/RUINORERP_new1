@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/10/2025 15:31:57
+// 时间：08/08/2025 13:46:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,10 +65,6 @@ this.chkAuthorized.Values.Text ="";
 this.lblDefaultRole = new Krypton.Toolkit.KryptonLabel();
 this.chkDefaultRole = new Krypton.Toolkit.KryptonCheckBox();
 this.chkDefaultRole.Values.Text ="";
-
-this.lblWorkDefaultLayout = new Krypton.Toolkit.KryptonLabel();
-this.txtWorkDefaultLayout = new Krypton.Toolkit.KryptonTextBox();
-this.txtWorkDefaultLayout.Multiline = true;
 
     
     //for end
@@ -158,21 +154,6 @@ this.chkDefaultRole.TabIndex = 4;
 this.Controls.Add(this.lblDefaultRole);
 this.Controls.Add(this.chkDefaultRole);
 
-           //#####2147483647WorkDefaultLayout###String
-this.lblWorkDefaultLayout.AutoSize = true;
-this.lblWorkDefaultLayout.Location = new System.Drawing.Point(100,125);
-this.lblWorkDefaultLayout.Name = "lblWorkDefaultLayout";
-this.lblWorkDefaultLayout.Size = new System.Drawing.Size(41, 12);
-this.lblWorkDefaultLayout.TabIndex = 5;
-this.lblWorkDefaultLayout.Text = "工作台布局";
-this.txtWorkDefaultLayout.Location = new System.Drawing.Point(173,121);
-this.txtWorkDefaultLayout.Name = "txtWorkDefaultLayout";
-this.txtWorkDefaultLayout.Size = new System.Drawing.Size(100, 21);
-this.txtWorkDefaultLayout.TabIndex = 5;
-this.txtWorkDefaultLayout.Multiline = true;
-this.Controls.Add(this.lblWorkDefaultLayout);
-this.Controls.Add(this.txtWorkDefaultLayout);
-
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -187,7 +168,7 @@ this.Controls.Add(this.txtWorkDefaultLayout);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 5;
+           // this.kryptonPanel1.TabIndex = 4;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -202,9 +183,6 @@ this.Controls.Add(this.chkAuthorized );
 
                 this.Controls.Add(this.lblDefaultRole );
 this.Controls.Add(this.chkDefaultRole );
-
-                this.Controls.Add(this.lblWorkDefaultLayout );
-this.Controls.Add(this.txtWorkDefaultLayout );
 
                             // 
             // "tb_User_RoleEdit"
@@ -247,11 +225,6 @@ private Krypton.Toolkit.KryptonCheckBox chkAuthorized;
         
               private Krypton.Toolkit.KryptonLabel lblDefaultRole;
 private Krypton.Toolkit.KryptonCheckBox chkDefaultRole;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblWorkDefaultLayout;
-private Krypton.Toolkit.KryptonTextBox txtWorkDefaultLayout;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

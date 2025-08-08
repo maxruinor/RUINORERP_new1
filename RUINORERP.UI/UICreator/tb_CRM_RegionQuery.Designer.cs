@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:15
+// 时间：08/08/2025 13:45:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -56,8 +56,8 @@ this.txtRegion_Name = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.lblRegion_code = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtRegion_code = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-Parent_region_id主外字段不一致。
-Parent_region_id主外字段不一致。
+
+
 this.lblIs_enabled = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.chkIs_enabled = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
 this.chkIs_enabled.Values.Text ="";
@@ -100,11 +100,9 @@ this.Controls.Add(this.lblRegion_code);
 this.Controls.Add(this.txtRegion_code);
 
            //#####Parent_region_id###Int64
-//属性测试75Parent_region_id
-Parent_region_id主外字段不一致。
+
            //#####Sort###Int32
-//属性测试100Sort
-Parent_region_id主外字段不一致。
+
            //#####Is_enabled###Boolean
 this.lblIs_enabled.AutoSize = true;
 this.lblIs_enabled.Location = new System.Drawing.Point(100,125);
@@ -147,8 +145,8 @@ this.Controls.Add(this.txtRegion_Name );
                 this.Controls.Add(this.lblRegion_code );
 this.Controls.Add(this.txtRegion_code );
 
-                Parent_region_id主外字段不一致。
-                Parent_region_id主外字段不一致。
+                
+                
                 this.Controls.Add(this.lblIs_enabled );
 this.Controls.Add(this.chkIs_enabled );
 
@@ -177,10 +175,10 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtRegion_code;
 
     
         
-              Parent_region_id主外字段不一致。
+              
     
         
-              Parent_region_id主外字段不一致。
+              
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblIs_enabled;

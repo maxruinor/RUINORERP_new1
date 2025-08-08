@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：08/08/2025 13:45:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,12 +38,12 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Field).MaximumLength(25).WithMessage("表达式:不能超过最大长度,25.");
+ RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Field).MaximumMixedLength(50).WithMessage("表达式:不能超过最大长度,50.");
  RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Field).NotEmpty().WithMessage("表达式:不能为空。");
 
- RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Operator).MaximumLength(25).WithMessage("操作符:不能超过最大长度,25.");
+ RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Operator).MaximumMixedLength(50).WithMessage("操作符:不能超过最大长度,50.");
 
- RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Value).MaximumLength(25).WithMessage("表达式值:不能超过最大长度,25.");
+ RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Value).MaximumMixedLength(50).WithMessage("表达式值:不能超过最大长度,50.");
 
            	        Initialize();
      }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:29
+// 时间：08/08/2025 13:45:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,15 +43,15 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdConversion =>tb_ProdConversion.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
- RuleFor(tb_ProdConversion =>tb_ProdConversion.ConversionNo).MaximumLength(25).WithMessage("转换单号:不能超过最大长度,25.");
+ RuleFor(tb_ProdConversion =>tb_ProdConversion.ConversionNo).MaximumMixedLength(50).WithMessage("转换单号:不能超过最大长度,50.");
 
 
 //***** 
  RuleFor(tb_ProdConversion =>tb_ProdConversion.TotalConversionQty).NotNull().WithMessage("转换数量:不能为空。");
 
- RuleFor(tb_ProdConversion =>tb_ProdConversion.Reason).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
+ RuleFor(tb_ProdConversion =>tb_ProdConversion.Reason).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 
- RuleFor(tb_ProdConversion =>tb_ProdConversion.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_ProdConversion =>tb_ProdConversion.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
 
  RuleFor(tb_ProdConversion =>tb_ProdConversion.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -63,7 +63,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdConversion =>tb_ProdConversion.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_ProdConversion =>tb_ProdConversion.ApprovalOpinions).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");
+ RuleFor(tb_ProdConversion =>tb_ProdConversion.ApprovalOpinions).MaximumMixedLength(500).WithMessage("审批意见:不能超过最大长度,500.");
 
  RuleFor(tb_ProdConversion =>tb_ProdConversion.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

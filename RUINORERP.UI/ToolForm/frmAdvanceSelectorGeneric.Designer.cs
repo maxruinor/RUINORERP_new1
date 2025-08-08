@@ -29,10 +29,11 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmAdvanceSelector));
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.kryptonSplitContainerNei = new Krypton.Toolkit.KryptonSplitContainer();
             this.txtFilter = new Krypton.Toolkit.KryptonTextBox();
             this.lblFilter = new Krypton.Toolkit.KryptonLabel();
             this.dgvItems = new RUINORERP.UI.UControls.NewSumDataGridView();
@@ -50,6 +51,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerNei)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerNei.Panel1)).BeginInit();
+            this.kryptonSplitContainerNei.Panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerNei.Panel2)).BeginInit();
+            this.kryptonSplitContainerNei.Panel2.SuspendLayout();
+            this.kryptonSplitContainerNei.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvItems)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).BeginInit();
@@ -74,9 +81,7 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtFilter);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblFilter);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.dgvItems);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonSplitContainerNei);
             // 
             // kryptonSplitContainer1.Panel2
             // 
@@ -86,16 +91,36 @@
             this.kryptonSplitContainer1.SplitterDistance = 419;
             this.kryptonSplitContainer1.TabIndex = 14;
             // 
+            // kryptonSplitContainerNei
+            // 
+            this.kryptonSplitContainerNei.Cursor = System.Windows.Forms.Cursors.Default;
+            this.kryptonSplitContainerNei.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonSplitContainerNei.Location = new System.Drawing.Point(0, 0);
+            this.kryptonSplitContainerNei.Name = "kryptonSplitContainerNei";
+            this.kryptonSplitContainerNei.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // kryptonSplitContainerNei.Panel1
+            // 
+            this.kryptonSplitContainerNei.Panel1.Controls.Add(this.txtFilter);
+            this.kryptonSplitContainerNei.Panel1.Controls.Add(this.lblFilter);
+            // 
+            // kryptonSplitContainerNei.Panel2
+            // 
+            this.kryptonSplitContainerNei.Panel2.Controls.Add(this.dgvItems);
+            this.kryptonSplitContainerNei.Size = new System.Drawing.Size(761, 419);
+            this.kryptonSplitContainerNei.SplitterDistance = 39;
+            this.kryptonSplitContainerNei.TabIndex = 2;
+            // 
             // txtFilter
             // 
-            this.txtFilter.Location = new System.Drawing.Point(80, 5);
+            this.txtFilter.Location = new System.Drawing.Point(73, 8);
             this.txtFilter.Name = "txtFilter";
             this.txtFilter.Size = new System.Drawing.Size(179, 23);
             this.txtFilter.TabIndex = 3;
             // 
             // lblFilter
             // 
-            this.lblFilter.Location = new System.Drawing.Point(25, 6);
+            this.lblFilter.Location = new System.Drawing.Point(18, 9);
             this.lblFilter.Name = "lblFilter";
             this.lblFilter.Size = new System.Drawing.Size(49, 20);
             this.lblFilter.TabIndex = 2;
@@ -106,8 +131,8 @@
             this.dgvItems.AllowUserToAddRows = false;
             this.dgvItems.AllowUserToDeleteRows = false;
             this.dgvItems.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.dgvItems.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.dgvItems.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.dgvItems.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -115,14 +140,15 @@
             this.dgvItems.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvItems.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvItems.CustomRowNo = false;
+            this.dgvItems.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvItems.EnableFiltering = false;
             this.dgvItems.FieldNameList = null;
             this.dgvItems.IsShowSumRow = false;
-            this.dgvItems.Location = new System.Drawing.Point(12, 34);
+            this.dgvItems.Location = new System.Drawing.Point(0, 0);
             this.dgvItems.Name = "dgvItems";
             this.dgvItems.NeedSaveColumnsXml = false;
             this.dgvItems.RowTemplate.Height = 23;
-            this.dgvItems.Size = new System.Drawing.Size(741, 382);
+            this.dgvItems.Size = new System.Drawing.Size(761, 375);
             this.dgvItems.SumColumns = null;
             this.dgvItems.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.dgvItems.SumRowCellFormat = "N2";
@@ -140,7 +166,7 @@
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 13;
-            this.btnCancel.Values.Text = "取消";
+            this.btnCancel.Values.Text = "取消(&N)";
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOk
@@ -149,7 +175,7 @@
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 12;
-            this.btnOk.Values.Text = "确定";
+            this.btnOk.Values.Text = "确定(&Y)";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // timerForToolTip
@@ -162,8 +188,10 @@
             // 
             // frmAdvanceSelector
             // 
+            this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(761, 488);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "frmAdvanceSelector";
@@ -173,11 +201,17 @@
             this.kryptonPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).EndInit();
             this.kryptonSplitContainer1.Panel1.ResumeLayout(false);
-            this.kryptonSplitContainer1.Panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).EndInit();
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerNei.Panel1)).EndInit();
+            this.kryptonSplitContainerNei.Panel1.ResumeLayout(false);
+            this.kryptonSplitContainerNei.Panel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerNei.Panel2)).EndInit();
+            this.kryptonSplitContainerNei.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerNei)).EndInit();
+            this.kryptonSplitContainerNei.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvItems)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceEdit)).EndInit();
@@ -198,5 +232,6 @@
         private UControls.NewSumDataGridView dgvItems;
         private Krypton.Toolkit.KryptonTextBox txtFilter;
         private Krypton.Toolkit.KryptonLabel lblFilter;
+        private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainerNei;
     }
 }

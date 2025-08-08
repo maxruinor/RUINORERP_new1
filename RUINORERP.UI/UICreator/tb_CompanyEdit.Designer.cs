@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/23/2025 23:00:46
+// 时间：08/08/2025 13:45:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -75,6 +75,9 @@ this.txtContact = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblPhone = new Krypton.Toolkit.KryptonLabel();
 this.txtPhone = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblFax = new Krypton.Toolkit.KryptonLabel();
+this.txtFax = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblAddress = new Krypton.Toolkit.KryptonLabel();
 this.txtAddress = new Krypton.Toolkit.KryptonTextBox();
@@ -264,217 +267,231 @@ this.txtPhone.TabIndex = 8;
 this.Controls.Add(this.lblPhone);
 this.Controls.Add(this.txtPhone);
 
+           //#####100Fax###String
+this.lblFax.AutoSize = true;
+this.lblFax.Location = new System.Drawing.Point(100,225);
+this.lblFax.Name = "lblFax";
+this.lblFax.Size = new System.Drawing.Size(41, 12);
+this.lblFax.TabIndex = 9;
+this.lblFax.Text = "传真";
+this.txtFax.Location = new System.Drawing.Point(173,221);
+this.txtFax.Name = "txtFax";
+this.txtFax.Size = new System.Drawing.Size(100, 21);
+this.txtFax.TabIndex = 9;
+this.Controls.Add(this.lblFax);
+this.Controls.Add(this.txtFax);
+
            //#####255Address###String
 this.lblAddress.AutoSize = true;
-this.lblAddress.Location = new System.Drawing.Point(100,225);
+this.lblAddress.Location = new System.Drawing.Point(100,250);
 this.lblAddress.Name = "lblAddress";
 this.lblAddress.Size = new System.Drawing.Size(41, 12);
-this.lblAddress.TabIndex = 9;
+this.lblAddress.TabIndex = 10;
 this.lblAddress.Text = "营业地址";
-this.txtAddress.Location = new System.Drawing.Point(173,221);
+this.txtAddress.Location = new System.Drawing.Point(173,246);
 this.txtAddress.Name = "txtAddress";
 this.txtAddress.Size = new System.Drawing.Size(100, 21);
-this.txtAddress.TabIndex = 9;
+this.txtAddress.TabIndex = 10;
 this.Controls.Add(this.lblAddress);
 this.Controls.Add(this.txtAddress);
 
            //#####255ENAddress###String
 this.lblENAddress.AutoSize = true;
-this.lblENAddress.Location = new System.Drawing.Point(100,250);
+this.lblENAddress.Location = new System.Drawing.Point(100,275);
 this.lblENAddress.Name = "lblENAddress";
 this.lblENAddress.Size = new System.Drawing.Size(41, 12);
-this.lblENAddress.TabIndex = 10;
+this.lblENAddress.TabIndex = 11;
 this.lblENAddress.Text = "英文地址";
-this.txtENAddress.Location = new System.Drawing.Point(173,246);
+this.txtENAddress.Location = new System.Drawing.Point(173,271);
 this.txtENAddress.Name = "txtENAddress";
 this.txtENAddress.Size = new System.Drawing.Size(100, 21);
-this.txtENAddress.TabIndex = 10;
+this.txtENAddress.TabIndex = 11;
 this.Controls.Add(this.lblENAddress);
 this.Controls.Add(this.txtENAddress);
 
            //#####255Website###String
 this.lblWebsite.AutoSize = true;
-this.lblWebsite.Location = new System.Drawing.Point(100,275);
+this.lblWebsite.Location = new System.Drawing.Point(100,300);
 this.lblWebsite.Name = "lblWebsite";
 this.lblWebsite.Size = new System.Drawing.Size(41, 12);
-this.lblWebsite.TabIndex = 11;
+this.lblWebsite.TabIndex = 12;
 this.lblWebsite.Text = "网址";
-this.txtWebsite.Location = new System.Drawing.Point(173,271);
+this.txtWebsite.Location = new System.Drawing.Point(173,296);
 this.txtWebsite.Name = "txtWebsite";
 this.txtWebsite.Size = new System.Drawing.Size(100, 21);
-this.txtWebsite.TabIndex = 11;
+this.txtWebsite.TabIndex = 12;
 this.Controls.Add(this.lblWebsite);
 this.Controls.Add(this.txtWebsite);
 
            //#####100Email###String
 this.lblEmail.AutoSize = true;
-this.lblEmail.Location = new System.Drawing.Point(100,300);
+this.lblEmail.Location = new System.Drawing.Point(100,325);
 this.lblEmail.Name = "lblEmail";
 this.lblEmail.Size = new System.Drawing.Size(41, 12);
-this.lblEmail.TabIndex = 12;
+this.lblEmail.TabIndex = 13;
 this.lblEmail.Text = "电子邮件";
-this.txtEmail.Location = new System.Drawing.Point(173,296);
+this.txtEmail.Location = new System.Drawing.Point(173,321);
 this.txtEmail.Name = "txtEmail";
 this.txtEmail.Size = new System.Drawing.Size(100, 21);
-this.txtEmail.TabIndex = 12;
+this.txtEmail.TabIndex = 13;
 this.Controls.Add(this.lblEmail);
 this.Controls.Add(this.txtEmail);
 
            //#####200InvoiceTitle###String
 this.lblInvoiceTitle.AutoSize = true;
-this.lblInvoiceTitle.Location = new System.Drawing.Point(100,325);
+this.lblInvoiceTitle.Location = new System.Drawing.Point(100,350);
 this.lblInvoiceTitle.Name = "lblInvoiceTitle";
 this.lblInvoiceTitle.Size = new System.Drawing.Size(41, 12);
-this.lblInvoiceTitle.TabIndex = 13;
+this.lblInvoiceTitle.TabIndex = 14;
 this.lblInvoiceTitle.Text = "发票抬头";
-this.txtInvoiceTitle.Location = new System.Drawing.Point(173,321);
+this.txtInvoiceTitle.Location = new System.Drawing.Point(173,346);
 this.txtInvoiceTitle.Name = "txtInvoiceTitle";
 this.txtInvoiceTitle.Size = new System.Drawing.Size(100, 21);
-this.txtInvoiceTitle.TabIndex = 13;
+this.txtInvoiceTitle.TabIndex = 14;
 this.Controls.Add(this.lblInvoiceTitle);
 this.Controls.Add(this.txtInvoiceTitle);
 
            //#####200InvoiceTaxNumber###String
 this.lblInvoiceTaxNumber.AutoSize = true;
-this.lblInvoiceTaxNumber.Location = new System.Drawing.Point(100,350);
+this.lblInvoiceTaxNumber.Location = new System.Drawing.Point(100,375);
 this.lblInvoiceTaxNumber.Name = "lblInvoiceTaxNumber";
 this.lblInvoiceTaxNumber.Size = new System.Drawing.Size(41, 12);
-this.lblInvoiceTaxNumber.TabIndex = 14;
+this.lblInvoiceTaxNumber.TabIndex = 15;
 this.lblInvoiceTaxNumber.Text = "纳税人识别号";
-this.txtInvoiceTaxNumber.Location = new System.Drawing.Point(173,346);
+this.txtInvoiceTaxNumber.Location = new System.Drawing.Point(173,371);
 this.txtInvoiceTaxNumber.Name = "txtInvoiceTaxNumber";
 this.txtInvoiceTaxNumber.Size = new System.Drawing.Size(100, 21);
-this.txtInvoiceTaxNumber.TabIndex = 14;
+this.txtInvoiceTaxNumber.TabIndex = 15;
 this.Controls.Add(this.lblInvoiceTaxNumber);
 this.Controls.Add(this.txtInvoiceTaxNumber);
 
            //#####200InvoiceAddress###String
 this.lblInvoiceAddress.AutoSize = true;
-this.lblInvoiceAddress.Location = new System.Drawing.Point(100,375);
+this.lblInvoiceAddress.Location = new System.Drawing.Point(100,400);
 this.lblInvoiceAddress.Name = "lblInvoiceAddress";
 this.lblInvoiceAddress.Size = new System.Drawing.Size(41, 12);
-this.lblInvoiceAddress.TabIndex = 15;
+this.lblInvoiceAddress.TabIndex = 16;
 this.lblInvoiceAddress.Text = "发票地址";
-this.txtInvoiceAddress.Location = new System.Drawing.Point(173,371);
+this.txtInvoiceAddress.Location = new System.Drawing.Point(173,396);
 this.txtInvoiceAddress.Name = "txtInvoiceAddress";
 this.txtInvoiceAddress.Size = new System.Drawing.Size(100, 21);
-this.txtInvoiceAddress.TabIndex = 15;
+this.txtInvoiceAddress.TabIndex = 16;
 this.Controls.Add(this.lblInvoiceAddress);
 this.Controls.Add(this.txtInvoiceAddress);
 
            //#####50InvoiceTEL###String
 this.lblInvoiceTEL.AutoSize = true;
-this.lblInvoiceTEL.Location = new System.Drawing.Point(100,400);
+this.lblInvoiceTEL.Location = new System.Drawing.Point(100,425);
 this.lblInvoiceTEL.Name = "lblInvoiceTEL";
 this.lblInvoiceTEL.Size = new System.Drawing.Size(41, 12);
-this.lblInvoiceTEL.TabIndex = 16;
+this.lblInvoiceTEL.TabIndex = 17;
 this.lblInvoiceTEL.Text = "发票电话";
-this.txtInvoiceTEL.Location = new System.Drawing.Point(173,396);
+this.txtInvoiceTEL.Location = new System.Drawing.Point(173,421);
 this.txtInvoiceTEL.Name = "txtInvoiceTEL";
 this.txtInvoiceTEL.Size = new System.Drawing.Size(100, 21);
-this.txtInvoiceTEL.TabIndex = 16;
+this.txtInvoiceTEL.TabIndex = 17;
 this.Controls.Add(this.lblInvoiceTEL);
 this.Controls.Add(this.txtInvoiceTEL);
 
            //#####150InvoiceBankAccount###String
 this.lblInvoiceBankAccount.AutoSize = true;
-this.lblInvoiceBankAccount.Location = new System.Drawing.Point(100,425);
+this.lblInvoiceBankAccount.Location = new System.Drawing.Point(100,450);
 this.lblInvoiceBankAccount.Name = "lblInvoiceBankAccount";
 this.lblInvoiceBankAccount.Size = new System.Drawing.Size(41, 12);
-this.lblInvoiceBankAccount.TabIndex = 17;
+this.lblInvoiceBankAccount.TabIndex = 18;
 this.lblInvoiceBankAccount.Text = "银行账号";
-this.txtInvoiceBankAccount.Location = new System.Drawing.Point(173,421);
+this.txtInvoiceBankAccount.Location = new System.Drawing.Point(173,446);
 this.txtInvoiceBankAccount.Name = "txtInvoiceBankAccount";
 this.txtInvoiceBankAccount.Size = new System.Drawing.Size(100, 21);
-this.txtInvoiceBankAccount.TabIndex = 17;
+this.txtInvoiceBankAccount.TabIndex = 18;
 this.Controls.Add(this.lblInvoiceBankAccount);
 this.Controls.Add(this.txtInvoiceBankAccount);
 
            //#####100InvoiceBankName###String
 this.lblInvoiceBankName.AutoSize = true;
-this.lblInvoiceBankName.Location = new System.Drawing.Point(100,450);
+this.lblInvoiceBankName.Location = new System.Drawing.Point(100,475);
 this.lblInvoiceBankName.Name = "lblInvoiceBankName";
 this.lblInvoiceBankName.Size = new System.Drawing.Size(41, 12);
-this.lblInvoiceBankName.TabIndex = 18;
+this.lblInvoiceBankName.TabIndex = 19;
 this.lblInvoiceBankName.Text = "开户行";
-this.txtInvoiceBankName.Location = new System.Drawing.Point(173,446);
+this.txtInvoiceBankName.Location = new System.Drawing.Point(173,471);
 this.txtInvoiceBankName.Name = "txtInvoiceBankName";
 this.txtInvoiceBankName.Size = new System.Drawing.Size(100, 21);
-this.txtInvoiceBankName.TabIndex = 18;
+this.txtInvoiceBankName.TabIndex = 19;
 this.Controls.Add(this.lblInvoiceBankName);
 this.Controls.Add(this.txtInvoiceBankName);
 
            //#####Created_at###DateTime
 this.lblCreated_at.AutoSize = true;
-this.lblCreated_at.Location = new System.Drawing.Point(100,475);
+this.lblCreated_at.Location = new System.Drawing.Point(100,500);
 this.lblCreated_at.Name = "lblCreated_at";
 this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_at.TabIndex = 19;
+this.lblCreated_at.TabIndex = 20;
 this.lblCreated_at.Text = "创建时间";
-//111======475
-this.dtpCreated_at.Location = new System.Drawing.Point(173,471);
+//111======500
+this.dtpCreated_at.Location = new System.Drawing.Point(173,496);
 this.dtpCreated_at.Name ="dtpCreated_at";
 this.dtpCreated_at.ShowCheckBox =true;
 this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-this.dtpCreated_at.TabIndex = 19;
+this.dtpCreated_at.TabIndex = 20;
 this.Controls.Add(this.lblCreated_at);
 this.Controls.Add(this.dtpCreated_at);
 
            //#####Created_by###Int64
 this.lblCreated_by.AutoSize = true;
-this.lblCreated_by.Location = new System.Drawing.Point(100,500);
+this.lblCreated_by.Location = new System.Drawing.Point(100,525);
 this.lblCreated_by.Name = "lblCreated_by";
 this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_by.TabIndex = 20;
+this.lblCreated_by.TabIndex = 21;
 this.lblCreated_by.Text = "创建人";
-this.txtCreated_by.Location = new System.Drawing.Point(173,496);
+this.txtCreated_by.Location = new System.Drawing.Point(173,521);
 this.txtCreated_by.Name = "txtCreated_by";
 this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
-this.txtCreated_by.TabIndex = 20;
+this.txtCreated_by.TabIndex = 21;
 this.Controls.Add(this.lblCreated_by);
 this.Controls.Add(this.txtCreated_by);
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
-this.lblModified_at.Location = new System.Drawing.Point(100,525);
+this.lblModified_at.Location = new System.Drawing.Point(100,550);
 this.lblModified_at.Name = "lblModified_at";
 this.lblModified_at.Size = new System.Drawing.Size(41, 12);
-this.lblModified_at.TabIndex = 21;
+this.lblModified_at.TabIndex = 22;
 this.lblModified_at.Text = "修改时间";
-//111======525
-this.dtpModified_at.Location = new System.Drawing.Point(173,521);
+//111======550
+this.dtpModified_at.Location = new System.Drawing.Point(173,546);
 this.dtpModified_at.Name ="dtpModified_at";
 this.dtpModified_at.ShowCheckBox =true;
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
-this.dtpModified_at.TabIndex = 21;
+this.dtpModified_at.TabIndex = 22;
 this.Controls.Add(this.lblModified_at);
 this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
 this.lblModified_by.AutoSize = true;
-this.lblModified_by.Location = new System.Drawing.Point(100,550);
+this.lblModified_by.Location = new System.Drawing.Point(100,575);
 this.lblModified_by.Name = "lblModified_by";
 this.lblModified_by.Size = new System.Drawing.Size(41, 12);
-this.lblModified_by.TabIndex = 22;
+this.lblModified_by.TabIndex = 23;
 this.lblModified_by.Text = "修改人";
-this.txtModified_by.Location = new System.Drawing.Point(173,546);
+this.txtModified_by.Location = new System.Drawing.Point(173,571);
 this.txtModified_by.Name = "txtModified_by";
 this.txtModified_by.Size = new System.Drawing.Size(100, 21);
-this.txtModified_by.TabIndex = 22;
+this.txtModified_by.TabIndex = 23;
 this.Controls.Add(this.lblModified_by);
 this.Controls.Add(this.txtModified_by);
 
            //#####255Notes###String
 this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,575);
+this.lblNotes.Location = new System.Drawing.Point(100,600);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 23;
+this.lblNotes.TabIndex = 24;
 this.lblNotes.Text = "备注";
-this.txtNotes.Location = new System.Drawing.Point(173,571);
+this.txtNotes.Location = new System.Drawing.Point(173,596);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 23;
+this.txtNotes.TabIndex = 24;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
 
@@ -492,7 +509,7 @@ this.Controls.Add(this.txtNotes);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 23;
+           // this.kryptonPanel1.TabIndex = 24;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -519,6 +536,9 @@ this.Controls.Add(this.txtContact );
 
                 this.Controls.Add(this.lblPhone );
 this.Controls.Add(this.txtPhone );
+
+                this.Controls.Add(this.lblFax );
+this.Controls.Add(this.txtFax );
 
                 this.Controls.Add(this.lblAddress );
 this.Controls.Add(this.txtAddress );
@@ -626,6 +646,11 @@ private Krypton.Toolkit.KryptonTextBox txtContact;
         
               private Krypton.Toolkit.KryptonLabel lblPhone;
 private Krypton.Toolkit.KryptonTextBox txtPhone;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblFax;
+private Krypton.Toolkit.KryptonTextBox txtFax;
 
     
         

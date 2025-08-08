@@ -9,6 +9,8 @@ using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Extensions.Middlewares;
+using Mapster;
+using RUINORERP.Model.Context;
 
 namespace RUINORERP.Business.LogicaService
 {
@@ -18,16 +20,18 @@ namespace RUINORERP.Business.LogicaService
         public IUnitServices _unitServices { get; set; }
         private readonly ILogger<UnitController> _logger;
         public Itb_UnitServices _Itb_UnitServices { get; set; }
-        public UnitController(ILogger<UnitController> logger, Itb_UnitServices Itb_UnitServices, IUnitOfWorkManage unitOfWorkManage)
+        private readonly ApplicationContext _appContext;
+        public UnitController(ILogger<UnitController> logger, Itb_UnitServices Itb_UnitServices, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext)
         {
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;
             _Itb_UnitServices = Itb_UnitServices;
+            _appContext = appContext;
         }
 
         public ValidationResult Validator(tb_Unit info)
         {
-            tb_UnitValidator validator = new tb_UnitValidator();
+            tb_UnitValidator validator = _appContext.GetRequiredService<tb_UnitValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
@@ -107,7 +111,7 @@ namespace RUINORERP.Business.LogicaService
                 }
                 catch (Exception ex)
                 {
-             
+
                     _unitOfWorkManage.RollbackTran();
                     _logger.Error(ex, "事务回滚" + ex.Message);
                 }

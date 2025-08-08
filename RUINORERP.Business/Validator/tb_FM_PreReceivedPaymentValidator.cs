@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/25/2025 18:51:46
+// 时间：08/08/2025 13:45:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PreRPNO).MaximumLength(15).WithMessage("单据编号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PreRPNO).MaximumMixedLength(30).WithMessage("单据编号:不能超过最大长度,30.");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PreRPNO).NotEmpty().WithMessage("单据编号:不能为空。");
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("公司账户:下拉选择值不正确。");
@@ -49,8 +49,10 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PayeeInfoID).Must(CheckForeignKeyValueCanNull).WithMessage("收款信息:下拉选择值不正确。");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PayeeAccountNo).MaximumMixedLength(100).WithMessage("收款账号:不能超过最大长度,100.");
 
+
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PlatformOrderNo).MaximumMixedLength(100).WithMessage("平台单号:不能超过最大长度,100.");
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("经办人:下拉选择值不正确。");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
@@ -69,14 +71,14 @@ namespace RUINORERP.Business
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 
 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PrePaymentReason).MaximumLength(100).WithMessage("事由:不能超过最大长度,100.");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PrePaymentReason).MaximumMixedLength(200).WithMessage("事由:不能超过最大长度,200.");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PrePaymentReason).NotEmpty().WithMessage("事由:不能为空。");
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.SourceBizType).NotEmpty().When(x => x.SourceBizType.HasValue);
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.SourceBillId).NotEmpty().When(x => x.SourceBillId.HasValue);
 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.SourceBillNo).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.SourceBillNo).MaximumMixedLength(30).WithMessage("来源单号:不能超过最大长度,30.");
 
 //***** 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PrePaymentStatus).NotNull().WithMessage("预收付状态:不能为空。");
@@ -85,7 +87,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.LocalPrepaidAmount).PrecisionScale(19,4,true).WithMessage("预定金额本币:小数位不能超过4。");
 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.LocalPrepaidAmountInWords).MaximumLength(75).WithMessage("大写预定金额本币:不能超过最大长度,75.");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.LocalPrepaidAmountInWords).MaximumMixedLength(150).WithMessage("大写预定金额本币:不能超过最大长度,150.");
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.LocalPrepaidAmountInWords).NotEmpty().WithMessage("大写预定金额本币:不能为空。");
 
  RuleFor(x => x.ForeignPaidAmount).PrecisionScale(19,4,true).WithMessage("核销金额外币:小数位不能超过4。");
@@ -103,11 +105,11 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PaymentImagePath).MaximumLength(300).WithMessage("付款凭证:不能超过最大长度,300.");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PaymentImagePath).MaximumMixedLength(300).WithMessage("付款凭证:不能超过最大长度,300.");
 
 //有默认值
 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Remark).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -116,7 +118,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
- RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");
+ RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.ApprovalOpinions).MaximumMixedLength(255).WithMessage("审批意见:不能超过最大长度,255.");
 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:32
+// 时间：08/08/2025 13:46:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_StockTransfer =>tb_StockTransfer.StockTransferNo).MaximumLength(25).WithMessage("调拨单号:不能超过最大长度,25.");
+ RuleFor(tb_StockTransfer =>tb_StockTransfer.StockTransferNo).MaximumMixedLength(50).WithMessage("调拨单号:不能超过最大长度,50.");
 
 //***** 
  RuleFor(tb_StockTransfer =>tb_StockTransfer.Location_ID_from).NotNull().WithMessage("调出仓库:不能为空。");
@@ -62,13 +62,13 @@ namespace RUINORERP.Business
 
  RuleFor(tb_StockTransfer =>tb_StockTransfer.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_StockTransfer =>tb_StockTransfer.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_StockTransfer =>tb_StockTransfer.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
 
 //***** 
  RuleFor(tb_StockTransfer =>tb_StockTransfer.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_StockTransfer =>tb_StockTransfer.ApprovalOpinions).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");
+ RuleFor(tb_StockTransfer =>tb_StockTransfer.ApprovalOpinions).MaximumMixedLength(500).WithMessage("审批意见:不能超过最大长度,500.");
 
  RuleFor(tb_StockTransfer =>tb_StockTransfer.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

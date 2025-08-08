@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:28
+// 时间：08/08/2025 13:45:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,30 +38,28 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.MaterialRequisitionNO).MaximumLength(25).WithMessage("领料单号:不能超过最大长度,25.");
+ RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.MaterialRequisitionNO).MaximumMixedLength(50).WithMessage("领料单号:不能超过最大长度,50.");
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.MaterialRequisitionNO).NotEmpty().WithMessage("领料单号:不能为空。");
 
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.MONO).MaximumLength(50).WithMessage("制令单号:不能超过最大长度,50.");
+ RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.MONO).MaximumMixedLength(100).WithMessage("制令单号:不能超过最大长度,100.");
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.MONO).NotEmpty().WithMessage("制令单号:不能为空。");
 
+ 
 
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
+//***** 
+ RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Employee_ID).NotNull().WithMessage("经办人:不能为空。");
 
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("生产部门:下拉选择值不正确。");
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("外发厂商:下拉选择值不正确。");
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.MOID).Must(CheckForeignKeyValue).WithMessage("制令单:下拉选择值不正确。");
 
-
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
 
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.ShippingAddress).MaximumLength(127).WithMessage("发货地址:不能超过最大长度,127.");
+ RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.ShippingAddress).MaximumMixedLength(255).WithMessage("发货地址:不能超过最大长度,255.");
 
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.shippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
+ RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.shippingWay).MaximumMixedLength(50).WithMessage("发货方式:不能超过最大长度,50.");
 
  RuleFor(x => x.TotalPrice).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
 
@@ -75,6 +73,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.TotalReQty).NotNull().WithMessage("退回总数:不能为空。");
 
+ RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.TrackNo).MaximumMixedLength(50).WithMessage("物流单号:不能超过最大长度,50.");
 
  RuleFor(x => x.ShipCost).PrecisionScale(19,4,true).WithMessage("运费:小数位不能超过4。");
 
@@ -86,9 +85,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

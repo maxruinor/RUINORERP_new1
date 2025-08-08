@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:32
+// 时间：08/08/2025 13:46:18
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,16 +38,16 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Key).MaximumLength(25).WithMessage("参数key:不能超过最大长度,25.");
+ RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Key).MaximumMixedLength(50).WithMessage("参数key:不能超过最大长度,50.");
  RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Key).NotEmpty().WithMessage("参数key:不能为空。");
 
- RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Name).MaximumLength(25).WithMessage("参数名:不能超过最大长度,25.");
+ RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Name).MaximumMixedLength(50).WithMessage("参数名:不能超过最大长度,50.");
 
- RuleFor(tb_StepBodyPara =>tb_StepBodyPara.DisplayName).MaximumLength(25).WithMessage("显示名称:不能超过最大长度,25.");
+ RuleFor(tb_StepBodyPara =>tb_StepBodyPara.DisplayName).MaximumMixedLength(50).WithMessage("显示名称:不能超过最大长度,50.");
 
- RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Value).MaximumLength(25).WithMessage("参数值:不能超过最大长度,25.");
+ RuleFor(tb_StepBodyPara =>tb_StepBodyPara.Value).MaximumMixedLength(50).WithMessage("参数值:不能超过最大长度,50.");
 
- RuleFor(tb_StepBodyPara =>tb_StepBodyPara.StepBodyParaType).MaximumLength(25).WithMessage("参数类型:不能超过最大长度,25.");
+ RuleFor(tb_StepBodyPara =>tb_StepBodyPara.StepBodyParaType).MaximumMixedLength(50).WithMessage("参数类型:不能超过最大长度,50.");
 
            	        Initialize();
      }

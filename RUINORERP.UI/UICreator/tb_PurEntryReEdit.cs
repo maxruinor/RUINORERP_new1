@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2024 15:56:36
+// 时间：08/08/2025 13:46:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -71,6 +71,10 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
 
          }
 /*
@@ -89,12 +93,16 @@ namespace RUINORERP.UI
                         entity.TotalTaxAmount = Decimal.Parse(txtTotalTaxAmount.Text);
                         entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);
                         entity.ActualAmount = Decimal.Parse(txtActualAmount.Text);
-                        entity.BillDate = DateTime.Parse(txtBillDate.Text);
                         entity.ProcessWay = Int32.Parse(txtProcessWay.Text);
                         entity.ReturnDate = DateTime.Parse(txtReturnDate.Text);
                         entity.ShippingWay = txtShippingWay.Text ;
                        entity.TrackNo = txtTrackNo.Text ;
-                       entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
+                       entity.IsCustomizedOrder = Boolean.Parse(txtIsCustomizedOrder.Text);
+                        entity.PayStatus = Int32.Parse(txtPayStatus.Text);
+                        entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
+                        entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
+                        entity.ForeignTotalAmount = Decimal.Parse(txtForeignTotalAmount.Text);
+                        entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
                         entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
@@ -136,12 +144,16 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalTaxAmount.ToString(), txtTotalTaxAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ActualAmount.ToString(), txtActualAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.BillDate, dtpBillDate,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ProcessWay, txtProcessWay, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.ReturnDate, dtpReturnDate,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ShippingWay, txtShippingWay, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_PurEntryRe>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_PurEntryRe>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
+           DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.PayStatus, txtPayStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.Currency_ID, txtCurrency_ID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ForeignTotalAmount.ToString(), txtForeignTotalAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4CheckBox<tb_PurEntryRe>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.Modified_at, dtpModified_at,false);
@@ -149,18 +161,18 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            //default  DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_PurEntryRe>(entity, t => t.ApprovalResults, chkApprovalResults, false);
-           DataBindingHelper.BindData4CehckBox<tb_PurEntryRe>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
+           DataBindingHelper.BindData4CheckBox<tb_PurEntryRe>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4CheckBox<tb_PurEntryRe>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.KeepAccountsType, txtKeepAccountsType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.Deposit.ToString(), txtDeposit, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TaxDeductionType, txtTaxDeductionType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.TotalDiscountAmount.ToString(), txtTotalDiscountAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_PurEntryRe>(entity, t => t.ReceiptInvoiceClosed, chkReceiptInvoiceClosed, false);
+           DataBindingHelper.BindData4CheckBox<tb_PurEntryRe>(entity, t => t.ReceiptInvoiceClosed, chkReceiptInvoiceClosed, false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_PurEntryRe>(entity, t => t.Approver_at, dtpApprover_at,false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_PurEntryRe>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
+           DataBindingHelper.BindData4CheckBox<tb_PurEntryRe>(entity, t => t.GenerateVouchers, chkGenerateVouchers, false);
            DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.VoucherNO, txtVoucherNO, BindDataType4TextBox.Text,false);
 }
 

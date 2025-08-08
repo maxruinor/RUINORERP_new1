@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/07/2024 19:06:32
+// 时间：08/08/2025 13:45:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -111,17 +111,17 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_ProdDetail>(entity, t => t.Discount_Price.ToString(), txtDiscount_Price, BindDataType4TextBox.Money,false);
            //default  DataBindingHelper.BindData4TextBox<tb_ProdDetail>(entity, t => t.Image.ToString(), txtImage, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_ProdDetail>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdDetail>(entity, t => t.SalePublish, chkSalePublish, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdDetail>(entity, t => t.SalePublish, chkSalePublish, false);
 //有默认值
-           DataBindingHelper.BindData4CehckBox<tb_ProdDetail>(entity, t => t.Is_enabled, chkIs_enabled, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdDetail>(entity, t => t.Is_enabled, chkIs_enabled, false);
 //有默认值
-           DataBindingHelper.BindData4CehckBox<tb_ProdDetail>(entity, t => t.Is_available, chkIs_available, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdDetail>(entity, t => t.Is_available, chkIs_available, false);
 //有默认值
            DataBindingHelper.BindData4DataTime<tb_ProdDetail>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_ProdDetail>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ProdDetail>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_ProdDetail>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdDetail>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdDetail>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_ProdDetail>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
 }
 

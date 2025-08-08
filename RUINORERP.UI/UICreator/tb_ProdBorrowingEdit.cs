@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/07/2025 13:17:54
+// 时间：08/08/2025 13:45:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -57,6 +57,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -65,6 +66,7 @@ namespace RUINORERP.UI
         {
         tb_ProdBorrowing entity = new tb_ProdBorrowing();
                      entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
+                        entity.IsVendor = Boolean.Parse(txtIsVendor.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.BorrowNo = txtBorrowNo.Text ;
                        entity.TotalQty = Int32.Parse(txtTotalQty.Text);
@@ -98,6 +100,7 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
+           DataBindingHelper.BindData4CheckBox<tb_ProdBorrowing>(entity, t => t.IsVendor, chkIsVendor, false);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.BorrowNo, txtBorrowNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty,false);

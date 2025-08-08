@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/26/2025 12:18:33
+// 时间：08/08/2025 13:46:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,13 +38,13 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_ReminderRule =>tb_ReminderRule.RuleName).MaximumLength(50).WithMessage("规则名称:不能超过最大长度,50.");
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.RuleName).MaximumMixedLength(100).WithMessage("规则名称:不能超过最大长度,100.");
  RuleFor(tb_ReminderRule =>tb_ReminderRule.RuleName).NotEmpty().WithMessage("规则名称:不能为空。");
 
 //***** 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.RuleEngineType).NotNull().WithMessage("引擎类型:不能为空。");
 
- RuleFor(tb_ReminderRule =>tb_ReminderRule.Description).MaximumLength(250).WithMessage("规则描述:不能超过最大长度,250.");
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.Description).MaximumMixedLength(500).WithMessage("规则描述:不能超过最大长度,500.");
  RuleFor(tb_ReminderRule =>tb_ReminderRule.Description).NotEmpty().WithMessage("规则描述:不能为空。");
 
 //***** 
@@ -56,13 +56,15 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.ReminderPriority).NotNull().WithMessage("优先级:不能为空。");
 
-
-// RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannels).MaximumLength(25).WithMessage("通知渠道:不能超过最大长度,25.");
  RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyChannels).NotEmpty().WithMessage("通知渠道:不能为空。");
 
+ //RuleFor(tb_ReminderRule =>tb_ReminderRule.Condition).NotEmpty().WithMessage("规则条件:不能为空。");
 
- RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipients).NotEmpty().WithMessage("通知接收人员:不能为空。");
+ //RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipientNames).NotEmpty().WithMessage("通知接收人员:不能为空。");
 
+ RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyRecipients).NotEmpty().WithMessage("通知接收人员ID:不能为空。");
+
+ //RuleFor(tb_ReminderRule =>tb_ReminderRule.NotifyMessage).NotEmpty().WithMessage("通知消息模板:不能为空。");
 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.JsonConfig).NotEmpty().WithMessage("扩展JSON配置:不能为空。");
 
@@ -73,7 +75,6 @@ namespace RUINORERP.Business
 
 //***** 
  RuleFor(tb_ReminderRule =>tb_ReminderRule.Modified_by).NotNull().WithMessage("修改人:不能为空。");
-
 
            	        Initialize();
      }

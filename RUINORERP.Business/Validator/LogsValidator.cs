@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：08/08/2025 13:45:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -39,28 +39,26 @@ namespace RUINORERP.Business
         
      
 
- RuleFor(Logs =>Logs.Level).MaximumLength(5).WithMessage("级别:不能超过最大长度,5.");
+ RuleFor(Logs =>Logs.Level).MaximumMixedLength(10).WithMessage("级别:不能超过最大长度,10.");
 
- RuleFor(Logs =>Logs.Logger).MaximumLength(25).WithMessage("记录器:不能超过最大长度,25.");
-
- RuleFor(Logs =>Logs.Message).MaximumLength(1500).WithMessage("消息:不能超过最大长度,1500.");
+ RuleFor(Logs =>Logs.Logger).MaximumMixedLength(500).WithMessage("记录器:不能超过最大长度,500.");
 
 
- RuleFor(Logs =>Logs.Operator).MaximumLength(25).WithMessage("操作者:不能超过最大长度,25.");
 
- RuleFor(Logs =>Logs.ModName).MaximumLength(25).WithMessage("模块名:不能超过最大长度,25.");
+ RuleFor(Logs =>Logs.Operator).MaximumMixedLength(200).WithMessage("操作者:不能超过最大长度,200.");
 
- RuleFor(Logs =>Logs.Path).MaximumLength(50).WithMessage("路径:不能超过最大长度,50.");
+ RuleFor(Logs =>Logs.ModName).MaximumMixedLength(50).WithMessage("模块名:不能超过最大长度,50.");
 
- RuleFor(Logs =>Logs.ActionName).MaximumLength(25).WithMessage("动作:不能超过最大长度,25.");
+ RuleFor(Logs =>Logs.Path).MaximumMixedLength(100).WithMessage("路径:不能超过最大长度,100.");
 
- RuleFor(Logs =>Logs.IP).MaximumLength(10).WithMessage("网络地址:不能超过最大长度,10.");
+ RuleFor(Logs =>Logs.ActionName).MaximumMixedLength(50).WithMessage("动作:不能超过最大长度,50.");
 
- RuleFor(Logs =>Logs.MAC).MaximumLength(15).WithMessage("物理地址:不能超过最大长度,15.");
+ RuleFor(Logs =>Logs.IP).MaximumMixedLength(20).WithMessage("网络地址:不能超过最大长度,20.");
 
- RuleFor(Logs =>Logs.MachineName).MaximumLength(25).WithMessage("电脑名:不能超过最大长度,25.");
+ RuleFor(Logs =>Logs.MAC).MaximumMixedLength(30).WithMessage("物理地址:不能超过最大长度,30.");
 
- RuleFor(Logs =>Logs.User_ID).Must(CheckForeignKeyValueCanNull).WithMessage("用户:下拉选择值不正确。");
+ RuleFor(Logs =>Logs.MachineName).MaximumMixedLength(50).WithMessage("电脑名:不能超过最大长度,50.");
+
  RuleFor(Logs =>Logs.User_ID).NotEmpty().When(x => x.User_ID.HasValue);
 
            	        Initialize();

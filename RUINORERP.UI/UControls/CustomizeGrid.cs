@@ -28,6 +28,10 @@ namespace RUINORERP.UI.UControls
             //this.Click += CustomizeGrid_Click;
 
         }
+        //恢复默认列的事件
+        public delegate void InitializeDefaultColumnDelegateCustomizeGrid(List<ColDisplayController> ColumnDisplays);
+        public event InitializeDefaultColumnDelegateCustomizeGrid InitializeDefaultColumnCustomizeGrid;
+
 
 
         [Browsable(true)]
@@ -360,6 +364,8 @@ namespace RUINORERP.UI.UControls
 
                 set.ColumnDisplays = cols.ToList();
 
+                set.InitializeDefaultColumn += Set_InitializeDefaultColumn;
+
                 //SerializableDictionary<string, bool> qr = new SerializableDictionary<string, bool>();
                 //qr = LoadColumnsList();
                 ////如果加载默认的 为空时，则默认有中文的全选中显示
@@ -409,6 +415,13 @@ namespace RUINORERP.UI.UControls
             }
         }
 
+        private void Set_InitializeDefaultColumn(List<ColDisplayController> ColumnDisplays)
+        {
+            if (InitializeDefaultColumnCustomizeGrid != null)
+            {
+                InitializeDefaultColumnCustomizeGrid(ColumnDisplays);
+            }
+        }
 
         private void ShowColumns(SerializableDictionary<string, bool> qr)
         {

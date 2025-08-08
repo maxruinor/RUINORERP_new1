@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:36
+// 时间：08/08/2025 13:45:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -71,8 +71,8 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_BOMConfigHistory>(entity, t => t.VerNo, txtVerNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_BOMConfigHistory>(entity, t => t.Effective_at, dtpEffective_at,false);
-           DataBindingHelper.BindData4CehckBox<tb_BOMConfigHistory>(entity, t => t.is_enabled, chkis_enabled, false);
-           DataBindingHelper.BindData4CehckBox<tb_BOMConfigHistory>(entity, t => t.is_available, chkis_available, false);
+           DataBindingHelper.BindData4CheckBox<tb_BOMConfigHistory>(entity, t => t.is_enabled, chkis_enabled, false);
+           DataBindingHelper.BindData4CheckBox<tb_BOMConfigHistory>(entity, t => t.is_available, chkis_available, false);
            DataBindingHelper.BindData4TextBox<tb_BOMConfigHistory>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_BOMConfigHistory>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_BOMConfigHistory>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);

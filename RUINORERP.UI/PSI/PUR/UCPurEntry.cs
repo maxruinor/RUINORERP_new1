@@ -20,6 +20,7 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.BusinessService.CalculationService;
 using RUINORERP.UI.Common;
+using RUINORERP.UI.PSI.SAL;
 using RUINORERP.UI.UCSourceGrid;
 using SourceGrid;
 using SqlSugar;
@@ -84,7 +85,7 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         private PurEntryCoordinator _coordinator;
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override async void LoadRelatedDataToDropDownItemsAsync()
         {
                 //加载关联的单据
                 if (base.EditEntity is tb_PurEntry purEntry)
@@ -123,9 +124,35 @@ namespace RUINORERP.UI.PSI.PUR
                             }
 
                         }
+
+                    //如果有出库，则查应收
+                    if (purEntry.DataStatus >= (int)DataStatus.确认)
+                    {
+                        var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                        .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
+                                                                        && c.CustomerVendor_ID == purEntry.CustomerVendor_ID
+                                                                        && c.SourceBillId == purEntry.PurEntryID)
+                                                                        .ToListAsync();
+                        foreach (var item in receivablePayables)
+                        {
+                            var rqpara = new Model.CommonModel.RelatedQueryParameter();
+                            rqpara.bizType = BizType.应付款单;
+                            rqpara.billId = item.ARAPId;
+                            ToolStripMenuItem RelatedMenuItemPara = new ToolStripMenuItem();
+                            RelatedMenuItemPara.Name = $"{rqpara.billId}";
+                            RelatedMenuItemPara.Tag = rqpara;
+                            RelatedMenuItemPara.Text = $"{rqpara.bizType}:{item.ARAPNo}";
+                            RelatedMenuItemPara.Click += base.MenuItem_Click;
+                            if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
+                            {
+                                toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemPara);
+                            }
+                        }
                     }
+
                 }
-                base.LoadRelatedDataToDropDownItems();
+                }
+                base.LoadRelatedDataToDropDownItemsAsync();
             }
         public override void BindData(tb_PurEntry entity, ActionStatus actionStatus)
         {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:42
+// 时间：08/08/2025 13:45:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,12 +38,12 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.RepairOrderNo).MaximumLength(25).WithMessage("维修工单号:不能超过最大长度,25.");
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.RepairOrderNo).MaximumMixedLength(50).WithMessage("维修工单号:不能超过最大长度,50.");
 
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ASApplyID).Must(CheckForeignKeyValueCanNull).WithMessage("售后申请单:下拉选择值不正确。");
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ASApplyID).NotEmpty().When(x => x.ASApplyID.HasValue);
 
- RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ASApplyNo).MaximumLength(25).WithMessage("售后申请编号:不能超过最大长度,25.");
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ASApplyNo).MaximumMixedLength(50).WithMessage("售后申请编号:不能超过最大长度,50.");
 
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人员:下拉选择值不正确。");
 
@@ -90,7 +90,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 
@@ -100,7 +100,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
- RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_AS_RepairOrder =>tb_AS_RepairOrder.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
  RuleFor(x => x.TotalMaterialCost).PrecisionScale(19,4,true).WithMessage("总材料成本:小数位不能超过4。");
 

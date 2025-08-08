@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:30
+// 时间：08/08/2025 13:45:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -60,6 +60,7 @@ this.txtLevel = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblLogger = new Krypton.Toolkit.KryptonLabel();
 this.txtLogger = new Krypton.Toolkit.KryptonTextBox();
+this.txtLogger.Multiline = true;
 
 this.lblMessage = new Krypton.Toolkit.KryptonLabel();
 this.txtMessage = new Krypton.Toolkit.KryptonTextBox();
@@ -91,7 +92,7 @@ this.lblMachineName = new Krypton.Toolkit.KryptonLabel();
 this.txtMachineName = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblUser_ID = new Krypton.Toolkit.KryptonLabel();
-this.cmbUser_ID = new Krypton.Toolkit.KryptonComboBox();
+this.txtUser_ID = new Krypton.Toolkit.KryptonTextBox();
 
     
     //for end
@@ -150,7 +151,7 @@ this.txtLevel.TabIndex = 2;
 this.Controls.Add(this.lblLevel);
 this.Controls.Add(this.txtLevel);
 
-           //#####50Logger###String
+           //#####500Logger###String
 this.lblLogger.AutoSize = true;
 this.lblLogger.Location = new System.Drawing.Point(100,75);
 this.lblLogger.Name = "lblLogger";
@@ -164,7 +165,7 @@ this.txtLogger.TabIndex = 3;
 this.Controls.Add(this.lblLogger);
 this.Controls.Add(this.txtLogger);
 
-           //#####3000Message###String
+           //#####2147483647Message###String
 this.lblMessage.AutoSize = true;
 this.lblMessage.Location = new System.Drawing.Point(100,100);
 this.lblMessage.Name = "lblMessage";
@@ -175,6 +176,7 @@ this.txtMessage.Location = new System.Drawing.Point(173,96);
 this.txtMessage.Name = "txtMessage";
 this.txtMessage.Size = new System.Drawing.Size(100, 21);
 this.txtMessage.TabIndex = 4;
+this.txtMessage.Multiline = true;
 this.Controls.Add(this.lblMessage);
 this.Controls.Add(this.txtMessage);
 
@@ -193,7 +195,7 @@ this.txtException.Multiline = true;
 this.Controls.Add(this.lblException);
 this.Controls.Add(this.txtException);
 
-           //#####50Operator###String
+           //#####200Operator###String
 this.lblOperator.AutoSize = true;
 this.lblOperator.Location = new System.Drawing.Point(100,150);
 this.lblOperator.Name = "lblOperator";
@@ -292,20 +294,18 @@ this.Controls.Add(this.lblMachineName);
 this.Controls.Add(this.txtMachineName);
 
            //#####User_ID###Int64
-//属性测试325User_ID
 this.lblUser_ID.AutoSize = true;
 this.lblUser_ID.Location = new System.Drawing.Point(100,325);
 this.lblUser_ID.Name = "lblUser_ID";
 this.lblUser_ID.Size = new System.Drawing.Size(41, 12);
 this.lblUser_ID.TabIndex = 13;
 this.lblUser_ID.Text = "用户";
-//111======325
-this.cmbUser_ID.Location = new System.Drawing.Point(173,321);
-this.cmbUser_ID.Name ="cmbUser_ID";
-this.cmbUser_ID.Size = new System.Drawing.Size(100, 21);
-this.cmbUser_ID.TabIndex = 13;
+this.txtUser_ID.Location = new System.Drawing.Point(173,321);
+this.txtUser_ID.Name = "txtUser_ID";
+this.txtUser_ID.Size = new System.Drawing.Size(100, 21);
+this.txtUser_ID.TabIndex = 13;
 this.Controls.Add(this.lblUser_ID);
-this.Controls.Add(this.cmbUser_ID);
+this.Controls.Add(this.txtUser_ID);
 
         //for 加入到容器
             //components = new System.ComponentModel.Container();
@@ -362,7 +362,7 @@ this.Controls.Add(this.txtMAC );
 this.Controls.Add(this.txtMachineName );
 
                 this.Controls.Add(this.lblUser_ID );
-this.Controls.Add(this.cmbUser_ID );
+this.Controls.Add(this.txtUser_ID );
 
                             // 
             // "LogsEdit"
@@ -449,7 +449,7 @@ private Krypton.Toolkit.KryptonTextBox txtMachineName;
     
         
               private Krypton.Toolkit.KryptonLabel lblUser_ID;
-private Krypton.Toolkit.KryptonComboBox cmbUser_ID;
+private Krypton.Toolkit.KryptonTextBox txtUser_ID;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

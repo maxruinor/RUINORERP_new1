@@ -249,7 +249,7 @@ namespace RUINORERP.Business
                 try
                 {
                     //按配置自动审核收款单
-                    if (_appContext.FMConfig.AutoAuditReceivePaymentRecord && entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                    if (_appContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform && entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                     {
                         if (entity.IsFromPlatform.HasValue && entity.IsFromPlatform.Value)
                         {

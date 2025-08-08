@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/07/2025 13:17:56
+// 时间：08/08/2025 13:45:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,9 +41,10 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("接收单位:下拉选择值不正确。");
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
+
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Employee_ID).Must(CheckForeignKeyValue).WithMessage("借出人:下拉选择值不正确。");
 
- RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.BorrowNo).MaximumLength(25).WithMessage("借出单号:不能超过最大长度,25.");
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.BorrowNo).MaximumMixedLength(50).WithMessage("借出单号:不能超过最大长度,50.");
 
 //***** 
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.TotalQty).NotNull().WithMessage("总数量:不能为空。");
@@ -60,15 +61,15 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
 
 //***** 
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Reason).MaximumLength(250).WithMessage("借出原因:不能超过最大长度,250.");
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Reason).MaximumMixedLength(500).WithMessage("借出原因:不能超过最大长度,500.");
 
- RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.ApprovalOpinions).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.ApprovalOpinions).MaximumMixedLength(500).WithMessage("审批意见:不能超过最大长度,500.");
 
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 
@@ -78,7 +79,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
- RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.CloseCaseOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.CloseCaseOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
            	                //long
                 //BorrowID

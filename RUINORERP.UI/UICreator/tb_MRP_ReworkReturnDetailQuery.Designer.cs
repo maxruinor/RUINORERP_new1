@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/04/2025 19:45:31
+// 时间：08/08/2025 13:45:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -15,7 +15,7 @@ using FluentValidation;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 采购入库退回单明细
+    /// 返工退库明细
     /// </summary>
     partial class tb_MRP_ReworkReturnDetailQuery
     {
@@ -65,14 +65,14 @@ this.txtproperty.Multiline = true;
 
 
 
-this.lblReworkFee = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtReworkFee = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblUnitCost = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtUnitCost = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblSubtotalReworkFee = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtSubtotalReworkFee = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-this.lblUnitCost = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtUnitCost = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblReworkFee = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtReworkFee = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblSubtotalCostAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtSubtotalCostAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -163,20 +163,20 @@ this.Controls.Add(this.txtproperty);
 //属性测试150DeliveredQuantity
 //属性测试150DeliveredQuantity
 
-           //#####ReworkFee###Decimal
-this.lblReworkFee.AutoSize = true;
-this.lblReworkFee.Location = new System.Drawing.Point(100,175);
-this.lblReworkFee.Name = "lblReworkFee";
-this.lblReworkFee.Size = new System.Drawing.Size(41, 12);
-this.lblReworkFee.TabIndex = 7;
-this.lblReworkFee.Text = "预估费用";
+           //#####UnitCost###Decimal
+this.lblUnitCost.AutoSize = true;
+this.lblUnitCost.Location = new System.Drawing.Point(100,175);
+this.lblUnitCost.Name = "lblUnitCost";
+this.lblUnitCost.Size = new System.Drawing.Size(41, 12);
+this.lblUnitCost.TabIndex = 7;
+this.lblUnitCost.Text = "成本";
 //111======175
-this.txtReworkFee.Location = new System.Drawing.Point(173,171);
-this.txtReworkFee.Name ="txtReworkFee";
-this.txtReworkFee.Size = new System.Drawing.Size(100, 21);
-this.txtReworkFee.TabIndex = 7;
-this.Controls.Add(this.lblReworkFee);
-this.Controls.Add(this.txtReworkFee);
+this.txtUnitCost.Location = new System.Drawing.Point(173,171);
+this.txtUnitCost.Name ="txtUnitCost";
+this.txtUnitCost.Size = new System.Drawing.Size(100, 21);
+this.txtUnitCost.TabIndex = 7;
+this.Controls.Add(this.lblUnitCost);
+this.Controls.Add(this.txtUnitCost);
 
            //#####SubtotalReworkFee###Decimal
 this.lblSubtotalReworkFee.AutoSize = true;
@@ -193,20 +193,20 @@ this.txtSubtotalReworkFee.TabIndex = 8;
 this.Controls.Add(this.lblSubtotalReworkFee);
 this.Controls.Add(this.txtSubtotalReworkFee);
 
-           //#####UnitCost###Decimal
-this.lblUnitCost.AutoSize = true;
-this.lblUnitCost.Location = new System.Drawing.Point(100,225);
-this.lblUnitCost.Name = "lblUnitCost";
-this.lblUnitCost.Size = new System.Drawing.Size(41, 12);
-this.lblUnitCost.TabIndex = 9;
-this.lblUnitCost.Text = "成本";
+           //#####ReworkFee###Decimal
+this.lblReworkFee.AutoSize = true;
+this.lblReworkFee.Location = new System.Drawing.Point(100,225);
+this.lblReworkFee.Name = "lblReworkFee";
+this.lblReworkFee.Size = new System.Drawing.Size(41, 12);
+this.lblReworkFee.TabIndex = 9;
+this.lblReworkFee.Text = "预估费用";
 //111======225
-this.txtUnitCost.Location = new System.Drawing.Point(173,221);
-this.txtUnitCost.Name ="txtUnitCost";
-this.txtUnitCost.Size = new System.Drawing.Size(100, 21);
-this.txtUnitCost.TabIndex = 9;
-this.Controls.Add(this.lblUnitCost);
-this.Controls.Add(this.txtUnitCost);
+this.txtReworkFee.Location = new System.Drawing.Point(173,221);
+this.txtReworkFee.Name ="txtReworkFee";
+this.txtReworkFee.Size = new System.Drawing.Size(100, 21);
+this.txtReworkFee.TabIndex = 9;
+this.Controls.Add(this.lblReworkFee);
+this.Controls.Add(this.txtReworkFee);
 
            //#####SubtotalCostAmount###Decimal
 this.lblSubtotalCostAmount.AutoSize = true;
@@ -214,7 +214,7 @@ this.lblSubtotalCostAmount.Location = new System.Drawing.Point(100,250);
 this.lblSubtotalCostAmount.Name = "lblSubtotalCostAmount";
 this.lblSubtotalCostAmount.Size = new System.Drawing.Size(41, 12);
 this.lblSubtotalCostAmount.TabIndex = 10;
-this.lblSubtotalCostAmount.Text = "成本小计";
+this.lblSubtotalCostAmount.Text = "小计";
 //111======250
 this.txtSubtotalCostAmount.Location = new System.Drawing.Point(173,246);
 this.txtSubtotalCostAmount.Name ="txtSubtotalCostAmount";
@@ -273,14 +273,14 @@ this.Controls.Add(this.txtproperty );
 
                 
                 
-                this.Controls.Add(this.lblReworkFee );
-this.Controls.Add(this.txtReworkFee );
+                this.Controls.Add(this.lblUnitCost );
+this.Controls.Add(this.txtUnitCost );
 
                 this.Controls.Add(this.lblSubtotalReworkFee );
 this.Controls.Add(this.txtSubtotalReworkFee );
 
-                this.Controls.Add(this.lblUnitCost );
-this.Controls.Add(this.txtUnitCost );
+                this.Controls.Add(this.lblReworkFee );
+this.Controls.Add(this.txtReworkFee );
 
                 this.Controls.Add(this.lblSubtotalCostAmount );
 this.Controls.Add(this.txtSubtotalCostAmount );
@@ -329,8 +329,8 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtproperty;
               
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblReworkFee;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtReworkFee;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblUnitCost;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtUnitCost;
 
     
         
@@ -339,8 +339,8 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtSubtotalReworkFee;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblUnitCost;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtUnitCost;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblReworkFee;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtReworkFee;
 
     
         

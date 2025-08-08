@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/12/2025 18:16:11
+// 时间：08/08/2025 13:46:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -102,7 +102,7 @@ namespace RUINORERP.UI
                        entity.Summary = txtSummary.Text ;
                        entity.PrintStatus = Int32.Parse(txtPrintStatus.Text);
                         entity.DataStatus = Int32.Parse(txtDataStatus.Text);
-                        entity.ApprovalStatus = Byte.Parse(txtApprovalStatus.Text);
+                        entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
                         entity.ApprovalResults = Boolean.Parse(txtApprovalResults.Text);
                         entity.ApprovalOpinions = txtApprovalOpinions.Text ;
                        entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);

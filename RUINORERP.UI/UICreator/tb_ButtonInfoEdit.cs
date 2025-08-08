@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:37
+// 时间：08/08/2025 13:45:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,6 +43,11 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
+        
+        
 
          }
 /*
@@ -54,12 +59,17 @@ namespace RUINORERP.UI
                         entity.BtnName = txtBtnName.Text ;
                        entity.BtnText = txtBtnText.Text ;
                        entity.HotKey = txtHotKey.Text ;
+                       entity.ButtonType = txtButtonType.Text ;
                        entity.FormName = txtFormName.Text ;
                        entity.ClassPath = txtClassPath.Text ;
                        entity.IsForm = Boolean.Parse(txtIsForm.Text);
                         entity.IsEnabled = Boolean.Parse(txtIsEnabled.Text);
                         entity.Notes = txtNotes.Text ;
-                               return entity;
+                       entity.Created_at = DateTime.Parse(txtCreated_at.Text);
+                        entity.Created_by = Int64.Parse(txtCreated_by.Text);
+                        entity.Modified_at = DateTime.Parse(txtModified_at.Text);
+                        entity.Modified_by = Int64.Parse(txtModified_by.Text);
+                                return entity;
 }
         */
 
@@ -73,12 +83,17 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_ButtonInfo>(entity, t => t.BtnName, txtBtnName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ButtonInfo>(entity, t => t.BtnText, txtBtnText, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ButtonInfo>(entity, t => t.HotKey, txtHotKey, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_ButtonInfo>(entity, t => t.ButtonType, txtButtonType, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ButtonInfo>(entity, t => t.FormName, txtFormName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ButtonInfo>(entity, t => t.ClassPath, txtClassPath, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_ButtonInfo>(entity, t => t.IsForm, chkIsForm, false);
-           DataBindingHelper.BindData4CehckBox<tb_ButtonInfo>(entity, t => t.IsEnabled, chkIsEnabled, false);
+           DataBindingHelper.BindData4CheckBox<tb_ButtonInfo>(entity, t => t.IsForm, chkIsForm, false);
+           DataBindingHelper.BindData4CheckBox<tb_ButtonInfo>(entity, t => t.IsEnabled, chkIsEnabled, false);
 //有默认值
            DataBindingHelper.BindData4TextBox<tb_ButtonInfo>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4DataTime<tb_ButtonInfo>(entity, t => t.Created_at, dtpCreated_at,false);
+           DataBindingHelper.BindData4TextBox<tb_ButtonInfo>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_ButtonInfo>(entity, t => t.Modified_at, dtpModified_at,false);
+           DataBindingHelper.BindData4TextBox<tb_ButtonInfo>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
 }
 
 

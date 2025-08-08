@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:37
+// 时间：08/08/2025 13:45:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,14 +47,14 @@ namespace RUINORERP.Business
  RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("货架:下拉选择值不正确。");
  RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
 
- RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.CustomerPartNo).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
+ RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.CustomerPartNo).MaximumMixedLength(50).WithMessage("客户型号:不能超过最大长度,50.");
 
- RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
 
- RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
+ RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
  RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.RepairOrderDetailID).NotEmpty().When(x => x.RepairOrderDetailID.HasValue);
 

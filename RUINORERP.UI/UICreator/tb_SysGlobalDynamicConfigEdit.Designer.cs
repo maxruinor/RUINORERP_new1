@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 09:38:35
+// 时间：08/08/2025 13:46:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,8 +61,7 @@ this.txtConfigValue = new Krypton.Toolkit.KryptonTextBox();
 this.txtConfigValue.Multiline = true;
 
 this.lblDescription = new Krypton.Toolkit.KryptonLabel();
-this.chkDescription = new Krypton.Toolkit.KryptonCheckBox();
-this.chkDescription.Values.Text ="";
+this.txtDescription = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblValueType = new Krypton.Toolkit.KryptonLabel();
 this.txtValueType = new Krypton.Toolkit.KryptonTextBox();
@@ -144,21 +143,21 @@ this.txtConfigValue.Multiline = true;
 this.Controls.Add(this.lblConfigValue);
 this.Controls.Add(this.txtConfigValue);
 
-           //#####Description###Boolean
+           //#####200Description###String
 this.lblDescription.AutoSize = true;
 this.lblDescription.Location = new System.Drawing.Point(100,75);
 this.lblDescription.Name = "lblDescription";
 this.lblDescription.Size = new System.Drawing.Size(41, 12);
 this.lblDescription.TabIndex = 3;
 this.lblDescription.Text = "配置描述";
-this.chkDescription.Location = new System.Drawing.Point(173,71);
-this.chkDescription.Name = "chkDescription";
-this.chkDescription.Size = new System.Drawing.Size(100, 21);
-this.chkDescription.TabIndex = 3;
+this.txtDescription.Location = new System.Drawing.Point(173,71);
+this.txtDescription.Name = "txtDescription";
+this.txtDescription.Size = new System.Drawing.Size(100, 21);
+this.txtDescription.TabIndex = 3;
 this.Controls.Add(this.lblDescription);
-this.Controls.Add(this.chkDescription);
+this.Controls.Add(this.txtDescription);
 
-           //#####50ValueType###String
+           //#####ValueType###Int32
 this.lblValueType.AutoSize = true;
 this.lblValueType.Location = new System.Drawing.Point(100,100);
 this.lblValueType.Name = "lblValueType";
@@ -285,7 +284,7 @@ this.Controls.Add(this.txtConfigKey );
 this.Controls.Add(this.txtConfigValue );
 
                 this.Controls.Add(this.lblDescription );
-this.Controls.Add(this.chkDescription );
+this.Controls.Add(this.txtDescription );
 
                 this.Controls.Add(this.lblValueType );
 this.Controls.Add(this.txtValueType );
@@ -343,7 +342,7 @@ private Krypton.Toolkit.KryptonTextBox txtConfigValue;
     
         
               private Krypton.Toolkit.KryptonLabel lblDescription;
-private Krypton.Toolkit.KryptonCheckBox chkDescription;
+private Krypton.Toolkit.KryptonTextBox txtDescription;
 
     
         

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:32
+// 时间：08/08/2025 13:46:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,18 +38,18 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ConfigKey).MaximumLength(127).WithMessage("配置项:不能超过最大长度,127.");
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ConfigKey).MaximumMixedLength(255).WithMessage("配置项:不能超过最大长度,255.");
  RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ConfigKey).NotEmpty().WithMessage("配置项:不能为空。");
 
  RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ConfigValue).NotEmpty().WithMessage("配置值:不能为空。");
 
- RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.Description).MaximumLength(100).WithMessage("配置描述:不能超过最大长度,100.");
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.Description).MaximumMixedLength(200).WithMessage("配置描述:不能超过最大长度,200.");
  RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.Description).NotEmpty().WithMessage("配置描述:不能为空。");
 
 //***** 
  RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ValueType).NotNull().WithMessage("配置项的值类型:不能为空。");
 
- RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ConfigType).MaximumLength(50).WithMessage("配置类型:不能超过最大长度,50.");
+ RuleFor(tb_SysGlobalDynamicConfig =>tb_SysGlobalDynamicConfig.ConfigType).MaximumMixedLength(100).WithMessage("配置类型:不能超过最大长度,100.");
 
 //有默认值
 

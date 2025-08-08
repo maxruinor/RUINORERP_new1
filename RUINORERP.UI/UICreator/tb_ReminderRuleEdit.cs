@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/26/2025 12:18:32
+// 时间：08/08/2025 13:46:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,7 +53,6 @@ namespace RUINORERP.UI
         
         
         
-        
 
          }
 /*
@@ -68,7 +67,7 @@ namespace RUINORERP.UI
                         entity.CheckIntervalByMinutes = Int32.Parse(txtCheckIntervalByMinutes.Text);
                         entity.ReminderPriority = Int32.Parse(txtReminderPriority.Text);
                         entity.IsEnabled = Boolean.Parse(txtIsEnabled.Text);
-                        entity.NotifyChannel = txtNotifyChannel.Text ;
+                        entity.NotifyChannels = txtNotifyChannels.Text ;
                        entity.EffectiveDate = DateTime.Parse(txtEffectiveDate.Text);
                         entity.ExpireDate = DateTime.Parse(txtExpireDate.Text);
                         entity.Condition = txtCondition.Text ;
@@ -80,7 +79,6 @@ namespace RUINORERP.UI
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
                         entity.Modified_by = Int64.Parse(txtModified_by.Text);
-                        entity.IsEnabled3 = Boolean.Parse(txtIsEnabled3.Text);
                                 return entity;
 }
         */
@@ -98,7 +96,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.CheckIntervalByMinutes, txtCheckIntervalByMinutes, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.ReminderPriority, txtReminderPriority, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4CheckBox<tb_ReminderRule>(entity, t => t.IsEnabled, chkIsEnabled, false);
-           DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.NotifyChannel, txtNotifyChannel, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.NotifyChannels, txtNotifyChannels, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.EffectiveDate, dtpEffectiveDate,false);
            DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.ExpireDate, dtpExpireDate,false);
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.Condition, txtCondition, BindDataType4TextBox.Text,false);
@@ -110,7 +108,6 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ReminderRule>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CheckBox<tb_ReminderRule>(entity, t => t.IsEnabled3, chkIsEnabled3, false);
 }
 
 

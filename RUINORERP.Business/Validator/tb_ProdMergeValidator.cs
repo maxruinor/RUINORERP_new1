@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:29
+// 时间：08/08/2025 13:45:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,12 +43,12 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdMerge =>tb_ProdMerge.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
- RuleFor(tb_ProdMerge =>tb_ProdMerge.MergeNo).MaximumLength(25).WithMessage("组合单号:不能超过最大长度,25.");
+ RuleFor(tb_ProdMerge =>tb_ProdMerge.MergeNo).MaximumMixedLength(50).WithMessage("组合单号:不能超过最大长度,50.");
 
 
  RuleFor(tb_ProdMerge =>tb_ProdMerge.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产出对象:下拉选择值不正确。");
 
- RuleFor(tb_ProdMerge =>tb_ProdMerge.SKU).MaximumLength(40).WithMessage("SKU码:不能超过最大长度,40.");
+ RuleFor(tb_ProdMerge =>tb_ProdMerge.SKU).MaximumMixedLength(80).WithMessage("SKU码:不能超过最大长度,80.");
 
 //***** 
  RuleFor(tb_ProdMerge =>tb_ProdMerge.MergeTargetQty).NotNull().WithMessage("产出数量:不能为空。");
@@ -56,14 +56,14 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdMerge =>tb_ProdMerge.MergeSourceTotalQty).NotNull().WithMessage("子件总数量:不能为空。");
 
- RuleFor(tb_ProdMerge =>tb_ProdMerge.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_ProdMerge =>tb_ProdMerge.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
- RuleFor(tb_ProdMerge =>tb_ProdMerge.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_ProdMerge =>tb_ProdMerge.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
  RuleFor(tb_ProdMerge =>tb_ProdMerge.BOM_ID).Must(CheckForeignKeyValueCanNull).WithMessage("组合配方:下拉选择值不正确。");
  RuleFor(tb_ProdMerge =>tb_ProdMerge.BOM_ID).NotEmpty().When(x => x.BOM_ID.HasValue);
 
- RuleFor(tb_ProdMerge =>tb_ProdMerge.BOM_No).MaximumLength(25).WithMessage("配方编号:不能超过最大长度,25.");
+ RuleFor(tb_ProdMerge =>tb_ProdMerge.BOM_No).MaximumMixedLength(50).WithMessage("配方编号:不能超过最大长度,50.");
 
 
  RuleFor(tb_ProdMerge =>tb_ProdMerge.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -75,7 +75,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdMerge =>tb_ProdMerge.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_ProdMerge =>tb_ProdMerge.ApprovalOpinions).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");
+ RuleFor(tb_ProdMerge =>tb_ProdMerge.ApprovalOpinions).MaximumMixedLength(500).WithMessage("审批意见:不能超过最大长度,500.");
 
  RuleFor(tb_ProdMerge =>tb_ProdMerge.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

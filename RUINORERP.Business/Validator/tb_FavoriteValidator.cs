@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：08/08/2025 13:45:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,16 +40,16 @@ namespace RUINORERP.Business
      
  RuleFor(tb_Favorite =>tb_Favorite.ReferenceID).NotEmpty().When(x => x.ReferenceID.HasValue);
 
- RuleFor(tb_Favorite =>tb_Favorite.Ref_Table_Name).MaximumLength(50).WithMessage("引用表名:不能超过最大长度,50.");
+ RuleFor(tb_Favorite =>tb_Favorite.Ref_Table_Name).MaximumMixedLength(100).WithMessage("引用表名:不能超过最大长度,100.");
 
- RuleFor(tb_Favorite =>tb_Favorite.ModuleName).MaximumLength(127).WithMessage("模块名:不能超过最大长度,127.");
+ RuleFor(tb_Favorite =>tb_Favorite.ModuleName).MaximumMixedLength(255).WithMessage("模块名:不能超过最大长度,255.");
 
- RuleFor(tb_Favorite =>tb_Favorite.BusinessType).MaximumLength(127).WithMessage("业务类型:不能超过最大长度,127.");
-
-
+ RuleFor(tb_Favorite =>tb_Favorite.BusinessType).MaximumMixedLength(255).WithMessage("业务类型:不能超过最大长度,255.");
 
 
- RuleFor(tb_Favorite =>tb_Favorite.Notes).MaximumLength(250).WithMessage("备注说明:不能超过最大长度,250.");
+
+
+ RuleFor(tb_Favorite =>tb_Favorite.Notes).MaximumMixedLength(500).WithMessage("备注说明:不能超过最大长度,500.");
 
 
  RuleFor(tb_Favorite =>tb_Favorite.Owner_by).NotEmpty().When(x => x.Owner_by.HasValue);

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:34:12
+// 时间：08/08/2025 13:45:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -67,7 +67,7 @@ namespace RUINORERP.UI
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.Subject_id = Int64.Parse(txtSubject_id.Text);
                         entity.CheckOutDate = DateTime.Parse(txtCheckOutDate.Text);
-                        entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);
+                        entity.SingleTotalAmount = Decimal.Parse(txtSingleTotalAmount.Text);
                         entity.IncludeTax = Boolean.Parse(txtIncludeTax.Text);
                         entity.Summary = txtSummary.Text ;
                        entity.TaxAmount = Decimal.Parse(txtTaxAmount.Text);
@@ -86,22 +86,22 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_FM_OtherExpense>(entity, k => k.ExpenseMainID, v=>v.XXNAME, cmbExpenseMainID);
-Account_id主外字段不一致。Subject_id主外字段不一致。           DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.ExpenseName, txtExpenseName, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.ExpenseName, txtExpenseName, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
-Account_id主外字段不一致。Subject_id主外字段不一致。          // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
-Account_id主外字段不一致。Subject_id主外字段不一致。          Account_id主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_FM_ExpenseType>(entity, k => k.ExpenseType_id, v=>v.XXNAME, cmbExpenseType_id);
-Subject_id主外字段不一致。          Account_id主外字段不一致。Subject_id主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.Account_id, txtAccount_id, BindDataType4TextBox.Qty,false);
+          // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
+          // DataBindingHelper.BindData4Cmb<tb_FM_ExpenseType>(entity, k => k.ExpenseType_id, v=>v.XXNAME, cmbExpenseType_id);
+          // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
-Account_id主外字段不一致。Subject_id主外字段不一致。          Account_id主外字段不一致。Subject_id主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.Subject_id, txtSubject_id, BindDataType4TextBox.Qty,false);
+          // DataBindingHelper.BindData4Cmb<tb_FM_Subject>(entity, k => k.Subject_id, v=>v.XXNAME, cmbSubject_id);
            DataBindingHelper.BindData4DataTime<tb_FM_OtherExpenseDetail>(entity, t => t.CheckOutDate, dtpCheckOutDate,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_FM_OtherExpenseDetail>(entity, t => t.IncludeTax, chkIncludeTax, false);
+           DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.SingleTotalAmount.ToString(), txtSingleTotalAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_OtherExpenseDetail>(entity, t => t.IncludeTax, chkIncludeTax, false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.TaxAmount.ToString(), txtTaxAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.UntaxedAmount.ToString(), txtUntaxedAmount, BindDataType4TextBox.Money,false);
           // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
-Account_id主外字段不一致。Subject_id主外字段不一致。           DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.EvidenceImagePath, txtEvidenceImagePath, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_OtherExpenseDetail>(entity, t => t.EvidenceImagePath, txtEvidenceImagePath, BindDataType4TextBox.Text,false);
 }
 
 

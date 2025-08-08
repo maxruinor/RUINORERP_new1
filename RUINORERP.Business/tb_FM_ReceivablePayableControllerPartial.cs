@@ -819,16 +819,20 @@ namespace RUINORERP.Business
 
         }
 
+
         #region 从预收付款中正向抵扣 [反审]
 
         /// <summary>
         /// 预收付款抵扣-的反操作
         /// 这个反审有一个类型是 来自销售出库，采购入库的反操作，因为都是自动生成。他们的反操作时要删除。不然会重复生成。
         /// 如果这反审是应收应付的财务反审，则不需要删除。会再次修改审核，所以这里需要一个开关
+        /// 这个反操作，就是撤销预付的抵扣,如果指定的撤销对象可以不用一一对应，否则要一一对应
         /// </summary>
         /// <param name="AutoAntiApproval">如果自动审核为真时，则会删除应收付款单据，否则保存用于人工修改</param>
+        /// <param name="preReceivedPayments">撤销时，指定了预收付时则不用一一对应，否则要一一对应</param>
         /// <param name="UseTransaction">外层有事务时这里传false</param>
-        public async Task<bool> AntiApplyManualPaymentAllocation(tb_FM_ReceivablePayable payable, ReceivePaymentType paymentType, bool AutoAntiApproval, bool UseTransaction = true)
+        public async Task<bool> AntiApplyManualPaymentAllocation(tb_FM_ReceivablePayable payable, ReceivePaymentType paymentType,
+           bool AutoAntiApproval, bool UseTransaction = true)
         {
             bool result = false;
             try
@@ -929,7 +933,7 @@ namespace RUINORERP.Business
                     #endregion
 
                     //要根据他核销的是预收的。还是收款单的 分别处理
-                    switch (payable.ARAPStatus)
+                    switch (payable.ARAPStatus.Value)
                     {
                         case (int)ARAPStatus.全部支付:
                         case (int)ARAPStatus.部分支付:
@@ -939,8 +943,7 @@ namespace RUINORERP.Business
                             {
                                 _unitOfWorkManage.RollbackTran();
                             }
-                            _unitOfWorkManage.RollbackTran();
-                            string msg = $"应{(ReceivePaymentType)payable.ReceivePaymentType}单状态为【{payable.ARAPStatus}】，无法反核销。请联系管理员";
+                            string msg = $"应{(ReceivePaymentType)payable.ReceivePaymentType}单状态为【{((ARAPStatus)payable.ARAPStatus.Value).ToString()}】，无法反核销。请联系管理员";
                             _logger.LogInformation(msg);
                             break;
                         case (int)ARAPStatus.草稿:
@@ -1005,6 +1008,285 @@ namespace RUINORERP.Business
                 #endregion
 
                 #region 更新原来业务单据
+                switch (payable.SourceBizType)
+                {
+                    case (int)BizType.销售出库单:
+
+                        var saleout = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
+                            .Includes(c => c.tb_saleorder)
+                            .Includes(c => c.tb_SaleOutDetails)
+                         .Where(x => (x.SaleOut_MainID == payable.SourceBillId))
+                         .SingleAsync();
+
+
+                        if (saleout.tb_saleorder.Deposit > 0 && saleout.PayStatus != (int)PayStatus.部分预付)
+                        {
+                            saleout.tb_saleorder.PayStatus = (int)PayStatus.部分预付;
+                            await _unitOfWorkManage.GetDbClient().Updateable(saleout.tb_saleorder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                            if (saleout.TotalAmount == saleout.TotalAmount && saleout.PayStatus == (int)PayStatus.部分付款)
+                            {
+                                saleout.PayStatus = (int)PayStatus.部分预付;
+                                await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                            }
+                        }
+
+                        //要验证
+                        if (saleout.tb_saleorder.Deposit == 0 && saleout.PayStatus != (int)PayStatus.全额预付)
+                        {
+                            saleout.tb_saleorder.PayStatus = (int)PayStatus.全额预付;
+                            await _unitOfWorkManage.GetDbClient().Updateable(saleout.tb_saleorder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                            if (saleout.TotalAmount == saleout.TotalAmount && saleout.PayStatus == (int)PayStatus.全部付款)
+                            {
+                                saleout.PayStatus = (int)PayStatus.全额预付;
+                                await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                            }
+                        }
+
+
+                        break;
+                    case (int)BizType.采购入库单:
+
+                        var purentry = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntry>()
+                            .Includes(c => c.tb_purorder)
+                            .Includes(c => c.tb_PurEntryDetails)
+                         .Where(x => (x.PurEntryID == payable.SourceBillId))
+                         .SingleAsync();
+
+                        if (payable.LocalPaidAmount < purentry.TotalAmount && purentry.PayStatus != (int)PayStatus.部分预付)
+                        {
+                            purentry.PayStatus = (int)PayStatus.部分预付;
+                            await _unitOfWorkManage.GetDbClient().Updateable(purentry).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                        }
+                        if (payable.LocalPaidAmount < purentry.TotalAmount && purentry.TotalAmount < purentry.tb_purorder.TotalAmount)
+                        {
+                            purentry.tb_purorder.PayStatus = (int)PayStatus.部分预付;
+                            await _unitOfWorkManage.GetDbClient().Updateable(purentry.tb_purorder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                        }
+
+                        if (payable.LocalPaidAmount == purentry.TotalAmount && purentry.PayStatus != (int)PayStatus.全额预付)
+                        {
+                            purentry.PayStatus = (int)PayStatus.全额预付;
+                            await _unitOfWorkManage.GetDbClient().Updateable(purentry).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                        }
+                        if (payable.LocalPaidAmount == purentry.TotalAmount && purentry.TotalAmount == purentry.tb_purorder.TotalAmount)
+                        {
+                            purentry.tb_purorder.PayStatus = (int)PayStatus.全额预付;
+                            await _unitOfWorkManage.GetDbClient().Updateable(purentry.tb_purorder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                        }
+
+                        break;
+                }
+                #endregion
+
+                //只更新指定列
+                var updateResult = await _unitOfWorkManage.GetDbClient().Updateable(payable).UpdateColumns(it => new
+                {
+                    it.ForeignPaidAmount,
+                    it.LocalPaidAmount,
+                    it.ForeignBalanceAmount,
+                    it.LocalBalanceAmount,
+                    it.ARAPStatus,
+                    it.ApprovalStatus,
+                    it.ApprovalResults,
+                    it.ApprovalOpinions
+                }).ExecuteCommandAsync();
+                // 注意信息的完整性
+                if (UseTransaction)
+                {
+                    _unitOfWorkManage.CommitTran();
+                }
+                result = true;
+            }
+            catch (Exception ex)
+            {
+                if (UseTransaction)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    _logger.Error(ex, "事务回滚" + ex.Message);
+                }
+                result = false;
+            }
+            return result;
+        }
+
+
+
+
+
+        #endregion
+
+
+        #region 撤销 从预收付款中正向的抵扣金额
+
+        /// <summary>
+        /// 这个反审有一个类型是 来自销售出库，采购入库的反操作，因为都是自动生成。他们的反操作时要删除。不然会重复生成。
+        /// 如果这反审是应收应付的财务反审，则不需要删除。会再次修改审核，所以这里需要一个开关
+        /// 这个反操作，就是撤销预付的抵扣,如果指定的撤销对象可以不用一一对应，否则要一一对应
+        /// </summary>
+        /// <param name="PrePayments">撤销时，指定了预收付时则不用一一对应，否则要一一对应</param>
+        /// <param name="UseTransaction">外层有事务时这里传false</param>
+        public async Task<bool> RevokeApplyManualPaymentAllocation(tb_FM_ReceivablePayable payable, ReceivePaymentType paymentType,
+        List<KeyValuePair<tb_FM_PreReceivedPayment, tb_FM_PaymentSettlement>> PrePaySettlements, bool UseTransaction = true)
+        {
+            //应收付状态降级
+            //预收付状态变化
+            //金额变化
+            bool result = false;
+            try
+            {
+                decimal remainingLocal = payable.LocalBalanceAmount; // 本币要支付的金额
+                decimal remainingForeign = payable.ForeignBalanceAmount; // 外币要支付的金额
+                if (UseTransaction)
+                {
+                    // 开启事务，保证数据一致性
+                    _unitOfWorkManage.BeginTran();
+                }
+
+                #region 反写预收付款
+
+                List<tb_FM_ReceivablePayable> arapupdatelist = new List<tb_FM_ReceivablePayable>();
+                List<tb_FM_PreReceivedPayment> prePaymentsUpdateList = new List<tb_FM_PreReceivedPayment>();
+                //产生两个相同出库单号的应付，只有退款 红冲 一正一负
+
+                if (payable.ARAPStatus == (int)ARAPStatus.草稿
+                    || payable.ARAPStatus == (int)ARAPStatus.待审核)
+                {
+
+                    throw new Exception("应收款状态错误，不能进行撤销抵扣");
+                }
+                else
+                {
+                    //根据不同情况处理： 如果没有收款记录，
+                    #region 如果有核销过，或部分支付
+                    //通过核销记录来处理
+                    #region 通过核销记录来处理 如果核销记录中是来自预收付的 则恢复，如果是来自收款单的则无法直接反审出库单。
+
+                    foreach (var item in PrePaySettlements)
+                    {
+                        if (paymentType == ReceivePaymentType.收款)
+                        {
+                            //预收转应收时
+                            if (payable.SourceBizType == (int)BizType.销售出库单)
+                            {
+                                // 要把抵扣掉的预付的 恢复回去，这里恢复是反操作。查询条件是按主键来的。只会一条数据
+                                var prePayment = item.Key as tb_FM_PreReceivedPayment;
+                                var Settlement = item.Value as tb_FM_PaymentSettlement;
+                                if (prePayment != null)
+                                {
+                                    prePayment.ForeignBalanceAmount += Settlement.SettledForeignAmount;
+                                    prePayment.LocalBalanceAmount += Settlement.SettledLocalAmount;
+                                    prePayment.LocalPaidAmount -= Settlement.SettledLocalAmount;
+                                    prePayment.ForeignPaidAmount -= Settlement.SettledForeignAmount;
+                                    if (prePayment.LocalPaidAmount == 0)
+                                    {
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
+                                    }
+                                    else if (prePayment.LocalPaidAmount < prePayment.LocalBalanceAmount)
+                                    {
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
+                                    }
+                                    payable.LocalBalanceAmount += Settlement.SettledLocalAmount;
+                                    payable.ForeignBalanceAmount += Settlement.SettledForeignAmount;
+                                    payable.ForeignPaidAmount -= Settlement.SettledForeignAmount;
+                                    payable.LocalPaidAmount -= Settlement.SettledLocalAmount;
+                                    prePaymentsUpdateList.Add(prePayment);
+
+                                    //Settlement 逻辑删除
+                                    Settlement.isdeleted = true;
+                                    await _unitOfWorkManage.GetDbClient().Updateable(Settlement).UpdateColumns(it => new
+                                    {
+                                        it.isdeleted
+                                    }).ExecuteCommandAsync();
+                                }
+
+                                //更新预收款对应的业务单据：销售订单
+                                if (prePayment.SourceBizType == (int)BizType.销售订单)
+                                {
+                                    var SaleOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
+                                           .Includes(c => c.tb_SaleOuts)
+                                        .Where(x => (x.SOrder_ID == prePayment.SourceBillId))
+                                        .SingleAsync();
+
+                                    if (SaleOrder.Deposit > 0 && SaleOrder.PayStatus != (int)PayStatus.部分预付)
+                                    {
+                                        SaleOrder.PayStatus = (int)PayStatus.部分预付;
+                                        await _unitOfWorkManage.GetDbClient().Updateable(SaleOrder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                                        foreach (var saleout in SaleOrder.tb_SaleOuts)
+                                        {
+                                            if (saleout.TotalAmount == saleout.TotalAmount && saleout.PayStatus == (int)PayStatus.部分付款)
+                                            {
+                                                saleout.PayStatus = (int)PayStatus.部分预付;
+                                                await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                                            }
+                                        }
+                                        
+                                    }
+
+                                    //要验证
+                                    if (SaleOrder.Deposit == 0 && SaleOrder.PayStatus != (int)PayStatus.全额预付)
+                                    {
+                                        SaleOrder.PayStatus = (int)PayStatus.全额预付;
+                                        await _unitOfWorkManage.GetDbClient().Updateable(SaleOrder).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+
+                                        foreach (var saleout in SaleOrder.tb_SaleOuts)
+                                        {
+                                            if (saleout.TotalAmount == saleout.TotalAmount && saleout.PayStatus == (int)PayStatus.全部付款)
+                                            {
+                                                saleout.PayStatus = (int)PayStatus.全额预付;
+                                                await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (payable.LocalPaidAmount == 0)
+                    {
+                        payable.ARAPStatus = (int)ARAPStatus.待支付;
+                    }
+                    //else if (payable.LocalPaidAmount < payable.LocalBalanceAmount)
+                    //{
+                    //    payable.ARAPStatus = (int)ARAPStatus.部分支付;
+                    //}
+                    else if (payable.TotalLocalPayableAmount > payable.LocalBalanceAmount)//应付的金额永远大于已经付的
+                    {
+                        payable.ARAPStatus = (int)ARAPStatus.部分支付;
+                    }
+
+                    #endregion
+
+                    #endregion
+
+                }
+                arapupdatelist.Add(payable);
+
+                if (prePaymentsUpdateList.Any())
+                {
+                    var resultprePayment = await _unitOfWorkManage.GetDbClient().Updateable(prePaymentsUpdateList).UpdateColumns(it => new
+                    {
+                        it.ForeignPaidAmount,
+                        it.LocalPaidAmount,
+                        it.ForeignBalanceAmount,
+                        it.LocalBalanceAmount,
+                        it.PrePaymentStatus,
+                    }).ExecuteCommandAsync();
+                }
+                if (arapupdatelist.Any())
+                {
+                    var resultprePayment = await _unitOfWorkManage.GetDbClient().Updateable(arapupdatelist).UpdateColumns(it => new
+                    {
+                        it.ForeignPaidAmount,
+                        it.LocalPaidAmount,
+                        it.ForeignBalanceAmount,
+                        it.LocalBalanceAmount,
+                        it.ARAPStatus,
+                    }).ExecuteCommandAsync();
+                }
+                #endregion
+
+                #region 恢复更新原来业务单据
                 switch (payable.SourceBizType)
                 {
                     case (int)BizType.销售出库单:
@@ -1484,7 +1766,7 @@ namespace RUINORERP.Business
                                        .ToListAsync();
                         if (prePayment.Count > 0)
                         {
-                          
+
                             if (receivablePayable.TotalLocalPayableAmount == prePayment[0].LocalPrepaidAmount &&
                                                        receivablePayable.TotalLocalPayableAmount == prePayment[0].LocalBalanceAmount)
                             {
@@ -1497,6 +1779,34 @@ namespace RUINORERP.Business
 
             return keyValuePairs;
         }
+
+
+
+
+
+
+        /// <summary>
+        /// 查找可撤销抵扣的预收付款单
+        /// </summary>
+        /// <param name="receivablePayable"></param>
+        /// <returns></returns>
+        public async Task<List<tb_FM_PreReceivedPayment>> FindAvailableAntiOffset(tb_FM_ReceivablePayable receivablePayable, List<tb_FM_PaymentSettlement> settlements)
+        {
+
+            long[] statementIds = settlements.Where(c => c.SourceBillId.HasValue).ToList().Select(c => c.SourceBillId.Value).ToArray();
+
+            var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                         .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.IsAvailable == true)
+                         .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.全额核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                         .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
+                         .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType
+                          && statementIds.Contains(c.PreRPID)
+                         )
+                         .OrderBy(c => c.PrePayDate)
+                         .ToListAsync();
+            return prePayment;
+        }
+
         /// <summary>
         /// 查找可抵扣的预收付款单
         /// </summary>
@@ -1512,11 +1822,6 @@ namespace RUINORERP.Business
                          //.Where(p => p.LocalBalanceAmount > 0)
                          .OrderBy(c => c.PrePayDate)
                          .ToListAsync();
-
-
-
-
-
             return prePayment;
         }
 

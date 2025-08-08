@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:30
+// 时间：08/08/2025 13:46:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,26 +45,36 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.PurEntryID).NotNull().WithMessage("采购入库单:不能为空。");
 
- RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
 
  RuleFor(x => x.UnitPrice).PrecisionScale(19,4,true).WithMessage("单价:小数位不能超过4。");
 
- 
+ RuleFor(x => x.CustomizedCost).PrecisionScale(19,4,true).WithMessage("定制成本:小数位不能超过4。");
+
+ RuleFor(x => x.UntaxedCustomizedCost).PrecisionScale(19,4,true).WithMessage("未税定制成本:小数位不能超过4。");
+
+
 
  RuleFor(x => x.TaxRate).PrecisionScale(5,2,true).WithMessage("税率:小数位不能超过2。");
 
  RuleFor(x => x.TaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
- 
- RuleFor(x => x.SubtotalAmount).PrecisionScale(19,4,true).WithMessage("小计:小数位不能超过4。");
 
- RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.CustomertModel).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
+ RuleFor(x => x.UntaxedUnitPrice).PrecisionScale(19,4,true).WithMessage("未税单价:小数位不能超过4。");
 
- RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
 
- 
+ RuleFor(x => x.SubtotalAmount).PrecisionScale(19,4,true).WithMessage("成交小计:小数位不能超过4。");
+
+ RuleFor(x => x.SubtotalUntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税金额小计:小数位不能超过4。");
+
+ RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.VendorModelCode).MaximumMixedLength(50).WithMessage("厂商型号:不能超过最大长度,50.");
+
+ RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.CustomertModel).MaximumMixedLength(50).WithMessage("客户型号:不能超过最大长度,50.");
+
+ RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
+
 
 //***** 
  RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.ReturnedQty).NotNull().WithMessage("退回数:不能为空。");
@@ -73,6 +83,10 @@ namespace RUINORERP.Business
  RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
 
  RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.PurOrder_ChildID).NotEmpty().When(x => x.PurOrder_ChildID.HasValue);
+
+ RuleFor(x => x.AllocatedFreightCost).PrecisionScale(19,4,true).WithMessage("运费成本分摊:小数位不能超过4。");
+
+ RuleFor(tb_PurEntryDetail =>tb_PurEntryDetail.FreightAllocationRules).NotEmpty().When(x => x.FreightAllocationRules.HasValue);
 
            	        Initialize();
      }

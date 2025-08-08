@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/16/2025 12:02:52
+// 时间：08/08/2025 13:45:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_CurrencyExchangeRate =>tb_CurrencyExchangeRate.ConversionName).MaximumLength(25).WithMessage("换算名称:不能超过最大长度,25.");
+ RuleFor(tb_CurrencyExchangeRate =>tb_CurrencyExchangeRate.ConversionName).MaximumMixedLength(50).WithMessage("换算名称:不能超过最大长度,50.");
  RuleFor(tb_CurrencyExchangeRate =>tb_CurrencyExchangeRate.ConversionName).NotEmpty().WithMessage("换算名称:不能为空。");
 
 //***** 
@@ -55,7 +55,7 @@ namespace RUINORERP.Business
 
 //有默认值
 
-//有默认值
+ RuleFor(tb_CurrencyExchangeRate =>tb_CurrencyExchangeRate.Notes).MaximumMixedLength(100).WithMessage(":不能超过最大长度,100.");
 
 
  RuleFor(tb_CurrencyExchangeRate =>tb_CurrencyExchangeRate.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

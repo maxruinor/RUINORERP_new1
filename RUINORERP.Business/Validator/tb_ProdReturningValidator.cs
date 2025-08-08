@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:30
+// 时间：08/08/2025 13:45:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,7 +44,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdReturning =>tb_ProdReturning.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("归还人:下拉选择值不正确。");
  RuleFor(tb_ProdReturning =>tb_ProdReturning.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
 
- RuleFor(tb_ProdReturning =>tb_ProdReturning.ReturnNo).MaximumLength(25).WithMessage("归还单号:不能超过最大长度,25.");
+ RuleFor(tb_ProdReturning =>tb_ProdReturning.ReturnNo).MaximumMixedLength(50).WithMessage("归还单号:不能超过最大长度,50.");
 
 //***** 
  RuleFor(tb_ProdReturning =>tb_ProdReturning.TotalQty).NotNull().WithMessage("总数量:不能为空。");
@@ -54,11 +54,11 @@ namespace RUINORERP.Business
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总金额:小数位不能超过4。");
 
 
- RuleFor(tb_ProdReturning =>tb_ProdReturning.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_ProdReturning =>tb_ProdReturning.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
  RuleFor(tb_ProdReturning =>tb_ProdReturning.BorrowID).Must(CheckForeignKeyValue).WithMessage("借出单:下拉选择值不正确。");
 
- RuleFor(tb_ProdReturning =>tb_ProdReturning.BorrowNO).MaximumLength(25).WithMessage("借出单号:不能超过最大长度,25.");
+ RuleFor(tb_ProdReturning =>tb_ProdReturning.BorrowNO).MaximumMixedLength(50).WithMessage("借出单号:不能超过最大长度,50.");
  RuleFor(tb_ProdReturning =>tb_ProdReturning.BorrowNO).NotEmpty().WithMessage("借出单号:不能为空。");
 
 
@@ -71,7 +71,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdReturning =>tb_ProdReturning.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_ProdReturning =>tb_ProdReturning.ApprovalOpinions).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");
+ RuleFor(tb_ProdReturning =>tb_ProdReturning.ApprovalOpinions).MaximumMixedLength(500).WithMessage("审批意见:不能超过最大长度,500.");
 
  RuleFor(tb_ProdReturning =>tb_ProdReturning.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 
@@ -81,7 +81,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdReturning =>tb_ProdReturning.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
- RuleFor(tb_ProdReturning =>tb_ProdReturning.CloseCaseOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_ProdReturning =>tb_ProdReturning.CloseCaseOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
            	                //long
                 //ReturnID

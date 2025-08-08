@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:27
+// 时间：08/08/2025 13:45:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,9 +38,9 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_Images =>tb_Images.Images).MaximumLength(127).WithMessage(":不能超过最大长度,127.");
+ RuleFor(tb_Images =>tb_Images.Images).MaximumMixedLength(255).WithMessage(":不能超过最大长度,255.");
 
- RuleFor(tb_Images =>tb_Images.Images_Path).MaximumLength(250).WithMessage(":不能超过最大长度,250.");
+ RuleFor(tb_Images =>tb_Images.Images_Path).MaximumMixedLength(500).WithMessage(":不能超过最大长度,500.");
 
            	        Initialize();
      }

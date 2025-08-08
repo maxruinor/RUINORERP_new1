@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:43
+// 时间：08/08/2025 13:45:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,7 +44,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
- RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
@@ -52,9 +52,9 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.DeliveredQty).NotNull().WithMessage("交付数量:不能为空。");
 
- RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.RepairContent).MaximumLength(250).WithMessage("维修内容:不能超过最大长度,250.");
+ RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.RepairContent).MaximumMixedLength(500).WithMessage("维修内容:不能超过最大长度,500.");
 
- RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
+ RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
            	        Initialize();
      }

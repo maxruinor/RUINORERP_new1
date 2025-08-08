@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/16/2024 20:05:38
+// 时间：08/08/2025 13:46:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,6 +51,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -60,6 +62,7 @@ namespace RUINORERP.UI
         tb_PurReturnEntryDetail entity = new tb_PurReturnEntryDetail();
                      entity.PurReEntry_ID = Int64.Parse(txtPurReEntry_ID.Text);
                         entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
+                        entity.PurEntryRe_CID = Int64.Parse(txtPurEntryRe_CID.Text);
                         entity.CustomertModel = txtCustomertModel.Text ;
                        entity.Location_ID = Int64.Parse(txtLocation_ID.Text);
                         entity.Rack_ID = Int64.Parse(txtRack_ID.Text);
@@ -72,7 +75,8 @@ namespace RUINORERP.UI
                         entity.TaxRate = Decimal.Parse(txtTaxRate.Text);
                         entity.TaxAmount = Decimal.Parse(txtTaxAmount.Text);
                         entity.SubtotalTrPriceAmount = Decimal.Parse(txtSubtotalTrPriceAmount.Text);
-                        entity.Summary = txtSummary.Text ;
+                        entity.VendorModelCode = txtVendorModelCode.Text ;
+                       entity.Summary = txtSummary.Text ;
                        entity.DiscountAmount = Decimal.Parse(txtDiscountAmount.Text);
                         entity.IsIncludeTax = Boolean.Parse(txtIsIncludeTax.Text);
                                 return entity;
@@ -87,6 +91,7 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_PurReturnEntry>(entity, k => k.PurReEntry_ID, v=>v.XXNAME, cmbPurReEntry_ID);
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
+           DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.PurEntryRe_CID, txtPurEntryRe_CID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.CustomertModel, txtCustomertModel, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
           // DataBindingHelper.BindData4Cmb<tb_StorageRack>(entity, k => k.Rack_ID, v=>v.XXNAME, cmbRack_ID);
@@ -95,13 +100,14 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.UnitPrice.ToString(), txtUnitPrice, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.Discount.ToString(), txtDiscount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.TransactionPrice.ToString(), txtTransactionPrice, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_PurReturnEntryDetail>(entity, t => t.IsGift, chkIsGift, false);
+           DataBindingHelper.BindData4CheckBox<tb_PurReturnEntryDetail>(entity, t => t.IsGift, chkIsGift, false);
            DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.TaxAmount.ToString(), txtTaxAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.SubtotalTrPriceAmount.ToString(), txtSubtotalTrPriceAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.VendorModelCode, txtVendorModelCode, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_PurReturnEntryDetail>(entity, t => t.DiscountAmount.ToString(), txtDiscountAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_PurReturnEntryDetail>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
+           DataBindingHelper.BindData4CheckBox<tb_PurReturnEntryDetail>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
 }
 
 

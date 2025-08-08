@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:07:04
+// 时间：08/08/2025 13:46:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 其它费用统计分析验证类
+    /// 其他费用统计分析验证类
     /// </summary>
     /*public partial class View_FM_OtherExpenseItemsValidator:AbstractValidator<View_FM_OtherExpenseItems>*/
     public partial class View_FM_OtherExpenseItemsValidator:BaseValidatorGeneric<View_FM_OtherExpenseItems>
@@ -38,7 +38,6 @@ namespace RUINORERP.Business
  
         
      
-
 
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 14:22:23
+// 时间：08/08/2025 13:45:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,15 +44,15 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.SourceBillId).NotEmpty().When(x => x.SourceBillId.HasValue);
 
- RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.SourceBillNo).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.SourceBillNo).MaximumMixedLength(30).WithMessage("来源单号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.ItemType).NotEmpty().When(x => x.ItemType.HasValue);
 
  RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);
 
- RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
- RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.Specifications).MaximumLength(500).WithMessage("规格:不能超过最大长度,500.");
+ RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.Specifications).MaximumMixedLength(1000).WithMessage("规格:不能超过最大长度,1000.");
 
  RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.Unit_ID).NotEmpty().When(x => x.Unit_ID.HasValue);
 
@@ -67,7 +67,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.SubtotalAmount).PrecisionScale(19,4,true).WithMessage("明细金额:小数位不能超过4。");
 
- RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.Summary).MaximumLength(150).WithMessage("摘要:不能超过最大长度,150.");
+ RuleFor(tb_FM_InvoiceDetail =>tb_FM_InvoiceDetail.Summary).MaximumMixedLength(300).WithMessage("摘要:不能超过最大长度,300.");
 
            	        Initialize();
      }

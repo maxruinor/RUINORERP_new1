@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 22:58:10
+// 时间：08/08/2025 13:46:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,10 +41,10 @@ namespace RUINORERP.Business
  RuleFor(tb_UIGridSetting =>tb_UIGridSetting.UIMenuPID).Must(CheckForeignKeyValueCanNull).WithMessage("菜单设置:下拉选择值不正确。");
  RuleFor(tb_UIGridSetting =>tb_UIGridSetting.UIMenuPID).NotEmpty().When(x => x.UIMenuPID.HasValue);
 
- RuleFor(tb_UIGridSetting =>tb_UIGridSetting.GridKeyName).MaximumLength(127).WithMessage("表格名称:不能超过最大长度,127.");
+ RuleFor(tb_UIGridSetting =>tb_UIGridSetting.GridKeyName).MaximumMixedLength(255).WithMessage("表格名称:不能超过最大长度,255.");
 
 
- RuleFor(tb_UIGridSetting =>tb_UIGridSetting.GridType).MaximumLength(25).WithMessage("表格类型:不能超过最大长度,25.");
+ RuleFor(tb_UIGridSetting =>tb_UIGridSetting.GridType).MaximumMixedLength(50).WithMessage("表格类型:不能超过最大长度,50.");
 
  RuleFor(tb_UIGridSetting =>tb_UIGridSetting.ColumnsMode).NotEmpty().When(x => x.ColumnsMode.HasValue);
 

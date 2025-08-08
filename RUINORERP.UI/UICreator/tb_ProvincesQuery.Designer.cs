@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:46
+// 时间：08/08/2025 13:46:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -50,7 +50,10 @@ namespace RUINORERP.UI
         
      //for start
      
-     this.lblProvinceCNName = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+     this.lblRegion_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.cmbRegion_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
+
+this.lblProvinceCNName = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtProvinceCNName = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 
@@ -61,33 +64,50 @@ this.txtProvinceENName = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
     this.SuspendLayout();
     
          //for start
-                 //#####80ProvinceCNName###String
+                 //#####Region_ID###Int64
+//属性测试25Region_ID
+this.lblRegion_ID.AutoSize = true;
+this.lblRegion_ID.Location = new System.Drawing.Point(100,25);
+this.lblRegion_ID.Name = "lblRegion_ID";
+this.lblRegion_ID.Size = new System.Drawing.Size(41, 12);
+this.lblRegion_ID.TabIndex = 1;
+this.lblRegion_ID.Text = "地区";
+//111======25
+this.cmbRegion_ID.Location = new System.Drawing.Point(173,21);
+this.cmbRegion_ID.Name ="cmbRegion_ID";
+this.cmbRegion_ID.Size = new System.Drawing.Size(100, 21);
+this.cmbRegion_ID.TabIndex = 1;
+this.Controls.Add(this.lblRegion_ID);
+this.Controls.Add(this.cmbRegion_ID);
+
+           //#####80ProvinceCNName###String
 this.lblProvinceCNName.AutoSize = true;
-this.lblProvinceCNName.Location = new System.Drawing.Point(100,25);
+this.lblProvinceCNName.Location = new System.Drawing.Point(100,50);
 this.lblProvinceCNName.Name = "lblProvinceCNName";
 this.lblProvinceCNName.Size = new System.Drawing.Size(41, 12);
-this.lblProvinceCNName.TabIndex = 1;
+this.lblProvinceCNName.TabIndex = 2;
 this.lblProvinceCNName.Text = "省份中文名";
-this.txtProvinceCNName.Location = new System.Drawing.Point(173,21);
+this.txtProvinceCNName.Location = new System.Drawing.Point(173,46);
 this.txtProvinceCNName.Name = "txtProvinceCNName";
 this.txtProvinceCNName.Size = new System.Drawing.Size(100, 21);
-this.txtProvinceCNName.TabIndex = 1;
+this.txtProvinceCNName.TabIndex = 2;
 this.Controls.Add(this.lblProvinceCNName);
 this.Controls.Add(this.txtProvinceCNName);
 
            //#####CountryID###Int64
+//属性测试75CountryID
 
            //#####80ProvinceENName###String
 this.lblProvinceENName.AutoSize = true;
-this.lblProvinceENName.Location = new System.Drawing.Point(100,75);
+this.lblProvinceENName.Location = new System.Drawing.Point(100,100);
 this.lblProvinceENName.Name = "lblProvinceENName";
 this.lblProvinceENName.Size = new System.Drawing.Size(41, 12);
-this.lblProvinceENName.TabIndex = 3;
+this.lblProvinceENName.TabIndex = 4;
 this.lblProvinceENName.Text = "省份英文名";
-this.txtProvinceENName.Location = new System.Drawing.Point(173,71);
+this.txtProvinceENName.Location = new System.Drawing.Point(173,96);
 this.txtProvinceENName.Name = "txtProvinceENName";
 this.txtProvinceENName.Size = new System.Drawing.Size(100, 21);
-this.txtProvinceENName.TabIndex = 3;
+this.txtProvinceENName.TabIndex = 4;
 this.Controls.Add(this.lblProvinceENName);
 this.Controls.Add(this.txtProvinceENName);
 
@@ -99,6 +119,9 @@ this.Controls.Add(this.txtProvinceENName);
             
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+                this.Controls.Add(this.lblRegion_ID );
+this.Controls.Add(this.cmbRegion_ID );
+
                 this.Controls.Add(this.lblProvinceCNName );
 this.Controls.Add(this.txtProvinceCNName );
 
@@ -118,6 +141,11 @@ this.Controls.Add(this.txtProvinceENName );
      //for start
      
          
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblRegion_ID;
+private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbRegion_ID;
+
+    
+        
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblProvinceCNName;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtProvinceCNName;
 

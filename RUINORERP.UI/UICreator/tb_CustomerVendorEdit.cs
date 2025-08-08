@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/08/2025 12:05:04
+// 时间：08/08/2025 13:45:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -33,6 +33,7 @@ namespace RUINORERP.UI
      
                          InitializeComponent();
       
+        
         
         
         
@@ -95,7 +96,8 @@ namespace RUINORERP.UI
                         entity.IsCustomer = Boolean.Parse(txtIsCustomer.Text);
                         entity.IsVendor = Boolean.Parse(txtIsVendor.Text);
                         entity.IsOther = Boolean.Parse(txtIsOther.Text);
-                        entity.Notes = txtNotes.Text ;
+                        entity.SpecialNotes = txtSpecialNotes.Text ;
+                       entity.Notes = txtNotes.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
@@ -137,6 +139,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.IsCustomer, chkIsCustomer, false);
            DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.IsVendor, chkIsVendor, false);
            DataBindingHelper.BindData4CheckBox<tb_CustomerVendor>(entity, t => t.IsOther, chkIsOther, false);
+           DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.SpecialNotes, txtSpecialNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_CustomerVendor>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_CustomerVendor>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
@@ -162,10 +165,9 @@ namespace RUINORERP.UI
         
         }
 
-        private void txtEmail_TextChanged(object sender, EventArgs e)
-        {
 
-        }
+
+
     }
 }
 

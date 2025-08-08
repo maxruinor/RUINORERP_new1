@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：08/08/2025 13:45:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,13 +47,13 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanStatus).NotNull().WithMessage("计划状态:不能为空。");
 
- RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanSubject).MaximumLength(100).WithMessage("计划主题:不能超过最大长度,100.");
+ RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanSubject).MaximumMixedLength(200).WithMessage("计划主题:不能超过最大长度,200.");
  RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanSubject).NotEmpty().WithMessage("计划主题:不能为空。");
 
- RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanContent).MaximumLength(500).WithMessage("计划内容:不能超过最大长度,500.");
+ RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanContent).MaximumMixedLength(1000).WithMessage("计划内容:不能超过最大长度,1000.");
  RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.PlanContent).NotEmpty().WithMessage("计划内容:不能为空。");
 
- RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Notes).MaximumLength(500).WithMessage("备注:不能超过最大长度,500.");
+ RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Notes).MaximumMixedLength(1000).WithMessage("备注:不能超过最大长度,1000.");
 
 
  RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/23/2025 23:00:49
+// 时间：08/08/2025 13:45:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,41 +38,43 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_Company =>tb_Company.CompanyCode).MaximumLength(15).WithMessage("公司代号:不能超过最大长度,15.");
+ RuleFor(tb_Company =>tb_Company.CompanyCode).MaximumMixedLength(30).WithMessage("公司代号:不能超过最大长度,30.");
 
- RuleFor(tb_Company =>tb_Company.CNName).MaximumLength(50).WithMessage("名称:不能超过最大长度,50.");
+ RuleFor(tb_Company =>tb_Company.CNName).MaximumMixedLength(100).WithMessage("名称:不能超过最大长度,100.");
 
- RuleFor(tb_Company =>tb_Company.ENName).MaximumLength(50).WithMessage("英语名称:不能超过最大长度,50.");
+ RuleFor(tb_Company =>tb_Company.ENName).MaximumMixedLength(100).WithMessage("英语名称:不能超过最大长度,100.");
 
- RuleFor(tb_Company =>tb_Company.ShortName).MaximumLength(25).WithMessage("简称:不能超过最大长度,25.");
+ RuleFor(tb_Company =>tb_Company.ShortName).MaximumMixedLength(50).WithMessage("简称:不能超过最大长度,50.");
 
- RuleFor(tb_Company =>tb_Company.LegalPersonName).MaximumLength(25).WithMessage("法人姓名:不能超过最大长度,25.");
+ RuleFor(tb_Company =>tb_Company.LegalPersonName).MaximumMixedLength(50).WithMessage("法人姓名:不能超过最大长度,50.");
 
- RuleFor(tb_Company =>tb_Company.UnifiedSocialCreditIdentifier).MaximumLength(25).WithMessage("公司执照代码:不能超过最大长度,25.");
+ RuleFor(tb_Company =>tb_Company.UnifiedSocialCreditIdentifier).MaximumMixedLength(50).WithMessage("公司执照代码:不能超过最大长度,50.");
 
- RuleFor(tb_Company =>tb_Company.Contact).MaximumLength(50).WithMessage("联系人:不能超过最大长度,50.");
+ RuleFor(tb_Company =>tb_Company.Contact).MaximumMixedLength(100).WithMessage("联系人:不能超过最大长度,100.");
 
- RuleFor(tb_Company =>tb_Company.Phone).MaximumLength(50).WithMessage("电话:不能超过最大长度,50.");
+ RuleFor(tb_Company =>tb_Company.Phone).MaximumMixedLength(100).WithMessage("电话:不能超过最大长度,100.");
 
- RuleFor(tb_Company =>tb_Company.Address).MaximumLength(127).WithMessage("营业地址:不能超过最大长度,127.");
+ RuleFor(tb_Company =>tb_Company.Fax).MaximumMixedLength(100).WithMessage("传真:不能超过最大长度,100.");
 
- RuleFor(tb_Company =>tb_Company.ENAddress).MaximumLength(127).WithMessage("英文地址:不能超过最大长度,127.");
+ RuleFor(tb_Company =>tb_Company.Address).MaximumMixedLength(255).WithMessage("营业地址:不能超过最大长度,255.");
 
- RuleFor(tb_Company =>tb_Company.Website).MaximumLength(127).WithMessage("网址:不能超过最大长度,127.");
+ RuleFor(tb_Company =>tb_Company.ENAddress).MaximumMixedLength(255).WithMessage("英文地址:不能超过最大长度,255.");
 
- RuleFor(tb_Company =>tb_Company.Email).MaximumLength(50).WithMessage("电子邮件:不能超过最大长度,50.");
+ RuleFor(tb_Company =>tb_Company.Website).MaximumMixedLength(255).WithMessage("网址:不能超过最大长度,255.");
 
- RuleFor(tb_Company =>tb_Company.InvoiceTitle).MaximumLength(100).WithMessage("发票抬头:不能超过最大长度,100.");
+ RuleFor(tb_Company =>tb_Company.Email).MaximumMixedLength(100).WithMessage("电子邮件:不能超过最大长度,100.");
 
- RuleFor(tb_Company =>tb_Company.InvoiceTaxNumber).MaximumLength(100).WithMessage("纳税人识别号:不能超过最大长度,100.");
+ RuleFor(tb_Company =>tb_Company.InvoiceTitle).MaximumMixedLength(200).WithMessage("发票抬头:不能超过最大长度,200.");
 
- RuleFor(tb_Company =>tb_Company.InvoiceAddress).MaximumLength(100).WithMessage("发票地址:不能超过最大长度,100.");
+ RuleFor(tb_Company =>tb_Company.InvoiceTaxNumber).MaximumMixedLength(200).WithMessage("纳税人识别号:不能超过最大长度,200.");
 
- RuleFor(tb_Company =>tb_Company.InvoiceTEL).MaximumLength(25).WithMessage("发票电话:不能超过最大长度,25.");
+ RuleFor(tb_Company =>tb_Company.InvoiceAddress).MaximumMixedLength(200).WithMessage("发票地址:不能超过最大长度,200.");
 
- RuleFor(tb_Company =>tb_Company.InvoiceBankAccount).MaximumLength(75).WithMessage("银行账号:不能超过最大长度,75.");
+ RuleFor(tb_Company =>tb_Company.InvoiceTEL).MaximumMixedLength(50).WithMessage("发票电话:不能超过最大长度,50.");
 
- RuleFor(tb_Company =>tb_Company.InvoiceBankName).MaximumLength(50).WithMessage("开户行:不能超过最大长度,50.");
+ RuleFor(tb_Company =>tb_Company.InvoiceBankAccount).MaximumMixedLength(150).WithMessage("银行账号:不能超过最大长度,150.");
+
+ RuleFor(tb_Company =>tb_Company.InvoiceBankName).MaximumMixedLength(100).WithMessage("开户行:不能超过最大长度,100.");
 
 
  RuleFor(tb_Company =>tb_Company.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -80,7 +82,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Company =>tb_Company.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_Company =>tb_Company.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_Company =>tb_Company.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
            	        Initialize();
      }

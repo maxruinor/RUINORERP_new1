@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:33
+// 时间：08/08/2025 13:45:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,12 +38,12 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASDeliveryNo).MaximumLength(25).WithMessage("交付单号:不能超过最大长度,25.");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASDeliveryNo).MaximumMixedLength(50).WithMessage("交付单号:不能超过最大长度,50.");
 
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyID).Must(CheckForeignKeyValueCanNull).WithMessage("售后申请单:下拉选择值不正确。");
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyID).NotEmpty().When(x => x.ASApplyID.HasValue);
 
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyNo).MaximumLength(25).WithMessage("申请编号:不能超过最大长度,25.");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyNo).MaximumMixedLength(50).WithMessage("申请编号:不能超过最大长度,50.");
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ASApplyNo).NotEmpty().WithMessage("申请编号:不能为空。");
 
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("业务员:下拉选择值不正确。");
@@ -58,11 +58,11 @@ namespace RUINORERP.Business
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.TotalDeliveryQty).NotNull().WithMessage("总交付数量:不能为空。");
 
 
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ShippingAddress).MaximumLength(250).WithMessage("收货地址:不能超过最大长度,250.");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ShippingAddress).MaximumMixedLength(500).WithMessage("收货地址:不能超过最大长度,500.");
 
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ShippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ShippingWay).MaximumMixedLength(50).WithMessage("发货方式:不能超过最大长度,50.");
 
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.TrackNo).MaximumLength(25).WithMessage("物流单号:不能超过最大长度,25.");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.TrackNo).MaximumMixedLength(50).WithMessage("物流单号:不能超过最大长度,50.");
 
 
 
@@ -74,7 +74,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 
@@ -84,7 +84,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
- RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_AS_AfterSaleDelivery =>tb_AS_AfterSaleDelivery.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
            	                //long?
                 //ASDeliveryID

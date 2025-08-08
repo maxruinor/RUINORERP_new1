@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:30
+// 时间：08/08/2025 13:45:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,14 +38,14 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_ProdProperty =>tb_ProdProperty.PropertyName).MaximumLength(10).WithMessage("属性名称:不能超过最大长度,10.");
+ RuleFor(tb_ProdProperty =>tb_ProdProperty.PropertyName).MaximumMixedLength(20).WithMessage("属性名称:不能超过最大长度,20.");
  RuleFor(tb_ProdProperty =>tb_ProdProperty.PropertyName).NotEmpty().WithMessage("属性名称:不能为空。");
 
- RuleFor(tb_ProdProperty =>tb_ProdProperty.PropertyDesc).MaximumLength(25).WithMessage("属性描述:不能超过最大长度,25.");
+ RuleFor(tb_ProdProperty =>tb_ProdProperty.PropertyDesc).MaximumMixedLength(50).WithMessage("属性描述:不能超过最大长度,50.");
 
  RuleFor(tb_ProdProperty =>tb_ProdProperty.SortOrder).NotEmpty().When(x => x.SortOrder.HasValue);
 
- RuleFor(tb_ProdProperty =>tb_ProdProperty.InputType).MaximumLength(25).WithMessage("输入类型:不能超过最大长度,25.");
+ RuleFor(tb_ProdProperty =>tb_ProdProperty.InputType).MaximumMixedLength(50).WithMessage("输入类型:不能超过最大长度,50.");
 
 
  RuleFor(tb_ProdProperty =>tb_ProdProperty.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

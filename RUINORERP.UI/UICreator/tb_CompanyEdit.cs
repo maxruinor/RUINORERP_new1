@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/23/2025 23:00:46
+// 时间：08/08/2025 13:45:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -57,6 +57,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -72,6 +73,7 @@ namespace RUINORERP.UI
                        entity.UnifiedSocialCreditIdentifier = txtUnifiedSocialCreditIdentifier.Text ;
                        entity.Contact = txtContact.Text ;
                        entity.Phone = txtPhone.Text ;
+                       entity.Fax = txtFax.Text ;
                        entity.Address = txtAddress.Text ;
                        entity.ENAddress = txtENAddress.Text ;
                        entity.Website = txtWebsite.Text ;
@@ -105,6 +107,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.UnifiedSocialCreditIdentifier, txtUnifiedSocialCreditIdentifier, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Contact, txtContact, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Phone, txtPhone, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Fax, txtFax, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Address, txtAddress, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.ENAddress, txtENAddress, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Company>(entity, t => t.Website, txtWebsite, BindDataType4TextBox.Text,false);

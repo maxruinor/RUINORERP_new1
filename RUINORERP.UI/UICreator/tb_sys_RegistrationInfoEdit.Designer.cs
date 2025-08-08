@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/11/2025 12:08:35
+// 时间：08/08/2025 13:46:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -57,6 +57,7 @@ this.txtCompanyName = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblFunctionModule = new Krypton.Toolkit.KryptonLabel();
 this.txtFunctionModule = new Krypton.Toolkit.KryptonTextBox();
+this.txtFunctionModule.Multiline = true;
 
 this.lblContactName = new Krypton.Toolkit.KryptonLabel();
 this.txtContactName = new Krypton.Toolkit.KryptonTextBox();
@@ -150,13 +151,13 @@ this.txtCompanyName.TabIndex = 1;
 this.Controls.Add(this.lblCompanyName);
 this.Controls.Add(this.txtCompanyName);
 
-           //#####200FunctionModule###String
+           //#####3000FunctionModule###String
 this.lblFunctionModule.AutoSize = true;
 this.lblFunctionModule.Location = new System.Drawing.Point(100,50);
 this.lblFunctionModule.Name = "lblFunctionModule";
 this.lblFunctionModule.Size = new System.Drawing.Size(41, 12);
 this.lblFunctionModule.TabIndex = 2;
-this.lblFunctionModule.Text = "备注";
+this.lblFunctionModule.Text = "功能模块";
 this.txtFunctionModule.Location = new System.Drawing.Point(173,46);
 this.txtFunctionModule.Name = "txtFunctionModule";
 this.txtFunctionModule.Size = new System.Drawing.Size(100, 21);

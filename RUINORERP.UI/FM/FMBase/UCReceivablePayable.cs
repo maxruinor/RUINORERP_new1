@@ -69,7 +69,7 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.反结案);
             base.AddExcludeMenuList(MenuItemEnums.结案);
         }
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override async void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_FM_ReceivablePayable receivablePayable)
             {
@@ -88,8 +88,35 @@ namespace RUINORERP.UI.FM
                         toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
                     }
                 }
+                //查是否有收付款单
+                if (receivablePayable.ARAPStatus >= (int)ARAPStatus.待支付)
+                {
+                    var PaymentList = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentRecord>()
+                               .Includes(a => a.tb_FM_PaymentRecordDetails)
+                              .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == receivablePayable.ARAPId)).ToListAsync();
+                    if (PaymentList != null && PaymentList.Count > 0)
+                    {
+                        foreach (var item in PaymentList)
+                        {
+                            var rqp = new Model.CommonModel.RelatedQueryParameter();
+                            rqp.bizType = BizType.收款单;
+                            rqp.billId = item.PaymentId;
+                            ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                            RelatedMenuItem.Name = $"{rqp.billId}";
+                            RelatedMenuItem.Tag = rqp;
+                            RelatedMenuItem.Text = $"{rqp.bizType}:{item.PaymentNo}";
+                            RelatedMenuItem.Click += base.MenuItem_Click;
+                            if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.PaymentId.ToString()))
+                            {
+                                toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                            }
+                        }
+                    }
+                  
+                }
+
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
         /// <summary>
         /// 收付款方式决定对应的菜单功能

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:26:57
+// 时间：08/08/2025 13:45:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,17 +47,17 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.Account_type).NotNull().WithMessage("账户类型:不能为空。");
 
- RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.Account_name).MaximumLength(25).WithMessage("账户名称:不能超过最大长度,25.");
+ RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.Account_name).MaximumMixedLength(50).WithMessage("账户名称:不能超过最大长度,50.");
 
- RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.Account_No).MaximumLength(50).WithMessage("账号:不能超过最大长度,50.");
+ RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.Account_No).MaximumMixedLength(100).WithMessage("账号:不能超过最大长度,100.");
 
- RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.PaymentCodeImagePath).MaximumLength(150).WithMessage("收款码:不能超过最大长度,150.");
+ RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.PaymentCodeImagePath).MaximumMixedLength(300).WithMessage("收款码:不能超过最大长度,300.");
 
- RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.BelongingBank).MaximumLength(25).WithMessage("所属银行:不能超过最大长度,25.");
+ RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.BelongingBank).MaximumMixedLength(50).WithMessage("所属银行:不能超过最大长度,50.");
 
- RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.OpeningBank).MaximumLength(30).WithMessage("开户行:不能超过最大长度,30.");
+ RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.OpeningBank).MaximumMixedLength(60).WithMessage("开户行:不能超过最大长度,60.");
 
- RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_FM_PayeeInfo =>tb_FM_PayeeInfo.Notes).MaximumMixedLength(200).WithMessage("备注:不能超过最大长度,200.");
 
 
 //有默认值

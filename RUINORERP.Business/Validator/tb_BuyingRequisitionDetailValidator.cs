@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：08/08/2025 13:45:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,7 +43,7 @@ namespace RUINORERP.Business
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品详情:下拉选择值不正确。");
 
 
- RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.ActualRequiredQty).NotNull().WithMessage("需求数量:不能为空。");
@@ -56,10 +56,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.DeliveredQuantity).NotNull().WithMessage("已交数量:不能为空。");
 
- //RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Purpose).MaximumLength(250).WithMessage("用途:不能超过最大长度,250.");
- //RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Purpose).NotEmpty().WithMessage("用途:不能为空。");
-
- RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Notes).MaximumLength(500).WithMessage("备注:不能超过最大长度,500.");
+ RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Notes).MaximumMixedLength(1000).WithMessage("备注:不能超过最大长度,1000.");
 
 
            	        Initialize();

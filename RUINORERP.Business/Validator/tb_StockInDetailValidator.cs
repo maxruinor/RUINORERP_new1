@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:32
+// 时间：08/08/2025 13:46:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -55,13 +55,13 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
 
- RuleFor(tb_StockInDetail =>tb_StockInDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
+ RuleFor(tb_StockInDetail =>tb_StockInDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
  RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
 
  RuleFor(x => x.SubtotalPirceAmount).PrecisionScale(19,4,true).WithMessage("金额小计:小数位不能超过4。");
 
- RuleFor(tb_StockInDetail =>tb_StockInDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_StockInDetail =>tb_StockInDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
            	        Initialize();
      }

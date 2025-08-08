@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/16/2024 16:57:10
+// 时间：08/08/2025 13:45:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -112,7 +112,7 @@ this.lblEmployee_ID.Location = new System.Drawing.Point(100,25);
 this.lblEmployee_ID.Name = "lblEmployee_ID";
 this.lblEmployee_ID.Size = new System.Drawing.Size(41, 12);
 this.lblEmployee_ID.TabIndex = 1;
-this.lblEmployee_ID.Text = "协作人";
+this.lblEmployee_ID.Text = "协作员工";
 //111======25
 this.cmbEmployee_ID.Location = new System.Drawing.Point(173,21);
 this.cmbEmployee_ID.Name ="cmbEmployee_ID";

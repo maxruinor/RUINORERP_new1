@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:25
+// 时间：08/08/2025 13:45:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -52,7 +52,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.IncludedForeignAmount).PrecisionScale(19,4,true).WithMessage("对账金额外币:小数位不能超过4。");
 
- RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.Summary).MaximumLength(150).WithMessage("摘要:不能超过最大长度,150.");
+ RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.Summary).MaximumMixedLength(300).WithMessage("摘要:不能超过最大长度,300.");
 
            	        Initialize();
      }

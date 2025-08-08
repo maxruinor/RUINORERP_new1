@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:33
+// 时间：08/08/2025 13:46:24
 // **************************************
 using System;
-using SqlSugar;
+﻿using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
@@ -24,32 +24,30 @@ namespace RUINORERP.Business
     /// 基本单位验证类
     /// </summary>
     /*public partial class tb_UnitValidator:AbstractValidator<tb_Unit>*/
-    public partial class tb_UnitValidator : BaseValidatorGeneric<tb_Unit>
+    public partial class tb_UnitValidator:BaseValidatorGeneric<tb_Unit>
     {
+     
+     //配置全局参数
+     public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
+    
+     public tb_UnitValidator(IOptionsMonitor<GlobalValidatorConfig> config)
+     {
+     
+        ValidatorConfig = config;
+        
+ 
+        
+     
+ RuleFor(tb_Unit =>tb_Unit.UnitName).MaximumMixedLength(255).WithMessage("单位名称:不能超过最大长度,255.");
+ RuleFor(tb_Unit =>tb_Unit.UnitName).NotEmpty().WithMessage("单位名称:不能为空。");
 
-        //配置全局参数
-        public readonly IOptionsMonitor<GlobalValidatorConfig> ValidatorConfig;
-
-        public tb_UnitValidator(IOptionsMonitor<GlobalValidatorConfig> config)
-        {
-
-            ValidatorConfig = config;
+ RuleFor(tb_Unit =>tb_Unit.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 
+           	        Initialize();
+     }
 
 
-            RuleFor(tb_Unit => tb_Unit.UnitName).MaximumLength(127).WithMessage("单位名称:不能超过最大长度,127.");
-            RuleFor(tb_Unit => tb_Unit.UnitName).NotEmpty().WithMessage("单位名称:不能为空。");
-
-            RuleFor(tb_Unit => tb_Unit.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
-
-
-            Initialize();
-        }
-
-        public tb_UnitValidator()  
-        {
-        }
 
 
         private bool DetailedRecordsNotEmpty(List<tb_FinishedGoodsInvDetail> details)
@@ -61,7 +59,7 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-
+        
 
         private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetail> details)
         {
@@ -72,22 +70,55 @@ namespace RUINORERP.Business
             }
             return rs;
         }
+        
 
-
-
-
-
-
-        private bool CheckForeignKeyValue(long ForeignKeyID)
+        private bool DetailedRecordsNotEmpty(List<tb_FM_ReceivablePayableDetail> details)
         {
             bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_BOM_SDetailSubstituteMaterial> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_FM_PriceAdjustmentDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+
+
+
+    
+          private bool CheckForeignKeyValue(long ForeignKeyID)
+        {
+            bool rs = true;    
             if (ForeignKeyID == 0 || ForeignKeyID == -1)
             {
                 return false;
             }
             return rs;
         }
-
+        
         private bool CheckForeignKeyValueCanNull(long? ForeignKeyID)
         {
             bool rs = true;
@@ -99,9 +130,9 @@ namespace RUINORERP.Business
                 }
             }
             return rs;
-
-        }
+        
     }
+}
 
 }
 

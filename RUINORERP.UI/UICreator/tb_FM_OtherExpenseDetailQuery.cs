@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:34:12
+// 时间：08/08/2025 13:45:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -89,13 +89,13 @@ namespace RUINORERP.UI
         public void LoadDroplistData()
         {
           // DataBindingHelper.InitDataToCmb<tb_CustomerVendor>(k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
-Account_id主外字段不一致。Subject_id主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_FM_OtherExpense>(k => k.ExpenseMainID, v=>v.XXNAME, cmbExpenseMainID);
-Account_id主外字段不一致。Subject_id主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
-Account_id主外字段不一致。Subject_id主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
-Account_id主外字段不一致。Subject_id主外字段不一致。          // DataBindingHelper.InitDataToCmb<tb_ProjectGroup>(k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
-Account_id主外字段不一致。Subject_id主外字段不一致。          Account_id主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_Account>(k => k.account_id, v=>v.XXNAME, cmbaccount_id);
-Subject_id主外字段不一致。          Account_id主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_ExpenseType>(k => k.ExpenseType_id, v=>v.XXNAME, cmbExpenseType_id);
-Subject_id主外字段不一致。          Account_id主外字段不一致。Subject_id主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_FM_Subject>(k => k.subject_id, v=>v.XXNAME, cmbsubject_id);
+          // DataBindingHelper.InitDataToCmb<tb_FM_OtherExpense>(k => k.ExpenseMainID, v=>v.XXNAME, cmbExpenseMainID);
+          // DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
+          // DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
+          // DataBindingHelper.InitDataToCmb<tb_ProjectGroup>(k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
+          // DataBindingHelper.InitDataToCmb<tb_FM_Account>(k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
+          // DataBindingHelper.InitDataToCmb<tb_FM_ExpenseType>(k => k.ExpenseType_id, v=>v.XXNAME, cmbExpenseType_id);
+          // DataBindingHelper.InitDataToCmb<tb_FM_Subject>(k => k.Subject_id, v=>v.XXNAME, cmbSubject_id);
         }
         
 

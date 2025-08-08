@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：08/08/2025 13:45:18
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CustomerName).MaximumLength(25).WithMessage("客户名称:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CustomerName).MaximumMixedLength(50).WithMessage("客户名称:不能超过最大长度,50.");
 
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("对接人:下拉选择值不正确。");
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
@@ -58,31 +58,31 @@ namespace RUINORERP.Business
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CityID).Must(CheckForeignKeyValueCanNull).WithMessage("城市:下拉选择值不正确。");
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CityID).NotEmpty().When(x => x.CityID.HasValue);
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.wwSocialTools).MaximumLength(100).WithMessage("旺旺/IM工具:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.wwSocialTools).MaximumMixedLength(200).WithMessage("旺旺/IM工具:不能超过最大长度,200.");
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.SocialTools).MaximumLength(100).WithMessage("其他/IM工具:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.SocialTools).MaximumMixedLength(200).WithMessage("其他/IM工具:不能超过最大长度,200.");
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Contact_Name).MaximumLength(25).WithMessage("联系人姓名:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Contact_Name).MaximumMixedLength(50).WithMessage("联系人姓名:不能超过最大长度,50.");
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Contact_Email).MaximumLength(50).WithMessage("邮箱:不能超过最大长度,50.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Contact_Email).MaximumMixedLength(100).WithMessage("邮箱:不能超过最大长度,100.");
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Contact_Phone).MaximumLength(15).WithMessage("电话:不能超过最大长度,15.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Contact_Phone).MaximumMixedLength(30).WithMessage("电话:不能超过最大长度,30.");
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CustomerAddress).MaximumLength(150).WithMessage("客户地址:不能超过最大长度,150.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CustomerAddress).MaximumMixedLength(300).WithMessage("客户地址:不能超过最大长度,300.");
 
 
 //***** 
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CustomerStatus).NotNull().WithMessage("客户状态:不能为空。");
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CustomerTags).MaximumLength(250).WithMessage("客户标签:不能超过最大长度,250.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CustomerTags).MaximumMixedLength(500).WithMessage("客户标签:不能超过最大长度,500.");
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CoreProductInfo).MaximumLength(100).WithMessage("获客来源:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CoreProductInfo).MaximumMixedLength(200).WithMessage("获客来源:不能超过最大长度,200.");
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.GetCustomerSource).MaximumLength(125).WithMessage("主营产品信息:不能超过最大长度,125.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.GetCustomerSource).MaximumMixedLength(250).WithMessage("主营产品信息:不能超过最大长度,250.");
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.SalePlatform).MaximumLength(25).WithMessage("销售平台:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.SalePlatform).MaximumMixedLength(50).WithMessage("销售平台:不能超过最大长度,50.");
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Website).MaximumLength(127).WithMessage("网址:不能超过最大长度,127.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Website).MaximumMixedLength(255).WithMessage("网址:不能超过最大长度,255.");
 
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.CustomerLevel).NotEmpty().When(x => x.CustomerLevel.HasValue);
 
@@ -95,7 +95,7 @@ namespace RUINORERP.Business
 
 
 
- RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 
  RuleFor(tb_CRM_Customer =>tb_CRM_Customer.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

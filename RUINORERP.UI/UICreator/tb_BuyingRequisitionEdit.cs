@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:37
+// 时间：08/08/2025 13:45:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,8 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表
-   数据编辑
+    /// 请购单，可能来自销售订单,也可以来自其它日常需求也可能来自生产需求也可以直接录数据，是一个纯业务性的数据表数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_BuyingRequisitionEdit:UserControl
@@ -34,6 +33,7 @@ namespace RUINORERP.UI
      
                          InitializeComponent();
       
+        
         
         
         
@@ -78,7 +78,8 @@ namespace RUINORERP.UI
                         entity.TotalQty = Int32.Parse(txtTotalQty.Text);
                         entity.Notes = txtNotes.Text ;
                        entity.DataStatus = Int32.Parse(txtDataStatus.Text);
-                        entity.ApprovalOpinions = txtApprovalOpinions.Text ;
+                        entity.Purpose = txtPurpose.Text ;
+                       entity.ApprovalOpinions = txtApprovalOpinions.Text ;
                        entity.ApprovalStatus = SByte.Parse(txtApprovalStatus.Text);
                         entity.ApprovalResults = Boolean.Parse(txtApprovalResults.Text);
                         entity.Approver_by = Int64.Parse(txtApprover_by.Text);
@@ -112,12 +113,13 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.Purpose, txtPurpose, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            //default  DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_BuyingRequisition>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4CheckBox<tb_BuyingRequisition>(entity, t => t.ApprovalResults, chkApprovalResults, false);
            DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_BuyingRequisition>(entity, t => t.Approver_at, dtpApprover_at,false);
-           DataBindingHelper.BindData4CehckBox<tb_BuyingRequisition>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_BuyingRequisition>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4DataTime<tb_BuyingRequisition>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_BuyingRequisition>(entity, t => t.Modified_at, dtpModified_at,false);

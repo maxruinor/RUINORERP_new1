@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/28/2024 15:53:20
+// 时间：08/08/2025 13:45:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,10 +46,10 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_gl_Comment =>tb_gl_Comment.BusinessID).NotNull().WithMessage("关联业务:不能为空。");
 
- RuleFor(tb_gl_Comment =>tb_gl_Comment.DbTableName).MaximumLength(50).WithMessage("关联表名:不能超过最大长度,50.");
+ RuleFor(tb_gl_Comment =>tb_gl_Comment.DbTableName).MaximumMixedLength(100).WithMessage("关联表名:不能超过最大长度,100.");
  RuleFor(tb_gl_Comment =>tb_gl_Comment.DbTableName).NotEmpty().WithMessage("关联表名:不能为空。");
 
- RuleFor(tb_gl_Comment =>tb_gl_Comment.CommentContent).MaximumLength(100).WithMessage("批注内容:不能超过最大长度,100.");
+ RuleFor(tb_gl_Comment =>tb_gl_Comment.CommentContent).MaximumMixedLength(200).WithMessage("批注内容:不能超过最大长度,200.");
  RuleFor(tb_gl_Comment =>tb_gl_Comment.CommentContent).NotEmpty().WithMessage("批注内容:不能为空。");
 
 

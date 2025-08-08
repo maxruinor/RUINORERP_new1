@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:24
+// 时间：08/08/2025 13:45:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_Statement =>tb_FM_Statement.StatementNo).MaximumLength(15).WithMessage("对账单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_Statement =>tb_FM_Statement.StatementNo).MaximumMixedLength(30).WithMessage("对账单号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
 
@@ -50,7 +50,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_Statement =>tb_FM_Statement.PayeeInfoID).Must(CheckForeignKeyValueCanNull).WithMessage("收款信息:下拉选择值不正确。");
  RuleFor(tb_FM_Statement =>tb_FM_Statement.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
 
- RuleFor(tb_FM_Statement =>tb_FM_Statement.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
+ RuleFor(tb_FM_Statement =>tb_FM_Statement.PayeeAccountNo).MaximumMixedLength(100).WithMessage("收款账号:不能超过最大长度,100.");
 
 //***** 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
@@ -65,7 +65,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.StatementStatus).NotEmpty().When(x => x.StatementStatus.HasValue);
 
- RuleFor(tb_FM_Statement =>tb_FM_Statement.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
+ RuleFor(tb_FM_Statement =>tb_FM_Statement.Remark).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -74,7 +74,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_Statement =>tb_FM_Statement.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
- RuleFor(tb_FM_Statement =>tb_FM_Statement.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");
+ RuleFor(tb_FM_Statement =>tb_FM_Statement.ApprovalOpinions).MaximumMixedLength(255).WithMessage("审批意见:不能超过最大长度,255.");
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

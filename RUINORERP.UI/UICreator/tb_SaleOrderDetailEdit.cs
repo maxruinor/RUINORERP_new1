@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/31/2024 20:20:02
+// 时间：08/08/2025 13:46:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -54,6 +54,9 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
 
          }
 /*
@@ -63,15 +66,18 @@ namespace RUINORERP.UI
         tb_SaleOrderDetail entity = new tb_SaleOrderDetail();
                      entity.SOrder_ID = Int64.Parse(txtSOrder_ID.Text);
                         entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
-                        entity.Location_ID = Int64.Parse(txtLocation_ID.Text);
+                        entity.property = txtproperty.Text ;
+                       entity.Location_ID = Int64.Parse(txtLocation_ID.Text);
                         entity.UnitPrice = Decimal.Parse(txtUnitPrice.Text);
                         entity.Quantity = Int32.Parse(txtQuantity.Text);
                         entity.Discount = Decimal.Parse(txtDiscount.Text);
                         entity.TransactionPrice = Decimal.Parse(txtTransactionPrice.Text);
                         entity.SubtotalTransAmount = Decimal.Parse(txtSubtotalTransAmount.Text);
+                        entity.CustomizedCost = Decimal.Parse(txtCustomizedCost.Text);
                         entity.Cost = Decimal.Parse(txtCost.Text);
                         entity.SubtotalCostAmount = Decimal.Parse(txtSubtotalCostAmount.Text);
                         entity.TotalDeliveredQty = Int32.Parse(txtTotalDeliveredQty.Text);
+                        entity.UnitCommissionAmount = Decimal.Parse(txtUnitCommissionAmount.Text);
                         entity.CommissionAmount = Decimal.Parse(txtCommissionAmount.Text);
                         entity.TaxRate = Decimal.Parse(txtTaxRate.Text);
                         entity.SubtotalTaxAmount = Decimal.Parse(txtSubtotalTaxAmount.Text);
@@ -80,7 +86,7 @@ namespace RUINORERP.UI
                        entity.CustomerPartNo = txtCustomerPartNo.Text ;
                        entity.Gift = Boolean.Parse(txtGift.Text);
                         entity.TotalReturnedQty = Int32.Parse(txtTotalReturnedQty.Text);
-                        entity.property = txtproperty.Text ;
+                        entity.SaleFlagCode = txtSaleFlagCode.Text ;
                                return entity;
 }
         */
@@ -93,24 +99,27 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_SaleOrder>(entity, k => k.SOrder_ID, v=>v.XXNAME, cmbSOrder_ID);
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.UnitPrice.ToString(), txtUnitPrice, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.Quantity, txtQuantity, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.Discount.ToString(), txtDiscount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.TransactionPrice.ToString(), txtTransactionPrice, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.SubtotalTransAmount.ToString(), txtSubtotalTransAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.CustomizedCost.ToString(), txtCustomizedCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.Cost.ToString(), txtCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.SubtotalCostAmount.ToString(), txtSubtotalCostAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.TotalDeliveredQty, txtTotalDeliveredQty, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.UnitCommissionAmount.ToString(), txtUnitCommissionAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.CommissionAmount.ToString(), txtCommissionAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.SubtotalTaxAmount.ToString(), txtSubtotalTaxAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.SubtotalUntaxedAmount.ToString(), txtSubtotalUntaxedAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.CustomerPartNo, txtCustomerPartNo, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_SaleOrderDetail>(entity, t => t.Gift, chkGift, false);
+           DataBindingHelper.BindData4CheckBox<tb_SaleOrderDetail>(entity, t => t.Gift, chkGift, false);
            DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.TotalReturnedQty, txtTotalReturnedQty, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_SaleOrderDetail>(entity, t => t.SaleFlagCode, txtSaleFlagCode, BindDataType4TextBox.Text,false);
 }
 
 

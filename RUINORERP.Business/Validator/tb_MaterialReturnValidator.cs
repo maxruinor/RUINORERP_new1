@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:28
+// 时间：08/08/2025 13:45:42
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,10 +38,9 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_MaterialReturn =>tb_MaterialReturn.BillNo).MaximumLength(25).WithMessage("退料单号:不能超过最大长度,25.");
+ RuleFor(tb_MaterialReturn =>tb_MaterialReturn.BillNo).MaximumMixedLength(50).WithMessage("退料单号:不能超过最大长度,50.");
 
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.BillType).NotEmpty().When(x => x.BillType.HasValue);
-
 
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
@@ -50,6 +49,7 @@ namespace RUINORERP.Business
 
 
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("加工厂商:下拉选择值不正确。");
+ RuleFor(tb_MaterialReturn =>tb_MaterialReturn.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
  RuleFor(x => x.TotalQty).PrecisionScale(18,0,true).WithMessage("总数量:小数位不能超过0。");
 
@@ -64,18 +64,18 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_MaterialReturn =>tb_MaterialReturn.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_MaterialReturn =>tb_MaterialReturn.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.MR_ID).Must(CheckForeignKeyValue).WithMessage("领料单:下拉选择值不正确。");
 
- RuleFor(tb_MaterialReturn =>tb_MaterialReturn.MaterialRequisitionNO).MaximumLength(25).WithMessage("领料单号:不能超过最大长度,25.");
+ RuleFor(tb_MaterialReturn =>tb_MaterialReturn.MaterialRequisitionNO).MaximumMixedLength(50).WithMessage("领料单号:不能超过最大长度,50.");
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.MaterialRequisitionNO).NotEmpty().WithMessage("领料单号:不能为空。");
 
 
 //***** 
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_MaterialReturn =>tb_MaterialReturn.ApprovalOpinions).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");
+ RuleFor(tb_MaterialReturn =>tb_MaterialReturn.ApprovalOpinions).MaximumMixedLength(500).WithMessage("审批意见:不能超过最大长度,500.");
 
  RuleFor(tb_MaterialReturn =>tb_MaterialReturn.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

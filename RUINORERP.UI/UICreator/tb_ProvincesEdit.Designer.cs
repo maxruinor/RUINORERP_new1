@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:46
+// 时间：08/08/2025 13:46:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -52,7 +52,10 @@ namespace RUINORERP.UI
      // this.btnCancel = new ComponentFactory.Krypton.Toolkit.KryptonButton();
       //this.kryptonPanel1 = new ComponentFactory.Krypton.Toolkit.KryptonPanel();
       //for definition
-     this.lblProvinceCNName = new Krypton.Toolkit.KryptonLabel();
+     this.lblRegion_ID = new Krypton.Toolkit.KryptonLabel();
+this.cmbRegion_ID = new Krypton.Toolkit.KryptonComboBox();
+
+this.lblProvinceCNName = new Krypton.Toolkit.KryptonLabel();
 this.txtProvinceCNName = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblCountryID = new Krypton.Toolkit.KryptonLabel();
@@ -88,45 +91,62 @@ this.txtProvinceENName = new Krypton.Toolkit.KryptonTextBox();
             
          //for size
      
-            //#####80ProvinceCNName###String
+            //#####Region_ID###Int64
+//属性测试25Region_ID
+this.lblRegion_ID.AutoSize = true;
+this.lblRegion_ID.Location = new System.Drawing.Point(100,25);
+this.lblRegion_ID.Name = "lblRegion_ID";
+this.lblRegion_ID.Size = new System.Drawing.Size(41, 12);
+this.lblRegion_ID.TabIndex = 1;
+this.lblRegion_ID.Text = "地区";
+//111======25
+this.cmbRegion_ID.Location = new System.Drawing.Point(173,21);
+this.cmbRegion_ID.Name ="cmbRegion_ID";
+this.cmbRegion_ID.Size = new System.Drawing.Size(100, 21);
+this.cmbRegion_ID.TabIndex = 1;
+this.Controls.Add(this.lblRegion_ID);
+this.Controls.Add(this.cmbRegion_ID);
+
+           //#####80ProvinceCNName###String
 this.lblProvinceCNName.AutoSize = true;
-this.lblProvinceCNName.Location = new System.Drawing.Point(100,25);
+this.lblProvinceCNName.Location = new System.Drawing.Point(100,50);
 this.lblProvinceCNName.Name = "lblProvinceCNName";
 this.lblProvinceCNName.Size = new System.Drawing.Size(41, 12);
-this.lblProvinceCNName.TabIndex = 1;
+this.lblProvinceCNName.TabIndex = 2;
 this.lblProvinceCNName.Text = "省份中文名";
-this.txtProvinceCNName.Location = new System.Drawing.Point(173,21);
+this.txtProvinceCNName.Location = new System.Drawing.Point(173,46);
 this.txtProvinceCNName.Name = "txtProvinceCNName";
 this.txtProvinceCNName.Size = new System.Drawing.Size(100, 21);
-this.txtProvinceCNName.TabIndex = 1;
+this.txtProvinceCNName.TabIndex = 2;
 this.Controls.Add(this.lblProvinceCNName);
 this.Controls.Add(this.txtProvinceCNName);
 
            //#####CountryID###Int64
+//属性测试75CountryID
 this.lblCountryID.AutoSize = true;
-this.lblCountryID.Location = new System.Drawing.Point(100,50);
+this.lblCountryID.Location = new System.Drawing.Point(100,75);
 this.lblCountryID.Name = "lblCountryID";
 this.lblCountryID.Size = new System.Drawing.Size(41, 12);
-this.lblCountryID.TabIndex = 2;
+this.lblCountryID.TabIndex = 3;
 this.lblCountryID.Text = "国家";
-this.txtCountryID.Location = new System.Drawing.Point(173,46);
+this.txtCountryID.Location = new System.Drawing.Point(173,71);
 this.txtCountryID.Name = "txtCountryID";
 this.txtCountryID.Size = new System.Drawing.Size(100, 21);
-this.txtCountryID.TabIndex = 2;
+this.txtCountryID.TabIndex = 3;
 this.Controls.Add(this.lblCountryID);
 this.Controls.Add(this.txtCountryID);
 
            //#####80ProvinceENName###String
 this.lblProvinceENName.AutoSize = true;
-this.lblProvinceENName.Location = new System.Drawing.Point(100,75);
+this.lblProvinceENName.Location = new System.Drawing.Point(100,100);
 this.lblProvinceENName.Name = "lblProvinceENName";
 this.lblProvinceENName.Size = new System.Drawing.Size(41, 12);
-this.lblProvinceENName.TabIndex = 3;
+this.lblProvinceENName.TabIndex = 4;
 this.lblProvinceENName.Text = "省份英文名";
-this.txtProvinceENName.Location = new System.Drawing.Point(173,71);
+this.txtProvinceENName.Location = new System.Drawing.Point(173,96);
 this.txtProvinceENName.Name = "txtProvinceENName";
 this.txtProvinceENName.Size = new System.Drawing.Size(100, 21);
-this.txtProvinceENName.TabIndex = 3;
+this.txtProvinceENName.TabIndex = 4;
 this.Controls.Add(this.lblProvinceENName);
 this.Controls.Add(this.txtProvinceENName);
 
@@ -144,10 +164,13 @@ this.Controls.Add(this.txtProvinceENName);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 3;
+           // this.kryptonPanel1.TabIndex = 4;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+                this.Controls.Add(this.lblRegion_ID );
+this.Controls.Add(this.cmbRegion_ID );
+
                 this.Controls.Add(this.lblProvinceCNName );
 this.Controls.Add(this.txtProvinceCNName );
 
@@ -181,6 +204,11 @@ this.Controls.Add(this.txtProvinceENName );
      //for start
      
          
+              private Krypton.Toolkit.KryptonLabel lblRegion_ID;
+private Krypton.Toolkit.KryptonComboBox cmbRegion_ID;
+
+    
+        
               private Krypton.Toolkit.KryptonLabel lblProvinceCNName;
 private Krypton.Toolkit.KryptonTextBox txtProvinceCNName;
 

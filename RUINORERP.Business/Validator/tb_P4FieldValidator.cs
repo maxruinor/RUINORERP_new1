@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:28
+// 时间：08/08/2025 13:45:47
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,16 +38,12 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_P4Field =>tb_P4Field.FieldInfo_ID).Must(CheckForeignKeyValueCanNull).WithMessage("字段:下拉选择值不正确。");
- RuleFor(tb_P4Field =>tb_P4Field.FieldInfo_ID).NotEmpty().When(x => x.FieldInfo_ID.HasValue);
+ RuleFor(tb_P4Field =>tb_P4Field.FieldInfo_ID).Must(CheckForeignKeyValue).WithMessage("字段:下拉选择值不正确。");
 
- RuleFor(tb_P4Field =>tb_P4Field.RoleID).Must(CheckForeignKeyValueCanNull).WithMessage("角色:下拉选择值不正确。");
- RuleFor(tb_P4Field =>tb_P4Field.RoleID).NotEmpty().When(x => x.RoleID.HasValue);
+ RuleFor(tb_P4Field =>tb_P4Field.RoleID).Must(CheckForeignKeyValue).WithMessage("角色:下拉选择值不正确。");
 
  RuleFor(tb_P4Field =>tb_P4Field.MenuID).Must(CheckForeignKeyValueCanNull).WithMessage("菜单:下拉选择值不正确。");
  RuleFor(tb_P4Field =>tb_P4Field.MenuID).NotEmpty().When(x => x.MenuID.HasValue);
-
-
 
 
 
@@ -56,7 +52,6 @@ namespace RUINORERP.Business
 
 
  RuleFor(tb_P4Field =>tb_P4Field.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-
 
            	        Initialize();
      }

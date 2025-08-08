@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:28
+// 时间：08/08/2025 13:45:42
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,7 +45,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品详情:下拉选择值不正确。");
 
- RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.ShouldSendQty).NotNull().WithMessage("应发数:不能为空。");
@@ -56,9 +56,9 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.CanQuantity).NotNull().WithMessage("可发数:不能为空。");
 
- RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
+ RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.Summary).MaximumMixedLength(255).WithMessage("摘要:不能超过最大长度,255.");
 
- RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.CustomerPartNo).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
+ RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.CustomerPartNo).MaximumMixedLength(50).WithMessage("客户型号:不能超过最大长度,50.");
 
  RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
 

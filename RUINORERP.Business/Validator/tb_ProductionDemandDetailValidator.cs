@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/19/2024 12:18:09
+// 时间：08/08/2025 13:46:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,7 +42,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品:下拉选择值不正确。");
 
- RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
  RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
@@ -84,7 +84,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.NotOutQty).NotNull().WithMessage("未发数量:不能为空。");
 
- RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
+ RuleFor(tb_ProductionDemandDetail =>tb_ProductionDemandDetail.Summary).MaximumMixedLength(255).WithMessage("摘要:不能超过最大长度,255.");
 
            	        Initialize();
      }

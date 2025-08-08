@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/20/2024 20:30:03
+// 时间：08/08/2025 13:45:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,6 +40,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -53,7 +54,8 @@ namespace RUINORERP.UI
                         entity.property = txtproperty.Text ;
                        entity.Qty = Int32.Parse(txtQty.Text);
                         entity.Summary = txtSummary.Text ;
-                               return entity;
+                       entity.UnitCost = Decimal.Parse(txtUnitCost.Text);
+                                return entity;
 }
         */
 
@@ -69,6 +71,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_ProdMergeDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdMergeDetail>(entity, t => t.Qty, txtQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ProdMergeDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_ProdMergeDetail>(entity, t => t.UnitCost.ToString(), txtUnitCost, BindDataType4TextBox.Money,false);
 }
 
 

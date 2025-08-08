@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/19/2024 12:18:08
+// 时间：08/08/2025 13:46:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,9 +49,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.ParentId).NotEmpty().When(x => x.ParentId.HasValue);
 
- RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.Specifications).MaximumLength(500).WithMessage("规格:不能超过最大长度,500.");
+ RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.Specifications).MaximumMixedLength(1000).WithMessage("规格:不能超过最大长度,1000.");
 
- RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
  RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.BOM_ID).Must(CheckForeignKeyValueCanNull).WithMessage("标准配方:下拉选择值不正确。");
  RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.BOM_ID).NotEmpty().When(x => x.BOM_ID.HasValue);
@@ -71,9 +71,9 @@ namespace RUINORERP.Business
 
 
 
- RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
+ RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
- RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.RefBillNO).MaximumLength(50).WithMessage("生成单号:不能超过最大长度,50.");
+ RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.RefBillNO).MaximumMixedLength(100).WithMessage("生成单号:不能超过最大长度,100.");
 
  RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.RefBillType).NotEmpty().When(x => x.RefBillType.HasValue);
 

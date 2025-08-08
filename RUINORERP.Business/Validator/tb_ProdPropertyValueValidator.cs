@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:30
+// 时间：08/08/2025 13:45:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,10 +41,10 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.Property_ID).NotNull().WithMessage("属性:不能为空。");
 
- RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueName).MaximumLength(25).WithMessage("属性值名称:不能超过最大长度,25.");
+ RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueName).MaximumMixedLength(20).WithMessage("属性值名称:不能超过最大长度,20.");
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueName).NotEmpty().WithMessage("属性值名称:不能为空。");
 
- RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueDesc).MaximumLength(50).WithMessage("属性值描述:不能超过最大长度,50.");
+ RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.PropertyValueDesc).MaximumMixedLength(50).WithMessage("属性值描述:不能超过最大长度,50.");
 
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.SortOrder).NotEmpty().When(x => x.SortOrder.HasValue);
 

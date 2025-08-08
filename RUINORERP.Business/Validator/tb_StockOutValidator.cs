@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:32
+// 时间：08/08/2025 13:46:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,7 +45,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_StockOut =>tb_StockOut.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
- RuleFor(tb_StockOut =>tb_StockOut.BillNo).MaximumLength(25).WithMessage("其它出库单号:不能超过最大长度,25.");
+ RuleFor(tb_StockOut =>tb_StockOut.BillNo).MaximumMixedLength(50).WithMessage("其它出库单号:不能超过最大长度,50.");
 
 //***** 
  RuleFor(tb_StockOut =>tb_StockOut.TotalQty).NotNull().WithMessage("总数量:不能为空。");
@@ -62,13 +62,13 @@ namespace RUINORERP.Business
 
  RuleFor(tb_StockOut =>tb_StockOut.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_StockOut =>tb_StockOut.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_StockOut =>tb_StockOut.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
 
 //***** 
  RuleFor(tb_StockOut =>tb_StockOut.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_StockOut =>tb_StockOut.ApprovalOpinions).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");
+ RuleFor(tb_StockOut =>tb_StockOut.ApprovalOpinions).MaximumMixedLength(500).WithMessage("审批意见:不能超过最大长度,500.");
 
  RuleFor(tb_StockOut =>tb_StockOut.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 
@@ -80,7 +80,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_StockOut =>tb_StockOut.RefBillID).NotEmpty().When(x => x.RefBillID.HasValue);
 
- RuleFor(tb_StockOut =>tb_StockOut.RefNO).MaximumLength(25).WithMessage("引用单号:不能超过最大长度,25.");
+ RuleFor(tb_StockOut =>tb_StockOut.RefNO).MaximumMixedLength(50).WithMessage("引用单号:不能超过最大长度,50.");
 
  RuleFor(tb_StockOut =>tb_StockOut.RefBizType).NotEmpty().When(x => x.RefBizType.HasValue);
 

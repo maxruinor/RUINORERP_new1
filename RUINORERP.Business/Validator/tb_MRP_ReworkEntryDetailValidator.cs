@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 20:57:17
+// 时间：08/08/2025 13:45:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,14 +42,14 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品:下拉选择值不正确。");
 
- RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.CustomertModel).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
+ RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.CustomertModel).MaximumMixedLength(50).WithMessage("客户型号:不能超过最大长度,50.");
 
  RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
  RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("货架:下拉选择值不正确。");
  RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
 
- RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
@@ -62,7 +62,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
 
- RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
+ RuleFor(tb_MRP_ReworkEntryDetail =>tb_MRP_ReworkEntryDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
            	        Initialize();
      }

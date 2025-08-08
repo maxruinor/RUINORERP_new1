@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：08/08/2025 13:45:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,31 +43,31 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.LeadsStatus).NotNull().WithMessage("线索状态:不能为空。");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.wwSocialTools).MaximumLength(100).WithMessage("其他/IM工具:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.wwSocialTools).MaximumMixedLength(200).WithMessage("其他/IM工具:不能超过最大长度,200.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.SocialTools).MaximumLength(100).WithMessage("旺旺/IM工具:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.SocialTools).MaximumMixedLength(200).WithMessage("旺旺/IM工具:不能超过最大长度,200.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.CustomerName).MaximumLength(50).WithMessage("客户名/线索名:不能超过最大长度,50.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.CustomerName).MaximumMixedLength(100).WithMessage("客户名/线索名:不能超过最大长度,100.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.GetCustomerSource).MaximumLength(125).WithMessage("获客来源:不能超过最大长度,125.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.GetCustomerSource).MaximumMixedLength(250).WithMessage("获客来源:不能超过最大长度,250.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.InterestedProducts).MaximumLength(25).WithMessage("兴趣产品:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.InterestedProducts).MaximumMixedLength(50).WithMessage("兴趣产品:不能超过最大长度,50.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Contact_Name).MaximumLength(25).WithMessage("联系人姓名:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Contact_Name).MaximumMixedLength(50).WithMessage("联系人姓名:不能超过最大长度,50.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Contact_Phone).MaximumLength(25).WithMessage("电话:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Contact_Phone).MaximumMixedLength(50).WithMessage("电话:不能超过最大长度,50.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Contact_Email).MaximumLength(50).WithMessage("邮箱:不能超过最大长度,50.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Contact_Email).MaximumMixedLength(100).WithMessage("邮箱:不能超过最大长度,100.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Position).MaximumLength(25).WithMessage("职位:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Position).MaximumMixedLength(50).WithMessage("职位:不能超过最大长度,50.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.SalePlatform).MaximumLength(25).WithMessage("销售平台:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.SalePlatform).MaximumMixedLength(50).WithMessage("销售平台:不能超过最大长度,50.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Address).MaximumLength(127).WithMessage("地址:不能超过最大长度,127.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Address).MaximumMixedLength(255).WithMessage("地址:不能超过最大长度,255.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Website).MaximumLength(127).WithMessage("网址:不能超过最大长度,127.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Website).MaximumMixedLength(255).WithMessage("网址:不能超过最大长度,255.");
 
- RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 
  RuleFor(tb_CRM_Leads =>tb_CRM_Leads.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

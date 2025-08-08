@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/25/2025 12:21:41
+// 时间：08/08/2025 13:46:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,13 +38,11 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RuleName).MaximumLength(100).WithMessage("规则名称:不能超过最大长度,100.");
+ RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RuleName).MaximumMixedLength(200).WithMessage("规则名称:不能超过最大长度,200.");
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RuleName).NotEmpty().WithMessage("规则名称:不能为空。");
 
-//***** 
- RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.BizType).NotNull().WithMessage("业务类型:不能为空。");
 
- RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.Prefix).MaximumLength(100).WithMessage("前缀:不能超过最大长度,100.");
+ RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.Prefix).MaximumMixedLength(200).WithMessage("前缀:不能超过最大长度,200.");
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.Prefix).NotEmpty().WithMessage("前缀:不能为空。");
 
 //***** 
@@ -54,13 +52,14 @@ namespace RUINORERP.Business
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.SequenceLength).NotNull().WithMessage("流水号长度:不能为空。");
 
 
- RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RedisKeyPattern).MaximumLength(1500).WithMessage("Redis键模式:不能超过最大长度,1500.");
+ RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.RedisKeyPattern).MaximumMixedLength(3000).WithMessage("Redis键模式:不能超过最大长度,3000.");
 
 //***** 
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.ResetMode).NotNull().WithMessage("重置模式:不能为空。");
 
+//有默认值
 
- RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.Description).MaximumLength(100).WithMessage("规则描述:不能超过最大长度,100.");
+ RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.Description).MaximumMixedLength(200).WithMessage("规则描述:不能超过最大长度,200.");
 
 
  RuleFor(tb_sys_BillNoRule =>tb_sys_BillNoRule.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

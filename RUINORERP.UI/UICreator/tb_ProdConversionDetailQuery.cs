@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/10/2024 14:15:54
+// 时间：08/08/2025 13:45:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -79,6 +79,10 @@ namespace RUINORERP.UI
         
     
         
+    
+        
+    
+        
 
   
    
@@ -91,14 +95,13 @@ namespace RUINORERP.UI
         public void LoadDroplistData()
         {
           ProdDetailID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProdDetail>(k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
-// DataBindingHelper.InitDataToCmb<tb_ProdDetail>(k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
+ProdDetailID_to主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProdDetail>(k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
 Type_ID_from主外字段不一致。Type_ID_to主外字段不一致。          ProdDetailID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProdConversion>(k => k.ConversionID, v=>v.XXNAME, cmbConversionID);
-Type_ID_from主外字段不一致。Type_ID_to主外字段不一致。          ProdDetailID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProdDetail>(k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
-// DataBindingHelper.InitDataToCmb<tb_ProdDetail>(k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
-Type_ID_from主外字段不一致。Type_ID_to主外字段不一致。          ProdDetailID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_Location>(k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
-Type_ID_from主外字段不一致。Type_ID_to主外字段不一致。          ProdDetailID_from主外字段不一致。Type_ID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProductType>(k => k.Type_ID, v=>v.XXNAME, cmbType_ID);
+ProdDetailID_to主外字段不一致。Type_ID_from主外字段不一致。Type_ID_to主外字段不一致。          ProdDetailID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProdDetail>(k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
+ProdDetailID_to主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProdDetail>(k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
+Type_ID_from主外字段不一致。Type_ID_to主外字段不一致。          ProdDetailID_from主外字段不一致。ProdDetailID_to主外字段不一致。Type_ID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProductType>(k => k.Type_ID, v=>v.XXNAME, cmbType_ID);
 Type_ID_to主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProductType>(k => k.Type_ID, v=>v.XXNAME, cmbType_ID);
-          ProdDetailID_from主外字段不一致。Type_ID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProductType>(k => k.Type_ID, v=>v.XXNAME, cmbType_ID);
+          ProdDetailID_from主外字段不一致。ProdDetailID_to主外字段不一致。Type_ID_from主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProductType>(k => k.Type_ID, v=>v.XXNAME, cmbType_ID);
 Type_ID_to主外字段不一致。// DataBindingHelper.InitDataToCmb<tb_ProductType>(k => k.Type_ID, v=>v.XXNAME, cmbType_ID);
         }
         

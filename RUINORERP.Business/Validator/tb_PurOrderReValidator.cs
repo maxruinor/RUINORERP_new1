@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:31
+// 时间：08/08/2025 13:46:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,11 +43,11 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurOrderRe =>tb_PurOrderRe.PurOrder_ID).NotEmpty().When(x => x.PurOrder_ID.HasValue);
 
- RuleFor(tb_PurOrderRe =>tb_PurOrderRe.PurOrderNo).MaximumLength(50).WithMessage("采购单号:不能超过最大长度,50.");
+ RuleFor(tb_PurOrderRe =>tb_PurOrderRe.PurOrderNo).MaximumMixedLength(100).WithMessage("采购单号:不能超过最大长度,100.");
  RuleFor(tb_PurOrderRe =>tb_PurOrderRe.PurOrderNo).NotEmpty().WithMessage("采购单号:不能为空。");
 
 
- RuleFor(tb_PurOrderRe =>tb_PurOrderRe.PurReturnNo).MaximumLength(25).WithMessage("退回单号:不能超过最大长度,25.");
+ RuleFor(tb_PurOrderRe =>tb_PurOrderRe.PurReturnNo).MaximumMixedLength(50).WithMessage("退回单号:不能超过最大长度,50.");
 
  RuleFor(x => x.GetPayment).PrecisionScale(19,4,true).WithMessage("实际收回订金货款:小数位不能超过4。");
 
@@ -56,10 +56,11 @@ namespace RUINORERP.Business
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("总计金额:小数位不能超过4。");
 
 
- RuleFor(tb_PurOrderRe =>tb_PurOrderRe.ReturnAddress).MaximumLength(127).WithMessage("退回地址:不能超过最大长度,127.");
+ RuleFor(tb_PurOrderRe =>tb_PurOrderRe.ReturnAddress).MaximumMixedLength(255).WithMessage("退回地址:不能超过最大长度,255.");
 
- RuleFor(tb_PurOrderRe =>tb_PurOrderRe.ShippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
+ RuleFor(tb_PurOrderRe =>tb_PurOrderRe.ShippingWay).MaximumMixedLength(50).WithMessage("发货方式:不能超过最大长度,50.");
 
+ RuleFor(tb_PurOrderRe =>tb_PurOrderRe.TrackNo).MaximumMixedLength(50).WithMessage("物流单号:不能超过最大长度,50.");
 
 
 
@@ -68,9 +69,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurOrderRe =>tb_PurOrderRe.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_PurOrderRe =>tb_PurOrderRe.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_PurOrderRe =>tb_PurOrderRe.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
- RuleFor(tb_PurOrderRe =>tb_PurOrderRe.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_PurOrderRe =>tb_PurOrderRe.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:29
+// 时间：08/08/2025 13:45:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,18 +41,18 @@ namespace RUINORERP.Business
  RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Step_Id).Must(CheckForeignKeyValueCanNull).WithMessage("流程定义:下拉选择值不正确。");
  RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Step_Id).NotEmpty().When(x => x.Step_Id.HasValue);
 
- RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Version).MaximumLength(25).WithMessage("版本:不能超过最大长度,25.");
+ RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Version).MaximumMixedLength(50).WithMessage("版本:不能超过最大长度,50.");
  RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Version).NotEmpty().WithMessage("版本:不能为空。");
 
- RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Title).MaximumLength(25).WithMessage("标题:不能超过最大长度,25.");
+ RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Title).MaximumMixedLength(50).WithMessage("标题:不能超过最大长度,50.");
 
- RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Color).MaximumLength(25).WithMessage("颜色:不能超过最大长度,25.");
+ RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Color).MaximumMixedLength(50).WithMessage("颜色:不能超过最大长度,50.");
 
- RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Icon).MaximumLength(125).WithMessage("图标:不能超过最大长度,125.");
+ RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Icon).MaximumMixedLength(250).WithMessage("图标:不能超过最大长度,250.");
 
- RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Description).MaximumLength(127).WithMessage("描述:不能超过最大长度,127.");
+ RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Description).MaximumMixedLength(255).WithMessage("描述:不能超过最大长度,255.");
 
- RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_ProcessDefinition =>tb_ProcessDefinition.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
            	        Initialize();
      }

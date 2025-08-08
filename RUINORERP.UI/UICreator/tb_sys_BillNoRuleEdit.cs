@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/25/2025 12:21:38
+// 时间：08/08/2025 13:46:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -35,6 +35,8 @@ namespace RUINORERP.UI
       
         
         
+                    InitializeComponent();
+      
         
         
         
@@ -56,8 +58,7 @@ namespace RUINORERP.UI
         {
         tb_sys_BillNoRule entity = new tb_sys_BillNoRule();
                      entity.RuleName = txtRuleName.Text ;
-                       entity.BizType = Int32.Parse(txtBizType.Text);
-                        entity.Prefix = txtPrefix.Text ;
+                       entity.Prefix = txtPrefix.Text ;
                        entity.DateFormat = Int32.Parse(txtDateFormat.Text);
                         entity.SequenceLength = Int32.Parse(txtSequenceLength.Text);
                         entity.UseCheckDigit = Boolean.Parse(txtUseCheckDigit.Text);
@@ -80,7 +81,6 @@ namespace RUINORERP.UI
         {
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_sys_BillNoRule>(entity, t => t.RuleName, txtRuleName, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_sys_BillNoRule>(entity, t => t.BizType, txtBizType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_sys_BillNoRule>(entity, t => t.Prefix, txtPrefix, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_sys_BillNoRule>(entity, t => t.DateFormat, txtDateFormat, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_sys_BillNoRule>(entity, t => t.SequenceLength, txtSequenceLength, BindDataType4TextBox.Qty,false);
@@ -88,6 +88,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_sys_BillNoRule>(entity, t => t.RedisKeyPattern, txtRedisKeyPattern, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_sys_BillNoRule>(entity, t => t.ResetMode, txtResetMode, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4CheckBox<tb_sys_BillNoRule>(entity, t => t.IsActive, chkIsActive, false);
+//有默认值
            DataBindingHelper.BindData4TextBox<tb_sys_BillNoRule>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_sys_BillNoRule>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_sys_BillNoRule>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);

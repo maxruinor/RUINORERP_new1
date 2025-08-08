@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/09/2024 12:02:46
+// 时间：08/08/2025 13:46:03
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -37,6 +37,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -44,7 +45,8 @@ namespace RUINORERP.UI
         tb_Provinces UIToEntity()
         {
         tb_Provinces entity = new tb_Provinces();
-                     entity.ProvinceCNName = txtProvinceCNName.Text ;
+                     entity.Region_ID = Int64.Parse(txtRegion_ID.Text);
+                        entity.ProvinceCNName = txtProvinceCNName.Text ;
                        entity.CountryID = Int64.Parse(txtCountryID.Text);
                         entity.ProvinceENName = txtProvinceENName.Text ;
                                return entity;
@@ -57,7 +59,8 @@ namespace RUINORERP.UI
         public void BindData(tb_Provinces entity)
         {
         _EditEntity = entity;
-                        DataBindingHelper.BindData4TextBox<tb_Provinces>(entity, t => t.ProvinceCNName, txtProvinceCNName, BindDataType4TextBox.Text,false);
+                       // DataBindingHelper.BindData4Cmb<tb_CRM_Region>(entity, k => k.Region_ID, v=>v.XXNAME, cmbRegion_ID);
+           DataBindingHelper.BindData4TextBox<tb_Provinces>(entity, t => t.ProvinceCNName, txtProvinceCNName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Provinces>(entity, t => t.CountryID, txtCountryID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_Provinces>(entity, t => t.ProvinceENName, txtProvinceENName, BindDataType4TextBox.Text,false);
 }

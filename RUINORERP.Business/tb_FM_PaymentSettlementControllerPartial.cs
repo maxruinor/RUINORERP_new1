@@ -133,6 +133,7 @@ namespace RUINORERP.Business
                 SettlementRecord.SettlementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款核销);
                 SettlementRecord.SettlementType = (int)SettlementType.预付冲应付;
             }
+
             SettlementRecord.Currency_ID = preReceivedPayment.Currency_ID;
             SettlementRecord.ExchangeRate = receivablePayable.ExchangeRate;
             SettlementRecord.CustomerVendor_ID = receivablePayable.CustomerVendor_ID;

@@ -40,6 +40,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Global.Model;
 using RUINORERP.UI.ToolForm;
 using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.FM
 {
@@ -179,6 +180,7 @@ namespace RUINORERP.UI.FM
             list.Add(new ContextMenuController("【生成对账单】", true, false, "NewSumDataGridView_生成对账单"));
             list.Add(new ContextMenuController($"【预{PaymentType}抵扣】", true, false, "NewSumDataGridView_预收预付抵扣"));
             list.Add(new ContextMenuController($"【批量智能预{PaymentType}抵扣】", true, false, "NewSumDataGridView_批量智能预收预付抵扣"));
+            list.Add(new ContextMenuController($"【撤销预{PaymentType}抵扣】", true, false, "NewSumDataGridView_撤销预收预付抵扣"));
             return list;
         }
         public override void BuildContextMenuController()
@@ -188,7 +190,7 @@ namespace RUINORERP.UI.FM
             ContextClickList.Add(NewSumDataGridView_生成对账单);
             ContextClickList.Add(NewSumDataGridView_预收预付抵扣);
             ContextClickList.Add(NewSumDataGridView_批量智能预收预付抵扣);
-
+            ContextClickList.Add(NewSumDataGridView_撤销预收预付抵扣);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
@@ -275,6 +277,158 @@ namespace RUINORERP.UI.FM
         }
         #endregion
 
+        //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
+        private async void NewSumDataGridView_撤销预收预付抵扣(object sender, EventArgs e)
+        {
+            //1,查找能抵扣的待核销或部分核销的预收付款单数据集合
+            //2,抵扣，更新预收付款单和应收应付记录表
+            //3,核销记录
+
+            //抵扣错误时，需要撤销
+            //应收应付 状态为 全部支付或部分支付，再到核销表中去找核销记录
+
+            try
+            {
+                List<tb_FM_ReceivablePayable> selectlist = GetSelectResult();
+                List<tb_FM_ReceivablePayable> RealList = new List<tb_FM_ReceivablePayable>();
+                StringBuilder msg = new StringBuilder();
+                int counter = 1;
+                foreach (var item in selectlist)
+                {
+                    //只有审核状态才可以转换为收款单
+                    bool canConvert = item.ARAPStatus == (int)ARAPStatus.全部支付 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                    if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
+                    {
+                        RealList.Add(item);
+                    }
+                    else
+                    {
+                        msg.Append(counter.ToString() + ") ");
+                        msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】 无法进行撤销抵扣。").Append("\r\n");
+                        counter++;
+                    }
+                }
+                //多选时。要相同客户才能合并到一个收款单
+                if (RealList.Count() > 1)
+                {
+                    msg.Append("一次只能选择一行数据进行撤销抵扣操作");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                if (msg.ToString().Length > 0)
+                {
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (RealList.Count == 0)
+                    {
+                        return;
+                    }
+                }
+
+                if (RealList.Count == 0)
+                {
+                    msg.Append("请至少选择一行数据进行撤销抵扣操作");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var receivable = RealList[0];
+
+                var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                var Settlements = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentSettlement>()
+                        .Where(c => c.CustomerVendor_ID == receivable.CustomerVendor_ID)
+                        .Where(c => c.Currency_ID == receivable.Currency_ID)
+                        .Where(c => c.ReceivePaymentType == receivable.ReceivePaymentType)
+                        .Where(c => c.TargetBillId == receivable.ARAPId && c.isdeleted == false)
+                        .OrderBy(c => c.SettleDate)
+                        .ToListAsync();
+
+                // 2. 查找可撤销抵扣的预收付款单
+                var availableAdvances = await receivablePayableController.FindAvailableAntiOffset(receivable, Settlements);
+                if (!availableAdvances.Any())
+                {
+                    MessageBox.Show("没有找到可撤销抵扣操作的预收付款单！");
+                    return;
+                }
+
+                // 初始化选择器
+                using (var selector = new frmAdvanceSelector<tb_FM_PreReceivedPayment>())
+                {
+
+                    selector.ConfirmButtonText = "撤销抵扣";
+                    selector.AllowMultiSelect = true;
+                    // 使用表达式树配置列映射
+                    selector.ConfigureColumn(x => x.PreRPNO, "单据编号");
+                    selector.ConfigureColumn(x => x.SettledLocalAmount, "核销金额");
+                    selector.ConfigureColumn(x => x.LocalPrepaidAmount, "预付金额");
+                    selector.ConfigureColumn(x => x.LocalBalanceAmount, "可用金额");
+                    selector.ConfigureColumn(x => x.CustomerVendor_ID, "客户");
+                    selector.ConfigureColumn(x => x.PrePayDate, "付款日期");
+                    selector.ConfigureColumn(x => x.SourceBizType, "来源业务");
+                    selector.ConfigureColumn(x => x.SourceBillNo, "来源单号");
+                    selector.ConfigureSummaryColumn(x => x.LocalPrepaidAmount);
+                    selector.ConfigureSummaryColumn(x => x.LocalBalanceAmount);
+                    selector.ConfigureSummaryColumn(x => x.SettledLocalAmount);
+
+                    //预收付款中的核销金额是被核销金额。不一定是当前的应收付款中的核销金额，只有核销记录中才是最准确的，所以这里要处理一下。
+                    foreach (var Settlement in Settlements)
+                    {
+                        if (Settlement.SourceBillId.HasValue)
+                        {
+                            var antiOffsetPrepaid = availableAdvances.FirstOrDefault(c => c.PreRPID == Settlement.SourceBillId.Value);
+                            if (antiOffsetPrepaid != null)
+                            {
+                                antiOffsetPrepaid.SettledLocalAmount = Settlement.SettledLocalAmount;
+                            }
+
+                        }
+                    }
+
+                    selector.InitializeSelector(availableAdvances, $"选择要撤销的预{PaymentType}单");
+
+
+
+                    if (selector.ShowDialog() == DialogResult.OK)
+                    {
+                        var selectedAdvances = selector.SelectedItems;
+
+                        //// 将选中单据的PreRPNO字段值用逗号连接成字符串
+                        //string preRPNOs = string.Join(", ", selectedAdvances.Select(item => item.PreRPNO));
+
+                        // 显示前10个单据编号，其余用省略号表示
+                        string preRPNOsPreview = string.Join(", ",
+                            selectedAdvances.Take(5).Select(item => item.PreRPNO));
+                        preRPNOsPreview = preRPNOsPreview.TrimEnd(',');
+                        if (selectedAdvances.Count > 5)
+                        {
+                            preRPNOsPreview += $" 等 {selectedAdvances.Count} 张单据\r\n";
+                        }
+                        if (selectedAdvances.Count > 0)
+                        {
+                            // 使用选中的预付款单
+                            //您确定要将当前应收款单，通过通过预收付款抵扣元吗？
+                            if (MessageBox.Show($"您确定要撤销当前【应{PaymentType}单】:{receivable.ARAPNo}\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 抵扣{selectedAdvances.Sum(x => x.SettledLocalAmount).ToString("##.00")}元吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                            {
+                                List<KeyValuePair<tb_FM_PreReceivedPayment, tb_FM_PaymentSettlement>> PrePaySettlements = new List<KeyValuePair<tb_FM_PreReceivedPayment, tb_FM_PaymentSettlement>>();
+                                foreach (var item in selectedAdvances)
+                                {
+                                    var PrePay = availableAdvances.FirstOrDefault(c => c.PreRPID == item.PreRPID);
+                                    var Settlement = Settlements.FirstOrDefault(c => c.SourceBillId == PrePay.PreRPID);
+                                    PrePaySettlements.Add(new KeyValuePair<tb_FM_PreReceivedPayment, tb_FM_PaymentSettlement>(PrePay, Settlement));
+                                }
+
+                                await receivablePayableController.RevokeApplyManualPaymentAllocation(receivable, ReceivePaymentType.收款, PrePaySettlements, true);
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
 
         //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
         private async void NewSumDataGridView_预收预付抵扣(object sender, EventArgs e)
@@ -328,8 +482,10 @@ namespace RUINORERP.UI.FM
                 }
                 var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
+                var receivable = RealList[0];
+
                 // 2. 查找可抵扣的预收付款单
-                var availableAdvances = await receivablePayableController.FindAvailableAdvances(RealList[0]);
+                var availableAdvances = await receivablePayableController.FindAvailableAdvances(receivable);
                 if (!availableAdvances.Any())
                 {
                     MessageBox.Show("没有找到可抵扣的预收付款单！");
@@ -392,9 +548,33 @@ namespace RUINORERP.UI.FM
                         {
                             // 使用选中的预付款单
                             //您确定要将当前应收款单，通过通过预收付款抵扣元吗？
-                            if (MessageBox.Show($"您确定要将当前【应{PaymentType}单】:{RealList[0].ARAPNo}\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 抵扣{selectedAdvances.Sum(x => x.LocalBalanceAmount).ToString("##.00")}元吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                            if (MessageBox.Show($"您确定要将当前【应{PaymentType}单】:{receivable.ARAPNo}\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 抵扣{selectedAdvances.Sum(x => x.LocalBalanceAmount).ToString("##.00")}元吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
                             {
-                                await receivablePayableController.ApplyManualPaymentAllocation(RealList[0], selectedAdvances);
+                                //一一对应检测订单号是否相同
+                                //应收款的出库单的订单号
+                                List<tb_SaleOut> SaleOutList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
+                                   .Includes(c => c.tb_saleorder)
+                                  .Where(c => c.SaleOut_MainID == receivable.SourceBillId)
+                                  .ToListAsync();
+                                long[] SaleOrderIds = SaleOutList.Select(c => c.tb_saleorder.SOrder_ID).ToArray();
+
+                                //选择的预收款对应的订单号
+                                long[] PreOrderIds = selectedAdvances.Where(c => c.SourceBizType == (int)BizType.销售订单).Select(c => c.SourceBillId.Value).ToArray();
+
+                                if (SaleOrderIds != PreOrderIds)
+                                {
+                                    if (MessageBox.Show($"当前【应{PaymentType}单】:{receivable.ARAPNo}与【预{PaymentType}单】：{preRPNOsPreview}的订单号不一致，你确实要抵扣吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                                    {
+                                        await receivablePayableController.ApplyManualPaymentAllocation(receivable, selectedAdvances);
+                                    }
+                                }
+                                else
+                                {
+                                    await receivablePayableController.ApplyManualPaymentAllocation(receivable, selectedAdvances);
+                                }
+
+
+
                             }
                         }
                     }
@@ -476,7 +656,7 @@ namespace RUINORERP.UI.FM
                             if (kv.Key.LocalBalanceAmount != kv.Value.LocalBalanceAmount)
                             {
                                 OffsetCounter--;
-                                OffsetAmount= OffsetAmount - kv.Key.LocalBalanceAmount;
+                                OffsetAmount = OffsetAmount - kv.Key.LocalBalanceAmount;
                                 MainForm.Instance.PrintInfoLog($"预收付款单抵扣金额不一致，跳过。{kv.Key.ARAPNo}:金额{kv.Key.LocalBalanceAmount.ToString("###.00")}===》{kv.Value.PreRPNO}:金额：{kv.Value.LocalBalanceAmount.ToString("###.00")}");
                                 continue;
                             }

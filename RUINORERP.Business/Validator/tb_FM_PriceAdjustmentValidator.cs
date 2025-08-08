@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:12
+// 时间：08/08/2025 13:45:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.AdjustNo).MaximumLength(15).WithMessage("调整编号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.AdjustNo).MaximumMixedLength(30).WithMessage("调整编号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
 
@@ -49,7 +49,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.SourceBillId).NotEmpty().When(x => x.SourceBillId.HasValue);
 
- RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.SourceBillNo).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.SourceBillNo).MaximumMixedLength(30).WithMessage("来源单号:不能超过最大长度,30.");
 
 //***** 
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.PayStatus).NotNull().WithMessage("付款状态:不能为空。");
@@ -59,7 +59,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
 
- RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.AdjustReason).MaximumLength(200).WithMessage("调整原因:不能超过最大长度,200.");
+ RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.AdjustReason).MaximumMixedLength(400).WithMessage("调整原因:不能超过最大长度,400.");
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 
@@ -85,9 +85,9 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
+ RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.Remark).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 
- RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");
+ RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.ApprovalOpinions).MaximumMixedLength(255).WithMessage("审批意见:不能超过最大长度,255.");
 
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

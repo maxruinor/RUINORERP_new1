@@ -95,7 +95,6 @@
             this.btnRestoreDefaultConfig.Size = new System.Drawing.Size(87, 33);
             this.btnRestoreDefaultConfig.TabIndex = 11;
             this.btnRestoreDefaultConfig.Values.Text = "恢复默认值";
-            this.btnRestoreDefaultConfig.Visible = false;
             this.btnRestoreDefaultConfig.Click += new System.EventHandler(this.btnMoreSetting_Click);
             // 
             // frmColumnsSets

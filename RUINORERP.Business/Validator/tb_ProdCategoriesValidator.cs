@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/21/2025 14:35:42
+// 时间：08/08/2025 13:45:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,18 +38,20 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_ProdCategories =>tb_ProdCategories.Category_name).MaximumLength(25).WithMessage("类别名称:不能超过最大长度,25.");
+ RuleFor(tb_ProdCategories =>tb_ProdCategories.Category_name).MaximumMixedLength(50).WithMessage("类别名称:不能超过最大长度,50.");
 
- RuleFor(tb_ProdCategories =>tb_ProdCategories.CategoryCode).MaximumLength(10).WithMessage("类别代码:不能超过最大长度,10.");
+ RuleFor(tb_ProdCategories =>tb_ProdCategories.CategoryCode).MaximumMixedLength(20).WithMessage("类别代码:不能超过最大长度,20.");
 
 //有默认值
+
+ RuleFor(tb_ProdCategories =>tb_ProdCategories.CategoryLevel).NotEmpty().When(x => x.CategoryLevel.HasValue);
 
  RuleFor(tb_ProdCategories =>tb_ProdCategories.Sort).NotEmpty().When(x => x.Sort.HasValue);
 
  RuleFor(tb_ProdCategories =>tb_ProdCategories.Parent_id).NotEmpty().When(x => x.Parent_id.HasValue);
 
 
- RuleFor(tb_ProdCategories =>tb_ProdCategories.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_ProdCategories =>tb_ProdCategories.Notes).MaximumMixedLength(200).WithMessage("备注:不能超过最大长度,200.");
 
            	        Initialize();
      }

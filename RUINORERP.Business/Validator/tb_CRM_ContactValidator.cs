@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：08/08/2025 13:45:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,21 +40,21 @@ namespace RUINORERP.Business
      
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Customer_id).Must(CheckForeignKeyValue).WithMessage("目标客户:下拉选择值不正确。");
 
- RuleFor(tb_CRM_Contact =>tb_CRM_Contact.SocialTools).MaximumLength(100).WithMessage("社交账号:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Contact =>tb_CRM_Contact.SocialTools).MaximumMixedLength(200).WithMessage("社交账号:不能超过最大长度,200.");
 
- RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Contact_Name).MaximumLength(25).WithMessage("姓名:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Contact_Name).MaximumMixedLength(50).WithMessage("姓名:不能超过最大长度,50.");
 
- RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Contact_Email).MaximumLength(50).WithMessage("邮箱:不能超过最大长度,50.");
+ RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Contact_Email).MaximumMixedLength(100).WithMessage("邮箱:不能超过最大长度,100.");
 
- RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Contact_Phone).MaximumLength(15).WithMessage("电话:不能超过最大长度,15.");
+ RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Contact_Phone).MaximumMixedLength(30).WithMessage("电话:不能超过最大长度,30.");
 
- RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Position).MaximumLength(25).WithMessage("职位:不能超过最大长度,25.");
+ RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Position).MaximumMixedLength(50).WithMessage("职位:不能超过最大长度,50.");
 
- RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Preferences).MaximumLength(100).WithMessage("爱好:不能超过最大长度,100.");
+ RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Preferences).MaximumMixedLength(200).WithMessage("爱好:不能超过最大长度,200.");
 
- RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Address).MaximumLength(127).WithMessage("联系地址:不能超过最大长度,127.");
+ RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Address).MaximumMixedLength(255).WithMessage("联系地址:不能超过最大长度,255.");
 
- RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

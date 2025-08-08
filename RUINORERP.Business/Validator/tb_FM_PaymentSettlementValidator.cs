@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:05
+// 时间：08/08/2025 13:45:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,13 +38,13 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SettlementNo).MaximumLength(15).WithMessage("核销单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SettlementNo).MaximumMixedLength(30).WithMessage("核销单号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBizType).NotEmpty().When(x => x.SourceBizType.HasValue);
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBillId).NotEmpty().When(x => x.SourceBillId.HasValue);
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBillNo).MaximumLength(15).WithMessage("来源单据编号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SourceBillNo).MaximumMixedLength(30).WithMessage("来源单据编号:不能超过最大长度,30.");
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(18,6,true).WithMessage("汇率:小数位不能超过6。");
 
@@ -52,7 +52,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBillId).NotEmpty().When(x => x.TargetBillId.HasValue);
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBillNo).MaximumLength(15).WithMessage("目标单据编号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.TargetBillNo).MaximumMixedLength(30).WithMessage("目标单据编号:不能超过最大长度,30.");
 
 //***** 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
@@ -75,12 +75,12 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Currency_ID).NotEmpty().When(x => x.Currency_ID.HasValue);
 
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Notes).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Notes).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 
 //***** 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.SettlementType).NotNull().WithMessage("核销状态:不能为空。");
 
- RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.EvidenceImagePath).MaximumLength(300).WithMessage("凭证图:不能超过最大长度,300.");
+ RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.EvidenceImagePath).MaximumMixedLength(300).WithMessage("凭证图:不能超过最大长度,300.");
 
 
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

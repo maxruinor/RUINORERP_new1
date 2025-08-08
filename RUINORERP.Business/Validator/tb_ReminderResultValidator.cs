@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/26/2025 12:18:32
+// 时间：08/08/2025 13:46:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,7 +45,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ReminderResult =>tb_ReminderResult.ReminderBizType).NotNull().WithMessage("提醒类型:不能为空。");
 
 
- RuleFor(tb_ReminderResult =>tb_ReminderResult.Message).MaximumLength(100).WithMessage("提醒内容:不能超过最大长度,100.");
+ RuleFor(tb_ReminderResult =>tb_ReminderResult.Message).MaximumMixedLength(200).WithMessage("提醒内容:不能超过最大长度,200.");
 
 
 

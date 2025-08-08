@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:29
+// 时间：08/08/2025 13:45:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,11 +46,13 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
 
- RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.SKU).MaximumLength(40).WithMessage("SKU:不能超过最大长度,40.");
+ RuleFor(x => x.SaleUnitPrice).PrecisionScale(19,4,true).WithMessage("销售单价:小数位不能超过4。");
 
- RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.property).MaximumLength(127).WithMessage("子件属性:不能超过最大长度,127.");
+ RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.SKU).MaximumMixedLength(80).WithMessage("SKU:不能超过最大长度,80.");
 
- RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.property).MaximumMixedLength(255).WithMessage("子件属性:不能超过最大长度,255.");
+
+ RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 //有默认值
 
@@ -61,7 +63,6 @@ namespace RUINORERP.Business
 
 
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
-
 
            	        Initialize();
      }

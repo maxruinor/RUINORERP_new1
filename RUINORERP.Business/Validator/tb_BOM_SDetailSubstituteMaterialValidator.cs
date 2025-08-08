@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 11:23:52
+// 时间：08/08/2025 13:45:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,9 +44,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品详情:下拉选择值不正确。");
 
- RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.SKU).MaximumLength(40).WithMessage("SKU:不能超过最大长度,40.");
+ RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.SKU).MaximumMixedLength(80).WithMessage("SKU:不能超过最大长度,80.");
 
- RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.property).MaximumLength(127).WithMessage("子件属性:不能超过最大长度,127.");
+ RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.property).MaximumMixedLength(255).WithMessage("子件属性:不能超过最大长度,255.");
 
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.Unit_ID).Must(CheckForeignKeyValue).WithMessage("单位:下拉选择值不正确。");
 
@@ -59,15 +59,15 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.LossRate).PrecisionScale(15,4,true).WithMessage("损耗率:小数位不能超过4。");
 
- RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.InstallPosition).MaximumLength(25).WithMessage("组装位置:不能超过最大长度,25.");
+ RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.InstallPosition).MaximumMixedLength(50).WithMessage("组装位置:不能超过最大长度,50.");
 
- RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.PositionNo).MaximumLength(25).WithMessage("位号:不能超过最大长度,25.");
+ RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.PositionNo).MaximumMixedLength(50).WithMessage("位号:不能超过最大长度,50.");
 
  RuleFor(x => x.UnitCost).PrecisionScale(19,4,true).WithMessage("单位成本:小数位不能超过4。");
 
  RuleFor(x => x.SubtotalUnitCost).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
 
- RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.PositionDesc).MaximumLength(50).WithMessage("位号描述:不能超过最大长度,50.");
+ RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.PositionDesc).MaximumMixedLength(100).WithMessage("位号描述:不能超过最大长度,100.");
 
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.ManufacturingProcessID).NotEmpty().When(x => x.ManufacturingProcessID.HasValue);
 
@@ -80,7 +80,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.Sort).NotNull().WithMessage("排序:不能为空。");
 
- RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.Summary).MaximumLength(100).WithMessage("摘要:不能超过最大长度,100.");
+ RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.Summary).MaximumMixedLength(200).WithMessage("摘要:不能超过最大长度,200.");
 
            	        Initialize();
      }

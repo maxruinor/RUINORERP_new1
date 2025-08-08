@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：08/08/2025 13:45:05
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,8 +38,11 @@ namespace RUINORERP.Business
  
         
      
+ RuleFor(tb_Approval =>tb_Approval.BillType).MaximumMixedLength(50).WithMessage("单据类型:不能超过最大长度,50.");
 
+ RuleFor(tb_Approval =>tb_Approval.BillName).MaximumMixedLength(100).WithMessage("单据名称:不能超过最大长度,100.");
 
+ RuleFor(tb_Approval =>tb_Approval.BillEntityClassName).MaximumMixedLength(50).WithMessage(":不能超过最大长度,50.");
 
  RuleFor(tb_Approval =>tb_Approval.ApprovalResults).NotEmpty().When(x => x.ApprovalResults.HasValue);
 

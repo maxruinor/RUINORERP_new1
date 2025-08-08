@@ -369,7 +369,7 @@ namespace RUINORERP.UI.BaseForm
                 baseEntity.AcceptChanges();
             }
             toolStripbtnRelatedQuery.DropDownItems.Clear();
-            LoadRelatedDataToDropDownItems();
+            LoadRelatedDataToDropDownItemsAsync();
             if (toolStripbtnRelatedQuery.DropDownItems.Count > 0)
             {
                 toolStripbtnRelatedQuery.Visible = true;
@@ -1865,6 +1865,23 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (menuItem.Tag is RelatedQueryParameter parameter)
                 {
+                    if (parameter.bizType == BizType.付款单 || parameter.bizType == BizType.收款单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_FM_PaymentRecord).Name
+                        && m.BIBizBaseForm == nameof(UCPaymentRecord)
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_PaymentRecord>>(typeof(tb_FM_PaymentRecord).Name + "Controller");
+                            tb_FM_PaymentRecord entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+
+
                     if (parameter.bizType == BizType.应付款单 || parameter.bizType == BizType.应收款单)
                     {
                         var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
@@ -1896,6 +1913,8 @@ namespace RUINORERP.UI.BaseForm
                             menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
                         }
                     }
+
+
                     if (parameter.bizType == BizType.其他费用收入 || parameter.bizType == BizType.其他费用支出)
                     {
                         var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
@@ -2588,7 +2607,7 @@ namespace RUINORERP.UI.BaseForm
                                             MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
                                             //自动退款？
                                             //平台订单 经过运费在 平台退款操作后，退回单状态中已经是 退款状态了。
-                                            if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecord)
+                                            if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
                                             {
                                                 if (rmr.ReturnObject is tb_SaleOutRe saleOutRe)
                                                 {
@@ -3276,7 +3295,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 加载相关数据的
         /// </summary>
-        protected virtual void LoadRelatedDataToDropDownItems()
+        protected virtual void LoadRelatedDataToDropDownItemsAsync()
         {
             //if (entity != null)
             //{

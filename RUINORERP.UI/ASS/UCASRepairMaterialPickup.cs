@@ -52,7 +52,7 @@ namespace RUINORERP.UI.ASS
             InitializeComponent();
         }
 
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_AS_RepairMaterialPickup MaterialPickup)
             {
@@ -72,7 +72,7 @@ namespace RUINORERP.UI.ASS
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
         internal override void LoadDataToUI(object Entity)
         {

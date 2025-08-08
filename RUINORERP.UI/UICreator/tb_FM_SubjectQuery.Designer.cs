@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:39:08
+// 时间：08/08/2025 13:45:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -71,19 +71,28 @@ this.chkIs_enabled.Values.Text ="";
 this.chkIs_enabled.Checked = true;
 this.chkIs_enabled.CheckState = System.Windows.Forms.CheckState.Checked;
 
-this.lblEndDate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.dtpEndDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
-
 
 
 this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
+this.lblCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.dtpCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
+
+
+this.lblModified_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
+
+
+this.lblisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.chkisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.chkisdeleted.Values.Text ="";
+
     //for end
     this.SuspendLayout();
     
          //for start
-                 //#####parent_subject_id###Int64
+                 //#####Parent_subject_id###Int64
 
            //#####50subject_code###String
 this.lblsubject_code.AutoSize = true;
@@ -157,39 +166,73 @@ this.chkIs_enabled.TabIndex = 7;
 this.Controls.Add(this.lblIs_enabled);
 this.Controls.Add(this.chkIs_enabled);
 
-           //#####EndDate###DateTime
-this.lblEndDate.AutoSize = true;
-this.lblEndDate.Location = new System.Drawing.Point(100,200);
-this.lblEndDate.Name = "lblEndDate";
-this.lblEndDate.Size = new System.Drawing.Size(41, 12);
-this.lblEndDate.TabIndex = 8;
-this.lblEndDate.Text = "离职日期";
-//111======200
-this.dtpEndDate.Location = new System.Drawing.Point(173,196);
-this.dtpEndDate.Name ="dtpEndDate";
-this.dtpEndDate.ShowCheckBox =true;
-this.dtpEndDate.Size = new System.Drawing.Size(100, 21);
-this.dtpEndDate.TabIndex = 8;
-this.Controls.Add(this.lblEndDate);
-this.Controls.Add(this.dtpEndDate);
-
            //#####Sort###Int32
 
            //#####2147483647Images###Binary
 
            //#####200Notes###String
 this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,275);
+this.lblNotes.Location = new System.Drawing.Point(100,250);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 11;
+this.lblNotes.TabIndex = 10;
 this.lblNotes.Text = "备注";
-this.txtNotes.Location = new System.Drawing.Point(173,271);
+this.txtNotes.Location = new System.Drawing.Point(173,246);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 11;
+this.txtNotes.TabIndex = 10;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
+
+           //#####Created_at###DateTime
+this.lblCreated_at.AutoSize = true;
+this.lblCreated_at.Location = new System.Drawing.Point(100,275);
+this.lblCreated_at.Name = "lblCreated_at";
+this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_at.TabIndex = 11;
+this.lblCreated_at.Text = "创建时间";
+//111======275
+this.dtpCreated_at.Location = new System.Drawing.Point(173,271);
+this.dtpCreated_at.Name ="dtpCreated_at";
+this.dtpCreated_at.ShowCheckBox =true;
+this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
+this.dtpCreated_at.TabIndex = 11;
+this.Controls.Add(this.lblCreated_at);
+this.Controls.Add(this.dtpCreated_at);
+
+           //#####Created_by###Int64
+
+           //#####Modified_at###DateTime
+this.lblModified_at.AutoSize = true;
+this.lblModified_at.Location = new System.Drawing.Point(100,325);
+this.lblModified_at.Name = "lblModified_at";
+this.lblModified_at.Size = new System.Drawing.Size(41, 12);
+this.lblModified_at.TabIndex = 13;
+this.lblModified_at.Text = "修改时间";
+//111======325
+this.dtpModified_at.Location = new System.Drawing.Point(173,321);
+this.dtpModified_at.Name ="dtpModified_at";
+this.dtpModified_at.ShowCheckBox =true;
+this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
+this.dtpModified_at.TabIndex = 13;
+this.Controls.Add(this.lblModified_at);
+this.Controls.Add(this.dtpModified_at);
+
+           //#####Modified_by###Int64
+
+           //#####isdeleted###Boolean
+this.lblisdeleted.AutoSize = true;
+this.lblisdeleted.Location = new System.Drawing.Point(100,375);
+this.lblisdeleted.Name = "lblisdeleted";
+this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
+this.lblisdeleted.TabIndex = 15;
+this.lblisdeleted.Text = "";
+this.chkisdeleted.Location = new System.Drawing.Point(173,371);
+this.chkisdeleted.Name = "chkisdeleted";
+this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
+this.chkisdeleted.TabIndex = 15;
+this.Controls.Add(this.lblisdeleted);
+this.Controls.Add(this.chkisdeleted);
 
           
     //for end
@@ -216,13 +259,21 @@ this.Controls.Add(this.chkBalance_direction );
                 this.Controls.Add(this.lblIs_enabled );
 this.Controls.Add(this.chkIs_enabled );
 
-                this.Controls.Add(this.lblEndDate );
-this.Controls.Add(this.dtpEndDate );
-
                 
                 
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
+
+                this.Controls.Add(this.lblCreated_at );
+this.Controls.Add(this.dtpCreated_at );
+
+                
+                this.Controls.Add(this.lblModified_at );
+this.Controls.Add(this.dtpModified_at );
+
+                
+                this.Controls.Add(this.lblisdeleted );
+this.Controls.Add(this.chkisdeleted );
 
                     
             this.Name = "tb_FM_SubjectQuery";
@@ -267,11 +318,6 @@ private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkIs_enabled;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblEndDate;
-private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpEndDate;
-
-    
-        
               
     
         
@@ -280,6 +326,27 @@ private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpEndDate;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotes;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCreated_at;
+private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
+
+    
+        
+              
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblModified_at;
+private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
+
+    
+        
+              
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblisdeleted;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkisdeleted;
 
     
     

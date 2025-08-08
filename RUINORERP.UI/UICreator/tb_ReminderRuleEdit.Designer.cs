@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/26/2025 12:18:32
+// 时间：08/08/2025 13:46:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -75,8 +75,8 @@ this.lblIsEnabled = new Krypton.Toolkit.KryptonLabel();
 this.chkIsEnabled = new Krypton.Toolkit.KryptonCheckBox();
 this.chkIsEnabled.Values.Text ="";
 
-this.lblNotifyChannel = new Krypton.Toolkit.KryptonLabel();
-this.txtNotifyChannel = new Krypton.Toolkit.KryptonTextBox();
+this.lblNotifyChannels = new Krypton.Toolkit.KryptonLabel();
+this.txtNotifyChannels = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblEffectiveDate = new Krypton.Toolkit.KryptonLabel();
 this.dtpEffectiveDate = new Krypton.Toolkit.KryptonDateTimePicker();
@@ -115,10 +115,6 @@ this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
 
 this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
 this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblIsEnabled3 = new Krypton.Toolkit.KryptonLabel();
-this.chkIsEnabled3 = new Krypton.Toolkit.KryptonCheckBox();
-this.chkIsEnabled3.Values.Text ="";
 
     
     //for end
@@ -245,19 +241,19 @@ this.chkIsEnabled.TabIndex = 7;
 this.Controls.Add(this.lblIsEnabled);
 this.Controls.Add(this.chkIsEnabled);
 
-           //#####50NotifyChannel###String
-this.lblNotifyChannel.AutoSize = true;
-this.lblNotifyChannel.Location = new System.Drawing.Point(100,200);
-this.lblNotifyChannel.Name = "lblNotifyChannel";
-this.lblNotifyChannel.Size = new System.Drawing.Size(41, 12);
-this.lblNotifyChannel.TabIndex = 8;
-this.lblNotifyChannel.Text = "通知渠道";
-this.txtNotifyChannel.Location = new System.Drawing.Point(173,196);
-this.txtNotifyChannel.Name = "txtNotifyChannel";
-this.txtNotifyChannel.Size = new System.Drawing.Size(100, 21);
-this.txtNotifyChannel.TabIndex = 8;
-this.Controls.Add(this.lblNotifyChannel);
-this.Controls.Add(this.txtNotifyChannel);
+           //#####50NotifyChannels###String
+this.lblNotifyChannels.AutoSize = true;
+this.lblNotifyChannels.Location = new System.Drawing.Point(100,200);
+this.lblNotifyChannels.Name = "lblNotifyChannels";
+this.lblNotifyChannels.Size = new System.Drawing.Size(41, 12);
+this.lblNotifyChannels.TabIndex = 8;
+this.lblNotifyChannels.Text = "通知渠道";
+this.txtNotifyChannels.Location = new System.Drawing.Point(173,196);
+this.txtNotifyChannels.Name = "txtNotifyChannels";
+this.txtNotifyChannels.Size = new System.Drawing.Size(100, 21);
+this.txtNotifyChannels.TabIndex = 8;
+this.Controls.Add(this.lblNotifyChannels);
+this.Controls.Add(this.txtNotifyChannels);
 
            //#####EffectiveDate###DateTime
 this.lblEffectiveDate.AutoSize = true;
@@ -422,20 +418,6 @@ this.txtModified_by.TabIndex = 19;
 this.Controls.Add(this.lblModified_by);
 this.Controls.Add(this.txtModified_by);
 
-           //#####IsEnabled3###Boolean
-this.lblIsEnabled3.AutoSize = true;
-this.lblIsEnabled3.Location = new System.Drawing.Point(100,500);
-this.lblIsEnabled3.Name = "lblIsEnabled3";
-this.lblIsEnabled3.Size = new System.Drawing.Size(41, 12);
-this.lblIsEnabled3.TabIndex = 20;
-this.lblIsEnabled3.Text = "是否启用";
-this.chkIsEnabled3.Location = new System.Drawing.Point(173,496);
-this.chkIsEnabled3.Name = "chkIsEnabled3";
-this.chkIsEnabled3.Size = new System.Drawing.Size(100, 21);
-this.chkIsEnabled3.TabIndex = 20;
-this.Controls.Add(this.lblIsEnabled3);
-this.Controls.Add(this.chkIsEnabled3);
-
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -450,7 +432,7 @@ this.Controls.Add(this.chkIsEnabled3);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 20;
+           // this.kryptonPanel1.TabIndex = 19;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -475,8 +457,8 @@ this.Controls.Add(this.txtReminderPriority );
                 this.Controls.Add(this.lblIsEnabled );
 this.Controls.Add(this.chkIsEnabled );
 
-                this.Controls.Add(this.lblNotifyChannel );
-this.Controls.Add(this.txtNotifyChannel );
+                this.Controls.Add(this.lblNotifyChannels );
+this.Controls.Add(this.txtNotifyChannels );
 
                 this.Controls.Add(this.lblEffectiveDate );
 this.Controls.Add(this.dtpEffectiveDate );
@@ -510,9 +492,6 @@ this.Controls.Add(this.dtpModified_at );
 
                 this.Controls.Add(this.lblModified_by );
 this.Controls.Add(this.txtModified_by );
-
-                this.Controls.Add(this.lblIsEnabled3 );
-this.Controls.Add(this.chkIsEnabled3 );
 
                             // 
             // "tb_ReminderRuleEdit"
@@ -573,8 +552,8 @@ private Krypton.Toolkit.KryptonCheckBox chkIsEnabled;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblNotifyChannel;
-private Krypton.Toolkit.KryptonTextBox txtNotifyChannel;
+              private Krypton.Toolkit.KryptonLabel lblNotifyChannels;
+private Krypton.Toolkit.KryptonTextBox txtNotifyChannels;
 
     
         
@@ -630,11 +609,6 @@ private Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
         
               private Krypton.Toolkit.KryptonLabel lblModified_by;
 private Krypton.Toolkit.KryptonTextBox txtModified_by;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblIsEnabled3;
-private Krypton.Toolkit.KryptonCheckBox chkIsEnabled3;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

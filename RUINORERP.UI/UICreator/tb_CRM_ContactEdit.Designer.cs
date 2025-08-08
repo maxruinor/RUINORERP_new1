@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:11
+// 时间：08/08/2025 13:45:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -146,7 +146,7 @@ this.lblSocialTools.Location = new System.Drawing.Point(100,50);
 this.lblSocialTools.Name = "lblSocialTools";
 this.lblSocialTools.Size = new System.Drawing.Size(41, 12);
 this.lblSocialTools.TabIndex = 2;
-this.lblSocialTools.Text = "社交工具";
+this.lblSocialTools.Text = "社交账号";
 this.txtSocialTools.Location = new System.Drawing.Point(173,46);
 this.txtSocialTools.Name = "txtSocialTools";
 this.txtSocialTools.Size = new System.Drawing.Size(100, 21);

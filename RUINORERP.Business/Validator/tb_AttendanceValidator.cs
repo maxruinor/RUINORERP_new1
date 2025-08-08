@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:25
+// 时间：08/08/2025 13:45:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,10 +38,15 @@ namespace RUINORERP.Business
  
         
      
+ RuleFor(tb_Attendance =>tb_Attendance.badgenumber).MaximumMixedLength(50).WithMessage(":不能超过最大长度,50.");
 
+ RuleFor(tb_Attendance =>tb_Attendance.username).MaximumMixedLength(50).WithMessage("姓名:不能超过最大长度,50.");
 
+ RuleFor(tb_Attendance =>tb_Attendance.deptname).MaximumMixedLength(60).WithMessage("部门:不能超过最大长度,60.");
 
+ RuleFor(tb_Attendance =>tb_Attendance.sDate).MaximumMixedLength(100).WithMessage("开始时间:不能超过最大长度,100.");
 
+ RuleFor(tb_Attendance =>tb_Attendance.stime).MaximumMixedLength(255).WithMessage("时间组:不能超过最大长度,255.");
 
 
 

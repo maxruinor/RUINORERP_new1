@@ -38,7 +38,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             InitializeComponent();
         }
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_FinishedGoodsInv FinishedGoodsInv)
             {
@@ -78,7 +78,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
 
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         /// <summary>

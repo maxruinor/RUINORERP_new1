@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：08/08/2025 13:45:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,16 +53,16 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpMethod).NotNull().WithMessage("跟进方式:不能为空。");
 
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpSubject).MaximumLength(100).WithMessage("跟进主题:不能超过最大长度,100.");
+ RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpSubject).MaximumMixedLength(200).WithMessage("跟进主题:不能超过最大长度,200.");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpSubject).NotEmpty().WithMessage("跟进主题:不能为空。");
 
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpContent).MaximumLength(500).WithMessage("跟进内容:不能超过最大长度,500.");
+ RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpContent).MaximumMixedLength(1000).WithMessage("跟进内容:不能超过最大长度,1000.");
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpContent).NotEmpty().WithMessage("跟进内容:不能为空。");
 
 
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpResult).MaximumLength(255).WithMessage("跟进结果:不能超过最大长度,255.");
+ RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.FollowUpResult).MaximumMixedLength(500).WithMessage("跟进结果:不能超过最大长度,500.");
 
- RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Notes).MaximumLength(500).WithMessage("备注:不能超过最大长度,500.");
+ RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Notes).MaximumMixedLength(1000).WithMessage("备注:不能超过最大长度,1000.");
 
 
  RuleFor(tb_CRM_FollowUpRecords =>tb_CRM_FollowUpRecords.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

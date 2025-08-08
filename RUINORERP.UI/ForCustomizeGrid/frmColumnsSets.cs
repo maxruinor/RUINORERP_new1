@@ -17,15 +17,15 @@ namespace RUINORERP.UI.ForCustomizeGrid
             InitializeComponent();
         }
 
-
+        //恢复默认列的事件
+        public delegate void InitializeDefaultColumnDelegate(List<ColDisplayController> ColumnDisplays);
+        public event InitializeDefaultColumnDelegate InitializeDefaultColumn;
 
         public List<ColDisplayController> ColumnDisplays { get; set; } = new List<ColDisplayController>();
 
         public ColDisplayController[] oldColumnDisplays;
 
-
         ContextMenuStrip contentMenu1;
-
 
         private void frmColumnsSets_Load(object sender, EventArgs e)
         {
@@ -382,13 +382,19 @@ namespace RUINORERP.UI.ForCustomizeGrid
 
 
 
-        private  void btnMoreSetting_Click(object sender, EventArgs e)
+        private void btnMoreSetting_Click(object sender, EventArgs e)
         {
+
+            if (InitializeDefaultColumn != null)
+            {
+                InitializeDefaultColumn(ColumnDisplays);
+            }
+
             //UIBizSrvice.SetGridViewAsync(DataSourceType, DataGridViewSetTarget, CurMenuInfo, true);
-       
+
             //这里初始化时，注意要以显示到可以操作的列为基准。（比方有些列BuildInvisibleCols在这个方法硬编码不显示，则默认这里也不会显示）
-           // UIBizSrvice.InitDataGridViewColumnDisplays(ColumnDisplays, dataGridView, gridviewType, CurMenuInfo, InvisibleCols);
-           // LoadColumnDisplayList();
+            // UIBizSrvice.InitDataGridViewColumnDisplays(ColumnDisplays, dataGridView, gridviewType, CurMenuInfo, InvisibleCols);
+            // LoadColumnDisplayList();
         }
     }
 }

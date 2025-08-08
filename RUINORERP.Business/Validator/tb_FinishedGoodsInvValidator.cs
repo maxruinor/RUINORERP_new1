@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：08/08/2025 13:45:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,14 +38,14 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.DeliveryBillNo).MaximumLength(25).WithMessage("缴库单号:不能超过最大长度,25.");
+ RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.DeliveryBillNo).MaximumMixedLength(50).WithMessage("缴库单号:不能超过最大长度,50.");
 
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人员:下拉选择值不正确。");
 
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("生产部门:下拉选择值不正确。");
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
- RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("生产商:下拉选择值不正确。");
+ RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("外发工厂:下拉选择值不正确。");
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
 
@@ -55,13 +55,14 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 
- RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.ShippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
+ RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.ShippingWay).MaximumMixedLength(50).WithMessage("发货方式:不能超过最大长度,50.");
 
+ RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.TrackNo).MaximumMixedLength(50).WithMessage("物流单号:不能超过最大长度,50.");
 
- RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.MONo).MaximumLength(25).WithMessage("制令单号:不能超过最大长度,25.");
+ RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.MONo).MaximumMixedLength(50).WithMessage("制令单号:不能超过最大长度,50.");
 
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.MOID).Must(CheckForeignKeyValueCanNull).WithMessage("制令单:下拉选择值不正确。");
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.MOID).NotEmpty().When(x => x.MOID.HasValue);
@@ -72,7 +73,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
 
- RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
  RuleFor(tb_FinishedGoodsInv =>tb_FinishedGoodsInv.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

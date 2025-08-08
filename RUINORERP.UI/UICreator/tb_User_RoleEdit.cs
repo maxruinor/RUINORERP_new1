@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/10/2025 15:31:57
+// 时间：08/08/2025 13:46:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,6 @@ namespace RUINORERP.UI
         
         
         
-        
 
          }
 /*
@@ -50,8 +49,7 @@ namespace RUINORERP.UI
                         entity.RoleID = Int64.Parse(txtRoleID.Text);
                         entity.Authorized = Boolean.Parse(txtAuthorized.Text);
                         entity.DefaultRole = Boolean.Parse(txtDefaultRole.Text);
-                        entity.WorkDefaultLayout = txtWorkDefaultLayout.Text ;
-                               return entity;
+                                return entity;
 }
         */
 
@@ -65,7 +63,6 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_RoleInfo>(entity, k => k.RoleID, v=>v.XXNAME, cmbRoleID);
            DataBindingHelper.BindData4CheckBox<tb_User_Role>(entity, t => t.Authorized, chkAuthorized, false);
            DataBindingHelper.BindData4CheckBox<tb_User_Role>(entity, t => t.DefaultRole, chkDefaultRole, false);
-           DataBindingHelper.BindData4TextBox<tb_User_Role>(entity, t => t.WorkDefaultLayout, txtWorkDefaultLayout, BindDataType4TextBox.Text,false);
 }
 
 

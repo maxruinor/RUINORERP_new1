@@ -29,7 +29,6 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             // 这里添加额外的初始化代码
-
             RuleFor(x => x.IsFromPlatform)
              .Custom((value, context) =>
              {

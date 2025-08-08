@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:27
+// 时间：08/08/2025 13:45:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,7 +41,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.ExpenseMainID).NotNull().WithMessage(":不能为空。");
 
- RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.ExpenseName).MaximumLength(150).WithMessage("事由:不能超过最大长度,150.");
+ RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.ExpenseName).MaximumMixedLength(300).WithMessage("事由:不能超过最大长度,300.");
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.ExpenseName).NotEmpty().WithMessage("事由:不能为空。");
 
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("经办人:下拉选择值不正确。");
@@ -59,13 +59,14 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("交易对象:下拉选择值不正确。");
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
+ RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Subject_id).Must(CheckForeignKeyValueCanNull).WithMessage("会计科目:下拉选择值不正确。");
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Subject_id).NotEmpty().When(x => x.Subject_id.HasValue);
 
 
  RuleFor(x => x.SingleTotalAmount).PrecisionScale(19,4,true).WithMessage("单项总金额:小数位不能超过4。");
 
 
- RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Summary).MaximumLength(50).WithMessage("摘要:不能超过最大长度,50.");
+ RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.Summary).MaximumMixedLength(100).WithMessage("摘要:不能超过最大长度,100.");
 
  RuleFor(x => x.TaxAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");
 
@@ -76,7 +77,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("所属项目:下拉选择值不正确。");
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
 
- RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.EvidenceImagePath).MaximumLength(300).WithMessage("凭证图:不能超过最大长度,300.");
+ RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.EvidenceImagePath).MaximumMixedLength(300).WithMessage("凭证图:不能超过最大长度,300.");
 
            	        Initialize();
      }

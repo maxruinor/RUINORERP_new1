@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:58:11
+// 时间：08/08/2025 13:45:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,25 +40,19 @@ namespace RUINORERP.Business
      
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Parent_subject_id).NotEmpty().When(x => x.Parent_subject_id.HasValue);
 
- RuleFor(tb_FM_Subject =>tb_FM_Subject.Subject_code).MaximumLength(25).WithMessage("科目代码:不能超过最大长度,25.");
- RuleFor(tb_FM_Subject =>tb_FM_Subject.Subject_code).NotEmpty().WithMessage("科目代码:不能为空。");
 
- RuleFor(tb_FM_Subject =>tb_FM_Subject.Subject_name).MaximumLength(50).WithMessage("科目名称:不能超过最大长度,50.");
- RuleFor(tb_FM_Subject =>tb_FM_Subject.Subject_name).NotEmpty().WithMessage("科目名称:不能为空。");
 
- RuleFor(tb_FM_Subject =>tb_FM_Subject.Subject_en_name).MaximumLength(50).WithMessage("英文名称:不能超过最大长度,50.");
 
 //***** 
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Subject_Type).NotNull().WithMessage("科目类型:不能为空。");
 
-//有默认值
 
 //有默认值
 
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Sort).NotEmpty().When(x => x.Sort.HasValue);
 
 
- RuleFor(tb_FM_Subject =>tb_FM_Subject.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_FM_Subject =>tb_FM_Subject.Notes).MaximumMixedLength(200).WithMessage("备注:不能超过最大长度,200.");
 
 
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -73,7 +67,7 @@ namespace RUINORERP.Business
 
 
 
-        private bool DetailedRecordsNotEmpty(List<tb_FM_ExpenseClaimDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_FM_OtherExpenseDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)
@@ -84,7 +78,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_FM_OtherExpenseDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_FM_ExpenseClaimDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

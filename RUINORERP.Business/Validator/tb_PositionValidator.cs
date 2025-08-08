@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:29
+// 时间：08/08/2025 13:45:50
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,14 +38,14 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_Position =>tb_Position.Left).MaximumLength(25).WithMessage("左边距:不能超过最大长度,25.");
+ RuleFor(tb_Position =>tb_Position.Left).MaximumMixedLength(50).WithMessage("左边距:不能超过最大长度,50.");
  RuleFor(tb_Position =>tb_Position.Left).NotEmpty().WithMessage("左边距:不能为空。");
 
- RuleFor(tb_Position =>tb_Position.Right).MaximumLength(25).WithMessage("右边距:不能超过最大长度,25.");
+ RuleFor(tb_Position =>tb_Position.Right).MaximumMixedLength(50).WithMessage("右边距:不能超过最大长度,50.");
 
- RuleFor(tb_Position =>tb_Position.Bottom).MaximumLength(25).WithMessage("下边距:不能超过最大长度,25.");
+ RuleFor(tb_Position =>tb_Position.Bottom).MaximumMixedLength(50).WithMessage("下边距:不能超过最大长度,50.");
 
- RuleFor(tb_Position =>tb_Position.Top).MaximumLength(25).WithMessage("上边距:不能超过最大长度,25.");
+ RuleFor(tb_Position =>tb_Position.Top).MaximumMixedLength(50).WithMessage("上边距:不能超过最大长度,50.");
 
            	        Initialize();
      }

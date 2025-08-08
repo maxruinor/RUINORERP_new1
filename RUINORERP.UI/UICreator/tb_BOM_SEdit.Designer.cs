@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/25/2024 20:53:09
+// 时间：08/08/2025 13:45:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -304,7 +304,7 @@ this.lblEmployee_ID.Location = new System.Drawing.Point(100,175);
 this.lblEmployee_ID.Name = "lblEmployee_ID";
 this.lblEmployee_ID.Size = new System.Drawing.Size(41, 12);
 this.lblEmployee_ID.TabIndex = 7;
-this.lblEmployee_ID.Text = "报销人";
+this.lblEmployee_ID.Text = "BOM工程师";
 //111======175
 this.cmbEmployee_ID.Location = new System.Drawing.Point(173,171);
 this.cmbEmployee_ID.Name ="cmbEmployee_ID";
@@ -398,7 +398,7 @@ this.lblOutApportionedCost.Location = new System.Drawing.Point(100,325);
 this.lblOutApportionedCost.Name = "lblOutApportionedCost";
 this.lblOutApportionedCost.Size = new System.Drawing.Size(41, 12);
 this.lblOutApportionedCost.TabIndex = 13;
-this.lblOutApportionedCost.Text = "处发分摊费用";
+this.lblOutApportionedCost.Text = "外发分摊费用";
 //111======325
 this.txtOutApportionedCost.Location = new System.Drawing.Point(173,321);
 this.txtOutApportionedCost.Name ="txtOutApportionedCost";
@@ -428,7 +428,7 @@ this.lblTotalSelfManuCost.Location = new System.Drawing.Point(100,375);
 this.lblTotalSelfManuCost.Name = "lblTotalSelfManuCost";
 this.lblTotalSelfManuCost.Size = new System.Drawing.Size(41, 12);
 this.lblTotalSelfManuCost.TabIndex = 15;
-this.lblTotalSelfManuCost.Text = "自产制造费用";
+this.lblTotalSelfManuCost.Text = "自制费用";
 //111======375
 this.txtTotalSelfManuCost.Location = new System.Drawing.Point(173,371);
 this.txtTotalSelfManuCost.Name ="txtTotalSelfManuCost";

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:39
+// 时间：08/08/2025 13:45:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,11 +41,11 @@ namespace RUINORERP.Business
  RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.RepairOrderID).Must(CheckForeignKeyValueCanNull).WithMessage("维修工单:下拉选择值不正确。");
  RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.RepairOrderID).NotEmpty().When(x => x.RepairOrderID.HasValue);
 
- RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.MaterialPickupNO).MaximumLength(25).WithMessage("领料单号:不能超过最大长度,25.");
+ RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.MaterialPickupNO).MaximumMixedLength(50).WithMessage("领料单号:不能超过最大长度,50.");
  RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.MaterialPickupNO).NotEmpty().WithMessage("领料单号:不能为空。");
 
 
- RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.RepairOrderNo).MaximumLength(50).WithMessage("维修工单:不能超过最大长度,50.");
+ RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.RepairOrderNo).MaximumMixedLength(100).WithMessage("维修工单:不能超过最大长度,100.");
  RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.RepairOrderNo).NotEmpty().WithMessage("维修工单:不能为空。");
 
  RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
@@ -67,9 +67,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
- RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
  RuleFor(tb_AS_RepairMaterialPickup =>tb_AS_RepairMaterialPickup.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

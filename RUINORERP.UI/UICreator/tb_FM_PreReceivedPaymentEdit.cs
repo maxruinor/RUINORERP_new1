@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/25/2025 18:51:41
+// 时间：08/08/2025 13:45:32
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -76,6 +76,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -89,7 +90,8 @@ namespace RUINORERP.UI
                         entity.PayeeInfoID = Int64.Parse(txtPayeeInfoID.Text);
                         entity.PayeeAccountNo = txtPayeeAccountNo.Text ;
                        entity.IsFromPlatform = Boolean.Parse(txtIsFromPlatform.Text);
-                        entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
+                        entity.PlatformOrderNo = txtPlatformOrderNo.Text ;
+                       entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
                         entity.Paytype_ID = Int64.Parse(txtPaytype_ID.Text);
@@ -141,6 +143,7 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
            DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PreReceivedPayment>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);

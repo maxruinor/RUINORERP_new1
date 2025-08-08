@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/15/2024 18:45:34
+// 时间：08/08/2025 13:46:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -314,6 +314,7 @@ this.lblModified_at.Text = "修改时间";
 //111======275
 this.dtpModified_at.Location = new System.Drawing.Point(173,271);
 this.dtpModified_at.Name ="dtpModified_at";
+this.dtpModified_at.ShowCheckBox =true;
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
 this.dtpModified_at.TabIndex = 11;
 this.Controls.Add(this.lblModified_at);

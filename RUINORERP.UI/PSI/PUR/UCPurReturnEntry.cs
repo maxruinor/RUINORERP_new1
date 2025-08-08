@@ -57,7 +57,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             AddPublicEntityObject(typeof(ProductSharePart));
         }
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_PurReturnEntry returnEntry)
             {
@@ -78,7 +78,7 @@ namespace RUINORERP.UI.PSI.PUR
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         internal override void LoadDataToUI(object Entity)

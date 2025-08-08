@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 18:55:22
+// 时间：08/08/2025 13:46:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -78,6 +78,7 @@ namespace RUINORERP.UI
         View_MRP_ReworkReturn entity = new View_MRP_ReworkReturn();
                      entity.ReworkReturnID = Int64.Parse(txtReworkReturnID.Text);
                         entity.ReworkReturnNo = txtReworkReturnNo.Text ;
+                       entity.DeliveryBillNo = txtDeliveryBillNo.Text ;
                        entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.DataStatus = Int32.Parse(txtDataStatus.Text);
@@ -95,7 +96,6 @@ namespace RUINORERP.UI
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
                         entity.Modified_by = Int64.Parse(txtModified_by.Text);
-                        entity.MOID = Int64.Parse(txtMOID.Text);
                         entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
                         entity.SKU = txtSKU.Text ;
                        entity.Specifications = txtSpecifications.Text ;
@@ -126,6 +126,7 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.ReworkReturnID, txtReworkReturnID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.ReworkReturnNo, txtReworkReturnNo, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.DeliveryBillNo, txtDeliveryBillNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.CustomerVendor_ID, txtCustomerVendor_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.Employee_ID, txtEmployee_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
@@ -143,7 +144,6 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<View_MRP_ReworkReturn>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.MOID, txtMOID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.ProdDetailID, txtProdDetailID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.SKU, txtSKU, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkReturn>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text,false);

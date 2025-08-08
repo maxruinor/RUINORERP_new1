@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/24/2025 14:14:53
+// 时间：08/08/2025 13:45:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,36 +40,36 @@ namespace RUINORERP.Business
      
  RuleFor(tb_Employee =>tb_Employee.DepartmentID).Must(CheckForeignKeyValue).WithMessage("部门:下拉选择值不正确。");
 
- RuleFor(tb_Employee =>tb_Employee.Employee_NO).MaximumLength(10).WithMessage("员工编号:不能超过最大长度,10.");
+ RuleFor(tb_Employee =>tb_Employee.Employee_NO).MaximumMixedLength(20).WithMessage("员工编号:不能超过最大长度,20.");
  RuleFor(tb_Employee =>tb_Employee.Employee_NO).NotEmpty().WithMessage("员工编号:不能为空。");
 
- RuleFor(tb_Employee =>tb_Employee.Employee_Name).MaximumLength(50).WithMessage("姓名:不能超过最大长度,50.");
+ RuleFor(tb_Employee =>tb_Employee.Employee_Name).MaximumMixedLength(100).WithMessage("姓名:不能超过最大长度,100.");
  RuleFor(tb_Employee =>tb_Employee.Employee_Name).NotEmpty().WithMessage("姓名:不能为空。");
 
 
- RuleFor(tb_Employee =>tb_Employee.Position).MaximumLength(10).WithMessage("职位:不能超过最大长度,10.");
+ RuleFor(tb_Employee =>tb_Employee.Position).MaximumMixedLength(20).WithMessage("职位:不能超过最大长度,20.");
 
 
 
 
- RuleFor(tb_Employee =>tb_Employee.JobTitle).MaximumLength(25).WithMessage("职称:不能超过最大长度,25.");
+ RuleFor(tb_Employee =>tb_Employee.JobTitle).MaximumMixedLength(50).WithMessage("职称:不能超过最大长度,50.");
 
- RuleFor(tb_Employee =>tb_Employee.Address).MaximumLength(127).WithMessage("联络地址:不能超过最大长度,127.");
+ RuleFor(tb_Employee =>tb_Employee.Address).MaximumMixedLength(255).WithMessage("联络地址:不能超过最大长度,255.");
 
- RuleFor(tb_Employee =>tb_Employee.Email).MaximumLength(50).WithMessage("邮件:不能超过最大长度,50.");
+ RuleFor(tb_Employee =>tb_Employee.Email).MaximumMixedLength(100).WithMessage("邮件:不能超过最大长度,100.");
 
- RuleFor(tb_Employee =>tb_Employee.Education).MaximumLength(50).WithMessage("教育程度:不能超过最大长度,50.");
+ RuleFor(tb_Employee =>tb_Employee.Education).MaximumMixedLength(100).WithMessage("教育程度:不能超过最大长度,100.");
 
- RuleFor(tb_Employee =>tb_Employee.LanguageSkills).MaximumLength(25).WithMessage("外语能力:不能超过最大长度,25.");
+ RuleFor(tb_Employee =>tb_Employee.LanguageSkills).MaximumMixedLength(50).WithMessage("外语能力:不能超过最大长度,50.");
 
- RuleFor(tb_Employee =>tb_Employee.University).MaximumLength(50).WithMessage("毕业院校:不能超过最大长度,50.");
+ RuleFor(tb_Employee =>tb_Employee.University).MaximumMixedLength(100).WithMessage("毕业院校:不能超过最大长度,100.");
 
- RuleFor(tb_Employee =>tb_Employee.IDNumber).MaximumLength(15).WithMessage("身份证号:不能超过最大长度,15.");
+ RuleFor(tb_Employee =>tb_Employee.IDNumber).MaximumMixedLength(30).WithMessage("身份证号:不能超过最大长度,30.");
 
 
  RuleFor(x => x.salary).PrecisionScale(19,4,true).WithMessage("工资:小数位不能超过4。");
 
- RuleFor(tb_Employee =>tb_Employee.Notes).MaximumLength(100).WithMessage("备注说明:不能超过最大长度,100.");
+ RuleFor(tb_Employee =>tb_Employee.Notes).MaximumMixedLength(200).WithMessage("备注说明:不能超过最大长度,200.");
 
 //有默认值
 
@@ -81,7 +81,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Employee =>tb_Employee.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_Employee =>tb_Employee.PhoneNumber).MaximumLength(25).WithMessage("手机号:不能超过最大长度,25.");
+ RuleFor(tb_Employee =>tb_Employee.PhoneNumber).MaximumMixedLength(50).WithMessage("手机号:不能超过最大长度,50.");
 
            	        Initialize();
      }

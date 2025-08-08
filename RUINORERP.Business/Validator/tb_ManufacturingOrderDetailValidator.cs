@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 20:57:17
+// 时间：08/08/2025 13:45:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,7 +44,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品:下拉选择值不正确。");
 
 
- RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.ID).NotNull().WithMessage(":不能为空。");
@@ -54,7 +54,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
- RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.BOM_NO).MaximumLength(25).WithMessage("配方编号:不能超过最大长度,25.");
+ RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.BOM_NO).MaximumMixedLength(50).WithMessage("配方编号:不能超过最大长度,50.");
 
  RuleFor(x => x.ShouldSendQty).PrecisionScale(10,3,true).WithMessage("应发数:小数位不能超过3。");
 
@@ -73,12 +73,13 @@ namespace RUINORERP.Business
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.BOM_ID).NotEmpty().When(x => x.BOM_ID.HasValue);
 
 
- RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
+ RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Summary).MaximumMixedLength(255).WithMessage("摘要:不能超过最大长度,255.");
 
- RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.AssemblyPosition).MaximumLength(250).WithMessage("组装位置:不能超过最大长度,250.");
+ RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.AssemblyPosition).MaximumMixedLength(500).WithMessage("组装位置:不能超过最大长度,500.");
 
+ RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.AlternativeProducts).MaximumMixedLength(50).WithMessage("替代品:不能超过最大长度,50.");
 
- RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Prelevel_BOM_Desc).MaximumLength(100).WithMessage("上级配方名称:不能超过最大长度,100.");
+ RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Prelevel_BOM_Desc).MaximumMixedLength(100).WithMessage("上级配方名称:不能超过最大长度,100.");
 
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Prelevel_BOM_ID).NotEmpty().When(x => x.Prelevel_BOM_ID.HasValue);
 

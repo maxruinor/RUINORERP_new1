@@ -49,7 +49,7 @@ namespace RUINORERP.Model.ConfigModel
         /// 平台订单时，自动审核收款单
         /// 平台订单才可能直接进账
         /// </summary>
-        public bool AutoAuditReceivePaymentRecord { get; set; }
+        public bool AutoAuditReceivePaymentRecordByPlatform { get; set; }
 
 
         /// <summary>

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/23/2025 12:19:09
+// 时间：08/08/2025 13:45:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,10 +38,10 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.WSRNo).MaximumLength(25).WithMessage("蓄水编号:不能超过最大长度,25.");
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.WSRNo).MaximumMixedLength(50).WithMessage("蓄水编号:不能超过最大长度,50.");
  RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.WSRNo).NotEmpty().WithMessage("蓄水编号:不能为空。");
 
- RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.PlatformOrderNo).MaximumLength(50).WithMessage("平台单号:不能超过最大长度,50.");
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.PlatformOrderNo).MaximumMixedLength(100).WithMessage("平台单号:不能超过最大长度,100.");
  RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.PlatformOrderNo).NotEmpty().WithMessage("平台单号:不能为空。");
 
 //***** 
@@ -57,11 +57,11 @@ namespace RUINORERP.Business
  RuleFor(x => x.PlatformFeeAmount).PrecisionScale(19,4,true).WithMessage("平台费用:小数位不能超过4。");
 
 
- RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.ShippingAddress).MaximumLength(250).WithMessage("收货地址:不能超过最大长度,250.");
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.ShippingAddress).MaximumMixedLength(500).WithMessage("收货地址:不能超过最大长度,500.");
 
- RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.ShippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.ShippingWay).MaximumMixedLength(50).WithMessage("发货方式:不能超过最大长度,50.");
 
- RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.TrackNo).MaximumLength(25).WithMessage("物流单号:不能超过最大长度,25.");
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.TrackNo).MaximumMixedLength(50).WithMessage("物流单号:不能超过最大长度,50.");
 
 
  RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -69,13 +69,13 @@ namespace RUINORERP.Business
 
  RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
 
 //***** 
  RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
  RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

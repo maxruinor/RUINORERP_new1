@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/07/2025 13:17:57
+// 时间：08/08/2025 13:45:53
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,7 +45,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdBorrowingDetail =>tb_ProdBorrowingDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品:下拉选择值不正确。");
 
- RuleFor(tb_ProdBorrowingDetail =>tb_ProdBorrowingDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_ProdBorrowingDetail =>tb_ProdBorrowingDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_ProdBorrowingDetail =>tb_ProdBorrowingDetail.Qty).NotNull().WithMessage("借出数量:不能为空。");
@@ -57,7 +57,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
 
- RuleFor(tb_ProdBorrowingDetail =>tb_ProdBorrowingDetail.Summary).MaximumLength(250).WithMessage("摘要:不能超过最大长度,250.");
+ RuleFor(tb_ProdBorrowingDetail =>tb_ProdBorrowingDetail.Summary).MaximumMixedLength(500).WithMessage("摘要:不能超过最大长度,500.");
 
  RuleFor(x => x.SubtotalCostAmount).PrecisionScale(19,4,true).WithMessage("成本小计:小数位不能超过4。");
 

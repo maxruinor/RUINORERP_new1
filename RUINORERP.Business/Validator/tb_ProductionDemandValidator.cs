@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:30
+// 时间：08/08/2025 13:46:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,11 +38,11 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_ProductionDemand =>tb_ProductionDemand.PDNo).MaximumLength(50).WithMessage("需要分析单号:不能超过最大长度,50.");
+ RuleFor(tb_ProductionDemand =>tb_ProductionDemand.PDNo).MaximumMixedLength(100).WithMessage("需要分析单号:不能超过最大长度,100.");
  RuleFor(tb_ProductionDemand =>tb_ProductionDemand.PDNo).NotEmpty().WithMessage("需要分析单号:不能为空。");
 
 
- RuleFor(tb_ProductionDemand =>tb_ProductionDemand.PPNo).MaximumLength(50).WithMessage("计划单号:不能超过最大长度,50.");
+ RuleFor(tb_ProductionDemand =>tb_ProductionDemand.PPNo).MaximumMixedLength(100).WithMessage("计划单号:不能超过最大长度,100.");
  RuleFor(tb_ProductionDemand =>tb_ProductionDemand.PPNo).NotEmpty().WithMessage("计划单号:不能为空。");
 
  RuleFor(tb_ProductionDemand =>tb_ProductionDemand.PPID).Must(CheckForeignKeyValue).WithMessage("计划单号:下拉选择值不正确。");
@@ -52,11 +52,11 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProductionDemand =>tb_ProductionDemand.DataStatus).NotNull().WithMessage("单据状态:不能为空。");
 
- RuleFor(tb_ProductionDemand =>tb_ProductionDemand.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_ProductionDemand =>tb_ProductionDemand.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
 
 
- RuleFor(tb_ProductionDemand =>tb_ProductionDemand.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_ProductionDemand =>tb_ProductionDemand.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
 
  RuleFor(tb_ProductionDemand =>tb_ProductionDemand.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -73,7 +73,7 @@ namespace RUINORERP.Business
 
 
 
-           	                //long
+           	                //long?
                 //PDID
                 //tb_ProductionDemandDetail
                 //RuleFor(x => x.tb_ProductionDemandDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
@@ -81,7 +81,7 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_ProductionDemandDetails).NotNull();
                 //RuleForEach(x => x.tb_ProductionDemandDetails).NotNull();
                 //RuleFor(x => x.tb_ProductionDemandDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                            //long
+                            //long?
                 //PDID
                 //tb_ProductionDemandTargetDetail
                 //RuleFor(x => x.tb_ProductionDemandTargetDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");

@@ -1154,6 +1154,7 @@ namespace RUINORERP.UI.UControls
 
             //自定义列
             customizeGrid = new CustomizeGrid();
+            customizeGrid.InitializeDefaultColumnCustomizeGrid += CustomizeGrid_InitializeDefaultColumnCustomizeGrid;
             customizeGrid.UseCustomColumnDisplay = UseCustomColumnDisplay;
             AllowUserToOrderColumns = UseCustomColumnDisplay;
             customizeGrid.targetDataGridView = this;
@@ -1179,6 +1180,30 @@ namespace RUINORERP.UI.UControls
             InitializeFilterPanel();
 
 
+        }
+
+        private void CustomizeGrid_InitializeDefaultColumnCustomizeGrid(List<ColDisplayController> ColumnDisplays)
+        {
+            //初始化列，有两种 一种是数据库中的。一种是xml文件的
+            if (NeedSaveColumnsXml)
+            {
+                //ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
+                ColumnDisplays.Clear();
+                foreach (DataGridViewColumn dc in Columns)
+                {
+                    ColDisplayController cdc = new ColDisplayController();
+                    cdc.ColDisplayText = dc.HeaderText;
+                    cdc.ColDisplayIndex = dc.DisplayIndex;
+                    cdc.ColWidth = dc.Width;
+                    cdc.ColName = dc.Name;
+                    cdc.IsFixed = dc.Frozen;
+                    cdc.Visible = dc.Visible;
+                    cdc.DataPropertyName = dc.DataPropertyName;
+                    ColumnDisplays.Add(cdc);
+                }
+
+            }
+            BindColumnStyle();
         }
 
         private void InitializeFilterPanel()

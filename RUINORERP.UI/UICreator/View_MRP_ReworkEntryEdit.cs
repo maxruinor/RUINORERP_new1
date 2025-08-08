@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 18:55:19
+// 时间：08/08/2025 13:46:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,6 +65,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -75,7 +76,8 @@ namespace RUINORERP.UI
                      entity.ReworkEntryID = Int64.Parse(txtReworkEntryID.Text);
                         entity.ReworkEntryNo = txtReworkEntryNo.Text ;
                        entity.ReworkReturnID = Int64.Parse(txtReworkReturnID.Text);
-                        entity.EntryDate = DateTime.Parse(txtEntryDate.Text);
+                        entity.ReworkReturnNo = txtReworkReturnNo.Text ;
+                       entity.EntryDate = DateTime.Parse(txtEntryDate.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.Notes = txtNotes.Text ;
@@ -119,6 +121,7 @@ namespace RUINORERP.UI
                         DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.ReworkEntryID, txtReworkEntryID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.ReworkEntryNo, txtReworkEntryNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.ReworkReturnID, txtReworkReturnID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.ReworkReturnNo, txtReworkReturnNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<View_MRP_ReworkEntry>(entity, t => t.EntryDate, dtpEntryDate,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.CustomerVendor_ID, txtCustomerVendor_ID, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<View_MRP_ReworkEntry>(entity, t => t.Employee_ID, txtEmployee_ID, BindDataType4TextBox.Qty,false);

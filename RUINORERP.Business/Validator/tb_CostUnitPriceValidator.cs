@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：08/08/2025 13:45:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,9 +42,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_CostUnitPrice =>tb_CostUnitPrice.Group_id).NotEmpty().When(x => x.Group_id.HasValue);
 
- RuleFor(tb_CostUnitPrice =>tb_CostUnitPrice.SpecInstructions).MaximumLength(127).WithMessage("特殊说明:不能超过最大长度,127.");
+ RuleFor(tb_CostUnitPrice =>tb_CostUnitPrice.SpecInstructions).MaximumMixedLength(255).WithMessage("特殊说明:不能超过最大长度,255.");
 
- RuleFor(tb_CostUnitPrice =>tb_CostUnitPrice.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_CostUnitPrice =>tb_CostUnitPrice.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 
  RuleFor(tb_CostUnitPrice =>tb_CostUnitPrice.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

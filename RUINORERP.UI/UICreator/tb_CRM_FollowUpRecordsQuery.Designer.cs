@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/13/2024 17:41:43
+// 时间：08/08/2025 13:45:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -79,6 +79,7 @@ this.chkHasResponse.Values.Text ="";
 
 this.lblFollowUpResult = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtFollowUpResult = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.txtFollowUpResult.Multiline = true;
 
 this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -233,13 +234,13 @@ this.chkHasResponse.TabIndex = 9;
 this.Controls.Add(this.lblHasResponse);
 this.Controls.Add(this.chkHasResponse);
 
-           //#####100FollowUpResult###String
+           //#####500FollowUpResult###String
 this.lblFollowUpResult.AutoSize = true;
 this.lblFollowUpResult.Location = new System.Drawing.Point(100,250);
 this.lblFollowUpResult.Name = "lblFollowUpResult";
 this.lblFollowUpResult.Size = new System.Drawing.Size(41, 12);
 this.lblFollowUpResult.TabIndex = 10;
-this.lblFollowUpResult.Text = "备注";
+this.lblFollowUpResult.Text = "跟进结果";
 this.txtFollowUpResult.Location = new System.Drawing.Point(173,246);
 this.txtFollowUpResult.Name = "txtFollowUpResult";
 this.txtFollowUpResult.Size = new System.Drawing.Size(100, 21);
@@ -247,13 +248,13 @@ this.txtFollowUpResult.TabIndex = 10;
 this.Controls.Add(this.lblFollowUpResult);
 this.Controls.Add(this.txtFollowUpResult);
 
-           //#####255Notes###String
+           //#####1000Notes###String
 this.lblNotes.AutoSize = true;
 this.lblNotes.Location = new System.Drawing.Point(100,275);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
 this.lblNotes.TabIndex = 11;
-this.lblNotes.Text = "跟进结果";
+this.lblNotes.Text = "备注";
 this.txtNotes.Location = new System.Drawing.Point(173,271);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);

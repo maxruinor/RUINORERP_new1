@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:28
+// 时间：08/08/2025 13:45:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,35 +41,41 @@ namespace RUINORERP.Business
  RuleFor(tb_MenuInfo =>tb_MenuInfo.ModuleID).Must(CheckForeignKeyValueCanNull).WithMessage("模块:下拉选择值不正确。");
  RuleFor(tb_MenuInfo =>tb_MenuInfo.ModuleID).NotEmpty().When(x => x.ModuleID.HasValue);
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.MenuName).MaximumLength(127).WithMessage("菜单名称:不能超过最大长度,127.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.MenuName).MaximumMixedLength(255).WithMessage("菜单名称:不能超过最大长度,255.");
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.MenuType).MaximumLength(10).WithMessage("菜单类型:不能超过最大长度,10.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.MenuType).MaximumMixedLength(20).WithMessage("菜单类型:不能超过最大长度,20.");
  RuleFor(tb_MenuInfo =>tb_MenuInfo.MenuType).NotEmpty().WithMessage("菜单类型:不能为空。");
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.BIBaseForm).MaximumLength(50).WithMessage("注入基类:不能超过最大长度,50.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.UIPropertyIdentifier).MaximumMixedLength(150).WithMessage("注入业务基类:不能超过最大长度,150.");
+
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.BizInterface).MaximumMixedLength(150).WithMessage("注入业务基类:不能超过最大长度,150.");
+
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.BIBizBaseForm).MaximumMixedLength(150).WithMessage("业务接口标识:不能超过最大长度,150.");
+
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.BIBaseForm).MaximumMixedLength(100).WithMessage("注入框架基类:不能超过最大长度,100.");
 
  RuleFor(tb_MenuInfo =>tb_MenuInfo.BizType).NotEmpty().When(x => x.BizType.HasValue);
 
  RuleFor(tb_MenuInfo =>tb_MenuInfo.UIType).NotEmpty().When(x => x.UIType.HasValue);
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.CaptionCN).MaximumLength(125).WithMessage("中文显示:不能超过最大长度,125.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.CaptionCN).MaximumMixedLength(250).WithMessage("中文显示:不能超过最大长度,250.");
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.CaptionEN).MaximumLength(125).WithMessage("英文显示:不能超过最大长度,125.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.CaptionEN).MaximumMixedLength(250).WithMessage("英文显示:不能超过最大长度,250.");
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.FormName).MaximumLength(127).WithMessage("窗体名称:不能超过最大长度,127.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.FormName).MaximumMixedLength(255).WithMessage("窗体名称:不能超过最大长度,255.");
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.ClassPath).MaximumLength(250).WithMessage("类路径:不能超过最大长度,250.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.ClassPath).MaximumMixedLength(500).WithMessage("类路径:不能超过最大长度,500.");
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.EntityName).MaximumLength(50).WithMessage("关联实体名:不能超过最大长度,50.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.EntityName).MaximumMixedLength(100).WithMessage("关联实体名:不能超过最大长度,100.");
 
 
 //有默认值
 
  RuleFor(tb_MenuInfo =>tb_MenuInfo.Parent_id).NotEmpty().When(x => x.Parent_id.HasValue);
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.Discription).MaximumLength(125).WithMessage("描述:不能超过最大长度,125.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.Discription).MaximumMixedLength(250).WithMessage("描述:不能超过最大长度,250.");
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.MenuNo).MaximumLength(125).WithMessage("菜单编码:不能超过最大长度,125.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.MenuNo).MaximumMixedLength(250).WithMessage("菜单编码:不能超过最大长度,250.");
 
  RuleFor(tb_MenuInfo =>tb_MenuInfo.MenuLevel).NotEmpty().When(x => x.MenuLevel.HasValue);
 
@@ -82,7 +88,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_MenuInfo =>tb_MenuInfo.Sort).NotNull().WithMessage("排序:不能为空。");
 
- RuleFor(tb_MenuInfo =>tb_MenuInfo.HotKey).MaximumLength(25).WithMessage("热键:不能超过最大长度,25.");
+ RuleFor(tb_MenuInfo =>tb_MenuInfo.HotKey).MaximumMixedLength(50).WithMessage("热键:不能超过最大长度,50.");
 
 
            	        Initialize();

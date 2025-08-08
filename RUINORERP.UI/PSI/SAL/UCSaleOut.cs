@@ -47,6 +47,7 @@ using RUINORERP.UI.BusinessService.CalculationService;
 using System.Threading;
 using RUINORERP.UI.ToolForm;
 using Netron.GraphLib;
+using LiveChartsCore.Geo;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -184,7 +185,7 @@ namespace RUINORERP.UI.PSI.SAL
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override async void LoadRelatedDataToDropDownItemsAsync()
         {
             //加载关联的单据
             if (base.EditEntity is tb_SaleOut saleOut)
@@ -224,8 +225,34 @@ namespace RUINORERP.UI.PSI.SAL
 
                     }
                 }
+
+                //如果有出库，则查应收
+                if (saleOut.DataStatus >= (int)DataStatus.确认)
+                {
+                    var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                    .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
+                                                                    && c.CustomerVendor_ID == saleOut.CustomerVendor_ID
+                                                                        && c.SourceBizType == (int)BizType.销售出库单
+                                                                    && c.SourceBillId == saleOut.SaleOut_MainID)
+                                                                    .ToListAsync();
+                    foreach (var item in receivablePayables)
+                    {
+                        var rqp = new Model.CommonModel.RelatedQueryParameter();
+                        rqp.bizType = BizType.应收款单;
+                        rqp.billId = item.ARAPId;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.ARAPNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
         public override void BindData(tb_SaleOut entity, ActionStatus actionStatus)
         {

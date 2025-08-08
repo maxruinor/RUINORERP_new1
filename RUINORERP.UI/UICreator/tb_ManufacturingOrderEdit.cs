@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 18:05:09
+// 时间：08/08/2025 13:45:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -82,6 +82,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -93,26 +94,27 @@ namespace RUINORERP.UI
                        entity.PDNO = txtPDNO.Text ;
                        entity.PDCID = Int64.Parse(txtPDCID.Text);
                         entity.PDID = Int64.Parse(txtPDID.Text);
-                        entity.QuantityDelivered = Int32.Parse(txtQuantityDelivered.Text);
+                        entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
+                        entity.SKU = txtSKU.Text ;
+                       entity.Specifications = txtSpecifications.Text ;
+                       entity.property = txtproperty.Text ;
+                       entity.CNName = txtCNName.Text ;
+                       entity.QuantityDelivered = Int32.Parse(txtQuantityDelivered.Text);
                         entity.ManufacturingQty = Int32.Parse(txtManufacturingQty.Text);
                         entity.Priority = Int32.Parse(txtPriority.Text);
                         entity.PreStartDate = DateTime.Parse(txtPreStartDate.Text);
                         entity.PreEndDate = DateTime.Parse(txtPreEndDate.Text);
-                        entity.SKU = txtSKU.Text ;
-                       entity.CNName = txtCNName.Text ;
-                       entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
                         entity.BOM_ID = Int64.Parse(txtBOM_ID.Text);
                         entity.BOM_No = txtBOM_No.Text ;
                        entity.Type_ID = Int64.Parse(txtType_ID.Text);
                         entity.Unit_ID = Int64.Parse(txtUnit_ID.Text);
                         entity.CustomerPartNo = txtCustomerPartNo.Text ;
-                       entity.Specifications = txtSpecifications.Text ;
-                       entity.property = txtproperty.Text ;
                        entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.Location_ID = Int64.Parse(txtLocation_ID.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.CustomerVendor_ID_Out = Int64.Parse(txtCustomerVendor_ID_Out.Text);
                         entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
+                        entity.IsCustomizedOrder = Boolean.Parse(txtIsCustomizedOrder.Text);
                         entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
@@ -151,27 +153,28 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PDNO, txtPDNO, BindDataType4TextBox.Text,false);
           CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_ProduceGoodsRecommendDetail>(entity, k => k.PDCID, v=>v.XXNAME, cmbPDCID);
           CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_ProductionDemand>(entity, k => k.PDID, v=>v.XXNAME, cmbPDID);
+          CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
+           DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.SKU, txtSKU, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.CNName, txtCNName, BindDataType4TextBox.Text,false);
           CustomerVendor_ID_Out主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.QuantityDelivered, txtQuantityDelivered, BindDataType4TextBox.Qty,false);
           CustomerVendor_ID_Out主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ManufacturingQty, txtManufacturingQty, BindDataType4TextBox.Qty,false);
           CustomerVendor_ID_Out主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.Priority, txtPriority, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.PreStartDate, dtpPreStartDate,false);
            DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.PreEndDate, dtpPreEndDate,false);
-           DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.SKU, txtSKU, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.CNName, txtCNName, BindDataType4TextBox.Text,false);
-          CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
           CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_BOM_S>(entity, k => k.BOM_ID, v=>v.XXNAME, cmbBOM_ID);
            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.BOM_No, txtBOM_No, BindDataType4TextBox.Text,false);
           CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_ProductType>(entity, k => k.Type_ID, v=>v.XXNAME, cmbType_ID);
           CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_Unit>(entity, k => k.Unit_ID, v=>v.XXNAME, cmbUnit_ID);
            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.CustomerPartNo, txtCustomerPartNo, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
           CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v=>v.XXNAME, cmbLocation_ID);
           CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           CustomerVendor_ID_Out主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.CustomerVendor_ID_Out, txtCustomerVendor_ID_Out, BindDataType4TextBox.Qty,false);
           CustomerVendor_ID_Out主外字段不一致。// DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
 // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
+           DataBindingHelper.BindData4CheckBox<tb_ManufacturingOrder>(entity, t => t.IsCustomizedOrder, chkIsCustomizedOrder, false);
            DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.Created_at, dtpCreated_at,false);
           CustomerVendor_ID_Out主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.Modified_at, dtpModified_at,false);

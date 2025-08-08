@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:31
+// 时间：08/08/2025 13:46:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.RolePropertyName).MaximumLength(127).WithMessage("角色名称:不能超过最大长度,127.");
+ RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.RolePropertyName).MaximumMixedLength(255).WithMessage("角色名称:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.QtyDataPrecision).NotNull().WithMessage("数量精度:不能为空。");
@@ -63,7 +63,7 @@ namespace RUINORERP.Business
 
 
 
- RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.DataBoardUnits).MaximumLength(250).WithMessage(":不能超过最大长度,250.");
+ RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.DataBoardUnits).MaximumMixedLength(500).WithMessage(":不能超过最大长度,500.");
 
            	        Initialize();
      }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:36
+// 时间：08/08/2025 13:45:08
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,12 +38,12 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.RepairInStockNo).MaximumLength(25).WithMessage("维修入库单号:不能超过最大长度,25.");
+ RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.RepairInStockNo).MaximumMixedLength(50).WithMessage("维修入库单号:不能超过最大长度,50.");
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.RepairInStockNo).NotEmpty().WithMessage("维修入库单号:不能为空。");
 
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.RepairOrderID).Must(CheckForeignKeyValue).WithMessage("维修工单:下拉选择值不正确。");
 
- RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.RepairOrderNo).MaximumLength(25).WithMessage("维修工单号:不能超过最大长度,25.");
+ RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.RepairOrderNo).MaximumMixedLength(50).WithMessage("维修工单号:不能超过最大长度,50.");
 
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("经办人员:下拉选择值不正确。");
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
@@ -64,9 +64,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
- RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
  RuleFor(tb_AS_RepairInStock =>tb_AS_RepairInStock.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

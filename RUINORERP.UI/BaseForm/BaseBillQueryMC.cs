@@ -1096,29 +1096,39 @@ namespace RUINORERP.UI.BaseForm
                         #region 组合查询
                         for (int i = 0; i < nodeParameter.conditionals.Count; i++)
                         {
-                            ConditionalCollections ccs = nodeParameter.conditionals[i] as ConditionalCollections;
-                            for (int c = 0; c < ccs.ConditionalList.Count; c++)
+                            if (nodeParameter.conditionals[i] is ConditionalCollections)
                             {
-                                ConditionalModel item = ccs.ConditionalList[c].Value;
-                                if (item.ConditionalType == ConditionalType.Equal)
+                                ConditionalCollections ccs = nodeParameter.conditionals[i] as ConditionalCollections;
+                                for (int c = 0; c < ccs.ConditionalList.Count; c++)
                                 {
-                                    switch (item.CSharpTypeName)
+                                    ConditionalModel item = ccs.ConditionalList[c].Value;
+                                    if (item.ConditionalType == ConditionalType.Equal)
                                     {
-                                        case "int":
-                                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
-                                            break;
-                                        case "long":
-                                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
-                                            break;
-                                        case "bool":
-                                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
-                                            break;
-                                        default:
-                                            QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
-                                            break;
+                                        switch (item.CSharpTypeName)
+                                        {
+                                            case "int":
+                                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
+                                                break;
+                                            case "long":
+                                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
+                                                break;
+                                            case "bool":
+                                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
+                                                break;
+                                            default:
+                                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
+                                                break;
+                                        }
                                     }
-                                }
 
+                                }
+                            }
+
+                            else
+                            {
+                                //KeyValuePair<WhereType, ConditionalModel> kv = new KeyValuePair<WhereType, ConditionalModel>(WhereType.And, item.Conditions[i] as ConditionalModel);
+                                //ConditionalList.Add(kv);
+                                //要进一步测试
                             }
 
                         }
@@ -1214,7 +1224,7 @@ namespace RUINORERP.UI.BaseForm
             if (ResultAnalysis && _UCOutlookGridAnalysis1 != null)
             {
                 _UCOutlookGridAnalysis1.ColDisplayTypes = new List<Type>();
-                
+
                 _UCOutlookGridAnalysis1.ColDisplayTypes.Add(typeof(M));
 
                 _UCOutlookGridAnalysis1.FieldNameList = _UCBillMasterQuery.newSumDataGridViewMaster.FieldNameList;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/07/2024 19:06:28
+// 时间：08/08/2025 13:45:51
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,6 +68,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -81,6 +82,7 @@ namespace RUINORERP.UI
                        entity.Images = Binary.Parse(txtImages.Text);
                         entity.ENName = txtENName.Text ;
                        entity.Model = txtModel.Text ;
+                       entity.VendorModelCode = txtVendorModelCode.Text ;
                        entity.ShortCode = txtShortCode.Text ;
                        entity.Specifications = txtSpecifications.Text ;
                        entity.SourceType = Int32.Parse(txtSourceType.Text);
@@ -125,6 +127,7 @@ namespace RUINORERP.UI
            //default  DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.Images.ToString(), txtImages, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.ENName, txtENName, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.Model, txtModel, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.VendorModelCode, txtVendorModelCode, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.ShortCode, txtShortCode, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.SourceType, txtSourceType, BindDataType4TextBox.Qty,false);
@@ -143,17 +146,17 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.CustomsCode, txtCustomsCode, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.Tag, txtTag, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_Prod>(entity, t => t.SalePublish, chkSalePublish, false);
-           DataBindingHelper.BindData4CehckBox<tb_Prod>(entity, t => t.Is_enabled, chkIs_enabled, false);
+           DataBindingHelper.BindData4CheckBox<tb_Prod>(entity, t => t.SalePublish, chkSalePublish, false);
+           DataBindingHelper.BindData4CheckBox<tb_Prod>(entity, t => t.Is_enabled, chkIs_enabled, false);
 //有默认值
-           DataBindingHelper.BindData4CehckBox<tb_Prod>(entity, t => t.Is_available, chkIs_available, false);
+           DataBindingHelper.BindData4CheckBox<tb_Prod>(entity, t => t.Is_available, chkIs_available, false);
 //有默认值
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_Prod>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_Prod>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_Prod>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_Prod>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_Prod>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
 }
 

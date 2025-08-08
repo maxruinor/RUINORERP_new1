@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/23/2025 23:27:34
+// 时间：08/08/2025 13:45:49
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,7 +42,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PayMethodAccountMapper =>tb_PayMethodAccountMapper.Account_id).Must(CheckForeignKeyValue).WithMessage("公司账户:下拉选择值不正确。");
 
- RuleFor(tb_PayMethodAccountMapper =>tb_PayMethodAccountMapper.Description).MaximumLength(25).WithMessage("描述:不能超过最大长度,25.");
+ RuleFor(tb_PayMethodAccountMapper =>tb_PayMethodAccountMapper.Description).MaximumMixedLength(50).WithMessage("描述:不能超过最大长度,50.");
 
 
 

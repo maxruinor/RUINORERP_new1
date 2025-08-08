@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:32
+// 时间：08/08/2025 13:45:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -85,7 +85,7 @@ this.dtpt4 = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
     this.SuspendLayout();
     
          //for start
-                 //#####30badgenumber###String
+                 //#####50badgenumber###String
 this.lblbadgenumber.AutoSize = true;
 this.lblbadgenumber.Location = new System.Drawing.Point(100,25);
 this.lblbadgenumber.Name = "lblbadgenumber";

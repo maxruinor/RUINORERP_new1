@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:34
+// 时间：08/08/2025 13:45:07
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,16 +44,16 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
- RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.Quantity).NotNull().WithMessage("数量:不能为空。");
 
- RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.SaleFlagCode).MaximumLength(100).WithMessage("标识代码:不能超过最大长度,100.");
+ RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.SaleFlagCode).MaximumMixedLength(200).WithMessage("标识代码:不能超过最大长度,200.");
 
- RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
+ RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
- RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.CustomerPartNo).MaximumLength(25).WithMessage("客户型号:不能超过最大长度,25.");
+ RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.CustomerPartNo).MaximumMixedLength(50).WithMessage("客户型号:不能超过最大长度,50.");
 
  RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.ASApplyDetailID).NotEmpty().When(x => x.ASApplyDetailID.HasValue);
 

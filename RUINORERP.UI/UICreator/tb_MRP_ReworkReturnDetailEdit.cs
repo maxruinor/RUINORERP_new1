@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/04/2025 19:45:30
+// 时间：08/08/2025 13:45:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,7 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 采购入库退回单明细数据编辑
+    /// 返工退库明细数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_MRP_ReworkReturnDetailEdit:UserControl
@@ -59,9 +59,9 @@ namespace RUINORERP.UI
                         entity.property = txtproperty.Text ;
                        entity.Quantity = Int32.Parse(txtQuantity.Text);
                         entity.DeliveredQuantity = Int32.Parse(txtDeliveredQuantity.Text);
-                        entity.ReworkFee = Decimal.Parse(txtReworkFee.Text);
-                        entity.SubtotalReworkFee = Decimal.Parse(txtSubtotalReworkFee.Text);
                         entity.UnitCost = Decimal.Parse(txtUnitCost.Text);
+                        entity.SubtotalReworkFee = Decimal.Parse(txtSubtotalReworkFee.Text);
+                        entity.ReworkFee = Decimal.Parse(txtReworkFee.Text);
                         entity.SubtotalCostAmount = Decimal.Parse(txtSubtotalCostAmount.Text);
                         entity.CustomertModel = txtCustomertModel.Text ;
                        entity.Summary = txtSummary.Text ;
@@ -81,9 +81,9 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.Quantity, txtQuantity, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.DeliveredQuantity, txtDeliveredQuantity, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.ReworkFee.ToString(), txtReworkFee, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.SubtotalReworkFee.ToString(), txtSubtotalReworkFee, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.UnitCost.ToString(), txtUnitCost, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.SubtotalReworkFee.ToString(), txtSubtotalReworkFee, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.ReworkFee.ToString(), txtReworkFee, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.SubtotalCostAmount.ToString(), txtSubtotalCostAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.CustomertModel, txtCustomertModel, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturnDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);

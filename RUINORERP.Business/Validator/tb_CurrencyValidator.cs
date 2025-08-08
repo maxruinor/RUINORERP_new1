@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:56:54
+// 时间：08/08/2025 13:45:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 币别资料表-备份第一行数据后删除重建 如果不行则直接修改字段删除字段验证类
+    /// 币别资料表验证类
     /// </summary>
     /*public partial class tb_CurrencyValidator:AbstractValidator<tb_Currency>*/
     public partial class tb_CurrencyValidator:BaseValidatorGeneric<tb_Currency>
@@ -38,16 +38,15 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_Currency =>tb_Currency.Country).MaximumLength(25).WithMessage("国家:不能超过最大长度,25.");
+ RuleFor(tb_Currency =>tb_Currency.Country).MaximumMixedLength(50).WithMessage("国家:不能超过最大长度,50.");
 
+ RuleFor(tb_Currency =>tb_Currency.CurrencyCode).MaximumMixedLength(50).WithMessage("币别代码:不能超过最大长度,50.");
 
- RuleFor(tb_Currency =>tb_Currency.CurrencyName).MaximumLength(10).WithMessage("币别名称:不能超过最大长度,10.");
+ RuleFor(tb_Currency =>tb_Currency.CurrencyName).MaximumMixedLength(20).WithMessage("币别名称:不能超过最大长度,20.");
  RuleFor(tb_Currency =>tb_Currency.CurrencyName).NotEmpty().WithMessage("币别名称:不能为空。");
 
- RuleFor(tb_Currency =>tb_Currency.CurrencySymbol).MaximumLength(5).WithMessage("币别符号:不能超过最大长度,5.");
+ RuleFor(tb_Currency =>tb_Currency.CurrencySymbol).MaximumMixedLength(50).WithMessage("币别符号:不能超过最大长度,50.");
 
-
-//有默认值
 
 //有默认值
 
@@ -63,7 +62,26 @@ namespace RUINORERP.Business
 
 
 
-      
+        private bool DetailedRecordsNotEmpty(List<tb_FM_StatementDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_FM_PaymentRecordDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
         
 
 

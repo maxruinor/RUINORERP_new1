@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/07/2025 14:22:22
+// 时间：08/08/2025 13:45:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_Invoice =>tb_FM_Invoice.InvoiceNo).MaximumLength(30).WithMessage("发票号码:不能超过最大长度,30.");
+ RuleFor(tb_FM_Invoice =>tb_FM_Invoice.InvoiceNo).MaximumMixedLength(60).WithMessage("发票号码:不能超过最大长度,60.");
  RuleFor(tb_FM_Invoice =>tb_FM_Invoice.InvoiceNo).NotEmpty().WithMessage("发票号码:不能为空。");
 
  RuleFor(tb_FM_Invoice =>tb_FM_Invoice.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("付款单位:下拉选择值不正确。");
@@ -54,7 +54,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("发票总金额（不含税）:小数位不能超过4。");
 
 
- RuleFor(tb_FM_Invoice =>tb_FM_Invoice.Notes).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
+ RuleFor(tb_FM_Invoice =>tb_FM_Invoice.Notes).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 
 //***** 
  RuleFor(tb_FM_Invoice =>tb_FM_Invoice.ReceivePaymentType).NotNull().WithMessage("付款状态:不能为空。");
@@ -66,7 +66,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_Invoice =>tb_FM_Invoice.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
- RuleFor(tb_FM_Invoice =>tb_FM_Invoice.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");
+ RuleFor(tb_FM_Invoice =>tb_FM_Invoice.ApprovalOpinions).MaximumMixedLength(255).WithMessage("审批意见:不能超过最大长度,255.");
 
  RuleFor(tb_FM_Invoice =>tb_FM_Invoice.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

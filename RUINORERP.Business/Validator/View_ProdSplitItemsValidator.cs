@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 18:07:05
+// 时间：08/08/2025 13:46:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 产品分割统计验证类
+    /// 分割明细统计-只管明细产品的数据主表的用查询验证类
     /// </summary>
     /*public partial class View_ProdSplitItemsValidator:AbstractValidator<View_ProdSplitItems>*/
     public partial class View_ProdSplitItemsValidator:BaseValidatorGeneric<View_ProdSplitItems>
@@ -38,10 +38,6 @@ namespace RUINORERP.Business
  
         
      
-
-
-
-
 
 
 

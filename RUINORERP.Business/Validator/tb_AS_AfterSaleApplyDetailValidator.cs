@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:25:31
+// 时间：08/08/2025 13:45:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,11 +43,11 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("产品:下拉选择值不正确。");
 
- RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
  RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
- RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.FaultDescription).MaximumLength(250).WithMessage("问题描述:不能超过最大长度,250.");
+ RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.FaultDescription).MaximumMixedLength(500).WithMessage("问题描述:不能超过最大长度,500.");
 
 //***** 
  RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.InitialQuantity).NotNull().WithMessage("客户申报数量:不能为空。");
@@ -55,12 +55,12 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.ConfirmedQuantity).NotNull().WithMessage("复核数量:不能为空。");
 
- RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.CustomerPartNo).MaximumLength(50).WithMessage("客户型号:不能超过最大长度,50.");
+ RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.CustomerPartNo).MaximumMixedLength(100).WithMessage("客户型号:不能超过最大长度,100.");
 
 //***** 
  RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.DeliveredQty).NotNull().WithMessage("交付数量:不能为空。");
 
- RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.Summary).MaximumLength(500).WithMessage("摘要:不能超过最大长度,500.");
+ RuleFor(tb_AS_AfterSaleApplyDetail =>tb_AS_AfterSaleApplyDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
            	        Initialize();
      }

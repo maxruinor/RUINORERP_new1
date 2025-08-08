@@ -96,7 +96,7 @@ namespace RUINORERP.UI.ASS
 
 
 
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_AS_AfterSaleDelivery AfterSaleDelivery)
             {
@@ -116,7 +116,7 @@ namespace RUINORERP.UI.ASS
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
 
 

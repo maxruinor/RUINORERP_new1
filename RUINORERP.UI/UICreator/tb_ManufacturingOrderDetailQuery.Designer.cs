@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 11:23:52
+// 时间：08/08/2025 13:45:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -372,7 +372,7 @@ this.txtAssemblyPosition.TabIndex = 19;
 this.Controls.Add(this.lblAssemblyPosition);
 this.Controls.Add(this.txtAssemblyPosition);
 
-           //#####10AlternativeProducts###String
+           //#####50AlternativeProducts###String
 this.lblAlternativeProducts.AutoSize = true;
 this.lblAlternativeProducts.Location = new System.Drawing.Point(100,500);
 this.lblAlternativeProducts.Name = "lblAlternativeProducts";

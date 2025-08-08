@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 11:11:38
+// 时间：08/08/2025 13:45:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -76,10 +76,6 @@ this.txtEstimatedPrice = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblDeliveredQuantity = new Krypton.Toolkit.KryptonLabel();
 this.txtDeliveredQuantity = new Krypton.Toolkit.KryptonTextBox();
-
-this.lblPurpose = new Krypton.Toolkit.KryptonLabel();
-this.txtPurpose = new Krypton.Toolkit.KryptonTextBox();
-this.txtPurpose.Multiline = true;
 
 this.lblNotes = new Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
@@ -242,45 +238,31 @@ this.txtDeliveredQuantity.TabIndex = 8;
 this.Controls.Add(this.lblDeliveredQuantity);
 this.Controls.Add(this.txtDeliveredQuantity);
 
-           //#####500Purpose###String
-this.lblPurpose.AutoSize = true;
-this.lblPurpose.Location = new System.Drawing.Point(100,225);
-this.lblPurpose.Name = "lblPurpose";
-this.lblPurpose.Size = new System.Drawing.Size(41, 12);
-this.lblPurpose.TabIndex = 9;
-this.lblPurpose.Text = "用途";
-this.txtPurpose.Location = new System.Drawing.Point(173,221);
-this.txtPurpose.Name = "txtPurpose";
-this.txtPurpose.Size = new System.Drawing.Size(100, 21);
-this.txtPurpose.TabIndex = 9;
-this.Controls.Add(this.lblPurpose);
-this.Controls.Add(this.txtPurpose);
-
            //#####1000Notes###String
 this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,250);
+this.lblNotes.Location = new System.Drawing.Point(100,225);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 10;
+this.lblNotes.TabIndex = 9;
 this.lblNotes.Text = "备注";
-this.txtNotes.Location = new System.Drawing.Point(173,246);
+this.txtNotes.Location = new System.Drawing.Point(173,221);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 10;
+this.txtNotes.TabIndex = 9;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
 
            //#####Purchased###Boolean
 this.lblPurchased.AutoSize = true;
-this.lblPurchased.Location = new System.Drawing.Point(100,275);
+this.lblPurchased.Location = new System.Drawing.Point(100,250);
 this.lblPurchased.Name = "lblPurchased";
 this.lblPurchased.Size = new System.Drawing.Size(41, 12);
-this.lblPurchased.TabIndex = 11;
+this.lblPurchased.TabIndex = 10;
 this.lblPurchased.Text = "已采购";
-this.chkPurchased.Location = new System.Drawing.Point(173,271);
+this.chkPurchased.Location = new System.Drawing.Point(173,246);
 this.chkPurchased.Name = "chkPurchased";
 this.chkPurchased.Size = new System.Drawing.Size(100, 21);
-this.chkPurchased.TabIndex = 11;
+this.chkPurchased.TabIndex = 10;
 this.Controls.Add(this.lblPurchased);
 this.Controls.Add(this.chkPurchased);
 
@@ -298,7 +280,7 @@ this.Controls.Add(this.chkPurchased);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 11;
+           // this.kryptonPanel1.TabIndex = 10;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -325,9 +307,6 @@ this.Controls.Add(this.txtEstimatedPrice );
 
                 this.Controls.Add(this.lblDeliveredQuantity );
 this.Controls.Add(this.txtDeliveredQuantity );
-
-                this.Controls.Add(this.lblPurpose );
-this.Controls.Add(this.txtPurpose );
 
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
@@ -396,11 +375,6 @@ private Krypton.Toolkit.KryptonTextBox txtEstimatedPrice;
         
               private Krypton.Toolkit.KryptonLabel lblDeliveredQuantity;
 private Krypton.Toolkit.KryptonTextBox txtDeliveredQuantity;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblPurpose;
-private Krypton.Toolkit.KryptonTextBox txtPurpose;
 
     
         

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:27
+// 时间：08/08/2025 13:45:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,9 +41,10 @@ namespace RUINORERP.Business
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.ModuleID).Must(CheckForeignKeyValueCanNull).WithMessage("模块:下拉选择值不正确。");
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.ModuleID).NotEmpty().When(x => x.ModuleID.HasValue);
 
+ RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartNo).MaximumMixedLength(50).WithMessage("流程图编号:不能超过最大长度,50.");
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartNo).NotEmpty().WithMessage("流程图编号:不能为空。");
 
- RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartName).MaximumLength(10).WithMessage("流程图名称:不能超过最大长度,10.");
+ RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartName).MaximumMixedLength(20).WithMessage("流程图名称:不能超过最大长度,20.");
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartName).NotEmpty().WithMessage("流程图名称:不能为空。");
 
            	        Initialize();

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/01/2025 12:16:52
+// 时间：08/08/2025 13:45:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentNo).MaximumLength(15).WithMessage("支付单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentNo).MaximumMixedLength(30).WithMessage("支付单号:不能超过最大长度,30.");
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentNo).NotEmpty().WithMessage("支付单号:不能为空。");
 
 //***** 
@@ -55,9 +55,9 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PayeeInfoID).Must(CheckForeignKeyValueCanNull).WithMessage("收款信息:下拉选择值不正确。");
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PayeeAccountNo).MaximumMixedLength(100).WithMessage("收款账号:不能超过最大长度,100.");
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.SourceBillNos).MaximumLength(500).WithMessage("来源单号:不能超过最大长度,500.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.SourceBillNos).MaximumMixedLength(1000).WithMessage("来源单号:不能超过最大长度,1000.");
 
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
@@ -75,20 +75,20 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentStatus).NotNull().WithMessage("支付状态:不能为空。");
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentImagePath).MaximumLength(300).WithMessage("付款凭证:不能超过最大长度,300.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.PaymentImagePath).MaximumMixedLength(300).WithMessage("付款凭证:不能超过最大长度,300.");
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReferenceNo).MaximumLength(150).WithMessage("交易参考号:不能超过最大长度,150.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReferenceNo).MaximumMixedLength(300).WithMessage("交易参考号:不能超过最大长度,300.");
 
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalId).NotEmpty().When(x => x.ReversedOriginalId.HasValue);
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalNo).MaximumLength(15).WithMessage("冲销单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalNo).MaximumMixedLength(30).WithMessage("冲销单号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentId).NotEmpty().When(x => x.ReversedByPaymentId.HasValue);
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentNo).MaximumLength(15).WithMessage("被冲销单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentNo).MaximumMixedLength(30).WithMessage("被冲销单号:不能超过最大长度,30.");
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Remark).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -97,7 +97,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");
+ RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ApprovalOpinions).MaximumMixedLength(255).WithMessage("审批意见:不能超过最大长度,255.");
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

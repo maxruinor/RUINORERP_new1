@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/25/2025 17:18:28
+// 时间：08/08/2025 13:45:27
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,14 +40,14 @@ namespace RUINORERP.Business
      
  RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.subject_id).NotEmpty().When(x => x.subject_id.HasValue);
 
- RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Expense_name).MaximumLength(25).WithMessage("费用业务名称:不能超过最大长度,25.");
+ RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Expense_name).MaximumMixedLength(50).WithMessage("费用业务名称:不能超过最大长度,50.");
 
 //有默认值
 
 //***** 
  RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
 
- RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Notes).MaximumLength(15).WithMessage("备注:不能超过最大长度,15.");
+ RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Notes).MaximumMixedLength(30).WithMessage("备注:不能超过最大长度,30.");
 
            	        Initialize();
      }
@@ -67,6 +67,17 @@ namespace RUINORERP.Business
         
 
         private bool DetailedRecordsNotEmpty(List<tb_FM_ExpenseClaimDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_FM_ReceivablePayableDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

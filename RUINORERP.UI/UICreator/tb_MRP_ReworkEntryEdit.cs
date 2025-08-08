@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/04/2025 19:45:25
+// 时间：08/08/2025 13:45:43
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -60,6 +60,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -69,10 +71,12 @@ namespace RUINORERP.UI
         tb_MRP_ReworkEntry entity = new tb_MRP_ReworkEntry();
                      entity.ReworkEntryNo = txtReworkEntryNo.Text ;
                        entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
+                        entity.IsOutSourced = Boolean.Parse(txtIsOutSourced.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.ReworkReturnID = Int64.Parse(txtReworkReturnID.Text);
-                        entity.TotalQty = Int32.Parse(txtTotalQty.Text);
+                        entity.ReworkReturnNo = txtReworkReturnNo.Text ;
+                       entity.TotalQty = Int32.Parse(txtTotalQty.Text);
                         entity.TotalReworkFee = Decimal.Parse(txtTotalReworkFee.Text);
                         entity.TotalCost = Decimal.Parse(txtTotalCost.Text);
                         entity.EntryDate = DateTime.Parse(txtEntryDate.Text);
@@ -105,9 +109,11 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.ReworkEntryNo, txtReworkEntryNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
+           DataBindingHelper.BindData4CheckBox<tb_MRP_ReworkEntry>(entity, t => t.IsOutSourced, chkIsOutSourced, false);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
           // DataBindingHelper.BindData4Cmb<tb_MRP_ReworkReturn>(entity, k => k.ReworkReturnID, v=>v.XXNAME, cmbReworkReturnID);
+           DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.ReworkReturnNo, txtReworkReturnNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.TotalReworkFee.ToString(), txtTotalReworkFee, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkEntry>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money,false);

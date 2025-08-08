@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：04/20/2025 22:58:11
+// 时间：08/08/2025 13:46:24
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,13 +41,13 @@ namespace RUINORERP.Business
  RuleFor(tb_UIInputDataField =>tb_UIInputDataField.UIMenuPID).Must(CheckForeignKeyValueCanNull).WithMessage("菜单设置:下拉选择值不正确。");
  RuleFor(tb_UIInputDataField =>tb_UIInputDataField.UIMenuPID).NotEmpty().When(x => x.UIMenuPID.HasValue);
 
- RuleFor(tb_UIInputDataField =>tb_UIInputDataField.Caption).MaximumLength(50).WithMessage("字段标题:不能超过最大长度,50.");
+ RuleFor(tb_UIInputDataField =>tb_UIInputDataField.Caption).MaximumMixedLength(100).WithMessage("字段标题:不能超过最大长度,100.");
 
- RuleFor(tb_UIInputDataField =>tb_UIInputDataField.FieldName).MaximumLength(50).WithMessage("字段名:不能超过最大长度,50.");
+ RuleFor(tb_UIInputDataField =>tb_UIInputDataField.FieldName).MaximumMixedLength(100).WithMessage("字段名:不能超过最大长度,100.");
 
- RuleFor(tb_UIInputDataField =>tb_UIInputDataField.BelongingObjectType).MaximumLength(40).WithMessage("所属实体:不能超过最大长度,40.");
+ RuleFor(tb_UIInputDataField =>tb_UIInputDataField.BelongingObjectType).MaximumMixedLength(80).WithMessage("所属实体:不能超过最大长度,80.");
 
- RuleFor(tb_UIInputDataField =>tb_UIInputDataField.ValueType).MaximumLength(25).WithMessage("值类型:不能超过最大长度,25.");
+ RuleFor(tb_UIInputDataField =>tb_UIInputDataField.ValueType).MaximumMixedLength(50).WithMessage("值类型:不能超过最大长度,50.");
 
 //***** 
  RuleFor(tb_UIInputDataField =>tb_UIInputDataField.ControlWidth).NotNull().WithMessage("控件宽度:不能为空。");
@@ -56,13 +56,13 @@ namespace RUINORERP.Business
  RuleFor(tb_UIInputDataField =>tb_UIInputDataField.Sort).NotNull().WithMessage("排序:不能为空。");
 
 
- RuleFor(tb_UIInputDataField =>tb_UIInputDataField.Default1).MaximumLength(127).WithMessage("默认值1:不能超过最大长度,127.");
+ RuleFor(tb_UIInputDataField =>tb_UIInputDataField.Default1).MaximumMixedLength(255).WithMessage("默认值1:不能超过最大长度,255.");
 
-
+ 
 
  RuleFor(tb_UIInputDataField =>tb_UIInputDataField.DiffDays1).NotEmpty().When(x => x.DiffDays1.HasValue);
 
-
+ 
  RuleFor(tb_UIInputDataField =>tb_UIInputDataField.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
 
 

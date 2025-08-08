@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:31
+// 时间：08/08/2025 13:46:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.PurReEntryNo).MaximumLength(25).WithMessage("入库单号:不能超过最大长度,25.");
+ RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.PurReEntryNo).MaximumMixedLength(50).WithMessage("入库单号:不能超过最大长度,50.");
 
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("供应商:下拉选择值不正确。");
 
@@ -47,13 +47,13 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
- RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款方式:下拉选择值不正确。");
+ RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.Paytype_ID).Must(CheckForeignKeyValueCanNull).WithMessage("付款类型:下拉选择值不正确。");
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.Paytype_ID).NotEmpty().When(x => x.Paytype_ID.HasValue);
 
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.PurEntryRe_ID).Must(CheckForeignKeyValueCanNull).WithMessage("采购退货单:下拉选择值不正确。");
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.PurEntryRe_ID).NotEmpty().When(x => x.PurEntryRe_ID.HasValue);
 
- RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.PurEntryReNo).MaximumLength(25).WithMessage("采购退货单号:不能超过最大长度,25.");
+ RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.PurEntryReNo).MaximumMixedLength(50).WithMessage("采购退货单号:不能超过最大长度,50.");
 
 //***** 
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.TotalQty).NotNull().WithMessage("合计数量:不能为空。");
@@ -63,8 +63,9 @@ namespace RUINORERP.Business
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("合计金额:小数位不能超过4。");
 
 
- RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.ShippingWay).MaximumLength(25).WithMessage("发货方式:不能超过最大长度,25.");
+ RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.ShippingWay).MaximumMixedLength(50).WithMessage("发货方式:不能超过最大长度,50.");
 
+ RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.TrackNo).MaximumMixedLength(50).WithMessage("物流单号:不能超过最大长度,50.");
 
 
 
@@ -73,19 +74,18 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
- RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
 
 
 
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
 
- 
+
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.TaxDeductionType).NotEmpty().When(x => x.TaxDeductionType.HasValue);
 
- 
 
 //***** 
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
@@ -97,7 +97,7 @@ namespace RUINORERP.Business
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
 
- RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.VoucherNO).MaximumLength(25).WithMessage("凭证号码:不能超过最大长度,25.");
+ RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.VoucherNO).MaximumMixedLength(50).WithMessage("凭证号码:不能超过最大长度,50.");
 
            	                //long
                 //PurReEntry_ID

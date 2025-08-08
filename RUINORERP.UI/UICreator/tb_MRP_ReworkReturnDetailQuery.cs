@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/04/2025 19:45:31
+// 时间：08/08/2025 13:45:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,9 +24,9 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 采购入库退回单明细数据查询
+    /// 返工退库明细数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_MRP_ReworkReturnDetailQuery), "采购入库退回单明细数据查询", true)]
+     [MenuAttribute(typeof(tb_MRP_ReworkReturnDetailQuery), "返工退库明细数据查询", true)]
     public partial class tb_MRP_ReworkReturnDetailQuery:UserControl
     {
      public tb_MRP_ReworkReturnDetailQuery() {

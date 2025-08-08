@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:30
+// 时间：08/08/2025 13:45:59
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,12 +43,12 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdSplit =>tb_ProdSplit.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
 
- RuleFor(tb_ProdSplit =>tb_ProdSplit.SplitNo).MaximumLength(25).WithMessage("拆分单号:不能超过最大长度,25.");
+ RuleFor(tb_ProdSplit =>tb_ProdSplit.SplitNo).MaximumMixedLength(50).WithMessage("拆分单号:不能超过最大长度,50.");
 
 
  RuleFor(tb_ProdSplit =>tb_ProdSplit.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("母件:下拉选择值不正确。");
 
- RuleFor(tb_ProdSplit =>tb_ProdSplit.SKU).MaximumLength(40).WithMessage("SKU码:不能超过最大长度,40.");
+ RuleFor(tb_ProdSplit =>tb_ProdSplit.SKU).MaximumMixedLength(80).WithMessage("SKU码:不能超过最大长度,80.");
 
 //***** 
  RuleFor(tb_ProdSplit =>tb_ProdSplit.SplitParentQty).NotNull().WithMessage("母件数量:不能为空。");
@@ -56,13 +56,13 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdSplit =>tb_ProdSplit.SplitChildTotalQty).NotNull().WithMessage("子件总数量:不能为空。");
 
- RuleFor(tb_ProdSplit =>tb_ProdSplit.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_ProdSplit =>tb_ProdSplit.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
- RuleFor(tb_ProdSplit =>tb_ProdSplit.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_ProdSplit =>tb_ProdSplit.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
  RuleFor(tb_ProdSplit =>tb_ProdSplit.BOM_ID).Must(CheckForeignKeyValue).WithMessage("拆分配方:下拉选择值不正确。");
 
- RuleFor(tb_ProdSplit =>tb_ProdSplit.BOM_No).MaximumLength(25).WithMessage("配方编号:不能超过最大长度,25.");
+ RuleFor(tb_ProdSplit =>tb_ProdSplit.BOM_No).MaximumMixedLength(50).WithMessage("配方编号:不能超过最大长度,50.");
  RuleFor(tb_ProdSplit =>tb_ProdSplit.BOM_No).NotEmpty().WithMessage("配方编号:不能为空。");
 
 
@@ -75,7 +75,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProdSplit =>tb_ProdSplit.DataStatus).NotNull().WithMessage("数据状态:不能为空。");
 
- RuleFor(tb_ProdSplit =>tb_ProdSplit.ApprovalOpinions).MaximumLength(250).WithMessage("审批意见:不能超过最大长度,250.");
+ RuleFor(tb_ProdSplit =>tb_ProdSplit.ApprovalOpinions).MaximumMixedLength(500).WithMessage("审批意见:不能超过最大长度,500.");
 
  RuleFor(tb_ProdSplit =>tb_ProdSplit.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

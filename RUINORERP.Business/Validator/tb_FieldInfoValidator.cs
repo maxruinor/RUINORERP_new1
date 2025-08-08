@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：05/29/2025 18:37:29
+// 时间：08/08/2025 13:45:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,23 +41,23 @@ namespace RUINORERP.Business
  RuleFor(tb_FieldInfo =>tb_FieldInfo.MenuID).Must(CheckForeignKeyValueCanNull).WithMessage("菜单:下拉选择值不正确。");
  RuleFor(tb_FieldInfo =>tb_FieldInfo.MenuID).NotEmpty().When(x => x.MenuID.HasValue);
 
- RuleFor(tb_FieldInfo =>tb_FieldInfo.EntityName).MaximumLength(50).WithMessage("实体名称:不能超过最大长度,50.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.EntityName).MaximumMixedLength(100).WithMessage("实体名称:不能超过最大长度,100.");
 
- RuleFor(tb_FieldInfo =>tb_FieldInfo.FieldName).MaximumLength(50).WithMessage("字段名称:不能超过最大长度,50.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.FieldName).MaximumMixedLength(100).WithMessage("字段名称:不能超过最大长度,100.");
 
- RuleFor(tb_FieldInfo =>tb_FieldInfo.FieldText).MaximumLength(50).WithMessage("字段显示:不能超过最大长度,50.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.FieldText).MaximumMixedLength(100).WithMessage("字段显示:不能超过最大长度,100.");
 
- RuleFor(tb_FieldInfo =>tb_FieldInfo.ClassPath).MaximumLength(250).WithMessage("类路径:不能超过最大长度,250.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.ClassPath).MaximumMixedLength(500).WithMessage("类路径:不能超过最大长度,500.");
 
 
 
 
 //有默认值
 
- RuleFor(tb_FieldInfo =>tb_FieldInfo.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.Notes).MaximumMixedLength(200).WithMessage("备注:不能超过最大长度,200.");
 
 
- RuleFor(tb_FieldInfo =>tb_FieldInfo.ChildEntityName).MaximumLength(50).WithMessage("子表名称:不能超过最大长度,50.");
+ RuleFor(tb_FieldInfo =>tb_FieldInfo.ChildEntityName).MaximumMixedLength(100).WithMessage("子表名称:不能超过最大长度,100.");
 
 
            	        Initialize();

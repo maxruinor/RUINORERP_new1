@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/14/2025 11:15:25
+// 时间：08/08/2025 13:46:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -58,17 +58,17 @@ namespace RUINORERP.UI
                      entity.MainID = Int64.Parse(txtMainID.Text);
                         entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
                         entity.Rack_ID = Int64.Parse(txtRack_ID.Text);
-                        entity.property = txtproperty.Text ;
-                       entity.Cost = Decimal.Parse(txtCost.Text);
+                        entity.CarryinglQty = Int32.Parse(txtCarryinglQty.Text);
+                        entity.DiffQty = Int32.Parse(txtDiffQty.Text);
+                        entity.CheckQty = Int32.Parse(txtCheckQty.Text);
+                        entity.Cost = Decimal.Parse(txtCost.Text);
                         entity.TaxRate = Decimal.Parse(txtTaxRate.Text);
                         entity.UntaxedCost = Decimal.Parse(txtUntaxedCost.Text);
-                        entity.CarryinglQty = Int32.Parse(txtCarryinglQty.Text);
                         entity.CarryingSubtotalAmount = Decimal.Parse(txtCarryingSubtotalAmount.Text);
-                        entity.DiffQty = Int32.Parse(txtDiffQty.Text);
                         entity.DiffSubtotalAmount = Decimal.Parse(txtDiffSubtotalAmount.Text);
-                        entity.CheckQty = Int32.Parse(txtCheckQty.Text);
                         entity.CheckSubtotalAmount = Decimal.Parse(txtCheckSubtotalAmount.Text);
                         entity.Notes = txtNotes.Text ;
+                       entity.property = txtproperty.Text ;
                                return entity;
 }
         */
@@ -82,17 +82,17 @@ namespace RUINORERP.UI
                        // DataBindingHelper.BindData4Cmb<tb_Stocktake>(entity, k => k.MainID, v=>v.XXNAME, cmbMainID);
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
           // DataBindingHelper.BindData4Cmb<tb_StorageRack>(entity, k => k.Rack_ID, v=>v.XXNAME, cmbRack_ID);
-           DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.CarryinglQty, txtCarryinglQty, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.DiffQty, txtDiffQty, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.CheckQty, txtCheckQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.Cost.ToString(), txtCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.UntaxedCost.ToString(), txtUntaxedCost, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.CarryinglQty, txtCarryinglQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.CarryingSubtotalAmount.ToString(), txtCarryingSubtotalAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.DiffQty, txtDiffQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.DiffSubtotalAmount.ToString(), txtDiffSubtotalAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.CheckQty, txtCheckQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.CheckSubtotalAmount.ToString(), txtCheckSubtotalAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_StocktakeDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
 }
 
 

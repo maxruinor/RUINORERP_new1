@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:12:15
+// 时间：08/08/2025 13:45:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,9 +65,9 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                         DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Region_Name, txtRegion_Name, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Region_code, txtRegion_code, BindDataType4TextBox.Text,false);
-          Parent_region_id主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Parent_region_id, txtParent_region_id, BindDataType4TextBox.Qty,false);
-          Parent_region_id主外字段不一致。 DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Sort, txtSort, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_CRM_Region>(entity, t => t.Is_enabled, chkIs_enabled, false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Parent_region_id, txtParent_region_id, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Sort, txtSort, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4CheckBox<tb_CRM_Region>(entity, t => t.Is_enabled, chkIs_enabled, false);
 //有默认值
            DataBindingHelper.BindData4TextBox<tb_CRM_Region>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
 }

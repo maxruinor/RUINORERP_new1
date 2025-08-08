@@ -55,7 +55,7 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.反结案);
             base.AddExcludeMenuList(MenuItemEnums.结案);
         }
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override async void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_FM_PreReceivedPayment preReceivedPayment)
             {
@@ -75,8 +75,44 @@ namespace RUINORERP.UI.FM
                         toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
                     }
                 }
+
+                //查是否有收付款单
+                if (preReceivedPayment.PrePaymentStatus >= (int)PrePaymentStatus.待审核)
+                {
+                    var PaymentList = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentRecord>()
+                               .Includes(a => a.tb_FM_PaymentRecordDetails)
+                              .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == preReceivedPayment.PreRPID)).ToListAsync();
+                    if (PaymentList != null && PaymentList.Count > 0)
+                    {
+                        foreach (var item in PaymentList)
+                        {
+                            var rqp = new Model.CommonModel.RelatedQueryParameter();
+                            if (PaymentType == ReceivePaymentType.付款)
+                            {
+                                rqp.bizType = BizType.付款单;
+                            }
+                            else
+                            {
+                                rqp.bizType = BizType.收款单;
+                            }
+                            rqp.billId = item.PaymentId;
+                            ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                            RelatedMenuItem.Name = $"{rqp.billId}";
+                            RelatedMenuItem.Tag = rqp;
+                            RelatedMenuItem.Text = $"{rqp.bizType}:{item.PaymentNo}";
+                            RelatedMenuItem.Click += base.MenuItem_Click;
+                            if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.PaymentId.ToString()))
+                            {
+                                toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                            }
+                        }
+                    }
+
+                }
+
+
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
         /// <summary>
         /// 收付款方式决定对应的菜单功能
@@ -237,7 +273,7 @@ namespace RUINORERP.UI.FM
             //带过滤的下拉绑定要这样
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-            
+
             if (PaymentType == ReceivePaymentType.收款)
             {
                 chkIsFromPlatform.Visible = true;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/06/2025 12:07:02
+// 时间：08/08/2025 13:46:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -32,12 +32,6 @@ namespace RUINORERP.UI
      public View_MRP_ReworkReturnQuery() {
      
          
-        
-    
-        
-    
-        
-    
         
     
         

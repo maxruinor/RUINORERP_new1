@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/01/2025 12:16:53
+// 时间：08/08/2025 13:45:31
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,7 +46,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.SourceBilllId).NotNull().WithMessage("来源单据:不能为空。");
 
- RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.SourceBillNo).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.SourceBillNo).MaximumMixedLength(30).WithMessage("来源单号:不能超过最大长度,30.");
  RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.SourceBillNo).NotEmpty().WithMessage("来源单号:不能为空。");
 
 
@@ -64,7 +64,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.LocalAmount).PrecisionScale(19,4,true).WithMessage("支付金额本币:小数位不能超过4。");
 
- RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.Summary).MaximumLength(150).WithMessage("摘要:不能超过最大长度,150.");
+ RuleFor(tb_FM_PaymentRecordDetail =>tb_FM_PaymentRecordDetail.Summary).MaximumMixedLength(300).WithMessage("摘要:不能超过最大长度,300.");
 
            	        Initialize();
      }

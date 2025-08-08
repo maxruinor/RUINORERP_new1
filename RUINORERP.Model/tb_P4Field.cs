@@ -52,14 +52,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _FieldInfo_ID;
+        private long _FieldInfo_ID;
         /// <summary>
         /// 字段
         /// </summary>
         [AdvQueryAttribute(ColName = "FieldInfo_ID", ColDesc = "字段")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "FieldInfo_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "字段")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "FieldInfo_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "字段")]
         [FKRelationAttribute("tb_FieldInfo", "FieldInfo_ID")]
-        public long? FieldInfo_ID
+        public long FieldInfo_ID
         {
             get { return _FieldInfo_ID; }
             set
@@ -68,14 +68,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _RoleID;
+        private long _RoleID;
         /// <summary>
         /// 角色
         /// </summary>
         [AdvQueryAttribute(ColName = "RoleID", ColDesc = "角色")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "RoleID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "角色")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "RoleID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "角色")]
         [FKRelationAttribute("tb_RoleInfo", "RoleID")]
-        public long? RoleID
+        public long RoleID
         {
             get { return _RoleID; }
             set

@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:39:08
+// 时间：08/08/2025 13:45:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -52,8 +52,8 @@ namespace RUINORERP.UI
      // this.btnCancel = new ComponentFactory.Krypton.Toolkit.KryptonButton();
       //this.kryptonPanel1 = new ComponentFactory.Krypton.Toolkit.KryptonPanel();
       //for definition
-     this.lblparent_subject_id = new Krypton.Toolkit.KryptonLabel();
-this.txtparent_subject_id = new Krypton.Toolkit.KryptonTextBox();
+     this.lblParent_subject_id = new Krypton.Toolkit.KryptonLabel();
+this.txtParent_subject_id = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblsubject_code = new Krypton.Toolkit.KryptonLabel();
 this.txtsubject_code = new Krypton.Toolkit.KryptonTextBox();
@@ -77,15 +77,28 @@ this.chkIs_enabled.Values.Text ="";
 this.chkIs_enabled.Checked = true;
 this.chkIs_enabled.CheckState = System.Windows.Forms.CheckState.Checked;
 
-this.lblEndDate = new Krypton.Toolkit.KryptonLabel();
-this.dtpEndDate = new Krypton.Toolkit.KryptonDateTimePicker();
-
 this.lblSort = new Krypton.Toolkit.KryptonLabel();
 this.txtSort = new Krypton.Toolkit.KryptonTextBox();
 
 
 this.lblNotes = new Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblCreated_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
+
+this.lblCreated_by = new Krypton.Toolkit.KryptonLabel();
+this.txtCreated_by = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblModified_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
+
+this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
+this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblisdeleted = new Krypton.Toolkit.KryptonLabel();
+this.chkisdeleted = new Krypton.Toolkit.KryptonCheckBox();
+this.chkisdeleted.Values.Text ="";
 
     
     //for end
@@ -114,19 +127,19 @@ this.txtNotes = new Krypton.Toolkit.KryptonTextBox();
             
          //for size
      
-            //#####parent_subject_id###Int64
-this.lblparent_subject_id.AutoSize = true;
-this.lblparent_subject_id.Location = new System.Drawing.Point(100,25);
-this.lblparent_subject_id.Name = "lblparent_subject_id";
-this.lblparent_subject_id.Size = new System.Drawing.Size(41, 12);
-this.lblparent_subject_id.TabIndex = 1;
-this.lblparent_subject_id.Text = "";
-this.txtparent_subject_id.Location = new System.Drawing.Point(173,21);
-this.txtparent_subject_id.Name = "txtparent_subject_id";
-this.txtparent_subject_id.Size = new System.Drawing.Size(100, 21);
-this.txtparent_subject_id.TabIndex = 1;
-this.Controls.Add(this.lblparent_subject_id);
-this.Controls.Add(this.txtparent_subject_id);
+            //#####Parent_subject_id###Int64
+this.lblParent_subject_id.AutoSize = true;
+this.lblParent_subject_id.Location = new System.Drawing.Point(100,25);
+this.lblParent_subject_id.Name = "lblParent_subject_id";
+this.lblParent_subject_id.Size = new System.Drawing.Size(41, 12);
+this.lblParent_subject_id.TabIndex = 1;
+this.lblParent_subject_id.Text = "";
+this.txtParent_subject_id.Location = new System.Drawing.Point(173,21);
+this.txtParent_subject_id.Name = "txtParent_subject_id";
+this.txtParent_subject_id.Size = new System.Drawing.Size(100, 21);
+this.txtParent_subject_id.TabIndex = 1;
+this.Controls.Add(this.lblParent_subject_id);
+this.Controls.Add(this.txtParent_subject_id);
 
            //#####50subject_code###String
 this.lblsubject_code.AutoSize = true;
@@ -212,33 +225,17 @@ this.chkIs_enabled.TabIndex = 7;
 this.Controls.Add(this.lblIs_enabled);
 this.Controls.Add(this.chkIs_enabled);
 
-           //#####EndDate###DateTime
-this.lblEndDate.AutoSize = true;
-this.lblEndDate.Location = new System.Drawing.Point(100,200);
-this.lblEndDate.Name = "lblEndDate";
-this.lblEndDate.Size = new System.Drawing.Size(41, 12);
-this.lblEndDate.TabIndex = 8;
-this.lblEndDate.Text = "离职日期";
-//111======200
-this.dtpEndDate.Location = new System.Drawing.Point(173,196);
-this.dtpEndDate.Name ="dtpEndDate";
-this.dtpEndDate.ShowCheckBox =true;
-this.dtpEndDate.Size = new System.Drawing.Size(100, 21);
-this.dtpEndDate.TabIndex = 8;
-this.Controls.Add(this.lblEndDate);
-this.Controls.Add(this.dtpEndDate);
-
            //#####Sort###Int32
 this.lblSort.AutoSize = true;
-this.lblSort.Location = new System.Drawing.Point(100,225);
+this.lblSort.Location = new System.Drawing.Point(100,200);
 this.lblSort.Name = "lblSort";
 this.lblSort.Size = new System.Drawing.Size(41, 12);
-this.lblSort.TabIndex = 9;
+this.lblSort.TabIndex = 8;
 this.lblSort.Text = "排序";
-this.txtSort.Location = new System.Drawing.Point(173,221);
+this.txtSort.Location = new System.Drawing.Point(173,196);
 this.txtSort.Name = "txtSort";
 this.txtSort.Size = new System.Drawing.Size(100, 21);
-this.txtSort.TabIndex = 9;
+this.txtSort.TabIndex = 8;
 this.Controls.Add(this.lblSort);
 this.Controls.Add(this.txtSort);
 
@@ -246,17 +243,91 @@ this.Controls.Add(this.txtSort);
 
            //#####200Notes###String
 this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,275);
+this.lblNotes.Location = new System.Drawing.Point(100,250);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 11;
+this.lblNotes.TabIndex = 10;
 this.lblNotes.Text = "备注";
-this.txtNotes.Location = new System.Drawing.Point(173,271);
+this.txtNotes.Location = new System.Drawing.Point(173,246);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 11;
+this.txtNotes.TabIndex = 10;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
+
+           //#####Created_at###DateTime
+this.lblCreated_at.AutoSize = true;
+this.lblCreated_at.Location = new System.Drawing.Point(100,275);
+this.lblCreated_at.Name = "lblCreated_at";
+this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_at.TabIndex = 11;
+this.lblCreated_at.Text = "创建时间";
+//111======275
+this.dtpCreated_at.Location = new System.Drawing.Point(173,271);
+this.dtpCreated_at.Name ="dtpCreated_at";
+this.dtpCreated_at.ShowCheckBox =true;
+this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
+this.dtpCreated_at.TabIndex = 11;
+this.Controls.Add(this.lblCreated_at);
+this.Controls.Add(this.dtpCreated_at);
+
+           //#####Created_by###Int64
+this.lblCreated_by.AutoSize = true;
+this.lblCreated_by.Location = new System.Drawing.Point(100,300);
+this.lblCreated_by.Name = "lblCreated_by";
+this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_by.TabIndex = 12;
+this.lblCreated_by.Text = "创建人";
+this.txtCreated_by.Location = new System.Drawing.Point(173,296);
+this.txtCreated_by.Name = "txtCreated_by";
+this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
+this.txtCreated_by.TabIndex = 12;
+this.Controls.Add(this.lblCreated_by);
+this.Controls.Add(this.txtCreated_by);
+
+           //#####Modified_at###DateTime
+this.lblModified_at.AutoSize = true;
+this.lblModified_at.Location = new System.Drawing.Point(100,325);
+this.lblModified_at.Name = "lblModified_at";
+this.lblModified_at.Size = new System.Drawing.Size(41, 12);
+this.lblModified_at.TabIndex = 13;
+this.lblModified_at.Text = "修改时间";
+//111======325
+this.dtpModified_at.Location = new System.Drawing.Point(173,321);
+this.dtpModified_at.Name ="dtpModified_at";
+this.dtpModified_at.ShowCheckBox =true;
+this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
+this.dtpModified_at.TabIndex = 13;
+this.Controls.Add(this.lblModified_at);
+this.Controls.Add(this.dtpModified_at);
+
+           //#####Modified_by###Int64
+this.lblModified_by.AutoSize = true;
+this.lblModified_by.Location = new System.Drawing.Point(100,350);
+this.lblModified_by.Name = "lblModified_by";
+this.lblModified_by.Size = new System.Drawing.Size(41, 12);
+this.lblModified_by.TabIndex = 14;
+this.lblModified_by.Text = "修改人";
+this.txtModified_by.Location = new System.Drawing.Point(173,346);
+this.txtModified_by.Name = "txtModified_by";
+this.txtModified_by.Size = new System.Drawing.Size(100, 21);
+this.txtModified_by.TabIndex = 14;
+this.Controls.Add(this.lblModified_by);
+this.Controls.Add(this.txtModified_by);
+
+           //#####isdeleted###Boolean
+this.lblisdeleted.AutoSize = true;
+this.lblisdeleted.Location = new System.Drawing.Point(100,375);
+this.lblisdeleted.Name = "lblisdeleted";
+this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
+this.lblisdeleted.TabIndex = 15;
+this.lblisdeleted.Text = "";
+this.chkisdeleted.Location = new System.Drawing.Point(173,371);
+this.chkisdeleted.Name = "chkisdeleted";
+this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
+this.chkisdeleted.TabIndex = 15;
+this.Controls.Add(this.lblisdeleted);
+this.Controls.Add(this.chkisdeleted);
 
         //for 加入到容器
             //components = new System.ComponentModel.Container();
@@ -272,12 +343,12 @@ this.Controls.Add(this.txtNotes);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 11;
+           // this.kryptonPanel1.TabIndex = 15;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-                this.Controls.Add(this.lblparent_subject_id );
-this.Controls.Add(this.txtparent_subject_id );
+                this.Controls.Add(this.lblParent_subject_id );
+this.Controls.Add(this.txtParent_subject_id );
 
                 this.Controls.Add(this.lblsubject_code );
 this.Controls.Add(this.txtsubject_code );
@@ -297,15 +368,27 @@ this.Controls.Add(this.chkBalance_direction );
                 this.Controls.Add(this.lblIs_enabled );
 this.Controls.Add(this.chkIs_enabled );
 
-                this.Controls.Add(this.lblEndDate );
-this.Controls.Add(this.dtpEndDate );
-
                 this.Controls.Add(this.lblSort );
 this.Controls.Add(this.txtSort );
 
                 
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
+
+                this.Controls.Add(this.lblCreated_at );
+this.Controls.Add(this.dtpCreated_at );
+
+                this.Controls.Add(this.lblCreated_by );
+this.Controls.Add(this.txtCreated_by );
+
+                this.Controls.Add(this.lblModified_at );
+this.Controls.Add(this.dtpModified_at );
+
+                this.Controls.Add(this.lblModified_by );
+this.Controls.Add(this.txtModified_by );
+
+                this.Controls.Add(this.lblisdeleted );
+this.Controls.Add(this.chkisdeleted );
 
                             // 
             // "tb_FM_SubjectEdit"
@@ -331,8 +414,8 @@ this.Controls.Add(this.txtNotes );
      //for start
      
          
-              private Krypton.Toolkit.KryptonLabel lblparent_subject_id;
-private Krypton.Toolkit.KryptonTextBox txtparent_subject_id;
+              private Krypton.Toolkit.KryptonLabel lblParent_subject_id;
+private Krypton.Toolkit.KryptonTextBox txtParent_subject_id;
 
     
         
@@ -366,11 +449,6 @@ private Krypton.Toolkit.KryptonCheckBox chkIs_enabled;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblEndDate;
-private Krypton.Toolkit.KryptonDateTimePicker dtpEndDate;
-
-    
-        
               private Krypton.Toolkit.KryptonLabel lblSort;
 private Krypton.Toolkit.KryptonTextBox txtSort;
 
@@ -381,6 +459,31 @@ private Krypton.Toolkit.KryptonTextBox txtSort;
         
               private Krypton.Toolkit.KryptonLabel lblNotes;
 private Krypton.Toolkit.KryptonTextBox txtNotes;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblCreated_at;
+private Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblCreated_by;
+private Krypton.Toolkit.KryptonTextBox txtCreated_by;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblModified_at;
+private Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblModified_by;
+private Krypton.Toolkit.KryptonTextBox txtModified_by;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblisdeleted;
+private Krypton.Toolkit.KryptonCheckBox chkisdeleted;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

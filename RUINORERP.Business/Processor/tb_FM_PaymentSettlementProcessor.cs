@@ -35,19 +35,17 @@ namespace RUINORERP.Business.Processor
     /// <summary>
     /// 记录收款 与应收的匹配，核销表-支持多对多、行项级核销 
     /// </summary>
-    public partial class tb_FM_PaymentSettlementProcessor:BaseProcessor 
+    public partial class tb_FM_PaymentSettlementProcessor : BaseProcessor
     {
 
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
 
-
+            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SettlementNo);
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBillNo);
-
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.TargetBillNo);
 
-            
             //没有限制了。这里应该是财务才能看
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)
@@ -58,10 +56,11 @@ namespace RUINORERP.Business.Processor
 
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.TargetBizType, QueryFieldType.CmbEnum, typeof(BizType));
-    
+
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.Account_id);
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.IsReversed);
-        
+            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.isdeleted);
+
             queryFilter.SetQueryFieldByAlias<tb_FM_PaymentSettlement, tb_Currency>(a => a.Currency_ID, null, b => b.Currency_ID, b => b.CurrencyName);
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SettlementType, QueryFieldType.CmbEnum, typeof(SettlementType));
 

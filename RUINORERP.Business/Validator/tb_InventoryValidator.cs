@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:27
+// 时间：08/08/2025 13:45:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -78,7 +78,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.CostMovingWA).PrecisionScale(19,4,true).WithMessage("移动加权平均成本:小数位不能超过4。");
 
- RuleFor(x => x.Inv_AdvCost).PrecisionScale(19,4,true).WithMessage("成本:小数位不能超过4。");
+ RuleFor(x => x.Inv_AdvCost).PrecisionScale(19,4,true).WithMessage("实际成本:小数位不能超过4。");
 
  RuleFor(x => x.Inv_Cost).PrecisionScale(19,4,true).WithMessage("货品成本:小数位不能超过4。");
 
@@ -87,7 +87,7 @@ namespace RUINORERP.Business
 
 
 
- RuleFor(tb_Inventory =>tb_Inventory.Notes).MaximumLength(125).WithMessage("备注说明:不能超过最大长度,125.");
+ RuleFor(tb_Inventory =>tb_Inventory.Notes).MaximumMixedLength(250).WithMessage("备注说明:不能超过最大长度,250.");
 
 
  RuleFor(tb_Inventory =>tb_Inventory.Created_by).NotEmpty().When(x => x.Created_by.HasValue);

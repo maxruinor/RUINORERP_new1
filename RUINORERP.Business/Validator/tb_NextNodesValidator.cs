@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:28
+// 时间：08/08/2025 13:45:45
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,7 +41,7 @@ namespace RUINORERP.Business
  RuleFor(tb_NextNodes =>tb_NextNodes.ConNodeConditions_Id).Must(CheckForeignKeyValueCanNull).WithMessage("条件:下拉选择值不正确。");
  RuleFor(tb_NextNodes =>tb_NextNodes.ConNodeConditions_Id).NotEmpty().When(x => x.ConNodeConditions_Id.HasValue);
 
- RuleFor(tb_NextNodes =>tb_NextNodes.NexNodeName).MaximumLength(25).WithMessage("下节点名称:不能超过最大长度,25.");
+ RuleFor(tb_NextNodes =>tb_NextNodes.NexNodeName).MaximumMixedLength(50).WithMessage("下节点名称:不能超过最大长度,50.");
  RuleFor(tb_NextNodes =>tb_NextNodes.NexNodeName).NotEmpty().WithMessage("下节点名称:不能为空。");
 
            	        Initialize();

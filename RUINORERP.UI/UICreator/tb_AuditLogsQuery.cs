@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/06/2025 14:52:01
+// 时间：08/08/2025 13:45:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -76,6 +76,7 @@ namespace RUINORERP.UI
 
         public void LoadDroplistData()
         {
+          // DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
         }
         
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 20:57:16
+// 时间：08/08/2025 13:45:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,16 +38,27 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.MONO).MaximumLength(50).WithMessage("制令单号:不能超过最大长度,50.");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.MONO).MaximumMixedLength(100).WithMessage("制令单号:不能超过最大长度,100.");
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.MONO).NotEmpty().WithMessage("制令单号:不能为空。");
 
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDNO).MaximumLength(50).WithMessage("需求单号:不能超过最大长度,50.");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDNO).MaximumMixedLength(100).WithMessage("需求单号:不能超过最大长度,100.");
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDCID).Must(CheckForeignKeyValueCanNull).WithMessage("自制品:下拉选择值不正确。");
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDCID).NotEmpty().When(x => x.PDCID.HasValue);
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDID).Must(CheckForeignKeyValueCanNull).WithMessage("需求单据:下拉选择值不正确。");
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDID).NotEmpty().When(x => x.PDID.HasValue);
+
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("母件产品:下拉选择值不正确。");
+
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.SKU).MaximumMixedLength(80).WithMessage("母件SKU码:不能超过最大长度,80.");
+
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Specifications).MaximumMixedLength(1000).WithMessage("母件规格:不能超过最大长度,1000.");
+
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.property).MaximumMixedLength(255).WithMessage("母件属性:不能超过最大长度,255.");
+
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CNName).MaximumMixedLength(255).WithMessage("母件品名:不能超过最大长度,255.");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CNName).NotEmpty().WithMessage("母件品名:不能为空。");
 
 //***** 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.QuantityDelivered).NotNull().WithMessage("已交付量:不能为空。");
@@ -60,16 +71,9 @@ namespace RUINORERP.Business
 
 
 
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.SKU).MaximumLength(40).WithMessage("母件SKU码:不能超过最大长度,40.");
-
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CNName).MaximumLength(127).WithMessage("母件品名:不能超过最大长度,127.");
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CNName).NotEmpty().WithMessage("母件品名:不能为空。");
-
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.ProdDetailID).Must(CheckForeignKeyValue).WithMessage("货品:下拉选择值不正确。");
-
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.BOM_ID).Must(CheckForeignKeyValue).WithMessage("配方名称:下拉选择值不正确。");
 
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.BOM_No).MaximumLength(50).WithMessage("配方号:不能超过最大长度,50.");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.BOM_No).MaximumMixedLength(100).WithMessage("配方号:不能超过最大长度,100.");
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.BOM_No).NotEmpty().WithMessage("配方号:不能为空。");
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Type_ID).Must(CheckForeignKeyValueCanNull).WithMessage("母件类型:下拉选择值不正确。");
@@ -78,17 +82,14 @@ namespace RUINORERP.Business
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Unit_ID).Must(CheckForeignKeyValueCanNull).WithMessage("单位:下拉选择值不正确。");
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Unit_ID).NotEmpty().When(x => x.Unit_ID.HasValue);
 
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CustomerPartNo).MaximumLength(50).WithMessage("客户料号:不能超过最大长度,50.");
-
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Specifications).MaximumLength(500).WithMessage("母件规格:不能超过最大长度,500.");
-
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.property).MaximumLength(127).WithMessage("母件属性:不能超过最大长度,127.");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CustomerPartNo).MaximumMixedLength(100).WithMessage("客户料号:不能超过最大长度,100.");
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Employee_ID).Must(CheckForeignKeyValue).WithMessage("制单人:下拉选择值不正确。");
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Location_ID).Must(CheckForeignKeyValue).WithMessage("预入库位:下拉选择值不正确。");
 
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("需求部门:下拉选择值不正确。");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("生产部门:下拉选择值不正确。");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CustomerVendor_ID_Out).NotEmpty().When(x => x.CustomerVendor_ID_Out.HasValue);
 
@@ -96,14 +97,15 @@ namespace RUINORERP.Business
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
 
+
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
 
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CloseCaseOpinions).MaximumLength(100).WithMessage("结案情况:不能超过最大长度,100.");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.CloseCaseOpinions).MaximumMixedLength(200).WithMessage("结案情况:不能超过最大长度,200.");
 
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
  RuleFor(x => x.ApportionedCost).PrecisionScale(19,4,true).WithMessage("分摊成本:小数位不能超过4。");
 
@@ -125,7 +127,7 @@ namespace RUINORERP.Business
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 
 
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
 
 

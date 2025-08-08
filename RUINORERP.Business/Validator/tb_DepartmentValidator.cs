@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/16/2025 11:47:57
+// 时间：08/08/2025 13:45:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,18 +38,26 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_Department =>tb_Department.ID).Must(CheckForeignKeyValue).WithMessage("公司:下拉选择值不正确。");
+ RuleFor(tb_Department =>tb_Department.ID).Must(CheckForeignKeyValue).WithMessage("所属公司:下拉选择值不正确。");
 
+ RuleFor(tb_Department =>tb_Department.DepartmentCode).MaximumMixedLength(50).WithMessage("部门代号:不能超过最大长度,50.");
  RuleFor(tb_Department =>tb_Department.DepartmentCode).NotEmpty().WithMessage("部门代号:不能为空。");
 
- RuleFor(tb_Department =>tb_Department.DepartmentName).MaximumLength(127).WithMessage("部门名称:不能超过最大长度,127.");
+ RuleFor(tb_Department =>tb_Department.DepartmentName).MaximumMixedLength(255).WithMessage("部门名称:不能超过最大长度,255.");
  RuleFor(tb_Department =>tb_Department.DepartmentName).NotEmpty().WithMessage("部门名称:不能为空。");
 
- RuleFor(tb_Department =>tb_Department.TEL).MaximumLength(10).WithMessage("电话:不能超过最大长度,10.");
+ RuleFor(tb_Department =>tb_Department.TEL).MaximumMixedLength(20).WithMessage("电话:不能超过最大长度,20.");
 
- RuleFor(tb_Department =>tb_Department.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_Department =>tb_Department.Notes).MaximumMixedLength(200).WithMessage("备注:不能超过最大长度,200.");
 
- RuleFor(tb_Department =>tb_Department.Director).MaximumLength(10).WithMessage("责任人:不能超过最大长度,10.");
+ RuleFor(tb_Department =>tb_Department.Director).MaximumMixedLength(20).WithMessage("责任人:不能超过最大长度,20.");
+
+
+ RuleFor(tb_Department =>tb_Department.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
+
+
+ RuleFor(tb_Department =>tb_Department.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
+
 
            	        Initialize();
      }
@@ -58,6 +66,17 @@ namespace RUINORERP.Business
 
 
         private bool DetailedRecordsNotEmpty(List<tb_FM_OtherExpenseDetail> details)
+        {
+            bool rs = true;
+            if (details == null || details.Count == 0)
+            {
+                return false;
+            }
+            return rs;
+        }
+        
+
+        private bool DetailedRecordsNotEmpty(List<tb_FM_PaymentRecordDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

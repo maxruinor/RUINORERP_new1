@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/12/2024 10:37:29
+// 时间：08/08/2025 13:45:18
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -228,7 +228,7 @@ this.txtPlanContent.TabIndex = 7;
 this.Controls.Add(this.lblPlanContent);
 this.Controls.Add(this.txtPlanContent);
 
-           //#####255Notes###String
+           //#####1000Notes###String
 this.lblNotes.AutoSize = true;
 this.lblNotes.Location = new System.Drawing.Point(100,200);
 this.lblNotes.Name = "lblNotes";

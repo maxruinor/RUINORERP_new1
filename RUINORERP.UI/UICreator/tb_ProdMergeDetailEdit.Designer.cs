@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/20/2024 20:30:03
+// 时间：08/08/2025 13:45:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -71,6 +71,9 @@ this.txtQty = new Krypton.Toolkit.KryptonTextBox();
 this.lblSummary = new Krypton.Toolkit.KryptonLabel();
 this.txtSummary = new Krypton.Toolkit.KryptonTextBox();
 this.txtSummary.Multiline = true;
+
+this.lblUnitCost = new Krypton.Toolkit.KryptonLabel();
+this.txtUnitCost = new Krypton.Toolkit.KryptonTextBox();
 
     
     //for end
@@ -195,6 +198,21 @@ this.txtSummary.TabIndex = 6;
 this.Controls.Add(this.lblSummary);
 this.Controls.Add(this.txtSummary);
 
+           //#####UnitCost###Decimal
+this.lblUnitCost.AutoSize = true;
+this.lblUnitCost.Location = new System.Drawing.Point(100,175);
+this.lblUnitCost.Name = "lblUnitCost";
+this.lblUnitCost.Size = new System.Drawing.Size(41, 12);
+this.lblUnitCost.TabIndex = 7;
+this.lblUnitCost.Text = "单位成本";
+//111======175
+this.txtUnitCost.Location = new System.Drawing.Point(173,171);
+this.txtUnitCost.Name ="txtUnitCost";
+this.txtUnitCost.Size = new System.Drawing.Size(100, 21);
+this.txtUnitCost.TabIndex = 7;
+this.Controls.Add(this.lblUnitCost);
+this.Controls.Add(this.txtUnitCost);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -209,7 +227,7 @@ this.Controls.Add(this.txtSummary);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 6;
+           // this.kryptonPanel1.TabIndex = 7;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -230,6 +248,9 @@ this.Controls.Add(this.txtQty );
 
                 this.Controls.Add(this.lblSummary );
 this.Controls.Add(this.txtSummary );
+
+                this.Controls.Add(this.lblUnitCost );
+this.Controls.Add(this.txtUnitCost );
 
                             // 
             // "tb_ProdMergeDetailEdit"
@@ -282,6 +303,11 @@ private Krypton.Toolkit.KryptonTextBox txtQty;
         
               private Krypton.Toolkit.KryptonLabel lblSummary;
 private Krypton.Toolkit.KryptonTextBox txtSummary;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblUnitCost;
+private Krypton.Toolkit.KryptonTextBox txtUnitCost;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

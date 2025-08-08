@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/10/2024 13:36:34
+// 时间：08/08/2025 13:45:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -81,7 +81,7 @@ namespace RUINORERP.UI
         public void BindData(tb_CRMConfig entity)
         {
         _EditEntity = entity;
-                        DataBindingHelper.BindData4CehckBox<tb_CRMConfig>(entity, t => t.CS_UseLeadsFunction, chkCS_UseLeadsFunction, false);
+                        DataBindingHelper.BindData4CheckBox<tb_CRMConfig>(entity, t => t.CS_UseLeadsFunction, chkCS_UseLeadsFunction, false);
            DataBindingHelper.BindData4TextBox<tb_CRMConfig>(entity, t => t.CS_NewCustToLeadsCustDays, txtCS_NewCustToLeadsCustDays, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_CRMConfig>(entity, t => t.CS_SleepingCustomerDays, txtCS_SleepingCustomerDays, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_CRMConfig>(entity, t => t.CS_LostCustomersDays, txtCS_LostCustomersDays, BindDataType4TextBox.Qty,false);

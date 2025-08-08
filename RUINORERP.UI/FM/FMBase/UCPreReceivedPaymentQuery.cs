@@ -38,6 +38,9 @@ using RUINORERP.Global.Model;
 
 using RUINORERP.Business.CommService;
 using FastReport.Table;
+using LiveChartsCore.Geo;
+using Netron.GraphLib;
+using RUINORERP.UI.UCSourceGrid;
 
 namespace RUINORERP.UI.FM
 {
@@ -91,9 +94,10 @@ namespace RUINORERP.UI.FM
 
         public override List<ContextMenuController> AddContextMenu()
         {
-  
+
             List<ContextMenuController> list = new List<ContextMenuController>();
             list.Add(new ContextMenuController("【转为退款单】", true, false, "NewSumDataGridView_转为退款单"));
+            list.Add(new ContextMenuController("【数据核查器】", true, false, "NewSumDataGridView_数据核查器"));
             //if (PaymentType == ReceivePaymentType.收款)
             //{
             //    list.Add(new ContextMenuController("【转为收款单】", true, false, "NewSumDataGridView_转为收付款单"));
@@ -105,6 +109,168 @@ namespace RUINORERP.UI.FM
             return list;
         }
 
+
+        //有些预收付的单据，特别是初期，核销时没有一一对应，
+        //比方预收的来自销售订单A，他的核销对应应该是这个订单的出库单。如果不是则检测出来。找到错误的应收单再到应收单查询中去撤销核销
+        private async void NewSumDataGridView_数据核查器(object sender, EventArgs e)
+        {
+            List<tb_FM_PreReceivedPayment> selectlist = GetSelectResult();
+            List<tb_FM_PreReceivedPayment> RealList = new List<tb_FM_PreReceivedPayment>();
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
+            foreach (var item in selectlist)
+            {
+                //只有审核状态才可以转换为收款单  或部分核销，一张预付款  核销了一部分。还有一部分要收取时用部分核销。
+                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.全额核销 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert || item.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                {
+                    RealList.Add(item);
+                }
+                else
+                {
+                    msg.Append(counter.ToString() + ") ");
+                    msg.Append($"当前应{PaymentType.ToString()}单 {item.PreRPNO}状态为【 {((ARAPStatus)item.PrePaymentStatus).ToString()}】 无法进行核销数据检查。").Append("\r\n");
+                    counter++;
+                }
+            }
+            if (RealList.Count == 0)
+            {
+                msg.Append("请至少选择一行数据进行检测。");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            string ARAPNoStr = string.Empty;
+
+            List<tb_FM_ReceivablePayable> TipsList = new List<tb_FM_ReceivablePayable>();
+
+            foreach (var PreReceived in RealList)
+            {
+                var Settlements = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentSettlement>()
+                        .Where(c => c.CustomerVendor_ID == PreReceived.CustomerVendor_ID)
+                        .Where(c => c.Currency_ID == PreReceived.Currency_ID)
+                        .Where(c => c.ReceivePaymentType == PreReceived.ReceivePaymentType)
+                        .Where(c => c.SourceBillId == PreReceived.PreRPID && c.isdeleted == false)
+                        .OrderBy(c => c.SettleDate)
+                        .ToListAsync();
+
+                //通过核销记录找到应收再找出库再找对应的订单号
+                long[] ReceivablePayableIds = Settlements.Select(c => c.TargetBillId.Value).ToArray();
+
+                List<tb_FM_ReceivablePayable> receivablePayableList = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                      .Where(p => p.SourceBizType == (int)BizType.销售出库单 && p.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                      .Where(c => ReceivablePayableIds.Contains(c.ARAPId))
+                      .ToListAsync();
+
+                long[] SaleOutIds = receivablePayableList.Select(c => c.SourceBillId.Value).ToArray();
+
+                List<tb_SaleOut> SaleOutList = await MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
+                     .Includes(c => c.tb_saleorder)
+                    .Where(c => SaleOutIds.Contains(c.SaleOut_MainID))
+                    .ToListAsync();
+
+                long[] SaleOrderIds = SaleOutList.Select(c => c.tb_saleorder.SOrder_ID).ToArray();
+
+                if (!SaleOrderIds.Contains(PreReceived.SourceBillId.Value))
+                {
+                    TipsList.AddRange(receivablePayableList);
+                }
+
+            }
+            // 使用Distinct()去除重复项后再拼接
+            ARAPNoStr = string.Join(",", TipsList.Select(c => c.ARAPNo).Distinct());
+            if (ARAPNoStr.IsNotEmptyOrNull())
+            {
+                msg.Append($"当前应{PaymentType.ToString()}单 {ARAPNoStr}核销的数据不对。").Append("\r\n");
+                MainForm.Instance.PrintInfoLog(msg.ToString());
+            }
+            if (msg.ToString().Length > 0)
+            {
+                msg.Append($"请到应收单查询中撤销核销数据，重新核销。");
+
+                using (RichTextForm dg = new RichTextForm())
+                {
+                    dg.StartPosition = FormStartPosition.CenterScreen;
+
+                    dg.InputValue = msg.ToString();
+
+                    if (dg.ShowDialog() == DialogResult.OK)
+                    {
+                        // 将值放入剪贴板
+                        Clipboard.SetText(dg.InputValue);
+
+                        //是否智能自动批量撤销抵扣
+                        if (MessageBox.Show("是否自动智能批量撤销抵扣？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        {
+
+                            foreach (var receivable in TipsList)
+                            {
+                                #region 自动全额撤销抵扣
+
+                                var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                                var Settlements = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentSettlement>()
+                                        .Where(c => c.CustomerVendor_ID == receivable.CustomerVendor_ID)
+                                        .Where(c => c.Currency_ID == receivable.Currency_ID)
+                                        .Where(c => c.ReceivePaymentType == receivable.ReceivePaymentType)
+                                        .Where(c => c.TargetBillId == receivable.ARAPId && c.isdeleted == false)
+                                        .OrderBy(c => c.SettleDate)
+                                        .ToListAsync();
+
+                                // 2. 查找可撤销抵扣的预收付款单
+                                var availableAdvances = await receivablePayableController.FindAvailableAntiOffset(receivable, Settlements);
+                                if (availableAdvances.Any())
+                                {
+                                    //给预收款字段单次核销的金额赋值
+                                    foreach (var Settlement in Settlements)
+                                    {
+                                        if (Settlement.SourceBillId.HasValue)
+                                        {
+                                            var antiOffsetPrepaid = availableAdvances.FirstOrDefault(c => c.PreRPID == Settlement.SourceBillId.Value);
+                                            if (antiOffsetPrepaid != null)
+                                            {
+                                                antiOffsetPrepaid.SettledLocalAmount = Settlement.SettledLocalAmount;
+                                            }
+                                        }
+                                    }
+
+
+
+                                    List<KeyValuePair<tb_FM_PreReceivedPayment, tb_FM_PaymentSettlement>> PrePaySettlements = new List<KeyValuePair<tb_FM_PreReceivedPayment, tb_FM_PaymentSettlement>>();
+                                    foreach (var item in availableAdvances)
+                                    {
+                                        var PrePay = availableAdvances.FirstOrDefault(c => c.PreRPID == item.PreRPID);
+                                        var Settlement = Settlements.FirstOrDefault(c => c.SourceBillId == PrePay.PreRPID);
+                                        PrePaySettlements.Add(new KeyValuePair<tb_FM_PreReceivedPayment, tb_FM_PaymentSettlement>(PrePay, Settlement));
+                                    }
+                                    if (receivable.TotalLocalPayableAmount == Settlements.Sum(c => c.SettledLocalAmount))
+                                    {
+                                        bool rs = await receivablePayableController.RevokeApplyManualPaymentAllocation(receivable, ReceivePaymentType.收款, PrePaySettlements, true);
+                                        if (rs)
+                                        {
+                                            MainForm.Instance.PrintInfoLog($"应{PaymentType.ToString()}单,{receivable.ARAPNo}的已经撤销抵扣。");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        MainForm.Instance.PrintInfoLog($"应{PaymentType.ToString()}单,{receivable.ARAPNo}的总额不等于已核销金额，请手动处理。");
+                                    }
+
+
+
+                                }
+
+                                #endregion
+                            }
+
+
+                        }
+                    }
+                }
+            }
+            else
+            {
+                MainForm.Instance.PrintInfoLog("没有异常数据。");
+            }
+        }
 
         //暂时认为一笔预收付就是一笔收付款。不拆分。要拆 拆订单订金  不然太复杂了。
         private void NewSumDataGridView_转为收付款单(object sender, EventArgs e)
@@ -182,6 +348,7 @@ namespace RUINORERP.UI.FM
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为退款单);
+            ContextClickList.Add(NewSumDataGridView_数据核查器);
             //ContextClickList.Add(NewSumDataGridView_转为收付款单);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
@@ -202,8 +369,8 @@ namespace RUINORERP.UI.FM
             List<tb_FM_PreReceivedPayment> selectlist = GetSelectResult();
             foreach (var item in selectlist)
             {
-                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.待核销 
-                    && item.ApprovalStatus == (int)ApprovalStatus.已审核 
+                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.待核销
+                    && item.ApprovalStatus == (int)ApprovalStatus.已审核
                     && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
 
                 if (canConvert || item.PrePaymentStatus == (int)PrePaymentStatus.部分核销)

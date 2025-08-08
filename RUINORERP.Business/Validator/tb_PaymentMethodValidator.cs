@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:29
+// 时间：08/08/2025 13:45:48
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 付款方式 付款方式，后面扩展有关账期 账龄分析的字段验证类
+    /// 付款方式 交易方式，后面扩展有关账期 账龄分析的字段验证类
     /// </summary>
     /*public partial class tb_PaymentMethodValidator:AbstractValidator<tb_PaymentMethod>*/
     public partial class tb_PaymentMethodValidator:BaseValidatorGeneric<tb_PaymentMethod>
@@ -38,9 +38,12 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_PaymentMethod =>tb_PaymentMethod.Paytype_Name).MaximumLength(50).WithMessage("付款方式:不能超过最大长度,50.");
+ RuleFor(tb_PaymentMethod =>tb_PaymentMethod.Paytype_Name).MaximumMixedLength(50).WithMessage("付款方式:不能超过最大长度,50.");
 
- RuleFor(tb_PaymentMethod =>tb_PaymentMethod.Desc).MaximumLength(25).WithMessage("描述:不能超过最大长度,25.");
+ RuleFor(tb_PaymentMethod =>tb_PaymentMethod.Desc).MaximumMixedLength(50).WithMessage("描述:不能超过最大长度,50.");
+
+//***** 
+ RuleFor(tb_PaymentMethod =>tb_PaymentMethod.Sort).NotNull().WithMessage("现金:不能为空。");
 
 
            	        Initialize();

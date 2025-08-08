@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/06/2025 14:52:01
+// 时间：08/08/2025 13:45:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,7 +53,7 @@ namespace RUINORERP.UI
       //this.kryptonPanel1 = new ComponentFactory.Krypton.Toolkit.KryptonPanel();
       //for definition
      this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
-this.txtEmployee_ID = new Krypton.Toolkit.KryptonTextBox();
+this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
 
 this.lblUserName = new Krypton.Toolkit.KryptonLabel();
 this.txtUserName = new Krypton.Toolkit.KryptonTextBox();
@@ -116,18 +116,20 @@ this.txtNotes.Multiline = true;
          //for size
      
             //#####Employee_ID###Int64
+//属性测试25Employee_ID
 this.lblEmployee_ID.AutoSize = true;
 this.lblEmployee_ID.Location = new System.Drawing.Point(100,25);
 this.lblEmployee_ID.Name = "lblEmployee_ID";
 this.lblEmployee_ID.Size = new System.Drawing.Size(41, 12);
 this.lblEmployee_ID.TabIndex = 1;
 this.lblEmployee_ID.Text = "员工信息";
-this.txtEmployee_ID.Location = new System.Drawing.Point(173,21);
-this.txtEmployee_ID.Name = "txtEmployee_ID";
-this.txtEmployee_ID.Size = new System.Drawing.Size(100, 21);
-this.txtEmployee_ID.TabIndex = 1;
+//111======25
+this.cmbEmployee_ID.Location = new System.Drawing.Point(173,21);
+this.cmbEmployee_ID.Name ="cmbEmployee_ID";
+this.cmbEmployee_ID.Size = new System.Drawing.Size(100, 21);
+this.cmbEmployee_ID.TabIndex = 1;
 this.Controls.Add(this.lblEmployee_ID);
-this.Controls.Add(this.txtEmployee_ID);
+this.Controls.Add(this.cmbEmployee_ID);
 
            //#####255UserName###String
 this.lblUserName.AutoSize = true;
@@ -174,6 +176,7 @@ this.Controls.Add(this.lblActionType);
 this.Controls.Add(this.txtActionType);
 
            //#####ObjectType###Int32
+//属性测试125ObjectType
 this.lblObjectType.AutoSize = true;
 this.lblObjectType.Location = new System.Drawing.Point(100,125);
 this.lblObjectType.Name = "lblObjectType";
@@ -188,6 +191,7 @@ this.Controls.Add(this.lblObjectType);
 this.Controls.Add(this.txtObjectType);
 
            //#####ObjectId###Int64
+//属性测试150ObjectId
 this.lblObjectId.AutoSize = true;
 this.lblObjectId.Location = new System.Drawing.Point(100,150);
 this.lblObjectId.Name = "lblObjectId";
@@ -291,7 +295,7 @@ this.Controls.Add(this.txtNotes);
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
                 this.Controls.Add(this.lblEmployee_ID );
-this.Controls.Add(this.txtEmployee_ID );
+this.Controls.Add(this.cmbEmployee_ID );
 
                 this.Controls.Add(this.lblUserName );
 this.Controls.Add(this.txtUserName );
@@ -348,7 +352,7 @@ this.Controls.Add(this.txtNotes );
      
          
               private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
-private Krypton.Toolkit.KryptonTextBox txtEmployee_ID;
+private Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
 
     
         

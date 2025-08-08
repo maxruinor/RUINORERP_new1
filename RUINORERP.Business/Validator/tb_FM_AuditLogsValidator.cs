@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/27/2025 18:00:25
+// 时间：08/08/2025 13:45:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -40,24 +40,24 @@ namespace RUINORERP.Business
      
  RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
 
- RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.UserName).MaximumLength(127).WithMessage("用户名:不能超过最大长度,127.");
+ RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.UserName).MaximumMixedLength(255).WithMessage("用户名:不能超过最大长度,255.");
  RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.UserName).NotEmpty().WithMessage("用户名:不能为空。");
 
 
- RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.ActionType).MaximumLength(25).WithMessage("动作:不能超过最大长度,25.");
+ RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.ActionType).MaximumMixedLength(50).WithMessage("动作:不能超过最大长度,50.");
 
  RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.ObjectType).NotEmpty().When(x => x.ObjectType.HasValue);
 
  RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.ObjectId).NotEmpty().When(x => x.ObjectId.HasValue);
 
- RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.ObjectNo).MaximumLength(25).WithMessage("单据编号:不能超过最大长度,25.");
+ RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.ObjectNo).MaximumMixedLength(50).WithMessage("单据编号:不能超过最大长度,50.");
 
- RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.OldState).MaximumLength(50).WithMessage("操作前状态:不能超过最大长度,50.");
+ RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.OldState).MaximumMixedLength(100).WithMessage("操作前状态:不能超过最大长度,100.");
 
- RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.NewState).MaximumLength(50).WithMessage("操作后状态:不能超过最大长度,50.");
+ RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.NewState).MaximumMixedLength(100).WithMessage("操作后状态:不能超过最大长度,100.");
 
 
- RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.Notes).MaximumLength(4000).WithMessage("备注说明:不能超过最大长度,4000.");
+ RuleFor(tb_FM_AuditLogs =>tb_FM_AuditLogs.Notes).MaximumMixedLength(8000).WithMessage("备注说明:不能超过最大长度,8000.");
 
            	        Initialize();
      }

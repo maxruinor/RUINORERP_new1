@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/14/2025 11:15:26
+// 时间：08/08/2025 13:46:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -59,9 +59,8 @@ this.cmbProdDetailID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 this.lblRack_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbRack_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
-this.lblproperty = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtproperty = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-this.txtproperty.Multiline = true;
+
+
 
 this.lblCost = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtCost = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -72,14 +71,11 @@ this.txtTaxRate = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.lblUntaxedCost = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtUntaxedCost = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-
 this.lblCarryingSubtotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtCarryingSubtotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-
 this.lblDiffSubtotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtDiffSubtotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-
 
 this.lblCheckSubtotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtCheckSubtotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -87,6 +83,10 @@ this.txtCheckSubtotalAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBo
 this.lblNotes = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtNotes = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.txtNotes.Multiline = true;
+
+this.lblproperty = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtproperty = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.txtproperty.Multiline = true;
 
     //for end
     this.SuspendLayout();
@@ -116,7 +116,7 @@ this.lblProdDetailID.Location = new System.Drawing.Point(100,50);
 this.lblProdDetailID.Name = "lblProdDetailID";
 this.lblProdDetailID.Size = new System.Drawing.Size(41, 12);
 this.lblProdDetailID.TabIndex = 2;
-this.lblProdDetailID.Text = "产品";
+this.lblProdDetailID.Text = "";
 //111======50
 this.cmbProdDetailID.Location = new System.Drawing.Point(173,46);
 this.cmbProdDetailID.Name ="cmbProdDetailID";
@@ -143,89 +143,80 @@ this.cmbRack_ID.TabIndex = 3;
 this.Controls.Add(this.lblRack_ID);
 this.Controls.Add(this.cmbRack_ID);
 
-           //#####255property###String
-this.lblproperty.AutoSize = true;
-this.lblproperty.Location = new System.Drawing.Point(100,100);
-this.lblproperty.Name = "lblproperty";
-this.lblproperty.Size = new System.Drawing.Size(41, 12);
-this.lblproperty.TabIndex = 4;
-this.lblproperty.Text = "属性";
-this.txtproperty.Location = new System.Drawing.Point(173,96);
-this.txtproperty.Name = "txtproperty";
-this.txtproperty.Size = new System.Drawing.Size(100, 21);
-this.txtproperty.TabIndex = 4;
-this.Controls.Add(this.lblproperty);
-this.Controls.Add(this.txtproperty);
+           //#####CarryinglQty###Int32
+//属性测试100CarryinglQty
+//属性测试100CarryinglQty
+//属性测试100CarryinglQty
+
+           //#####DiffQty###Int32
+//属性测试125DiffQty
+//属性测试125DiffQty
+//属性测试125DiffQty
+
+           //#####CheckQty###Int32
+//属性测试150CheckQty
+//属性测试150CheckQty
+//属性测试150CheckQty
 
            //#####Cost###Decimal
 this.lblCost.AutoSize = true;
-this.lblCost.Location = new System.Drawing.Point(100,125);
+this.lblCost.Location = new System.Drawing.Point(100,175);
 this.lblCost.Name = "lblCost";
 this.lblCost.Size = new System.Drawing.Size(41, 12);
-this.lblCost.TabIndex = 5;
-this.lblCost.Text = "成本";
-//111======125
-this.txtCost.Location = new System.Drawing.Point(173,121);
+this.lblCost.TabIndex = 7;
+this.lblCost.Text = "含税单价";
+//111======175
+this.txtCost.Location = new System.Drawing.Point(173,171);
 this.txtCost.Name ="txtCost";
 this.txtCost.Size = new System.Drawing.Size(100, 21);
-this.txtCost.TabIndex = 5;
+this.txtCost.TabIndex = 7;
 this.Controls.Add(this.lblCost);
 this.Controls.Add(this.txtCost);
 
            //#####TaxRate###Decimal
 this.lblTaxRate.AutoSize = true;
-this.lblTaxRate.Location = new System.Drawing.Point(100,150);
+this.lblTaxRate.Location = new System.Drawing.Point(100,200);
 this.lblTaxRate.Name = "lblTaxRate";
 this.lblTaxRate.Size = new System.Drawing.Size(41, 12);
-this.lblTaxRate.TabIndex = 6;
+this.lblTaxRate.TabIndex = 8;
 this.lblTaxRate.Text = "税率";
-//111======150
-this.txtTaxRate.Location = new System.Drawing.Point(173,146);
+//111======200
+this.txtTaxRate.Location = new System.Drawing.Point(173,196);
 this.txtTaxRate.Name ="txtTaxRate";
 this.txtTaxRate.Size = new System.Drawing.Size(100, 21);
-this.txtTaxRate.TabIndex = 6;
+this.txtTaxRate.TabIndex = 8;
 this.Controls.Add(this.lblTaxRate);
 this.Controls.Add(this.txtTaxRate);
 
            //#####UntaxedCost###Decimal
 this.lblUntaxedCost.AutoSize = true;
-this.lblUntaxedCost.Location = new System.Drawing.Point(100,175);
+this.lblUntaxedCost.Location = new System.Drawing.Point(100,225);
 this.lblUntaxedCost.Name = "lblUntaxedCost";
 this.lblUntaxedCost.Size = new System.Drawing.Size(41, 12);
-this.lblUntaxedCost.TabIndex = 7;
+this.lblUntaxedCost.TabIndex = 9;
 this.lblUntaxedCost.Text = "未税单价";
-//111======175
-this.txtUntaxedCost.Location = new System.Drawing.Point(173,171);
+//111======225
+this.txtUntaxedCost.Location = new System.Drawing.Point(173,221);
 this.txtUntaxedCost.Name ="txtUntaxedCost";
 this.txtUntaxedCost.Size = new System.Drawing.Size(100, 21);
-this.txtUntaxedCost.TabIndex = 7;
+this.txtUntaxedCost.TabIndex = 9;
 this.Controls.Add(this.lblUntaxedCost);
 this.Controls.Add(this.txtUntaxedCost);
 
-           //#####CarryinglQty###Int32
-//属性测试200CarryinglQty
-//属性测试200CarryinglQty
-//属性测试200CarryinglQty
-
            //#####CarryingSubtotalAmount###Decimal
 this.lblCarryingSubtotalAmount.AutoSize = true;
-this.lblCarryingSubtotalAmount.Location = new System.Drawing.Point(100,225);
+this.lblCarryingSubtotalAmount.Location = new System.Drawing.Point(100,250);
 this.lblCarryingSubtotalAmount.Name = "lblCarryingSubtotalAmount";
 this.lblCarryingSubtotalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblCarryingSubtotalAmount.TabIndex = 9;
+this.lblCarryingSubtotalAmount.TabIndex = 10;
 this.lblCarryingSubtotalAmount.Text = "载账小计";
-//111======225
-this.txtCarryingSubtotalAmount.Location = new System.Drawing.Point(173,221);
+//111======250
+this.txtCarryingSubtotalAmount.Location = new System.Drawing.Point(173,246);
 this.txtCarryingSubtotalAmount.Name ="txtCarryingSubtotalAmount";
 this.txtCarryingSubtotalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtCarryingSubtotalAmount.TabIndex = 9;
+this.txtCarryingSubtotalAmount.TabIndex = 10;
 this.Controls.Add(this.lblCarryingSubtotalAmount);
 this.Controls.Add(this.txtCarryingSubtotalAmount);
-
-           //#####DiffQty###Int32
-//属性测试250DiffQty
-//属性测试250DiffQty
-//属性测试250DiffQty
 
            //#####DiffSubtotalAmount###Decimal
 this.lblDiffSubtotalAmount.AutoSize = true;
@@ -242,39 +233,48 @@ this.txtDiffSubtotalAmount.TabIndex = 11;
 this.Controls.Add(this.lblDiffSubtotalAmount);
 this.Controls.Add(this.txtDiffSubtotalAmount);
 
-           //#####CheckQty###Int32
-//属性测试300CheckQty
-//属性测试300CheckQty
-//属性测试300CheckQty
-
            //#####CheckSubtotalAmount###Decimal
 this.lblCheckSubtotalAmount.AutoSize = true;
-this.lblCheckSubtotalAmount.Location = new System.Drawing.Point(100,325);
+this.lblCheckSubtotalAmount.Location = new System.Drawing.Point(100,300);
 this.lblCheckSubtotalAmount.Name = "lblCheckSubtotalAmount";
 this.lblCheckSubtotalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblCheckSubtotalAmount.TabIndex = 13;
+this.lblCheckSubtotalAmount.TabIndex = 12;
 this.lblCheckSubtotalAmount.Text = "盘点小计";
-//111======325
-this.txtCheckSubtotalAmount.Location = new System.Drawing.Point(173,321);
+//111======300
+this.txtCheckSubtotalAmount.Location = new System.Drawing.Point(173,296);
 this.txtCheckSubtotalAmount.Name ="txtCheckSubtotalAmount";
 this.txtCheckSubtotalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtCheckSubtotalAmount.TabIndex = 13;
+this.txtCheckSubtotalAmount.TabIndex = 12;
 this.Controls.Add(this.lblCheckSubtotalAmount);
 this.Controls.Add(this.txtCheckSubtotalAmount);
 
            //#####255Notes###String
 this.lblNotes.AutoSize = true;
-this.lblNotes.Location = new System.Drawing.Point(100,350);
+this.lblNotes.Location = new System.Drawing.Point(100,325);
 this.lblNotes.Name = "lblNotes";
 this.lblNotes.Size = new System.Drawing.Size(41, 12);
-this.lblNotes.TabIndex = 14;
+this.lblNotes.TabIndex = 13;
 this.lblNotes.Text = "备注";
-this.txtNotes.Location = new System.Drawing.Point(173,346);
+this.txtNotes.Location = new System.Drawing.Point(173,321);
 this.txtNotes.Name = "txtNotes";
 this.txtNotes.Size = new System.Drawing.Size(100, 21);
-this.txtNotes.TabIndex = 14;
+this.txtNotes.TabIndex = 13;
 this.Controls.Add(this.lblNotes);
 this.Controls.Add(this.txtNotes);
+
+           //#####255property###String
+this.lblproperty.AutoSize = true;
+this.lblproperty.Location = new System.Drawing.Point(100,350);
+this.lblproperty.Name = "lblproperty";
+this.lblproperty.Size = new System.Drawing.Size(41, 12);
+this.lblproperty.TabIndex = 14;
+this.lblproperty.Text = "属性";
+this.txtproperty.Location = new System.Drawing.Point(173,346);
+this.txtproperty.Name = "txtproperty";
+this.txtproperty.Size = new System.Drawing.Size(100, 21);
+this.txtproperty.TabIndex = 14;
+this.Controls.Add(this.lblproperty);
+this.Controls.Add(this.txtproperty);
 
           
     //for end
@@ -293,9 +293,9 @@ this.Controls.Add(this.cmbProdDetailID );
                 this.Controls.Add(this.lblRack_ID );
 this.Controls.Add(this.cmbRack_ID );
 
-                this.Controls.Add(this.lblproperty );
-this.Controls.Add(this.txtproperty );
-
+                
+                
+                
                 this.Controls.Add(this.lblCost );
 this.Controls.Add(this.txtCost );
 
@@ -305,20 +305,20 @@ this.Controls.Add(this.txtTaxRate );
                 this.Controls.Add(this.lblUntaxedCost );
 this.Controls.Add(this.txtUntaxedCost );
 
-                
                 this.Controls.Add(this.lblCarryingSubtotalAmount );
 this.Controls.Add(this.txtCarryingSubtotalAmount );
 
-                
                 this.Controls.Add(this.lblDiffSubtotalAmount );
 this.Controls.Add(this.txtDiffSubtotalAmount );
 
-                
                 this.Controls.Add(this.lblCheckSubtotalAmount );
 this.Controls.Add(this.txtCheckSubtotalAmount );
 
                 this.Controls.Add(this.lblNotes );
 this.Controls.Add(this.txtNotes );
+
+                this.Controls.Add(this.lblproperty );
+this.Controls.Add(this.txtproperty );
 
                     
             this.Name = "tb_StocktakeDetailQuery";
@@ -347,9 +347,13 @@ private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbRack_ID;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblproperty;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtproperty;
-
+              
+    
+        
+              
+    
+        
+              
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCost;
@@ -367,23 +371,14 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtUntaxedCost;
 
     
         
-              
-    
-        
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCarryingSubtotalAmount;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtCarryingSubtotalAmount;
 
     
         
-              
-    
-        
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDiffSubtotalAmount;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtDiffSubtotalAmount;
 
-    
-        
-              
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCheckSubtotalAmount;
@@ -393,6 +388,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtCheckSubtotalAmount;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblNotes;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtNotes;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblproperty;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtproperty;
 
     
     

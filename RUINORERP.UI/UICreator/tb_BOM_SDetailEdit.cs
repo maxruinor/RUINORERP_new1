@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 11:23:48
+// 时间：08/08/2025 13:45:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -93,6 +93,7 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
            DataBindingHelper.BindData4CheckBox<tb_BOM_SDetail>(entity, t => t.IsKeyMaterial, chkIsKeyMaterial, false);
+//有默认值
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetail>(entity, t => t.SKU, txtSKU, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_BOM_S>(entity, k => k.BOM_ID, v=>v.XXNAME, cmbBOM_ID);
            DataBindingHelper.BindData4TextBox<tb_BOM_SDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);

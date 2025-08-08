@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/10/2025 15:31:58
+// 时间：08/08/2025 13:46:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -41,17 +41,17 @@ namespace RUINORERP.Business
  RuleFor(tb_UserInfo =>tb_UserInfo.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("员工信息:下拉选择值不正确。");
  RuleFor(tb_UserInfo =>tb_UserInfo.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
 
- RuleFor(tb_UserInfo =>tb_UserInfo.UserName).MaximumLength(127).WithMessage("用户名:不能超过最大长度,127.");
+ RuleFor(tb_UserInfo =>tb_UserInfo.UserName).MaximumMixedLength(255).WithMessage("用户名:不能超过最大长度,255.");
  RuleFor(tb_UserInfo =>tb_UserInfo.UserName).NotEmpty().WithMessage("用户名:不能为空。");
 
- RuleFor(tb_UserInfo =>tb_UserInfo.Password).MaximumLength(127).WithMessage("密码:不能超过最大长度,127.");
+ RuleFor(tb_UserInfo =>tb_UserInfo.Password).MaximumMixedLength(255).WithMessage("密码:不能超过最大长度,255.");
 
 //有默认值
 
 //有默认值
 
 
- RuleFor(tb_UserInfo =>tb_UserInfo.Notes).MaximumLength(50).WithMessage("备注说明:不能超过最大长度,50.");
+ RuleFor(tb_UserInfo =>tb_UserInfo.Notes).MaximumMixedLength(100).WithMessage("备注说明:不能超过最大长度,100.");
 
 
 

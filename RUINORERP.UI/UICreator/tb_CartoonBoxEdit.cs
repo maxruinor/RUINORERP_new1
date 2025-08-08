@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2024 14:54:18
+// 时间：08/08/2025 13:45:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -104,9 +104,9 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_CartoonBox>(entity, t => t.FluteType, txtFluteType, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CartoonBox>(entity, t => t.PrintType, txtPrintType, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_CartoonBox>(entity, t => t.CustomPrint, txtCustomPrint, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_CartoonBox>(entity, t => t.Is_enabled, chkIs_enabled, false);
+           DataBindingHelper.BindData4CheckBox<tb_CartoonBox>(entity, t => t.Is_enabled, chkIs_enabled, false);
            DataBindingHelper.BindData4TextBox<tb_CartoonBox>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CehckBox<tb_CartoonBox>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_CartoonBox>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4DataTime<tb_CartoonBox>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_CartoonBox>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_CartoonBox>(entity, t => t.Modified_at, dtpModified_at,false);

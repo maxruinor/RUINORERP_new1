@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/21/2025 19:17:36
+// 时间：08/08/2025 13:46:25
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_Unit_Conversion =>tb_Unit_Conversion.UnitConversion_Name).MaximumLength(50).WithMessage("备注:不能超过最大长度,50.");
+ RuleFor(tb_Unit_Conversion =>tb_Unit_Conversion.UnitConversion_Name).MaximumMixedLength(100).WithMessage("备注:不能超过最大长度,100.");
  RuleFor(tb_Unit_Conversion =>tb_Unit_Conversion.UnitConversion_Name).NotEmpty().WithMessage("备注:不能为空。");
 
 //***** 
@@ -49,7 +49,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.Conversion_ratio).PrecisionScale(10,5,true).WithMessage("换算比例:小数位不能超过5。");
 
- RuleFor(tb_Unit_Conversion =>tb_Unit_Conversion.Notes).MaximumLength(100).WithMessage("备注:不能超过最大长度,100.");
+ RuleFor(tb_Unit_Conversion =>tb_Unit_Conversion.Notes).MaximumMixedLength(200).WithMessage("备注:不能超过最大长度,200.");
 
            	        Initialize();
      }

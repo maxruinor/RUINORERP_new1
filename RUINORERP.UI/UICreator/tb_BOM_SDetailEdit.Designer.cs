@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/27/2024 11:23:49
+// 时间：08/08/2025 13:45:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -58,6 +58,8 @@ this.cmbProdDetailID = new Krypton.Toolkit.KryptonComboBox();
 this.lblIsKeyMaterial = new Krypton.Toolkit.KryptonLabel();
 this.chkIsKeyMaterial = new Krypton.Toolkit.KryptonCheckBox();
 this.chkIsKeyMaterial.Values.Text ="";
+this.chkIsKeyMaterial.Checked = true;
+this.chkIsKeyMaterial.CheckState = System.Windows.Forms.CheckState.Checked;
 
 this.lblSKU = new Krypton.Toolkit.KryptonLabel();
 this.txtSKU = new Krypton.Toolkit.KryptonTextBox();

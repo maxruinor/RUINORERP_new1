@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/04/2025 11:58:54
+// 时间：08/08/2025 13:45:35
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,13 +38,13 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ARAPNo).MaximumLength(15).WithMessage("单据编号:不能超过最大长度,15.");
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ARAPNo).MaximumMixedLength(30).WithMessage("单据编号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.SourceBizType).NotEmpty().When(x => x.SourceBizType.HasValue);
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.SourceBillId).NotEmpty().When(x => x.SourceBillId.HasValue);
 
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.SourceBillNo).MaximumLength(15).WithMessage("来源单号:不能超过最大长度,15.");
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.SourceBillNo).MaximumMixedLength(30).WithMessage("来源单号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
 
@@ -52,7 +52,7 @@ namespace RUINORERP.Business
 
 
 
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PlatformOrderNo).MaximumLength(50).WithMessage("平台单号:不能超过最大长度,50.");
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PlatformOrderNo).MaximumMixedLength(100).WithMessage("平台单号:不能超过最大长度,100.");
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("公司账户:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
@@ -60,7 +60,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeInfoID).Must(CheckForeignKeyValueCanNull).WithMessage("收款信息:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
 
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeAccountNo).MaximumLength(50).WithMessage("收款账号:不能超过最大长度,50.");
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.PayeeAccountNo).MaximumMixedLength(100).WithMessage("收款账号:不能超过最大长度,100.");
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 
@@ -101,7 +101,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ARAPStatus).NotEmpty().When(x => x.ARAPStatus.HasValue);
 
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Remark).MaximumLength(150).WithMessage("备注:不能超过最大长度,150.");
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Remark).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -110,7 +110,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
- RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ApprovalOpinions).MaximumLength(127).WithMessage("审批意见:不能超过最大长度,127.");
+ RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.ApprovalOpinions).MaximumMixedLength(255).WithMessage("审批意见:不能超过最大长度,255.");
 
  RuleFor(tb_FM_ReceivablePayable =>tb_FM_ReceivablePayable.Approver_by).NotEmpty().When(x => x.Approver_by.HasValue);
 

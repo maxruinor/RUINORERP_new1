@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/22/2024 13:38:38
+// 时间：08/08/2025 13:45:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -119,6 +119,9 @@ this.chkApprovalResults.Values.Text ="";
 
 this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
 this.txtPrintStatus = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblCloseCaseOpinions = new Krypton.Toolkit.KryptonLabel();
+this.txtCloseCaseOpinions = new Krypton.Toolkit.KryptonTextBox();
 
     
     //for end
@@ -480,6 +483,20 @@ this.txtPrintStatus.TabIndex = 22;
 this.Controls.Add(this.lblPrintStatus);
 this.Controls.Add(this.txtPrintStatus);
 
+           //#####200CloseCaseOpinions###String
+this.lblCloseCaseOpinions.AutoSize = true;
+this.lblCloseCaseOpinions.Location = new System.Drawing.Point(100,575);
+this.lblCloseCaseOpinions.Name = "lblCloseCaseOpinions";
+this.lblCloseCaseOpinions.Size = new System.Drawing.Size(41, 12);
+this.lblCloseCaseOpinions.TabIndex = 23;
+this.lblCloseCaseOpinions.Text = "审批意见";
+this.txtCloseCaseOpinions.Location = new System.Drawing.Point(173,571);
+this.txtCloseCaseOpinions.Name = "txtCloseCaseOpinions";
+this.txtCloseCaseOpinions.Size = new System.Drawing.Size(100, 21);
+this.txtCloseCaseOpinions.TabIndex = 23;
+this.Controls.Add(this.lblCloseCaseOpinions);
+this.Controls.Add(this.txtCloseCaseOpinions);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -494,7 +511,7 @@ this.Controls.Add(this.txtPrintStatus);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 22;
+           // this.kryptonPanel1.TabIndex = 23;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -561,6 +578,9 @@ this.Controls.Add(this.chkApprovalResults );
 
                 this.Controls.Add(this.lblPrintStatus );
 this.Controls.Add(this.txtPrintStatus );
+
+                this.Controls.Add(this.lblCloseCaseOpinions );
+this.Controls.Add(this.txtCloseCaseOpinions );
 
                             // 
             // "tb_ProdReturningEdit"
@@ -691,6 +711,11 @@ private Krypton.Toolkit.KryptonCheckBox chkApprovalResults;
         
               private Krypton.Toolkit.KryptonLabel lblPrintStatus;
 private Krypton.Toolkit.KryptonTextBox txtPrintStatus;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblCloseCaseOpinions;
+private Krypton.Toolkit.KryptonTextBox txtCloseCaseOpinions;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/12/2024 11:32:07
+// 时间：08/08/2025 13:45:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -58,8 +58,6 @@ namespace RUINORERP.UI
         
         
         
-        
-        
 
          }
 /*
@@ -73,11 +71,9 @@ namespace RUINORERP.UI
                         entity.PayeeInfoID = Int64.Parse(txtPayeeInfoID.Text);
                         entity.DocumentDate = DateTime.Parse(txtDocumentDate.Text);
                         entity.ClaimAmount = Decimal.Parse(txtClaimAmount.Text);
-                        entity.ApprovedAmount = Decimal.Parse(txtApprovedAmount.Text);
                         entity.IncludeTax = Boolean.Parse(txtIncludeTax.Text);
                         entity.Notes = txtNotes.Text ;
                        entity.TaxAmount = Decimal.Parse(txtTaxAmount.Text);
-                        entity.TaxRate = Decimal.Parse(txtTaxRate.Text);
                         entity.UntaxedAmount = Decimal.Parse(txtUntaxedAmount.Text);
                         entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
@@ -109,11 +105,9 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);
            DataBindingHelper.BindData4DataTime<tb_FM_ExpenseClaim>(entity, t => t.DocumentDate, dtpDocumentDate,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ClaimAmount.ToString(), txtClaimAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ApprovedAmount.ToString(), txtApprovedAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_ExpenseClaim>(entity, t => t.IncludeTax, chkIncludeTax, false);
            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.TaxAmount.ToString(), txtTaxAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.UntaxedAmount.ToString(), txtUntaxedAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4DataTime<tb_FM_ExpenseClaim>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);

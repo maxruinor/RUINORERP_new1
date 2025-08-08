@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/19/2024 12:18:09
+// 时间：08/08/2025 13:46:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -68,14 +68,14 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ProductionDemandTargetDetail =>tb_ProductionDemandTargetDetail.NotIssueMaterialQty).NotNull().WithMessage("未发料量:不能为空。");
 
- RuleFor(tb_ProductionDemandTargetDetail =>tb_ProductionDemandTargetDetail.Summary).MaximumLength(127).WithMessage("摘要:不能超过最大长度,127.");
+ RuleFor(tb_ProductionDemandTargetDetail =>tb_ProductionDemandTargetDetail.Summary).MaximumMixedLength(255).WithMessage("摘要:不能超过最大长度,255.");
 
 //***** 
  RuleFor(tb_ProductionDemandTargetDetail =>tb_ProductionDemandTargetDetail.PPCID).NotNull().WithMessage(":不能为空。");
 
- RuleFor(tb_ProductionDemandTargetDetail =>tb_ProductionDemandTargetDetail.Specifications).MaximumLength(500).WithMessage("规格:不能超过最大长度,500.");
+ RuleFor(tb_ProductionDemandTargetDetail =>tb_ProductionDemandTargetDetail.Specifications).MaximumMixedLength(1000).WithMessage("规格:不能超过最大长度,1000.");
 
- RuleFor(tb_ProductionDemandTargetDetail =>tb_ProductionDemandTargetDetail.property).MaximumLength(127).WithMessage("属性:不能超过最大长度,127.");
+ RuleFor(tb_ProductionDemandTargetDetail =>tb_ProductionDemandTargetDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
            	        Initialize();
      }

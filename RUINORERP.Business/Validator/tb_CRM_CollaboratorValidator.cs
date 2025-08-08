@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：12/18/2024 17:45:26
+// 时间：08/08/2025 13:45:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,7 +42,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Customer_id).Must(CheckForeignKeyValue).WithMessage("目标客户:下拉选择值不正确。");
 
- RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Notes).MaximumLength(127).WithMessage("备注:不能超过最大长度,127.");
+ RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
 
 
 //***** 

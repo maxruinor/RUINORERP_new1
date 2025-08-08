@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:34:11
+// 时间：08/08/2025 13:45:28
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -59,6 +59,9 @@ namespace RUINORERP.UI
         
         
         
+        
+        
+        
 
          }
 /*
@@ -70,6 +73,8 @@ namespace RUINORERP.UI
                        entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.DocumentDate = DateTime.Parse(txtDocumentDate.Text);
                         entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);
+                        entity.PayStatus = Int32.Parse(txtPayStatus.Text);
+                        entity.Paytype_ID = Int64.Parse(txtPaytype_ID.Text);
                         entity.EXPOrINC = Boolean.Parse(txtEXPOrINC.Text);
                         entity.IncludeTax = Boolean.Parse(txtIncludeTax.Text);
                         entity.Notes = txtNotes.Text ;
@@ -91,6 +96,7 @@ namespace RUINORERP.UI
                         entity.ApprovedAmount = Decimal.Parse(txtApprovedAmount.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.CloseCaseImagePath = txtCloseCaseImagePath.Text ;
+                       entity.CloseCaseOpinions = txtCloseCaseOpinions.Text ;
                                return entity;
 }
         */
@@ -105,9 +111,11 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
            DataBindingHelper.BindData4DataTime<tb_FM_OtherExpense>(entity, t => t.DocumentDate, dtpDocumentDate,false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_FM_OtherExpense>(entity, t => t.EXPOrINC, chkEXPOrINC, false);
+           DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.PayStatus, txtPayStatus, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.Paytype_ID, txtPaytype_ID, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_OtherExpense>(entity, t => t.EXPOrINC, chkEXPOrINC, false);
 //有默认值
-           DataBindingHelper.BindData4CehckBox<tb_FM_OtherExpense>(entity, t => t.IncludeTax, chkIncludeTax, false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_OtherExpense>(entity, t => t.IncludeTax, chkIncludeTax, false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.TaxAmount.ToString(), txtTaxAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.TaxRate.ToString(), txtTaxRate, BindDataType4TextBox.Money,false);
@@ -116,17 +124,18 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_FM_OtherExpense>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_FM_OtherExpense>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_OtherExpense>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_FM_OtherExpense>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_FM_OtherExpense>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_OtherExpense>(entity, t => t.ApprovalResults, chkApprovalResults, false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.ApprovedAmount.ToString(), txtApprovedAmount, BindDataType4TextBox.Money,false);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.CloseCaseImagePath, txtCloseCaseImagePath, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_OtherExpense>(entity, t => t.CloseCaseOpinions, txtCloseCaseOpinions, BindDataType4TextBox.Text,false);
 }
 
 

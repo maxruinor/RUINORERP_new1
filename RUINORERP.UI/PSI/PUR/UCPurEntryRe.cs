@@ -87,7 +87,7 @@ namespace RUINORERP.UI.PSI.PUR
             .ToExpression();
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
-        protected override void LoadRelatedDataToDropDownItems()
+        protected override void LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_PurEntryRe  entryRe)
             {
@@ -131,7 +131,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
             }
-            base.LoadRelatedDataToDropDownItems();
+            base.LoadRelatedDataToDropDownItemsAsync();
         }
         public override void BindData(tb_PurEntryRe entity, ActionStatus actionStatus = ActionStatus.无操作)
         {

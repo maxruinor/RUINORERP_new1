@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/20/2024 20:30:04
+// 时间：08/08/2025 13:45:58
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -58,8 +58,6 @@ namespace RUINORERP.UI
         
         
         
-        
-        
 
          }
 /*
@@ -75,12 +73,10 @@ namespace RUINORERP.UI
                         entity.SKU = txtSKU.Text ;
                        entity.SplitParentQty = Int32.Parse(txtSplitParentQty.Text);
                         entity.SplitChildTotalQty = Int32.Parse(txtSplitChildTotalQty.Text);
-                        entity.Specifications = txtSpecifications.Text ;
-                       entity.property = txtproperty.Text ;
+                        entity.property = txtproperty.Text ;
                        entity.Notes = txtNotes.Text ;
                        entity.BOM_ID = Int64.Parse(txtBOM_ID.Text);
                         entity.BOM_No = txtBOM_No.Text ;
-                       entity.BOM_Name = txtBOM_Name.Text ;
                        entity.Created_at = DateTime.Parse(txtCreated_at.Text);
                         entity.Created_by = Int64.Parse(txtCreated_by.Text);
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
@@ -111,23 +107,21 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.SKU, txtSKU, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.SplitParentQty, txtSplitParentQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.SplitChildTotalQty, txtSplitChildTotalQty, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.Specifications, txtSpecifications, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_BOM_S>(entity, k => k.BOM_ID, v=>v.XXNAME, cmbBOM_ID);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.BOM_No, txtBOM_No, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.BOM_Name, txtBOM_Name, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4DataTime<tb_ProdSplit>(entity, t => t.Created_at, dtpCreated_at,false);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.Created_by, txtCreated_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ProdSplit>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdSplit>(entity, t => t.isdeleted, chkisdeleted, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdSplit>(entity, t => t.isdeleted, chkisdeleted, false);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.Approver_by, txtApprover_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_ProdSplit>(entity, t => t.Approver_at, dtpApprover_at,false);
            //default  DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.ApprovalStatus.ToString(), txtApprovalStatus, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4CehckBox<tb_ProdSplit>(entity, t => t.ApprovalResults, chkApprovalResults, false);
+           DataBindingHelper.BindData4CheckBox<tb_ProdSplit>(entity, t => t.ApprovalResults, chkApprovalResults, false);
            DataBindingHelper.BindData4TextBox<tb_ProdSplit>(entity, t => t.PrintStatus, txtPrintStatus, BindDataType4TextBox.Qty,false);
 }
 

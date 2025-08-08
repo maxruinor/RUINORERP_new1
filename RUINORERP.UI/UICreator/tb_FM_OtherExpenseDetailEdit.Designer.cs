@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/19/2024 00:34:12
+// 时间：08/08/2025 13:45:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -54,34 +54,34 @@ namespace RUINORERP.UI
       //for definition
      this.lblExpenseMainID = new Krypton.Toolkit.KryptonLabel();
 this.cmbExpenseMainID = new Krypton.Toolkit.KryptonComboBox();
-Account_id主外字段不一致。Subject_id主外字段不一致。
+
 this.lblExpenseName = new Krypton.Toolkit.KryptonLabel();
 this.txtExpenseName = new Krypton.Toolkit.KryptonTextBox();
 this.txtExpenseName.Multiline = true;
 
 this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
 this.cmbEmployee_ID = new Krypton.Toolkit.KryptonComboBox();
-Account_id主外字段不一致。Subject_id主外字段不一致。
+
 this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
 this.cmbDepartmentID = new Krypton.Toolkit.KryptonComboBox();
-Account_id主外字段不一致。Subject_id主外字段不一致。
-Account_id主外字段不一致。this.lblExpenseType_id = new Krypton.Toolkit.KryptonLabel();
+
+this.lblExpenseType_id = new Krypton.Toolkit.KryptonLabel();
 this.cmbExpenseType_id = new Krypton.Toolkit.KryptonComboBox();
-Subject_id主外字段不一致。
-Account_id主外字段不一致。Subject_id主外字段不一致。this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
-this.txtAccount_id = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
+this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
 
 this.lblCustomerVendor_ID = new Krypton.Toolkit.KryptonLabel();
 this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
-Account_id主外字段不一致。Subject_id主外字段不一致。
-Account_id主外字段不一致。Subject_id主外字段不一致。this.lblSubject_id = new Krypton.Toolkit.KryptonLabel();
-this.txtSubject_id = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblSubject_id = new Krypton.Toolkit.KryptonLabel();
+this.cmbSubject_id = new Krypton.Toolkit.KryptonComboBox();
 
 this.lblCheckOutDate = new Krypton.Toolkit.KryptonLabel();
 this.dtpCheckOutDate = new Krypton.Toolkit.KryptonDateTimePicker();
 
-this.lblTotalAmount = new Krypton.Toolkit.KryptonLabel();
-this.txtTotalAmount = new Krypton.Toolkit.KryptonTextBox();
+this.lblSingleTotalAmount = new Krypton.Toolkit.KryptonLabel();
+this.txtSingleTotalAmount = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblIncludeTax = new Krypton.Toolkit.KryptonLabel();
 this.chkIncludeTax = new Krypton.Toolkit.KryptonCheckBox();
@@ -101,7 +101,7 @@ this.txtUntaxedAmount = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblProjectGroup_ID = new Krypton.Toolkit.KryptonLabel();
 this.cmbProjectGroup_ID = new Krypton.Toolkit.KryptonComboBox();
-Account_id主外字段不一致。Subject_id主外字段不一致。
+
 this.lblEvidenceImagePath = new Krypton.Toolkit.KryptonLabel();
 this.txtEvidenceImagePath = new Krypton.Toolkit.KryptonTextBox();
 this.txtEvidenceImagePath.Multiline = true;
@@ -192,7 +192,7 @@ this.lblDepartmentID.Location = new System.Drawing.Point(100,100);
 this.lblDepartmentID.Name = "lblDepartmentID";
 this.lblDepartmentID.Size = new System.Drawing.Size(41, 12);
 this.lblDepartmentID.TabIndex = 4;
-this.lblDepartmentID.Text = "发生部门";
+this.lblDepartmentID.Text = "归属部门";
 //111======100
 this.cmbDepartmentID.Location = new System.Drawing.Point(173,96);
 this.cmbDepartmentID.Name ="cmbDepartmentID";
@@ -208,7 +208,7 @@ this.Controls.Add(this.cmbDepartmentID);
 //属性测试125ExpenseType_id
 //属性测试125ExpenseType_id
 //属性测试125ExpenseType_id
-Account_id主外字段不一致。//属性测试125ExpenseType_id
+//属性测试125ExpenseType_id
 this.lblExpenseType_id.AutoSize = true;
 this.lblExpenseType_id.Location = new System.Drawing.Point(100,125);
 this.lblExpenseType_id.Name = "lblExpenseType_id";
@@ -230,20 +230,19 @@ this.Controls.Add(this.cmbExpenseType_id);
 //属性测试150Account_id
 //属性测试150Account_id
 //属性测试150Account_id
-Account_id主外字段不一致。//属性测试150Account_id
-//属性测试150Account_id
-Subject_id主外字段不一致。this.lblAccount_id.AutoSize = true;
+this.lblAccount_id.AutoSize = true;
 this.lblAccount_id.Location = new System.Drawing.Point(100,150);
 this.lblAccount_id.Name = "lblAccount_id";
 this.lblAccount_id.Size = new System.Drawing.Size(41, 12);
 this.lblAccount_id.TabIndex = 6;
 this.lblAccount_id.Text = "交易账号";
-this.txtAccount_id.Location = new System.Drawing.Point(173,146);
-this.txtAccount_id.Name = "txtAccount_id";
-this.txtAccount_id.Size = new System.Drawing.Size(100, 21);
-this.txtAccount_id.TabIndex = 6;
+//111======150
+this.cmbAccount_id.Location = new System.Drawing.Point(173,146);
+this.cmbAccount_id.Name ="cmbAccount_id";
+this.cmbAccount_id.Size = new System.Drawing.Size(100, 21);
+this.cmbAccount_id.TabIndex = 6;
 this.Controls.Add(this.lblAccount_id);
-this.Controls.Add(this.txtAccount_id);
+this.Controls.Add(this.cmbAccount_id);
 
            //#####CustomerVendor_ID###Int64
 //属性测试175CustomerVendor_ID
@@ -268,20 +267,21 @@ this.Controls.Add(this.cmbCustomerVendor_ID);
 //属性测试200Subject_id
 //属性测试200Subject_id
 //属性测试200Subject_id
-Account_id主外字段不一致。//属性测试200Subject_id
 //属性测试200Subject_id
-Subject_id主外字段不一致。this.lblSubject_id.AutoSize = true;
+//属性测试200Subject_id
+this.lblSubject_id.AutoSize = true;
 this.lblSubject_id.Location = new System.Drawing.Point(100,200);
 this.lblSubject_id.Name = "lblSubject_id";
 this.lblSubject_id.Size = new System.Drawing.Size(41, 12);
 this.lblSubject_id.TabIndex = 8;
 this.lblSubject_id.Text = "会计科目";
-this.txtSubject_id.Location = new System.Drawing.Point(173,196);
-this.txtSubject_id.Name = "txtSubject_id";
-this.txtSubject_id.Size = new System.Drawing.Size(100, 21);
-this.txtSubject_id.TabIndex = 8;
+//111======200
+this.cmbSubject_id.Location = new System.Drawing.Point(173,196);
+this.cmbSubject_id.Name ="cmbSubject_id";
+this.cmbSubject_id.Size = new System.Drawing.Size(100, 21);
+this.cmbSubject_id.TabIndex = 8;
 this.Controls.Add(this.lblSubject_id);
-this.Controls.Add(this.txtSubject_id);
+this.Controls.Add(this.cmbSubject_id);
 
            //#####CheckOutDate###DateTime
 this.lblCheckOutDate.AutoSize = true;
@@ -298,20 +298,20 @@ this.dtpCheckOutDate.TabIndex = 9;
 this.Controls.Add(this.lblCheckOutDate);
 this.Controls.Add(this.dtpCheckOutDate);
 
-           //#####TotalAmount###Decimal
-this.lblTotalAmount.AutoSize = true;
-this.lblTotalAmount.Location = new System.Drawing.Point(100,250);
-this.lblTotalAmount.Name = "lblTotalAmount";
-this.lblTotalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblTotalAmount.TabIndex = 10;
-this.lblTotalAmount.Text = "总金额";
+           //#####SingleTotalAmount###Decimal
+this.lblSingleTotalAmount.AutoSize = true;
+this.lblSingleTotalAmount.Location = new System.Drawing.Point(100,250);
+this.lblSingleTotalAmount.Name = "lblSingleTotalAmount";
+this.lblSingleTotalAmount.Size = new System.Drawing.Size(41, 12);
+this.lblSingleTotalAmount.TabIndex = 10;
+this.lblSingleTotalAmount.Text = "单项总金额";
 //111======250
-this.txtTotalAmount.Location = new System.Drawing.Point(173,246);
-this.txtTotalAmount.Name ="txtTotalAmount";
-this.txtTotalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtTotalAmount.TabIndex = 10;
-this.Controls.Add(this.lblTotalAmount);
-this.Controls.Add(this.txtTotalAmount);
+this.txtSingleTotalAmount.Location = new System.Drawing.Point(173,246);
+this.txtSingleTotalAmount.Name ="txtSingleTotalAmount";
+this.txtSingleTotalAmount.Size = new System.Drawing.Size(100, 21);
+this.txtSingleTotalAmount.TabIndex = 10;
+this.Controls.Add(this.lblSingleTotalAmount);
+this.Controls.Add(this.txtSingleTotalAmount);
 
            //#####IncludeTax###Boolean
 this.lblIncludeTax.AutoSize = true;
@@ -450,23 +450,23 @@ this.Controls.Add(this.cmbEmployee_ID );
                 this.Controls.Add(this.lblDepartmentID );
 this.Controls.Add(this.cmbDepartmentID );
 
-                Account_id主外字段不一致。this.Controls.Add(this.lblExpenseType_id );
+                this.Controls.Add(this.lblExpenseType_id );
 this.Controls.Add(this.cmbExpenseType_id );
 
-                Account_id主外字段不一致。Subject_id主外字段不一致。this.Controls.Add(this.lblAccount_id );
-this.Controls.Add(this.txtAccount_id );
+                this.Controls.Add(this.lblAccount_id );
+this.Controls.Add(this.cmbAccount_id );
 
                 this.Controls.Add(this.lblCustomerVendor_ID );
 this.Controls.Add(this.cmbCustomerVendor_ID );
 
-                Account_id主外字段不一致。Subject_id主外字段不一致。this.Controls.Add(this.lblSubject_id );
-this.Controls.Add(this.txtSubject_id );
+                this.Controls.Add(this.lblSubject_id );
+this.Controls.Add(this.cmbSubject_id );
 
                 this.Controls.Add(this.lblCheckOutDate );
 this.Controls.Add(this.dtpCheckOutDate );
 
-                this.Controls.Add(this.lblTotalAmount );
-this.Controls.Add(this.txtTotalAmount );
+                this.Controls.Add(this.lblSingleTotalAmount );
+this.Controls.Add(this.txtSingleTotalAmount );
 
                 this.Controls.Add(this.lblIncludeTax );
 this.Controls.Add(this.chkIncludeTax );
@@ -515,7 +515,7 @@ this.Controls.Add(this.txtEvidenceImagePath );
          
               private Krypton.Toolkit.KryptonLabel lblExpenseMainID;
 private Krypton.Toolkit.KryptonComboBox cmbExpenseMainID;
-Account_id主外字段不一致。Subject_id主外字段不一致。
+
     
         
               private Krypton.Toolkit.KryptonLabel lblExpenseName;
@@ -525,31 +525,31 @@ private Krypton.Toolkit.KryptonTextBox txtExpenseName;
         
               private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
 private Krypton.Toolkit.KryptonComboBox cmbEmployee_ID;
-Account_id主外字段不一致。Subject_id主外字段不一致。
+
     
         
               private Krypton.Toolkit.KryptonLabel lblDepartmentID;
 private Krypton.Toolkit.KryptonComboBox cmbDepartmentID;
-Account_id主外字段不一致。Subject_id主外字段不一致。
+
     
         
-              Account_id主外字段不一致。private Krypton.Toolkit.KryptonLabel lblExpenseType_id;
+              private Krypton.Toolkit.KryptonLabel lblExpenseType_id;
 private Krypton.Toolkit.KryptonComboBox cmbExpenseType_id;
-Subject_id主外字段不一致。
+
     
         
-              Account_id主外字段不一致。Subject_id主外字段不一致。private Krypton.Toolkit.KryptonLabel lblAccount_id;
-private Krypton.Toolkit.KryptonTextBox txtAccount_id;
+              private Krypton.Toolkit.KryptonLabel lblAccount_id;
+private Krypton.Toolkit.KryptonComboBox cmbAccount_id;
 
     
         
               private Krypton.Toolkit.KryptonLabel lblCustomerVendor_ID;
 private Krypton.Toolkit.KryptonComboBox cmbCustomerVendor_ID;
-Account_id主外字段不一致。Subject_id主外字段不一致。
+
     
         
-              Account_id主外字段不一致。Subject_id主外字段不一致。private Krypton.Toolkit.KryptonLabel lblSubject_id;
-private Krypton.Toolkit.KryptonTextBox txtSubject_id;
+              private Krypton.Toolkit.KryptonLabel lblSubject_id;
+private Krypton.Toolkit.KryptonComboBox cmbSubject_id;
 
     
         
@@ -558,8 +558,8 @@ private Krypton.Toolkit.KryptonDateTimePicker dtpCheckOutDate;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblTotalAmount;
-private Krypton.Toolkit.KryptonTextBox txtTotalAmount;
+              private Krypton.Toolkit.KryptonLabel lblSingleTotalAmount;
+private Krypton.Toolkit.KryptonTextBox txtSingleTotalAmount;
 
     
         
@@ -590,7 +590,7 @@ private Krypton.Toolkit.KryptonTextBox txtUntaxedAmount;
         
               private Krypton.Toolkit.KryptonLabel lblProjectGroup_ID;
 private Krypton.Toolkit.KryptonComboBox cmbProjectGroup_ID;
-Account_id主外字段不一致。Subject_id主外字段不一致。
+
     
         
               private Krypton.Toolkit.KryptonLabel lblEvidenceImagePath;

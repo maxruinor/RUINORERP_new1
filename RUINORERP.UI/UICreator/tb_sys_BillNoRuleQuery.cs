@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：06/25/2025 12:21:39
+// 时间：08/08/2025 13:46:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,7 +46,17 @@ namespace RUINORERP.UI
     
         
     
-        
+                
+        //==============
+
+            InitializeComponent();
+
+       // RuleFor(tb_sys_BillNoRule => tb_sys_BillNoRule.BizType).NotEmpty();
+       
+       
+       //===============
+       
+          
     
         
     

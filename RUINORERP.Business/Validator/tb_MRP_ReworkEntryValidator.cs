@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/14/2025 20:57:17
+// 时间：08/08/2025 13:45:44
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,20 +38,21 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkEntryNo).MaximumLength(25).WithMessage("返工入库单号:不能超过最大长度,25.");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkEntryNo).MaximumMixedLength(50).WithMessage("返工入库单号:不能超过最大长度,50.");
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkEntryNo).NotEmpty().WithMessage("返工入库单号:不能为空。");
 
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("生产单位:下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.CustomerVendor_ID).Must(CheckForeignKeyValueCanNull).WithMessage("外发工厂:下拉选择值不正确。");
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.CustomerVendor_ID).NotEmpty().When(x => x.CustomerVendor_ID.HasValue);
 
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("需求部门:下拉选择值不正确。");
+
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("生产部门:下拉选择值不正确。");
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkReturnID).Must(CheckForeignKeyValue).WithMessage(":下拉选择值不正确。");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkReturnID).Must(CheckForeignKeyValue).WithMessage("退库单:下拉选择值不正确。");
 
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkReturnNo).MaximumLength(25).WithMessage("退库单号:不能超过最大长度,25.");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkReturnNo).MaximumMixedLength(50).WithMessage("退库单号:不能超过最大长度,50.");
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ReworkReturnNo).NotEmpty().WithMessage("退库单号:不能为空。");
 
 //***** 
@@ -69,9 +70,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.Notes).MaximumLength(750).WithMessage("备注:不能超过最大长度,750.");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.Notes).MaximumMixedLength(1500).WithMessage("备注:不能超过最大长度,1500.");
 
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ApprovalOpinions).MaximumLength(100).WithMessage("审批意见:不能超过最大长度,100.");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.ApprovalOpinions).MaximumMixedLength(200).WithMessage("审批意见:不能超过最大长度,200.");
 
 
 
@@ -88,7 +89,7 @@ namespace RUINORERP.Business
  RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
 
- RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.VoucherNO).MaximumLength(25).WithMessage("凭证号码:不能超过最大长度,25.");
+ RuleFor(tb_MRP_ReworkEntry =>tb_MRP_ReworkEntry.VoucherNO).MaximumMixedLength(50).WithMessage("凭证号码:不能超过最大长度,50.");
 
            	                //long?
                 //ReworkEntryID

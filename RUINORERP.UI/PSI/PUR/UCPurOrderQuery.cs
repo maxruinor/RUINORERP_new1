@@ -29,6 +29,8 @@ using FastReport.Table;
 using RUINORERP.UI.UControls;
 using StackExchange.Redis;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.UI.CommonUI;
 namespace RUINORERP.UI.PSI.PUR
 {
 
@@ -45,8 +47,10 @@ namespace RUINORERP.UI.PSI.PUR
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为采购入库单);
+            ContextClickList.Add(NewSumDataGridView_预付货款);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list.Add(new ContextMenuController("【转为入库单】", true, false, "NewSumDataGridView_转为采购入库单"));
+            list.Add(new ContextMenuController("【预付货款】", true, false, "NewSumDataGridView_预付货款"));
             return list;
         }
 
@@ -54,6 +58,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为采购入库单);
+            ContextClickList.Add(NewSumDataGridView_预付货款);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
@@ -66,6 +71,95 @@ namespace RUINORERP.UI.PSI.PUR
                     , ContextClickList, list, true
                     );
                 _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
+            }
+        }
+
+
+        private async void NewSumDataGridView_预付货款(object sender, EventArgs e)
+        {
+            try
+            {
+                List<tb_PurOrder> selectlist = GetSelectResult();
+                List<tb_PurOrder> RealList = new List<tb_PurOrder>();
+                StringBuilder msg = new StringBuilder();
+                int counter = 1;
+                foreach (var item in selectlist)
+                {
+                    //只有审核状态才可以转换为收款单
+                    if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                    {
+                        RealList.Add(item);
+                    }
+                    else
+                    {
+                        msg.Append(counter.ToString() + ") ");
+                        msg.Append($"当前采购订单 {item.SOrderNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法进行再次预付款。").Append("\r\n");
+                        counter++;
+                    }
+                }
+                //多选时。要相同客户才能合并到一个收款单
+                if (RealList.Count() > 1)
+                {
+                    msg.Append("一次只能选择一行数据进行预付款。");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                if (msg.ToString().Length > 0)
+                {
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (RealList.Count == 0)
+                    {
+                        return;
+                    }
+                }
+
+                if (RealList.Count == 0)
+                {
+                    msg.Append("请至少选择一行数据进行预付款。");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                var PurOrder = RealList[0];
+                var amountRule = new AmountValidationRule();
+                using (var inputForm = new frmInputObject(amountRule))
+                {
+                    inputForm.DefaultTitle = "请输入预付款金额";
+                    if (inputForm.ShowDialog() == DialogResult.OK)
+                    {
+                        if (inputForm.InputContent.ToDecimal() <= 0)
+                        {
+                            MessageBox.Show("预付款金额必须大于0", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return;
+                        }
+                        decimal PreAmount = inputForm.InputContent.ObjToDecimal();
+                        //检测新增的订金是不是大于总金额了。
+                        if (PurOrder.Deposit + PreAmount > PurOrder.TotalAmount)
+                        {
+                            if (MessageBox.Show($"【采购订单】的预付款金额{PurOrder.Deposit}+{PreAmount}，超过了订单总金额{PurOrder.TotalAmount}，你确定要超额付款吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, defaultButton: MessageBoxDefaultButton.Button2) == DialogResult.No)
+                            {
+                                return;
+                            }
+                        }
+
+                        if (MessageBox.Show($"针对采购订单：{PurOrder.SOrderNo}，确定向供应商{PurOrder.tb_customervendor.CVName}:预付款：{inputForm.InputContent}元吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        {
+                           var ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
+                            var rs = await ctr.ManualPrePayment(inputForm.InputContent.ObjToDecimal(), PurOrder);
+                            MenuPowerHelper menuPowerHelper;
+                            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PreReceivedPayment) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                            if (RelatedMenuInfo != null)
+                            {
+                                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
             }
         }
 
@@ -109,7 +203,6 @@ namespace RUINORERP.UI.PSI.PUR
             }
         }
 
-
         public override void BuildLimitQueryConditions()
         {
             //创建表达式
@@ -120,7 +213,6 @@ namespace RUINORERP.UI.PSI.PUR
             base.LimitQueryConditions = lambda;
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
-
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法

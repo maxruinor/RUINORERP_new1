@@ -379,17 +379,15 @@ namespace RUINORERP.UI.PSI.SAL
                     return;
                 }
 
-                if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) || s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID))
-                {
-                    //如果全额预付 自动设置为订金额就是全款
-
-                    Summation();
-
-                }
-
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) || s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID))
+                    {
+                        //如果全额预付 自动设置为订金额就是全款
+                        Summation();
+                    }
+
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Notes))
                     {
                         // 提取订单编号

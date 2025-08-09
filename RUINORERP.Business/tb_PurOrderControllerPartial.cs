@@ -605,6 +605,141 @@ namespace RUINORERP.Business
 
 
         /// <summary>
+        /// 手动生成预付款单
+        /// </summary>
+        /// <param name="PrepaidAmount">本次预付金额</param>
+        /// <param name="entity">对应的订单</param>
+        /// <returns></returns>
+        public async Task<ReturnResults<tb_FM_PreReceivedPayment>> ManualPrePayment(decimal PrepaidAmount, tb_PurOrder entity)
+        {
+            ReturnResults<tb_FM_PreReceivedPayment> rmrs = new ReturnResults<tb_FM_PreReceivedPayment>();
+            AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+            if (authorizeController.EnableFinancialModule())
+            {
+                #region 生成预付款单 
+
+                #region 生成预付款单条件判断检测
+                // 获取付款方式信息
+                if (_appContext.PaymentMethodOfPeriod == null)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    rmrs.Succeeded = false;
+                    rmrs.ErrorMsg = $"请先配置付款方式信息！";
+                    if (_appContext.SysConfig.ShowDebugInfo)
+                    {
+                        _logger.LogInformation(rmrs.ErrorMsg);
+                    }
+                    return rmrs;
+                }
+
+                //如果是账期必须是未付款
+                if (entity.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
+                {
+                    if (entity.PayStatus != (int)PayStatus.未付款)
+                    {
+                        rmrs.Succeeded = false;
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
+                        if (_appContext.SysConfig.ShowDebugInfo)
+                        {
+                            _logger.LogInformation(rmrs.ErrorMsg);
+                        }
+                        return rmrs;
+                    }
+                }
+
+                if (entity.PayStatus == (int)PayStatus.未付款)
+                {
+                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
+                    {
+                        rmrs.Succeeded = false;
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
+                        if (_appContext.SysConfig.ShowDebugInfo)
+                        {
+                            _logger.LogInformation(rmrs.ErrorMsg);
+                        }
+                        return rmrs;
+                    }
+                    else
+                    {
+                        //是账期。说明是未付过款时，则是第一次收订金。具体的渠道。由后面补上，这里暂时空置? 但是又不是空值类型。
+
+                    }
+                }
+
+
+                #endregion
+
+
+                // 外币相关处理 正确是 外币时一定要有汇率
+                decimal exchangeRate = 1; // 获取销售订单的汇率
+                if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                {
+                    exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
+                                                        // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
+                                                        // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
+                }
+
+                //正常来说。不能重复生成。即使退款也只会有一个对应订单的预付款单。 一个预付款单可以对应正负两个收款单。
+                // 生成预付款单前 检测
+                var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                var PreReceivedPayment = ctrpay.BuildPreReceivedPayment(entity, PrepaidAmount);
+                if (PreReceivedPayment.LocalPrepaidAmount > 0)
+                {
+                    ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
+                    if (!rmpay.Succeeded)
+                    {
+
+                        // 处理预付款单生成失败的情况
+                        rmrs.Succeeded = false;
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"预付款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
+                        if (_appContext.SysConfig.ShowDebugInfo)
+                        {
+                            _logger.LogInformation(rmrs.ErrorMsg);
+                        }
+                    }
+                    else
+                    {
+                        rmrs.ReturnObject = rmpay.ReturnObject;
+                        if (_appContext.FMConfig.AutoAuditPrePayment)
+                        {
+                            #region 自动审核预付款
+                            //销售订单审核时自动将预付款单设为"已生效"状态
+                            PreReceivedPayment.ApprovalOpinions = "再次收到预付款，系统自动审核";
+                            PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.已审核;
+                            PreReceivedPayment.ApprovalResults = true;
+                            ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
+                            if (!autoApproval.Succeeded)
+                            {
+                                rmrs.Succeeded = false;
+                                _unitOfWorkManage.RollbackTran();
+                                rmrs.ErrorMsg = $"预付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                if (_appContext.SysConfig.ShowDebugInfo)
+                                {
+                                    _logger.LogInformation(rmrs.ErrorMsg);
+                                }
+                            }
+                            else
+                            {
+                                rmrs.ReturnObject = autoApproval.ReturnObject;
+                                FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预付款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
+                            }
+                            #endregion
+                        }
+                    }
+                }
+
+                #endregion
+            }
+            return rmrs;
+        }
+
+
+
+        /// <summary>
         /// 转换为采购入库单,注意一个订单可以多次转成入库单。
         /// </summary>
         /// <param name="order"></param>

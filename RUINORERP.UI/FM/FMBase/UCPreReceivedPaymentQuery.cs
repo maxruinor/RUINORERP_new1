@@ -481,7 +481,10 @@ namespace RUINORERP.UI.FM
                         MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
                     }
                 }
-                MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");
+                if (counter > 0)
+                {
+                    MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");
+                }
             }
         }
 

@@ -377,6 +377,15 @@ namespace RUINORERP.UI.PSI.PUR
                                 }
                             }
                         }
+
+                        if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.PayStatus) || s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.Paytype_ID))
+                        {
+                            //如果全额预付 自动设置为订金额就是全款
+                            Summation();
+
+                        }
+
+
                     }
                 }
 
@@ -428,7 +437,7 @@ namespace RUINORERP.UI.PSI.PUR
                             if (payeeInfo != null)
                             {
                                 btnInfo.Tag = payeeInfo;
-                                
+
                                 //DataBindingHelper.BindData4CmbByEnum<tb_FM_PayeeInfo>(payeeInfo, k => k.Account_type, typeof(AccountType), cmbAccount_type, false);
                                 //添加收款信息。展示给财务看
                                 //entity.PayeeAccountNo = payeeInfo.Account_No;
@@ -509,8 +518,13 @@ namespace RUINORERP.UI.PSI.PUR
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.ShipCost) && entity.ShipCost > 0)
                     {
-                        EditEntity.TotalAmount = EditEntity.tb_PurOrderDetails.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity);
-                        EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.ShipCost;
+
+
+
+                        Summation();
+
+
+
                     }
 
                 }
@@ -823,6 +837,10 @@ namespace RUINORERP.UI.PSI.PUR
                 MainForm.Instance.uclog.AddLog("请先使用新增或查询加载数据");
                 return;
             }
+            Summation();
+        }
+        private void Summation()
+        {
             try
             {
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
@@ -859,6 +877,12 @@ namespace RUINORERP.UI.PSI.PUR
                     //
                     EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
                 }
+
+                if (EditEntity.PayStatus == (int)PayStatus.全额预付)
+                {
+                    EditEntity.Deposit = EditEntity.TotalAmount;
+                }
+
             }
             catch (Exception ex)
             {
@@ -867,7 +891,6 @@ namespace RUINORERP.UI.PSI.PUR
                 MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
             }
         }
-
         protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)

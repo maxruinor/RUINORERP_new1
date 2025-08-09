@@ -96,6 +96,97 @@ namespace RUINORERP.UI.PSI.SAL
                 _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
             }
         }
+        private async void NewSumDataGridView_预收货款(object sender, EventArgs e)
+        {
+
+            try
+            {
+                List<tb_SaleOrder> selectlist = GetSelectResult();
+                List<tb_SaleOrder> RealList = new List<tb_SaleOrder>();
+                StringBuilder msg = new StringBuilder();
+                int counter = 1;
+                foreach (var item in selectlist)
+                {
+                    //只有审核状态才可以转换为收款单
+                    if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                    {
+                        RealList.Add(item);
+                    }
+                    else
+                    {
+                        msg.Append(counter.ToString() + ") ");
+                        msg.Append($"当前销售订单 {item.SOrderNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法进行再次预收款。").Append("\r\n");
+                        counter++;
+                    }
+                }
+                //多选时。要相同客户才能合并到一个收款单
+                if (RealList.Count() > 1)
+                {
+                    msg.Append("一次只能选择一行数据进行预收款。");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                if (msg.ToString().Length > 0)
+                {
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (RealList.Count == 0)
+                    {
+                        return;
+                    }
+                }
+
+                if (RealList.Count == 0)
+                {
+                    msg.Append("请至少选择一行数据进行预收款。");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                var SOrder = RealList[0];
+                var amountRule = new AmountValidationRule();
+                using (var inputForm = new frmInputObject(amountRule))
+                {
+                    inputForm.DefaultTitle = "请输入预付款金额";
+                    if (inputForm.ShowDialog() == DialogResult.OK)
+                    {
+                        if (inputForm.InputContent.ToDecimal() <= 0)
+                        {
+                            MessageBox.Show("预付款金额必须大于0", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return;
+                        }
+                        decimal PreAmount = inputForm.InputContent.ObjToDecimal();
+                        //检测新增的订金是不是大于总金额了。
+                        if (SOrder.Deposit + PreAmount > SOrder.TotalAmount)
+                        {
+                            if (MessageBox.Show($"【销售订单】的预付款金额{SOrder.Deposit}+{PreAmount}，超过了订单总金额{SOrder.TotalAmount}，你确定客户有超额付款吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, defaultButton: MessageBoxDefaultButton.Button2) == DialogResult.No)
+                            {
+                                return;
+                            }
+                        }
+
+                        if (MessageBox.Show($"针对订单：{SOrder.SOrderNo}，确定收到客户{SOrder.tb_customervendor.CVName}:收到预付款：{inputForm.InputContent}元吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        {
+                            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+                            //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
+                            var rs = await ctr.ManualPrePayment(inputForm.InputContent.ObjToDecimal(), SOrder);
+                            MenuPowerHelper menuPowerHelper;
+                            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PreReceivedPayment) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                            if (RelatedMenuInfo != null)
+                            {
+                                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
+                            }
+                            return;
+
+
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
 
         //public override void BuildLimitQueryConditions()
         //{
@@ -240,90 +331,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-        private async void NewSumDataGridView_预收货款(object sender, EventArgs e)
-        {
 
-
-
-            try
-            {
-                List<tb_SaleOrder> selectlist = GetSelectResult();
-                List<tb_SaleOrder> RealList = new List<tb_SaleOrder>();
-                StringBuilder msg = new StringBuilder();
-                int counter = 1;
-                foreach (var item in selectlist)
-                {
-                    //只有审核状态才可以转换为收款单
-                    if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
-                    {
-                        RealList.Add(item);
-                    }
-                    else
-                    {
-                        msg.Append(counter.ToString() + ") ");
-                        msg.Append($"当前销售单 {item.SOrderNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法进行再次预收款。").Append("\r\n");
-                        counter++;
-                    }
-                }
-                //多选时。要相同客户才能合并到一个收款单
-                if (RealList.Count() > 1)
-                {
-                    msg.Append("一次只能选择一行数据进行预收款。");
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-                if (msg.ToString().Length > 0)
-                {
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    if (RealList.Count == 0)
-                    {
-                        return;
-                    }
-                }
-
-                if (RealList.Count == 0)
-                {
-                    msg.Append("请至少选择一行数据进行预收款。");
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-                var SOrder = RealList[0];
-                var amountRule = new AmountValidationRule();
-                using (var inputForm = new frmInputObject(amountRule))
-                {
-                    inputForm.DefaultTitle = "请输入预付款金额";
-                    if (inputForm.ShowDialog() == DialogResult.OK)
-                    {
-                        if (inputForm.InputContent.ToDecimal() <= 0)
-                        {
-                            MessageBox.Show("预付款金额必须大于0", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            return;
-                        }
-
-                        if (MessageBox.Show($"针对订单：{SOrder.SOrderNo}，确定收到客户{SOrder.tb_customervendor.CVName}:收到预付款：{inputForm.InputContent}元吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                        {
-                            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                            //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
-                            var rs = await ctr.ManualPrePayment(inputForm.InputContent.ObjToDecimal(), SOrder);
-                            MenuPowerHelper menuPowerHelper;
-                            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PreReceivedPayment) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
-                            if (RelatedMenuInfo != null)
-                            {
-                                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
-                            }
-                            return;
-
-
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-
-            }
-        }
 
 
 

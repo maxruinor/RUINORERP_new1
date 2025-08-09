@@ -49,7 +49,7 @@ namespace RUINORERP.UI.Monitoring.Auditing
         {
             m_instance = new AuditLogHelper_old();
         }
-        public async void CreateAuditLog<T>(string action, T entity, string description) where T : class
+        public async Task CreateAuditLog<T>(string action, T entity, string description) where T : class
         {
 
             //将操作记录保存到数据库中
@@ -100,7 +100,7 @@ namespace RUINORERP.UI.Monitoring.Auditing
             CreateAuditLog<T>(action, entity, "");
         }
         //创建一个审计功能的方法，将单据的操作记录下来
-        public async void CreateAuditLog(string action, string description)
+        public async Task CreateAuditLog(string action, string description)
         {
 
             //将操作记录保存到数据库中
@@ -200,7 +200,7 @@ namespace RUINORERP.UI.Monitoring.Auditing
         //    _auditLogService = MainForm.Instance.AppContext.GetRequiredService<IAuditLogService>();
         //}
 
-        public async void CreateAuditLog<T>(string action, T entity, string description) where T : class
+        public async Task CreateAuditLog<T>(string action, T entity, string description) where T : class
         {
             try
             {
@@ -217,7 +217,7 @@ namespace RUINORERP.UI.Monitoring.Auditing
             CreateAuditLog(action, entity, "");
         }
 
-        public async void CreateAuditLog(string action, string description)
+        public async Task CreateAuditLog(string action, string description)
         {
             try
             {

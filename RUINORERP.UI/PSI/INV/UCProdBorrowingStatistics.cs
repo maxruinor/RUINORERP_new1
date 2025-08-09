@@ -111,7 +111,7 @@ namespace RUINORERP.UI.PSI.INV
         /*
         //根据客户生成对账单 数据模式是 客户信息为主，明细为子表
 
-        public override async void Print(RptMode rptMode)
+        public override async Task Print(RptMode rptMode)
         {
             //构建对账单的数据
             PurEntryStatementByCV statementByCV = new PurEntryStatementByCV();

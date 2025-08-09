@@ -491,7 +491,7 @@ namespace RUINORERP.UI.SysConfig
 
         #region 数据修复
 
-        private async void CostFix()
+        private async Task CostFix()
         {
             /*有库存数据。包含0的情况下。如果价格为空。为0.使用最后的采购入库价格修复。*/
             //查看出库明细和总数量是否一样。

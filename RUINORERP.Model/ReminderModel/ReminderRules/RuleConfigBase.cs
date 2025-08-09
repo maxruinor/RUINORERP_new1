@@ -23,9 +23,22 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
             return JsonConvert.SerializeObject(this);
         }
 
-        public virtual bool Validate()
+        /// <summary>
+        /// 验证配置，返回包含消息的结果
+        /// </summary>
+        /// <returns></returns>
+        public virtual RuleValidationResult Validate()
         {
-            return true;
+            var result = new RuleValidationResult();
+
+            // 基础验证逻辑：检测频率必须大于0
+            if (CheckIntervalByMinutes <= 0)
+            {
+                result.AddError("检测频率必须大于0分钟");
+            }
+            // 可以根据业务需要添加更多基础验证规则
+
+            return result;
         }
 
     }

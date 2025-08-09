@@ -1584,7 +1584,7 @@ namespace RUINORERP.UI
         }
 
 
-        private async void Logout()
+        private async Task Logout()
         {
             try
             {
@@ -1836,7 +1836,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// 只执行一次,初始化菜单
         /// </summary>
-        private async void InitMenu()
+        private async Task InitMenu()
         {
             //List<MenuAssemblyInfo> list = UIHelper.RegisterForm();
             //CreateMenu(list, 0, 0);
@@ -2520,7 +2520,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// 清除数据相关的
         /// </summary>
-        private async void ClearData()
+        private async Task ClearData()
         {
             Program.AppContextData.IsOnline = false;
             ecs.LoginStatus = false;
@@ -3084,7 +3084,7 @@ namespace RUINORERP.UI
             RefreshToolbar();
         }
 
-        public async void LoginWebServer()
+        public async Task LoginWebServer()
         {
             try
             {

@@ -239,7 +239,7 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 将模块 菜单 显示为树
         /// </summary>
-        private async void LoadTreeView()
+        private async Task LoadTreeView()
         {
             TreeView1.Nodes.Clear();
 

@@ -242,7 +242,7 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 加载角色和用户，加载树形控件
         /// </summary>
-        private async void LoadTreeView()
+        private async Task LoadTreeView()
         {
             TreeView1.Nodes.Clear();
 

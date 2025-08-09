@@ -31,6 +31,8 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCPreReceivedPayment));
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.txtPlatformOrderNo = new Krypton.Toolkit.KryptonTextBox();
+            this.lblPlatformOrderNo = new Krypton.Toolkit.KryptonLabel();
             this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
             this.cmbBizType = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
@@ -88,8 +90,6 @@
             this.cmbCustomerVendor_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblRemark = new Krypton.Toolkit.KryptonLabel();
             this.txtRemark = new Krypton.Toolkit.KryptonTextBox();
-            this.txtPlatformOrderNo = new Krypton.Toolkit.KryptonTextBox();
-            this.lblPlatformOrderNo = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
@@ -173,6 +173,21 @@
             this.kryptonPanel1.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
             this.kryptonPanel1.Size = new System.Drawing.Size(1144, 696);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // txtPlatformOrderNo
+            // 
+            this.txtPlatformOrderNo.Location = new System.Drawing.Point(882, 159);
+            this.txtPlatformOrderNo.Name = "txtPlatformOrderNo";
+            this.txtPlatformOrderNo.Size = new System.Drawing.Size(156, 23);
+            this.txtPlatformOrderNo.TabIndex = 232;
+            // 
+            // lblPlatformOrderNo
+            // 
+            this.lblPlatformOrderNo.Location = new System.Drawing.Point(814, 160);
+            this.lblPlatformOrderNo.Name = "lblPlatformOrderNo";
+            this.lblPlatformOrderNo.Size = new System.Drawing.Size(62, 20);
+            this.lblPlatformOrderNo.TabIndex = 231;
+            this.lblPlatformOrderNo.Values.Text = "平台单号";
             // 
             // chkIsFromPlatform
             // 
@@ -294,6 +309,7 @@
             // 
             this.txtForeignPaidAmount.Location = new System.Drawing.Point(902, 511);
             this.txtForeignPaidAmount.Name = "txtForeignPaidAmount";
+            this.txtForeignPaidAmount.ReadOnly = true;
             this.txtForeignPaidAmount.Size = new System.Drawing.Size(172, 23);
             this.txtForeignPaidAmount.TabIndex = 199;
             // 
@@ -309,6 +325,7 @@
             // 
             this.txtLocalPaidAmount.Location = new System.Drawing.Point(902, 574);
             this.txtLocalPaidAmount.Name = "txtLocalPaidAmount";
+            this.txtLocalPaidAmount.ReadOnly = true;
             this.txtLocalPaidAmount.Size = new System.Drawing.Size(172, 23);
             this.txtLocalPaidAmount.TabIndex = 201;
             // 
@@ -324,6 +341,7 @@
             // 
             this.txtForeignBalanceAmount.Location = new System.Drawing.Point(902, 482);
             this.txtForeignBalanceAmount.Name = "txtForeignBalanceAmount";
+            this.txtForeignBalanceAmount.ReadOnly = true;
             this.txtForeignBalanceAmount.Size = new System.Drawing.Size(172, 23);
             this.txtForeignBalanceAmount.TabIndex = 203;
             // 
@@ -339,6 +357,7 @@
             // 
             this.txtLocalBalanceAmount.Location = new System.Drawing.Point(902, 546);
             this.txtLocalBalanceAmount.Name = "txtLocalBalanceAmount";
+            this.txtLocalBalanceAmount.ReadOnly = true;
             this.txtLocalBalanceAmount.Size = new System.Drawing.Size(172, 23);
             this.txtLocalBalanceAmount.TabIndex = 205;
             // 
@@ -652,21 +671,6 @@
             this.txtRemark.Name = "txtRemark";
             this.txtRemark.Size = new System.Drawing.Size(294, 114);
             this.txtRemark.TabIndex = 32;
-            // 
-            // txtPlatformOrderNo
-            // 
-            this.txtPlatformOrderNo.Location = new System.Drawing.Point(882, 159);
-            this.txtPlatformOrderNo.Name = "txtPlatformOrderNo";
-            this.txtPlatformOrderNo.Size = new System.Drawing.Size(156, 23);
-            this.txtPlatformOrderNo.TabIndex = 232;
-            // 
-            // lblPlatformOrderNo
-            // 
-            this.lblPlatformOrderNo.Location = new System.Drawing.Point(814, 160);
-            this.lblPlatformOrderNo.Name = "lblPlatformOrderNo";
-            this.lblPlatformOrderNo.Size = new System.Drawing.Size(62, 20);
-            this.lblPlatformOrderNo.TabIndex = 231;
-            this.lblPlatformOrderNo.Values.Text = "平台单号";
             // 
             // UCPreReceivedPayment
             // 

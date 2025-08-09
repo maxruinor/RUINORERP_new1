@@ -31,7 +31,7 @@ namespace RUINORERP.UI.BI
             InitializeComponent();
         }
 
-        public async void BindDataBackup(tb_UserInfo entity)
+        public async Task BindDataBackup(tb_UserInfo entity)
         {
 
             DataBindingHelper.BindData4TextBox<tb_UserInfo>(entity, t => t.UserName, txtUserName, BindDataType4TextBox.Text, true);

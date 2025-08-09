@@ -49,7 +49,7 @@ namespace RUINORERP.UI.BI
         }
 
         tb_FM_SubjectController<tb_FM_Subject> ctr = Startup.GetFromFac<tb_FM_SubjectController<tb_FM_Subject>>();
-        protected override void Add()
+        protected override Task Add()
         {
             UCFMSubjectEdit frmadd = new UCFMSubjectEdit();
             frmadd.bindingSourceEdit = bindingSourceList;
@@ -75,6 +75,7 @@ namespace RUINORERP.UI.BI
                 frmadd.bindingSourceEdit.CancelEdit();
                 //command.Undo();
             }
+            return Task.CompletedTask;
         }
 
         protected async override void Delete()
@@ -133,7 +134,7 @@ namespace RUINORERP.UI.BI
 
             ListDataSoure.DataSourceChanged += ListDataSoure_DataSourceChanged;
             dataGridView1.ReadOnly = true;
-           list = await ctr.QueryAsync();
+            list = await ctr.QueryAsync();
             ListDataSoure.DataSource = list.ToBindingSortCollection();
             dataGridView1.DataSource = ListDataSoure;
 
@@ -191,7 +192,7 @@ namespace RUINORERP.UI.BI
             base.dataGridView1.XmlFileName = typeof(tb_FM_Subject).Name;
             //dataGridView1.CellFormatting += DataGridView1_CellFormatting;
 
-       
+
         }
 
         //集成到了基类实现

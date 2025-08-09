@@ -531,7 +531,7 @@ namespace RUINORERP.UI.SAL
         }
 
 
-        public async void Query(List<tb_SaleOrder> _PURList = null)
+        public async Task Query(List<tb_SaleOrder> _PURList = null)
         {
             List<tb_SaleOrder> purList = await GetProductionPlan();
             if (purList != null)
@@ -539,7 +539,7 @@ namespace RUINORERP.UI.SAL
                 SubQuery(purList);
             }
         }
-        public async void SubQuery(List<tb_SaleOrder> List = null)
+        public async Task SubQuery(List<tb_SaleOrder> List = null)
         {
             await uCSale.QueryData(List);
         }

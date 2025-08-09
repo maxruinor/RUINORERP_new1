@@ -3315,14 +3315,9 @@ namespace RUINORERP.UI.BaseForm
         /// 加载相关数据的
         /// 联查数据
         /// </summary>
-        protected virtual void LoadRelatedDataToDropDownItemsAsync()
+        protected virtual Task LoadRelatedDataToDropDownItemsAsync()
         {
-            //if (entity != null)
-            //{
-            //    ToolStripMenuItem menuItem = new ToolStripMenuItem();
-            //    menuItem.Name = "加载最新数据";
-            //    toolStripbtnRelatedQuery.DropDownItems.Add(menuItem);
-            //}
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -4558,7 +4553,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
         #endregion
-        public async void PrintDesigned()
+        public async Task PrintDesigned()
         {
             try
             {
@@ -4585,7 +4580,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 单个单据打印
         /// </summary>
-        public async void Print()
+        public async Task Print()
         {
             if (EditEntity == null)
             {
@@ -4640,7 +4635,7 @@ namespace RUINORERP.UI.BaseForm
             MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("打印", EditEntity);
         }
 
-        public async void Preview()
+        public async Task Preview()
         {
             bool rs = false;
             try

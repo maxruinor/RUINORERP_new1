@@ -40,7 +40,7 @@ namespace RUINORERP.UI.SysConfig
         }
 
         tb_RoleInfoController<tb_RoleInfo> ctrRole = Startup.GetFromFac<tb_RoleInfoController<tb_RoleInfo>>();
-        private async void LoadUser()
+        private async Task LoadUser()
         {
             TreeView1.Nodes.Clear();
             tb_UserInfoController<tb_UserInfo> ctr = Startup.GetFromFac<tb_UserInfoController<tb_UserInfo>>();

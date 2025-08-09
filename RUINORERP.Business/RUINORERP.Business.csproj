@@ -64,6 +64,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="tb_FM_PaymentRecordControllerPartial.cs~RFb50f1bc.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="SqlSugar" Version="5.1.4.160" />
     <PackageReference Include="StackExchange.Redis" Version="2.7.10" />

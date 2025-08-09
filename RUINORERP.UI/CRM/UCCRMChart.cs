@@ -90,7 +90,7 @@ namespace RUINORERP.UI.CRM
         }
 
         DataRequest request;
-        private async void LoadOK()
+        private async Task LoadOK()
         {
             request = new DataRequest
             {
@@ -257,7 +257,7 @@ namespace RUINORERP.UI.CRM
 
 
 
-        private async void Load1()
+        private async Task Load1()
         {
             // 在WinForms中使用
             var db = MainForm.Instance.AppContext.Db; // 获取SqlSugar实例

@@ -756,7 +756,7 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="CurMenuInfo"></param>
         /// <param name="InputDataFields"></param>
-        public static async void SaveInputDataPresetValues(tb_MenuInfo CurMenuInfo,
+        public static async Task SaveInputDataPresetValues(tb_MenuInfo CurMenuInfo,
             List<tb_UIInputDataField> InputDataFields)
         {
 
@@ -797,7 +797,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static async void SaveGridSettingData(tb_MenuInfo CurMenuInfo, NewSumDataGridView dataGridView, Type datasourceType = null)
+        public static async Task SaveGridSettingData(tb_MenuInfo CurMenuInfo, NewSumDataGridView dataGridView, Type datasourceType = null)
         {
             if (CurMenuInfo == null)
             {
@@ -1241,7 +1241,7 @@ namespace RUINORERP.UI.Common
         /// 保存协作人信息
         /// </summary>
         /// <param name="ContactInfo"></param>
-        public static async void SaveCRMCollaborator(tb_CRM_Collaborator ContactInfo)
+        public static async Task SaveCRMCollaborator(tb_CRM_Collaborator ContactInfo)
         {
             BaseController<tb_CRM_Collaborator> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Collaborator>>(typeof(tb_CRM_Collaborator).Name + "Controller");
             ReturnResults<tb_CRM_Collaborator> result = await ctrContactInfo.BaseSaveOrUpdate(ContactInfo);
@@ -1265,7 +1265,7 @@ namespace RUINORERP.UI.Common
         /// 保存联系人信息
         /// </summary>
         /// <param name="ContactInfo"></param>
-        public static async void SaveCRMContact(tb_CRM_Contact ContactInfo)
+        public static async Task SaveCRMContact(tb_CRM_Contact ContactInfo)
         {
             BaseController<tb_CRM_Contact> ctrContactInfo = Startup.GetFromFacByName<BaseController<tb_CRM_Contact>>(typeof(tb_CRM_Contact).Name + "Controller");
             ReturnResults<tb_CRM_Contact> result = await ctrContactInfo.BaseSaveOrUpdate(ContactInfo);
@@ -1289,7 +1289,7 @@ namespace RUINORERP.UI.Common
         /// 保存收款人信息
         /// </summary>
         /// <param name="payeeInfo"></param>
-        public static async void SavePayeeInfo(tb_FM_PayeeInfo payeeInfo)
+        public static async Task SavePayeeInfo(tb_FM_PayeeInfo payeeInfo)
         {
             BaseController<tb_FM_PayeeInfo> ctrPayeeInfo = Startup.GetFromFacByName<BaseController<tb_FM_PayeeInfo>>(typeof(tb_FM_PayeeInfo).Name + "Controller");
             ReturnResults<tb_FM_PayeeInfo> result = await ctrPayeeInfo.BaseSaveOrUpdate(payeeInfo);
@@ -1377,7 +1377,7 @@ namespace RUINORERP.UI.Common
         /// 保存开票信息
         /// </summary>
         /// <param name="BillingInformation"></param>
-        public static async void SaveBillingInformation(tb_BillingInformation Info)
+        public static async Task SaveBillingInformation(tb_BillingInformation Info)
         {
             BaseController<tb_BillingInformation> ctrInfo = Startup.GetFromFacByName<BaseController<tb_BillingInformation>>(typeof(tb_BillingInformation).Name + "Controller");
             ReturnResults<tb_BillingInformation> result = await ctrInfo.BaseSaveOrUpdate(Info);

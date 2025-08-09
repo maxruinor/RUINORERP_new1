@@ -32,7 +32,7 @@ namespace RUINORERP.UI.BI
 
         }
 
-        protected override async void Add()
+        protected override async Task Add()
         {
             if (ListDataSoure.Count == 0)
             {

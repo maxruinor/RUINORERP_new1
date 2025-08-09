@@ -50,7 +50,7 @@ namespace RUINORERP.UI.MRP.MP
             InitializeComponent();
         }
 
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_ManufacturingOrder ManufacturingOrder)
             {
@@ -90,7 +90,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+         await   base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         internal override void LoadDataToUI(object Entity)
@@ -980,7 +980,7 @@ protected override void Print()
         /// 制令单怎么来的？ 由需求分析中转过来。也可以直接从需要求分析时转换过来。
         /// </summary>
         /// <param name="id"></param>
-        private async void LoadChildItems(long? id)
+        private async Task LoadChildItems(long? id)
         {
             //因为要查BOM情况。不会传过来。
             var SourceBill = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(c => c.PDID == id)

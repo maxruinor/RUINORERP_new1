@@ -157,7 +157,7 @@ namespace RUINORERP.Business.CommService
                 auditLog.ObjectId = idField;
                 auditLog.ObjectNo = noField;
 
-      
+
                 var dataContent = EntityDataExtractor.ExtractDataContent(entity);
                 auditLog.DataContent = dataContent;
 
@@ -368,7 +368,7 @@ namespace RUINORERP.Business.CommService
             _auditLogService = auditLogService;
         }
 
-        public async void CreateAuditLog<T>(string action, T entity, string description) where T : class
+        public async Task CreateAuditLog<T>(string action, T entity, string description) where T : class
         {
             try
             {
@@ -385,7 +385,7 @@ namespace RUINORERP.Business.CommService
             CreateAuditLog(action, entity, "");
         }
 
-        public async void CreateAuditLog(string action, string description)
+        public async Task CreateAuditLog(string action, string description)
         {
             try
             {
@@ -512,8 +512,8 @@ namespace RUINORERP.Business.CommService
                 var (idField, noField) = _mapper.Value.GetEntityFieldValue<long>(typeof(T), entity);
                 auditLog.ObjectId = idField;
                 auditLog.ObjectNo = noField;
-           
-        
+
+
                 var dataContent = EntityDataExtractor.ExtractDataContent(entity);
                 auditLog.DataContent = dataContent;
                 // 使用反射获取需要审计的字段

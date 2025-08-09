@@ -74,7 +74,7 @@ namespace RUINORERP.UI.SmartReminderClient
 
             CheckedListBoxHelper.BindData4CheckedListBox<SafetyStockConfig, long, tb_Location>(
             entity,
-            e => e.ProductIds,
+            e => e.LocationIds,
             clbLocation_IDs,
            BizCacheHelper.Manager.GetEntityList<tb_Location>(),
             u => u.Location_ID,
@@ -97,18 +97,18 @@ namespace RUINORERP.UI.SmartReminderClient
         {
             bindingSourceEdit.EndEdit();
             if (bindingSourceEdit.Current is SafetyStockConfig stockConfig)
-            {
-                if (stockConfig.Validate())
+            {// 执行验证
+                var result = stockConfig.Validate();
+                if (!result.IsValid)
+                {
+                    MessageBox.Show($"错误：{result.GetCombinedErrors()}", "验证失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
                 {
                     this.DialogResult = DialogResult.OK;
                     this.Close();
                 }
-                else
-                {
-                    MessageBox.Show("请检查数据是否填写正确。");
-                }
             }
-
         }
 
         private void UCBoxRulesEdit_Load(object sender, EventArgs e)

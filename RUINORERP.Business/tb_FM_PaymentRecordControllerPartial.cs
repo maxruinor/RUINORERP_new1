@@ -62,6 +62,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 付款单审核通过时，更新对应的业务单据的收款状态。更新余额
+        /// 如:一个订单 开始预付一次，后面再预付一次，全款都付完成要更新为全额预付
         /// 通常收款付款单审核时。已经处理完了 预收付。除非特殊情况。不可用时。
         /// 自动核销关联的应收/应付单
         /// </summary>
@@ -692,10 +693,8 @@ namespace RUINORERP.Business
                                                 }
                                             }
                                         }
-
                                     }
                                 }
-
 
                                 //预付的确认时，可以核销应付
                                 if (_appContext.FMConfig.EnablePaymentAutoOffsetAP)
@@ -743,6 +742,49 @@ namespace RUINORERP.Business
                                 }
 
                                 #endregion
+                                if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                                {
+                                    if (prePayment.SourceBizType == (int)BizType.销售订单)
+                                    {
+                                        //如果是多次预付，则合并订单中订金字段的预付金额
+                                        //多次预付款时，则要找到这个订单名下的所有订金预付款的单。如果只有一行。则不用累计。如果是多行。要需要？
+
+                                        #region 更新对应业务的单据状态和订金金额情况
+
+                                        List<tb_FM_PreReceivedPayment> SameOrderPrePayments = await _appContext.Db.Queryable<tb_FM_PreReceivedPayment>()
+                                                            .Where(c => c.SourceBillId == prePayment.SourceBillId)
+                                                            .Where(c => c.SourceBizType == (int)BizType.销售订单)
+                                                            .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.待核销)
+                                                            .Where(c => c.PreRPID != prePayment.PreRPID)//排除当前的
+                                                            .ToListAsync();
+                                        if (SameOrderPrePayments != null && SameOrderPrePayments.Count > 0)
+                                        {
+                                            tb_SaleOrder saleOrder = await _appContext.Db.Queryable<tb_SaleOrder>()
+                                                 .Where(c => c.SOrder_ID == prePayment.SourceBillId).SingleAsync();
+                                            if (saleOrder != null)
+                                            {
+                                                //原来的。加上当前的
+                                                saleOrder.Deposit = SameOrderPrePayments.Sum(c => c.LocalPrepaidAmount) + prePayment.LocalPrepaidAmount;
+                                                //应收结清，并且结清的金额等于销售出库金额，则修改出库单的状态。同时计算对应订单情况。也更新。
+
+                                                if (saleOrder.Deposit == saleOrder.TotalAmount)
+                                                {
+                                                    saleOrder.PayStatus = (int)PayStatus.全额预付;
+                                                    saleOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                                }
+                                                else
+                                                {
+                                                    saleOrder.PayStatus = (int)PayStatus.部分付款;
+                                                    saleOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                                }
+                                                saleOrderUpdateList.Add(saleOrder);
+                                            }
+
+                                        }
+
+                                        #endregion
+                                    }
+                                }
 
                             }
                         }
@@ -828,9 +870,11 @@ namespace RUINORERP.Business
                 {
                     var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(saleOrderUpdateList).UpdateColumns(t => new
                     {
+                        t.Deposit,
                         t.ApprovalOpinions,
                         t.DataStatus,
-                        t.PayStatus
+                        t.PayStatus,
+                        t.Paytype_ID,
                     }).ExecuteCommandAsync();
 
                 }

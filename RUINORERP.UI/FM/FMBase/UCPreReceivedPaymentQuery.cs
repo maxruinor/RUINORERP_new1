@@ -466,8 +466,8 @@ namespace RUINORERP.UI.FM
                 foreach (var item in Datas)
                 {
                     //https://www.runoob.com/w3cnote/csharp-enum.html
-                    var dataStatus = (DataStatus)(item.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                    if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+                    var dataStatus = (PrePaymentStatus)(item.GetPropertyValue(typeof(PrePaymentStatus).Name).ToInt());
+                    if (dataStatus == PrePaymentStatus.待审核 || dataStatus == PrePaymentStatus.草稿)
                     {
                         BaseController<tb_FM_PreReceivedPayment> ctr = Startup.GetFromFacByName<BaseController<tb_FM_PreReceivedPayment>>(typeof(tb_FM_PreReceivedPayment).Name + "Controller");
                         bool rs = await ctr.BaseDeleteAsync(item);

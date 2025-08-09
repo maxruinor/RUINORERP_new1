@@ -96,7 +96,7 @@ namespace RUINORERP.UI.ASS
 
 
 
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_AS_AfterSaleDelivery AfterSaleDelivery)
             {
@@ -116,7 +116,7 @@ namespace RUINORERP.UI.ASS
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
 
@@ -766,7 +766,7 @@ namespace RUINORERP.UI.ASS
         }
 
 
-        private async void AfterSaleDelivery(long? ASApplyID)
+        private async  Task AfterSaleDelivery(long? ASApplyID)
         {
             //要加一个判断 值是否有变化
             //新增时才可以

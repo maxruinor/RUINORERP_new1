@@ -185,7 +185,7 @@ namespace RUINORERP.UI.PSI.SAL
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
 
-        protected override async void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             //加载关联的单据
             if (base.EditEntity is tb_SaleOut saleOut)

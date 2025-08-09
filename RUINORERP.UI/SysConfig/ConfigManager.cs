@@ -29,7 +29,7 @@ namespace RUINORERP.UI.SysConfig
             //LoadConfigValues();
         }
 
-        public async void LoadConfigValues()
+        public async Task LoadConfigValues()
         {
             /*
             Assembly assembly = Assembly.GetExecutingAssembly();

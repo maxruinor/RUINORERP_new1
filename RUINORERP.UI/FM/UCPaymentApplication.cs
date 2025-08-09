@@ -264,7 +264,7 @@ namespace RUINORERP.UI.FM
             base.BindData(entity);
         }
 
-        private async void LoadImageData(string CloseCaseImagePath)
+        private async Task LoadImageData(string CloseCaseImagePath)
         {
             if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))
             {

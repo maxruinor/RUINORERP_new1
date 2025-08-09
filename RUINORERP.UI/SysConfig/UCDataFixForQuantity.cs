@@ -187,7 +187,7 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        private async void QueryInv()
+        private async Task QueryInv()
         {
             List<View_Inventory> inventories = new List<View_Inventory>();
             inventories = await MainForm.Instance.AppContext.Db.Queryable<View_Inventory>()
@@ -509,7 +509,7 @@ namespace RUINORERP.UI.SysConfig
 
       
 
-        private async void 更新为当前成本ToolStripMenuItem_Click(object sender, EventArgs e)
+        private async Task 更新为当前成本ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem toolStripMenu)
             {
@@ -547,7 +547,7 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
-        private async void toolStripMenuItem修复小计总计_Click(object sender, EventArgs e)
+        private async Task toolStripMenuItem修复小计总计_Click(object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem toolStripMenu)
             {
@@ -609,7 +609,7 @@ namespace RUINORERP.UI.SysConfig
 
         }
 
-        private async void 将配方成本更新到库存ToolStripMenuItem_Click(object sender, EventArgs e)
+        private async Task 将配方成本更新到库存ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (tabControl.SelectedTab != null)
             {

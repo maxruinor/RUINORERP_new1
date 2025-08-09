@@ -265,7 +265,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <param name="ProduceDetail"></param>
         /// <param name="ProduceDetailrow"></param>
         /// <param name="prodDetail"></param>
-        private async void LoadSelfMadeProducts(tb_ProductionDemand demand, tb_ProduceGoodsRecommendDetail ProduceDetail, KryptonTreeGridNodeRow ProduceDetailrow, View_ProdDetail prodDetail)
+        private async Task LoadSelfMadeProducts(tb_ProductionDemand demand, tb_ProduceGoodsRecommendDetail ProduceDetail, KryptonTreeGridNodeRow ProduceDetailrow, View_ProdDetail prodDetail)
         {
             List<tb_ProduceGoodsRecommendDetail> SubSelfDetails = new List<tb_ProduceGoodsRecommendDetail>();
             SubSelfDetails = demand.tb_ProduceGoodsRecommendDetails.Where(c => c.ParentId == ProduceDetail.ID).ToList();

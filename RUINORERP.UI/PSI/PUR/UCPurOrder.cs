@@ -92,7 +92,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.InitDataToCmb<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.InitDataToCmb<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
         }
-        protected override async void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_PurOrder purOrder)
             {

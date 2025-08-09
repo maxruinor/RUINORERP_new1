@@ -85,7 +85,7 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         private PurEntryCoordinator _coordinator;
-        protected override async void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
                 //加载关联的单据
                 if (base.EditEntity is tb_PurEntry purEntry)
@@ -152,7 +152,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 }
                 }
-                base.LoadRelatedDataToDropDownItemsAsync();
+              await  base.LoadRelatedDataToDropDownItemsAsync();
             }
         public override void BindData(tb_PurEntry entity, ActionStatus actionStatus)
         {
@@ -707,7 +707,7 @@ namespace RUINORERP.UI.PSI.PUR
         /// 要统一起来。只做一个方法
         /// </summary>
         /// <param name="purOrderID"></param>
-        private async void LoadPurOrder(long? purOrderID)
+        private async Task LoadPurOrder(long? purOrderID)
         {
             ButtonSpecAny bsa = (txtPurOrderNO as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
             if (bsa == null)

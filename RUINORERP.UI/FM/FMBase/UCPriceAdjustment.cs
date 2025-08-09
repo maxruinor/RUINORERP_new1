@@ -62,7 +62,7 @@ namespace RUINORERP.UI.FM
             InitializeComponent();
             AddPublicEntityObject(typeof(ProductSharePart));
         }
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_FM_PriceAdjustment  priceAdjustment)
             {
@@ -82,7 +82,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+         await   base.LoadRelatedDataToDropDownItemsAsync();
         }
         /// <summary>
         /// 收付款方式决定对应的菜单功能

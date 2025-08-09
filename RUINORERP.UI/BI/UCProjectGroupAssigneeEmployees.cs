@@ -42,7 +42,7 @@ namespace RUINORERP.UI.SysConfig
         tb_ProjectGroupController<tb_ProjectGroup> ctrGroup = Startup.GetFromFac<tb_ProjectGroupController<tb_ProjectGroup>>();
         tb_EmployeeController<tb_Employee> ctrEmp = Startup.GetFromFac<tb_EmployeeController<tb_Employee>>();
         tb_ProjectGroupEmployeesController<tb_ProjectGroupEmployees> ctr = Startup.GetFromFac<tb_ProjectGroupEmployeesController<tb_ProjectGroupEmployees>>();
-        private async void LoadGroups()
+        private async Task LoadGroups()
         {
             TreeView1.Nodes.Clear();
             var lambda = Expressionable.Create<tb_ProjectGroup>()

@@ -21,6 +21,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
+using SourceGrid2.Win32;
 
 namespace RUINORERP.UI.CRM
 {
@@ -48,7 +49,7 @@ namespace RUINORERP.UI.CRM
         }
 
         tb_CRM_RegionController<tb_CRM_Region> ctr = Startup.GetFromFac<tb_CRM_RegionController<tb_CRM_Region>>();
-        protected override void Add()
+        protected override async Task Add()
         {
             UCCRMRegionEdit frmadd = new UCCRMRegionEdit();
             frmadd.bindingSourceEdit = bindingSourceList;
@@ -73,6 +74,8 @@ namespace RUINORERP.UI.CRM
                 frmadd.bindingSourceEdit.CancelEdit();
                 //command.Undo();
             }
+            
+          
         }
 
         protected async override void Delete()

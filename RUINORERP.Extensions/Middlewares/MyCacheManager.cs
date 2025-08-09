@@ -176,7 +176,10 @@ namespace RUINORERP.Extensions.Middlewares
             if (NewTableList.ContainsKey(tableName))
             {
                 var cachelist = CacheEntityList.Get(tableName);
-
+                if (cachelist == null)
+                {
+                    return tlist;
+                }
                 Type listType = cachelist.GetType();
                 if (TypeHelper.IsGenericList(listType))
                 {

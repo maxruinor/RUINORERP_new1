@@ -142,9 +142,9 @@ namespace RUINORERP.UI.ProductEAV
         /// <summary>
         /// 产品编辑特别，修改要保存后进行。不可以新建后就修改
         /// </summary>
-        protected override void Add()
+        protected override async Task Add()
         {
-            base.Add();
+           await base.Add();
             base.toolStripButtonModify.Enabled = false;
         }
 

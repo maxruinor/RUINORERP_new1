@@ -91,7 +91,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        protected async void UpdatePaymentStatus()
+        protected async Task UpdatePaymentStatus()
         {
             if (EditEntity == null)
             {
@@ -150,7 +150,7 @@ namespace RUINORERP.UI.PSI.SAL
             MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("付款调整", EditEntity, $"结果:{(rr.Succeeded ? "成功" : "失败")},{rr.ErrorMsg}");
         }
 
-        protected override async void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_SaleOrder saleOrder)
             {
@@ -381,8 +381,10 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) || s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID))
                 {
-                    //  toolStripButton付款调整.Enabled = true;
-                    // UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton付款调整);
+                    //如果全额预付 自动设置为订金额就是全款
+
+                    Summation();
+
                 }
 
                 //权限允许
@@ -901,6 +903,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
                 EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
+
                 if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
@@ -911,6 +914,10 @@ using var binder = new UIStateBinder(..., customEvaluator);
                         EditEntity.ForeignFreightIncome = EditEntity.FreightIncome / EditEntity.ExchangeRate;
                         EditEntity.ForeignFreightIncome = Math.Round(EditEntity.ForeignFreightIncome, 2); // 四舍五入到 2 位小数
                     }
+                }
+                if (EditEntity.PayStatus == (int)PayStatus.全额预付)
+                {
+                    EditEntity.Deposit = EditEntity.TotalAmount;
                 }
             }
             catch (Exception ex)
@@ -1009,6 +1016,14 @@ using var binder = new UIStateBinder(..., customEvaluator);
                         MessageBox.Show("部分预付时，请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return false;
                     }
+
+                    if (EditEntity.Deposit >= EditEntity.TotalAmount)
+                    {
+                        MessageBox.Show("部分预付时，订金不能大于等于总金额。请输入正确的订金金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return false;
+                    }
+
+
                 }
                 if (EditEntity.PayStatus == (int)PayStatus.全额预付)
                 {
@@ -1016,6 +1031,15 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     {
                         MessageBox.Show("全部预付时，不需要输入订金,系统默认总金额为支付金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return false;
+                    }
+
+                    //超付情况时，只是提示
+                    if (EditEntity.Deposit > EditEntity.TotalAmount)
+                    {
+                        if (MessageBox.Show("全额预付时，订金大于总金额。你确定客户要超额付款吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
+                        {
+                            return false;
+                        }
                     }
                 }
             }
@@ -1658,7 +1682,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             UpdateCustomizedCost();
         }
 
-        private async void UpdateCustomizedCost()
+        private async Task UpdateCustomizedCost()
         {
             if (EditEntity == null)
             {

@@ -529,7 +529,7 @@ namespace RUINORERP.UI.PUR
         }
 
 
-        public async void Query(List<tb_PurOrder> _PURList = null)
+        public async Task Query(List<tb_PurOrder> _PURList = null)
         {
             List<tb_PurOrder> purList = await GetProductionPlan();
             if (purList != null)
@@ -537,7 +537,7 @@ namespace RUINORERP.UI.PUR
                 SubQuery(purList);
             }
         }
-        public async void SubQuery(List<tb_PurOrder> List = null)
+        public async Task SubQuery(List<tb_PurOrder> List = null)
         {
             await uCPur.QueryData(List);
         }

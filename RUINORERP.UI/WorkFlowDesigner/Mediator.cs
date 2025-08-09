@@ -1153,7 +1153,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
         /// <summary>
         ///  
         /// </summary>
-        public async void TestWorkFlowByJson(object sender, EventArgs e)
+        public async Task TestWorkFlowByJson(object sender, EventArgs e)
         {
             Service.JSONSerializer jSONSerializer = new Service.JSONSerializer(this.GraphControl);
             jSONSerializer.JsonText = this.Editor.Text;

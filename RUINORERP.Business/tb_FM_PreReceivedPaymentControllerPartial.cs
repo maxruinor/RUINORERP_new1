@@ -308,9 +308,9 @@ namespace RUINORERP.Business
         /// 通过销售订单生成预收款单
         /// </summary>
         /// <param name="entity"></param>
-        /// <param name="SaveToDb"></param>
+        ///<param name="PrepaidAmount">手动再次预付款时的金额，</param>
         /// <returns></returns>
-        public tb_FM_PreReceivedPayment BuildPreReceivedPayment(tb_SaleOrder entity)
+        public tb_FM_PreReceivedPayment BuildPreReceivedPayment(tb_SaleOrder entity, decimal PrepaidAmount = 0)
         {
 
             // 外币相关处理 正确是 外币时一定要有汇率
@@ -352,34 +352,41 @@ namespace RUINORERP.Business
 
             payable.LocalPrepaidAmountInWords = string.Empty;
             payable.Account_id = entity.Account_id;
-            //如果是外币时，则由外币算出本币
-            if (entity.PayStatus == (int)PayStatus.全额预付)
-            {
-                //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
-                if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
-                {
-                    payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
-                    //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
-                }
-                //本币时
-                payable.LocalPrepaidAmount = entity.TotalAmount;
 
+            if (PrepaidAmount == 0)
+            {        //如果是外币时，则由外币算出本币
+                if (entity.PayStatus == (int)PayStatus.全额预付)
+                {
+                    //外币时 全部付款，则外币金额=本币金额/汇率 在UI中显示出来。
+                    if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                    {
+                        payable.ForeignPrepaidAmount = entity.ForeignTotalAmount;
+                        //payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
+                    }
+                    //本币时
+                    payable.LocalPrepaidAmount = entity.TotalAmount;
+
+                }
+                else            //来自于订金
+                if (entity.PayStatus == (int)PayStatus.部分预付)
+                {
+                    //外币时
+                    if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                    {
+                        payable.ForeignPrepaidAmount = entity.ForeignDeposit;
+                        // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
+                    }
+                    else
+                    {
+                        payable.LocalPrepaidAmount = entity.Deposit;
+                    }
+                }
             }
-            else            //来自于订金
-            if (entity.PayStatus == (int)PayStatus.部分预付)
+            else
             {
-                //外币时
-                if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
-                {
-                    payable.ForeignPrepaidAmount = entity.ForeignDeposit;
-                    // payable.LocalPrepaidAmount = payable.ForeignPrepaidAmount * exchangeRate;
-                }
-                else
-                {
-                    payable.LocalPrepaidAmount = entity.Deposit;
-                }
+                payable.LocalPrepaidAmount = PrepaidAmount;
             }
-            //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
+
             payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
             payable.IsAvailable = true;//默认可用
             payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款。";

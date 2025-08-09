@@ -744,7 +744,7 @@ namespace RUINORERP.UI.ProductEAV
 
 
 
-        private async void LoadChildItems(long? saleorderid)
+        private async Task LoadChildItems(long? saleorderid)
         {
             //ButtonSpecAny bsa = (txtSaleOrder as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
             //if (bsa == null)

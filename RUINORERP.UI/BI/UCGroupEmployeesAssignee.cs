@@ -43,7 +43,7 @@ namespace RUINORERP.UI.SysConfig
 
         public long ProjectGroupID { get; set; }
 
-        private async void LoadGroups()
+        private async Task LoadGroups()
         {
             TreeView1.Nodes.Clear();
             var lambda = Expressionable.Create<tb_ProjectGroup>()

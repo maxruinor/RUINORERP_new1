@@ -219,7 +219,7 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        private async void RecordSave(bool w_EidtFlag)
+        private async Task RecordSave(bool w_EidtFlag)
         {
             if (tree_MainMenu.SelectedNode.Tag is tb_MenuInfo)
             {

@@ -56,15 +56,28 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
         public List<long> Approvers { get; set; } // 审批人
         public bool EnableDelegateApproval { get; set; } // 启用委托审批
 
-
-
-
-        public override bool Validate()
+        /// <summary>
+        /// 重写验证方法，先执行基类验证，再添加子类特有验证
+        /// </summary>
+        /// <returns></returns>
+        public override RuleValidationResult Validate()
         {
-            return DocumentTypes?.Any() == true
-                && TimeoutMinutes >= 30
-                 ;
+            // 先执行基类的验证逻辑
+            var result = base.Validate();
+
+            // 产品ID验证
+            if (DocumentTypes == null || !DocumentTypes.Any())
+            {
+                result.AddError("必须选择至少提醒的单据类型");
+            }
+
+            if (TimeoutMinutes < 30)
+            {
+                result.AddError("必须大于等于30分钟");
+            }
+            return result;
         }
+
 
 
     }

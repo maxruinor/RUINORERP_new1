@@ -51,7 +51,7 @@ namespace RUINORERP.UI.MRP.MP
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionPlan>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
 
         }
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_ProductionPlan ProductionPlan)
             {
@@ -91,7 +91,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+         await   base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         internal override void LoadDataToUI(object Entity)
@@ -876,7 +876,7 @@ namespace RUINORERP.UI.MRP.MP
 
         //注意这里从销售订单中引入明细。明细中会存在相同产品分开录入的情况。
         //比方备品。这里在计划明细中合并处理。目前认为生产采购一次数量大才好。当然应该也可以分开。可能逻辑还有一些小问题
-        private async void LoadChildItems(long? saleorderid)
+        private async Task LoadChildItems(long? saleorderid)
         {
             //ButtonSpecAny bsa = (txtSaleOrder as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
             //if (bsa == null)

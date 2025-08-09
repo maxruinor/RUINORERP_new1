@@ -43,7 +43,7 @@ namespace RUINORERP.UI.BI
         }
 
         tb_ProdCategoriesController<tb_ProdCategories> ctr = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
-        protected override async void Add()
+        protected override async Task Add()
         {
             if (ListDataSoure.Count == 0)
             {

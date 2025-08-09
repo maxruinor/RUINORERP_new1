@@ -341,7 +341,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
 
         ///连接上之后断开必然会触发OnClosed事件;
-        //private async void OnClientClosed(object sender, EventArgs e)
+        //private async Task OnClientClosed(object sender, EventArgs e)
         //{
         //    IsConnected = false;
         //    if (OnConnectClosed != null)

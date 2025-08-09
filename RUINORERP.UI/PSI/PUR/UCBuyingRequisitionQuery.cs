@@ -76,7 +76,7 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
         /*
-        protected override async void Query()
+        protected override async Task Query()
         {
 
             if (ValidationHelper.hasValidationErrors(this.Controls))

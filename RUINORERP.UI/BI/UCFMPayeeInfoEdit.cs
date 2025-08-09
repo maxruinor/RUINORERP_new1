@@ -141,7 +141,7 @@ namespace RUINORERP.UI.BI
         /// 下载图片显示到控件中
         /// </summary>
         /// <param name="ImagePath"></param>
-        private async void LoadImageData(string ImagePath)
+        private async Task LoadImageData(string ImagePath)
         {
             if (!string.IsNullOrWhiteSpace(ImagePath))
             {

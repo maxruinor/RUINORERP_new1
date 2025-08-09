@@ -38,7 +38,7 @@ namespace RUINORERP.UI.PSI.PUR
         {
             InitializeComponent();
         }
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_FinishedGoodsInv FinishedGoodsInv)
             {
@@ -78,7 +78,7 @@ namespace RUINORERP.UI.PSI.PUR
                 }
 
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+          await  base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         /// <summary>
@@ -684,7 +684,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
 
         //后面再优化。相当于多个制令单的批量转单
-        private async void LoadSubLines(long? MainID)
+        private async Task LoadSubLines(long? MainID)
         {
             ButtonSpecAny bsa = (txtRef_BillNo as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
             if (bsa == null)

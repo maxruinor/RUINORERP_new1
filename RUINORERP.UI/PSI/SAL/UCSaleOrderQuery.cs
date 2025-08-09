@@ -39,6 +39,10 @@ using System.Linq.Dynamic.Core.CustomTypeProviders;
 using Fireasy.Common.Extensions;
 using Netron.NetronLight;
 using RUINORERP.UI.UControls;
+using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.UI.CommonUI;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.ToolForm;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -59,11 +63,13 @@ namespace RUINORERP.UI.PSI.SAL
             ContextClickList.Add(NewSumDataGridView_取消订单);
             ContextClickList.Add(NewSumDataGridView_标记已打印);
             ContextClickList.Add(NewSumDataGridView_转为采购订单);
+            ContextClickList.Add(NewSumDataGridView_预收货款);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list.Add(new ContextMenuController("【标记已打印】", true, false, "NewSumDataGridView_标记已打印"));
             list.Add(new ContextMenuController("【转为出库单】", true, false, "NewSumDataGridView_转为销售出库单"));
             list.Add(new ContextMenuController("【取消订单】", true, false, "NewSumDataGridView_取消订单"));
             list.Add(new ContextMenuController("【转为采购单】", true, false, "NewSumDataGridView_转为采购订单"));
+            list.Add(new ContextMenuController("【预收货款】", true, false, "NewSumDataGridView_预收货款"));
             return list;
         }
 
@@ -74,7 +80,7 @@ namespace RUINORERP.UI.PSI.SAL
             ContextClickList.Add(NewSumDataGridView_转为销售出库单);
             ContextClickList.Add(NewSumDataGridView_取消订单);
             ContextClickList.Add(NewSumDataGridView_转为采购订单);
-
+            ContextClickList.Add(NewSumDataGridView_预收货款);
 
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
@@ -233,6 +239,92 @@ namespace RUINORERP.UI.PSI.SAL
                 }
             }
         }
+
+        private async void NewSumDataGridView_预收货款(object sender, EventArgs e)
+        {
+
+
+
+            try
+            {
+                List<tb_SaleOrder> selectlist = GetSelectResult();
+                List<tb_SaleOrder> RealList = new List<tb_SaleOrder>();
+                StringBuilder msg = new StringBuilder();
+                int counter = 1;
+                foreach (var item in selectlist)
+                {
+                    //只有审核状态才可以转换为收款单
+                    if (item.DataStatus == (int)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value)
+                    {
+                        RealList.Add(item);
+                    }
+                    else
+                    {
+                        msg.Append(counter.ToString() + ") ");
+                        msg.Append($"当前销售单 {item.SOrderNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法进行再次预收款。").Append("\r\n");
+                        counter++;
+                    }
+                }
+                //多选时。要相同客户才能合并到一个收款单
+                if (RealList.Count() > 1)
+                {
+                    msg.Append("一次只能选择一行数据进行预收款。");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                if (msg.ToString().Length > 0)
+                {
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (RealList.Count == 0)
+                    {
+                        return;
+                    }
+                }
+
+                if (RealList.Count == 0)
+                {
+                    msg.Append("请至少选择一行数据进行预收款。");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                var SOrder = RealList[0];
+                var amountRule = new AmountValidationRule();
+                using (var inputForm = new frmInputObject(amountRule))
+                {
+                    inputForm.DefaultTitle = "请输入预付款金额";
+                    if (inputForm.ShowDialog() == DialogResult.OK)
+                    {
+                        if (inputForm.InputContent.ToDecimal() <= 0)
+                        {
+                            MessageBox.Show("预付款金额必须大于0", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return;
+                        }
+
+                        if (MessageBox.Show($"针对订单：{SOrder.SOrderNo}，确定收到客户{SOrder.tb_customervendor.CVName}:收到预付款：{inputForm.InputContent}元吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        {
+                            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+                            //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
+                            var rs = await ctr.ManualPrePayment(inputForm.InputContent.ObjToDecimal(), SOrder);
+                            MenuPowerHelper menuPowerHelper;
+                            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PreReceivedPayment) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                            if (RelatedMenuInfo != null)
+                            {
+                                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
+                            }
+                            return;
+
+
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
 
 
         [Obsolete("暂时废弃，后面要确认一下是不是需要有这个功能")]
@@ -560,7 +652,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// <summary>
         /// 批量转换为销售出库单
         /// </summary>
-        public async void BatchConversion()
+        public async Task BatchConversion()
         {
             tb_SaleOutController<tb_SaleOut> ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
             List<tb_SaleOrder> selectlist = GetSelectResult();

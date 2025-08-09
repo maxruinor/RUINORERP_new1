@@ -363,7 +363,7 @@ namespace RUINORERP.UI.SuperSocketClient
             }
         }
 
-        public static async void 接收切换服务器消息(OriginalData gd)
+        public static async Task 接收切换服务器消息(OriginalData gd)
         {
             try
             {
@@ -425,7 +425,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 MainForm.Instance.PrintInfoLog("接收服务器提示消息:" + ex.Message);
             }
         }
-        public static async void 接收服务器提示消息(OriginalData gd)
+        public static async Task 接收服务器提示消息(OriginalData gd)
         {
             try
             {

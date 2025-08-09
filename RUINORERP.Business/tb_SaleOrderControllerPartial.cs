@@ -248,17 +248,11 @@ namespace RUINORERP.Business
                                     {
                                         FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
                                         fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
-
-
                                     }
                                     #endregion
                                 }
-
-                             
-
                             }
                         }
-
                     }
                     #endregion
                 }
@@ -294,6 +288,141 @@ namespace RUINORERP.Business
             }
 
         }
+
+
+        /// <summary>
+        /// 手动生成预付款单
+        /// </summary>
+        /// <param name="PrepaidAmount">本次预付金额</param>
+        /// <param name="entity">对应的订单</param>
+        /// <returns></returns>
+        public async Task<ReturnResults<tb_FM_PreReceivedPayment>> ManualPrePayment(decimal PrepaidAmount, tb_SaleOrder entity)
+        {
+            ReturnResults<tb_FM_PreReceivedPayment> rmrs = new ReturnResults<tb_FM_PreReceivedPayment>();
+            AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+            if (authorizeController.EnableFinancialModule())
+            {
+                #region 生成预收款单 
+
+                #region 生成预收款单条件判断检测
+                // 获取付款方式信息
+                if (_appContext.PaymentMethodOfPeriod == null)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    rmrs.Succeeded = false;
+                    rmrs.ErrorMsg = $"请先配置付款方式信息！";
+                    if (_appContext.SysConfig.ShowDebugInfo)
+                    {
+                        _logger.LogInformation(rmrs.ErrorMsg);
+                    }
+                    return rmrs;
+                }
+
+                //如果是账期必须是未付款
+                if (entity.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
+                {
+                    if (entity.PayStatus != (int)PayStatus.未付款)
+                    {
+                        rmrs.Succeeded = false;
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
+                        if (_appContext.SysConfig.ShowDebugInfo)
+                        {
+                            _logger.LogInformation(rmrs.ErrorMsg);
+                        }
+                        return rmrs;
+                    }
+                }
+
+                if (entity.PayStatus == (int)PayStatus.未付款)
+                {
+                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
+                    {
+                        rmrs.Succeeded = false;
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
+                        if (_appContext.SysConfig.ShowDebugInfo)
+                        {
+                            _logger.LogInformation(rmrs.ErrorMsg);
+                        }
+                        return rmrs;
+                    }
+                }
+
+
+                #endregion
+
+
+                // 外币相关处理 正确是 外币时一定要有汇率
+                decimal exchangeRate = 1; // 获取销售订单的汇率
+                if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                {
+                    exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
+                                                        // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
+                                                        // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
+                }
+
+                //销售订单审核时，非账期，即时收款时
+                //订金，部分收款和全部收款都要生成预收款。（因为财务必须有一个审核收款行为）
+                //销售出库时，生成应收去核销预收。 如果客户超付，（预收，收款，实际已经支付。 出库时 只要生成应收，和核销记录，并且回写
+                if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
+                {
+                    //正常来说。不能重复生成。即使退款也只会有一个对应订单的预收款单。 一个预收款单可以对应正负两个收款单。
+                    // 生成预收款单前 检测
+                    var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                    var PreReceivedPayment = ctrpay.BuildPreReceivedPayment(entity, PrepaidAmount);
+                    if (PreReceivedPayment.LocalPrepaidAmount > 0)
+                    {
+                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
+                        if (!rmpay.Succeeded)
+                        {
+                       
+                            // 处理预收款单生成失败的情况
+                            rmrs.Succeeded = false;
+                            _unitOfWorkManage.RollbackTran();
+                            rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
+                            if (_appContext.SysConfig.ShowDebugInfo)
+                            {
+                                _logger.LogInformation(rmrs.ErrorMsg);
+                            }
+                        }
+                        else
+                        {
+                            rmrs.ReturnObject = rmpay.ReturnObject;
+                            if (_appContext.FMConfig.AutoAuditPreReceive)
+                            {
+                                #region 自动审核预收款
+                                //销售订单审核时自动将预付款单设为"已生效"状态
+                                PreReceivedPayment.ApprovalOpinions = "再次收到预付款，系统自动审核";
+                                PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                PreReceivedPayment.ApprovalResults = true;
+                                ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
+                                if (!autoApproval.Succeeded)
+                                {
+                                    rmrs.Succeeded = false;
+                                    _unitOfWorkManage.RollbackTran();
+                                    rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                    if (_appContext.SysConfig.ShowDebugInfo)
+                                    {
+                                        _logger.LogInformation(rmrs.ErrorMsg);
+                                    }
+                                }
+                                else
+                                {
+                                    rmrs.ReturnObject = autoApproval.ReturnObject;
+                                    FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
+                                }
+                                #endregion
+                            }
+                        }
+                    }
+                }
+                #endregion
+            }
+            return rmrs;
+        }
+
 
 
         /// <summary>

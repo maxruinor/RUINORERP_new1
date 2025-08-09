@@ -361,7 +361,7 @@ namespace RUINORERP.UI.BaseForm
         /// 控制功能按钮
         /// </summary>
         /// <param name="p_Text"></param>
-        protected virtual async void DoButtonClick(MenuItemEnums menuItem)
+        protected virtual async Task DoButtonClick(MenuItemEnums menuItem)
         {
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
@@ -489,7 +489,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         BizTypeMapper Bizmapper = new BizTypeMapper();
-        public virtual async void Print(RptMode rptMode)
+        public virtual async Task Print(RptMode rptMode)
         {
             List<M> printItems = new List<M>();
             List<M> selectlist = GetSelectResult();
@@ -1335,7 +1335,7 @@ namespace RUINORERP.UI.BaseForm
         public static string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), GlobalConstants.LayoutConfigDirectory);
         string xmlfilepath = System.IO.Path.Combine(basePath, "QueryMC" + typeof(M).Name + "Persistence.xml");
 
-        protected virtual async void Exit(object thisform)
+        protected virtual async Task Exit(object thisform)
         {
             try
             {

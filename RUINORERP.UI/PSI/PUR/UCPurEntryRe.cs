@@ -87,7 +87,7 @@ namespace RUINORERP.UI.PSI.PUR
             .ToExpression();
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
         }
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_PurEntryRe  entryRe)
             {
@@ -131,7 +131,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+          await  base.LoadRelatedDataToDropDownItemsAsync();
         }
         public override void BindData(tb_PurEntryRe entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
@@ -617,7 +617,7 @@ protected async override void ReReview()
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void LoadRefBillData(long? PurEntryID)
+        private async Task LoadRefBillData(long? PurEntryID)
         {
             //要加一个判断 值是否有变化
             //新增时才可以

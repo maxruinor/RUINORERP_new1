@@ -55,7 +55,7 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.反结案);
             base.AddExcludeMenuList(MenuItemEnums.结案);
         }
-        protected override async void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_FM_PreReceivedPayment preReceivedPayment)
             {
@@ -127,6 +127,10 @@ namespace RUINORERP.UI.FM
             {
                 return;
             }
+            txtForeignBalanceAmount.Enabled = false;
+            txtLocalBalanceAmount.Enabled = false;
+            txtForeignPaidAmount.Enabled = false;
+            txtLocalPaidAmount.Enabled = false;
             txtApprovalOpinions.ReadOnly = true;
             if (entity.PreRPID > 0)
             {
@@ -433,7 +437,7 @@ namespace RUINORERP.UI.FM
 
 
 
-        private async void LoadImageData(string ImagePath)
+        private async Task LoadImageData(string ImagePath)
         {
             if (!string.IsNullOrWhiteSpace(ImagePath))
             {

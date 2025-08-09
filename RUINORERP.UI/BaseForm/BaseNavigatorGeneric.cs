@@ -396,7 +396,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
         //https://www.cnblogs.com/westsoft/p/8594379.html  三联单
-        public virtual async void Print(RptMode rptMode)
+        public virtual async Task Print(RptMode rptMode)
         {
             List<M> selectlist = GetSelectResult();
             if (_PrintConfig == null || _PrintConfig.tb_PrintTemplates == null)
@@ -565,7 +565,7 @@ namespace RUINORERP.UI.BaseForm
         public static string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), GlobalConstants.LayoutConfigDirectory);
         string xmlfilepath = System.IO.Path.Combine(basePath, "Navigator" + typeof(M).Name + "Persistence.xml");
 
-        protected virtual async void Exit(object thisform)
+        protected virtual async Task Exit(object thisform)
         {
             if (_UCMasterQuery != null && _UCMasterQuery.newSumDataGridViewMaster != null)
             {

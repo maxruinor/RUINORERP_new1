@@ -29,11 +29,11 @@ namespace RUINORERP.UI.BI
     public partial class UCSystemConfigList : BaseForm.BaseListGeneric<tb_SystemConfig>
     {
 
-        protected override void Add()
+        protected override async Task Add()
         {
             if (ListDataSoure.Count == 0)
             {
-                base.Add();
+              await  base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
             else

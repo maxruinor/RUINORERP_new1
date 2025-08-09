@@ -37,7 +37,7 @@ namespace RUINORERP.UI.BI
             base.EditForm = typeof(UCCurrencyEdit);
            
         }
-        protected override async void Add()
+        protected override async Task Add()
         {
             if (ListDataSoure.Count == 0)
             {
@@ -73,13 +73,13 @@ namespace RUINORERP.UI.BI
                 }
                 List<long> ids = await MainForm.Instance.AppContext.Db.Insertable<tb_Currency>(list).ExecuteReturnSnowflakeIdListAsync();
                 Query();
-                base.Add();
+             await   base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
             else
             {
                 //非第一次添加付款方式时。正常处理
-                base.Add();
+             await   base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
         }

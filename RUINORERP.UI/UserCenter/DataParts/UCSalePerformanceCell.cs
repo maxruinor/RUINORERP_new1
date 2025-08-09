@@ -37,7 +37,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
         int errorCount = 0;
-        private async void QuerySaleOrderStatus()
+        private async Task QuerySaleOrderStatus()
         {
             try
             {

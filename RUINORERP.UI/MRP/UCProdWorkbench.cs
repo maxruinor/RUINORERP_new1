@@ -596,7 +596,7 @@ namespace RUINORERP.UI.MRP
         }
 
 
-        public async void Query(List<tb_ProductionPlan> _PURList = null)
+        public async Task Query(List<tb_ProductionPlan> _PURList = null)
         {
             List<tb_ProductionPlan> purList = await GetProductionPlan();
             if (purList != null)
@@ -604,7 +604,7 @@ namespace RUINORERP.UI.MRP
                 SubQuery(purList);
             }
         }
-        public async void SubQuery(List<tb_ProductionPlan> _PURList = null)
+        public async Task SubQuery(List<tb_ProductionPlan> _PURList = null)
         {
             await uCMRP.QueryMRPDataStatus(_PURList);
         }

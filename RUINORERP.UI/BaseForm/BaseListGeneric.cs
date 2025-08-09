@@ -737,7 +737,7 @@ namespace RUINORERP.UI.BaseForm
         /// 控制功能按钮
         /// </summary>
         /// <param name="p_Text"></param>
-        protected virtual async void DoButtonClick(MenuItemEnums menuItem)
+        protected virtual async Task DoButtonClick(MenuItemEnums menuItem)
         {
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
@@ -946,7 +946,7 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        protected virtual void Add()
+        protected virtual Task Add()
         {
             object frm = Activator.CreateInstance(EditForm);
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
@@ -999,7 +999,7 @@ namespace RUINORERP.UI.BaseForm
                 #endregion
             }
 
-
+            return Task.CompletedTask;
         }
 
 
@@ -1740,7 +1740,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        protected async void AdvQueryShowResult(bool useLike, BaseEntityDto dto)
+        protected async Task AdvQueryShowResult(bool useLike, BaseEntityDto dto)
         {
             dataGridView1.ReadOnly = true;
 

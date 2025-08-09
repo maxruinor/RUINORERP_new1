@@ -95,7 +95,7 @@ namespace RUINORERP.UI.ASS
 
 
 
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_AS_AfterSaleApply SaleApply)
             {
@@ -140,7 +140,7 @@ namespace RUINORERP.UI.ASS
 
 
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
         ToolStripButton toolStripButton维修评估 = new System.Windows.Forms.ToolStripButton();
         /// <summary>
@@ -532,7 +532,7 @@ namespace RUINORERP.UI.ASS
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.VendorModelCode);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
-        
+
             if (!AppContext.SysConfig.UseBarCode)
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);

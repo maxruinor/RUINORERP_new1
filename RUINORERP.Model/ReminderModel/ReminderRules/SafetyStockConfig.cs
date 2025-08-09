@@ -38,31 +38,61 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
         public List<long> LocationIds { get; set; } = new List<long>();
 
 
-        public override bool Validate()
+        /// <summary>
+        /// 重写验证方法，先执行基类验证，再添加子类特有验证
+        /// </summary>
+        /// <returns></returns>
+        public override RuleValidationResult Validate()
         {
-            return ProductIds?.Any() == true
-                && LocationIds?.Any() == true
-                && MinStock >= 0
-                && MaxStock > MinStock
-                && CheckIntervalByMinutes > 30;
+            // 先执行基类的验证逻辑
+            var result = base.Validate();
+
+            // 产品ID验证
+            if (ProductIds == null || !ProductIds.Any())
+            {
+                result.AddError("必须选择至少一个产品");
+            }
+            else if (ProductIds.Any(id => id <= 0))
+            {
+                result.AddError("产品ID不能为负数或零");
+            }
+
+            // 库位验证
+            if (LocationIds == null || !LocationIds.Any())
+            {
+                result.AddError("必须选择至少一个库位");
+            }
+            else if (LocationIds.Any(id => id <= 0))
+            {
+                result.AddError("库位ID不能为负数或零");
+            }
+
+            // 库存数量验证
+            if (MinStock < 0)
+            {
+                result.AddError("最小安全库存不能小于0");
+            }
+
+            if (MaxStock <= MinStock)
+            {
+                result.AddError("最大安全库存必须大于最小安全库存");
+            }
+
+            // 补货数量验证
+            if (ReorderQuantity <= 0)
+            {
+                result.AddError("补货数量必须大于0");
+            }
+
+            // 检测频率特殊验证（安全库存检查建议不低于30分钟）
+            if (CheckIntervalByMinutes > 0 && CheckIntervalByMinutes < 30)
+            {
+                result.AddError("安全库存检测频率建议不低于30分钟");
+            }
+
+            return result;
         }
 
-
-        //public override void Validate()
-        //{
-        //    base.Validate();
-
-        //    if (MinStock < 0)
-        //        throw new ArgumentException("安全库存下限不能小于0");
-
-        //    if (MaxStock <= MinStock)
-        //        throw new ArgumentException("安全库存上限必须大于下限");
-
-        //    if (ReorderQuantity <= 0)
-        //        throw new ArgumentException("补货数量必须大于0");
-
-        //    if (ProductIds == null || !ProductIds.Any())
-        //        throw new ArgumentException("必须指定至少一个产品");
-        //}
+         
     }
 }

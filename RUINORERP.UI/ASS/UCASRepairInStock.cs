@@ -74,7 +74,7 @@ namespace RUINORERP.UI.ASS
         }
 
 
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_AS_RepairInStock RepairInStock)
             {
@@ -95,7 +95,7 @@ namespace RUINORERP.UI.ASS
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+           await base.LoadRelatedDataToDropDownItemsAsync();
         }
         public override void BindData(tb_AS_RepairInStock entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
@@ -578,7 +578,7 @@ namespace RUINORERP.UI.ASS
             }
         }
 
-        private async void RepairInStock(long? RepairOrderID)
+        private async Task RepairInStock(long? RepairOrderID)
         {
             //要加一个判断 值是否有变化
             //新增时才可以
@@ -612,7 +612,7 @@ namespace RUINORERP.UI.ASS
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void LoadSaleOutBillData(long? ASApplyID)
+        private async Task LoadSaleOutBillData(long? ASApplyID)
         {
             //要加一个判断 值是否有变化
             //新增时才可以

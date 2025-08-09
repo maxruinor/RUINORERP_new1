@@ -855,7 +855,7 @@ namespace RUINORERP.UI.Common
         /// 可以多次执行，但是发布后不需要每次执行
         /// 2025-1-16优化执行为批量添加 可以多次执行
         /// </summary>
-        public async void InitModuleAndMenu()
+        public async Task InitModuleAndMenu()
         {
             _menuAssemblyList = UIHelper.RegisterForm();
 
@@ -1026,7 +1026,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        private async void InitNavMenu<T>(tb_MenuInfo menuParent, List<MenuAttrAssemblyInfo> list)
+        private async Task InitNavMenu<T>(tb_MenuInfo menuParent, List<MenuAttrAssemblyInfo> list)
         {
             string parentName = typeof(T).Name;
             tb_MenuInfoController<tb_MenuInfo> mc = _appContext.GetRequiredService<tb_MenuInfoController<tb_MenuInfo>>();
@@ -1161,7 +1161,7 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="info"></param>
         /// <param name="menuInfo"></param>
-        public async void InitToolStripItem(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo)
+        public async Task InitToolStripItem(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo)
         {
             Control c = Startup.ServiceProvider.GetService(info.ClassType) as Control;
             tb_ButtonInfoController<tb_ButtonInfo> BtnController = Startup.GetFromFac<tb_ButtonInfoController<tb_ButtonInfo>>();
@@ -1504,7 +1504,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        public async void InitFieldInoMainAndSub(Type type, tb_MenuInfo menuInfo, bool isChild, string childType)
+        public async Task InitFieldInoMainAndSub(Type type, tb_MenuInfo menuInfo, bool isChild, string childType)
         {
             List<tb_FieldInfo> fields = new List<tb_FieldInfo>();
             var attrs = type.GetCustomAttributes<SugarTable>();

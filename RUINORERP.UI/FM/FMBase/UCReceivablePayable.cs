@@ -49,6 +49,8 @@ using System.Configuration;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.StatusManagerService;
+using FastReport;
+using FastReport.Data;
 
 namespace RUINORERP.UI.FM
 {
@@ -69,7 +71,7 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.反结案);
             base.AddExcludeMenuList(MenuItemEnums.结案);
         }
-        protected override async void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_FM_ReceivablePayable receivablePayable)
             {
@@ -112,7 +114,7 @@ namespace RUINORERP.UI.FM
                             }
                         }
                     }
-                  
+
                 }
 
             }
@@ -138,11 +140,16 @@ namespace RUINORERP.UI.FM
         //}
         public override void BindData(tb_FM_ReceivablePayable entity, ActionStatus actionStatus)
         {
-
             if (entity == null)
             {
                 return;
             }
+
+            chkIsExpenseType.Enabled = false;
+            txtForeignBalanceAmount.Enabled = false;
+            txtLocalBalanceAmount.Enabled = false;
+            txtForeignPaidAmount.Enabled = false;
+            txtLocalPaidAmount.Enabled = false;
 
             EditEntity = entity;
             if (entity.ARAPId > 0)
@@ -184,7 +191,6 @@ namespace RUINORERP.UI.FM
                     cmbPayeeInfoID.DataBindings.Clear();
                 }
 
-                chkIsExpenseType.Enabled = false;
 
 
                 //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
@@ -231,7 +237,7 @@ namespace RUINORERP.UI.FM
                 }
 
                 //entity.InvoiceDate = System.DateTime.Now;
-
+                entity.ARAPStatus = (int)ARAPStatus.草稿;
 
                 // 清空 DataSource（如果适用）
                 cmbPayeeInfoID.DataSource = null;
@@ -430,8 +436,11 @@ namespace RUINORERP.UI.FM
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.ShippingFee))
                     {
-                        EditEntity.LocalBalanceAmount = details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee;
-                        EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee;
+                        TotalSum();
+                    }
+                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.TotalLocalPayableAmount))
+                    {
+                        TotalSum();
                     }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.PayeeInfoID))
@@ -472,10 +481,6 @@ namespace RUINORERP.UI.FM
 
                     }
 
-                    if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.ShippingFee))
-                    {
-                        EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee;
-                    }
                 }
 
                 //到期日期应该是根据对应客户的账期的天数来算
@@ -877,6 +882,12 @@ namespace RUINORERP.UI.FM
                 MainForm.Instance.uclog.AddLog("请先使用新增或查询加载数据");
                 return;
             }
+            TotalSum();
+        }
+
+
+        void TotalSum()
+        {
             try
             {
 
@@ -888,9 +899,8 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.uclog.AddLog("金额必须大于0");
                     return;
                 }
-
-
                 EditEntity.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee;
+                EditEntity.LocalBalanceAmount = EditEntity.TotalLocalPayableAmount - EditEntity.LocalPaidAmount;
             }
             catch (Exception ex)
             {
@@ -898,9 +908,8 @@ namespace RUINORERP.UI.FM
                 logger.LogError("计算出错", ex);
                 MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
             }
-
-
         }
+
 
         /// <summary>
         /// 保存图片到服务器。所有图片都保存到服务器。即使草稿换电脑还可以看到
@@ -1028,7 +1037,7 @@ namespace RUINORERP.UI.FM
 
 
                 //如果主表的总金额和明细金额加总后不相等，则提示
-                if (NeedValidated && EditEntity.TotalLocalPayableAmount != details.Sum(c => c.LocalPayableAmount)+EditEntity.ShippingFee)
+                if (NeedValidated && EditEntity.TotalLocalPayableAmount != details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee)
                 {
                     if (MessageBox.Show("总金额和明细金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {
@@ -1042,7 +1051,7 @@ namespace RUINORERP.UI.FM
                         return false;
                     }
                 }
- 
+
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))

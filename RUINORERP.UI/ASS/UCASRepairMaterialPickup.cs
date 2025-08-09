@@ -52,7 +52,7 @@ namespace RUINORERP.UI.ASS
             InitializeComponent();
         }
 
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_AS_RepairMaterialPickup MaterialPickup)
             {
@@ -72,7 +72,7 @@ namespace RUINORERP.UI.ASS
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+         await   base.LoadRelatedDataToDropDownItemsAsync();
         }
         internal override void LoadDataToUI(object Entity)
         {
@@ -566,7 +566,7 @@ namespace RUINORERP.UI.ASS
         /// 发料单明细相同也不累计了。直接发
         /// </summary>
         /// <param name="id"></param>
-        private async void LoadChildItems(long? id)
+        private async  Task LoadChildItems(long? id)
         {
 
             var ctr = Startup.GetFromFac<tb_AS_RepairOrderController<tb_AS_RepairOrder>>();

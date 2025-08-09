@@ -157,7 +157,7 @@ namespace RUINORERP.UI.PSI.PUR
         /// <summary>
         /// 批量转换为采购入库单
         /// </summary>
-        public async void BatchConversion()
+        public async Task BatchConversion()
         {
             tb_PurEntryController<tb_PurEntry> ctr = Startup.GetFromFac<tb_PurEntryController<tb_PurEntry>>();
             List<tb_PurOrder> selectlist = GetSelectResult();

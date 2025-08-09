@@ -325,9 +325,9 @@ namespace RUINORERP.UI.BaseForm
 
         #region 定义所有工具栏的方法
 
-        protected virtual void Add()
+        protected virtual Task Add()
         {
-
+            return Task.CompletedTask;
         }
 
         protected virtual void Delete()

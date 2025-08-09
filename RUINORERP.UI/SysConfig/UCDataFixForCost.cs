@@ -188,7 +188,7 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        private async void QueryInvNeedUpdate()
+        private async Task QueryInvNeedUpdate()
         {
             List<View_Inventory> inventories = new List<View_Inventory>();
             //inventories = await MainForm.Instance.AppContext.Db.Queryable<View_Inventory>()
@@ -237,7 +237,7 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        private async void QueryInv()
+        private async Task QueryInv()
         {
             List<View_Inventory> inventories = new List<View_Inventory>();
             inventories = await MainForm.Instance.AppContext.Db.Queryable<View_Inventory>()
@@ -421,7 +421,7 @@ namespace RUINORERP.UI.SysConfig
             AddLoadRelatedData();
         }
 
-        private async void AddLoadRelatedData()
+        private async Task AddLoadRelatedData()
         {
             if (dataGridViewInv.CurrentRow == null)
             {
@@ -1121,7 +1121,7 @@ namespace RUINORERP.UI.SysConfig
         /// 更新相关出库的明细中的成本
         /// </summary>
         /// <param name="updateInvList"></param>
-        private async void UpdateRelatedCost(List<tb_Inventory> updateInvList, BizType SelectBizType = BizType.无对应数据, bool FixSubtotal = false)
+        private async Task UpdateRelatedCost(List<tb_Inventory> updateInvList, BizType SelectBizType = BizType.无对应数据, bool FixSubtotal = false)
         {
 
             if (!chkTestMode.Checked)
@@ -2282,7 +2282,7 @@ namespace RUINORERP.UI.SysConfig
         /// 将母件当子件查询。找他的上级。如果存在则更新他的本身的成本及他的BOM的总成本，直到没有。如果进入循环看最多次数为10层是不可能的
         /// </summary>
         /// <param name="bOM_S"></param>
-        private async void LoopUpdateBom(tb_BOM_S bOM_S)
+        private async Task LoopUpdateBom(tb_BOM_S bOM_S)
         {
             if (bOM_S.SelfProductionAllCosts != bOM_S.OutProductionAllCosts)
             {
@@ -2374,7 +2374,7 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
-        private async void 更新为当前成本ToolStripMenuItem_Click(object sender, EventArgs e)
+        private async Task 更新为当前成本ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem toolStripMenu)
             {
@@ -2439,7 +2439,7 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
-        private async void toolStripMenuItem修复小计总计_Click(object sender, EventArgs e)
+        private async Task toolStripMenuItem修复小计总计_Click(object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem toolStripMenu)
             {

@@ -676,7 +676,7 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="Nodes"></param>
         /// <param name="tb_P4Modules"></param>
-        private async void UpdateP4Module(TreeNodeCollection Nodes, List<tb_P4Menu> tb_P4Menus)
+        private async Task UpdateP4Module(TreeNodeCollection Nodes, List<tb_P4Menu> tb_P4Menus)
         {
 
             // 先检查数据库中的重复数据
@@ -879,7 +879,7 @@ namespace RUINORERP.UI.SysConfig
         /// 按角色初始化所有菜单,默认为否
         /// </summary>
         /// <param name="role"></param>
-        public async void InitMenuByRole(tb_RoleInfo role, bool Selected = false)
+        public async Task InitMenuByRole(tb_RoleInfo role, bool Selected = false)
         {
             var db = MainForm.Instance.AppContext.Db;
             var list = await ctrMenu.QueryByNavAsync();
@@ -1624,7 +1624,7 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="selectMenu"></param>
         /// <param name="InitLoadData"></param>
-        private async void InitLoadP4Button(tb_MenuInfo selectMenu, bool InitLoadData = false)
+        private async Task InitLoadP4Button(tb_MenuInfo selectMenu, bool InitLoadData = false)
         {
             if (CurrentRole == null)
             {
@@ -1656,7 +1656,7 @@ namespace RUINORERP.UI.SysConfig
 
         }
 
-        private async void InitLoadP4Field(tb_MenuInfo selectMenu, bool InitLoadData = false)
+        private async Task InitLoadP4Field(tb_MenuInfo selectMenu, bool InitLoadData = false)
         {
             if (CurrentRole == null)
             {
@@ -2511,7 +2511,7 @@ namespace RUINORERP.UI.SysConfig
         private List<tb_RoleInfo> _sourceRoles = new List<tb_RoleInfo>();
 
         // 在初始化时加载可参考的源角色列表
-        private async void InitializeSourceRoles()
+        private async Task InitializeSourceRoles()
         {
             try
             {

@@ -52,7 +52,7 @@ namespace RUINORERP.UI.MRP.MP
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_MaterialRequisition>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
         }
 
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_MaterialRequisition MaterialRequisition)
             {
@@ -92,7 +92,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+         await   base.LoadRelatedDataToDropDownItemsAsync();
         }
         internal override void LoadDataToUI(object Entity)
         {
@@ -657,7 +657,7 @@ namespace RUINORERP.UI.MRP.MP
         /// 发料单明细相同也不累计了。直接发
         /// </summary>
         /// <param name="id"></param>
-        private async void LoadChildItems(long? id)
+        private async Task LoadChildItems(long? id)
         {
             //生成制令单  以目标为基准。
             tb_ManufacturingOrderController<tb_ManufacturingOrder> ctr = Startup.GetFromFac<tb_ManufacturingOrderController<tb_ManufacturingOrder>>();

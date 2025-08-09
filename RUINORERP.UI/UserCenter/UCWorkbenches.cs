@@ -368,7 +368,7 @@ namespace RUINORERP.UI.UserCenter
             }
         }
 
-        private async void SaveAsDefaultLayoutToDb()
+        private async Task SaveAsDefaultLayoutToDb()
         {
             try
             {

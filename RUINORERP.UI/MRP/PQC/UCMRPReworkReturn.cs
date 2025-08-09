@@ -456,7 +456,7 @@ namespace RUINORERP.UI.MRP.PQC
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void LoadRefBillData(long? fgid)
+        private async Task LoadRefBillData(long? fgid)
         {
 
             //要加一个判断 值是否有变化

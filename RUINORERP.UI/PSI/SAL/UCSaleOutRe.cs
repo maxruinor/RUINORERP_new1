@@ -277,7 +277,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-        protected override async void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_SaleOutRe saleOutRe)
             {
@@ -1114,7 +1114,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void LoadSaleOutBillData(long? saleoutid)
+        private async Task LoadSaleOutBillData(long? saleoutid)
         {
             //要加一个判断 值是否有变化
             //新增时才可以

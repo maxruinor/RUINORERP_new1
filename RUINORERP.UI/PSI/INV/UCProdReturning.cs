@@ -57,7 +57,7 @@ namespace RUINORERP.UI.PSI.INV
         }
 
 
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_ProdReturning returning)
             {
@@ -78,7 +78,7 @@ namespace RUINORERP.UI.PSI.INV
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+         await   base.LoadRelatedDataToDropDownItemsAsync();
         }
         internal override void LoadDataToUI(object Entity)
         {
@@ -602,7 +602,7 @@ namespace RUINORERP.UI.PSI.INV
    */
 
 
-        private async void LoadRefBillData(long? billID)
+        private async Task LoadRefBillData(long? billID)
         {
             ButtonSpecAny bsa = (txtBorrowNO as KryptonTextBox).ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
             if (bsa == null)

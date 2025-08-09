@@ -159,6 +159,7 @@ namespace RUINORERP.UI.FM
                 return;
             }
             txtApprovalOpinions.ReadOnly = true;
+            
             if (entity.PaymentId > 0)
             {
                 entity.PrimaryKeyID = entity.PaymentId;
@@ -429,7 +430,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_FM_PaymentRecord PaymentRecord)
             {
@@ -456,7 +457,7 @@ namespace RUINORERP.UI.FM
 
                 }
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+          await  base.LoadRelatedDataToDropDownItemsAsync();
         }
 
 
@@ -470,7 +471,7 @@ namespace RUINORERP.UI.FM
 
         }
 
-        private async void LoadImageData(string CloseCaseImagePath)
+        private async Task LoadImageData(string CloseCaseImagePath)
         {
             if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))
             {

@@ -47,11 +47,11 @@ namespace RUINORERP.UI.BI
             //tokenSource.Cancel();
         }
 
-        protected override void Add()
+        protected override async Task Add()
         {
             if (ListDataSoure.Count == 0)
             {
-                base.Add();
+                await base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
             else

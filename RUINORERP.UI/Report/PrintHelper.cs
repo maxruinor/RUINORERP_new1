@@ -21,7 +21,7 @@ namespace RUINORERP.UI.Report
     {
 
         /*
-        public static async void Print_old(List<M> EditEntitys, RptMode rptMode)
+        public static async Task Print_old(List<M> EditEntitys, RptMode rptMode)
         {
             if (EditEntitys == null || EditEntitys.Count == 0)
             {
@@ -363,7 +363,7 @@ namespace RUINORERP.UI.Report
 
 
         //更新打印状态，打印次数加1
-        public static async void UpdatePrintStatus(List<M> EditEntitys, string PKFieldName = null)
+        public static async Task UpdatePrintStatus(List<M> EditEntitys, string PKFieldName = null)
         {
             //打印状态更新
             foreach (var editEntity in EditEntitys)

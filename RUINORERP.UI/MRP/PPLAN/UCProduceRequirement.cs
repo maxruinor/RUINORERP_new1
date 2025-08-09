@@ -58,7 +58,7 @@ namespace RUINORERP.UI.MRP.MP
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionDemand>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
 
         }
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_ProductionDemand ProductionDemand)
             {
@@ -98,7 +98,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+           await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         /// <summary>
@@ -1959,7 +1959,7 @@ protected async override Task<ApprovalEntity> ReReview()
         /// 通过BOM找到不足的库存后。算出要制作的数量 。比方 如果PCBA仓库有的。制的数量少1，则要仓库发出1，一定会在制令单中体现
         /// 由库存不足数据组成
         /// </summary>
-        private async void GenerateProductionSuggestionsNew()
+        private async Task GenerateProductionSuggestionsNew()
         {
             if (EditEntity == null)
             {
@@ -2167,7 +2167,7 @@ protected async override Task<ApprovalEntity> ReReview()
         /// 即：中间式是指  加载选中的单个组件制作材料。 加载上层驱动是将他所有子级都要参与制作的材料
         /// </summary>
         ///<param name="MiddlewareType">中间件式:true，上层驱动模式:false</param>
-        private async void CreateProductionNew2024(bool MiddlewareType = false)
+        private async Task CreateProductionNew2024(bool MiddlewareType = false)
         {
 
             if (EditEntity == null)
@@ -2429,7 +2429,7 @@ protected async override Task<ApprovalEntity> ReReview()
         }
 
 
-        private async void updateSubItem(tb_ProduceGoodsRecommendDetail row, tb_ProduceGoodsRecommendDetail Prow)
+        private async Task updateSubItem(tb_ProduceGoodsRecommendDetail row, tb_ProduceGoodsRecommendDetail Prow)
         {
             decimal DiffQty = row.RecommendQty - row.RequirementQty;
             tb_BOM_SDetailController<tb_BOM_SDetail> sDetailController = Startup.GetFromFac<tb_BOM_SDetailController<tb_BOM_SDetail>>();

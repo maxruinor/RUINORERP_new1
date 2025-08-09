@@ -98,7 +98,7 @@ namespace RUINORERP.UI.ASS
             this.BaseToolStrip.Items.AddRange(extendButtons);
             return extendButtons;
         }
-        private async void toolStripButton维修处理_Click(object sender, EventArgs e)
+        private  async void toolStripButton维修处理_Click(object sender, EventArgs e)
         {
             if (EditEntity == null)
             {
@@ -217,7 +217,7 @@ namespace RUINORERP.UI.ASS
         }
 
 
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_AS_RepairOrder RepairOrder)
             {
@@ -260,7 +260,7 @@ namespace RUINORERP.UI.ASS
 
 
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+          await  base.LoadRelatedDataToDropDownItemsAsync();
         }
         public override void BindData(tb_AS_RepairOrder entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
@@ -1025,7 +1025,7 @@ namespace RUINORERP.UI.ASS
             }
         }
 
-        private async void ToRepairOrder(long? ASApplyID)
+        private async Task ToRepairOrder(long? ASApplyID)
         {
             //要加一个判断 值是否有变化
             //新增时才可以
@@ -1058,7 +1058,7 @@ namespace RUINORERP.UI.ASS
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void LoadSaleOutBillData(long? ASApplyID)
+        private async Task LoadSaleOutBillData(long? ASApplyID)
         {
             //要加一个判断 值是否有变化
             //新增时才可以

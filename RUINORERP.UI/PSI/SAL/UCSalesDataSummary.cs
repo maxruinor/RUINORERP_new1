@@ -105,7 +105,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="dto"></param>
         [MustOverride]
-        protected virtual async void Query()
+        protected virtual async Task Query()
         {
             //var eer = errorProviderForAllInput.GetError(txtPDNo);
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);

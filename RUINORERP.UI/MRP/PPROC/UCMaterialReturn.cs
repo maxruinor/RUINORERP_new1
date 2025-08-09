@@ -49,7 +49,7 @@ namespace RUINORERP.UI.MRP.MP
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_MaterialReturn>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
         }
 
-        protected override void LoadRelatedDataToDropDownItemsAsync()
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_MaterialReturn MaterialReturn)
             {
@@ -72,7 +72,7 @@ namespace RUINORERP.UI.MRP.MP
                 
 
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+         await   base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         internal override void LoadDataToUI(object Entity)
@@ -851,7 +851,7 @@ namespace RUINORERP.UI.MRP.MP
         /// 由领料单加载明细
         /// </summary>
         /// <param name="id"></param>
-        private async void LoadChildItems(long? id)
+        private async Task LoadChildItems(long? id)
         {
 
 

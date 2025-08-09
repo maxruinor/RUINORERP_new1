@@ -391,7 +391,7 @@ namespace RUINORERP.UI.Common
         /// <param name="nodeParameter">工作台待办事项点击过来带的条件</param>
         /// <param name="LoadItem">加载单实体</param>
         /// <param name="LoadItems">加载实体集合</param>
-        public async void ExecuteEvents(tb_MenuInfo pr, object LoadItem = null, QueryParameter nodeParameter = null, object LoadItems = null)
+        public async Task ExecuteEvents(tb_MenuInfo pr, object LoadItem = null, QueryParameter nodeParameter = null, object LoadItems = null)
         {
             if (pr == null)
             {

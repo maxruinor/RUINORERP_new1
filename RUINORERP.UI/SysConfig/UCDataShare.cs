@@ -408,7 +408,7 @@ namespace RUINORERP.UI.SysConfig
         /// 导出分享数据到文件。
         /// </summary>
         /// <param name="list"></param>
-        private async void ExportShareData(BindingSortCollection<tb_Prod> list)
+        private async Task ExportShareData(BindingSortCollection<tb_Prod> list)
         {
             List<long> ids = new List<long>();
             //找到导出主产品的明细中的BOM中的bom明细对应的详情的主产品的ID。
@@ -526,7 +526,7 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
-        private async void ExportDataBom(List<tb_Prod> prods)
+        private async Task ExportDataBom(List<tb_Prod> prods)
         {
             List<tb_BOM_S> bomList = await MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
            .Includes(a => a.tb_BOM_SDetails)
@@ -581,7 +581,7 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 保存数据 去掉了价格和供应商
         /// </summary>
-        private async void SaveShareData(bool SaveData = false)
+        private async Task SaveShareData(bool SaveData = false)
         {
             var validator = new Temptb_ProdValidator();
             var result = validator.Validate(TempProd);

@@ -24,9 +24,9 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
 
 
         /// <summary>
-        /// 验证配置是否有效
+        /// 验证配置并返回结果
         /// </summary>
-        /// <returns>验证结果</returns>
-        bool Validate();
+        /// <returns>验证结果包含状态和消息</returns>
+        RuleValidationResult Validate();
     }
 }

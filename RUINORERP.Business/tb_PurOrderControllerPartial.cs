@@ -605,7 +605,7 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 手动生成预付款单
+        /// 手动生成预付款单，需要手动审核。因为除金额后，还可以添加 完善 付款方式等、备注、附件、等信息。
         /// </summary>
         /// <param name="PrepaidAmount">本次预付金额</param>
         /// <param name="entity">对应的订单</param>
@@ -703,6 +703,7 @@ namespace RUINORERP.Business
                     else
                     {
                         rmrs.ReturnObject = rmpay.ReturnObject;
+                        /*
                         if (_appContext.FMConfig.AutoAuditPrePayment)
                         {
                             #region 自动审核预付款
@@ -729,6 +730,7 @@ namespace RUINORERP.Business
                             }
                             #endregion
                         }
+                        */
                     }
                 }
 

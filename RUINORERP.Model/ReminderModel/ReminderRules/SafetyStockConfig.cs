@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Model.ReminderModel.ReminderResults;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,15 +12,15 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
 {
     public class SafetyStockConfig : RuleConfigBase
     {
-        //// 辅助属性，不参与JSON序列化
-        //[JsonIgnore]
-        //public string _ProductIds
-        //{
-        //    get => string.Join(",", ProductIds);
-        //    set => ProductIds = value?.Split(',')
-        //                         .Select(long.Parse)
-        //                         .ToList() ?? new List<long>();
-        //}
+       
+        /// <summary>
+        /// 安全库存是通过计算来的。当然也可以人工手动指定
+        /// </summary>
+        [Description("安全库存计算频率(天)")]
+        public int CalculateSafetyStockIntervalByDays { get; set; } = 3;
+
+        [Description("是否手动指定安全库存")]
+        public bool IsCalculateSafetyStockByHand { get; set; } = false;
 
         [Description("要检测的产品对象")]
         public List<long> ProductIds { get; set; } = new List<long>();
@@ -30,8 +31,8 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
         [Description("最大安全库存")]
         public int MaxStock { get; set; }
 
-        [Description("补货数量")]
-        public long ReorderQuantity { get; set; }
+        [Description("预警激活")]
+        public bool Alert_Activation { get; set; } = true;
 
 
         [Description("提醒库位")]
@@ -92,7 +93,6 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
 
             return result;
         }
-
          
     }
 }

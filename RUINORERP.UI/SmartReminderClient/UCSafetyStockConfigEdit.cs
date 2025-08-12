@@ -142,5 +142,15 @@ namespace RUINORERP.UI.SmartReminderClient
             //将集合用,号隔开后拼起来
             //txt_ProductIds.Text = safetyStockConfig.ProductIds.ToJson();
         }
+
+        private void kryptonLabel2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void txtCheckIntervalByMinutes_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

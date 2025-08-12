@@ -68,6 +68,11 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
 
         // 临时存储当前产品的计算结果
         public SafetyStockResult CurrentResult { get; set; }
+
+        // 添加产品信息缓存字典
+        public Dictionary<long, View_Inventory> ProductInfoCache { get; set; } = new Dictionary<long, View_Inventory>();
+
+
     }
 
     /// <summary>
@@ -121,7 +126,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            // 可以从配置或数据库中加载默认参数
+            // 可参数校验与默认值设置
             CalculationPeriodDays = CalculationPeriodDays <= 0 ? 90 : CalculationPeriodDays;
             PurchaseLeadTimeDays = PurchaseLeadTimeDays <= 0 ? 7 : PurchaseLeadTimeDays;
             ServiceLevelFactor = ServiceLevelFactor <= 0 ? 1.64 : ServiceLevelFactor;
@@ -145,17 +150,17 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
 
                         ProductIds.AddRange(safetyStockConfig.ProductIds); // safetyStockConfig.ProductIds
                     }
+                    // 批量查询所有产品信息
+                    var products = db.Queryable<View_Inventory>()
+                        .Where(p => ProductIds.Contains(p.ProdDetailID.Value))
+                        .ToList();
 
-                    // 在InitializeParameters中预加载产品信息
-                    //var products = db.Queryable<View_Inventory>()
-                    //    .Where(p => ProductIds.Contains(p.ProdDetailID.Value))
-                    //    .ToDictionary(p => p.ProdDetailID.Value);
-
-                    //// 将产品字典存入工作流数据
-                    //data.ProductInfoCache = products;
-
+                    // 存入缓存字典
+                    foreach (var product in products)
+                    {
+                        (context.Workflow.Data as SafetyStockData).ProductInfoCache[product.ProdDetailID.Value] = product;
+                    }
                 }
-
 
             }
 
@@ -243,21 +248,36 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         public override ExecutionResult Run(IStepExecutionContext context)
         {
             Result = new SafetyStockResult { ProductId = ProductId };
- 
-            logger.Error($"CalculateSafetyStock：{ProductId}");
 
-            ISqlSugarClient sugarScope = Startup.GetFromFac<ISqlSugarClient>();
-            // 获取产品信息和当前库存
-            using (var db = sugarScope)
+            //logger.Error($"CalculateSafetyStock：{ProductId}");
+
+            //ISqlSugarClient sugarScope = Startup.GetFromFac<ISqlSugarClient>();
+            //// 获取产品信息和当前库存
+            //using (var db = sugarScope)
+            //{
+            //    var product = db.Queryable<View_Inventory>().First(p => p.ProdDetailID == ProductId);
+            //    if (product != null)
+            //    {
+            //        Result.ProductName = product.CNName;
+            //    }
+
+            //    // 获取当前库存
+            //    Result.CurrentStock = product?.Quantity ?? 0;
+            //}
+
+            // === 从缓存获取产品信息 ===
+            if ((context.Workflow.Data as SafetyStockData).ProductInfoCache.TryGetValue(
+                ProductId,
+                out View_Inventory product))
             {
-                var product = db.Queryable<View_Inventory>().First(p => p.ProdDetailID == ProductId);
-                if (product != null)
-                {
-                    Result.ProductName = product.CNName;
-                }
-
-                // 获取当前库存
-                Result.CurrentStock = product.Quantity.Value;
+                Result.ProductName = product.CNName;
+                Result.CurrentStock = product?.Quantity ?? 0;
+            }
+            else
+            {
+                // 缓存中找不到的备选方案
+                Result.ProductName = "未知产品";
+                Result.CurrentStock = 0;
             }
 
             // 计算日均需求量
@@ -274,7 +294,10 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                     double sumOfSquares = SalesData.Sum(d => Math.Pow((double)(d.Quantity - Result.AverageDailyDemand), 2));
                     Result.DemandStandardDeviation = (decimal)Math.Sqrt(sumOfSquares / (SalesData.Count - 1));
                 }
-
+                else
+                {
+                    Result.DemandStandardDeviation = 0;
+                }
                 // 计算安全库存 = 服务水平系数 × 需求标准差 × √采购提前期
                 Result.SafetyStockLevel = (decimal)(ServiceLevelFactor
                     * (double)Result.DemandStandardDeviation
@@ -286,7 +309,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                     ? $"产品 {Result.ProductName} 库存不足，当前库存: {Result.CurrentStock}, 安全库存: {Result.SafetyStockLevel}"
                     : $"产品 {Result.ProductName} 库存正常，当前库存: {Result.CurrentStock}, 安全库存: {Result.SafetyStockLevel}";
 
-                logger.Error($"结果{Result.ProductId }{Result.Message}");
+                logger.Error($"结果{Result.ProductId}{Result.Message}");
             }
             else
             {
@@ -303,16 +326,16 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
     /// </summary>
     public class SendAlertNotification : StepBodyAsync
     {
-        private readonly IConnectionMultiplexer _redis;
-        private readonly ICacheManager<object> _cache;
+        //private readonly IConnectionMultiplexer _redis;
+        //private readonly ICacheManager<object> _cache;
 
         public SafetyStockResult Result { get; set; }
 
-        public SendAlertNotification(IConnectionMultiplexer redis, ICacheManager<object> cache)
-        {
-            _redis = redis;
-            _cache = cache;
-        }
+        //public SendAlertNotification(IConnectionMultiplexer redis, ICacheManager<object> cache)
+        //{
+        //    _redis = redis;
+        //    _cache = cache;
+        //}
 
         public override async Task<ExecutionResult> RunAsync(IStepExecutionContext context)
         {
@@ -360,6 +383,8 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
 
     /// <summary>
     /// 定期根据规则去检测安全库存的参数这个周期较长，
+    /// 默认是90天,当前工作流是先计算安全库存，然后发送提醒，然后更新数据库。
+    /// 安全库存会保存到数据库中，下次启动时从数据库中读取，只进行检测，不进行计算。
     /// </summary>
     public class SafetyStockWorkflow : IWorkflow<SafetyStockData>
     {
@@ -402,14 +427,13 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
 
                         // 保存结果到字典
                         .Then<SaveResultToDictionaryStep>()
-                            .Input(step => step.ProductId, data => data.TempProductId)
+                            //.Input(step => step.ProductId, data => data.TempProductId)
                             .Input(step => step.ProductId, (data, context) => (long)context.Item)
                             .Input(step => step.Result, data => data.CurrentResult)
                             .Input(step => step.ResultsDictionary, data => data.Results)
-                            .Output(data => data.Results, step => step.UpdatedResultsDictionary)
                     // 发送提醒
-                    //.Then<SendAlertNotification>()
-                    //    .Input(step => step.Result, data => data.CurrentResult)
+                      .Then<SendAlertNotification>()
+                          .Input(step => step.Result, data => data.CurrentResult)
                     )
 
                 // 完成处理
@@ -434,16 +458,15 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         public long ProductId { get; set; }
         public SafetyStockResult Result { get; set; }
         public Dictionary<long, SafetyStockResult> ResultsDictionary { get; set; }
-        public Dictionary<long, SafetyStockResult> UpdatedResultsDictionary { get; set; }
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-          //  logger.Error($"SaveResultToDictionaryStep：{ProductId}");
-            if (UpdatedResultsDictionary == null)
-                UpdatedResultsDictionary = ResultsDictionary ?? new Dictionary<long, SafetyStockResult>();
+            if (ResultsDictionary == null)
+                ResultsDictionary = new Dictionary<long, SafetyStockResult>();
 
             if (Result != null)
-                UpdatedResultsDictionary[ProductId] = Result;
+                ResultsDictionary[ProductId] = Result;
+
 
             return ExecutionResult.Next();
         }

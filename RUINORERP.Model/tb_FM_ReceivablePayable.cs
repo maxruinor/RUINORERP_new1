@@ -165,6 +165,7 @@ namespace RUINORERP.Model
                         }
         }
 
+
         private string _PlatformOrderNo;
         /// <summary>
         /// 平台单号
@@ -221,6 +222,20 @@ namespace RUINORERP.Model
             set{
             SetProperty(ref _PayeeAccountNo, value);
                         }
+        }
+        private bool? _IsForCommission;
+        /// <summary>
+        /// 用于佣金
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsForCommission", ColDesc = "用于佣金")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsForCommission", IsNullable = true, ColumnDescription = "用于佣金")]
+        public bool? IsForCommission
+        {
+            get { return _IsForCommission; }
+            set
+            {
+                SetProperty(ref _IsForCommission, value);
+            }
         }
 
         private decimal _ExchangeRate= ((1));

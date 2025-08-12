@@ -151,7 +151,7 @@ namespace RUINORERP.UI.FM
         public ReceivePaymentType PaymentType { get; set; }
 
         //草稿 → 已审核 → 部分生效 → 全部生效 或 草稿 → 已冲销
-        public override void BindData(tb_FM_PaymentRecord entity, ActionStatus actionStatus = ActionStatus.无操作)
+        public override async void BindData(tb_FM_PaymentRecord entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             EditEntity = entity;
             if (entity == null)
@@ -159,7 +159,7 @@ namespace RUINORERP.UI.FM
                 return;
             }
             txtApprovalOpinions.ReadOnly = true;
-            
+
             if (entity.PaymentId > 0)
             {
                 entity.PrimaryKeyID = entity.PaymentId;
@@ -179,10 +179,14 @@ namespace RUINORERP.UI.FM
                     if (PaymentType == ReceivePaymentType.付款)
                     {
                         entity.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+                        chkIsForCommission.Visible = true;
+                        chkIsFromPlatform.Visible = false;
                     }
                     else
                     {
                         entity.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+                        chkIsForCommission.Visible = false;
+                        chkIsFromPlatform.Visible = true;
                     }
                 }
 
@@ -201,6 +205,7 @@ namespace RUINORERP.UI.FM
 
             }
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
+            DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsForCommission, chkIsForCommission, false);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
 
@@ -239,7 +244,7 @@ namespace RUINORERP.UI.FM
             {
                 sgh.LoadItemDataToGrid<tb_FM_PaymentRecordDetail>(grid1, sgd, new List<tb_FM_PaymentRecordDetail>(), c => c.PaymentDetailId);
             }
-            if (entity.ReceivePaymentType == (long)ReceivePaymentType.收款)
+            if (entity.ReceivePaymentType == (long)ReceivePaymentType.收款 || entity.IsForCommission.GetValueOrDefault())
             {
                 //收客户的款
                 var lambda = Expressionable.Create<tb_CustomerVendor>()
@@ -377,7 +382,7 @@ namespace RUINORERP.UI.FM
             }
 
             //显示图片
-            LoadImageData(entity.PaymentImagePath);
+            await LoadImageData(entity.PaymentImagePath);
             base.BindData(entity);
         }
 
@@ -457,7 +462,7 @@ namespace RUINORERP.UI.FM
 
                 }
             }
-          await  base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
 

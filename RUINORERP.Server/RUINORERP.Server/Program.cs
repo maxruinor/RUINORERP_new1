@@ -36,6 +36,9 @@ using SuperSocket.Server.Host;
 using RUINORERP.Server.Comm;
 using Mapster;
 using RUINORERP.Server.SmartReminder;
+using WorkflowCore.Services;
+using Autofac;
+using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
 
 namespace RUINORERP.Server
 {
@@ -98,7 +101,7 @@ namespace RUINORERP.Server
             }
         }
 
-        static void StartServerUI()
+        static async void StartServerUI()
         {
 
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
@@ -162,6 +165,10 @@ namespace RUINORERP.Server
                     var json = System.IO.File.ReadAllText(jsonpath);
                     loader.LoadDefinition(json, Deserializers.Json);
 
+
+                    await SafetyStockWorkflowConfig.ScheduleDailySafetyStockCalculation(host);
+
+
                     // 如果host启动了，不能再次启动，但没有判断方法
                     if (!serviceStarted)
                     {
@@ -175,13 +182,13 @@ namespace RUINORERP.Server
                     //Task.Run(() => reminderService.RunSystemAsync());
 
 
-            
-
                     // 启动workflow工作流
                     // host.StartWorkflow("HelloWorkflow", 1, data: null); //
                     //host.StartWorkflow("HelloWorkflow");//, 2, data: null, 默认会启用版本高的
 
                     #endregion
+
+            
 
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
 

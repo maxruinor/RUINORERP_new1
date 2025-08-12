@@ -5,6 +5,7 @@ using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Server.Comm;
+using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
 using RUINORERP.Server.Workflow;
 using RUINORERP.Server.Workflow.Steps;
 using RUINORERP.Server.Workflow.WFApproval;
@@ -167,7 +168,7 @@ namespace RUINORERP.Server
         {
             //启动提醒工作流
             ReminderData data = new ReminderData();
-            
+
             //data.BizKey = "华哥";
             //var workflowId = Program.WorkflowHost.StartWorkflow("PushBaseInfoWorkflow", data);
             //MessageBox.Show("start push：" + workflowId);
@@ -175,6 +176,12 @@ namespace RUINORERP.Server
             //三个参数是 ID名，版本号，数据对象
             var workflowId = await host.StartWorkflow("ReminderWorkflow", 1, data);
 
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            // 执行工作流
+             host.StartWorkflow<SafetyStockData>("SafetyStockWorkflow", new SafetyStockData());
         }
     }
 }

@@ -1405,7 +1405,7 @@ namespace RUINORERP.Business
             paymentRecord.Modified_at = null;
             paymentRecord.Modified_by = null;
             paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
-
+            paymentRecord.IsForCommission=entities[0].IsForCommission;
 
             List<tb_FM_PaymentRecordDetail> details = mapper.Map<List<tb_FM_PaymentRecordDetail>>(entities);
             List<tb_FM_PaymentRecordDetail> NewDetails = new List<tb_FM_PaymentRecordDetail>();

@@ -228,11 +228,15 @@ namespace RUINORERP.UI.FM
                     if (PaymentType == ReceivePaymentType.收款)
                     {
                         entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
+                        chkIsForCommission.Visible = false;
+                        chkIsFromPlatform.Visible = true;
 
                     }
                     else
                     {
                         entity.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+                        chkIsForCommission.Visible = true;
+                        chkIsFromPlatform.Visible = false;
                     }
                 }
 
@@ -260,6 +264,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.LocalBalanceAmount.ToString(), txtLocalBalanceAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.ShippingFee.ToString(), txtShippingFee, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsForCommission, chkIsForCommission, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             // DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
@@ -286,7 +291,7 @@ namespace RUINORERP.UI.FM
             ShowPrintStatus(lblPrintStatus, entity);
 
 
-            if (PaymentType == ReceivePaymentType.收款)
+            if (PaymentType == ReceivePaymentType.收款 || entity.IsForCommission.GetValueOrDefault())
             {
                 //创建表达式
                 var lambda = Expressionable.Create<tb_CustomerVendor>()

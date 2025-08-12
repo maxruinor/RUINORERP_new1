@@ -64,6 +64,8 @@ using RUINORERP.Server.SmartReminder.ReminderRuleStrategy;
 using Newtonsoft.Json;
 using RUINORERP.Model.Base;
 using RUINORERP.Business.CommService;
+using System.Runtime.InteropServices.JavaScript;
+using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
 
 namespace RUINORERP.Server
 {
@@ -377,7 +379,7 @@ namespace RUINORERP.Server
             .ConfigureServices((context, services) =>
             {
                 services.AddAutofac();
-
+                SafetyStockWorkflowConfig.RegisterWorkflow(services);
                 //services.AddLogging(configure => configure.AddLog4Net());
 
                 //services.AddTransient<Business.UseCsla.Itb_LocationTypeDal, Business.UseCsla.tb_LocationTypeDal>();

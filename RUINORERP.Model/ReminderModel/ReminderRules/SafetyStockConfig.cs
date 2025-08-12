@@ -79,10 +79,10 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
             }
 
             // 补货数量验证
-            if (ReorderQuantity <= 0)
-            {
-                result.AddError("补货数量必须大于0");
-            }
+            //if (ReorderQuantity <= 0)
+            //{
+            //    result.AddError("补货数量必须大于0");
+            //}
 
             // 检测频率特殊验证（安全库存检查建议不低于30分钟）
             if (CheckIntervalByMinutes > 0 && CheckIntervalByMinutes < 30)

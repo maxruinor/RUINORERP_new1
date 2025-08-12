@@ -42,6 +42,8 @@
             this.lb作用对象列表 = new Krypton.Toolkit.KryptonLabel();
             this.lblMinStock = new Krypton.Toolkit.KryptonLabel();
             this.txtMinStock = new Krypton.Toolkit.KryptonTextBox();
+            this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonTextBox1 = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -67,6 +69,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel3);
+            this.kryptonPanel1.Controls.Add(this.kryptonTextBox1);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
             this.kryptonPanel1.Controls.Add(this.txtCheckIntervalByMinutes);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
@@ -170,6 +174,21 @@
             this.txtMinStock.Size = new System.Drawing.Size(97, 23);
             this.txtMinStock.TabIndex = 18;
             // 
+            // kryptonLabel3
+            // 
+            this.kryptonLabel3.Location = new System.Drawing.Point(452, 256);
+            this.kryptonLabel3.Name = "kryptonLabel3";
+            this.kryptonLabel3.Size = new System.Drawing.Size(75, 20);
+            this.kryptonLabel3.TabIndex = 58;
+            this.kryptonLabel3.Values.Text = "最小库存量";
+            // 
+            // kryptonTextBox1
+            // 
+            this.kryptonTextBox1.Location = new System.Drawing.Point(537, 253);
+            this.kryptonTextBox1.Name = "kryptonTextBox1";
+            this.kryptonTextBox1.Size = new System.Drawing.Size(97, 23);
+            this.kryptonTextBox1.TabIndex = 59;
+            // 
             // UCSafetyStockConfigEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -202,5 +221,7 @@
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
         private Krypton.Toolkit.KryptonTextBox txtCheckIntervalByMinutes;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel3;
+        private Krypton.Toolkit.KryptonTextBox kryptonTextBox1;
     }
 }

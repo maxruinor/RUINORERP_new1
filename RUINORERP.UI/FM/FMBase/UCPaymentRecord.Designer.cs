@@ -32,6 +32,8 @@ namespace RUINORERP.UI.FM
             {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblReimburser = new Krypton.Toolkit.KryptonLabel();
+            this.cmbReimburser = new Krypton.Toolkit.KryptonComboBox();
             this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
             this.cmbPaytype_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblPaytype_ID = new Krypton.Toolkit.KryptonLabel();
@@ -74,8 +76,7 @@ namespace RUINORERP.UI.FM
             this.lblTotalLocalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalForeignAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.lblReimburser = new Krypton.Toolkit.KryptonLabel();
-            this.cmbReimburser = new Krypton.Toolkit.KryptonComboBox();
+            this.chkIsForCommission = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -86,6 +87,7 @@ namespace RUINORERP.UI.FM
             this.kryptonSplitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbReimburser)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).BeginInit();
@@ -98,7 +100,6 @@ namespace RUINORERP.UI.FM
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbReimburser)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -122,6 +123,7 @@ namespace RUINORERP.UI.FM
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkIsForCommission);
             this.kryptonPanel1.Controls.Add(this.lblReimburser);
             this.kryptonPanel1.Controls.Add(this.cmbReimburser);
             this.kryptonPanel1.Controls.Add(this.chkIsFromPlatform);
@@ -165,6 +167,23 @@ namespace RUINORERP.UI.FM
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(1133, 251);
             this.kryptonPanel1.TabIndex = 4;
+            // 
+            // lblReimburser
+            // 
+            this.lblReimburser.Location = new System.Drawing.Point(521, 109);
+            this.lblReimburser.Name = "lblReimburser";
+            this.lblReimburser.Size = new System.Drawing.Size(62, 20);
+            this.lblReimburser.TabIndex = 228;
+            this.lblReimburser.Values.Text = "报销人员";
+            // 
+            // cmbReimburser
+            // 
+            this.cmbReimburser.DropDownWidth = 100;
+            this.cmbReimburser.IntegralHeight = false;
+            this.cmbReimburser.Location = new System.Drawing.Point(588, 110);
+            this.cmbReimburser.Name = "cmbReimburser";
+            this.cmbReimburser.Size = new System.Drawing.Size(135, 21);
+            this.cmbReimburser.TabIndex = 227;
             // 
             // chkIsFromPlatform
             // 
@@ -535,22 +554,13 @@ namespace RUINORERP.UI.FM
             this.lblTotalForeignAmount.TabIndex = 202;
             this.lblTotalForeignAmount.Values.Text = "支付金额外币";
             // 
-            // lblReimburser
+            // chkIsForCommission
             // 
-            this.lblReimburser.Location = new System.Drawing.Point(521, 109);
-            this.lblReimburser.Name = "lblReimburser";
-            this.lblReimburser.Size = new System.Drawing.Size(62, 20);
-            this.lblReimburser.TabIndex = 228;
-            this.lblReimburser.Values.Text = "报销人员";
-            // 
-            // cmbReimburser
-            // 
-            this.cmbReimburser.DropDownWidth = 100;
-            this.cmbReimburser.IntegralHeight = false;
-            this.cmbReimburser.Location = new System.Drawing.Point(588, 110);
-            this.cmbReimburser.Name = "cmbReimburser";
-            this.cmbReimburser.Size = new System.Drawing.Size(135, 21);
-            this.cmbReimburser.TabIndex = 227;
+            this.chkIsForCommission.Location = new System.Drawing.Point(731, 109);
+            this.chkIsForCommission.Name = "chkIsForCommission";
+            this.chkIsForCommission.Size = new System.Drawing.Size(75, 20);
+            this.chkIsForCommission.TabIndex = 232;
+            this.chkIsForCommission.Values.Text = "用于佣金";
             // 
             // UCPaymentRecord
             // 
@@ -572,6 +582,7 @@ namespace RUINORERP.UI.FM
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbReimburser)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendor_ID)).EndInit();
@@ -585,7 +596,6 @@ namespace RUINORERP.UI.FM
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cmbReimburser)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -641,5 +651,6 @@ namespace RUINORERP.UI.FM
         private Krypton.Toolkit.KryptonCheckBox chkIsFromPlatform;
         private Krypton.Toolkit.KryptonLabel lblReimburser;
         private Krypton.Toolkit.KryptonComboBox cmbReimburser;
+        private Krypton.Toolkit.KryptonCheckBox chkIsForCommission;
     }
     }

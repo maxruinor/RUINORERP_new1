@@ -48,6 +48,7 @@ namespace RUINORERP.Business.Processor
             //可以根据关联外键自动加载条件，条件用公共虚方法
 
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.IsFromPlatform);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.IsForCommission);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.PlatformOrderNo);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Currency_ID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.DepartmentID);

@@ -181,6 +181,9 @@ namespace RUINORERP.Model
                         }
         }
 
+       
+
+
         private long _Currency_ID;
         /// <summary>
         /// 币别
@@ -308,7 +311,20 @@ namespace RUINORERP.Model
             SetProperty(ref _ReferenceNo, value);
                         }
         }
-
+        private bool? _IsForCommission;
+        /// <summary>
+        /// 用于佣金
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsForCommission", ColDesc = "用于佣金")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsForCommission", IsNullable = true, ColumnDescription = "用于佣金")]
+        public bool? IsForCommission
+        {
+            get { return _IsForCommission; }
+            set
+            {
+                SetProperty(ref _IsForCommission, value);
+            }
+        }
         private bool _IsReversed= false;
         /// <summary>
         /// 是否冲销

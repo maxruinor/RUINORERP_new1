@@ -205,7 +205,7 @@ namespace RUINORERP.Server
             if (e.ClickedItem.Text == "工作流测试")
             {
                 frmWorkFlowManage frm = Startup.GetFromFac<frmWorkFlowManage>();
-                frm.MdiParent = this;
+                //frm.MdiParent = this;
                 frm.Show();
                 frm.Activate();
             }

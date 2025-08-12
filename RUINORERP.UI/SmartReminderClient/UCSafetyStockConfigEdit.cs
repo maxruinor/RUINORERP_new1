@@ -101,7 +101,7 @@ namespace RUINORERP.UI.SmartReminderClient
                 var result = stockConfig.Validate();
                 if (!result.IsValid)
                 {
-                    MessageBox.Show($"错误：{result.GetCombinedErrors()}", "验证失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"错误:\r\n{result.GetCombinedErrors()}", "验证失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 else
                 {

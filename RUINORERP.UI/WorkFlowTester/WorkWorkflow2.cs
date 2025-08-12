@@ -11,7 +11,6 @@ namespace RUINORERP.UI.WorkFlowTester
 
         public void Build(IWorkflowBuilder<MyNameClass> builder)
         {
-
             builder
                 .StartWith<NextWorker>()
            .Recur(data => TimeSpan.FromSeconds(5), data => data.Counter > 10)

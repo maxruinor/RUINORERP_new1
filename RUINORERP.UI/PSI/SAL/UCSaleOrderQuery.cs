@@ -98,7 +98,8 @@ namespace RUINORERP.UI.PSI.SAL
         }
         private async void NewSumDataGridView_预收货款(object sender, EventArgs e)
         {
-
+            //金额，付款方式，收款账号，备注，经办人
+            //思路是先输入金额。生成一个单后。再显示出来。让用户可以完善信息。再审核
             try
             {
                 List<tb_SaleOrder> selectlist = GetSelectResult();
@@ -166,7 +167,6 @@ namespace RUINORERP.UI.PSI.SAL
                         if (MessageBox.Show($"针对订单：{SOrder.SOrderNo}，确定收到客户{SOrder.tb_customervendor.CVName}:收到预付款：{inputForm.InputContent}元吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                         {
                             tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                            //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
                             var rs = await ctr.ManualPrePayment(inputForm.InputContent.ObjToDecimal(), SOrder);
                             MenuPowerHelper menuPowerHelper;
                             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -176,8 +176,6 @@ namespace RUINORERP.UI.PSI.SAL
                                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
                             }
                             return;
-
-
                         }
                     }
                 }

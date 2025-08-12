@@ -19,6 +19,8 @@ using RUINORERP.Model;
 using RUINORERP.Global.EnumExt;
 using System.Reflection;
 using RUINORERP.Model.ReminderModel.ReminderRules;
+using RUINORERP.Business.ReminderService;
+using RUINORERP.Model.ReminderModel.ReminderResults;
 
 namespace RUINORERP.Server.SmartReminder
 {
@@ -26,7 +28,9 @@ namespace RUINORERP.Server.SmartReminder
     {
         Task<bool> EvaluateAsync(IReminderRule rule, object context);
     }
-    /*
+
+
+
     public class RuleEngineCenter : IRuleEngineCenter
     {
         private readonly RulesEngine.RulesEngine _reEngine;
@@ -34,11 +38,15 @@ namespace RUINORERP.Server.SmartReminder
         public readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly ApplicationContext _appContext;
         private readonly ILogger<SmartReminderMonitor> _logger;
-        public RuleEngineCenter(ILogger<SmartReminderMonitor> logger, ApplicationContext _AppContextData, IUnitOfWorkManage unitOfWorkManage)
+        private readonly ReminderResultManager _resultManager;
+
+        public RuleEngineCenter(ILogger<SmartReminderMonitor> logger, ApplicationContext _AppContextData,
+            IUnitOfWorkManage unitOfWorkManage, ReminderResultManager resultManager)
         {
             _logger = logger;
             _appContext = _AppContextData;
             _unitOfWorkManage = unitOfWorkManage;
+            _resultManager = resultManager;
             // 初始化RulesEngine
             //var workflows = LoadWorkflowsFromDb();
             //_reEngine = new RulesEngine.RulesEngine(workflows.ToArray());
@@ -66,6 +74,68 @@ namespace RUINORERP.Server.SmartReminder
             };
         }
 
+
+        public void EvaluateAndAddResult(IReminderRule rule, object context)
+        {
+            IReminderResult result = null;
+            var ReminderBizType = (ReminderBizType)rule.ReminderBizType;
+            switch (ReminderBizType)
+            {
+                case ReminderBizType.安全库存提醒:
+                    var stockContext = context as InventoryContext;
+                    List<tb_Inventory> inventories = stockContext.GetData() as List<tb_Inventory>;
+                    for (int i = 0; i < inventories.Count; i++)
+                    {
+                        var tb_Inventory = inventories[i];
+
+
+
+                        //if (tb_Inventory.Quantity < tb_Inventory.MinStock)
+                        //{
+                        //    result = new SafetyStockResult
+                        //    {
+                        //        RuleId = rule.RuleId,
+                        //        ProductName = stockContext.ProductName,
+                        //        SKU = stockContext.SKU,
+                        //        CurrentStock = stockContext.CurrentStock,
+                        //        MinStock = stockContext.MinStock,
+                        //        MaxStock = stockContext.MaxStock,
+                        //        RecommendedQuantity = stockContext.MaxStock - stockContext.CurrentStock,
+                        //        Unit = stockContext.Unit
+                        //    };
+                        //}
+                    }
+                   
+                    break;
+
+                case ReminderBizType.单据审批提醒:
+                    //var docContext = context as DocumentContext;
+                    //if (docContext.Status == DocumentStatus.PendingApproval)
+                    //{
+                    //    result = new DocumentApprovalResult
+                    //    {
+                    //        RuleId = rule.RuleId,
+                    //        DocumentType = docContext.DocumentType,
+                    //        DocumentNumber = docContext.DocumentNumber,
+                    //        DocumentStatus = docContext.Status.ToString(),
+                    //        Creator = docContext.Creator,
+                    //        CreateTime = docContext.CreateTime,
+                    //        ApprovalAction = "审批",
+                    //        DocumentLink = docContext.Link
+                    //    };
+                    //}
+                    break;
+
+                    // 其他业务类型...
+            }
+
+            if (result != null)
+            {
+                _resultManager.AddResult(result);
+            }
+        }
+
+
         private async Task<bool> EvaluateWithRulesEngine(IReminderRule rule, object context)
         {
             var result = await _reEngine.ExecuteAllRulesAsync(rule.RuleEngineType.ToString(), context);
@@ -76,19 +146,16 @@ namespace RUINORERP.Server.SmartReminder
         {
             if (!_roslynCache.TryGetValue(rule.RuleId.ToString(), out var runner))
             {
-                var scriptOptions = ScriptOptions.Default
-                .AddReferences(Assembly.GetExecutingAssembly())
-                .AddImports("System");
+                //var scriptOptions = ScriptOptions.Default
+                //.AddReferences(Assembly.GetExecutingAssembly())
+                //.AddImports("System");
 
-                var script = CSharpScript.Create<bool>(rule.Condition,
-                    options: scriptOptions,
-                    globalsType: typeof(RuleGlobals<>).MakeGenericType(context.GetType()));
+                //var script = CSharpScript.Create<bool>(rule.Condition,
+                //    options: scriptOptions,
+                //    globalsType: typeof(RuleGlobals<>).MakeGenericType(context.GetType()));
 
-     
-              
-
-                runner = script.CreateDelegate();
-                _roslynCache.TryAdd(rule.RuleId.ToString(), runner);
+                //runner = script.CreateDelegate();
+                //_roslynCache.TryAdd(rule.RuleId.ToString(), runner);
             }
 
             var globals = Activator.CreateInstance(typeof(RuleGlobals<>)
@@ -97,7 +164,7 @@ namespace RUINORERP.Server.SmartReminder
             return await runner(globals);
         }
     }
-    **/
+
     public class RuleGlobals<T>
     {
         public T Context { get; }

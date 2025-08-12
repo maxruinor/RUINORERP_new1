@@ -56,7 +56,7 @@ namespace RUINORERP.UI.MRP.MP
         {
             if (base.EditEntity is tb_MaterialRequisition MaterialRequisition)
             {
-                if (MaterialRequisition.MOID> 0)
+                if (MaterialRequisition.MOID > 0)
                 {
                     RelatedQueryParameter rqp = new RelatedQueryParameter();
                     rqp.bizType = BizType.制令单;
@@ -92,7 +92,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
             }
-         await   base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
         internal override void LoadDataToUI(object Entity)
         {
@@ -387,6 +387,8 @@ namespace RUINORERP.UI.MRP.MP
             listCols.SetCol_ReadOnly<tb_MaterialRequisitionDetail>(c => c.ShouldSendQty);
             listCols.SetCol_ReadOnly<tb_MaterialRequisitionDetail>(c => c.ReturnQty);
             listCols.SetCol_ReadOnly<tb_MaterialRequisitionDetail>(c => c.Cost);
+            listCols.SetCol_ReadOnly<tb_MaterialRequisitionDetail>(c => c.CanQuantity);
+
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             sgd = new SourceGridDefine(grid1, listCols, true);
@@ -429,8 +431,8 @@ namespace RUINORERP.UI.MRP.MP
             sgh.SetPointToColumnPairs<ProductSharePart, tb_MaterialRequisitionDetail>(sgd, f => f.prop, t => t.property);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_MaterialRequisitionDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             //listCols.SetCol_Formula<tb_MaterialRequisitionDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.SubtotalTaxAmount, d => d.ActualSentQty);
-             listCols.SetCol_Formula<tb_MaterialRequisitionDetail>((a, b) => a.Cost * b.ActualSentQty, c => c.SubtotalCost);
-           
+            listCols.SetCol_Formula<tb_MaterialRequisitionDetail>((a, b) => a.Cost * b.ActualSentQty, c => c.SubtotalCost);
+
 
             //应该只提供一个结构
             List<tb_MaterialRequisitionDetail> lines = new List<tb_MaterialRequisitionDetail>();
@@ -444,7 +446,7 @@ namespace RUINORERP.UI.MRP.MP
             sgh.InitGrid(grid1, sgd, true, nameof(tb_MaterialRequisitionDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
 
@@ -460,7 +462,7 @@ namespace RUINORERP.UI.MRP.MP
             if (RowDetails != null)
             {
                 List<tb_MaterialRequisitionDetail> details = new List<tb_MaterialRequisitionDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_MaterialRequisitionDetail Detail = MainForm.Instance.mapper.Map<tb_MaterialRequisitionDetail>(item);
@@ -680,7 +682,7 @@ namespace RUINORERP.UI.MRP.MP
             //新增时才可以转单
             if (SourceBill != null)
             {
-                
+
                 tb_MaterialRequisition entity = MainForm.Instance.mapper.Map<tb_MaterialRequisition>(SourceBill);
                 List<tb_MaterialRequisitionDetail> details = MainForm.Instance.mapper.Map<List<tb_MaterialRequisitionDetail>>(SourceBill.tb_ManufacturingOrderDetails);
                 entity.DeliveryDate = System.DateTime.Now;
@@ -689,7 +691,29 @@ namespace RUINORERP.UI.MRP.MP
                 for (global::System.Int32 i = 0; i < details.Count; i++)
                 {
                     tb_ManufacturingOrderDetail _SourceBillDetail = SourceBill.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID && c.Location_ID == details[i].Location_ID);
-                    details[i].ShouldSendQty = (_SourceBillDetail.ShouldSendQty + _SourceBillDetail.WastageQty - _SourceBillDetail.ActualSentQty).ToInt();
+
+                    // 计算应发数量：应发数量 = 应发送数量 + 损耗数量 - 已实际发送数量
+                    decimal shouldQty = _SourceBillDetail.ShouldSendQty + _SourceBillDetail.WastageQty - _SourceBillDetail.ActualSentQty;
+
+                    // 处理数量规则：
+                    // - 等于0时保持0不变
+                    // - 大于0且小于1时设为1
+                    // - 大于等于1时向上取整（如1.1取2，2.0保持2）
+                    if (shouldQty == 0)
+                    {
+                        // 保持0不变
+                    }
+                    else if (shouldQty < 1)
+                    {
+                        shouldQty = 1;
+                    }
+                    else
+                    {
+                        // 对decimal类型使用Math.Ceiling需要先转换为double，再转回decimal
+                        shouldQty = (decimal)Math.Ceiling((double)shouldQty);
+                    }
+                    // 可以在这里添加赋值操作，将计算结果赋给需要的属性
+                    details[i].ShouldSendQty = shouldQty.ToInt();
                     var inv = _SourceBillDetail.tb_proddetail.tb_Inventories.FirstOrDefault(c => c.Location_ID == details[i].Location_ID);
                     if (inv != null)
                     {

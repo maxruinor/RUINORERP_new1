@@ -1219,7 +1219,7 @@ namespace RUINORERP.Business
                                                 await _unitOfWorkManage.GetDbClient().Updateable(saleout).UpdateColumns(it => new { it.PayStatus, }).ExecuteCommandAsync();
                                             }
                                         }
-                                        
+
                                     }
 
                                     //要验证
@@ -1847,7 +1847,7 @@ namespace RUINORERP.Business
             payable.ApprovalOpinions = "";
             payable.Modified_at = null;
             payable.Modified_by = null;
-
+            payable.IsForCommission = IsProcessCommission;
             if (entity.tb_saleorder != null)
             {
                 payable.Account_id = entity.tb_saleorder.Account_id;
@@ -1926,13 +1926,29 @@ namespace RUINORERP.Business
                 var olditem = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
                 if (olditem != null)
                 {
-                    details[i].TaxRate = olditem.TaxRate;
-                    details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
-                    details[i].Quantity = olditem.Quantity;
-                    details[i].UnitPrice = olditem.TransactionPrice;
-                    details[i].LocalPayableAmount = olditem.TransactionPrice * olditem.Quantity;
-                    //下面有专门的一行运费。这里加上去不明了，会导致误会。如果生成对账单的话。
-                    //details[i].LocalPayableAmount+= olditem.AllocatedFreightIncome;
+                    if (IsProcessCommission)
+                    {
+                        //佣金应付
+                        details[i].TaxRate = olditem.TaxRate;
+                        details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
+                        details[i].Quantity = olditem.Quantity;
+                        details[i].UnitPrice = olditem.UnitCommissionAmount;
+                        details[i].LocalPayableAmount = olditem.CommissionAmount;
+                        //下面有专门的一行运费。这里加上去不明了，会导致误会。如果生成对账单的话。
+                        //details[i].LocalPayableAmount+= olditem.AllocatedFreightIncome;
+                    }
+                    else
+                    {
+                        //正常应收
+                        details[i].TaxRate = olditem.TaxRate;
+                        details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
+                        details[i].Quantity = olditem.Quantity;
+                        details[i].UnitPrice = olditem.TransactionPrice;
+                        details[i].LocalPayableAmount = olditem.TransactionPrice * olditem.Quantity;
+                        //下面有专门的一行运费。这里加上去不明了，会导致误会。如果生成对账单的话。
+                        //details[i].LocalPayableAmount+= olditem.AllocatedFreightIncome;
+                    }
+
                 }
 
                 details[i].ExchangeRate = entity.ExchangeRate;
@@ -1951,30 +1967,25 @@ namespace RUINORERP.Business
             #endregion
 
             payable.tb_FM_ReceivablePayableDetails = details;
-            ////如果是外币时，则由外币算出本币
-            //if (isRefund)
-            //{
-            //    //为负数，退款时设置为负数。退货，出库反审？
-            //    entity.ForeignTotalAmount = -entity.ForeignTotalAmount;
-            //    entity.TotalAmount = -entity.TotalAmount;
-            //}
+            payable.TotalLocalPayableAmount = payable.tb_FM_ReceivablePayableDetails.Sum(c => c.LocalPayableAmount) + payable.ShippingFee;
+
+            //本币时
+            payable.LocalBalanceAmount = payable.TotalLocalPayableAmount;
+            payable.LocalPaidAmount = 0;
 
             //这里要重点思考 是本币一定有。！！！！！！！！！！！！！！！！！ TODO by watson
             //外币时  只是换算。本币不能少。
+            //暂时外布没有严格的逻辑核对
             if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
             {
-                payable.ForeignBalanceAmount = entity.ForeignTotalAmount;
+                payable.TotalForeignPayableAmount = payable.TotalLocalPayableAmount * payable.ExchangeRate;
+                payable.ForeignBalanceAmount = payable.TotalForeignPayableAmount;
                 payable.ForeignPaidAmount = 0;
-                payable.TotalForeignPayableAmount = entity.ForeignTotalAmount;
             }
 
-            //本币时
-            payable.LocalBalanceAmount = entity.TotalAmount;
-            payable.LocalPaidAmount = 0;
-            payable.TotalLocalPayableAmount = entity.TotalAmount;
             if (IsProcessCommission)
             {
-                payable.Remark = $"由销售出库单：{entity.SaleOutNo}【佣金】生成的应收款单";
+                payable.Remark = $"由销售出库单：{entity.SaleOutNo}【佣金】生成的应付款单";
             }
             else
             {

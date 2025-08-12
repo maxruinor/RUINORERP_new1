@@ -291,7 +291,7 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 手动生成预付款单
+        /// 手动生成预付款单，需要手工审核
         /// </summary>
         /// <param name="PrepaidAmount">本次预付金额</param>
         /// <param name="entity">对应的订单</param>
@@ -376,7 +376,6 @@ namespace RUINORERP.Business
                     ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
                     if (!rmpay.Succeeded)
                     {
-
                         // 处理预收款单生成失败的情况
                         rmrs.Succeeded = false;
                         _unitOfWorkManage.RollbackTran();
@@ -389,6 +388,9 @@ namespace RUINORERP.Business
                     else
                     {
                         rmrs.ReturnObject = rmpay.ReturnObject;
+
+                        //为了再次收款，让业务员 能修改完善如：备注  收款方式等信息，这里不自动审核。需要人工审核。
+                        /*
                         if (_appContext.FMConfig.AutoAuditPreReceive)
                         {
                             #region 自动审核预收款
@@ -415,6 +417,7 @@ namespace RUINORERP.Business
                             }
                             #endregion
                         }
+                        */
                     }
                 }
 

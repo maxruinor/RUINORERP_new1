@@ -89,6 +89,7 @@
             this.lblLocalPaidAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtLocalBalanceAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblLocalBalanceAmount = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsForCommission = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -136,6 +137,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkIsForCommission);
             this.kryptonPanel1.Controls.Add(this.txtPlatformOrderNo);
             this.kryptonPanel1.Controls.Add(this.lblPlatformOrderNo);
             this.kryptonPanel1.Controls.Add(this.chkIsExpenseType);
@@ -204,7 +206,7 @@
             // 
             // chkIsExpenseType
             // 
-            this.chkIsExpenseType.Location = new System.Drawing.Point(81, 159);
+            this.chkIsExpenseType.Location = new System.Drawing.Point(81, 160);
             this.chkIsExpenseType.Name = "chkIsExpenseType";
             this.chkIsExpenseType.Size = new System.Drawing.Size(75, 20);
             this.chkIsExpenseType.TabIndex = 228;
@@ -699,6 +701,14 @@
             this.lblLocalBalanceAmount.TabIndex = 206;
             this.lblLocalBalanceAmount.Values.Text = "未核销本币";
             // 
+            // chkIsForCommission
+            // 
+            this.chkIsForCommission.Location = new System.Drawing.Point(389, 160);
+            this.chkIsForCommission.Name = "chkIsForCommission";
+            this.chkIsForCommission.Size = new System.Drawing.Size(75, 20);
+            this.chkIsForCommission.TabIndex = 231;
+            this.chkIsForCommission.Values.Text = "用于佣金";
+            // 
             // UCReceivablePayable
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -802,5 +812,6 @@
         private Krypton.Toolkit.KryptonCheckBox chkIsExpenseType;
         private Krypton.Toolkit.KryptonTextBox txtPlatformOrderNo;
         private Krypton.Toolkit.KryptonLabel lblPlatformOrderNo;
+        private Krypton.Toolkit.KryptonCheckBox chkIsForCommission;
     }
 }

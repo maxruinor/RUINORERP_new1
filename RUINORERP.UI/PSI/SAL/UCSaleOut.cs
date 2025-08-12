@@ -238,7 +238,14 @@ namespace RUINORERP.UI.PSI.SAL
                     foreach (var item in receivablePayables)
                     {
                         var rqp = new Model.CommonModel.RelatedQueryParameter();
-                        rqp.bizType = BizType.应收款单;
+                        if (item.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                        {
+                            rqp.bizType = BizType.应付款单;
+                        }
+                        else
+                        {
+                            rqp.bizType = BizType.应收款单;
+                        }
                         rqp.billId = item.ARAPId;
                         ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
                         RelatedMenuItem.Name = $"{rqp.billId}";

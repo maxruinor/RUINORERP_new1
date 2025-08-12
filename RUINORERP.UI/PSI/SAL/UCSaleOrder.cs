@@ -1025,12 +1025,6 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 }
                 if (EditEntity.PayStatus == (int)PayStatus.全额预付)
                 {
-                    if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
-                    {
-                        MessageBox.Show("全部预付时，不需要输入订金,系统默认总金额为支付金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return false;
-                    }
-
                     //超付情况时，只是提示
                     if (EditEntity.Deposit > EditEntity.TotalAmount)
                     {

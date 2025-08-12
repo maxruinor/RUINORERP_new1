@@ -31,10 +31,10 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
         {
             var result = new RuleValidationResult();
 
-            // 基础验证逻辑：检测频率必须大于0
-            if (CheckIntervalByMinutes <= 0)
+            // 基础验证逻辑：检测频率必须大于5
+            if (CheckIntervalByMinutes <= 5)
             {
-                result.AddError("检测频率必须大于0分钟");
+                result.AddError("检测频率必须大于5分钟");
             }
             // 可以根据业务需要添加更多基础验证规则
 

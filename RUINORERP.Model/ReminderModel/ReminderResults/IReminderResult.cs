@@ -14,7 +14,6 @@ namespace RUINORERP.Model.ReminderModel.ReminderResults
         string ResultId { get; }
         long RuleId { get; }
         ReminderBizType BusinessType { get; }
-
         DateTime TriggerTime { get; }
         string Title { get; }
         string Summary { get; }

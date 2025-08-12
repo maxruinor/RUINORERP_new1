@@ -2081,6 +2081,13 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="SmartReminderClient\DetailForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SmartReminderClient\PopupNotification.cs" />
+    <Compile Include="SmartReminderClient\ReminderCenterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="UControls\JsonViewer.cs" />
     <Compile Include="UControls\JsonViewer.Designer.cs">
       <DependentUpon>JsonViewer.cs</DependentUpon>

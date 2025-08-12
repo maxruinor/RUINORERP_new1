@@ -47,6 +47,7 @@
             btnPushTest = new System.Windows.Forms.Button();
             btn缓存测试 = new System.Windows.Forms.Button();
             btnStartReminderWF = new System.Windows.Forms.Button();
+            button4 = new System.Windows.Forms.Button();
             SuspendLayout();
             // 
             // button1
@@ -213,11 +214,22 @@
             btnStartReminderWF.UseVisualStyleBackColor = true;
             btnStartReminderWF.Click += btnStartReminderWF_Click;
             // 
+            // button4
+            // 
+            button4.Location = new System.Drawing.Point(582, 551);
+            button4.Name = "button4";
+            button4.Size = new System.Drawing.Size(191, 34);
+            button4.TabIndex = 11;
+            button4.Text = "启动安全库存动态计算工作流";
+            button4.UseVisualStyleBackColor = true;
+            button4.Click += button4_Click;
+            // 
             // frmWorkFlowManage
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1069, 626);
+            Controls.Add(button4);
             Controls.Add(btnStartReminderWF);
             Controls.Add(btn缓存测试);
             Controls.Add(btnPushTest);
@@ -267,5 +279,6 @@
         private System.Windows.Forms.Button btnPushTest;
         private System.Windows.Forms.Button btn缓存测试;
         private System.Windows.Forms.Button btnStartReminderWF;
+        private System.Windows.Forms.Button button4;
     }
 }

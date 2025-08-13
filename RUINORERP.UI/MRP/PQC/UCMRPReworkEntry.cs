@@ -83,7 +83,7 @@ namespace RUINORERP.UI.MRP.PQC
             EditEntity = entity;
             if (entity.ReworkEntryID > 0)
             {
-                entity.PrimaryKeyID = entity.ReworkReturnID;
+                entity.PrimaryKeyID = entity.ReworkEntryID;
                 entity.ActionStatus = ActionStatus.加载;
                 //entity.DataStatus = (int)DataStatus.确认;
                 //如果审核了，审核要灰色
@@ -155,7 +155,7 @@ namespace RUINORERP.UI.MRP.PQC
             }
 
             //如果属性变化 则状态为修改
-            entity.PropertyChanged += (sender, s2) =>
+            entity.PropertyChanged += async (sender, s2) =>
             {
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
@@ -190,7 +190,7 @@ namespace RUINORERP.UI.MRP.PQC
                     {
                         if (entity.ReworkReturnID > 0)
                         {
-                            LoadRefBillData(entity.ReworkReturnID);
+                          await  LoadRefBillData(entity.ReworkReturnID);
                         }
                     }
 
@@ -238,7 +238,7 @@ namespace RUINORERP.UI.MRP.PQC
             }
 
             //先绑定这个。InitFilterForControl 这个才生效
-            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, v => v.ReworkReturnID, txtReworkReturnID, BindDataType4TextBox.Text, true);
+            DataBindingHelper.BindData4TextBox<tb_MRP_ReworkReturn>(entity, v => v.ReworkReturnNo, txtReworkReturnID, BindDataType4TextBox.Text, true);
 
             //创建表达式  草稿 结案 和没有提交的都不显示
             var lambdaMO = Expressionable.Create<tb_MRP_ReworkReturn>()

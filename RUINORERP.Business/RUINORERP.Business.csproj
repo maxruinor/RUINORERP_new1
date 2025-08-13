@@ -28,6 +28,7 @@
     <Compile Remove="BizCodeGeneration\ISerialNumberGenerator.cs" />
     <Compile Remove="BizCodeGeneration\RedisSerialNumberGenerator.cs" />
     <Compile Remove="BizCodeGeneration\SerialNumberGeneratorFactory.cs" />
+    <Compile Remove="CommService\CacheManager.cs" />
     <Compile Remove="CommService\DictServiceHelper.cs" />
     <Compile Remove="CommService\InitDBData.cs" />
     <Compile Remove="Ean13.cs" />
@@ -36,6 +37,7 @@
     <Compile Remove="SaleOrderController.cs" />
     <Compile Remove="Security\Credentials.cs" />
     <Compile Remove="Security\CredentialValidator.cs" />
+    <Compile Remove="tb_InventoryTransactionControllerPartial.cs" />
     <Compile Remove="tb_OpeningIinventoryController.cs" />
     <Compile Remove="tb_OpeningIinventory_detailController.cs" />
     <Compile Remove="tb_ProdBaseController.cs" />

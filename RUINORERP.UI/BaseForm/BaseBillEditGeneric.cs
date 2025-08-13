@@ -4624,15 +4624,17 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
                 }
-
-
             }
             if (PrintConfig == null || PrintConfig.tb_PrintTemplates == null)
             {
                 PrintConfig = PrintHelper<T>.GetPrintConfig(list);
             }
             bool rs = await PrintHelper<T>.Print(list, RptMode.PRINT, PrintConfig);
-            MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("打印", EditEntity);
+            if (rs)
+            {
+                MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("打印", EditEntity);
+            }
+            
         }
 
         public async Task Preview()

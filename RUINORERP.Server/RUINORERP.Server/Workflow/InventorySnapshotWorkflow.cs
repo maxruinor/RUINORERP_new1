@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Business;
+using RUINORERP.Model;
 using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
 using System;
 using System.Collections.Generic;
@@ -24,9 +26,7 @@ namespace RUINORERP.Server.Workflow
         {
             builder
                 .StartWith<GenerateSnapshotStep>()
-                .Then<CleanupOldSnapshotsStep>()
-                .Delay(data => TimeSpan.FromDays(1)) // 每天执行一次
-                .Then<InventorySnapshotWorkflow>(); // 循环执行
+                .Then<CleanupOldSnapshotsStep>();
         }
     }
 
@@ -35,10 +35,10 @@ namespace RUINORERP.Server.Workflow
     /// </summary>
     public class GenerateSnapshotStep : StepBodyAsync
     {
-        private readonly IInventorySnapshotService _snapshotService;
+        private readonly tb_InventorySnapshotController<tb_InventorySnapshot> _snapshotService;
         private readonly ILogger _logger;
 
-        public GenerateSnapshotStep(IInventorySnapshotService snapshotService, ILogger logger)
+        public GenerateSnapshotStep(tb_InventorySnapshotController<tb_InventorySnapshot> snapshotService, ILogger logger)
         {
             _snapshotService = snapshotService;
             _logger = logger;
@@ -49,15 +49,16 @@ namespace RUINORERP.Server.Workflow
             try
             {
                 _logger.Info("开始生成库存快照...");
-                var count = _snapshotService.GenerateSnapshot();
+                var count = _snapshotService.GenerateDailySnapshot();
                 _logger.Info($"库存快照生成完成，共生成 {count} 条记录");
-                return Task.FromResult(ExecutionResult.Next());
             }
             catch (Exception ex)
             {
                 _logger.Error("生成库存快照失败", ex);
-                return Task.FromResult(ExecutionResult.Fail(ex.Message));
+                //return Task.FromResult(ExecutionResult.F(ex.Message));
+
             }
+            return Task.FromResult(ExecutionResult.Next());
         }
     }
 
@@ -66,10 +67,10 @@ namespace RUINORERP.Server.Workflow
     /// </summary>
     public class CleanupOldSnapshotsStep : StepBodyAsync
     {
-        private readonly IInventorySnapshotService _snapshotService;
+        private readonly tb_InventorySnapshotController<tb_InventorySnapshot> _snapshotService;
         private readonly ILogger _logger;
 
-        public CleanupOldSnapshotsStep(IInventorySnapshotService snapshotService, ILogger logger)
+        public CleanupOldSnapshotsStep(tb_InventorySnapshotController<tb_InventorySnapshot> snapshotService, ILogger logger)
         {
             _snapshotService = snapshotService;
             _logger = logger;
@@ -83,13 +84,14 @@ namespace RUINORERP.Server.Workflow
                 // 保留最近12个月的快照
                 var count = _snapshotService.CleanupExpiredSnapshots(12);
                 _logger.Info($"过期库存快照清理完成，共清理 {count} 条记录");
-                return Task.FromResult(ExecutionResult.Next());
+
             }
             catch (Exception ex)
             {
                 _logger.Error("清理过期库存快照失败", ex);
-                return Task.FromResult(ExecutionResult.Fail(ex.Message));
+
             }
+            return Task.FromResult(ExecutionResult.Next());
         }
     }
 
@@ -105,19 +107,18 @@ namespace RUINORERP.Server.Workflow
         }
 
         /// <summary>
-        /// 启动安全库存计算工作流（每天凌晨2点执行）
+        /// 库存快照（每天凌晨1点执行）
         /// </summary>
         public static async Task<bool> ScheduleInventorySnapshot(IWorkflowHost host)
         {
-
             try
             {
                 // 注册工作流
-                host.RegisterWorkflow<SafetyStockWorkflow, SafetyStockData>();
+                host.RegisterWorkflow<InventorySnapshotWorkflow>();
 
                 // 计算下次执行时间
                 var now = DateTime.Now;
-                var nextRunTime = new DateTime(now.Year, now.Month, now.Day, 18, 22, 0);
+                var nextRunTime = new DateTime(now.Year, now.Month, now.Day, 1, 0, 0);
                 if (nextRunTime <= now)
                     nextRunTime = nextRunTime.AddDays(1);
 
@@ -132,18 +133,7 @@ namespace RUINORERP.Server.Workflow
                     try
                     {
                         // 执行工作流
-                        //await host.StartWorkflow<SafetyStockData>("SafetyStockWorkflow", new SafetyStockData());
-                        var configs = GetEnabledSafetyStockConfigs();
-
-                        foreach (var config in configs)
-                        {
-                            await host.StartWorkflow("SafetyStockWorkflow", new SafetyStockData
-                            {
-                                Config = config
-                            });
-                        }
-
-
+                        await host.StartWorkflow<InventorySnapshotWorkflow>("InventorySnapshotWorkflow");
                     }
                     catch (Exception ex)
                     {

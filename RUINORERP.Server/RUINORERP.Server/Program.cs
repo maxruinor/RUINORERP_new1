@@ -167,7 +167,7 @@ namespace RUINORERP.Server
 
 
                     await SafetyStockWorkflowConfig.ScheduleDailySafetyStockCalculation(host);
-
+                    await InventorySnapshotWorkflowConfig.ScheduleInventorySnapshot(host);
 
                     // 如果host启动了，不能再次启动，但没有判断方法
                     if (!serviceStarted)
@@ -188,7 +188,7 @@ namespace RUINORERP.Server
 
                     #endregion
 
-            
+
 
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
 

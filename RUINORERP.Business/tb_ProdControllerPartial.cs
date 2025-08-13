@@ -268,7 +268,7 @@ namespace RUINORERP.Business
                             await _unitOfWorkManage.GetDbClient().Insertable(detail.tb_Prod_Attr_Relations).ExecuteReturnSnowflakeIdListAsync();
                         }
 
-                        if (detail.ActionStatus == ActionStatus.修改)
+                        if (detail.ActionStatus == ActionStatus.修改 || detail.HasChanged)
                         {
                             detail.ProdBaseID = info.ProdBaseID;
                             if (detail.ProdDetailID == 0)
@@ -284,7 +284,11 @@ namespace RUINORERP.Business
                             }
                             else
                             {
+
                                 await _unitOfWorkManage.GetDbClient().Updateable(detail).ExecuteCommandAsync();
+                                //本来想 只更新修改部分。但是检测不到，暂时全部更新
+                                //var detailController = _appContext.GetRequiredService<tb_ProdDetailController<tb_ProdDetail>>();
+                                //await detailController.SaveOrUpdate(detail);
                                 for (int i = 0; i < detail.tb_Prod_Attr_Relations.Count; i++)
                                 {
                                     if (detail.tb_Prod_Attr_Relations[i].RAR_ID == 0)

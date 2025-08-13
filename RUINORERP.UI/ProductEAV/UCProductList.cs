@@ -103,7 +103,7 @@ namespace RUINORERP.UI.ProductEAV
             }
         }
 
- 
+
         /// <summary>
         /// 扩展带条件查询
         /// 因为产品相关性多，重写这个方法用高级导航查询
@@ -112,7 +112,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             if (ValidationHelper.hasValidationErrors(this.Controls))
                 return;
-            if (QueryDtoProxy==null)
+            if (QueryDtoProxy == null)
             {
                 return;
             }
@@ -132,6 +132,14 @@ namespace RUINORERP.UI.ProductEAV
                 dataGridView1.SumColumns = masterlist.ToArray();
             }
 
+            list.ForEach(
+                c =>
+                {
+                    c.tb_ProdDetails.ForEach(d => d.BeginOperation());
+                    c.BeginOperation();
+                }
+            );
+
             ListDataSoure.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             dataGridView1.DataSource = ListDataSoure;
 
@@ -144,7 +152,7 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         protected override async Task Add()
         {
-           await base.Add();
+            await base.Add();
             base.toolStripButtonModify.Enabled = false;
         }
 
@@ -169,10 +177,10 @@ namespace RUINORERP.UI.ProductEAV
                 else
                 {
                     this.bindingSourceList.Remove(loc);
-                     rs = await pctr.DeleteByNavAsync(loc);
+                    rs = await pctr.DeleteByNavAsync(loc);
                     if (rs)
                     {
-                         //缓存只是显示用，所以删除后，并不影响。等待服务器的更新机制更新即可。
+                        //缓存只是显示用，所以删除后，并不影响。等待服务器的更新机制更新即可。
                     }
                 }
 
@@ -191,7 +199,7 @@ namespace RUINORERP.UI.ProductEAV
             foreach (var item in bindingSourceList.List)
             {
                 var entity = item as tb_Prod;
-               
+
                 switch (entity.ActionStatus)
                 {
                     case ActionStatus.无操作:
@@ -201,7 +209,7 @@ namespace RUINORERP.UI.ProductEAV
                         base.toolStripButtonSave.Enabled = false;
                         ReturnResults<tb_Prod> rr = new ReturnResults<tb_Prod>();
                         rr = await pctr.SaveOrUpdateAsync(entity);
-                        //  rr = await base.ctr.BaseSaveOrUpdateWithChildtb_Prod(entity as tb_Prod);
+                        //rr = await base.ctr.BaseSaveOrUpdateWithChildtb_Prod(entity as tb_Prod);
                         // await ctr.SaveOrUpdate(entity as tb_Unit);
                         if (rr.Succeeded)
                         {

@@ -290,48 +290,7 @@ namespace RUINORERP.UI.FM
             //显示 打印状态 如果是草稿状态 不显示打印
             ShowPrintStatus(lblPrintStatus, entity);
 
-
-            if (PaymentType == ReceivePaymentType.收款 || entity.IsForCommission.GetValueOrDefault())
-            {
-                //创建表达式
-                var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsCustomer == true)//供应商和第三方
-                            .And(t => t.isdeleted == false)
-                            .And(t => t.Is_enabled == true)
-                            .ToExpression();//注意 这一句 不能少
-
-                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-                queryFilterC.FilterLimitExpressions.Add(lambda);
-
-                //带过滤的下拉绑定要这样
-                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-
-                chkIsFromPlatform.Visible = true;
-                txtPlatformOrderNo.Visible = true;
-
-            }
-            else
-            {
-                chkIsFromPlatform.Visible = false;
-                txtPlatformOrderNo.Visible = false;
-                //应付  付给供应商
-                //创建表达式
-                var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsVendor == true)//供应商
-                            .And(t => t.isdeleted == false)
-                            .And(t => t.Is_enabled == true)
-                            .ToExpression();//注意 这一句 不能少
-
-                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-                queryFilterC.FilterLimitExpressions.Add(lambda);
-
-                //带过滤的下拉绑定要这样
-                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-            }
+            LoadCustomerVendor(entity);
 
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
@@ -433,6 +392,12 @@ namespace RUINORERP.UI.FM
                 //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
+
+                    if (PaymentType == ReceivePaymentType.付款 && s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.IsForCommission))
+                    {
+                        LoadCustomerVendor(entity);
+                    }
+
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.IsExpenseType))
                     {
                         LoadItems(entity.IsExpenseType);
@@ -585,6 +550,55 @@ namespace RUINORERP.UI.FM
             base.BindData(entity);
         }
 
+        /// <summary>
+        /// 根据是否为佣金加载往来单位
+        /// 分客户和供应商
+        /// </summary>
+        /// <param name="entity"></param>
+        private void LoadCustomerVendor(tb_FM_ReceivablePayable entity)
+        {
+            if (PaymentType == ReceivePaymentType.收款 || entity.IsForCommission.GetValueOrDefault())
+            {
+                //创建表达式
+                var lambda = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsCustomer == true)//供应商和第三方
+                            .And(t => t.isdeleted == false)
+                            .And(t => t.Is_enabled == true)
+                            .ToExpression();//注意 这一句 不能少
+
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+                queryFilterC.FilterLimitExpressions.Add(lambda);
+
+                //带过滤的下拉绑定要这样
+                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+
+                chkIsFromPlatform.Visible = true;
+                txtPlatformOrderNo.Visible = true;
+
+            }
+            else
+            {
+                chkIsFromPlatform.Visible = false;
+                txtPlatformOrderNo.Visible = false;
+                //应付  付给供应商
+                //创建表达式
+                var lambda = Expressionable.Create<tb_CustomerVendor>()
+                            .And(t => t.IsVendor == true)//供应商
+                            .And(t => t.isdeleted == false)
+                            .And(t => t.Is_enabled == true)
+                            .ToExpression();//注意 这一句 不能少
+
+                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+                queryFilterC.FilterLimitExpressions.Add(lambda);
+
+                //带过滤的下拉绑定要这样
+                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
+            }
+        }
 
         public void LoadItems(bool? IsExpenseTypeValue)
         {

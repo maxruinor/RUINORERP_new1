@@ -29,7 +29,8 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
-            RuleFor(x => x.PayeeInfoID).NotNull().When(c=>c.ReceivePaymentType==(int)ReceivePaymentType.付款).WithMessage("收款信息:不能为空。");
+            //审核时才需验证，所以状态为提交保存时可以忽略
+            RuleFor(x => x.PayeeInfoID).NotNull().When(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款 && c.ARAPStatus > (int)ARAPStatus.待审核).WithMessage("收款信息:付款时，对方的收款账号等信息不能为空。");
         }
     }
 

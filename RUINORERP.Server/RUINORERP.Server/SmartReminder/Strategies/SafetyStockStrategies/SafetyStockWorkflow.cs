@@ -27,34 +27,9 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
     /// </summary>
     public class SafetyStockData
     {
-        /// <summary>
-        /// 工作流ID
-        /// </summary>
-        public string WorkflowId { get; set; }
 
-        // 添加临时存储字段
-        public long TempProductId { get; set; }
-
-
-        /// <summary>
-        /// 产品ID列表
-        /// </summary>
-        public List<long> ProductIds { get; set; } = new List<long>();
-
-        /// <summary>
-        /// 计算周期（天）
-        /// </summary>
-        public int CalculationPeriodDays { get; set; } = 90;
-
-        /// <summary>
-        /// 采购提前期（天）
-        /// </summary>
-        public int PurchaseLeadTimeDays { get; set; } = 7;
-
-        /// <summary>
-        /// 服务水平系数 (1.28=90%, 1.64=95%, 2.33=99%)
-        /// </summary>
-        public double ServiceLevelFactor { get; set; } = 1.64;
+        // 使用配置对象替代所有可配置参数
+        public SafetyStockConfig Config { get; set; } = new SafetyStockConfig();
 
         /// <summary>
         /// 计算结果
@@ -62,6 +37,11 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         public Dictionary<long, SafetyStockResult> Results { get; set; } = new Dictionary<long, SafetyStockResult>();
 
 
+        /// <summary>
+        /// 工作流ID  仅保留运行时数据
+        /// </summary>
+        public string WorkflowId { get; set; }
+ 
 
         // 临时存储当前产品的销售数据
         public List<SalesHistory> CurrentSalesData { get; set; }
@@ -106,30 +86,40 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
     /// </summary>
     public class InitializeParameters : StepBody
     {
+        public SafetyStockConfig Config { get; set; }
+
         public List<long> ProductIds { get; set; }
 
-        /// <summary>
-        /// 计算的周期
-        /// </summary>
-        public int CalculationPeriodDays { get; set; }
+        ///// <summary>
+        ///// 计算的周期
+        ///// </summary>
+        //public int CalculationPeriodDays { get; set; }
 
-        /// <summary>
-        /// 采购提前期
-        /// </summary>
-        public int PurchaseLeadTimeDays { get; set; }
+        ///// <summary>
+        ///// 采购提前期
+        ///// </summary>
+        //public int PurchaseLeadTimeDays { get; set; }
 
 
-        /// <summary>
-        /// 服务水平系数 (1.28=90%, 1.64=95%, 2.33=99%
-        /// </summary>
-        public double ServiceLevelFactor { get; set; }
+        ///// <summary>
+        ///// 服务水平系数 (1.28=90%, 1.64=95%, 2.33=99%
+        ///// </summary>
+        //public double ServiceLevelFactor { get; set; }
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
-            // 可参数校验与默认值设置
-            CalculationPeriodDays = CalculationPeriodDays <= 0 ? 90 : CalculationPeriodDays;
-            PurchaseLeadTimeDays = PurchaseLeadTimeDays <= 0 ? 7 : PurchaseLeadTimeDays;
-            ServiceLevelFactor = ServiceLevelFactor <= 0 ? 1.64 : ServiceLevelFactor;
+            var data = context.Workflow.Data as SafetyStockData;
+            data.Config = Config; // 传递配置到工作流数据
+                                  // 设置默认值
+            Config.CalculationPeriodDays = Config.CalculationPeriodDays <= 0
+                ? 90 : Config.CalculationPeriodDays;
+
+            Config.PurchaseLeadTimeDays = Config.PurchaseLeadTimeDays <= 0
+                ? 7 : Config.PurchaseLeadTimeDays;
+
+            Config.ServiceLevelFactor = Config.ServiceLevelFactor <= 0
+                ? 1.64 : Config.ServiceLevelFactor;
+
 
             // 如果没有指定产品ID，则获取所有需要监控的产品
             if (ProductIds == null || !ProductIds.Any())
@@ -193,28 +183,25 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         }
         public long ProductId { get; set; }
 
-        // 添加输出属性
-        public long OutputProductId { get; set; }
-        public int CalculationPeriodDays { get; set; }
-        public List<SalesHistory> SalesData { get; set; }
+        //public List<SalesHistory> SalesData { get; set; }
 
         public override async Task<ExecutionResult> RunAsync(IStepExecutionContext context)
         {
-            // 将当前产品ID作为输出
-            OutputProductId = ProductId;
+            var data = context.Workflow.Data as SafetyStockData;
+            int days = data.Config.CalculationPeriodDays;
 
             ISqlSugarClient sugarScope = Startup.GetFromFac<ISqlSugarClient>();
             using (var db = sugarScope)
             {
                 var endDate = DateTime.Now.Date;
-                var startDate = endDate.AddDays(-CalculationPeriodDays);
+                var startDate = endDate.AddDays(-days);
 
-                SalesData = await db.Queryable<View_SaleOutItems>()
+                data.CurrentSalesData = await db.Queryable<View_SaleOutItems>()
                     .Where(i => i.ProdDetailID == ProductId
                                 && i.OutDate.Value >= startDate
                                 && i.OutDate.Value < endDate)
-                    //.GroupBy(i =>SqlFunc i.OutDate.Value.ToString("yyyy-MM-dd")) // 分组键
-                    .GroupBy(i => i.OutDate.Value.Date) // 分组键
+                                                                       // .GroupBy(i => (i.OutDate.Value.ToShortDateString()) // 分组键
+                                                                       .GroupBy(i => i.OutDate.Value.Date) // 分组键
                     .Select(g => new SalesHistory  // 使用 g 代表分组结果
                     {
                         Date = g.OutDate.Value.Date, // 使用分组键作为日期
@@ -240,13 +227,17 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         }
         public long ProductId { get; set; }
 
-        public int PurchaseLeadTimeDays { get; set; }
-        public double ServiceLevelFactor { get; set; }
+
         public List<SalesHistory> SalesData { get; set; }
         public SafetyStockResult Result { get; set; }
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
+
+            var data = context.Workflow.Data as SafetyStockData;
+            var config = data.Config;
+
+
             Result = new SafetyStockResult { ProductId = ProductId };
 
             //logger.Error($"CalculateSafetyStock：{ProductId}");
@@ -299,9 +290,17 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                     Result.DemandStandardDeviation = 0;
                 }
                 // 计算安全库存 = 服务水平系数 × 需求标准差 × √采购提前期
-                Result.SafetyStockLevel = (decimal)(ServiceLevelFactor
+                Result.SafetyStockLevel = (decimal)(config.ServiceLevelFactor
                     * (double)Result.DemandStandardDeviation
-                    * Math.Sqrt(PurchaseLeadTimeDays));
+                    * Math.Sqrt(config.PurchaseLeadTimeDays));
+
+
+                // 检查手动指定库存
+                //if (config.ManualSafetyStockLevel)
+                //{
+                //    safetyStock = config.ManualSafetyStockLevel;
+                //}
+
 
                 // 检查是否需要提醒（当前库存低于安全库存）
                 Result.NeedAlert = Result.CurrentStock < Result.SafetyStockLevel;
@@ -401,44 +400,39 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         {
             builder
                 .StartWith<InitializeParameters>()
-                    .Input(step => step.ProductIds, data => data.ProductIds)
-                    .Input(step => step.CalculationPeriodDays, data => data.CalculationPeriodDays)
-                    .Input(step => step.PurchaseLeadTimeDays, data => data.PurchaseLeadTimeDays)
-                    .Input(step => step.ServiceLevelFactor, data => data.ServiceLevelFactor)
-                    .Output(data => data.ProductIds, step => step.ProductIds)
-                    .Output(data => data.CalculationPeriodDays, step => step.CalculationPeriodDays)
-                    .Output(data => data.PurchaseLeadTimeDays, step => step.PurchaseLeadTimeDays)
-                    .Output(data => data.ServiceLevelFactor, step => step.ServiceLevelFactor)
-                .ForEach(data => data.ProductIds)
+                    .Input(step => step.Config, data => data.Config)
+                    .Input(step => step.ProductIds, data => data.Config.ProductIds)
+
+                .ForEach(data => data.Config.ProductIds)
                     .Do(foreachBuilder => foreachBuilder
                         // 获取销售历史数据
                         .StartWith<GetSalesHistory>()
-                            .Input(step => step.ProductId, (data, context) => (long)context.Item)
-                            .Input(step => step.CalculationPeriodDays, data => data.CalculationPeriodDays)
-                            .Output(data => data.CurrentSalesData, step => step.SalesData)
-                            .Output(data => data.TempProductId, step => step.ProductId)
+                        .Input(step => step.ProductId, (data, context) => (long)context.Item)
+                        //.Input(step => step.CalculationPeriodDays, data => data.CalculationPeriodDays)
+                        //.Output(data => data.CurrentSalesData, step => step.SalesData)
+                        //.Output(data => data.TempProductId, step => step.ProductId)
                         // 计算安全库存
                         .Then<CalculateSafetyStock>()
-                            .Input(step => step.ProductId, (data, context) => (long)context.Item)
-                            .Input(step => step.PurchaseLeadTimeDays, data => data.PurchaseLeadTimeDays)
-                            .Input(step => step.ServiceLevelFactor, data => data.ServiceLevelFactor)
-                            .Input(step => step.SalesData, data => data.CurrentSalesData)
-                            .Output(data => data.CurrentResult, step => step.Result)
+                        .Input(step => step.ProductId, (data, context) => (long)context.Item)
+                        //.Input(step => step.PurchaseLeadTimeDays, data => data.PurchaseLeadTimeDays)
+                        //.Input(step => step.ServiceLevelFactor, data => data.ServiceLevelFactor)
+                        //.Input(step => step.SalesData, data => data.CurrentSalesData)
+                        //.Output(data => data.CurrentResult, step => step.Result)
 
                         // 保存结果到字典
                         .Then<SaveResultToDictionaryStep>()
-                            //.Input(step => step.ProductId, data => data.TempProductId)
-                            .Input(step => step.ProductId, (data, context) => (long)context.Item)
-                            .Input(step => step.Result, data => data.CurrentResult)
-                            .Input(step => step.ResultsDictionary, data => data.Results)
-                    // 发送提醒
+                      .Input(step => step.ProductId, (data, context) => (long)context.Item)
+                      //.Input(step => step.ProductId, (data, context) => (long)context.Item)
+                      //.Input(step => step.Result, data => data.CurrentResult)
+                      //.Input(step => step.ResultsDictionary, data => data.Results)
+                      // 发送提醒
                       .Then<SendAlertNotification>()
-                          .Input(step => step.Result, data => data.CurrentResult)
+                    //.Input(step => step.Result, data => data.CurrentResult)
                     )
 
                 // 完成处理
-                .Then<CompleteSafetyStockCalculation>()
-                    .Input(step => step.Results, data => data.Results);
+                .Then<CompleteSafetyStockCalculation>();
+            //.Input(step => step.Results, data => data.Results);
         }
 
 
@@ -493,6 +487,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         /// </summary>
         public static async Task<bool> ScheduleDailySafetyStockCalculation(IWorkflowHost host)
         {
+
             try
             {
                 // 注册工作流
@@ -515,7 +510,18 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                     try
                     {
                         // 执行工作流
-                        await host.StartWorkflow<SafetyStockData>("SafetyStockWorkflow", new SafetyStockData());
+                        //await host.StartWorkflow<SafetyStockData>("SafetyStockWorkflow", new SafetyStockData());
+                        var configs = GetEnabledSafetyStockConfigs();
+
+                        foreach (var config in configs)
+                        {
+                            await host.StartWorkflow("SafetyStockWorkflow", new SafetyStockData
+                            {
+                                Config = config
+                            });
+                        }
+
+
                     }
                     catch (Exception ex)
                     {
@@ -535,6 +541,16 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                 return false;
             }
         }
+
+        private static List<SafetyStockConfig> GetEnabledSafetyStockConfigs()
+        {
+            using var db = Startup.GetFromFac<ISqlSugarClient>();
+            return db.Queryable<tb_ReminderRule>()
+                .Where(r => r.IsEnabled && r.ReminderBizType == (int)ReminderBizType.安全库存提醒)
+                .Select(r => JsonConvert.DeserializeObject<SafetyStockConfig>(r.JsonConfig))
+                .ToList();
+        }
+
     }
     #endregion
 

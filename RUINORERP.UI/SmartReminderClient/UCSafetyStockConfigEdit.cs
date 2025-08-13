@@ -25,6 +25,13 @@ using RUINORERP.Model.ReminderModel.ReminderRules;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.CommService;
 using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using HLH.WinControl.MyTypeConverter;
+using System.Linq.Expressions;
+using RUINORERP.Common.Helper;
+
 
 namespace RUINORERP.UI.SmartReminderClient
 {
@@ -61,16 +68,18 @@ namespace RUINORERP.UI.SmartReminderClient
             //    displayExpression: u => u.CNName
             //);
 
-            CheckedListBoxHelper.BindData4CheckedListBox<SafetyStockConfig, long, View_ProdDetail>(
-                entity,
-                e => e.ProductIds,
-                clbProds,
-                MainForm.Instance.View_ProdDetailList,
-                u => u.ProdDetailID,
-                u => u.CNName
-                );
-
-
+            //CheckedListBoxHelper.BindData4CheckedListBox<SafetyStockConfig, long, View_ProdDetail>(
+            //    entity,
+            //    e => e.ProductIds,
+            //    clbProds,
+            //    MainForm.Instance.View_ProdDetailList,
+            //    u => u.ProdDetailID,
+            //    u => u.CNName
+            //    );
+            dataGridView1.ReadOnly = true;
+            var list = MainForm.Instance.View_ProdDetailList.Where(c => entity.ProductIds.Contains(c.ProdDetailID)).ToList();
+            bindingSourceList.DataSource = ListExtension.ToBindingSortCollection<View_ProdDetail>(list);//这句是否能集成到上一层生成
+            dataGridView1.DataSource = bindingSourceList;
 
             CheckedListBoxHelper.BindData4CheckedListBox<SafetyStockConfig, long, tb_Location>(
             entity,
@@ -97,7 +106,10 @@ namespace RUINORERP.UI.SmartReminderClient
         {
             bindingSourceEdit.EndEdit();
             if (bindingSourceEdit.Current is SafetyStockConfig stockConfig)
-            {// 执行验证
+            {
+                //stockConfig.ProductIds = bindingSourceList.DataSource.ToList<View_ProdDetail>().Select(x => x.ProductID).ToList();
+
+                // 执行验证
                 var result = stockConfig.Validate();
                 if (!result.IsValid)
                 {
@@ -113,9 +125,36 @@ namespace RUINORERP.UI.SmartReminderClient
 
         private void UCBoxRulesEdit_Load(object sender, EventArgs e)
         {
+            InitDataGridVIew();
             BindData(safetyStockConfig);
         }
 
+        public GridViewDisplayTextResolver DisplayTextResolver;
+        private Type entityType = typeof(View_ProdDetail);
+        /// <summary>
+        /// 主表表不可见的列
+        /// </summary>
+        public List<Expression<Func<View_ProdDetail, object>>> MasterInvisibleCols { get; set; } = new List<Expression<Func<View_ProdDetail, object>>>();
+
+        private void InitDataGridVIew()
+        {
+            DisplayTextResolver = new GridViewDisplayTextResolver(entityType);
+            dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridView1.XmlFileName = this.Name + entityType.Name + "BaseMasterQueryWithCondition";
+            dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(entityType);
+       
+            //这里设置了指定列不可见
+            foreach (var item in RuinorExpressionHelper.ExpressionListToHashSet(MasterInvisibleCols))
+            {
+                KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
+                dataGridView1.FieldNameList.TryRemove(item, out kv);
+            }
+
+            dataGridView1.BizInvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(MasterInvisibleCols);
+
+            dataGridView1.DataSource = bindingSourceList;
+            DisplayTextResolver.Initialize(dataGridView1);
+        }
         private void btnSeleted_Click(object sender, EventArgs e)
         {
             using (QueryFormGeneric dg = new QueryFormGeneric())

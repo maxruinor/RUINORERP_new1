@@ -12,15 +12,31 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
 {
     public class SafetyStockConfig : RuleConfigBase
     {
-       
+ 
+
+        // 添加工作流所需的所有参数
+        [Description("计算周期（天）")]
+        public int CalculationPeriodDays { get; set; } = 90;
+
         /// <summary>
         /// 安全库存是通过计算来的。当然也可以人工手动指定
         /// </summary>
         [Description("安全库存计算频率(天)")]
         public int CalculateSafetyStockIntervalByDays { get; set; } = 3;
 
+
+        [Description("采购提前期（天）")]
+        public int PurchaseLeadTimeDays { get; set; } = 7;
+
+        [Description("服务水平系数")]
+        public double ServiceLevelFactor { get; set; } = 1.64;
+
         [Description("是否手动指定安全库存")]
         public bool IsCalculateSafetyStockByHand { get; set; } = false;
+
+
+        [Description("手动指定安全库存")]
+        public bool ManualSafetyStockLevel { get; set; }
 
         [Description("要检测的产品对象")]
         public List<long> ProductIds { get; set; } = new List<long>();

@@ -1463,7 +1463,12 @@ namespace RUINORERP.UI.BaseForm
                 dataGridView1.IsShowSumRow = true;
                 dataGridView1.SumColumns = masterlist.ToArray();
             }
-
+            //list.ForEach(
+            //    c =>
+            //    {
+            //        c.BeginOperation();
+            //    }
+            //);
             ListDataSoure.DataSource = list.ToBindingSortCollection();//这句是否能集成到上一层生成
             dataGridView1.DataSource = ListDataSoure;
 

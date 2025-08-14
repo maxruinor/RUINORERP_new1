@@ -45,10 +45,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
- RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.Specifications).MaximumMixedLength(1000).WithMessage("规格:不能超过最大长度,1000.");
-
- RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.Unit_ID).Must(CheckForeignKeyValueCanNull).WithMessage("单位:下拉选择值不正确。");
- RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.Unit_ID).NotEmpty().When(x => x.Unit_ID.HasValue);
+ 
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
 

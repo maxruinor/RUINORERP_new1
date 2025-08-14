@@ -63,6 +63,8 @@ namespace RUINORERP.Business
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
+                //产生看产生的应收付是否真的付了。如果付了。则不能反审了。
+
                 //应收应付 审核只是业务性确认，不会产生收会款单。通过对账单 确认，客户付款了才会产生付款单 应收右键生成收款单
                 ////注意，反审是将只有收款单没有审核前，删除
                 ////删除
@@ -111,6 +113,8 @@ namespace RUINORERP.Business
             tb_FM_PriceAdjustment entity = ObjectEntity as tb_FM_PriceAdjustment;
             try
             {
+              
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
@@ -144,22 +148,96 @@ namespace RUINORERP.Business
                         ReturnResults<tb_FM_ReceivablePayable> rr = await paymentController.ApprovalAsync(paybalbe);
                         if (rr.Succeeded)
                         {
-                            rmr.Succeeded = false;
+                            //保存
+                            tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                            //对于采购入库，价格调整单不生成新的入库单，而是直接 修正库存总成本
+                            if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款
+                                && entity.SourceBizType == (int)BizType.采购入库单)
+                            {
+                                List<tb_BOM_SDetail> BOM_SDetails = new List<tb_BOM_SDetail>();
+                                List<tb_BOM_S> BOMs = new List<tb_BOM_S>();
+
+
+                                for (int i = 0; i < entity.tb_FM_PriceAdjustmentDetails.Count; i++)
+                                {
+                                    var detail = entity.tb_FM_PriceAdjustmentDetails[i];
+                                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == detail.ProdDetailID && i.Location_ID == detail.Location_ID);
+                                    if (inv != null)
+                                    {
+                                        #region 计算成本
+                                        //这里只修改成本。数量不变
+                                        if (detail.UntaxedUnitPrice > 0)
+                                        {
+                                            CommService.CostCalculations.AdjustCostOnly(_appContext, inv, detail.UntaxedUnitPrice);
+
+                                            #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
+
+                                            List<tb_BOM_SDetail> bomDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
+                                            .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
+                                            .Where(c => c.ProdDetailID == detail.ProdDetailID).ToListAsync();
+                                            foreach (tb_BOM_SDetail bomDetail in bomDetails)
+                                            {
+                                                //如果存在则更新 
+                                                bomDetail.UnitCost = inv.Inv_Cost;
+                                                bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
+                                                
+                                                if (bomDetail.tb_bom_s != null)
+                                                {
+                                                    bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                                                    bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
+                                                    bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
+                                                    BOMs.Add(bomDetail.tb_bom_s);
+                                                }
+                                                BOM_SDetails.Add(bomDetail);
+                                            }
+
+                                            #endregion
+                                        }
+
+                                        #endregion
+                                    }
+                                }
+                                if (BOMs.Any())
+                                {
+                                    var bomresult = await _unitOfWorkManage.GetDbClient().Updateable(BOMs)
+                                         .UpdateColumns(it => new
+                                         {
+                                             it.TotalMaterialCost,
+                                             it.OutProductionAllCosts,
+                                             it.SelfProductionAllCosts,
+                                         })
+                                         .ExecuteCommandHasChangeAsync();
+                                }
+
+                                if (BOM_SDetails.Any())
+                                {
+                                    var bom_detailresult = await _unitOfWorkManage.GetDbClient().Updateable(BOM_SDetails)
+                                        .UpdateColumns(it => new
+                                        {
+                                            it.UnitCost,
+                                            it.SubtotalUnitCost,
+                                        })
+                                        .ExecuteCommandHasChangeAsync();
+                                }
+
+                            }
                         }
                         else
                         {
                             ApprovalResult.ErrorMsg = rr.ErrorMsg;
                             ApprovalResult.Succeeded = false;
-                            throw new Exception("保存应收应付单失败");
+                            throw new Exception($"审核{payTypeText}失败");
                         }
                     }
                     else
                     {
                         ApprovalResult.ErrorMsg = rmr.ErrorMsg;
                         ApprovalResult.Succeeded = false;
-                        throw new Exception("审核应收应付单失败");
+                        throw new Exception($"保存{payTypeText}失败");
                     }
                 }
+
+                
 
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
@@ -167,15 +245,17 @@ namespace RUINORERP.Business
 
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-            
+
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
-                                           .UpdateColumns(it => new { 
-                                               it.DataStatus, 
-                                               it.ApprovalOpinions, 
+                                           .UpdateColumns(it => new
+                                           {
+                                               it.DataStatus,
+                                               it.ApprovalOpinions,
                                                it.ApprovalResults,
                                                it.ApprovalStatus,
                                                it.Approver_at,
-                                               it.Approver_by })
+                                               it.Approver_by
+                                           })
                                            .ExecuteCommandHasChangeAsync();
 
 

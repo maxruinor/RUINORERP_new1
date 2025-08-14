@@ -95,33 +95,22 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Specifications;
-        /// <summary>
-        /// 规格
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Specifications",ColDesc = "规格")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Specifications" ,Length=1000,IsNullable = true,ColumnDescription = "规格" )]
-        public string Specifications
-        { 
-            get{return _Specifications;}
-            set{
-            SetProperty(ref _Specifications, value);
-                        }
-        }
 
-        private long? _Unit_ID;
+
+        private long _Location_ID;
         /// <summary>
-        /// 单位
+        /// 库位
         /// </summary>
-        [AdvQueryAttribute(ColName = "Unit_ID",ColDesc = "单位")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Unit_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "单位" )]
-        [FKRelationAttribute("tb_Unit","Unit_ID")]
-        public long? Unit_ID
-        { 
-            get{return _Unit_ID;}
-            set{
-            SetProperty(ref _Unit_ID, value);
-                        }
+        [AdvQueryAttribute(ColName = "Location_ID", ColDesc = "库位")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Location_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "库位")]
+        [FKRelationAttribute("tb_Location", "Location_ID")]
+        public long Location_ID
+        {
+            get { return _Location_ID; }
+            set
+            {
+                SetProperty(ref _Location_ID, value);
+            }
         }
 
         private decimal _ExchangeRate= ((1));
@@ -222,19 +211,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _Description;
-        /// <summary>
-        /// 描述
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Description",ColDesc = "描述")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Description" ,Length=300,IsNullable = true,ColumnDescription = "描述" )]
-        public string Description
-        { 
-            get{return _Description;}
-            set{
-            SetProperty(ref _Description, value);
-                        }
-        }
+
 
         private decimal _TaxRate= ((0));
         /// <summary>
@@ -278,6 +255,50 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _UntaxedUnitPrice = 0;
+        /// <summary>
+        /// 未税单价
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UntaxedUnitPrice", ColDesc = "未税单价")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UntaxedUnitPrice", DecimalDigits = 4, IsNullable = false, ColumnDescription = "未税单价")]
+        public decimal UntaxedUnitPrice
+        {
+            get { return _UntaxedUnitPrice; }
+            set
+            {
+                SetProperty(ref _UntaxedUnitPrice, value);
+            }
+        }
+
+        private decimal _SubtotalUntaxedAmount;
+        /// <summary>
+        /// 未税小计
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SubtotalUntaxedAmount", ColDesc = "未税小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SubtotalUntaxedAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "未税小计")]
+        public decimal SubtotalUntaxedAmount
+        {
+            get { return _SubtotalUntaxedAmount; }
+            set
+            {
+                SetProperty(ref _SubtotalUntaxedAmount, value);
+            }
+        }
+
+        private string _Description;
+        /// <summary>
+        /// 描述
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Description",ColDesc = "描述")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Description" ,Length=300,IsNullable = true,ColumnDescription = "描述" )]
+        public string Description
+        { 
+            get{return _Description;}
+            set{
+            SetProperty(ref _Description, value);
+                        }
+        }
+
         private string _Summary;
         /// <summary>
         /// 摘要
@@ -300,10 +321,7 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(ProdDetailID))]
         public virtual tb_ProdDetail tb_proddetail { get; set; }
 
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(Unit_ID))]
-        public virtual tb_Unit tb_unit { get; set; }
+      
 
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示

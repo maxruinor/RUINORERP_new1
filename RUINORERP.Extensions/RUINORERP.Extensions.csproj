@@ -77,9 +77,10 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extras.DynamicProxy" Version="6.0.1" />
     <PackageReference Include="AutoMapper" Version="10.1.1" />
-    <PackageReference Include="CacheManager.Microsoft.Extensions.Caching.Memory" Version="1.2.0" />
+    <PackageReference Include="CacheManager.Core" Version="2.0.0" />
+    <PackageReference Include="CacheManager.Microsoft.Extensions.Caching.Memory" Version="2.0.0" />
     <PackageReference Include="CacheManager.Microsoft.Extensions.Logging" Version="2.0.0-beta-1629" />
-    <PackageReference Include="CacheManager.SystemRuntimeCaching" Version="2.0.0-beta-1629" />
+    <PackageReference Include="CacheManager.SystemRuntimeCaching" Version="2.0.0" />
     <PackageReference Include="Fireasy.Mapster" Version="2.3.0-preview1" />
     <PackageReference Include="log4net" Version="2.0.15" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
@@ -90,7 +91,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-    <PackageReference Include="StackExchange.Redis" Version="2.6.90" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>

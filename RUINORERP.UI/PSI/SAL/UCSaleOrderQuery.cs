@@ -158,7 +158,7 @@ namespace RUINORERP.UI.PSI.SAL
                         //检测新增的订金是不是大于总金额了。
                         if (SOrder.Deposit + PreAmount > SOrder.TotalAmount)
                         {
-                            if (MessageBox.Show($"【销售订单】的预付款金额{SOrder.Deposit}+{PreAmount}，超过了订单总金额{SOrder.TotalAmount}，你确定客户有超额付款吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, defaultButton: MessageBoxDefaultButton.Button2) == DialogResult.No)
+                            if (MessageBox.Show($"【销售订单】原有预付款金额{SOrder.Deposit}+当前预付款：{PreAmount}，超过了订单总金额{SOrder.TotalAmount}，你确定客户有超额付款吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, defaultButton: MessageBoxDefaultButton.Button2) == DialogResult.No)
                             {
                                 return;
                             }
@@ -168,9 +168,11 @@ namespace RUINORERP.UI.PSI.SAL
                         {
                             tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                             var rs = await ctr.ManualPrePayment(inputForm.InputContent.ObjToDecimal(), SOrder);
-                            MenuPowerHelper menuPowerHelper;
-                            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PreReceivedPayment) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                            MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                            string Flag = string.Empty;
+                            Flag = SharedFlag.Flag1.ToString();
+                            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                            && m.EntityName == nameof(tb_FM_PreReceivedPayment) && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag).FirstOrDefault();
                             if (RelatedMenuInfo != null)
                             {
                                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);

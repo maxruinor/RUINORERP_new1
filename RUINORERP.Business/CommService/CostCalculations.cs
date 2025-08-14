@@ -162,6 +162,44 @@ namespace RUINORERP.Business.CommService
             }
 
         }
+
+
+        /// <summary>
+        /// 采购价格调整专用：仅修正移动加权平均成本，不改动库存数量。
+        /// </summary>
+        /// <param name="_appContext"></param>
+        /// <param name="inv">要调整的库存记录</param>
+        /// <param name="costDiff">不含税的成本差异额（可正可负，含运费）</param>
+        public static void AdjustCostOnly(ApplicationContext _appContext,
+                                          tb_Inventory inv,
+                                          decimal costDiff)
+        {
+            // 只允许移动加权平均法通过本接口调成本，其余方法直接返回
+            var m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
+            if (m != 库存成本计算方式.移动加权平均法)
+                return;
+
+            // 当前库存数量
+            int onHandQty = inv.Quantity;
+
+            // 极端保护：库存数量为 0 时不允许再调成本
+            if (onHandQty == 0)
+                throw new InvalidOperationException("库存数量为 0 时不允许再调整成本");
+
+            // 把差异额直接加到总库存金额上
+            decimal originalAmount = inv.Inv_Cost * onHandQty;
+            decimal newTotalAmount = originalAmount + costDiff;
+
+            // 重新计算单位成本
+            inv.CostMovingWA = newTotalAmount / onHandQty;
+            inv.Inv_Cost = inv.CostMovingWA;
+
+            // 保护：不允许出现负成本
+            if (inv.Inv_Cost < 0)
+                throw new InvalidOperationException($"调整后出现负库存成本：{inv.Inv_Cost}");
+        }
+
+
         public static void AntiCostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal currentCostPrice)
         {
             // 获取系统配置

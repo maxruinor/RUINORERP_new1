@@ -469,7 +469,6 @@ namespace RUINORERP.Business
         {
             List<tb_FM_PriceAdjustmentDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustmentDetail>()
                                .Includes(t => t.tb_proddetail )
-                               .Includes(t => t.tb_unit )
                                .Includes(t => t.tb_fm_priceadjustment )
                                     .ToListAsync();
             
@@ -491,7 +490,6 @@ namespace RUINORERP.Business
         {
             List<tb_FM_PriceAdjustmentDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustmentDetail>().Where(exp)
                                .Includes(t => t.tb_proddetail )
-                               .Includes(t => t.tb_unit )
                                .Includes(t => t.tb_fm_priceadjustment )
                                     .ToListAsync();
             
@@ -513,7 +511,6 @@ namespace RUINORERP.Business
         {
             List<tb_FM_PriceAdjustmentDetail> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustmentDetail>().Where(exp)
                             .Includes(t => t.tb_proddetail )
-                            .Includes(t => t.tb_unit )
                             .Includes(t => t.tb_fm_priceadjustment )
                                     .ToList();
             
@@ -552,7 +549,6 @@ namespace RUINORERP.Business
         {
             tb_FM_PriceAdjustmentDetail entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustmentDetail>().Where(w => w.AdjustDetailID == (long)id)
                              .Includes(t => t.tb_proddetail )
-                            .Includes(t => t.tb_unit )
                             .Includes(t => t.tb_fm_priceadjustment )
                                     .FirstAsync();
             if(entity!=null)

@@ -193,24 +193,25 @@ namespace RUINORERP.Business
 
                 //应收款中不能存在相同的来源的 正数金额的出库单的应收数据
                 //一个出库不能多次应收。一个出库一个应收（负数除外）。一个应收可以多次收款来抵扣
-
-                //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
-                var PendingApprovalReceivablePayable = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
-                    .Includes(c => c.tb_FM_ReceivablePayableDetails)
-                .Where(c => c.ARAPStatus >= (int)ARAPStatus.待支付)
-                .ToListAsync();
-
-                //要把自己也算上。不能大于1,entity是等待审核。所以拼一起
-                PendingApprovalReceivablePayable.Add(entity);
-
-                if (!ValidatePaymentDetails(PendingApprovalReceivablePayable, rmrs))
+                if (entity.SourceBizType.HasValue && entity.SourceBillId.HasValue)
                 {
-                    //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
-                    rmrs.Succeeded = false;
-                    rmrs.ReturnObject = entity as T;
-                    return rmrs;
-                }
+                    //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
+                    var PendingApprovalReceivablePayable = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                        .Includes(c => c.tb_FM_ReceivablePayableDetails)
+                    .Where(c => c.ARAPStatus >= (int)ARAPStatus.待支付)
+                    .ToListAsync();
 
+                    //要把自己也算上。不能大于1,entity是等待审核。所以拼一起
+                    PendingApprovalReceivablePayable.Add(entity);
+
+                    if (!ValidatePaymentDetails(PendingApprovalReceivablePayable, rmrs))
+                    {
+                        //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
+                        rmrs.Succeeded = false;
+                        rmrs.ReturnObject = entity as T;
+                        return rmrs;
+                    }
+                }
                 //出库入库时生成应收。。其它业务审核确认这个就生效。
                 /*             
                 1. 状态更新	将应收单状态从“未审核”改为“已审核”	应收单自身状态
@@ -304,7 +305,7 @@ namespace RUINORERP.Business
         /// <param name="ReceivablePayables"></param>
         /// <param name="returnResults"></param>
         /// <returns></returns>
-        public static bool ValidatePaymentDetails(List<tb_FM_ReceivablePayable> ReceivablePayables, ReturnResults<T> returnResults = null)
+        public static bool ValidatePaymentDetails_old(List<tb_FM_ReceivablePayable> ReceivablePayables, ReturnResults<T> returnResults = null)
         {
             // 按来源业务类型分组
             var groupedByBizType = ReceivablePayables
@@ -347,7 +348,74 @@ namespace RUINORERP.Business
             return true;
         }
 
+        /// <summary>
+        /// 来源业务单等没有。是手工建的。则不进入这里检测
+        /// </summary>
+        /// <param name="ReceivablePayables"></param>
+        /// <param name="returnResults"></param>
+        /// <returns></returns>
+        public static bool ValidatePaymentDetails(List<tb_FM_ReceivablePayable> ReceivablePayables, ReturnResults<T> returnResults = null)
+        {
+            // 按来源业务类型分组
+            var groupedByBizType = ReceivablePayables
+                .GroupBy(d => d.SourceBizType)
+                .ToList();
 
+            foreach (var bizTypeGroup in groupedByBizType)
+            {
+                // 按来源单号分组
+                var groupedByBillNo = bizTypeGroup
+                    .GroupBy(d => d.SourceBillNo)
+                    .ToList();
+
+                foreach (var billNoGroup in groupedByBillNo)
+                {
+                    var items = billNoGroup.ToList();
+
+                    // 情况1：单条记录直接通过
+                    if (items.Count == 1)
+                        continue;
+
+                    // 情况2：按交易方向分组（应收/应付）
+                    var directionGroups = items
+                        .GroupBy(d => d.ReceivePaymentType) // 应收/应付类型字段
+                        .ToList();
+
+                    bool hasError = false;
+                    foreach (var directionGroup in directionGroups)
+                    {
+                        var dirItems = directionGroup.ToList();
+
+                        // 子情况2.1：同一方向对冲（正负抵消）
+                        if (dirItems.Count == 2)
+                        {
+                            decimal totalLocal = dirItems.Sum(i => i.LocalBalanceAmount);
+                            decimal totalForeign = dirItems.Sum(i => i.ForeignBalanceAmount);
+                            if (Math.Abs(totalLocal) < 0.001m && Math.Abs(totalForeign) < 0.001m)
+                                continue; // 对冲成功
+                        }
+                        // 子情况2.2：单方向单条记录（允许不同方向共存）
+                        else if (dirItems.Count == 1)
+                        {
+                            continue;
+                        }
+
+                        // 不满足上述条件则标记错误
+                        hasError = true;
+                        break;
+                    }
+
+                    // 情况3：混合方向（应收+应付）且各自合法
+                    if (!hasError) continue;
+
+                    // 错误处理
+                    returnResults.ErrorMsg = $"业务来源：{(BizType)bizTypeGroup.Key}，单号:{billNoGroup.Key}\r\n"
+                        + $"应{(ReceivePaymentType)ReceivablePayables[0].ReceivePaymentType}单已经存在，数据不能重复，请检查。";
+                    return false;
+                }
+            }
+            return true;
+        }
 
 
         /// <summary>
@@ -533,14 +601,7 @@ namespace RUINORERP.Business
 
             payable.Currency_ID = entity.Currency_ID;
 
-            //if (entity.tb_saleorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
-            //{
-            //    if (entity.tb_customervendor.CustomerCreditDays.HasValue)
-            //    {
-            //        // 从销售出库日期开始计算到期日
-            //        payable.DueDate = entity.OutDate.Date.AddDays(entity.tb_customervendor.CustomerCreditDays.Value).AddDays(1).AddTicks(-1);
-            //    }
-            //}
+    
             payable.ExchangeRate = entity.ExchangeRate;
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_SaleOutReDetails);
@@ -552,9 +613,9 @@ namespace RUINORERP.Business
                 {
                     details[i].TaxRate = olditem.TaxRate;
                     details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
-                    details[i].Quantity = olditem.Quantity;
+                    details[i].Quantity = -olditem.Quantity;//注意是负数
                     details[i].UnitPrice = olditem.TransactionPrice;
-                    details[i].LocalPayableAmount = olditem.TransactionPrice * olditem.Quantity;
+                    details[i].LocalPayableAmount = olditem.TransactionPrice * -olditem.Quantity;
                 }
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;
@@ -2231,14 +2292,7 @@ namespace RUINORERP.Business
             {
                 payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
             }
-            //if (entity.tb_saleorder.tb_paymentmethod.Paytype_Name == DefaultPaymentMethod.账期.ToString())
-            //{
-            //    if (entity.tb_customervendor.CustomerCreditDays.HasValue)
-            //    {
-            //        // 从销售出库日期开始计算到期日
-            //        payable.DueDate = entity.OutDate.Date.AddDays(entity.tb_customervendor.CustomerCreditDays.Value).AddDays(1).AddTicks(-1);
-            //    }
-            //}
+ 
             payable.ExchangeRate = entity.ExchangeRate;
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_PurEntryReDetails);
@@ -2250,9 +2304,9 @@ namespace RUINORERP.Business
                 {
                     details[i].TaxRate = olditem.TaxRate;
                     details[i].TaxLocalAmount = olditem.TaxAmount;
-                    details[i].Quantity = olditem.Quantity;
+                    details[i].Quantity = -olditem.Quantity;//注意是负数方向
                     details[i].UnitPrice = olditem.UnitPrice;
-                    details[i].LocalPayableAmount = olditem.UnitPrice * olditem.Quantity;
+                    details[i].LocalPayableAmount = details[i].UnitPrice.Value * details[i].Quantity.Value;
                 }
                 details[i].ExchangeRate = entity.ExchangeRate;
                 details[i].ActionStatus = ActionStatus.新增;

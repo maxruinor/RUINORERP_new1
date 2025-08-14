@@ -95,6 +95,7 @@ namespace RUINORERP.UI.FM.FMBase
                 {
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 }
+                entity.Currency_ID = MainForm.Instance.AppContext.BaseCurrency.Currency_ID;
                 entity.DocumentDate = System.DateTime.Now;
                 if (CurMenuInfo != null)
                 {

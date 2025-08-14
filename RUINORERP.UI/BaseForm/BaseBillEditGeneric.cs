@@ -386,7 +386,7 @@ namespace RUINORERP.UI.BaseForm
             #region 转单
 
             toolStripbtnConvertDocuments.DropDownItems.Clear();
-            LoadRelatedDataToDropDownItemsAsync();
+            //LoadRelatedDataToDropDownItemsAsync();
             if (toolStripbtnConvertDocuments.DropDownItems.Count > 0)
             {
                 toolStripbtnConvertDocuments.Visible = true;

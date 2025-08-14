@@ -92,19 +92,19 @@
       <HintPath>..\packages\BouncyCastle.Cryptography.2.3.0\lib\net461\BouncyCastle.Cryptography.dll</HintPath>
     </Reference>
     <Reference Include="CacheManager.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5b450b4fb65c4cdb, processorArchitecture=MSIL">
-      <HintPath>..\packages\CacheManager.Core.2.0.0-beta-1629\lib\net45\CacheManager.Core.dll</HintPath>
+      <HintPath>..\packages\CacheManager.Core.2.0.0\lib\net472\CacheManager.Core.dll</HintPath>
     </Reference>
     <Reference Include="CacheManager.Microsoft.Extensions.Caching.Memory, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5b450b4fb65c4cdb, processorArchitecture=MSIL">
-      <HintPath>..\packages\CacheManager.Microsoft.Extensions.Caching.Memory.2.0.0-beta-1629\lib\netstandard2.0\CacheManager.Microsoft.Extensions.Caching.Memory.dll</HintPath>
+      <HintPath>..\packages\CacheManager.Microsoft.Extensions.Caching.Memory.2.0.0\lib\netstandard2.0\CacheManager.Microsoft.Extensions.Caching.Memory.dll</HintPath>
     </Reference>
     <Reference Include="CacheManager.Microsoft.Extensions.Configuration, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5b450b4fb65c4cdb, processorArchitecture=MSIL">
-      <HintPath>..\packages\CacheManager.Microsoft.Extensions.Configuration.2.0.0-beta-1629\lib\net461\CacheManager.Microsoft.Extensions.Configuration.dll</HintPath>
+      <HintPath>..\packages\CacheManager.Microsoft.Extensions.Configuration.2.0.0\lib\netstandard2.0\CacheManager.Microsoft.Extensions.Configuration.dll</HintPath>
     </Reference>
     <Reference Include="CacheManager.Microsoft.Extensions.Logging, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5b450b4fb65c4cdb, processorArchitecture=MSIL">
       <HintPath>..\packages\CacheManager.Microsoft.Extensions.Logging.2.0.0-beta-1629\lib\netstandard2.0\CacheManager.Microsoft.Extensions.Logging.dll</HintPath>
     </Reference>
     <Reference Include="CacheManager.SystemRuntimeCaching, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5b450b4fb65c4cdb, processorArchitecture=MSIL">
-      <HintPath>..\packages\CacheManager.SystemRuntimeCaching.2.0.0-beta-1629\lib\net45\CacheManager.SystemRuntimeCaching.dll</HintPath>
+      <HintPath>..\packages\CacheManager.SystemRuntimeCaching.2.0.0\lib\net472\CacheManager.SystemRuntimeCaching.dll</HintPath>
     </Reference>
     <Reference Include="Castle.Core, Version=5.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <HintPath>..\packages\Castle.Core.5.1.1\lib\net462\Castle.Core.dll</HintPath>

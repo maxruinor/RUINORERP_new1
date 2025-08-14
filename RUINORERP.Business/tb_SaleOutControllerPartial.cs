@@ -1330,7 +1330,15 @@ namespace RUINORERP.Business
                         }
                         else
                         {
-                            tipsMsg.Add($"销售出库单{saleout.SaleOutNo}，{item.tb_proddetail.tb_prod.CNName + item.tb_proddetail.tb_prod.Specifications}已退回数为{item.TotalReturnedQty}，可退库数为{details[i].Quantity}，当前行数据忽略！");
+                            var prodInfo = BizCacheHelper.Instance.GetEntity<View_ProdInfo>(details[i].ProdDetailID);
+                            if (prodInfo != null)
+                            {
+                                tipsMsg.Add($"销售出库单{saleout.SaleOutNo}，{prodInfo.CNName + prodInfo.Specifications}已退回数为{item.TotalReturnedQty}，可退库数为{details[i].Quantity}，当前行数据忽略！");
+                            }
+                            else
+                            {
+                                tipsMsg.Add($"销售出库单{saleout.SaleOutNo}，{item.property}已退回数为{item.TotalReturnedQty}，可退库数为{details[i].Quantity}，当前行数据忽略！");
+                            }
                         }
 
                         #endregion

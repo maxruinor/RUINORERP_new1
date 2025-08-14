@@ -59,6 +59,7 @@ namespace RUINORERP.Business.CommService
         private static MyCacheManager _manager;
 
 
+        /*
         public static void InitManager()
         {
             if (_manager == null)
@@ -107,7 +108,47 @@ namespace RUINORERP.Business.CommService
                 _manager = new MyCacheManager(cache, cacheEntity, cacheEntityList);
             }
         }
+        */
 
+        // 修正后的InitManager方法
+        public static void InitManager()
+        {
+            if (_manager == null)
+            {
+                // 1. 创建日志工厂（如果需要自定义日志）
+                var loggerFactory = LoggerFactory.Create(logBuilder =>
+                {
+                    // 添加Log4NetProvider（你的日志配置）
+                    Common.Log4Net.Log4NetProvider log4NetProvider = new Common.Log4Net.Log4NetProvider("Log4net_file.config");
+                    logBuilder.AddProvider(log4NetProvider);
+                });
+
+                // 2. 构建缓存管理器（使用正确的Build重载）
+                var cache = CacheFactory.Build<object>(
+                    builder => builder
+                        .WithSystemRuntimeCacheHandle() // 使用系统运行时缓存
+                        .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120)), // 过期配置
+                    loggerFactory // 传入日志工厂
+                );
+
+                // 同理构建其他缓存管理器（cacheEntity、cacheEntityList）
+                var cacheEntity = CacheFactory.Build<object>(
+                    builder => builder
+                        .WithSystemRuntimeCacheHandle()
+                        .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120)),
+                    loggerFactory
+                );
+
+                var cacheEntityList = CacheFactory.Build<object>(
+                    builder => builder
+                        .WithSystemRuntimeCacheHandle()
+                        .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120)),
+                    loggerFactory
+                );
+
+                _manager = new MyCacheManager(cache, cacheEntity, cacheEntityList);
+            }
+        }
         //private ConcurrentDictionary<string, object> _Dict = new ConcurrentDictionary<string, object>();
 
         //public ConcurrentDictionary<string, object> Dict { get => _Dict; set => _Dict = value; }

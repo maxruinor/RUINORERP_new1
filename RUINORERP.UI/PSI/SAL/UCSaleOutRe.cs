@@ -331,7 +331,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             if (entity == null)
             {
-
+                 
                 return;
             }
             cmbPayStatus.Enabled = true;

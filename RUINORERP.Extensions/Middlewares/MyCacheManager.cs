@@ -16,10 +16,12 @@ using System.Linq;
 using System.Web.Caching;
 using Fireasy.Common.Extensions;
 using SqlSugar;
+using Microsoft.Extensions.Configuration;
 
 namespace RUINORERP.Extensions.Middlewares
 {
     /// <summary>
+    /// 缓存核心管理器,负责实体及列表的缓存CRUD操作，支持强类型和JSON格式存储
     /// CacheManager引用第三方框架
     /// 这里这样设置为了在控制层中   方便添加删除修改，在UI层再加一层为了引用调用
     /// 当前系统暂时一般只处理基础性的资料不包含主子表的单据情况
@@ -42,8 +44,49 @@ namespace RUINORERP.Extensions.Middlewares
         /// </summary>
         public ICacheManager<object> CacheInfoList { get => _cache; set => _cache = value; }
 
+        /// <summary>
+        /// 实体列表缓存（核心缓存容器）
+        /// </summary>
 
         private ICacheManager<object> _cacheEntityList;
+
+
+        /// <summary>
+        /// 表结构信息缓存
+        /// Key:表名 Value:主键和显示字段的键值对
+        /// </summary>
+        public ConcurrentDictionary<string, KeyValuePair<string, string>> TableSchema { get; }
+            = new ConcurrentDictionary<string, KeyValuePair<string, string>>();
+
+        /// <summary>
+        /// 表类型映射
+        /// </summary>
+        public ConcurrentDictionary<string, Type> TableTypes { get; }
+            = new ConcurrentDictionary<string, Type>();
+
+        /// <summary>
+        /// 外键关系缓存
+        /// </summary>
+        public ConcurrentDictionary<string, List<KeyValuePair<string, string>>> ForeignKeyMappings { get; }
+            = new ConcurrentDictionary<string, List<KeyValuePair<string, string>>>();
+
+        private static readonly Lazy<MyCacheManager> _instance = new Lazy<MyCacheManager>(() =>
+            new MyCacheManager(
+                CacheFactory.Build<object>(p => p.WithSystemRuntimeCacheHandle()),
+                CacheFactory.Build<object>(p => p.WithSystemRuntimeCacheHandle())
+            )
+        );
+
+
+
+        /// <summary>
+        /// 构造函数（支持依赖注入）
+        /// </summary>
+        public MyCacheManager(ICacheManager<object> cacheInfoList, ICacheManager<object> cacheEntityList)
+        {
+            CacheInfoList = cacheInfoList ?? throw new ArgumentNullException(nameof(cacheInfoList));
+            CacheEntityList = cacheEntityList ?? throw new ArgumentNullException(nameof(cacheEntityList));
+        }
 
         /// <summary>
         /// 缓存所有的基础数据的实体列表，通过表名寻找
@@ -53,21 +96,45 @@ namespace RUINORERP.Extensions.Middlewares
         /// 2025-2-27 决定：所有缓存统一转换为List<object>类型 ,实际object应该是强类型 Customer
         /// </summary>
         public ICacheManager<object> CacheEntityList { get => _cacheEntityList; set => _cacheEntityList = value; }
-
-
-        //  private ICacheManager<object> _cacheEntity;
-
-
         /// <summary>
-        /// 缓存所有的基础数据的实体，通过表名，主键列名，和主键值的组合寻找
-        /// tableName + ":" + key + ":" + KeyValue; 得到实体
-        /// tb_Unit:ID:12312312为搜索的key，返回是一个实体,当然保存的也是实体
+        /// 注册表结构信息
         /// </summary>
-        //   public ICacheManager<object> CacheEntity { get => _cacheEntity; set => _cacheEntity = value; }
+        public void RegisterTableSchema<T>(string idColumn, string nameColumn)
+        {
+            var tableName = typeof(T).Name;
+            TableSchema.TryAdd(tableName, new KeyValuePair<string, string>(idColumn, nameColumn));
+            TableTypes.TryAdd(tableName, typeof(T));
+        }
+        /// <summary>
+        /// 加载外键关系
+        /// </summary>
+        public void LoadForeignKeyMappings<T>()
+        {
+            var type = typeof(T);
+            var tableName = type.Name;
 
+            if (ForeignKeyMappings.ContainsKey(tableName) || tableName.Contains("View"))
+                return;
 
+            var fkRelations = type.GetProperties()
+                .SelectMany(prop => prop.GetCustomAttributes<FKRelationAttribute>()
+                    .Select(attr => new KeyValuePair<string, string>(
+                        attr.FK_IDColName,
+                        attr.FKTableName == "tb_ProdDetail" ? "View_ProdDetail" : attr.FKTableName
+                    ))
+                ).ToList();
+
+            if (fkRelations.Any())
+            {
+                ForeignKeyMappings.TryAdd(tableName, fkRelations);
+            }
+        }
 
         private static MyCacheManager _manager;
+
+        /// <summary>
+        /// 单例实例（兼容现有逻辑，建议逐步迁移到依赖注入）
+        /// </summary>
         public static MyCacheManager Instance
         {
             get
@@ -109,12 +176,7 @@ namespace RUINORERP.Extensions.Middlewares
         //结合上面的表集合一起用。不然应该是在开始设计时NewTableList的key用Type.
         public ConcurrentDictionary<string, Type> NewTableTypeList = new ConcurrentDictionary<string, Type>();
 
-        /// <summary>
-        /// 为了把所有基础数据的表名 实际 和类型关联起来 在列表datagridview的cellFormating中显示名称时 通过关联的外键找到的基础数据的表名和值。从而得到名称
-        /// 直接通过泛型参数得到Type
-        /// </summary>
-        // public ConcurrentDictionary<string, Type> TableTypeList { get => _TableTypeList; set => _TableTypeList = value; }
-
+   
 
         public void SetFkColList<T>()
         {
@@ -214,116 +276,124 @@ namespace RUINORERP.Extensions.Middlewares
             return tlist;
         }
 
-        /*
-        public void AddCacheEntity<T>(object entity, Expression<Func<T, int>> expkey, Expression<Func<T, string>> expvalue)
+        /// <summary>
+        /// 获取实体列表（指定表名） AI:
+        /// </summary>
+        public List<T> GetEntityList_AI<T>(string tableName)
         {
-            string key = expkey.Body.ToString().Split('.')[1];
-            string value = expvalue.Body.ToString().Split('.')[1];
-            string tableName = expkey.Parameters[0].Type.Name;
-            //只处理需要缓存的表
-            if (TableList.ContainsKey(tableName))
+            if (!TableSchema.ContainsKey(tableName) || !CacheEntityList.Exists(tableName))
+                return new List<T>();
+
+            var cacheData = CacheEntityList.Get(tableName);
+            if (cacheData == null)
+                return new List<T>();
+
+            // 处理强类型列表
+            if (cacheData is List<object> objectList)
             {
-                //设置属性的值
-                object xkey = typeof(T).GetProperty(key).GetValue(entity, null);
-                object xValue = typeof(T).GetProperty(value).GetValue(entity, null);
-                string dckey = tableName + ":" + key + ":" + xkey;
-                if (!Cache.Exists(dckey))
-                {
-                    Cache.Add(dckey, xValue);
-                }
+                return objectList.OfType<T>().ToList();
             }
+
+            // 处理JSON数组
+            if (cacheData is JArray jArray)
+            {
+                return jArray.ToObject<List<T>>() ?? new List<T>();
+            }
+
+            // 处理原始泛型列表
+            if (TypeHelper.IsGenericList(cacheData.GetType()))
+            {
+                return ((IEnumerable)cacheData).Cast<T>().ToList();
+            }
+
+            return new List<T>();
         }
 
-
-        public void AddCacheEntity<T>(T entity)
+        /// <summary>
+        /// 内部缓存更新方法
+        /// </summary>
+        private void UpdateCacheList(string tableName, object data, bool hasExpire)
         {
-            if (entity == null)
+            if (CacheEntityList.Exists(tableName))
             {
+                CacheEntityList.Update(tableName, _ => data);
+            }
+            else
+            {
+                CacheEntityList.Add(tableName, data);
+            }
+
+            // 更新缓存信息
+            var count = data is IEnumerable enumerable ? enumerable.Cast<object>().Count() : 0;
+            UpdateCacheInfo(tableName, count, hasExpire);
+        }
+
+        /// <summary>
+        /// 更新缓存元信息
+        /// </summary>
+        private void UpdateCacheInfo(string tableName, int count, bool hasExpire)
+        {
+            var cacheInfo = new CacheInfo(tableName, count)
+            {
+                HasExpire = hasExpire
+            };
+
+            if (hasExpire)
+            {
+                var expireMinutes = new Random().Next(60, 120);
+                CacheEntityList.Expire(tableName, ExpirationMode.Absolute, TimeSpan.FromMinutes(expireMinutes));
+                cacheInfo.ExpirationTime = DateTime.Now.AddMinutes(expireMinutes);
+            }
+     
+            // 更新缓存表的信息
+            CacheInfoList.Update(tableName, existing => cacheInfo);
+        }
+
+        /// <summary>
+        /// 更新实体列表（统一入口）
+        /// </summary>
+        public void UpdateEntityList_AI<T>(IEnumerable<T> entities, bool hasExpire = false)
+        {
+            if (entities == null) return;
+
+            var tableName = typeof(T).Name;
+            var objectList = entities.Cast<object>().ToList();
+            UpdateCacheList(tableName, objectList, hasExpire);
+        }
+        /// <summary>
+        /// 更新JSON格式的实体列表
+        /// </summary>
+        public void UpdateEntityList_AI(string tableName, JArray jArray)
+        {
+            if (jArray == null) return;
+            UpdateCacheList(tableName, jArray, false);
+        }
+        /// <summary>
+        /// 更新单个实体
+        /// </summary>
+        public void UpdateEntity_AI<T>(T entity)
+        {
+            if (entity == null) return;
+
+            var tableName = typeof(T).Name;
+            if (!TableSchema.TryGetValue(tableName, out var schema))
                 return;
-            }
-            string tableName = typeof(T).Name;
-            //只处理需要缓存的表
-            if (TableList.ContainsKey(tableName))
-            {
-                //ID
-                string key = TableList[tableName].Split(':')[0];
-                //NAME 列名而已
-                string value = TableList[tableName].Split(':')[1];
-                //设置属性的值
-                object xkey = typeof(T).GetProperty(key).GetValue(entity, null);
-                object xValue = typeof(T).GetProperty(value).GetValue(entity, null);
-                string dckey = tableName + ":" + key + ":" + xkey;
-                if (!CacheEntity.Exists(dckey))
-                {
-                    CacheEntity.Add(dckey, entity);
-                }
-                else
-                {
-                    UpdateEntity<T>(entity);
-                }
 
-                //if (CacheEntityList.Exists(tableName))
-                //{
-                //   List<T> old= CacheEntityList.Get<T>(tableName) as List<T>;
-                //    old.Add((T)entity);
-                //    CacheEntityList.Update(tableName,o=> old);
-                //    //CacheEntityList.TryUpdate(tableName, old, out old);
-                //}
-
-            }
-        }
-
-        public void AddCacheEntity<T>(object entity)
-        {
-            if (entity == null)
-            {
+            var idValue = entity.GetPropertyValue(schema.Key)?.ToString();
+            if (string.IsNullOrEmpty(idValue))
                 return;
-            }
-            string tableName = typeof(T).Name;
-            //只处理需要缓存的表
-            if (TableList.ContainsKey(tableName))
-            {
-                //ID
-                string key = TableList[tableName].Split(':')[0];
-                //NAME 列名而已
-                string value = TableList[tableName].Split(':')[1];
-                //设置属性的值
-                object xkey = typeof(T).GetProperty(key).GetValue(entity, null);
-                object xValue = typeof(T).GetProperty(value).GetValue(entity, null);
-                string dckey = tableName + ":" + key + ":" + xkey;
-                if (!CacheEntity.Exists(dckey))
-                {
-                    CacheEntity.Add(dckey, entity);
-                }
-                else
-                {
-                    UpdateEntity<T>(entity);
-                }
 
-                //if (CacheEntityList.Exists(tableName))
-                //{
-                //   List<T> old= CacheEntityList.Get<T>(tableName) as List<T>;
-                //    old.Add((T)entity);
-                //    CacheEntityList.Update(tableName,o=> old);
-                //    //CacheEntityList.TryUpdate(tableName, old, out old);
-                //}
+            // 获取现有列表并更新
+            var entityList = GetEntityList_AI<T>(tableName).ToList();
+            var existingEntity = entityList.FirstOrDefault(e =>
+                e.GetPropertyValue(schema.Key)?.ToString() == idValue);
 
-            }
+            if (existingEntity != null)
+                entityList.Remove(existingEntity);
+
+            entityList.Add(entity);
+            UpdateEntityList(entityList);
         }
-
-        public void AddCacheEntity<T>(List<T> list)
-        {
-            if (list == null)
-            {
-                return;
-            }
-            foreach (var item in list)
-            {
-                AddCacheEntity<T>(item);
-            }
-        }
-        */
-
 
         /// <summary>
         /// 更新缓存列表
@@ -856,6 +926,27 @@ ToList：
 
 
 
+        /// <summary>
+        /// 删除实体
+        /// </summary>
+        public void DeleteEntity<T>(object idValue)
+        {
+            if (idValue == null) return;
+
+            var tableName = typeof(T).Name;
+            if (!TableSchema.TryGetValue(tableName, out var schema))
+                return;
+
+            var entityList = GetEntityList_AI<T>(tableName).ToList();
+            var entityToRemove = entityList.FirstOrDefault(e =>
+                e.GetPropertyValue(schema.Key)?.ToString() == idValue.ToString());
+
+            if (entityToRemove != null)
+            {
+                entityList.Remove(entityToRemove);
+                UpdateEntityList(entityList);
+            }
+        }
 
         /// <summary>
         /// TODO
@@ -1088,16 +1179,42 @@ ToList：
             _manager = this;
         }
 
-        private static void MostSimpleCacheManager()
-        {
-            var config = new ConfigurationBuilder()
-                .WithSystemRuntimeCacheHandle()
-                .Build();
 
-            var cache = new BaseCacheManager<string>(config);
-            // or
-            var cache2 = CacheFactory.FromConfiguration<string>(config);
+        //private static void MostSimpleCacheManager()
+        //{
+        //    var config = new ConfigurationBuilder()
+        //        .WithSystemRuntimeCacheHandle()
+        //        .Build();
+
+        //    var cache = new BaseCacheManager<string>(config);
+        //    // or
+        //    var cache2 = CacheFactory.FromConfiguration<string>(config);
+        //}
+
+
+        /// <summary>
+        /// 合并列表（去重）
+        /// </summary>
+        public List<object> MergeLists(Type elementType, List<object> existingList, List<object> newList, string keyField)
+        {
+            return existingList.Concat(newList)
+                .GroupBy(item => item.GetPropertyValue(keyField))
+                .Select(group => group.First())
+                .Where(item =>
+                    item.GetPropertyValue(keyField) != null &&
+                    item.GetPropertyValue(keyField).ToString() != "0")
+                .ToList();
         }
+        /// <summary>
+        /// 合并JSON数组（去重）
+        /// </summary>
+        public JArray MergeJArrays(JArray existingArray, JArray newArray, string keyField)
+        {
+            return new JArray(existingArray.Concat(newArray)
+                .GroupBy(token => token[keyField])
+                .Select(group => group.First()));
+        }
+
 
         private static void MostSimpleCacheManagerB()
         {

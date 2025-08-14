@@ -601,7 +601,7 @@ namespace RUINORERP.UI.FM
         }
 
         public void LoadItems(bool? IsExpenseTypeValue)
-        {
+            {
             bool IsExpenseType = IsExpenseTypeValue.GetValueOrDefault();
             //产品
 

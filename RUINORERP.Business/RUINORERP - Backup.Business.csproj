@@ -7,15 +7,12 @@
    </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Cache\**" />
     <Compile Remove="SystemService\**" />
     <Compile Remove="UseCsla\**" />
     <Compile Remove="Validator_back\**" />
-    <EmbeddedResource Remove="Cache\**" />
     <EmbeddedResource Remove="SystemService\**" />
     <EmbeddedResource Remove="UseCsla\**" />
     <EmbeddedResource Remove="Validator_back\**" />
-    <None Remove="Cache\**" />
     <None Remove="SystemService\**" />
     <None Remove="UseCsla\**" />
     <None Remove="Validator_back\**" />
@@ -33,9 +30,7 @@
     <Compile Remove="BizCodeGeneration\SerialNumberGeneratorFactory.cs" />
     <Compile Remove="CommService\CacheManager.cs" />
     <Compile Remove="CommService\DictServiceHelper.cs" />
-    <Compile Remove="CommService\ICacheManager.cs" />
     <Compile Remove="CommService\InitDBData.cs" />
-    <Compile Remove="CommService\InventoryCacheManager.cs" />
     <Compile Remove="Ean13.cs" />
     <Compile Remove="LogicaService\LocTypeController.cs" />
     <Compile Remove="Processor\View_SaleOrderPerformanceAuto.cs" />
@@ -78,6 +73,7 @@
     <PackageReference Include="CacheManager.Core" Version="2.0.0" />
     <PackageReference Include="CacheManager.Microsoft.Extensions.Caching.Memory" Version="2.0.0" />
     <PackageReference Include="CacheManager.Microsoft.Extensions.Configuration" Version="2.0.0" />
+    <PackageReference Include="CacheManager.Serialization.Json" Version="2.0.0" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="SqlSugar" Version="5.1.4.160" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
@@ -105,8 +101,6 @@
 
   <ItemGroup>
     <Folder Include="BizCodeGeneration\" />
-    <Folder Include="Cache\" />
-    <Folder Include="DependencyInjection\" />
     <Folder Include="IocExtensions\" />
   </ItemGroup>
 

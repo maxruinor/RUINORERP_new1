@@ -166,6 +166,9 @@ namespace RUINORERP.UI.FM
                     //清空
                     cmbPayeeInfoID.DataBindings.Clear();
                 }
+
+
+                lblBillText.Text = $"预{PaymentType}单";
                 //根据币别如果是外币才显示外币相关的字段
                 if (entity.Currency_ID > 0)
                 {

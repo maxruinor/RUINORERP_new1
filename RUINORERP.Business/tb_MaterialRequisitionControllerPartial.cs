@@ -123,7 +123,7 @@ namespace RUINORERP.Business
                 // entity.ApprovalResults = approvalEntity.ApprovalResults;
 
 
-          
+
 
 
                 #region 审核 通过时
@@ -195,28 +195,81 @@ namespace RUINORERP.Business
 
                         //更新当前发料明细行数据对应的制令单明细。以行号和产品ID为标准
                         //先找到这个MO名下所有发料的和以行号和产品ID为标准
-                        int TotalQty = entity.tb_MaterialRequisitionDetails.Where(c => c.ProdDetailID == entity.tb_MaterialRequisitionDetails[i].ProdDetailID && c.Location_ID == entity.tb_MaterialRequisitionDetails[i].Location_ID).Sum(c => c.ActualSentQty);
-                        if ((mochild.ActualSentQty + TotalQty) > mochild.ShouldSendQty)//超发
-                        {
-                            /***/
+                        // 允许的误差（1 个单位以内）
+                        const decimal tolerance = 1.0m;
+                         int TotalQty = entity.tb_MaterialRequisitionDetails.Where(c => c.ProdDetailID == entity.tb_MaterialRequisitionDetails[i].ProdDetailID && c.Location_ID == entity.tb_MaterialRequisitionDetails[i].Location_ID).Sum(c => c.ActualSentQty);
 
-                            if (!entity.ReApply)
+                        // 计算实际已发 + 本次要发的数量
+                        decimal totalSent = mochild.ActualSentQty + TotalQty;
+
+                        // 判断应发数量是否为小数
+                        bool shouldSendIsDecimal = (mochild.ShouldSendQty % 1) != 0;
+
+                        // 计算超发量
+                        decimal overQty = totalSent - mochild.ShouldSendQty;
+
+                        // 超发判断
+                        if (overQty > 0)
+                        {
+                            // 如果应发数量是小数，且超发量在 1 个单位以内，视为正常
+                            if (shouldSendIsDecimal && overQty <= tolerance)
                             {
-                                string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量不能大于制令单对应行的应发数量。";
-                                MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                //_unitOfWorkManage.RollbackTran();
-                                rrs.ErrorMsg = msg;
-                                _logger.LogInformation(msg);
-                                return rrs;
+                                // 视为正常，不报错，继续执行
                             }
                             else
                             {
-                                mochild.OverSentQty += (mochild.ActualSentQty + TotalQty) - mochild.ShouldSendQty;
+                                // 否则视为真正的超发
+                                if (!entity.ReApply)
+                                {
+                                    string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量{totalSent}不能大于制令单对应行的应发数量{mochild.ShouldSendQty}。";
+                                    MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    rrs.ErrorMsg = msg;
+                                    _logger.LogInformation(msg);
+                                    return rrs;
+                                }
+                                else
+                                {
+                                    mochild.OverSentQty += overQty;
+                                }
                             }
-
-                            /***/
                         }
+
+                        // 更新已发数量
                         mochild.ActualSentQty += TotalQty;
+
+                
+                        //// 判断应发数量是否为小数
+                        //bool shouldSendIsDecimal = (mochild.ShouldSendQty % 1) != 0;
+
+
+                        //// 计算实际已发 + 本次要发的数量
+                        //decimal totalSent = mochild.ActualSentQty + TotalQty;
+                        //// 允许的误差（1 个单位以内）
+                        //const decimal tolerance = 1.0m;
+                        //// 判断超发，但允许 1 个单位以内的误差
+                        //if (totalSent > mochild.ShouldSendQty &&
+                        //    Math.Abs(totalSent - mochild.ShouldSendQty) > tolerance)
+                        //{
+                        //    /*
+                        //     这里有一个情况，有些物料不是整数。发料时向上取整了。所以这里的比较如果在1以内。则不需处理。
+                        //     */
+                        //    if (!entity.ReApply)
+                        //    {
+                        //        string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量{totalSent}不能大于制令单对应行的应发数量{mochild.ShouldSendQty}。";
+                        //        MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        //        //_unitOfWorkManage.RollbackTran();
+                        //        rrs.ErrorMsg = msg;
+                        //        _logger.LogInformation(msg);
+                        //        return rrs;
+                        //    }
+                        //    else
+                        //    {
+                        //        mochild.OverSentQty += (mochild.ActualSentQty + TotalQty) - mochild.ShouldSendQty;
+                        //    }
+
+                        //    /***/
+                        //}
+                        //mochild.ActualSentQty += TotalQty;
 
                     }
                     #endregion
@@ -258,23 +311,42 @@ namespace RUINORERP.Business
                             if (MoDeltail != null)
                             {
                                 //所有对应的领料明细减少去制令单中的应该发的差。
-                                //是不是应该统计审核过的？
                                 decimal totalActualSentQty = entity.tb_manufacturingorder.tb_MaterialRequisitions
                                     .Where(c => c.ApprovalStatus.HasValue && c.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && (c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结))
                                     .Where(c => c.ApprovalResults.HasValue && c.ApprovalResults.Value == true)
                                     .Sum(c => c.tb_MaterialRequisitionDetails.Where(c => c.ProdDetailID == inv.ProdDetailID && c.Location_ID == inv.Location_ID).Sum(d => d.ActualSentQty));
 
-                                //所有实发的数量不能大于应发的数量，除非是补料
-                                if (!entity.ReApply && totalActualSentQty > MoDeltail.ShouldSendQty)
-                                {
-                                    string prodName = child.tb_proddetail.tb_prod.CNName + child.tb_proddetail.tb_prod.Specifications;
-                                    string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量不能大于制令单对应行的应发数量。";
-                                    rrs.ErrorMsg = msg;
-                                    _unitOfWorkManage.RollbackTran();
-                                    rrs.ErrorMsg = msg;
-                                    _logger.LogInformation(msg);
-                                    return rrs;
 
+                                // 允许的误差阈值
+                                const decimal tolerance = 1.0m;
+                            
+
+                                // 超发量
+                                decimal overQty = totalActualSentQty - MoDeltail.ShouldSendQty;
+
+                                // 只有应发数量带小数时才允许 1 个单位以内的误差
+                                bool allowTolerance = (MoDeltail.ShouldSendQty % 1) != 0;
+
+                                // 真正需要拦截的超发：整数必须 0 误差；小数允许 1 以内
+                                bool realOver = overQty > 0 &&
+                                                (!allowTolerance || overQty > tolerance);
+
+                                if (realOver)
+                                {
+                                    //所有实发的数量不能大于应发的数量，除非是补料
+                                    if (!entity.ReApply)
+                                    {
+                                        string prodName = child.tb_proddetail.tb_prod.CNName + child.tb_proddetail.tb_prod.Specifications;
+                                        string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量{totalActualSentQty}不能大于制令单对应行的应发数量{MoDeltail.ShouldSendQty}。";
+                                        rrs.ErrorMsg = msg;
+                                        _unitOfWorkManage.RollbackTran();
+                                        rrs.ErrorMsg = msg;
+                                        _logger.LogInformation(msg);
+                                        return rrs;
+
+                                    }
+                                    // 补料 → 累记超发
+                                    MoDeltail.OverSentQty += overQty;
                                 }
                                 inv.NotOutQty -= child.ActualSentQty.ToInt();
                             }
@@ -320,7 +392,7 @@ namespace RUINORERP.Business
                 {
                     //_logger.LogInformation("审核领料单成功" + entity.MaterialRequisitionNO);
                 }
-             
+
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
@@ -383,7 +455,7 @@ namespace RUINORERP.Business
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 
@@ -430,7 +502,7 @@ namespace RUINORERP.Business
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
                     invUpdateList.Add(inv);
-                   
+
                 }
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
@@ -439,7 +511,7 @@ namespace RUINORERP.Business
                     _logger.LogInformation($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
                 }
 
-                
+
 
                 //更新制作单明细的已发数量
                 if (entity.tb_manufacturingorder != null)

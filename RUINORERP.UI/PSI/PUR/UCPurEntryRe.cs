@@ -45,6 +45,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Model.CommonModel;
 using AutoUpdateTools;
+using ICSharpCode.SharpZipLib.Tar;
 
 
 namespace RUINORERP.UI.PSI.PUR
@@ -57,7 +58,7 @@ namespace RUINORERP.UI.PSI.PUR
             InitializeComponent();
             AddPublicEntityObject(typeof(ProductSharePart));
         }
- 
+
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -89,7 +90,7 @@ namespace RUINORERP.UI.PSI.PUR
         }
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
-            if (base.EditEntity is tb_PurEntryRe  entryRe)
+            if (base.EditEntity is tb_PurEntryRe entryRe)
             {
                 if (entryRe.PurEntryID.HasValue)
                 {
@@ -126,12 +127,34 @@ namespace RUINORERP.UI.PSI.PUR
                             toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
                         }
                     }
-
+                }
+                //如果有出库，则查应收
+                if (entryRe.DataStatus >= (int)DataStatus.确认 && entryRe.ProcessWay == (int)PurReProcessWay.厂商退款)
+                {
+                    var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                    .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
+                                                                    && c.CustomerVendor_ID == entryRe.CustomerVendor_ID
+                                                                    && c.SourceBillId == entryRe.PurEntryRe_ID)
+                                                                    .ToListAsync();
+                    foreach (var item in receivablePayables)
+                    {
+                        var rqpara = new Model.CommonModel.RelatedQueryParameter();
+                        rqpara.bizType = BizType.应付款单;
+                        rqpara.billId = item.ARAPId;
+                        ToolStripMenuItem RelatedMenuItemPara = new ToolStripMenuItem();
+                        RelatedMenuItemPara.Name = $"{rqpara.billId}";
+                        RelatedMenuItemPara.Tag = rqpara;
+                        RelatedMenuItemPara.Text = $"{rqpara.bizType}:{item.ARAPNo}";
+                        RelatedMenuItemPara.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemPara);
+                        }
+                    }
                 }
 
-
             }
-          await  base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
         public override void BindData(tb_PurEntryRe entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
@@ -429,7 +452,7 @@ namespace RUINORERP.UI.PSI.PUR
                     EditEntity.IsIncludeTax = false;
                 }
 
-        
+
                 if (NeedValidated && !base.Validator<tb_PurEntryReDetail>(details))
                 {
                     return false;
@@ -651,7 +674,7 @@ protected async override void ReReview()
                 {
                     tb_PurEntryDetail item = purEntry.tb_PurEntryDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
                     details[i].Quantity = details[i].Quantity - item.ReturnedQty;// 减掉已经退回的数量
-                    details[i].SubtotalTrPriceAmount = (details[i].UnitPrice+details[i].CustomizedCost )* details[i].Quantity;
+                    details[i].SubtotalTrPriceAmount = (details[i].UnitPrice + details[i].CustomizedCost) * details[i].Quantity;
 
                     if (details[i].Quantity > 0)
                     {
@@ -687,7 +710,7 @@ protected async override void ReReview()
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
                 entity.TotalTaxAmount = NewDetails.Sum(c => c.TaxAmount);
                 //这里还要有一个未税总金额TotalUntaxedAmount
-                
+
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 entity.ApprovalResults = null;

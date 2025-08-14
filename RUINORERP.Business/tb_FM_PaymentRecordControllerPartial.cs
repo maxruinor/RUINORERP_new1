@@ -661,28 +661,28 @@ namespace RUINORERP.Business
                                                 saleOrder.ApprovalOpinions += $" 订金退款，订单取消作废";
                                                 saleOrder.DataStatus = (int)DataStatus.作废;
                                                 saleOrderUpdateList.Add(saleOrder);
+                                                #region 更新库存的拟销量
 
-                                            }
+                                                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                                                foreach (var child in saleOrder.tb_SaleOrderDetails)
+                                                {
+                                                    #region 库存表的更新 ，
+                                                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                                                    //更新在途库存
+                                                    inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
+                                                    BusinessHelper.Instance.EditEntity(inv);
+                                                    #endregion
+                                                    invUpdateList.Add(inv);
+                                                }
 
+                                                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                                                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
 
-                                            #region 更新库存的拟销量
-
-                                            List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
-                                            foreach (var child in saleOrder.tb_SaleOrderDetails)
-                                            {
-                                                #region 库存表的更新 ，
-                                                tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                                                //更新在途库存
-                                                inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
-                                                BusinessHelper.Instance.EditEntity(inv);
                                                 #endregion
-                                                invUpdateList.Add(inv);
                                             }
 
-                                            DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                                            var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
 
-                                            #endregion
+
 
                                         }
                                         else if (prePayment.SourceBizType == (int)BizType.采购订单)
@@ -696,26 +696,24 @@ namespace RUINORERP.Business
                                                 purOrder.ApprovalOpinions += $" 订金退款，订单取消";
                                                 purOrder.DataStatus = (int)DataStatus.作废;
                                                 purOrderUpdateList.Add(purOrder);
-                                            }
+                                                #region 更新库存的拟销量
 
-                                            #region 更新库存的拟销量
+                                                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                                                foreach (var child in purOrder.tb_PurOrderDetails)
+                                                {
+                                                    #region 库存表的更新 ，
+                                                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                                                    inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
+                                                    BusinessHelper.Instance.EditEntity(inv);
+                                                    #endregion
+                                                    invUpdateList.Add(inv);
+                                                }
 
-                                            List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
-                                            foreach (var child in purOrder.tb_PurOrderDetails)
-                                            {
-                                                #region 库存表的更新 ，
-                                                tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                                                inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
-                                                BusinessHelper.Instance.EditEntity(inv);
+                                                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                                                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+
                                                 #endregion
-                                                invUpdateList.Add(inv);
                                             }
-
-                                            DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                                            var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-
-                                            #endregion
-
 
                                         }
                                     }

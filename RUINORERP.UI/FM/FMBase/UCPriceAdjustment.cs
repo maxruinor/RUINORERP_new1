@@ -518,9 +518,8 @@ namespace RUINORERP.UI.FM
              */
 
             //公共到明细的映射 源 ，左边会隐藏
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PriceAdjustmentDetail>(sgd, f => f.Specifications, t => t.Specifications);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PriceAdjustmentDetail>(sgd, f => f.Specifications, t => t.CustomerPartNo);
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PriceAdjustmentDetail>(sgd, f => f.Unit_ID, t => t.Unit_ID);
+            sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PriceAdjustmentDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PriceAdjustmentDetail>(sgd, f => f.prop, t => t.property);
 
             //应该只提供一个结构

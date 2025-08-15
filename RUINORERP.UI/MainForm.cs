@@ -107,6 +107,10 @@ namespace RUINORERP.UI
     {
 
         public UILogManager logManager;
+
+        /// <summary>
+        /// 菜单跟踪器菜单推荐器
+        /// </summary>
         private readonly MenuTracker _menuTracker;
         //IOptions<T> 提供对配置设置的单例访问。它在整个应用程序生命周期中保持相同的实例，这意味着即使在配置文件更改后，通过 IOptions<T> 获取的值也不会改变
         //。

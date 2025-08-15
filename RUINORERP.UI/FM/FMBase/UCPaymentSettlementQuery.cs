@@ -71,16 +71,16 @@ namespace RUINORERP.UI.FM
 
             var lambda = Expressionable.Create<tb_FM_PaymentSettlement>()
                              .And(t => t.ReceivePaymentType == (int)PaymentType)
-                            //.AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
-                            // t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                         //.AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
+                         // t => t.Created_by == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
 
             base.LimitQueryConditions = lambda;
 
-    
-        }
 
+        }
+  
         public override void AddExcludeMenuList()
         {
             base.AddExcludeMenuList("批量处理");
@@ -111,7 +111,7 @@ namespace RUINORERP.UI.FM
             base.MasterInvisibleCols.Add(c => c.SourceBillId);
             base.MasterInvisibleCols.Add(c => c.TargetBillId);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
-            
+
             //base.ChildInvisibleCols.Add(c => c.SubtotalCostAmount);
         }
 
@@ -145,6 +145,25 @@ namespace RUINORERP.UI.FM
                 base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_PaymentSettlement>(c => c.TargetBillNo, keyNamePair);
             }
             #endregion
+
+            base._UCBillMasterQuery.newSumDataGridViewMaster.DataBindingComplete += new DataGridViewBindingCompleteEventHandler(grid_DataBindingComplete);
+        }
+
+        private void grid_DataBindingComplete(object sender,
+                                      DataGridViewBindingCompleteEventArgs e)
+        {
+            foreach (DataGridViewRow dr in
+                     base._UCBillMasterQuery.newSumDataGridViewMaster.Rows)
+            {
+                if (dr.DataBoundItem is tb_FM_PaymentSettlement p &&
+                    p.isdeleted)
+                {
+                    dr.DefaultCellStyle.BackColor = Color.FromArgb(255, 64, 0);
+                    dr.DefaultCellStyle.ForeColor = Color.WhiteSmoke;
+                    base._UCBillMasterQuery.newSumDataGridViewMaster.ShowCellToolTips = true;
+                    dr.HeaderCell.ToolTipText = "此核销记录，被撤销过，已标识删除";
+                }
+            }
         }
     }
 }

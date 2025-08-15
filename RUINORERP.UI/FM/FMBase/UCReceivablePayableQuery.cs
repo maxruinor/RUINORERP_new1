@@ -416,7 +416,7 @@ namespace RUINORERP.UI.FM
                                     PrePaySettlements.Add(new KeyValuePair<tb_FM_PreReceivedPayment, tb_FM_PaymentSettlement>(PrePay, Settlement));
                                 }
 
-                                await receivablePayableController.RevokeApplyManualPaymentAllocation(receivable, ReceivePaymentType.收款, PrePaySettlements, true);
+                                await receivablePayableController.RevokeApplyManualPaymentAllocation(receivable, PrePaySettlements, true);
                             }
                         }
                     }
@@ -548,7 +548,7 @@ namespace RUINORERP.UI.FM
                         {
                             // 使用选中的预付款单
                             //您确定要将当前应收款单，通过通过预收付款抵扣元吗？
-                            if (MessageBox.Show($"您确定要将当前【应{PaymentType}单】:{receivable.ARAPNo}\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 抵扣{selectedAdvances.Sum(x => x.LocalBalanceAmount).ToString("##.00")}元吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                            if (MessageBox.Show($"当前【应{PaymentType}单】:{receivable.ARAPNo}，未核销余额:{receivable.LocalBalanceAmount.ToString("##.00")}元\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 抵扣{selectedAdvances.Sum(x => x.LocalBalanceAmount).ToString("##.00")}元。\r\n您确定吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
                             {
                                 //一一对应检测订单号是否相同
                                 //应收款的出库单的订单号
@@ -560,8 +560,9 @@ namespace RUINORERP.UI.FM
 
                                 //选择的预收款对应的订单号
                                 long[] PreOrderIds = selectedAdvances.Where(c => c.SourceBizType == (int)BizType.销售订单).Select(c => c.SourceBillId.Value).ToArray();
-
-                                if (SaleOrderIds != PreOrderIds)
+                                var saleOrderSet = new HashSet<long>(SaleOrderIds);
+                                var preOrderSet = new HashSet<long>(PreOrderIds);
+                                if (!saleOrderSet.SetEquals(preOrderSet))
                                 {
                                     if (MessageBox.Show($"当前【应{PaymentType}单】:{receivable.ARAPNo}与【预{PaymentType}单】：{preRPNOsPreview}的订单号不一致，你确实要抵扣吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
                                     {

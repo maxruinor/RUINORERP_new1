@@ -135,7 +135,7 @@ namespace RUINORERP.UI.PSI.PUR
                     var PreReceivedPayments = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PreReceivedPayment>()
                                                                     .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.待审核
                                                                     && c.CustomerVendor_ID == purOrder.CustomerVendor_ID
-                                                                    && c.SourceBillId == purOrder.SOrder_ID)
+                                                                    && c.SourceBillId == purOrder.PurOrder_ID)
                                                                     .ToListAsync();
                     foreach (var item in PreReceivedPayments)
                     {
@@ -154,7 +154,7 @@ namespace RUINORERP.UI.PSI.PUR
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
         public override void BindData(tb_PurOrder entity, ActionStatus actionStatus)
         {
@@ -516,15 +516,9 @@ namespace RUINORERP.UI.PSI.PUR
                         }
                     }
 
-                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.ShipCost) && entity.ShipCost > 0)
+                    if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.ShipCost))
                     {
-
-
-
                         Summation();
-
-
-
                     }
 
                 }
@@ -543,24 +537,7 @@ namespace RUINORERP.UI.PSI.PUR
                         }
                     }
                 }
-
-                if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.ShipCost))
-                {
-                    EditEntity.TotalAmount = EditEntity.tb_PurOrderDetails.Sum(c => c.SubtotalAmount) + EditEntity.ShipCost;
-                    var taxrate = EditEntity.tb_PurOrderDetails.FirstOrDefault(c => c.TaxRate > 0);
-                    if (taxrate != null)
-                    {
-                        decimal FreightTaxRate = taxrate.TaxRate;
-                        var UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
-                        EditEntity.TotalUntaxedAmount = EditEntity.tb_PurOrderDetails.Sum(c => c.SubtotalUntaxedAmount);
-                        EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
-                    }
-                    if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
-                    {
-                        EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
-                        EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
-                    }
-                }
+              
 
                 //如果客户有变化，带出对应有业务员
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.CustomerVendor_ID))
@@ -620,36 +597,7 @@ namespace RUINORERP.UI.PSI.PUR
             base.BindData(entity);
         }
 
-        //protected override tb_PurOrder AddByCopy()
-        //{
-        //    if (EditEntity == null)
-        //    {
-        //        MessageBox.Show("请先选择一个采购订单作为复制的基准。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        //        return EditEntity;
-        //    }
-
-        //    EditEntity=  base.AddByCopy();
-        //    EditEntity.ActionStatus = ActionStatus.新增;
-        //    EditEntity.PurOrder_ID = 0;
-        //    EditEntity.ApprovalStatus = (int)ApprovalStatus.未审核;
-        //    EditEntity.DataStatus = (int)DataStatus.草稿;
-        //    EditEntity.Approver_at = null;
-        //    EditEntity.tb_PurEntries = null;
-        //    EditEntity.tb_PurOrderRes = null;
-        //    EditEntity.PurOrderNo = string.Empty;
-        //    EditEntity.PrintStatus = 0;
-        //    BusinessHelper.Instance.InitEntity(EditEntity);
-        //    foreach (var item in EditEntity.tb_PurOrderDetails)
-        //    {
-        //        item.PurOrder_ID = 0;
-        //        item.PurOrder_ChildID = 0;
-        //        item.tb_purorder = null;
-        //        item.PrimaryKeyID = 0;
-        //    }
-
-        //    return EditEntity;
-        //}
-
+     
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();
@@ -660,9 +608,6 @@ namespace RUINORERP.UI.PSI.PUR
 
         private void UCStockIn_Load(object sender, EventArgs e)
         {
-            // list = dc.Query();
-            //DevAge.ComponentModel.IBoundList bd = list.ToBindingSortCollection<View_ProdDetail>()  ;//new DevAge.ComponentModel.BoundDataView(mView);
-            // grid1.DataSource = list.ToBindingSortCollection<View_ProdDetail>() as DevAge.ComponentModel.IBoundList;// new DevAge.ComponentModel.BoundDataView(list.ToDataTable().DefaultView); 
             InitDataTocmbbox();
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
 
@@ -708,20 +653,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
-            /*
-            //具体审核权限的人才显示
-            if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
-            {
-                //listCols.SetCol_NeverVisible<tb_PurOrderDetail>(c => c.Cost);
-                //listCols.SetCol_NeverVisible<tb_PurOrderDetail>(c => c.SubtotalCostAmount);
-                //listCols.SetCol_NeverVisible<tb_PurOrderDetail>(c => c.SubtotalPirceAmount);
-            }
-            */
-
-            //listCols.SetCol_Summary<tb_PurOrderDetail>(c => c.Quantity);
-            //listCols.SetCol_Summary<tb_PurOrderDetail>(c => c.TransactionPrice);
-            //listCols.SetCol_Summary<tb_PurOrderDetail>(c => c.SubtotalAmount);
-            //listCols.SetCol_Summary<tb_PurOrderDetail>(c => c.TaxAmount);
+             
 
             //设置总计列
             BaseProcessor baseProcessor = BusinessHelper._appContext.GetRequiredServiceByName<BaseProcessor>(typeof(tb_PurOrderDetail).Name + "Processor");

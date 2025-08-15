@@ -160,7 +160,7 @@ namespace RUINORERP.UI.PSI.SAL
                                             if (PaymentList != null && PaymentList.Count == 1)
                                             {
                                                 newPaymentRecord = PaymentList[0];
-                                                if (newPaymentRecord.TotalLocalAmount== receivablePayable.TotalLocalPayableAmount)
+                                                if (newPaymentRecord.TotalLocalAmount == receivablePayable.TotalLocalPayableAmount)
                                                 {
                                                     //自动审核收款单
                                                     newPaymentRecord.ApprovalOpinions = "销售退回单【平台退款】时，系统自动审核";
@@ -331,7 +331,7 @@ namespace RUINORERP.UI.PSI.SAL
         {
             if (entity == null)
             {
-                 
+
                 return;
             }
             cmbPayStatus.Enabled = true;
@@ -375,7 +375,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
             EditEntity = entity;
 
-            DataBindingHelper.BindData4CmbByEnum<tb_SaleOutRe, RefundStatus>(entity, k => k.RefundStatus, cmbRefundStatus, false);
+            DataBindingHelper.BindData4CmbByEnum<tb_SaleOutRe, RefundStatus>(entity, k => k.RefundStatus, cmbRefundStatus, false, RefundStatus.部分退款退货);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_SaleOutRe, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false, PayStatus.全额预付, PayStatus.部分预付);

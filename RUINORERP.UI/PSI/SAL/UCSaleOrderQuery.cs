@@ -43,6 +43,7 @@ using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.UI.CommonUI;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.ToolForm;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -335,7 +336,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
 
-        [Obsolete("暂时废弃，后面要确认一下是不是需要有这个功能")]
+
         private async void NewSumDataGridView_取消订单(object sender, EventArgs e)
         {
             if (MessageBox.Show("确定要执行【取消订单】操作吗?", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.No)
@@ -357,16 +358,19 @@ namespace RUINORERP.UI.PSI.SAL
                     }
 
                     tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                    //审核状态时取消订单 有退款则退款？
+
+
+                    //如果订单状态是审核状态，则取消订单
+
+
+                    //审核状态时取消订单 有退款则退款
+                    //如果有预付款，则取消订单时，需要退款
                     ReturnResults<tb_SaleOrder> rmrs = await ctr.CancelOrder(item);
-                    //if (result)
-                    //{
+                    if (rmrs.Succeeded)
+                    {
+                        await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("取消订单【作废】", rmrs.ReturnObject, $"结果:{(rmrs.Succeeded ? "成功" : "失败")},{rmrs.ErrorMsg}");
+                    }
 
-                    //}
-                    //else
-                    //{
-
-                    //}
 
                 }
                 else

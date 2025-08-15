@@ -350,7 +350,7 @@ namespace RUINORERP.Business
                     else
                     {
                         //是账期。说明是未付过款时，则是第一次收订金。具体的渠道。由后面补上，这里暂时空置? 但是又不是空值类型。
-                        
+
                     }
                 }
 
@@ -1423,6 +1423,22 @@ namespace RUINORERP.Business
                     {
                         //订单取消后，预收款，可以退款可以下一个订单，应收来处理。由财务决定。
                         //这里仅提醒，订金已支付
+                        if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销
+                            || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                        {
+                            rmrs.ErrorMsg = $"存在预收款单，并且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请进行，撤销核销，再退款处理。";
+                            _unitOfWorkManage.RollbackTran();
+                            rmrs.Succeeded = false;
+                            return rmrs;
+                        }
+
+                        if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待核销)
+                        {
+                            rmrs.ErrorMsg = $"存在预收款单，并且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请进行退款处理。";
+                            _unitOfWorkManage.RollbackTran();
+                            rmrs.Succeeded = false;
+                            return rmrs;
+                        }
                     }
 
                 }
@@ -1471,7 +1487,7 @@ namespace RUINORERP.Business
                 {
                     _logger.LogInformation($"{entity.SOrderNo}取消时，更新库存结果为0行，请检查数据！");
                 }
-
+                entity.CloseCaseOpinions = "用户取消订单";
                 entity.DataStatus = (int)DataStatus.作废;
                 BusinessHelper.Instance.EditEntity(entity);
 

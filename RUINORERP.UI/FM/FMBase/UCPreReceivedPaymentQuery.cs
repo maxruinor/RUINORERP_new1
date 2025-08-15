@@ -243,7 +243,7 @@ namespace RUINORERP.UI.FM
                                     }
                                     if (receivable.TotalLocalPayableAmount == Settlements.Sum(c => c.SettledLocalAmount))
                                     {
-                                        bool rs = await receivablePayableController.RevokeApplyManualPaymentAllocation(receivable, ReceivePaymentType.收款, PrePaySettlements, true);
+                                        bool rs = await receivablePayableController.RevokeApplyManualPaymentAllocation(receivable,  PrePaySettlements, true);
                                         if (rs)
                                         {
                                             MainForm.Instance.PrintInfoLog($"应{PaymentType.ToString()}单,{receivable.ARAPNo}的已经撤销抵扣。");

@@ -101,12 +101,22 @@ namespace RUINORERP.UI.FM
                         foreach (var item in PaymentList)
                         {
                             var rqp = new Model.CommonModel.RelatedQueryParameter();
-                            rqp.bizType = BizType.收款单;
+                            if (item.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                            {
+                                rqp.bizType = BizType.付款单;
+                            }
+                            else
+                            {
+                                rqp.bizType = BizType.收款单;
+                            }
+
+
                             rqp.billId = item.PaymentId;
                             ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
                             RelatedMenuItem.Name = $"{rqp.billId}";
                             RelatedMenuItem.Tag = rqp;
                             RelatedMenuItem.Text = $"{rqp.bizType}:{item.PaymentNo}";
+                            RelatedMenuItem.ToolTipText = $"{item.PaymentNo}支付金额【{item.TotalLocalAmount}】";
                             RelatedMenuItem.Click += base.MenuItem_Click;
                             if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.PaymentId.ToString()))
                             {
@@ -115,10 +125,50 @@ namespace RUINORERP.UI.FM
                         }
                     }
 
+                    //应收款单可能还会核销预收款,如何查询？
+                    #region
+
+                    var Settlements = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentSettlement>()
+                           .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID)
+                           .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
+                           .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType)
+                           //.Where(c => c.SourceBizType == (int)BizType.预收款单)
+                           //.Where(c => c.TargetBizType == (int)BizType.应收款单)
+                           .Where(c => c.TargetBillId == receivablePayable.ARAPId && c.isdeleted == false)
+                           .OrderBy(c => c.SettleDate)
+                           .ToListAsync();
+
+                    ////通过核销记录找到应收付的预收付记录表
+                    foreach (var item in Settlements)
+                    {
+                        if (!item.SourceBizType.HasValue)
+                        {
+                            //坏账时，没有核销记录，将来可以做无形费用单
+                            continue;
+                        }
+
+                        var rqp = new Model.CommonModel.RelatedQueryParameter();
+                        
+                        rqp.bizType = (BizType)item.SourceBizType.Value;
+                        rqp.billId = item.SourceBillId.Value;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.SourceBillNo}[核销]";
+                        RelatedMenuItem.ToolTipText = $"{item.SourceBillNo}核销金额【{item.SettledLocalAmount}】";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqp.billId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+
+                    #endregion
+
                 }
 
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
         /// <summary>
         /// 收付款方式决定对应的菜单功能
@@ -601,7 +651,7 @@ namespace RUINORERP.UI.FM
         }
 
         public void LoadItems(bool? IsExpenseTypeValue)
-            {
+        {
             bool IsExpenseType = IsExpenseTypeValue.GetValueOrDefault();
             //产品
 

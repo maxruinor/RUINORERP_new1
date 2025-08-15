@@ -183,6 +183,11 @@ namespace RUINORERP.Business
             tb_FM_PaymentSettlement SettlementRecord = new tb_FM_PaymentSettlement();
             SettlementRecord = mapper.Map<tb_FM_PaymentSettlement>(PaymentRecordDetail);
 
+            if (PaymentRecord.CustomerVendor_ID.HasValue)
+            {
+                SettlementRecord.CustomerVendor_ID = PaymentRecord.CustomerVendor_ID.Value;
+            }
+
             SettlementRecord.ActionStatus = ActionStatus.新增;
             SettlementRecord.IsAutoSettlement = true;
             SettlementRecord.ReceivePaymentType = PaymentRecord.ReceivePaymentType;
@@ -202,7 +207,7 @@ namespace RUINORERP.Business
             }
 
             SettlementRecord.SettledLocalAmount = PaymentRecordDetail.LocalAmount;
-            SettlementRecord.SettledForeignAmount = PaymentRecordDetail.ForeignAmount; ;
+            SettlementRecord.SettledForeignAmount = PaymentRecordDetail.ForeignAmount; 
             SettlementRecord.Account_id = PaymentRecord.Account_id;
             if (SettlementRecord.SettledLocalAmount < 0 || SettlementRecord.SettledForeignAmount < 0)
             {
@@ -225,9 +230,6 @@ namespace RUINORERP.Business
             {
 
             }
-
-            SettlementRecord.SettledForeignAmount = Math.Abs(receivablePayable.ForeignPaidAmount);
-            SettlementRecord.SettledLocalAmount = Math.Abs(receivablePayable.LocalPaidAmount);
 
             BusinessHelper.Instance.InitEntity(SettlementRecord);
             long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentSettlement>(SettlementRecord).ExecuteReturnSnowflakeIdAsync();

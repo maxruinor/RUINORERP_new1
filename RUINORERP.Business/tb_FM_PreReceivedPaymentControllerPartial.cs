@@ -33,6 +33,7 @@ using RUINORERP.Business.StatusManagerService;
 using OfficeOpenXml.Export.ToDataTable;
 using Fireasy.Common.Extensions;
 using RUINORERP.Business.CommService;
+using System.Windows.Forms;
 
 namespace RUINORERP.Business
 {
@@ -208,13 +209,55 @@ namespace RUINORERP.Business
                     }
                     return rmrs;
                 }
-                //if (!ValidatePaymentDetails(PendingApprovalDetails, rmrs))
-                //{
-                //    //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
-                //    rmrs.Succeeded = false;
-                //    rmrs.ReturnObject = entity as T;
-                //    return rmrs;
-                //}
+
+
+                List<tb_FM_PreReceivedPayment> PendingApprovalDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                    .Where(c => c.ReceivePaymentType == entity.ReceivePaymentType)
+                    .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.待审核)
+                    .Where(c => c.SourceBillId == entity.SourceBillId)
+                    .ToListAsync();
+
+
+                //加上自己
+                //要把自己也算上。不能大于1 ，entity是等待审核。所以拼一起
+                PendingApprovalDetails.AddRange(entity);
+
+                //验证 如果相同收款方向 下，相同业务类型下的相同来源单号，比方一个销售订单 多次收款，一个采购订单 多次付款时
+                //则要计算累计收款金额，如果累计金额大于等于收款金额，则不能再收款。如果超过收款金额，则进一步提示才能继续收款。
+                decimal TotalOrderAmount = 0;
+                if (entity.SourceBizType.HasValue)
+                {
+                    if (entity.SourceBizType.Value == (int)BizType.销售订单)
+                    {
+                        var saleOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
+                        .Where(c => c.SOrder_ID == entity.SourceBillId)
+                        .SingleAsync();
+                        if (saleOrder != null)
+                        {
+                            TotalOrderAmount = saleOrder.TotalAmount;
+                        }
+                    }
+                    if (entity.SourceBizType.Value == (int)BizType.采购订单)
+                    {
+                        var purOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurOrder>()
+                        .Where(c => c.PurOrder_ID == entity.SourceBillId)
+                        .SingleAsync();
+                        if (purOrder != null)
+                        {
+                            TotalOrderAmount = purOrder.TotalAmount;
+                        }
+                    }
+                }
+
+                if (!ValidatePaymentDetails(PendingApprovalDetails, entity, TotalOrderAmount, rmrs))
+                {
+                    //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
+                    rmrs.Succeeded = false;
+                    rmrs.ReturnObject = entity as T;
+                    return rmrs;
+                }
+
+
                 entity.PrePaymentStatus = (int)PrePaymentStatus.已生效;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.ApprovalResults = true;
@@ -289,6 +332,68 @@ namespace RUINORERP.Business
                 return rmrs;
             }
         }
+
+
+
+        public static bool ValidatePaymentDetails(List<tb_FM_PreReceivedPayment> paymentDetails, tb_FM_PreReceivedPayment currentPrePayment, decimal totalOrderAmount, ReturnResults<T> returnResults = null)
+        {
+            if (paymentDetails.Count == 0)
+            {
+                return true;
+            }
+            var PaymentType = (ReceivePaymentType)paymentDetails[0].ReceivePaymentType;
+
+
+            // 按来源业务类型分组
+            var groupedByBizType = paymentDetails
+                .GroupBy(d => d.SourceBizType)
+                .ToList();
+
+            foreach (var bizTypeGroup in groupedByBizType)
+            {
+                // 按来源单号分组
+                var groupedByBillNo = bizTypeGroup
+                    .GroupBy(d => d.SourceBillNo)
+                    .ToList();
+
+                foreach (var billNoGroup in groupedByBillNo)
+                {
+                    var items = billNoGroup.ToList();
+
+                    // 如果只有一条记录，直接通过
+                    if (items.Count == 1)
+                        continue;
+
+                    // 如果有两条记录，检查是否为对冲情况
+                    if (items.Count >= 2)
+                    {
+                        // 计算本币金额总和
+                        decimal totalLocalAmount = items.Sum(i => i.LocalPrepaidAmount);
+                        // 计算外币金额总和
+                        decimal totalForeignAmount = items.Sum(i => i.ForeignPrepaidAmount);
+
+                        // 检查是否满足对冲条件（总和接近0，考虑浮点数精度问题）
+                        if (Math.Abs(totalLocalAmount) < 0.001m && Math.Abs(totalForeignAmount) < 0.001m)
+                            continue;
+
+                        if (totalLocalAmount > totalOrderAmount)
+                        {
+                            if (MessageBox.Show($"预{PaymentType}单总金额{totalLocalAmount}(包含当前金额{currentPrePayment.LocalPrepaidAmount})，超过了订单总金额{totalOrderAmount}，确定要超额预{PaymentType}吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, defaultButton: MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                    returnResults.ErrorMsg = $"不能存在相同业务来源的数据:{(BizType)groupedByBizType[0].Key}，来源单号为:{groupedByBillNo[0].Key}";
+                    returnResults.ErrorMsg += $"\r\n通常是生成了重复的预{PaymentType}单。请仔细核对！";
+                    // 其他情况均视为不合法
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
 
         public async Task<bool> BaseLogicDeleteAsync(tb_FM_PreReceivedPayment ObjectEntity)
         {
@@ -447,11 +552,11 @@ namespace RUINORERP.Business
             payable.SourceBillId = entity.PurOrder_ID;
             payable.Currency_ID = entity.Currency_ID;
             payable.PrePayDate = entity.PurDate;
-            payable.ExchangeRate = exchangeRate;  
+            payable.ExchangeRate = exchangeRate;
             payable.LocalPrepaidAmountInWords = string.Empty;
-            if (PrepaidAmount==0)
+            if (PrepaidAmount == 0)
             {
-         
+
                 //payable.Account_id = entity.Account_id;//付款账户信息 在采购订单时 不用填写。由财务决定 
                 //如果是外币时，则由外币算出本币
                 if (entity.PayStatus == (int)PayStatus.全额预付)
@@ -485,7 +590,7 @@ namespace RUINORERP.Business
             {
                 payable.LocalPrepaidAmount = PrepaidAmount;
             }
-            
+
 
             //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
             payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();

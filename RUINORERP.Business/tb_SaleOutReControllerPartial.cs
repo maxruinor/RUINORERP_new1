@@ -172,70 +172,70 @@ namespace RUINORERP.Business
 
 
 
-                    //这里要更新状态！！！！！！！！！！
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(entity.tb_saleout.tb_SaleOutDetails)
-                        .UpdateColumns(t => new { t.TotalReturnedQty })
-                        .ExecuteCommandAsync();
-
-                    #endregion
-
-                    #region 回写销售订单
-
-                    //2024-4-15思路更新:如果销售订单中有相同的产品的多行情况。时 如订单: A 5PCS  A2PCS  ,出库也可以多行，A 2,A3, A2 按订单循环
-                    //回写订单退回数量
-
-                    List<tb_SaleOutReDetail> outReDetailsList = new List<tb_SaleOutReDetail>();
-                    outReDetailsList.AddRange(entity.tb_SaleOutReDetails);
-
-                    for (int i = 0; i < entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Count; i++)
+                    if (!entity.RefundOnly)
                     {
-                        tb_SaleOrderDetail orderDetail = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails[i];
-                        var totalReturnedQty = outReDetailsList.Where(c => c.ProdDetailID == orderDetail.ProdDetailID
-                        && c.Location_ID == orderDetail.Location_ID).ToList().Sum(c => c.Quantity);
-                        //没有退回
-                        if (totalReturnedQty == 0)
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOutDetail>(entity.tb_saleout.tb_SaleOutDetails)
+                               .UpdateColumns(t => new { t.TotalReturnedQty })
+                               .ExecuteCommandAsync();
+
+                        #region 回写销售订单
+
+                        //2024-4-15思路更新:如果销售订单中有相同的产品的多行情况。时 如订单: A 5PCS  A2PCS  ,出库也可以多行，A 2,A3, A2 按订单循环
+                        //回写订单退回数量
+
+                        List<tb_SaleOutReDetail> outReDetailsList = new List<tb_SaleOutReDetail>();
+                        outReDetailsList.AddRange(entity.tb_SaleOutReDetails);
+
+                        for (int i = 0; i < entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Count; i++)
                         {
-                            continue;
+                            tb_SaleOrderDetail orderDetail = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails[i];
+                            var totalReturnedQty = outReDetailsList.Where(c => c.ProdDetailID == orderDetail.ProdDetailID
+                            && c.Location_ID == orderDetail.Location_ID).ToList().Sum(c => c.Quantity);
+                            //没有退回
+                            if (totalReturnedQty == 0)
+                            {
+                                continue;
+                            }
+
+                            orderDetail.TotalReturnedQty += totalReturnedQty;
+
+                            //上面明细中 没办法处理 相同料号多次录入订单情况。这里 合并数量来判断。
+                            int totalOrderTotalQty = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Where(c => c.ProdDetailID == orderDetail.ProdDetailID && c.Location_ID == orderDetail.Location_ID).Sum(c => c.Quantity);
+
+                            //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
+                            if (orderDetail.TotalReturnedQty > totalOrderTotalQty)
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                View_ProdDetail ProdDetail = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(orderDetail.ProdDetailID);
+
+                                if (ProdDetail != null)
+                                {
+                                    rrs.ErrorMsg = $"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中，{ProdDetail.SKU} 退回总数{orderDetail.TotalReturnedQty}不能大于订单中对应数量{orderDetail.Quantity}！";
+                                }
+                                else
+                                {
+                                    rrs.ErrorMsg = $"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中， 退回总数{orderDetail.TotalReturnedQty}不能大于订单中对应数量{orderDetail.Quantity}！";
+                                }
+                                rrs.Succeeded = false;
+                                return rrs;
+                            }
                         }
 
-                        orderDetail.TotalReturnedQty += totalReturnedQty;
+                        //更新已退数量
+                        await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails)
+                            .UpdateColumns(t => new { t.TotalReturnedQty }).ExecuteCommandAsync();
 
-                        //上面明细中 没办法处理 相同料号多次录入订单情况。这里 合并数量来判断。
-                        int totalOrderTotalQty = entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails.Where(c => c.ProdDetailID == orderDetail.ProdDetailID && c.Location_ID == orderDetail.Location_ID).Sum(c => c.Quantity);
-
-                        //如果已交数据大于 订单数量 给出警告实际操作中 使用其他方式将备品入库
-                        if (orderDetail.TotalReturnedQty > totalOrderTotalQty)
+                        //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
+                        //相当于出库的。全退了。
+                        if (entity.tb_saleout.TotalQty == entity.tb_saleout.tb_SaleOutDetails.Sum(c => c.TotalReturnedQty))
                         {
-                            _unitOfWorkManage.RollbackTran();
-                            View_ProdDetail ProdDetail = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(orderDetail.ProdDetailID);
-
-                            if (ProdDetail != null)
-                            {
-                                rrs.ErrorMsg = $"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中，{ProdDetail.SKU} 退回总数{orderDetail.TotalReturnedQty}不能大于订单中对应数量{orderDetail.Quantity}！";
-                            }
-                            else
-                            {
-                                rrs.ErrorMsg = $"销售出库退回时，出库单：{entity.tb_saleout.SaleOutNo}中， 退回总数{orderDetail.TotalReturnedQty}不能大于订单中对应数量{orderDetail.Quantity}！";
-                            }
-                            rrs.Succeeded = false;
-                            return rrs;
+                            entity.tb_saleout.DataStatus = (int)DataStatus.完结;
+                            await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleout).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
                         }
+
+                        #endregion
                     }
-
-                    //更新已退数量
-                    await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrderDetail>(entity.tb_saleout.tb_saleorder.tb_SaleOrderDetails)
-                        .UpdateColumns(t => new { t.TotalReturnedQty }).ExecuteCommandAsync();
-
-                    //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
-                    //相当于出库的。全退了。
-                    if (entity.tb_saleout.TotalQty == entity.tb_saleout.tb_SaleOutDetails.Sum(c => c.TotalReturnedQty))
-                    {
-                        entity.tb_saleout.DataStatus = (int)DataStatus.完结;
-                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleout).UpdateColumns(t => new { t.DataStatus }).ExecuteCommandAsync();
-                    }
-
                     #endregion
-
                 }
 
                 if (!entity.RefundOnly)

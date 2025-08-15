@@ -135,7 +135,7 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
 
-                #region
+                #region 关联单据状态处理
 
                 //相同客户，多个应收可以合成一个收款 。所以明细中就是对应的应收单。
                 //为了提高性能 将按业务类型分组后再找到对应的单据去处理
@@ -191,6 +191,7 @@ namespace RUINORERP.Business
                         {
                             //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
                             //应收应付明细中可以相同的。负数对冲。最终收款时只会合并。
+                            //这里目前假设的是
                             tb_FM_PaymentRecordDetail RecordDetail = entity.tb_FM_PaymentRecordDetails.FirstOrDefault(c => c.SourceBilllId == receivablePayable.ARAPId);
                             receivablePayable.ForeignPaidAmount += RecordDetail.ForeignAmount;
                             receivablePayable.LocalPaidAmount += RecordDetail.LocalAmount;
@@ -343,6 +344,7 @@ namespace RUINORERP.Business
                                 if (receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付)
                                 {
                                     tb_SaleOutRe saleOutRe = await _appContext.Db.Queryable<tb_SaleOutRe>()
+                                        .Includes(c => c.tb_saleout)
                                         .Where(c => c.DataStatus >= (int)DataStatus.确认
                                      && c.SaleOutRe_ID == receivablePayable.SourceBillId).SingleAsync();
                                     if (saleOutRe != null)
@@ -350,6 +352,21 @@ namespace RUINORERP.Business
                                         saleOutRe.DataStatus = (int)DataStatus.完结;
                                         saleOutRe.PayStatus = (int)PayStatus.全部付款;
                                         saleOutRe.Paytype_ID = entity.Paytype_ID;
+
+                                        if (saleOutRe.RefundStatus == (int)RefundStatus.未退款已退货)
+                                        {
+                                            saleOutRe.RefundStatus = (int)RefundStatus.已退款已退货;
+                                            if (saleOutRe.TotalAmount == saleOutRe.tb_saleout.TotalAmount)
+                                            {
+                                                saleOutRe.tb_saleout.RefundStatus = (int)RefundStatus.已退款已退货;
+                                            }
+                                            else
+                                            {
+                                                saleOutRe.tb_saleout.RefundStatus = (int)RefundStatus.部分退款退货;
+                                            }
+                                            saleOutUpdateList.Add(saleOutRe.tb_saleout);
+                                        }
+
                                         SaleOutReUpdateList.Add(saleOutRe);
                                     }
 
@@ -658,8 +675,9 @@ namespace RUINORERP.Business
                                             if (saleOrder != null)
                                             {
 
-                                                saleOrder.ApprovalOpinions += $" 订金退款，订单取消作废";
+                                                saleOrder.CloseCaseOpinions += $" 订金退款，订单取消作废";
                                                 saleOrder.DataStatus = (int)DataStatus.作废;
+
                                                 saleOrderUpdateList.Add(saleOrder);
                                                 #region 更新库存的拟销量
 
@@ -693,7 +711,7 @@ namespace RUINORERP.Business
                                             .SingleAsync();
                                             if (purOrder != null)
                                             {
-                                                purOrder.ApprovalOpinions += $" 订金退款，订单取消";
+                                                purOrder.CloseCaseOpinions += $" 订金退款，订单取消";
                                                 purOrder.DataStatus = (int)DataStatus.作废;
                                                 purOrderUpdateList.Add(purOrder);
                                                 #region 更新库存的拟销量
@@ -954,7 +972,8 @@ namespace RUINORERP.Business
                     {
                         t.Paytype_ID,
                         t.DataStatus,
-                        t.PayStatus
+                        t.PayStatus,
+                        t.RefundStatus,
                     }).ExecuteCommandAsync();
                 }
                 if (saleOutUpdateList.Any())
@@ -963,7 +982,8 @@ namespace RUINORERP.Business
                     {
                         t.Paytype_ID,
                         t.DataStatus,
-                        t.PayStatus
+                        t.PayStatus,
+                        t.RefundStatus,
                     }).ExecuteCommandAsync();
                 }
 
@@ -1126,7 +1146,7 @@ namespace RUINORERP.Business
                         if (Math.Abs(totalLocalAmount) < 0.001m && Math.Abs(totalForeignAmount) < 0.001m)
                             continue;
                     }
-                    returnResults.ErrorMsg = $"{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单中不能存在相同业务来源的数据:{(BizType)groupedByBizType[0].Key}，来源单号为:{groupedByBillNo[0].Key}。";
+                    returnResults.ErrorMsg = $"{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单中不能存在相同业务来源的数据:{(BizType)groupedByBizType[0].Key}，来源单号为:{groupedByBillNo[0].Key}";
                     returnResults.ErrorMsg += $"\r\n通常是生成了重复{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单。请仔细核对！";
                     // 其他情况均视为不合法
                     return false;
@@ -1390,7 +1410,7 @@ namespace RUINORERP.Business
         public tb_FM_PaymentRecord BuildPaymentRecord(List<tb_FM_ReceivablePayable> entities, tb_FM_PaymentRecord OriginalPaymentRecord = null)
         {
             //通过应收 自动生成 收付款记录
-            //ReturnResults<tb_FM_PaymentRecord> rs = new ReturnResults<tb_FM_PaymentRecord>();
+            //如果应收付款单中，已经为部分付款，或可能是从预收付款单中核销了部分。所以这里生成时需要取未核销金额的应收付金额
             tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
             paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entities[0]);
             paymentRecord.ApprovalResults = null;
@@ -1403,7 +1423,7 @@ namespace RUINORERP.Business
             paymentRecord.Modified_at = null;
             paymentRecord.Modified_by = null;
             paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
-            paymentRecord.IsForCommission=entities[0].IsForCommission;
+            paymentRecord.IsForCommission = entities[0].IsForCommission;
 
             List<tb_FM_PaymentRecordDetail> details = mapper.Map<List<tb_FM_PaymentRecordDetail>>(entities);
             List<tb_FM_PaymentRecordDetail> NewDetails = new List<tb_FM_PaymentRecordDetail>();

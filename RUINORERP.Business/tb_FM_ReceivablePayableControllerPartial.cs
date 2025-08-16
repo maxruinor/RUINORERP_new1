@@ -257,7 +257,8 @@ namespace RUINORERP.Business
                     it.ARAPStatus,
                     it.ApprovalStatus,
                     it.ApprovalResults,
-                    it.ApprovalOpinions
+                    it.ApprovalOpinions,
+                    it.PayeeInfoID,
                 }).ExecuteCommandAsync();
                 if (result <= 0)
                 {
@@ -299,7 +300,7 @@ namespace RUINORERP.Business
         }
 
 
-        
+
         /// <summary>
         /// 来源业务单等没有。是手工建的。则不进入这里检测
         /// </summary>
@@ -1342,7 +1343,7 @@ namespace RUINORERP.Business
                                         }
                                     }
 
-                                    
+
                                 }
                             }
                         }
@@ -2277,15 +2278,14 @@ namespace RUINORERP.Business
             payable.LocalBalanceAmount = entity.TotalAmount;
             payable.LocalPaidAmount = 0;
             payable.TotalLocalPayableAmount = entity.TotalAmount;
-
-
+            if (entity.tb_purorder != null && !payable.PayeeInfoID.HasValue)
+            {
+                //通过订单添加付款信息
+                payable.PayeeInfoID = entity.tb_purorder.PayeeInfoID;
+            }
             payable.Remark = $"采购入库单：{entity.PurEntryNo}的应付款";
-
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
-
-            //var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-            //ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
             return payable;
         }
 

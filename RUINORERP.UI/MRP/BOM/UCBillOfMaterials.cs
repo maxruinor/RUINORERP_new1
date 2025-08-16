@@ -49,6 +49,7 @@ using System.Windows.Documents;
 using RUINORERP.Global.EnumExt;
 using System.Diagnostics;
 using RUINORERP.UI.AdvancedUIModule;
+using Mysqlx.Crud;
 
 
 
@@ -2004,11 +2005,16 @@ namespace RUINORERP.UI.MRP.BOM
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
+                for (int i = 0; i < details.Count; i++)
+                {
+                    var detail = details[i];
+
+                    decimal tempSubtotal = detail.UsedQty * detail.UnitCost;
+                    tempSubtotal = Math.Round(tempSubtotal, 4);
+                    detail.SubtotalUnitCost = tempSubtotal;
+                }
                 EditEntity.TotalMaterialCost = details.Sum(c => c.SubtotalUnitCost);
                 EditEntity.TotalMaterialQty = details.Sum(c => c.UsedQty);
-                //主表中的这两个字段保存了两种方式下的直接费用。再加上子表中的直接费用
-                // EditEntity.OutManuCost= details.Sum(c => c.SubtotalOutManuCost);
-                // EditEntity.ManufacturingCost = details.Sum(c => c.SubtotalSelfManuCost);
                 EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
                 EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
             }

@@ -2685,39 +2685,52 @@ namespace RUINORERP.UI.BaseForm
                                 //    (int)BizType.销售订单, 11);
                                 //MainForm.Instance.ecs.AddSendData(od);
                             }
-                        }
 
-                        #region 采购入库单如果启用了财务模块，则会生成应付款单
 
-                        AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
-                        if (authorizeController.EnableFinancialModule())
-                        {
-                            if (MainForm.Instance.AppContext.FMConfig.AutoAuditPaymentable)
+                            #region 采购入库单如果启用了财务模块，则会生成应付款单
+
+                            AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
+                            if (authorizeController.EnableFinancialModule())
                             {
-                                #region 自动审核应付款单
-                                //销售订单审核时自动将预付款单设为"已生效"状态
-                                var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                                if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
+                                if (MainForm.Instance.AppContext.FMConfig.AutoAuditPaymentable)
                                 {
-                                    payable.ApprovalOpinions = "系统自动审核";
-                                    payable.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                    payable.ApprovalResults = true;
-                                    ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable);
-                                    if (!autoApproval.Succeeded)
+                                    #region 自动审核应付款单
+                                    //销售订单审核时自动将预付款单设为"已生效"状态
+                                    var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                                    if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
                                     {
-                                        autoApproval.Succeeded = false;
-                                        autoApproval.ErrorMsg = $"应付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        payable.ApprovalOpinions = "系统自动审核";
+                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                        payable.ApprovalResults = true;
+                                        if (PurEntry.tb_purorder != null && !payable.PayeeInfoID.HasValue)
+                                        {
+                                            //通过订单添加付款信息
+                                            payable.PayeeInfoID = PurEntry.tb_purorder.PayeeInfoID;
+                                        }
+
+                                        ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable);
+                                        if (!autoApproval.Succeeded)
+                                        {
+                                            autoApproval.Succeeded = false;
+                                            autoApproval.ErrorMsg = $"应付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                            if (MainForm.Instance.AppContext.SysConfig.ShowDebugInfo)
+                                            {
+                                                MainForm.Instance.logger.LogInformation(autoApproval.ErrorMsg);
+                                            }
+                                            await MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核失败", autoApproval.ReturnObject as tb_FM_ReceivablePayable, autoApproval.ErrorMsg);
+                                        }
+                                        else
+                                        {
+                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                        }
                                     }
-                                    else
-                                    {
-                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
-                                    }
+                                    #endregion
                                 }
-                                #endregion
                             }
+
+                            #endregion
                         }
 
-                        #endregion
                     }
 
 

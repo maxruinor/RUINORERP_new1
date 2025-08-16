@@ -116,7 +116,7 @@ namespace RUINORERP.Business
                         if (!exist)
                         {
                             _unitOfWorkManage.RollbackTran();
-                            View_ProdDetail view_Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(child.ProdDetailID);
+                            View_ProdInfo view_Prod = BizCacheHelper.Instance.GetEntity<View_ProdInfo>(child.ProdDetailID);
                             if (view_Prod != null)
                             {
                                 string prodName = "【" + view_Prod.SKU + "】" + view_Prod.CNName;
@@ -131,19 +131,31 @@ namespace RUINORERP.Business
                         }
                     }
 
-                    foreach (var child in entity.tb_saleout.tb_SaleOutDetails)
+                    for (int c = 0; c < entity.tb_saleout.tb_SaleOutDetails.Count; c++)
                     {
+                        var child = entity.tb_saleout.tb_SaleOutDetails[c];
+
                         tb_SaleOutReDetail returnDetail = entity.tb_SaleOutReDetails
                             .Where(c => c.ProdDetailID == child.ProdDetailID
                             && c.Location_ID == child.Location_ID
                             && c.SaleOutDetail_ID == child.SaleOutDetail_ID
                             ).FirstOrDefault();
+
                         if (returnDetail == null) //这里主要 是因为 条件是后面加的前面退货明细中没有出库行号值
                         {
                             returnDetail = entity.tb_SaleOutReDetails
                             .Where(c => c.ProdDetailID == child.ProdDetailID
                             && c.Location_ID == child.Location_ID
                             ).FirstOrDefault();
+                            //找到退货行号
+                            if (returnDetail != null)
+                            {
+                                //一个单有退货行号。则全部有。有的话，就前面不可能查不到。查不到说明退的是相同产品的后面的行，这里要跳过
+                                if (returnDetail.SaleOutDetail_ID.HasValue)
+                                {
+                                    continue;
+                                }
+                            }
                         }
                         //如果仅退款则数量不能加回？
                         if (returnDetail == null || entity.RefundOnly)
@@ -157,14 +169,31 @@ namespace RUINORERP.Business
                         if (child.TotalReturnedQty > child.Quantity)
                         {
                             _unitOfWorkManage.RollbackTran();
-                            rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能大于出库数量！请检查该出库单是否已经退回过！";
+
+                            var prodinfo = BizCacheHelper.Instance.GetEntity<View_ProdInfo>(child.ProdDetailID);
+                            if (prodinfo != null)
+                            {
+                                rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细{prodinfo.SKU}：{prodinfo.CNName}{prodinfo.prop}退回总数量不能大于出库数量！请检查该出库单是否已经退回过！";
+                            }
+                            else
+                            {
+                                rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能大于出库数量！请检查该出库单是否已经退回过！";
+                            }
                             rrs.Succeeded = false;
                             return rrs;
                         }
                         if (child.TotalReturnedQty < 0)
                         {
-                            _unitOfWorkManage.RollbackTran();
-                            rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能小于0！请检查数据后重试！";
+                            _unitOfWorkManage.RollbackTran(); var prodinfo = BizCacheHelper.Instance.GetEntity<View_ProdInfo>(child.ProdDetailID);
+                            if (prodinfo != null)
+                            {
+                                rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细{prodinfo.SKU}：{prodinfo.CNName}{prodinfo.prop}退回总数量不能小于0！请检查数据后重试！";
+                            }
+                            else
+                            {
+                                rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中，明细退回总数量不能小于0！请检查数据后重试！";
+                            }
+
                             rrs.Succeeded = false;
                             return rrs;
                         }
@@ -284,7 +313,7 @@ namespace RUINORERP.Business
                                 BusinessHelper.Instance.EditEntity(inv);
                             }
                             // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
-                            //inv.Inv_Cost = child.TransactionPrice;//这里需要计算，根据系统设置中的算法计算。
+                            //inv.Inv_Cost = child.TransactionPrice;// 退货按当前成本，不倒算
                             //inv.CostFIFO = child.TransactionPrice;
                             //inv.CostMonthlyWA = child.TransactionPrice;
                             //inv.CostMovingWA = child.TransactionPrice;
@@ -341,16 +370,17 @@ namespace RUINORERP.Business
                 if (entity.RefundStatus.HasValue && ((RefundStatus)entity.RefundStatus.Value).ToString().Contains("已退款"))
                 {
                     entity.RefundStatus = (int)RefundStatus.已退款已退货;
-                    if (entity.RefundOnly)
-                    {
-                        entity.RefundStatus = (int)RefundStatus.已退款未退货;
-                    }
+
                     if (entity.tb_saleout != null)
                     {
                         if (entity.tb_saleout.RefundStatus == (int)RefundStatus.已退款未退货 || entity.tb_saleout.RefundStatus == (int)RefundStatus.已退款等待退货)
                         {
                             entity.tb_saleout.RefundStatus = (int)RefundStatus.已退款已退货;
                         }
+                    }
+                    if (entity.RefundOnly)
+                    {
+                        entity.RefundStatus = (int)RefundStatus.已退款未退货;
                     }
                 }
 

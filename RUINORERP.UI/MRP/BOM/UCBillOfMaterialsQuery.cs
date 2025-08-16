@@ -100,67 +100,9 @@ namespace RUINORERP.UI.MRP.BOM
             }
         }
 
-        /*
-        /// <summary>
-        /// 销售订单审核，审核成功后，库存中的拟销售量增加，同时检查数量和金额，总数量和总金额不能小于明细小计的和
-        /// </summary>
-        /// <returns></returns>
-        public async override Task<bool> ReReview(List<View_BOM> EditEntitys)
-        {
-            if (EditEntitys == null)
-            {
-                return false;
-            }
-            //如果已经审核并且通过，则不能重复审核
-            List<View_BOM> needApprovals = EditEntitys.Where(
-                c => (c.ApprovalStatus.HasValue
-                && c.ApprovalStatus.Value == (int)ApprovalStatus.已审核
-                && c.ApprovalResults.HasValue && c.ApprovalResults.Value)
-                ).ToList();
 
-            if (needApprovals.Count == 0)
-            {
-                MainForm.Instance.PrintInfoLog($"要反审核的数据为：{needApprovals.Count}:请检查数据！");
-                return false;
-            }
-
-            tb_BOM_SController<View_BOM> ctr = Startup.GetFromFac<tb_BOM_SController<View_BOM>>();
-            bool Succeeded = await ctr.ReverseApproveAsync(needApprovals[0]);
-            if (Succeeded)
-            {
-                //if (MainForm.Instance.WorkflowItemlist.ContainsKey(""))
-                //{
-
-                //}
-                //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                //MainForm.Instance.ecs.AddSendData(od);
-                base.Query(QueryDto);
-            }
-            return true;
-        }
-        */
         public override void AddByCopy(List<View_BOM> EditEntitys)
         {
-            /*
-            //这里是显示明细
-            //要把单据信息传过去
-            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath.Contains(typeof(M).Name.Replace("tb_", "UC").ToString().Replace("Query", ""))).FirstOrDefault();
-            if (RelatedMenuInfo != null)
-            {
-                MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                if (EditEntitys.Count > 0)
-                {
-                    M instance = Activator.CreateInstance(typeof(M), false) as M;
-                    M instance2 = default(M);
-                    instance2 = EditEntitys[0].Copy();
-
-                    //要把单据信息传过去
-                    menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance2);
-                }
-            }
-            */
             base.AddByCopy(EditEntitys);
         }
         public override void BuildLimitQueryConditions()
@@ -207,12 +149,13 @@ namespace RUINORERP.UI.MRP.BOM
             base.MasterSummaryCols.Add(c => c.TotalMaterialCost);
             base.MasterSummaryCols.Add(c => c.TotalOutManuCost);
             base.MasterSummaryCols.Add(c => c.TotalSelfManuCost);
-            base.ChildInvisibleCols.Add(c => c.SubtotalUnitCost);
+            base.ChildSummaryCols.Add(c => c.SubtotalUnitCost);
+            base.ChildSummaryCols.Add(c => c.UsedQty);
+            //base.ChildInvisibleCols.Add(c => c.SubtotalUnitCost);
         }
 
         public override void BuildInvisibleCols()
         {
-            base.MasterInvisibleCols.Add(c => c.TotalMaterialCost);
             base.MasterInvisibleCols.Add(c => c.BOM_ID);
             base.MasterInvisibleCols.Add(c => c.ProdDetailID);
             base.ChildInvisibleCols.Add(C => C.BOM_ID);

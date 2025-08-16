@@ -251,7 +251,11 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 else
                 {
-                    MessageBox.Show($"当前【销售出库单】的状态为{(DataStatus)EditEntity.DataStatus}，无法进行【平台退款】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (true)
+                    {
+
+                    }
+                   // MessageBox.Show($"当前【销售出库单】的状态为{(DataStatus)EditEntity.DataStatus}，无法进行【平台退款】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }
@@ -1149,4 +1153,30 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
     }
+
+
+    public static class RefundStatusExtensions
+    {
+        /// <summary>
+        /// 根据业务规则，计算合法的 RefundStatus。
+        /// 规则：只能由小到大单向迁移，且值必须在 1-6 区间。
+        /// </summary>
+        /// <param name="oldStatus">旧状态</param>
+        /// <param name="newStatus">新状态</param>
+        /// <returns>最终允许的状态</returns>
+        public static RefundStatus NextOrKeep(this RefundStatus oldStatus, RefundStatus newStatus)
+        {
+            int oldVal = (int)oldStatus;
+            int newVal = (int)newStatus;
+
+            // 允许的单向迁移：1→2→3→4→5→6
+            if (newVal > oldVal && newVal >= 1 && newVal <= 6)
+            {
+                return newStatus;
+            }
+
+            return oldStatus; // 不合法则保持原状
+        }
+    }
+
 }

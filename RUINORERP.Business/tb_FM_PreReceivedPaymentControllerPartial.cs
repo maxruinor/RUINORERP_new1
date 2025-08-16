@@ -220,7 +220,7 @@ namespace RUINORERP.Business
 
                 //加上自己
                 //要把自己也算上。不能大于1 ，entity是等待审核。所以拼一起
-                PendingApprovalDetails.AddRange(entity);
+                //PendingApprovalDetails.AddRange(entity);
 
                 //验证 如果相同收款方向 下，相同业务类型下的相同来源单号，比方一个销售订单 多次收款，一个采购订单 多次付款时
                 //则要计算累计收款金额，如果累计金额大于等于收款金额，则不能再收款。如果超过收款金额，则进一步提示才能继续收款。
@@ -525,7 +525,7 @@ namespace RUINORERP.Business
                                                     // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
             }
 
-            #region 生成预收款
+            #region 生成预付款
 
             tb_FM_PreReceivedPayment payable = new tb_FM_PreReceivedPayment();
             payable = mapper.Map<tb_FM_PreReceivedPayment>(entity);

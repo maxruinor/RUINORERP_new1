@@ -296,7 +296,7 @@ namespace RUINORERP.Business
                 List<tb_BOM_S> BOMs = new List<tb_BOM_S>();
                 List<tb_PriceRecord> PriceRecords = new List<tb_PriceRecord>();
 
-      
+
 
                 //采购入库单，如果来自于采购订单，则要把入库数量累加到订单中的已交数量 TODO 销售也会有这种情况
                 if (entity.tb_purorder != null)
@@ -363,7 +363,11 @@ namespace RUINORERP.Business
                         }
                         CommService.CostCalculations.CostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UntaxedUnitPrice, UntaxedShippingCost);
 
-                        #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
+                        // 递归更新所有上级BOM的成本
+                        await UpdateParentBOMsAsync(group.Key.ProdDetailID, inv.Inv_Cost);
+
+                        /*
+                        #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化，但是对就的BOM主表对应的母件。可能是其它配方的子项目。也要同步更新。递归
 
                         List<tb_BOM_SDetail> bomDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
                         .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
@@ -384,11 +388,14 @@ namespace RUINORERP.Business
                         }
 
                         #endregion
+                     */
+
+
                     }
 
                     #endregion
 
-                    #region 更新采购价格
+                    #region 更新采购价格记录表
 
                     //注意这里的人是指采购订单录入的人。不是采购入库的人。
                     tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
@@ -428,7 +435,7 @@ namespace RUINORERP.Business
                     throw new Exception("入库时，库存更新数据为0，更新失败！");
                 }
 
-                if (BOM_SDetails.Count > 0)
+                if (BOM_SDetails.Any())
                 {
                     DbHelper<tb_BOM_SDetail> BOM_SDetaildbHelper = _appContext.GetRequiredService<DbHelper<tb_BOM_SDetail>>();
                     var BOM_SDetailCounter = await BOM_SDetaildbHelper.BaseDefaultAddElseUpdateAsync(BOM_SDetails);
@@ -461,7 +468,7 @@ namespace RUINORERP.Business
                     }
                 }
 
-           
+
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -501,7 +508,7 @@ namespace RUINORERP.Business
                         if (rmr.Succeeded)
                         {
                             //已经是等审核。 审核时会核销预收付款
-
+                            rs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
                         }
                         #endregion
                     }
@@ -518,7 +525,7 @@ namespace RUINORERP.Business
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
 
-              
+
 
 
                 return rs;
@@ -534,7 +541,63 @@ namespace RUINORERP.Business
 
         }
 
+        /// <summary>
+        /// 递归更新所有上级BOM的成本信息
+        /// </summary>
+        /// <param name="prodDetailId">当前BOM对应的产品详情ID</param>
+        /// <param name="selfProductionCost">当前BOM的自产总成本</param>
+        private async Task UpdateParentBOMsAsync(long prodDetailId, decimal selfProductionCost)
+        {
+            // 查询所有直接引用当前产品作为子件的上级BOM
+            var parentBomList = await _appContext.Db.Queryable<tb_BOM_S>()
+                                  .Includes(x => x.tb_BOM_SDetails)
+                                  .Where(x => x.tb_BOM_SDetails.Any(z => z.ProdDetailID == prodDetailId))
+                                  .ToListAsync();
 
+            if (parentBomList == null || parentBomList.Count == 0)
+            {
+                return; // 没有上级BOM，递归终止
+            }
+
+            // 处理当前层级的所有BOM
+            foreach (var parentBom in parentBomList)
+            {
+                bool hasChanges = false;
+
+                // 更新子件成本
+                foreach (var detail in parentBom.tb_BOM_SDetails)
+                {
+                    if (detail.ProdDetailID == prodDetailId)
+                    {
+                        // 更新单位成本和小计
+                        detail.UnitCost = selfProductionCost;
+                        detail.SubtotalUnitCost = detail.UnitCost * detail.UsedQty;
+                        hasChanges = true;
+                    }
+                }
+
+                if (hasChanges)
+                {
+                    // 重新计算BOM总成本
+                    parentBom.TotalMaterialCost = parentBom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
+                    parentBom.OutProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalOutManuCost + parentBom.OutApportionedCost;
+                    parentBom.SelfProductionAllCosts = parentBom.TotalMaterialCost + parentBom.TotalSelfManuCost + parentBom.SelfApportionedCost;
+
+                    // 保存明细更新
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(parentBom.tb_BOM_SDetails)
+                          .UpdateColumns(it => new { it.UnitCost, it.SubtotalUnitCost })
+                          .ExecuteCommandHasChangeAsync();
+
+                    // 保存主表更新
+                    await _unitOfWorkManage.GetDbClient().Updateable(parentBom)
+                          .UpdateColumns(it => new { it.TotalMaterialCost, it.OutProductionAllCosts, it.SelfProductionAllCosts })
+                          .ExecuteCommandHasChangeAsync();
+
+                    // 递归处理上一级BOM
+                    await UpdateParentBOMsAsync(parentBom.ProdDetailID, parentBom.SelfProductionAllCosts);
+                }
+            }
+        }
 
         /// <summary>
         /// 反审核
@@ -869,7 +932,7 @@ namespace RUINORERP.Business
 
                 }
 
-               
+
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
@@ -917,7 +980,7 @@ namespace RUINORERP.Business
                     {
                         if (ARAPList.Count == 1)
                         {
-                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(ARAPList[0], ReceivePaymentType.付款,true, false);
+                            var result = await ctrpayable.AntiApplyManualPaymentAllocation(ARAPList[0], ReceivePaymentType.付款, true, false);
                         }
                         else
                         {
@@ -940,7 +1003,7 @@ namespace RUINORERP.Business
                 rs.ReturnObject = entity as T;
                 rs.Succeeded = true;
 
-       
+
 
                 return rs;
             }

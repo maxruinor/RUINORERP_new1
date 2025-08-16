@@ -1531,12 +1531,20 @@ namespace RUINORERP.UI.SysConfig
                 if (treeView1.SelectedNode.Text == "配方数量成本的检测")
                 {
                     List<tb_BOM_S> bomupdatelist = new();
+
+                    List<tb_BOM_SDetail> bomDetailUpdateList = new();
                     #region 明细要等于主表中的数量的检测
                     List<tb_BOM_S> BOM_Ss = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
-                        .Includes(c => c.tb_BOM_SDetails)
+                        .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s, c => c.tb_BOM_SDetails)
                        .ToList();
                     foreach (tb_BOM_S bom in BOM_Ss.ToArray())
                     {
+
+                        if (bom.BOM_No == "BS250510021")
+                        {
+
+                        }
+
                         if (!bom.TotalMaterialQty.Equals(bom.tb_BOM_SDetails.Sum(c => c.UsedQty)))
                         {
                             richTextBoxLog.AppendText($"配方主次表数量不一致：{bom.BOM_ID}：{bom.BOM_No} new:{bom.tb_BOM_SDetails.Sum(c => c.UsedQty)} old{bom.TotalMaterialQty}" + "\r\n");
@@ -1544,7 +1552,24 @@ namespace RUINORERP.UI.SysConfig
                             bomupdatelist.Add(bom);
                         }
 
-                        if (!bom.TotalMaterialCost.Equals(bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost)))
+                        bool isUpdate = false;
+                        //小计检测
+                        for (int i = 0; i < bom.tb_BOM_SDetails.Count; i++)
+                        {
+                            var detail = bom.tb_BOM_SDetails[i];
+
+                            decimal tempSubtotal = detail.UsedQty * detail.UnitCost;
+                            tempSubtotal = Math.Round(tempSubtotal, 4);
+                            if (detail.SubtotalUnitCost != tempSubtotal)
+                            {
+                                richTextBoxLog.AppendText($"配方明细小计与数量*单价不一致：{bom.BOM_ID}：{bom.BOM_No} new:{tempSubtotal} old{detail.SubtotalUnitCost}" + "\r\n");
+                                detail.SubtotalUnitCost = tempSubtotal;
+                                bomDetailUpdateList.Add(detail);
+                                isUpdate = true;
+                            }
+                        }
+
+                        if (!bom.TotalMaterialCost.Equals(bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost)) || isUpdate)
                         {
 
                             decimal diffpirce = Math.Abs(bom.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost) - bom.TotalMaterialCost);
@@ -1560,11 +1585,23 @@ namespace RUINORERP.UI.SysConfig
                             bom.SelfProductionAllCosts = bom.TotalMaterialCost + bom.TotalSelfManuCost + bom.SelfApportionedCost;
                             bomupdatelist.Add(bom);
                         }
+
                     }
 
                     #endregion
+
                     if (!chkTestMode.Checked)
                     {
+                        if (bomDetailUpdateList.Any())
+                        {
+                            int totalDetailCounter = await MainForm.Instance.AppContext.Db.Updateable(bomDetailUpdateList)
+                           .UpdateColumns(t => new
+                           {
+                               t.SubtotalUnitCost,
+                           }).ExecuteCommandAsync();
+                            richTextBoxLog.AppendText($"修复配方 明细小计数据 修复成功：{totalDetailCounter} " + "\r\n");
+                        }
+
                         int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(bomupdatelist)
                             .UpdateColumns(t => new
                             {

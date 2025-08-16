@@ -29,6 +29,7 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             RuleFor(x => x.UsedQty).GreaterThan(0).WithMessage("配方明细，用量：要大于零。");
+            RuleFor(x => x.UnitCost).GreaterThan(0).WithMessage("配方明细，单位成本：要大于零。");
         }
     }
 }

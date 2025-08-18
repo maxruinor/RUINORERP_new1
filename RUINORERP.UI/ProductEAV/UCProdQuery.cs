@@ -1031,7 +1031,7 @@ namespace RUINORERP.UI.ProductEAV
                         var v_ProductSharePart = MainForm.Instance.View_ProdDetailList.Find(x => x.ProdDetailID == queryObjectItem.ProdDetailID && x.Location_ID == queryObjectItem.Location_ID);
                         if (v_ProductSharePart != null)
                         {
-                            v_ProductSharePart= queryObjectItem;
+                            v_ProductSharePart = queryObjectItem;
                         }
                         else
                         {
@@ -1383,10 +1383,22 @@ namespace RUINORERP.UI.ProductEAV
             {
                 foreach (TreeListViewItem item in treeListView1.SelectedItems)
                 {
-                    if (!QueryObjects.Contains((View_ProdDetail)item.Tag))
+                    if (item.Tag is View_ProdDetail prodDetail)
                     {
                         QueryObjects.Add((View_ProdDetail)item.Tag);
                     }
+                    else if (item.Tag is View_ProdInfo prodInfo)
+                    {
+                        var _prodDetail = MainForm.Instance.View_ProdDetailList.FirstOrDefault(c => c.ProdDetailID == prodInfo.ProdDetailID);
+                        {
+                            QueryObjects.Add(_prodDetail);
+                        }
+                    }
+                 
+                    //if (!QueryObjects.Contains((View_ProdDetail)item.Tag))
+                    //{
+                    //    QueryObjects.Add((View_ProdDetail)item.Tag);
+                    //}
                 }
             }
             if (QueryObjects.Count > 0)

@@ -191,6 +191,62 @@ namespace RUINORERP.Business
                     }
                 }
 
+
+                //检测往来单位要与来源业务要一致
+                if (entity.SourceBillId.HasValue)
+                {
+                    if (entity.SourceBizType == (int)BizType.采购入库单)
+                    {
+                        var PurEntry = await _appContext.Db.Queryable<tb_PurEntry>()
+                            .Where(c => c.PurEntryID == entity.SourceBillId)
+                           .SingleAsync();
+                        if (!PurEntry.CustomerVendor_ID.Equals(entity.CustomerVendor_ID))
+                        {
+                            rmrs.ErrorMsg = "收付款时必需与来源业务的往来单位相同!";
+                            rmrs.Succeeded = false;
+                            rmrs.ReturnObject = entity as T;
+                            return rmrs;
+                        }
+                    }
+                    if (entity.SourceBizType == (int)BizType.采购退货单)
+                    {
+                        var PurEntryRe = await _appContext.Db.Queryable<tb_PurEntryRe>()
+                    .Where(c => c.PurEntryRe_ID == entity.SourceBillId)
+                   .SingleAsync();
+                        if (!PurEntryRe.CustomerVendor_ID.Equals(entity.CustomerVendor_ID))
+                        {
+                            rmrs.ErrorMsg = "收付款时必需与来源业务的往来单位相同!";
+                            rmrs.Succeeded = false;
+                            rmrs.ReturnObject = entity as T;
+                            return rmrs;
+                        }
+                    }
+                    if (entity.SourceBizType == (int)BizType.销售出库单)
+                    {
+                        var SaleOut = await _appContext.Db.Queryable<tb_SaleOut>()
+                    .Where(c => c.SaleOut_MainID == entity.SourceBillId)
+                   .SingleAsync(); if (!SaleOut.CustomerVendor_ID.Equals(entity.CustomerVendor_ID))
+                        {
+                            rmrs.ErrorMsg = "收付款时必需与来源业务的往来单位相同!";
+                            rmrs.Succeeded = false;
+                            rmrs.ReturnObject = entity as T;
+                            return rmrs;
+                        }
+                    }
+                    if (entity.SourceBizType == (int)BizType.销售退回单)
+                    {
+                        var SaleOutRe = await _appContext.Db.Queryable<tb_SaleOutRe>()
+                            .Where(c => c.SaleOutRe_ID == entity.SourceBillId)
+                           .SingleAsync(); if (!SaleOutRe.CustomerVendor_ID.Equals(entity.CustomerVendor_ID))
+                        {
+                            rmrs.ErrorMsg = "收付款时必需与来源业务的往来单位相同!";
+                            rmrs.Succeeded = false;
+                            rmrs.ReturnObject = entity as T;
+                            return rmrs;
+                        }
+                    }
+                }
+
                 //应收款中不能存在相同的来源的 正数金额的出库单的应收数据
                 //一个出库不能多次应收。一个出库一个应收（负数除外）。一个应收可以多次收款来抵扣
                 if (entity.SourceBizType.HasValue && entity.SourceBillId.HasValue)

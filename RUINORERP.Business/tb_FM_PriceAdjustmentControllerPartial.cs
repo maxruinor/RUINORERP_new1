@@ -42,8 +42,9 @@ namespace RUINORERP.Business
     public partial class tb_FM_PriceAdjustmentController<T> : BaseController<T> where T : class
     {
         /// <summary>
-        ///  
-        ///  
+        ///  价格调整单反审核 相于当销售或采购的一种补充行为
+        ///  审核时生成应收付单，
+        ///  反审核时删除应收付单（如果没有支付的情况），否则只能红冲退款作废
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
@@ -60,20 +61,50 @@ namespace RUINORERP.Business
                     rmrs.ErrorMsg = "只有【已确认】审核通过状态的价格调整单才可以反审";
                     return rmrs;
                 }
+                var PaymentType = (ReceivePaymentType)entity.ReceivePaymentType;
+
+                var ARAPList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                     .Includes(c => c.tb_FM_ReceivablePayableDetails)
+                                    .Where(c => c.SourceBillId == entity.AdjustId
+                                    && c.TotalLocalPayableAmount > 0) //正向
+                                    .WhereIF(entity.ReceivePaymentType == (int)ReceivePaymentType.收款, c => c.SourceBizType == (int)BizType.销售价格调整单)
+                                    .WhereIF(entity.ReceivePaymentType == (int)ReceivePaymentType.付款, c => c.SourceBizType == (int)BizType.采购价格调整单)
+                                    .ToListAsync();
+                if (ARAPList != null && ARAPList.Count > 0)
+                {
+                    if (ARAPList[0].ARAPStatus <= (int)ARAPStatus.待审核)
+                    {
+                        //删除应收付单
+                        await _appContext.Db.DeleteNav(ARAPList).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
+                    }
+                    else
+                    {
+                        rmrs.ErrorMsg = $"当前调整单的应{PaymentType}单{ARAPList[0].ARAPNo}，状态为{(ARAPStatus)ARAPList[0].ARAPStatus.Value}，反审核失败。";
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+                }
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 //产生看产生的应收付是否真的付了。如果付了。则不能反审了。
-             
-               
+
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列
-                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PriceAdjustment>(entity).ExecuteCommandAsync();
-                //rmr = await ctr.BaseSaveOrUpdate(EditEntity);
-                // 注意信息的完整性
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                        .UpdateColumns(it => new
+                                        {
+                                            it.DataStatus,
+                                            it.ApprovalOpinions,
+                                            it.ApprovalResults,
+                                            it.ApprovalStatus,
+                                            it.Approver_at,
+                                            it.Approver_by
+                                        })
+                                        .ExecuteCommandHasChangeAsync();
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
@@ -103,7 +134,21 @@ namespace RUINORERP.Business
             tb_FM_PriceAdjustment entity = ObjectEntity as tb_FM_PriceAdjustment;
             try
             {
-              
+                var PaymentType = (ReceivePaymentType)entity.ReceivePaymentType;
+                var ARAPList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                     .Includes(c => c.tb_FM_ReceivablePayableDetails)
+                    .Where(c => c.SourceBillId == entity.AdjustId
+                    && c.TotalLocalPayableAmount > 0) //正向
+                    .WhereIF(PaymentType == ReceivePaymentType.收款, c => c.SourceBizType == (int)BizType.销售价格调整单)
+                    .WhereIF(PaymentType == ReceivePaymentType.付款, c => c.SourceBizType == (int)BizType.采购价格调整单)
+                    .ToListAsync();
+                if (ARAPList != null && ARAPList.Count > 0)
+                {
+                    ApprovalResult.ErrorMsg = $"当前调整单已经生成应{PaymentType}单{ARAPList[0].ARAPNo}，不能重复生成，审核失败。";
+                    ApprovalResult.Succeeded = false;
+                    return ApprovalResult;
+                }
+
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
@@ -112,9 +157,6 @@ namespace RUINORERP.Business
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款
                     && entity.SourceBizType == (int)BizType.采购入库单)
                 {
-                    List<tb_BOM_SDetail> BOM_SDetails = new List<tb_BOM_SDetail>();
-                    List<tb_BOM_S> BOMs = new List<tb_BOM_S>();
-
                     tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                     for (int i = 0; i < entity.tb_FM_PriceAdjustmentDetails.Count; i++)
@@ -129,58 +171,16 @@ namespace RUINORERP.Business
                             {
                                 CommService.CostCalculations.AdjustCostOnly(_appContext, inv, detail.UntaxedUnitPrice);
 
-                                #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
-
-                                List<tb_BOM_SDetail> bomDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                                .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
-                                .Where(c => c.ProdDetailID == detail.ProdDetailID).ToListAsync();
-                                foreach (tb_BOM_SDetail bomDetail in bomDetails)
-                                {
-                                    //如果存在则更新 
-                                    bomDetail.UnitCost = inv.Inv_Cost;
-                                    bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
-
-                                    if (bomDetail.tb_bom_s != null)
-                                    {
-                                        bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
-                                        bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
-                                        bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
-                                        BOMs.Add(bomDetail.tb_bom_s);
-                                    }
-                                    BOM_SDetails.Add(bomDetail);
-                                }
-
-                                #endregion
+                                var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                                // 递归更新所有上级BOM的成本
+                                await ctrbom.UpdateParentBOMsAsync(inv.ProdDetailID, inv.Inv_Cost);
                             }
 
                             #endregion
                         }
                     }
-                    if (BOMs.Any())
-                    {
-                        var bomresult = await _unitOfWorkManage.GetDbClient().Updateable(BOMs)
-                             .UpdateColumns(it => new
-                             {
-                                 it.TotalMaterialCost,
-                                 it.OutProductionAllCosts,
-                                 it.SelfProductionAllCosts,
-                             })
-                             .ExecuteCommandHasChangeAsync();
-                    }
-
-                    if (BOM_SDetails.Any())
-                    {
-                        var bom_detailresult = await _unitOfWorkManage.GetDbClient().Updateable(BOM_SDetails)
-                            .UpdateColumns(it => new
-                            {
-                                it.UnitCost,
-                                it.SubtotalUnitCost,
-                            })
-                            .ExecuteCommandHasChangeAsync();
-                    }
 
                 }
-
 
                 var paymentController = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
                 //如果已经生成过的话，不能再次生成。
@@ -211,8 +211,7 @@ namespace RUINORERP.Business
                         ReturnResults<tb_FM_ReceivablePayable> rr = await paymentController.ApprovalAsync(paybalbe);
                         if (rr.Succeeded)
                         {
-                            
-                          //审计日志
+                            //审计日志
                         }
                         else
                         {
@@ -229,7 +228,7 @@ namespace RUINORERP.Business
                     }
                 }
 
-                
+
 
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;

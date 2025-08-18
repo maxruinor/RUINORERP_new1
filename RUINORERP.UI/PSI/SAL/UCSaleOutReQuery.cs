@@ -164,14 +164,14 @@ namespace RUINORERP.UI.PSI.SAL
                     var dataStatus = (DataStatus)(item.GetPropertyValue(typeof(DataStatus).Name).ToInt());
                     if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
                     {
-                        if (item.Created_by.HasValue && item.Created_by.Value != MainForm.Instance.AppContext.CurUserInfo.Id)
+                        if (item.Created_by.HasValue && item.Created_by.Value != MainForm.Instance.AppContext.CurUserInfo.Id  && !MainForm.Instance.AppContext.IsSuperUser)
                         {
-                            MessageBox.Show("只能删除自己创建的销售退回单。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            MessageBox.Show("只能删除自己创建的销售退回单。或请求超级管理员处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             continue;
                         }
 
                         BaseController<tb_SaleOutRe> ctr = Startup.GetFromFacByName<BaseController<tb_SaleOutRe>>(typeof(tb_SaleOutRe).Name + "Controller");
-                        bool rs = await ctr.BaseDeleteAsync(item);
+                        bool rs = await ctr.BaseDeleteByNavAsync(item);
                         if (rs)
                         {
                             counter++;

@@ -348,19 +348,30 @@ namespace RUINORERP.Business
                     //如果是有出库情况，则反冲。如果是没有出库情况。则生成付款单
                     //退货单审核后生成红字应收单（负金额）
                     var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                    tb_FM_ReceivablePayable Payable = await ctrpayable.BuildReceivablePayable(entity);
+                    tb_FM_ReceivablePayable Payable = new tb_FM_ReceivablePayable();
 
+                    //如果运营提前 退款了。这里审核不用处理财务了
+                    var refundStatus = (RefundStatus)entity.RefundStatus.GetValueOrDefault();
+                    if (refundStatus.ToString().Contains("已退款"))
+                    {
+                        Payable = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>()
+                                               .Includes(c => c.tb_FM_ReceivablePayableDetails)
+                                               .Where(c => c.ARAPStatus >= (int)ARAPStatus.待支付 && c.SourceBillId == entity.SaleOutRe_ID)
+                                               .FirstAsync();
+                        if (Payable != null)
+                        {
+                            Payable = await ctrpayable.BuildReceivablePayable(entity);
+                        }
+                    }
+                    else
+                    {
+                        Payable = await ctrpayable.BuildReceivablePayable(entity);
+                    }
 
                     ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
                     if (rmr.Succeeded)
                     {
-
                         rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
-
-                        //已经是等审核。 审核时会核销预收付款
-                        //应收 负 在 就是退款 审核时还要仔细跟进一下
-                        //如果是平台订单 则自动审核
-
                     }
 
                     #endregion
@@ -662,8 +673,37 @@ namespace RUINORERP.Business
                         if (returnpayable.ARAPStatus == (int)ARAPStatus.草稿
                             || returnpayable.ARAPStatus == (int)ARAPStatus.待审核 || returnpayable.ARAPStatus == (int)ARAPStatus.待支付)
                         {
+                          
+                            //如果有对应的收付款单也要删除。如果在没有支付前
+                            #region 这里是以付款单为准，反审。暂时不用了
+                            var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
+                                        .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == returnpayable.ARAPId))
+                                          .ToListAsync();
+                            if (PaymentRecordlist != null && PaymentRecordlist.Count > 0)
+                            {
+                                if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
+                                    && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
+                                {
+                                    _unitOfWorkManage.RollbackTran();
+                                    rrs.ErrorMsg = $"存在【已支付】的{((ReceivePaymentType)returnpayable.ReceivePaymentType).ToString()}单，反审失败,请联系上级财务，或作退回处理。";
+                                    rrs.Succeeded = false;
+                                    return rrs;
+                                }
+                                else
+                                {
+                                    foreach (var item in PaymentRecordlist)
+                                    {
+                                        //删除对应的由应收付款单生成的收款单
+                                        await _appContext.Db.DeleteNav<tb_FM_PaymentRecord>(item)
+                                            .Include(c => c.tb_FM_PaymentRecordDetails)
+                                            .ExecuteCommandAsync();
+                                    }
+                                }
+                            }
+                            #endregion
                             //删除
                             bool deleters = await ctrpayable.BaseDeleteByNavAsync(returnpayable);
+
                         }
                         else
                         {

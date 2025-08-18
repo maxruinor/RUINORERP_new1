@@ -181,6 +181,7 @@ namespace RUINORERP.UI.FM
             list.Add(new ContextMenuController($"【预{PaymentType}抵扣】", true, false, "NewSumDataGridView_预收预付抵扣"));
             list.Add(new ContextMenuController($"【批量智能预{PaymentType}抵扣】", true, false, "NewSumDataGridView_批量智能预收预付抵扣"));
             list.Add(new ContextMenuController($"【撤销预{PaymentType}抵扣】", true, false, "NewSumDataGridView_撤销预收预付抵扣"));
+            list.Add(new ContextMenuController($"【快捷全额{PaymentType}】", true, false, "NewSumDataGridView_快捷全额收付款"));
             return list;
         }
         public override void BuildContextMenuController()
@@ -191,6 +192,7 @@ namespace RUINORERP.UI.FM
             ContextClickList.Add(NewSumDataGridView_预收预付抵扣);
             ContextClickList.Add(NewSumDataGridView_批量智能预收预付抵扣);
             ContextClickList.Add(NewSumDataGridView_撤销预收预付抵扣);
+            ContextClickList.Add(NewSumDataGridView_快捷全额收付款);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
@@ -205,6 +207,77 @@ namespace RUINORERP.UI.FM
                 _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
             }
         }
+
+        private async void NewSumDataGridView_快捷全额收付款(object sender, EventArgs e)
+        {
+
+            List<tb_FM_ReceivablePayable> selectlist = GetSelectResult();
+            List<tb_FM_ReceivablePayable> RealList = new List<tb_FM_ReceivablePayable>();
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
+            foreach (var item in selectlist)
+            {
+                //只有审核状态才可以转换为收款单
+                bool canConvert = item.ARAPStatus == (int)ARAPStatus.待支付 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
+                {
+                    RealList.Add(item);
+                }
+                else
+                {
+                    msg.Append(counter.ToString() + ") ");
+                    msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】 无法生成{PaymentType.ToString()}单。").Append("\r\n");
+                    counter++;
+                }
+            }
+            //多选时。要相同客户才能合并到一个收款单
+            if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
+            {
+                msg.Append($"多选时，要相同客户才能合并到一个{PaymentType.ToString()}单");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (msg.ToString().Length > 0)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (RealList.Count == 0)
+                {
+                    return;
+                }
+            }
+
+            if (RealList.Count == 0)
+            {
+                msg.Append($"请至少选择一行数据转为收{PaymentType.ToString()}单");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+            tb_FM_PaymentRecord PaymentRecord = paymentController.BuildPaymentRecord(RealList);
+            PaymentRecord.Remark = "快捷全额" + PaymentType.ToString();
+            PaymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
+            var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(PaymentRecord, false);
+            if (rrs.Succeeded)
+            {
+                //自动审核收款单
+                PaymentRecord.ApprovalOpinions = $"快捷{PaymentType.ToString()}，自动审核";
+                PaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
+                PaymentRecord.ApprovalResults = true;
+                ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(PaymentRecord);
+                if (!rrRecord.Succeeded)
+                {
+                    MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>($"快捷全额 {PaymentType.ToString()}，自动审核失败：" + rrRecord.ErrorMsg, rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                }
+                else
+                {
+
+                    MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>($"快捷全额 {PaymentType.ToString()}，自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                }
+            }
+        }
+
+
         private void NewSumDataGridView_转为收付款单(object sender, EventArgs e)
         {
 

@@ -155,7 +155,7 @@ namespace RUINORERP.Business
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
-                
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
@@ -209,7 +209,7 @@ namespace RUINORERP.Business
                                     .ExecuteCommandHasChangeAsync();
                 }
                 */
-              
+
 
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalResults = true;
@@ -239,7 +239,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="prodDetailId">当前BOM对应的产品详情ID</param>
         /// <param name="selfProductionCost">当前BOM的自产总成本</param>
-        private async Task UpdateParentBOMsAsync(long prodDetailId, decimal selfProductionCost)
+        public async Task UpdateParentBOMsAsync(long prodDetailId, decimal selfProductionCost)
         {
             // 查询所有直接引用当前产品作为子件的上级BOM
             var parentBomList = await _appContext.Db.Queryable<tb_BOM_S>()

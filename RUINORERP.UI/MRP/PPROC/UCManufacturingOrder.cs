@@ -151,6 +151,8 @@ namespace RUINORERP.UI.MRP.MP
                     entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                     entity.Created_at = System.DateTime.Now;
                 }
+
+                chkIsCustomizedOrder.ToolTipValues.Description = "定制单，只借用标品的配方。缴库时，只缴数量不影响成本！";
             }
 
             if (entity.ApprovalStatus.HasValue)

@@ -134,6 +134,11 @@ namespace RUINORERP.Business
                     if (!entity.tb_manufacturingorder.IsCustomizedOrder)
                     {
                         CommService.CostCalculations.CostCalculation(_appContext, inv, child.Qty, child.UnitCost);
+                        var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                        // 递归更新所有上级BOM的成本
+                        await ctrbom.UpdateParentBOMsAsync(inv.ProdDetailID, inv.Inv_Cost);
+
+                        /*
                         #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 
                         tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
@@ -158,8 +163,8 @@ namespace RUINORERP.Business
                             await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
                         }
 
-
                         #endregion
+                        */
                     }
 
                     inv.Quantity = inv.Quantity + child.Qty;

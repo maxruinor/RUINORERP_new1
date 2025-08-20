@@ -239,6 +239,8 @@ namespace RUINORERP.Business
                                         rmrs.Succeeded = false;
                                         _unitOfWorkManage.RollbackTran();
                                         rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核失败", autoApproval.ReturnObject as tb_FM_PreReceivedPayment, rmrs.ErrorMsg);
                                         if (_appContext.SysConfig.ShowDebugInfo)
                                         {
                                             _logger.LogInformation(rmrs.ErrorMsg);

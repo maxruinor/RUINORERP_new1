@@ -255,6 +255,11 @@ namespace RUINORERP.UI.FM
 
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
             tb_FM_PaymentRecord PaymentRecord = paymentController.BuildPaymentRecord(RealList);
+
+            if (MessageBox.Show($"{PaymentType.ToString()}金额为:{PaymentRecord.TotalLocalAmount.ToString("#.0000")}元，确定吗？", "金额确认", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
+            {
+                return;
+            }
             PaymentRecord.Remark = "快捷全额" + PaymentType.ToString();
             PaymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
             var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(PaymentRecord, false);
@@ -271,7 +276,6 @@ namespace RUINORERP.UI.FM
                 }
                 else
                 {
-
                     MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>($"快捷全额 {PaymentType.ToString()}，自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
                 }
             }
@@ -621,7 +625,7 @@ namespace RUINORERP.UI.FM
                         {
                             // 使用选中的预付款单
                             //您确定要将当前应收款单，通过通过预收付款抵扣元吗？
-                            if (MessageBox.Show($"当前【应{PaymentType}单】:{receivable.ARAPNo}，未核销余额:{receivable.LocalBalanceAmount.ToString("##.00")}元\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 抵扣{selectedAdvances.Sum(x => x.LocalBalanceAmount).ToString("##.00")}元。\r\n您确定吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                            if (MessageBox.Show($"当前【应{PaymentType}单】:{receivable.ARAPNo}，未核销余额:{receivable.LocalBalanceAmount.ToString("##.00")}元\r\n通过【预{PaymentType}单】:{preRPNOsPreview} 从{selectedAdvances.Sum(x => x.LocalBalanceAmount).ToString("##.00")}元中进行抵扣{receivable.LocalBalanceAmount.ToString("##.00")}元。\r\n您确定吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
                             {
                                 //一一对应检测订单号是否相同
                                 //应收款的出库单的订单号

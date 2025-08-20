@@ -358,7 +358,7 @@ namespace RUINORERP.Business
                                                .Includes(c => c.tb_FM_ReceivablePayableDetails)
                                                .Where(c => c.ARAPStatus >= (int)ARAPStatus.待支付 && c.SourceBillId == entity.SaleOutRe_ID)
                                                .FirstAsync();
-                        if (Payable != null)
+                        if (Payable == null)
                         {
                             Payable = await ctrpayable.BuildReceivablePayable(entity);
                         }
@@ -673,7 +673,7 @@ namespace RUINORERP.Business
                         if (returnpayable.ARAPStatus == (int)ARAPStatus.草稿
                             || returnpayable.ARAPStatus == (int)ARAPStatus.待审核 || returnpayable.ARAPStatus == (int)ARAPStatus.待支付)
                         {
-                          
+
                             //如果有对应的收付款单也要删除。如果在没有支付前
                             #region 这里是以付款单为准，反审。暂时不用了
                             var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()

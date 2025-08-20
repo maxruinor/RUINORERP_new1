@@ -47,7 +47,7 @@ namespace RUINORERP.Business.StatusManagerService
 
             if (status is PrePaymentStatus pre)
                 return pre == PrePaymentStatus.全额核销 ||
-                       pre == PrePaymentStatus.已退款;
+                       pre == PrePaymentStatus.已结案;
 
             if (status is ARAPStatus arap)
                 return arap == ARAPStatus.全部支付 ||
@@ -226,8 +226,8 @@ namespace RUINORERP.Business.StatusManagerService
                 throw new InvalidOperationException("终态单据禁止状态变更");
 
             // 退款后不能修改
-            if (current == PrePaymentStatus.已退款)
-                throw new InvalidOperationException("已退款状态禁止变更");
+            if (current == PrePaymentStatus.已结案)
+                throw new InvalidOperationException("已结案状态禁止变更");
 
             // 已核销不能回退
             if ((current == PrePaymentStatus.部分核销 || current == PrePaymentStatus.全额核销) &&

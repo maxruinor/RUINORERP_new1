@@ -135,6 +135,7 @@ namespace RUINORERP.Business
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
+                    //简化流程，不算债权关系，
                     //更新财务模块 
                     var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                     tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(entity);

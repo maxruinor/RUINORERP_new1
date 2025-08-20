@@ -904,10 +904,13 @@ namespace RUINORERP.UI.PSI.PUR
                 }
                 if (EditEntity.PayStatus == (int)PayStatus.全额预付)
                 {
-                    if (EditEntity.Deposit > 0 || EditEntity.ForeignDeposit > 0)
+                    //超付情况时，只是提示
+                    if (EditEntity.Deposit > EditEntity.TotalAmount)
                     {
-                        MessageBox.Show("全部预付时，不需要输入订金,系统默认总金额为支付金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return false;
+                        if (MessageBox.Show("全额预付时，订金大于总金额。你确定客户要超额付款吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
+                        {
+                            return false;
+                        }
                     }
                 }
             }

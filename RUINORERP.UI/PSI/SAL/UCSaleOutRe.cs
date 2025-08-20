@@ -98,8 +98,8 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 tb_SaleOutRe saleOutRe = EditEntity as tb_SaleOutRe;
                 //只有审核状态才可以转换
-                if (EditEntity.DataStatus >= (int)DataStatus.新建 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
-                {
+                //if (EditEntity.DataStatus >= (int)DataStatus.草稿 && EditEntity.ApprovalStatus == (int)ApprovalStatus.已审核 && EditEntity.ApprovalResults.HasValue && EditEntity.ApprovalResults.Value)
+                //{
                     //判断是否为平台订单
                     if (!saleOutRe.IsFromPlatform || saleOutRe.PlatformOrderNo.IsNullOrEmpty())
                     {
@@ -115,13 +115,13 @@ namespace RUINORERP.UI.PSI.SAL
                     if (saleOutRe.RefundStatus.Value >= (int)RefundStatus.未退款等待退货)
                     {
                         //在回仓库后操作的情况，多数是审核动作。生成在退仓时生成了
-                        if (
-                            saleOutRe.DataStatus >= (int)DataStatus.确认
-                            && saleOutRe.ApprovalStatus == (int)ApprovalStatus.已审核
-                            && saleOutRe.ApprovalResults.HasValue
-                            && saleOutRe.ApprovalResults.Value)
+                        //if (
+                        //    saleOutRe.DataStatus >= (int)DataStatus.确认
+                        //    && saleOutRe.ApprovalStatus == (int)ApprovalStatus.已审核
+                        //    && saleOutRe.ApprovalResults.HasValue
+                        //    && saleOutRe.ApprovalResults.Value)
 
-                        {
+                        //{
                             #region 销售退回单 如果启用了财务模块    这里有一个情况是仓库退回时已经生成。这里确认退款只是审核
                             AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
                             if (authorizeController.EnableFinancialModule())
@@ -207,7 +207,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 }
                             }
                             #endregion
-                        }
+                        //}
 
                         //如果销售退回单都审核过了，则为  退货退款，否则是已退款等待退货。后面审核时根据这个状态。判断是否已退货， 已退货
                         if (saleOutRe.DataStatus == (int)DataStatus.确认 && saleOutRe.ApprovalStatus == (int)ApprovalStatus.已审核)
@@ -240,12 +240,11 @@ namespace RUINORERP.UI.PSI.SAL
                         toolStripButton平台退款.Enabled = true;
                         return;
                     }
-
-                }
-                else
-                {
-                     MessageBox.Show($"当前【销售出库单】的状态为{(DataStatus)EditEntity.DataStatus}，无法进行【平台退款】，请提交后再试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                //}
+                //else
+                //{
+                //    MessageBox.Show($"当前【销售出库单】的状态为{(DataStatus)EditEntity.DataStatus}，无法进行【平台退款】，请提交后再试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //}
             }
         }
 
@@ -578,6 +577,13 @@ namespace RUINORERP.UI.PSI.SAL
                             return rss;
                         }
                     }
+                    var refundStatus = (RefundStatus)EditEntity.RefundStatus.GetValueOrDefault();
+                    if (refundStatus.ToString().Contains("已退款"))
+                    {
+                        System.Windows.Forms.MessageBox.Show("已经有退款记录，不能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        rss.ErrorMsg = "已经有退款记录，不能删除。";
+                        rss.Succeeded = false;
+                    }
 
                     tb_SaleOutReController<tb_SaleOutRe> ctr = Startup.GetFromFac<tb_SaleOutReController<tb_SaleOutRe>>();
                     bool rs = await ctr.BaseDeleteByNavAsync(EditEntity as tb_SaleOutRe);
@@ -909,8 +915,12 @@ namespace RUINORERP.UI.PSI.SAL
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (NeedValidated && aa.Count > 0)
                 {
-                    System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return false;
+                    if (MessageBox.Show("退货明细中，录入了相同的产品你确定吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                    {
+                        return false;
+                    }
+
+
                 }
 
                 //因为有一个特殊验证： RuleFor(tb_SaleOutReDetail => tb_SaleOutReDetail.Quantity).NotEqual(0).When(c => c.tb_saleoutre.RefundOnly == false).WithMessage("非仅退款时，退回数量不能为0为零。");
@@ -999,6 +1009,7 @@ namespace RUINORERP.UI.PSI.SAL
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
+                        EditEntity.AcceptChanges();
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ReturnNo}。");
                     }
                     else
@@ -1016,10 +1027,22 @@ namespace RUINORERP.UI.PSI.SAL
             if (EditEntity != null)
             {
                 //销售退回单，在新创建时，默认为未退款状态。即使退款了，也是由后面流程触发的，生成应收（红）及收款单
-                var refundStatus = (RefundStatus)EditEntity.RefundStatus.GetValueOrDefault();
-                if (refundStatus.ToString().Contains("已退款"))
+                //var refundStatus = (RefundStatus)EditEntity.RefundStatus.GetValueOrDefault();
+                //if (refundStatus.ToString().Contains("已退款"))
+                //{
+                //    System.Windows.Forms.MessageBox.Show("销售退回单，在提交时不能为【已退款】状态。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //    return false;
+                //}
+
+                if (MessageBox.Show("【提交】表示你收到了退回的商品，可以进行下一步处理。 你收到退件了吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.No)
                 {
-                    System.Windows.Forms.MessageBox.Show("销售退回单，在提交时不能为【已退款】状态。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return false;
+                }
+
+
+                if (EditEntity.HasChanged && EditEntity.HasPropertyChanged(nameof(RefundStatus)))
+                {
+                    System.Windows.Forms.MessageBox.Show("销售退回单，在提交时【退货退款状态】不能修改。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return false;
                 }
 

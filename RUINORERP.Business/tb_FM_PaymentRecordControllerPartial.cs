@@ -88,7 +88,7 @@ namespace RUINORERP.Business
                     // 非平台来源且没有收款信息时，返回错误
                     if (!entity.IsFromPlatform.GetValueOrDefault() && !entity.PayeeInfoID.HasValue)
                     {
-                        rmrs.ErrorMsg = "付款时，对方的收款信息必填!";
+                        rmrs.ErrorMsg = $"{entity.PaymentNo}付款时，对方的收款信息必填!";
                         rmrs.Succeeded = false;
                         rmrs.ReturnObject = entity as T;
                         return rmrs;
@@ -120,20 +120,27 @@ namespace RUINORERP.Business
                     rmrs.ReturnObject = entity as T;
                     return rmrs;
                 }
-                //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
-                var PendingApprovalDetails = await _appContext.Db.Queryable<tb_FM_PaymentRecordDetail>()
-                    .Includes(c => c.tb_fm_paymentrecord)
-                .Where(c => c.tb_fm_paymentrecord.PaymentStatus >= (int)PaymentStatus.已支付).ToListAsync();
 
-                //要把自己也算上。不能大于1 ，entity是等待审核。所以拼一起
-                PendingApprovalDetails.AddRange(entity.tb_FM_PaymentRecordDetails);
-                if (!ValidatePaymentDetails(PendingApprovalDetails, rmrs))
+                foreach (var PaymentRecordDetail in entity.tb_FM_PaymentRecordDetails)
                 {
-                    //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
-                    rmrs.Succeeded = false;
-                    rmrs.ReturnObject = entity as T;
-                    return rmrs;
+                    //审核时 要检测明细中对应的相同业务类型下不能有相同来源单号。除非有正负总金额为0对冲情况。或是两行数据?
+                    var PendingApprovalDetails = await _appContext.Db.Queryable<tb_FM_PaymentRecordDetail>()
+                        .Includes(c => c.tb_fm_paymentrecord)
+                        .Where(c => c.SourceBilllId == PaymentRecordDetail.SourceBilllId && c.SourceBizType == PaymentRecordDetail.SourceBizType)
+                        .Where(c => c.tb_fm_paymentrecord.PaymentStatus >= (int)PaymentStatus.已支付).ToListAsync();
+
+                    //要把自己也算上。不能大于1 
+                    PendingApprovalDetails.AddRange(PaymentRecordDetail);
+                    bool isValid = await ValidatePaymentDetails(PendingApprovalDetails, rmrs);
+                    if (!isValid)
+                    {
+                        //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
+                        rmrs.Succeeded = false;
+                        rmrs.ReturnObject = entity as T;
+                        return rmrs;
+                    }
                 }
+
 
                 #region 关联单据状态处理
 
@@ -219,7 +226,7 @@ namespace RUINORERP.Business
                                     //全退了则是 已冲销
                                     if (oldPrePayment.LocalRefundAmount == oldPrePayment.LocalPrepaidAmount || oldPrePayment.ForeignRefundAmount == oldPrePayment.ForeignPrepaidAmount)
                                     {
-                                        oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.已退款;
+                                        oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.已结案;
                                         oldPrePayment.IsAvailable = false;
                                     }
 
@@ -244,24 +251,21 @@ namespace RUINORERP.Business
                                 #region 通过他的来源单据，找到对应的预收付单的收款单。标记为已关闭 !!!!!!!!!! 收款单 有是否反冲标记， 预收付中有退回金额
 
                                 //要调式
-                                //tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
-                                //.Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId)
-                                //&& c.PaymentStatus == (int)PaymentStatus.已支付)
-                                // .SingleAsync();
-
+                                //找到最原始的收款单 正数
                                 tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
                                 .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId)
                                 && c.PaymentStatus == (int)PaymentStatus.已支付)
+                                  .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.LocalAmount > 0))
                                  .FirstAsync();
                                 if (oldPayment != null)
                                 {
                                     // 更新原始记录 指向[负数]冲销记录
                                     oldPayment.ReversedByPaymentId = entity.PaymentId;
-                                    oldPayment.ReversedByPaymentNo = entity.PaymentNo;
+                                    //oldPayment.ReversedByPaymentNo = entity.PaymentNo;
                                     oldPaymentUpdateList.Add(oldPayment);
                                     // 指向原始记录
                                     entity.ReversedOriginalId = oldPayment.PaymentId;
-                                    entity.ReversedOriginalNo = oldPayment.PaymentNo;
+                                    //entity.ReversedOriginalNo = oldPayment.PaymentNo;
                                 }
                                 entity.IsReversed = true;
 
@@ -302,12 +306,19 @@ namespace RUINORERP.Business
                                             //财务只管财务的状态
                                             // saleOut.DataStatus = (int)DataStatus.完结;
                                             saleOut.PayStatus = (int)PayStatus.全部付款;
-                                            saleOut.Paytype_ID = entity.Paytype_ID.Value;
+                                            if (entity.Paytype_ID.HasValue)
+                                            {
+                                                saleOut.Paytype_ID = entity.Paytype_ID.Value;
+                                            }
+
                                         }
                                         else
                                         {
                                             saleOut.PayStatus = (int)PayStatus.部分付款;
-                                            saleOut.Paytype_ID = entity.Paytype_ID.Value;
+                                            if (entity.Paytype_ID.HasValue)
+                                            {
+                                                saleOut.Paytype_ID = entity.Paytype_ID.Value;
+                                            }
                                         }
                                         if (saleOut.tb_saleorder.tb_SaleOuts != null)
                                         {
@@ -320,12 +331,18 @@ namespace RUINORERP.Business
                                                 && otherSaleOuts.Sum(c => c.TotalAmount) + saleOut.TotalAmount == saleOut.tb_saleorder.TotalAmount)
                                             {
                                                 saleOut.tb_saleorder.PayStatus = (int)PayStatus.全部付款;
-                                                saleOut.tb_saleorder.Paytype_ID = entity.Paytype_ID.Value;
+                                                if (entity.Paytype_ID.HasValue)
+                                                {
+                                                    saleOut.tb_saleorder.Paytype_ID = entity.Paytype_ID.Value;
+                                                }
                                             }
                                             else
                                             {
                                                 saleOut.tb_saleorder.PayStatus = (int)PayStatus.部分付款;
-                                                saleOut.tb_saleorder.Paytype_ID = entity.Paytype_ID.Value;
+                                                if (entity.Paytype_ID.HasValue)
+                                                {
+                                                    saleOut.tb_saleorder.Paytype_ID = entity.Paytype_ID.Value;
+                                                }
                                             }
 
                                         }
@@ -548,12 +565,18 @@ namespace RUINORERP.Business
                                             //财务只管财务的状态
                                             // saleOut.DataStatus = (int)DataStatus.完结;
                                             RepairOrder.PayStatus = (int)PayStatus.全部付款;
-                                            RepairOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                            if (entity.Paytype_ID.HasValue)
+                                            {
+                                                RepairOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                            }
                                         }
                                         else
                                         {
                                             RepairOrder.PayStatus = (int)PayStatus.部分付款;
-                                            RepairOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                            if (entity.Paytype_ID.HasValue)
+                                            {
+                                                RepairOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                            }
                                         }
 
                                         RepairOrderUpdateList.Add(RepairOrder);
@@ -613,7 +636,7 @@ namespace RUINORERP.Business
                                         //全退了则是 已冲销
                                         if (oldPrePayment.LocalRefundAmount == oldPrePayment.LocalPrepaidAmount || oldPrePayment.ForeignRefundAmount == oldPrePayment.ForeignPrepaidAmount)
                                         {
-                                            oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.已退款;
+                                            oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.已结案;
                                             oldPrePayment.IsAvailable = false;
                                         }
 
@@ -628,7 +651,7 @@ namespace RUINORERP.Business
                                         if ((oldPrePayment.LocalPaidAmount == 0 && oldPrePayment.LocalRefundAmount > 0 && oldPrePayment.LocalRefundAmount < oldPrePayment.LocalPrepaidAmount) ||
                                             (oldPrePayment.ForeignPaidAmount == 0 && oldPrePayment.ForeignRefundAmount > 0 && oldPrePayment.ForeignRefundAmount < oldPrePayment.ForeignPrepaidAmount))
                                         {
-                                            oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
+                                            oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
                                         }
                                         //更新原来的上一个预付记录
                                         preReceivedPaymentUpdateList.Add(oldPrePayment);
@@ -637,11 +660,6 @@ namespace RUINORERP.Business
 
                                     #region 通过他的来源单据，找到对应的预收付单的收款单。标记为已关闭 !!!!!!!!!! 收款单 有是否反冲标记， 预收付中有退回金额
 
-                                    //要调式
-                                    //tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
-                                    //.Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId)
-                                    //&& c.PaymentStatus == (int)PaymentStatus.已支付)
-                                    // .SingleAsync();
 
                                     tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
                                     .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId)
@@ -651,11 +669,10 @@ namespace RUINORERP.Business
                                     {
                                         // 更新原始记录 指向[负数]冲销记录
                                         oldPayment.ReversedByPaymentId = entity.PaymentId;
-                                        oldPayment.ReversedByPaymentNo = entity.PaymentNo;
                                         oldPaymentUpdateList.Add(oldPayment);
                                         // 指向原始记录
                                         entity.ReversedOriginalId = oldPayment.PaymentId;
-                                        entity.ReversedOriginalNo = oldPayment.PaymentNo;
+                                        //entity.ReversedOriginalNo = oldPayment.PaymentNo;
                                     }
                                     entity.IsReversed = true;
 
@@ -671,32 +688,37 @@ namespace RUINORERP.Business
                                             var saleOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
                                                 .Includes(c => c.tb_SaleOrderDetails)
                                             .Where(c => c.SOrder_ID == prePayment.SourceBillId)
+                                            .Where(c => c.DataStatus == (int)DataStatus.确认)
                                             .SingleAsync();
                                             if (saleOrder != null)
                                             {
-
-                                                saleOrder.CloseCaseOpinions += $" 订金退款，订单取消作废";
-                                                saleOrder.DataStatus = (int)DataStatus.作废;
-
-                                                saleOrderUpdateList.Add(saleOrder);
-                                                #region 更新库存的拟销量
-
-                                                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
-                                                foreach (var child in saleOrder.tb_SaleOrderDetails)
+                                                //订金全退时 作废
+                                                if (saleOrder.Deposit == Math.Abs(entity.TotalLocalAmount))
                                                 {
-                                                    #region 库存表的更新 ，
-                                                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                                                    //更新在途库存
-                                                    inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
-                                                    BusinessHelper.Instance.EditEntity(inv);
+                                                    saleOrder.CloseCaseOpinions += $"订金退款，订单取消作废";
+                                                    saleOrder.DataStatus = (int)DataStatus.作废;
+
+                                                    saleOrderUpdateList.Add(saleOrder);
+                                                    #region 更新库存的拟销量
+
+                                                    List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                                                    foreach (var child in saleOrder.tb_SaleOrderDetails)
+                                                    {
+                                                        #region 库存表的更新 ，
+                                                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                                                        //更新在途库存
+                                                        inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
+                                                        BusinessHelper.Instance.EditEntity(inv);
+                                                        #endregion
+                                                        invUpdateList.Add(inv);
+                                                    }
+
+                                                    DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                                                    var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+
                                                     #endregion
-                                                    invUpdateList.Add(inv);
                                                 }
 
-                                                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                                                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-
-                                                #endregion
                                             }
 
 
@@ -708,29 +730,33 @@ namespace RUINORERP.Business
                                             var purOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurOrder>()
                                                 .Includes(c => c.tb_PurOrderDetails)
                                             .Where(c => c.SOrder_ID == prePayment.SourceBillId)
+                                             .Where(c => c.DataStatus == (int)DataStatus.确认)
                                             .SingleAsync();
                                             if (purOrder != null)
-                                            {
-                                                purOrder.CloseCaseOpinions += $" 订金退款，订单取消";
-                                                purOrder.DataStatus = (int)DataStatus.作废;
-                                                purOrderUpdateList.Add(purOrder);
-                                                #region 更新库存的拟销量
-
-                                                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
-                                                foreach (var child in purOrder.tb_PurOrderDetails)
+                                            { //订金全退时 作废
+                                                if (purOrder.Deposit == Math.Abs(entity.TotalLocalAmount))
                                                 {
-                                                    #region 库存表的更新 ，
-                                                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                                                    inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
-                                                    BusinessHelper.Instance.EditEntity(inv);
+                                                    purOrder.CloseCaseOpinions += $" 订金退款，订单取消";
+                                                    purOrder.DataStatus = (int)DataStatus.作废;
+                                                    purOrderUpdateList.Add(purOrder);
+                                                    #region 更新库存的拟销量
+
+                                                    List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                                                    foreach (var child in purOrder.tb_PurOrderDetails)
+                                                    {
+                                                        #region 库存表的更新 ，
+                                                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                                                        inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
+                                                        BusinessHelper.Instance.EditEntity(inv);
+                                                        #endregion
+                                                        invUpdateList.Add(inv);
+                                                    }
+
+                                                    DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                                                    var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+
                                                     #endregion
-                                                    invUpdateList.Add(inv);
                                                 }
-
-                                                DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                                                var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-
-                                                #endregion
                                             }
 
                                         }
@@ -860,12 +886,18 @@ namespace RUINORERP.Business
                                                 if (saleOrder.Deposit == saleOrder.TotalAmount)
                                                 {
                                                     saleOrder.PayStatus = (int)PayStatus.全额预付;
-                                                    saleOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                                    if (entity.Paytype_ID.HasValue)
+                                                    {
+                                                        saleOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                                    }
                                                 }
                                                 else
                                                 {
                                                     saleOrder.PayStatus = (int)PayStatus.部分预付;
-                                                    saleOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                                    if (entity.Paytype_ID.HasValue)
+                                                    {
+                                                        saleOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                                    }
                                                 }
                                                 saleOrderUpdateList.Add(saleOrder);
                                             }
@@ -903,12 +935,18 @@ namespace RUINORERP.Business
                                                 if (purOrder.Deposit == purOrder.TotalAmount)
                                                 {
                                                     purOrder.PayStatus = (int)PayStatus.全额预付;
-                                                    purOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                                    if (entity.Paytype_ID.HasValue)
+                                                    {
+                                                        purOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                                    }
                                                 }
                                                 else
                                                 {
                                                     purOrder.PayStatus = (int)PayStatus.部分预付;
-                                                    purOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                                    if (entity.Paytype_ID.HasValue)
+                                                    {
+                                                        purOrder.Paytype_ID = entity.Paytype_ID.Value;
+                                                    }
                                                 }
                                                 purOrderUpdateList.Add(purOrder);
                                             }
@@ -930,8 +968,7 @@ namespace RUINORERP.Business
                     //更新原来的上一个预付记录
                     await _unitOfWorkManage.GetDbClient().Updateable(oldPaymentUpdateList).UpdateColumns(t => new
                     {
-                        t.ReversedByPaymentId,
-                        t.ReversedByPaymentNo
+                        t.ReversedOriginalId,
                     }
                     ).ExecuteCommandAsync();
                 }
@@ -1094,6 +1131,8 @@ namespace RUINORERP.Business
                     it.Approver_at,
                     it.Approver_by,
                     it.ApprovalOpinions,
+                    it.IsReversed,
+                    it.ReversedByPaymentId,
                     it.Paytype_ID
                 }).ExecuteCommandAsync();
 
@@ -1112,7 +1151,7 @@ namespace RUINORERP.Business
             }
         }
 
-        public static bool ValidatePaymentDetails(List<tb_FM_PaymentRecordDetail> paymentDetails, ReturnResults<T> returnResults = null)
+        public async Task<bool> ValidatePaymentDetails(List<tb_FM_PaymentRecordDetail> paymentDetails, ReturnResults<T> returnResults = null)
         {
             // 按来源业务类型分组
             var groupedByBizType = paymentDetails
@@ -1122,11 +1161,11 @@ namespace RUINORERP.Business
             foreach (var bizTypeGroup in groupedByBizType)
             {
                 // 按来源单号分组
-                var groupedByBillNo = bizTypeGroup
-                    .GroupBy(d => d.SourceBillNo)
+                var groupedByBillIDAndNo = bizTypeGroup
+                    .GroupBy(d => new { d.SourceBilllId, d.SourceBillNo })
                     .ToList();
 
-                foreach (var billNoGroup in groupedByBillNo)
+                foreach (var billNoGroup in groupedByBillIDAndNo)
                 {
                     var items = billNoGroup.ToList();
 
@@ -1134,19 +1173,51 @@ namespace RUINORERP.Business
                     if (items.Count == 1)
                         continue;
 
-                    // 如果有两条记录，检查是否为对冲情况
-                    if (items.Count == 2)
+                    // 如果有两条记录，检查是否为对冲情况, 
+                    // 如果满足对冲条件，则通过,如一正一向，并且和是业务单预收的余额或核销金额之和？
+                    bool hasNegativeAmount = items.Any(detail => detail.LocalAmount < 0);
+                    if (items.Count == 2 && hasNegativeAmount)
                     {
                         // 计算本币金额总和
                         decimal totalLocalAmount = items.Sum(i => i.LocalAmount);
                         // 计算外币金额总和
                         decimal totalForeignAmount = items.Sum(i => i.ForeignAmount);
 
+
                         // 检查是否满足对冲条件（总和接近0，考虑浮点数精度问题）
                         if (Math.Abs(totalLocalAmount) < 0.001m && Math.Abs(totalForeignAmount) < 0.001m)
                             continue;
+                        if (bizTypeGroup.Key == (int)BizType.预收款单 || bizTypeGroup.Key == (int)BizType.预付款单)
+                        {
+                            var PreReceivedPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                                  .Where(c => c.PreRPID == billNoGroup.Key.SourceBilllId)
+                                  .FirstAsync();
+                            if (PreReceivedPayment != null)
+                            {
+                                if (PreReceivedPayment.LocalPaidAmount == totalLocalAmount)
+                                {
+                                    //余额全部退款
+                                    continue;
+                                }
+                                else if (PreReceivedPayment.LocalPaidAmount < totalLocalAmount)
+                                {
+                                    //部分退款
+                                    continue;
+                                }
+                                else
+                                {
+                                    returnResults.ErrorMsg = $"可能存在超额退款的单据:{(BizType)groupedByBizType[0].Key}，单号：{billNoGroup.Key.SourceBillNo}";
+                                    // 其他情况均视为不合法
+                                    return false;
+                                }
+                            }
+
+                        }
+
+                        // 检查 
+
                     }
-                    returnResults.ErrorMsg = $"{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单中不能存在相同业务来源的数据:{(BizType)groupedByBizType[0].Key}，来源单号为:{groupedByBillNo[0].Key}";
+                    returnResults.ErrorMsg = $"{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单中不能存在相同业务来源的单据:{(BizType)groupedByBizType[0].Key}，单号：{billNoGroup.Key.SourceBillNo}";
                     returnResults.ErrorMsg += $"\r\n通常是生成了重复{(ReceivePaymentType)paymentDetails[0].tb_fm_paymentrecord.ReceivePaymentType}单。请仔细核对！";
                     // 其他情况均视为不合法
                     return false;
@@ -1309,7 +1380,6 @@ namespace RUINORERP.Business
             return paymentRecord;
         }
 
-        // 生成收付款记录表
         /// <summary>
         /// 生成收付款记录表
         /// </summary>
@@ -1319,7 +1389,6 @@ namespace RUINORERP.Business
         public tb_FM_PaymentRecord BuildPaymentRecord(tb_FM_PreReceivedPayment entity, bool isRefund)
         {
             //预收付款单 审核时 自动生成 收付款记录
-
             tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
             paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);
             paymentRecord.ApprovalResults = null;
@@ -1359,26 +1428,30 @@ namespace RUINORERP.Business
             paymentRecordDetail.Currency_ID = entity.Currency_ID;
             paymentRecordDetail.ExchangeRate = entity.ExchangeRate;
             #endregion
+            //只退余额
             if (isRefund)
             {
-                paymentRecordDetail.ForeignAmount = -entity.ForeignPrepaidAmount;
-                paymentRecordDetail.LocalAmount = -entity.LocalPrepaidAmount;
+                paymentRecordDetail.ForeignAmount = -(entity.ForeignBalanceAmount);
+                paymentRecordDetail.LocalAmount = -(entity.LocalBalanceAmount);
+
+
             }
             else
             {
                 paymentRecordDetail.LocalAmount = entity.LocalPrepaidAmount;
                 paymentRecordDetail.ForeignAmount = entity.ForeignPrepaidAmount;
+
+
             }
             paymentRecordDetail.Summary = $"来自预{(ReceivePaymentType)entity.ReceivePaymentType}{entity.PreRPNO}。";
             if (entity.PrePaymentReason.Contains("平台单号"))
             {
                 paymentRecordDetail.Summary += entity.PrePaymentReason;
             }
-
-
-
             paymentRecord.TotalLocalAmount = paymentRecordDetail.LocalAmount;
             paymentRecord.TotalForeignAmount = paymentRecordDetail.ForeignAmount;
+
+
             paymentRecord.PaymentDate = entity.PrePayDate;
             paymentRecord.Currency_ID = entity.Currency_ID;
             paymentRecord.CustomerVendor_ID = entity.CustomerVendor_ID;
@@ -1396,13 +1469,7 @@ namespace RUINORERP.Business
             paymentRecord.SourceBillNos = string.Join(",", paymentRecord.tb_FM_PaymentRecordDetails.Select(t => t.SourceBillNo).ToArray());
 
             BusinessHelper.Instance.InitEntity(paymentRecord);
-            //long id = await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecord>(paymentRecord).ExecuteReturnSnowflakeIdAsync();
-            //if (id > 0)
-            //{
-            //    paymentRecordDetail.PaymentId = id;
-            //    await _unitOfWorkManage.GetDbClient().Insertable<tb_FM_PaymentRecordDetail>(paymentRecordDetail).ExecuteReturnSnowflakeIdAsync();
-            //    paymentRecord.tb_FM_PaymentRecordDetails.Add(paymentRecordDetail);
-            //}
+
             return paymentRecord;
         }
 
@@ -1462,7 +1529,7 @@ namespace RUINORERP.Business
                 if (OriginalPaymentRecord != null)
                 {
                     paymentRecord.ReversedOriginalId = OriginalPaymentRecord.PaymentId;
-                    paymentRecord.ReversedOriginalNo = OriginalPaymentRecord.PaymentNo;
+                    //paymentRecord.ReversedOriginalNo = OriginalPaymentRecord.PaymentNo;
                 }
             }
 
@@ -1495,42 +1562,11 @@ namespace RUINORERP.Business
             //SourceBillNos的值来自于tb_FM_PaymentRecordDetails集合中的 SourceBillNo属性的值，用逗号隔开
             paymentRecord.SourceBillNos = string.Join(",", paymentRecord.tb_FM_PaymentRecordDetails.Select(t => t.SourceBillNo).ToArray());
 
-
             BusinessHelper.Instance.InitEntity(paymentRecord);
-            //            paymentRecord.ReferenceNo=entity.no 流水
-            //if (SaveToDb)
-            //{
-            //    //自动提交
-            //    paymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
-            //    var ctr = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            //    //比方 暂时没有供应商  又是外键，则是如何处理的？
-            //    bool vb = ShowInvalidMessage(ctr.Validator(paymentRecord));
-            //    if (!vb)
-            //    {
-            //        rs.ErrorMsg = "数据校验失败。";
-            //        rs.ReturnObject = paymentRecord;
-            //        return rs;
-            //    }
-            //    var paymentRecordController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            //    ReturnMainSubResults<tb_FM_PaymentRecord> rsms = await paymentRecordController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord);
-            //    if (rsms.Succeeded)
-            //    {
-            //        paymentRecord.tb_FM_PaymentRecordDetails.ForEach(c => c.PaymentId = rsms.ReturnObject.PaymentId);
-            //    }
-            //    else
-            //    {
-            //        //记录错误日志
-            //        _logger.LogError(rsms.ErrorMsg);
-            //    }
-            //}
-            //else
-            //{
+
             paymentRecord.PaymentStatus = (int)PaymentStatus.草稿;
             return paymentRecord;
-            ////}
-            //rs.Succeeded = true;
-            //rs.ReturnObject = paymentRecord;
-            //return rs;
+
         }
 
         public static bool ShowInvalidMessage(ValidationResult results)

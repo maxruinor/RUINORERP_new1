@@ -148,7 +148,7 @@ namespace RUINORERP.UI.FM
                         }
 
                         var rqp = new Model.CommonModel.RelatedQueryParameter();
-                        
+
                         rqp.bizType = (BizType)item.SourceBizType.Value;
                         rqp.billId = item.SourceBillId.Value;
                         ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
@@ -370,6 +370,7 @@ namespace RUINORERP.UI.FM
             }
             LoadItems(entity.IsExpenseType);
             InitLoadGrid();
+
             if (entity.tb_FM_ReceivablePayableDetails != null && entity.tb_FM_ReceivablePayableDetails.Count > 0)
             {
                 details = entity.tb_FM_ReceivablePayableDetails;
@@ -394,7 +395,7 @@ namespace RUINORERP.UI.FM
             {
                 sgh.LoadItemDataToGrid<tb_FM_ReceivablePayableDetail>(grid1, sgd, new List<tb_FM_ReceivablePayableDetail>(), c => c.ProdDetailID);
             }
-
+            UIBizSrvice.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
             //如果属性变化 则状态为修改
             entity.PropertyChanged += async (sender, s2) =>
             {
@@ -843,12 +844,12 @@ namespace RUINORERP.UI.FM
 
 
             //隐藏外币相关
-            UIHelper.ControlForeignFieldInvisible<tb_FM_ReceivablePayable>(this, false);
+                UIHelper.ControlForeignFieldInvisible<tb_FM_ReceivablePayable>(this, false);
             if (listCols != null)
             {
                 listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.ExchangeRate);
             }
-
+            UIBizSrvice.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
         }
         #region 坏账处理
         ToolStripButton toolStripButton坏账处理 = new System.Windows.Forms.ToolStripButton();
@@ -943,15 +944,18 @@ namespace RUINORERP.UI.FM
         }
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
-        {
-
+            {
             if (EditEntity == null)
             {
                 //都不是正常状态
                 MainForm.Instance.uclog.AddLog("请先使用新增或查询加载数据");
                 return;
             }
-            TotalSum();
+            if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
+            {
+                TotalSum();
+            }
+            
         }
 
 

@@ -182,13 +182,14 @@ namespace RUINORERP.Business
 
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
                 {
-                    if (!entity.PayeeInfoID.HasValue)
-                    {
-                        rmrs.ErrorMsg = "付款时，对方的收款信息必填!";
-                        rmrs.Succeeded = false;
-                        rmrs.ReturnObject = entity as T;
-                        return rmrs;
-                    }
+                    //暂时不检测。实际业务太灵活
+                    //if (!entity.PayeeInfoID.HasValue)
+                    //{
+                    //    rmrs.ErrorMsg = $"{entity.ARAPNo}付款时，对方的收款信息必填!";
+                    //    rmrs.Succeeded = false;
+                    //    rmrs.ReturnObject = entity as T;
+                    //    return rmrs;
+                    //}
                 }
 
 

@@ -27,7 +27,6 @@ namespace RUINORERP.Model
     {
         public tb_FM_ReceivablePayable()
         {
-            
             if (!PK_FK_ID_Check())
             {
                 throw new Exception("应收应付表tb_FM_ReceivablePayable" + "外键ID与对应主主键名称不一致。请修改数据库");

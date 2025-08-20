@@ -746,89 +746,14 @@ namespace RUINORERP.UI.BaseForm
                                         statusEnum is ARAPStatus arap && arap == ARAPStatus.待审核 ||
                                         statusEnum is PaymentStatus pay && pay == PaymentStatus.待审核;
 
-            //// 结案/特殊操作按钮
-            //toolStripButton结案.Enabled = false;
-            //toolStripButton结案.Visible = false;
 
-            //if (statusEnum is PrePaymentStatus preStatus)
-            //{
-            //    toolStripButton结案.Visible = preStatus == PrePaymentStatus.待核销;
-            //    toolStripButton结案.Enabled = preStatus == PrePaymentStatus.待核销;
-            //}
-            //else if (statusEnum is ARAPStatus arapStatus)
-            //{
-            //    toolStripButton结案.Visible = arapStatus == ARAPStatus.待支付 ||
-            //                                 arapStatus == ARAPStatus.部分支付;
-            //    toolStripButton结案.Enabled = arapStatus == ARAPStatus.待支付 ||
-            //                                 arapStatus == ARAPStatus.部分支付;
 
-            // 坏账按钮
-            //toolStripButton坏账.Visible = toolStripButton结案.Visible;
-            //toolStripButton坏账.Enabled = toolStripButton结案.Enabled;
-            //}
             // 状态检测器
             var statusDetector = new StatusDetector(entity as BaseEntity);
             // 锁定状态处理
             HandleLockStatus(entity as BaseEntity, statusDetector);
 
-            /*
-            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name) ||
-    entity.ContainsProperty(typeof(ARAPStatus).Name) ||
-    entity.ContainsProperty(typeof(PaymentStatus).Name))
-            {
-                // 获取实际状态类型
-                var statusType = GetActualStatusType(entity as BaseEntity);
-                var statusValue = GetStatusValue(entity as BaseEntity, statusType);
-                var actionStatus = (ActionStatus)Enum.Parse(typeof(ActionStatus),
-                    entity.GetPropertyValue(typeof(ActionStatus).Name).ToString());
 
-
-                // 使用状态辅助类判断
-                bool isFinal = statusValue.IsFinalStatus();
-                bool canEdit = statusValue.IsEditable();
-                bool canCancel = statusValue.CanCancel(HasRelatedRecords(entity as BaseEntity));
-
-
-
-                // 根据不同类型细化控制
-                switch (statusValue)
-                {
-                    case PrePaymentStatus preStatus:
-                        HandlePrePaymentStatus(preStatus, actionStatus);
-                        break;
-                    case ARAPStatus arapStatus:
-                        HandleARAPStatus(arapStatus, actionStatus);
-                        break;
-                    case PaymentStatus paymentStatus:
-                        HandlePaymentStatus(paymentStatus, actionStatus);
-                        break;
-                    default:
-                        //  HandleBaseStatus(statusValue, actionStatus);
-                        break;
-                }
-
-                // 通用按钮控制逻辑
-                toolStripbtnAdd.Enabled = !isFinal && canEdit;
-                toolStripBtnCancel.Visible = canCancel;
-                toolStripbtnModify.Enabled = canEdit;
-                toolStripbtnDelete.Enabled = canEdit && !isFinal;
-                toolStripButtonSave.Enabled = canEdit && !isFinal;
-
-                if (statusValue.IsFinalStatus())
-                {
-                    toolStripBtnReverseReview.Enabled = false;
-                    toolStripbtnModify.Enabled = false;
-                    toolStripbtnSubmit.Enabled = false;
-                    toolStripButtonSave.Enabled = false;
-                    toolStripbtnReview.Enabled = false;
-                }
-                // 处理锁定状态
-                HandleLockStatus(entity as BaseEntity);
-
-                // 状态变更事件处理
-                HandleStatusChangeEvents(entity as BaseEntity, statusValue);
-            }
-            */
 
         }
 
@@ -969,6 +894,7 @@ namespace RUINORERP.UI.BaseForm
             toolStripbtnSubmit.Enabled = statusDetector.CanSubmit;
             toolStripbtnReview.Enabled = statusDetector.CanReview;
             toolStripBtnReverseReview.Enabled = statusDetector.CanReverseReview;
+            toolStripBtnReverseReview.Visible=statusDetector.CanReverseReview; 
             toolStripButton结案.Enabled = statusDetector.CanClose;
             //  RefreshToolbar
             statusDetector.RefreshToolbar += (actionStatus, statusValue) =>
@@ -1049,7 +975,7 @@ namespace RUINORERP.UI.BaseForm
                     case PrePaymentStatus pre:
                         CanSubmit = pre == PrePaymentStatus.草稿;
                         CanReview = pre == PrePaymentStatus.待审核;
-                        CanReverseReview = pre == PrePaymentStatus.待核销;
+                        CanReverseReview = pre == PrePaymentStatus.待核销 || pre == PrePaymentStatus.已生效;
                         CanClose = pre == PrePaymentStatus.待核销; // 可退款
                         CanReverse = false;
                         break;

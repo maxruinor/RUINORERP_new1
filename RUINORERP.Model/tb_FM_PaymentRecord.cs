@@ -354,19 +354,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _ReversedOriginalNo;
-        /// <summary>
-        /// 冲销单号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ReversedOriginalNo",ColDesc = "冲销单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedOriginalNo" ,Length=30,IsNullable = true,ColumnDescription = "冲销单号" )]
-        public string ReversedOriginalNo
-        { 
-            get{return _ReversedOriginalNo;}
-            set{
-            SetProperty(ref _ReversedOriginalNo, value);
-                        }
-        }
+        //private string _ReversedOriginalNo;
+        ///// <summary>
+        ///// 冲销单号
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "ReversedOriginalNo",ColDesc = "冲销单号")] 
+        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedOriginalNo" ,Length=30,IsNullable = true,ColumnDescription = "冲销单号" )]
+        //public string ReversedOriginalNo
+        //{ 
+        //    get{return _ReversedOriginalNo;}
+        //    set{
+        //    SetProperty(ref _ReversedOriginalNo, value);
+        //                }
+        //}
 
         private long? _ReversedByPaymentId;
         /// <summary>
@@ -383,19 +383,19 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _ReversedByPaymentNo;
-        /// <summary>
-        /// 被冲销单号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ReversedByPaymentNo",ColDesc = "被冲销单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedByPaymentNo" ,Length=30,IsNullable = true,ColumnDescription = "被冲销单号" )]
-        public string ReversedByPaymentNo
-        { 
-            get{return _ReversedByPaymentNo;}
-            set{
-            SetProperty(ref _ReversedByPaymentNo, value);
-                        }
-        }
+        //private string _ReversedByPaymentNo;
+        ///// <summary>
+        ///// 被冲销单号
+        ///// </summary>
+        //[AdvQueryAttribute(ColName = "ReversedByPaymentNo",ColDesc = "被冲销单号")] 
+        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ReversedByPaymentNo" ,Length=30,IsNullable = true,ColumnDescription = "被冲销单号" )]
+        //public string ReversedByPaymentNo
+        //{ 
+        //    get{return _ReversedByPaymentNo;}
+        //    set{
+        //    SetProperty(ref _ReversedByPaymentNo, value);
+        //                }
+        //}
 
         private string _Remark;
         /// <summary>

@@ -11,39 +11,78 @@ namespace RUINORERP.Global.EnumExt
 
 
     /// <summary>
-    /// 对账单状态
+    /// 对账状态
     /// </summary>
-    public enum StatementStatus 
+    public enum StatementStatus
     {
         草稿 = 1,       // 初始状态
         已发送 = 2,     // 已发送给客户
         已确认 = 3,     // 客户确认对账
-        已关闭 = 4,     // 流程终止
-        已结清 = 5,     // 完全结清
-        部分结算 =6   // 部分金额结算
+        已结清 = 4,     // 完全结清
+        部分结算 = 5,   // 部分金额结算
+        已作废 = 6,     // 流程终止
+    }
+    /// <summary>
+    /// 对账单明细的核销状态
+    /// </summary>
+    public enum ReconciliationWriteOffStatus
+    {
+        [Description("待核销")]
+        PendingWriteOff = 1,  // 已纳入对账单，尚未核销任何金额
+
+        [Description("部分核销")]
+        PartiallyWrittenOff = 2,  // 本次对账中部分金额已核销
+
+        [Description("全额核销")]
+        FullyWrittenOff = 3  // 本次对账中全部未核销金额已核销
     }
 
-    //// 基础状态 (所有财务单据共用)
-    //[Flags]
-    //public enum BaseFMStatus : long
-    //{
-    //    [Description("未提交")]
-    //    草稿 = 1 << 0,  // 1
+    /// <summary>
+    /// 损益类型
+    /// </summary>
+    public enum ProfitLossType
+    {
+        //（视同销售）
+        [Description("样品赠送")] SampleGift = 1,
 
-    //    [Description("待审核")]
-    //    待审核 = 1 << 1,  // 2
+        //（进项税转出）
+        [Description("库存盘亏")] InventoryScrap = 2,
 
-    //    [Description("审核通过")]
-    //    已生效 = 1 << 2,  // 4
+        [Description("折旧损失")] QualityLoss = 3,
+        [Description("报废损耗")] ProductionLoss = 4,
+        [Description("工艺报废")] ProcessScrap = 5,
+        [Description("研发试制损失")] RDPrototypeLoss = 6,
+        [Description("设备故障损失")] EquipmentFailureLoss = 7,
+        [Description("物流损毁")] LogisticsDamage = 8,
+        [Description("汇率损失")] ExchangeRateLoss = 9,
+        [Description("坏账损失")] BadDebtLoss = 10,
+        [Description("平台费用")] PlatformFee = 11,
+        [Description("其他经营损失")] OtherLoss = 12,
+        //------------------------------------------------------------可以以值为分隔下拉选择时
+        [Description("库存盘盈")] InventorySurplus = 20,
+        [Description("供应商赠品")] SupplierGift = 21,
+        [Description("客户退货溢余")] ReturnSurplus = 22,
+        [Description("生产溢余")] ProductionSurplus = 23,
+        [Description("采购溢余")] PurchaseSurplus = 24,
+        [Description("汇率收益")] ExchangeRateGain = 25,
+        [Description("其他经营溢余")] OtherGain = 26
+    }
 
-    //    [Description("已关闭")]
-    //    已关闭 = 1 << 3   // 8
-    //}
 
+    /// <summary>
+    /// 亏盈方向
+    /// </summary>
+    public enum ProfitLossDirection
+    {
+        [Description("亏损（支出）")]
+        Loss = 1,
+        [Description("盈余（收入）")]
+        Surplus = 2
+    }
 
-
+ 
     /// <summary>预付款状态</summary>
-    public enum PrePaymentStatus 
+    public enum PrePaymentStatus
     {
         [Description("草稿")]
         草稿 = 1,
@@ -55,7 +94,7 @@ namespace RUINORERP.Global.EnumExt
         已生效 = 3,  // 审核通过后状态
 
         [Description("待核销")]
-        待核销 = 4,// 支付完成后状态
+        待核销 = 4,// 支付完成后状态，待核销，是不是可以和部分核销合并？
 
         [Description("部分核销")]
         部分核销 = 5,
@@ -63,14 +102,14 @@ namespace RUINORERP.Global.EnumExt
         [Description("全额核销")]
         全额核销 = 6,
 
-        [Description("已退款")]
-        已退款 = 7
+        [Description("已结案")] //包含部分退款和全额退款？
+        已结案 = 7,
 
     }
 
 
     /// <summary>应收应付状态</summary>
-    public enum ARAPStatus  
+    public enum ARAPStatus
     {
         [Description("草稿")]
         草稿 = 1,
@@ -101,7 +140,7 @@ namespace RUINORERP.Global.EnumExt
 
 
     /// <summary>付款状态</summary>
-    public enum PaymentStatus  
+    public enum PaymentStatus
     {
 
         [Description("草稿")]
@@ -114,6 +153,9 @@ namespace RUINORERP.Global.EnumExt
         已支付 = 3
     }
 
+
+
+
     /// <summary>
     /// 核销类型
     /// 需核销的场景
@@ -124,7 +166,7 @@ namespace RUINORERP.Global.EnumExt
     public enum SettlementType
     {
 
-        [Description("手工核销")]
+        [Description("未核销")]
         未核销 = 0,
 
         [Description("收款核销应收")]
@@ -142,9 +184,23 @@ namespace RUINORERP.Global.EnumExt
         [Description("坏账核销")]
         坏账核销 = 5,
 
-        [Description("退款红冲")]
+        [Description("退款红冲核销")]
         红冲核销 = 6,
 
+        /// <summary>
+        /// 一个单位即收又付。双方需进行核销
+        /// </summary>
+        [Description("应收冲应付")]
+        应收冲应付 = 7,
+
+        [Description("应付冲应收")]
+        应付冲应收 = 8,
+
+        [Description("对账收款核销")]
+        对账收款核销 = 9,
+
+        [Description("对账付款核销")]
+        对账付款核销 = 10
     }
 
     /// <summary>
@@ -165,7 +221,7 @@ namespace RUINORERP.Global.EnumExt
 
     public enum InvoiceStatus
     {
-        
+
 
         /// <summary>
         /// 发票未正式开具	编辑、删除
@@ -189,10 +245,10 @@ namespace RUINORERP.Global.EnumExt
         /// </summary>
         已核销,
     }
- 
- 
 
- 
+
+
+
 
     /// <summary>
     /// 默认币种

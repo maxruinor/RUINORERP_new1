@@ -82,11 +82,11 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalId).NotEmpty().When(x => x.ReversedOriginalId.HasValue);
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalNo).MaximumMixedLength(30).WithMessage("冲销单号:不能超过最大长度,30.");
+ //RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedOriginalNo).MaximumMixedLength(30).WithMessage("冲销单号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentId).NotEmpty().When(x => x.ReversedByPaymentId.HasValue);
 
- RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentNo).MaximumMixedLength(30).WithMessage("被冲销单号:不能超过最大长度,30.");
+ //RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.ReversedByPaymentNo).MaximumMixedLength(30).WithMessage("被冲销单号:不能超过最大长度,30.");
 
  RuleFor(tb_FM_PaymentRecord =>tb_FM_PaymentRecord.Remark).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 

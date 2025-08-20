@@ -182,7 +182,7 @@ namespace RUINORERP.Business
                 {
                     if (!entity.PayeeInfoID.HasValue)
                     {
-                        rmrs.ErrorMsg = "付款时，对方的收款信息必填!";
+                        rmrs.ErrorMsg = $"{entity.PreRPNO}付款时，对方的收款信息必填!";
                         rmrs.Succeeded = false;
                         rmrs.ReturnObject = entity as T;
                         return rmrs;

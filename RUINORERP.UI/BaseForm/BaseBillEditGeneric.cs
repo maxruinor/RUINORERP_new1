@@ -894,7 +894,7 @@ namespace RUINORERP.UI.BaseForm
             toolStripbtnSubmit.Enabled = statusDetector.CanSubmit;
             toolStripbtnReview.Enabled = statusDetector.CanReview;
             toolStripBtnReverseReview.Enabled = statusDetector.CanReverseReview;
-            toolStripBtnReverseReview.Visible=statusDetector.CanReverseReview; 
+            toolStripBtnReverseReview.Visible = statusDetector.CanReverseReview;
             toolStripButton结案.Enabled = statusDetector.CanClose;
             //  RefreshToolbar
             statusDetector.RefreshToolbar += (actionStatus, statusValue) =>
@@ -2487,7 +2487,7 @@ namespace RUINORERP.UI.BaseForm
                                     payable.ApprovalOpinions = "系统自动审核";
                                     payable.ApprovalStatus = (int)ApprovalStatus.已审核;
                                     payable.ApprovalResults = true;
-                                    ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable);
+                                    ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
                                     if (!autoApproval.Succeeded)
                                     {
                                         autoApproval.Succeeded = false;
@@ -2527,18 +2527,25 @@ namespace RUINORERP.UI.BaseForm
                                 var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
                                 if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
                                 {
-                                    payable.ApprovalOpinions = "平台退款，货回仓库时，系统自动审核";
-                                    payable.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                    payable.ApprovalResults = true;
-                                    ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable);
-                                    if (!autoApproval.Succeeded)
+                                    //只有有应收记录。挂账都可以手工进行后面的步骤。
+                                    //所以这里应收审核过了。说明平台退款了，认为销售退回单中的平台退款已经处理了。
+
+                                    if ( (payable.ApprovalStatus.GetValueOrDefault() == (int)ApprovalStatus.未审核 ) || !payable.ApprovalResults.GetValueOrDefault())
                                     {
-                                        autoApproval.Succeeded = false;
-                                        autoApproval.ErrorMsg = $"应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                                    }
-                                    else
-                                    {
-                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                        payable.ApprovalOpinions = "平台退款，货回仓库时，系统自动审核";
+                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                        payable.ApprovalResults = true;
+                                        ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
+                                        if (!autoApproval.Succeeded)
+                                        {
+                                            autoApproval.Succeeded = false;
+                                            autoApproval.ErrorMsg = $"应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        }
+                                        else
+                                        {
+                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                        }
+                                        
                                         //自动退款？
                                         //平台订单 经过运费在 平台退款操作后，退回单状态中已经是 退款状态了。
                                         if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
@@ -2552,7 +2559,7 @@ namespace RUINORERP.UI.BaseForm
                                                     //自动生成销售退回单的对应的应该收款单（红冲的）对应的收款记录
                                                     var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                                                     List<tb_FM_ReceivablePayable> receivablePayables = new List<tb_FM_ReceivablePayable>();
-                                                    receivablePayables.Add(autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                                    receivablePayables.Add(payable);
 
                                                     tb_FM_PaymentRecord newPaymentRecord = paymentController.BuildPaymentRecord(receivablePayables);
                                                     newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红冲";
@@ -2580,13 +2587,13 @@ namespace RUINORERP.UI.BaseForm
                                                     }
                                                     #endregion
 
-
-
-
                                                 }
                                             }
                                         }
+
+
                                     }
+
 
 
                                 }
@@ -2640,7 +2647,7 @@ namespace RUINORERP.UI.BaseForm
                                                 payable.PayeeInfoID = PurEntry.tb_purorder.PayeeInfoID;
                                             }
 
-                                            ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable);
+                                            ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
                                             if (!autoApproval.Succeeded)
                                             {
                                                 autoApproval.Succeeded = false;

@@ -503,6 +503,22 @@ namespace RUINORERP.Business
         /// 审核  审核本身就是一个特殊情况。所以不能批量处理
         /// </summary>
         /// <param name="entity"></param>
+        /// <param name="IsAutoApprove">是否自动审核</param>
+        /// <returns></returns>
+        public async virtual Task<ReturnResults<T>> ApprovalAsync(T entity,bool IsAutoApprove = false)
+        {
+            
+            throw new Exception("子类要重写ApprovalAsync,请联系管理员");
+            ReturnResults<T> result = new ReturnResults<T>();
+            await Task.Delay(0); // 模拟异步操作
+            return result; // 或者根据实际情况返回值
+        }
+
+        /// <summary>
+        /// 审核  审核本身就是一个特殊情况。所以不能批量处理
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="IsAutoApprove">是否自动审核</param>
         /// <returns></returns>
         public async virtual Task<ReturnResults<T>> ApprovalAsync(T entity)
         {
@@ -511,7 +527,6 @@ namespace RUINORERP.Business
             await Task.Delay(0); // 模拟异步操作
             return result; // 或者根据实际情况返回值
         }
-
 
 
 

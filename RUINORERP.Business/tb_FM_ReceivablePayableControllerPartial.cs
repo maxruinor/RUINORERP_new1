@@ -154,6 +154,13 @@ namespace RUINORERP.Business
 
         }
 
+
+
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
+        {
+            return await ApprovalAsync(ObjectEntity, false);
+        }
+
         /// <summary>
         /// 这个审核可以由业务来审。后面还会有财务来定是否真实收付，这财务审核收款单前，还是可以反审的
         /// 审核通过时生成关联的收款/付款草稿单 财务核对是否到账。
@@ -161,7 +168,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
+        public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity, bool IsAutoApprove = false)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_FM_ReceivablePayable entity = ObjectEntity as tb_FM_ReceivablePayable;
@@ -182,14 +189,14 @@ namespace RUINORERP.Business
 
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
                 {
-                    //暂时不检测。实际业务太灵活
-                    //if (!entity.PayeeInfoID.HasValue)
-                    //{
-                    //    rmrs.ErrorMsg = $"{entity.ARAPNo}付款时，对方的收款信息必填!";
-                    //    rmrs.Succeeded = false;
-                    //    rmrs.ReturnObject = entity as T;
-                    //    return rmrs;
-                    //}
+                    //自动审核时不检测
+                    if (!entity.PayeeInfoID.HasValue && !IsAutoApprove)
+                    {
+                        rmrs.ErrorMsg = $"{entity.ARAPNo}付款时，对方的收款信息必填!";
+                        rmrs.Succeeded = false;
+                        rmrs.ReturnObject = entity as T;
+                        return rmrs;
+                    }
                 }
 
 

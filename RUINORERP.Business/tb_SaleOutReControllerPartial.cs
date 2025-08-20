@@ -361,17 +361,25 @@ namespace RUINORERP.Business
                         if (Payable == null)
                         {
                             Payable = await ctrpayable.BuildReceivablePayable(entity);
+                            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
+                            if (rmr.Succeeded)
+                            {
+                                rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                            }
+                        }
+                        else
+                        {
+                            rrs.ReturnObjectAsOtherEntity = Payable;
                         }
                     }
                     else
                     {
                         Payable = await ctrpayable.BuildReceivablePayable(entity);
-                    }
-
-                    ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
-                    if (rmr.Succeeded)
-                    {
-                        rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                        ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
+                        if (rmr.Succeeded)
+                        {
+                            rrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                        }
                     }
 
                     #endregion

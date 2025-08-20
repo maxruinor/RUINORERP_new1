@@ -208,7 +208,7 @@ namespace RUINORERP.Business
                     {
                         var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
                         paybalbe.ApprovalOpinions = $"价格调整单{entity.AdjustNo}审核时，自动创建并审核通过";
-                        ReturnResults<tb_FM_ReceivablePayable> rr = await paymentController.ApprovalAsync(paybalbe);
+                        ReturnResults<tb_FM_ReceivablePayable> rr = await paymentController.ApprovalAsync(paybalbe,true);
                         if (rr.Succeeded)
                         {
                             //审计日志

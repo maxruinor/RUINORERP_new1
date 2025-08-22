@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:53
+// 时间：08/22/2025 21:05:39
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,6 +45,12 @@ namespace RUINORERP.Business
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.Employee_ID).Must(CheckForeignKeyValue).WithMessage("借出人:下拉选择值不正确。");
 
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.BorrowNo).MaximumMixedLength(50).WithMessage("借出单号:不能超过最大长度,50.");
+
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
+
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.ProjectGroup_ID).Must(CheckForeignKeyValueCanNull).WithMessage("项目组:下拉选择值不正确。");
+ RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.ProjectGroup_ID).NotEmpty().When(x => x.ProjectGroup_ID.HasValue);
 
 //***** 
  RuleFor(tb_ProdBorrowing =>tb_ProdBorrowing.TotalQty).NotNull().WithMessage("总数量:不能为空。");

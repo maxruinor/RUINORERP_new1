@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/22/2025 20:05:18
+// 时间：08/22/2025 21:05:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -109,13 +109,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _IncomeExpenseDirection;
+        private int _IncomeExpenseDirection;
         /// <summary>
         /// 收支方向
         /// </summary>
         [AdvQueryAttribute(ColName = "IncomeExpenseDirection",ColDesc = "收支方向")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "IncomeExpenseDirection" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "收支方向" )]
-        public int? IncomeExpenseDirection
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "IncomeExpenseDirection" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收支方向" )]
+        public int IncomeExpenseDirection
         { 
             get{return _IncomeExpenseDirection;}
             set{

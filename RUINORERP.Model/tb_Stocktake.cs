@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/08/2025 16:32:30
+// 时间：08/22/2025 21:05:40
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -470,7 +470,11 @@ return rs;
 
 
 
- 
+
+
+       
+        
+
         public override object Clone()
         {
             tb_Stocktake loctype = (tb_Stocktake)this.MemberwiseClone(); //创建当前对象的浅拷贝。

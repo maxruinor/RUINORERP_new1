@@ -89,7 +89,7 @@ namespace RUINORERP.UI.FM.FMBase
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                entity.PostTime = System.DateTime.Now;
+                entity.PostDate = System.DateTime.Now;
                 if (CurMenuInfo != null)
                 {
                     lbl盘点单.Text = CurMenuInfo.CaptionCN;
@@ -127,9 +127,8 @@ namespace RUINORERP.UI.FM.FMBase
             // DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
 
-            DataBindingHelper.BindData4DataTime<tb_FM_ProfitLoss>(entity, t => t.PostTime, dtpPostTime, false);
+            DataBindingHelper.BindData4DataTime<tb_FM_ProfitLoss>(entity, t => t.PostDate, dtpPostDate, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ProfitLoss>(entity, t => t.IsExpenseType, chkIsExpenseType, false);
-            DataBindingHelper.BindData4CmbByEnum<tb_FM_ProfitLoss, ProfitLossType>(entity, k => k.ProfitLossType, cmbProfitLossType, false);
 
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupCode, cmbProjectGroup_ID);
@@ -258,7 +257,8 @@ namespace RUINORERP.UI.FM.FMBase
             listCols.SetCol_Formula<tb_FM_ProfitLossDetail>((a, b, c) => a.SubtotalAmont / (1 + b.TaxRate) * c.TaxRate, d => d.TaxSubtotalAmont);
             listCols.SetCol_Formula<tb_FM_ProfitLossDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.SubtotalAmont);
             listCols.SetCol_Formula<tb_FM_ProfitLossDetail>((a, b) => a.SubtotalAmont - b.TaxSubtotalAmont, c => c.UntaxedSubtotalAmont);
-
+            listCols.SetCol_Format<tb_FM_ProfitLossDetail>(c => c.ProfitLossType, CustomFormatType.EnumOptions, null, typeof(ProfitLossType));
+            listCols.SetCol_Format<tb_FM_ProfitLossDetail>(c => c.IncomeExpenseDirection, CustomFormatType.EnumOptions, null, typeof(IncomeExpenseDirection));
 
             //应该只提供一个结构
             List<tb_FM_ProfitLossDetail> lines = new List<tb_FM_ProfitLossDetail>();

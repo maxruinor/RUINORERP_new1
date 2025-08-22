@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:52
+// 时间：08/22/2025 21:05:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -58,6 +58,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -69,7 +71,9 @@ namespace RUINORERP.UI
                         entity.IsVendor = Boolean.Parse(txtIsVendor.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.BorrowNo = txtBorrowNo.Text ;
-                       entity.TotalQty = Int32.Parse(txtTotalQty.Text);
+                       entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
+                        entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
+                        entity.TotalQty = Int32.Parse(txtTotalQty.Text);
                         entity.TotalCost = Decimal.Parse(txtTotalCost.Text);
                         entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);
                         entity.DueDate = DateTime.Parse(txtDueDate.Text);
@@ -103,6 +107,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4CheckBox<tb_ProdBorrowing>(entity, t => t.IsVendor, chkIsVendor, false);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.BorrowNo, txtBorrowNo, BindDataType4TextBox.Text,false);
+          // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
+          // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.TotalQty, txtTotalQty, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.TotalCost.ToString(), txtTotalCost, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_ProdBorrowing>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);

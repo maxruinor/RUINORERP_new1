@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:46:21
+// 时间：08/22/2025 21:05:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -55,11 +55,11 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_StocktakeDetail =>tb_StocktakeDetail.CheckQty).NotNull().WithMessage("盘点数量:不能为空。");
 
- RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("含税单价:小数位不能超过4。");
+ RuleFor(x => x.Cost).PrecisionScale(19,4,true).WithMessage("含税单位成本:小数位不能超过4。");
 
- RuleFor(x => x.TaxRate).PrecisionScale(5,3,true).WithMessage("税率:小数位不能超过3。");
+ RuleFor(x => x.TaxRate).PrecisionScale(10,3,true).WithMessage("税率:小数位不能超过3。");
 
- RuleFor(x => x.UntaxedCost).PrecisionScale(19,4,true).WithMessage("未税单价:小数位不能超过4。");
+ RuleFor(x => x.UntaxedCost).PrecisionScale(19,4,true).WithMessage("未税单位成本:小数位不能超过4。");
 
  RuleFor(x => x.CarryingSubtotalAmount).PrecisionScale(19,4,true).WithMessage("载账小计:小数位不能超过4。");
 

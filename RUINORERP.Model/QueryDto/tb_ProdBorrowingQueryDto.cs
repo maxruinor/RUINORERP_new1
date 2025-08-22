@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/07/2025 13:17:55
+// 时间：08/22/2025 21:05:38
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,6 +47,19 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private bool _IsVendor= false;
+        /// <summary>
+        /// 是供应商
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsVendor",ColDesc = "是供应商")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsVendor",IsNullable = false,ColumnDescription = "是供应商" )]
+        public bool IsVendor 
+        { 
+            get{return _IsVendor;}
+            set{SetProperty(ref _IsVendor, value);}
+        }
+     
+
         private long _Employee_ID;
         /// <summary>
         /// 借出人
@@ -71,6 +84,34 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _BorrowNo;}
             set{SetProperty(ref _BorrowNo, value);}
+        }
+     
+
+        private long? _DepartmentID;
+        /// <summary>
+        /// 部门
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DepartmentID",ColDesc = "部门")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "DepartmentID",IsNullable = true,ColumnDescription = "部门" )]
+        [FKRelationAttribute("tb_Department","DepartmentID")]
+        public long? DepartmentID 
+        { 
+            get{return _DepartmentID;}
+            set{SetProperty(ref _DepartmentID, value);}
+        }
+     
+
+        private long? _ProjectGroup_ID;
+        /// <summary>
+        /// 项目组
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID",ColDesc = "项目组")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ProjectGroup_ID",IsNullable = true,ColumnDescription = "项目组" )]
+        [FKRelationAttribute("tb_ProjectGroup","ProjectGroup_ID")]
+        public long? ProjectGroup_ID 
+        { 
+            get{return _ProjectGroup_ID;}
+            set{SetProperty(ref _ProjectGroup_ID, value);}
         }
      
 
@@ -165,13 +206,13 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private DateTime _Modified_at;
+        private DateTime? _Modified_at;
         /// <summary>
         /// 修改时间
         /// </summary>
         [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")]
-        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Modified_at",IsNullable = false,ColumnDescription = "修改时间" )]
-        public DateTime Modified_at 
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "Modified_at",IsNullable = true,ColumnDescription = "修改时间" )]
+        public DateTime? Modified_at 
         { 
             get{return _Modified_at;}
             set{SetProperty(ref _Modified_at, value);}

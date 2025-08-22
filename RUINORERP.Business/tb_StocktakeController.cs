@@ -1,10 +1,9 @@
-﻿
-// **************************************
+﻿// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:53
+// 时间：08/22/2025 21:05:40
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -289,7 +288,7 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Stocktake>()
                                 .Includes(m => m.tb_StocktakeDetails)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -546,8 +545,10 @@ namespace RUINORERP.Business
             tb_Stocktake entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Stocktake>().Where(w => w.MainID == (long)id)
                              .Includes(t => t.tb_location )
                             .Includes(t => t.tb_employee )
-                                        .Includes(t => t.tb_StocktakeDetails )
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_StocktakeDetails )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

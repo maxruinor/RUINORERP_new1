@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:46:21
+// 时间：08/22/2025 21:05:41
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -164,7 +164,7 @@ this.lblCost.Location = new System.Drawing.Point(100,175);
 this.lblCost.Name = "lblCost";
 this.lblCost.Size = new System.Drawing.Size(41, 12);
 this.lblCost.TabIndex = 7;
-this.lblCost.Text = "含税单价";
+this.lblCost.Text = "含税单位成本";
 //111======175
 this.txtCost.Location = new System.Drawing.Point(173,171);
 this.txtCost.Name ="txtCost";
@@ -194,7 +194,7 @@ this.lblUntaxedCost.Location = new System.Drawing.Point(100,225);
 this.lblUntaxedCost.Name = "lblUntaxedCost";
 this.lblUntaxedCost.Size = new System.Drawing.Size(41, 12);
 this.lblUntaxedCost.TabIndex = 9;
-this.lblUntaxedCost.Text = "未税单价";
+this.lblUntaxedCost.Text = "未税单位成本";
 //111======225
 this.txtUntaxedCost.Location = new System.Drawing.Point(173,221);
 this.txtUntaxedCost.Name ="txtUntaxedCost";

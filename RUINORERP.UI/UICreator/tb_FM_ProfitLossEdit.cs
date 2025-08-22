@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/22/2025 20:05:14
+// 时间：08/22/2025 21:05:33
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -72,7 +72,7 @@ namespace RUINORERP.UI
                         entity.SourceBillId = Int64.Parse(txtSourceBillId.Text);
                         entity.SourceBillNo = txtSourceBillNo.Text ;
                        entity.ProfitLossDirection = Int32.Parse(txtProfitLossDirection.Text);
-                        entity.PostTime = DateTime.Parse(txtPostTime.Text);
+                        entity.PostDate = DateTime.Parse(txtPostDate.Text);
                         entity.IsExpenseType = Boolean.Parse(txtIsExpenseType.Text);
                         entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
@@ -108,7 +108,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.ProfitLossDirection, txtProfitLossDirection, BindDataType4TextBox.Qty,false);
-           DataBindingHelper.BindData4DataTime<tb_FM_ProfitLoss>(entity, t => t.PostTime, dtpPostTime,false);
+           DataBindingHelper.BindData4DataTime<tb_FM_ProfitLoss>(entity, t => t.PostDate, dtpPostDate,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_ProfitLoss>(entity, t => t.IsExpenseType, chkIsExpenseType, false);
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);

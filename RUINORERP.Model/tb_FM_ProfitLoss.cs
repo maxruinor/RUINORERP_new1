@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/22/2025 20:05:17
+// 时间：08/22/2025 21:05:36
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -107,13 +107,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int? _ProfitLossDirection;
+        private int _ProfitLossDirection;
         /// <summary>
         /// 盈亏方向
         /// </summary>
         [AdvQueryAttribute(ColName = "ProfitLossDirection",ColDesc = "盈亏方向")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ProfitLossDirection" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "盈亏方向" )]
-        public int? ProfitLossDirection
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ProfitLossDirection" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "盈亏方向" )]
+        public int ProfitLossDirection
         { 
             get{return _ProfitLossDirection;}
             set{
@@ -121,27 +121,27 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime _PostTime;
+        private DateTime _PostDate;
         /// <summary>
         /// 记账时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "PostTime",ColDesc = "记账时间")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "PostTime" ,IsNullable = false,ColumnDescription = "记账时间" )]
-        public DateTime PostTime
+        [AdvQueryAttribute(ColName = "PostDate",ColDesc = "记账时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "PostDate" ,IsNullable = false,ColumnDescription = "记账时间" )]
+        public DateTime PostDate
         { 
-            get{return _PostTime;}
+            get{return _PostDate;}
             set{
-            SetProperty(ref _PostTime, value);
+            SetProperty(ref _PostDate, value);
                         }
         }
 
-        private bool? _IsExpenseType;
+        private bool _IsExpenseType;
         /// <summary>
         /// 费用记账
         /// </summary>
         [AdvQueryAttribute(ColName = "IsExpenseType",ColDesc = "费用记账")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExpenseType" ,IsNullable = true,ColumnDescription = "费用记账" )]
-        public bool? IsExpenseType
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExpenseType" ,IsNullable = false,ColumnDescription = "费用记账" )]
+        public bool IsExpenseType
         { 
             get{return _IsExpenseType;}
             set{

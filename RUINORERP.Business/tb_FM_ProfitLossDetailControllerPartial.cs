@@ -276,7 +276,7 @@ namespace RUINORERP.Business
                     break;
             }
 
-            profitLoss.PostTime = DateTime.Now;
+            profitLoss.PostDate = DateTime.Now;
             if (entity.tb_projectgroup != null && entity.tb_projectgroup.DepartmentID.HasValue)
             {
                 profitLoss.DepartmentID = entity.tb_projectgroup.DepartmentID;
@@ -296,7 +296,7 @@ namespace RUINORERP.Business
                 {
                     details[i].SubtotalAmont = olditem.LocalPayableAmount;
                 }
-                details[i].ProfitLossType = (int)ProfitLossType.BadDebtLoss;
+                details[i].ProfitLossType = (int)ProfitLossType.坏账损失;
             }
 
             profitLoss.tb_FM_ProfitLossDetails = details;
@@ -337,7 +337,7 @@ namespace RUINORERP.Business
             profitLoss.SourceBillNo = entity.CheckNo;
             profitLoss.SourceBillId = entity.MainID;
             profitLoss.SourceBizType = (int)BizType.盘点单;
-            profitLoss.PostTime = DateTime.Now;
+            profitLoss.PostDate = DateTime.Now;
 
             List<tb_FM_ProfitLossDetail> details = mapper.Map<List<tb_FM_ProfitLossDetail>>(entity.tb_StocktakeDetails);
             for (global::System.Int32 i = 0; i < details.Count; i++)
@@ -351,7 +351,7 @@ namespace RUINORERP.Business
                     details[i].SubtotalAmont = olditem.DiffSubtotalAmount;
                 }
 
-                details[i].ProfitLossType = (int)ProfitLossType.InventoryLoss;
+                details[i].ProfitLossType = (int)ProfitLossType.库存盘亏;
 
                 details[i].ActionStatus = ActionStatus.新增;
             }
@@ -410,7 +410,7 @@ namespace RUINORERP.Business
             profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
             profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.损失确认单);
 
-            profitLoss.PostTime = DateTime.Now;
+            profitLoss.PostDate = DateTime.Now;
             profitLoss.DepartmentID = entity.DepartmentID;
             profitLoss.ProjectGroup_ID = entity.ProjectGroup_ID;
 

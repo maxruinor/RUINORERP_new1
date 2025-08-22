@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/22/2025 20:05:19
+// 时间：08/22/2025 21:05:37
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -48,7 +48,8 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_ProfitLossDetail =>tb_FM_ProfitLossDetail.ProfitLossType).NotNull().WithMessage("损溢类型:不能为空。");
 
- RuleFor(tb_FM_ProfitLossDetail =>tb_FM_ProfitLossDetail.IncomeExpenseDirection).NotEmpty().When(x => x.IncomeExpenseDirection.HasValue);
+//***** 
+ RuleFor(tb_FM_ProfitLossDetail =>tb_FM_ProfitLossDetail.IncomeExpenseDirection).NotNull().WithMessage("收支方向:不能为空。");
 
  RuleFor(tb_FM_ProfitLossDetail =>tb_FM_ProfitLossDetail.ExpenseDescription).MaximumMixedLength(300).WithMessage("费用说明:不能超过最大长度,300.");
 

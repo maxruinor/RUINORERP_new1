@@ -43,28 +43,28 @@ namespace RUINORERP.Global.EnumExt
     public enum ProfitLossType
     {
         //（视同销售）
-        [Description("样品赠出")] SampleGift = 1,
+        [Description("样品赠出")] 样品赠出 = 1,
 
         //（进项税转出）
-        [Description("库存盘亏")] InventoryLoss = 2,
-        [Description("折旧损失")] QualityLoss = 3,
-        [Description("报废损耗")] ProductionLoss = 4,
-        [Description("工艺报废")] ProcessScrap = 5,
-        [Description("研发试制损失")] RDPrototypeLoss = 6,
-        [Description("设备故障损失")] EquipmentFailureLoss = 7,
-        [Description("物流损毁")] LogisticsDamage = 8,
-        [Description("汇率损失")] ExchangeRateLoss = 9,
-        [Description("坏账损失")] BadDebtLoss = 10,
-        [Description("平台费用")] PlatformFee = 11,
-        [Description("其他经营损失")] OtherLoss = 12,
+        [Description("库存盘亏")] 库存盘亏 = 2,
+        [Description("折旧损失")] 折旧损失 = 3,
+        [Description("报废损耗")] 报废损耗 = 4,
+        [Description("工艺报废")] 工艺报废 = 5,
+        [Description("研发试制损失")] 研发试制损失 = 6,
+        [Description("设备故障损失")] 设备故障损失 = 7,
+        [Description("物流损毁")] 物流损毁 = 8,
+        [Description("汇率损失")] 汇率损失 = 9,
+        [Description("坏账损失")] 坏账损失 = 10,
+        [Description("平台费用")] 平台费用 = 11,
+        [Description("其他经营损失")] 其他经营损失 = 12,
         //------------------------------------------------------------可以以值为分隔下拉选择时
-        [Description("库存盘盈")] InventorySurplus = 20,
-        [Description("供应商赠品")] SupplierGift = 21,
-        [Description("客户退货溢余")] ReturnSurplus = 22,
-        [Description("生产溢余")] ProductionSurplus = 23,
-        [Description("采购溢余")] PurchaseSurplus = 24,
-        [Description("汇率收益")] ExchangeRateGain = 25,
-        [Description("其他经营溢余")] OtherGain = 26
+        [Description("库存盘盈")] 库存盘盈 = 20,
+        [Description("供应商赠品")] 供应商赠品 = 21,
+        [Description("客户退货溢余")] 客户退货溢余 = 22,
+        [Description("生产溢余")] 生产溢余 = 23,
+        [Description("采购溢余")] 采购溢余 = 24,
+        [Description("汇率收益")] 汇率收益 = 25,
+        [Description("其他经营溢余")] 其他经营溢余 = 26
     }
 
 

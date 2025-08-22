@@ -147,14 +147,6 @@ namespace RUINORERP.Model
         //ExpenseType_id.FK_EXPENSECLAIMDETAIL_REF_EXPENSETYPE)
         //tb_FM_ExpenseType.ExpenseType_id)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ProfitLossDetail.ExpenseType_id))]
-        public virtual List<tb_FM_ProfitLossDetail> tb_FM_ProfitLossDetails { get; set; }
-        //tb_FM_ProfitLossDetail.ExpenseType_id)
-        //ExpenseType_id.FK_TB_FM_PROFITLOSSDETAIL_REF_TB_FM_EXPENSETYPE)
-        //tb_FM_ExpenseType.ExpenseType_id)
-
 
         #endregion
 

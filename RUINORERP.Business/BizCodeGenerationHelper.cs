@@ -350,10 +350,10 @@ namespace RUINORERP.Business
                     rule = "{S:AR}{D:yyMMdd}{redis:{S:应收单}{D:yyMM}/000}";
                     break;
                 case BizType.损失确认单://Loss Shortage（损失）
-                    rule = "{S:LO}{D:yyMMdd}{redis:{S:应收单}{D:yyMM}/000}";
+                    rule = "{S:LO}{D:yyMMdd}{redis:{S:应收单}{D:yyMM}/00}";
                     break;
                 case BizType.溢余确认单://Over Yield（溢余）
-                    rule = "{S:OY}{D:yyMMdd}{redis:{S:收款核销}{D:yyMM}/000}";
+                    rule = "{S:OY}{D:yyMMdd}{redis:{S:收款核销}{D:yyMM}/00}";
                     break;
                 case BizType.付款核销:
                     rule = "{S:FKHX}{D:yyMMdd}{redis:{S:付款核销}{D:yyMM}/000}";

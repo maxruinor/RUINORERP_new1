@@ -30,7 +30,6 @@
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.lblProfitLossDirection = new Krypton.Toolkit.KryptonLabel();
-            this.cmbProfitLossType = new Krypton.Toolkit.KryptonComboBox();
             this.cmbSourceBizType = new Krypton.Toolkit.KryptonComboBox();
             this.lblSourceBill_BizType = new Krypton.Toolkit.KryptonLabel();
             this.lblSourceBillNo = new Krypton.Toolkit.KryptonLabel();
@@ -40,10 +39,9 @@
             this.txtRemark = new Krypton.Toolkit.KryptonTextBox();
             this.lblApprovalOpinions = new Krypton.Toolkit.KryptonLabel();
             this.txtApprovalOpinions = new Krypton.Toolkit.KryptonTextBox();
-            this.lblPostTime = new Krypton.Toolkit.KryptonLabel();
-            this.dtpPostTime = new Krypton.Toolkit.KryptonDateTimePicker();
+            this.lblPostDate = new Krypton.Toolkit.KryptonLabel();
+            this.dtpPostDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.chkIsExpenseType = new Krypton.Toolkit.KryptonCheckBox();
-            this.lblProfitLossType = new Krypton.Toolkit.KryptonLabel();
             this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
             this.cmbDepartmentID = new Krypton.Toolkit.KryptonComboBox();
             this.lblProjectGroup_ID = new Krypton.Toolkit.KryptonLabel();
@@ -70,7 +68,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).BeginInit();
             this.kryptonSplitContainer1.Panel2.SuspendLayout();
             this.kryptonSplitContainer1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbProfitLossType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbSourceBizType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup_ID)).BeginInit();
@@ -93,7 +90,6 @@
             // kryptonSplitContainer1.Panel1
             // 
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblProfitLossDirection);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbProfitLossType);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbSourceBizType);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblSourceBill_BizType);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblSourceBillNo);
@@ -103,10 +99,9 @@
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtRemark);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblApprovalOpinions);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.txtApprovalOpinions);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPostTime);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.dtpPostTime);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPostDate);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.dtpPostDate);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkIsExpenseType);
-            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblProfitLossType);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblDepartmentID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbDepartmentID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblProjectGroup_ID);
@@ -134,15 +129,6 @@
             this.lblProfitLossDirection.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lblProfitLossDirection.TabIndex = 274;
             this.lblProfitLossDirection.Values.Text = "";
-            // 
-            // cmbProfitLossType
-            // 
-            this.cmbProfitLossType.DropDownWidth = 79;
-            this.cmbProfitLossType.IntegralHeight = false;
-            this.cmbProfitLossType.Location = new System.Drawing.Point(353, 110);
-            this.cmbProfitLossType.Name = "cmbProfitLossType";
-            this.cmbProfitLossType.Size = new System.Drawing.Size(173, 21);
-            this.cmbProfitLossType.TabIndex = 273;
             // 
             // cmbSourceBizType
             // 
@@ -216,21 +202,21 @@
             this.txtApprovalOpinions.Size = new System.Drawing.Size(230, 168);
             this.txtApprovalOpinions.TabIndex = 266;
             // 
-            // lblPostTime
+            // lblPostDate
             // 
-            this.lblPostTime.Location = new System.Drawing.Point(587, 57);
-            this.lblPostTime.Name = "lblPostTime";
-            this.lblPostTime.Size = new System.Drawing.Size(62, 20);
-            this.lblPostTime.TabIndex = 241;
-            this.lblPostTime.Values.Text = "记账时间";
+            this.lblPostDate.Location = new System.Drawing.Point(587, 57);
+            this.lblPostDate.Name = "lblPostDate";
+            this.lblPostDate.Size = new System.Drawing.Size(62, 20);
+            this.lblPostDate.TabIndex = 241;
+            this.lblPostDate.Values.Text = "记账时间";
             // 
-            // dtpPostTime
+            // dtpPostDate
             // 
-            this.dtpPostTime.Location = new System.Drawing.Point(655, 57);
-            this.dtpPostTime.Name = "dtpPostTime";
-            this.dtpPostTime.ShowCheckBox = true;
-            this.dtpPostTime.Size = new System.Drawing.Size(131, 21);
-            this.dtpPostTime.TabIndex = 242;
+            this.dtpPostDate.Location = new System.Drawing.Point(655, 57);
+            this.dtpPostDate.Name = "dtpPostDate";
+            this.dtpPostDate.ShowCheckBox = true;
+            this.dtpPostDate.Size = new System.Drawing.Size(131, 21);
+            this.dtpPostDate.TabIndex = 242;
             // 
             // chkIsExpenseType
             // 
@@ -239,14 +225,6 @@
             this.chkIsExpenseType.Size = new System.Drawing.Size(75, 20);
             this.chkIsExpenseType.TabIndex = 244;
             this.chkIsExpenseType.Values.Text = "费用记账";
-            // 
-            // lblProfitLossType
-            // 
-            this.lblProfitLossType.Location = new System.Drawing.Point(286, 114);
-            this.lblProfitLossType.Name = "lblProfitLossType";
-            this.lblProfitLossType.Size = new System.Drawing.Size(62, 20);
-            this.lblProfitLossType.TabIndex = 245;
-            this.lblProfitLossType.Values.Text = "损溢类型";
             // 
             // lblDepartmentID
             // 
@@ -439,7 +417,6 @@
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cmbProfitLossType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbSourceBizType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbDepartmentID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup_ID)).EndInit();
@@ -466,10 +443,9 @@
         private Krypton.Toolkit.KryptonLabel lblDataStatus;
         private Krypton.Toolkit.KryptonLabel lblProfitLossNo;
         private Krypton.Toolkit.KryptonTextBox txtProfitLossNo;
-        private Krypton.Toolkit.KryptonLabel lblPostTime;
-        private Krypton.Toolkit.KryptonDateTimePicker dtpPostTime;
+        private Krypton.Toolkit.KryptonLabel lblPostDate;
+        private Krypton.Toolkit.KryptonDateTimePicker dtpPostDate;
         private Krypton.Toolkit.KryptonCheckBox chkIsExpenseType;
-        private Krypton.Toolkit.KryptonLabel lblProfitLossType;
         private Krypton.Toolkit.KryptonLabel lblTotalAmount;
         private Krypton.Toolkit.KryptonTextBox txtTotalAmount;
         private Krypton.Toolkit.KryptonLabel lblDepartmentID;
@@ -489,7 +465,6 @@
         private Krypton.Toolkit.KryptonLabel lblSourceBill_BizType;
         private Krypton.Toolkit.KryptonLabel lblSourceBillNo;
         private Krypton.Toolkit.KryptonTextBox txtSourceBillNo;
-        private Krypton.Toolkit.KryptonComboBox cmbProfitLossType;
         private Krypton.Toolkit.KryptonLabel lblProfitLossDirection;
     }
 }

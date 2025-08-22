@@ -1,10 +1,9 @@
-﻿
-// **************************************
+﻿// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：03/14/2025 20:39:47
+// 时间：08/22/2025 21:05:38
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -292,7 +291,7 @@ namespace RUINORERP.Business
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBorrowing>()
                                 .Includes(m => m.tb_ProdReturnings)
                         .Includes(m => m.tb_ProdBorrowingDetails)
-                                        .WhereCustom(useLike, dto);
+                                        .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
 
@@ -467,6 +466,8 @@ namespace RUINORERP.Business
             List<tb_ProdBorrowing> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBorrowing>()
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_projectgroup )
+                               .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_ProdReturnings )
                                 .Includes(t => t.tb_ProdBorrowingDetails )
                         .ToListAsync();
@@ -490,6 +491,8 @@ namespace RUINORERP.Business
             List<tb_ProdBorrowing> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBorrowing>().Where(exp)
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_employee )
+                               .Includes(t => t.tb_projectgroup )
+                               .Includes(t => t.tb_department )
                                             .Includes(t => t.tb_ProdReturnings )
                                 .Includes(t => t.tb_ProdBorrowingDetails )
                         .ToListAsync();
@@ -513,6 +516,8 @@ namespace RUINORERP.Business
             List<tb_ProdBorrowing> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBorrowing>().Where(exp)
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
+                            .Includes(t => t.tb_projectgroup )
+                            .Includes(t => t.tb_department )
                                         .Includes(t => t.tb_ProdReturnings )
                             .Includes(t => t.tb_ProdBorrowingDetails )
                         .ToList();
@@ -553,9 +558,13 @@ namespace RUINORERP.Business
             tb_ProdBorrowing entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdBorrowing>().Where(w => w.BorrowID == (long)id)
                              .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_employee )
-                                        .Includes(t => t.tb_ProdReturnings )
-                            .Includes(t => t.tb_ProdBorrowingDetails )
-                        .FirstAsync();
+                            .Includes(t => t.tb_projectgroup )
+                            .Includes(t => t.tb_department )
+                        
+
+                                            .Includes(t => t.tb_ProdReturnings )
+                                            .Includes(t => t.tb_ProdBorrowingDetails )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

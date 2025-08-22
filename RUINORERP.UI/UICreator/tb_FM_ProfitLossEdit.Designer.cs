@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/22/2025 20:05:15
+// 时间：08/22/2025 21:05:34
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -67,8 +67,8 @@ this.txtSourceBillNo = new Krypton.Toolkit.KryptonTextBox();
 this.lblProfitLossDirection = new Krypton.Toolkit.KryptonLabel();
 this.txtProfitLossDirection = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblPostTime = new Krypton.Toolkit.KryptonLabel();
-this.dtpPostTime = new Krypton.Toolkit.KryptonDateTimePicker();
+this.lblPostDate = new Krypton.Toolkit.KryptonLabel();
+this.dtpPostDate = new Krypton.Toolkit.KryptonDateTimePicker();
 
 this.lblIsExpenseType = new Krypton.Toolkit.KryptonLabel();
 this.chkIsExpenseType = new Krypton.Toolkit.KryptonCheckBox();
@@ -237,20 +237,20 @@ this.txtProfitLossDirection.TabIndex = 5;
 this.Controls.Add(this.lblProfitLossDirection);
 this.Controls.Add(this.txtProfitLossDirection);
 
-           //#####PostTime###DateTime
-this.lblPostTime.AutoSize = true;
-this.lblPostTime.Location = new System.Drawing.Point(100,150);
-this.lblPostTime.Name = "lblPostTime";
-this.lblPostTime.Size = new System.Drawing.Size(41, 12);
-this.lblPostTime.TabIndex = 6;
-this.lblPostTime.Text = "记账时间";
+           //#####PostDate###DateTime
+this.lblPostDate.AutoSize = true;
+this.lblPostDate.Location = new System.Drawing.Point(100,150);
+this.lblPostDate.Name = "lblPostDate";
+this.lblPostDate.Size = new System.Drawing.Size(41, 12);
+this.lblPostDate.TabIndex = 6;
+this.lblPostDate.Text = "记账时间";
 //111======150
-this.dtpPostTime.Location = new System.Drawing.Point(173,146);
-this.dtpPostTime.Name ="dtpPostTime";
-this.dtpPostTime.Size = new System.Drawing.Size(100, 21);
-this.dtpPostTime.TabIndex = 6;
-this.Controls.Add(this.lblPostTime);
-this.Controls.Add(this.dtpPostTime);
+this.dtpPostDate.Location = new System.Drawing.Point(173,146);
+this.dtpPostDate.Name ="dtpPostDate";
+this.dtpPostDate.Size = new System.Drawing.Size(100, 21);
+this.dtpPostDate.TabIndex = 6;
+this.Controls.Add(this.lblPostDate);
+this.Controls.Add(this.dtpPostDate);
 
            //#####IsExpenseType###Boolean
 this.lblIsExpenseType.AutoSize = true;
@@ -577,8 +577,8 @@ this.Controls.Add(this.txtSourceBillNo );
                 this.Controls.Add(this.lblProfitLossDirection );
 this.Controls.Add(this.txtProfitLossDirection );
 
-                this.Controls.Add(this.lblPostTime );
-this.Controls.Add(this.dtpPostTime );
+                this.Controls.Add(this.lblPostDate );
+this.Controls.Add(this.dtpPostDate );
 
                 this.Controls.Add(this.lblIsExpenseType );
 this.Controls.Add(this.chkIsExpenseType );
@@ -687,8 +687,8 @@ private Krypton.Toolkit.KryptonTextBox txtProfitLossDirection;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblPostTime;
-private Krypton.Toolkit.KryptonDateTimePicker dtpPostTime;
+              private Krypton.Toolkit.KryptonLabel lblPostDate;
+private Krypton.Toolkit.KryptonDateTimePicker dtpPostDate;
 
     
         

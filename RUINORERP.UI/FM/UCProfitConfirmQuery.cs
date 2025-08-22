@@ -22,7 +22,7 @@ namespace RUINORERP.UI.FM
         public UCProfitConfirmQuery()
         {
             InitializeComponent();
-            base.profitLossDirect = Global.EnumExt.ProfitLossDirection.Surplus;
+            base.profitLossDirect = Global.EnumExt.ProfitLossDirection.溢余;
         }
 
         public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag1;

@@ -1427,9 +1427,9 @@ namespace RUINORERP.Business
             for (int i = 0; i < entities.Count; i++)
             {
                 var entity = entities[i];
-                tb_FM_PaymentRecordDetail paymentRecordDetail = new tb_FM_PaymentRecordDetail();
-                #region 明细   一笔预收付款单只有一条明细
 
+                #region 明细   一笔预收付款单只有一条明细
+                tb_FM_PaymentRecordDetail paymentRecordDetail = new tb_FM_PaymentRecordDetail();
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                 {
                     paymentRecordDetail.SourceBizType = (int)BizType.预收款单;

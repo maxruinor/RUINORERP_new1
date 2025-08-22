@@ -93,7 +93,7 @@ namespace RUINORERP.UI.FM.FMBase
                 if (CurMenuInfo != null)
                 {
                     lbl盘点单.Text = CurMenuInfo.CaptionCN;
-                    if (profitLossDirect == ProfitLossDirection.Loss)
+                    if (profitLossDirect == ProfitLossDirection.损失)
                     {
                         if (string.IsNullOrEmpty(entity.ProfitLossNo))
                         {
@@ -101,7 +101,7 @@ namespace RUINORERP.UI.FM.FMBase
                         }
                     }
 
-                    if (profitLossDirect == ProfitLossDirection.Surplus)
+                    if (profitLossDirect == ProfitLossDirection.溢余)
                     {
                         if (string.IsNullOrEmpty(entity.ProfitLossNo))
                         {

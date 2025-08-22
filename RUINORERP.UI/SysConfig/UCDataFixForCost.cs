@@ -2566,12 +2566,28 @@ namespace RUINORERP.UI.SysConfig
                                     {
                                         if (inventory.SKU == item.Cells["母件SKU"].Value.ToString())
                                         {
+                                            //inventory.tb_inventory.Inv_Cost= item.Cells["成本"].Value.ToString();
                                             inventories.Add(inventory.tb_inventory);
                                         }
-
+                                        decimal OutCost = 0;
+                                        decimal SelfCost = 0;
+                                        if (decimal.TryParse(item.Cells["外发总成本"].Value.ToString(), out OutCost))
+                                        {
+                                            inventory.tb_inventory.Inv_Cost = OutCost;
+                                        }
+                                        if (decimal.TryParse(item.Cells["自产总成本"].Value.ToString(), out SelfCost))
+                                        {
+                                            inventory.tb_inventory.Inv_Cost = SelfCost;
+                                        }
+                                        inventory.tb_inventory.Inv_Cost = Math.Max(OutCost, SelfCost);
                                     }
                                 }
-                                await UpdateInventoryCost(inventories);
+                                var result = await MainForm.Instance.AppContext.Db.Updateable(inventories).UpdateColumns(it => new
+                                {
+                                    it.Inv_Cost,
+                                }).ExecuteCommandAsync();
+
+
                             }
                         }
                     }

@@ -3890,11 +3890,11 @@ namespace RUINORERP.UI.BaseForm
                     BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     if (typeof(C).Name.Contains("Detail"))
                     {
-                         rs = await ctr.BaseDeleteAsync(editEntity as T);
+                        rs = await ctr.BaseDeleteByNavAsync(editEntity as T);
                     }
                     else
                     {
-                         rs = await ctr.BaseDeleteByNavAsync(editEntity as T);
+                        rs = await ctr.BaseDeleteAsync(editEntity as T);
                     }
                     object PKValue = editEntity.GetPropertyValue(UIHelper.GetPrimaryKeyColName(typeof(T)));
                     rss.Succeeded = rs;

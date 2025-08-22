@@ -74,7 +74,7 @@ namespace RUINORERP.Business
                     entity.GetPropertyValue(statusProperty)
                 );
 
-                if (!FMPaymentStatusHelper.CanReReview(currentStatus, false))
+                if (!FMPaymentStatusHelper.CanUnapprove(currentStatus, false))
                 {
                     rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以反审";
                     return rmrs;
@@ -863,12 +863,15 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
 
                 await settlementController.GenerateSettlement(receivablePayable, receivablePayable.LocalBalanceAmount, receivablePayable.ForeignBalanceAmount);
+               
+                //自动添加到损失费用单
+                
                 // 4. 核销金额
                 receivablePayable.ForeignPaidAmount += receivablePayable.ForeignBalanceAmount;
                 receivablePayable.LocalPaidAmount += receivablePayable.LocalBalanceAmount;
                 receivablePayable.ForeignBalanceAmount = 0;
                 receivablePayable.LocalBalanceAmount = 0;
-
+               
                 //只更新指定列
                 var updateResult = await _unitOfWorkManage.GetDbClient().Updateable(receivablePayable).UpdateColumns(it => new
                 {
@@ -1948,9 +1951,6 @@ namespace RUINORERP.Business
 
             return keyValuePairs;
         }
-
-
-
 
 
 

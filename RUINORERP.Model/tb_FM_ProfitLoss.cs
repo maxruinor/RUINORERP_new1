@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:05
+// 时间：08/22/2025 20:05:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 损益费用单
+    /// 损溢费用单
     /// </summary>
     [Serializable()]
-    [Description("损益费用单")]
+    [Description("损溢费用单")]
     [SugarTable("tb_FM_ProfitLoss")]
     public partial class tb_FM_ProfitLoss: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("损益费用单tb_FM_ProfitLoss" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("损溢费用单tb_FM_ProfitLoss" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -107,13 +107,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _ProfitLossDirection;
+        private int? _ProfitLossDirection;
         /// <summary>
         /// 盈亏方向
         /// </summary>
         [AdvQueryAttribute(ColName = "ProfitLossDirection",ColDesc = "盈亏方向")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "ProfitLossDirection", DecimalDigits = 0, IsNullable = false, ColumnDescription = "盈亏方向")]
-        public int ProfitLossDirection
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ProfitLossDirection" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "盈亏方向" )]
+        public int? ProfitLossDirection
         { 
             get{return _ProfitLossDirection;}
             set{
@@ -135,31 +135,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _IsExpenseType;
+        private bool? _IsExpenseType;
         /// <summary>
         /// 费用记账
         /// </summary>
         [AdvQueryAttribute(ColName = "IsExpenseType",ColDesc = "费用记账")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExpenseType" ,IsNullable = false,ColumnDescription = "费用记账" )]
-        public bool IsExpenseType
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsExpenseType" ,IsNullable = true,ColumnDescription = "费用记账" )]
+        public bool? IsExpenseType
         { 
             get{return _IsExpenseType;}
             set{
             SetProperty(ref _IsExpenseType, value);
-                        }
-        }
-
-        private int _ProfitLossType;
-        /// <summary>
-        /// 损溢类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ProfitLossType",ColDesc = "损溢类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ProfitLossType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "损溢类型" )]
-        public int ProfitLossType
-        { 
-            get{return _ProfitLossType;}
-            set{
-            SetProperty(ref _ProfitLossType, value);
                         }
         }
 

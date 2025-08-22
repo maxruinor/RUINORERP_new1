@@ -75,7 +75,7 @@ namespace RUINORERP.Business
                     entity.GetPropertyValue(statusProperty)
                 );
 
-                if (!FMPaymentStatusHelper.CanReReview(currentStatus, false))
+                if (!FMPaymentStatusHelper.CanUnapprove(currentStatus, false))
                 {
                     rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以反审";
                     return rmrs;

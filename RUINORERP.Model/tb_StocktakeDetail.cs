@@ -157,10 +157,10 @@ namespace RUINORERP.Model
 
         private decimal _Cost = ((0));
         /// <summary>
-        /// 含税单价
+        /// 成本单价
         /// </summary>
-        [AdvQueryAttribute(ColName = "Cost", ColDesc = "含税单价")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "Cost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "含税单价")]
+        [AdvQueryAttribute(ColName = "Cost", ColDesc = "成本单价")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "Cost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "成本单价")]
         public decimal Cost
         {
             get { return _Cost; }
@@ -169,37 +169,6 @@ namespace RUINORERP.Model
                 SetProperty(ref _Cost, value);
             }
         }
-
-        private decimal _TaxRate = ((0));
-        /// <summary>
-        /// 税率
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TaxRate", ColDesc = "税率")]
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType = "Decimal", ColumnName = "TaxRate", DecimalDigits = 3, IsNullable = false, ColumnDescription = "税率")]
-        public decimal TaxRate
-        {
-            get { return _TaxRate; }
-            set
-            {
-                SetProperty(ref _TaxRate, value);
-            }
-        }
-
-        private decimal _UntaxedCost = ((0));
-        /// <summary>
-        /// 未税单价
-        /// </summary>
-        [AdvQueryAttribute(ColName = "UntaxedCost", ColDesc = "未税单价")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "UntaxedCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "未税单价")]
-        public decimal UntaxedCost
-        {
-            get { return _UntaxedCost; }
-            set
-            {
-                SetProperty(ref _UntaxedCost, value);
-            }
-        }
-
 
 
         private decimal _CarryingSubtotalAmount = ((0));

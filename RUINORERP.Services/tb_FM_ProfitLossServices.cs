@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:05
+// 时间：08/22/2025 20:05:17
 // **************************************
 using AutoMapper;
 using RUINORERP.IRepository.Base;
@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Services
 {
     /// <summary>
-    /// 损益费用单
+    /// 损溢费用单
     /// </summary>
     public partial class tb_FM_ProfitLossServices : BaseServices<tb_FM_ProfitLoss>, Itb_FM_ProfitLossServices
     {

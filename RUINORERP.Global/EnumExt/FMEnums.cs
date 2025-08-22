@@ -43,11 +43,10 @@ namespace RUINORERP.Global.EnumExt
     public enum ProfitLossType
     {
         //（视同销售）
-        [Description("样品赠送")] SampleGift = 1,
+        [Description("样品赠出")] SampleGift = 1,
 
         //（进项税转出）
-        [Description("库存盘亏")] InventoryScrap = 2,
-
+        [Description("库存盘亏")] InventoryLoss = 2,
         [Description("折旧损失")] QualityLoss = 3,
         [Description("报废损耗")] ProductionLoss = 4,
         [Description("工艺报废")] ProcessScrap = 5,
@@ -75,19 +74,36 @@ namespace RUINORERP.Global.EnumExt
     public enum ProfitLossDirection
     {
         /// <summary>
-        /// 亏损（支出）
+        /// 损失（支出）
         /// </summary>
-        [Description("亏损（支出）")]
-        Loss = 1,
+        [Description("损失（支出）")]
+        损失 = 1,
 
         /// <summary>
-        /// 盈余（收入）
+        /// 溢余（收入）
         /// </summary>
-        [Description("盈余（收入）")]
-        Surplus = 2
+        [Description("溢余（收入）")]
+        溢余 = 2
     }
 
+
  
+    public enum IncomeExpenseDirection
+    {
+        /// <summary>
+        /// 损失（支出）
+        /// </summary>
+        [Description("损失（收入）")]
+        收入 = 1,
+
+        /// <summary>
+        /// 溢余（收入）
+        /// </summary>
+        [Description("溢余（收入）")]
+        支出 = 2
+    }
+
+
     /// <summary>预付款状态</summary>
     public enum PrePaymentStatus
     {

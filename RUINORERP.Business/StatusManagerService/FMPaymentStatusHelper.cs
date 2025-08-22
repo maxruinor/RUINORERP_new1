@@ -83,8 +83,8 @@ namespace RUINORERP.Business.StatusManagerService
         }
 
 
- 
- 
+
+
 
 
 
@@ -112,7 +112,7 @@ namespace RUINORERP.Business.StatusManagerService
         }
 
         /// <summary>是否允许反审操作</summary>
-        public static bool CanReReview<T>(T status, bool hasRelatedRecords) where T : Enum
+        public static bool CanUnapprove<T>(T status, bool hasRelatedRecords) where T : Enum
         {
             if (IsFinalStatus(status)) return false;
 
@@ -134,8 +134,38 @@ namespace RUINORERP.Business.StatusManagerService
         }
 
 
+        /// <summary>
+        /// 是否允许审核操作
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="status"></param>
+        /// <param name="hasRelatedRecords"></param>
+        /// <returns></returns>
+        public static bool CanApprove<T>(T status, bool hasRelatedRecords) where T : Enum
+        {
+            if (IsFinalStatus(status)) return false;
+
+            if (status is PrePaymentStatus pre)
+                return pre <= PrePaymentStatus.待审核 && !hasRelatedRecords;
+
+            if (status is ARAPStatus arap)
+                return arap <= ARAPStatus.待审核 && !hasRelatedRecords;
+
+
+            if (status is PaymentStatus pay)
+                return pay <= PaymentStatus.待审核 && !hasRelatedRecords;
+
+            if (status is DataStatus dataStatus)
+                return dataStatus < DataStatus.确认 && !hasRelatedRecords;
+
+
+            return false;
+        }
+
+
         //CanReverse 只对 ARAPStatus 有效
         /// <summary>是否允许冲销操作</summary>
+        /// 反结案？
         public static bool CanReverse<T>(T status) where T : Enum
         {
             if (status is ARAPStatus arap)
@@ -172,17 +202,6 @@ namespace RUINORERP.Business.StatusManagerService
         }
 
 
-        //public virtual bool CanSubmit<TEnum>(TEnum status) where TEnum : Enum
-        //{
-        //    return status switch
-        //    {
-        //        DataStatus dataStatus => dataStatus == DataStatus.草稿,
-        //        PrePaymentStatus pre => pre == PrePaymentStatus.草稿,
-        //        ARAPStatus arap => arap == ARAPStatus.草稿,
-        //        PaymentStatus pay => pay == PaymentStatus.草稿,
-        //        _ => false
-        //    };
-        //}
 
 
         /// <summary>验证状态转换是否合法</summary>

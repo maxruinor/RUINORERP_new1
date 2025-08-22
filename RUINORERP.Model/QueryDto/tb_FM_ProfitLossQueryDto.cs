@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:05
+// 时间：08/22/2025 20:05:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 损益费用单
+    /// 损溢费用单
     /// </summary>
     [Serializable()]
     [SugarTable("tb_FM_ProfitLoss")]
@@ -85,26 +85,26 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool? _ProfitLossDirection;
+        private int? _ProfitLossDirection;
         /// <summary>
-        /// 亏盈方向
+        /// 盈亏方向
         /// </summary>
-        [AdvQueryAttribute(ColName = "ProfitLossDirection",ColDesc = "亏盈方向")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "ProfitLossDirection",IsNullable = true,ColumnDescription = "亏盈方向" )]
-        public bool? ProfitLossDirection 
+        [AdvQueryAttribute(ColName = "ProfitLossDirection",ColDesc = "盈亏方向")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ProfitLossDirection",IsNullable = true,ColumnDescription = "盈亏方向" )]
+        public int? ProfitLossDirection 
         { 
             get{return _ProfitLossDirection;}
             set{SetProperty(ref _ProfitLossDirection, value);}
         }
      
 
-        private DateTime? _PostTime;
+        private DateTime _PostTime;
         /// <summary>
         /// 记账时间
         /// </summary>
         [AdvQueryAttribute(ColName = "PostTime",ColDesc = "记账时间")]
-        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "PostTime",IsNullable = true,ColumnDescription = "记账时间" )]
-        public DateTime? PostTime 
+        [SugarColumn(ColumnDataType = "datetime",SqlParameterDbType ="DateTime",ColumnName = "PostTime",IsNullable = false,ColumnDescription = "记账时间" )]
+        public DateTime PostTime 
         { 
             get{return _PostTime;}
             set{SetProperty(ref _PostTime, value);}
@@ -121,19 +121,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _IsExpenseType;}
             set{SetProperty(ref _IsExpenseType, value);}
-        }
-     
-
-        private int _ProfitLossType;
-        /// <summary>
-        /// 损溢类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ProfitLossType",ColDesc = "损溢类型")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ProfitLossType",IsNullable = false,ColumnDescription = "损溢类型" )]
-        public int ProfitLossType 
-        { 
-            get{return _ProfitLossType;}
-            set{SetProperty(ref _ProfitLossType, value);}
         }
      
 

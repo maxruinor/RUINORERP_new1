@@ -129,11 +129,11 @@
             // 
             this.lblProfitLossDirection.Location = new System.Drawing.Point(78, 21);
             this.lblProfitLossDirection.Name = "lblProfitLossDirection";
-            this.lblProfitLossDirection.Size = new System.Drawing.Size(100, 30);
+            this.lblProfitLossDirection.Size = new System.Drawing.Size(6, 2);
             this.lblProfitLossDirection.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
             this.lblProfitLossDirection.StateNormal.ShortText.Font = new System.Drawing.Font("长城行楷体", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lblProfitLossDirection.TabIndex = 274;
-            this.lblProfitLossDirection.Values.Text = "盈亏方向";
+            this.lblProfitLossDirection.Values.Text = "";
             // 
             // cmbProfitLossType
             // 

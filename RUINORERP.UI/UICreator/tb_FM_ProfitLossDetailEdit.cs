@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:06
+// 时间：08/22/2025 20:05:18
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -46,6 +46,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -56,7 +57,8 @@ namespace RUINORERP.UI
                      entity.ProfitLossId = Int64.Parse(txtProfitLossId.Text);
                         entity.ProdDetailID = Int64.Parse(txtProdDetailID.Text);
                         entity.property = txtproperty.Text ;
-                       entity.ExpenseType_id = Int64.Parse(txtExpenseType_id.Text);
+                       entity.ProfitLossType = Int32.Parse(txtProfitLossType.Text);
+                        entity.IncomeExpenseDirection = Int32.Parse(txtIncomeExpenseDirection.Text);
                         entity.ExpenseDescription = txtExpenseDescription.Text ;
                        entity.UnitPrice = Decimal.Parse(txtUnitPrice.Text);
                         entity.Quantity = Decimal.Parse(txtQuantity.Text);
@@ -78,7 +80,8 @@ namespace RUINORERP.UI
                        // DataBindingHelper.BindData4Cmb<tb_FM_ProfitLoss>(entity, k => k.ProfitLossId, v=>v.XXNAME, cmbProfitLossId);
           // DataBindingHelper.BindData4Cmb<tb_ProdDetail>(entity, k => k.ProdDetailID, v=>v.XXNAME, cmbProdDetailID);
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLossDetail>(entity, t => t.property, txtproperty, BindDataType4TextBox.Text,false);
-          // DataBindingHelper.BindData4Cmb<tb_FM_ExpenseType>(entity, k => k.ExpenseType_id, v=>v.XXNAME, cmbExpenseType_id);
+           DataBindingHelper.BindData4TextBox<tb_FM_ProfitLossDetail>(entity, t => t.ProfitLossType, txtProfitLossType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ProfitLossDetail>(entity, t => t.IncomeExpenseDirection, txtIncomeExpenseDirection, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLossDetail>(entity, t => t.ExpenseDescription, txtExpenseDescription, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLossDetail>(entity, t => t.UnitPrice.ToString(), txtUnitPrice, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLossDetail>(entity, t => t.Quantity.ToString(), txtQuantity, BindDataType4TextBox.Money,false);

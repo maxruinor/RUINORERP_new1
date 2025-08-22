@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:06
+// 时间：08/22/2025 20:05:18
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -467,7 +467,6 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_ProfitLossDetail>> QueryByNavAsync()
         {
             List<tb_FM_ProfitLossDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ProfitLossDetail>()
-                               .Includes(t => t.tb_fm_expensetype )
                                .Includes(t => t.tb_fm_profitloss )
                                .Includes(t => t.tb_proddetail )
                                     .ToListAsync();
@@ -489,7 +488,6 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_ProfitLossDetail>> QueryByNavAsync(Expression<Func<tb_FM_ProfitLossDetail, bool>> exp)
         {
             List<tb_FM_ProfitLossDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ProfitLossDetail>().Where(exp)
-                               .Includes(t => t.tb_fm_expensetype )
                                .Includes(t => t.tb_fm_profitloss )
                                .Includes(t => t.tb_proddetail )
                                     .ToListAsync();
@@ -511,7 +509,6 @@ namespace RUINORERP.Business
          public virtual List<tb_FM_ProfitLossDetail> QueryByNav(Expression<Func<tb_FM_ProfitLossDetail, bool>> exp)
         {
             List<tb_FM_ProfitLossDetail> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ProfitLossDetail>().Where(exp)
-                            .Includes(t => t.tb_fm_expensetype )
                             .Includes(t => t.tb_fm_profitloss )
                             .Includes(t => t.tb_proddetail )
                                     .ToList();
@@ -550,8 +547,7 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_FM_ProfitLossDetail entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ProfitLossDetail>().Where(w => w.ProfitLossDetail_ID == (long)id)
-                             .Includes(t => t.tb_fm_expensetype )
-                            .Includes(t => t.tb_fm_profitloss )
+                             .Includes(t => t.tb_fm_profitloss )
                             .Includes(t => t.tb_proddetail )
                         
 

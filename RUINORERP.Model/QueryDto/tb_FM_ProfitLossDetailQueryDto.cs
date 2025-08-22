@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:06
+// 时间：08/22/2025 20:05:18
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -74,17 +74,29 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _ExpenseType_id;
+        private int _ProfitLossType;
         /// <summary>
-        /// 费用类型
+        /// 损溢类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "ExpenseType_id",ColDesc = "费用类型")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ExpenseType_id",IsNullable = true,ColumnDescription = "费用类型" )]
-        [FKRelationAttribute("tb_FM_ExpenseType","ExpenseType_id")]
-        public long? ExpenseType_id 
+        [AdvQueryAttribute(ColName = "ProfitLossType",ColDesc = "损溢类型")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ProfitLossType",IsNullable = false,ColumnDescription = "损溢类型" )]
+        public int ProfitLossType 
         { 
-            get{return _ExpenseType_id;}
-            set{SetProperty(ref _ExpenseType_id, value);}
+            get{return _ProfitLossType;}
+            set{SetProperty(ref _ProfitLossType, value);}
+        }
+     
+
+        private int? _IncomeExpenseDirection;
+        /// <summary>
+        /// 收支方向
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IncomeExpenseDirection",ColDesc = "收支方向")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "IncomeExpenseDirection",IsNullable = true,ColumnDescription = "收支方向" )]
+        public int? IncomeExpenseDirection 
+        { 
+            get{return _IncomeExpenseDirection;}
+            set{SetProperty(ref _IncomeExpenseDirection, value);}
         }
      
 

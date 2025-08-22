@@ -145,8 +145,32 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_FM_ReceivablePayable, tb_FM_PaymentRecord>();
 
             //应收付单生成收款记录表
-            CreateMap<tb_FM_ReceivablePayableDetail, tb_FM_PaymentRecordDetail>()
-                ;
+            CreateMap<tb_FM_ReceivablePayableDetail, tb_FM_PaymentRecordDetail>();
+
+            CreateMap<tb_FM_ReceivablePayable, tb_FM_ProfitLoss>();
+            CreateMap<tb_FM_ReceivablePayableDetail, tb_FM_ProfitLossDetail>()
+                .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+                .ForMember(a => a.property, o => o.MapFrom(d => d.property))
+                .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.ARAPDetailID))
+                .ForMember(a => a.ExpenseDescription, o => o.MapFrom(d => d.ExpenseDescription))
+                .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.UnitPrice))
+                .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
+                .ForMember(a => a.SubtotalAmont, o => o.MapFrom(d => d.LocalPayableAmount))
+                .ForMember(a => a.UntaxedSubtotalAmont, o => o.MapFrom(d => d.LocalPayableAmount-d.TaxLocalAmount))
+                .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
+                .ForMember(a => a.TaxSubtotalAmont, o => o.MapFrom(d => d.TaxLocalAmount))
+               .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
+
+
+            CreateMap<tb_Stocktake, tb_FM_ProfitLoss>();
+            CreateMap<tb_StocktakeDetail, tb_FM_ProfitLossDetail>()
+                .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+                .ForMember(a => a.property, o => o.MapFrom(d => d.property))
+                .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.SubID))
+                .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.Cost))
+                .ForMember(a => a.Quantity, o => o.MapFrom(d => d.DiffQty))
+                .ForMember(a => a.SubtotalAmont, o => o.MapFrom(d => d.DiffSubtotalAmount));
+
 
             //多个应收应付 合并生成一个 付款单
             CreateMap<tb_FM_ReceivablePayable, tb_FM_PaymentRecordDetail>()

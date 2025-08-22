@@ -41,7 +41,7 @@ namespace RUINORERP.UI.UserCenter
         销售_销售出库单,
 
         生产_计划单,
-
+        生产_制令单,
         仓库_采购入库单,
         仓库_盘点单,
         仓库_缴库单,
@@ -56,10 +56,13 @@ namespace RUINORERP.UI.UserCenter
         请购单,
         借出单,
         归还单,
+        损溢费用单,
+
         预收款单,
         预付款单,
         应收款单,
         应付款单,
+        对账单,
         收款单,
         付款单,
         

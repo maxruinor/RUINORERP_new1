@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:04
+// 时间：08/22/2025 20:05:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,7 +24,7 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 损益费用单数据编辑
+    /// 损溢费用单数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_FM_ProfitLossEdit:UserControl
@@ -33,7 +33,6 @@ namespace RUINORERP.UI
      
                          InitializeComponent();
       
-        
         
         
         
@@ -72,10 +71,9 @@ namespace RUINORERP.UI
                        entity.SourceBizType = Int32.Parse(txtSourceBizType.Text);
                         entity.SourceBillId = Int64.Parse(txtSourceBillId.Text);
                         entity.SourceBillNo = txtSourceBillNo.Text ;
-                       entity.ProfitLossDirection = Boolean.Parse(txtProfitLossDirection.Text);
+                       entity.ProfitLossDirection = Int32.Parse(txtProfitLossDirection.Text);
                         entity.PostTime = DateTime.Parse(txtPostTime.Text);
                         entity.IsExpenseType = Boolean.Parse(txtIsExpenseType.Text);
-                        entity.ProfitLossType = Int32.Parse(txtProfitLossType.Text);
                         entity.TotalAmount = Decimal.Parse(txtTotalAmount.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
@@ -109,10 +107,9 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.SourceBizType, txtSourceBizType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4CheckBox<tb_FM_ProfitLoss>(entity, t => t.ProfitLossDirection, chkProfitLossDirection, false);
+           DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.ProfitLossDirection, txtProfitLossDirection, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4DataTime<tb_FM_ProfitLoss>(entity, t => t.PostTime, dtpPostTime,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_ProfitLoss>(entity, t => t.IsExpenseType, chkIsExpenseType, false);
-           DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.ProfitLossType, txtProfitLossType, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money,false);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);

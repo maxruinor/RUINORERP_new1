@@ -908,6 +908,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 case 待办事项.生产_计划单:
                     yield return BizType.生产计划单;
                     break;
+                case 待办事项.生产_制令单:
+                    yield return BizType.制令单;
+                    break;
                 case 待办事项.财务_费用报销单:
                     yield return BizType.费用报销单;
                     yield return BizType.付款申请单;
@@ -931,6 +934,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     yield return BizType.返工退库单;
                     yield return BizType.返工入库单;
                     break;
+                case 待办事项.损溢费用单:
+                    yield return BizType.损失确认单;
+                    yield return BizType.溢余确认单;
+                    break;
                 case 待办事项.预付款单:
                     yield return BizType.预付款单;
                     break;
@@ -942,6 +949,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     break;
                 case 待办事项.应收款单:
                     yield return BizType.应收款单;
+                    break;
+                case 待办事项.对账单:
+                    yield return BizType.对账单;
                     break;
                 case 待办事项.付款单:
                     yield return BizType.付款单;

@@ -19,9 +19,9 @@ using System.Linq;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 预收付款单
+    /// 损溢单明细
     /// </summary>
-    public partial class tb_FM_ReceivablePayableDetail : BaseEntity, ICloneable
+    public partial class tb_FM_ProfitLossDetail : BaseEntity, ICloneable
     {
         #region 扩展属性
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:05
+// 时间：08/22/2025 20:05:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,9 +24,9 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 损益费用单数据查询
+    /// 损溢费用单数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_FM_ProfitLossQuery), "损益费用单数据查询", true)]
+     [MenuAttribute(typeof(tb_FM_ProfitLossQuery), "损溢费用单数据查询", true)]
     public partial class tb_FM_ProfitLossQuery:UserControl
     {
      public tb_FM_ProfitLossQuery() {
@@ -43,8 +43,6 @@ namespace RUINORERP.UI
        //===============
        
           
-    
-        
     
         
     

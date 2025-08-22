@@ -114,6 +114,37 @@ namespace RUINORERP.Model
                 SetProperty(ref _BorrowNo, value);
             }
         }
+        private long? _DepartmentID;
+        /// <summary>
+        /// 部门
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DepartmentID", ColDesc = "部门")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "DepartmentID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "部门")]
+        [FKRelationAttribute("tb_Department", "DepartmentID")]
+        public long? DepartmentID
+        {
+            get { return _DepartmentID; }
+            set
+            {
+                SetProperty(ref _DepartmentID, value);
+            }
+        }
+
+        private long? _ProjectGroup_ID;
+        /// <summary>
+        /// 项目组
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID", ColDesc = "项目组")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProjectGroup_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "项目组")]
+        [FKRelationAttribute("tb_ProjectGroup", "ProjectGroup_ID")]
+        public long? ProjectGroup_ID
+        {
+            get { return _ProjectGroup_ID; }
+            set
+            {
+                SetProperty(ref _ProjectGroup_ID, value);
+            }
+        }
 
         private int _TotalQty = ((0));
         /// <summary>
@@ -429,6 +460,15 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(Employee_ID))]
         public virtual tb_Employee tb_employee { get; set; }
 
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(DepartmentID))]
+        public virtual tb_Department tb_department { get; set; }
+
+        [SugarColumn(IsIgnore = true)]
+        //[Browsable(false)] 打印报表时的数据源会不显示
+        [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
+        public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

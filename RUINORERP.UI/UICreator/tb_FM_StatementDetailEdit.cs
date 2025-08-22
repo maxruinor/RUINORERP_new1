@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:36
+// 时间：08/20/2025 16:08:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,17 +24,23 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 对账单明细（关联应收单） 数据编辑
+    /// 对账单明细数据编辑
     /// </summary>
      [MenuAttrAssemblyInfo( "库位编辑", true, UIType.单表数据)]
     public partial class tb_FM_StatementDetailEdit:UserControl
     {
      public tb_FM_StatementDetailEdit() {
      
-             
-        
-                    InitializeComponent();
+                         InitializeComponent();
       
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         
@@ -50,10 +56,16 @@ namespace RUINORERP.UI
         tb_FM_StatementDetail entity = new tb_FM_StatementDetail();
                      entity.StatementId = Int64.Parse(txtStatementId.Text);
                         entity.ARAPId = Int64.Parse(txtARAPId.Text);
+                        entity.ReceivePaymentType = Int32.Parse(txtReceivePaymentType.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.IncludedLocalAmount = Decimal.Parse(txtIncludedLocalAmount.Text);
                         entity.IncludedForeignAmount = Decimal.Parse(txtIncludedForeignAmount.Text);
+                        entity.WrittenOffLocalAmount = Decimal.Parse(txtWrittenOffLocalAmount.Text);
+                        entity.WrittenOffForeignAmount = Decimal.Parse(txtWrittenOffForeignAmount.Text);
+                        entity.RemainingLocalAmount = Decimal.Parse(txtRemainingLocalAmount.Text);
+                        entity.RemainingForeignAmount = Decimal.Parse(txtRemainingForeignAmount.Text);
+                        entity.ARAPWriteOffStatus = Int32.Parse(txtARAPWriteOffStatus.Text);
                         entity.Summary = txtSummary.Text ;
                                return entity;
 }
@@ -67,10 +79,16 @@ namespace RUINORERP.UI
         _EditEntity = entity;
                        // DataBindingHelper.BindData4Cmb<tb_FM_Statement>(entity, k => k.StatementId, v=>v.XXNAME, cmbStatementId);
           // DataBindingHelper.BindData4Cmb<tb_FM_ReceivablePayable>(entity, k => k.ARAPId, v=>v.XXNAME, cmbARAPId);
+           DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.IncludedLocalAmount.ToString(), txtIncludedLocalAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.IncludedForeignAmount.ToString(), txtIncludedForeignAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.WrittenOffLocalAmount.ToString(), txtWrittenOffLocalAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.WrittenOffForeignAmount.ToString(), txtWrittenOffForeignAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.RemainingLocalAmount.ToString(), txtRemainingLocalAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.RemainingForeignAmount.ToString(), txtRemainingForeignAmount, BindDataType4TextBox.Money,false);
+           DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.ARAPWriteOffStatus, txtARAPWriteOffStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text,false);
 }
 

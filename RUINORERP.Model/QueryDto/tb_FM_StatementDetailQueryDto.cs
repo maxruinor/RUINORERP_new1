@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:24
+// 时间：08/20/2025 16:08:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 对账单明细（关联应收单） 
+    /// 对账单明细
     /// </summary>
     [Serializable()]
     [SugarTable("tb_FM_StatementDetail")]
@@ -47,17 +47,30 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private long? _ARAPId;
+        private long _ARAPId;
         /// <summary>
         /// 应收付款单
         /// </summary>
         [AdvQueryAttribute(ColName = "ARAPId",ColDesc = "应收付款单")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ARAPId",IsNullable = true,ColumnDescription = "应收付款单" )]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ARAPId",IsNullable = false,ColumnDescription = "应收付款单" )]
         [FKRelationAttribute("tb_FM_ReceivablePayable","ARAPId")]
-        public long? ARAPId 
+        public long ARAPId 
         { 
             get{return _ARAPId;}
             set{SetProperty(ref _ARAPId, value);}
+        }
+     
+
+        private int _ReceivePaymentType;
+        /// <summary>
+        /// 收付类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ReceivePaymentType",IsNullable = false,ColumnDescription = "收付类型" )]
+        public int ReceivePaymentType 
+        { 
+            get{return _ReceivePaymentType;}
+            set{SetProperty(ref _ReceivePaymentType, value);}
         }
      
 
@@ -111,6 +124,71 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _IncludedForeignAmount;}
             set{SetProperty(ref _IncludedForeignAmount, value);}
+        }
+     
+
+        private decimal _WrittenOffLocalAmount= ((0));
+        /// <summary>
+        /// 本次已核销本币金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "WrittenOffLocalAmount",ColDesc = "本次已核销本币金额")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "WrittenOffLocalAmount",IsNullable = false,ColumnDescription = "本次已核销本币金额" )]
+        public decimal WrittenOffLocalAmount 
+        { 
+            get{return _WrittenOffLocalAmount;}
+            set{SetProperty(ref _WrittenOffLocalAmount, value);}
+        }
+     
+
+        private decimal _WrittenOffForeignAmount= ((0));
+        /// <summary>
+        /// 本次已核销原币金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "WrittenOffForeignAmount",ColDesc = "本次已核销原币金额")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "WrittenOffForeignAmount",IsNullable = false,ColumnDescription = "本次已核销原币金额" )]
+        public decimal WrittenOffForeignAmount 
+        { 
+            get{return _WrittenOffForeignAmount;}
+            set{SetProperty(ref _WrittenOffForeignAmount, value);}
+        }
+     
+
+        private decimal _RemainingLocalAmount= ((0));
+        /// <summary>
+        /// 剩余未核销本币金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RemainingLocalAmount",ColDesc = "剩余未核销本币金额")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "RemainingLocalAmount",IsNullable = false,ColumnDescription = "剩余未核销本币金额" )]
+        public decimal RemainingLocalAmount 
+        { 
+            get{return _RemainingLocalAmount;}
+            set{SetProperty(ref _RemainingLocalAmount, value);}
+        }
+     
+
+        private decimal _RemainingForeignAmount= ((0));
+        /// <summary>
+        /// 剩余未核销原币金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RemainingForeignAmount",ColDesc = "剩余未核销原币金额")]
+        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "RemainingForeignAmount",IsNullable = false,ColumnDescription = "剩余未核销原币金额" )]
+        public decimal RemainingForeignAmount 
+        { 
+            get{return _RemainingForeignAmount;}
+            set{SetProperty(ref _RemainingForeignAmount, value);}
+        }
+     
+
+        private int _ARAPWriteOffStatus;
+        /// <summary>
+        /// 核销状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ARAPWriteOffStatus",ColDesc = "核销状态")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ARAPWriteOffStatus",IsNullable = false,ColumnDescription = "核销状态" )]
+        public int ARAPWriteOffStatus 
+        { 
+            get{return _ARAPWriteOffStatus;}
+            set{SetProperty(ref _ARAPWriteOffStatus, value);}
         }
      
 

@@ -554,7 +554,7 @@ namespace RUINORERP.UI.SysConfig
                             break;
                         case BizType.销售退回单:
                             break;
-                   
+
                         case BizType.采购入库单:
                             break;
                         case BizType.采购退货单:
@@ -854,7 +854,7 @@ namespace RUINORERP.UI.SysConfig
                             }
                             #endregion
                             break;
-           
+
                         case BizType.产品分割单:
                             break;
                         case BizType.产品组合单:
@@ -980,10 +980,10 @@ namespace RUINORERP.UI.SysConfig
                             break;
                         case BizType.返工退库单:
                             break;
-                 
+
                         case BizType.返工入库单:
                             break;
-               
+
 
                         default:
                             break;
@@ -1638,8 +1638,8 @@ namespace RUINORERP.UI.SysConfig
                                         if (needupdateOut)
                                         {
                                             saleoutCounter++;
-                                            SaleOut.TotalCost = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount)+SaleOut.FreightCost;
-                                            SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount)+SaleOut.FreightIncome ;
+                                            SaleOut.TotalCost = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount) + SaleOut.FreightCost;
+                                            SaleOut.TotalAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTransAmount) + SaleOut.FreightIncome;
                                             SaleOut.TotalQty = SaleOut.tb_SaleOutDetails.Sum(c => c.Quantity);
                                             SaleOut.TotalTaxAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.SubtotalTaxAmount);
                                             SaleOut.TotalCommissionAmount = SaleOut.tb_SaleOutDetails.Sum(c => c.CommissionAmount);
@@ -1819,7 +1819,7 @@ namespace RUINORERP.UI.SysConfig
                                                 if (rdb时间区间.Checked)
                                                 {
                                                     //这里库存成本是最终成本 这里要拆分
-                                                    Detail.UnitCost=child.Inv_Cost;
+                                                    Detail.UnitCost = child.Inv_Cost;
                                                     Detail.MaterialCost = Detail.UnitCost - Detail.ManuFee - Detail.ApportionedCost;
                                                     Detail.ProductionAllCost = Detail.UnitCost * Detail.Qty;
                                                     updateFGListdetail.Add(Detail);
@@ -2419,7 +2419,7 @@ namespace RUINORERP.UI.SysConfig
                                             {
                                                 item.SubtotalCostAmount = (item.Cost + item.CustomizedCost) * item.Quantity;
                                             }
-                                            order.TotalCost = order.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount)+order.FreightCost;
+                                            order.TotalCost = order.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount) + order.FreightCost;
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(order.tb_SaleOutDetails).ExecuteCommandAsync();
                                         }
                                         await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(SaleOuts).ExecuteCommandAsync();
@@ -2484,7 +2484,7 @@ namespace RUINORERP.UI.SysConfig
                                             {
                                                 item.SubtotalCostAmount = (item.Cost + item.CustomizedCost) * item.Quantity;
                                             }
-                                            order.TotalCost = order.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount)+order.FreightCost;
+                                            order.TotalCost = order.tb_SaleOutDetails.Sum(c => c.SubtotalCostAmount) + order.FreightCost;
                                             await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOutDetail>(order.tb_SaleOutDetails).ExecuteCommandAsync();
                                         }
                                         await MainForm.Instance.AppContext.Db.Updateable<tb_SaleOut>(SaleOuts).ExecuteCommandAsync();
@@ -2555,34 +2555,27 @@ namespace RUINORERP.UI.SysConfig
                     dgv.AllowUserToAddRows = false;
                     if (tabControl.SelectedTab.Text.Contains("配方"))
                     {
-                        if (tabControl.SelectedTab.Text.Contains("对应配方"))
+                        foreach (DataGridViewRow item in dgv.SelectedRows)
                         {
-                            foreach (DataGridViewRow item in dgv.SelectedRows)
+                            if (dataGridViewInv.SelectedRows != null)
                             {
-                                if (dataGridViewInv.SelectedRows != null)
+                                List<tb_Inventory> inventories = new List<tb_Inventory>();
+                                foreach (DataGridViewRow dr in dataGridViewInv.Rows)
                                 {
-                                    List<tb_Inventory> inventories = new List<tb_Inventory>();
-                                    foreach (DataGridViewRow dr in dataGridViewInv.Rows)
+                                    if (dr.DataBoundItem is View_Inventory inventory)
                                     {
-                                        if (dr.DataBoundItem is View_Inventory inventory)
+                                        if (inventory.SKU == item.Cells["母件SKU"].Value.ToString())
                                         {
-                                            if (inventory.SKU == item.Cells["母件SKU"].Value.ToString())
-                                            {
-                                                inventories.Add(inventory.tb_inventory);
-                                            }
-
+                                            inventories.Add(inventory.tb_inventory);
                                         }
+
                                     }
-                                    await UpdateInventoryCost(inventories);
                                 }
+                                await UpdateInventoryCost(inventories);
                             }
                         }
-
                     }
-
-
                 }
-
             }
         }
 

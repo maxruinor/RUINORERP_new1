@@ -119,7 +119,7 @@ namespace RUINORERP.Business
                 entity.tb_as_aftersaleapply = AfterSaleApply;
                 entity.TotalDeliveryQty = NewDetails.Sum(c => c.Quantity);
 
-                BusinessHelper.Instance.InitEntity(entity);
+               
                 //保存到数据库
 
             }

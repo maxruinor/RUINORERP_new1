@@ -263,7 +263,7 @@ namespace RUINORERP.Business
                 entity.ApprovalResults = true;
 
                 //下面的自动审核会修改PrePaymentStatus状态。所以已经生效生赋值。后面 可能是审核后变为等待核销
-                tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(entity, false);
+                tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { entity }, false);
                 var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
                 if (rrs.Succeeded)
                 {
@@ -294,7 +294,7 @@ namespace RUINORERP.Business
                     //按配置自动审核收款单
                     if (_appContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform && entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                     {
-                        if (entity.IsFromPlatform.HasValue && entity.IsFromPlatform.Value)
+                        if (entity.IsFromPlatform)
                         {
                             //自动审核收款单
                             paymentRecord.ApprovalOpinions = "系统自动审核";
@@ -655,7 +655,6 @@ namespace RUINORERP.Business
         //}
 
 
-
         public async override Task<List<T>> GetPrintDataSource(long ID)
         {
             List<tb_FM_PreReceivedPayment> list = await _appContext.Db.CopyNew().Queryable<tb_FM_PreReceivedPayment>()
@@ -663,20 +662,34 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_employee)
                             .Includes(a => a.tb_currency)
                             .Includes(a => a.tb_paymentmethod)
-                              .Includes(a => a.tb_fm_payeeinfo)
+                            .Includes(a => a.tb_fm_payeeinfo)
                             .Includes(a => a.tb_projectgroup)
                             .Includes(a => a.tb_department)
                             .Includes(a => a.tb_customervendor)
                             .Includes(a => a.tb_fm_account)
                             .ToListAsync();
+
+
+            foreach (var item in list)
+            {
+                if (item.SourceBizType.HasValue && item.SourceBizType.Value == (int)BizType.采购订单)
+                {
+                    item.tb_purorder = await _appContext.Db.CopyNew().Queryable<tb_PurOrder>()
+                        .Includes(a=>a.tb_PurOrderDetails,b=>b.tb_proddetail,c=>c.tb_prod)
+                        .Where(c => c.PurOrder_ID == item.SourceBillId).FirstAsync();
+                }
+
+                if (item.SourceBizType.HasValue && item.SourceBizType.Value == (int)BizType.销售订单)
+                {
+                    item.tb_saleorder = await _appContext.Db.CopyNew().Queryable<tb_SaleOrder>()
+                        .Includes(a => a.tb_SaleOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
+                        .Where(c => c.SOrder_ID == item.SourceBillId).FirstAsync();
+                }
+            }
+
             return list as List<T>;
         }
-
-
-
-
     }
-
 }
 
 

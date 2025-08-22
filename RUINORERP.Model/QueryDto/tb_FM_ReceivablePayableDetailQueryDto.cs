@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/04/2025 11:58:54
+// 时间：08/20/2025 16:08:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -74,26 +74,12 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _Specifications;
-        /// <summary>
-        /// 规格
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Specifications",ColDesc = "规格")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Specifications",Length=1000,IsNullable = true,ColumnDescription = "规格" )]
-        public string Specifications 
-        { 
-            get{return _Specifications;}
-            set{SetProperty(ref _Specifications, value);}
-        }
-     
-
         private long? _ExpenseType_id;
         /// <summary>
         /// 费用类型
         /// </summary>
         [AdvQueryAttribute(ColName = "ExpenseType_id",ColDesc = "费用类型")]
         [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "ExpenseType_id",IsNullable = true,ColumnDescription = "费用类型" )]
-        [FKRelationAttribute("tb_FM_ExpenseType","ExpenseType_id")]
         public long? ExpenseType_id 
         { 
             get{return _ExpenseType_id;}
@@ -111,20 +97,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _ExpenseDescription;}
             set{SetProperty(ref _ExpenseDescription, value);}
-        }
-     
-
-        private long? _Unit_ID;
-        /// <summary>
-        /// 单位
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Unit_ID",ColDesc = "单位")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Unit_ID",IsNullable = true,ColumnDescription = "单位" )]
-        [FKRelationAttribute("tb_Unit","Unit_ID")]
-        public long? Unit_ID 
-        { 
-            get{return _Unit_ID;}
-            set{SetProperty(ref _Unit_ID, value);}
         }
      
 

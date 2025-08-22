@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:36
+// 时间：08/20/2025 16:08:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 对账单主表验证类
+    /// 对账单验证类
     /// </summary>
     /*public partial class tb_FM_StatementValidator:AbstractValidator<tb_FM_Statement>*/
     public partial class tb_FM_StatementValidator:BaseValidatorGeneric<tb_FM_Statement>
@@ -42,8 +42,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
 
- RuleFor(tb_FM_Statement =>tb_FM_Statement.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
-
  RuleFor(tb_FM_Statement =>tb_FM_Statement.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("公司账户:下拉选择值不正确。");
  RuleFor(tb_FM_Statement =>tb_FM_Statement.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
 
@@ -52,20 +50,35 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.PayeeAccountNo).MaximumMixedLength(100).WithMessage("收款账号:不能超过最大长度,100.");
 
-//***** 
- RuleFor(tb_FM_Statement =>tb_FM_Statement.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
-
- RuleFor(x => x.TotalForeignAmount).PrecisionScale(19,4,true).WithMessage("总金额外币:小数位不能超过4。");
-
- RuleFor(x => x.TotalLocalAmount).PrecisionScale(19,4,true).WithMessage("总金额本币:小数位不能超过4。");
 
 
+ RuleFor(x => x.OpeningBalanceForeignAmount).PrecisionScale(19,4,true).WithMessage("期初余额外币:小数位不能超过4。");
+
+ RuleFor(x => x.OpeningBalanceLocalAmount).PrecisionScale(19,4,true).WithMessage("期初余额本币:小数位不能超过4。");
+
+ RuleFor(x => x.TotalReceivableForeignAmount).PrecisionScale(19,4,true).WithMessage("期间应收外币:小数位不能超过4。");
+
+ RuleFor(x => x.TotalReceivableLocalAmount).PrecisionScale(19,4,true).WithMessage("期间应收本币:小数位不能超过4。");
+
+ RuleFor(x => x.TotalPayableForeignAmount).PrecisionScale(19,4,true).WithMessage("期间应付外币:小数位不能超过4。");
+
+ RuleFor(x => x.TotalPayableLocalAmount).PrecisionScale(19,4,true).WithMessage("期间应付本币:小数位不能超过4。");
+
+ RuleFor(x => x.TotalReceivedForeignAmount).PrecisionScale(19,4,true).WithMessage("期间收款外币:小数位不能超过4。");
+
+ RuleFor(x => x.TotalReceivedLocalAmount).PrecisionScale(19,4,true).WithMessage("期间收款本币:小数位不能超过4。");
+
+ RuleFor(x => x.TotalPaidForeignAmount).PrecisionScale(19,4,true).WithMessage("期间付款外币:小数位不能超过4。");
+
+ RuleFor(x => x.TotalPaidLocalAmount).PrecisionScale(19,4,true).WithMessage("期间付款本币:小数位不能超过4。");
+
+ RuleFor(x => x.ClosingBalanceForeignAmount).PrecisionScale(19,4,true).WithMessage("期末余额外币:小数位不能超过4。");
+
+ RuleFor(x => x.ClosingBalanceLocalAmount).PrecisionScale(19,4,true).WithMessage("期末余额本币:小数位不能超过4。");
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.StatementStatus).NotEmpty().When(x => x.StatementStatus.HasValue);
-
- RuleFor(tb_FM_Statement =>tb_FM_Statement.Remark).MaximumMixedLength(300).WithMessage("备注:不能超过最大长度,300.");
 
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
@@ -80,6 +93,8 @@ namespace RUINORERP.Business
 
 
 
+
+ RuleFor(tb_FM_Statement =>tb_FM_Statement.Summary).MaximumMixedLength(500).WithMessage("备注:不能超过最大长度,500.");
 
 //***** 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");

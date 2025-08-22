@@ -233,7 +233,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 lblExchangeRate.Visible = false;
                 txtExchangeRate.Visible = false;
-
+                BusinessHelper.Instance.InitEntity(entity);
 
                 UIHelper.ControlForeignFieldInvisible<tb_PurOrder>(this, false);
             }

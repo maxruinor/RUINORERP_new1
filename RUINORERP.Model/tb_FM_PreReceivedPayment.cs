@@ -124,13 +124,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool? _IsFromPlatform;
+        private bool _IsFromPlatform;
         /// <summary>
         /// 平台单
         /// </summary>
         [AdvQueryAttribute(ColName = "IsFromPlatform",ColDesc = "平台单")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsFromPlatform" ,IsNullable = true,ColumnDescription = "平台单" )]
-        public bool? IsFromPlatform
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsFromPlatform" ,IsNullable = false,ColumnDescription = "平台单" )]
+        public bool IsFromPlatform
         { 
             get{return _IsFromPlatform;}
             set{

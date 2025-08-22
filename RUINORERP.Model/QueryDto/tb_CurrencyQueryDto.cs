@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:56:54
+// 时间：08/20/2025 16:08:00
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -19,7 +19,7 @@ using RUINORERP.Model.Base;
 namespace RUINORERP.Model.QueryDto
 {
     /// <summary>
-    /// 币别资料表-备份第一行数据后删除重建 如果不行则直接修改字段删除字段
+    /// 币别资料表
     /// </summary>
     [Serializable()]
     [SugarTable("tb_Currency")]
@@ -51,7 +51,7 @@ namespace RUINORERP.Model.QueryDto
         /// 币别代码
         /// </summary>
         [AdvQueryAttribute(ColName = "CurrencyCode",ColDesc = "币别代码")]
-        [SugarColumn(ColumnDataType = "char",SqlParameterDbType ="String",ColumnName = "CurrencyCode",Length=10,IsNullable = true,ColumnDescription = "币别代码" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "CurrencyCode",Length=50,IsNullable = true,ColumnDescription = "币别代码" )]
         public string CurrencyCode 
         { 
             get{return _CurrencyCode;}
@@ -77,7 +77,7 @@ namespace RUINORERP.Model.QueryDto
         /// 币别符号
         /// </summary>
         [AdvQueryAttribute(ColName = "CurrencySymbol",ColDesc = "币别符号")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "CurrencySymbol",Length=10,IsNullable = true,ColumnDescription = "币别符号" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "CurrencySymbol",Length=50,IsNullable = true,ColumnDescription = "币别符号" )]
         public string CurrencySymbol 
         { 
             get{return _CurrencySymbol;}
@@ -108,19 +108,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Is_enabled;}
             set{SetProperty(ref _Is_enabled, value);}
-        }
-     
-
-        private bool? _Is_available= true;
-        /// <summary>
-        /// 是否可用
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Is_available",ColDesc = "是否可用")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "Is_available",IsNullable = true,ColumnDescription = "是否可用" )]
-        public bool? Is_available 
-        { 
-            get{return _Is_available;}
-            set{SetProperty(ref _Is_available, value);}
         }
      
 

@@ -214,37 +214,37 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
             var ConditionGrouplist = new List<ConditionGroup>
         {
-           new ConditionGroup
-            {
-                          Identifier =identifier,
-                StatusName = "待提交",
-
-                Conditions = new List<IConditionalModel>
+               new ConditionGroup
                 {
-                    new ConditionalModel
+                              Identifier =identifier,
+                    StatusName = "待提交",
+
+                    Conditions = new List<IConditionalModel>
                     {
-                        FieldName = "ReceivePaymentType",
-                        ConditionalType = ConditionalType.Equal,
-                        FieldValue = ((int)paymentType).ToString(),
-                        CSharpTypeName = "int"
-                    },
-                    new ConditionalModel
-                    {
-                        FieldName = "PrePaymentStatus",
-                        ConditionalType = ConditionalType.Equal,
-                        FieldValue = ((int)PrePaymentStatus.草稿).ToString(),
-                        CSharpTypeName = "int"
-                    },
-                     new ConditionalModel
-                    {
-                        FieldName = "isdeleted",
-                        ConditionalType = ConditionalType.Equal,
-                        FieldValue = "False",
-                        CSharpTypeName = "bool"
+                        new ConditionalModel
+                        {
+                            FieldName = "ReceivePaymentType",
+                            ConditionalType = ConditionalType.Equal,
+                            FieldValue = ((int)paymentType).ToString(),
+                            CSharpTypeName = "int"
+                        },
+                        new ConditionalModel
+                        {
+                            FieldName = "PrePaymentStatus",
+                            ConditionalType = ConditionalType.Equal,
+                            FieldValue = ((int)PrePaymentStatus.草稿).ToString(),
+                            CSharpTypeName = "int"
+                        },
+                         new ConditionalModel
+                        {
+                            FieldName = "isdeleted",
+                            ConditionalType = ConditionalType.Equal,
+                            FieldValue = "False",
+                            CSharpTypeName = "bool"
+                        }
                     }
                 }
-            }
-            ,
+                ,
                 new ConditionGroup
             {
                           Identifier =identifier,
@@ -264,6 +264,37 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         FieldName = "PrePaymentStatus",
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)PrePaymentStatus.待审核).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                     new ConditionalModel
+                    {
+                        FieldName = "isdeleted",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = "False",
+                        CSharpTypeName = "bool"
+                    }
+                }
+            }
+                ,
+                     new ConditionGroup
+            {
+                          Identifier =identifier,
+                StatusName = "已生效",
+
+                Conditions = new List<IConditionalModel>
+                {
+                    new ConditionalModel
+                    {
+                        FieldName = "ReceivePaymentType",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)paymentType).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "PrePaymentStatus",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)PrePaymentStatus.已生效).ToString(),
                         CSharpTypeName = "int"
                     },
                      new ConditionalModel

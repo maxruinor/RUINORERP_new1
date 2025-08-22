@@ -241,8 +241,6 @@ namespace RUINORERP.UI.FM
                     cmbPayeeInfoID.DataBindings.Clear();
                 }
 
-
-
                 //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
                 if (entity.ARAPStatus == (int)ARAPStatus.待审核)
                 {
@@ -269,6 +267,9 @@ namespace RUINORERP.UI.FM
                 entity.ARAPStatus = (int)ARAPStatus.草稿;
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
+
+                //默认新建的都是费用，产品的话是可以转单
+                entity.IsExpenseType = true;
 
                 //到期日期应该是根据对应客户的账期的天数来算
                 chkIsExpenseType.Enabled = true;
@@ -608,7 +609,7 @@ namespace RUINORERP.UI.FM
         /// <param name="entity"></param>
         private void LoadCustomerVendor(tb_FM_ReceivablePayable entity)
         {
-            if (PaymentType == ReceivePaymentType.收款 || entity.IsForCommission.GetValueOrDefault())
+            if (PaymentType == ReceivePaymentType.收款 || entity.IsForCommission)
             {
                 //创建表达式
                 var lambda = Expressionable.Create<tb_CustomerVendor>()
@@ -654,7 +655,15 @@ namespace RUINORERP.UI.FM
         public void LoadItems(bool? IsExpenseTypeValue)
         {
             bool IsExpenseType = IsExpenseTypeValue.GetValueOrDefault();
+
+
             //产品
+            //listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID);
+            //listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
+            //listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.Location_ID)).Visible = false;
+            //listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.Rack_ID)).Visible = false;
+
+
 
             listCols.SetCol_DefaultHide<ProductSharePart>(c => c.CNName, !IsExpenseType);
             listCols.SetCol_DefaultHide<ProductSharePart>(c => c.Location_ID, !IsExpenseType);
@@ -668,6 +677,20 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_DefaultHide<ProductSharePart>(c => c.Type_ID, !IsExpenseType);
             listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.property, !IsExpenseType);
             listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.CustomerPartNo, !IsExpenseType);
+
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.CNName, IsExpenseType);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Location_ID, IsExpenseType);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID, IsExpenseType);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.prop, IsExpenseType);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.SKU, IsExpenseType);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Specifications, IsExpenseType);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Model, IsExpenseType);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Unit_ID, IsExpenseType);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ProductNo, IsExpenseType);
+            listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Type_ID, IsExpenseType);
+            listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.property, IsExpenseType);
+            listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.CustomerPartNo, IsExpenseType);
+
 
             listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.CNName)).Visible = !IsExpenseType;
             listCols.FirstOrDefault(c => c.ColName == nameof(ProductSharePart.Location_ID)).Visible = !IsExpenseType;
@@ -684,6 +707,11 @@ namespace RUINORERP.UI.FM
 
             listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.ExpenseType_id, !IsExpenseType);
             listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.ExpenseDescription, !IsExpenseType);
+
+            listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ExpenseType_id, !IsExpenseType);
+            listCols.SetCol_NeverVisible<tb_FM_ReceivablePayableDetail>(c => c.ExpenseDescription, !IsExpenseType);
+
+
 
             listCols.FirstOrDefault(c => c.ColName == nameof(tb_FM_ReceivablePayableDetail.ExpenseType_id)).Visible = IsExpenseType;
             listCols.FirstOrDefault(c => c.ColName == nameof(tb_FM_ReceivablePayableDetail.ExpenseDescription)).Visible = IsExpenseType;
@@ -844,7 +872,7 @@ namespace RUINORERP.UI.FM
 
 
             //隐藏外币相关
-                UIHelper.ControlForeignFieldInvisible<tb_FM_ReceivablePayable>(this, false);
+            UIHelper.ControlForeignFieldInvisible<tb_FM_ReceivablePayable>(this, false);
             if (listCols != null)
             {
                 listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.ExchangeRate);
@@ -944,7 +972,7 @@ namespace RUINORERP.UI.FM
         }
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
-            {
+        {
             if (EditEntity == null)
             {
                 //都不是正常状态
@@ -955,7 +983,7 @@ namespace RUINORERP.UI.FM
             {
                 TotalSum();
             }
-            
+
         }
 
 
@@ -1179,7 +1207,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
- 
+
 
         protected override async Task<bool> Submit()
         {

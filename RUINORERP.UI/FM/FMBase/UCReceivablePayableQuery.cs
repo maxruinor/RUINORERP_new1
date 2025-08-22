@@ -720,7 +720,7 @@ namespace RUINORERP.UI.FM
                     StringBuilder sbOffset = new StringBuilder();
                     foreach (var item in availableAdvances)
                     {
-                        sbOffset.Append($"{item.Key.ARAPNo}:金额{item.Key.LocalBalanceAmount.ToString("###.00")}===》{item.Value.PreRPNO}:金额：{item.Value.LocalBalanceAmount.ToString("###.00")}").Append("\r\n");
+                        sbOffset.Append($"应{PaymentType.ToString()}单{item.Key.ARAPNo}:金额{item.Key.LocalBalanceAmount.ToString("###.00")}=>预{PaymentType.ToString()}单{item.Value.PreRPNO}:金额：{item.Value.LocalBalanceAmount.ToString("###.00")}").Append("\r\n");
                     }
 
                     if (MessageBox.Show($"{sbOffset.ToString()}你确定进行对应抵扣吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
@@ -745,7 +745,7 @@ namespace RUINORERP.UI.FM
                 }
                 else
                 {
-                    MessageBox.Show("没有找到可抵扣的预收付款单！");
+                    MessageBox.Show("没有找到可抵扣的预收付款单！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 

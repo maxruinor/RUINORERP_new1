@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:35
+// 时间：08/20/2025 16:08:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,12 +45,9 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
-
- RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ExpenseType_id).Must(CheckForeignKeyValueCanNull).WithMessage("费用类型:下拉选择值不正确。");
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ExpenseType_id).NotEmpty().When(x => x.ExpenseType_id.HasValue);
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.ExpenseDescription).MaximumMixedLength(300).WithMessage("费用说明:不能超过最大长度,300.");
-
 
 
  RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
@@ -61,7 +58,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.CustomerPartNo).MaximumMixedLength(100).WithMessage("往来单位料号:不能超过最大长度,100.");
 
- //RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.Description).MaximumMixedLength(300).WithMessage("描述:不能超过最大长度,300.");
+ RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.Description).MaximumMixedLength(300).WithMessage("描述:不能超过最大长度,300.");
 
  RuleFor(x => x.TaxRate).PrecisionScale(5,2,true).WithMessage("税率:小数位不能超过2。");
 

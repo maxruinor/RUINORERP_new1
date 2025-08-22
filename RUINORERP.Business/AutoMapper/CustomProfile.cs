@@ -33,6 +33,7 @@ namespace RUINORERP.Business.AutoMapper
           .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.UnitPrice))
           .ForMember(a => a.Quantity, o => o.MapFrom(d => d.ShouldSendQty))
           .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+          .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.RepairMaterialDetailID))
           .ForMember(a => a.property, o => o.MapFrom(d => d.property))
           .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
           .ForMember(a => a.TaxLocalAmount, o => o.MapFrom(d => d.SubtotalTaxAmount))
@@ -93,6 +94,7 @@ namespace RUINORERP.Business.AutoMapper
             .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.TransactionPrice))
             .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
             .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+              .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.SaleOutDetail_ID))
             .ForMember(a => a.property, o => o.MapFrom(d => d.property))
             .ForMember(a => a.CustomerPartNo, o => o.MapFrom(d => d.CustomerPartNo))
             .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
@@ -107,6 +109,7 @@ namespace RUINORERP.Business.AutoMapper
             .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.TransactionPrice))
             .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
             .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+              .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.SOutReturnDetail_ID))
             .ForMember(a => a.property, o => o.MapFrom(d => d.property))
             //.ForMember(a => a.IncludeTax, o => o.MapFrom(d => d.incl))
             .ForMember(a => a.CustomerPartNo, o => o.MapFrom(d => d.CustomerPartNo))
@@ -117,7 +120,9 @@ namespace RUINORERP.Business.AutoMapper
 
             //生成应付及明细
             CreateMap<tb_FM_PriceAdjustment, tb_FM_ReceivablePayable>();
-            CreateMap<tb_FM_PriceAdjustmentDetail, tb_FM_ReceivablePayableDetail>();
+            CreateMap<tb_FM_PriceAdjustmentDetail, tb_FM_ReceivablePayableDetail>()
+                  .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.AdjustDetailID))
+                ;
 
             CreateMap<tb_SaleOut, tb_FM_PriceAdjustment>();
             CreateMap<tb_SaleOutDetail, tb_FM_PriceAdjustmentDetail>();
@@ -127,18 +132,21 @@ namespace RUINORERP.Business.AutoMapper
 
             //生成应付及明细
             CreateMap<tb_PurEntry, tb_FM_ReceivablePayable>();
-            CreateMap<tb_PurEntryDetail, tb_FM_ReceivablePayableDetail>();
+            CreateMap<tb_PurEntryDetail, tb_FM_ReceivablePayableDetail>()
+                  .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.PurEntryDetail_ID))                ;
 
             //生成应付及明细
             CreateMap<tb_PurEntryRe, tb_FM_ReceivablePayable>();
-            CreateMap<tb_PurEntryReDetail, tb_FM_ReceivablePayableDetail>();
+            CreateMap<tb_PurEntryReDetail, tb_FM_ReceivablePayableDetail>()
+                  .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.PurEntryRe_CID));
 
 
             //应收付单生成收款记录表
             CreateMap<tb_FM_ReceivablePayable, tb_FM_PaymentRecord>();
 
             //应收付单生成收款记录表
-            CreateMap<tb_FM_ReceivablePayableDetail, tb_FM_PaymentRecordDetail>();
+            CreateMap<tb_FM_ReceivablePayableDetail, tb_FM_PaymentRecordDetail>()
+                ;
 
             //多个应收应付 合并生成一个 付款单
             CreateMap<tb_FM_ReceivablePayable, tb_FM_PaymentRecordDetail>()

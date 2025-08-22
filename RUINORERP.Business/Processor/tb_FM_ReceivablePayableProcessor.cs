@@ -34,7 +34,7 @@ using RUINORERP.Global.EnumExt;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 费用报销单
+    /// 应收流付
     /// </summary>
     public partial class tb_FM_ReceivablePayableProcessor : BaseProcessor
     {
@@ -46,6 +46,8 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.SourceBillNo);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable, tb_CustomerVendor>(c => c.CustomerVendor_ID);
             //可以根据关联外键自动加载条件，条件用公共虚方法
+
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.IsExpenseType);
 
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.IsFromPlatform);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.IsForCommission);

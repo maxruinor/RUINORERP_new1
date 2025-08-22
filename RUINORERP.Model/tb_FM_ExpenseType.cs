@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/25/2025 17:18:28
+// 时间：08/20/2025 16:08:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -80,7 +80,19 @@ namespace RUINORERP.Model
                         }
         }
 
- 
+        private bool _EXPOrINC= true;
+        /// <summary>
+        /// 收支标识
+        /// </summary>
+        [AdvQueryAttribute(ColName = "EXPOrINC",ColDesc = "收支标识")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "EXPOrINC" ,IsNullable = false,ColumnDescription = "收支标识" )]
+        public bool EXPOrINC
+        { 
+            get{return _EXPOrINC;}
+            set{
+            SetProperty(ref _EXPOrINC, value);
+                        }
+        }
 
         private int _ReceivePaymentType;
         /// <summary>
@@ -133,6 +145,14 @@ namespace RUINORERP.Model
         public virtual List<tb_FM_ExpenseClaimDetail> tb_FM_ExpenseClaimDetails { get; set; }
         //tb_FM_ExpenseClaimDetail.ExpenseType_id)
         //ExpenseType_id.FK_EXPENSECLAIMDETAIL_REF_EXPENSETYPE)
+        //tb_FM_ExpenseType.ExpenseType_id)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ProfitLossDetail.ExpenseType_id))]
+        public virtual List<tb_FM_ProfitLossDetail> tb_FM_ProfitLossDetails { get; set; }
+        //tb_FM_ProfitLossDetail.ExpenseType_id)
+        //ExpenseType_id.FK_TB_FM_PROFITLOSSDETAIL_REF_TB_FM_EXPENSETYPE)
         //tb_FM_ExpenseType.ExpenseType_id)
 
 

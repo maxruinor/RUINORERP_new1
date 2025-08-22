@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:36
+// 时间：08/20/2025 16:08:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 对账单明细（关联应收单） 验证类
+    /// 对账单明细验证类
     /// </summary>
     /*public partial class tb_FM_StatementDetailValidator:AbstractValidator<tb_FM_StatementDetail>*/
     public partial class tb_FM_StatementDetailValidator:BaseValidatorGeneric<tb_FM_StatementDetail>
@@ -37,12 +37,14 @@ namespace RUINORERP.Business
         
  
         
-     //***** 
+     
+//***** 
  RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.StatementId).NotNull().WithMessage("对账单:不能为空。");
 
- RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.ARAPId).Must(CheckForeignKeyValueCanNull).WithMessage("应收付款单:下拉选择值不正确。");
- RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.ARAPId).NotEmpty().When(x => x.ARAPId.HasValue);
+ RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.ARAPId).Must(CheckForeignKeyValue).WithMessage("应收付款单:下拉选择值不正确。");
 
+//***** 
+ RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
 
  RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
 
@@ -51,6 +53,17 @@ namespace RUINORERP.Business
  RuleFor(x => x.IncludedLocalAmount).PrecisionScale(19,4,true).WithMessage("对账金额本币:小数位不能超过4。");
 
  RuleFor(x => x.IncludedForeignAmount).PrecisionScale(19,4,true).WithMessage("对账金额外币:小数位不能超过4。");
+
+ RuleFor(x => x.WrittenOffLocalAmount).PrecisionScale(19,4,true).WithMessage("本次已核销本币金额:小数位不能超过4。");
+
+ RuleFor(x => x.WrittenOffForeignAmount).PrecisionScale(19,4,true).WithMessage("本次已核销原币金额:小数位不能超过4。");
+
+ RuleFor(x => x.RemainingLocalAmount).PrecisionScale(19,4,true).WithMessage("剩余未核销本币金额:小数位不能超过4。");
+
+ RuleFor(x => x.RemainingForeignAmount).PrecisionScale(19,4,true).WithMessage("剩余未核销原币金额:小数位不能超过4。");
+
+//***** 
+ RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.ARAPWriteOffStatus).NotNull().WithMessage("核销状态:不能为空。");
 
  RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.Summary).MaximumMixedLength(300).WithMessage("摘要:不能超过最大长度,300.");
 

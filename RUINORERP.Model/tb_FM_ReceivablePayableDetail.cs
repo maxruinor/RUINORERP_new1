@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/04/2025 11:58:55
+// 时间：08/20/2025 16:08:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -95,15 +95,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        
-
         private long? _ExpenseType_id;
         /// <summary>
         /// 费用类型
         /// </summary>
         [AdvQueryAttribute(ColName = "ExpenseType_id",ColDesc = "费用类型")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "ExpenseType_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "费用类型" )]
-        [FKRelationAttribute("tb_FM_ExpenseType","ExpenseType_id")]
+        [FKRelationAttribute("tb_FM_ExpenseType", "ExpenseType_id")]
         public long? ExpenseType_id
         { 
             get{return _ExpenseType_id;}
@@ -125,8 +123,6 @@ namespace RUINORERP.Model
             SetProperty(ref _ExpenseDescription, value);
                         }
         }
-
- 
 
         private bool _IncludeTax= false;
         /// <summary>
@@ -198,7 +194,19 @@ namespace RUINORERP.Model
                         }
         }
 
-       
+        private string _Description;
+        /// <summary>
+        /// 描述
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Description",ColDesc = "描述")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "Description" ,Length=300,IsNullable = true,ColumnDescription = "描述" )]
+        public string Description
+        { 
+            get{return _Description;}
+            set{
+            SetProperty(ref _Description, value);
+                        }
+        }
 
         private decimal _TaxRate= ((0));
         /// <summary>
@@ -274,15 +282,13 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(ExpenseType_id))]
         public virtual tb_FM_ExpenseType tb_fm_expensetype { get; set; }
 
-
-
         #endregion
 
 
 
 
-//如果为false,则不可以。
-private bool PK_FK_ID_Check()
+        //如果为false,则不可以。
+        private bool PK_FK_ID_Check()
 {
   bool rs=true;
 return rs;

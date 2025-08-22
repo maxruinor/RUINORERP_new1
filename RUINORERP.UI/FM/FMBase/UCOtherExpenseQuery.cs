@@ -69,6 +69,7 @@ namespace RUINORERP.UI.FM.FMBase
             base.ChildSummaryCols.Add(c => c.TaxAmount);
             base.ChildSummaryCols.Add(c => c.SingleTotalAmount);
             base.ChildSummaryCols.Add(c => c.UntaxedAmount);
+            
         }
 
 

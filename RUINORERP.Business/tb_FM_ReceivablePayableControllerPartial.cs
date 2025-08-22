@@ -501,7 +501,8 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-                var olditem = entity.tb_AS_RepairOrderMaterialDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                //这个写法，如果原来明细中  相同产品ID 多行录入。就会出错。混乱。
+                var olditem = entity.tb_AS_RepairOrderMaterialDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID && c.RepairMaterialDetailID == details[i].SourceItemRowID).FirstOrDefault();
                 if (olditem != null)
                 {
                     details[i].TaxRate = olditem.TaxRate;
@@ -591,7 +592,6 @@ namespace RUINORERP.Business
             {
                 payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
             }
-            //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
                 var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
@@ -605,73 +605,61 @@ namespace RUINORERP.Business
                 }
                 else
                 {
-                    //db查询
                     entity.tb_projectgroup = await _appContext.GetRequiredService<tb_ProjectGroupController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
                     payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
                 }
             }
 
-            //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-
             payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
-
             payable.Currency_ID = entity.Currency_ID;
-
-
             payable.ExchangeRate = entity.ExchangeRate;
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_SaleOutReDetails);
 
-            for (global::System.Int32 i = 0; i < details.Count; i++)
+            foreach (var d in details)
             {
-                var olditem = entity.tb_SaleOutReDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
-                if (olditem != null)
-                {
-                    details[i].TaxRate = olditem.TaxRate;
-                    details[i].TaxLocalAmount = olditem.SubtotalTaxAmount;
-                    details[i].Quantity = -olditem.Quantity;//注意是负数
-                    details[i].UnitPrice = olditem.TransactionPrice;
-                    details[i].LocalPayableAmount = olditem.TransactionPrice * -olditem.Quantity;
-                }
-                details[i].ExchangeRate = entity.ExchangeRate;
-                details[i].ActionStatus = ActionStatus.新增;
+                var src = entity.tb_SaleOutReDetails.First(c => c.ProdDetailID == d.ProdDetailID);
 
+                d.TaxRate = src.TaxRate;
+                d.UnitPrice = Math.Abs(src.TransactionPrice);    // 保证正数
+                d.Quantity = -Math.Abs(src.Quantity);            // 保证负数
+                d.TaxLocalAmount = -Math.Abs(src.SubtotalTaxAmount);   // 保证负数
+                d.LocalPayableAmount = d.UnitPrice.Value * d.Quantity.Value;         // 负金额
 
-                //数量标负数，单价保持正数是标准做法
-                details[i].Quantity = -details[i].Quantity;
-                details[i].TaxLocalAmount = -details[i].TaxLocalAmount;
-                details[i].LocalPayableAmount = details[i].UnitPrice.Value * details[i].Quantity.Value;
+                d.ExchangeRate = entity.ExchangeRate;
+                d.ActionStatus = ActionStatus.新增;
             }
 
-            #region 单独处理运费 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。佣金不需要
-            // 添加运费行（关键部分）
+            #region 单独处理运费
             if (entity.FreightIncome > 0)
             {
-                payable.ShippingFee = -entity.FreightIncome;
+                payable.ShippingFee = -entity.FreightIncome;   // 运费应收，同样为负
             }
-
             #endregion
 
             payable.tb_FM_ReceivablePayableDetails = details;
-            //如果是外币时，则由外币算出本币
-            //外币时
+
             if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
             {
-                payable.ForeignBalanceAmount = -entity.ForeignTotalAmount;
+                payable.ForeignBalanceAmount = -Math.Abs(entity.ForeignTotalAmount);
                 payable.ForeignPaidAmount = 0;
-                payable.TotalForeignPayableAmount = -entity.ForeignTotalAmount;
+                payable.TotalForeignPayableAmount = payable.ForeignBalanceAmount;
             }
             else
             {
-                //本币时
-                payable.LocalBalanceAmount = -entity.TotalAmount;
+                payable.LocalBalanceAmount = -Math.Abs(entity.TotalAmount);
                 payable.LocalPaidAmount = 0;
-                payable.TotalLocalPayableAmount = -entity.TotalAmount;
+                payable.TotalLocalPayableAmount = payable.LocalBalanceAmount;
+            }
+            //业务经办人
+            if (entity.Employee_ID.HasValue)
+            {
+                payable.Employee_ID = entity.Employee_ID.Value;
             }
 
             payable.Remark = $"销售出库单：{entity.SaleOut_NO}对应的销售退回单{entity.ReturnNo}的应付款";
-            if (payable.IsFromPlatform.HasValue && payable.IsFromPlatform.Value)
+            if (payable.IsFromPlatform)
             {
                 payable.Remark += " 平台单号:" + entity.PlatformOrderNo;
             }
@@ -679,10 +667,10 @@ namespace RUINORERP.Business
             {
                 payable.Remark += " 线下退款";
             }
+
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
             return payable;
-
         }
 
         /// <summary>
@@ -792,7 +780,8 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-                var olditem = entity.tb_FM_PriceAdjustmentDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                //这个写法，如果原来明细中  相同产品ID 多行录入。就会出错。混乱。
+                var olditem = entity.tb_FM_PriceAdjustmentDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID && c.AdjustDetailID == details[i].SourceItemRowID).FirstOrDefault();
                 if (olditem != null)
                 {
                     details[i].TaxRate = olditem.TaxRate;
@@ -1561,38 +1550,6 @@ namespace RUINORERP.Business
 
 
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="entity"></param>
-        ///// <param name="UseTransaction"></param>
-        ///// <returns></returns>
-        //public async Task<bool> AntiApplyAutoPaymentAllocation(tb_FM_ReceivablePayable entity, bool UseTransaction = true)
-        //{
-        //    bool result = false;
-
-        //    var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-
-        //    //出库时，全部生成应收，账期的。就加上到期日
-        //    //有付款过的。就去预收中抵扣，不够的金额及状态标识出来
-        //    //反操作上面的逻辑
-
-        //    //如果收款了，则不能反审,预收的可以
-        //    List<tb_FM_ReceivablePayable> arapupdatelist = new List<tb_FM_ReceivablePayable>();
-        //    List<tb_FM_PreReceivedPayment> prePaymentsUpdateList = new List<tb_FM_PreReceivedPayment>();
-        //    var ARAPList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
-        //                    .Includes(c => c.tb_FM_ReceivablePayableDetails)
-        //                   .Where(c => c.SourceBillId == entity.SaleOut_MainID && c.SourceBizType == (int)BizType.销售出库单).ToListAsync();
-
-        //    if (ARAPList != null)
-        //    {
-
-        //    }
-
-        //    result = await AntiApplyManualPaymentAllocation(entity, UseTransaction);
-        //    return result;
-
-        //}
 
 
         #endregion
@@ -1923,7 +1880,11 @@ namespace RUINORERP.Business
                 {
                     var SaleOut = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
                     .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.SaleOut_MainID == receivablePayable.SourceBillId)
-                    .SingleAsync();
+                    .FirstAsync();//single的话 如果修改过客户。会查不到。所以用first。
+                    if (SaleOut == null)
+                    {
+                        throw new Exception($"销售出库单：{receivablePayable.SourceBillNo}的应收款单来源数据出错，请检查往来单位是否对应。");
+                    }
                     if (SaleOut.SOrder_ID.HasValue)
                     {
                         var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
@@ -1951,7 +1912,11 @@ namespace RUINORERP.Business
                 {
                     var PurEntry = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntry>()
                     .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.PurEntryID == receivablePayable.SourceBillId)
-                    .SingleAsync();
+                   .FirstAsync();
+                    if (PurEntry == null)
+                    {
+                        throw new Exception($"采购入库单：{receivablePayable.SourceBillNo}的应付款单来源数据出错，请检查往来单位是否对应。");
+                    }
                     if (PurEntry.PurOrder_ID.HasValue)
                     {
                         var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
@@ -2122,7 +2087,10 @@ namespace RUINORERP.Business
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_SaleOutDetails);
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-                var olditem = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                ////这个写法，如果原来明细中  相同产品ID 多行录入。就会出错。混乱。
+                ///如果来源和目录字段值一致。mapper应该完成映射。目前为了保险，在目标明细实体中添加一个 原始的主键ID
+                var olditem = entity.tb_SaleOutDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID
+                && c.SaleOutDetail_ID == details[i].SourceItemRowID).FirstOrDefault();
                 if (olditem != null)
                 {
                     if (IsProcessCommission)
@@ -2181,7 +2149,11 @@ namespace RUINORERP.Business
                 payable.ForeignBalanceAmount = payable.TotalForeignPayableAmount;
                 payable.ForeignPaidAmount = 0;
             }
-
+            //业务经办人
+            if (entity.tb_saleorder != null)
+            {
+                payable.Employee_ID = entity.tb_saleorder.Employee_ID;
+            }
             if (IsProcessCommission)
             {
                 payable.Remark = $"由销售出库单：{entity.SaleOutNo}【佣金】生成的应付款单";
@@ -2191,7 +2163,7 @@ namespace RUINORERP.Business
                 payable.Remark = $"由销售出库单：{entity.SaleOutNo}【货款】生成的应收款单";
             }
 
-            if (payable.IsFromPlatform.HasValue && payable.IsFromPlatform.Value)
+            if (payable.IsFromPlatform)
             {
                 payable.Remark += " 平台单号:" + entity.PlatformOrderNo;
             }
@@ -2298,7 +2270,7 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-                var olditem = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                var olditem = entity.tb_PurEntryDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID && c.PurEntryDetail_ID == details[i].SourceItemRowID).FirstOrDefault();
                 if (olditem != null)
                 {
                     details[i].TaxRate = olditem.TaxRate;
@@ -2347,6 +2319,14 @@ namespace RUINORERP.Business
                 //通过订单添加付款信息
                 payable.PayeeInfoID = entity.tb_purorder.PayeeInfoID;
             }
+
+            //业务经办人
+            if (entity.tb_purorder != null)
+            {
+                payable.Employee_ID = entity.tb_purorder.Employee_ID;
+            }
+
+
             payable.Remark = $"采购入库单：{entity.PurEntryNo}的应付款";
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
@@ -2436,7 +2416,7 @@ namespace RUINORERP.Business
 
             for (global::System.Int32 i = 0; i < details.Count; i++)
             {
-                var olditem = entity.tb_PurEntryReDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID).FirstOrDefault();
+                var olditem = entity.tb_PurEntryReDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID && c.PurEntryRe_CID == details[i].SourceItemRowID).FirstOrDefault();
                 if (olditem != null)
                 {
                     details[i].TaxRate = olditem.TaxRate;
@@ -2466,6 +2446,8 @@ namespace RUINORERP.Business
                 payable.LocalPaidAmount = 0;
                 payable.TotalLocalPayableAmount = -entity.TotalAmount;
             }
+            //业务经办人
+            payable.Employee_ID = entity.Employee_ID;
 
             payable.Remark = $"采购入库单：{entity.PurEntryNo}对应的采购退回单{entity.PurEntryReNo}的应付款";
 
@@ -2625,6 +2607,7 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_fm_payeeinfo)
                             .Includes(a => a.tb_projectgroup)
                             .Includes(a => a.tb_customervendor)
+                            .Includes(a => a.tb_FM_ReceivablePayableDetails, b => b.tb_fm_expensetype)
                              .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                               .Includes(a => a.tb_FM_ReceivablePayableDetails, b => b.tb_proddetail, c => c.tb_prod, d => d.tb_unit)
                             .ToListAsync();

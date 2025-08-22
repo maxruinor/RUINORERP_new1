@@ -147,18 +147,18 @@ namespace RUINORERP.UI.PSI.SAL
                                 ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(receivablePayable, false);
                                 if (rmr.Succeeded)
                                 {
-                                    receivablePayable.ApprovalOpinions = "平台退款，货回仓库时，系统自动审核";
+                                    receivablePayable.ApprovalOpinions = "【平台退款】时，系统自动审核";
                                     receivablePayable.ApprovalStatus = (int)ApprovalStatus.已审核;
                                     receivablePayable.ApprovalResults = true;
                                     ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(receivablePayable, true);
                                     if (!autoApproval.Succeeded)
                                     {
                                         autoApproval.Succeeded = false;
-                                        autoApproval.ErrorMsg = $"应收款单（红冲退款）自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        autoApproval.ErrorMsg = $"【平台退款】时,应收款单（红冲退款）自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                     }
                                     else
                                     {
-                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单（红冲退款），平台退款时自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单（红冲退款），【平台退款】时自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
                                     }
 
                                     #region 生成新的退款单
@@ -169,6 +169,9 @@ namespace RUINORERP.UI.PSI.SAL
                                         MessageBox.Show("平台订单，在【平台退款】时自动生成的【收款单】（负数）金额为零。请检查是否重复操作。实际已经【退款】。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                         return;
                                     }
+
+                                    newPaymentRecord.Paytype_ID = saleOutRe.Paytype_ID;
+
                                     newPaymentRecord.Remark = "平台单，货已经退仓，【平台退款】时自动生成的收款单（负数）红冲";
                                     var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(newPaymentRecord, false);
                                     if (rrs.Succeeded)
@@ -200,7 +203,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
                                 {
                                     //自动生成销售退回单的对应的应该收款单（红冲的）对应的收款记录
-                                 
+
                                     var PaymentList = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentRecord>()
                                       .Includes(a => a.tb_FM_PaymentRecordDetails)
                                       .Where(c => c.PaymentStatus <= (int)PaymentStatus.待审核)
@@ -321,12 +324,13 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
                 var refundStatus = (RefundStatus)EditEntity.RefundStatus.GetValueOrDefault();
-                    if (saleOutRe.DataStatus >= (int)DataStatus.确认 || refundStatus.ToString().Contains("已退款"))
+                if (saleOutRe.DataStatus >= (int)DataStatus.确认 || refundStatus.ToString().Contains("已退款"))
                 {
                     var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
                                                                     .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
                                                                     && c.CustomerVendor_ID == saleOutRe.CustomerVendor_ID
                                                                     && c.SourceBizType == (int)BizType.销售退回单
+                                                                    && c.isdeleted == false
                                                                     && c.SourceBillId == saleOutRe.SaleOutRe_ID)
                                                                     .ToListAsync();
                     foreach (var item in receivablePayables)
@@ -387,6 +391,7 @@ namespace RUINORERP.UI.PSI.SAL
                         entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
                     }
                     entity.RefundStatus = (int)RefundStatus.未退款等待退货;
+                    cmbRefundStatus.Enabled = false;
                 }
 
             }
@@ -613,6 +618,7 @@ namespace RUINORERP.UI.PSI.SAL
                         System.Windows.Forms.MessageBox.Show("已经有退款记录，不能删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         rss.ErrorMsg = "已经有退款记录，不能删除。";
                         rss.Succeeded = false;
+                        return rss;
                     }
 
                     tb_SaleOutReController<tb_SaleOutRe> ctr = Startup.GetFromFac<tb_SaleOutReController<tb_SaleOutRe>>();

@@ -837,6 +837,18 @@
     <Compile Include="FM\FMBase\UCPriceAdjustmentQuery.Designer.cs">
       <DependentUpon>UCPriceAdjustmentQuery.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\FMBase\UCProfitLoss.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCProfitLoss.designer.cs">
+      <DependentUpon>UCProfitLoss.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\FMBase\UCProfitLossQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCProfitLossQuery.designer.cs">
+      <DependentUpon>UCProfitLossQuery.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\FMBase\UCReceivablePayableQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1731,6 +1743,24 @@
     <Compile Include="FM\OtherExpenseVoucher.Designer.cs">
       <DependentUpon>OtherExpenseVoucher.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\UCProfitConfirmQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCProfitConfirmQuery.Designer.cs">
+      <DependentUpon>UCProfitConfirmQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCProfitConfirm.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCProfitConfirm.Designer.cs">
+      <DependentUpon>UCProfitConfirm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCLossConfirm.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCLossConfirm.Designer.cs">
+      <DependentUpon>UCLossConfirm.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\UCOtherIncomeVoucher.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1760,6 +1790,12 @@
     </Compile>
     <Compile Include="FM\UCPurPriceAdjustment.Designer.cs">
       <DependentUpon>UCPurPriceAdjustment.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCLossConfirmQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCLossConfirmQuery.Designer.cs">
+      <DependentUpon>UCLossConfirmQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\UCSalePriceAdjustment.cs">
       <SubType>UserControl</SubType>
@@ -3780,6 +3816,12 @@
     <EmbeddedResource Include="FM\FMBase\UCPriceAdjustmentQuery.resx">
       <DependentUpon>UCPriceAdjustmentQuery.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCProfitLoss.resx">
+      <DependentUpon>UCProfitLoss.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCProfitLossQuery.resx">
+      <DependentUpon>UCProfitLossQuery.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FM\FMBase\UCReceivablePayableQuery.resx">
       <DependentUpon>UCReceivablePayableQuery.cs</DependentUpon>
     </EmbeddedResource>
@@ -3800,6 +3842,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FM\OtherExpenseVoucherQuery.resx">
       <DependentUpon>OtherExpenseVoucherQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCProfitConfirmQuery.resx">
+      <DependentUpon>UCProfitConfirmQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCOtherIncomeVoucherQuery.resx">
       <DependentUpon>UCOtherIncomeVoucherQuery.cs</DependentUpon>
@@ -3836,6 +3881,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCPurPriceAdjustmentQuery.resx">
       <DependentUpon>UCPurPriceAdjustmentQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCLossConfirmQuery.resx">
+      <DependentUpon>UCLossConfirmQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCSalePriceAdjustmentQuery.resx">
       <DependentUpon>UCSalePriceAdjustmentQuery.cs</DependentUpon>

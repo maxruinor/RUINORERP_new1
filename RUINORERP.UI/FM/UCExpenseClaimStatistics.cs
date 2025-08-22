@@ -22,7 +22,7 @@ using RUINORERP.Business.Processor;
 
 namespace RUINORERP.UI.PSI.SAL
 {
-    [MenuAttrAssemblyInfo("费用报销统计", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用管理, BizType.费用报销单)]
+    [MenuAttrAssemblyInfo("费用报销统计", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用报销, BizType.费用报销单)]
     public partial class UCExpenseClaimStatistics : BaseNavigatorGeneric<View_FM_ExpenseClaimItems, View_FM_ExpenseClaimItems>
     {
         public UCExpenseClaimStatistics()

@@ -162,6 +162,11 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(RepairStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(RepairStatus))));
                 }
+                else if (prop.Name == nameof(RefundStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(RefundStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(RefundStatus))));
+                }
+                
                 else if (prop.Name == nameof(PaymentStatus))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PaymentStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PaymentStatus))));

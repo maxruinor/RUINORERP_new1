@@ -98,14 +98,14 @@ namespace RUINORERP.UI.FM
             List<ContextMenuController> list = new List<ContextMenuController>();
             list.Add(new ContextMenuController("【转为退款单】", true, false, "NewSumDataGridView_转为退款单"));
             list.Add(new ContextMenuController("【核销核查器】", true, false, "NewSumDataGridView_核销核查器"));
-            //if (PaymentType == ReceivePaymentType.收款)
-            //{
-            //    list.Add(new ContextMenuController("【转为收款单】", true, false, "NewSumDataGridView_转为收付款单"));
-            //}
-            //else
-            //{
-            //    list.Add(new ContextMenuController("【转为付款单】", true, false, "NewSumDataGridView_转为收付款单"));
-            //}
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                list.Add(new ContextMenuController("【转为收款单】", true, false, "NewSumDataGridView_转为收付款单"));
+            }
+            else
+            {
+                list.Add(new ContextMenuController("【转为付款单】", true, false, "NewSumDataGridView_转为收付款单"));
+            }
             return list;
         }
 
@@ -200,7 +200,7 @@ namespace RUINORERP.UI.FM
                     }
 
                 }
-               
+
 
             }
 
@@ -312,9 +312,9 @@ namespace RUINORERP.UI.FM
             int counter = 1;
             foreach (var item in selectlist)
             {
-                //只有审核状态才可以转换为收款单  或部分核销，一张预付款  核销了一部分。还有一部分要收取时用部分核销。
-                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.待核销 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
-                if (canConvert || item.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                //预收付时，没有真正付前可以合并一起收付
+                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.已生效 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert)
                 {
                     RealList.Add(item);
                 }
@@ -340,7 +340,6 @@ namespace RUINORERP.UI.FM
                     return;
                 }
             }
-
             if (RealList.Count == 0)
             {
                 msg.Append("请至少选择一行数据进行转换。");
@@ -348,8 +347,25 @@ namespace RUINORERP.UI.FM
                 return;
             }
 
+            if (RealList.Count > 1)
+            {
+                if (!RealList[0].PayeeInfoID.HasValue)
+                {
+                    msg.Append("多单合并支付时，将以第一张付款单中的收款信息为准,请输入正确的收款信息。");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+                else
+                {
+                    msg.Append("多单合并支付时，将以第一张付款单中的收款信息为准。");
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+            }
+
+
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList[0], false);
+            tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList, false);
             tb_FM_PaymentRecord paymentRecord = ReturnObject;
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -379,7 +395,7 @@ namespace RUINORERP.UI.FM
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为退款单);
             ContextClickList.Add(NewSumDataGridView_核销核查器);
-            //ContextClickList.Add(NewSumDataGridView_转为收付款单);
+            ContextClickList.Add(NewSumDataGridView_转为收付款单);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
@@ -397,59 +413,88 @@ namespace RUINORERP.UI.FM
         private async void NewSumDataGridView_转为退款单(object sender, EventArgs e)
         {
             List<tb_FM_PreReceivedPayment> selectlist = GetSelectResult();
+            List<tb_FM_PreReceivedPayment> RealList = new List<tb_FM_PreReceivedPayment>();
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
             foreach (var item in selectlist)
             {
+                //预收付时，没有真正付前可以合并一起收付
                 bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.待核销
                     && item.ApprovalStatus == (int)ApprovalStatus.已审核
                     && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
 
                 if (canConvert || item.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
                 {
-                    //审核就是收款 或 付款了 ，则生成退款单  （负数的收款单）
-                    //这个状态要退款单审核后回写
-                    //entity.FMPaymentStatus = (int)FMPaymentStatus.已冲销;//退款  余额有多少退多少。
                     if (item.ForeignBalanceAmount > 0 || item.LocalBalanceAmount > 0)
                     {
-                        tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                        bool isRefund = true;
-                        tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(item, isRefund);
-
-                        MenuPowerHelper menuPowerHelper;
-                        menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-
-                        string Flag = string.Empty;
-                        if (CurMenuInfo == null)
-                        {
-                            MessageBox.Show("请联系管理员，配置入口菜单");
-                        }
-                        else
-                        {
-                            Flag = CurMenuInfo.UIPropertyIdentifier;
-                        }
-
-                        tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                        && m.EntityName == nameof(tb_FM_PaymentRecord)
-                        && m.BIBaseForm == "BaseBillEditGeneric`2"
-                        && m.UIPropertyIdentifier == Flag
-                        ).FirstOrDefault();
-                        if (RelatedMenuInfo != null)
-                        {
-                            await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
-                        }
-                        return;
+                        RealList.Add(item);
                     }
                     else
                     {
                         //没有金额可退。
                         MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}没有可退金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
-
                 }
                 else
                 {
-                    MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}状态为【{((PrePaymentStatus)item.PrePaymentStatus).ToString()}】 无法生成退款单，请查询单据状态是否正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    msg.Append(counter.ToString() + ") ");
+                    msg.Append($"当前应{PaymentType.ToString()}单 {item.PreRPNO}状态为【 {((ARAPStatus)item.PrePaymentStatus).ToString()}】 无法生成退款单。").Append("\r\n");
+                    counter++;
                 }
             }
+            //多选时。要相同客户才能合并到一个退款单
+            if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
+            {
+                msg.Append($"系统禁止合并转换为{((ReceivePaymentType)RealList[0].ReceivePaymentType).ToString()}单");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (msg.ToString().Length > 0)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (RealList.Count == 0)
+                {
+                    return;
+                }
+            }
+            if (RealList.Count == 0)
+            {
+                msg.Append("请至少选择一行数据进行转换。");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            #region  转换为退款单再打开
+            tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+            bool isRefund = true;
+            tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(RealList, isRefund);
+
+            MenuPowerHelper menuPowerHelper;
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+
+            string Flag = string.Empty;
+            if (CurMenuInfo == null)
+            {
+                MessageBox.Show("请联系管理员，配置入口菜单");
+            }
+            else
+            {
+                Flag = CurMenuInfo.UIPropertyIdentifier;
+            }
+
+            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+            && m.EntityName == nameof(tb_FM_PaymentRecord)
+            && m.BIBaseForm == "BaseBillEditGeneric`2"
+            && m.UIPropertyIdentifier == Flag
+            ).FirstOrDefault();
+            if (RelatedMenuInfo != null)
+            {
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+            }
+            return;
+
+
+            #endregion
         }
 
         public override void BuildSummaryCols()

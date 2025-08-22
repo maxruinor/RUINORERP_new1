@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:27
+// 时间：08/20/2025 16:08:04
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -77,7 +77,7 @@ namespace RUINORERP.Business
         }
         
 
-        private bool DetailedRecordsNotEmpty(List<tb_FM_ReceivablePayableDetail> details)
+        private bool DetailedRecordsNotEmpty(List<tb_FM_ProfitLossDetail> details)
         {
             bool rs = true;
             if (details == null || details.Count == 0)

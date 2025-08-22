@@ -32,6 +32,7 @@ namespace RUINORERP.UI.FM
             {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkIsForCommission = new Krypton.Toolkit.KryptonCheckBox();
             this.lblReimburser = new Krypton.Toolkit.KryptonLabel();
             this.cmbReimburser = new Krypton.Toolkit.KryptonComboBox();
             this.chkIsFromPlatform = new Krypton.Toolkit.KryptonCheckBox();
@@ -40,8 +41,8 @@ namespace RUINORERP.UI.FM
             this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
             this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
             this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
-            this.lblDueDate = new Krypton.Toolkit.KryptonLabel();
-            this.dtpDueDate = new Krypton.Toolkit.KryptonDateTimePicker();
+            this.lblPaymentDate = new Krypton.Toolkit.KryptonLabel();
+            this.dtpPaymentDate = new Krypton.Toolkit.KryptonDateTimePicker();
             this.lblTaxTotalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTaxTotalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblUntaxedTotalAmont = new Krypton.Toolkit.KryptonLabel();
@@ -76,7 +77,6 @@ namespace RUINORERP.UI.FM
             this.lblTotalLocalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalForeignAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.chkIsForCommission = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -132,8 +132,8 @@ namespace RUINORERP.UI.FM
             this.kryptonPanel1.Controls.Add(this.lblAccount_id);
             this.kryptonPanel1.Controls.Add(this.cmbAccount_id);
             this.kryptonPanel1.Controls.Add(this.lblEmployee_ID);
-            this.kryptonPanel1.Controls.Add(this.lblDueDate);
-            this.kryptonPanel1.Controls.Add(this.dtpDueDate);
+            this.kryptonPanel1.Controls.Add(this.lblPaymentDate);
+            this.kryptonPanel1.Controls.Add(this.dtpPaymentDate);
             this.kryptonPanel1.Controls.Add(this.lblTaxTotalAmount);
             this.kryptonPanel1.Controls.Add(this.txtTaxTotalAmount);
             this.kryptonPanel1.Controls.Add(this.lblUntaxedTotalAmont);
@@ -167,6 +167,14 @@ namespace RUINORERP.UI.FM
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(1133, 251);
             this.kryptonPanel1.TabIndex = 4;
+            // 
+            // chkIsForCommission
+            // 
+            this.chkIsForCommission.Location = new System.Drawing.Point(731, 109);
+            this.chkIsForCommission.Name = "chkIsForCommission";
+            this.chkIsForCommission.Size = new System.Drawing.Size(75, 20);
+            this.chkIsForCommission.TabIndex = 232;
+            this.chkIsForCommission.Values.Text = "用于佣金";
             // 
             // lblReimburser
             // 
@@ -235,21 +243,21 @@ namespace RUINORERP.UI.FM
             this.lblEmployee_ID.TabIndex = 195;
             this.lblEmployee_ID.Values.Text = "业务经办人";
             // 
-            // lblDueDate
+            // lblPaymentDate
             // 
-            this.lblDueDate.Location = new System.Drawing.Point(534, 54);
-            this.lblDueDate.Name = "lblDueDate";
-            this.lblDueDate.Size = new System.Drawing.Size(49, 20);
-            this.lblDueDate.TabIndex = 193;
-            this.lblDueDate.Values.Text = "到期日";
+            this.lblPaymentDate.Location = new System.Drawing.Point(520, 54);
+            this.lblPaymentDate.Name = "lblPaymentDate";
+            this.lblPaymentDate.Size = new System.Drawing.Size(62, 20);
+            this.lblPaymentDate.TabIndex = 193;
+            this.lblPaymentDate.Values.Text = "支付日期";
             // 
-            // dtpDueDate
+            // dtpPaymentDate
             // 
-            this.dtpDueDate.Location = new System.Drawing.Point(588, 53);
-            this.dtpDueDate.Name = "dtpDueDate";
-            this.dtpDueDate.ShowCheckBox = true;
-            this.dtpDueDate.Size = new System.Drawing.Size(135, 21);
-            this.dtpDueDate.TabIndex = 194;
+            this.dtpPaymentDate.Location = new System.Drawing.Point(588, 53);
+            this.dtpPaymentDate.Name = "dtpPaymentDate";
+            this.dtpPaymentDate.ShowCheckBox = true;
+            this.dtpPaymentDate.Size = new System.Drawing.Size(135, 21);
+            this.dtpPaymentDate.TabIndex = 194;
             // 
             // lblTaxTotalAmount
             // 
@@ -554,14 +562,6 @@ namespace RUINORERP.UI.FM
             this.lblTotalForeignAmount.TabIndex = 202;
             this.lblTotalForeignAmount.Values.Text = "支付金额外币";
             // 
-            // chkIsForCommission
-            // 
-            this.chkIsForCommission.Location = new System.Drawing.Point(731, 109);
-            this.chkIsForCommission.Name = "chkIsForCommission";
-            this.chkIsForCommission.Size = new System.Drawing.Size(75, 20);
-            this.chkIsForCommission.TabIndex = 232;
-            this.chkIsForCommission.Values.Text = "用于佣金";
-            // 
             // UCPaymentRecord
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -637,8 +637,8 @@ namespace RUINORERP.UI.FM
             private Krypton.Toolkit.KryptonTextBox txtTaxTotalAmount;
             private Krypton.Toolkit.KryptonLabel lblUntaxedTotalAmont;
             private Krypton.Toolkit.KryptonTextBox txtUntaxedTotalAmont;
-            private Krypton.Toolkit.KryptonLabel lblDueDate;
-            private Krypton.Toolkit.KryptonDateTimePicker dtpDueDate;
+            private Krypton.Toolkit.KryptonLabel lblPaymentDate;
+            private Krypton.Toolkit.KryptonDateTimePicker dtpPaymentDate;
             private Krypton.Toolkit.KryptonLabel lblEmployee_ID;
             private Krypton.Toolkit.KryptonLabel lblTotalLocalAmount;
             private Krypton.Toolkit.KryptonTextBox txtTotalLocalAmount;

@@ -1,10 +1,9 @@
-﻿
-// **************************************
+﻿// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:22
+// 时间：08/20/2025 16:08:13
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +28,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 对账单主表
+    /// 对账单
     /// </summary>
     public partial class tb_FM_StatementController<T>:BaseController<T> where T : class
     {
@@ -461,7 +460,6 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_Statement>> QueryByNavAsync()
         {
             List<tb_FM_Statement> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Statement>()
-                               .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_fm_account )
                                .Includes(t => t.tb_fm_payeeinfo )
@@ -486,7 +484,6 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FM_Statement>> QueryByNavAsync(Expression<Func<tb_FM_Statement, bool>> exp)
         {
             List<tb_FM_Statement> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Statement>().Where(exp)
-                               .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_customervendor )
                                .Includes(t => t.tb_fm_account )
                                .Includes(t => t.tb_fm_payeeinfo )
@@ -511,7 +508,6 @@ namespace RUINORERP.Business
          public virtual List<tb_FM_Statement> QueryByNav(Expression<Func<tb_FM_Statement, bool>> exp)
         {
             List<tb_FM_Statement> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Statement>().Where(exp)
-                            .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_fm_account )
                             .Includes(t => t.tb_fm_payeeinfo )
@@ -553,13 +549,14 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_FM_Statement entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Statement>().Where(w => w.StatementId == (long)id)
-                             .Includes(t => t.tb_currency )
-                            .Includes(t => t.tb_customervendor )
+                             .Includes(t => t.tb_customervendor )
                             .Includes(t => t.tb_fm_account )
                             .Includes(t => t.tb_fm_payeeinfo )
                             .Includes(t => t.tb_employee )
-                                        .Includes(t => t.tb_FM_StatementDetails )
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_FM_StatementDetails )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

@@ -807,7 +807,7 @@ namespace RUINORERP.UI.BaseForm
         {
             toolStripbtnSubmit.Enabled = status == PrePaymentStatus.草稿;
             toolStripbtnReview.Enabled = status == PrePaymentStatus.待审核;
-            toolStripBtnReverseReview.Enabled = status == PrePaymentStatus.待核销;
+            toolStripBtnReverseReview.Enabled = status == PrePaymentStatus.待核销 || status == PrePaymentStatus.已生效;
 
             // 结案按钮改为"退款"
             toolStripButton结案.Text = "退款";
@@ -1589,6 +1589,8 @@ namespace RUINORERP.UI.BaseForm
 
             //操作前是不是锁定。自己排除
             long pkid = 0;
+            //操作前将数据收集
+            this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             switch (menuItem)
             {
                 case MenuItemEnums.联查:
@@ -2530,22 +2532,22 @@ namespace RUINORERP.UI.BaseForm
                                     //只有有应收记录。挂账都可以手工进行后面的步骤。
                                     //所以这里应收审核过了。说明平台退款了，认为销售退回单中的平台退款已经处理了。
 
-                                    if ( (payable.ApprovalStatus.GetValueOrDefault() == (int)ApprovalStatus.未审核 ) || !payable.ApprovalResults.GetValueOrDefault())
+                                    if ((payable.ApprovalStatus.GetValueOrDefault() == (int)ApprovalStatus.未审核) || !payable.ApprovalResults.GetValueOrDefault())
                                     {
-                                        payable.ApprovalOpinions = "平台退款，货回仓库时，系统自动审核";
+                                        payable.ApprovalOpinions = "【销售退回单】审核时，系统自动审核";
                                         payable.ApprovalStatus = (int)ApprovalStatus.已审核;
                                         payable.ApprovalResults = true;
                                         ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
                                         if (!autoApproval.Succeeded)
                                         {
                                             autoApproval.Succeeded = false;
-                                            autoApproval.ErrorMsg = $"应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                            autoApproval.ErrorMsg = $"【销售退回单】审核时,应收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                         }
                                         else
                                         {
-                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("【销售退回单】审核时，应收款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
                                         }
-                                        
+
                                         //自动退款？
                                         //平台订单 经过运费在 平台退款操作后，退回单状态中已经是 退款状态了。
                                         if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
@@ -2564,6 +2566,10 @@ namespace RUINORERP.UI.BaseForm
                                                     tb_FM_PaymentRecord newPaymentRecord = paymentController.BuildPaymentRecord(receivablePayables);
                                                     newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红冲";
                                                     newPaymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
+                                                    if (!newPaymentRecord.Paytype_ID.HasValue && saleOutRe.Paytype_ID.HasValue)
+                                                    {
+                                                        newPaymentRecord.Paytype_ID = saleOutRe.Paytype_ID;
+                                                    }
                                                     var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(newPaymentRecord, false);
                                                     if (rrs.Succeeded)
                                                     {
@@ -2573,6 +2579,7 @@ namespace RUINORERP.UI.BaseForm
                                                             newPaymentRecord.ApprovalOpinions = "【平台单】已退款，销售退回单审核时，自动审核";
                                                             newPaymentRecord.ApprovalStatus = (int)ApprovalStatus.已审核;
                                                             newPaymentRecord.ApprovalResults = true;
+
                                                             ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(newPaymentRecord);
                                                             if (!rrRecord.Succeeded)
                                                             {
@@ -3199,32 +3206,28 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
-
-            List<C> details = new List<C>();
-            bindingSourceSub.EndEdit();
-            List<C> detailentity = bindingSourceSub.DataSource as List<C>;
-            if (detailentity == null)
-            {
-                return;
-            }
-            string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
-
-            //产品ID有值才算有效值
-            details = detailentity.Where(t => t.GetPropertyValue(detailPKName).ToLong() > 0).ToList();
-
-            EditEntity.SetPropertyValue(typeof(C).Name.ToLower() + "s", details);
-
             //没有经验通过下面先不计算
             if (!Validator(EditEntity))
             {
                 return;
             }
-            if (!Validator<C>(details))
+
+            List<C> details = new List<C>();
+            bindingSourceSub.EndEdit();
+            string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
+            List<C> detailentity = bindingSourceSub.DataSource as List<C>;
+            if (typeof(C).Name.Contains("Detail") && detailentity != null)
             {
-                return;
+                //产品ID有值才算有效值
+                details = detailentity.Where(t => t.GetPropertyValue(detailPKName).ToLong() > 0).ToList();
+                EditEntity.SetPropertyValue(typeof(C).Name.ToLower() + "s", details);
+                if (!Validator<C>(details))
+                {
+                    return;
+                }
             }
 
-            // BaseController<C> ctrDetail = Startup.GetFromFacByName<BaseController<C>>(typeof(C).Name + "Controller");
+
             var result = await MainForm.Instance.AppContext.Db.UpdateableByObject(details).ExecuteCommandAsync();
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
             ReturnResults<T> SaveResult = new ReturnResults<T>();
@@ -3641,6 +3644,7 @@ namespace RUINORERP.UI.BaseForm
             if (pkid == 0)
             {
                 entity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.草稿);
+                BusinessHelper.Instance.InitEntity(entity);
             }
             else
             {

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:34
+// 时间：08/20/2025 16:08:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -77,6 +77,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -91,6 +92,7 @@ namespace RUINORERP.UI
                        entity.CustomerVendor_ID = Int64.Parse(txtCustomerVendor_ID.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.IsExpenseType = Boolean.Parse(txtIsExpenseType.Text);
+                        entity.IsForCommission = Boolean.Parse(txtIsForCommission.Text);
                         entity.IsFromPlatform = Boolean.Parse(txtIsFromPlatform.Text);
                         entity.PlatformOrderNo = txtPlatformOrderNo.Text ;
                        entity.Account_id = Int64.Parse(txtAccount_id.Text);
@@ -144,6 +146,7 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
            DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsExpenseType, chkIsExpenseType, false);
+           DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsForCommission, chkIsForCommission, false);
            DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.PlatformOrderNo, txtPlatformOrderNo, BindDataType4TextBox.Text,false);
           // DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v=>v.XXNAME, cmbAccount_id);

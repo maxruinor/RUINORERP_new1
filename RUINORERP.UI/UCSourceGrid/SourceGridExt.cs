@@ -78,7 +78,7 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="cols"></param>
         /// <param name="colNameExp"></param>
         public static void SetCol_NeverVisible<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> colNameExp, bool NeverVisible = true)
-        {
+            {
             MemberInfo minfo = colNameExp.GetMemberInfo();
             foreach (var item in cols)
             {

@@ -505,10 +505,10 @@ namespace RUINORERP.Business
         /// <param name="entity"></param>
         /// <param name="IsAutoApprove">是否自动审核</param>
         /// <returns></returns>
-        public async virtual Task<ReturnResults<T>> ApprovalAsync(T entity,bool IsAutoApprove = false)
+        public async virtual Task<ReturnResults<T>> ApprovalAsync(T entity, bool IsAutoApprove = false)
         {
-            
-            throw new Exception("子类要重写ApprovalAsync,请联系管理员");
+            return await ApprovalAsync(entity);
+            //throw new Exception("子类要重写ApprovalAsync,请联系管理员");
             ReturnResults<T> result = new ReturnResults<T>();
             await Task.Delay(0); // 模拟异步操作
             return result; // 或者根据实际情况返回值

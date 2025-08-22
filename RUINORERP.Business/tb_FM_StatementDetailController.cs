@@ -1,10 +1,9 @@
-﻿
-// **************************************
+﻿// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:24
+// 时间：08/20/2025 16:08:15
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,7 +28,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 对账单明细（关联应收单） 
+    /// 对账单明细
     /// </summary>
     public partial class tb_FM_StatementDetailController<T>:BaseController<T> where T : class
     {
@@ -554,7 +553,9 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_fm_receivablepayable )
                             .Includes(t => t.tb_fm_statement )
-                                    .FirstAsync();
+                        
+
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:24
+// 时间：08/20/2025 16:08:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -16,7 +16,7 @@ using RUINORERP.Model;
 namespace RUINORERP.IServices
 {
     /// <summary>
-    /// 对账单明细（关联应收单） 
+    /// 对账单明细
     /// </summary>
     public partial interface Itb_FM_StatementDetailServices : IBaseServices<tb_FM_StatementDetail>
     {

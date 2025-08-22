@@ -360,6 +360,8 @@ namespace RUINORERP.Business
                                                .FirstAsync();
                         if (Payable == null)
                         {
+                           
+
                             Payable = await ctrpayable.BuildReceivablePayable(entity);
                             ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
                             if (rmr.Succeeded)

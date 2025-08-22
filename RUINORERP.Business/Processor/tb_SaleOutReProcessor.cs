@@ -50,6 +50,8 @@ namespace RUINORERP.Business.Processor
                        //.AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
                        .ToExpression();//注意 这一句 不能少
             queryFilter.SetQueryField<tb_SaleOutRe>(c => c.ReturnNo);
+            queryFilter.SetQueryField<tb_SaleOutRe>(c => c.RefundStatus);
+            queryFilter.SetQueryField<tb_SaleOutRe>(c => c.Paytype_ID);
             queryFilter.SetQueryField<tb_SaleOut, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambda);
 
             //可以根据关联外键自动加载条件，条件用公共虚方法

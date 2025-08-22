@@ -31,6 +31,7 @@ namespace RUINORERP.UI.Report
 
         private void RptPreviewForm_Load(object sender, EventArgs e)
         {
+           
             //pReport = new FastReport.Report();   //实例化一个Report报表
             // pReport.RegisterData(MainList, "Main");
             // pReport.RegisterData(SubList, "Sub");
@@ -57,17 +58,21 @@ namespace RUINORERP.UI.Report
             //  }
             ////  MyReport.Load(reportFile);  //载入报表文件
             ///
-      
+
+
+
             MyReport.Preview = previewControl1; //设置报表的Preview控件（这里的previewControl1就是我们之前拖进去的那个）
-            
+
             MyReport.ShowPrepared();  //显示
+
+           
         }
-  
+
 
 
         private void 导出PDFToolStripMenuItem_Click(object sender, EventArgs e)
         {
-           
+
         }
     }
 }

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:56:54
+// 时间：08/20/2025 16:08:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 币别资料表-备份第一行数据后删除重建 如果不行则直接修改字段删除字段
+    /// 币别资料表
     /// </summary>
     [Serializable()]
     [Description("币别资料表")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("币别资料表-备份第一行数据后删除重建 如果不行则直接修改字段删除字段tb_Currency" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("币别资料表tb_Currency" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 
@@ -70,7 +70,7 @@ namespace RUINORERP.Model
         /// 币别代码
         /// </summary>
         [AdvQueryAttribute(ColName = "CurrencyCode",ColDesc = "币别代码")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CurrencyCode" ,Length=10,IsNullable = true,ColumnDescription = "币别代码" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CurrencyCode" ,Length=50,IsNullable = true,ColumnDescription = "币别代码" )]
         public string CurrencyCode
         { 
             get{return _CurrencyCode;}
@@ -98,7 +98,7 @@ namespace RUINORERP.Model
         /// 币别符号
         /// </summary>
         [AdvQueryAttribute(ColName = "CurrencySymbol",ColDesc = "币别符号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CurrencySymbol" ,Length=10,IsNullable = true,ColumnDescription = "币别符号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "CurrencySymbol" ,Length=50,IsNullable = true,ColumnDescription = "币别符号" )]
         public string CurrencySymbol
         { 
             get{return _CurrencySymbol;}
@@ -134,8 +134,6 @@ namespace RUINORERP.Model
             SetProperty(ref _Is_enabled, value);
                         }
         }
-
-       
 
         private DateTime? _Created_at;
         /// <summary>
@@ -199,24 +197,27 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Currency_ID))]
-        public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
-        //tb_FM_Account.Currency_ID)
-        //Currency_ID.FK_ACCOUNTS_REF_CURRENCY)
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecord.Currency_ID))]
+        public virtual List<tb_FM_PaymentRecord> tb_FM_PaymentRecords { get; set; }
+        //tb_FM_PaymentRecord.Currency_ID)
+        //Currency_ID.FK_FM_PAYMENTRECORD_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.Currency_ID))]
-        public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }
-        //tb_FM_ExpenseClaim.Currency_ID)
-        //Currency_ID.FK_EXPENSECLAIM_REF_CURRENCY)
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ReceivablePayable.Currency_ID))]
+        public virtual List<tb_FM_ReceivablePayable> tb_FM_ReceivablePayables { get; set; }
+        //tb_FM_ReceivablePayable.Currency_ID)
+        //Currency_ID.FK_FM_RECEIVABLEPAYABLE_REF_CURRENCY)
         //tb_Currency.Currency_ID)
 
-    
-         
-
-       
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_StatementDetail.Currency_ID))]
+        public virtual List<tb_FM_StatementDetail> tb_FM_StatementDetails { get; set; }
+        //tb_FM_StatementDetail.Currency_ID)
+        //Currency_ID.FK_FM_STATEMENTDETAIL_REF_CURRENCY)
+        //tb_Currency.Currency_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
@@ -228,12 +229,83 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentRecordDetail.Currency_ID))]
+        public virtual List<tb_FM_PaymentRecordDetail> tb_FM_PaymentRecordDetails { get; set; }
+        //tb_FM_PaymentRecordDetail.Currency_ID)
+        //Currency_ID.FK_FM_PaymentRecordDetail_REF_CURRENCY)
+        //tb_Currency.Currency_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_Account.Currency_ID))]
+        public virtual List<tb_FM_Account> tb_FM_Accounts { get; set; }
+        //tb_FM_Account.Currency_ID)
+        //Currency_ID.FK_ACCOUNTS_REF_CURRENCY)
+        //tb_Currency.Currency_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentApplication.Currency_ID))]
         public virtual List<tb_FM_PaymentApplication> tb_FM_PaymentApplications { get; set; }
         //tb_FM_PaymentApplication.Currency_ID)
         //Currency_ID.FK_PAYMENTAPPLICATION_REF_CURRENCY)
         //tb_Currency.Currency_ID)
- 
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_GeneralLedger.Currency_ID))]
+        public virtual List<tb_FM_GeneralLedger> tb_FM_GeneralLedgers { get; set; }
+        //tb_FM_GeneralLedger.Currency_ID)
+        //Currency_ID.FK_FM_GE_REFERENCEDGER_TB_CURRENCY)
+        //tb_Currency.Currency_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_ExpenseClaim.Currency_ID))]
+        public virtual List<tb_FM_ExpenseClaim> tb_FM_ExpenseClaims { get; set; }
+        //tb_FM_ExpenseClaim.Currency_ID)
+        //Currency_ID.FK_EXPENSECLAIM_REF_CURRENCY)
+        //tb_Currency.Currency_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PaymentSettlement.Currency_ID))]
+        public virtual List<tb_FM_PaymentSettlement> tb_FM_PaymentSettlements { get; set; }
+        //tb_FM_PaymentSettlement.Currency_ID)
+        //Currency_ID.FK_FM_PaymentSettlement_REF_CURRENCY)
+        //tb_Currency.Currency_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_CurrencyExchangeRate.BaseCurrencyID))]
+        public virtual List<tb_CurrencyExchangeRate> tb_CurrencyExchangeRates { get; set; }
+        //tb_CurrencyExchangeRate.Currency_ID)
+        //Currency_ID.FK_CURRENCYEXCHANGERATE_REFERENCE_TB_CURRENCYBase)
+        //tb_Currency.BaseCurrencyID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_CurrencyExchangeRate.TargetCurrencyID))]
+        public virtual List<tb_CurrencyExchangeRate> tb_CurrencyExchangeRates_Target { get; set; }
+        //tb_CurrencyExchangeRate.Currency_ID)
+        //Currency_ID.FK_CURRENCYEXCHANGERATE_REFERENCE_TB_CURRENCYTarget)
+        //tb_Currency.TargetCurrencyID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PriceAdjustment.Currency_ID))]
+        public virtual List<tb_FM_PriceAdjustment> tb_FM_PriceAdjustments { get; set; }
+        //tb_FM_PriceAdjustment.Currency_ID)
+        //Currency_ID.FK_PRICEADJUSTMENT_REF_CURRENCY)
+        //tb_Currency.Currency_ID)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FM_PreReceivedPayment.Currency_ID))]
+        public virtual List<tb_FM_PreReceivedPayment> tb_FM_PreReceivedPayments { get; set; }
+        //tb_FM_PreReceivedPayment.Currency_ID)
+        //Currency_ID.FK_FM_PRERECEIVEDPAYMENT_REF_CURRENCY)
+        //tb_Currency.Currency_ID)
 
 
         #endregion
@@ -251,6 +323,10 @@ return rs;
 
 
 
+
+
+       
+        
 
         public override object Clone()
         {

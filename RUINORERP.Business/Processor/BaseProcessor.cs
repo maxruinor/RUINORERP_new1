@@ -35,6 +35,11 @@ namespace RUINORERP.Business.Processor
             _unitOfWorkManage = unitOfWorkManage;
         }
 
+        /// <summary>
+        /// 如果查询条件要根据菜单来判断，则要赋值
+        /// </summary>
+        public tb_MenuInfo CurMenuInfo { get; set; }
+
 
         public virtual QueryFilter GetQueryFilter()
         {

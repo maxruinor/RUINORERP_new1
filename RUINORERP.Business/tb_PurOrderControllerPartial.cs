@@ -509,7 +509,7 @@ namespace RUINORERP.Business
                     #region  预付款单处理
 
                     var PrePaymentQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                        .Where(p => p.SourceBillId == entity.SOrder_ID && p.SourceBizType == (int)BizType.采购订单 && p.Currency_ID == entity.Currency_ID);
+                        .Where(p => p.SourceBillId == entity.PurOrder_ID && p.SourceBizType == (int)BizType.采购订单 && p.Currency_ID == entity.Currency_ID);
                     var PrePaymentList = await PrePaymentQueryable.ToListAsync();
                     if (PrePaymentList != null && PrePaymentList.Count > 0)
                     {

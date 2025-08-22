@@ -81,6 +81,39 @@ namespace RUINORERP.UI.FM
                         toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
                     }
                 }
+
+                //如果有出库，则查应收
+                if (priceAdjustment.DataStatus >= (int)DataStatus.确认)
+                {
+                    var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                    .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
+                                                                    && c.CustomerVendor_ID == priceAdjustment.CustomerVendor_ID
+                                                                    && c.SourceBillId == priceAdjustment.AdjustId)
+                                                                    .ToListAsync();
+                    foreach (var item in receivablePayables)
+                    {
+                        var rqpara = new Model.CommonModel.RelatedQueryParameter();
+                        if (PaymentType==ReceivePaymentType.收款)
+                        {
+                            rqpara.bizType = BizType.应收款单;
+                        }
+                        else
+                        {
+                            rqpara.bizType = BizType.应付款单;
+                        }
+          
+                        rqpara.billId = item.ARAPId;
+                        ToolStripMenuItem RelatedMenuItemPara = new ToolStripMenuItem();
+                        RelatedMenuItemPara.Name = $"{rqpara.billId}";
+                        RelatedMenuItemPara.Tag = rqpara;
+                        RelatedMenuItemPara.Text = $"{rqpara.bizType}:{item.ARAPNo}";
+                        RelatedMenuItemPara.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemPara);
+                        }
+                    }
+                }
             }
          await   base.LoadRelatedDataToDropDownItemsAsync();
         }

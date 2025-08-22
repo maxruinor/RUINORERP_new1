@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:36
+// 时间：08/20/2025 16:08:12
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,9 +24,9 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 对账单主表数据查询
+    /// 对账单数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_FM_StatementQuery), "对账单主表数据查询", true)]
+     [MenuAttribute(typeof(tb_FM_StatementQuery), "对账单数据查询", true)]
     public partial class tb_FM_StatementQuery:UserControl
     {
      public tb_FM_StatementQuery() {
@@ -93,6 +93,22 @@ namespace RUINORERP.UI
         
     
         
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
 
   
    
@@ -104,7 +120,6 @@ namespace RUINORERP.UI
 
         public void LoadDroplistData()
         {
-          // DataBindingHelper.InitDataToCmb<tb_Currency>(k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
           // DataBindingHelper.InitDataToCmb<tb_CustomerVendor>(k => k.CustomerVendor_ID, v=>v.XXNAME, cmbCustomerVendor_ID);
           // DataBindingHelper.InitDataToCmb<tb_FM_Account>(k => k.Account_id, v=>v.XXNAME, cmbAccount_id);
           // DataBindingHelper.InitDataToCmb<tb_FM_PayeeInfo>(k => k.PayeeInfoID, v=>v.XXNAME, cmbPayeeInfoID);

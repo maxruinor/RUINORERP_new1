@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：02/19/2025 22:56:53
+// 时间：08/20/2025 16:07:59
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -30,7 +30,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 币别资料表-备份第一行数据后删除重建 如果不行则直接修改字段删除字段
+    /// 币别资料表
     /// </summary>
     public partial class tb_CurrencyProcessor:BaseProcessor 
     {

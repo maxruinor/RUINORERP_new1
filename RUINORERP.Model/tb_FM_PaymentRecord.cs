@@ -167,13 +167,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool? _IsFromPlatform;
+        private bool _IsFromPlatform=false;
         /// <summary>
         /// 平台单
         /// </summary>
         [AdvQueryAttribute(ColName = "IsFromPlatform",ColDesc = "平台单")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsFromPlatform" ,IsNullable = true,ColumnDescription = "平台单" )]
-        public bool? IsFromPlatform
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsFromPlatform" ,IsNullable = false,ColumnDescription = "平台单" )]
+        public bool IsFromPlatform
         { 
             get{return _IsFromPlatform;}
             set{
@@ -311,13 +311,13 @@ namespace RUINORERP.Model
             SetProperty(ref _ReferenceNo, value);
                         }
         }
-        private bool? _IsForCommission;
+        private bool _IsForCommission=false;
         /// <summary>
         /// 用于佣金
         /// </summary>
         [AdvQueryAttribute(ColName = "IsForCommission", ColDesc = "用于佣金")]
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsForCommission", IsNullable = true, ColumnDescription = "用于佣金")]
-        public bool? IsForCommission
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "IsForCommission", IsNullable = false, ColumnDescription = "用于佣金")]
+        public bool IsForCommission
         {
             get { return _IsForCommission; }
             set

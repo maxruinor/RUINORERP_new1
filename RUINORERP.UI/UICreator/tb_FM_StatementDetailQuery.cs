@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:36
+// 时间：08/20/2025 16:08:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -24,18 +24,14 @@ using RUINORERP.UI.Common;
 namespace RUINORERP.UI
 {
     /// <summary>
-    /// 对账单明细（关联应收单） 数据查询
+    /// 对账单明细数据查询
     /// </summary>
-     [MenuAttribute(typeof(tb_FM_StatementDetailQuery), "对账单明细（关联应收单） 数据查询", true)]
+     [MenuAttribute(typeof(tb_FM_StatementDetailQuery), "对账单明细数据查询", true)]
     public partial class tb_FM_StatementDetailQuery:UserControl
     {
      public tb_FM_StatementDetailQuery() {
      
          
-        
-    
-        
-    
                 
         //==============
 
@@ -47,6 +43,22 @@ namespace RUINORERP.UI
        //===============
        
           
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
     
         
     

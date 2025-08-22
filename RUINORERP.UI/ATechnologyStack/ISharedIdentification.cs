@@ -24,13 +24,13 @@ namespace RUINORERP.UI.ATechnologyStack
     public enum SharedFlag
     {
         /// <summary>
-        /// 财务模块中 用于收款类型
+        /// 财务模块中 用于收款类型,收入
         /// </summary>
         [Description("收款")]
         Flag1 = 1,
 
         /// <summary>
-        /// 财务模块中 用于付款类型
+        /// 财务模块中 用于付款类型,支出
         /// </summary>
         [Description("付款")]
         Flag2 = 2,

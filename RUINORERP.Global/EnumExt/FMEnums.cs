@@ -23,9 +23,9 @@ namespace RUINORERP.Global.EnumExt
         已作废 = 6,     // 流程终止
     }
     /// <summary>
-    /// 对账单明细的核销状态
+    /// 对账单明细中的应收付核销状态
     /// </summary>
-    public enum ReconciliationWriteOffStatus
+    public enum ARAPWriteOffStatus
     {
         [Description("待核销")]
         PendingWriteOff = 1,  // 已纳入对账单，尚未核销任何金额
@@ -74,8 +74,15 @@ namespace RUINORERP.Global.EnumExt
     /// </summary>
     public enum ProfitLossDirection
     {
+        /// <summary>
+        /// 亏损（支出）
+        /// </summary>
         [Description("亏损（支出）")]
         Loss = 1,
+
+        /// <summary>
+        /// 盈余（收入）
+        /// </summary>
         [Description("盈余（收入）")]
         Surplus = 2
     }
@@ -90,7 +97,7 @@ namespace RUINORERP.Global.EnumExt
         [Description("待审核")]
         待审核 = 2,
 
-        [Description("已审核")]
+        [Description("已生效")]
         已生效 = 3,  // 审核通过后状态
 
         [Description("待核销")]

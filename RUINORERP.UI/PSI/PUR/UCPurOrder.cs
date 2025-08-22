@@ -814,6 +814,10 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     EditEntity.Deposit = EditEntity.TotalAmount;
                 }
+                if (EditEntity.PayStatus == (int)PayStatus.未付款)
+                {
+                    EditEntity.Deposit = 0;
+                }
 
             }
             catch (Exception ex)

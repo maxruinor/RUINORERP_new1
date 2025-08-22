@@ -30,6 +30,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.Security;
 using AutoMapper;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -472,7 +473,7 @@ namespace RUINORERP.Business
 
                 _unitOfWorkManage.RollbackTran();
                 rs.ErrorMsg = ex.Message;
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
 
                 return rs;
             }

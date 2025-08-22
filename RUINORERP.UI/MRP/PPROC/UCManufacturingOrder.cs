@@ -90,7 +90,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
             }
-         await   base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         internal override void LoadDataToUI(object Entity)
@@ -264,13 +264,13 @@ namespace RUINORERP.UI.MRP.MP
                             entity.TotalManuFee = entity.tb_bom_s.TotalSelfManuCost / entity.tb_bom_s.OutputQty * entity.ManufacturingQty;
                             entity.CustomerVendor_ID_Out = null;
                         }
-                        entity.TotalProductionCost = entity.ApportionedCost * entity.TotalManuFee + entity.TotalMaterialCost;
+                        entity.TotalProductionCost = entity.ApportionedCost + entity.TotalManuFee + entity.TotalMaterialCost;
                     }
                 }
                 //如果是销售订单引入变化则加载明细及相关数据
                 if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.PDID.HasValue)
                 {
-                    if(entity.PDID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.PDID))
+                    if (entity.PDID > 0 && s2.PropertyName == entity.GetPropertyName<tb_ManufacturingOrder>(c => c.PDID))
                     {
                         //因为太复杂。目前暂时只能由需求分析那边生成
                         //LoadChildItems(entity.PDID.Value);
@@ -444,7 +444,7 @@ namespace RUINORERP.UI.MRP.MP
             listCols.SetCol_ReadOnly<tb_ManufacturingOrderDetail>(c => c.WastageQty);
             listCols.SetCol_ReadOnly<tb_ManufacturingOrderDetail>(c => c.CurrentIinventory);
 
-         
+
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.ActualSentQty);
@@ -454,6 +454,7 @@ namespace RUINORERP.UI.MRP.MP
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.WastageQty);
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.CurrentIinventory);
             listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.SubtotalUnitCost);
+            listCols.SetCol_Summary<tb_ManufacturingOrderDetail>(c => c.UnitCost);
 
             //制令单前期是计划性的。以计划的生产数量为标准去算成本这些
             listCols.SetCol_Formula<tb_ManufacturingOrderDetail>((a, b) => a.ShouldSendQty * b.UnitCost, c => c.SubtotalUnitCost);
@@ -502,7 +503,7 @@ namespace RUINORERP.UI.MRP.MP
             sgh.InitGrid(grid1, sgd, true, nameof(tb_ManufacturingOrderDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnLoadMultiRowData += Sgh_OnLoadMultiRowData;
-            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo,this);
+            UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
 
@@ -517,7 +518,7 @@ namespace RUINORERP.UI.MRP.MP
             if (RowDetails != null)
             {
                 List<tb_ManufacturingOrderDetail> details = new List<tb_ManufacturingOrderDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_ManufacturingOrderDetail Detail = MainForm.Instance.mapper.Map<tb_ManufacturingOrderDetail>(item);
@@ -645,6 +646,46 @@ namespace RUINORERP.UI.MRP.MP
                     if (EditEntity.tb_FinishedGoodsInvs != null && EditEntity.tb_FinishedGoodsInvs.Count > 0)
                     {
                         MessageBox.Show("当前制令单已经存在缴库数据，无法修改保存。请联系仓库处理。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
+
+                if (NeedValidated)
+                {
+                    // 1. 配方单位成本
+                    decimal bomUnitCost = EditEntity.IsOutSourced
+                        ? EditEntity.tb_bom_s.OutProductionAllCosts
+                        : EditEntity.tb_bom_s.SelfApportionedCost;
+
+                    // 2. 制令单实际单位成本
+                    decimal moUnitCost = EditEntity.ManufacturingQty == 0
+                        ? 0
+                        : EditEntity.TotalProductionCost / EditEntity.ManufacturingQty;
+
+                    // 3. 差异阈值（10%）
+                    const decimal tolerance = 0.1m;
+                    const decimal Bigtolerance = 0.5m;
+                    decimal diffRatio = bomUnitCost == 0
+                        ? (moUnitCost == 0 ? 0 : 1)   // 避免除以 0
+                        : Math.Abs(moUnitCost - bomUnitCost) / bomUnitCost;
+
+                    // 4. 差异过大，提示并阻断
+                    if (diffRatio > tolerance)
+                    {
+                        string msg = $"产出母件的生产单位成本({moUnitCost:N2})与配方成本({bomUnitCost:N2})差异过大（>{tolerance:P0}），\n" +
+                                     "是否为定制单？确定继续吗？";
+                        if (MessageBox.Show(msg, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,MessageBoxDefaultButton.Button2) == DialogResult.No)
+                        {
+                            return false;
+                        }
+
+                    }
+                    // 4. 差异过大，一半了，提示并阻断
+                    if (diffRatio > Bigtolerance)
+                    {
+                        string msg = $"产出母件的生产单位成本({moUnitCost:N2})与配方成本({bomUnitCost:N2})差异过大（>{tolerance:P0}），\n" +
+                                     "是否为定制单？请检查数据后重试！";
+                        System.Windows.Forms.MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return false;
                     }
                 }

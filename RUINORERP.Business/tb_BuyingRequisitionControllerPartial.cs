@@ -27,6 +27,7 @@ using RUINORERP.Global;
 using SqlSugar;
 using RUINORERP.Business.Security;
 using RUINORERP.Extensions;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -133,7 +134,7 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 rmrs.ErrorMsg = ex.Message;
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 return rmrs;
             }
 

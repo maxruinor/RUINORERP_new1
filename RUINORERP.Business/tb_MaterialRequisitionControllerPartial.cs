@@ -29,6 +29,7 @@ using RUINORERP.Global;
 using System.Windows.Forms;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -84,7 +85,6 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
                 rs.ErrorMsg = ex.Message;
@@ -404,7 +404,7 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 return rrs;
             }
 
@@ -610,7 +610,7 @@ namespace RUINORERP.Business
             {
 
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
                 return rs;

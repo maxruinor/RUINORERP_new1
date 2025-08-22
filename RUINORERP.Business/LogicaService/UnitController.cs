@@ -113,7 +113,7 @@ namespace RUINORERP.Business.LogicaService
                 {
 
                     _unitOfWorkManage.RollbackTran();
-                    _logger.Error(ex, "事务回滚" + ex.Message);
+                    _logger.Error(ex);
                 }
             }
             else

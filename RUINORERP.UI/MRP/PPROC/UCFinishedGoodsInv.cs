@@ -192,7 +192,7 @@ namespace RUINORERP.UI.PSI.PUR
             }
 
             //如果属性变化 则状态为修改
-            entity.PropertyChanged += (sender, s2) =>
+            entity.PropertyChanged += async (sender, s2) =>
             {
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
@@ -204,7 +204,7 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     if (entity.MOID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FinishedGoodsInv>(c => c.MOID))
                     {
-                        LoadSubLines(entity.MOID);
+                      await  LoadSubLines(entity.MOID);
                     }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FinishedGoodsInv>(c => c.DepartmentID))

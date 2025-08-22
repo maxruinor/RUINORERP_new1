@@ -27,6 +27,7 @@ using System.Linq;
 using RUINORERP.Global;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.BizMapperService;
 
 
 namespace RUINORERP.Business
@@ -117,7 +118,7 @@ namespace RUINORERP.Business
             {
                
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rsms.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rsms;
             }
@@ -217,8 +218,9 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _logger.Error(ex);
+                
                 _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 //  _logger.Error(approvalEntity.bizName + "事务回滚");
                 return rs;
             }

@@ -98,7 +98,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
             }
-           await base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         /// <summary>
@@ -618,8 +618,8 @@ namespace RUINORERP.UI.MRP.MP
             //必须在定下后面
             listColsPur.SetCol_Formula<tb_PurGoodsRecommendDetail>((a) => a.RequirementQty * 1, c => c.RequirementQty);
             listColsPur.SetCol_Summary<tb_PurGoodsRecommendDetail>(c => c.RequirementQty);
-
-
+            listColsPur.SetCol_Summary<tb_PurGoodsRecommendDetail>(c => c.ActualRequiredQty);
+            listColsPur.SetCol_Summary<tb_PurGoodsRecommendDetail>(c => c.RecommendQty);
 
             //if (CurMenuInfo.tb_P4Fields != null)
             //{
@@ -1452,49 +1452,83 @@ protected async override Task<ApprovalEntity> ReReview()
 
         List<tb_ProduceGoodsRecommendDetail> MakingListitems = new List<tb_ProduceGoodsRecommendDetail>();
 
-
-        private void btnAnalysis_Click(object sender, EventArgs e)
+        private async void btnAnalysis_Click(object sender, EventArgs e)
         {
-            if (EditEntity == null)
+            if (EditEntity == null || MainForm.Instance?.AppContext?.Db == null)
             {
                 return;
             }
-
             //库存不足不能修改。只是显示，
             kryptonTreeGridViewStockLess.ReadOnly = true;
 
-
-            if (sgdTarget.BindingSourceLines.DataSource is List<tb_ProductionDemandTargetDetail> _targetDetails)
+            if (sgdTarget.BindingSourceLines.DataSource is List<tb_ProductionDemandTargetDetail> targetDetails)
             {
-                _targetDetails = _targetDetails.Where(c => c.ProdDetailID > 0).ToList();
+                var filteredDetails = targetDetails.Where(c => c.ProdDetailID > 0).ToList();
+                var productIds = filteredDetails.Select(c => c.ProdDetailID).Distinct().ToList();
 
-                //目标中的产品  与 选择的配方的所属
-                List<long> longids = new List<long>();
-                foreach (var item in _targetDetails)
+                var boms = await MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
+                    .Includes(c => c.tb_proddetail, d => d.tb_prod)
+                    .Where(c => productIds.Contains(c.ProdDetailID))
+                    .ToListAsync();
+
+                var invalidProducts = filteredDetails
+                    .Where(item => !boms.Any(c => c.ProdDetailID == item.ProdDetailID))
+                    .Select(item => item.ProdDetailID)
+                    .Distinct()
+                    .ToList();
+
+                if (invalidProducts.Any())
                 {
-                    if (!longids.Contains(item.ProdDetailID))
-                    {
-                        longids.Add(item.ProdDetailID);
-                    }
-                }
-
-                List<tb_BOM_S> boms = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
-                       .Includes(c => c.tb_proddetail, d => d.tb_prod)
-                          .Where(c => longids.ToArray().Contains(c.ProdDetailID)).ToList();
-
-                foreach (var item in _targetDetails)
-                {
-                    if (!boms.Any(c => c.ProdDetailID == item.ProdDetailID))
-                    {
-                        //当前目标产品的配方选择不正确。
-                        MessageBox.Show($"当前目标产品的配方选择不正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
+                    MessageBox.Show("当前目标产品的配方选择不正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
 
-
             AnalysisTargetItems();
         }
+
+        //private void btnAnalysis_Click(object sender, EventArgs e)
+        //{
+        //    if (EditEntity == null || MainForm.Instance?.AppContext?.Db == null)
+        //    {
+        //        return;
+        //    }
+
+        //    //库存不足不能修改。只是显示，
+        //    kryptonTreeGridViewStockLess.ReadOnly = true;
+
+
+        //    if (sgdTarget.BindingSourceLines.DataSource is List<tb_ProductionDemandTargetDetail> _targetDetails)
+        //    {
+        //        var filteredDetails = _targetDetails.Where(c => c.ProdDetailID > 0).ToList();
+        //        //目标中的产品  与 选择的配方的所属
+        //        var productIds = filteredDetails.Select(c => c.ProdDetailID).Distinct().ToList();
+
+        //        List<long> longids = new List<long>();
+        //        foreach (var item in _targetDetails)
+        //        {
+        //            if (!longids.Contains(item.ProdDetailID))
+        //            {
+        //                longids.Add(item.ProdDetailID);
+        //            }
+        //        }
+
+        //        List<tb_BOM_S> boms = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
+        //               .Includes(c => c.tb_proddetail, d => d.tb_prod)
+        //                  .Where(c => longids.ToArray().Contains(c.ProdDetailID)).ToList();
+
+        //        foreach (var item in _targetDetails)
+        //        {
+        //            if (!boms.Any(c => c.ProdDetailID == item.ProdDetailID))
+        //            {
+        //                //当前目标产品的配方选择不正确。
+        //                MessageBox.Show($"当前目标产品的配方选择不正确。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        //            }
+        //        }
+        //    }
+
+
+        //    AnalysisTargetItems();
+        //}
 
         /// <summary>
         /// 生成库存不足的列表。用树形式显示
@@ -1848,7 +1882,7 @@ protected async override Task<ApprovalEntity> ReReview()
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void btn产生建议_Click(object sender, EventArgs e)
+        private async void btn产生建议_Click(object sender, EventArgs e)
         {
             //自建品建议也以树形结构展示,并且都是由库存不足明细转换过来的。
             if (EditEntity == null)
@@ -1860,7 +1894,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
 
             //采购建议 累计了相同的物料,
-            List<tb_PurGoodsRecommendDetail> tb_PurGoodsRecommendDetails = ctr.GeneratePurSuggestions(EditEntity, chkPurAllItems.Checked);
+            List<tb_PurGoodsRecommendDetail> tb_PurGoodsRecommendDetails = await ctr.GeneratePurSuggestions(EditEntity, chkPurAllItems.Checked);
 
             tb_PurGoodsRecommendDetails.Sort((p1, p2) =>
             {
@@ -1880,7 +1914,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
 
             //生成自制品建议
-            GenerateProductionSuggestionsNew();
+            await GenerateProductionSuggestionsNew();
 
             btnCreateProduction.Enabled = true;
             btnCreatePurRequisition.Enabled = true;
@@ -1958,6 +1992,7 @@ protected async override Task<ApprovalEntity> ReReview()
         /// <summary>
         /// 通过BOM找到不足的库存后。算出要制作的数量 。比方 如果PCBA仓库有的。制的数量少1，则要仓库发出1，一定会在制令单中体现
         /// 由库存不足数据组成
+        /// 自制品建议
         /// </summary>
         private async Task GenerateProductionSuggestionsNew()
         {
@@ -1973,9 +2008,7 @@ protected async override Task<ApprovalEntity> ReReview()
 
             foreach (tb_ProductionDemandDetail target in EditEntity.tb_ProductionDemandDetails.Where(c => c.ParentId == 0).ToList())
             {
-                tb_ProduceGoodsRecommendDetail MakingProd = new tb_ProduceGoodsRecommendDetail();
-
-                MakingProd = MainForm.Instance.mapper.Map<tb_ProduceGoodsRecommendDetail>(target);
+                tb_ProduceGoodsRecommendDetail MakingProd = MainForm.Instance.mapper.Map<tb_ProduceGoodsRecommendDetail>(target);
                 //要用原始的ID及父ID
                 //long sid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
                 MakingProd.ID = target.ID;
@@ -1997,6 +2030,13 @@ protected async override Task<ApprovalEntity> ReReview()
                 //实际以他是否有bom为标记找下级需要的材料
                 if (MakingProd.BOM_ID.HasValue)
                 {
+                    //通过配方算出单位成本
+                    if (MakingProd.tb_bom_s == null)
+                    {
+                        MakingProd.tb_bom_s = await MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>().Where(c => c.BOM_ID == MakingProd.BOM_ID.Value).FirstAsync();
+                        MakingProd.UnitCost = Math.Max(MakingProd.tb_bom_s.OutProductionAllCosts, MakingProd.tb_bom_s.SelfProductionAllCosts);
+                    }
+
                     var nextlist = await GetNextBomToMakingItemNew(target.NeedQuantity, target.RequirementDate, MakingProd.ID.Value, target.BOM_ID.Value, AlreadyReducedQtyList, target.Location_ID);
                     MakingProditems.AddRange(nextlist);
                 }

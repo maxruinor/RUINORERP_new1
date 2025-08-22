@@ -114,7 +114,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, RUINORERP.Business.BizMapperService.EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
@@ -260,7 +260,7 @@ namespace RUINORERP.Business
             {
 
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, RUINORERP.Business.BizMapperService.EntityDataExtractor.ExtractDataContent(entity));
                 ApprovalResult.ErrorMsg += ex.Message;
                 return ApprovalResult;
             }

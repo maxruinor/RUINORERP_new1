@@ -31,6 +31,7 @@ using RUINORERP.Business.CommService;
 using System.Collections;
 using static StackExchange.Redis.Role;
 using System.Text;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -249,7 +250,7 @@ namespace RUINORERP.Business
             {
 
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.Succeeded = false;
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rs;
@@ -399,7 +400,7 @@ namespace RUINORERP.Business
 
                 _unitOfWorkManage.RollbackTran();
                 rs.Succeeded = false;
-                _logger.Error(ex);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rs;
             }

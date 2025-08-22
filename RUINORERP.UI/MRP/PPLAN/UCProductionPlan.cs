@@ -76,7 +76,7 @@ namespace RUINORERP.UI.MRP.MP
                     foreach (var item in ProductionPlan.tb_ProductionDemands)
                     {
                         RelatedQueryParameter rqp = new RelatedQueryParameter();
-                        rqp.bizType = BizType.生产计划单;
+                        rqp.bizType = BizType.需求分析;
                         rqp.billId = item.PDID;
                         ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
                         RelatedMenuItem.Name = $"{rqp.billId}";

@@ -459,7 +459,9 @@ namespace RUINORERP.Business
                 }
 
                 if (PriceRecords.Count > 0)
-                {
+                { 
+                     
+                    // 更新价格记录表  是不是 批量更新  或 批量插入？
                     DbHelper<tb_PriceRecord> PriceRecorddbHelper = _appContext.GetRequiredService<DbHelper<tb_PriceRecord>>();
                     var PriceRecordCounter = await PriceRecorddbHelper.BaseDefaultAddElseUpdateAsync(PriceRecords);
                     if (PriceRecordCounter == 0)

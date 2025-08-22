@@ -27,6 +27,7 @@ using System.Diagnostics;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using RUINORERP.Business.CommService;
 using System.Windows.Forms;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -118,7 +119,7 @@ namespace RUINORERP.Business
             {
 
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rmrs;
             }
@@ -308,7 +309,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 BizTypeMapper mapper = new BizTypeMapper();
                 rmrs.ErrorMsg = mapper.GetBizType(typeof(tb_ProductionDemand)).ToString() + "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
@@ -688,6 +689,9 @@ namespace RUINORERP.Business
                 .Where(w => w.Location_ID == Location_ID)
                 .Sum(c => c.NotOutQty);
 
+            NewDetail.NotOutQty = NotOutQty;
+            NewDetail.Sale_Qty = Sale_Qty;
+
             //这几个指标要优化
             NewDetail.InTransitInventory = detail.tb_proddetail.tb_Inventories
                 .Where(w => w.Location_ID == Location_ID)
@@ -924,7 +928,7 @@ namespace RUINORERP.Business
         /// 生产采购建议,将缺少数量大于0的所有物料加载
         /// 采购建议 累计了相同的物料
         /// </summary>
-        public List<tb_PurGoodsRecommendDetail> GeneratePurSuggestions(tb_ProductionDemand EditEntity, bool PurAllItem)
+        public async Task<List<tb_PurGoodsRecommendDetail>> GeneratePurSuggestions(tb_ProductionDemand EditEntity, bool PurAllItem)
         {
             List<tb_ProductionDemandDetail> demandDetails = EditEntity.tb_ProductionDemandDetails;
             //要排除有BOM的，这些是要生产的。只要最基本的物料本身
@@ -965,48 +969,55 @@ namespace RUINORERP.Business
 
             //分组统计 采购建议 累计了相同的物料
             //这里的需求日期和为库位。来自于分析目标中行数据。目前认为是固定的一样的。
+            //日期不添加分组了。第一，可能精确的分秒不同，第二 以采购合并为利。需求时间差一点也不大。小工厂没有这么细。
             var groupedPurDetails = PurDetails
-                .GroupBy(pd => new { pd.ProdDetailID, pd.Location_ID, pd.RequirementDate }) // 根据指定的属性分组
+                .GroupBy(pd => new { pd.ProdDetailID, pd.Location_ID }) // 根据指定的属性分组
                 .Select(group => new
                 {
                     ProdDetailID = group.Key.ProdDetailID,       // 分组键的产品ID
                     Location_ID = group.Key.Location_ID,         // 分组键的库位ID
-                    RequirementDate = group.Key.RequirementDate, // 分组键的需求日期
-                    // 累加数量，这里以ActualRequiredQty为例，你可以根据需要选择其他属性
+                                                                 // RequirementDate = group.Key.RequirementDate, // 分组键的需求日期
+                                                                 // 累加数量，这里以ActualRequiredQty为例，你可以根据需要选择其他属性
                     TotalActualRequiredQty = group.Sum(pd => pd.ActualRequiredQty),
                     TotalRecommendQty = group.Sum(pd => pd.RecommendQty),
                     TotalRequirementQty = group.Sum(pd => pd.RequirementQty),
                 })
                 .ToList(); // 转换为List
 
+            var prodIds = groupedPurDetails.Select(g => g.ProdDetailID).Distinct().ToList();
+
+            var records = await _appContext.Db.Queryable<tb_PriceRecord>()
+                    .Where(c => prodIds.Contains(c.ProdDetailID))
+                    .ToListAsync();
+
             foreach (var group in groupedPurDetails)
             {
                 tb_PurGoodsRecommendDetail newDetail = new tb_PurGoodsRecommendDetail();
+                var detail = PurDetails.FirstOrDefault(c => c.ProdDetailID == group.ProdDetailID && c.Location_ID == group.Location_ID);
+                if (detail != null)
+                {
+                    newDetail.RequirementDate = detail.RequirementDate;
+                    newDetail = detail;//后面数据再修改，这里公共值赋给新的对象
+                }
+
                 newDetail.ProdDetailID = group.ProdDetailID;
                 newDetail.Location_ID = group.Location_ID;
-                newDetail.RequirementDate = group.RequirementDate;
-
+                //newDetail.RequirementDate = group.RequirementDate;
+               
                 newDetail.RequirementQty = group.TotalRequirementQty;
                 newDetail.RecommendQty = group.TotalRecommendQty;
                 newDetail.ActualRequiredQty = group.TotalActualRequiredQty;
 
+                //推荐采购价 来自于上次的采购价？
+                var record = records.FirstOrDefault(c => c.ProdDetailID == newDetail.ProdDetailID);
+                if (record != null)
+                {
+                    newDetail.RecommendPurPrice = record.PurPrice;
+                }
                 NewPurDetails.Add(newDetail);
             }
             return NewPurDetails;
         }
-
-        ///// <summary>
-        ///// 生成自制品建议（制令单）
-        ///// 是否需要按树节点来生成。只取目标明细中所有的最高一级。按道理是这样的。 因为成品只需要做成品所有的制令单并且发所有物料。
-        ///// </summary>
-        //public List<tb_ProduceGoodsRecommendDetail> GenerateProductionSuggestions(List<tb_ProductionDemandDetail> demandDetails)
-        //{
-        //    IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-        //    List<tb_ProduceGoodsRecommendDetail> MaikingDetails = mapper.Map<List<tb_ProduceGoodsRecommendDetail>>(demandDetails);
-        //    //有BOM的，这些是要生产的。
-        //    return MaikingDetails.Where(c => c.BOM_ID.HasValue && c.RecommendQty > 0).ToList();
-        //}
-
 
 
 
@@ -1201,11 +1212,11 @@ namespace RUINORERP.Business
                     if (saleOrderDetail != null)
                     {
                         ManufacturingOrder.CustomerPartNo = saleOrderDetail.CustomerPartNo;
-                        
+
                     }
                 }
                 ManufacturingOrder.IsCustomizedOrder = demand.tb_productionplan.tb_saleorder.IsCustomizedOrder;
-                ManufacturingOrder.CustomerVendor_ID= demand.tb_productionplan.tb_saleorder.CustomerVendor_ID;
+                ManufacturingOrder.CustomerVendor_ID = demand.tb_productionplan.tb_saleorder.CustomerVendor_ID;
             }
             else
             {

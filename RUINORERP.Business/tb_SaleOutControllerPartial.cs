@@ -35,6 +35,7 @@ using AutoMapper;
 using RUINORERP.Global.EnumExt;
 using Castle.Core.Resource;
 using SharpYaml.Tokens;
+using RUINORERP.Business.BizMapperService;
 
 
 namespace RUINORERP.Business
@@ -873,7 +874,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 rrs.Succeeded = false;
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 return rrs;
             }
 

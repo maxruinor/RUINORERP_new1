@@ -34,6 +34,7 @@ using OfficeOpenXml.Export.ToDataTable;
 using Fireasy.Common.Extensions;
 using RUINORERP.Business.CommService;
 using System.Windows.Forms;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -140,7 +141,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
@@ -327,7 +328,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
@@ -646,7 +647,7 @@ namespace RUINORERP.Business
         //    }
         //    catch (Exception ex)
         //    {
-        //        _logger.Error(ex);
+        //        _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
         //        _unitOfWorkManage.RollbackTran();
         //        _logger.Error(approvalEntity.bizName + "事务回滚");
         //        return false;

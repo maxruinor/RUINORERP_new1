@@ -913,10 +913,15 @@ using var binder = new UIStateBinder(..., customEvaluator);
                         EditEntity.ForeignFreightIncome = Math.Round(EditEntity.ForeignFreightIncome, 2); // 四舍五入到 2 位小数
                     }
                 }
-                if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.Deposit <= EditEntity.TotalAmount)
+                if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.Deposit != EditEntity.TotalAmount)
                 {
                     EditEntity.Deposit = EditEntity.TotalAmount;
                 }
+                if (EditEntity.PayStatus == (int)PayStatus.未付款 && EditEntity.Deposit != 0)
+                {
+                    EditEntity.Deposit = 0;
+                }
+                
             }
             catch (Exception ex)
             {

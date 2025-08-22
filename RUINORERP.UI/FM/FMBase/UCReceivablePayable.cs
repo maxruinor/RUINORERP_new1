@@ -994,7 +994,7 @@ namespace RUINORERP.UI.FM
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_ReceivablePayableDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_ReceivablePayableDetail>;
-                details = details.Where(c => c.LocalPayableAmount != 0).ToList();
+                details = details.Where(c => c.LocalPayableAmount != 0 || c.ProdDetailID.HasValue).ToList();
                 if (details.Count == 0)
                 {
                     MainForm.Instance.uclog.AddLog("金额必须大于0");
@@ -1113,8 +1113,8 @@ namespace RUINORERP.UI.FM
             List<tb_FM_ReceivablePayableDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_ReceivablePayableDetail>;
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
-                //产品ID有值才算有效值
-                details = detailentity.Where(t => t.LocalPayableAmount != 0).ToList();
+                //产品ID有值才算有效值,这里样品 可能金额为0.也显示。方便对账
+                details = detailentity.Where(t => t.LocalPayableAmount != 0 || t.ProdDetailID.HasValue).ToList();
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {

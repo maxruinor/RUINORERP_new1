@@ -1,4 +1,4 @@
-﻿using FastReport.Editor.Dialogs;
+﻿    using FastReport.Editor.Dialogs;
 using Krypton.Toolkit;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
@@ -284,11 +284,15 @@ namespace RUINORERP.UI.UserPersonalized
 
             if (entity.EnableDefault1.HasValue && entity.EnableDefault1.Value)
             {
-                //object defaultValue = queryField.FieldPropertyInfo
-                // 进行类型转换
-                object convertedValue = Convert.ChangeType(entity.Default1, queryField.ColDataType);
+                if (entity.Default1!=null)
+                {
+                    //object defaultValue = queryField.FieldPropertyInfo
+                    // 进行类型转换
+                    object convertedValue = Convert.ChangeType(entity.Default1, queryField.ColDataType);
 
-                TargetEntityDto.SetPropertyValue(entity.FieldName, convertedValue);
+                    TargetEntityDto.SetPropertyValue(entity.FieldName, convertedValue);
+                }
+                
             }
 
             entity.PropertyChanged += (sender, s2) =>

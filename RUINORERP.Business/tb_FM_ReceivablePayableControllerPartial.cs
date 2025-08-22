@@ -34,6 +34,7 @@ using StackExchange.Redis;
 using RUINORERP.Business.StatusManagerService;
 using System.Drawing.Drawing2D;
 using System.Collections;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -147,7 +148,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
@@ -255,6 +256,9 @@ namespace RUINORERP.Business
                     }
                 }
 
+                //得到当前实体对应的业务类型
+                //var _mapper = _appContext.GetRequiredService<EnhancedBizTypeMapper>();
+                //var bizType = _mapper.GetBizType(typeof(T), entity);
                 //应收款中不能存在相同的来源的 正数金额的出库单的应收数据
                 //一个出库不能多次应收。一个出库一个应收（负数除外）。一个应收可以多次收款来抵扣
                 if (entity.SourceBizType.HasValue && entity.SourceBillId.HasValue)
@@ -263,6 +267,7 @@ namespace RUINORERP.Business
                     var PendingApprovalReceivablePayable = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
                         .Includes(c => c.tb_FM_ReceivablePayableDetails)
                     .Where(c => c.ARAPStatus >= (int)ARAPStatus.待支付)
+                    .Where(c => c.SourceBizType == entity.SourceBizType)//相同业务来源的应收付款。是否有重复的检测
                     .ToListAsync();
 
                     //要把自己也算上。不能大于1,entity是等待审核。所以拼一起
@@ -357,7 +362,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
@@ -833,16 +838,16 @@ namespace RUINORERP.Business
         {
 
             ReturnResults<tb_FM_ReceivablePayable> returnResults = new Business.ReturnResults<tb_FM_ReceivablePayable>();
+
+            // 0. 验证
+            if (receivablePayable == null)
+                throw new Exception("无可处理数据");
+
+            // 1. 验证未核销金额
+            if (receivablePayable.ForeignBalanceAmount == 0 && receivablePayable.LocalBalanceAmount == 0)
+                throw new Exception("无未核销金额，无法进行坏账处理");
             try
             {
-                // 0. 验证
-                if (receivablePayable == null)
-                    throw new Exception("无可处理数据");
-
-                // 1. 验证未核销金额
-                if (receivablePayable.ForeignBalanceAmount == 0 && receivablePayable.LocalBalanceAmount == 0)
-                    throw new Exception("无未核销金额，无法进行坏账处理");
-
                 // 2. 更新状态信息
                 receivablePayable.Remark = $"[坏账处理]原因：{reason};处理时间：{DateTime.Now}";
                 BusinessHelper.Instance.EditEntity(receivablePayable);
@@ -883,7 +888,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(receivablePayable));
                 returnResults.ErrorMsg = ex.Message;
                 return returnResults;
             }
@@ -1183,7 +1188,7 @@ namespace RUINORERP.Business
                 if (UseTransaction)
                 {
                     _unitOfWorkManage.RollbackTran();
-                    _logger.Error(ex, "事务回滚" + ex.Message);
+                    _logger.Error(ex, EntityDataExtractor.ExtractDataContent(payable));
                 }
                 result = false;
             }
@@ -1541,8 +1546,8 @@ namespace RUINORERP.Business
                 if (UseTransaction)
                 {
                     _unitOfWorkManage.RollbackTran();
-                    _logger.Error(ex, "事务回滚" + ex.Message);
                 }
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(payable));
                 result = false;
             }
             return result;
@@ -1760,7 +1765,7 @@ namespace RUINORERP.Business
                 if (UseTransaction)
                 {
                     _unitOfWorkManage.RollbackTran();
-                    _logger.Error(ex, "事务回滚" + ex.Message);
+                    _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 }
                 result = false;
 
@@ -2135,7 +2140,8 @@ namespace RUINORERP.Business
 
             payable.tb_FM_ReceivablePayableDetails = details;
             payable.TotalLocalPayableAmount = payable.tb_FM_ReceivablePayableDetails.Sum(c => c.LocalPayableAmount) + payable.ShippingFee;
-
+            payable.TaxTotalAmount = payable.tb_FM_ReceivablePayableDetails.Sum(c => c.TaxLocalAmount);
+            payable.UntaxedTotalAmont = payable.TotalLocalPayableAmount - payable.TaxTotalAmount;
             //本币时
             payable.LocalBalanceAmount = payable.TotalLocalPayableAmount;
             payable.LocalPaidAmount = 0;
@@ -2514,7 +2520,7 @@ namespace RUINORERP.Business
         //    }
         //    catch (Exception ex)
         //    {
-        //        _logger.Error(ex);
+        //        _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
         //        _unitOfWorkManage.RollbackTran();
         //        _logger.Error(approvalEntity.bizName + "事务回滚");
         //        return false;
@@ -2588,7 +2594,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.ErrorMsg = ex.Message;
                 rs.Succeeded = false;
                 return rs;

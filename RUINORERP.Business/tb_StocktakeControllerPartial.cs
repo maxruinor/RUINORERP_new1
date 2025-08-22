@@ -27,6 +27,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
 using Microsoft.Extensions.Hosting;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -226,7 +227,7 @@ namespace RUINORERP.Business
 
                 _unitOfWorkManage.RollbackTran();
 
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
 
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rmrs;
@@ -378,7 +379,7 @@ namespace RUINORERP.Business
 
                 _unitOfWorkManage.RollbackTran();
                 rmsr.ErrorMsg = ex.Message;
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 //  _logger.Error(approvalEntity.bizName +);
                 return rmsr;
             }

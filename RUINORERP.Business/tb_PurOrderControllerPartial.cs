@@ -32,6 +32,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using Fireasy.Common.Extensions;
 using System.Collections;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -385,7 +386,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rmrs;
             }
@@ -596,7 +597,7 @@ namespace RUINORERP.Business
             {
 
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rs;
             }

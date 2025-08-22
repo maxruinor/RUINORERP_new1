@@ -31,6 +31,7 @@ using SqlSugar;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -56,13 +57,14 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rrs = new ReturnResults<T>();
             tb_SaleOutRe entity = ObjectEntity as tb_SaleOutRe;
+            if (entity == null)
+            {
+                rrs.Succeeded = false;
+                return rrs;
+            }
+
             try
             {
-                if (entity == null)
-                {
-                    rrs.Succeeded = false;
-                    return rrs;
-                }
                 //支持无出库单退货
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
@@ -451,7 +453,8 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 rrs.Succeeded = false;
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
-                _logger.Error(ex, "事务回滚" + ex.Message);
+               
+               _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 return rrs;
             }
 

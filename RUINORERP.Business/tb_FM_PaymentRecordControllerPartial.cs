@@ -35,6 +35,7 @@ using IMapper = AutoMapper.IMapper;
 using System.Text;
 using System.Windows.Forms;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business
 {
@@ -1153,7 +1154,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, "事务回滚" + ex.Message);
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
@@ -1737,8 +1738,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex);
-                _logger.Error(approvalEntity.bizName + "事务回滚");
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(approvalEntity));
                 return false;
             }
 

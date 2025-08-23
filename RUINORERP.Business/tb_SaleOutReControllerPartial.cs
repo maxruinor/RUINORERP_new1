@@ -721,7 +721,7 @@ namespace RUINORERP.Business
                         else
                         {
                             _unitOfWorkManage.RollbackTran();
-                            rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中,对应的应收红冲数据状态为【{(ARAPStatus)returnpayable.ARAPStatus}】。无法反审核！";
+                            rrs.ErrorMsg = $"销售退回单：{entity.ReturnNo}中,对应的应收红字数据状态为【{(ARAPStatus)returnpayable.ARAPStatus}】。无法反审核！";
                             rrs.Succeeded = false;
                             return rrs;
                         }
@@ -740,7 +740,7 @@ namespace RUINORERP.Business
                             var OriginalPayable = PositivePayableList[i];
                             #region 如果原始应收没有核销付款，则直接生成 红字应收核销
 
-                            //判断 如果出库的应收金额和未核销余额一样。说明 客户还没有支付任何款，则可以直接全额红冲
+                            //判断 如果出库的应收金额和未核销余额一样。说明 客户还没有支付任何款，则可以直接全额红字
                             OriginalPayable.LocalBalanceAmount += entity.TotalAmount;
 
                             returnpayable.LocalBalanceAmount -= entity.TotalAmount;
@@ -753,7 +753,7 @@ namespace RUINORERP.Business
                             OriginalPayable.ARAPStatus = (int)ARAPStatus.已冲销;
                             returnpayable.ARAPStatus = (int)ARAPStatus.已冲销;
                             //生成核销记录证明正负抵消应收应付
-                            //生成一笔核销记录  应收红冲
+                            //生成一笔核销记录  应收红字
                             tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement> settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
                             await settlementController.GenerateSettlement(OriginalPayable, returnpayable);
 

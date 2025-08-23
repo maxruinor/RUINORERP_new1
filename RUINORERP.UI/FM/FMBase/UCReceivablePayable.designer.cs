@@ -28,8 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCReceivablePayable));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkIsForCommission = new Krypton.Toolkit.KryptonCheckBox();
             this.txtPlatformOrderNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblPlatformOrderNo = new Krypton.Toolkit.KryptonLabel();
             this.chkIsExpenseType = new Krypton.Toolkit.KryptonCheckBox();
@@ -89,7 +91,7 @@
             this.lblLocalPaidAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtLocalBalanceAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblLocalBalanceAmount = new Krypton.Toolkit.KryptonLabel();
-            this.chkIsForCommission = new Krypton.Toolkit.KryptonCheckBox();
+            this.picBox红字 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -114,6 +116,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picBox红字)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -137,6 +140,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.picBox红字);
             this.kryptonPanel1.Controls.Add(this.chkIsForCommission);
             this.kryptonPanel1.Controls.Add(this.txtPlatformOrderNo);
             this.kryptonPanel1.Controls.Add(this.lblPlatformOrderNo);
@@ -188,6 +192,14 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(1133, 265);
             this.kryptonPanel1.TabIndex = 4;
+            // 
+            // chkIsForCommission
+            // 
+            this.chkIsForCommission.Location = new System.Drawing.Point(389, 160);
+            this.chkIsForCommission.Name = "chkIsForCommission";
+            this.chkIsForCommission.Size = new System.Drawing.Size(75, 20);
+            this.chkIsForCommission.TabIndex = 231;
+            this.chkIsForCommission.Values.Text = "用于佣金";
             // 
             // txtPlatformOrderNo
             // 
@@ -701,13 +713,17 @@
             this.lblLocalBalanceAmount.TabIndex = 206;
             this.lblLocalBalanceAmount.Values.Text = "未核销本币";
             // 
-            // chkIsForCommission
+            // picBox红字
             // 
-            this.chkIsForCommission.Location = new System.Drawing.Point(389, 160);
-            this.chkIsForCommission.Name = "chkIsForCommission";
-            this.chkIsForCommission.Size = new System.Drawing.Size(75, 20);
-            this.chkIsForCommission.TabIndex = 231;
-            this.chkIsForCommission.Values.Text = "用于佣金";
+            this.picBox红字.BackColor = System.Drawing.SystemColors.InactiveCaption;
+            this.picBox红字.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("picBox红字.BackgroundImage")));
+            this.picBox红字.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.picBox红字.InitialImage = null;
+            this.picBox红字.Location = new System.Drawing.Point(79, 3);
+            this.picBox红字.Name = "picBox红字";
+            this.picBox红字.Size = new System.Drawing.Size(125, 48);
+            this.picBox红字.TabIndex = 232;
+            this.picBox红字.TabStop = false;
             // 
             // UCReceivablePayable
             // 
@@ -744,6 +760,7 @@
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.picBox红字)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -813,5 +830,6 @@
         private Krypton.Toolkit.KryptonTextBox txtPlatformOrderNo;
         private Krypton.Toolkit.KryptonLabel lblPlatformOrderNo;
         private Krypton.Toolkit.KryptonCheckBox chkIsForCommission;
+        private System.Windows.Forms.PictureBox picBox红字;
     }
 }

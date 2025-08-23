@@ -121,9 +121,10 @@ namespace RUINORERP.UI.Common
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(Priority), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(Priority))));
                 }
                 // 检查类型 T 是否包含 PurReProcessWay 列
-                else if (prop.Name == nameof(PurReProcessWay))
+                else if (prop.Name == nameof(PurReProcessWay) || prop.Name == "ProcessWay")
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "ProcessWay", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
                 }
                 else if (prop.Name == nameof(GoodsSource)||prop.Name == "SourceType") //应该字段名和枚举名相同才好
                 {

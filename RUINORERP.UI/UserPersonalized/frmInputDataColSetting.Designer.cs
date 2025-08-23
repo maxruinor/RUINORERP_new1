@@ -31,13 +31,14 @@
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkEnableInputPresetValue = new Krypton.Toolkit.KryptonCheckBox();
             this.btnApply = new Krypton.Toolkit.KryptonButton();
             this.btnInitCol = new Krypton.Toolkit.KryptonButton();
             this.panelConditionEdit = new System.Windows.Forms.Panel();
             this.chkReverseSelection = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAll = new Krypton.Toolkit.KryptonCheckBox();
             this.listView1 = new System.Windows.Forms.ListView();
-            this.chkEnableInputPresetValue = new Krypton.Toolkit.KryptonCheckBox();
+            this.kryptonCheckBox1 = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -63,6 +64,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonCheckBox1);
             this.kryptonPanel1.Controls.Add(this.chkEnableInputPresetValue);
             this.kryptonPanel1.Controls.Add(this.btnApply);
             this.kryptonPanel1.Controls.Add(this.btnInitCol);
@@ -78,6 +80,16 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(898, 624);
             this.kryptonPanel1.TabIndex = 14;
             // 
+            // chkEnableInputPresetValue
+            // 
+            this.chkEnableInputPresetValue.Checked = true;
+            this.chkEnableInputPresetValue.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableInputPresetValue.Location = new System.Drawing.Point(628, 25);
+            this.chkEnableInputPresetValue.Name = "chkEnableInputPresetValue";
+            this.chkEnableInputPresetValue.Size = new System.Drawing.Size(114, 20);
+            this.chkEnableInputPresetValue.TabIndex = 48;
+            this.chkEnableInputPresetValue.Values.Text = "启用录入预设值";
+            // 
             // btnApply
             // 
             this.btnApply.Location = new System.Drawing.Point(640, 576);
@@ -89,7 +101,7 @@
             // 
             // btnInitCol
             // 
-            this.btnInitCol.Location = new System.Drawing.Point(776, 25);
+            this.btnInitCol.Location = new System.Drawing.Point(776, 23);
             this.btnInitCol.Name = "btnInitCol";
             this.btnInitCol.Size = new System.Drawing.Size(90, 25);
             this.btnInitCol.TabIndex = 44;
@@ -134,13 +146,13 @@
             this.listView1.View = System.Windows.Forms.View.Details;
             this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
             // 
-            // chkEnableInputPresetValue
+            // kryptonCheckBox1
             // 
-            this.chkEnableInputPresetValue.Location = new System.Drawing.Point(628, 30);
-            this.chkEnableInputPresetValue.Name = "chkEnableInputPresetValue";
-            this.chkEnableInputPresetValue.Size = new System.Drawing.Size(114, 20);
-            this.chkEnableInputPresetValue.TabIndex = 48;
-            this.chkEnableInputPresetValue.Values.Text = "启用录入预设值";
+            this.kryptonCheckBox1.Location = new System.Drawing.Point(238, 25);
+            this.kryptonCheckBox1.Name = "kryptonCheckBox1";
+            this.kryptonCheckBox1.Size = new System.Drawing.Size(256, 20);
+            this.kryptonCheckBox1.TabIndex = 49;
+            this.kryptonCheckBox1.Values.Text = "启用系统级录入预设值（超级用户设置）";
             // 
             // frmInputDataColSetting
             // 
@@ -171,5 +183,6 @@
         private Krypton.Toolkit.KryptonButton btnInitCol;
         private Krypton.Toolkit.KryptonButton btnApply;
         private Krypton.Toolkit.KryptonCheckBox chkEnableInputPresetValue;
+        private Krypton.Toolkit.KryptonCheckBox kryptonCheckBox1;
     }
 }

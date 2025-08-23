@@ -19,18 +19,119 @@ using RUINORERP.Common.Extensions;
 using SqlSugar;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.Processor;
+using RUINORERP.UI.UControls;
+using LiveChartsCore.Geo;
+using Netron.GraphLib;
+using RUINORERP.Business.CommService;
+using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.PSI.PUR
 {
 
     [MenuAttrAssemblyInfo("采购退货单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.采购管理, BizType.采购退货单)]
-    public partial class UCPurEntryReQuery : BaseBillQueryMC<tb_PurEntryRe, tb_PurEntryReDetail>
+    public partial class UCPurEntryReQuery : BaseBillQueryMC<tb_PurEntryRe, tb_PurEntryReDetail>, UI.AdvancedUIModule.IContextMenuInfoAuth
     {
         public UCPurEntryReQuery()
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.PurEntryReNo);
         }
+
+        #region 转为红字应付款单
+        public override List<ContextMenuController> AddContextMenu()
+        {
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            //供应商退款单
+            list.Add(new ContextMenuController("转为红字【应付款单】", true, false, "NewSumDataGridView_转为红字应付款单"));
+            return list;
+        }
+        public override void BuildContextMenuController()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_转为红字应付款单);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list = AddContextMenu();
+
+            UIHelper.ControlContextMenuInvisible(CurMenuInfo, list);
+
+            if (_UCBillMasterQuery != null)
+            {
+                //base.dataGridView1.Use是否使用内置右键功能 = false;
+                ContextMenuStrip newContextMenuStrip = _UCBillMasterQuery.newSumDataGridViewMaster.GetContextMenu(_UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip
+                    , ContextClickList, list, true
+                    );
+                _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
+            }
+        }
+        private async void NewSumDataGridView_转为红字应付款单(object sender, EventArgs e)
+        {
+            List<tb_PurEntryRe> selectlist = GetSelectResult();
+            if (selectlist.Count > 1)
+            {
+                MessageBox.Show("生成红字【应付款单】每次只能选择一个采购退货单。");
+                return;
+            }
+            List<tb_PurEntryRe> RealList = new List<tb_PurEntryRe>();
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
+            foreach (var item in selectlist)
+            {
+                //只有审核状态才可以转换为应收 红字
+                bool canConvert = item.DataStatus == (long)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert)
+                {
+                    RealList.Add(item);
+                }
+                else
+                {
+                    msg.Append(counter.ToString() + ") ");
+                    msg.Append($"当前采购退货单 {item.PurEntryReNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【红字】应付款单。").Append("\r\n");
+                    counter++;
+                }
+            }
+            //多选时。要相同客户才能合并到一个付款单
+            if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
+            {
+                msg.Append("多选时，要相同供应商才能合并到一个红字【应付款单】");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (msg.ToString().Length > 0)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (RealList.Count == 0)
+                {
+                    return;
+                }
+            }
+
+            if (RealList.Count == 0)
+            {
+                msg.Append("请至少选择一行数据转为红字【应付款单】");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var ReceivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+            tb_FM_ReceivablePayable ReceivablePayable =  ReceivablePayableController.BuildReceivablePayable(RealList[0]);
+            MenuPowerHelper menuPowerHelper;
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+            string Flag = string.Empty;
+            //红字付款
+            Flag = typeof(RUINORERP.UI.FM.UCReceivable).FullName;
+
+            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == nameof(tb_FM_ReceivablePayable)
+                        && m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
+            .FirstOrDefault();
+            if (RelatedMenuInfo != null)
+            {
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+            }
+        }
+        #endregion
+
+
         public override void SetGridViewDisplayConfig()
         {
             _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_PurEntryRe, tb_PurEntry>(c => c.PurEntryNo, r => r.PurEntryNo);

@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 采购退回单
+    /// 采购退货单
     /// </summary>
     [Serializable()]
-    [Description("采购退回单")]
+    [Description("采购退货单")]
     [SugarTable("tb_PurOrderReDetail")]
     public partial class tb_PurOrderReDetail: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("采购退回单tb_PurOrderReDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("采购退货单tb_PurOrderReDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

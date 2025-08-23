@@ -388,7 +388,7 @@
             this.lblClassPath.Name = "lblClassPath";
             this.lblClassPath.Size = new System.Drawing.Size(88, 20);
             this.lblClassPath.TabIndex = 22;
-            this.lblClassPath.Values.Text = "采购退回单号";
+            this.lblClassPath.Values.Text = "采购退货单号";
             // 
             // txtPurEntryNO
             // 

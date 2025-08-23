@@ -16,7 +16,7 @@ using RUINORERP.Model;
 namespace RUINORERP.IServices
 {
     /// <summary>
-    /// 采购退回单
+    /// 采购退货单
     /// </summary>
     public partial interface Itb_PurOrderReDetailServices : IBaseServices<tb_PurOrderReDetail>
     {

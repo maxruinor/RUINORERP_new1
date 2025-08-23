@@ -343,6 +343,11 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 以查询的结果中的列名为key，指定到明细中的列名为value的集合
         /// </summary>
         public ConcurrentDictionary<string, SGDefineColumnItem> QueryItemToColumnPairList { get; set; } = new ConcurrentDictionary<string, SGDefineColumnItem>();
+        // 替换原来的定义
+        public ConcurrentDictionary<string, QueryColumnMapping> QueryColumnMappings { get; set; } = new ConcurrentDictionary<string, QueryColumnMapping>();
+
+
+
 
         ///// <summary>
         ///// 单据明细中，小计列的计算组合比方成本，价格*qty

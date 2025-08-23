@@ -3723,6 +3723,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
+
         /// <summary>
         /// 设置从查询结果对象指向单据明细的列集合
         /// 即：从产品查询QueryFormGeneric查出来的结果。放到 指定明细中某个列中
@@ -3748,6 +3749,55 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
+
+        /// <summary>
+        /// 基础映射：直接赋值
+        /// 设置从查询结果对象指向单据明细的列集合
+        /// 即：从产品查询QueryFormGeneric查出来的结果。放到 指定明细中某个列中
+        /// </summary>
+        //public void SetQueryItemToColumnPairs<T, BillDetail>(
+        //    SourceGridDefine define,
+        //    Expression<Func<T, object>> fromExp,
+        //    Expression<Func<BillDetail, object>> toExp)
+        //{
+        //    SetQueryItemToColumnPairs(define, fromExp, toExp, null);
+        //}
+
+        /// <summary>
+        /// 扩展映射：支持自定义计算逻辑
+        /// </summary>
+        public void SetQueryItemToColumnPairs<T, BillDetail>(
+            SourceGridDefine define,
+            Expression<Func<T, object>> fromExp,
+            Expression<Func<BillDetail, object>> toExp,
+            Func<BillDetail, object> valueCalculator)
+        {
+            string fromColName = fromExp.GetMemberInfo().Name;
+            string toColName = toExp.GetMemberInfo().Name;
+
+            // 获取目标列定义
+            var targetColumn = define.DefineColumns
+                .Where(c => c.ColName == toColName && c.BelongingObjectType == typeof(BillDetail))
+                .FirstOrDefault();
+
+            if (targetColumn == null)
+            {
+                MainForm.Instance.uclog.AddLog("提醒",
+                    $"当前字段{toColName}没有提取到,请确认在单据明细{typeof(BillDetail).Name}中描述是否正确");
+                return;
+            }
+
+            // 创建映射关系
+            var mapping = new QueryColumnMapping
+            {
+                SourceColumnName = fromColName,
+                TargetColumn = targetColumn,
+                // 转换为通用委托（兼容object类型）
+                ValueCalculator = valueCalculator != null ? obj => valueCalculator((BillDetail)obj) : null
+            };
+
+            define.QueryColumnMappings.TryAdd(fromColName, mapping);
+        }
 
 
         /// <summary>

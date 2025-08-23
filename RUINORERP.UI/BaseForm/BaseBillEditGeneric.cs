@@ -2690,14 +2690,14 @@ namespace RUINORERP.UI.BaseForm
                                                 if (saleOutRe.IsFromPlatform)
                                                 {
 
-                                                    #region 生成应收款红冲单，退款
-                                                    //自动生成销售退回单的对应的应该收款单（红冲的）对应的收款记录
+                                                    #region 生成应收款红字单，退款
+                                                    //自动生成销售退回单的对应的应该收款单（红字的）对应的收款记录
                                                     var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                                                     List<tb_FM_ReceivablePayable> receivablePayables = new List<tb_FM_ReceivablePayable>();
                                                     receivablePayables.Add(payable);
 
                                                     tb_FM_PaymentRecord newPaymentRecord = paymentController.BuildPaymentRecord(receivablePayables);
-                                                    newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红冲";
+                                                    newPaymentRecord.Remark = "平台单，已退款，货回仓审核时自动生成的收款单（负数）红字";
                                                     newPaymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
                                                     if (!newPaymentRecord.Paytype_ID.HasValue && saleOutRe.Paytype_ID.HasValue)
                                                     {
@@ -2747,7 +2747,7 @@ namespace RUINORERP.UI.BaseForm
                     #endregion
 
                     //如果是出库单审核，则上传到服务器 锁定订单无法修改
-                    if (ae.bizType == BizType.采购入库单)
+                    if (ae.bizType == BizType.采购入库单 || ae.bizType == BizType.采购退货入库)
                     {
                         //锁定对应的订单
                         if (EditEntity is tb_PurEntry PurEntry)
@@ -2762,11 +2762,18 @@ namespace RUINORERP.UI.BaseForm
                                 //    (int)BizType.销售订单, 11);
                                 //MainForm.Instance.ecs.AddSendData(od);
                             }
+                        }
+                        if (EditEntity is tb_PurReturnEntry PurReturnEntry)
+                        {
+                            if (PurReturnEntry.tb_purentryre != null)
+                            {
+                                LockBill(PurReturnEntry.tb_purentryre.PurEntryRe_ID, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
+                            }
+                        }
 
+                        #region 采购入库单如果启用了财务模块，则会生成应付款单
 
-                            #region 采购入库单如果启用了财务模块，则会生成应付款单
-
-                            AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
+                        AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
                             if (authorizeController.EnableFinancialModule())
                             {
                                 if (MainForm.Instance.AppContext.FMConfig.AutoAuditPaymentable)
@@ -2781,11 +2788,11 @@ namespace RUINORERP.UI.BaseForm
                                             payable.ApprovalOpinions = "系统自动审核";
                                             payable.ApprovalStatus = (int)ApprovalStatus.已审核;
                                             payable.ApprovalResults = true;
-                                            if (PurEntry.tb_purorder != null && !payable.PayeeInfoID.HasValue)
-                                            {
-                                                //通过订单添加付款信息
-                                                payable.PayeeInfoID = PurEntry.tb_purorder.PayeeInfoID;
-                                            }
+                                            //if (PurEntry.tb_purorder != null && !payable.PayeeInfoID.HasValue)
+                                            //{
+                                            //    //通过订单添加付款信息
+                                            //    payable.PayeeInfoID = PurEntry.tb_purorder.PayeeInfoID;
+                                            //}
 
                                             ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
                                             if (!autoApproval.Succeeded)
@@ -2809,7 +2816,7 @@ namespace RUINORERP.UI.BaseForm
                             }
 
                             #endregion
-                        }
+                     
 
                     }
 

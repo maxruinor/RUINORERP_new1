@@ -53,12 +53,13 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.DepartmentID, typeof(tb_Department));
             queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.ProjectGroup_ID, typeof(tb_ProjectGroup));
             queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.Account_id, typeof(tb_FM_Account));
-            queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.Remark);
+            queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.Summary);
             queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.ReferenceNo);
             queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.ReversedByPaymentNo);
             queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.ReversedOriginalNo);
             queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.PaymentStatus, QueryFieldType.CmbEnum, typeof(PaymentStatus));
             queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.PayeeAccountNo);
+            queryFilter.SetQueryField<View_FM_PaymentRecordItems>(c => c.Remark);
 
             return queryFilter;
         }

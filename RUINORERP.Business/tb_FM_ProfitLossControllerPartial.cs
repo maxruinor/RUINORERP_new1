@@ -35,7 +35,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 损益费用单
     /// </summary>
-    public partial class tb_FM_ProfitLossDetailController<T> : BaseController<T> where T : class
+    public partial class tb_FM_ProfitLossController<T> : BaseController<T> where T : class
     {
 
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
@@ -223,6 +223,8 @@ namespace RUINORERP.Business
             profitLossDetail.SubtotalAmont = profitLossDetail.UnitPrice.Value * profitLossDetail.Quantity.Value;
             profitLossDetail.UntaxedSubtotalAmont = profitLossDetail.SubtotalAmont - profitLossDetail.TaxSubtotalAmont;
             profitLossDetail.ExpenseDescription = "应" + ((ReceivePaymentType)entity.ReceivePaymentType).ToString() + "单";
+
+
             #endregion
 
 
@@ -234,7 +236,7 @@ namespace RUINORERP.Business
                 {
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
                     profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.损失确认单);
-
+                    profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
                 }
                 else
                 {
@@ -242,6 +244,7 @@ namespace RUINORERP.Business
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.溢余;
                     profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.溢余确认单);
                     profitLossDetail.ExpenseDescription += "的退款";
+                    profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.收入;
                 }
             }
             else
@@ -252,6 +255,7 @@ namespace RUINORERP.Business
                 {
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.溢余;
                     profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.溢余确认单);
+                    profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.收入;
                 }
                 else
                 {
@@ -259,6 +263,7 @@ namespace RUINORERP.Business
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
                     profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.损失确认单);
                     profitLossDetail.ExpenseDescription += "的退款";
+                    profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
                 }
             }
             switch (entity.SourceBizType)
@@ -350,13 +355,32 @@ namespace RUINORERP.Business
                 {
                     details[i].SubtotalAmont = olditem.DiffSubtotalAmount;
                 }
-
-                details[i].ProfitLossType = (int)ProfitLossType.库存盘亏;
-
+                if (details[i].SubtotalAmont > 0)
+                {
+                    details[i].ProfitLossType = (int)ProfitLossType.库存盘盈;
+                    details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.收入;
+                }
+                if (details[i].SubtotalAmont < 0 && olditem.DiffQty < 0)
+                {
+                    details[i].ProfitLossType = (int)ProfitLossType.库存盘亏;
+                    details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
+                }
                 details[i].ActionStatus = ActionStatus.新增;
             }
 
-            profitLoss.tb_FM_ProfitLossDetails = details;
+            profitLoss.tb_FM_ProfitLossDetails = details.Where(c => c.SubtotalAmont != 0).ToList();
+
+            if (entity.Adjust_Type == (int)Adjust_Type.减少)
+            {
+                profitLoss.tb_FM_ProfitLossDetails = profitLoss.tb_FM_ProfitLossDetails
+                    .Where(c => c.ProfitLossType == (int)ProfitLossType.库存盘亏).ToList();
+            }
+            if (entity.Adjust_Type == (int)Adjust_Type.增加)
+            {
+                profitLoss.tb_FM_ProfitLossDetails = profitLoss.tb_FM_ProfitLossDetails
+                  .Where(c => c.ProfitLossType == (int)ProfitLossType.库存盘盈).ToList();
+            }
+
             profitLoss.TotalAmount = profitLoss.tb_FM_ProfitLossDetails.Sum(c => c.SubtotalAmont);
             profitLoss.TaxTotalAmount = profitLoss.tb_FM_ProfitLossDetails.Sum(c => c.TaxSubtotalAmont);
             profitLoss.UntaxedTotalAmont = profitLoss.TotalAmount - profitLoss.TaxTotalAmount;
@@ -365,11 +389,10 @@ namespace RUINORERP.Business
                 profitLoss.IsIncludeTax = true;
             }
             //最后根据总的情况来判断单据类型
-            if (entity.DiffTotalAmount < 0)
+            if (profitLoss.TotalAmount < 0)
             {
                 profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
                 profitLoss.ProfitLossNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.损失确认单);
-
             }
             else
             {
@@ -424,8 +447,8 @@ namespace RUINORERP.Business
                 if (olditem != null)
                 {
                     details[i].SubtotalAmont = olditem.SubtotalCostAmount;
-
                 }
+                details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
                 details[i].ActionStatus = ActionStatus.新增;
             }
 

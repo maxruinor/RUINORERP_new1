@@ -36,6 +36,7 @@ namespace RUINORERP.Business
     public partial class tb_PurReturnEntryController<T>
     {
 
+
         /// <summary>
         /// 返回批量审核的结果
         /// </summary>
@@ -54,7 +55,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+                //BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
 
                 //处理采购退货单
@@ -82,7 +83,7 @@ namespace RUINORERP.Business
                 //如果入库明细中的产品。不存在于采购退货单中。审核失败。
                 foreach (var child in entity.tb_PurReturnEntryDetails)
                 {
-                    if (!entity.tb_purentryre.tb_PurEntryReDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
+                    if (!entity.is_force_offset.GetValueOrDefault() && !entity.tb_purentryre.tb_PurEntryReDetails.Any(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID))
                     {
                         rs.Succeeded = false;
                         _unitOfWorkManage.RollbackTran();
@@ -101,7 +102,7 @@ namespace RUINORERP.Business
                     if (inv == null)
                     {
                         _unitOfWorkManage.RollbackTran();
-                        rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法进行采购退货。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
+                        rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法进行采购退货入库。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                         rs.Succeeded = false;
                         return rs;
                     }
@@ -112,45 +113,22 @@ namespace RUINORERP.Business
                     }
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Location_ID = child.Location_ID;
-                    inv.Notes = "";//后面修改数据库是不需要？
                     inv.LatestStorageTime = System.DateTime.Now;
 
                     //采购退货单时添加 。这里减掉在路上的数量
                     inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
 
-                    //直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                    //平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                    //先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。适用范围：适用于存货的实物流转比较符合先进先出的假设，比如食品、药品等有保质期限制的商品，先购进的存货会先发出销售。
-
                     //采购退货入库暂时不影响成本
-                    /*
-                   if (child.IsGift.HasValue && child.IsGift == false && child.TransactionPrice > 0)
-                   {
-                       CommService.CostCalculations.CostCalculation(_appContext, inv, child.Quantity, child.TransactionPrice);
-                       #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
+                    decimal UntaxedUnitPrice = child.UnitPrice / (1 + child.TaxRate);
+                    UntaxedUnitPrice = Math.Round(UntaxedUnitPrice, 3);
+                    if (child.IsGift.HasValue && !child.IsGift.Value && UntaxedUnitPrice > 0)
+                    {
+                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.Quantity.ToInt(), UntaxedUnitPrice, 0);
 
-                       tb_BOM_SDetailController<tb_BOM_SDetail> ctrtb_BOM_SDetail = _appContext.GetRequiredService<tb_BOM_SDetailController<tb_BOM_SDetail>>();
-                       List<tb_BOM_SDetail> bomDetails = _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                       .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
-                       .Where(c => c.ProdDetailID == child.ProdDetailID).ToList();
-                       foreach (tb_BOM_SDetail bomDetail in bomDetails)
-                       {
-                           //如果存在则更新 
-                           bomDetail.UnitCost = inv.Inv_Cost;
-                           bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
-                           if (bomDetail.tb_bom_s != null)
-                           {
-                               bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
-                               bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
-                               bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
-                               await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_S>(bomDetail.tb_bom_s).ExecuteCommandAsync();
-                           }
-                       }
-                       await _unitOfWorkManage.GetDbClient().Updateable<tb_BOM_SDetail>(bomDetails).ExecuteCommandAsync();
-
-                       #endregion
-                   }
-                    */
+                        var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                        // 递归更新所有上级BOM的成本
+                        await ctrbom.UpdateParentBOMsAsync(child.ProdDetailID, inv.Inv_Cost);
+                    }
 
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
@@ -200,7 +178,7 @@ namespace RUINORERP.Business
 
                         var inQty = detailList.Where(c => c.ProdDetailID == entity.tb_purentryre.tb_PurEntryReDetails[i].ProdDetailID
                         && c.PurEntryRe_CID == entity.tb_purentryre.tb_PurEntryReDetails[i].PurEntryRe_CID).Sum(c => c.Quantity);
-                        if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
+                        if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset.GetValueOrDefault())
                         {
                             string msg = $"【{prodName}】的采购退货入库数量不能大于退货单中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购退货入库单。";
                             rs.ErrorMsg = msg;
@@ -218,7 +196,7 @@ namespace RUINORERP.Business
                             //算出交付的数量
                             entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity += RowQty;
                             //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
+                            if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset.GetValueOrDefault())
                             {
                                 _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"采购退货入库：{entity.PurReEntryNo}审核时，对应的采购退货单：{entity.tb_purentryre.PurEntryReNo}中，入库总数量不能大于退货数量！");
@@ -232,7 +210,7 @@ namespace RUINORERP.Business
                             .Where(c => c.ProdDetailID == entity.tb_purentryre.tb_PurEntryReDetails[i].ProdDetailID
                          && c.Location_ID == entity.tb_purentryre.tb_PurEntryReDetails[i].Location_ID
                         ).Sum(c => c.Quantity);
-                        if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
+                        if (inQty > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset.GetValueOrDefault())
                         {
                             string msg = $"采购退回入库单:{entity.PurReEntryNo}的【{prodName}】的入库数量不能大于【采购退货单】中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购入库单。";
                             rs.ErrorMsg = msg;
@@ -249,7 +227,7 @@ namespace RUINORERP.Business
                                 ).Sum(c => c.Quantity);
                             entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity += RowQty;
                             //如果已交数据大于 退货单数量 给出警告实际操作中 使用其他方式将备品入库
-                            if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity)
+                            if (entity.tb_purentryre.tb_PurEntryReDetails[i].DeliveredQuantity > entity.tb_purentryre.tb_PurEntryReDetails[i].Quantity && !entity.is_force_offset.GetValueOrDefault())
                             {
                                 _unitOfWorkManage.RollbackTran();
                                 throw new Exception($"采购退回入库单：{entity.PurReEntryNo}审核时，对应的退货单：{entity.tb_purentryre.PurEntryReNo}，入库总数量不能大于退货单数量！");
@@ -296,6 +274,30 @@ namespace RUINORERP.Business
                     }
                 }
 
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                    try
+                    {
+                        #region 生成应付 ,这里的应付不从预付中抵扣了，只会去用这个蓝字应付去冲销退货时生成的红字应付
+                        var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                        tb_FM_ReceivablePayable Payable = ctrpayable.BuildReceivablePayable(entity);
+                        var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                        ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
+                        if (rmr.Succeeded)
+                        {
+                            //已经是等审核。 审核时会核销预收付款
+                            rs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                        }
+                        #endregion
+                    }
+                    catch (Exception)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("入库时，财务数据处理失败，更新失败！");
+                    }
+                }
+
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
@@ -313,7 +315,6 @@ namespace RUINORERP.Business
             }
 
         }
-
 
 
         /// <summary>

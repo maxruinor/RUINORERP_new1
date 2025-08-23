@@ -28,6 +28,19 @@ namespace RUINORERP.Business.AutoMapper
 
             #region 财务模块
 
+            CreateMap<tb_PurReturnEntryDetail, tb_FM_ReceivablePayableDetail>()
+       .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.UnitPrice))
+       .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
+       .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+       .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.PurReEntry_CID))
+       .ForMember(a => a.property, o => o.MapFrom(d => d.property))
+       .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
+       .ForMember(a => a.TaxLocalAmount, o => o.MapFrom(d => d.TaxAmount))
+       .ForMember(a => a.LocalPayableAmount, o => o.MapFrom(d => d.SubtotalTrPriceAmount))
+       .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
+
+
+
             //维修物料明细收费 转成应收明细
             CreateMap<tb_AS_RepairOrderMaterialDetail, tb_FM_ReceivablePayableDetail>()
           .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.UnitPrice))

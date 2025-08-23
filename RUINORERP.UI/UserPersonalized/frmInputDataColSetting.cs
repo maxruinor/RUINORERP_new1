@@ -34,6 +34,7 @@ namespace RUINORERP.UI.UserPersonalized
             this.StartPosition = FormStartPosition.CenterParent;
         }
 
+        //Enable system level input preset values (super user settings)
 
         public List<tb_UIInputDataField> InputFields { get; set; } = new List<tb_UIInputDataField>();
 
@@ -477,10 +478,10 @@ namespace RUINORERP.UI.UserPersonalized
             }
         }
 
-        private void btnApply_Click(object sender, EventArgs e)
+        private async void btnApply_Click(object sender, EventArgs e)
         {
             //保存设置到DB
-            UIBizSrvice.SaveInputDataPresetValues(CurMenuInfo, InputFields);
+          await  UIBizSrvice.SaveInputDataPresetValues(CurMenuInfo, InputFields);
         }
     }
 }

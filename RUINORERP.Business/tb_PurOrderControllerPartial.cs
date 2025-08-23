@@ -525,7 +525,7 @@ namespace RUINORERP.Business
 
                             #region  检测对应的收款单记录，如果没有支付也可以直接删除
                             //取消的话。则要退款。修改的话。则不需要退款？？？这个功能则要详细比对数据。将来可能来实现。现在统计
-                            //如果没有出库，则生成红冲单  ，已冲销  已取消，先用取消标记
+                            //如果没有出库，则生成红字单  ，已冲销  已取消，先用取消标记
                             //如果是要退款，则在预收款查询这，生成退款单。
                             //如果预收单审核了，生成收款单 在财务没有审核前。还是可以反审。这是为了保存系统的灵活性。
                             var PaymentList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()

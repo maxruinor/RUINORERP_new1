@@ -293,25 +293,7 @@ namespace RUINORERP.UI.UCSourceGrid
             return false;
         }
 
-        /*
-        public Expression<Func<T, bool>> CreateCondition<T>(Expression<Func<T, object>> expression)
-        {
-            // 创建一个参数表达式，代表Product对象
-            ParameterExpression parameter = Expression.Parameter(typeof(T), "p");
-
-            // 创建一个二元表达式，代表UnitPrice == 0的条件
-            Expression left = Expression.Property(parameter, "UnitPrice");
-            Expression right = Expression.Constant(0m, typeof(decimal));
-
-            Expression condition = Expression.Equal(left, right);
-
-            // 创建一个Lambda表达式，将条件表达式与参数表达式结合
-            var lambda = Expression.Lambda<Func<T, bool>>(condition, parameter);
-
-            return lambda;
-        }
-
-        */
+       
 
     }
 

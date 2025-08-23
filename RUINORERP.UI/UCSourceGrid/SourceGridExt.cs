@@ -697,31 +697,6 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
         public static void SetCol_Formula<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName, Expression<Func<T, object>> ConditionExpression = null)
         {
-            /*
-            MemberInfo minfo = ResultColName.GetMemberInfo();
-            foreach (SourceGridDefineColumnItem item in cols)
-            {
-                if (item.BelongingObjectType.Name != typeof(T).Name)
-                {
-                    continue;
-                }
-                //如果目标列和参数列一致，则不计算
-                if (item.ColName == minfo.Name)
-                {
-                    bool isSame = item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol.ColName == minfo.Name && s.OriginalExpression.ToString() == FormulaExp.Body.ToString()).Any();
-                    if (isSame)
-                    {
-                        continue;
-                    }
-
-                    CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
-                    expStr.TagetCol = item;
-                    expStr.OriginalExpression = FormulaExp.Body.ToString();
-                    expStr.TagetColName = item.ColName;//以这个结果列，或叫目标标为标准，但是可能多种方法组合得到这个结果。所以可以重复
-                    item.ParentGridDefine.SubtotalCalculate.Add(expStr);
-                     }
-                }
-            */
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
             SetCalculateFormula(cols, ConditionExpression, ResultColName, expStr, FormulaExp.Body.ToString());
         }
@@ -920,49 +895,6 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
             SetCalculateFormulaReverse(cols, ResultColName, expStr, FormulaExp.Body.ToString(), ConditionExpression);
-            /*
-             MemberInfo minfo = ResultColName.GetMemberInfo();
-             foreach (SourceGridDefineColumnItem item in cols)
-             {
-                 if (item.BelongingObjectType.Name != typeof(T).Name)
-                 {
-                     continue;
-                 }
-                 //如果目标列和参数列一致，则不计算
-                 if (item.ColName == minfo.Name)
-                 {
-                     bool isSame = item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol.ColName == minfo.Name
-                     && s.OriginalExpression.ToString() == FormulaExp.Body.ToString()
-                     && s.CalcCondition.expCondition.ToString() == ConditionExpression.Body.ToString() //反算时一定有条件
-                    ).Any();
-                     if (isSame)
-                     {
-                         continue;
-                     }
-
-
-                     expStr.TagetCol = item;
-                     expStr.OriginalExpression = FormulaExp.Body.ToString();
-                     expStr.TagetColName = item.ColName;//以这个结果列，或叫目标列为标准，但是可能多种方法组合得到这个结果。所以可以重复
-                     #region 计算条件
-                     CalculationCondition condition = new CalculationCondition();
-                     condition.CalculationTargetType = typeof(T);
-                     //var RExpression = ConditionExpression.ReduceExtensions();
-                     var unary = ConditionExpression.Body as UnaryExpression;
-                     string str = unary.Operand.ToString();
-                     foreach (var para in ConditionExpression.Parameters)
-                     {
-                         str = str.Replace(para.Name + ".", "");
-                     }
-                     Expression exp = unary.Operand;
-                     condition.expCondition = exp;
-                     expStr.CalcCondition = condition;
-                     #endregion
-                     item.ParentGridDefine.SubtotalCalculateReverse.Add(expStr);
-
-                 }
-
-             }*/
         }
         public static void SetCol_FormulaReverse<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName)
         {

@@ -836,7 +836,7 @@ namespace RUINORERP.UI.FM
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_PaymentRecordDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_PaymentRecordDetail>;
-                //红冲时就是负数
+                //红字时就是负数
                 details = details.Where(c => c.LocalAmount != 0 || c.ForeignAmount != 0).ToList();
                 if (details.Count == 0)
                 {

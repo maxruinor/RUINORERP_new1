@@ -189,6 +189,9 @@ namespace RUINORERP.UI.PSI.PUR
                     entity.tb_PurEntryReDetails.ForEach(c => c.PurEntryRe_ID = 0);
                     entity.tb_PurEntryReDetails.ForEach(c => c.PurEntryRe_CID = 0);
                 }
+
+                //默认处理方式为退款，会生成应付红字单，到退回入库时再生成 应付蓝字对冲。
+                entity.ProcessWay = (int)PurReProcessWay.厂商退款;
             }
 
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);

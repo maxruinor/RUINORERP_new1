@@ -1545,11 +1545,15 @@ namespace RUINORERP.UI.MRP.BOM
                 item.BOM_ID = 0;
                 item.SubID = 0;
             }
-            foreach (var item in EditEntity.tb_BOM_SDetailSecondaries)
+            if (EditEntity.tb_BOM_SDetailSecondaries!=null)
             {
-                item.BOM_ID = 0;
-                item.SecID = 0;
+                foreach (var item in EditEntity.tb_BOM_SDetailSecondaries)
+                {
+                    item.BOM_ID = 0;
+                    item.SecID = 0;
+                }
             }
+
             return EditEntity;
         }
 

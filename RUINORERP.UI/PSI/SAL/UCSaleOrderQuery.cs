@@ -68,7 +68,7 @@ namespace RUINORERP.UI.PSI.SAL
             List<ContextMenuController> list = new List<ContextMenuController>();
             list.Add(new ContextMenuController("【标记已打印】", true, false, "NewSumDataGridView_标记已打印"));
             list.Add(new ContextMenuController("【转为出库单】", true, false, "NewSumDataGridView_转为销售出库单"));
-            list.Add(new ContextMenuController("【取消订单】", true, false, "NewSumDataGridView_取消订单"));
+            list.Add(new ContextMenuController("【订单取消作废】", true, false, "NewSumDataGridView_取消订单"));
             list.Add(new ContextMenuController("【转为采购单】", true, false, "NewSumDataGridView_转为采购订单"));
             list.Add(new ContextMenuController("【预收货款】", true, false, "NewSumDataGridView_预收货款"));
             return list;
@@ -336,10 +336,14 @@ namespace RUINORERP.UI.PSI.SAL
 
 
 
-
+        /// <summary>
+        /// 订单取消作废
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void NewSumDataGridView_取消订单(object sender, EventArgs e)
         {
-            if (MessageBox.Show("确定要执行【取消订单】操作吗?", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.No)
+            if (MessageBox.Show("确定要执行【订单取消作废】操作吗?", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2) == DialogResult.No)
             {
                 return;
             }
@@ -353,7 +357,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     if (item.tb_SaleOuts != null && item.tb_SaleOuts.Count > 0)
                     {
-                        MessageBox.Show($"当前订单：{item.SOrderNo},已经生成过出库单，\r\n无法取消！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"当前订单：{item.SOrderNo},已经生成过出库单，\r\n无法取消作废,只能销售退回处理！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
                     }
                     tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();

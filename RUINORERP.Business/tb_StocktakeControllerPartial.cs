@@ -33,8 +33,6 @@ namespace RUINORERP.Business
 {
     public partial class tb_StocktakeController<T>
     {
-
-
         /// <summary>
         /// 审核盘点单 注意盘点单明细中的差数，在提交或录入时就自动计算。到审核时数据都准备好了。只是确认审核会影响其他数据以及审核状态等
         /// </summary>
@@ -48,15 +46,13 @@ namespace RUINORERP.Business
 
             try
             {
-
-
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 if (entity == null)
                 {
                     return rmrs;
                 }
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+    
                 //!!!child.DiffQty 是否有正负数？如果有正数
                 CheckMode cm = (CheckMode)entity.CheckMode;
                 //将盘点到的数据，根据处理调整类型去修改库存表，期初还需要保存到期初表中
@@ -113,16 +109,7 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.EditEntity(inv);
                     }
 
-                    /*
-                  直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                 平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                 先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                 后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                 数据来源可以是多种多样的，例如：
-                 采购价格：从供应商处购买产品或物品时的价格。
-                 生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                 市场价格：参考市场上类似产品或物品的价格。
-                  */
+               
 
                     //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.
                     //并且其实盘点时只有数量大于0时才计算成本
@@ -192,7 +179,28 @@ namespace RUINORERP.Business
                     _logger.LogInformation($"{entity.CheckNo}审核时，更新库存结果为0行，请检查数据！");
                 }
 
-
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                    try
+                    {
+                        #region 生成费用单
+                        var ctrpayable = _appContext.GetRequiredService<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
+                        tb_FM_ProfitLoss profitLoss = ctrpayable.BuildProfitLoss(entity);
+                        ReturnMainSubResults<tb_FM_ProfitLoss> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
+                        if (rmr.Succeeded)
+                        {
+                            //已经是等审核。 审核时会核销预收付款
+                            rmrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                        }
+                        #endregion
+                    }
+                    catch (Exception)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("盘点单审核时，财务数据处理失败，更新失败！");
+                    }
+                }
 
 
                 //List<tb_Inventory> UpdateList = invUpdateList.Where(c => c.Inventory_ID > 0).ToList();
@@ -252,7 +260,7 @@ namespace RUINORERP.Business
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
-                BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
+      
                 CheckMode cm = (CheckMode)entity.CheckMode;
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StocktakeDetails)
@@ -357,6 +365,30 @@ namespace RUINORERP.Business
                 {
 
                 }
+
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
+                {
+                    try
+                    {
+                        #region 生成费用单
+                        var ctrpayable = _appContext.GetRequiredService<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
+                        tb_FM_ProfitLoss profitLoss = ctrpayable.BuildProfitLoss(entity);
+                        ReturnMainSubResults<tb_FM_ProfitLoss> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
+                        if (rmr.Succeeded)
+                        {
+                            //已经是等审核。 审核时会核销预收付款
+                            rmsr.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                        }
+                        #endregion
+                    }
+                    catch (Exception)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("盘点单审核时，财务数据处理失败，更新失败！");
+                    }
+                }
+
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalOpinions = "反审";

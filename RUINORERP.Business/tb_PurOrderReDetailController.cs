@@ -29,7 +29,7 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 采购退回单
+    /// 采购退货单
     /// </summary>
     public partial class tb_PurOrderReDetailController<T>:BaseController<T> where T : class
     {

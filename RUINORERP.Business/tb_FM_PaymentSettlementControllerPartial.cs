@@ -76,7 +76,7 @@ namespace RUINORERP.Business
 
             //if (SettlementRecord.SettledLocalAmount < 0 || SettlementRecord.SettledForeignAmount < 0)
             //{
-            //    SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
+            //    SettlementRecord.SettlementType = (int)SettlementType.红字核销;
             //    SettlementRecord.IsReversed = true;
             //}
 
@@ -143,7 +143,7 @@ namespace RUINORERP.Business
 
             if (SettlementRecord.SettledLocalAmount < 0 || SettlementRecord.SettledForeignAmount < 0)
             {
-                SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
+                SettlementRecord.SettlementType = (int)SettlementType.红字核销;
                 SettlementRecord.IsReversed = true;
                 if (ReversedPaymentSettlement != null)
                 {
@@ -211,7 +211,7 @@ namespace RUINORERP.Business
             SettlementRecord.Account_id = PaymentRecord.Account_id;
             if (SettlementRecord.SettledLocalAmount < 0 || SettlementRecord.SettledForeignAmount < 0)
             {
-                SettlementRecord.SettlementType = (int)SettlementType.红冲核销;
+                SettlementRecord.SettlementType = (int)SettlementType.红字核销;
             }
 
             //应收单转收款

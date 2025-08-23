@@ -1,4 +1,4 @@
-﻿ using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -369,6 +369,9 @@ namespace RUINORERP.UI.PSI.INV
             //由查询的结果中含有的字段，指向到明细中的字段中,这里是将查询到的库存放到载账数量
 
             sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Quantity, t => t.CarryinglQty);
+            sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Inv_Cost, t => t.UntaxedCost);
+            // sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Quantity, t => t.CarryinglQty);
+
 
             //  listCols.SetCol_Formula<tb_StocktakeDetail>((a, b, c) => (a.CarryinglQty * b.CarryinglQty * c.CarryinglQty), F => F.CarryinglQty);
             listCols.SetCol_Summary<tb_StocktakeDetail>(c => c.CheckQty);
@@ -700,6 +703,7 @@ namespace RUINORERP.UI.PSI.INV
                         {
                             detail.UntaxedCost = item.Inv_Cost.Value;
                         }
+                        detail.Cost = detail.UntaxedCost / (1 + detail.TaxRate);
                         if (item.Quantity.HasValue)
                         {
                             detail.CarryinglQty = item.Quantity.Value;

@@ -1,10 +1,10 @@
-﻿所谓的红字冲销，红字单，比方  收款单的红字单， 就是创建一个对应的 收款单，只是金额为负数 并且状态标记为红冲或冲销
+﻿所谓的红字冲销，红字单，比方  收款单的红字单， 就是创建一个对应的 收款单，只是金额为负数 并且状态标记为红字或冲销
 
 
 一、核销记录的核心作用
 记录资金与业务的关联：明确每一笔收付款如何冲抵预收预付或应收应付。
 
-支持反向操作：退款、红冲时需依赖核销记录进行逆向处理。
+支持反向操作：退款、红字冲销时需依赖核销记录进行逆向处理。
 
 财务对账与审计：提供完整的资金流转证据链。
 
@@ -101,7 +101,7 @@ CREATE TABLE tb_FM_PaymentSettlement (
     Amount DECIMAL(18,2) NOT NULL,        -- 核销金额（原币）
     Currency VARCHAR(10) NOT NULL,        -- 币种
     SettlementDate DATETIME NOT NULL,     -- 核销日期
-    IsReversed BIT DEFAULT 0,             -- 是否反向冲销（退款/红冲）
+    IsReversed BIT DEFAULT 0,             -- 是否反向冲销（退款/红字）
     ReversedSettlementId BIGINT           -- 关联的反向核销记录ID
 );
 五、关键设计原则
@@ -117,7 +117,7 @@ CREATE TABLE tb_FM_PaymentSettlement (
 
 支持反向操作：
 
-退款或红冲时，生成反向核销记录（IsReversed=1），并关联原记录。
+退款或红字时，生成反向核销记录（IsReversed=1），并关联原记录。
 
 多币种处理：
 

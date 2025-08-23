@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Services
 {
     /// <summary>
-    /// 采购退回单
+    /// 采购退货单
     /// </summary>
     public partial class tb_PurOrderReDetailServices : BaseServices<tb_PurOrderReDetail>, Itb_PurOrderReDetailServices
     {

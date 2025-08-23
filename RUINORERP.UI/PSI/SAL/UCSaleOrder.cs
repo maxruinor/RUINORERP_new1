@@ -921,7 +921,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 {
                     EditEntity.Deposit = 0;
                 }
-                
+
             }
             catch (Exception ex)
             {
@@ -1082,7 +1082,11 @@ using var binder = new UIStateBinder(..., customEvaluator);
                             //    c.SubtotalCostAmount = (c.Cost + c.CustomizedCost) * c.Quantity;
                             //}
                             //c.SubtotalTransAmount = c.TransactionPrice * c.Quantity;
-                            //c.SubtotalTaxAmount = c.SubtotalTransAmount / (1 + c.TaxRate) * c.TaxRate;
+                            if (c.TotalDeliveredQty > 0 && (EditEntity.tb_SaleOuts==null || EditEntity.tb_SaleOuts.Count == 0))
+                            {
+                                c.TotalDeliveredQty = 0;
+                            }
+                            c.SubtotalTaxAmount = c.SubtotalTransAmount / (1 + c.TaxRate) * c.TaxRate;
                             if (c.CustomizedCost > 0)
                             {
                                 EditEntity.IsCustomizedOrder = true;

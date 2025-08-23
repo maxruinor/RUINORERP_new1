@@ -45,13 +45,13 @@ namespace RUINORERP.UI.PSI.SAL
             //ContextClickList.Add(NewSumDataGridView_转为收付款单);
             List<ContextMenuController> list = new List<ContextMenuController>();
             //退款单
-            list.Add(new ContextMenuController("【转为红冲应收款单】", true, false, "NewSumDataGridView_转为红冲应收款单"));
+            list.Add(new ContextMenuController("转为红字【应收款单】", true, false, "NewSumDataGridView_转为红字应收款单"));
             return list;
         }
         public override void BuildContextMenuController()
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
-            ContextClickList.Add(NewSumDataGridView_转为红冲应收款单);
+            ContextClickList.Add(NewSumDataGridView_转为红字应收款单);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
@@ -66,12 +66,12 @@ namespace RUINORERP.UI.PSI.SAL
                 _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
             }
         }
-        private async void NewSumDataGridView_转为红冲应收款单(object sender, EventArgs e)
+        private async void NewSumDataGridView_转为红字应收款单(object sender, EventArgs e)
         {
             List<tb_SaleOutRe> selectlist = GetSelectResult();
             if (selectlist.Count > 1)
             {
-                MessageBox.Show("生成红冲应收款单每次只能选择一个销售退回单。");
+                MessageBox.Show("生成红字【应收款单】每次只能选择一个销售退回单。");
                 return;
             }
             List<tb_SaleOutRe> RealList = new List<tb_SaleOutRe>();
@@ -79,7 +79,7 @@ namespace RUINORERP.UI.PSI.SAL
             int counter = 1;
             foreach (var item in selectlist)
             {
-                //只有审核状态才可以转换为应收 红冲
+                //只有审核状态才可以转换为应收 红字
                 bool canConvert = item.DataStatus == (long)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert)
                 {
@@ -88,14 +88,14 @@ namespace RUINORERP.UI.PSI.SAL
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前销售退回单 {item.ReturnNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【红冲】应收款单。").Append("\r\n");
+                    msg.Append($"当前销售退回单 {item.ReturnNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【红字】应收款单。").Append("\r\n");
                     counter++;
                 }
             }
             //多选时。要相同客户才能合并到一个收款单
             if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
             {
-                msg.Append("多选时，要相同客户才能合并到一个【红冲】应收款单");
+                msg.Append("多选时，要相同客户才能合并到一个【红字应收款单】");
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -110,7 +110,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             if (RealList.Count == 0)
             {
-                msg.Append("请至少选择一行数据转为【红冲】应收款单");
+                msg.Append("请至少选择一行数据转为【红字应收款单】");
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -120,7 +120,7 @@ namespace RUINORERP.UI.PSI.SAL
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             string Flag = string.Empty;
-            //红冲收款
+            //红字收款
             Flag = typeof(RUINORERP.UI.FM.UCReceivable).FullName;
 
             tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble

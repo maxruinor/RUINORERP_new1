@@ -44,7 +44,7 @@ namespace RUINORERP.Business
         /// <summary>
         ///  价格调整单反审核 相于当销售或采购的一种补充行为
         ///  审核时生成应收付单，
-        ///  反审核时删除应收付单（如果没有支付的情况），否则只能红冲退款作废
+        ///  反审核时删除应收付单（如果没有支付的情况），否则只能红字退款作废
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
@@ -55,7 +55,7 @@ namespace RUINORERP.Business
 
             try
             {
-                //只有生效状态的才允许反审，其它不能也不需要，有可能可删除。也可能只能红冲
+                //只有生效状态的才允许反审，其它不能也不需要，有可能可删除。也可能只能红字
                 if (entity.DataStatus != (long)DataStatus.确认)
                 {
                     rmrs.ErrorMsg = "只有【已确认】审核通过状态的价格调整单才可以反审";

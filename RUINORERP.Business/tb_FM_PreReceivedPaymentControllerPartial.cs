@@ -56,7 +56,7 @@ namespace RUINORERP.Business
         //    }
         //}
         /// <summary>
-        /// 客户取消订单时，如果有订单，如果财务没有在他对应的收付单里审核前是可以反审的。否则只能通过红冲机制处理。
+        /// 客户取消订单时，如果有订单，如果财务没有在他对应的收付单里审核前是可以反审的。否则只能通过红字机制处理。
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
@@ -67,7 +67,7 @@ namespace RUINORERP.Business
 
             try
             {
-                //只有生效状态的才允许反审，其它不能也不需要，有可能可删除。也可能只能红冲
+                //只有生效状态的才允许反审，其它不能也不需要，有可能可删除。也可能只能红字
                 // 获取当前状态
                 var statusProperty = typeof(PrePaymentStatus).Name;
                 var currentStatus = (PrePaymentStatus)Enum.ToObject(
@@ -336,17 +336,17 @@ namespace RUINORERP.Business
 
 
 
-        public static bool ValidatePaymentDetails(List<tb_FM_PreReceivedPayment> paymentDetails, tb_FM_PreReceivedPayment currentPrePayment, decimal totalOrderAmount, ReturnResults<T> returnResults = null)
+        public static bool ValidatePaymentDetails(List<tb_FM_PreReceivedPayment> prePaymentLists, tb_FM_PreReceivedPayment currentPrePayment, decimal totalOrderAmount, ReturnResults<T> returnResults = null)
         {
-            if (paymentDetails.Count == 0)
+            if (prePaymentLists.Count == 0)
             {
                 return true;
             }
-            var PaymentType = (ReceivePaymentType)paymentDetails[0].ReceivePaymentType;
+            var PaymentType = (ReceivePaymentType)prePaymentLists[0].ReceivePaymentType;
 
 
             // 按来源业务类型分组
-            var groupedByBizType = paymentDetails
+            var groupedByBizType = prePaymentLists
                 .GroupBy(d => d.SourceBizType)
                 .ToList();
 
@@ -383,6 +383,24 @@ namespace RUINORERP.Business
                             {
                                 continue;
                             }
+                        }
+                        else
+                        {
+                            //两笔款正好 首款+尾款
+                            if (totalLocalAmount == totalOrderAmount)
+                            {
+                                continue;
+                            }
+
+                            //如果当前金额，和前面的一笔金额相同，则提示错误
+                            if (prePaymentLists.Any(a => a.LocalPrepaidAmount == currentPrePayment.LocalPrepaidAmount))
+                            {
+                                if (MessageBox.Show($"当前的预{PaymentType}单总金额{totalLocalAmount}与对应来源业务的已支付笔数中的金额相同，请确认不是重复支付，确定要预{PaymentType}吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, defaultButton: MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                                {
+                                    continue;
+                                }
+                            }
+
                         }
                     }
                     returnResults.ErrorMsg = $"不能存在相同业务来源的数据:{(BizType)groupedByBizType[0].Key}，来源单号为:{groupedByBillNo[0].Key}";
@@ -676,7 +694,7 @@ namespace RUINORERP.Business
                 if (item.SourceBizType.HasValue && item.SourceBizType.Value == (int)BizType.采购订单)
                 {
                     item.tb_purorder = await _appContext.Db.CopyNew().Queryable<tb_PurOrder>()
-                        .Includes(a=>a.tb_PurOrderDetails,b=>b.tb_proddetail,c=>c.tb_prod)
+                        .Includes(a => a.tb_PurOrderDetails, b => b.tb_proddetail, c => c.tb_prod)
                         .Where(c => c.PurOrder_ID == item.SourceBillId).FirstAsync();
                 }
 

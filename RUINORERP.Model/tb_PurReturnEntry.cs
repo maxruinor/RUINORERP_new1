@@ -238,6 +238,24 @@ namespace RUINORERP.Model
                         }
         }
 
+        private bool? _is_force_offset = false;
+        /// <summary>
+        /// 强制核销模式
+        /// 为真是跳过检测数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "is_force_offset", ColDesc = "强制核销模式")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "is_force_offset", IsNullable = true, ColumnDescription = "强制核销模式")]
+        [Browsable(false)]
+        public bool? is_force_offset
+        {
+            get { return _is_force_offset; }
+            set
+            {
+                SetProperty(ref _is_force_offset, value);
+            }
+        }
+
+
         private bool _isdeleted= false;
         /// <summary>
         /// 逻辑删除

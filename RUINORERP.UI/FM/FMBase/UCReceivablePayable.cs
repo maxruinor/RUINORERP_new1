@@ -64,6 +64,7 @@ namespace RUINORERP.UI.FM
         {
             InitializeComponent();
             AddPublicEntityObject(typeof(ProductSharePart));
+            picBox红字.Visible = false;
         }
 
         public override void AddExcludeMenuList()
@@ -259,7 +260,10 @@ namespace RUINORERP.UI.FM
                 {
                     base.toolStripBtnReverseReview.Visible = false;
                 }
-
+                if (entity.TotalLocalPayableAmount<0)
+                {
+                    picBox红字.Visible = true;
+                }
             }
             else
             {

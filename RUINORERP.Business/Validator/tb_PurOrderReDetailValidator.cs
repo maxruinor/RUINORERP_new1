@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 采购退回单验证类
+    /// 采购退货单验证类
     /// </summary>
     /*public partial class tb_PurOrderReDetailValidator:AbstractValidator<tb_PurOrderReDetail>*/
     public partial class tb_PurOrderReDetailValidator:BaseValidatorGeneric<tb_PurOrderReDetail>

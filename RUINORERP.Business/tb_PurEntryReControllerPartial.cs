@@ -226,7 +226,7 @@ namespace RUINORERP.Business
                     if (entity.ProcessWay == (int)PurReProcessWay.厂商退款)
                     {
                         //处理财务数据 
-                        #region 采购入库退货 财务处理 不管什么情况都是生成红字应付【金额为负】生成红冲负向应付款单
+                        #region 采购入库退货 财务处理 不管什么情况都是生成红字应付【金额为负】生成红字负向应付款单
                         //如果是有出库情况，则反冲。如果是没有出库情况。则生成付款单
                         //退货单审核后生成红字应收单（负金额）
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
@@ -237,7 +237,7 @@ namespace RUINORERP.Business
                             //下面冲销逻辑应该放到付款的审核时处理
                             /*
                             tb_FM_ReceivablePayable returnpayable = results.ReturnObject;
-                            //如果这个供应商要退款给我们，则去找这个供应商名下是否还有应付款。找到所有的。倒算自动红冲 余额。抵消
+                            //如果这个供应商要退款给我们，则去找这个供应商名下是否还有应付款。找到所有的。倒算自动红字 余额。抵消
                             var PositivePayableList = await ctrpayable.BaseQueryByWhereAsync(c => c.CustomerVendor_ID == returnpayable.CustomerVendor_ID
                             && (c.ARAPStatus == (int)ARAPStatus.待支付 || c.ARAPStatus == (int)ARAPStatus.部分支付)
                             &&
@@ -250,7 +250,7 @@ namespace RUINORERP.Business
                                 var OriginalPayable = PositivePayableList[i];
                                 #region 如果原始应付没有核销收款，则直接生成 红字应付核销
 
-                                //判断 如果出库的应收金额和未核销余额一样。说明 客户还没有支付任何款，则可以直接全额红冲
+                                //判断 如果出库的应收金额和未核销余额一样。说明 客户还没有支付任何款，则可以直接全额红字
                                 OriginalPayable.LocalBalanceAmount -= entity.TotalAmount;
                                 //-500 加上退款500 应该为0
                                 returnpayable.LocalBalanceAmount += entity.TotalAmount;
@@ -261,7 +261,7 @@ namespace RUINORERP.Business
                                 OriginalPayable.ARAPStatus = (int)ARAPStatus.已冲销;
                                 returnpayable.ARAPStatus = (int)ARAPStatus.已冲销;
                                 //生成核销记录证明正负抵消应收应付
-                                //生成一笔核销记录  应收红冲
+                                //生成一笔核销记录  应收红字
                                 var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
                                 await settlementController.GenerateSettlement(OriginalPayable, returnpayable);
 
@@ -347,7 +347,7 @@ namespace RUINORERP.Business
                 if (entity.tb_PurReturnEntries != null
                     && (entity.tb_PurReturnEntries.Any(c => c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结) && entity.tb_PurReturnEntries.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))
                 {
-                    rs.ErrorMsg = "存在已确认或已完结，或已审核的采购退回入库单，不能反审采购退回单。 ";
+                    rs.ErrorMsg = "存在已确认或已完结，或已审核的采购退回入库单，不能反审采购退货单。 ";
                     return rs;
                 }
 
@@ -526,7 +526,7 @@ namespace RUINORERP.Business
                             else
                             {
                                 _unitOfWorkManage.RollbackTran();
-                                rs.ErrorMsg = $"采购退货单：{entity.PurEntryReNo}中,对应的应收红冲数据已经生效。无法反审核！";
+                                rs.ErrorMsg = $"采购退货单：{entity.PurEntryReNo}中,对应的应收红字数据已经生效。无法反审核！";
                                 rs.Succeeded = false;
                                 return rs;
                             }

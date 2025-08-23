@@ -54,7 +54,7 @@ namespace RUINORERP.Business
         //    }
         //}
         /// <summary>
-        /// 客户取消订单时，如果有订单，如果财务没有在他对应的收付单里审核前是可以反审的。否则只能通过红冲机制处理。
+        /// 客户取消订单时，如果有订单，如果财务没有在他对应的收付单里审核前是可以反审的。否则只能通过红字机制处理。
         /// 应收应付 没有审核，没有生成付款单，也没有从预收付中抵扣时。即可 状态和 核销金额和 应收付金额一样时可以反审删除
         /// </summary>
         /// <param name="ObjectEntity"></param>
@@ -663,7 +663,7 @@ namespace RUINORERP.Business
                 payable.Employee_ID = entity.Employee_ID.Value;
             }
 
-            payable.Remark = $"销售出库单：{entity.SaleOut_NO}对应的销售退回单{entity.ReturnNo}的应付款";
+            payable.Remark = $"销售出库单：{entity.SaleOut_NO}对应的销售退回单{entity.ReturnNo}的红字应付款";
             if (payable.IsFromPlatform)
             {
                 payable.Remark += " 平台单号:" + entity.PlatformOrderNo;
@@ -863,15 +863,15 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
 
                 await settlementController.GenerateSettlement(receivablePayable, receivablePayable.LocalBalanceAmount, receivablePayable.ForeignBalanceAmount);
-               
+
                 //自动添加到损失费用单
-                
+
                 // 4. 核销金额
                 receivablePayable.ForeignPaidAmount += receivablePayable.ForeignBalanceAmount;
                 receivablePayable.LocalPaidAmount += receivablePayable.LocalBalanceAmount;
                 receivablePayable.ForeignBalanceAmount = 0;
                 receivablePayable.LocalBalanceAmount = 0;
-               
+
                 //只更新指定列
                 var updateResult = await _unitOfWorkManage.GetDbClient().Updateable(receivablePayable).UpdateColumns(it => new
                 {
@@ -928,7 +928,7 @@ namespace RUINORERP.Business
 
                 List<tb_FM_ReceivablePayable> arapupdatelist = new List<tb_FM_ReceivablePayable>();
                 List<tb_FM_PreReceivedPayment> prePaymentsUpdateList = new List<tb_FM_PreReceivedPayment>();
-                //产生两个相同出库单号的应付，只有退款 红冲 一正一负
+                //产生两个相同出库单号的应付，只有退款 红字 一正一负
 
                 if (payable.ARAPStatus == (int)ARAPStatus.草稿
                     || payable.ARAPStatus == (int)ARAPStatus.待审核)
@@ -937,7 +937,7 @@ namespace RUINORERP.Business
                     {
                         await _appContext.Db.DeleteNav(payable).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
                     }
-                    //这里还要判断 是否有付款单，还是只有预收付的核销。有付款单则用红冲?
+                    //这里还要判断 是否有付款单，还是只有预收付的核销。有付款单则用红字?
                 }
                 else
                 {
@@ -1235,7 +1235,7 @@ namespace RUINORERP.Business
 
                 List<tb_FM_ReceivablePayable> arapupdatelist = new List<tb_FM_ReceivablePayable>();
                 List<tb_FM_PreReceivedPayment> prePaymentsUpdateList = new List<tb_FM_PreReceivedPayment>();
-                //产生两个相同出库单号的应付，只有退款 红冲 一正一负
+                //产生两个相同出库单号的应付，只有退款 红字 一正一负
 
                 if (payable.ARAPStatus == (int)ARAPStatus.草稿
                     || payable.ARAPStatus == (int)ARAPStatus.待审核)
@@ -2340,6 +2340,82 @@ namespace RUINORERP.Business
         }
 
 
+        /// <summary>
+        /// 由采购退货入为生成蓝字应付款单，这个单一般是用来冲红采购退货单对应的红字应付款单
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public tb_FM_ReceivablePayable BuildReceivablePayable(tb_PurReturnEntry entity)
+        {
+            //入库时，全部生成应付，账期的。就加上到期日
+            //有付款过的。就去预付中抵扣，不够的金额及状态标识出来生成对账单
+
+            tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
+            payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
+            payable.ApprovalResults = null;
+            payable.ApprovalStatus = (int)ApprovalStatus.未审核;
+            payable.Approver_at = null;
+            payable.Approver_by = null;
+            payable.PrintStatus = 0;
+            payable.ActionStatus = ActionStatus.新增;
+            payable.ApprovalOpinions = "";
+            payable.Modified_at = null;
+            payable.Modified_by = null;
+            payable.SourceBillNo = entity.PurReEntryNo;
+            payable.SourceBillId = entity.PurReEntry_ID;
+            payable.SourceBizType = (int)BizType.采购退货入库;
+
+            payable.DepartmentID = entity.DepartmentID;
+
+            //采购就是付款
+            payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
+            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+
+
+
+
+            List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_PurReturnEntryDetails);
+
+            for (global::System.Int32 i = 0; i < details.Count; i++)
+            {
+                var olditem = entity.tb_PurReturnEntryDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID && c.PurReEntry_CID == details[i].SourceItemRowID).FirstOrDefault();
+                if (olditem != null)
+                {
+                    details[i].TaxRate = olditem.TaxRate;
+                    details[i].TaxLocalAmount = olditem.TaxAmount;
+                    details[i].Quantity = olditem.Quantity;
+                    details[i].UnitPrice = olditem.UnitPrice;
+                    details[i].LocalPayableAmount = olditem.UnitPrice * olditem.Quantity;
+                }
+                details[i].ActionStatus = ActionStatus.新增;
+            }
+
+            payable.tb_FM_ReceivablePayableDetails = details;
+         
+            #region 单独处理运费 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。
+            // 添加运费行（关键部分）
+            //  payable.ShippingFee = entity.ShipCost;
+
+            #endregion
+            //本币时 一定会有值。
+            payable.LocalBalanceAmount = entity.TotalAmount;
+            payable.LocalPaidAmount = 0;
+            payable.TotalLocalPayableAmount = entity.TotalAmount;
+
+            //通过订单添加付款信息
+            // payable.PayeeInfoID = entity.PayeeInfoID;
+
+
+            //业务经办人
+            payable.Employee_ID = entity.Employee_ID;
+
+
+            payable.Remark = $"采购退货入库单：{entity.PurReEntryNo}的应付款";
+            Business.BusinessHelper.Instance.InitEntity(payable);
+            payable.ARAPStatus = (int)ARAPStatus.待审核;
+            return payable;
+        }
+
 
         public async Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model, bool UseTran = false) where C : class
         {
@@ -2455,7 +2531,7 @@ namespace RUINORERP.Business
             //业务经办人
             payable.Employee_ID = entity.Employee_ID;
 
-            payable.Remark = $"采购入库单：{entity.PurEntryNo}对应的采购退回单{entity.PurEntryReNo}的应付款";
+            payable.Remark = $"采购入库单：{entity.PurEntryNo}对应的采购退货单{entity.PurEntryReNo}的红字应付款";
 
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;

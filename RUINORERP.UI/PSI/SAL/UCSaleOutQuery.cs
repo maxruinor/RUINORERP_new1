@@ -159,7 +159,7 @@ namespace RUINORERP.UI.PSI.SAL
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             string Flag = string.Empty;
-            //红冲收款
+            //红字收款
             Flag = typeof(RUINORERP.UI.FM.UCReceivable).FullName;
 
             tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble

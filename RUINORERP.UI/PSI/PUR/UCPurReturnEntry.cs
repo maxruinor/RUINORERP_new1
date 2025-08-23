@@ -153,7 +153,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.TotalTaxAmount.ToString(), txtTotalTaxAmount, BindDataType4TextBox.Money, false);
 
             DataBindingHelper.BindData4DataTime<tb_PurReturnEntry>(entity, t => t.BillDate, dtpBillDate, false);
-
+            DataBindingHelper.BindData4CheckBox<tb_PurReturnEntry>(entity, t => t.is_force_offset, chkis_force_offset, false);
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.ShippingWay, txtShippingWay, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.TrackNo, txtTrackNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
@@ -513,7 +513,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                 if (NewDetails.Count == 0)
                 {
-                    tipsMsg.Add($"采购退回单:{entity.PurEntryReNo}已全部入回仓库，请检查是否正在重复操作！");
+                    tipsMsg.Add($"采购退货单:{entity.PurEntryReNo}已全部入回仓库，请检查是否正在重复操作！");
                 }
 
                 StringBuilder msg = new StringBuilder();

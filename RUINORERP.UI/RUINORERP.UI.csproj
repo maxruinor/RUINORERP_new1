@@ -2956,6 +2956,7 @@
     <Compile Include="UCSourceGrid\AdditionalEvent.cs" />
     <Compile Include="UCSourceGrid\CellClickEvent.cs" />
     <Compile Include="UCSourceGrid\CollectionExtensions.cs" />
+    <Compile Include="UCSourceGrid\QueryColumnMapping.cs" />
     <Compile Include="UCSourceGrid\SGColDisplayHandler.cs" />
     <Compile Include="UCSourceGrid\ComputingController.cs" />
     <Compile Include="UCSourceGrid\CustomKeyEvent.cs" />

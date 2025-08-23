@@ -154,11 +154,11 @@ namespace RUINORERP.UI.PSI.SAL
                                     if (!autoApproval.Succeeded)
                                     {
                                         autoApproval.Succeeded = false;
-                                        autoApproval.ErrorMsg = $"【平台退款】时,应收款单（红冲退款）自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                        autoApproval.ErrorMsg = $"【平台退款】时,应收款单（红字退款）自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                     }
                                     else
                                     {
-                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单（红冲退款），【平台退款】时自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应收款单（红字退款），【平台退款】时自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
                                     }
 
                                     #region 生成新的退款单
@@ -172,7 +172,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                                     newPaymentRecord.Paytype_ID = saleOutRe.Paytype_ID;
 
-                                    newPaymentRecord.Remark = "平台单，货已经退仓，【平台退款】时自动生成的收款单（负数）红冲";
+                                    newPaymentRecord.Remark = "平台单，货已经退仓，【平台退款】时自动生成的收款单（负数）红字";
                                     var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(newPaymentRecord, false);
                                     if (rrs.Succeeded)
                                     {
@@ -202,7 +202,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 //平台订单 经过运费在 平台退款操作后，退回单状态中已经是 退款状态了。
                                 if (MainForm.Instance.AppContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
                                 {
-                                    //自动生成销售退回单的对应的应该收款单（红冲的）对应的收款记录
+                                    //自动生成销售退回单的对应的应该收款单（红字的）对应的收款记录
 
                                     var PaymentList = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentRecord>()
                                       .Includes(a => a.tb_FM_PaymentRecordDetails)

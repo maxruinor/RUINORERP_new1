@@ -296,8 +296,6 @@ namespace RUINORERP.Business
                 List<tb_BOM_S> BOMs = new List<tb_BOM_S>();
                 List<tb_PriceRecord> PriceRecords = new List<tb_PriceRecord>();
 
-
-
                 //采购入库单，如果来自于采购订单，则要把入库数量累加到订单中的已交数量 TODO 销售也会有这种情况
                 if (entity.tb_purorder != null)
                 {
@@ -367,29 +365,6 @@ namespace RUINORERP.Business
                         // 递归更新所有上级BOM的成本
                         await ctrbom.UpdateParentBOMsAsync(group.Key.ProdDetailID, inv.Inv_Cost);
 
-                        /*
-                        #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化，但是对就的BOM主表对应的母件。可能是其它配方的子项目。也要同步更新。递归
-
-                        List<tb_BOM_SDetail> bomDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                        .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
-                        .Where(c => c.ProdDetailID == group.Key.ProdDetailID).ToListAsync();
-                        foreach (tb_BOM_SDetail bomDetail in bomDetails)
-                        {
-                            //如果存在则更新 
-                            bomDetail.UnitCost = inv.Inv_Cost;
-                            bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
-                            if (bomDetail.tb_bom_s != null)
-                            {
-                                bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
-                                bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
-                                bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
-                                BOMs.Add(bomDetail.tb_bom_s);
-                            }
-                            BOM_SDetails.Add(bomDetail);
-                        }
-
-                        #endregion
-                     */
 
 
                     }
@@ -644,26 +619,11 @@ namespace RUINORERP.Business
                     if (group.Value.IsGift.HasValue && !group.Value.IsGift.Value && group.Value.UntaxedUnitPrice > 0)
                     {
                         CommService.CostCalculations.AntiCostCalculation(_appContext, inv, group.Value.PurQtySum.ToInt(), group.Value.UntaxedUnitPrice);
-                        #region 更新BOM价格,当前产品存在哪些BOM中，则更新所有BOM的价格包含主子表数据的变化
 
-                        List<tb_BOM_SDetail> bomDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetail>()
-                        .Includes(b => b.tb_bom_s, d => d.tb_BOM_SDetails)
-                        .Where(c => c.ProdDetailID == group.Key.ProdDetailID).ToListAsync();
-                        foreach (tb_BOM_SDetail bomDetail in bomDetails)
-                        {
-                            //如果存在则更新 
-                            bomDetail.UnitCost = inv.Inv_Cost;
-                            bomDetail.SubtotalUnitCost = bomDetail.UnitCost * bomDetail.UsedQty;
-                            if (bomDetail.tb_bom_s != null)
-                            {
-                                bomDetail.tb_bom_s.TotalMaterialCost = bomDetail.tb_bom_s.tb_BOM_SDetails.Sum(c => c.SubtotalUnitCost);
-                                bomDetail.tb_bom_s.OutProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalOutManuCost + bomDetail.tb_bom_s.OutApportionedCost;
-                                bomDetail.tb_bom_s.SelfProductionAllCosts = bomDetail.tb_bom_s.TotalMaterialCost + bomDetail.tb_bom_s.TotalSelfManuCost + bomDetail.tb_bom_s.SelfApportionedCost;
-                                BOMs.Add(bomDetail.tb_bom_s);
-                            }
-                            BOM_SDetails.Add(bomDetail);
-                        }
-                        #endregion
+                        var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                        // 递归更新所有上级BOM的成本
+                        await ctrbom.UpdateParentBOMsAsync(group.Key.ProdDetailID, inv.Inv_Cost);
+                      
                     }
 
                     #endregion

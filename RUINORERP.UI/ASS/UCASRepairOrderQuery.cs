@@ -90,7 +90,7 @@ namespace RUINORERP.UI.ASS
             int counter = 1;
             foreach (var item in selectlist)
             {
-                //只有审核状态才可以转换为应收 红冲
+                //只有审核状态才可以转换为应收 红字
                 bool canConvert = item.DataStatus == (long)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert)
                 {
@@ -121,7 +121,7 @@ namespace RUINORERP.UI.ASS
 
             if (RealList.Count == 0)
             {
-                msg.Append("请至少选择一行数据转为【红冲】应收款单");
+                msg.Append("请至少选择一行数据转为应收款单】");
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -131,7 +131,7 @@ namespace RUINORERP.UI.ASS
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             string Flag = string.Empty;
-            //红冲收款
+            //收款
             Flag = typeof(RUINORERP.UI.FM.UCReceivable).FullName;
 
             tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble

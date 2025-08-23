@@ -538,15 +538,13 @@ namespace RUINORERP.UI.ASS
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
 
-
             //listCols.SetCol_DefaultValue<tb_AS_AfterSaleApplyDetail>(a => a.TaxRate, 0.13m);//m =>decial d=>double
 
             //如果库位为只读  暂时只会显示 ID
             //listCols.SetCol_ReadOnly<ProductSharePart>(c => c.Location_ID);
             listCols.SetCol_ReadOnly<tb_AS_AfterSaleApplyDetail>(c => c.DeliveredQty);
-
-
-
+            //主表指定了,明细 可以省略，不再明细可以随便更指定。不然太复杂
+            listCols.SetCol_DefaultHide<tb_AS_AfterSaleApplyDetail>(c => c.Location_ID);
 
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;

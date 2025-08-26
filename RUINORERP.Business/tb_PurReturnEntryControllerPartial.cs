@@ -291,10 +291,10 @@ namespace RUINORERP.Business
                         }
                         #endregion
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         _unitOfWorkManage.RollbackTran();
-                        throw new Exception("入库时，财务数据处理失败，更新失败！");
+                        throw new Exception("采购退回入库时，财务数据处理失败，审核失败！");
                     }
                 }
 

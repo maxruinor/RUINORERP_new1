@@ -93,14 +93,14 @@ namespace RUINORERP.Global.EnumExt
         /// <summary>
         /// 损失（支出）
         /// </summary>
-        [Description("损失（收入）")]
-        收入 = 1,
+        [Description("损失（支出）")]
+        支出 = 1,
 
         /// <summary>
         /// 溢余（收入）
         /// </summary>
         [Description("溢余（收入）")]
-        支出 = 2
+        收入 = 2
     }
 
 

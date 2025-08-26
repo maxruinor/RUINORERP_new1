@@ -64,6 +64,8 @@ namespace RUINORERP.Common.Extensions
             if (customAttribute == null) { return val.ToString(); }
             else { return ((DescriptionAttribute)customAttribute).Description; }
         }
+  
+
 
         /// <summary>
         /// 获取到对应枚举的描述-没有描述信息，返回枚举值

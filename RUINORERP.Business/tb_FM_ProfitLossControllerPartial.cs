@@ -177,6 +177,31 @@ namespace RUINORERP.Business
                 }
 
                 //结案来源单？
+                if (entity.SourceBizType == (int)BizType.盘点单)
+                {
+                    int borrowUpdateResult = await _appContext.Db.Updateable<tb_Stocktake>()
+                                   .SetColumns(it => new tb_Stocktake() { DataStatus = (int)DataStatus.完结, Notes = it.Notes + "盘点确认费用结案" })
+                                   .Where(it => it.MainID == entity.SourceBillId)
+                                   .ExecuteCommandAsync();
+                }
+
+                if (entity.SourceBizType == (int)BizType.借出单)
+                {
+                    int borrowUpdateResult = await _appContext.Db.Updateable<tb_ProdBorrowing>()
+                                   .SetColumns(it => new tb_ProdBorrowing() { DataStatus = (int)DataStatus.完结, CloseCaseOpinions = "借出确认费用结案" })
+                                   .Where(it => it.BorrowID == entity.SourceBillId)
+                                   .ExecuteCommandAsync();
+                }
+
+                //if (entity.SourceBizType == (int)BizType.应付款单 || entity.SourceBizType == (int)BizType.应收款单)
+                //{
+                //    int borrowUpdateResult = await _appContext.Db.Updateable<tb_FM_ReceivablePayable>()
+                //                   .SetColumns(it => new tb_FM_ReceivablePayable() { ARAPStatus = (int)ARAPStatus.坏账, Remark = it.Remark + ((BizType)entity.SourceBizType.Value).ToString() + "坏账确认费用结案" })
+                //                   .Where(it => it.ARAPId == entity.SourceBillId)
+                //                   .ExecuteCommandAsync();
+                //}
+
+
 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
@@ -450,6 +475,7 @@ namespace RUINORERP.Business
                 }
                 details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
                 details[i].ActionStatus = ActionStatus.新增;
+                details[i].ProfitLossType = (int)ProfitLossType.样品赠出;
             }
 
             profitLoss.tb_FM_ProfitLossDetails = details;

@@ -489,6 +489,10 @@ namespace RUINORERP.UI.MRP.MP
                 //}
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_MaterialRequisitionDetail> details = sgd.BindingSourceLines.DataSource as List<tb_MaterialRequisitionDetail>;
+                if (details==null)
+                {
+                    return;
+                }
                 details = details.Where(c => c.ProdDetailID > 0).ToList();
                 if (details.Count == 0)
                 {
@@ -502,8 +506,8 @@ namespace RUINORERP.UI.MRP.MP
             }
             catch (Exception ex)
             {
-
                 logger.LogError("计算出错", ex);
+                logger.LogError(ex.Message + ex.StackTrace);
                 MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
             }
         }

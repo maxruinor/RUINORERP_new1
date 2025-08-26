@@ -189,7 +189,17 @@ namespace RUINORERP.UI.PSI.PUR
                     entity.tb_PurEntryReDetails.ForEach(c => c.PurEntryRe_ID = 0);
                     entity.tb_PurEntryReDetails.ForEach(c => c.PurEntryRe_CID = 0);
                 }
-
+                if (entity.tb_purentry != null && entity.tb_purentry.Currency_ID.HasValue)
+                {
+                    entity.Currency_ID = entity.tb_purentry.Currency_ID.Value;
+                }
+                else
+                {
+                    if (AppContext.BaseCurrency != null)
+                    {
+                        entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                    }
+                }
                 //默认处理方式为退款，会生成应付红字单，到退回入库时再生成 应付蓝字对冲。
                 entity.ProcessWay = (int)PurReProcessWay.厂商退款;
             }
@@ -363,7 +373,8 @@ namespace RUINORERP.UI.PSI.PUR
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.prop, t => t.property);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.VendorModelCode, t => t.VendorModelCode);
-
+            //sgh.SetQueryItemToColumnPairs<ProductSharePart, tb_PurEntryReDetail>(sgd, f => f.Inv_Cost, t => t.UnitPrice);
+            sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_PurEntryReDetail>(sgd, f => f.Inv_Cost, t => t.UnitPrice);
             //应该只提供一个结构
             List<tb_PurEntryReDetail> lines = new List<tb_PurEntryReDetail>();
             bindingSourceSub.DataSource = lines; //  ctrSub.Query(" 1>2 ");

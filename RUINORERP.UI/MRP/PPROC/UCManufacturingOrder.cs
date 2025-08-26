@@ -652,10 +652,17 @@ namespace RUINORERP.UI.MRP.MP
 
                 if (NeedValidated)
                 {
+
+                    if (EditEntity.tb_bom_s == null)
+                    {
+                        var bomCtroller = MainForm.Instance.AppContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                        EditEntity.tb_bom_s =await bomCtroller.BaseQueryByIdAsync(EditEntity.BOM_ID);
+                    }
+
                     // 1. 配方单位成本
                     decimal bomUnitCost = EditEntity.IsOutSourced
                         ? EditEntity.tb_bom_s.OutProductionAllCosts
-                        : EditEntity.tb_bom_s.SelfApportionedCost;
+                        : EditEntity.tb_bom_s.SelfProductionAllCosts;
 
                     // 2. 制令单实际单位成本
                     decimal moUnitCost = EditEntity.ManufacturingQty == 0
@@ -674,7 +681,7 @@ namespace RUINORERP.UI.MRP.MP
                     {
                         string msg = $"产出母件的生产单位成本({moUnitCost:N2})与配方成本({bomUnitCost:N2})差异过大（>{tolerance:P0}），\n" +
                                      "是否为定制单？确定继续吗？";
-                        if (MessageBox.Show(msg, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,MessageBoxDefaultButton.Button2) == DialogResult.No)
+                        if (MessageBox.Show(msg, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                         {
                             return false;
                         }

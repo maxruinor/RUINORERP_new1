@@ -7,6 +7,8 @@ using Google.Protobuf.Reflection;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NPOI.SS.Formula.Functions;
+
 //using Google.Protobuf.Reflection;
 //using NetTaste;
 using RUINORERP.Business;
@@ -15,6 +17,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.Dto;
 using RUINORERP.UI.BaseForm;
@@ -28,6 +31,7 @@ using SourceGrid.Cells.Editors;
 using SourceGrid.Selection;
 using SqlSugar;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -3378,19 +3382,53 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             var _editor = new SourceGrid.Cells.Editors.ComboBox(typeof(string));
             if (dci.CustomFormat == CustomFormatType.EnumOptions && dci.TypeForEnumOptions != null)
-            {
-                #region 绑定枚举值
-                List<string> ids = new List<string>();
-                ConcurrentDictionary<string, string> OutNames = new ConcurrentDictionary<string, string>();
+            {      // 取得枚举类型
+                Type enumType = dci.TypeForEnumOptions;
+                if (!enumType.IsEnum)
+                    throw new ArgumentException("类型必须是枚举", nameof(enumType));
 
-                var dic = EnumHelper.GetDicKeyValue(dci.TypeForEnumOptions);
-                dic.Keys.ForEach(x => ids.Add(x.ToString()));
-
-                dic.ForEach(x =>
+                #region  判断设置枚举过滤条件
+                // 获取所有枚举值（原始完整列表）
+               // Array allValues = Enum.GetValues(enumType);
+               /// IEnumerable<Enum> values = allValues.Cast<Enum>();
+                IEnumerable<Enum> values = Enum.GetValues(enumType).CastToList<Enum>();
+                // 判断是否设置了过滤
+                if (dci.EnumFilterRuntime != null)
                 {
-                    OutNames.TryAdd(x.Key.ToString(), x.Value.ToString());
+                    values = values.Where(dci.EnumFilterRuntime.Match);
                 }
-                );
+                #endregion
+
+                #region 绑定枚举值
+
+                // 1) ids：key 列表（字符串形式的整数值）
+                List<string> ids = values
+                    .Select(e => Convert.ToInt64(e).ToString())
+                    .ToList();
+
+
+                ConcurrentDictionary<string, string> OutNames = new ConcurrentDictionary<string, string>();
+                 OutNames = new ConcurrentDictionary<string, string>(
+                                values.Select(e =>
+                                {
+                                    // 枚举值 → 字符串（int/long 均可）
+                                    string key = Convert.ToInt64(e).ToString();
+
+                                    // 描述：优先 Description 特性，其次 ToString()
+                                    string display = e.GetType()
+                                                      .GetField(e.ToString())
+                                                     ?.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                                                      .Cast<DescriptionAttribute>()
+                                                      .FirstOrDefault()
+                                                     ?.Description
+                                                      ?? e.ToString();
+
+                                    return new KeyValuePair<string, string>(key, display);
+                                }));
+
+                
+
+
 
                 SourceGrid.Cells.Editors.ComboBox ec = new SourceGrid.Cells.Editors.ComboBox(typeof(List<int>), ids.ToArray(), true);
                 ec.Control.FormattingEnabled = true;
@@ -3459,6 +3497,16 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             else
             {
+
+                //明细 加载 关联表的数据源是通过外键加载的。是不是可以加一个条件 来过滤？
+                //     像这样。再加一个类似 指定数据源、加条件？
+                //         listCols.SetCol_Format<tb_FM_ProfitLossDetail>(c => c.IncomeExpenseDirection, CustomFormatType.EnumOptions, null, typeof(IncomeExpenseDirection));
+
+
+
+
+
+
                 string tableName = dci.FKRelationCol.FKTableName;
                 string typeName = "RUINORERP.Model." + tableName;
                 //缓存下拉
@@ -3467,13 +3515,25 @@ namespace RUINORERP.UI.UCSourceGrid
                     string ColID = BizCacheHelper.Manager.NewTableList[tableName].Key;
                     string ColName = BizCacheHelper.Manager.NewTableList[tableName].Value;
                     BindingSource bs = new BindingSource();
-                    var objlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                    if (objlist != null)
+
+                    //var MyCache = BizCacheHelper.Manager.GetEntityList_AII(tableName); // 返回 List<object>
+                    //if (dci.DataSourceFilter != null)
+                    //{
+                    //    // 统一用非泛型接口
+                    //    MyCache = MyCache.Where(dci.DataSourceFilter.Match).ToList();
+                    //}
+
+                    var cache = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    if (cache != null)
                     {
-                        var tlist = ((IEnumerable<dynamic>)objlist).ToList();
+                        var cachelist = ((IEnumerable<dynamic>)cache).ToList();
+
+                        if (dci.DataSourceFilter != null)
+                            cachelist = cachelist.Where(dci.DataSourceFilter.Match).ToList();
+
                         List<string> ids = new List<string>();
                         ConcurrentDictionary<string, string> OutNames = new ConcurrentDictionary<string, string>();
-                        foreach (var item in tlist)
+                        foreach (var item in cachelist)
                         {
                             if (item is JObject)
                             {
@@ -3501,7 +3561,8 @@ namespace RUINORERP.UI.UCSourceGrid
                             }
 
                         }
-                        if (tlist == null || tlist.Count == 0)
+
+                        if (cachelist == null || cachelist.Count == 0)
                         {
                             Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
                             var list = bdc.GetBindSourceList(tableName);
@@ -3659,24 +3720,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                             #endregion
                             _editor = ec;
-
-
-                            /*
-                            int[] arrInt = new int[] { 0, 1, 2, 3, 4 };
-                            string[] arrStr = new string[] { "0 - Zero", "1 - One", "2 - Two", "3 - Three", "4- Four" };
-                            SourceGrid.Cells.Editors.ComboBox editorComboCustomDisplay = new SourceGrid.Cells.Editors.ComboBox(typeof(int), arrInt, true);
-                            editorComboCustomDisplay.Control.FormattingEnabled = true;
-                            DevAge.ComponentModel.Validator.ValueMapping comboMapping = new DevAge.ComponentModel.Validator.ValueMapping();
-                            comboMapping.DisplayStringList = arrStr;
-                            comboMapping.ValueList = arrInt;
-                            comboMapping.SpecialList = arrStr;
-                            comboMapping.SpecialType = typeof(string);
-                            comboMapping.BindValidator(editorComboCustomDisplay);
-                            editorComboCustomDisplay.SetEditValue(0);
-                            _editor = editorComboCustomDisplay;*/
-
-                            // InsertSelectItem<T>(key, value, tlist);
-                            //bs.DataSource = tlist;
+ 
                         }
                     }
                 }
@@ -3750,21 +3794,72 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-        /// <summary>
-        /// 基础映射：直接赋值
-        /// 设置从查询结果对象指向单据明细的列集合
-        /// 即：从产品查询QueryFormGeneric查出来的结果。放到 指定明细中某个列中
-        /// </summary>
-        //public void SetQueryItemToColumnPairs<T, BillDetail>(
-        //    SourceGridDefine define,
-        //    Expression<Func<T, object>> fromExp,
-        //    Expression<Func<BillDetail, object>> toExp)
-        //{
-        //    SetQueryItemToColumnPairs(define, fromExp, toExp, null);
-        //}
+
 
         /// <summary>
-        /// 扩展映射：支持自定义计算逻辑
+        /// 扩展映射：支持自定义计算逻辑 Expression<Func<T, object>> ConditionExpression, Expression<Func<T, T, object>> FormulaExp, Expression<Func<T, object>> ResultColName
+        /// </summary>
+        public void SetQueryItemToColumnPairs<T, BillDetail>(
+            SourceGridDefine define,
+            Expression<Func<T, T, object>> FormulaExp,
+            Expression<Func<T, object>> fromExp,
+            Expression<Func<BillDetail, object>> toExp,
+            Func<BillDetail, object> valueCalculator = null, Expression<Func<BillDetail, object>> ConditionExpression = null)
+        {
+            string fromColName = fromExp.GetMemberInfo().Name;
+            string toColName = toExp.GetMemberInfo().Name;
+
+            // 获取目标列定义
+            var targetColumn = define.DefineColumns
+                .Where(c => c.ColName == toColName && c.BelongingObjectType == typeof(BillDetail))
+                .FirstOrDefault();
+
+            if (targetColumn == null)
+            {
+                MainForm.Instance.uclog.AddLog("提醒",
+                    $"当前字段{toColName}没有提取到,请确认在单据明细{typeof(BillDetail).Name}中描述是否正确");
+                return;
+            }
+
+            // 创建映射关系
+            var mapping = new QueryColumnMapping
+            {
+                SourceColumnName = fromColName,
+                TargetColumn = targetColumn,
+                // 转换为通用委托（兼容object类型）
+                ValueCalculator = valueCalculator != null ? obj => valueCalculator((BillDetail)obj) : null
+            };
+
+
+            CalculateFormula formula = CalculateParser<T>.ParserString(FormulaExp);
+
+            formula.TagetCol = targetColumn;
+            formula.OriginalExpression = FormulaExp.Body.ToString();
+            formula.TagetColName = targetColumn.ColName;//以这个结果列，或叫目标标为标准，但是可能多种方法组合得到这个结果。所以可以重复
+            #region 计算条件
+            if (ConditionExpression != null)
+            {
+                CalculationCondition condition = new CalculationCondition();
+                condition.CalculationTargetType = typeof(T);
+                //var RExpression = ConditionExpression.ReduceExtensions();
+                var unary = ConditionExpression.Body as UnaryExpression;
+                string str = unary.Operand.ToString();
+                foreach (var para in ConditionExpression.Parameters)
+                {
+                    str = str.Replace(para.Name + ".", "");
+                }
+                Expression exp = unary.Operand;
+                condition.expCondition = exp;
+                formula.CalcCondition = condition;
+            }
+
+            #endregion
+            mapping.calculateFormula = formula;
+            define.QueryColumnMappings.TryAdd(fromColName, mapping);
+        }
+
+        /// <summary>
+        /// 扩展映射：支持自定义计算逻辑 
         /// </summary>
         public void SetQueryItemToColumnPairs<T, BillDetail>(
             SourceGridDefine define,
@@ -3798,8 +3893,6 @@ namespace RUINORERP.UI.UCSourceGrid
 
             define.QueryColumnMappings.TryAdd(fromColName, mapping);
         }
-
-
         /// <summary>
         /// 设置实时数据决定下拉选择的内容。根据传入的表达式和当前行的值
         /// </summary>
@@ -3979,286 +4072,6 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
-        /// <summary>
-        /// 设置单元格的值,包含关联的值
-        /// 意思是在指定位置上，设置单元格的值。
-        /// </summary>
-        /// <param name="dc">指定列,基准</param>
-        /// <param name="p">要找，如果顺序变了</param>
-        /// <param name="rowObj"></param>
-        /// <param name="isbatch"></param>
-        /// <param name="isOnlyPointColumn">是否只设置指定列的值</param>
-        public void SetCellValue_old(SGDefineColumnItem dc, SourceGrid.Position p, object rowObj, bool isbatch, bool isOnlyPointColumn = false)
-        {
-            SourceGridDefine sgdefine = dc.ParentGridDefine;
-            var colInfo = sgdefine.grid.Columns.GetColumnInfo(dc.UniqueId);
-
-            if (p.Column == -1 || p.Row == -1)
-            {
-                return;
-            }
-
-            foreach (SGDefineColumnItem item in sgdefine)
-            {
-                int realIndex = sgdefine.grid.Columns.GetColumnInfo(item.UniqueId).Index;
-                if (isOnlyPointColumn)
-                {
-                    if (item.ColName != dc.ColName)
-                    {
-                        continue;
-                    }
-                }
-                if (item.ColCaption == "载账数量")
-                {
-
-                }
-                if (item.IsRowHeaderCol)
-                {
-                    continue;
-                }
-                //这里是设置明细中的主要业务字段
-                if ((item.GuideToTargetColumn && !sgdefine.PointToColumnPairList.ContainsKey(item) && !item.IsPrimaryBizKeyColumn))
-                {
-                    //这里给默认值  明细中的。如数量为0？
-
-                    #region 目标列要修改对应的绑定数据对象
-
-                    if (sgdefine.grid.Rows[p.Row].RowData != null)
-                    {
-                        //设置目标的绑定数据值，就是产品ID
-                        SourceGrid.CellContext processDefaultContext = new SourceGrid.CellContext(sgdefine.grid, new Position(p.Row, realIndex));
-                        var currentObj = sgdefine.grid.Rows[p.Row].RowData;
-                        var cellDefaultValue = ReflectionHelper.GetPropertyValue(currentObj, item.ColName);
-
-                        if (cellDefaultValue != null && !item.IsFKRelationColumn && cellDefaultValue.IsNotEmptyOrNull())
-                        {
-                            sgdefine.grid[p.Row, realIndex].Value = cellDefaultValue;
-                            switch (item.CustomFormat)
-                            {
-                                case CustomFormatType.DefaultFormat:
-                                    break;
-                                case CustomFormatType.PercentFormat:
-                                    decimal pf = decimal.Parse(cellDefaultValue.ToString());
-                                    sgdefine.grid[p.Row, realIndex].Value = pf;
-                                    break;
-                                case CustomFormatType.CurrencyFormat:
-                                    decimal cf = decimal.Parse(cellDefaultValue.ToString());
-                                    sgdefine.grid[p.Row, realIndex].Value = cf;
-                                    break;
-                                case CustomFormatType.DecimalPrecision:
-                                    break;
-                                case CustomFormatType.Bool:
-                                    bool bl = cellDefaultValue.ToBool();
-                                    if (bl == true)
-                                    {
-                                        sgdefine.grid[p.Row, realIndex].DisplayText = "是";
-                                    }
-                                    else
-                                    {
-                                        sgdefine.grid[p.Row, realIndex].DisplayText = "否";
-                                    }
-                                    break;
-                                case CustomFormatType.Image:
-
-                                    break;
-                                case CustomFormatType.WebPathImage:
-
-                                    break;
-                                default:
-                                    break;
-                            }
-
-                        }
-                        //针对特殊的选择列，用一个控制器来给行对象值。
-                        if (item.ColName == "Selected")
-                        {
-                            sgdefine.grid[p.Row, realIndex].Editor = item.EditorForColumn;
-                            sgdefine.grid[p.Row, realIndex].Editor.EnableEdit = true;
-                            sgdefine.grid[p.Row, realIndex] = new SourceGrid.Cells.CheckBox(null, false);
-                            if (sgdefine.grid[p.Row, realIndex].Editor != null)
-                            {
-                                if (sgdefine.grid[p.Row, realIndex].FindController(typeof(SelectedForCheckBoxController)) == null)
-                                {
-                                    SelectedForCheckBoxController SeletedController = new SelectedForCheckBoxController("Seleted", sgdefine);
-                                    SeletedController.OnValidateDataCell += (MycurrentObj) =>
-                                    {
-
-                                    };
-                                    sgdefine.grid[p.Row, realIndex].AddController(SeletedController);
-                                }
-
-                            }
-
-                        }
-                        ///默认值处理
-                        if (item.DefaultValue != null && item.GuideToTargetColumn)
-                        {
-                            var setcurrentObj = sgdefine.grid.Rows[p.Row].RowData;
-                            //如果值是空的，就给默认值，时间要特殊处理
-                            if (setcurrentObj != null && setcurrentObj.GetType().GetProperty(item.ColName) == null)
-                            {
-                                ReflectionHelper.SetPropertyValue(setcurrentObj, item.ColName, item.DefaultValue);
-                            }
-                            if (setcurrentObj != null && setcurrentObj.GetType().GetProperty(item.ColName) != null)
-                            {
-                                //时间为默认值的情况，格式不带时间
-                                if (item.ColPropertyInfo.PropertyType == typeof(DateTime))
-                                {
-                                    if (setcurrentObj.GetPropertyValue(item.ColName).ToDateTime().Year == 1)
-                                    {
-                                        ReflectionHelper.SetPropertyValue(setcurrentObj, item.ColName, item.DefaultValue);
-                                    }
-                                    sgdefine.grid[p.Row, realIndex].DisplayText = string.Format("{0:yyyy-MM-dd}", item.DefaultValue);
-                                }
-
-                            }
-
-                            if (item.CustomFormat == CustomFormatType.CurrencyFormat)
-                            {
-                                sgdefine.grid[p.Row, realIndex].DisplayText = string.Format("{0:C}", item.DefaultValue);
-                            }
-                            sgdefine.grid[p.Row, realIndex].Value = item.DefaultValue;
-                        }
-
-
-
-                        //如果这个列属性的名称在查询结果中指定的集合中匹配。就设置一下目标
-                        //查询结果字段名，如盘点单中的 查出来的数量，（实际库存，认为是载账数量），指定以明细中的载账数量
-                        if (sgdefine.QueryItemToColumnPairList.Values.Contains(item))
-                        {
-                            if (sgdefine.grid.Rows[p.Row].RowData != null)
-                            {
-
-                                //值是来自于指定的列名
-                                var qtc = sgdefine.QueryItemToColumnPairList.Where(v => v.Value == item).FirstOrDefault();
-
-                                var newTagetValue = ReflectionHelper.GetPropertyValue(rowObj, qtc.Key);
-                                //公共部分。只是显示用来看
-                                sgdefine.grid[p.Row, realIndex].Value = newTagetValue;
-
-                                //目标存于明细中。是保存进数据库的
-                                int newTargetIndex = sgdefine.grid.Columns.GetColumnInfo(qtc.Value.UniqueId).Index;
-                                if (newTagetValue != null && newTagetValue.ToString() != "")
-                                {
-                                    ReflectionHelper.SetPropertyValue(currentObj, qtc.Value.ColName, newTagetValue);
-                                }
-
-                                sgdefine.grid[p.Row, newTargetIndex].Value = newTagetValue;
-
-                            }
-                        }
-
-                    }
-
-
-
-                    #endregion
-
-                    continue;
-                }
-
-                #region 设置表格UI中的其他关联列的值
-                SourceGrid.Position pt = new Position(p.Row, realIndex);
-                SourceGrid.CellContext processContext = new SourceGrid.CellContext(sgdefine.grid, pt);
-                string displaytxt = string.Empty;
-                object newValue = string.Empty;
-                newValue = ReflectionHelper.GetPropertyValue(rowObj, item.ColName);
-
-                if (item.IsFKRelationColumn && !string.IsNullOrEmpty(newValue.ToString()))
-                {
-                    displaytxt = ShowFKColumnText(item, newValue, sgdefine);
-                }
-
-                if (item.ColPropertyInfo.PropertyType.FullName == "System.Byte[]")
-                {
-                    if (newValue.GetType().Name == "Byte[]" && newValue != null)
-                    {
-                        System.Drawing.Image temp = RUINORERP.Common.Helper.ImageHelper.ConvertByteToImg(newValue as Byte[]);
-                        processContext.Value = temp;
-                        if (temp != null)
-                        {
-                            processContext.Cell.View = new SourceGrid.Cells.Views.SingleImage(temp);
-                        }
-                    }
-                    continue;
-                }
-                if ((!object.Equals(processContext.Value, newValue)) || isbatch)
-                {
-                    processContext.DisplayText = displaytxt.ToString();
-                    if (!string.IsNullOrEmpty(displaytxt) && !item.GuideToTargetColumn)
-                    {
-                        processContext.Value = displaytxt;
-                    }
-                    else
-                    {
-                        processContext.Value = newValue;
-                    }
-
-                    processContext.Tag = newValue;
-
-
-                    //如果这个列属性指定匹配集合中。就设置一下目标
-                    if (sgdefine.PointToColumnPairList.ContainsKey(item))
-                    {
-                        if (sgdefine.grid.Rows[pt.Row].RowData != null)
-                        {
-                            //公共部分。只是显示用来看
-                            sgdefine.grid[pt.Row, realIndex].Value = newValue;
-
-                            //设置目标的绑定数据值，就是产品ID
-                            var currentObj = sgdefine.grid.Rows[pt.Row].RowData;
-
-                            //目标存于明细中。是保存进数据库的
-                            int newTargetIndex = sgdefine.grid.Columns.GetColumnInfo(sgdefine.PointToColumnPairList[item].UniqueId).Index;
-                            if (newValue != null && !string.IsNullOrEmpty(newValue.ToString()))
-                            {
-                                if (sgdefine.PointToColumnPairList[item].ColName == "BOM_ID")
-                                {
-
-                                }
-                                ReflectionHelper.SetPropertyValue(currentObj, sgdefine.PointToColumnPairList[item].ColName, newValue);
-                            }
-                            sgdefine.grid[pt.Row, newTargetIndex].Value = newValue;
-
-                        }
-                    }
-
-
-
-
-                }
-
-                #endregion
-
-                #region 目标列要修改对应的绑定数据对象
-                if (item.IsPrimaryBizKeyColumn)
-                {
-                    if (sgdefine.grid.Rows[pt.Row].RowData != null)
-                    {
-                        //设置目标的绑定数据值，就是产品ID
-                        var currentObj = sgdefine.grid.Rows[pt.Row].RowData;
-                        ReflectionHelper.SetPropertyValue(currentObj, item.ColName, newValue);
-                        //给值就给行号
-                        sgdefine.grid[pt.Row, 0].Value = pt.Row.ToString();
-
-                        //行头给右键菜单
-                        PopupMenuForRowHeader pop = sgdefine.grid[pt.Row, 0].FindController<PopupMenuForRowHeader>();
-                        if (pop == null)
-                        {
-                            PopupMenuForRowHeader menuController = new PopupMenuForRowHeader(pt.Row, sgdefine.grid, sgdefine);
-                            sgdefine.grid[pt.Row, 0].Controller.AddController(menuController);
-                        }
-
-                        //行头加颜色标记
-                        sgdefine.grid[pt.Row, 0].View = sgdefine.RowHeaderWithData;
-
-                    }
-                }
-
-                #endregion
-
-            }
-        }
 
         GridViewDisplayHelper displayHelper = new GridViewDisplayHelper();
 

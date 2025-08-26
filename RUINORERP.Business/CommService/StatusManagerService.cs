@@ -8,6 +8,7 @@ using System.ComponentModel;
 using RUINORERP.Common.CustomAttribute;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
+using RUINORERP.Common.Extensions;
 namespace RUINORERP.Business.CommService
 {
     /// <summary>
@@ -223,19 +224,7 @@ namespace RUINORERP.Business.CommService
 
         #endregion
 
-        #region 工具方法
 
-        /// <summary>
-        /// 获取枚举描述（需要配合DescriptionAttribute使用）
-        /// </summary>
-        private static string GetDescription(this Enum value)
-        {
-            var field = value.GetType().GetField(value.ToString());
-            var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute));
-            return attribute?.Description ?? value.ToString();
-        }
-
-        #endregion
     }
 
 

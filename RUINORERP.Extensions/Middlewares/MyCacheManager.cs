@@ -276,6 +276,14 @@ namespace RUINORERP.Extensions.Middlewares
             return tlist;
         }
 
+        public List<object> GetEntityList_AII(string tableName)
+        {
+            var raw = CacheEntityList.Get(tableName);
+            if (raw is IList list)
+                return list.Cast<object>().ToList();
+            return new List<object>();
+        }
+
         /// <summary>
         /// 获取实体列表（指定表名） AI:
         /// </summary>

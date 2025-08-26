@@ -77,6 +77,31 @@ namespace RUINORERP.UI.PSI.PUR
                         toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
                     }
                 }
+                //如果有出库，则查应收
+                if (returnEntry.DataStatus >= (int)DataStatus.确认)
+                {
+                    var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                    .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
+                                                                    && c.CustomerVendor_ID == returnEntry.CustomerVendor_ID
+                                                                    && c.SourceBillId == returnEntry.PurReEntry_ID)
+                                                                    .ToListAsync();
+                    foreach (var item in receivablePayables)
+                    {
+                        var rqpara = new Model.CommonModel.RelatedQueryParameter();
+                        rqpara.bizType = BizType.应付款单;
+                        rqpara.billId = item.ARAPId;
+                        ToolStripMenuItem RelatedMenuItemPara = new ToolStripMenuItem();
+                        RelatedMenuItemPara.Name = $"{rqpara.billId}";
+                        RelatedMenuItemPara.Tag = rqpara;
+                        RelatedMenuItemPara.Text = $"{rqpara.bizType}:{item.ARAPNo}";
+                        RelatedMenuItemPara.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemPara);
+                        }
+                    }
+                }
+
             }
             base.LoadRelatedDataToDropDownItemsAsync();
         }
@@ -134,14 +159,29 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     entity.PurReEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购退货入库);
                 }
-
+                if (entity.tb_purentryre != null && entity.tb_purentryre.Currency_ID.HasValue)
+                {
+                    entity.Currency_ID = entity.tb_purentryre.Currency_ID.Value;
+                }
+                else
+                {
+                    if (AppContext.BaseCurrency != null)
+                    {
+                        entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                    }
+                }
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_PurReturnEntryDetails != null && entity.tb_PurReturnEntryDetails.Count > 0)
                 {
                     entity.tb_PurReturnEntryDetails.ForEach(c => c.PurReEntry_CID = 0);
                     entity.tb_PurReturnEntryDetails.ForEach(c => c.PurReEntry_ID = 0);
                 }
+
+
             }
+
+
+           
 
             //DataBindingHelper.BindData4CmbByEnum<tb_PurReturnEntry>(entity, k => k.ShippingWay, typeof(PurReProcessWay), cmbProcessWay, true);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
@@ -151,7 +191,7 @@ namespace RUINORERP.UI.PSI.PUR
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.TotalQty.ToString(), txtTotalQty, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.TotalAmount.ToString(), txtTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.TotalTaxAmount.ToString(), txtTotalTaxAmount, BindDataType4TextBox.Money, false);
-
+            DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4DataTime<tb_PurReturnEntry>(entity, t => t.BillDate, dtpBillDate, false);
             DataBindingHelper.BindData4CheckBox<tb_PurReturnEntry>(entity, t => t.is_force_offset, chkis_force_offset, false);
             DataBindingHelper.BindData4TextBox<tb_PurReturnEntry>(entity, t => t.ShippingWay, txtShippingWay, BindDataType4TextBox.Text, false);

@@ -903,7 +903,7 @@ namespace RUINORERP.Business
                         //一个订单。只会有一个预收款单
                         if (PrePayment != null)
                         {
-                            if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.草稿 || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核|| PrePayment.PrePaymentStatus == (int)PrePaymentStatus.已生效)
+                            if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.草稿 || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核 || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.已生效)
                             {
                                 await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
                             }
@@ -1406,94 +1406,120 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
-        public async Task<ReturnResults<tb_SaleOrder>> CancelOrder(tb_SaleOrder ObjectEntity)
+        public async Task<ReturnResults<tb_SaleOrder>> CancelOrder(tb_SaleOrder entity)
         {
             ReturnResults<tb_SaleOrder> rmrs = new ReturnResults<tb_SaleOrder>();
-            tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                #region  预收款单处理
-                tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                var PrePayment = await ctrpay.IsExistEntityAsync(p => p.SourceBillId == entity.SOrder_ID && p.SourceBizType == (int)BizType.销售订单);
-                if (PrePayment != null)
+                var authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule())
                 {
-                    if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.草稿 ||
-                        PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核 ||
-                        PrePayment.PrePaymentStatus == (int)PrePaymentStatus.已生效)
+                    #region  预收款单处理
+                    tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                    var PrePayment = await ctrpay.IsExistEntityAsync(p => p.SourceBillId == entity.SOrder_ID && p.SourceBizType == (int)BizType.销售订单);
+                    if (PrePayment != null)
                     {
-                        //没有付款记录的，直接删除关闭
-                        await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
-                        #region  检测对应的收款单记录，如果没有支付也可以直接删除
-                        
-                        var PaymentList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
-                              .Includes(a => a.tb_FM_PaymentRecordDetails)
-                             .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == PrePayment.PreRPID)).ToListAsync();
-                        if (PaymentList != null && PaymentList.Count > 0)
+                        if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.草稿 ||
+                            PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核 ||
+                            PrePayment.PrePaymentStatus == (int)PrePaymentStatus.已生效)
                         {
-                            if (PaymentList.Count > 1 && PaymentList.Sum(c => c.TotalLocalAmount) == 0 && PaymentList.Any(c => c.IsReversed))
+                            //没有付款记录的，直接删除关闭
+                            await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
+                            #region  检测对应的收款单记录，如果没有支付也可以直接删除
+
+                            var PaymentList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
+                                  .Includes(a => a.tb_FM_PaymentRecordDetails)
+                                 .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == PrePayment.PreRPID)).ToListAsync();
+                            if (PaymentList != null && PaymentList.Count > 0)
                             {
-                                //退款冲销过
-                                _unitOfWorkManage.RollbackTran();
-                                rmrs.ErrorMsg = $"销售订单{PrePayment.SourceBillNo}的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能直接取消订单,只能【预收款退款】作废。";
-                                rmrs.Succeeded = false;
-                                return rmrs;
-                            }
-                            else
-                            {
-                                tb_FM_PaymentRecord Payment = PaymentList[0];
-                                if (Payment.PaymentStatus == (int)PaymentStatus.草稿 || Payment.PaymentStatus == (int)PaymentStatus.待审核)
+                                if (PaymentList.Count > 1 && PaymentList.Sum(c => c.TotalLocalAmount) == 0 && PaymentList.Any(c => c.IsReversed))
                                 {
-                                    var PaymentCounter = await _unitOfWorkManage.GetDbClient().DeleteNav(Payment)
-                                        .Include(c => c.tb_FM_PaymentRecordDetails)
-                                        .ExecuteCommandAsync();
-                                    //if (PaymentCounter)
-                                    //{
-                                    //    await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
-                                    //}
+
+                                    if (_appContext.FMConfig.EnableAutoRefundOnOrderCancel && entity.IsFromPlatform)
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        //退款冲销过
+                                        _unitOfWorkManage.RollbackTran();
+                                        rmrs.ErrorMsg = $"销售订单{PrePayment.SourceBillNo}的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能直接取消订单,只能【预收款退款】作废。";
+                                        rmrs.Succeeded = false;
+                                        return rmrs;
+                                    }
+
                                 }
                                 else
                                 {
-                                    _unitOfWorkManage.RollbackTran();
-                                    rmrs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，取消失败\r\n" +
-                                        $"需将预收款单【退款】，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
-                                        $"当前订单【作废】后，重新录入正确的销售订单。";
-                                    rmrs.Succeeded = false;
-                                    return rmrs;
+                                    tb_FM_PaymentRecord Payment = PaymentList[0];
+                                    if (Payment.PaymentStatus == (int)PaymentStatus.草稿 || Payment.PaymentStatus == (int)PaymentStatus.待审核)
+                                    {
+                                        var PaymentCounter = await _unitOfWorkManage.GetDbClient().DeleteNav(Payment)
+                                            .Include(c => c.tb_FM_PaymentRecordDetails)
+                                            .ExecuteCommandAsync();
+                                        //if (PaymentCounter)
+                                        //{
+                                        //    await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
+                                        //}
+                                    }
+                                    else
+                                    {
+                                        if (_appContext.FMConfig.EnableAutoRefundOnOrderCancel && entity.IsFromPlatform)
+                                        {
+                                            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                            bool isRefund = true;
+                                            tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { PrePayment }, isRefund);
+                                            var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+                                            if (rrs.Succeeded)
+                                            {
+                                                await paymentController.ApprovalAsync(paymentRecord,true);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            _unitOfWorkManage.RollbackTran();
+                                            rmrs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，取消失败\r\n" +
+                                                $"需将预收款单【退款】，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
+                                                $"当前订单【作废】后，重新录入正确的销售订单。";
+                                            rmrs.Succeeded = false;
+                                            return rmrs;
+                                        }
+
+                                    }
                                 }
+
                             }
 
+                            #endregion
                         }
-                        
-                        #endregion
-                    }
-                    else
-                    {
-                        //订单取消后，预收款，可以退款可以下一个订单，应收来处理。由财务决定。
-                        //这里仅提醒，订金已支付
-                        if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销
-                            || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                        else
                         {
-                            rmrs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请撤销核销，再【退款】处理。";
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.Succeeded = false;
-                            return rmrs;
+                            //订单取消后，预收款，可以退款可以下一个订单，应收来处理。由财务决定。
+                            //这里仅提醒，订金已支付
+                            if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销
+                                || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                            {
+                                rmrs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请撤销核销，再【退款】处理。";
+                                _unitOfWorkManage.RollbackTran();
+                                rmrs.Succeeded = false;
+                                return rmrs;
+                            }
+
+                            if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待核销)
+                            {
+                                rmrs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请进行【退款】处理。";
+                                _unitOfWorkManage.RollbackTran();
+                                rmrs.Succeeded = false;
+                                return rmrs;
+                            }
                         }
 
-                        if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待核销)
-                        {
-                            rmrs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请进行【退款】处理。";
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.Succeeded = false;
-                            return rmrs;
-                        }
                     }
 
+                    #endregion
                 }
-
-                #endregion
-
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
 

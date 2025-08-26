@@ -190,7 +190,6 @@ namespace RUINORERP.Business
                         ReturnMainSubResults<tb_FM_ProfitLoss> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
                         if (rmr.Succeeded)
                         {
-                            //已经是等审核。 审核时会核销预收付款
                             rmrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
                         }
                         #endregion
@@ -198,7 +197,7 @@ namespace RUINORERP.Business
                     catch (Exception)
                     {
                         _unitOfWorkManage.RollbackTran();
-                        throw new Exception("盘点单审核时，财务数据处理失败，更新失败！");
+                        throw new Exception("盘点单审核时，财务费用单数据保存失败！");
                     }
                 }
 

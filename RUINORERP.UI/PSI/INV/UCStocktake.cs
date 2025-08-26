@@ -370,7 +370,17 @@ namespace RUINORERP.UI.PSI.INV
 
             sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Quantity, t => t.CarryinglQty);
             sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Inv_Cost, t => t.UntaxedCost);
-            // sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Quantity, t => t.CarryinglQty);
+
+            //sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, (a, b) => a.Inv_Cost / (1 + b.),
+            //我要实现 通过上面类似的传入条件 及公式 ，能计算 目标值 具体是计算含税单价
+            //暂时直接加载，将有再看要不要实现
+            sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_StocktakeDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
+
+            listCols.SetCol_Formula<tb_StocktakeDetail>(
+                 (a, b) => a.UntaxedCost * (1 + b.TaxRate),  // 计算公式
+                 r => r.Cost,                                // 结果列
+                 d => d.TaxRate > 0                           // 条件：税率大于0时才计算
+             );
 
 
             //  listCols.SetCol_Formula<tb_StocktakeDetail>((a, b, c) => (a.CarryinglQty * b.CarryinglQty * c.CarryinglQty), F => F.CarryinglQty);
@@ -387,7 +397,7 @@ namespace RUINORERP.UI.PSI.INV
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b, c) => a.Cost / (1 + b.TaxRate), d => d.UntaxedCost);
             //listCols.SetCol_FormulaReverse<tb_StocktakeDetail>(d => d.CheckQty != d.CarryinglQty, (a, b) => (a.CheckQty - b.CarryinglQty), r => r.DiffQty);//-->成交价是结果列
 
-            listCols.SetCol_FormulaReverse<tb_StocktakeDetail>(d => d.Cost == 0, (a, b, c) => a.UntaxedCost / (1 + b.TaxRate), d => d.Cost);
+            listCols.SetCol_FormulaReverse<tb_StocktakeDetail>(d => d.Cost == 0, (a, b, c) => a.UntaxedCost * (1 + b.TaxRate), d => d.Cost);
 
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.DiffQty * b.UntaxedCost), r => r.DiffSubtotalAmount);
             listCols.SetCol_Formula<tb_StocktakeDetail>((a, b) => (a.CarryinglQty * b.UntaxedCost), r => r.CarryingSubtotalAmount);
@@ -703,7 +713,7 @@ namespace RUINORERP.UI.PSI.INV
                         {
                             detail.UntaxedCost = item.Inv_Cost.Value;
                         }
-                        detail.Cost = detail.UntaxedCost / (1 + detail.TaxRate);
+                        detail.Cost = detail.UntaxedCost * (1 + detail.TaxRate);
                         if (item.Quantity.HasValue)
                         {
                             detail.CarryinglQty = item.Quantity.Value;

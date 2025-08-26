@@ -561,7 +561,11 @@ namespace RUINORERP.Business
             payable.LocalBalanceAmount = entity.TotalAmount;
             payable.LocalPaidAmount = 0;
             payable.TotalLocalPayableAmount = entity.TotalAmount;
-
+            //否则会关联性SQL出错，外键
+            if (payable.Account_id <= 0)
+            {
+                payable.Account_id = null;
+            }
             payable.Remark = $"售后申请单：{entity.ASApplyNo}对应的维修工单{entity.RepairOrderNo}的应付款";
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
@@ -672,7 +676,11 @@ namespace RUINORERP.Business
             {
                 payable.Remark += " 线下退款";
             }
-
+            //否则会关联性SQL出错，外键
+            if (payable.Account_id <= 0)
+            {
+                payable.Account_id = null;
+            }
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
             return payable;
@@ -817,7 +825,11 @@ namespace RUINORERP.Business
                 payable.LocalPaidAmount = 0;
                 payable.TotalLocalPayableAmount = entity.TotalLocalDiffAmount;
             }
-
+            //否则会关联性SQL出错，外键
+            if (payable.Account_id <= 0)
+            {
+                payable.Account_id = null;
+            }
 
 
             Business.BusinessHelper.Instance.InitEntity(payable);
@@ -865,6 +877,17 @@ namespace RUINORERP.Business
                 await settlementController.GenerateSettlement(receivablePayable, receivablePayable.LocalBalanceAmount, receivablePayable.ForeignBalanceAmount);
 
                 //自动添加到损失费用单
+                var ctrProfitloss = _appContext.GetRequiredService<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
+                tb_FM_ProfitLoss profitLoss = ctrProfitloss.BuildProfitLoss(receivablePayable);
+                var rmr = await ctrProfitloss.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
+                if (rmr.Succeeded)
+                {
+                    var Auditresults = await ctrProfitloss.ApprovalAsync(rmr.ReturnObject);
+                    if (!Auditresults.Succeeded)
+                    {
+                        _logger.LogError($"损失费用单审核失败{Auditresults.ErrorMsg}");
+                    }
+                }
 
                 // 4. 核销金额
                 receivablePayable.ForeignPaidAmount += receivablePayable.ForeignBalanceAmount;
@@ -2173,6 +2196,11 @@ namespace RUINORERP.Business
             {
                 payable.Remark += " 平台单号:" + entity.PlatformOrderNo;
             }
+            //否则会关联性SQL出错，外键
+            if (payable.Account_id <= 0)
+            {
+                payable.Account_id = null;
+            }
 
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
@@ -2332,7 +2360,11 @@ namespace RUINORERP.Business
                 payable.Employee_ID = entity.tb_purorder.Employee_ID;
             }
 
-
+            //否则会关联性SQL出错，外键
+            if (payable.Account_id <= 0)
+            {
+                payable.Account_id = null;
+            }
             payable.Remark = $"采购入库单：{entity.PurEntryNo}的应付款";
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
@@ -2371,8 +2403,7 @@ namespace RUINORERP.Business
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
             payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
 
-
-
+            payable.Currency_ID = entity.Currency_ID;
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_PurReturnEntryDetails);
 
@@ -2391,7 +2422,7 @@ namespace RUINORERP.Business
             }
 
             payable.tb_FM_ReceivablePayableDetails = details;
-         
+
             #region 单独处理运费 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。
             // 添加运费行（关键部分）
             //  payable.ShippingFee = entity.ShipCost;
@@ -2408,7 +2439,11 @@ namespace RUINORERP.Business
 
             //业务经办人
             payable.Employee_ID = entity.Employee_ID;
-
+            //否则会关联性SQL出错，外键
+            if (payable.Account_id <= 0)
+            {
+                payable.Account_id = null;
+            }
 
             payable.Remark = $"采购退货入库单：{entity.PurReEntryNo}的应付款";
             Business.BusinessHelper.Instance.InitEntity(payable);
@@ -2532,7 +2567,11 @@ namespace RUINORERP.Business
             payable.Employee_ID = entity.Employee_ID;
 
             payable.Remark = $"采购入库单：{entity.PurEntryNo}对应的采购退货单{entity.PurEntryReNo}的红字应付款";
-
+            //否则会关联性SQL出错，外键
+            if (payable.Account_id <= 0)
+            {
+                payable.Account_id = null;
+            }
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
 

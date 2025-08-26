@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
+            this.chkis_force_offset = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.lblPaytype_ID = new Krypton.Toolkit.KryptonLabel();
             this.dtpBillDate = new Krypton.Toolkit.KryptonDateTimePicker();
@@ -69,7 +70,8 @@
             this.txtTotalQty = new Krypton.Toolkit.KryptonTextBox();
             this.txtTotalTaxAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalTaxAmount = new Krypton.Toolkit.KryptonLabel();
-            this.chkis_force_offset = new Krypton.Toolkit.KryptonCheckBox();
+            this.lblCurrency_ID = new Krypton.Toolkit.KryptonLabel();
+            this.cmbCurrency_ID = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -88,6 +90,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -100,6 +103,8 @@
             // 
             // kryptonSplitContainer1.Panel1
             // 
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblCurrency_ID);
+            this.kryptonSplitContainer1.Panel1.Controls.Add(this.cmbCurrency_ID);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.chkis_force_offset);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonLabel2);
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.lblPaytype_ID);
@@ -140,6 +145,16 @@
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
             this.kryptonSplitContainer1.SplitterDistance = 237;
             this.kryptonSplitContainer1.TabIndex = 4;
+            // 
+            // chkis_force_offset
+            // 
+            this.chkis_force_offset.Location = new System.Drawing.Point(851, 140);
+            this.chkis_force_offset.Name = "chkis_force_offset";
+            this.chkis_force_offset.Size = new System.Drawing.Size(101, 20);
+            this.chkis_force_offset.TabIndex = 150;
+            this.chkis_force_offset.ToolTipValues.Description = "启用强制核销模式时，审核本单将忽略产品型号与数量的校验，仅以总金额生成应付单用于与源退货单冲销";
+            this.chkis_force_offset.ToolTipValues.EnableToolTips = true;
+            this.chkis_force_offset.Values.Text = "强制核销模式";
             // 
             // kryptonLabel2
             // 
@@ -487,15 +502,22 @@
             this.lblTotalTaxAmount.TabIndex = 113;
             this.lblTotalTaxAmount.Values.Text = "合计税额";
             // 
-            // chkis_force_offset
+            // lblCurrency_ID
             // 
-            this.chkis_force_offset.Location = new System.Drawing.Point(851, 140);
-            this.chkis_force_offset.Name = "chkis_force_offset";
-            this.chkis_force_offset.Size = new System.Drawing.Size(101, 20);
-            this.chkis_force_offset.TabIndex = 150;
-            this.chkis_force_offset.ToolTipValues.Description = "启用强制核销模式时，审核本单将忽略产品型号与数量的校验，仅以总金额生成应付单用于与源退货单冲销";
-            this.chkis_force_offset.ToolTipValues.EnableToolTips = true;
-            this.chkis_force_offset.Values.Text = "强制核销模式";
+            this.lblCurrency_ID.Location = new System.Drawing.Point(320, 82);
+            this.lblCurrency_ID.Name = "lblCurrency_ID";
+            this.lblCurrency_ID.Size = new System.Drawing.Size(36, 20);
+            this.lblCurrency_ID.TabIndex = 199;
+            this.lblCurrency_ID.Values.Text = "币别";
+            // 
+            // cmbCurrency_ID
+            // 
+            this.cmbCurrency_ID.DropDownWidth = 100;
+            this.cmbCurrency_ID.IntegralHeight = false;
+            this.cmbCurrency_ID.Location = new System.Drawing.Point(362, 82);
+            this.cmbCurrency_ID.Name = "cmbCurrency_ID";
+            this.cmbCurrency_ID.Size = new System.Drawing.Size(167, 21);
+            this.cmbCurrency_ID.TabIndex = 200;
             // 
             // UCPurReturnEntry
             // 
@@ -526,6 +548,7 @@
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -575,5 +598,7 @@
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
         private Krypton.Toolkit.KryptonDateTimePicker dtpBillDate;
         private Krypton.Toolkit.KryptonCheckBox chkis_force_offset;
+        private Krypton.Toolkit.KryptonLabel lblCurrency_ID;
+        private Krypton.Toolkit.KryptonComboBox cmbCurrency_ID;
     }
 }

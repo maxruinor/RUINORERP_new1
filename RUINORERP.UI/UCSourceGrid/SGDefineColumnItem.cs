@@ -11,6 +11,9 @@ using static NPOI.HSSF.Util.HSSFColor;
 using HLH.Lib.Helper;
 using System.Collections.Generic;
 using RUINORERP.UI.UControls;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Business.CommService;
+using FastReport.Editor.Syntax;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -41,6 +44,54 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
             }
         }
+        #region 列的值是来自数据库（缓存的表时）过滤
+
+     
+
+        internal IDataFilter DataSourceFilter { get; private set; }
+
+        internal void SetDataFilter<T>(DataFilter<T> filter) where T : class
+            => DataSourceFilter = filter.Impl;
+
+        #endregion 
+
+
+        #region 列值为枚举时，可过滤
+
+
+        //internal void SetEnumFilter<TEnum>(EnumFilter<TEnum> filter) where TEnum : Enum
+        //      => EnumFilterInternal = filter.Impl;
+        internal IRuntimeEnumFilter EnumFilterRuntime { get; private set; }
+
+
+        internal void SetEnumFilter<TEnum>(EnumFilter<TEnum> filter) where TEnum : Enum
+       => EnumFilterRuntime = (IRuntimeEnumFilter)filter.Impl;
+
+
+
+        //internal IEnumFilter<TEnum> GetEnumFilter<TEnum>() where TEnum : Enum
+        //    => EnumFilterInternal as IEnumFilter<TEnum> ?? new ListEnumFilter<TEnum>(Array.Empty<TEnum>(), false);
+
+
+        ///// <summary>
+        ///// 运行时使用：根据枚举类型返回 IEnumFilter&lt;Enum&gt;
+        ///// </summary>
+        //internal IEnumFilter<Enum> GetEnumFilter(Type enumType)
+        //{
+        //    if (EnumFilterInternal == null) return null;
+
+        //    var targetInterface = typeof(IEnumFilter<>).MakeGenericType(enumType);
+        //    if (targetInterface.IsInstanceOfType(EnumFilterInternal))
+        //    {
+        //        // 协变转换：IEnumFilter<具体枚举> → IEnumFilter<Enum>
+        //        return (IEnumFilter<Enum>)EnumFilterInternal;
+        //    }
+
+        //    return null;
+        //}
+
+
+        #endregion
 
 
         /// <summary>
@@ -389,4 +440,17 @@ namespace RUINORERP.UI.UCSourceGrid
         public int declen = 2;
 
     }
+
+
+    public static class SGDefineColumnItemExt
+    {
+        public static void SetEnumFilter<TEnum>(this SGDefineColumnItem col,
+                                                EnumFilter<TEnum> filter)
+            where TEnum : Enum
+        {
+            col.SetEnumFilter(filter);
+        }
+    }
+
+
 }

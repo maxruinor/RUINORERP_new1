@@ -93,7 +93,7 @@ namespace RUINORERP.UI.FM
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
-                
+
                 //默认优化报销自己
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
                 {
@@ -218,7 +218,7 @@ namespace RUINORERP.UI.FM
                     {
                         if (obj is tb_FM_PayeeInfo cv)
                         {
-                             
+
                             //添加收款信息。展示给财务看
                             if (!string.IsNullOrEmpty(cv.PaymentCodeImagePath))
                             {
@@ -231,7 +231,7 @@ namespace RUINORERP.UI.FM
                                 btnInfo.Visible = false;
                             }
                         }
-                        
+
                     }
                 }
 
@@ -366,6 +366,11 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, CustomFormatType.CurrencyFormat);
             //            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage, CustomFormatType.Image);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImagePath, CustomFormatType.WebPathImage);
+
+            listCols.SetCol_DataFilter<tb_FM_ExpenseClaimDetail, tb_FM_ExpenseType>(c => c.ExpenseType_id,
+                 DataFilter<tb_FM_ExpenseType>.Where(p => p.EXPOrINC == true)
+                 );
+
             sgd = new SourceGridDefine(grid1, listCols, true);
 
             sgd.GridMasterData = EditEntity;

@@ -64,5 +64,13 @@ namespace RUINORERP.Model.ConfigModel
         /// 自动审核应付款
         /// </summary>
         public bool AutoAuditPaymentable { get; set; }
+
+
+
+        /// <summary>
+        /// 平台订单取消作废时启用财务数据自动退款功能
+        /// </summary>
+       public bool EnableAutoRefundOnOrderCancel { get; set; } = false;
+
     }
 }

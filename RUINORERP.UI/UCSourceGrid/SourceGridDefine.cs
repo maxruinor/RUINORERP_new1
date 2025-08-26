@@ -130,7 +130,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         SubtotalResultAttribute subtotalResultAttribute = attr as SubtotalResultAttribute;
                         col.SubtotalResult = true;
                     }
-                 
+
                     //if (attr is SubtotalAttribute)
                     //{
                     //    SubtotalAttribute subtotalAttribute = attr as SubtotalAttribute;
@@ -343,7 +343,11 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 以查询的结果中的列名为key，指定到明细中的列名为value的集合
         /// </summary>
         public ConcurrentDictionary<string, SGDefineColumnItem> QueryItemToColumnPairList { get; set; } = new ConcurrentDictionary<string, SGDefineColumnItem>();
-        // 替换原来的定义
+
+
+        /// <summary>
+        /// 查询结果列映射，查询出来的实体对象，通过这里的参数，在一定条件下 进行逻辑运算后将值保存到对应的目标属性中
+        /// </summary>
         public ConcurrentDictionary<string, QueryColumnMapping> QueryColumnMappings { get; set; } = new ConcurrentDictionary<string, QueryColumnMapping>();
 
 
@@ -393,7 +397,7 @@ namespace RUINORERP.UI.UCSourceGrid
             grid = _grid;
             SetSelection(grid);
             this.HasRowHeader = hasRowHeader;
-      
+
             //判断是否有选择列
             SGDefineColumnItem SelectedCol = DataColList.Find(c => c.ColName.Contains("Selected"));
             if (SelectedCol != null)
@@ -436,7 +440,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     this.HasSummaryRow = true;
                 }
-                
+
                 this.Add(cols[i]);
                 InitDefineColumns.Add(cols[i]);
             }
@@ -1043,6 +1047,12 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 枚举值下拉选项
         /// </summary>
         EnumOptions,
+
+        /// <summary>
+        /// 数据源，一般是外键表，可带条件WithConditions
+        /// </summary>
+        DataSource,
+
         /// <summary>
         /// 货币
         /// </summary>

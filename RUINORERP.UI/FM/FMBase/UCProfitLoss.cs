@@ -41,6 +41,7 @@ using RUINORERP.Business.Security;
 using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.Global.EnumExt;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.FM.FMBase
 {
@@ -136,7 +137,7 @@ namespace RUINORERP.UI.FM.FMBase
             DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.TaxTotalAmount.ToString(), txtTaxTotalAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.UntaxedTotalAmont.ToString(), txtUntaxedTotalAmont, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
-
+            DataBindingHelper.BindData4TextBox<tb_FM_ProfitLoss>(entity, t => t.TotalAmount, txtTotalAmount, BindDataType4TextBox.Money, false);
 
 
             if (entity.tb_FM_ProfitLossDetails != null && entity.tb_FM_ProfitLossDetails.Count > 0)
@@ -240,6 +241,17 @@ namespace RUINORERP.UI.FM.FMBase
             listCols.SetCol_Format<tb_FM_ProfitLossDetail>(c => c.TaxSubtotalAmont, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ProfitLossDetail>(c => c.UnitPrice, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ProfitLossDetail>(c => c.UntaxedSubtotalAmont, CustomFormatType.CurrencyFormat);
+
+            //if (profitLossDirect == ProfitLossDirection.损失)
+            //{
+            //    listCols.SetCol_Format<tb_FM_ProfitLossDetail, ProfitLossType>(o => o.ProfitLossType, EnumFilter<ProfitLossType>.LessThan(ProfitLossType.其他经营损失));
+            //}
+            //else
+            //{
+            //    listCols.SetCol_Format<tb_FM_ProfitLossDetail, ProfitLossType>(o => o.ProfitLossType, EnumFilter<ProfitLossType>.GreaterThan(ProfitLossType.库存盘盈));
+            //}
+
+
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
             /*
@@ -257,6 +269,8 @@ namespace RUINORERP.UI.FM.FMBase
             listCols.SetCol_Formula<tb_FM_ProfitLossDetail>((a, b, c) => a.SubtotalAmont / (1 + b.TaxRate) * c.TaxRate, d => d.TaxSubtotalAmont);
             listCols.SetCol_Formula<tb_FM_ProfitLossDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.SubtotalAmont);
             listCols.SetCol_Formula<tb_FM_ProfitLossDetail>((a, b) => a.SubtotalAmont - b.TaxSubtotalAmont, c => c.UntaxedSubtotalAmont);
+
+            //枚举值 排除或只选择
             listCols.SetCol_Format<tb_FM_ProfitLossDetail>(c => c.ProfitLossType, CustomFormatType.EnumOptions, null, typeof(ProfitLossType));
             listCols.SetCol_Format<tb_FM_ProfitLossDetail>(c => c.IncomeExpenseDirection, CustomFormatType.EnumOptions, null, typeof(IncomeExpenseDirection));
 

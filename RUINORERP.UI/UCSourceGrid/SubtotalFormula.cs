@@ -19,6 +19,7 @@ namespace RUINORERP.UI.UCSourceGrid
     /// 目标列就也是结果列，
     /// 一个目标列可能来自两组公式
     /// 计算公式可能是在一定条件下，才会参与计算
+    /// 在一定条件下，才参与计算的，带公式的参数都可以用这个传递
     /// </summary>
     public class CalculateFormula
     {

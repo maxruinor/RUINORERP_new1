@@ -272,8 +272,6 @@ namespace RUINORERP.Business
 
                                 #endregion
 
-
-
                             }
 
 

@@ -1,4 +1,7 @@
 ﻿
+using NPOI.SS.Formula;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global.Model;
@@ -387,6 +390,47 @@ namespace RUINORERP.UI.UCSourceGrid
         }
 
 
+        /// <summary>
+        /// 给外键列设置缓存过滤
+        /// </summary>
+        /// <typeparam name="T">目标列所属实体类型</typeparam>
+        /// <typeparam name="TEntity">被绑定的数据源类型</typeparam>
+        /// <param name="cols"></param>
+        /// <param name="colNameExp"></param>
+        /// <param name="filter"></param>
+        public static void SetCol_DataFilter<T, TEntity>(
+            this List<SGDefineColumnItem> cols,
+            Expression<Func<T, object>> colNameExp,
+            DataFilter<TEntity> filter) where TEntity : class
+        {
+            var prop = colNameExp.GetMemberInfo().Name;
+            foreach (var col in cols.Where(c => c.ColName == prop))
+                col.SetDataFilter(filter);
+        }
+
+
+
+
+
+        public static void SetCol_Format<T, TEnum>(
+    this List<SGDefineColumnItem> cols,
+    Expression<Func<T, object>> colNameExp,
+    EnumFilter<TEnum> filter,
+    string[] formatText = null)
+    where TEnum : Enum
+        {
+            MemberInfo minfo = colNameExp.GetMemberInfo();
+            foreach (var item in cols)
+            {
+                if (item.ColName == minfo.Name)
+                {
+                    // 新增扩展方法，内部保存在 SGDefineColumnItem 的一个字段里
+                    item.TypeForEnumOptions = typeof(TEnum);
+                    item.SetEnumFilter(filter);
+                }
+            }
+        }
+
 
 
         /// <summary>
@@ -515,8 +559,6 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
                 col.CustomFormat = CustomFormat;
             }
-
-
 
         }
 
@@ -655,33 +697,6 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
             SetCalculateFormula(cols, ConditionExpression, ResultColName, expStr, FormulaExp.Body.ToString());
-            /*
-            MemberInfo minfo = ResultColName.GetMemberInfo();
-            foreach (SourceGridDefineColumnItem item in cols)
-            {
-                if (item.BelongingObjectType.Name != typeof(T).Name)
-                {
-                    continue;
-                }
-                //如果目标列和参数列一致，则不计算
-                if (item.ColName == minfo.Name)
-                {
-                    bool isSame = item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol.ColName == minfo.Name && s.OriginalExpression.ToString() == FormulaExp.Body.ToString()).Any();
-                    if (isSame)
-                    {
-                        continue;
-                    }
-
-                    CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
-                    expStr.TagetCol = item;
-                    expStr.OriginalExpression = FormulaExp.Body.ToString();
-                    expStr.TagetColName = item.ColName;//以这个结果列，或叫目标标为标准，但是可能多种方法组合得到这个结果。所以可以重复
-                    item.ParentGridDefine.SubtotalCalculate.Add(expStr);
-                    //item.Summary = true;参与计算不一定得要显示小计，如比例之类的列
-                }
-
-            }
-            */
         }
 
 
@@ -711,7 +726,6 @@ namespace RUINORERP.UI.UCSourceGrid
         /// <param name="ConditionExpression">条件表达式，如果为真则执行计算</param>
         private static void SetCalculateFormula<T>(this List<SGDefineColumnItem> cols, Expression<Func<T, object>> ConditionExpression, Expression<Func<T, object>> ResultColName, CalculateFormula calculateFormula, string OriginalExpressionStr)
         {
-
             MemberInfo minfo = ResultColName.GetMemberInfo();
             foreach (SGDefineColumnItem item in cols)
             {
@@ -728,14 +742,12 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     bool isSame = item.ParentGridDefine.SubtotalCalculateReverse.Where(s => s.TagetCol.ColName == minfo.Name
                     && s.OriginalExpression.ToString() == OriginalExpressionStr
-
                     ).Any();
                     if (isSame)
                     {
                         continue;
                     }
 
-                    //CalculateFormula expStr = CalculateParser<T>.ParserString(FormulaExp);
                     CalculateFormula expStr = calculateFormula;
                     expStr.TagetCol = item;
                     expStr.OriginalExpression = OriginalExpressionStr;
@@ -756,17 +768,13 @@ namespace RUINORERP.UI.UCSourceGrid
                         condition.expCondition = exp;
                         expStr.CalcCondition = condition;
                     }
-                    else
-                    {
-
-                    }
                     #endregion
                     item.ParentGridDefine.SubtotalCalculate.Add(expStr);
                 }
             }
+ 
         }
-
-
+ 
         /// <summary>
         /// 指定计算公式的列,要在dg定义后使用
         /// </summary>

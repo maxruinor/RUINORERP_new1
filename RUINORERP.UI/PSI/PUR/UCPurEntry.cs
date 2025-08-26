@@ -180,7 +180,17 @@ namespace RUINORERP.UI.PSI.PUR
                     entity.PurEntryNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.采购入库单);
                 }
 
-
+                if (entity.tb_purorder != null)
+                {
+                    entity.Currency_ID = entity.tb_purorder.Currency_ID;
+                }
+                else
+                {
+                    if (AppContext.BaseCurrency != null)
+                    {
+                        entity.Currency_ID = AppContext.BaseCurrency.Currency_ID;
+                    }
+                }
                 entity.EntryDate = System.DateTime.Now;
                 entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 if (entity.tb_PurEntryDetails != null && entity.tb_PurEntryDetails.Count > 0)

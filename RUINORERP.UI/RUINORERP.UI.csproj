@@ -861,6 +861,12 @@
     <Compile Include="FM\FMBase\UCFMStatementQuery.Designer.cs">
       <DependentUpon>UCFMStatementQuery.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\FMBase\UCStatementCreator.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\FMBase\UCStatementCreator.Designer.cs">
+      <DependentUpon>UCStatementCreator.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\FMBase\UCReceivablePayableQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1755,6 +1761,12 @@
     <Compile Include="FM\OtherExpenseVoucher.Designer.cs">
       <DependentUpon>OtherExpenseVoucher.cs</DependentUpon>
     </Compile>
+    <Compile Include="FM\UCStatementCreatorByPurchaser.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCStatementCreatorByPurchaser.Designer.cs">
+      <DependentUpon>UCStatementCreatorByPurchaser.cs</DependentUpon>
+    </Compile>
     <Compile Include="FM\UCPaymentStatement.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1832,6 +1844,12 @@
     </Compile>
     <Compile Include="FM\UCReceiptStatementQuery.Designer.cs">
       <DependentUpon>UCReceiptStatementQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FM\UCStatementCreatorSaler.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FM\UCStatementCreatorSaler.Designer.cs">
+      <DependentUpon>UCStatementCreatorSaler.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\UCSalePriceAdjustment.cs">
       <SubType>UserControl</SubType>
@@ -3866,6 +3884,9 @@
     <EmbeddedResource Include="FM\FMBase\UCFMStatementQuery.resx">
       <DependentUpon>UCFMStatementQuery.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="FM\FMBase\UCStatementCreator.resx">
+      <DependentUpon>UCStatementCreator.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FM\FMBase\UCReceivablePayableQuery.resx">
       <DependentUpon>UCReceivablePayableQuery.cs</DependentUpon>
     </EmbeddedResource>
@@ -3931,6 +3952,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCReceiptStatementQuery.resx">
       <DependentUpon>UCReceiptStatementQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCStatementCreatorSaler.resx">
+      <DependentUpon>UCStatementCreatorSaler.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FM\UCReceivedSettledQuery.resx">
+      <DependentUpon>UCReceivedSettledQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCSalePriceAdjustmentQuery.resx">
       <DependentUpon>UCSalePriceAdjustmentQuery.cs</DependentUpon>

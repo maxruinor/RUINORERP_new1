@@ -253,7 +253,7 @@ namespace RUINORERP.UI.PSI.PUR
                                 {
                                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                                     //
-                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision()); // 四舍五入到 2 位小数
                                 }
                                 lblExchangeRate.Visible = true;
                                 txtExchangeRate.Visible = true;
@@ -549,7 +549,7 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
                     UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
-                    EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
+                    EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
                 }
 
                 //是不是选了外币就通过本币和汇率算一下？
@@ -557,7 +557,7 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                     //
-                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision()); // 四舍五入到 2 位小数
                 }
             }
             catch (Exception ex)
@@ -658,7 +658,7 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     decimal FreightTaxRate = details.FirstOrDefault(c => c.TaxRate > 0).TaxRate;
                     UntaxedShippingCost = (EditEntity.ShipCost / (1 + FreightTaxRate)); //计算列：不含税运费
-                    EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, 2);
+                    EditEntity.TotalUntaxedAmount += Math.Round(UntaxedShippingCost, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
                 }
 
                 if (EditEntity.TotalTaxAmount > 0)

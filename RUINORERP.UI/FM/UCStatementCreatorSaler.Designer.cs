@@ -1,6 +1,6 @@
 ﻿namespace RUINORERP.UI.FM
 {
-    partial class UCReceivedSettledQuery
+    partial class UCStatementCreatorSaler
     {
         /// <summary> 
         /// 必需的设计器变量。
@@ -45,11 +45,11 @@
             // 
             this.kryptonDockingManagerQuery.Strings.TextAutoHide = "自动隐藏";
             // 
-            // UCReceivedSettledQuery
+            // UCReceivableQuery
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "UCReceivedSettledQuery";
+            this.Name = "UCReceivableQuery";
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).EndInit();
             this.kryptonPanelMainBig.ResumeLayout(false);
             this.kryptonPanelMainBig.PerformLayout();

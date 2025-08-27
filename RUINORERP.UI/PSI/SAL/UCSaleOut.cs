@@ -400,7 +400,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 {
                                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                                     //
-                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision()); // 四舍五入到 2 位小数
                                 }
                                 lblExchangeRate.Visible = true;
                                 txtExchangeRate.Visible = true;
@@ -816,7 +816,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                     //
-                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision()); // 四舍五入到 2 位小数
                 }
 
                 //如果单据可以审核，这时修改子表，没保存直接审核。则出错。修改了，就要保存再提交 再审核
@@ -1019,7 +1019,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                     //
-                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision()); // 四舍五入到 2 位小数
                 }
 
 

@@ -1256,7 +1256,7 @@ namespace RUINORERP.UI.BaseForm
             BuildInvisibleCols();
 
             //先添加主要的条件 在processor中
-            BuildQueryCondition();
+            QueryConditionBuilder();
 
             //再添加UI上额外的情况
             BuildLimitQueryConditions();
@@ -1274,7 +1274,7 @@ namespace RUINORERP.UI.BaseForm
         /// QueryParameters
         /// 目前支持上面两种，不能同时使用
         /// </summary>
-        public virtual void BuildQueryCondition()
+        public virtual void QueryConditionBuilder()
         {
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(M).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();

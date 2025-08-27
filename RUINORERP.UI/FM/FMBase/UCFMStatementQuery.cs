@@ -44,7 +44,7 @@ using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.FM
 {
-    //应收应付查询
+    //对应单查询
     public partial class UCFMStatementQuery : BaseBillQueryMC<tb_FM_Statement, tb_FM_StatementDetail>
     {
         public UCFMStatementQuery()

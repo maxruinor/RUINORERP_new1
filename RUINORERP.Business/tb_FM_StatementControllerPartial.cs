@@ -291,10 +291,14 @@ namespace RUINORERP.Business
             statement.ClosingBalanceLocalAmount = statement.OpeningBalanceLocalAmount + statement.TotalReceivableLocalAmount - statement.TotalPayableLocalAmount;
 
             //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
-            var checkList = statement.tb_FM_StatementDetails.GroupBy(c => c.ARAPId).ToList();
-            if (checkList.Count > 1)
+            var duplicateArapIds = statement.tb_FM_StatementDetails
+            .GroupBy(c => c.ARAPId)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+            if (duplicateArapIds.Any())
             {
-                throw new Exception("对账单明细中，同一业务下同一张单据不能重复对账。\r\n相同业务下的单据必须为一行。");
+                throw new Exception($"对账单明细中，以下应收付款单存在重复对账：{string.Join(",", duplicateArapIds)}");
             }
             statement.ARAPNos = string.Join(",", statement.tb_FM_StatementDetails.Select(t => t.ARAPId).ToArray());
 

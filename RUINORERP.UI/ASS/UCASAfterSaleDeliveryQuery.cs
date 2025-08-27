@@ -82,9 +82,9 @@ namespace RUINORERP.UI.ASS
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
-        public override void BuildQueryCondition()
+        public override void QueryConditionBuilder()
         {
-            base.BuildQueryCondition();
+            base.QueryConditionBuilder();
 
             //非超级用户时，只能查看自己的订单,如果设置的销售业务限制范围的话
             var lambda = Expressionable.Create<tb_AS_AfterSaleDelivery>()

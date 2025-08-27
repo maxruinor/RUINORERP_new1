@@ -189,23 +189,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-        //public override void BuildLimitQueryConditions()
-        //{
-        //    //// 替换占位符为参数名
-        //    //.Replace("@EmployeeId", ":employeeId");
-        //    //// SqlSugar自动处理参数
-        //    //lambda.And(t => t.Employee_ID == SqlFunc.Param("employeeId", user.EmployeeId));
-        //    //创建表达式
-        //    var lambda = Expressionable.Create<tb_SaleOrder>()
-        //                     //.AndIF(CurMenuInfo.CaptionCN.Contains("客户"), t => t.IsCustomer == true)
-        //                     // .AndIF(CurMenuInfo.CaptionCN.Contains("供应商"), t => t.IsVendor == true)
-        //                     .And(t => t.isdeleted == false)
-        //                       // .And(t => t.Is_enabled == true)
-        //                       .AndIF(AuthorizeController.GetSaleLimitedAuth(MainForm.Instance.AppContext), t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
-        //                    .ToExpression();//注意 这一句 不能少
-        //    base.LimitQueryConditions = lambda;
-        //    QueryConditionFilter.FilterLimitExpressions.Add(lambda);
-        //}
+ 
 
         public List<RuleResultWithFilter> ExecuteRulesWithFilter(RulesEngine.RulesEngine re, tb_UserInfo user, tb_MenuInfo menu)
         {
@@ -647,9 +631,9 @@ namespace RUINORERP.UI.PSI.SAL
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
-        public override void BuildQueryCondition()
+        public override void QueryConditionBuilder()
         {
-            base.BuildQueryCondition();
+            base.QueryConditionBuilder();
 
             //非超级用户时，只能查看自己的订单,如果设置的销售业务限制范围的话
             var lambda = Expressionable.Create<tb_SaleOrder>()

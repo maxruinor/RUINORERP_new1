@@ -2014,7 +2014,8 @@ namespace RUINORERP.UI.MRP.BOM
                     var detail = details[i];
 
                     decimal tempSubtotal = detail.UsedQty * detail.UnitCost;
-                    tempSubtotal = Math.Round(tempSubtotal, 4);
+                    tempSubtotal = Math.Round(tempSubtotal, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+                    
                     detail.SubtotalUnitCost = tempSubtotal;
                 }
                 EditEntity.TotalMaterialCost = details.Sum(c => c.SubtotalUnitCost);

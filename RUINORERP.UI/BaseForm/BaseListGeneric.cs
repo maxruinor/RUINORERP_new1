@@ -1416,7 +1416,7 @@ namespace RUINORERP.UI.BaseForm
         {
             tsbtnSelected.Visible = true;
         }
-
+        
 
 
         public virtual void QueryConditionBuilder()

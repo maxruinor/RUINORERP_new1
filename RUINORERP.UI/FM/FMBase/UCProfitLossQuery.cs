@@ -83,7 +83,7 @@ namespace RUINORERP.UI.FM.FMBase
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
-        public override void BuildQueryCondition()
+        public override void QueryConditionBuilder()
         {
             bool isIncome = true;
             

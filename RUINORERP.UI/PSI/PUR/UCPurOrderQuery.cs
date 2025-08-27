@@ -221,9 +221,9 @@ namespace RUINORERP.UI.PSI.PUR
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
-        public override void BuildQueryCondition()
+        public override void QueryConditionBuilder()
         {
-            base.BuildQueryCondition();
+            base.QueryConditionBuilder();
             var lambda = Expressionable.Create<tb_PurOrder>()
             .AndIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
             .ToExpression();

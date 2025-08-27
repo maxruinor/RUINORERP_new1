@@ -64,7 +64,7 @@ namespace RUINORERP.UI.PSI.PUR
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
-        public override void BuildQueryCondition()
+        public override void QueryConditionBuilder()
         {
             //base.QueryConditions.Add(c => c.PurOrderNo);
             //base.QueryConditions.Add(c => c.PurDate);

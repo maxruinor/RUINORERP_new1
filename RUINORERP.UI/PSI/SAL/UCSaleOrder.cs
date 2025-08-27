@@ -448,7 +448,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 {
                                     EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
                                     //
-                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision()); // 四舍五入到 2 位小数
                                 }
                                 lblExchangeRate.Visible = true;
                                 txtExchangeRate.Visible = true;
@@ -534,20 +534,11 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
-
                 if (entity.FreightIncome >= 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.FreightIncome))
                 {
                     if (EditEntity.tb_SaleOrderDetails != null)
                     {
-                        EditEntity.TotalTaxAmount = entity.tb_SaleOrderDetails.Sum(c => c.SubtotalTaxAmount);
-                        EditEntity.TotalAmount = entity.tb_SaleOrderDetails.Sum(c => c.TransactionPrice * c.Quantity);
-                        EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
-                        if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
-                        {
-                            EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
-                            //
-                            EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
-                        }
+                        AmountCalculate(EditEntity.tb_SaleOrderDetails);
                     }
                 }
 
@@ -895,32 +886,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
-                EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
-                EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
-                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
-                EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
-
-                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
-                {
-                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
-                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
-                    //外币时，如果收了运费。算换成外币。反之
-                    if (EditEntity.FreightIncome > 0)
-                    {
-                        EditEntity.ForeignFreightIncome = EditEntity.FreightIncome / EditEntity.ExchangeRate;
-                        EditEntity.ForeignFreightIncome = Math.Round(EditEntity.ForeignFreightIncome, 2); // 四舍五入到 2 位小数
-                    }
-                }
-                if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.Deposit != EditEntity.TotalAmount)
-                {
-                    EditEntity.Deposit = EditEntity.TotalAmount;
-                }
-                if (EditEntity.PayStatus == (int)PayStatus.未付款 && EditEntity.Deposit != 0)
-                {
-                    EditEntity.Deposit = 0;
-                }
+                AmountCalculate(details);
 
             }
             catch (Exception ex)
@@ -929,6 +895,44 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 MainForm.Instance.uclog.AddLog("Sgh_OnCalculateColumnValue" + ex.Message);
             }
         }
+
+
+        private void AmountCalculate(List<tb_SaleOrderDetail> details)
+        {
+            EditEntity.TotalQty = details.Sum(c => c.Quantity);
+            EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
+            EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
+            EditEntity.TotalTaxAmount = Math.Round(EditEntity.TotalTaxAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+            EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
+            EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity);
+            EditEntity.TotalAmount = EditEntity.TotalAmount + EditEntity.FreightIncome;
+
+            if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
+            {
+                EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
+                //EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, 2); // 四舍五入到 2 位小数
+                EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+                //外币时，如果收了运费。算换成外币。反之
+                if (EditEntity.FreightIncome > 0)
+                {
+                    EditEntity.ForeignFreightIncome = EditEntity.FreightIncome / EditEntity.ExchangeRate;
+                    EditEntity.ForeignFreightIncome = Math.Round(EditEntity.ForeignFreightIncome, MainForm.Instance.authorizeController.GetMoneyDataPrecision()); // 四舍五入到 2 位小数
+                }
+            }
+
+
+
+            if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.Deposit != EditEntity.TotalAmount)
+            {
+                EditEntity.Deposit = EditEntity.TotalAmount;
+            }
+            if (EditEntity.PayStatus == (int)PayStatus.未付款 && EditEntity.Deposit != 0)
+            {
+                EditEntity.Deposit = 0;
+            }
+        }
+
+
 
         List<tb_SaleOrderDetail> details = new List<tb_SaleOrderDetail>();
         /// <summary>
@@ -1087,6 +1091,8 @@ using var binder = new UIStateBinder(..., customEvaluator);
                                 c.TotalDeliveredQty = 0;
                             }
                             c.SubtotalTaxAmount = c.SubtotalTransAmount / (1 + c.TaxRate) * c.TaxRate;
+                            c.SubtotalTaxAmount=Math.Round(c.SubtotalTaxAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+
                             if (c.CustomizedCost > 0)
                             {
                                 EditEntity.IsCustomizedOrder = true;
@@ -1095,12 +1101,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     }
                 );
 
-                EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
-
-                EditEntity.TotalTaxAmount = details.Sum(c => c.SubtotalTaxAmount);
-                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;
+                AmountCalculate(details);
 
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)

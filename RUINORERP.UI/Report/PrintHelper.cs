@@ -217,8 +217,7 @@ namespace RUINORERP.UI.Report
                 List<object> objlist = new List<object>();
                 List<M> mlist = new List<M>();
 
-                FastReport.Report FReport;
-                FReport = new FastReport.Report();
+                FastReport.Report FReport = new FastReport.Report();
                 int counter = 0;
 
                 try

@@ -60,6 +60,7 @@ namespace RUINORERP.Business
                 .Includes(c => c.tb_Packing_forSku, e => e.tb_BoxRuleses)
                 .Includes(c => c.tb_Packing_forSku, e => e.tb_PackingDetails)
                 .IncludesAllFirstLayer()//自动导航
+                .OrderBy(c=>c.Type_ID)
                 .Take(top).Where(exp);
             return querySqlQueryable.ToList();
         }

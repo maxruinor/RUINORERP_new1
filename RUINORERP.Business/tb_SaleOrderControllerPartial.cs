@@ -1406,7 +1406,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
-        public async Task<ReturnResults<tb_SaleOrder>> CancelOrder(tb_SaleOrder entity)
+        public async Task<ReturnResults<tb_SaleOrder>> CancelOrder(tb_SaleOrder entity, string CancelReason)
         {
             ReturnResults<tb_SaleOrder> rmrs = new ReturnResults<tb_SaleOrder>();
             try
@@ -1471,10 +1471,11 @@ namespace RUINORERP.Business
                                             var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                                             bool isRefund = true;
                                             tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { PrePayment }, isRefund);
+                                            paymentRecord.Remark += "（作废）" + CancelReason;
                                             var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
                                             if (rrs.Succeeded)
                                             {
-                                                await paymentController.ApprovalAsync(paymentRecord,true);
+                                                await paymentController.ApprovalAsync(paymentRecord, true);
                                             }
                                         }
                                         else
@@ -1562,12 +1563,15 @@ namespace RUINORERP.Business
                 {
                     _logger.LogInformation($"{entity.SOrderNo}取消时，更新库存结果为0行，请检查数据！");
                 }
-                entity.CloseCaseOpinions = "用户取消订单";
                 entity.DataStatus = (int)DataStatus.作废;
+                entity.CloseCaseOpinions += CancelReason;
+                entity.Notes += $"取消原因：{CancelReason}";
                 BusinessHelper.Instance.EditEntity(entity);
 
                 //只更新指定列
-                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity).UpdateColumns(it => new { it.DataStatus }).ExecuteCommandAsync();
+                var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entity)
+                    .UpdateColumns(it => new { it.DataStatus, entity.Notes, entity.CloseCaseOpinions })
+                    .ExecuteCommandAsync();
 
                 if (result > 0)
                 {

@@ -950,8 +950,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 case 待办事项.应收款单:
                     yield return BizType.应收款单;
                     break;
-                case 待办事项.对账单:
-                    yield return BizType.对账单;
+                case 待办事项.收款对账单:
+                    yield return BizType.收款对账单;
+                    break;
+                case 待办事项.付款对账单:
+                    yield return BizType.付款对账单;
                     break;
                 case 待办事项.付款单:
                     yield return BizType.付款单;

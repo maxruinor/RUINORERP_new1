@@ -101,7 +101,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditReceivePaymentRecordByPlatform, chkAutoAuditReceivePaymentRecordByPlatform, false);
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditReceiveable, chkAutoAuditReceiveable, false);
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditPaymentable, chkAutoAuditPaymentable, false);
-
+            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnableAutoRefundOnOrderCancel, chkEnableAutoRefundOnOrderCancel, false);
             #endregion
 
             base.BindData(entity);

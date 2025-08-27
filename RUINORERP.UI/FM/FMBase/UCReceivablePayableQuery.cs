@@ -282,7 +282,7 @@ namespace RUINORERP.UI.FM
         }
 
 
-        private void NewSumDataGridView_转为收付款单(object sender, EventArgs e)
+        private async void NewSumDataGridView_转为收付款单(object sender, EventArgs e)
         {
 
             List<tb_FM_ReceivablePayable> selectlist = GetSelectResult();
@@ -349,7 +349,7 @@ namespace RUINORERP.UI.FM
             .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
             }
         }
         #endregion
@@ -758,9 +758,102 @@ namespace RUINORERP.UI.FM
 
 
         //按客户生成对账单
-        private void NewSumDataGridView_生成对账单(object sender, EventArgs e)
+        private async void NewSumDataGridView_生成对账单(object sender, EventArgs e)
         {
 
+            List<tb_FM_ReceivablePayable> selectlist = GetSelectResult();
+            List<tb_FM_ReceivablePayable> RealList = new List<tb_FM_ReceivablePayable>();
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
+            foreach (var item in selectlist)
+            {
+                //只有审核状态才可以转换为收款单
+                bool canConvert = item.ARAPStatus == (int)ARAPStatus.待支付 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
+                {
+                    RealList.Add(item);
+                }
+                else
+                {
+                    msg.Append(counter.ToString() + ") ");
+                    msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】 无法生成{PaymentType.ToString()}对账单。").Append("\r\n");
+                    counter++;
+                }
+            }
+
+            if (RealList.GroupBy(g => g.Currency_ID).Select(g => g.Key).Count() > 1)
+            {
+                msg.Append($"多选时，币别相同才能合并到一个{PaymentType.ToString()}对账单");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+
+            //多选时。要相同客户才能合并到一个收款单
+            if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
+            {
+                msg.Append($"多选时，要相同客户才能合并到一个{PaymentType.ToString()}对账单");
+                #region 显示多个客户抬头
+
+                // 显示前10个单据编号，其余用省略号表示
+                string CustomerVendors = string.Join(", ",
+                    RealList.Select(item => item.tb_customervendor).Distinct().Select(c => c.CVName));
+                CustomerVendors = CustomerVendors.TrimEnd(',');
+                int Count = RealList.Select(item => item.tb_customervendor).Distinct().Count();
+                //if (RealList.Select(item => item.CustomerVendor_ID).Count() > 5)
+                //{
+                //    CustomerVendors += $" 等 {CustomerVendors.Count} 张单据\r\n";
+                //}
+
+                #endregion
+                if (MessageBox.Show(msg.ToString(), "系统提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                {
+                    //您已选择 N 个客户，生成对账单时将合并这些客户的往来数据，是否继续？
+                    MessageBox.Show($"您已选择 {Count} 个客户:{CustomerVendors}，生成对账单时将合并这些客户的往来数据，请确认是否继续？", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
+                    return;
+                }
+
+            }
+            if (msg.ToString().Length > 0)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (RealList.Count == 0)
+                {
+                    return;
+                }
+            }
+
+            if (RealList.Count == 0)
+            {
+                msg.Append($"请至少选择一行数据转为收{PaymentType.ToString()}对账单");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
+            tb_FM_Statement statement = await paymentController.BuildStatement(RealList, PaymentType);
+
+            MenuPowerHelper menuPowerHelper;
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+
+            string Flag = string.Empty;
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                Flag = typeof(RUINORERP.UI.FM.UCReceiptStatement).FullName;
+            }
+            else
+            {
+                Flag = typeof(RUINORERP.UI.FM.UCPaymentStatement).FullName;
+            }
+
+            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+        && m.EntityName == nameof(tb_FM_Statement)
+        && m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
+            .FirstOrDefault();
+            if (RelatedMenuInfo != null)
+            {
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, statement);
+            }
         }
 
         public override void BuildSummaryCols()
@@ -787,7 +880,7 @@ namespace RUINORERP.UI.FM
             base.MasterInvisibleCols.Add(c => c.SourceBillId);
             if (PaymentType == ReceivePaymentType.收款)
             {
-                //应收款，不需要对方的收款信息。收款才要显示
+                //应收款，不需要对方的收款信息。付款才要显示
                 base.MasterInvisibleCols.Add(c => c.PayeeInfoID);
                 base.MasterInvisibleCols.Add(c => c.PayeeAccountNo);
             }

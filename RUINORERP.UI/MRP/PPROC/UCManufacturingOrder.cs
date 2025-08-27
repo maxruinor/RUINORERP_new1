@@ -483,10 +483,12 @@ namespace RUINORERP.UI.MRP.MP
             }*/
 
             //公共到明细的映射 源 ，左边会隐藏
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_ManufacturingOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
-            sgh.SetPointToColumnPairs<ProductSharePart, tb_ManufacturingOrderDetail>(sgd, f => f.prop, t => t.property);
+            //sgh.SetPointToColumnPairs<ProductSharePart, tb_ManufacturingOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
+            //sgh.SetPointToColumnPairs<ProductSharePart, tb_ManufacturingOrderDetail>(sgd, f => f.prop, t => t.property);
             sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_ManufacturingOrderDetail>(sgd, f => f.BOM_ID, t => t.BOM_ID);
             sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_ManufacturingOrderDetail>(sgd, f => f.Quantity, t => t.CurrentIinventory);
+            sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_ManufacturingOrderDetail>(sgd, f => f.prop, t => t.property);
+            sgh.SetQueryItemToColumnPairs<View_ProdDetail, tb_ManufacturingOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
 
             // TODO by watson 如果有BOM则显示BOM里的成本。如果没有则是库存成本，如果这里要算成本人工费这些，还要进一步处理 制令单与BOM清单中的各中费用关系
             //如果
@@ -656,7 +658,7 @@ namespace RUINORERP.UI.MRP.MP
                     if (EditEntity.tb_bom_s == null)
                     {
                         var bomCtroller = MainForm.Instance.AppContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
-                        EditEntity.tb_bom_s =await bomCtroller.BaseQueryByIdAsync(EditEntity.BOM_ID);
+                        EditEntity.tb_bom_s = await bomCtroller.BaseQueryByIdAsync(EditEntity.BOM_ID);
                     }
 
                     // 1. 配方单位成本
@@ -690,7 +692,7 @@ namespace RUINORERP.UI.MRP.MP
                     // 4. 差异过大，一半了，提示并阻断
                     if (diffRatio > Bigtolerance)
                     {
-                        string msg = $"产出母件的生产单位成本({moUnitCost:N2})与配方成本({bomUnitCost:N2})差异过大（>{tolerance:P0}），\n" +
+                        string msg = $"产出母件的生产单位成本({moUnitCost:N2})与配方成本({bomUnitCost:N2})差异过大（>{Bigtolerance:P0}），\n" +
                                      "是否为定制单？请检查数据后重试！";
                         System.Windows.Forms.MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return false;

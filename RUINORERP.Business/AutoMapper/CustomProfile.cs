@@ -27,17 +27,23 @@ namespace RUINORERP.Business.AutoMapper
 
 
             #region 财务模块
+
+            CreateMap<tb_FM_ReceivablePayable, tb_FM_StatementDetail>()
+            .ForMember(a => a.IncludedForeignAmount, o => o.MapFrom(d => d.ForeignBalanceAmount))
+            .ForMember(a => a.IncludedLocalAmount, o => o.MapFrom(d => d.LocalBalanceAmount))
+            .ForMember(a => a.Summary, o => o.MapFrom(d => d.Remark));
+
             CreateMap<tb_PurReturnEntry, tb_FM_ReceivablePayable>();
             CreateMap<tb_PurReturnEntryDetail, tb_FM_ReceivablePayableDetail>()
-       .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.UnitPrice))
-       .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
-       .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
-       .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.PurReEntry_CID))
-       .ForMember(a => a.property, o => o.MapFrom(d => d.property))
-       .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
-       .ForMember(a => a.TaxLocalAmount, o => o.MapFrom(d => d.TaxAmount))
-       .ForMember(a => a.LocalPayableAmount, o => o.MapFrom(d => d.SubtotalTrPriceAmount))
-       .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
+           .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.UnitPrice))
+           .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
+           .ForMember(a => a.ProdDetailID, o => o.MapFrom(d => d.ProdDetailID))
+           .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.PurReEntry_CID))
+           .ForMember(a => a.property, o => o.MapFrom(d => d.property))
+           .ForMember(a => a.TaxRate, o => o.MapFrom(d => d.TaxRate))
+           .ForMember(a => a.TaxLocalAmount, o => o.MapFrom(d => d.TaxAmount))
+           .ForMember(a => a.LocalPayableAmount, o => o.MapFrom(d => d.SubtotalTrPriceAmount))
+           .ForMember(a => a.Summary, o => o.MapFrom(d => d.Summary));
 
 
 

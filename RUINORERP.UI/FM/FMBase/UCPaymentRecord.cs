@@ -166,7 +166,10 @@ namespace RUINORERP.UI.FM
                 entity.ActionStatus = ActionStatus.加载;
                 LoadPayeeInfo(entity);
                 ControlCurrency(entity);
-
+                if (entity.TotalLocalAmount < 0)
+                {
+                    picBox红字.Visible = true;
+                }
             }
             else
             {

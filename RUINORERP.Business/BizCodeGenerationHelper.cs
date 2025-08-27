@@ -344,19 +344,29 @@ namespace RUINORERP.Business
                     rule = "{S:SK}{D:yyMMdd}{redis:{S:收款单}{D:yyMM}/000}";
                     break;
                 case BizType.应付款单:
-                    rule = "{S:AP}{D:yyMMdd}{redis:{S:应付单}{D:yyMM}/000}";
+                    rule = "{S:AP}{D:yyMMdd}{redis:{S:应付款单}{D:yyMM}/000}";
                     break;
                 case BizType.应收款单:
-                    rule = "{S:AR}{D:yyMMdd}{redis:{S:应收单}{D:yyMM}/000}";
+                    rule = "{S:AR}{D:yyMMdd}{redis:{S:应收款单}{D:yyMM}/000}";
                     break;
+                case BizType.付款对账单:
+                    rule = "{S:FKS}{D:yyMMdd}{redis:{S:付款对账单}{D:yyMM}/000}";
+                    break;
+                case BizType.收款对账单:
+                    rule = "{S:SKS}{D:yyMMdd}{redis:{S:收款对账单}{D:yyMM}/000}";
+                    break;
+
                 case BizType.损失确认单://Loss Shortage（损失）
-                    rule = "{S:LO}{D:yyMMdd}{redis:{S:应收单}{D:yyMM}/00}";
+                    rule = "{S:LO}{D:yyMMdd}{redis:{S:损失确认单}{D:yyMM}/00}";
                     break;
                 case BizType.溢余确认单://Over Yield（溢余）
-                    rule = "{S:OY}{D:yyMMdd}{redis:{S:收款核销}{D:yyMM}/00}";
+                    rule = "{S:OY}{D:yyMMdd}{redis:{S:溢余确认单}{D:yyMM}/00}";
                     break;
                 case BizType.付款核销:
-                    rule = "{S:FKHX}{D:yyMMdd}{redis:{S:付款核销}{D:yyMM}/000}";
+                    rule = "{S:FKHX}{D:yyMMdd}{redis:{S:付款核销}{D:yyMM}/0000}";
+                    break;
+                case BizType.收款核销:
+                    rule = "{S:SKHX}{D:yyMMdd}{redis:{S:收款核销}{D:yyMM}/0000}";
                     break;
                 case BizType.销售价格调整单:
                     rule = "{S:SPA}{D:yyMMdd}{redis:{S:销售价格调整单}{D:yyMM}/000}";

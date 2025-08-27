@@ -79,6 +79,7 @@ namespace RUINORERP.UI.MRP.MP
             base.MasterSummaryCols.Add(c => c.QuantityDelivered);
             base.ChildSummaryCols.Add(c => c.ShouldSendQty);
             base.ChildSummaryCols.Add(c => c.SubtotalUnitCost);
+            base.ChildSummaryCols.Add(c => c.UnitCost);
 
         }
 

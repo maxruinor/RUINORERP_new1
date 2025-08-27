@@ -360,19 +360,41 @@ namespace RUINORERP.UI.PSI.SAL
                         MessageBox.Show($"当前订单：{item.SOrderNo},已经生成过出库单，\r\n无法取消作废,只能销售退回处理！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
                     }
-                    tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                    //如果订单状态是审核状态，则取消订单
-                    //审核状态时取消订单 有退款则退款
-                    //如果有预付款，则取消订单时，需要退款
-                    ReturnResults<tb_SaleOrder> rmrs = await ctr.CancelOrder(item);
-                    if (rmrs.Succeeded)
+
+                    //取消订单的原因
+                    var CancelReasonRule = new LengthAndChineseValidationRule
                     {
-                        await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("取消订单【作废】", rmrs.ReturnObject, $"结果:{(rmrs.Succeeded ? "成功" : "失败")},{rmrs.ErrorMsg}");
-                    }
-                    else
+                        MinLength = 5,
+                        MaxLength = 500,
+                        MaxChineseChars = 50   // 例如只让最多 50 个汉字
+                    };
+
+                    
+                    using (var inputForm = new frmInputObject(CancelReasonRule))
                     {
-                        MessageBox.Show($"当前订单：{item.SOrderNo}{rmrs.ErrorMsg}！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
+                        inputForm.DefaultTitle = "请输入订单【取消作废】的原因";
+                        if (inputForm.ShowDialog() == DialogResult.OK)
+                        {
+                            tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
+                            //如果订单状态是审核状态，则取消订单
+                            //审核状态时取消订单 有退款则退款
+                            //如果有预付款，则取消订单时，需要退款
+
+                            ReturnResults<tb_SaleOrder> rmrs = await ctr.CancelOrder(item, inputForm.InputContent);
+                            if (rmrs.Succeeded)
+                            {
+                                await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("取消订单【作废】", rmrs.ReturnObject, $"结果:{(rmrs.Succeeded ? "成功" : "失败")},{rmrs.ErrorMsg}");
+                            }
+                            else
+                            {
+                                MessageBox.Show($"当前订单：{item.SOrderNo}{rmrs.ErrorMsg}！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            return;
+                        }
                     }
 
                 }

@@ -1,0 +1,302 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using RUINORERP.Business.LogicaService;
+using RUINORERP.Model;
+using RUINORERP.UI.Common;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINOR.Core;
+using RUINORERP.Common.Helper;
+using RUINORERP.Business;
+
+using RUINORERP.Business.AutoMapper;
+using AutoMapper;
+using RUINORERP.Model.Base;
+using SqlSugar;
+using Krypton.Navigator;
+using RUINORERP.Business.Security;
+using RUINORERP.Business.Processor;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.Global.EnumExt.CRM;
+using RUINORERP.Global;
+using RUINORERP.Model.TransModel;
+using RUINORERP.UI.SuperSocketClient;
+using TransInstruction;
+using AutoUpdateTools;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.UControls;
+using LiveChartsCore.Geo;
+using Netron.GraphLib;
+using RUINORERP.Business.CommService;
+using RUINORERP.Global.Model;
+using RUINORERP.UI.ToolForm;
+using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
+
+namespace RUINORERP.UI.FM
+{
+    //应收应付查询
+    public partial class UCFMStatementQuery : BaseBillQueryMC<tb_FM_Statement, tb_FM_StatementDetail>
+    {
+        public UCFMStatementQuery()
+        {
+            InitializeComponent();
+            base.RelatedBillEditCol = (c => c.StatementNo);
+        }
+        public ReceivePaymentType PaymentType { get; set; }
+        public override void BuildLimitQueryConditions()
+        {
+
+            //这里外层来实现对客户供应商的限制
+            string customerVendorId = "".ToFieldName<tb_CustomerVendor>(c => c.CustomerVendor_ID);
+
+            //应收付款中的往来单位额外添加一些条件
+            var lambdaCv = Expressionable.Create<tb_CustomerVendor>()
+                .AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
+                .AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
+              .ToExpression();
+            QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
+            queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv);
+
+
+            var lambda = Expressionable.Create<tb_FM_Statement>()
+                              .And(t => t.isdeleted == false)
+                             .And(t => t.ReceivePaymentType == (int)PaymentType)
+                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
+                             t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                         .ToExpression();//注意 这一句 不能少
+            QueryConditionFilter.FilterLimitExpressions.Add(lambda);
+
+            base.LimitQueryConditions = lambda;
+        }
+        public override void AddExcludeMenuList()
+        {
+            base.AddExcludeMenuList("批量处理");
+            base.AddExcludeMenuList(MenuItemEnums.反结案);
+            base.AddExcludeMenuList(MenuItemEnums.复制性新增);
+            base.AddExcludeMenuList(MenuItemEnums.数据特殊修正);
+            base.AddExcludeMenuList(MenuItemEnums.结案);
+            base.AddExcludeMenuList(MenuItemEnums.删除);
+            base.AddExcludeMenuList(MenuItemEnums.提交);
+            base.AddExcludeMenuList(MenuItemEnums.新增);
+            base.AddExcludeMenuList(MenuItemEnums.导入);
+            base.AddExcludeMenuList(MenuItemEnums.修改);
+            base.AddExcludeMenuList(MenuItemEnums.保存);
+        }
+
+        #region 添加生成对账单
+
+        /// <summary>
+        /// 添加回收
+        /// </summary>
+        /// <returns></returns>
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        {
+            ToolStripButton toolStripButton生成对账单 = new System.Windows.Forms.ToolStripButton();
+            toolStripButton生成对账单.Text = "生成对账单";
+            toolStripButton生成对账单.Image = global::RUINORERP.UI.Properties.Resources.MakeSureCost;
+            toolStripButton生成对账单.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton生成对账单.Name = "生成对账单MakesureCost";
+            toolStripButton生成对账单.Visible = false;//默认隐藏
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton生成对账单);
+            toolStripButton生成对账单.ToolTipText = "生成对账单。";
+            toolStripButton生成对账单.Click += new System.EventHandler(this.toolStripButton生成对账单_Click);
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton生成对账单 };
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+
+        }
+
+        private void toolStripButton生成对账单_Click(object sender, EventArgs e)
+        {
+
+
+
+        }
+
+
+        #endregion
+
+
+
+        #region 转为收付款单
+        public override List<ContextMenuController> AddContextMenu()
+        {
+            //List<EventHandler> ContextClickList = new List<EventHandler>();
+            //ContextClickList.Add(NewSumDataGridView_转为收付款单);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                list.Add(new ContextMenuController("【转为收款单】", true, false, "NewSumDataGridView_转为收付款单"));
+            }
+            else
+            {
+                list.Add(new ContextMenuController("【转为付款单】", true, false, "NewSumDataGridView_转为收付款单"));
+            }
+
+            return list;
+        }
+        public override void BuildContextMenuController()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_转为收付款单);
+            ContextClickList.Add(NewSumDataGridView_生成对账单);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list = AddContextMenu();
+
+            UIHelper.ControlContextMenuInvisible(CurMenuInfo, list);
+
+            if (_UCBillMasterQuery != null)
+            {
+                //base.dataGridView1.Use是否使用内置右键功能 = false;
+                ContextMenuStrip newContextMenuStrip = _UCBillMasterQuery.newSumDataGridViewMaster.GetContextMenu(_UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip
+                    , ContextClickList, list, true
+                    );
+                _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
+            }
+        }
+
+
+
+        private async void NewSumDataGridView_转为收付款单(object sender, EventArgs e)
+        {
+
+            List<tb_FM_Statement> selectlist = GetSelectResult();
+            List<tb_FM_Statement> RealList = new List<tb_FM_Statement>();
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
+            foreach (var item in selectlist)
+            {
+                //只有审核状态才可以转换为收款单
+                bool canConvert = item.StatementStatus == (int)StatementStatus.已确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert || item.StatementStatus == (int)StatementStatus.部分结算)
+                {
+                    RealList.Add(item);
+                }
+                else
+                {
+                    msg.Append(counter.ToString() + ") ");
+                    msg.Append($"应{PaymentType.ToString()}对账单 {item.StatementNo}状态为【 {((StatementStatus)item.StatementStatus.Value).ToString()}】 无法生成{PaymentType.ToString()}单。").Append("\r\n");
+                    counter++;
+                }
+            }
+            //多选时。要相同客户才能合并到一个收款单
+            if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
+            {
+                msg.Append($"多选时，要相同客户才能合并到一个{PaymentType.ToString()}单");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            if (msg.ToString().Length > 0)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (RealList.Count == 0)
+                {
+                    return;
+                }
+            }
+
+            if (RealList.Count == 0)
+            {
+                msg.Append($"请至少选择一行数据转为收{PaymentType.ToString()}单");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+            tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList);
+            tb_FM_PaymentRecord paymentRecord = ReturnObject;
+            MenuPowerHelper menuPowerHelper;
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+
+            string Flag = string.Empty;
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                Flag = typeof(RUINORERP.UI.FM.UCFMReceivedRecord).FullName;
+            }
+            else
+            {
+                Flag = typeof(RUINORERP.UI.FM.UCFMPaymentRecord).FullName;
+            }
+
+            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+        && m.EntityName == nameof(tb_FM_PaymentRecord)
+        && m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
+            .FirstOrDefault();
+            if (RelatedMenuInfo != null)
+            {
+              await  menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+            }
+        }
+        #endregion
+
+
+
+
+        //按客户生成对账单
+        private void NewSumDataGridView_生成对账单(object sender, EventArgs e)
+        {
+
+        }
+
+        public override void BuildSummaryCols()
+        {
+            base.MasterSummaryCols.Add(c => c.ClosingBalanceForeignAmount);
+            base.MasterSummaryCols.Add(c => c.ClosingBalanceLocalAmount);
+            base.MasterSummaryCols.Add(c => c.OpeningBalanceForeignAmount);
+            base.MasterSummaryCols.Add(c => c.OpeningBalanceLocalAmount);
+            base.MasterSummaryCols.Add(c => c.TotalPaidForeignAmount);
+            base.MasterSummaryCols.Add(c => c.TotalPaidLocalAmount);
+            base.MasterSummaryCols.Add(c => c.TotalPayableForeignAmount);
+            base.MasterSummaryCols.Add(c => c.TotalPayableLocalAmount);
+            base.MasterSummaryCols.Add(c => c.TotalReceivableForeignAmount);
+            base.MasterSummaryCols.Add(c => c.TotalReceivableLocalAmount);
+            base.MasterSummaryCols.Add(c => c.TotalReceivedForeignAmount);
+            base.MasterSummaryCols.Add(c => c.TotalReceivedLocalAmount);
+
+            base.ChildSummaryCols.Add(c => c.IncludedForeignAmount);
+            base.ChildSummaryCols.Add(c => c.IncludedLocalAmount);
+            base.ChildSummaryCols.Add(c => c.RemainingForeignAmount);
+            base.ChildSummaryCols.Add(c => c.RemainingLocalAmount);
+            base.ChildSummaryCols.Add(c => c.WrittenOffForeignAmount);
+            base.ChildSummaryCols.Add(c => c.WrittenOffLocalAmount);
+        }
+
+
+        public override void BuildInvisibleCols()
+        {
+            base.MasterInvisibleCols.Add(c => c.StatementId);
+            base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
+
+            if (PaymentType == ReceivePaymentType.收款)
+            {
+                //应收款，不需要对方的收款信息。付款才要显示
+                base.MasterInvisibleCols.Add(c => c.PayeeInfoID);
+                base.MasterInvisibleCols.Add(c => c.PayeeAccountNo);
+            }
+
+        }
+
+
+        protected override void Delete(List<tb_FM_Statement> Datas)
+        {
+            MessageBox.Show("对账单记录不能删除？", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        private void UCReceivablePayableQuery_Load(object sender, EventArgs e)
+        {
+
+        }
+    }
+}

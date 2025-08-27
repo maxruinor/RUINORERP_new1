@@ -450,6 +450,21 @@ namespace RUINORERP.Model
             SetProperty(ref _Invoiced, value);
                         }
         }
+        private bool _AllowAddToStatement = false;
+        /// <summary>
+        /// 允许加入对账
+        /// </summary>
+        [AdvQueryAttribute(ColName = "AllowAddToStatement", ColDesc = "允许加入对账")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "AllowAddToStatement", IsNullable = false, ColumnDescription = "允许加入对账")]
+        public bool AllowAddToStatement
+        {
+            get { return _AllowAddToStatement; }
+            set
+            {
+                SetProperty(ref _AllowAddToStatement, value);
+            }
+        }
+
 
         private bool _IsIncludeTax= false;
         /// <summary>

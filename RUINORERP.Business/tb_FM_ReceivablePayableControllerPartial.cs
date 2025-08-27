@@ -313,7 +313,7 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.ApprovalResults = true;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
-
+                entity.AllowAddToStatement = true;
 
                 BusinessHelper.Instance.ApproverEntity(entity);
                 //只更新指定列

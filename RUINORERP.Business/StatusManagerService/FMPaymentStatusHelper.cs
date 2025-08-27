@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using ZXing.OneD.RSS;
 
 namespace RUINORERP.Business.StatusManagerService
 {
@@ -31,7 +32,9 @@ namespace RUINORERP.Business.StatusManagerService
 
             if (entity.ContainsProperty(typeof(PaymentStatus).Name))
                 return typeof(PaymentStatus);
-
+            if (entity.ContainsProperty(typeof(StatementStatus).Name))
+                return typeof(StatementStatus);
+            
             return null;
         }
 
@@ -48,6 +51,11 @@ namespace RUINORERP.Business.StatusManagerService
             if (status is PrePaymentStatus pre)
                 return pre == PrePaymentStatus.全额核销 ||
                        pre == PrePaymentStatus.已结案;
+
+            if (status is StatementStatus ss)
+                return ss == StatementStatus.已作废 ||
+                       ss == StatementStatus.已结清;
+
 
             if (status is ARAPStatus arap)
                 return arap == ARAPStatus.全部支付 ||
@@ -70,6 +78,10 @@ namespace RUINORERP.Business.StatusManagerService
             if (status is PrePaymentStatus pre)
                 return pre == PrePaymentStatus.草稿 ||
                        pre == PrePaymentStatus.待审核;
+
+            if (status is StatementStatus ss)
+                return ss == StatementStatus.草稿 ||
+                       ss == StatementStatus.已发送;
 
             if (status is ARAPStatus arap)
                 return arap == ARAPStatus.草稿 ||
@@ -101,6 +113,13 @@ namespace RUINORERP.Business.StatusManagerService
                 return arap != ARAPStatus.部分支付 &&
                        arap != ARAPStatus.坏账;
 
+            if (status is StatementStatus ss)
+                return ss != StatementStatus.已结清 &&
+                       ss != StatementStatus.已作废 &&
+                       ss != StatementStatus.部分结算;
+
+
+
             if (status is PaymentStatus pay)
                 return pay != PaymentStatus.已支付 && !hasRelatedRecords;
 
@@ -119,9 +138,16 @@ namespace RUINORERP.Business.StatusManagerService
             if (status is PrePaymentStatus pre)
                 return pre != PrePaymentStatus.待核销 && !hasRelatedRecords;
 
+            if (status is StatementStatus ss)
+                return ss != StatementStatus.已结清 &&
+                       ss != StatementStatus.已作废 &&
+                       ss != StatementStatus.部分结算;
+
             if (status is ARAPStatus arap)
                 return arap != ARAPStatus.部分支付 &&
                        arap != ARAPStatus.坏账;
+
+
 
             if (status is PaymentStatus pay)
                 return pay != PaymentStatus.已支付 && !hasRelatedRecords;
@@ -151,6 +177,10 @@ namespace RUINORERP.Business.StatusManagerService
             if (status is ARAPStatus arap)
                 return arap <= ARAPStatus.待审核 && !hasRelatedRecords;
 
+            if (status is StatementStatus ss)
+                return ss <= StatementStatus.已发送 && !hasRelatedRecords;
+
+        
 
             if (status is PaymentStatus pay)
                 return pay <= PaymentStatus.待审核 && !hasRelatedRecords;
@@ -185,6 +215,13 @@ namespace RUINORERP.Business.StatusManagerService
                 return arap == ARAPStatus.待支付 ||
                        arap == ARAPStatus.部分支付;
             }
+
+
+            if (status is StatementStatus ss)
+                return ss == StatementStatus.部分结算 ||
+                       ss == StatementStatus.已确认;
+
+
             return false;
         }
 
@@ -195,6 +232,7 @@ namespace RUINORERP.Business.StatusManagerService
             {
                 DataStatus pre => pre == DataStatus.草稿,
                 PrePaymentStatus pre => pre == PrePaymentStatus.草稿,
+                StatementStatus ss => ss == StatementStatus.草稿,
                 ARAPStatus arap => arap == ARAPStatus.草稿,
                 PaymentStatus pay => pay == PaymentStatus.草稿,
                 _ => false
@@ -209,6 +247,12 @@ namespace RUINORERP.Business.StatusManagerService
         {
             if (IsFinalStatus(current))
                 throw new InvalidOperationException("终态单据禁止状态变更");
+            if (current is StatementStatus ssCurrent &&
+             target is StatementStatus ssTarget)
+            {
+                ValidateStatementStatusTransition(ssCurrent, ssTarget);
+            }
+
 
             if (current is PrePaymentStatus preCurrent &&
                 target is PrePaymentStatus preTarget)
@@ -236,9 +280,33 @@ namespace RUINORERP.Business.StatusManagerService
             }
         }
 
-        private static void ValidatePrePaymentTransition(PrePaymentStatus current, PrePaymentStatus target)
+        private static void ValidateStatementStatusTransition(StatementStatus current, StatementStatus target)
         {
 
+            // 终态不能转换
+            if (IsFinalStatus(current))
+                throw new InvalidOperationException("终态单据禁止状态变更");
+
+            // 退款后不能修改
+            if (current == StatementStatus.已结清)
+                throw new InvalidOperationException("已结清状态禁止变更");
+
+            // 已核销不能回退
+            if (current == StatementStatus.部分结算 || current == StatementStatus.已结清) 
+                throw new InvalidOperationException("已有结算状态不可回退");
+
+            // 允许从草稿直接到已生效（自动审核）
+            if (current == StatementStatus.草稿 && target == StatementStatus.已发送)
+                return;
+
+            // 允许从已生效到待核销（支付完成）
+            if (current == StatementStatus.已发送 && target == StatementStatus.已确认)
+                return;
+        }
+
+
+        private static void ValidatePrePaymentTransition(PrePaymentStatus current, PrePaymentStatus target)
+        {
 
             // 终态不能转换
             if (IsFinalStatus(current))

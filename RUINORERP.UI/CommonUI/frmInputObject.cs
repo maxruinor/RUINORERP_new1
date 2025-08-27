@@ -45,22 +45,23 @@ namespace RUINORERP.UI.CommonUI
             }
 
         }
- 
+
 
         private void btnOk_Click(object sender, EventArgs e)
         {
             InputContent = txtInputContent.Text;
             // 5. 执行验证
-            if (_rule.Validate(InputContent))
+            if (!_rule.Validate(InputContent, out string err))
+            {
+                Console.WriteLine(err);   // 输出具体错误
+                MessageBox.Show(err);
+            }
+            else
             {
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
-            else
-            {
-                MessageBox.Show("请输入正确的格式。");
-            }
-            
+
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

@@ -278,12 +278,14 @@ namespace RUINORERP.Business
                             if (receivablePayable.ForeignBalanceAmount == 0 || receivablePayable.LocalBalanceAmount == 0)
                             {
                                 receivablePayable.ARAPStatus = (int)ARAPStatus.全部支付;
+                                receivablePayable.AllowAddToStatement = false;
                             }
                             //付过，没付结清
                             if ((receivablePayable.ForeignBalanceAmount > 0 && receivablePayable.ForeignPaidAmount > 0)
                                 || (receivablePayable.LocalBalanceAmount > 0 && receivablePayable.LocalPaidAmount > 0))
                             {
                                 receivablePayable.ARAPStatus = (int)ARAPStatus.部分支付;
+                                receivablePayable.AllowAddToStatement = true;
                             }
                             //写回业务 原始单据的完结状态，销售出库。销售订单。
                             //通过的来源类型，来源单号，来源编号分组得到原始单据数据组后再根据类型分别处理更新状态
@@ -1094,6 +1096,7 @@ namespace RUINORERP.Business
                     var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>(receivablePayableUpdateList).UpdateColumns(it =>
                                 new
                                 {
+                                    it.AllowAddToStatement,
                                     it.ARAPStatus,
                                     it.ForeignPaidAmount,
                                     it.LocalPaidAmount,
@@ -1410,6 +1413,11 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public tb_FM_PaymentRecord BuildPaymentRecord(List<tb_FM_PreReceivedPayment> entities, bool isRefund)
         {
+            if (entities.Count==0)
+            {
+                throw new Exception("请选择要退款的预收付款单！");
+            }
+
             //预收付款单 审核时 自动生成 收付款记录
             tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
             //转一些公共信息如往来单位，金额后面还会覆盖重置新值
@@ -1451,6 +1459,8 @@ namespace RUINORERP.Business
                 {
                     paymentRecordDetail.SourceBizType = (int)BizType.预付款单;
                 }
+                paymentRecordDetail.DepartmentID = entities[0].DepartmentID;
+                paymentRecordDetail.ProjectGroup_ID = entities[0].ProjectGroup_ID;
                 paymentRecordDetail.IsFromPlatform = entity.IsFromPlatform;
                 paymentRecordDetail.SourceBillNo = entity.PreRPNO;
                 paymentRecordDetail.SourceBilllId = entity.PreRPID;
@@ -1601,6 +1611,106 @@ namespace RUINORERP.Business
             return paymentRecord;
 
         }
+
+
+        /// <summary>
+        /// 由对账单创建付款单
+        /// </summary>
+        /// <param name="entities"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public tb_FM_PaymentRecord BuildPaymentRecord(List<tb_FM_Statement> entities)
+        {
+            //通过应收 自动生成 收付款记录
+            //如果应收付款单中，已经为部分付款，或可能是从预收付款单中核销了部分。所以这里生成时需要取未核销金额的应收付金额
+            tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
+            paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entities[0]);
+            paymentRecord.ApprovalResults = null;
+            paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
+            paymentRecord.Approver_at = null;
+            paymentRecord.Approver_by = null;
+            paymentRecord.PrintStatus = 0;
+            paymentRecord.ActionStatus = ActionStatus.新增;
+            paymentRecord.ApprovalOpinions = "";
+            paymentRecord.Modified_at = null;
+            paymentRecord.Modified_by = null;
+            paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
+            paymentRecord.IsForCommission = false;
+
+            List<tb_FM_PaymentRecordDetail> details = mapper.Map<List<tb_FM_PaymentRecordDetail>>(entities);
+            List<tb_FM_PaymentRecordDetail> NewDetails = new List<tb_FM_PaymentRecordDetail>();
+
+            for (int i = 0; i < details.Count; i++)
+            {
+                #region 明细 
+                tb_FM_PaymentRecordDetail paymentRecordDetail = details[i];
+                if (paymentRecord.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                {
+                    paymentRecordDetail.SourceBizType = (int)BizType.应收款单;
+                }
+                else
+                {
+                    paymentRecordDetail.SourceBizType = (int)BizType.应付款单;
+                }
+                paymentRecordDetail.Summary = $"由应{((ReceivePaymentType)paymentRecord.ReceivePaymentType).ToString()}对账单转换自动生成。";
+                var entity = entities.FirstOrDefault(c => c.StatementId == details[i].SourceBilllId);
+                if (entity != null)
+                {
+                    paymentRecordDetail.Summary += entity.Summary;
+                }
+                #endregion
+                NewDetails.Add(paymentRecordDetail);
+            }
+
+            paymentRecord.PaymentDate = System.DateTime.Now;
+            paymentRecord.Currency_ID = paymentRecord.Currency_ID;
+
+            //应收的余额给到付款单。创建收款
+            paymentRecord.TotalForeignAmount = NewDetails.Sum(c => c.ForeignAmount);
+            paymentRecord.TotalLocalAmount = NewDetails.Sum(c => c.LocalAmount);
+            //if (paymentRecord.TotalForeignAmount < 0 || paymentRecord.TotalLocalAmount < 0)
+            //{
+            //    //paymentRecord.IsReversed = true;
+            //    //if (OriginalPaymentRecord != null)
+            //    //{
+            //    //    paymentRecord.ReversedOriginalId = OriginalPaymentRecord.PaymentId;
+            //    //    //paymentRecord.ReversedOriginalNo = OriginalPaymentRecord.PaymentNo;
+            //    //}
+            //}
+
+            //默认给第一个
+            paymentRecord.PayeeInfoID = entities[0].PayeeInfoID;
+            paymentRecord.CustomerVendor_ID = entities[0].CustomerVendor_ID;
+            paymentRecord.PayeeAccountNo = entities[0].PayeeAccountNo;
+            paymentRecord.tb_FM_PaymentRecordDetails = NewDetails;
+            if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
+            {
+                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);
+                if (paymentRecord.tb_FM_PaymentRecordDetails.Where(c => c.IsFromPlatform.HasValue && c.IsFromPlatform == true).ToList().Count == paymentRecord.tb_FM_PaymentRecordDetails.Count)
+                {
+                    paymentRecord.IsFromPlatform = true;
+                }
+            }
+            else
+            {
+                paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款单);
+            }
+            //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
+            var checkList = paymentRecord.tb_FM_PaymentRecordDetails.GroupBy(c => c.SourceBizType, c => c.SourceBilllId).ToList();
+            if (checkList.Count > 1)
+            {
+                throw new Exception("收付款单明细中，同一业务下同一张单据不能重复分次收款。\r\n相同业务下的单据必须为一行。");
+            }
+            //SourceBillNos的值来自于tb_FM_PaymentRecordDetails集合中的 SourceBillNo属性的值，用逗号隔开
+            paymentRecord.SourceBillNos = string.Join(",", paymentRecord.tb_FM_PaymentRecordDetails.Select(t => t.SourceBillNo).ToArray());
+
+            BusinessHelper.Instance.InitEntity(paymentRecord);
+
+            paymentRecord.PaymentStatus = (int)PaymentStatus.草稿;
+            return paymentRecord;
+
+        }
+
 
         public static bool ShowInvalidMessage(ValidationResult results)
         {

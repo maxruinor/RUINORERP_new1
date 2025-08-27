@@ -123,7 +123,34 @@ namespace RUINORERP.Model
             SetProperty(ref _PayeeAccountNo, value);
                         }
         }
-
+        private int _ReceivePaymentType = ((0));
+        /// <summary>
+        /// 收付类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReceivePaymentType", ColDesc = "收付类型")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "ReceivePaymentType", DecimalDigits = 0, IsNullable = false, ColumnDescription = "收付类型")]
+        public int ReceivePaymentType
+        {
+            get { return _ReceivePaymentType; }
+            set
+            {
+                SetProperty(ref _ReceivePaymentType, value);
+            }
+        }
+        private string _ARAPNos;
+        /// <summary>
+        /// 应收付款单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ARAPNos", ColDesc = "应收付款单号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ARAPNos", Length = 1000, IsNullable = true, ColumnDescription = "应收付款单号")]
+        public string ARAPNos
+        {
+            get { return _ARAPNos; }
+            set
+            {
+                SetProperty(ref _ARAPNos, value);
+            }
+        }
         private DateTime? _StartDate;
         /// <summary>
         /// 对账周期起

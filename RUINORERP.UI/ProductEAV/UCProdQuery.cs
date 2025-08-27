@@ -39,6 +39,11 @@ using Image = System.Drawing.Image;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using Netron.NetronLight;
 using RUINORERP.Business.CommService;
+using System.Collections;
+
+
+
+
 namespace RUINORERP.UI.ProductEAV
 {
     [MenuAttrAssemblyInfo("产品查询", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
@@ -73,6 +78,9 @@ namespace RUINORERP.UI.ProductEAV
         //三级 还是两级呢。  反向来 一是 KEY VALUE  然后是列名
         ConcurrentDictionary<string, List<KeyValuePair<object, string>>> _DataDictionary = new ConcurrentDictionary<string, List<KeyValuePair<object, string>>>();
 
+    
+
+
         /// <summary>
         /// 固定的值显示，入库ture 出库false
         /// 每个列表对应的值 ，单独设置
@@ -82,6 +90,9 @@ namespace RUINORERP.UI.ProductEAV
         public UCProdQuery()
         {
             InitializeComponent();
+ 
+
+
             newSumDataGridView产品.NeedSaveColumnsXml = true;
             newSumDataGridView产品组合.NeedSaveColumnsXml = true;
 
@@ -543,6 +554,9 @@ namespace RUINORERP.UI.ProductEAV
             bindingSourceProdDetail.DataSource = list.ToBindingSortCollection();
         }
 
+
+        DynamicTypeColumnSorter typeSorter;
+
         private void QueryToBOM()
         {
             tb_ProdCategoriesController<tb_ProdCategories> categoriesController = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
@@ -554,10 +568,24 @@ namespace RUINORERP.UI.ProductEAV
             int maxrow = int.Parse(txtMaxRows.Value.ToString());
             var querySqlQueryable = MainForm.Instance.AppContext.Db.CopyNew().Queryable<View_ProdDetail>().Take(maxrow)
                 .IncludesAllFirstLayer()//自动导航
+                                        //.OrderBy(c => c.Type_ID)
                 .Where(GetQueryExp());
             var list = querySqlQueryable.ToList();
             treeListView1.Items.Clear();
             AddItems(list);
+
+            // 从数据源提取类型排序优先级（基于Type_ID的顺序）
+            var typePriority = GetTypePriorityFromData(list);
+
+            // 初始化并配置排序器
+            if (typeSorter == null)
+                typeSorter = new DynamicTypeColumnSorter();
+
+            typeSorter.TypePriority = typePriority;
+            typeSorter.SetSort(5, SortOrder.Ascending);  // "类型"列索引为5
+            this.treeListView1.ListViewItemSorter = typeSorter;
+            this.treeListView1.Sort();
+
 
             // 原文链接：https://blog.csdn.net/m0_53104033/article/details/129006538
         }
@@ -593,12 +621,37 @@ namespace RUINORERP.UI.ProductEAV
                 itemRow.SubItems.Add(row.Alert_Quantity.ToString());
                 treeListView1.Items.Add(itemRow);
                 tb_BOM_S bOM_S = listboms.Where(c => c.ProdDetailID == row.ProdDetailID).FirstOrDefault();
-                Loadbom(bOM_S, row.ProdDetailID, row.Location_ID.Value, itemRow);
+                if (bOM_S != null)
+                {
+                    Loadbom(bOM_S, row.ProdDetailID, row.Location_ID, itemRow);
+                }
+
             }
         }
+        // 从数据源获取类型排序优先级
+        private Dictionary<string, int> GetTypePriorityFromData(List<View_ProdDetail> list)
+        {
+            // 提取所有唯一的Type_ID并按Type_ID排序
+            var sortedTypeIds = list.Select(c => c.Type_ID)
+                                    .Distinct()
+                                    .OrderBy(id => id)  // 按Type_ID升序确定优先级
+                                    .ToList();
 
+            // 生成类型名称到优先级的映射
+            var priorityDict = new Dictionary<string, int>();
+            for (int i = 0; i < sortedTypeIds.Count; i++)
+            {
+                string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", sortedTypeIds[i]);
+                if (!priorityDict.ContainsKey(prodType))
+                {
+                    priorityDict[prodType] = i + 1;  // 优先级从1开始
+                }
+            }
 
-        private void Loadbom(tb_BOM_S bOM_S, long ProdDetailID, long Location_ID, TreeListViewItem listViewItem)
+            return priorityDict;
+        }
+
+        private void Loadbom(tb_BOM_S bOM_S, long ProdDetailID, long? Location_ID, TreeListViewItem listViewItem)
         {
             if (bOM_S != null && bOM_S.tb_BOM_SDetails != null)
             {
@@ -614,7 +667,7 @@ namespace RUINORERP.UI.ProductEAV
                     itemSub.SubItems.Add(BOM_SDetail.view_ProdInfo.Specifications);
                     string prodType = UIHelper.ShowGridColumnsNameValue(typeof(tb_ProductType), "Type_ID", BOM_SDetail.view_ProdInfo.Type_ID);
                     itemSub.SubItems.Add(prodType);
-                    if (BOM_SDetail.view_ProdInfo != null)
+                    if (BOM_SDetail.view_ProdInfo != null && Location_ID.HasValue)
                     {
                         var view_ProdDetail = MainForm.Instance.View_ProdDetailList.FirstOrDefault(c => c.ProdDetailID == BOM_SDetail.ProdDetailID && c.Location_ID == Location_ID);
                         if (view_ProdDetail != null)
@@ -1394,7 +1447,7 @@ namespace RUINORERP.UI.ProductEAV
                             QueryObjects.Add(_prodDetail);
                         }
                     }
-                 
+
                     //if (!QueryObjects.Contains((View_ProdDetail)item.Tag))
                     //{
                     //    QueryObjects.Add((View_ProdDetail)item.Tag);
@@ -1687,5 +1740,77 @@ namespace RUINORERP.UI.ProductEAV
 
 
     }
+
+
+
+
+    // 动态类型排序比较器
+    public class DynamicTypeColumnSorter : IComparer
+    {
+        // 排序的列索引
+        private int sortColumn = 0;
+        // 排序顺序
+        private SortOrder sortOrder = SortOrder.None;
+
+        // 动态类型排序优先级（从数据源获取）
+        public Dictionary<string, int> TypePriority { get; set; } = new Dictionary<string, int>();
+
+        // 设置排序的列和顺序
+        public void SetSort(int column, SortOrder order)
+        {
+            sortColumn = column;
+            sortOrder = order;
+        }
+
+        // 比较逻辑实现
+        public int Compare(object x, object y)
+        {
+            // 将比较对象转换为TreeListViewItem
+            var itemX = x as TreeListViewItem;
+            var itemY = y as TreeListViewItem;
+
+            // 处理空值情况
+            if (itemX == null && itemY == null) return 0;
+            if (itemX == null) return -1;
+            if (itemY == null) return 1;
+
+            // 对于树形结构，先保持父子关系，只对同层级项排序
+            if (itemX.Parent != itemY.Parent)
+            {
+                // 不同父项的节点不改变原有顺序
+                return 0;
+            }
+
+            // 获取"类型"列的值
+            string typeX = itemX.SubItems[sortColumn].Text;
+            string typeY = itemY.SubItems[sortColumn].Text;
+
+            // 检查是否都在动态排序字典中
+            bool hasX = TypePriority.ContainsKey(typeX);
+            bool hasY = TypePriority.ContainsKey(typeY);
+
+            // 都在字典中则按优先级排序
+            if (hasX && hasY)
+            {
+                int compareResult = TypePriority[typeX].CompareTo(TypePriority[typeY]);
+
+                // 根据排序顺序调整结果
+                if (sortOrder == SortOrder.Descending)
+                    compareResult = -compareResult;
+
+                return compareResult;
+            }
+
+            // 不在字典中的项放在后面
+            if (hasX) return -1;
+            if (hasY) return 1;
+
+            // 都不在字典中则按字符串默认规则排序
+            return string.Compare(typeX, typeY, StringComparison.Ordinal) *
+                   (sortOrder == SortOrder.Descending ? -1 : 1);
+        }
+    }
+
+
 }
 

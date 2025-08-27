@@ -48,7 +48,7 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+              var   ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 if (entity == null)
                 {
                     return rmsr;
@@ -126,7 +126,12 @@ namespace RUINORERP.Business
 
 
                 }
-                int InvUpdateCounterFrom = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateListFrom).ExecuteCommandAsync();
+
+                 
+
+                int InvUpdateCounterFrom = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateListFrom)
+                    .UpdateColumns(it => new { it.Quantity, it.Inv_SubtotalCostMoney, it.LatestOutboundTime })
+                    .ExecuteCommandAsync();
                 if (InvUpdateCounterFrom == 0)
                 {
                     _unitOfWorkManage.RollbackTran();
@@ -134,16 +139,19 @@ namespace RUINORERP.Business
                 }
 
                 List<tb_Inventory> invInsertList = invUpdateListTo.Where(c => c.Inventory_ID == 0).ToList();
-
-
-                var InvInsertCounterTo = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
-                if (InvInsertCounterTo.Count == 0)
+                if (invInsertList.Any())
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("目标库存保存失败！");
+                    var InvInsertCounterTo = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
+                    if (InvInsertCounterTo.Count == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("目标库存保存失败！");
+                    }
                 }
+               
                 List<tb_Inventory> invUpdateList = invUpdateListTo.Where(c => c.Inventory_ID > 0).ToList();
-                int InvUpdateCounterTo = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+                int InvUpdateCounterTo = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList)
+                    .UpdateColumns(it => new { it.Quantity, it.Inv_SubtotalCostMoney, it.LatestStorageTime }).ExecuteCommandAsync();
                 if (InvUpdateCounterTo == 0)
                 {
                     _unitOfWorkManage.RollbackTran();

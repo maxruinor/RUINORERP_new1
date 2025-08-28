@@ -135,7 +135,8 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public Expression<Func<M, string>> RelatedBillEditCol { get; set; }
 
-        private readonly EnhancedBizTypeMapper _mapper;
+  
+        private readonly EntityInfoServiceImpl _mapper;
 
         public BaseBillQueryMC()
         {
@@ -150,7 +151,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     if (_mapper == null)
                     {
-                        _mapper = Startup.GetFromFac<EnhancedBizTypeMapper>();
+                        _mapper = Startup.GetFromFac<EntityInfoServiceImpl>();
                     }
 
 

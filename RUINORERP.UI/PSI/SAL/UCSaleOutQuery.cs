@@ -66,7 +66,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
-        private void NewSumDataGridView_转为退货单(object sender, EventArgs e)
+        private async void NewSumDataGridView_转为退货单(object sender, EventArgs e)
         {
             List<tb_SaleOut> selectlist = GetSelectResult();
             foreach (var item in selectlist)
@@ -93,14 +93,14 @@ namespace RUINORERP.UI.PSI.SAL
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOutRe) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                        menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOutre);
+                       await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOutre);
                     }
                     return;
                 }
                 else
                 {
                     // 弹出提示窗口：没有审核的销售订单，无源转为出库单
-                    MessageBox.Show($"当前【销售出库单】{item.SaleOutNo}：未审核，无法生成【销售退回单】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"当前【销售出库单】{item.SaleOutNo}状态为{(DataStatus)item.DataStatus}，无法生成【销售退回单】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
         }

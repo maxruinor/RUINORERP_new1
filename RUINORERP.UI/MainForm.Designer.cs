@@ -163,7 +163,7 @@ namespace RUINORERP.UI
             this.kryptonPage2,
             this.kryptonPage4});
             this.kryptonNavigator1.SelectedIndex = 0;
-            this.kryptonNavigator1.Size = new System.Drawing.Size(168, 675);
+            this.kryptonNavigator1.Size = new System.Drawing.Size(168, 650);
             this.kryptonNavigator1.TabIndex = 0;
             // 
             // buttonSpecNavigator1
@@ -181,7 +181,7 @@ namespace RUINORERP.UI
             this.kryptonPage5.LastVisibleSet = true;
             this.kryptonPage5.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPage5.Name = "kryptonPage5";
-            this.kryptonPage5.Size = new System.Drawing.Size(166, 547);
+            this.kryptonPage5.Size = new System.Drawing.Size(166, 522);
             this.kryptonPage5.Text = "仓库";
             this.kryptonPage5.TextDescription = "";
             this.kryptonPage5.TextTitle = "仓库系统";
@@ -460,7 +460,7 @@ namespace RUINORERP.UI
             this.tsbtnSysTest});
             this.toolStrip1.Location = new System.Drawing.Point(3, 24);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(426, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(533, 25);
             this.toolStrip1.TabIndex = 7;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -578,7 +578,7 @@ namespace RUINORERP.UI
             this.kryptonDockableWorkspace1.Root.WorkspaceControl = this.kryptonDockableWorkspace1;
             this.kryptonDockableWorkspace1.SeparatorStyle = Krypton.Toolkit.SeparatorStyle.HighProfile;
             this.kryptonDockableWorkspace1.ShowMaximizeButton = false;
-            this.kryptonDockableWorkspace1.Size = new System.Drawing.Size(1175, 675);
+            this.kryptonDockableWorkspace1.Size = new System.Drawing.Size(1175, 650);
             this.kryptonDockableWorkspace1.SplitterWidth = 5;
             this.kryptonDockableWorkspace1.TabIndex = 2;
             this.kryptonDockableWorkspace1.TabStop = true;
@@ -636,7 +636,7 @@ namespace RUINORERP.UI
             this.kryptonPanelBigg.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanelBigg.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanelBigg.Name = "kryptonPanelBigg";
-            this.kryptonPanelBigg.Size = new System.Drawing.Size(1353, 675);
+            this.kryptonPanelBigg.Size = new System.Drawing.Size(1353, 650);
             this.kryptonPanelBigg.TabIndex = 15;
             // 
             // kryptonSeparator1
@@ -644,7 +644,7 @@ namespace RUINORERP.UI
             this.kryptonSeparator1.Dock = System.Windows.Forms.DockStyle.Left;
             this.kryptonSeparator1.Location = new System.Drawing.Point(168, 0);
             this.kryptonSeparator1.Name = "kryptonSeparator1";
-            this.kryptonSeparator1.Size = new System.Drawing.Size(10, 675);
+            this.kryptonSeparator1.Size = new System.Drawing.Size(10, 650);
             this.kryptonSeparator1.TabIndex = 3;
             // 
             // toolStripFunctionMenu
@@ -653,7 +653,7 @@ namespace RUINORERP.UI
             this.toolStripFunctionMenu.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.toolStripFunctionMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripMenuSearcher});
-            this.toolStripFunctionMenu.Location = new System.Drawing.Point(1180, 24);
+            this.toolStripFunctionMenu.Location = new System.Drawing.Point(15, 49);
             this.toolStripFunctionMenu.Name = "toolStripFunctionMenu";
             this.toolStripFunctionMenu.Size = new System.Drawing.Size(135, 25);
             this.toolStripFunctionMenu.TabIndex = 17;
@@ -679,7 +679,7 @@ namespace RUINORERP.UI
             // 
             this.toolStripContainerMenu.ContentPanel.AutoScroll = true;
             this.toolStripContainerMenu.ContentPanel.Controls.Add(this.kryptonPanelBigg);
-            this.toolStripContainerMenu.ContentPanel.Size = new System.Drawing.Size(1353, 675);
+            this.toolStripContainerMenu.ContentPanel.Size = new System.Drawing.Size(1353, 650);
             this.toolStripContainerMenu.Dock = System.Windows.Forms.DockStyle.Fill;
             this.toolStripContainerMenu.Location = new System.Drawing.Point(0, 0);
             this.toolStripContainerMenu.Name = "toolStripContainerMenu";

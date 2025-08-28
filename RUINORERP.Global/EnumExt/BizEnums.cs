@@ -299,6 +299,7 @@ namespace RUINORERP.Global
     /// </summary>
     public enum BizType
     {
+        Unknown=-2,
         无对应数据 = -1,
         销售订单 = 0,// SO (Sales Order)
         销售出库单 = 1,// STO (Sales Transfer Out)

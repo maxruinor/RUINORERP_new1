@@ -40,6 +40,9 @@ using log4net.Repository.Hierarchy;
 using RUINORERP.UI.SS;
 using RUINORERP.UI.Monitoring.Auditing;
 using Mysqlx.Crud;
+using RUINORERP.Business.RowLevelAuthService;
+using RUINORERP.Global;
+using Netron.GraphLib;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -59,6 +62,7 @@ namespace RUINORERP.UI.SysConfig
                 BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
                 null, TreeView1, new object[] { true });
             BuildContextMenuController();
+            _defaultRuleProvider = MainForm.Instance.AppContext.GetRequiredService<DefaultRowAuthRuleProvider>();
         }
 
 
@@ -186,8 +190,25 @@ namespace RUINORERP.UI.SysConfig
 
         private void KryptonNavigator1_SelectedIndexChanged(object sender, EventArgs e)
         {
+
             // TODO: 实现导航器索引改变时的逻辑
             NewSumDataGridView dg = kryptonNavigator1.SelectedPage.Controls[0] as NewSumDataGridView;
+            if (dg == null && kryptonNavigator1.SelectedPage.Controls.Count > 0)
+            {
+                dg = newSumDataGridViewRowAuthPolicy;
+                //加载默认RLA row level auth
+                var rlaProvider = MainForm.Instance.AppContext.GetRequiredService<DefaultRowAuthRuleProvider>();
+
+                if ((TreeView1.SelectedNode.Tag is tb_MenuInfo menuInfo))
+                {
+                    rlaProvider.GetDefaultRuleOptions((BizType)menuInfo.BizType.Value);
+                    return;
+                }
+
+
+
+            }
+
             #region 设置全选菜单
 
             //如果是bool型的才显示右键菜单全选全不选
@@ -222,6 +243,7 @@ namespace RUINORERP.UI.SysConfig
             .Includes(m => m.tb_P4Buttons, c => c.tb_buttoninfo)
            .Includes(m => m.tb_P4Fields, c => c.tb_fieldinfo)
            .Includes(m => m.tb_P4Menus, c => c.tb_menuinfo)
+           .Includes(m => m.tb_P4RowAuthPolicyByRoles, c => c.tb_rowauthpolicy)
            .ToListAsync();
 
             DataBindingHelper.InitCmb<tb_RoleInfo>(k => k.RoleID, v => v.RoleName, cmRoleInfo.ComboBox, true, roleInfos);
@@ -231,8 +253,10 @@ namespace RUINORERP.UI.SysConfig
             InitListData();
             dataGridView1.NeedSaveColumnsXml = true;
             dataGridView2.NeedSaveColumnsXml = true;
+            newSumDataGridViewRowAuthPolicy.NeedSaveColumnsXml = true;
             dataGridView1.Use是否使用内置右键功能 = false;
             dataGridView2.Use是否使用内置右键功能 = false;
+            newSumDataGridViewRowAuthPolicy.Use是否使用内置右键功能 = false;
             // dataGridView1.ContextMenuStrip = contextMenuStrip1;
             // dataGridView2.ContextMenuStrip = contextMenuStrip1;
             dataGridView1.CellMouseDown += new DataGridViewCellMouseEventHandler(dataGridView1_CellMouseDown);
@@ -1574,7 +1598,7 @@ namespace RUINORERP.UI.SysConfig
         tb_RoleInfoController<tb_RoleInfo> ctrRole = Startup.GetFromFac<tb_RoleInfoController<tb_RoleInfo>>();
 
 
-        private void TreeView1_AfterSelect(object sender, TreeViewEventArgs e)
+        private async void TreeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             if (TreeView1.SelectedNode == null)
             {
@@ -1596,9 +1620,12 @@ namespace RUINORERP.UI.SysConfig
             }
             kryptonNavigator1.SelectedPage = kryptonPageBtn;
 
-            InitLoadP4Button(selectMenu, false);
+            await InitLoadP4Button(selectMenu, false);
 
-            InitLoadP4Field(selectMenu, false);
+            await InitLoadP4Field(selectMenu, false);
+
+            //加载默认行级权限
+            InitLoadDefaultRowLevelAuthPolicy(selectMenu);
 
             #region 按钮和字段列表的中的值 有变化则保存可用
             CurrentRole.tb_P4Buttons.Where(c => c.RoleID == CurrentRole.RoleID).ForEach(x => UpdateSaveEnabled<tb_P4Button>(x));
@@ -1692,6 +1719,46 @@ namespace RUINORERP.UI.SysConfig
             pflist.ForEach(x => UpdateSaveEnabled<tb_P4Field>(x));
 
 
+
+        }
+        DefaultRowAuthRuleProvider _defaultRuleProvider;
+        private void InitLoadDefaultRowLevelAuthPolicy(tb_MenuInfo selectMenu)
+        {
+            if (CurrentRole == null)
+            {
+                return;
+            }
+
+            #region 加载默认的
+            if (selectMenu.BizType.HasValue)
+            {
+                BizType bizType = (BizType)selectMenu.BizType.Value;
+                // 获取指定业务类型的默认规则选项
+                var options = _defaultRuleProvider.GetDefaultRuleOptions(BizType.销售订单);
+                //DataBindingHelper.InitDataToCmb<DefaultRuleOption>(k => k.Key, v => v.Name, cmbDefaultAuthPolicy);
+                BindingSource bs = new BindingSource();
+                bs.DataSource = options;
+                Common.DataBindingHelper.InitDataToCmb(bs, "Key", "Name", cmbDefaultAuthPolicy);
+
+            }
+
+            #endregion
+
+            var RlAList = CurrentRole.tb_P4RowAuthPolicyByRoles.Where(k => k.MenuID == selectMenu.MenuID).ToList();
+            bindingSourceRowAuthPolicy.DataSource = RlAList.ToBindingSortCollection();
+            newSumDataGridViewRowAuthPolicy.DataSource = bindingSourceRowAuthPolicy;
+            foreach (DataGridViewColumn col in dataGridView2.Columns)
+            {
+                if (col.ValueType.Name == "Boolean")
+                {
+                    col.ReadOnly = false;
+                }
+                //ischild只是标记是否为子表。他不可以编辑
+                if (col.DataPropertyName == "IsChild")
+                {
+                    col.ReadOnly = true;
+                }
+            }
 
         }
 

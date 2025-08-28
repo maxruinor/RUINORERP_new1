@@ -33,6 +33,7 @@
             this.treeView1 = new RUINOR.WinFormsUI.TreeViewThreeState.ThreeStateTreeView();
             this.kryptonNavigator1 = new Krypton.Navigator.KryptonNavigator();
             this.kryptonPage1 = new Krypton.Navigator.KryptonPage();
+            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             this.kryptonPage3 = new Krypton.Navigator.KryptonPage();
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
             this.toolStripButtonSave = new System.Windows.Forms.ToolStripButton();
@@ -41,7 +42,6 @@
             this.tsbtnUndoButton = new System.Windows.Forms.ToolStripButton();
             this.tsbtnRedoButton = new System.Windows.Forms.ToolStripButton();
             this.textBox1 = new Krypton.Toolkit.KryptonRichTextBox();
-            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -113,7 +113,7 @@
             this.kryptonNavigator1.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
             this.kryptonPage1,
             this.kryptonPage3});
-            this.kryptonNavigator1.SelectedIndex = 0;
+            this.kryptonNavigator1.SelectedIndex = 1;
             this.kryptonNavigator1.Size = new System.Drawing.Size(649, 502);
             this.kryptonNavigator1.TabIndex = 1;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -137,6 +137,15 @@
             this.kryptonPage1.ToolTipTitle = "Page ToolTip";
             this.kryptonPage1.UniqueName = "60445288435B49021FB28348D07C5399";
             this.kryptonPage1.Click += new System.EventHandler(this.kryptonPage1_Click);
+            // 
+            // propertyGrid1
+            // 
+            this.propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.propertyGrid1.Location = new System.Drawing.Point(0, 0);
+            this.propertyGrid1.Name = "propertyGrid1";
+            this.propertyGrid1.Size = new System.Drawing.Size(647, 471);
+            this.propertyGrid1.TabIndex = 1;
+            this.propertyGrid1.SelectedObjectsChanged += new System.EventHandler(this.propertyGrid1_SelectedObjectsChanged);
             // 
             // kryptonPage3
             // 
@@ -217,15 +226,6 @@
             this.textBox1.TabIndex = 57;
             this.textBox1.Text = "";
             this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
-            // 
-            // propertyGrid1
-            // 
-            this.propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.propertyGrid1.Location = new System.Drawing.Point(0, 0);
-            this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(647, 471);
-            this.propertyGrid1.TabIndex = 1;
-            this.propertyGrid1.SelectedObjectsChanged += new System.EventHandler(this.propertyGrid1_SelectedObjectsChanged);
             // 
             // UCGlobalDynamicConfig
             // 

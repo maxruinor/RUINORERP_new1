@@ -31,6 +31,13 @@
     <Compile Remove="BizCodeGeneration\ISerialNumberGenerator.cs" />
     <Compile Remove="BizCodeGeneration\RedisSerialNumberGenerator.cs" />
     <Compile Remove="BizCodeGeneration\SerialNumberGeneratorFactory.cs" />
+    <Compile Remove="BizMapperService\EnhancedBizTypeMapper.cs" />
+    <Compile Remove="BizMapperService\EntityBizMappingService.cs" />
+    <Compile Remove="BizMapperService\EntityBizMappingServiceAdapter.cs" />
+    <Compile Remove="BizMapperService\EntityBizMappingServiceRegistration.cs" />
+    <Compile Remove="BizMapperService\EntityInfoServiceExample.cs" />
+    <Compile Remove="BizMapperService\EntityInfoServiceUsageExample.cs" />
+    <Compile Remove="BizMapperService\LegacyEntityMappingRegistration.cs" />
     <Compile Remove="CommService\CacheManager.cs" />
     <Compile Remove="CommService\DictServiceHelper.cs" />
     <Compile Remove="CommService\ICacheManager.cs" />

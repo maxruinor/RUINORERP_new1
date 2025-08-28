@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Extensions.ServiceExtensions;
@@ -21,12 +21,12 @@ namespace RUINORERP.Business.BizMapperService
     /// </summary>
     public class EntityLoader
     {
-        private readonly EntityBizMappingService _mappingService;
+        private readonly IEntityInfoService _mappingService;
         private readonly ApplicationContext _context;
         private readonly ILogger<EntityLoader> _logger;
 
         public EntityLoader(
-            EntityBizMappingService mappingService,
+            IEntityInfoService mappingService,
             ApplicationContext context,
             ILogger<EntityLoader> logger)
         {
@@ -44,7 +44,7 @@ namespace RUINORERP.Business.BizMapperService
                 return null;
             }
 
-            var config = _mappingService.GetFieldConfig(entityType);
+            var config = _mappingService.GetEntityInfo(entityType);
             if (config == null)
             {
                 _logger.LogError($"找不到实体类型的字段配置: {entityType.Name}");
@@ -82,20 +82,7 @@ namespace RUINORERP.Business.BizMapperService
         }
 
 
-        ///// <summary>
-        ///// 加载实体数据（返回动态类型）
-        ///// </summary>
-        //public dynamic LoadEntity(string tableName, object billNo)
-        //{
-        //    var entityType = _mappingService.GetEntityTypeByTableName(tableName);
-        //    if (entityType == null)
-        //    {
-        //        _logger.LogError($"找不到表名对应的实体类型: {tableName}");
-        //        return null;
-        //    }
-
-        //    return LoadEntityInternal(entityType, billNo);
-        //}
+        
 
         /// <summary>
         /// 加载实体数据（返回指定类型）
@@ -159,7 +146,7 @@ namespace RUINORERP.Business.BizMapperService
 
         public object LoadEntityInternal(Type entityType, object billNo)
         {
-            var cfg = _mappingService.GetFieldConfig(entityType);
+            var cfg = _mappingService.GetEntityInfo(entityType);
             if (cfg == null)
             {
                 _logger.LogError($"找不到实体类型的字段配置: {entityType.Name}");
@@ -206,15 +193,18 @@ namespace RUINORERP.Business.BizMapperService
                     throw new ArgumentException("billNo 必须是 long 或 string");
                 }
 
-                string paramName = fieldName;                    // RepairOrderNo
-                object paramObj = new Dictionary<string, object>
-                {
-                    [paramName] = billNo                         // Key 必须与 @RepairOrderNo 同名
-                };
 
+                // 修改前的错误代码
+                //string paramName = fieldName;
+                //object paramObj = new Dictionary<string, object>
+                //{
+                //    [paramName] = billNo
+                //};
+                //queryable = whereMethod.Invoke(queryable, new object[] { $"{fieldName} = @{fieldName}", paramObj });
 
+                // 修改后的正确代码
                 // 动态调用 Where
-                queryable = whereMethod.Invoke(queryable, new object[] { $"{fieldName} = @{fieldName}", paramObj });
+                queryable = whereMethod.Invoke(queryable, new object[] { $"{fieldName} = @{fieldName}", param });
 
         
 

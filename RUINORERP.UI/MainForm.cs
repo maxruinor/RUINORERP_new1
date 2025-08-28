@@ -3122,6 +3122,13 @@ namespace RUINORERP.UI
 
         private void tsbtnloginFileServer_Click(object sender, EventArgs e)
         {
+
+            var entityInfoService = Startup.GetFromFac<Business.BizMapperService.IEntityInfoService>();
+
+            // 获取实体信息
+            var entityInfo = entityInfoService.GetEntityInfo(BizType.借出单);
+
+
             //如果删除了。服务器上的工作流就可以删除了。
             RequestReminderCommand request = new RequestReminderCommand();
             request.requestType = RequestReminderType.删除提醒;

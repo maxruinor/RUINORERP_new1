@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -100,6 +100,37 @@ namespace RUINORERP.UI
 
             //即使没有这里的定义，基础数据主键 类型是long的都会自动添加
             //  IServiceProvider serviceProvider = new ServiceCollection().BuildServiceProvider();
+        }
+
+        /// <summary>
+        /// 直接注册实体业务映射服务 - 作为降级方案
+        /// </summary>
+        /// <param name="builder">Autofac容器构建器</param>
+        private static void RegisterEntityBizMappingServiceDirect(ContainerBuilder builder)
+        {
+            try
+            {
+                // 直接注册实体信息服务和实体业务映射服务
+                builder.RegisterType(typeof(RUINORERP.Business.BizMapperService.EntityInfoServiceImpl))
+                    .As(typeof(RUINORERP.Business.BizMapperService.IEntityInfoService))
+                    .SingleInstance()
+                    .PropertiesAutowired();
+
+                // 注册实体信息配置类
+                builder.RegisterType(typeof(RUINORERP.Business.BizMapperService.EntityInfoConfig))
+                    .SingleInstance()
+                    .PropertiesAutowired();
+
+                //// 注册实体业务映射服务
+                //builder.RegisterType(typeof(RUINORERP.Business.BizMapperService.EntityBizMappingService))
+                //    .As(typeof(RUINORERP.Business.BizMapperService.IEntityBizMappingService))
+                //    .SingleInstance()
+                //    .PropertiesAutowired();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(string.Format("Failed to directly register entity biz mapping services: {0}", ex.Message));
+            }
         }
 
 
@@ -736,15 +767,9 @@ namespace RUINORERP.UI
             services.AddSingleton<ICacheService, SqlSugarMemoryCacheService>();
 
 
-            var mappingService = new EntityBizMappingService();
-            mappingService.RegisterCommonMappings();
-            // 注册为单例服务
-            services.AddSingleton(mappingService);
-            // 添加映射服务为单例
-            // services.AddSingleton<EntityBizMappingService>();
+            services.AddEntityInfoServicesWithMappings();
 
             // 添加其他服务...
-            services.AddScoped<EnhancedBizTypeMapper>();
             services.AddScoped<EntityLoader>();
 
 
@@ -1132,7 +1157,10 @@ namespace RUINORERP.UI
                 {
                     IOCTypes.Add(tempTypes[i]);
                 }
-
+                if (tempTypes[i].BaseType == null)
+                {
+                    continue;
+                }
                 if (tempTypes[i].BaseType == typeof(BaseProcessor))
                 {
                     ProcessorList.Add(new KeyValuePair<string, Type>(tempTypes[i].Name, tempTypes[i]));
@@ -1184,6 +1212,9 @@ namespace RUINORERP.UI
 
 
             }
+
+
+            //加载RUINORERP.Business.dll并自动注册其中的服务
             var ExType = typeof(SearchType);
             builder.RegisterTypes(IOCTypes.ToArray())
             .Where(x => x.GetConstructors().Length > 0) //没有构造函数的排除
@@ -1292,15 +1323,33 @@ namespace RUINORERP.UI
 
 
             //AutofacDependencyResolver.Current.RequestLifetimeScope.ResolveNamed<INewsHelper>("news");
-            //模块化注入
-            //builder.RegisterModule<DefaultModule>();
-            //属性注入控制器
-            // builder.RegisterType<AutoDIController>().PropertiesAutowired();
-            ////属性注入
-            //builder.RegisterType<TestService>().As<ITestService>().PropertiesAutowired();
-            // builder.RegisterModule(new AutofacRegister());
+            //模块化注入 - 使用服务注册契约统一管理服务注册
+            try
+            {
+                // 加载RUINORERP.Business.dll并注册ServiceRegistrationModule
+                var businessAssembly = System.Reflection.Assembly.LoadFrom("RUINORERP.Business.dll");
+                var moduleType = businessAssembly.GetType("RUINORERP.Business.BizMapperService.ServiceRegistrationModule");
+                if (moduleType != null)
+                {
+                    var module = Activator.CreateInstance(moduleType);
+                    builder.RegisterModule((Autofac.Module)module);
+                }
+                else
+                {
+                    // 降级方案：直接注册实体业务映射服务
+                    Console.WriteLine("ServiceRegistrationModule not found, using direct registration for entity biz mapping services.");
+                    RegisterEntityBizMappingServiceDirect(builder);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(string.Format("Failed to register service registration module: {0}", ex.Message));
+                // 降级方案：直接注册实体业务映射服务
+                RegisterEntityBizMappingServiceDirect(builder);
+            }
 
-
+            // 显式注册GridViewRelated为单例，确保整个应用程序中使用同一个实例
+            builder.RegisterType<GridViewRelated>().SingleInstance();
 
             builder.RegisterModule(new AutofacServiceRegister());
         }
@@ -1469,29 +1518,7 @@ namespace RUINORERP.UI
         }
 
 
+
+
     }
-
-    /*
-    //http://cn.voidcc.com/question/p-pkpebief-bv.html
-    public class TableNameParameter : Parameter
-    {
-        public override Boolean CanSupplyValue(
-         ParameterInfo pi, IComponentContext context, out Func<Object> valueProvider)
-        {
-            valueProvider = null;
-
-            if (pi.ParameterType != typeof(String) && pi.Name != "tableName")
-                return false;
-
-            valueProvider = () =>
-            {
-                ITableNameResolver tableNameResolver = context.Resolve<ITableNameResolver>();
-                Type entityType = pi.Member.DeclaringType.GetGenericArguments()[0];
-                String tableName = tableNameResolver.GetTableName(entityType);
-                return tableName;
-            };
-            return true;
-        }
-    }*/
-
 }

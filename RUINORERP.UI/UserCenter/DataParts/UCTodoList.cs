@@ -34,20 +34,18 @@ namespace RUINORERP.UI.UserCenter.DataParts
     {
         // 依赖注入的服务
         private readonly MenuPowerHelper _menuPowerHelper;
-        private readonly BizTypeMapper _mapper;
-        private readonly EnhancedBizTypeMapper _Emapper;
+        private readonly IEntityInfoService _mapper;
         private readonly EntityLoader _loader;
-        public UCTodoList(EnhancedBizTypeMapper mapper, EntityLoader loader)
+        public UCTodoList(IEntityInfoService mapper, EntityLoader loader)
         {
             InitializeComponent();
-            _Emapper = mapper;
+            _mapper = mapper;
             _loader = loader;
             // 通过依赖注入获取服务实例
             _menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-            _mapper = new BizTypeMapper();
             _conditionBuilderFactory = new ConditionBuilderFactory();
         }
-        
+
 
 
         private readonly ConditionBuilderFactory _conditionBuilderFactory;
@@ -56,7 +54,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             InitializeComponent();
             // 通过依赖注入获取服务实例
             _menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-            _mapper = new BizTypeMapper();
+            _mapper = Startup.GetFromFac<IEntityInfoService>();
             _conditionBuilderFactory = new ConditionBuilderFactory();
         }
 
@@ -111,7 +109,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
         #endregion
-        private void UCTodoList_Load(object sender, EventArgs e)
+        private async void UCTodoList_Load(object sender, EventArgs e)
         {
             if (this.DesignMode) return;
 
@@ -124,7 +122,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
 
             // 构建待办事项树
-            BuilderToDoListTreeView();
+            await BuilderToDoListTreeView();
 
             // 设置上下文菜单
             kryptonTreeViewJobList.ContextMenuStrip = contextMenuStrip1;
@@ -281,11 +279,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
 
-        private void RefreshData_Click(object sender, EventArgs e)
+        private async void RefreshData_Click(object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem menuItem && menuItem.Owner is ContextMenuStrip contextMenu)
             {
-                BuilderToDoListTreeView();
+                await BuilderToDoListTreeView();
             }
         }
 
@@ -396,13 +394,15 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private async Task<TreeNode> ProcessBizTypeNodeAsync(BizType bizType)
         {
-            if (bizType==BizType.预收款单)
+            if (bizType == BizType.预收款单)
             {
 
             }
-            //Type tableType = _mapper.GetTableType(bizType);
-            Type tableType = _Emapper.GetEntityType(bizType);
+            Type tableType = _mapper.GetEntityType(bizType);
+            if (tableType==null)
+            {
 
+            }
             var bizEntity = Activator.CreateInstance(tableType);
             TreeNode parentNode = new TreeNode(bizType.ToString());
 
@@ -707,7 +707,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return conModels;
         }
 
- 
+
 
 
 

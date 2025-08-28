@@ -32,6 +32,8 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.BizMapperService;
+using System.Data.OleDb;
+using System.Collections;
 
 namespace RUINORERP.Business
 {
@@ -114,22 +116,31 @@ namespace RUINORERP.Business
                     // 回写出库单
                     foreach (var child in entity.tb_SaleOutReDetails)
                     {
+                        //为了支持出库时从主仓库。返回时退到 其它仓库（如维修仓库）
+                        //这里检测时要注意仓库不相同的情况
+
+
                         bool exist = entity.tb_saleout.tb_SaleOutDetails.Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == child.Location_ID).Any();
                         if (!exist)
                         {
-                            _unitOfWorkManage.RollbackTran();
-                            View_ProdInfo view_Prod = BizCacheHelper.Instance.GetEntity<View_ProdInfo>(child.ProdDetailID);
-                            if (view_Prod != null)
+                            //上面可能因为仓库不同，导致明细不存在
+                            exist = entity.tb_saleout.tb_SaleOutDetails.Where(c => c.SaleOutDetail_ID == child.SaleOutDetail_ID).Any();
+                            if (!exist)
                             {
-                                string prodName = "【" + view_Prod.SKU + "】" + view_Prod.CNName;
-                                rrs.ErrorMsg = $"{prodName} ，不存在于对应销售出库的明细数据中!";
+                                _unitOfWorkManage.RollbackTran();
+                                View_ProdInfo view_Prod = BizCacheHelper.Instance.GetEntity<View_ProdInfo>(child.ProdDetailID);
+                                if (view_Prod != null)
+                                {
+                                    string prodName = "【" + view_Prod.SKU + "】" + view_Prod.CNName;
+                                    rrs.ErrorMsg = $"{prodName} ，不存在于对应销售出库的明细数据中!";
+                                }
+                                else
+                                {
+                                    rrs.ErrorMsg = $"数量为:{child.Quantity}的产品，不存在于对应销售出库的明细数据中!";
+                                }
+                                rrs.Succeeded = false;
+                                return rrs;
                             }
-                            else
-                            {
-                                rrs.ErrorMsg = $"数量为:{child.Quantity}的产品，不存在于对应销售出库的明细数据中!";
-                            }
-                            rrs.Succeeded = false;
-                            return rrs;
                         }
                     }
 
@@ -139,15 +150,15 @@ namespace RUINORERP.Business
 
                         tb_SaleOutReDetail returnDetail = entity.tb_SaleOutReDetails
                             .Where(c => c.ProdDetailID == child.ProdDetailID
-                            && c.Location_ID == child.Location_ID
-                            && c.SaleOutDetail_ID == child.SaleOutDetail_ID
+                            // && c.Location_ID == child.Location_ID 出库仓库和退回仓库一致才能加
+                            && c.SaleOutDetail_ID == child.SaleOutDetail_ID  //有行号即可
                             ).FirstOrDefault();
 
                         if (returnDetail == null) //这里主要 是因为 条件是后面加的前面退货明细中没有出库行号值
                         {
                             returnDetail = entity.tb_SaleOutReDetails
                             .Where(c => c.ProdDetailID == child.ProdDetailID
-                            && c.Location_ID == child.Location_ID
+                            // && c.Location_ID == child.Location_ID
                             ).FirstOrDefault();
                             //找到退货行号
                             if (returnDetail != null)
@@ -276,6 +287,23 @@ namespace RUINORERP.Business
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        if (inv == null)
+                        {
+                            var outDetail = entity.tb_saleout.tb_SaleOutDetails.Where(c => c.SaleOutDetail_ID == child.SaleOutDetail_ID).FirstOrDefault();
+                            if (outDetail != null)
+                            {
+                                // 必须要有库存初始数据
+                                //如果从主仓库出。退到维修仓库 可能就没有初始库数据，则将出库时的数据搬过来后更更新数量
+                                var oldinv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == outDetail.Location_ID);
+                                inv = new tb_Inventory();
+                                inv.Quantity = 0;
+                                inv.Inv_Cost = oldinv.Inv_Cost;
+                            }
+                        }
+                        if (inv == null)
+                        {
+                            throw new Exception("更库存不存在");
+                        }
                         //更新库存
                         inv.Quantity = inv.Quantity + child.Quantity;
                         BusinessHelper.Instance.EditEntity(inv);
@@ -362,7 +390,7 @@ namespace RUINORERP.Business
                                                .FirstAsync();
                         if (Payable == null)
                         {
-                           
+
 
                             Payable = await ctrpayable.BuildReceivablePayable(entity);
                             ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
@@ -453,8 +481,8 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
                 rrs.Succeeded = false;
                 rrs.ErrorMsg = "事务回滚=>" + ex.Message;
-               
-               _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
+
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 return rrs;
             }
 

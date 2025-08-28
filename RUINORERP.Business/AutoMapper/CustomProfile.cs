@@ -25,6 +25,8 @@ namespace RUINORERP.Business.AutoMapper
             //IgnoreBaseEntityProperties();
             //ApplySmartConventions();
 
+            //销售退货单时，从主仓出，退到维修仓库时 更新库存时得新建。参考主仓信息
+            CreateMap<tb_Inventory, tb_Inventory>();
 
             #region 财务模块
 

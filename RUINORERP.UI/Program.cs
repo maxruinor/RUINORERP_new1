@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -42,6 +42,7 @@ using log4net.Repository.Hierarchy;
 using System.Text.RegularExpressions;
 using RUINORERP.UI.Common;
 using SqlSugar;
+using static RUINORERP.Business.BizMapperService.ServiceCollectionExtensions;
 
 
 namespace RUINORERP.UI
@@ -605,6 +606,9 @@ namespace RUINORERP.UI
 
                     #endregion
 
+                    // 执行实体映射初始化
+                    var initializer = Startup.ServiceProvider.GetService<IStartupInitializer>();
+                    initializer?.Initialize();
 
                     var form1 = Startup.ServiceProvider.GetService<MainForm>();
                     Application.Run(form1);

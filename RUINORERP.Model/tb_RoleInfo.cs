@@ -104,6 +104,12 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_P4RowAuthPolicyByRole.RoleID))]
+        public virtual List<tb_P4RowAuthPolicyByRole> tb_P4RowAuthPolicyByRoles { get; set; }
+
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_User_Role.RoleID))]
         public virtual List<tb_User_Role> tb_User_Roles { get; set; }
         //tb_User_Role.RoleID)

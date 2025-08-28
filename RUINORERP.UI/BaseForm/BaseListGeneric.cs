@@ -326,7 +326,8 @@ namespace RUINORERP.UI.BaseForm
                 if (!this.DesignMode)
                 {
                     frm = new frmFormProperty();
-                    GridRelated = new GridViewRelated();
+                    //GridRelated = new GridViewRelated();
+                    GridRelated = Startup.GetFromFac<GridViewRelated>();
                     ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     //权限菜单
                     if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())

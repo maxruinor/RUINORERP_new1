@@ -785,20 +785,20 @@ namespace RUINORERP.UI.FM
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
 
-            string Flag = string.Empty;
+            BizType bizType = 0;
+            tb_MenuInfo RelatedMenuInfo = null;
             if (PaymentType == ReceivePaymentType.收款)
             {
-                Flag = typeof(RUINORERP.UI.FM.UCReceiptStatement).FullName;
+                bizType = BizType.收款对账单;
             }
             else
             {
-                Flag = typeof(RUINORERP.UI.FM.UCPaymentStatement).FullName;
+                bizType = BizType.付款对账单;
             }
-
-            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-        && m.EntityName == nameof(tb_FM_Statement)
-        && m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
-            .FirstOrDefault();
+            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                 && m.BizType == (int)bizType
+                 && m.BIBaseForm == "BaseBillEditGeneric`2")
+                     .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, statement);

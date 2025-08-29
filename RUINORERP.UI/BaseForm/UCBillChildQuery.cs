@@ -20,6 +20,7 @@ namespace RUINORERP.UI.BaseForm
         public UCBillChildQuery()
         {
             InitializeComponent();
+            GridRelated = new GridViewRelated();
             // newSumDataGridViewChild.CellFormatting += DataGridView1_CellFormatting;
             newSumDataGridViewChild.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.newSumDataGridViewChild_CellDoubleClick);
         }
@@ -51,12 +52,12 @@ namespace RUINORERP.UI.BaseForm
             DisplayTextResolver.Initialize(newSumDataGridViewChild);
         }
 
-       
+
 
         /// <summary>
         /// 双击单号导向单据的功能类
         /// </summary>
-        public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
+        public GridViewRelated GridRelated { get; set; }
 
 
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -75,7 +76,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
             }
-            
+
         }
 
 

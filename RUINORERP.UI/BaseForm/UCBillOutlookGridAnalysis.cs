@@ -29,6 +29,7 @@ namespace RUINORERP.UI.BaseForm
         public UCBillOutlookGridAnalysis()
         {
             InitializeComponent();
+             GridRelated = new GridViewRelated();
         }
 
         /// <summary>
@@ -509,7 +510,7 @@ namespace RUINORERP.UI.BaseForm
             expand = !expand;
         }
 
-        public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
+        public GridViewRelated GridRelated { get; set; } 
 
 
         private void kryptonOutlookGrid1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)

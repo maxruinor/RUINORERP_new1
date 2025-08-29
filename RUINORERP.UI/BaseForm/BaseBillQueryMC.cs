@@ -136,7 +136,7 @@ namespace RUINORERP.UI.BaseForm
         public Expression<Func<M, string>> RelatedBillEditCol { get; set; }
 
   
-        private readonly EntityInfoServiceImpl _mapper;
+  
 
         public BaseBillQueryMC()
         {
@@ -149,11 +149,6 @@ namespace RUINORERP.UI.BaseForm
                     {
                         frm = new frmFormProperty();
                     }
-                    if (_mapper == null)
-                    {
-                        _mapper = Startup.GetFromFac<EntityInfoServiceImpl>();
-                    }
-
 
                     //提前统一插入批量处理的菜单按钮
 

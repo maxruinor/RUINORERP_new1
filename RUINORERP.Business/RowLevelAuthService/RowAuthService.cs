@@ -19,7 +19,7 @@ namespace RUINORERP.Business.RowLevelAuthService
     public class RowAuthService : IRowAuthService
     {
         private readonly IDefaultRowAuthRuleProvider _defaultRuleProvider;
-        private readonly IEntityBizMappingService _entityBizMappingService;
+        private readonly IEntityInfoService _entityBizMappingService;
         private readonly ApplicationContext _appContext;
         private readonly ILogger<RowAuthService> _logger;
         private readonly ISqlSugarClient _db;
@@ -36,7 +36,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <param name="cacheManager">内存缓存管理器</param>
         public RowAuthService(
             IDefaultRowAuthRuleProvider defaultRuleProvider,
-            IEntityBizMappingService entityBizMappingService,
+            IEntityInfoService entityBizMappingService,
             ApplicationContext context,
             ILogger<RowAuthService> logger,
             ISqlSugarClient db,
@@ -86,6 +86,17 @@ namespace RUINORERP.Business.RowLevelAuthService
                     .Where((p, r) => p.TargetEntity == entityInfo.EntityName && r.RoleID == roleId)
                     .Select((p, r) => p)
                     .ToList();
+
+                // 获取可用的默认策略（尚未分配给该角色的）
+                var allDefaultPolicies = _db.Queryable<tb_RowAuthPolicy>()
+                    .Where(p => p.TargetEntity == entityInfo.EntityName && p.DefaultRuleEnum.HasValue)
+                    .ToList();
+
+                dto.AvailableDefaultPolicies = allDefaultPolicies
+                    .Where(p => !dto.AssignedPolicies.Any(ap => ap.PolicyId == p.PolicyId))
+                    .ToList();
+
+
 
                 return dto;
             }

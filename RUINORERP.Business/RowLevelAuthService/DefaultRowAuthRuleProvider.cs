@@ -287,18 +287,31 @@ namespace RUINORERP.Business.RowLevelAuthService
         private void ConfigurePolicyFilter(tb_RowAuthPolicy policy, long optionKey, string tableName)
         {
             // 将long类型的Key转换为RowLevelAuthRule枚举
-            if (Enum.IsDefined(typeof(RowLevelAuthRule), optionKey))
+            try
             {
-                var rule = (RowLevelAuthRule)optionKey;
-                ConfigurePolicyFilterByRule(policy, rule, tableName);
+                // 先检查optionKey是否可以安全地转换为int（枚举的底层类型）
+                if (optionKey >= int.MinValue && optionKey <= int.MaxValue)
+                {
+                    int intOptionKey = Convert.ToInt32(optionKey);
+                    // 现在检查这个整数值是否在枚举定义中
+                    if (Enum.IsDefined(typeof(RowLevelAuthRule), intOptionKey))
+                    {
+                        var rule = (RowLevelAuthRule)intOptionKey;
+                        ConfigurePolicyFilterByRule(policy, rule, tableName);
+                        return;
+                    }
+                }
+                
+                _logger.LogWarning("值 {OptionKey} 超出RowLevelAuthRule枚举范围或无法安全转换", optionKey);
             }
-            else
+            catch (Exception ex)
             {
-                _logger.LogWarning("未知的规则Key值: {OptionKey}", optionKey);
-                // 默认设置为全部数据
-                policy.IsJoinRequired = false;
-                policy.FilterClause = "1=1"; // 全部数据
+                _logger.LogWarning(ex, "转换规则Key值时发生异常: {OptionKey}", optionKey);
             }
+            
+            // 默认设置为全部数据
+            policy.IsJoinRequired = false;
+            policy.FilterClause = "1=1"; // 全部数据
         }
 
         /// <summary>

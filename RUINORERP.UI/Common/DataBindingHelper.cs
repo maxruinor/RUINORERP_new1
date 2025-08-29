@@ -459,7 +459,7 @@ namespace RUINORERP.UI.Common
 
                 if (image == null)
                 {
-                    MainForm.Instance.logger.LogWarning($"未找到名为 '{resourceName}' 的资源");
+                    RUINORERP.Common.Log4Net.Logger.Warn($"未找到名为 '{resourceName}' 的资源");
                     return null;
                 }
 

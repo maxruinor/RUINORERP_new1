@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -176,8 +176,19 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 _cancellationTokenSource.Token.ThrowIfCancellationRequested(); // 如果已经被取消，抛出异常
 
-                MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}正在连接...");
-                //var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port));
+                // 确保在UI线程上执行日志操作
+                if (MainForm.Instance.InvokeRequired)
+                {
+                    MainForm.Instance.Invoke(new Action(() =>
+                    {
+                        MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}正在连接...");
+                    }));
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}正在连接...");
+                }
+                
                 var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port), _cancellationTokenSource.Token);
                 if (connected)
                 {
@@ -187,14 +198,23 @@ namespace RUINORERP.UI.SuperSocketClient
                 {
                     //连接失败
                     IsConnected = false;
-
                 }
                 return IsConnected;
             }
             catch (OperationCanceledException)
             {
-                // 连接被取消
-                MainForm.Instance.uclog.AddLog("连接尝试被取消。");
+                // 连接被取消，确保在UI线程上执行日志操作
+                if (MainForm.Instance.InvokeRequired)
+                {
+                    MainForm.Instance.Invoke(new Action(() =>
+                    {
+                        MainForm.Instance.uclog.AddLog("连接尝试被取消。");
+                    }));
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog("连接尝试被取消。");
+                }
             }
             finally
             {
@@ -265,8 +285,22 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}正在连接服务器{ServerIp}:{Port}...";
-                MainForm.Instance.uclog.AddLog(msg);
-                MainForm.Instance.lblServerInfo.Text = msg;
+                
+                // 确保在UI线程上执行日志操作
+                if (MainForm.Instance.InvokeRequired)
+                {
+                    MainForm.Instance.Invoke(new Action(() =>
+                    {
+                        MainForm.Instance.uclog.AddLog(msg);
+                        MainForm.Instance.lblServerInfo.Text = msg;
+                    }));
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog(msg);
+                    MainForm.Instance.lblServerInfo.Text = msg;
+                }
+                
                 var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port), cancellationToken);
                 if (connected)
                 {
@@ -284,16 +318,39 @@ namespace RUINORERP.UI.SuperSocketClient
             }
             catch (OperationCanceledException)
             {
-                // 连接被取消
-                MainForm.Instance.uclog.AddLog("连接尝试被取消。");
-                msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接尝试被取消{ServerIp}:{Port}...";
-                MainForm.Instance.uclog.AddLog(msg);
-                MainForm.Instance.lblServerInfo.Text = msg;
+                // 连接被取消，确保在UI线程上执行日志操作
+                if (MainForm.Instance.InvokeRequired)
+                {
+                    MainForm.Instance.Invoke(new Action(() =>
+                    {
+                        MainForm.Instance.uclog.AddLog("连接尝试被取消。");
+                        msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接尝试被取消{ServerIp}:{Port}...";
+                        MainForm.Instance.uclog.AddLog(msg);
+                        MainForm.Instance.lblServerInfo.Text = msg;
+                    }));
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog("连接尝试被取消。");
+                    msg = $"{System.Threading.Thread.CurrentThread.ManagedThreadId}连接尝试被取消{ServerIp}:{Port}...";
+                    MainForm.Instance.uclog.AddLog(msg);
+                    MainForm.Instance.lblServerInfo.Text = msg;
+                }
             }
             catch (Exception ex)
             {
-                // 处理其他异常情况
-                MainForm.Instance.uclog.AddLog($"连接异常: {ex.Message}");
+                // 处理其他异常情况，确保在UI线程上执行日志操作
+                if (MainForm.Instance.InvokeRequired)
+                {
+                    MainForm.Instance.Invoke(new Action(() =>
+                    {
+                        MainForm.Instance.uclog.AddLog($"连接异常: {ex.Message}");
+                    }));
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog($"连接异常: {ex.Message}");
+                }
             }
             finally
             {

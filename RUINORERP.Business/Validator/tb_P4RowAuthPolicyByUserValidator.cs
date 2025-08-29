@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/28/2025 15:02:31
+// 时间：08/29/2025 20:39:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,11 +38,11 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_P4RowAuthPolicyByUser =>tb_P4RowAuthPolicyByUser.PolicyId).Must(CheckForeignKeyValue).WithMessage(":下拉选择值不正确。");
+ RuleFor(tb_P4RowAuthPolicyByUser =>tb_P4RowAuthPolicyByUser.PolicyId).Must(CheckForeignKeyValue).WithMessage("数据权限规则:下拉选择值不正确。");
 
  RuleFor(tb_P4RowAuthPolicyByUser =>tb_P4RowAuthPolicyByUser.MenuID).Must(CheckForeignKeyValue).WithMessage("菜单:下拉选择值不正确。");
 
- RuleFor(tb_P4RowAuthPolicyByUser =>tb_P4RowAuthPolicyByUser.User_ID).Must(CheckForeignKeyValue).WithMessage(":下拉选择值不正确。");
+ RuleFor(tb_P4RowAuthPolicyByUser =>tb_P4RowAuthPolicyByUser.User_ID).Must(CheckForeignKeyValue).WithMessage("用户:下拉选择值不正确。");
 
 //有默认值
 

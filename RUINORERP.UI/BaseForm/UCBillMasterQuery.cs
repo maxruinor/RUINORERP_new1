@@ -45,8 +45,8 @@ namespace RUINORERP.UI.BaseForm
         public UCBillMasterQuery()
         {
             InitializeComponent();
+            GridRelated = new GridViewRelated();
         }
-
 
 
         public GridViewDisplayTextResolver DisplayTextResolver;
@@ -154,7 +154,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 双击单号导向单据的功能类
         /// </summary>
-        public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
+        public GridViewRelated GridRelated { get; set; }
 
 
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();

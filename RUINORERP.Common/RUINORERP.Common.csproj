@@ -65,7 +65,6 @@
   <Compile Remove="Helper\WaterMarkHelper.cs" />
   <Compile Remove="Helper\WeChatHelper.cs" />
   <Compile Remove="log4netHelper.cs" />
-  <Compile Remove="Log4Net\CustomAdoNetAppender.cs" />
   <Compile Remove="Logging\Class1.cs" />
   <Compile Remove="Logging\ConsoleLoggingProvider.cs" />
   <Compile Remove="Logging\PeriodBatchingLoggingService.cs" />
@@ -100,6 +99,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj" />
     <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
   </ItemGroup>
 

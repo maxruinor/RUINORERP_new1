@@ -1502,7 +1502,7 @@ namespace RUINORERP.Business
                             if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销
                                 || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
                             {
-                                rmrs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请撤销核销，再【退款】处理。";
+                                rmrs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请撤销核销，再退款处理,或部分退款";
                                 _unitOfWorkManage.RollbackTran();
                                 rmrs.Succeeded = false;
                                 return rmrs;
@@ -1510,10 +1510,26 @@ namespace RUINORERP.Business
 
                             if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待核销)
                             {
-                                rmrs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请进行【退款】处理。";
-                                _unitOfWorkManage.RollbackTran();
-                                rmrs.Succeeded = false;
-                                return rmrs;
+                                if (_appContext.FMConfig.EnableAutoRefundOnOrderCancel && entity.IsFromPlatform)
+                                {
+                                    var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                    bool isRefund = true;
+                                    tb_FM_PaymentRecord paymentRecord = paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { PrePayment }, isRefund);
+                                    paymentRecord.Remark += "（作废）" + CancelReason;
+                                    var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+                                    if (rrs.Succeeded)
+                                    {
+                                        await paymentController.ApprovalAsync(paymentRecord, true);
+                                    }
+                                }
+                                else
+                                {
+                                    rmrs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接取消订单,请进行【退款】处理。";
+                                    _unitOfWorkManage.RollbackTran();
+                                    rmrs.Succeeded = false;
+                                    return rmrs;
+                                }
+                          
                             }
                         }
 

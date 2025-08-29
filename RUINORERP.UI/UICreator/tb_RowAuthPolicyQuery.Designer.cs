@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/28/2025 15:02:31
+// 时间：08/29/2025 20:39:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -96,6 +96,7 @@ this.dtpCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker(
 
 this.lblModified_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
+
 
 
     //for end
@@ -292,6 +293,8 @@ this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
 
+           //#####DefaultRuleEnum###Int32
+
           
     //for end
 
@@ -340,6 +343,7 @@ this.Controls.Add(this.dtpCreated_at );
                 this.Controls.Add(this.lblModified_at );
 this.Controls.Add(this.dtpModified_at );
 
+                
                 
                     
             this.Name = "tb_RowAuthPolicyQuery";
@@ -419,6 +423,9 @@ private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblModified_at;
 private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
 
+    
+        
+              
     
         
               

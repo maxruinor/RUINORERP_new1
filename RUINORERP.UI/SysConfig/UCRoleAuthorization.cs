@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -43,6 +43,7 @@ using Mysqlx.Crud;
 using RUINORERP.Business.RowLevelAuthService;
 using RUINORERP.Global;
 using Netron.GraphLib;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -54,6 +55,7 @@ namespace RUINORERP.UI.SysConfig
     [MenuAttrAssemblyInfo("角色授权", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.权限管理)]
     public partial class UCRoleAuthorization : UserControl, IContextMenuInfoAuth
     {
+        private readonly IRowAuthService _rowAuthService;
         public UCRoleAuthorization()
         {
             InitializeComponent();
@@ -63,6 +65,8 @@ namespace RUINORERP.UI.SysConfig
                 null, TreeView1, new object[] { true });
             BuildContextMenuController();
             _defaultRuleProvider = MainForm.Instance.AppContext.GetRequiredService<DefaultRowAuthRuleProvider>();
+
+            _rowAuthService = Startup.GetFromFac<IRowAuthService>();
         }
 
 
@@ -315,6 +319,13 @@ namespace RUINORERP.UI.SysConfig
 
         private void tVtypeList_DrawNode(object sender, DrawTreeNodeEventArgs e)
         {
+            // 检查是否需要跨线程调用
+            if (TreeView1.InvokeRequired)
+            {
+                TreeView1.Invoke(new Action<object, DrawTreeNodeEventArgs>(tVtypeList_DrawNode), sender, e);
+                return;
+            }
+            
             e.Graphics.FillRectangle(Brushes.White, e.Node.Bounds);
             if (e.State == TreeNodeStates.Selected)//做判断
             {
@@ -565,18 +576,28 @@ namespace RUINORERP.UI.SysConfig
             FieldNameList1 = UIHelper.GetFieldNameColList(typeof(tb_P4Button));
             dataGridView1.XmlFileName = "UCRoleAuthorization1";
             dataGridView1.FieldNameList = FieldNameList1;
-            dataGridView2.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            FieldNameList2 = UIHelper.GetFieldNameColList(typeof(tb_P4Field));
-            dataGridView2.XmlFileName = "UCRoleAuthorization2";
-            dataGridView2.FieldNameList = FieldNameList2;
             dataGridView1.DataSource = null;
             ListDataSoure1 = bindingSource1;
             //绑定导航
             dataGridView1.DataSource = ListDataSoure1.DataSource;
+
+            dataGridView2.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            FieldNameList2 = UIHelper.GetFieldNameColList(typeof(tb_P4Field));
+            dataGridView2.XmlFileName = "UCRoleAuthorization2";
+            dataGridView2.FieldNameList = FieldNameList2;
             dataGridView2.DataSource = null;
             ListDataSoure2 = bindingSource2;
             //绑定导航
             dataGridView2.DataSource = ListDataSoure2.DataSource;
+
+
+            newSumDataGridViewRowAuthPolicy.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            FieldNameList3 = UIHelper.GetFieldNameColList(typeof(tb_P4RowAuthPolicyByRole));
+            newSumDataGridViewRowAuthPolicy.XmlFileName = "UCtb_P4RowAuthPolicyByRole";
+            newSumDataGridViewRowAuthPolicy.FieldNameList = FieldNameList3;
+            newSumDataGridViewRowAuthPolicy.DataSource = null;
+            //绑定导航
+            newSumDataGridViewRowAuthPolicy.DataSource = bindingSourceRowAuthPolicy.DataSource;
 
         }
 
@@ -875,6 +896,13 @@ namespace RUINORERP.UI.SysConfig
 
         private void UpdateP4MenuUI(TreeNodeCollection Nodes, List<tb_P4Menu> tb_P4Menus)
         {
+            // 检查是否需要跨线程调用
+            if (TreeView1.InvokeRequired)
+            {
+                TreeView1.Invoke(new Action<TreeNodeCollection, List<tb_P4Menu>>(UpdateP4MenuUI), Nodes, tb_P4Menus);
+                return;
+            }
+            
             //保存菜单勾选情况  是用更新
             foreach (ThreeStateTreeNode tn in Nodes)
             {
@@ -1593,7 +1621,7 @@ namespace RUINORERP.UI.SysConfig
 
         ConcurrentDictionary<string, KeyValuePair<string, bool>> FieldNameList1;
         ConcurrentDictionary<string, KeyValuePair<string, bool>> FieldNameList2;
-
+        ConcurrentDictionary<string, KeyValuePair<string, bool>> FieldNameList3;
 
         tb_RoleInfoController<tb_RoleInfo> ctrRole = Startup.GetFromFac<tb_RoleInfoController<tb_RoleInfo>>();
 
@@ -1741,6 +1769,11 @@ namespace RUINORERP.UI.SysConfig
                 Common.DataBindingHelper.InitDataToCmb(bs, "Key", "Name", cmbDefaultAuthPolicy);
 
             }
+            var initializationService = Startup.GetFromFac<IDefaultRowAuthPolicyInitializationService>();
+
+            initializationService.InitializeDefaultPoliciesAsync();
+
+           var policies =  initializationService.GetOrCreateDefaultPoliciesAsync(BizType.销售订单);
 
             #endregion
 
@@ -2835,7 +2868,6 @@ namespace RUINORERP.UI.SysConfig
 
         }
         #endregion
-
         private void kryptonNavigator1_SelectedPageChanged(object sender, EventArgs e)
         {
             #region 设置全选菜单
@@ -2863,6 +2895,11 @@ namespace RUINORERP.UI.SysConfig
             }
 
             #endregion
+        }
+
+        private void cmbDefaultAuthPolicy_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            
         }
     }
 }

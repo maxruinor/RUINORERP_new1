@@ -76,6 +76,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// </summary>
         public List<DefaultRuleOption> AvailableDefaultOptions { get; set; }
 
+        public List<tb_RowAuthPolicy> AvailableDefaultPolicies { get; set; } // 新增
         /// <summary>
         /// 已分配的权限策略列表
         /// </summary>

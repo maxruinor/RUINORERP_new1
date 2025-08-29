@@ -1,115 +1,115 @@
-using  RUINORERP.Common.ClassLibrary;
+using log4net;
+using log4net.Config;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
- 
+using System.Reflection;
+using System.Windows.Forms;
 
-namespace  RUINORERP.Common.Helper
+namespace RUINORERP.Common
 {
-
-    /// <summary>
-    /// 日志操作类
-    /// </summary>
-    public static class LogHelper
+    public static class Logger
     {
-        private static readonly UsingLock<object> Lock = new UsingLock<object>();
-        /// <summary>
-        /// 文本日志
-        /// </summary>
-        /// <param name="folder">文件夹</param>
-        /// <param name="message">消息</param>   
-        public static void WriteError(string message, IEnumerable<string> folder)
+        private static readonly ILog log = LogManager.GetLogger(typeof(Logger));
+
+        static Logger()
         {
-          //  AddLog(message, folder);
+            InitializeLogging();
         }
 
         /// <summary>
-        /// 写日志文件数据库日志文件
+        /// 初始化日志系统
         /// </summary>
-        /// <param name="folder">文件夹</param>
-        /// <param name="message">消息</param> 
-        public static void WriteLog(string message, IEnumerable<string> folder)
+        private static void InitializeLogging()
         {
-           // AddLog(message, folder);
+            try
+            {
+                // 加载log4net配置
+                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+                XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
+                log.Info("日志系统初始化完成");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"日志初始化失败: {ex.Message}");
+            }
         }
 
-        ///// <summary>
-        ///// 文本日志
-        ///// </summary>
-        ///// <param name="folder">文件夹</param>
-        ///// <param name="message">日志存储目录名称</param>
-        //private static void AddLog(string message, IEnumerable<string> folder)
-        //{
-        //    try
-        //    {
-        //        var path = Path.Combine(AppSettings.ContentRootPath, "Logs");
-        //        path = folder.Aggregate(path, Path.Combine);
+        /// <summary>
+        /// 记录信息日志
+        /// </summary>
+        public static void Info(string message, string operatorName = null, string modName = null,
+                               string path = null, string actionName = null, string ip = null)
+        {
+            SetCustomProperties(operatorName, modName, path, actionName, ip);
+            log.Info(message);
+            ClearCustomProperties();
+        }
 
-        //        if (!Directory.Exists(path))
-        //        {
-        //            Directory.CreateDirectory(path);
-        //        }
+        /// <summary>
+        /// 记录错误日志
+        /// </summary>
+        public static void Error(string message, Exception ex = null, string operatorName = null,
+                                string modName = null, string path = null, string actionName = null,
+                                string ip = null)
+        {
+            SetCustomProperties(operatorName, modName, path, actionName, ip);
+            if (ex != null)
+                log.Error(message, ex);
+            else
+                log.Error(message);
+            ClearCustomProperties();
+        }
 
-        //        string logFilePath = Path.Combine(path, $@"{DateTime.Now:yyyyMMdd}.log");
-        //        //只保留30天的日志
-        //        var deletePath = Path.Combine(path, $@"{DateTime.Now.AddDays(-30):yyyyMMdd}.log");
-        //        if (File.Exists(deletePath))
-        //        {
-        //            File.Delete(deletePath);
-        //        }
+        /// <summary>
+        /// 记录警告日志
+        /// </summary>
+        public static void Warn(string message, string operatorName = null, string modName = null,
+                               string path = null, string actionName = null, string ip = null)
+        {
+            SetCustomProperties(operatorName, modName, path, actionName, ip);
+            log.Warn(message);
+            ClearCustomProperties();
+        }
 
-        //        if (!File.Exists(logFilePath))
-        //        {
-        //            using var fs = new FileStream(logFilePath, FileMode.Create, FileAccess.Write);
-        //            var sw = new StreamWriter(fs);
-        //            sw.Close();
-        //            fs.Close();
-        //        }
+        /// <summary>
+        /// 设置自定义属性
+        /// </summary>
+        private static void SetCustomProperties(string operatorName, string modName, string path,
+                                              string actionName, string ip)
+        {
+            if (!string.IsNullOrEmpty(operatorName))
+                log4net.ThreadContext.Properties["Operator"] = operatorName;
 
-        //        using (Lock.Write())
-        //        {
-        //            using var writer = new StreamWriter(logFilePath, true);
-        //            writer.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss fff"));
-        //            writer.WriteLine(message);
-        //            writer.WriteLine(Environment.NewLine);
-        //        }
-        //    }
-        //    catch
-        //    {
-        //        // ignored
-        //    }
-        //}
+            if (!string.IsNullOrEmpty(modName))
+                log4net.ThreadContext.Properties["ModName"] = modName;
 
-        ///// <summary>
-        ///// SQL日志
-        ///// </summary>
-        ///// <param name="filename"></param>
-        ///// <param name="dataParas"></param>
-        //public static void WriteSqlLog(string filename, IEnumerable<string> dataParas)
-        //{
-        //    try
-        //    {
-        //        var path = Path.Combine(AppSettings.ContentRootPath, "Logs", "Sql");
-        //        if (!Directory.Exists(path))
-        //        {
-        //            Directory.CreateDirectory(path);
-        //        }
+            if (!string.IsNullOrEmpty(path))
+                log4net.ThreadContext.Properties["Path"] = path;
 
-        //        var logFilePath = Path.Combine(path, $@"{filename}.log");
+            if (!string.IsNullOrEmpty(actionName))
+                log4net.ThreadContext.Properties["ActionName"] = actionName;
 
-        //        var logContent =
-        //            DateTime.Now.ToString("yyyy-MM-dd HH:ss:mm fff") + "\r\n" +
-        //            string.Join("", dataParas) + "\r\n\r\n\r\n\r\n";
-        //        using (Lock.Write())
-        //        {
-        //            File.AppendAllText(logFilePath, logContent);
-        //        }
-        //    }
-        //    catch
-        //    {
-        //        // ignored
-        //    }
-        //}
+            if (!string.IsNullOrEmpty(ip))
+                log4net.ThreadContext.Properties["IP"] = ip;
+
+            // 自动添加机器名
+            log4net.ThreadContext.Properties["MachineName"] = Environment.MachineName;
+
+            // 如果需要MAC地址，可以在这里添加获取MAC地址的代码
+        }
+
+        /// <summary>
+        /// 清除自定义属性
+        /// </summary>
+        private static void ClearCustomProperties()
+        {
+            log4net.ThreadContext.Properties.Remove("Operator");
+            log4net.ThreadContext.Properties.Remove("ModName");
+            log4net.ThreadContext.Properties.Remove("Path");
+            log4net.ThreadContext.Properties.Remove("ActionName");
+            log4net.ThreadContext.Properties.Remove("IP");
+            log4net.ThreadContext.Properties.Remove("MachineName");
+        }
     }
 }

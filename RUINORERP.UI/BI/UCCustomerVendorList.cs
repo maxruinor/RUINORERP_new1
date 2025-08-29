@@ -63,10 +63,10 @@ namespace RUINORERP.UI.BI
             ListDataSoure.DataSource = GetDuplicatesList();
             dataGridView1.DataSource = ListDataSoure;
         }
-
+        public IDuplicateCheckService _duplicateService;
         private void UCCustomerVendorList_Load(object sender, EventArgs e)
         {
-
+            _duplicateService = Startup.GetFromFac<IDuplicateCheckService>();
         }
 
 
@@ -85,6 +85,19 @@ namespace RUINORERP.UI.BI
                         break;
                     case ActionStatus.新增:
                     case ActionStatus.修改:
+
+                        var dup = await _duplicateService.CheckAsync(entity);
+                        if (dup.IsDuplicate)
+                        {
+                            var dr = MessageBox.Show(
+                                $"检测到疑似重复：{dup.DuplicateEntity.CVName}\r\n相似度：{dup.Score:P1}\r\n是否继续保存？",
+                                "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2);
+                            if (dr == DialogResult.No)
+                            {
+                                continue;
+                            }
+                        }
+
                         ReturnResults<tb_CustomerVendor> rr = new ReturnResults<tb_CustomerVendor>();
                         rr = await ctr.SaveOrUpdate(entity);
                         if (rr.Succeeded)

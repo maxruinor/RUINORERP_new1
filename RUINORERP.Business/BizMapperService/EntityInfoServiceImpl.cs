@@ -13,7 +13,7 @@ namespace RUINORERP.Business.BizMapperService
     /// <summary>
     /// 实体信息服务实现类
     /// </summary>
-    public class EntityInfoServiceImpl : IEntityInfoService
+    public class EntityInfoService : IEntityInfoService
     {
         private readonly ILogger _logger;
         
@@ -35,9 +35,9 @@ namespace RUINORERP.Business.BizMapperService
         /// <summary>
         /// 构造函数
         /// </summary>
-        public EntityInfoServiceImpl(ILoggerFactory loggerFactory)
+        public EntityInfoService(ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<EntityInfoServiceImpl>();
+            _logger = loggerFactory.CreateLogger<EntityInfoService>();
         }
 
         /// <summary>
@@ -181,7 +181,7 @@ namespace RUINORERP.Business.BizMapperService
                 return sharedTableEntityInfo;
             }
             
-            _logger.LogWarning("未找到业务类型 {0} 对应的实体信息", bizType);
+            _logger.Debug("未找到业务类型 {0} 对应的实体信息", bizType);
             return null;
         }
         
@@ -260,7 +260,7 @@ namespace RUINORERP.Business.BizMapperService
                 return entityInfo;
             }
             
-            _logger.LogWarning("未找到实体类型 {0} 对应的实体信息", entityType.FullName);
+            _logger.Debug("未找到实体类型 {0} 对应的实体信息", entityType.FullName);
             return null;
         }
         
@@ -311,7 +311,7 @@ namespace RUINORERP.Business.BizMapperService
                 }
             }
             
-            _logger.LogWarning("未找到表名 {0} 对应的实体信息", tableName);
+            _logger.Debug("未找到表名 {0} 对应的实体信息", tableName);
             return null;
         }
         
@@ -411,7 +411,7 @@ namespace RUINORERP.Business.BizMapperService
                 return sharedConfig.BizType != BizType.无对应数据 ? sharedConfig.BizType : BizType.Unknown;
             }
             
-            _logger.LogWarning("未找到实体类型 {0} 对应的实体信息或业务类型", entityType.FullName);
+            _logger.Debug("未找到实体类型 {0} 对应的实体信息或业务类型", entityType.FullName);
             return BizType.Unknown;
         }
         
@@ -599,7 +599,7 @@ namespace RUINORERP.Business.BizMapperService
 
             if (entityInfo == null)
             {
-                _logger.LogWarning("未找到实体类型 {0} 对应的实体信息", entityType.FullName);
+                _logger.Debug("未找到实体类型 {0} 对应的实体信息", entityType.FullName);
                 return (0, null);
             }
 

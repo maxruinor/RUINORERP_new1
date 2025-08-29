@@ -44,6 +44,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         public UCMRP()
         {
             InitializeComponent();
+             GridRelated = new GridViewRelated();
             GridRelated.SetRelatedInfo<tb_ProductionPlan>(c => c.PPNo);
             GridRelated.SetRelatedInfo<tb_ManufacturingOrder>(c => c.MONO);
             GridRelated.SetRelatedInfo<tb_MaterialRequisition>(c => c.MaterialRequisitionNO);
@@ -52,7 +53,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             GridRelated.SetRelatedInfo<tb_ProductionDemand>(c => c.PDNo);
             this.Dock = DockStyle.Fill;
         }
-        public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
+        public GridViewRelated GridRelated { get; set; }
 
 
 
@@ -100,7 +101,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_employee)
                   .Includes(c => c.tb_department)
                    .Includes(c => c.tb_projectgroup)
-                    //                  .Includes(c => c.tb_ProductionPlanDetails,d=>d.tb_proddetail,e=>e.tb_prod)
+                    //  .Includes(c => c.tb_ProductionPlanDetails,d=>d.tb_proddetail,e=>e.tb_prod)
                     .Includes(c => c.tb_ProductionPlanDetails)
                   .Includes(c => c.tb_ProductionDemands, d => d.tb_ProductionDemandTargetDetails)
                   .AsNavQueryable()

@@ -44,7 +44,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         UCPUR uCPUR = new UCPUR();
         private async void UCPURCell_Load(object sender, EventArgs e)
         {
-            await Task.Delay(1000); // 等待5秒
+            await Task.Delay(500); // 等待5秒
             Stopwatch stopwatch = Stopwatch.StartNew();
             int ListCount = await uCPUR.QueryData();
             kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + ListCount.ToString() + "】采购入库中";

@@ -57,22 +57,66 @@ namespace RUINORERP.UI
         private static ApplicationContext _AppContextData;
         public static ApplicationContext AppContextData
         {
-            get
+            get => _AppContextData ??= InitializeApplicationContext();
+            set => _AppContextData = value;
+        }
+
+        /// <summary>
+        /// 初始化应用程序上下文
+        /// </summary>
+        private static ApplicationContext InitializeApplicationContext()
+        {
+            ApplicationContextManagerAsyncLocal applicationContextManagerAsyncLocal = new ApplicationContextManagerAsyncLocal();
+            applicationContextManagerAsyncLocal.Flag = "test" + DateTime.Now.ToString();
+            ApplicationContextAccessor applicationContextAccessor = new ApplicationContextAccessor(applicationContextManagerAsyncLocal);
+            return new ApplicationContext(applicationContextAccessor);
+        }
+
+        /// <summary>
+        /// 初始化日志系统
+        /// </summary>
+        private static void InitializeLogging()
+        {
+            try
             {
-                if (_AppContextData == null)
+                // 配置log4net
+                var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
+                XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+
+                // 创建基础日志记录器用于启动阶段的日志记录
+                Microsoft.Extensions.Logging.ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
                 {
-                    ApplicationContextManagerAsyncLocal applicationContextManagerAsyncLocal = new ApplicationContextManagerAsyncLocal();
-                    applicationContextManagerAsyncLocal.Flag = "test" + System.DateTime.Now.ToString();
-                    ApplicationContextAccessor applicationContextAccessor = new ApplicationContextAccessor(applicationContextManagerAsyncLocal);
-                    _AppContextData = new ApplicationContext(applicationContextAccessor);
-                }
-                return _AppContextData;
+                    builder.AddLog4Net("log4net.config");
+                });
+
+                // 使用字符串名称而不是静态类类型
+                var logger = loggerFactory.CreateLogger("ApplicationStartup");
+                logger.LogInformation("应用程序启动 - 日志系统初始化完成");
             }
-            set
+            catch (Exception ex)
             {
-                _AppContextData = value;
+                // 如果日志配置失败，至少确保有控制台输出
+                Console.WriteLine($"日志初始化失败: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// 检查是否已有实例运行
+        /// </summary>
+        private static bool CheckSingleInstance()
+        {
+            string mutexName = $"Global\\{AppGuid}";
+            bool createdNew;
+            _mutex = new Mutex(true, mutexName, out createdNew);
+
+            if (!createdNew)
+            {
+                ActivateExistingInstance();
+                return false;
+            }
+            return true;
+        }
+
 
         /// <summary>
         /// 配置依赖注入对象
@@ -89,7 +133,6 @@ namespace RUINORERP.UI
             //services.AddSingleton<ISqlSugarClient>(sqlSugar); // 单例注册
             //services.AddScoped(typeof(SqlSugarRepository<>)); // 仓储注册
             //services.AddUnitOfWork<SqlSugarUnitOfWork>(); // 事务与工作单元注册
-
 
 
 
@@ -183,6 +226,7 @@ namespace RUINORERP.UI
             #endregion
         }
 
+        /*
 
         /// <summary>
         /// 注入服务
@@ -255,7 +299,7 @@ namespace RUINORERP.UI
 
 
         }
-
+        */
 
 
         static void CreateConfig()
@@ -268,7 +312,7 @@ namespace RUINORERP.UI
         }
 
         private static Mutex _mutex;
-        private const string AppGuid = "{11-22-33-44}"; // 替换为你自己的GUID
+        private const string AppGuid = "{11-22-33-4400}"; // 替换为你自己的GUID
 
         /// <summary>
         /// 应用程序的主入口点。
@@ -276,21 +320,13 @@ namespace RUINORERP.UI
         [STAThread]
         static void Main(string[] args)
         {
-
-
-            // 生成唯一的Mutex名称（使用GUID确保唯一性）
-            string mutexName = $"Global\\{AppGuid}";
-
-            // 尝试创建Mutex
-            bool createdNew;
-            _mutex = new Mutex(true, mutexName, out createdNew);
-
-            if (!createdNew)
-            {
-                // 如果已有实例运行，激活它并退出
-                ActivateExistingInstance();
+            // 初始化日志系统（最先执行）
+            // InitializeLogging();
+            // 初始化日志系统
+            RUINORERP.Common.Log4Net.Logger.Initialize();
+            // 单实例检查
+            if (!CheckSingleInstance())
                 return;
-            }
 
             try
             {
@@ -302,8 +338,8 @@ namespace RUINORERP.UI
             {
                 ReleaseMutex();
             }
-        }
 
+        }
 
 
         private static void ActivateExistingInstance()
@@ -365,21 +401,6 @@ namespace RUINORERP.UI
         private const int SW_RESTORE = 9;
 
 
-        //if (SingleInstanceChecker.IsAlreadyRunning())
-        //{
-        //    // 激活已有窗口并退出
-        //    BringExistingInstanceToFront();
-        //    return;
-        //}
-        //try
-        //{
-        //    // 正常启动程序
-        //    StartProgram(args);
-        //}
-        //finally
-        //{
-        //    SingleInstanceChecker.Release();
-        //}
 
 
 
@@ -439,82 +460,6 @@ namespace RUINORERP.UI
             Application.SetCompatibleTextRenderingDefault(false);
             //公共类中的 先要执行
 
-
-
-            #region clsa 可用
-            /*
-            var csservices = new ServiceCollection();
-            csservices.AddCsla(options => options.AddWindowsForms());
-            csservices.AddSingleton<Form2>();
-            csservices.AddTransient<tb_LocationTypeList>();
-            csservices.AddTransient<tb_LocationTypeInfo>();
-            csservices.AddTransient<tb_LocationType>();
-            csservices.AddTransient<tb_LocationTypeEdit>();
-            csservices.AddTransient<tb_LocationTypeEditBindingList>();
-            //.AddTransient<Pages.PersonListPage>()
-            //.AddTransient<tb_UnitEntity>()
-
-            // register other services here
-            csservices.AddTransient<Itb_LocationTypeDal, tb_LocationTypeDal>();
-
-            var provider = csservices.BuildServiceProvider();
-            ApplicationContext = provider.GetRequiredService<Csla.ApplicationContext>();
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form2());
-            */
-
-            /*
-
-
-                   var host1 = new HostBuilder()
-                .ConfigureServices((hostContext, services) => services
-                         // register window and page types here
-                         //       .AddSingleton<MainForm>()
-                         //            .AddSingleton<Form2>()
-                         .AddSingleton<Form2>()
-                  .AddTransient<tb_LocationTypeList>()
-                   .AddTransient<tb_LocationTypeInfo>()
-                  .AddTransient<tb_LocationType>()
-                  .AddTransient<tb_LocationTypeEdit>()
-                  .AddTransient<tb_LocationTypeEditBindingList>()
-                   //.AddTransient<Pages.PersonListPage>()
-                   //.AddTransient<tb_UnitEntity>()
-
-                   // register other services here
-                   .AddTransient<Itb_LocationTypeDal, tb_LocationTypeDal>()
-
-                  .AddCsla(options => options.AddWindowsForms())
-                  .AddLogging(configure => configure.AddConsole())
-
-              ).Build();
-
-
-                   IServiceProvider services;
-
-                   using (var serviceScope = host1.Services.CreateScope())
-                   {
-
-                       services = serviceScope.ServiceProvider;
-
-                       try
-                       {
-                           var form1 = services.GetRequiredService<Form2>();
-                           Application.Run(form1);
-
-                           Console.WriteLine("Success");
-                       }
-       #pragma warning disable CA1031 // Do not catch general exception types
-                       catch (Exception ex)
-                       {
-                           Console.WriteLine("Error Occurred " + ex.Message);
-                       }
-       #pragma warning restore CA1031 // Do not catch general exception types
-                   }
-            */
-            #endregion
-
-
             try
             {
 
@@ -535,15 +480,7 @@ namespace RUINORERP.UI
                     AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);
                     BusinessHelper.Instance.SetContext(AppContextData);
 
-                    /*
-                    services.AddLogging(logBuilder =>
-                    {
-                        logBuilder.ClearProviders();
-                        //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
 
-                        logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", Program.AppContextData));
-                    });
-                    */
 
                     #region  启动工作流主机
 
@@ -625,40 +562,6 @@ namespace RUINORERP.UI
                     MessageBox.Show(ex.StackTrace);
                     Console.Write(ex.StackTrace);
                 }
-
-                /*
-
-                IServiceProvider services;
-                using (var serviceScope = myhost.Services.CreateScope())
-                {
-                    services = serviceScope.ServiceProvider;
-                    try
-                    {
-                        serviceScope.ServiceProvider.get
-                        var form1 = services.GetRequiredService<Form2>();
-                        Application.Run(form1);
-                        Console.WriteLine("Success");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Error Occurred " + ex.Message);
-                    }
-
-                }
-                */
-
-                // IHostBuilder ihostbuilder= starter.CslaDIPort();
-                // ihostbuilder.Start();
-                //ServiceProvider = Startup.ServiceProvider;
-                //IServiceProvider services = myhost.Services;
-
-                //var mainform = services.GetService<Form2>();
-
-                // var mainform = Startup.GetFromFac<Form2>(); //获取服务Service1
-                //var mainform = Startup.GetFromFac<MainForm>(); //获取服务Service1
-                // Application.Run(mainform);
-
-
 
                 return;
                 #endregion
@@ -811,7 +714,7 @@ namespace RUINORERP.UI
 
                 // 尝试从表名推断实体类型名称（移除tb_前缀并处理复数）
                 string entityTypeName = relatedTable;
-           
+
 
                 // 通过反射获取实体类的Description特性值
                 string entityDescription = GetEntityDescriptionFromTableName(entityTypeName);
@@ -837,60 +740,88 @@ namespace RUINORERP.UI
         };
         static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
         {
+            if (e.Exception == null)
+            {
+                return;
+            }
+
+            // 特殊异常处理列表
             List<string> IgnoreExceptionMsglist = new List<string>
             {
                 "执行 CreateHandle() 时无法调用值 Dispose()",
                 "所请求的剪贴板操作失败",
-                    "GDI+ 中发生一般性错误",
+                "GDI+ 中发生一般性错误"
             };
 
-            if (e.Exception != null)
+            // 检查是否需要忽略的异常
+            bool isIgnored = false;
+            foreach (var item in IgnoreExceptionMsglist)
             {
-                //特殊的几个异常暂时屏蔽掉
-                foreach (var item in IgnoreExceptionMsglist)
+                if (e.Exception.Message.Contains(item))
                 {
-                    if (e.Exception.Message.Contains(item))
-                    {
-                        string errorStrIgnore = string.Empty;
-                        Exception errorIgnore = e.Exception as Exception;
-                        if (errorIgnore != null)
-                        {
-                            errorStrIgnore = string.Format("异常类型：{0}\r\n异常消息：{1}\r\n{2}\r\n",
-                               errorIgnore.GetType().Name, errorIgnore.Message, errorIgnore.StackTrace);
-                        }
-                        else
-                        {
-                            errorStrIgnore = string.Format("应用程序线程错误:{0}", e);
-                        }
-
-                        MainForm.Instance.logger.LogError("出现应用程序未处理的异常，客户端没显示！\r\n" + errorStrIgnore, errorIgnore);
-                        return;
-                    }
+                    isIgnored = true;
+                    break;
                 }
             }
 
-            if (HandleUniqueConstraintException(e.Exception)) return;
+            // 记录所有异常，包括被忽略的异常
+            string errorDetails = string.Format("异常类型：{0}\r\n异常消息：{1}\r\n堆栈信息：{2}\r\n",
+                e.Exception.GetType().Name, e.Exception.Message, e.Exception.StackTrace);
 
+            if (isIgnored)
+            {
+                // 被忽略的异常仍然记录日志，但不显示给用户
+                RUINORERP.Common.Log4Net.Logger.Error("出现应用程序未处理的异常，客户端没显示！\r\n" + errorDetails, e.Exception);
+                return;
+            }
 
-            string str = "";
-            string strDateInfo = "\r\n\r\n出现应用程序未处理的异常,请更新到最新版本，如果无法解决，请联系管理员!" + DateTime.Now.ToString() + "\r\n";
-            //Exception error = e.Exception as Exception;
-            //if (error != null)
-            //{
-            //    str = string.Format(strDateInfo + "异常类型：{0}\r\n异常消息：{1}\r\n{2}\r\n",
-            //    error.GetType().Name, error.Message, error.StackTrace);
-            //}
-            //else
-            //{
-            //    str = string.Format("应用程序线程错误:{0}", e);
-            //}
-            SystemOptimizerService.异常信息发送(e.Exception.Message, e.Exception);
-            //MainForm.Instance.uclog.AddLog("线程", str);
-            string errorHash = e.Exception.StackTrace?.GetHashCode().ToString(); // 更稳定的哈希
-            if (_errorCache.TryGetValue(errorHash, out _)) return;
+            // 处理特定类型的业务异常
+            if (HandleUniqueConstraintException(e.Exception))
+            {
+                RUINORERP.Common.Log4Net.Logger.Error("业务约束异常处理完成", e.Exception);
+                return;
+            }
+
+            // 防止重复显示相同的错误
+            string errorHash = e.Exception.StackTrace?.GetHashCode().ToString() ?? e.Exception.Message.GetHashCode().ToString();
+            if (_errorCache.TryGetValue(errorHash, out _))
+            {
+                return;
+            }
+
+            // 添加到缓存，设置过期时间
             _errorCache.Set(errorHash, DateTime.Now, _cacheOptions);
-            MainForm.Instance.logger.LogError(e.Exception, e.Exception.Message);
-            MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            // 发送错误信息并记录日志
+            try
+            {
+                SystemOptimizerService.异常信息发送(e.Exception.Message, e.Exception);
+            }
+            catch (Exception ex)
+            {
+                // 确保异常上报失败不会影响主流程
+                RUINORERP.Common.Log4Net.Logger.Error("异常上报服务调用失败", ex);
+            }
+
+            // 记录详细错误日志
+            RUINORERP.Common.Log4Net.Logger.Error("应用程序未处理的线程异常", e.Exception);
+
+            // 显示错误信息给用户
+            string userMessage = string.Format("系统发生错误：{0}\r\n\r\n请更新到最新版本，如果无法解决，请联系管理员！\r\n时间：{1}",
+                e.Exception.Message, DateTime.Now.ToString());
+
+            // 使用线程安全的方式显示消息框
+            if (MainForm.Instance != null && MainForm.Instance.InvokeRequired)
+            {
+                MainForm.Instance.Invoke(new Action(() =>
+                {
+                    MessageBox.Show(userMessage, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }));
+            }
+            else
+            {
+                MessageBox.Show(userMessage, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
@@ -918,7 +849,7 @@ namespace RUINORERP.UI
             try
             {
                 // 假设实体类都在当前程序集的某个命名空间下
-        
+
 
                 // 尝试查找对应的实体类型
                 var assembly = Assembly.GetExecutingAssembly();

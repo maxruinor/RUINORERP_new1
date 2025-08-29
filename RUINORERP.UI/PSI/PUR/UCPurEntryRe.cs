@@ -203,6 +203,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //默认处理方式为退款，会生成应付红字单，到退回入库时再生成 应付蓝字对冲。
                 entity.ProcessWay = (int)PurReProcessWay.厂商退款;
             }
+            cmbProcessWay.Enabled = false;
 
             DataBindingHelper.BindData4TextBox<tb_PurEntryRe>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);

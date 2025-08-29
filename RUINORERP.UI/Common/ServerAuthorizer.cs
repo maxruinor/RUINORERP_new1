@@ -278,7 +278,7 @@ namespace RUINORERP.UI.Common
                         catch
                         {
                             // 记录失败日志，继续尝试下一个地址
-                            MainForm.Instance.logger.LogWarning($"连接 {address} 失败");
+                            RUINORERP.Common.Log4Net.Logger.Warn($"连接 {address} 失败");
                         }
                     }
                     if (!_ecs.IsConnected)

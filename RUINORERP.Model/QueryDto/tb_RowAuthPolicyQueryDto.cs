@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/28/2025 15:02:32
+// 时间：08/29/2025 20:39:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,7 +38,7 @@ namespace RUINORERP.Model.QueryDto
         /// 规则名称
         /// </summary>
         [AdvQueryAttribute(ColName = "PolicyName",ColDesc = "规则名称")]
-        [SugarColumn(ColumnDataType = "nvarchar",SqlParameterDbType ="String",ColumnName = "PolicyName",Length=100,IsNullable = true,ColumnDescription = "规则名称" )]
+        [SugarColumn(ColumnDataType = "nvarchar",SqlParameterDbType ="String",ColumnName = "PolicyName",Length=100,IsNullable = false,ColumnDescription = "规则名称" )]
         public string PolicyName 
         { 
             get{return _PolicyName;}
@@ -51,7 +51,7 @@ namespace RUINORERP.Model.QueryDto
         /// 查询主表
         /// </summary>
         [AdvQueryAttribute(ColName = "TargetTable",ColDesc = "查询主表")]
-        [SugarColumn(ColumnDataType = "nvarchar",SqlParameterDbType ="String",ColumnName = "TargetTable",Length=100,IsNullable = true,ColumnDescription = "查询主表" )]
+        [SugarColumn(ColumnDataType = "nvarchar",SqlParameterDbType ="String",ColumnName = "TargetTable",Length=100,IsNullable = false,ColumnDescription = "查询主表" )]
         public string TargetTable 
         { 
             get{return _TargetTable;}
@@ -64,7 +64,7 @@ namespace RUINORERP.Model.QueryDto
         /// 查询实体
         /// </summary>
         [AdvQueryAttribute(ColName = "TargetEntity",ColDesc = "查询实体")]
-        [SugarColumn(ColumnDataType = "nvarchar",SqlParameterDbType ="String",ColumnName = "TargetEntity",Length=100,IsNullable = true,ColumnDescription = "查询实体" )]
+        [SugarColumn(ColumnDataType = "nvarchar",SqlParameterDbType ="String",ColumnName = "TargetEntity",Length=100,IsNullable = false,ColumnDescription = "查询实体" )]
         public string TargetEntity 
         { 
             get{return _TargetEntity;}
@@ -225,6 +225,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Modified_by;}
             set{SetProperty(ref _Modified_by, value);}
+        }
+     
+
+        private int? _DefaultRuleEnum;
+        /// <summary>
+        /// 默认规则
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DefaultRuleEnum",ColDesc = "默认规则")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "DefaultRuleEnum",IsNullable = true,ColumnDescription = "默认规则" )]
+        public int? DefaultRuleEnum 
+        { 
+            get{return _DefaultRuleEnum;}
+            set{SetProperty(ref _DefaultRuleEnum, value);}
         }
 
 

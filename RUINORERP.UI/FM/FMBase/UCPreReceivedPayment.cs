@@ -99,7 +99,14 @@ namespace RUINORERP.UI.FM
                             ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
                             RelatedMenuItem.Name = $"{rqp.billId}";
                             RelatedMenuItem.Tag = rqp;
-                            RelatedMenuItem.Text = $"{rqp.bizType}:{item.PaymentNo}";
+                            if (item.TotalLocalAmount < 0)
+                            {
+                                RelatedMenuItem.Text = $"{rqp.bizType}:{item.PaymentNo}[红字]";
+                            }
+                            else
+                            {
+                                RelatedMenuItem.Text = $"{rqp.bizType}:{item.PaymentNo}";
+                            }
                             RelatedMenuItem.Click += base.MenuItem_Click;
                             if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.PaymentId.ToString()))
                             {
@@ -577,7 +584,7 @@ namespace RUINORERP.UI.FM
 
 
 
- 
+
         protected override async Task<bool> Submit()
         {
             bool result = await Submit(PrePaymentStatus.待审核);

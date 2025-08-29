@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/28/2025 15:02:31
+// 时间：08/29/2025 20:39:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -35,10 +35,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long _PolicyId;
         /// <summary>
-        /// 
+        /// 数据权限规则
         /// </summary>
-        [AdvQueryAttribute(ColName = "PolicyId",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PolicyId",IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "PolicyId",ColDesc = "数据权限规则")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "PolicyId",IsNullable = false,ColumnDescription = "数据权限规则" )]
         [FKRelationAttribute("tb_RowAuthPolicy","PolicyId")]
         public long PolicyId 
         { 
@@ -63,10 +63,10 @@ namespace RUINORERP.Model.QueryDto
 
         private long _User_ID;
         /// <summary>
-        /// 
+        /// 用户
         /// </summary>
-        [AdvQueryAttribute(ColName = "User_ID",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "User_ID",IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "User_ID",ColDesc = "用户")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "User_ID",IsNullable = false,ColumnDescription = "用户" )]
         [FKRelationAttribute("tb_UserInfo","User_ID")]
         public long User_ID 
         { 

@@ -289,6 +289,9 @@
     <Reference Include="Microsoft.Extensions.Logging.EventSource, Version=7.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Logging.EventSource.7.0.0\lib\net462\Microsoft.Extensions.Logging.EventSource.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore, Version=8.0.0.0, Culture=neutral, PublicKeyToken=5d1104efbd0e675d, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Logging.Log4Net.AspNetCore.8.0.0\lib\netstandard2.0\Microsoft.Extensions.Logging.Log4Net.AspNetCore.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Extensions.ObjectPool, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.ObjectPool.2.2.0\lib\netstandard2.0\Microsoft.Extensions.ObjectPool.dll</HintPath>
     </Reference>

@@ -35,7 +35,7 @@ namespace RUINORERP.Business.CommService
     {
         private readonly ConcurrentQueue<tb_AuditLogs> _auditLogQueue = new ConcurrentQueue<tb_AuditLogs>();
 
-        private readonly Lazy<EntityInfoServiceImpl> _mapper;
+        private readonly Lazy<IEntityInfoService> _mapper;
 
         private readonly Lazy<BillConverterFactory> _billConverterFactory; // 缓存工厂
         private readonly Lazy<tb_AuditLogsController<tb_AuditLogs>> _AuditLogsController; // 缓存工厂
@@ -55,8 +55,8 @@ namespace RUINORERP.Business.CommService
                 () => _appContext.GetRequiredService<BillConverterFactory>());// 缓存工厂
 
 
-            _mapper = new Lazy<EntityInfoServiceImpl>(
-                () => _appContext.GetRequiredService<EntityInfoServiceImpl>());// 缓存工厂
+            _mapper = new Lazy<IEntityInfoService>(
+                () => _appContext.GetRequiredService<IEntityInfoService>());// 缓存工厂
 
 
             _AuditLogsController = new Lazy<tb_AuditLogsController<tb_AuditLogs>>(() => _appContext.GetRequiredService<tb_AuditLogsController<tb_AuditLogs>>());

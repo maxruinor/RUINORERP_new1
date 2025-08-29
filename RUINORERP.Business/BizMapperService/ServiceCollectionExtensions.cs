@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.RowLevelAuthService;
 using RUINORERP.Global;
 using System;
 
@@ -19,8 +20,9 @@ namespace RUINORERP.Business.BizMapperService
         public static IServiceCollection AddEntityInfoServices(this IServiceCollection services)
         {
             // 注册实体信息服务的实现类为单例
-            services.AddSingleton<IEntityInfoService, EntityInfoServiceImpl>();
-            
+            services.AddSingleton<IEntityInfoService, EntityInfoService>();
+           // services.AddSingleton<IDefaultRowAuthPolicyInitializationService, DefaultRowAuthPolicyInitializationService>();
+            services.AddScoped<IDefaultRowAuthPolicyInitializationService, DefaultRowAuthPolicyInitializationService>();
             // 注册实体信息配置类为单例（用于迁移原有EntityBizMappingService的注册逻辑）
             services.AddSingleton<EntityInfoConfig>();
             

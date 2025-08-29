@@ -260,10 +260,7 @@ namespace RUINORERP.UI.FM
                 {
                     base.toolStripBtnReverseReview.Visible = false;
                 }
-                if (entity.TotalLocalPayableAmount<0)
-                {
-                    picBox红字.Visible = true;
-                }
+               
             }
             else
             {
@@ -304,7 +301,14 @@ namespace RUINORERP.UI.FM
                 cmbPayeeInfoID.Items.Clear();
 
             }
-
+            if (entity.TotalLocalPayableAmount < 0)
+            {
+                picBox红字.Visible = true;
+            }
+            else
+            {
+                picBox红字.Visible = false;
+            }
 
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsExpenseType, chkIsExpenseType, false);
 

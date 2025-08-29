@@ -42,6 +42,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         public UCSale()
         {
             InitializeComponent();
+            GridRelated = new GridViewRelated();
             GridRelated.SetRelatedInfo<tb_SaleOrder>(c => c.SOrderNo);
             GridRelated.SetRelatedInfo<tb_SaleOut>(c => c.SaleOutNo);
             GridRelated.SetRelatedInfo<tb_PurOrder>(c => c.PurOrderNo);
@@ -51,7 +52,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             GridRelated.SetRelatedInfo<tb_BuyingRequisition>(c => c.PuRequisitionNo);
             this.Dock = DockStyle.Fill;
         }
-        public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
+        public GridViewRelated GridRelated { get; set; }
 
         public List<tb_SaleOrder> SaleOrderList = new List<tb_SaleOrder>();
 

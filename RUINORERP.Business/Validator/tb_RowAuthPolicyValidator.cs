@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/28/2025 15:02:32
+// 时间：08/29/2025 20:39:11
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -39,10 +39,13 @@ namespace RUINORERP.Business
         
      
  RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.PolicyName).MaximumMixedLength(100).WithMessage("规则名称:不能超过最大长度,100.");
+ RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.PolicyName).NotEmpty().WithMessage("规则名称:不能为空。");
 
  RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.TargetTable).MaximumMixedLength(100).WithMessage("查询主表:不能超过最大长度,100.");
+ RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.TargetTable).NotEmpty().WithMessage("查询主表:不能为空。");
 
  RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.TargetEntity).MaximumMixedLength(100).WithMessage("查询实体:不能超过最大长度,100.");
+ RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.TargetEntity).NotEmpty().WithMessage("查询实体:不能为空。");
 
 
  RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.JoinTable).MaximumMixedLength(100).WithMessage("需要关联的表名:不能超过最大长度,100.");
@@ -64,6 +67,8 @@ namespace RUINORERP.Business
 
 
  RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
+
+ RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.DefaultRuleEnum).NotEmpty().When(x => x.DefaultRuleEnum.HasValue);
 
            	        Initialize();
      }

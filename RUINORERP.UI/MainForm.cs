@@ -1,4 +1,4 @@
-﻿using Krypton.Docking;
+using Krypton.Docking;
 using Krypton.Navigator;
 using Krypton.Toolkit;
 using Krypton.Workspace;
@@ -95,6 +95,8 @@ using HLH.Lib.Helper;
 using RUINORERP.UI.BusinessService.SmartMenuService;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
 using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.Business.RowLevelAuthService;
 
 
 
@@ -193,13 +195,14 @@ namespace RUINORERP.UI
             fmauditLogHelper = _fmauditLogHelper;
             logger = _logger;
             _main = this;
-            System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+            // 移除禁用跨线程检查的代码，这是不安全的做法
+            // System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+
             kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
             kryptonDockableWorkspace1.ShowMaximizeButton = false;
             kryptonDockableWorkspace1.WorkspaceCellRemoved += KryptonDockableWorkspace1_WorkspaceCellRemoved;
             kryptonDockableWorkspace1.ControlRemoved += KryptonDockableWorkspace1_ControlRemoved;
             kryptonDockableWorkspace1.PageCloseClicked += KryptonDockableWorkspace1_PageCloseClicked;
-
 
 
             ecs.OnConnectClosed += Ecs_OnConnectClosed;
@@ -387,6 +390,13 @@ namespace RUINORERP.UI
 
         private void Ecs_OnConnectClosed(bool isconect)
         {
+            // 确保在UI线程上执行
+            if (InvokeRequired)
+            {
+                Invoke(new Action<bool>(Ecs_OnConnectClosed), isconect);
+                return;
+            }
+
             // ecs.LoginStatus = false;
             ecs.IsConnected = isconect;
         }
@@ -521,7 +531,19 @@ namespace RUINORERP.UI
             return p;
         }
 
-        public UClog uclog = Startup.GetFromFac<UClog>();
+        private UClog _uclog;
+        public UClog uclog
+        {
+            get
+            {
+                if (_uclog == null)
+                {
+                    // 使用延迟初始化，但最好是通过构造函数注入
+                    _uclog = Startup.GetFromFac<UClog>();
+                }
+                return _uclog;
+            }
+        }
         // public IM.UCMessager ucMsg = new IM.UCMessager();
 
 
@@ -730,6 +752,7 @@ namespace RUINORERP.UI
             //
             ClearData();
             ClearUI();
+
             RUINORERP.Extensions.SqlsugarSetup.CheckEvent += SqlsugarSetup_CheckEvent;
             RUINORERP.Extensions.SqlsugarSetup.RemindEvent += SqlsugarSetup_RemindEvent;
             bool islogin = await Login();
@@ -825,6 +848,23 @@ namespace RUINORERP.UI
             MainForm.Instance.uclog.AddLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
+
+            // 在应用程序启动代码中添加
+            var initializationService = Startup.GetFromFac<IDefaultRowAuthPolicyInitializationService>();
+            await initializationService.InitializeDefaultPoliciesAsync();
+            // 可以选择异步初始化或同步初始化
+            //Task.Run(async () =>
+            //{
+            //    try
+            //    {
+            //        await initializationService.InitializeDefaultPoliciesAsync();
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        logger.LogError(ex, "初始化默认行级权限策略时发生错误");
+            //    }
+            //}).GetAwaiter().GetResult(); // 或者使用 await 如果是异步上下文
+
 
 
 
@@ -3220,7 +3260,6 @@ namespace RUINORERP.UI
 
 
                });
-
 
 
         }

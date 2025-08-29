@@ -71,7 +71,7 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
-            ReturnResults<T> rmrs = new ReturnResults<T>();
+            ReturnResults<T> rmrs = new();
             tb_FM_PaymentRecord entity = ObjectEntity as tb_FM_PaymentRecord;
             var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
             try
@@ -209,48 +209,9 @@ namespace RUINORERP.Business
                             //应收付的退款操作，对应收付款审核时。要找他对应的正向预收付单。修改状态。和退回金额。
                             if (RecordDetail.LocalAmount < 0 || RecordDetail.ForeignAmount < 0)
                             {
-                                //负数时，他一定有一个正数的收款单。并且对应一个对应的预收付单。，预收则要转为已冲销。自己则为
-                                //预收的退款操作时。 应该是去找他相同的
-
-                                #region 通过他的来源单据，找到对应的预收付单
-                                //应该只有一条。 会不会更新的就是自己 prePayment
-                                //这是是预收付的  收款单时的处理？ 也可能是预收付的退款?
-                                tb_FM_PreReceivedPayment oldPrePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                                    .Where(c => c.PreRPID == RecordDetail.SourceBilllId && c.PrePaymentStatus == (int)PrePaymentStatus.待核销)
-                                   .SingleAsync();
-                                if (oldPrePayment != null)
-                                {
-                                    oldPrePayment.LocalRefundAmount += Math.Abs(RecordDetail.LocalAmount);
-                                    oldPrePayment.ForeignRefundAmount += Math.Abs(RecordDetail.ForeignAmount);
-                                    oldPrePayment.LocalBalanceAmount = oldPrePayment.LocalBalanceAmount - Math.Abs(oldPrePayment.LocalRefundAmount) - Math.Abs(oldPrePayment.LocalPaidAmount);
-                                    oldPrePayment.ForeignBalanceAmount = oldPrePayment.ForeignBalanceAmount - Math.Abs(oldPrePayment.ForeignRefundAmount) - Math.Abs(oldPrePayment.ForeignPaidAmount);
-                                    //全退了则是 已冲销
-                                    if (oldPrePayment.LocalRefundAmount == oldPrePayment.LocalPrepaidAmount || oldPrePayment.ForeignRefundAmount == oldPrePayment.ForeignPrepaidAmount)
-                                    {
-                                        oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.已结案;
-                                        oldPrePayment.IsAvailable = false;
-                                    }
-
-                                    //有退，有核销 则是  部分核销
-                                    if ((oldPrePayment.LocalPaidAmount > 0 && oldPrePayment.LocalRefundAmount > 0) ||
-                                        (oldPrePayment.ForeignPaidAmount > 0 && oldPrePayment.ForeignRefundAmount > 0))
-                                    {
-                                        oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
-                                    }
-
-                                    //有退部分,还没有核销，后面可能退，也可能核销掉 则是  部分核销
-                                    if ((oldPrePayment.LocalPaidAmount == 0 && oldPrePayment.LocalRefundAmount > 0 && oldPrePayment.LocalRefundAmount < oldPrePayment.LocalPrepaidAmount) ||
-                                        (oldPrePayment.ForeignPaidAmount == 0 && oldPrePayment.ForeignRefundAmount > 0 && oldPrePayment.ForeignRefundAmount < oldPrePayment.ForeignPrepaidAmount))
-                                    {
-                                        oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
-                                    }
-                                    //更新原来的上一个预付记录
-                                    preReceivedPaymentUpdateList.Add(oldPrePayment);
-                                }
-                                #endregion
-
+                                //应收款付款时，应该不会到这里。如果是应付的退款时。应该是付了后。才会有退款。如果没有付在挂账时就处理了。
+                                throw new Exception("来于应收应付时，收付款审核时，不需要处理退款。只需要红冲。");
                                 #region 通过他的来源单据，找到对应的预收付单的收款单。标记为已关闭 !!!!!!!!!! 收款单 有是否反冲标记， 预收付中有退回金额
-
                                 //要调式
                                 //找到最原始的收款单 正数
                                 tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
@@ -275,17 +236,17 @@ namespace RUINORERP.Business
                             }
 
 
-                            if (receivablePayable.ForeignBalanceAmount == 0 || receivablePayable.LocalBalanceAmount == 0)
-                            {
-                                receivablePayable.ARAPStatus = (int)ARAPStatus.全部支付;
-                                receivablePayable.AllowAddToStatement = false;
-                            }
                             //付过，没付结清
                             if ((receivablePayable.ForeignBalanceAmount > 0 && receivablePayable.ForeignPaidAmount > 0)
                                 || (receivablePayable.LocalBalanceAmount > 0 && receivablePayable.LocalPaidAmount > 0))
                             {
                                 receivablePayable.ARAPStatus = (int)ARAPStatus.部分支付;
                                 receivablePayable.AllowAddToStatement = true;
+                            }
+                            if (receivablePayable.ForeignBalanceAmount == 0 || receivablePayable.LocalBalanceAmount == 0)
+                            {
+                                receivablePayable.ARAPStatus = (int)ARAPStatus.全部支付;
+                                receivablePayable.AllowAddToStatement = false;
                             }
                             //写回业务 原始单据的完结状态，销售出库。销售订单。
                             //通过的来源类型，来源单号，来源编号分组得到原始单据数据组后再根据类型分别处理更新状态
@@ -602,6 +563,7 @@ namespace RUINORERP.Business
                     //这里收款审核，面对预先处理。只是一个记录，并且回写预收生效，待核销。不用生成核销记录。
                     if (group.Key == (int)BizType.预收款单 || group.Key == (int)BizType.预付款单)
                     {
+                        //找到 付款单对应的预付款单
                         List<tb_FM_PreReceivedPayment> PreReceivablePayableList = await _appContext.Db.Queryable<tb_FM_PreReceivedPayment>()
                            .Where(c => sourcebillids.Contains(c.PreRPID))
                            .ToListAsync();
@@ -611,6 +573,7 @@ namespace RUINORERP.Business
                             tb_FM_PaymentRecordDetail RecordDetail = entity.tb_FM_PaymentRecordDetails.FirstOrDefault(c => c.SourceBilllId == prePayment.PreRPID);
                             if (prePayment != null)
                             {
+                                //正数是地，是收预付款的款，所以是等待核销
                                 prePayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
                                 prePayment.PrePayDate = DateTime.Now;
                                 prePayment.ForeignBalanceAmount += RecordDetail.ForeignAmount;
@@ -619,52 +582,40 @@ namespace RUINORERP.Business
                                 //预收付的退款操作，对应收付款审核时。要找他对应的正向预收付单。修改状态。和退回金额。
                                 if (RecordDetail.LocalAmount < 0 || RecordDetail.ForeignAmount < 0)
                                 {
-                                    //负数时，他一定有一个正数的收款单。并且对应一个对应的预收付单。，预收则要转为已冲销。自己则为
+                                    prePayment.LocalRefundAmount += Math.Abs(RecordDetail.LocalAmount);
+                                    prePayment.ForeignRefundAmount += Math.Abs(RecordDetail.ForeignAmount);
+                                    prePayment.Remark += $"{System.DateTime.Now.ToString()}退款{Math.Abs(RecordDetail.LocalAmount)}";
                                     //预收的退款操作时。 应该是去找他相同的
-
                                     #region 通过他的来源单据，找到对应的预收付单
-                                    //应该只有一条。 会不会更新的就是自己 prePayment
-                                    //这是是预收付的  收款单时的处理？ 也可能是预收付的退款?
-                                    tb_FM_PreReceivedPayment oldPrePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                                        .Where(c => c.PreRPID == RecordDetail.SourceBilllId && c.PrePaymentStatus == (int)PrePaymentStatus.待核销)
-                                       .SingleAsync();
-                                    if (oldPrePayment != null)
+                                    //有退，有核销 则是  部分核销
+                                    if ((prePayment.LocalPaidAmount > 0 && prePayment.LocalRefundAmount > 0) ||
+                                        (prePayment.ForeignPaidAmount > 0 && prePayment.ForeignRefundAmount > 0))
                                     {
-                                        oldPrePayment.LocalRefundAmount += Math.Abs(RecordDetail.LocalAmount);
-                                        oldPrePayment.ForeignRefundAmount += Math.Abs(RecordDetail.ForeignAmount);
-                                        oldPrePayment.LocalBalanceAmount = oldPrePayment.LocalBalanceAmount - Math.Abs(oldPrePayment.LocalRefundAmount) - Math.Abs(oldPrePayment.LocalPaidAmount);
-                                        oldPrePayment.ForeignBalanceAmount = oldPrePayment.ForeignBalanceAmount - Math.Abs(oldPrePayment.ForeignRefundAmount) - Math.Abs(oldPrePayment.ForeignPaidAmount);
-                                        //全退了则是 已冲销
-                                        if (oldPrePayment.LocalRefundAmount == oldPrePayment.LocalPrepaidAmount || oldPrePayment.ForeignRefundAmount == oldPrePayment.ForeignPrepaidAmount)
-                                        {
-                                            oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.已结案;
-                                            oldPrePayment.IsAvailable = false;
-                                        }
-
-                                        //有退，有核销 则是  部分核销
-                                        if ((oldPrePayment.LocalPaidAmount > 0 && oldPrePayment.LocalRefundAmount > 0) ||
-                                            (oldPrePayment.ForeignPaidAmount > 0 && oldPrePayment.ForeignRefundAmount > 0))
-                                        {
-                                            oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
-                                        }
-
-                                        //有退部分,还没有核销，后面可能退，也可能核销掉 则是  部分核销
-                                        if ((oldPrePayment.LocalPaidAmount == 0 && oldPrePayment.LocalRefundAmount > 0 && oldPrePayment.LocalRefundAmount < oldPrePayment.LocalPrepaidAmount) ||
-                                            (oldPrePayment.ForeignPaidAmount == 0 && oldPrePayment.ForeignRefundAmount > 0 && oldPrePayment.ForeignRefundAmount < oldPrePayment.ForeignPrepaidAmount))
-                                        {
-                                            oldPrePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
-                                        }
-                                        //更新原来的上一个预付记录
-                                        preReceivedPaymentUpdateList.Add(oldPrePayment);
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
                                     }
+
+                                    //有退部分,还没有核销，后面可能退，也可能核销掉 则是  部分核销
+                                    if ((prePayment.LocalPaidAmount == 0 && prePayment.LocalRefundAmount > 0 && prePayment.LocalRefundAmount < prePayment.LocalPrepaidAmount) ||
+                                        (prePayment.ForeignPaidAmount == 0 && prePayment.ForeignRefundAmount > 0 && prePayment.ForeignRefundAmount < prePayment.ForeignPrepaidAmount))
+                                    {
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
+                                    }
+                                    //全退了则是 已冲销
+                                    if (prePayment.LocalRefundAmount == prePayment.LocalPrepaidAmount || prePayment.ForeignRefundAmount == prePayment.ForeignPrepaidAmount)
+                                    {
+                                        //全退款
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.已结案;
+                                        prePayment.IsAvailable = false;
+                                    }
+
                                     #endregion
 
                                     #region 通过他的来源单据，找到对应的预收付单的收款单。标记为已关闭 !!!!!!!!!! 收款单 有是否反冲标记， 预收付中有退回金额
 
-
+                                    //负数时，他一定有一个正数的收款单。并且对应一个对应的预收付单。，预收则要转为已冲销。自己则为
                                     tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
                                     .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId)
-                                    && c.PaymentStatus == (int)PaymentStatus.已支付)
+                                    && c.PaymentStatus == (int)PaymentStatus.已支付 && c.IsReversed == false && c.TotalLocalAmount > 0)
                                      .FirstAsync();
                                     if (oldPayment != null)
                                     {
@@ -694,10 +645,18 @@ namespace RUINORERP.Business
                                             if (saleOrder != null)
                                             {
                                                 //订金全退时 作废
-                                                if (saleOrder.Deposit == Math.Abs(entity.TotalLocalAmount))
+                                                if (saleOrder.Deposit == Math.Abs(entity.TotalLocalAmount) || prePayment.LocalBalanceAmount == 0)
                                                 {
-                                                    saleOrder.CloseCaseOpinions += $"订金退款，订单取消作废";
-                                                    saleOrder.DataStatus = (int)DataStatus.作废;
+                                                    if (saleOrder.Deposit == Math.Abs(entity.TotalLocalAmount))
+                                                    {
+                                                        saleOrder.CloseCaseOpinions += $"订金全退，订单取消作废";
+                                                        saleOrder.DataStatus = (int)DataStatus.作废;
+                                                    }
+                                                    else
+                                                    {
+                                                        saleOrder.CloseCaseOpinions += $"部分出库，订金部分退款，订单结案";
+                                                        saleOrder.DataStatus = (int)DataStatus.完结;
+                                                    }
 
                                                     saleOrderUpdateList.Add(saleOrder);
                                                     #region 更新库存的拟销量
@@ -707,8 +666,13 @@ namespace RUINORERP.Business
                                                     {
                                                         #region 库存表的更新 ，
                                                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                                                        int notoutqty = child.Quantity - child.TotalDeliveredQty;
+                                                        if (notoutqty == 0)
+                                                        {
+                                                            continue;
+                                                        }
                                                         //更新在途库存
-                                                        inv.Sale_Qty = inv.Sale_Qty - child.Quantity;
+                                                        inv.Sale_Qty = inv.Sale_Qty - notoutqty;
                                                         BusinessHelper.Instance.EditEntity(inv);
                                                         #endregion
                                                         invUpdateList.Add(inv);
@@ -716,14 +680,9 @@ namespace RUINORERP.Business
 
                                                     DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                                                     var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-
                                                     #endregion
                                                 }
-
                                             }
-
-
-
 
                                         }
                                         else if (prePayment.SourceBizType == (int)BizType.采购订单)
@@ -735,10 +694,19 @@ namespace RUINORERP.Business
                                             .SingleAsync();
                                             if (purOrder != null)
                                             { //订金全退时 作废
-                                                if (purOrder.Deposit == Math.Abs(entity.TotalLocalAmount))
+
+                                                if (purOrder.Deposit == Math.Abs(entity.TotalLocalAmount) || prePayment.LocalBalanceAmount == 0)
                                                 {
-                                                    purOrder.CloseCaseOpinions += $" 订金退款，订单取消";
-                                                    purOrder.DataStatus = (int)DataStatus.作废;
+                                                    if (purOrder.Deposit == Math.Abs(entity.TotalLocalAmount))
+                                                    {
+                                                        purOrder.CloseCaseOpinions += $"订金全退，订单取消作废";
+                                                        purOrder.DataStatus = (int)DataStatus.作废;
+                                                    }
+                                                    else
+                                                    {
+                                                        purOrder.CloseCaseOpinions += $"部分入库，订金部分退款，订单结案";
+                                                        purOrder.DataStatus = (int)DataStatus.完结;
+                                                    }
                                                     purOrderUpdateList.Add(purOrder);
                                                     #region 更新库存的拟销量
 
@@ -747,7 +715,12 @@ namespace RUINORERP.Business
                                                     {
                                                         #region 库存表的更新 ，
                                                         tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                                                        inv.On_the_way_Qty = inv.On_the_way_Qty - child.Quantity;
+                                                        int notEntryQty = child.Quantity - child.DeliveredQuantity;
+                                                        if (notEntryQty == 0)
+                                                        {
+                                                            continue;
+                                                        }
+                                                        inv.On_the_way_Qty = inv.On_the_way_Qty - notEntryQty;
                                                         BusinessHelper.Instance.EditEntity(inv);
                                                         #endregion
                                                         invUpdateList.Add(inv);
@@ -978,12 +951,17 @@ namespace RUINORERP.Business
                                     }
                                 }
 
-                            }
-                        }
-                        //这里要测试哦！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！会不会更新的就是自己，
-                        preReceivedPaymentUpdateList.AddRange(PreReceivablePayableList);
 
+
+                            }
+
+                        }
+
+                        //收款单 确认时，会修改预收付款的状态。余额，退款金额等
+                        preReceivedPaymentUpdateList.AddRange(PreReceivablePayableList);
                     }
+
+
                 }
 
 
@@ -1413,7 +1391,7 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public tb_FM_PaymentRecord BuildPaymentRecord(List<tb_FM_PreReceivedPayment> entities, bool isRefund)
         {
-            if (entities.Count==0)
+            if (entities.Count == 0)
             {
                 throw new Exception("请选择要退款的预收付款单！");
             }
@@ -1819,6 +1797,8 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public async virtual Task<bool> BatchApproval(List<tb_FM_PaymentRecord> entitys, ApprovalEntity approvalEntity)
         {
+            throw new Exception("收付款单，系统不支持批量审核！");
+            return false;
             try
             {
                 // 开启事务，保证数据一致性

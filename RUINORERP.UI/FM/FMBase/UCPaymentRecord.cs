@@ -166,10 +166,7 @@ namespace RUINORERP.UI.FM
                 entity.ActionStatus = ActionStatus.加载;
                 LoadPayeeInfo(entity);
                 ControlCurrency(entity);
-                if (entity.TotalLocalAmount < 0)
-                {
-                    picBox红字.Visible = true;
-                }
+                
             }
             else
             {
@@ -207,6 +204,16 @@ namespace RUINORERP.UI.FM
                 LoadPayeeInfo(entity);
 
             }
+
+            if (entity.TotalLocalAmount < 0)
+            {
+                picBox红字.Visible = true;
+            }
+            else
+            {
+                picBox红字.Visible = false;
+            }
+
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsForCommission, chkIsForCommission, false);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);

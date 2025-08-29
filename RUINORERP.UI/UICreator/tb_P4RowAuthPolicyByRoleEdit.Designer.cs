@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/28/2025 15:02:28
+// 时间：08/29/2025 20:39:06
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -113,7 +113,7 @@ this.lblPolicyId.Location = new System.Drawing.Point(100,25);
 this.lblPolicyId.Name = "lblPolicyId";
 this.lblPolicyId.Size = new System.Drawing.Size(41, 12);
 this.lblPolicyId.TabIndex = 1;
-this.lblPolicyId.Text = "";
+this.lblPolicyId.Text = "数据权限规则";
 //111======25
 this.cmbPolicyId.Location = new System.Drawing.Point(173,21);
 this.cmbPolicyId.Name ="cmbPolicyId";

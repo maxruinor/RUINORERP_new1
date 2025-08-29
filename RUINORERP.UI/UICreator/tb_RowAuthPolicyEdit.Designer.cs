@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/28/2025 15:02:31
+// 时间：08/29/2025 20:39:10
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -103,6 +103,9 @@ this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
 
 this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
 this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblDefaultRuleEnum = new Krypton.Toolkit.KryptonLabel();
+this.txtDefaultRuleEnum = new Krypton.Toolkit.KryptonTextBox();
 
     
     //for end
@@ -345,6 +348,20 @@ this.txtModified_by.TabIndex = 15;
 this.Controls.Add(this.lblModified_by);
 this.Controls.Add(this.txtModified_by);
 
+           //#####DefaultRuleEnum###Int32
+this.lblDefaultRuleEnum.AutoSize = true;
+this.lblDefaultRuleEnum.Location = new System.Drawing.Point(100,400);
+this.lblDefaultRuleEnum.Name = "lblDefaultRuleEnum";
+this.lblDefaultRuleEnum.Size = new System.Drawing.Size(41, 12);
+this.lblDefaultRuleEnum.TabIndex = 16;
+this.lblDefaultRuleEnum.Text = "默认规则";
+this.txtDefaultRuleEnum.Location = new System.Drawing.Point(173,396);
+this.txtDefaultRuleEnum.Name = "txtDefaultRuleEnum";
+this.txtDefaultRuleEnum.Size = new System.Drawing.Size(100, 21);
+this.txtDefaultRuleEnum.TabIndex = 16;
+this.Controls.Add(this.lblDefaultRuleEnum);
+this.Controls.Add(this.txtDefaultRuleEnum);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -359,7 +376,7 @@ this.Controls.Add(this.txtModified_by);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 15;
+           // this.kryptonPanel1.TabIndex = 16;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -407,6 +424,9 @@ this.Controls.Add(this.dtpModified_at );
 
                 this.Controls.Add(this.lblModified_by );
 this.Controls.Add(this.txtModified_by );
+
+                this.Controls.Add(this.lblDefaultRuleEnum );
+this.Controls.Add(this.txtDefaultRuleEnum );
 
                             // 
             // "tb_RowAuthPolicyEdit"
@@ -504,6 +524,11 @@ private Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
         
               private Krypton.Toolkit.KryptonLabel lblModified_by;
 private Krypton.Toolkit.KryptonTextBox txtModified_by;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblDefaultRuleEnum;
+private Krypton.Toolkit.KryptonTextBox txtDefaultRuleEnum;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

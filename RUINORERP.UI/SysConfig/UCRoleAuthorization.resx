@@ -117,6 +117,37 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="newSumDataGridViewRowAuthPolicy.BizInvisibleCols" mimetype="application/x-microsoft.net.object.binary.base64">
+    <value>
+        AAEAAAD/////AQAAAAAAAAAMAgAAAJ0BbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1u
+        ZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0sIFN5c3RlbS5Db3JlLCBWZXJz
+        aW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4
+        OQwDAAAAmgFtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tl
+        eVRva2VuPWI3N2E1YzU2MTkzNGUwODldXSwgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVy
+        ZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAzU3lzdGVtLkNvbGxl
+        Y3Rpb25zLkdlbmVyaWMuSGFzaFNldGAxW1tTeXN0ZW0uU3RyaW5nAwAAAAdWZXJzaW9uCENvbXBhcmVy
+        CENhcGFjaXR5AAQACENTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21w
+        YXJlcmAxW1tTeXN0ZW0uU3RyaW5nAwAAAAgCAAAAAAAAAAkEAAAAAAAAAAUEAAAAQ1N5c3RlbS5Db2xs
+        ZWN0aW9ucy5HZW5lcmljLkdlbmVyaWNFcXVhbGl0eUNvbXBhcmVyYDFbW1N5c3RlbS5TdHJpbmcAAAAA
+        AwAAAAs=
+</value>
+  </data>
+  <metadata name="BaseToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>162, 17</value>
+  </metadata>
+  <metadata name="contextMenuStrip4InitData.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>605, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="toolStripCopyRoleConfig.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACfSURBVDhPY8AGKrrn/MeFa/vnXoEqww1ACj/9+o+BQeI9
+        c1cDDZl/AaoUO8BnwLfvP/43Tpj/D24ISBAXnrhoA4YBIPDl2/f/9X1zgIYsOA42ABsAiffMXfN/8pJN
+        KAagY7wGgJzbNw9oyOKNKC5BNhCvASAAcm7P7FX/Z6zYSroB6JgkA9DBqAEQxdgwSQaAky46oIoBxGKo
+        FiTAwAAAzRHzxmUaql8AAAAASUVORK5CYII=
+</value>
+  </data>
   <data name="dataGridView1.BizInvisibleCols" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAJ0BbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1u
@@ -145,37 +176,6 @@
         YXJlcmAxW1tTeXN0ZW0uU3RyaW5nAwAAAAgCAAAAAAAAAAkEAAAAAAAAAAUEAAAAQ1N5c3RlbS5Db2xs
         ZWN0aW9ucy5HZW5lcmljLkdlbmVyaWNFcXVhbGl0eUNvbXBhcmVyYDFbW1N5c3RlbS5TdHJpbmcAAAAA
         AwAAAAs=
-</value>
-  </data>
-  <data name="newSumDataGridViewRowAuthPolicy.BizInvisibleCols" mimetype="application/x-microsoft.net.object.binary.base64">
-    <value>
-        AAEAAAD/////AQAAAAAAAAAMAgAAAJ0BbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1u
-        ZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0sIFN5c3RlbS5Db3JlLCBWZXJz
-        aW9uPTQuMC4wLjAsIEN1bHR1cmU9bmV1dHJhbCwgUHVibGljS2V5VG9rZW49Yjc3YTVjNTYxOTM0ZTA4
-        OQwDAAAAmgFtc2NvcmxpYiwgVmVyc2lvbj00LjAuMC4wLCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tl
-        eVRva2VuPWI3N2E1YzU2MTkzNGUwODldXSwgbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVy
-        ZT1uZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5BQEAAAAzU3lzdGVtLkNvbGxl
-        Y3Rpb25zLkdlbmVyaWMuSGFzaFNldGAxW1tTeXN0ZW0uU3RyaW5nAwAAAAdWZXJzaW9uCENvbXBhcmVy
-        CENhcGFjaXR5AAQACENTeXN0ZW0uQ29sbGVjdGlvbnMuR2VuZXJpYy5HZW5lcmljRXF1YWxpdHlDb21w
-        YXJlcmAxW1tTeXN0ZW0uU3RyaW5nAwAAAAgCAAAAAAAAAAkEAAAAAAAAAAUEAAAAQ1N5c3RlbS5Db2xs
-        ZWN0aW9ucy5HZW5lcmljLkdlbmVyaWNFcXVhbGl0eUNvbXBhcmVyYDFbW1N5c3RlbS5TdHJpbmcAAAAA
-        AwAAAAs=
-</value>
-  </data>
-  <metadata name="BaseToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>162, 17</value>
-  </metadata>
-  <metadata name="contextMenuStrip4InitData.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>605, 17</value>
-  </metadata>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="toolStripCopyRoleConfig.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACfSURBVDhPY8AGKrrn/MeFa/vnXoEqww1ACj/9+o+BQeI9
-        c1cDDZl/AaoUO8BnwLfvP/43TVzwD24ISBAXnrhoA4YBIPDl2/f/9f1zgYYsOA42ABsAiffMXfN/8pJN
-        KAagY7wGgJzbNw9oyOKNKC5BNhCvASAAcm7P7FX/Z6zYSroB6JgkA9DBqAEQxdgwSQaAky46oIoBxGKo
-        FiTAwAAA3T7zy+regbMAAAAASUVORK5CYII=
 </value>
   </data>
   <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

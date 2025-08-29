@@ -56,7 +56,7 @@ namespace RUINORERP.UI.MRP.MP
         {
             InitializeComponent();
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionDemand>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
-
+             GridRelated = new GridViewRelated();
         }
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
@@ -806,7 +806,7 @@ namespace RUINORERP.UI.MRP.MP
             }
         }
         #endregion
-        public GridViewRelated GridRelated { get; set; } = new GridViewRelated();
+        public GridViewRelated GridRelated { get; set; } 
 
 
         private void Sgh_OnLoadMultiRowData(object rows, SourceGrid.Position position)

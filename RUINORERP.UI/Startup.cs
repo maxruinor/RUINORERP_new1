@@ -30,9 +30,8 @@ using RUINORERP.Business;
 using RUINORERP.Common.CustomAttribute;
 using SqlSugar;
 using RUINORERP.Model;
-
+using CacheManager.Core;
 using Microsoft.Extensions.Hosting;
-
 using AutoMapper;
 using RUINORERP.Common.SnowflakeIdHelper;
 using RUINORERP.UI.ATechnologyStack.ServiceRegister;
@@ -66,6 +65,8 @@ using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.UI.BusinessService.SmartMenuService;
+using RUINORERP.UI.WorkFlowDesigner;
+using RUINORERP.Business.LogicaService;
 
 namespace RUINORERP.UI
 {
@@ -73,6 +74,7 @@ namespace RUINORERP.UI
     {
         /// <summary>
         /// 没使用用csla时使用
+        /// utofac容器
         /// </summary>
         public static IContainer AutoFacContainer;
 
@@ -84,22 +86,326 @@ namespace RUINORERP.UI
         /// 服务管理者
         /// </summary>
         public static IServiceProvider ServiceProvider { get; set; }
-
+        /// <summary>
+        /// 使用csla有值
+        /// </summary>
+        public static ILifetimeScope AutofacContainerScope { get; set; }
 
         public Startup(bool tset)
         {
-            //雪花ID器
+            // 初始化ID生成器
+            InitializeIdGenerators();
+        }
+
+        /// <summary>
+        /// 初始化ID生成器
+        /// </summary>
+        private void InitializeIdGenerators()
+        {
+            // 雪花ID器
             new IdHelperBootstrapper().SetWorkderId(1).Boot();
-            //IdHelper.GetLongId(); 用这个取值
+
+            // SqlSugar自带雪花ID
+            SnowFlakeSingle.WorkId = 1;
             //上面是自定义雪花ID
             //--------------------
             // 下面是SqlSugar自带雪花ID是成熟算法，正确配置WORKID无一例重复反馈，标题4也可以用自定义雪花算法
             //程序启时动执行一次就行
-            SnowFlakeSingle.WorkId = 1; //从配置文件读取一定要不一样
+            //从配置文件读取一定要不一样
             //服务器时间修改一定也要修改WorkId
-
             //即使没有这里的定义，基础数据主键 类型是long的都会自动添加
             //  IServiceProvider serviceProvider = new ServiceCollection().BuildServiceProvider();
+            //IdHelper.GetLongId(); 用这个取值
+        }
+        /// <summary>
+        /// Autofac容器配置回调
+        /// </summary>
+        void ConfigureAutofacContainer(HostBuilderContext bc, ContainerBuilder builder)
+        {
+            Services = new ServiceCollection();
+
+            // 配置基础服务
+            ConfigureBaseServices(Services);
+
+            // 配置Autofac容器
+            ConfigureContainer(builder);
+
+            // 将服务集合注册到Autofac
+            builder.Populate(Services);
+        }
+        /// <summary>
+        /// 配置基础服务
+        /// </summary>
+        public static void ConfigureBaseServices(IServiceCollection services)
+        {
+            // 配置日志（最先注册）
+            ConfigureLogging(services);
+
+            // 配置应用程序设置
+            ConfigureAppSettings(services);
+
+            // 配置数据库
+            ConfigureDatabase(services);
+
+            // 配置AutoMapper
+            ConfigureAutoMapper(services);
+
+            // 配置工作流
+            ConfigureWorkflow(services);
+
+            // 配置其他服务
+            ConfigureOtherServices(services);
+        }
+
+        /// <summary>
+        /// 配置日志服务
+        /// </summary>
+        private static void ConfigureLogging(IServiceCollection services)
+        {
+            // 从配置文件读取数据库连接字符串
+            string conn = AppSettings.GetValue("ConnectString");
+            string key = "ruinor1234567890";
+            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+
+            // 注册日志服务
+            services.AddLogging(logBuilder =>
+            {
+                logBuilder.ClearProviders();
+                logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", newconn, Program.AppContextData));
+            });
+        }
+
+        /// <summary>
+        /// 配置应用程序设置
+        /// </summary>
+        private static void ConfigureAppSettings(IServiceCollection services)
+        {
+            // 创建配置目录和文件
+            CreateConfigFiles();
+
+            // 读取配置
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles"))
+                .AddJsonFile(nameof(SystemGlobalconfig) + ".json", optional: false, reloadOnChange: true)
+                .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
+                .Build();
+
+            services.Configure<SystemGlobalconfig>(builder.GetSection(nameof(SystemGlobalconfig)));
+            services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
+
+            services.AddSingleton(typeof(ConfigManager));
+        }
+
+        /// <summary>
+        /// 创建配置文件
+        /// </summary>
+        private static void CreateConfigFiles()
+        {
+            string configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
+            if (!Directory.Exists(configDirectory))
+            {
+                Directory.CreateDirectory(configDirectory);
+            }
+
+            // 创建系统全局配置
+            string systemGlobalConfigPath = Path.Combine(configDirectory, nameof(SystemGlobalconfig) + ".json");
+            if (!File.Exists(systemGlobalConfigPath))
+            {
+                var systemGlobalConfig = new SystemGlobalconfig();
+                string systemGlobalConfigJson = JsonConvert.SerializeObject(new { SystemGlobalconfig = systemGlobalConfig }, Formatting.Indented);
+                File.WriteAllText(systemGlobalConfigPath, systemGlobalConfigJson);
+            }
+
+            // 创建全局验证器配置
+            string globalValidatorConfigPath = Path.Combine(configDirectory, nameof(GlobalValidatorConfig) + ".json");
+            if (!File.Exists(globalValidatorConfigPath))
+            {
+                var globalValidatorConfig = new GlobalValidatorConfig();
+                string globalValidatorConfigJson = JsonConvert.SerializeObject(globalValidatorConfig, Formatting.Indented);
+                File.WriteAllText(globalValidatorConfigPath, globalValidatorConfigJson);
+            }
+        }
+
+        /// <summary>
+        /// 配置数据库
+        /// </summary>
+        private static void ConfigureDatabase(IServiceCollection services)
+        {
+            // 从配置读取连接字符串
+            string conn = AppSettings.GetValue("ConnectString");
+            string key = "ruinor1234567890";
+            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+
+            // 配置SqlSugar
+            services.AddSqlsugarSetup(Program.AppContextData, newconn);
+
+            // 注册工作单元
+            services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
+        }
+
+        /// <summary>
+        /// 配置AutoMapper
+        /// </summary>
+        private static void ConfigureAutoMapper(IServiceCollection services)
+        {
+            services.AddSingleton(typeof(AutoMapperConfig));
+            IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
+            services.AddScoped<IMapper, Mapper>();
+            services.AddSingleton<IMapper>(mapper);
+            services.AddAutoMapperSetup();
+        }
+
+        /// <summary>
+        /// 配置工作流
+        /// </summary>
+        private static void ConfigureWorkflow(IServiceCollection services)
+        {
+            services.AddWorkflow();
+            services.AddWorkflowDSL();
+
+            // 注册工作流服务
+            services.AddTransient<loopWork>();
+            services.AddTransient<MyNameClass>();
+            services.AddTransient<NextWorker>();
+            services.AddTransient<worker>();
+            services.AddTransient<WorkWorkflow>();
+            services.AddTransient<WorkWorkflow2>();
+        }
+
+        /// <summary>
+        /// 配置其他服务
+        /// </summary>
+        private static void ConfigureOtherServices(IServiceCollection services)
+        {
+            services.AddMemoryCacheSetup();
+            services.AddAppContext(Program.AppContextData);
+
+            // 注册审计日志
+            services.Configure<AuditLogOptions>(options =>
+            {
+                options.BatchSize = 5;
+                options.FlushInterval = 5000;
+                options.EnableAudit = true;
+            });
+
+            services.AddSingleton<IAuditLogService, AuditLogService>();
+            services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
+            services.AddSingleton(typeof(MenuTracker));
+
+            // 注册主窗体
+            services.AddSingleton(typeof(MainForm));
+        }
+
+        /// <summary>
+        /// 配置Autofac容器
+        /// </summary>
+        public static void ConfigureContainer(ContainerBuilder builder)
+        {
+            // 注册基础类型
+            builder.RegisterGeneric(typeof(DbHelper<>))
+                .As(typeof(DbHelper<>))
+                .AsImplementedInterfaces()
+                .AsSelf()
+                .PropertiesAutowired()
+                .SingleInstance();
+
+            // 注册当前程序集
+            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+                .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type))
+                .AsImplementedInterfaces()
+                .AsSelf();
+
+            // 注册特定组件
+            builder.RegisterType<RUINORERP.UI.SS.MenuInit>()
+                .Named<UserControl>("MENU")
+                .AsImplementedInterfaces()
+                .AsSelf();
+
+            // 配置DLL程序集注册
+            ConfigureContainerTodll(builder);
+
+            // 注册窗体
+            RegisterForm(builder);
+
+            // 注册AOP相关
+            ConfigureAOP(builder);
+
+            // 注册工作单元
+            builder.RegisterType<UnitOfWorkManage>()
+                .As<IUnitOfWorkManage>()
+                .AsImplementedInterfaces()
+                .InstancePerLifetimeScope()
+                .EnableInterfaceInterceptors()
+                .InterceptedBy(typeof(BaseDataCacheAOP));
+        }
+
+        /// <summary>
+        /// 配置AOP
+        /// </summary>
+        private static void ConfigureAOP(ContainerBuilder builder)
+        {
+            builder.RegisterType<AutoComplete>()
+                .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
+
+            builder.RegisterType<BizCodeGenerator>();
+            builder.RegisterType<BaseDataCacheAOP>();
+
+            builder.RegisterType<Person>()
+                .InterceptedBy(typeof(BaseDataCacheAOP))
+                .EnableClassInterceptors();
+
+            builder.RegisterType<PersonBus>()
+                .EnableClassInterceptors();
+
+            builder.RegisterType<tb_DepartmentServices>()
+                .As<Itb_DepartmentServices>()
+                .AsImplementedInterfaces()
+                .InstancePerLifetimeScope()
+                .EnableInterfaceInterceptors()
+                .InterceptedBy(typeof(BaseDataCacheAOP));
+        }
+
+        /// <summary>
+        /// 配置DLL程序集注册
+        /// </summary>
+        public static void ConfigureContainerTodll(ContainerBuilder builder)
+        {
+            // 注册各个DLL程序集
+            RegisterAssemblyTypes(builder, "RUINORERP.WF.dll");
+            RegisterAssemblyTypes(builder, "RUINORERP.Extensions.dll");
+            RegisterAssemblyTypes(builder, "RUINORERP.Model.dll");
+            RegisterAssemblyTypes(builder, "RUINORERP.IServices.dll");
+            RegisterAssemblyTypes(builder, "RUINORERP.Services.dll");
+            RegisterAssemblyTypes(builder, "RUINORERP.Business.dll");
+
+            // 注册实体业务映射服务
+            RegisterEntityBizMappingServiceDirect(builder);
+
+            // 注册GridViewRelated为单例
+            builder.RegisterType<GridViewRelated>().SingleInstance();
+
+            builder.RegisterModule(new AutofacServiceRegister());
+        }
+
+        /// <summary>
+        /// 注册程序集类型
+        /// </summary>
+        private static void RegisterAssemblyTypes(ContainerBuilder builder, string assemblyName)
+        {
+            try
+            {
+                var assembly = Assembly.LoadFrom(assemblyName);
+                builder.RegisterAssemblyTypes(assembly)
+                    .AsImplementedInterfaces()
+                    .AsSelf()
+                    .InstancePerDependency()
+                    .PropertiesAutowired();
+            }
+            catch (Exception ex)
+            {
+                // 记录程序集加载失败日志
+                Console.WriteLine($"加载程序集 {assemblyName} 失败: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -111,7 +417,7 @@ namespace RUINORERP.UI
             try
             {
                 // 直接注册实体信息服务和实体业务映射服务
-                builder.RegisterType(typeof(RUINORERP.Business.BizMapperService.EntityInfoServiceImpl))
+                builder.RegisterType(typeof(RUINORERP.Business.BizMapperService.EntityInfoService))
                     .As(typeof(RUINORERP.Business.BizMapperService.IEntityInfoService))
                     .SingleInstance()
                     .PropertiesAutowired();
@@ -149,7 +455,7 @@ namespace RUINORERP.UI
             #region 模仿csla 为了上下文
             //为了上下文
             // ApplicationContext defaults
-            // RegisterContextManager(Services);
+            RegisterContextManager(Services);
             // Services.AddSingleton<Context.ApplicationContext>(Program.AppContextData);
             #endregion
 
@@ -258,6 +564,7 @@ namespace RUINORERP.UI
             string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
 
             Program.InitAppcontextValue(Program.AppContextData);
+            //日志要放在最前面，因为要使用
             Services.AddLogging(logBuilder =>
             {
                 logBuilder.ClearProviders();
@@ -306,8 +613,6 @@ namespace RUINORERP.UI
             #endregion
 
             //ILifetimeScope autofacRoot;//= app.ApplicationServices.GetAutofacRoot();
-
-
             // var repository = autofacRoot.Resolve<>();
             //public interface IAutofacConfiguration
             //{
@@ -316,10 +621,7 @@ namespace RUINORERP.UI
             //}
         }
 
-        /// <summary>
-        /// 使用csla有值
-        /// </summary>
-        public static ILifetimeScope AutofacContainerScope { get; set; }
+
 
         public IHost CslaDIPort()
         {
@@ -968,6 +1270,40 @@ namespace RUINORERP.UI
 
             builder.RegisterType<Extensions.Filter.GlobalExceptionsFilter>();
 
+            /*
+             Autofac 只会把 接口 IDuplicateCheckService 注册到容器；
+DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
+因此你在解析时 只能用接口。
+             */
+            // 内存缓存配置
+            // 纯内存缓存
+
+            // 纯内存缓存
+            var cache = CacheFactory.Build<object>(c =>
+            {
+                c.WithSystemRuntimeCacheHandle("memHandle");
+            });
+
+            // 注册到 Autofac
+            builder.RegisterInstance(cache)
+                   .As<ICacheManager<object>>()
+                   .SingleInstance();
+
+
+            builder.RegisterType<DuplicateCheckService>()
+           .AsSelf()                 // 允许按类解析 一般不注册自己？
+           .As<IDuplicateCheckService>() // 允许按接口解析
+           .SingleInstance();
+
+            //// 1. 先建配置
+            //var cacheCfg = ConfigurationBuilder.BuildConfiguration(cfg =>
+            //{
+            //    cfg.WithRedisConnection("redis", "127.0.0.1:6379") // 换成你的 Redis
+            //       .WithRedisCacheHandle("redis", true);            // true = 作为回退
+            //});
+
+           
+
 
             var dalAssemble_WF = System.Reflection.Assembly.LoadFrom("RUINORERP.WF.dll");
             builder.RegisterAssemblyTypes(dalAssemble_WF)
@@ -1428,57 +1764,122 @@ namespace RUINORERP.UI
         /// 要扫描的程序集名称
         /// 默认为[^Shop.Utils|^Shop.]多个使用|分隔
         /// </summary>
-        public static string MatchAssemblies = "^RUINORERP.|^TETS.";
+        public static string MatchAssemblies = "^RUINORERP.|^TEST.";
 
+        /// <summary>
+        /// 批量注册服务
+        /// </summary>
+        /// <param name="services">服务集合</param>
+        /// <returns>更新后的服务集合</returns>
         public IServiceCollection BatchServiceRegister(IServiceCollection services)
         {
             #region 依赖注入
-            //services.AddScoped<IUserService, UserService>();           
-            var baseType = typeof(IDependency);
-            var path = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-
-            var getFiles = Directory.GetFiles(path, "*.dll").Where(o => o.ToLower().StartsWith(@path.ToLower() + "ruinor"));//路径筛选
-
-            List<string> dlls = new List<string>();
-            foreach (var file in getFiles)
+            try
             {
-                FileInfo fi = new FileInfo(file);
-                if (fi.Name.ToLower().Contains("ruinor"))
+                var baseType = typeof(IDependency);
+                var path = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
+
+                // 安全检查路径
+                if (string.IsNullOrEmpty(path))
                 {
-                    dlls.Add(file);
+                    throw new ArgumentNullException("path", "无法获取应用程序目录路径");
+                }
+
+                // 获取RUINORERP相关的DLL文件
+                var getFiles = Directory.GetFiles(path, "*.dll")
+                    .Where(o => o.IndexOf("ruinor", StringComparison.OrdinalIgnoreCase) >= 0)
+                    .ToList();
+
+                if (getFiles == null || getFiles.Count == 0)
+                {
+                    RUINORERP.Common.Log4Net.Logger.Warn("未找到需要注册的RUINORERP相关DLL文件");
+
+                    return services;
+                }
+
+                var implementTypes = new List<Type>();
+                var interfaceTypes = new List<Type>();
+
+                // 遍历所有DLL文件，加载并分析其中的类型
+                foreach (var file in getFiles)
+                {
+                    try
+                    {
+                        var assembly = Assembly.LoadFrom(file);
+                        var types = assembly.GetTypes()
+                            .Where(t => t.IsPublic && !t.IsAbstract && !t.IsInterface && baseType.IsAssignableFrom(t))
+                            .ToList();
+
+                        implementTypes.AddRange(types);
+
+                        // 获取该程序集中的所有接口
+                        var interfaces = assembly.GetTypes()
+                            .Where(t => t.IsInterface && baseType.IsAssignableFrom(t))
+                            .ToList();
+
+                        interfaceTypes.AddRange(interfaces);
+                    }
+                    catch (Exception ex)
+                    {
+                        RUINORERP.Common.Log4Net.Logger.Error($"加载程序集 {Path.GetFileName(file)} 失败", ex);
+                        // 继续处理其他程序集，不中断整体注册流程
+                        continue;
+                    }
+                }
+
+                // 去重，避免重复注册
+                implementTypes = implementTypes.Distinct().ToList();
+                interfaceTypes = interfaceTypes.Distinct().ToList();
+
+                RUINORERP.Common.Log4Net.Logger.Info($"共发现 {implementTypes.Count} 个实现类和 {interfaceTypes.Count} 个接口需要注册");
+
+                // 注册所有实现类到对应的接口
+                foreach (var implementType in implementTypes)
+                {
+                    try
+                    {
+                        // 获取该实现类实现的所有接口
+                        var implementedInterfaces = implementType.GetInterfaces()
+                            .Where(i => interfaceTypes.Contains(i))
+                            .ToList();
+
+                        if (implementedInterfaces.Count == 0)
+                        {
+                            RUINORERP.Common.Log4Net.Logger.Warn($"警告: 类 {0} 实现了IDependency接口但未实现任何已发现的具体接口{implementType.FullName}");
+                            continue;
+                        }
+
+                        foreach (var interfaceType in implementedInterfaces)
+                        {
+                            // 根据不同的接口类型选择不同的生命周期
+                            if (typeof(IDependencyService).IsAssignableFrom(implementType))
+                            {
+                                services.AddScoped(interfaceType, implementType);
+                                RUINORERP.Common.Log4Net.Logger.Debug($"已注册 Scoped 服务: {interfaceType.Name} -> {implementType.Name}");
+                            }
+                            else if (typeof(IDependencyRepository).IsAssignableFrom(implementType))
+                            {
+                                services.AddSingleton(interfaceType, implementType);
+                                RUINORERP.Common.Log4Net.Logger.Debug($"已注册 Singleton 服务: {interfaceType.Name} -> {implementType.Name}");
+                            }
+                            else
+                            {
+                                services.AddTransient(interfaceType, implementType);
+                                RUINORERP.Common.Log4Net.Logger.Debug($"已注册 Transient 服务: {interfaceType.Name} -> {implementType.Name}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        RUINORERP.Common.Log4Net.Logger.Error($"注册服务 {implementType.FullName} 失败", ex);
+                        // 继续处理其他服务，不中断整体注册流程
+                        continue;
+                    }
                 }
             }
-            var referencedAssemblies = getFiles.Select(Assembly.LoadFrom).ToList();  //.Select(o=> Assembly.LoadFrom(o))         
-            var ss = referencedAssemblies.SelectMany(o => o.GetTypes());
-            var types = referencedAssemblies
-                .SelectMany(a => a.DefinedTypes)
-                .Select(type => type.AsType())
-                .Where(x => x != baseType && baseType.IsAssignableFrom(x))
-                .ToList();
-
-            var implementTypes = types.Where(x => x.IsClass).ToList();
-            var interfaceTypes = types.Where(x => x.IsInterface).ToList();
-
-            foreach (var implementType in implementTypes)
+            catch (Exception ex)
             {
-                if (typeof(IDependencyService).IsAssignableFrom(implementType))
-                {
-                    var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-                    if (interfaceType != null)
-                        services.AddScoped(interfaceType, implementType);
-                }
-                else if (typeof(IDependencyRepository).IsAssignableFrom(implementType))
-                {
-                    var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-                    if (interfaceType != null)
-                        services.AddSingleton(interfaceType, implementType);
-                }
-                else
-                {
-                    var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-                    if (interfaceType != null)
-                        services.AddTransient(interfaceType, implementType);
-                }
+                RUINORERP.Common.Log4Net.Logger.Error("批量注册服务过程中发生严重错误", ex);
             }
             #endregion
             return services;
@@ -1497,28 +1898,71 @@ namespace RUINORERP.UI
             return Regex.IsMatch(assemblyName, MatchAssemblies, RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }
 
+        /// <summary>
+        /// 从Autofac容器中解析指定类型的服务
+        /// </summary>
+        /// <typeparam name="T">要解析的服务类型</typeparam>
+        /// <returns>解析到的服务实例</returns>
         public static T GetFromFac<T>()
         {
-            // return ServiceProvider.GetService<T>();
-            //use csla
-            Console.WriteLine($"AutofacContainerScope : {typeof(T).FullName}");
-            return AutofacContainerScope.Resolve<T>();
-            //原来模式
-            // return AutoFacContainer.Resolve<T>();
-        }
-
-        public static T GetFromFacByName<T>(string className)
-        {
-            if (string.IsNullOrEmpty(className))
+            try
             {
+                // 检查容器是否初始化
+                if (AutofacContainerScope == null)
+                {
+                    RUINORERP.Common.Log4Net.Logger.Warn($"警告: AutofacContainerScope尚未初始化，无法解析服务 {typeof(T).FullName}");
+                    return default(T);
+                }
+
+                // 记录服务解析日志
+                RUINORERP.Common.Log4Net.Logger.Debug($"正在从Autofac容器中解析服务: {typeof(T).FullName}");
+                T service = AutofacContainerScope.Resolve<T>();
+                RUINORERP.Common.Log4Net.Logger.Debug($"成功解析服务: {typeof(T).FullName}");
+                return service;
+            }
+            catch (Exception ex)
+            {
+                RUINORERP.Common.Log4Net.Logger.Error($"解析服务失败 {typeof(T).FullName}", ex);
+                // 错误处理：返回默认值而不是抛出异常，确保应用程序继续运行
                 return default(T);
             }
-
-            return AutofacContainerScope.ResolveNamed<T>(className);
         }
 
+        /// <summary>
+        /// 从Autofac容器中解析指定名称的服务
+        /// </summary>
+        /// <typeparam name="T">要解析的服务类型</typeparam>
+        /// <param name="className">服务名称</param>
+        /// <returns>解析到的服务实例</returns>
+        public static T GetFromFacByName<T>(string className)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(className))
+                {
+                    RUINORERP.Common.Log4Net.Logger.Warn("警告: className参数为空，无法按名称解析服务");
+                    return default(T);
+                }
 
+                // 检查容器是否初始化
+                if (AutofacContainerScope == null)
+                {
+                    RUINORERP.Common.Log4Net.Logger.Warn($"警告: AutofacContainerScope尚未初始化，无法按名称解析服务 {className}");
+                    return default(T);
+                }
 
-
+                // 记录服务解析日志
+                RUINORERP.Common.Log4Net.Logger.Debug($"正在从Autofac容器中按名称解析服务: {typeof(T).FullName}, 名称: {className}");
+                T service = AutofacContainerScope.ResolveNamed<T>(className);
+                RUINORERP.Common.Log4Net.Logger.Debug($"成功按名称解析服务: {typeof(T).FullName}, 名称: {className}");
+                return service;
+            }
+            catch (Exception ex)
+            {
+                RUINORERP.Common.Log4Net.Logger.Error($"按名称解析服务失败 {typeof(T).FullName}, 名称: {className}", ex);
+                // 错误处理：返回默认值而不是抛出异常，确保应用程序继续运行
+                return default(T);
+            }
+        }
     }
 }

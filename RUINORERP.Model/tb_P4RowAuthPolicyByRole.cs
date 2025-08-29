@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/28/2025 15:02:30
+// 时间：08/29/2025 20:39:09
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private long _PolicyId;
         /// <summary>
-        /// 
+        /// 数据权限规则
         /// </summary>
-        [AdvQueryAttribute(ColName = "PolicyId",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PolicyId" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "PolicyId",ColDesc = "数据权限规则")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PolicyId" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "数据权限规则" )]
         [FKRelationAttribute("tb_RowAuthPolicy","PolicyId")]
         public long PolicyId
         { 

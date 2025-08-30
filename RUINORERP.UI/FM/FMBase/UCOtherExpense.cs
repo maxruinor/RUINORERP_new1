@@ -151,7 +151,10 @@ namespace RUINORERP.UI.FM.FMBase
                 //权限允许
                 if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
                 {
+                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
+                    {
 
+                    }
                 }
                 if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
                 {
@@ -339,7 +342,7 @@ namespace RUINORERP.UI.FM.FMBase
 
             listCols.SetCol_Formula<tb_FM_OtherExpenseDetail>((a, b, c) => a.SingleTotalAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
             listCols.SetCol_Formula<tb_FM_OtherExpenseDetail>((a, b) => a.SingleTotalAmount - b.TaxAmount, c => c.UntaxedAmount);
-     
+
 
             //应该只提供一个结构
             List<tb_FM_OtherExpenseDetail> lines = new List<tb_FM_OtherExpenseDetail>();
@@ -369,7 +372,7 @@ namespace RUINORERP.UI.FM.FMBase
                 details = details.Where(c => c.SingleTotalAmount != 0).ToList();
                 if (details.Count == 0)
                 {
-                    MainForm.Instance.uclog.AddLog("金额必须大于0");
+                    MainForm.Instance.uclog.AddLog("金额不能为0");
                     return;
                 }
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
@@ -401,7 +404,7 @@ namespace RUINORERP.UI.FM.FMBase
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
                 //产品ID有值才算有效值
-                details = detailentity.Where(t => t.SingleTotalAmount > 0).ToList();
+                details = detailentity.Where(t => t.SingleTotalAmount != 0).ToList();
                 //details = details.Where(t => t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0 && NeedValidated)
@@ -422,6 +425,8 @@ namespace RUINORERP.UI.FM.FMBase
 
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.TotalAmount = details.Sum(c => c.SingleTotalAmount);
+     
+
                 if (NeedValidated)
                 {//处理图片
                     bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_OtherExpenseDetails);

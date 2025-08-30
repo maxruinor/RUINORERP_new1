@@ -97,6 +97,7 @@ using RUINORERP.UI.WorkFlowDesigner.Entities;
 using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Business.RowLevelAuthService;
+using RUINORERP.Plugin;
 
 
 
@@ -714,7 +715,7 @@ namespace RUINORERP.UI
             //手动初始化  打开就加载。省得登陆后还没有加载完
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
             BizCacheHelper.InitManager();
-            await InitConfig(false);
+            await InitCacheConfig(false);
 
             //先加载一遍缓存
             var tableNames = CacheInfoList.Keys.ToList();
@@ -1023,25 +1024,71 @@ namespace RUINORERP.UI
             // 判断是否为唯一约束冲突（中文/英文消息兼容）
             if (errorMsg.Contains("unique key") || errorMsg.Contains("重复键"))
             {
-                // 提取重复的订单编号（示例：从消息中匹配括号内的内容）
-                string uniquekey = Regex.Match(errorMsg, @"\((.*?)\)").Groups[1].Value;
-                string value = ExtractDuplicateValue(ex.Message);
-
-                MessageBox.Show(
-                    $"【{value}】已存在，请检查后重试！",
-                    "唯一性错误",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
-
+                try
+                {
+                    // 提取重复的订单编号
+                    string uniquekey = Regex.Match(errorMsg, @"\((.*?)\)").Groups[1].Value;
+                    string value = ExtractDuplicateValue(ex.Message);
+                    
+                    // 尝试从异常消息中提取表名
+                    string tableName = string.Empty;
+                    Match tableMatch = Regex.Match(ex.Message, @"object '(.*?)'");
+                    if (tableMatch.Success)
+                    {
+                        tableName = tableMatch.Groups[1].Value;
+                        // 如果表名包含.dbo.，提取后面的部分
+                        if (tableName.Contains(".dbo."))
+                        {
+                            tableName = tableName.Split(new string[] {".dbo."}, StringSplitOptions.None)[1];
+                        }
+                    }
+                    
+                    string tableDescription = string.Empty;
+                    // 尝试通过IEntityInfoService获取表的中文描述
+                    try
+                    {
+                        var entityInfoService = Startup.GetFromFac<RUINORERP.Business.BizMapperService.IEntityInfoService>();
+                        if (entityInfoService != null && !string.IsNullOrEmpty(tableName))
+                        {
+                            var entityInfo = entityInfoService.GetEntityInfoByTableName(tableName);
+                            if (entityInfo != null && !string.IsNullOrEmpty(entityInfo.TableDescription))
+                            {
+                                tableDescription = entityInfo.TableDescription;
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // 如果获取实体信息失败，继续使用原有的错误提示
+                    }
+                    
+                    // 根据是否获取到表描述，显示不同的错误信息
+                    string message = string.IsNullOrEmpty(tableDescription)
+                        ? $"【{value}】已存在，请检查后重试！"
+                        : $"{tableDescription}中【{value}】已存在，请检查后重试！";
+                    
+                    MessageBox.Show(
+                        message,
+                        "唯一性错误",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+                catch (Exception)
+                {
+                    // 如果处理过程中出现异常，显示默认错误提示
+                    string value = ExtractDuplicateValue(ex.Message);
+                    MessageBox.Show(
+                        $"【{value}】已存在，请检查后重试！",
+                        "唯一性错误",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+                
                 handled = true;
             }
             return handled;
-            //else
-            //{
-            //    // 其他 SqlSugar 异常处理
-            //    MessageBox.Show($"操作失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //}
         }
 
 
@@ -1871,9 +1918,9 @@ namespace RUINORERP.UI
         }
 
 
-        private async Task InitConfig(bool LoadData)
+        private async Task InitCacheConfig(bool LoadData)
         {
-            BizCacheHelper.Instance.InitDict(LoadData);
+            BizCacheHelper.Instance.InitCacheDict(LoadData);
             await Task.Delay(5);
         }
 
@@ -2056,6 +2103,9 @@ namespace RUINORERP.UI
                 MenuPowerHelper p = Startup.GetFromFac<MenuPowerHelper>();
                 MenuList = p.AddMenu(this.menuStripMain);
 
+                // 添加"我的工具"菜单
+                AddMyToolsMenu();
+
                 //绑定的搜索下拉
                 #region
 
@@ -2128,6 +2178,34 @@ namespace RUINORERP.UI
 
 
 
+            }
+        }
+
+        /// <summary>
+        /// 添加"我的工具"菜单并注册插件菜单项
+        /// </summary>
+        private void AddMyToolsMenu()
+        {
+            try
+            {
+                // 创建"我的工具"菜单项
+                ToolStripMenuItem myToolsMenu = new ToolStripMenuItem("我的工具");
+                this.menuStripMain.Items.Add(myToolsMenu);
+
+                // 从Autofac中获取PluginManager实例
+                var pluginManager = Startup.GetFromFac<RUINORERP.Plugin.PluginManager>();
+                if (pluginManager != null)
+                {
+                    // 初始化插件管理器
+                    pluginManager.Initialize();
+                    
+                    // 注册所有插件的菜单项
+                    pluginManager.RegisterPluginMenuItems(myToolsMenu);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error("添加我的工具菜单失败: " + ex.Message, ex);
             }
         }
 

@@ -181,7 +181,7 @@ namespace RUINORERP.Business.BizMapperService
                 return sharedTableEntityInfo;
             }
             
-            _logger.Debug("未找到业务类型 {0} 对应的实体信息", bizType);
+            //_logger.Debug("未找到业务类型 {0} 对应的实体信息", bizType);
             return null;
         }
         

@@ -736,6 +736,18 @@
     <Compile Include="BI\UCReminderRuleList.designer.cs">
       <DependentUpon>UCReminderRuleList.cs</DependentUpon>
     </Compile>
+    <Compile Include="BI\UCRowAuthPolicyEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCRowAuthPolicyEdit.Designer.cs">
+      <DependentUpon>UCRowAuthPolicyEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCRowAuthPolicyList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCRowAuthPolicyList.Designer.cs">
+      <DependentUpon>UCRowAuthPolicyList.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\UCSupplierList.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -2173,6 +2185,22 @@
     </Compile>
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Plugin\IPlugin.cs" />
+    <Compile Include="Plugin\OrderImport1688Plugin.cs" />
+    <Compile Include="Plugin\PluginBase.cs" />
+    <Compile Include="Plugin\PluginManager.cs" />
+    <Compile Include="ProductEAV\UCProductAttrRelationEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ProductEAV\UCProductAttrRelationEdit.Designer.cs">
+      <DependentUpon>UCProductAttrRelationEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ProductEAV\UCProductAttrRelationList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ProductEAV\UCProductAttrRelationList.Designer.cs">
+      <DependentUpon>UCProductAttrRelationList.cs</DependentUpon>
     </Compile>
     <Compile Include="SmartReminderClient\DetailForm.cs">
       <SubType>Form</SubType>
@@ -3638,6 +3666,12 @@
     <EmbeddedResource Include="BI\UCReminderRuleList.resx">
       <DependentUpon>UCReminderRuleList.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCRowAuthPolicyEdit.resx">
+      <DependentUpon>UCRowAuthPolicyEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCRowAuthPolicyList.resx">
+      <DependentUpon>UCRowAuthPolicyList.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BI\UCsysBillNoRuleEdit.resx">
       <DependentUpon>UCsysBillNoRuleEdit.cs</DependentUpon>
     </EmbeddedResource>
@@ -4139,6 +4173,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\UCPacking.resx">
       <DependentUpon>UCPacking.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProductEAV\UCProductAttrRelationEdit.resx">
+      <DependentUpon>UCProductAttrRelationEdit.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProductEAV\UCProductAttrRelationList.resx">
+      <DependentUpon>UCProductAttrRelationList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\UCProductList.resx">
       <DependentUpon>UCProductList.cs</DependentUpon>

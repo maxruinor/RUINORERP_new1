@@ -29,9 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCRoleAuthorization));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.TreeView1 = new RUINOR.WinFormsUI.TreeViewThreeState.ThreeStateTreeView();
@@ -43,11 +43,11 @@
             this.kryptonPageRowAuthPolicy = new Krypton.Navigator.KryptonPage();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.newSumDataGridViewRowAuthPolicy = new RUINORERP.UI.UControls.NewSumDataGridView();
-            this.cmbDefaultAuthPolicy = new Krypton.Toolkit.KryptonComboBox();
+            this.cmbRowAuthPolicy = new Krypton.Toolkit.KryptonComboBox();
             this.lblType_ID = new Krypton.Toolkit.KryptonLabel();
             this.lblPolicyName = new Krypton.Toolkit.KryptonLabel();
             this.txtPolicyName = new Krypton.Toolkit.KryptonTextBox();
-            this.btnOk = new Krypton.Toolkit.KryptonButton();
+            this.btnAdd = new Krypton.Toolkit.KryptonButton();
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
             this.contextMenuStrip4InitData = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItemInitBtn = new System.Windows.Forms.ToolStripMenuItem();
@@ -90,7 +90,7 @@
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewRowAuthPolicy)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbDefaultAuthPolicy)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbRowAuthPolicy)).BeginInit();
             this.BaseToolStrip.SuspendLayout();
             this.contextMenuStrip4InitData.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
@@ -186,8 +186,8 @@
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle4.BackColor = System.Drawing.Color.Beige;
+            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -235,8 +235,8 @@
             this.dataGridView2.AllowUserToAddRows = false;
             this.dataGridView2.AllowUserToDeleteRows = false;
             this.dataGridView2.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView2.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
+            this.dataGridView2.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridView2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -294,11 +294,11 @@
             // 
             // kryptonSplitContainer2.Panel2
             // 
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.cmbDefaultAuthPolicy);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.cmbRowAuthPolicy);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblType_ID);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblPolicyName);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtPolicyName);
-            this.kryptonSplitContainer2.Panel2.Controls.Add(this.btnOk);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.btnAdd);
             this.kryptonSplitContainer2.Size = new System.Drawing.Size(647, 589);
             this.kryptonSplitContainer2.SplitterDistance = 243;
             this.kryptonSplitContainer2.TabIndex = 1;
@@ -308,8 +308,8 @@
             this.newSumDataGridViewRowAuthPolicy.AllowUserToAddRows = false;
             this.newSumDataGridViewRowAuthPolicy.AllowUserToDeleteRows = false;
             this.newSumDataGridViewRowAuthPolicy.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle4.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridViewRowAuthPolicy.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridViewRowAuthPolicy.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.newSumDataGridViewRowAuthPolicy.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -336,24 +336,24 @@
             this.newSumDataGridViewRowAuthPolicy.Use是否使用内置右键功能 = true;
             this.newSumDataGridViewRowAuthPolicy.XmlFileName = "";
             // 
-            // cmbDefaultAuthPolicy
+            // cmbRowAuthPolicy
             // 
-            this.cmbDefaultAuthPolicy.DropDownWidth = 296;
-            this.cmbDefaultAuthPolicy.IntegralHeight = false;
-            this.cmbDefaultAuthPolicy.Location = new System.Drawing.Point(126, 14);
-            this.cmbDefaultAuthPolicy.Name = "cmbDefaultAuthPolicy";
-            this.cmbDefaultAuthPolicy.Size = new System.Drawing.Size(426, 21);
-            this.cmbDefaultAuthPolicy.TabIndex = 35;
-            this.cmbDefaultAuthPolicy.SelectedIndexChanged += new System.EventHandler(this.cmbDefaultAuthPolicy_SelectedIndexChanged);
+            this.cmbRowAuthPolicy.DropDownWidth = 296;
+            this.cmbRowAuthPolicy.IntegralHeight = false;
+            this.cmbRowAuthPolicy.Location = new System.Drawing.Point(126, 14);
+            this.cmbRowAuthPolicy.Name = "cmbRowAuthPolicy";
+            this.cmbRowAuthPolicy.Size = new System.Drawing.Size(426, 21);
+            this.cmbRowAuthPolicy.TabIndex = 35;
+            this.cmbRowAuthPolicy.SelectedIndexChanged += new System.EventHandler(this.cmbRowAuthPolicy_SelectedIndexChanged);
             // 
             // lblType_ID
             // 
-            this.lblType_ID.Location = new System.Drawing.Point(59, 14);
+            this.lblType_ID.Location = new System.Drawing.Point(32, 14);
             this.lblType_ID.Name = "lblType_ID";
             this.lblType_ID.PaletteMode = Krypton.Toolkit.PaletteMode.Office2007Blue;
-            this.lblType_ID.Size = new System.Drawing.Size(62, 20);
+            this.lblType_ID.Size = new System.Drawing.Size(88, 20);
             this.lblType_ID.TabIndex = 34;
-            this.lblType_ID.Values.Text = "默认规则";
+            this.lblType_ID.Values.Text = "数据权限规则";
             // 
             // lblPolicyName
             // 
@@ -371,13 +371,14 @@
             this.txtPolicyName.Size = new System.Drawing.Size(426, 21);
             this.txtPolicyName.TabIndex = 11;
             // 
-            // btnOk
+            // btnAdd
             // 
-            this.btnOk.Location = new System.Drawing.Point(267, 265);
-            this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(90, 25);
-            this.btnOk.TabIndex = 8;
-            this.btnOk.Values.Text = "确定";
+            this.btnAdd.Location = new System.Drawing.Point(126, 257);
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.Size = new System.Drawing.Size(90, 25);
+            this.btnAdd.TabIndex = 8;
+            this.btnAdd.Values.Text = "添加";
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // BaseToolStrip
             // 
@@ -548,7 +549,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.newSumDataGridViewRowAuthPolicy)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbDefaultAuthPolicy)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbRowAuthPolicy)).EndInit();
             this.BaseToolStrip.ResumeLayout(false);
             this.BaseToolStrip.PerformLayout();
             this.contextMenuStrip4InitData.ResumeLayout(false);
@@ -590,11 +591,11 @@
         private Krypton.Navigator.KryptonPage kryptonPageRowAuthPolicy;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer2;
         private UControls.NewSumDataGridView newSumDataGridViewRowAuthPolicy;
-        private Krypton.Toolkit.KryptonButton btnOk;
+        private Krypton.Toolkit.KryptonButton btnAdd;
         private System.Windows.Forms.BindingSource bindingSourceRowAuthPolicy;
         private Krypton.Toolkit.KryptonLabel lblPolicyName;
         private Krypton.Toolkit.KryptonTextBox txtPolicyName;
-        private Krypton.Toolkit.KryptonComboBox cmbDefaultAuthPolicy;
+        private Krypton.Toolkit.KryptonComboBox cmbRowAuthPolicy;
         private Krypton.Toolkit.KryptonLabel lblType_ID;
     }
 }

@@ -498,6 +498,7 @@ namespace RUINORERP.Business.CommService
             "View_ProdInfo",
             "tb_ProdPropertyType",
             "tb_ProdProperty",
+            "tb_ProdPropertyValue",
             "tb_Employee",
             "tb_UserInfo",
             "tb_RoleInfo",
@@ -683,6 +684,9 @@ namespace RUINORERP.Business.CommService
                 case "tb_Unit_Conversion":
                     SetDictDataSource<tb_Unit_Conversion>(k => k.UnitConversion_ID, v => v.UnitConversion_Name, LoadData);
                     break;
+                case "tb_ProdPropertyValue":
+                    SetDictDataSource<tb_ProdPropertyValue>(k => k.PropertyValueID, v => v.PropertyValueName, LoadData);
+                    break;
                 default:
                     // Console.WriteLine("未知类型: " + typeName);
                     _logger.LogInformation("SetDictDataSource 未知类型" + typeName);
@@ -714,7 +718,7 @@ namespace RUINORERP.Business.CommService
         /// <summary>
         /// 初始化数据字典,并且提取出结果
         /// </summary>
-        public void InitDict(bool LoadData = true)
+        public void InitCacheDict(bool LoadData = true)
         {
             try
             {

@@ -57,7 +57,7 @@ namespace RUINORERP.Business.CommService
 
         public List<T> GetBindSource<T>(string tableName, Expression<Func<T, bool>> expCondition)
         {
-            return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(expCondition).AS(tableName).ToList();
+                return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(expCondition).AS(tableName).ToList();
         }
 
         public object GetBindSourceList(string tableName)

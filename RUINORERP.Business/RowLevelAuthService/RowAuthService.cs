@@ -9,6 +9,7 @@ using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace RUINORERP.Business.RowLevelAuthService
 {
@@ -96,8 +97,6 @@ namespace RUINORERP.Business.RowLevelAuthService
                     .Where(p => !dto.AssignedPolicies.Any(ap => ap.PolicyId == p.PolicyId))
                     .ToList();
 
-
-
                 return dto;
             }
             catch (Exception ex)
@@ -120,7 +119,8 @@ namespace RUINORERP.Business.RowLevelAuthService
             }
 
             try
-            {  // 获取实体信息服务
+            {
+                // 获取实体信息服务
                 var entityInfoService = _appContext.GetRequiredService<IEntityInfoService>();
 
                 // 获取实体信息
@@ -131,24 +131,77 @@ namespace RUINORERP.Business.RowLevelAuthService
                     return false;
                 }
 
-                // 处理新创建的自定义规则
-                if (config.NewCustomPolicy != null &&
-                    !string.IsNullOrEmpty(config.NewCustomPolicy.FilterClause))
+                // 开始事务
+                _db.Ado.BeginTran();
+
+                try
                 {
-                    config.NewCustomPolicy.TargetEntity = entityInfo.EntityName;
-                    config.NewCustomPolicy.EntityType = entityInfo.EntityType.FullName;
-                    config.NewCustomPolicy.Created_at = DateTime.Now;
-                    config.NewCustomPolicy.Created_by = GetCurrentUserId();
+                    // 获取该角色在该实体上已有的所有策略ID
+                    var existingPolicyIds = _db.Queryable<tb_P4RowAuthPolicyByRole>()
+                        .Where(r => r.RoleID == config.RoleId)
+                        .InnerJoin<tb_RowAuthPolicy>((r, p) => r.PolicyId == p.PolicyId)
+                        .Where((r, p) => p.TargetEntity == entityInfo.EntityName)
+                        .Select((r, p) => r.PolicyId)
+                        .ToList();
 
-                    // 插入新规则
-                    var policyId = _db.Insertable(config.NewCustomPolicy).ExecuteReturnBigIdentity();
-
-                    // 将新规则分配给当前角色
-                    _db.Insertable(new tb_P4RowAuthPolicyByRole
+                    // 处理已分配的策略（新增或保留的）
+                    var assignedPolicyIds = new List<long>();
+                    if (config.AssignedPolicies != null)
                     {
-                        PolicyId = policyId,
-                        RoleID = config.RoleId
-                    }).ExecuteCommand();
+                        foreach (var policy in config.AssignedPolicies)
+                        {
+                            assignedPolicyIds.Add(policy.PolicyId);
+
+                            // 如果策略尚未分配给该角色，则进行分配
+                            if (!existingPolicyIds.Contains(policy.PolicyId))
+                            {
+                                _db.Insertable(new tb_P4RowAuthPolicyByRole
+                                {
+                                    PolicyId = policy.PolicyId,
+                                    RoleID = config.RoleId
+                                }).ExecuteReturnSnowflakeId();
+                            }
+                        }
+                    }
+
+                    // 处理新创建的自定义规则
+                    if (config.NewCustomPolicy != null &&
+                        !string.IsNullOrEmpty(config.NewCustomPolicy.FilterClause))
+                    {
+                        config.NewCustomPolicy.TargetEntity = entityInfo.EntityName;
+                        config.NewCustomPolicy.EntityType = entityInfo.EntityType.FullName;
+                        config.NewCustomPolicy.Created_at = DateTime.Now;
+                        config.NewCustomPolicy.Created_by = GetCurrentUserId();
+
+                        // 插入新规则
+                        var policyId = _db.Insertable(config.NewCustomPolicy).ExecuteReturnSnowflakeId();
+
+                        // 将新规则分配给当前角色
+                        _db.Insertable(new tb_P4RowAuthPolicyByRole
+                        {
+                            PolicyId = policyId,
+                            RoleID = config.RoleId
+                        }).ExecuteReturnSnowflakeId();
+                    }
+
+                    // 移除不再分配的策略
+                    var policiesToRemove = existingPolicyIds.Except(assignedPolicyIds).ToList();
+                    if (policiesToRemove.Any())
+                    {
+                        _db.Deleteable<tb_P4RowAuthPolicyByRole>()
+                            .Where(r => r.RoleID == config.RoleId && policiesToRemove.Contains(r.PolicyId))
+                            .ExecuteCommand();
+                    }
+
+                    // 提交事务
+                    _db.Ado.CommitTran();
+                }
+                catch (Exception innerEx)
+                {
+                    // 回滚事务
+                    _db.Ado.RollbackTran();
+                    _logger.LogError(innerEx, "保存行级权限配置事务失败: {RoleId}, {BizType}", config.RoleId, config.BizType);
+                    return false;
                 }
 
                 // 清除相关缓存
@@ -165,6 +218,18 @@ namespace RUINORERP.Business.RowLevelAuthService
         }
 
         /// <summary>
+        /// 异步保存行级权限配置
+        /// </summary>
+        /// <param name="config">行级权限配置DTO</param>
+        /// <returns>保存是否成功</returns>
+        public async Task<bool> SaveRowAuthConfigAsync(RowAuthConfigDto config)
+        {
+            // 使用Task.FromResult包装同步方法的结果，提供异步接口
+            // 在实际应用中，这里应该使用真正的异步数据库操作
+            return await Task.Run(() => SaveRowAuthConfig(config));
+        }
+
+        /// <summary>
         /// 获取所有权限策略
         /// </summary>
         /// <returns>权限策略列表</returns>
@@ -177,6 +242,38 @@ namespace RUINORERP.Business.RowLevelAuthService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "获取所有权限策略失败");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 根据指定的业务类型获取能参与配置的规则
+        /// </summary>
+        /// <param name="bizType">业务类型</param>
+        /// <returns>权限策略列表</returns>
+        public List<tb_RowAuthPolicy> GetAllPolicies(BizType bizType)
+        {
+            try
+            {
+                // 获取实体信息服务
+                var entityInfoService = _appContext.GetRequiredService<IEntityInfoService>();
+
+                // 获取实体信息
+                var entityInfo = entityInfoService.GetEntityInfo(bizType);
+                if (entityInfo == null)
+                {
+                    _logger.LogWarning("未找到业务类型 {BizType} 对应的实体信息", bizType);
+                    return new List<tb_RowAuthPolicy>();
+                }
+
+                // 查询与该实体相关的所有规则
+                return _db.Queryable<tb_RowAuthPolicy>()
+                    .Where(p => p.TargetEntity == entityInfo.EntityName)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "根据业务类型获取权限策略失败: {BizType}", bizType);
                 throw;
             }
         }
@@ -202,7 +299,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                     {
                         PolicyId = policyId,
                         RoleID = roleId
-                    }).ExecuteCommand();
+                    }).ExecuteReturnSnowflakeId();
                 }
 
                 // 清除相关缓存
@@ -280,14 +377,14 @@ namespace RUINORERP.Business.RowLevelAuthService
                     return null;
                 }
 
-                // 获取用户所有角色 
-                //为了跑通而已  (r => r.RoleID).  应该是用户的ID
-                var userRoleIds = _appContext.Roles.Select(r => r.RoleID).ToList();
+                // 获取当前用户的所有角色ID
+                var currentUserId = GetCurrentUserId();
+                var userRoleIds =  _appContext.Roles.Select(r => r.RoleID).ToList();
                 if (!userRoleIds.Any())
                 {
                     // 用户没有角色，返回null表示无限制
                     // 不缓存null值，使用特殊标记表示"无限制"
-              
+
                     _cacheManager.Set(cacheKey, "__NO_RESTRICTION__", cacheEntryOptions);
                     return null;
                 }
@@ -343,13 +440,15 @@ namespace RUINORERP.Business.RowLevelAuthService
         {
             try
             {
-                // 获取所有拥有此角色的用户
-                var usersWithRole = _db.Queryable<tb_P4RowAuthPolicyByRole>()
+                // 获取所有拥有此角色的用户ID
+                var userIds = _db.Queryable<tb_User_Role>()
                     .Where(ur => ur.RoleID == roleId)
+                    .Select(ur => ur.User_ID)
                     .ToList();
+                
 
                 // 清除这些用户对此实体的缓存
-                foreach (var userId in usersWithRole)
+                foreach (var userId in userIds)
                 {
                     var cacheKey = $"RowAuth:UserId:{userId}:Entity:{entityName}";
                     _cacheManager.Remove(cacheKey);

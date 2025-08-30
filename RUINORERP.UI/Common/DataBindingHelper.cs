@@ -3744,6 +3744,43 @@ namespace RUINORERP.UI.Common
             ComboBoxHelper.InitDropList(bs, cmbBox, ValueMember, DisplayMember, ComboBoxStyle.DropDownList, false);
         }
 
+        /// <summary>
+        /// 绑定数据到下拉（使用了缓存）
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="expression">值字段表达式</param>
+        /// <param name="expValue">显示字段表达式</param>
+        /// <param name="cmbBox">KryptonComboBox控件</param>
+        /// <param name="expCondition">过滤条件表达式（可选）</param>
+        public static void InitDataToCmb<T>(BindingSource bs, Expression<Func<T, long>> expression, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox) where T : class
+        {
+            if (cmbBox == null)
+                throw new ArgumentNullException(nameof(cmbBox));
+
+            if (expression == null)
+                throw new ArgumentNullException(nameof(expression));
+
+            if (expValue == null)
+                throw new ArgumentNullException(nameof(expValue));
+
+            // 获取字段名称
+            MemberInfo minfo = expression.GetMemberInfo();
+            string key = minfo.Name;
+            MemberInfo minfoValue = expValue.GetMemberInfo();
+            string value = minfoValue.Name;
+            string tableName = expression.Parameters[0].Type.Name;
+
+            try
+            {
+                InitDataToCmb(bs, value, tableName, cmbBox);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError("初始化下拉框数据失败: " + ex.Message, ex);
+                throw;
+            }
+        }
+
 
         /// <summary>
         /// 绑定数据到下拉（使用了缓存）

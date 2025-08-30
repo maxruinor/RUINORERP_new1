@@ -1,10 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
 using SqlSugar;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,8 @@ namespace RUINORERP.Business.RowLevelAuthService
         private readonly IEntityInfoService _entityInfoService;
         private readonly ILogger<DefaultRowAuthPolicyInitializationService> _logger;
         private readonly ApplicationContext _appContext;
+        // 使用并发集合跟踪已初始化的业务类型，避免重复检查
+        private readonly ConcurrentDictionary<BizType, bool> _initializedBizTypes = new ConcurrentDictionary<BizType, bool>();
 
         public DefaultRowAuthPolicyInitializationService(
             ISqlSugarClient db,
@@ -42,15 +45,32 @@ namespace RUINORERP.Business.RowLevelAuthService
 
                 // 获取所有业务类型
                 var allBizTypes = Enum.GetValues(typeof(BizType)).Cast<BizType>().ToList();
+                int initializedCount = 0;
+                int skippedCount = 0;
 
                 foreach (var bizType in allBizTypes)
                 {
                     if (bizType == BizType.无对应数据) continue;
 
-                    await EnsureDefaultPoliciesForBizTypeAsync(bizType);
+                    // 如果业务类型已经初始化过，则跳过
+                    if (_initializedBizTypes.TryGetValue(bizType, out bool isInitialized) && isInitialized)
+                    {
+                        skippedCount++;
+                        _logger.LogDebug("业务类型 {BizType} 已初始化过，跳过检查", bizType);
+                        continue;
+                    }
+
+                    bool result = await EnsureDefaultPoliciesForBizTypeAsync(bizType);
+                    if (result)
+                    {
+                        initializedCount++;
+                        // 标记业务类型为已初始化
+                        _initializedBizTypes.TryAdd(bizType, true);
+                    }
                 }
 
-                _logger.LogInformation("默认行级权限策略初始化完成");
+                _logger.LogInformation("默认行级权限策略初始化完成：已初始化 {InitializedCount} 个业务类型，跳过 {SkippedCount} 个已初始化业务类型",
+                    initializedCount, skippedCount);
             }
             catch (Exception ex)
             {
@@ -81,7 +101,15 @@ namespace RUINORERP.Business.RowLevelAuthService
                 var entityInfo = _entityInfoService.GetEntityInfo(bizType);
                 if (entityInfo == null)
                 {
-                    _logger.LogWarning("未找到业务类型 {BizType} 对应的实体信息", bizType);
+//                    _logger.LogWarning("未找到业务类型 {BizType} 对应的实体信息", bizType);
+                    return new List<tb_RowAuthPolicy>();
+                }
+
+                // 验证实体信息中的必要字段
+                if (string.IsNullOrEmpty(entityInfo.TableName) || string.IsNullOrEmpty(entityInfo.EntityName))
+                {
+                    _logger.LogWarning("业务类型 {BizType} 的实体信息缺少必要字段：TableName={TableName}, EntityName={EntityName}",
+                        bizType, entityInfo.TableName, entityInfo.EntityName);
                     return new List<tb_RowAuthPolicy>();
                 }
 
@@ -99,18 +127,48 @@ namespace RUINORERP.Business.RowLevelAuthService
                 var defaultOptions = _defaultRuleProvider.GetDefaultRuleOptions(bizType);
                 var newPolicies = new List<tb_RowAuthPolicy>();
 
-                // 为每个默认选项创建策略
-                foreach (var option in defaultOptions)
+                // 使用事务确保数据一致性
+                using (var transaction = _db.Ado.UseTran())
                 {
-                    var policy = _defaultRuleProvider.CreatePolicyFromDefaultOption(bizType, option, 0);
-                    policy.DefaultRuleEnum =policy.DefaultRuleEnum;
-                    policy.PolicyName = $"[默认] {policy.PolicyName}";
+                    try
+                    {
+                        // 为每个默认选项创建策略
+                        foreach (var option in defaultOptions)
+                        {
+                            var policy = _defaultRuleProvider.CreatePolicyFromDefaultOption(bizType, option, 0);
+                            // 设置DefaultRuleEnum为选项的Key值（确保在int范围内）
+                            if (option.Key >= int.MinValue && option.Key <= int.MaxValue)
+                            {
+                                policy.DefaultRuleEnum = Convert.ToInt32(option.Key);
+                            }
+                            policy.PolicyName = $"[默认] {policy.PolicyName}";
 
-                    // 插入数据库
-                    policy.PolicyId = _db.Insertable(policy).ExecuteReturnBigIdentity();
-                    newPolicies.Add(policy);
+                            // 再次验证必填字段
+                            if (string.IsNullOrEmpty(policy.PolicyName) || string.IsNullOrEmpty(policy.TargetTable) ||
+                                string.IsNullOrEmpty(policy.TargetEntity))
+                            {
+                                _logger.LogWarning("创建的策略缺少必填字段: {PolicyName}, {TargetTable}, {TargetEntity}",
+                                    policy.PolicyName, policy.TargetTable, policy.TargetEntity);
+                                continue;
+                            }
 
-                    _logger.LogInformation("已创建默认策略: {PolicyName} (ID: {PolicyId})", policy.PolicyName, policy.PolicyId);
+                            // 插入数据库
+                            policy.PolicyId = _db.Insertable(policy).ExecuteReturnSnowflakeId();
+                            newPolicies.Add(policy);
+
+                            _logger.LogInformation("已创建默认策略: {PolicyName} (ID: {PolicyId})", policy.PolicyName, policy.PolicyId);
+                        }
+
+                        // 提交事务
+                        transaction.CommitTran();
+                    }
+                    catch (Exception ex)
+                    {
+                        // 回滚事务
+                        transaction.RollbackTran();
+                        _logger.LogError(ex, "创建默认策略时发生错误，事务已回滚: {BizType}", bizType);
+                        throw;
+                    }
                 }
 
                 return newPolicies;

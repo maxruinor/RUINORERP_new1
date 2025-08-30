@@ -31,7 +31,7 @@ namespace RUINORERP.Business
             // 这里添加额外的初始化代码
             // 如果选择了外发，则必须填写外发加工商
             RuleFor(x => x.ClaimName).MinimumLength(2).WithMessage("明细中，事由:长度不能小于2。");
-            RuleFor(x => x.SingleAmount).GreaterThan(0).WithMessage("明细中，单项金额:要大于零。");
+            RuleFor(x => x.SingleAmount).NotEqual(0).WithMessage("明细中，单项金额:不能为零。");
             RuleFor(x => x.TranDate).GreaterThan(System.DateTime.Now.AddDays(-365)).WithMessage("明细中，发生日期:必须为真实的近期交易时间。");
         }
 

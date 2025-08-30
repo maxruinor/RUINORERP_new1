@@ -44,6 +44,7 @@ using RUINORERP.Business.RowLevelAuthService;
 using RUINORERP.Global;
 using Netron.GraphLib;
 using Microsoft.Extensions.DependencyInjection;
+using System.Management;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -64,9 +65,11 @@ namespace RUINORERP.UI.SysConfig
                 BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
                 null, TreeView1, new object[] { true });
             BuildContextMenuController();
-            _defaultRuleProvider = MainForm.Instance.AppContext.GetRequiredService<DefaultRowAuthRuleProvider>();
+
 
             _rowAuthService = Startup.GetFromFac<IRowAuthService>();
+
+            newSumDataGridViewRowAuthPolicy.CellFormatting += new DataGridViewCellFormattingEventHandler(DataGridView3_CellFormatting);
         }
 
 
@@ -194,18 +197,20 @@ namespace RUINORERP.UI.SysConfig
 
         private void KryptonNavigator1_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            if (TreeView1.SelectedNode == null)
+                return;
             // TODO: 实现导航器索引改变时的逻辑
             NewSumDataGridView dg = kryptonNavigator1.SelectedPage.Controls[0] as NewSumDataGridView;
-            if (dg == null && kryptonNavigator1.SelectedPage.Controls.Count > 0)
+            if (dg == null && kryptonNavigator1.SelectedPage.Controls.Count > 0 && TreeView1.SelectedNode.Tag != null)
             {
                 dg = newSumDataGridViewRowAuthPolicy;
-                //加载默认RLA row level auth
-                var rlaProvider = MainForm.Instance.AppContext.GetRequiredService<DefaultRowAuthRuleProvider>();
-
+                //加载行级授权的配置
                 if ((TreeView1.SelectedNode.Tag is tb_MenuInfo menuInfo))
                 {
-                    rlaProvider.GetDefaultRuleOptions((BizType)menuInfo.BizType.Value);
+                    MainForm.Instance.AppContext.Db.Queryable<tb_P4RowAuthPolicyByRole>()
+                        .Where(c => c.MenuID == menuInfo.MenuID)
+                        .Where(c => c.RoleID == CurrentRole.RoleID)
+                        .ToList();
                     return;
                 }
 
@@ -325,7 +330,7 @@ namespace RUINORERP.UI.SysConfig
                 TreeView1.Invoke(new Action<object, DrawTreeNodeEventArgs>(tVtypeList_DrawNode), sender, e);
                 return;
             }
-            
+
             e.Graphics.FillRectangle(Brushes.White, e.Node.Bounds);
             if (e.State == TreeNodeStates.Selected)//做判断
             {
@@ -669,6 +674,45 @@ namespace RUINORERP.UI.SysConfig
                 pflist.Add(pf);
             }
             bool rs2 = await MainForm.Instance.AppContext.Db.CopyNew().Updateable(pflist).ExecuteCommandHasChangeAsync();
+
+            //保存行级权限规则
+            try
+            {
+                if (bindingSourceRowAuthPolicy.List != null && bindingSourceRowAuthPolicy.List.Count > 0 && CurrentRole != null)
+                {
+                    var roleId = CurrentRole.RoleID;
+                    var menuId = selectMenu.MenuID;
+
+                    // 获取所有与当前角色和菜单相关的行级权限规则
+                    List<tb_P4RowAuthPolicyByRole> policies = new List<tb_P4RowAuthPolicyByRole>();
+                    foreach (var item in bindingSourceRowAuthPolicy.List)
+                    {
+                        tb_P4RowAuthPolicyByRole policy = item as tb_P4RowAuthPolicyByRole;
+                        if (policy != null)
+                        {
+                            policies.Add(policy);
+                        }
+                    }
+
+                    // 删除旧的关联记录
+                    await MainForm.Instance.AppContext.Db.Deleteable<tb_P4RowAuthPolicyByRole>()
+                        .Where(p => p.RoleID == roleId && p.MenuID == menuId)
+                        .ExecuteCommandAsync();
+
+                    // 保存新的关联记录
+                    if (policies.Any())
+                    {
+                        await MainForm.Instance.AppContext.Db.Insertable(policies).ExecuteCommandAsync();
+                        MainForm.Instance.logger.LogInformation("成功保存{Count}条行级权限规则", policies.Count);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.Error("保存行级权限规则失败", ex);
+                MessageBox.Show($"保存行级权限规则失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
             toolStripButtonSave.Enabled = false;
 
         }
@@ -902,7 +946,7 @@ namespace RUINORERP.UI.SysConfig
                 TreeView1.Invoke(new Action<TreeNodeCollection, List<tb_P4Menu>>(UpdateP4MenuUI), Nodes, tb_P4Menus);
                 return;
             }
-            
+
             //保存菜单勾选情况  是用更新
             foreach (ThreeStateTreeNode tn in Nodes)
             {
@@ -1648,12 +1692,13 @@ namespace RUINORERP.UI.SysConfig
             }
             kryptonNavigator1.SelectedPage = kryptonPageBtn;
 
+            CurrentMenuInfo = selectMenu;
             await InitLoadP4Button(selectMenu, false);
 
             await InitLoadP4Field(selectMenu, false);
 
-            //加载默认行级权限
-            InitLoadDefaultRowLevelAuthPolicy(selectMenu);
+            //加载行级权限规则，优先默认的在前面
+            InitLoadRowLevelAuthPolicy(selectMenu);
 
             #region 按钮和字段列表的中的值 有变化则保存可用
             CurrentRole.tb_P4Buttons.Where(c => c.RoleID == CurrentRole.RoleID).ForEach(x => UpdateSaveEnabled<tb_P4Button>(x));
@@ -1749,8 +1794,8 @@ namespace RUINORERP.UI.SysConfig
 
 
         }
-        DefaultRowAuthRuleProvider _defaultRuleProvider;
-        private void InitLoadDefaultRowLevelAuthPolicy(tb_MenuInfo selectMenu)
+
+        private void InitLoadRowLevelAuthPolicy(tb_MenuInfo selectMenu)
         {
             if (CurrentRole == null)
             {
@@ -1762,18 +1807,20 @@ namespace RUINORERP.UI.SysConfig
             {
                 BizType bizType = (BizType)selectMenu.BizType.Value;
                 // 获取指定业务类型的默认规则选项
-                var options = _defaultRuleProvider.GetDefaultRuleOptions(BizType.销售订单);
-                //DataBindingHelper.InitDataToCmb<DefaultRuleOption>(k => k.Key, v => v.Name, cmbDefaultAuthPolicy);
+
+                var Policies = _rowAuthService.GetAllPolicies(bizType);
                 BindingSource bs = new BindingSource();
-                bs.DataSource = options;
-                Common.DataBindingHelper.InitDataToCmb(bs, "Key", "Name", cmbDefaultAuthPolicy);
-
+                bs.DataSource = Policies;
+                
+                // 先移除事件订阅，防止设置数据源时触发事件
+                cmbRowAuthPolicy.SelectedIndexChanged -= cmbRowAuthPolicy_SelectedIndexChanged;
+                
+                // 设置数据源
+                DataBindingHelper.InitDataToCmb<tb_RowAuthPolicy>(bs, k => k.PolicyId, v => v.PolicyName, cmbRowAuthPolicy);
+                
+                // 数据源设置完成后再重新订阅事件
+                cmbRowAuthPolicy.SelectedIndexChanged += cmbRowAuthPolicy_SelectedIndexChanged;
             }
-            var initializationService = Startup.GetFromFac<IDefaultRowAuthPolicyInitializationService>();
-
-            initializationService.InitializeDefaultPoliciesAsync();
-
-           var policies =  initializationService.GetOrCreateDefaultPoliciesAsync(BizType.销售订单);
 
             #endregion
 
@@ -2004,6 +2051,79 @@ namespace RUINORERP.UI.SysConfig
 
 
         }
+
+
+        private void DataGridView3_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
+            if (!newSumDataGridViewRowAuthPolicy.Columns[e.ColumnIndex].Visible)
+            {
+                return;
+            }
+            if (e.Value == null)
+            {
+                e.Value = "";
+                return;
+            }
+            //图片特殊处理
+            if (newSumDataGridViewRowAuthPolicy.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
+            {
+                if (e.Value != null)
+                {
+                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
+                    Image image = Image.FromStream(buf, true);
+                    e.Value = image;
+                    return;
+                }
+            }
+            //固定字典值显示
+            string colDbName = dataGridView2.Columns[e.ColumnIndex].Name;
+            if (ColNameDataDictionary.ContainsKey(colDbName))
+            {
+                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
+                //意思是通过列名找，再通过值找到对应的文本
+                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
+                if (kvlist != null)
+                {
+                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
+                    if (kv.Value != null)
+                    {
+                        e.Value = kv.Value;
+                    }
+
+                }
+            }
+
+            if (newSumDataGridViewRowAuthPolicy.Rows[e.RowIndex].DataBoundItem is tb_P4RowAuthPolicyByRole authPolicy)
+            {
+                if (authPolicy.tb_rowauthpolicy != null && colDbName == authPolicy.GetPropertyName<tb_RowAuthPolicy>(c => c.PolicyId))
+                {
+                    e.Value = authPolicy.tb_rowauthpolicy.PolicyName;
+                }
+
+                if (colDbName == authPolicy.GetPropertyName<tb_MenuInfo>(c => c.MenuID))
+                {
+                    e.Value = CurrentMenuInfo.MenuName;
+                    return;
+                }
+
+                //因为是下拉选的角色来配置这里直接用下拉的
+                if (colDbName == authPolicy.GetPropertyName<tb_RoleInfo>(c => c.RoleID))
+                {
+                    e.Value = CurrentRole.RoleName;
+                    return;
+                }
+            }
+
+            //动态字典值显示
+            string colName = UIHelper.ShowGridColumnsNameValue<tb_RowAuthPolicy>(colDbName, e.Value);
+            if (!string.IsNullOrEmpty(colName))
+            {
+                e.Value = colName;
+            }
+
+        }
+
 
         private void dataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
@@ -2897,9 +3017,68 @@ namespace RUINORERP.UI.SysConfig
             #endregion
         }
 
-        private void cmbDefaultAuthPolicy_SelectedIndexChanged(object sender, EventArgs e)
+        tb_MenuInfo CurrentMenuInfo;
+        private void cmbRowAuthPolicy_SelectedIndexChanged(object sender, EventArgs e)
         {
-            
+            // 获取该业务类型支持的默认规则选项
+            if (cmbRowAuthPolicy.SelectedItem is tb_RowAuthPolicy policy)
+            {
+                // 为每个默认选项创建策略
+                tb_MenuInfo selectMenu = TreeView1.SelectedNode.Tag as tb_MenuInfo;
+                if (selectMenu.MenuType != "行为菜单")
+                {
+                    return;
+                }
+
+                if (selectMenu.BizType.HasValue && CurrentRole != null)
+                {
+                    BizType bizType = (BizType)selectMenu.BizType.Value;
+                    // 创建角色与行级规则的关联对象
+                    tb_P4RowAuthPolicyByRole newPolicyRelation = new tb_P4RowAuthPolicyByRole
+                    {
+                        RoleID = CurrentRole.RoleID,
+                        MenuID = selectMenu.MenuID,
+                        PolicyId = policy.PolicyId,
+                        IsEnabled = true,
+                    };
+
+                    BusinessHelper.Instance.InitEntity(newPolicyRelation);
+
+                    // 检查是否已存在相同的规则关联（一个规则在一个角色对应的一个菜单下面只能添加一次）
+                    bool isDuplicate = false;
+                    foreach (tb_P4RowAuthPolicyByRole existingRelation in bindingSourceRowAuthPolicy)
+                    {
+                        if (existingRelation.RoleID == newPolicyRelation.RoleID &&
+                            existingRelation.MenuID == newPolicyRelation.MenuID &&
+                            existingRelation.PolicyId == newPolicyRelation.PolicyId)
+                        {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+
+                    if (!isDuplicate)
+                    {
+                        // 添加到数据源
+                        bindingSourceRowAuthPolicy.Add(newPolicyRelation);
+                        toolStripButtonSave.Enabled = true;
+                    }
+                    else
+                    {
+                        // 已存在相同的规则关联，不重复添加
+                        MessageBox.Show("该规则已添加到当前角色的此菜单中，不能重复添加。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+        }
+
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+
         }
     }
+
+
+
 }
+

@@ -434,7 +434,7 @@ namespace RUINORERP.UI.FM
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_ExpenseClaimDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_ExpenseClaimDetail>;
-                details = details.Where(c => c.SingleAmount > 0).ToList();
+                details = details.Where(c => c.SingleAmount !=0).ToList();
                 if (details.Count == 0)
                 {
                     MainForm.Instance.uclog.AddLog("单项金额必须大于0");
@@ -443,6 +443,12 @@ namespace RUINORERP.UI.FM
                 EditEntity.TaxAmount = details.Sum(c => c.TaxAmount);
                 EditEntity.ClaimAmount = details.Sum(c => c.SingleAmount);
                 EditEntity.UntaxedAmount = details.Sum(C => C.UntaxedAmount);
+                
+                //添加总计金额小于0的提示
+                if (EditEntity.ClaimAmount < 0)
+                {
+                    MainForm.Instance.uclog.AddLog("警告：报销费用总计小于0，请调整明细金额！", Global.UILogType.警告);
+                }
 
             }
             catch (Exception ex)
@@ -557,7 +563,7 @@ namespace RUINORERP.UI.FM
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
                 //产品ID有值才算有效值
-                details = detailentity.Where(t => t.SingleAmount > 0).ToList();
+                details = detailentity.Where(t => t.SingleAmount != 0).ToList();
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {
@@ -598,7 +604,12 @@ namespace RUINORERP.UI.FM
                         return false;
                     }
                 }
-
+                if (NeedValidated && EditEntity.ClaimAmount < 0)
+                {
+                    //总计金额不能为负数，强制不允许保存
+                    MessageBox.Show("报销费用总计不能小于0，请调整明细金额！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {

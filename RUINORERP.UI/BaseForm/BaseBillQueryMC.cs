@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using FastReport.Barcode;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
@@ -18,6 +18,7 @@ using RUINORERP.Business;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
+using RUINORERP.Business.RowLevelAuthService;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
@@ -135,8 +136,8 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public Expression<Func<M, string>> RelatedBillEditCol { get; set; }
 
-  
-  
+
+
 
         public BaseBillQueryMC()
         {
@@ -979,7 +980,68 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public virtual void BuildLimitQueryConditions()
         {
+            try
+            {
+                // 应用行级权限过滤
+                ApplyRowLevelAuthFilter();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.Error("应用行级权限过滤时发生错误", ex);
+                // 发生错误时继续执行，不阻止查询
+            }
+        }
 
+        /// <summary>
+        /// 应用行级权限过滤条件
+        /// </summary>
+        private void ApplyRowLevelAuthFilter()
+        {
+            try
+            {
+                // 获取行级权限服务
+                var rowAuthService = Startup.GetFromFac<IRowAuthService>();
+                if (rowAuthService == null)
+                {
+                    return;
+                }
+
+                // 获取实体类型
+                Type entityType = typeof(M);
+
+                // 获取过滤条件SQL子句
+                string filterClause = rowAuthService.GetUserRowAuthFilterClause(entityType);
+
+                if (!string.IsNullOrEmpty(filterClause))
+                {
+                    // 如果已有查询条件，将行级权限条件添加到现有条件中
+                    if (LimitQueryConditions != null)
+                    {
+                        // 这里我们需要创建一个新的表达式，将现有条件和行级权限条件组合起来
+                        // 由于我们只有SQL子句，我们需要使用Dynamic Linq来创建表达式
+                        var combinedCondition = DynamicExpressionParser.ParseLambda<M, bool>(
+                            ParsingConfig.Default,
+                            true,
+                            $"@0 && ({filterClause})",
+                            LimitQueryConditions);
+
+                        LimitQueryConditions = combinedCondition;
+                    }
+                    else
+                    {
+                        // 如果没有现有条件，直接使用行级权限条件
+                        LimitQueryConditions = DynamicExpressionParser.ParseLambda<M, bool>(
+                            ParsingConfig.Default,
+                            true,
+                            filterClause);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.Error("生成行级权限过滤条件时发生错误", ex);
+                // 发生错误时继续执行，不阻止查询
+            }
         }
 
 
@@ -1199,7 +1261,11 @@ namespace RUINORERP.UI.BaseForm
             {
                 QueryConditionFilter.FilterLimitExpressions = new List<LambdaExpression>();
             }
-            if (!QueryConditionFilter.FilterLimitExpressions.Contains(LimitQueryConditions))
+
+            // 确保在查询前应用行级权限过滤
+            ApplyRowLevelAuthFilter();
+
+            if (LimitQueryConditions != null && !QueryConditionFilter.FilterLimitExpressions.Contains(LimitQueryConditions))
             {
                 QueryConditionFilter.FilterLimitExpressions.Add(LimitQueryConditions);
             }

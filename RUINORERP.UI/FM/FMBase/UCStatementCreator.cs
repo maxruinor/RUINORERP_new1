@@ -90,7 +90,6 @@ namespace RUINORERP.UI.FM
                              t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
-
             base.LimitQueryConditions = lambda;
         }
         public override void AddExcludeMenuList()

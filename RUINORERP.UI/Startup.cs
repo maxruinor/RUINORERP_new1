@@ -294,6 +294,9 @@ namespace RUINORERP.UI
 
             // 注册主窗体
             services.AddSingleton(typeof(MainForm));
+
+            // 注册插件管理器
+            services.AddSingleton(typeof(RUINORERP.Plugin.PluginManager));
         }
 
         /// <summary>

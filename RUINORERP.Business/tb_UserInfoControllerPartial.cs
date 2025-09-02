@@ -32,7 +32,7 @@ namespace RUINORERP.Business
         /// <returns>数据列表</returns>
         public virtual async Task<List<tb_UserInfo>> QueryByNavWithMoreInfoAsync(Expression<Func<tb_UserInfo, bool>> exp)
         {
-            List<tb_UserInfo> list =await _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
+            List<tb_UserInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
                             .Includes(t => t.tb_employee, e => e.tb_department, d => d.tb_company)
                             .AsNavQueryable()
                             .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Menus, s => s.tb_menuinfo)
@@ -68,6 +68,7 @@ namespace RUINORERP.Business
         {
             List<tb_UserInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
                             .Includes(t => t.tb_employee, e => e.tb_department, d => d.tb_company)
+                            .Includes(a => a.tb_User_Roles, b => b.tb_roleinfo,c=>c.tb_P4RowAuthPolicyByRoles)
                             .AsNavQueryable()
                             .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Menus, s => s.tb_menuinfo)
                             .AsNavQueryable()
@@ -81,6 +82,8 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIQueryConditions)
                               .AsNavQueryable()
                             .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIInputDataFields)
+
+
                             .ToList();
 
             foreach (var item in list)
@@ -92,41 +95,6 @@ namespace RUINORERP.Business
             return list;
         }
 
-
-
-        
-        public virtual List<tb_RoleInfo> QueryALLPowerByNavWithMoreInfo(List<tb_RoleInfo> roles)
-        {
-            List<tb_RoleInfo> list = new List<tb_RoleInfo>();
-            try
-            {
-                var ids = roles.Select(it => new { it.RoleID }).ToArray();
-                long[] idss = new long[ids.Length];
-                for (int i = 0; i < ids.Length; i++)
-                {
-                    idss[i] = ids[i].RoleID;
-                }
-                list = _unitOfWorkManage.GetDbClient().Queryable<tb_RoleInfo>()
-               .In(it => it.RoleID, idss)
-               .AsNavQueryable()
-               .Includes(a => a.tb_P4Menus, b => b.tb_menuinfo, c => c.tb_ButtonInfos)
-               .Includes(a => a.tb_P4Menus, b => b.tb_menuinfo, c => c.tb_FieldInfos)
-               .Includes(a => a.tb_P4Buttons, b => b.tb_buttoninfo)
-               .Includes(a => a.tb_P4Fields, b => b.tb_fieldinfo)
-               .Includes(a => a.tb_rolepropertyconfig)
-               .ToList();
-                foreach (var item in list)
-                {
-                    item.HasChanged = false;
-                }
-            }
-            catch (Exception ex)
-            {
-
-
-            }
-            return list;
-        }
 
 
         /// <summary>

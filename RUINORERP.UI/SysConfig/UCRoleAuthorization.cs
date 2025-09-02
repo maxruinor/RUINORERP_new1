@@ -57,6 +57,9 @@ namespace RUINORERP.UI.SysConfig
     public partial class UCRoleAuthorization : UserControl, IContextMenuInfoAuth
     {
         private readonly IRowAuthService _rowAuthService;
+        // 缓存默认的行级权限策略，避免重复从数据库加载
+        private Dictionary<BizType, List<tb_RowAuthPolicy>> _policyCache = new Dictionary<BizType, List<tb_RowAuthPolicy>>();
+        
         public UCRoleAuthorization()
         {
             InitializeComponent();
@@ -675,7 +678,7 @@ namespace RUINORERP.UI.SysConfig
             }
             bool rs2 = await MainForm.Instance.AppContext.Db.CopyNew().Updateable(pflist).ExecuteCommandHasChangeAsync();
 
-            //保存行级权限规则
+            // 保存行级权限规则
             try
             {
                 if (bindingSourceRowAuthPolicy.List != null && bindingSourceRowAuthPolicy.List.Count > 0 && CurrentRole != null)
@@ -702,8 +705,30 @@ namespace RUINORERP.UI.SysConfig
                     // 保存新的关联记录
                     if (policies.Any())
                     {
-                        await MainForm.Instance.AppContext.Db.Insertable(policies).ExecuteCommandAsync();
+                        await MainForm.Instance.AppContext.Db.Insertable(policies).ExecuteReturnSnowflakeIdAsync();
                         MainForm.Instance.logger.LogInformation("成功保存{Count}条行级权限规则", policies.Count);
+                    }
+
+                    // 更新内存中的CurrentRole对象，同步最新的权限规则
+                    // 1. 先移除当前菜单下的所有旧规则
+                    CurrentRole.tb_P4RowAuthPolicyByRoles = CurrentRole.tb_P4RowAuthPolicyByRoles
+                        .Where(r => !(r.RoleID == roleId && r.MenuID == menuId))
+                        .ToList();
+
+                    // 2. 添加新保存的规则
+                    if (policies.Any())
+                    {
+                        CurrentRole.tb_P4RowAuthPolicyByRoles.AddRange(policies);
+                    }
+                    
+                    // 清除当前业务类型的策略缓存，确保下次加载时获取最新数据
+                    if (selectMenu.BizType.HasValue)
+                    {
+                        BizType bizType = (BizType)selectMenu.BizType.Value;
+                        if (_policyCache.ContainsKey(bizType))
+                        {
+                            _policyCache.Remove(bizType);
+                        }
                     }
                 }
             }
@@ -1806,18 +1831,24 @@ namespace RUINORERP.UI.SysConfig
             if (selectMenu.BizType.HasValue)
             {
                 BizType bizType = (BizType)selectMenu.BizType.Value;
-                // 获取指定业务类型的默认规则选项
-
-                var Policies = _rowAuthService.GetAllPolicies(bizType);
+                // 尝试从缓存获取默认策略
+                List<tb_RowAuthPolicy> Policies;
+                if (!_policyCache.TryGetValue(bizType, out Policies))
+                {
+                    // 缓存未命中时才从服务层获取
+                    Policies = _rowAuthService.GetAllPolicies(bizType);
+                    _policyCache[bizType] = Policies;
+                }
+                
                 BindingSource bs = new BindingSource();
                 bs.DataSource = Policies;
-                
+
                 // 先移除事件订阅，防止设置数据源时触发事件
                 cmbRowAuthPolicy.SelectedIndexChanged -= cmbRowAuthPolicy_SelectedIndexChanged;
-                
+
                 // 设置数据源
                 DataBindingHelper.InitDataToCmb<tb_RowAuthPolicy>(bs, k => k.PolicyId, v => v.PolicyName, cmbRowAuthPolicy);
-                
+
                 // 数据源设置完成后再重新订阅事件
                 cmbRowAuthPolicy.SelectedIndexChanged += cmbRowAuthPolicy_SelectedIndexChanged;
             }
@@ -3021,7 +3052,7 @@ namespace RUINORERP.UI.SysConfig
         private void cmbRowAuthPolicy_SelectedIndexChanged(object sender, EventArgs e)
         {
             // 获取该业务类型支持的默认规则选项
-            if (cmbRowAuthPolicy.SelectedItem is tb_RowAuthPolicy policy)
+            if (TreeView1.SelectedNode != null && cmbRowAuthPolicy.SelectedItem is tb_RowAuthPolicy policy)
             {
                 // 为每个默认选项创建策略
                 tb_MenuInfo selectMenu = TreeView1.SelectedNode.Tag as tb_MenuInfo;

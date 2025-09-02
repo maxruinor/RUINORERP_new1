@@ -15,8 +15,9 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// 获取用户对特定实体类型的数据权限过滤条件
         /// </summary>
         /// <param name="entityType">实体类型</param>
+        /// <param name="menuId">菜单ID，用于区分不同功能的数据规则</param>
         /// <returns>SQL过滤条件子句</returns>
-        string GetUserRowAuthFilterClause(System.Type entityType);
+        string GetUserRowAuthFilterClause(System.Type entityType, long menuId);
 
         /// <summary>
         /// 获取指定角色和业务类型的行级权限配置

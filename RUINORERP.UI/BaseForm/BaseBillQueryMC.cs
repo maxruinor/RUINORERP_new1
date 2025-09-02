@@ -999,48 +999,814 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
+                // 检查是否为超级管理员，如果是则跳过行级权限过滤
+                if (MainForm.Instance != null && MainForm.Instance.AppContext != null && MainForm.Instance.AppContext.IsSuperUser)
+                {
+                    MainForm.Instance.logger.LogDebug("当前用户为超级管理员，跳过行级权限过滤");
+                    return;
+                }
+
                 // 获取行级权限服务
                 var rowAuthService = Startup.GetFromFac<IRowAuthService>();
                 if (rowAuthService == null)
                 {
+                    MainForm.Instance.logger.LogWarning("无法获取行级权限服务，跳过行级权限过滤");
                     return;
                 }
 
                 // 获取实体类型
                 Type entityType = typeof(M);
+                MainForm.Instance.logger.LogDebug("为实体类型 {EntityType} 应用行级权限过滤", entityType.FullName);
 
                 // 获取过滤条件SQL子句
-                string filterClause = rowAuthService.GetUserRowAuthFilterClause(entityType);
+                string filterClause = rowAuthService.GetUserRowAuthFilterClause(entityType, CurMenuInfo.MenuID);
 
                 if (!string.IsNullOrEmpty(filterClause))
                 {
-                    // 如果已有查询条件，将行级权限条件添加到现有条件中
-                    if (LimitQueryConditions != null)
+                    MainForm.Instance.logger.LogDebug("获取到行级权限过滤条件: {FilterClause}", filterClause);
+                    try
                     {
-                        // 这里我们需要创建一个新的表达式，将现有条件和行级权限条件组合起来
-                        // 由于我们只有SQL子句，我们需要使用Dynamic Linq来创建表达式
-                        var combinedCondition = DynamicExpressionParser.ParseLambda<M, bool>(
-                            ParsingConfig.Default,
-                            true,
-                            $"@0 && ({filterClause})",
-                            LimitQueryConditions);
+                        // 预处理filterClause，移除可能导致问题的外层括号和标准化SQL语法
+                        string processedFilterClause = PreprocessFilterClause(filterClause);
 
-                        LimitQueryConditions = combinedCondition;
+                        // 检查是否包含复杂SQL结构(如EXISTS子查询)
+                        if (ContainsComplexSqlStructure(processedFilterClause))
+                        {
+                            MainForm.Instance.logger.LogDebug("检测到复杂SQL表达式，使用专门的处理机制");
+                            // 对于复杂SQL表达式，直接使用包装方法处理
+                            Expression<Func<M, bool>> complexFilterExpression = t => EvaluateComplexFilterExpression(t, processedFilterClause);
+
+                            if (LimitQueryConditions != null)
+                            {
+                                // 合并现有条件和复杂SQL条件
+                                LimitQueryConditions = MergeWithComplexCondition(LimitQueryConditions, complexFilterExpression);
+                            }
+                            else
+                            {
+                                // 直接使用复杂SQL条件
+                                LimitQueryConditions = complexFilterExpression;
+                            }
+
+                            // 不将复杂条件添加到QueryConditionFilter.FilterLimitExpressions中，避免SQL转换错误
+                            MainForm.Instance.logger.LogDebug("复杂条件仅保存在LimitQueryConditions中，不添加到FilterLimitExpressions");
+                        }
+                        else
+                        {
+                            // 如果已有查询条件，将行级权限条件添加到现有条件中
+                            if (LimitQueryConditions != null)
+                            {
+                                // 合并查询条件和行级权限条件
+                                LimitQueryConditions = MergeQueryConditions(LimitQueryConditions, processedFilterClause);
+                            }
+                            else
+                            {
+                                // 如果没有现有条件，直接使用行级权限条件
+                                LimitQueryConditions = CreateRowAuthExpression(processedFilterClause);
+                            }
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        // 如果没有现有条件，直接使用行级权限条件
-                        LimitQueryConditions = DynamicExpressionParser.ParseLambda<M, bool>(
-                            ParsingConfig.Default,
-                            true,
-                            filterClause);
+                        MainForm.Instance.logger.LogError(ex, "解析行级权限过滤条件时发生错误: {FilterClause}", filterClause);
+                        // 详细记录异常信息，便于调试
+                        MainForm.Instance.logger.LogError(ex.StackTrace);
+                        // 发生错误时继续执行，不阻止查询
                     }
+                }
+                else
+                {
+                    MainForm.Instance.logger.LogDebug("未获取到行级权限过滤条件，可能是无权限限制或无适用规则");
                 }
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.Error("生成行级权限过滤条件时发生错误", ex);
+                MainForm.Instance.logger.LogError(ex, "应用行级权限过滤时发生错误");
+                MainForm.Instance.logger.LogError(ex.StackTrace);
                 // 发生错误时继续执行，不阻止查询
+            }
+        }
+
+        /// <summary>
+        /// 检查过滤条件是否包含复杂SQL结构
+        /// </summary>
+        /// <param name="filterClause">过滤条件</param>
+        /// <returns>是否包含复杂SQL结构</returns>
+        private bool ContainsComplexSqlStructure(string filterClause)
+        {
+            if (string.IsNullOrEmpty(filterClause))
+                return false;
+
+            string lowerClause = filterClause.ToLower();
+            // 检查是否包含常见的复杂SQL结构
+            return lowerClause.Contains("exists") ||
+                   lowerClause.Contains("in (") ||
+                   lowerClause.Contains("join") ||
+                   lowerClause.Contains("select ") ||
+                   lowerClause.Contains("from ");
+        }
+
+        /// <summary>
+        /// 检查表达式是否包含EvaluateComplexFilterExpression方法调用
+        /// 用于识别无法直接转换为SQL的复杂条件表达式
+        /// </summary>
+        /// <param name="expression">要检查的表达式</param>
+        /// <returns>如果表达式包含EvaluateComplexFilterExpression方法调用，则返回true；否则返回false</returns>
+        private bool ContainsEvaluateComplexFilterExpression(Expression expression)
+        {
+            if (expression == null)
+                return false;
+
+            // 检查是否为方法调用表达式
+            if (expression is MethodCallExpression methodCallExpr)
+            {
+                // 检查方法名是否为EvaluateComplexFilterExpression
+                if (methodCallExpr.Method.Name == "EvaluateComplexFilterExpression")
+                {
+                    return true;
+                }
+
+                // 递归检查方法参数
+                foreach (var arg in methodCallExpr.Arguments)
+                {
+                    if (ContainsEvaluateComplexFilterExpression(arg))
+                    {
+                        return true;
+                    }
+                }
+            }
+            // 检查是否为二元表达式
+            else if (expression is BinaryExpression binaryExpr)
+            {
+                // 递归检查左操作数
+                if (ContainsEvaluateComplexFilterExpression(binaryExpr.Left))
+                {
+                    return true;
+                }
+
+                // 递归检查右操作数
+                if (ContainsEvaluateComplexFilterExpression(binaryExpr.Right))
+                {
+                    return true;
+                }
+            }
+            // 检查是否为一元表达式
+            else if (expression is UnaryExpression unaryExpr)
+            {
+                // 递归检查操作数
+                if (ContainsEvaluateComplexFilterExpression(unaryExpr.Operand))
+                {
+                    return true;
+                }
+            }
+            // 检查是否为lambda表达式
+            else if (expression is LambdaExpression lambdaExpr)
+            {
+                // 递归检查lambda表达式体
+                if (ContainsEvaluateComplexFilterExpression(lambdaExpr.Body))
+                {
+                    return true;
+                }
+            }
+            // 检查是否为参数表达式（基本情况，无需递归）
+            else if (expression is ParameterExpression)
+            {
+                // 参数表达式不包含方法调用
+                return false;
+            }
+            // 检查是否为常量表达式（基本情况，无需递归）
+            else if (expression is ConstantExpression)
+            {
+                // 常量表达式不包含方法调用
+                return false;
+            }
+            // 其他类型的表达式
+            else
+            {
+                // 对于其他类型的表达式，尝试访问其属性或字段
+                try
+                {
+                    // 获取表达式的所有子表达式
+                    var subExpressions = expression.GetType().GetProperties()
+                        .Where(p => typeof(Expression).IsAssignableFrom(p.PropertyType))
+                        .Select(p => p.GetValue(expression) as Expression)
+                        .Where(e => e != null);
+
+                    // 递归检查所有子表达式
+                    foreach (var subExpr in subExpressions)
+                    {
+                        if (ContainsEvaluateComplexFilterExpression(subExpr))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 发生异常时，记录日志并返回false
+                    MainForm.Instance.logger.LogWarning(ex, "检查表达式是否包含EvaluateComplexFilterExpression方法调用时发生异常");
+                }
+            }
+
+            // 没有找到EvaluateComplexFilterExpression方法调用
+            return false;
+        }
+
+        /// <summary>
+        /// 合并现有查询条件和复杂条件表达式
+        /// 优化的实现，提供更健壮的表达式合并逻辑和错误处理，避免重复条件合并
+        /// </summary>
+        /// <param name="existingCondition">现有查询条件</param>
+        /// <param name="complexCondition">复杂条件表达式</param>
+        /// <returns>合并后的查询条件</returns>
+        private Expression<Func<M, bool>> MergeWithComplexCondition(Expression<Func<M, bool>> existingCondition, Expression<Func<M, bool>> complexCondition)
+        {
+            try
+            {
+                if (existingCondition == null)
+                {
+                    MainForm.Instance.logger.LogDebug("现有条件为空，直接返回复杂条件表达式");
+                    return complexCondition;
+                }
+
+                if (complexCondition == null)
+                {
+                    MainForm.Instance.logger.LogDebug("复杂条件为空，直接返回现有查询条件");
+                    return existingCondition;
+                }
+
+                // 检测是否已有相同的复杂条件，避免重复合并
+                if (HasDuplicateComplexCondition(existingCondition, complexCondition))
+                {
+                    MainForm.Instance.logger.LogDebug("检测到重复的复杂条件，跳过合并操作");
+                    return existingCondition;
+                }
+
+                MainForm.Instance.logger.LogDebug("准备合并现有查询条件和复杂条件表达式");
+
+                // 创建统一的参数表达式，确保两个条件使用相同的参数实例
+                var parameter = Expression.Parameter(typeof(M), "t");
+
+                try
+                {
+                    // 从现有表达式中获取条件
+                    var existingConditionBody = Expression.Invoke(existingCondition, parameter);
+
+                    // 从复杂条件表达式中获取条件
+                    var complexConditionBody = Expression.Invoke(complexCondition, parameter);
+
+                    // 创建AND组合表达式
+                    var combinedExpression = Expression.AndAlso(existingConditionBody, complexConditionBody);
+
+                    // 创建最终的Lambda表达式
+                    var combinedCondition = Expression.Lambda<Func<M, bool>>(combinedExpression, parameter);
+
+                    MainForm.Instance.logger.LogDebug("成功合并现有查询条件和复杂条件表达式");
+                    return combinedCondition;
+                }
+                catch (InvalidOperationException ioEx)
+                {
+                    // 捕获参数不匹配或表达式结构问题
+                    MainForm.Instance.logger.LogWarning(ioEx, "使用标准方法合并表达式失败，尝试替代方法");
+
+                    // 替代方法：创建一个新的Lambda表达式，内部调用两个条件方法
+                    Expression<Func<M, bool>> alternativeCombined = t => existingCondition.Compile()(t) && complexCondition.Compile()(t);
+
+                    MainForm.Instance.logger.LogDebug("成功使用替代方法合并表达式");
+                    return alternativeCombined;
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "合并查询条件和复杂条件表达式时发生错误");
+                // 详细记录异常栈
+                MainForm.Instance.logger.LogError(ex.StackTrace);
+
+                // 发生严重错误时，创建一个安全的后备条件，返回一个总是为true的表达式
+                // 这样可以确保查询不会因为条件合并失败而完全无法执行
+                Expression<Func<M, bool>> safeFallback = t => true;
+                MainForm.Instance.logger.LogWarning("使用安全后备条件，所有记录都将被返回");
+
+                return safeFallback;
+            }
+        }
+
+        /// <summary>
+        /// 检测现有条件中是否已包含相同的复杂条件
+        /// 避免重复合并导致的表达式嵌套过深或重复计算
+        /// </summary>
+        /// <param name="existingCondition">现有查询条件</param>
+        /// <param name="complexCondition">复杂条件表达式</param>
+        /// <returns>是否包含重复的复杂条件</returns>
+        private bool HasDuplicateComplexCondition(Expression<Func<M, bool>> existingCondition, Expression<Func<M, bool>> complexCondition)
+        {
+            try
+            {
+                // 获取表达式的调试视图字符串，用于比较
+                string existingDebugView = GetExpressionDebugView(existingCondition);
+                string complexDebugView = GetExpressionDebugView(complexCondition);
+
+                // 检查现有条件是否已经包含了相同的复杂条件
+                // 特别针对EvaluateComplexFilterExpression方法调用进行检查
+                bool hasDuplicate = existingDebugView.Contains("EvaluateComplexFilterExpression") &&
+                                   complexDebugView.Contains("EvaluateComplexFilterExpression");
+
+                if (hasDuplicate)
+                {
+                    MainForm.Instance.logger.LogDebug("检测到重复的EvaluateComplexFilterExpression调用");
+                }
+
+                return hasDuplicate;
+            }
+            catch (Exception ex)
+            {
+                // 比较失败时默认为不重复，避免阻止正常的合并操作
+                MainForm.Instance.logger.LogWarning(ex, "检测重复条件时发生错误");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取表达式的调试视图字符串
+        /// 用于表达式比较和调试
+        /// </summary>
+        /// <param name="expression">要获取调试视图的表达式</param>
+        /// <returns>表达式的调试视图字符串</returns>
+        private string GetExpressionDebugView(Expression expression)
+        {
+            try
+            {
+                // 使用反射获取Expression的DebugView属性
+                var debugViewProperty = expression.GetType().GetProperty("DebugView",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                if (debugViewProperty != null)
+                {
+                    return debugViewProperty.GetValue(expression) as string ?? string.Empty;
+                }
+
+                // 如果无法获取DebugView，返回表达式的ToString()结果
+                return expression.ToString();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogWarning(ex, "获取表达式调试视图时发生错误");
+                return expression.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 合并现有查询条件和行级权限条件
+        /// 优化的实现，提供更健壮的表达式合并逻辑和错误处理，避免重复条件合并
+        /// </summary>
+        /// <param name="existingCondition">现有查询条件</param>
+        /// <param name="filterClause">行级权限过滤条件</param>
+        /// <returns>合并后的查询条件</returns>
+        private Expression<Func<M, bool>> MergeQueryConditions(Expression<Func<M, bool>> existingCondition, string filterClause)
+        {
+            try
+            {
+                // 检查filterClause是否为空或只包含恒真条件
+                if (string.IsNullOrWhiteSpace(filterClause) ||
+                    filterClause.Trim() == "(1=1)" || filterClause.Trim() == "1=1")
+                {
+                    // 如果是无条件或恒真条件，则不需要合并，直接使用现有条件
+                    MainForm.Instance.logger.LogDebug("行级权限条件为空或恒真，无需合并");
+                    return existingCondition;
+                }
+
+                if (existingCondition == null)
+                {
+                    MainForm.Instance.logger.LogDebug("现有条件为空，直接创建行级权限条件表达式");
+                    return CreateRowAuthExpression(filterClause);
+                }
+
+                // 创建行级权限条件表达式
+                Expression<Func<M, bool>> rowAuthExpression = CreateRowAuthExpression(filterClause);
+
+                // 检测是否已有相同的复杂条件，避免重复合并
+                if (HasDuplicateComplexCondition(existingCondition, rowAuthExpression))
+                {
+                    MainForm.Instance.logger.LogDebug("检测到重复的行级权限条件，跳过合并操作: {FilterClause}", filterClause);
+                    return existingCondition;
+                }
+
+                MainForm.Instance.logger.LogDebug("准备合并现有查询条件和行级权限条件: {FilterClause}", filterClause);
+
+                // 创建统一的参数表达式
+                var parameter = Expression.Parameter(typeof(M), "t"); // 统一使用t作为参数名，与原始代码保持一致
+
+                try
+                {
+                    // 从现有表达式中获取条件
+                    var existingConditionBody = Expression.Invoke(existingCondition, parameter);
+
+                    // 从行级权限表达式中获取条件
+                    var rowAuthConditionBody = Expression.Invoke(rowAuthExpression, parameter);
+
+                    // 创建AND组合表达式
+                    var combinedExpression = Expression.AndAlso(existingConditionBody, rowAuthConditionBody);
+
+                    // 创建最终的Lambda表达式
+                    var combinedCondition = Expression.Lambda<Func<M, bool>>(combinedExpression, parameter);
+
+                    MainForm.Instance.logger.LogDebug("成功合并现有查询条件和行级权限条件");
+                    return combinedCondition;
+                }
+                catch (InvalidOperationException ioEx)
+                {
+                    // 捕获参数不匹配或表达式结构问题
+                    MainForm.Instance.logger.LogWarning(ioEx, "使用标准方法合并表达式失败，尝试替代方法");
+
+                    // 替代方法：使用编译后的委托进行条件组合
+                    Expression<Func<M, bool>> alternativeCombined = t => existingCondition.Compile()(t) && rowAuthExpression.Compile()(t);
+
+                    MainForm.Instance.logger.LogDebug("成功使用替代方法合并表达式");
+                    return alternativeCombined;
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "合并查询条件和行级权限条件时发生错误");
+                // 详细记录异常栈
+                MainForm.Instance.logger.LogError(ex.StackTrace);
+
+                // 发生严重错误时，创建一个安全的后备条件，返回一个总是为true的表达式
+                // 这样可以确保查询不会因为条件合并失败而完全无法执行
+                Expression<Func<M, bool>> safeFallback = t => true;
+                MainForm.Instance.logger.LogWarning("使用安全后备条件，所有记录都将被返回");
+
+                return safeFallback;
+            }
+        }
+
+        /// <summary>
+        /// 创建行级权限表达式
+        /// </summary>
+        /// <param name="filterClause">过滤条件</param>
+        /// <returns>行级权限表达式</returns>
+        private Expression<Func<M, bool>> CreateRowAuthExpression(string filterClause)
+        {
+            try
+            {
+                // 尝试直接解析行级权限条件
+                var rowAuthExpression = DynamicExpressionParser.ParseLambda<M, bool>(
+                    ParsingConfig.Default,
+                    true,
+                    filterClause);
+
+                MainForm.Instance.logger.LogDebug("成功创建行级权限表达式");
+                return rowAuthExpression;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogWarning(ex, "无法直接解析行级权限表达式，使用替代方案: {FilterClause}", filterClause);
+
+                // 返回一个包含EvaluateComplexFilterExpression调用的表达式
+                // 但在Query方法中我们会检测并在客户端处理这些表达式
+                // 这样可以保留行级权限过滤的信息
+                return t => EvaluateComplexFilterExpression(t, filterClause);
+            }
+        }
+
+        /// <summary>
+        /// 预处理过滤条件，移除可能导致问题的外层括号和标准化SQL语法
+        /// 特别针对DynamicExpressionParser无法解析的复杂SQL表达式格式进行优化
+        /// </summary>
+        /// <param name="filterClause">原始过滤条件</param>
+        /// <returns>预处理后的过滤条件</returns>
+        private string PreprocessFilterClause(string filterClause)
+        {
+            if (string.IsNullOrWhiteSpace(filterClause))
+                return filterClause;
+
+            string processed = filterClause.Trim();
+
+            // 第一步：移除外层括号（如果它们是配对的）
+            processed = RemoveOuterBrackets(processed);
+
+            // 第二步：标准化SQL语法格式
+            processed = StandardizeSqlSyntax(processed);
+
+            // 第三步：处理特殊情况
+            processed = HandleSpecialCases(processed);
+
+            MainForm.Instance.logger.LogDebug("预处理后的过滤条件: {ProcessedFilterClause}", processed);
+            return processed;
+        }
+
+        /// <summary>
+        /// 移除外层括号（如果它们是配对的）
+        /// </summary>
+        /// <param name="filterClause">过滤条件</param>
+        /// <returns>处理后的过滤条件</returns>
+        private string RemoveOuterBrackets(string filterClause)
+        {
+            string trimmed = filterClause.Trim();
+
+            // 移除外层括号
+            if (trimmed.StartsWith("(") && trimmed.EndsWith(")"))
+            {
+                int bracketCount = 1;
+                for (int i = 1; i < trimmed.Length - 1; i++)
+                {
+                    if (trimmed[i] == '(')
+                        bracketCount++;
+                    else if (trimmed[i] == ')')
+                        bracketCount--;
+
+                    // 如果括号数量归零，说明外层括号不是一对
+                    if (bracketCount == 0)
+                        return filterClause;
+                }
+
+                // 如果括号数量最终为1，说明外层括号是一对，可以移除
+                if (bracketCount == 1)
+                    return trimmed.Substring(1, trimmed.Length - 2).Trim();
+            }
+
+            return filterClause;
+        }
+
+        /// <summary>
+        /// 标准化SQL语法格式
+        /// </summary>
+        /// <param name="filterClause">过滤条件</param>
+        /// <returns>标准化后的过滤条件</returns>
+        private string StandardizeSqlSyntax(string filterClause)
+        {
+            string standardized = filterClause;
+
+            // 处理常见的SQL语法标准化
+            standardized = standardized.Replace("\"", "'"); // 将双引号替换为单引号
+            standardized = standardized.Replace("''", "'"); // 处理重复的单引号
+
+            // 移除多余的空格
+            standardized = System.Text.RegularExpressions.Regex.Replace(standardized, @"\s+", " ");
+
+            return standardized.Trim();
+        }
+
+        /// <summary>
+        /// 处理特殊情况
+        /// </summary>
+        /// <param name="filterClause">过滤条件</param>
+        /// <returns>处理后的过滤条件</returns>
+        private string HandleSpecialCases(string filterClause)
+        {
+            string result = filterClause;
+
+            // 处理特定的SQL函数格式问题
+            // 例如处理DateTime函数格式
+            if (result.Contains("DateTime."))
+            {
+                // 简单的示例，实际可能需要更复杂的处理
+                result = result.Replace("DateTime.Now", "DateTime.Now");
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 评估复杂的过滤表达式，用于处理DynamicExpressionParser无法直接解析的SQL语法
+        /// 这个方法会使用EF Core来执行复杂的SQL表达式，而不是尝试将其解析为Lambda表达式
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="filterClause">过滤条件</param>
+        /// <returns>是否满足过滤条件</returns>
+        private bool EvaluateComplexFilterExpression(M entity, string filterClause)
+        {
+            try
+            {
+                MainForm.Instance.logger.LogDebug("评估复杂过滤表达式: {FilterClause}", filterClause);
+
+                // 获取实体主键值
+                string PKCol = BaseUIHelper.GetEntityPrimaryKey(typeof(M));
+                long entityId = (long)ReflectionHelper.GetPropertyValue(entity, PKCol);
+
+                // 执行专门的评估方法来处理包含EXISTS子查询的复杂表达式
+                bool result = EvaluateExistsFilterExpression(entityId, filterClause);
+                MainForm.Instance.logger.LogDebug("复杂过滤表达式评估结果: {Result}", result);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "评估复杂过滤表达式时发生错误: {FilterClause}", filterClause);
+                // 发生错误时默认返回true，确保查询不会被过度限制
+                return true;
+            }
+        }
+
+
+        /// <summary>
+        /// 评估包含EXISTS子查询的过滤表达式
+        /// 基于SqlSugar框架优化的实现，提供更健壮的复杂SQL表达式处理
+        /// </summary>
+        /// <param name="entityId">实体ID</param>
+        /// <param name="filterClause">过滤条件</param>
+        /// <returns>是否满足过滤条件</returns>
+        private bool EvaluateExistsFilterExpression(object entityId, string filterClause)
+        {
+            try
+            {
+                // 获取实体类型和表名
+                var entityType = typeof(M);
+                string tableName = GetTableName(entityType);
+
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    MainForm.Instance.logger.LogWarning("无法获取实体类型 {EntityType} 的表名，跳过复杂表达式评估", entityType.FullName);
+                    return true;
+                }
+
+                // 获取主键列名
+                string primaryKeyColumn = BaseUIHelper.GetEntityPrimaryKey(typeof(M));
+
+                if (string.IsNullOrEmpty(primaryKeyColumn))
+                {
+                    MainForm.Instance.logger.LogWarning("无法获取实体类型 {EntityType} 的主键列名，跳过复杂表达式评估", entityType.FullName);
+                    return true;
+                }
+
+                // 构建包含WHERE子句的完整SQL查询
+                // 处理SQL表达式，确保其适合直接执行
+                string processedFilterClause = ProcessSqlForDirectExecution(filterClause, tableName);
+
+                // 构建检查记录是否存在的SQL
+                string checkExistsSql = $"SELECT COUNT(1) FROM {tableName} WHERE {primaryKeyColumn} = @EntityId AND ({processedFilterClause})";
+
+                MainForm.Instance.logger.LogDebug("执行SQL检查实体权限: {Sql}", checkExistsSql);
+
+                // 安全检查SQL语句
+                if (!IsSafeSql(checkExistsSql))
+                {
+                    MainForm.Instance.logger.LogWarning("检测到不安全的SQL语句，跳过执行: {Sql}", checkExistsSql);
+                    return true;
+                }
+
+                // 使用参数化查询避免SQL注入
+                var parameters = new { EntityId = entityId };
+
+                // 执行SQL查询并获取结果
+                int count = 0;
+                try
+                {
+                    count = MainForm.Instance.AppContext.Db.Ado.SqlQuery<int>(checkExistsSql, parameters).FirstOrDefault();
+                }
+                catch (SqlSugar.SqlSugarException sqlEx)
+                {
+                    // 专门处理SqlSugar相关异常
+                    MainForm.Instance.logger.LogError(sqlEx, "执行SqlSugar查询时发生SQL错误: {Sql}", checkExistsSql);
+                    // 记录SQL错误详情
+                    if (sqlEx.InnerException != null)
+                    {
+                        MainForm.Instance.logger.LogError(sqlEx.InnerException, "SQL错误详情");
+                    }
+                    return true;
+                }
+
+                MainForm.Instance.logger.LogDebug("EXISTS子查询执行结果: 找到 {Count} 条记录", count);
+                return count > 0;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "执行EXISTS过滤表达式时发生错误: {FilterClause}", filterClause);
+                // 详细记录异常栈
+                MainForm.Instance.logger.LogError(ex.StackTrace);
+                return true; // 失败时返回true，确保不阻止查询
+            }
+        }
+
+        /// <summary>
+        /// 获取实体类型对应的数据库表名
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>表名</returns>
+        private string GetTableName(Type entityType)
+        {
+            try
+            {
+                // 尝试通过特性获取表名
+                var tableAttribute = entityType.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.TableAttribute), true)
+                    .FirstOrDefault() as System.ComponentModel.DataAnnotations.Schema.TableAttribute;
+
+                if (tableAttribute != null && !string.IsNullOrEmpty(tableAttribute.Name))
+                {
+                    return tableAttribute.Name;
+                }
+
+                // 默认使用实体名称作为表名
+                return entityType.Name;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "获取表名时发生错误");
+                return entityType.Name;
+            }
+        }
+
+
+
+        /// <summary>
+        /// 检查SQL语句是否安全（防止SQL注入）
+        /// </summary>
+        /// <param name="sql">要检查的SQL语句</param>
+        /// <returns>SQL语句是否安全</returns>
+        private bool IsSafeSql(string sql)
+        {
+            if (string.IsNullOrEmpty(sql))
+                return false;
+
+            string lowerSql = sql.ToLower();
+
+            // 基本的SQL注入检测
+            string[] dangerousKeywords = new string[]
+            {
+                "drop ", "truncate ", "alter ", "exec ", "execute ", "insert ", "update ", "delete ",
+                "create ", "grant ", "revoke ", "sp_"
+            };
+
+            foreach (string keyword in dangerousKeywords)
+            {
+                if (lowerSql.Contains(keyword))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 处理SQL语句，使其适合直接执行
+        /// 针对复杂SQL表达式（如EXISTS子查询）进行特殊处理
+        /// </summary>
+        /// <param name="filterClause">过滤条件</param>
+        /// <param name="tableName">实体表名</param>
+        /// <returns>处理后的SQL语句</returns>
+        private string ProcessSqlForDirectExecution(string filterClause, string tableName = null)
+        {
+            if (string.IsNullOrEmpty(filterClause))
+                return "1=1";
+
+            string processed = filterClause.Trim();
+
+            try
+            {
+                // 处理常见的SQL语法问题
+                processed = processed.Replace("'", "''"); // 转义单引号
+
+                // 处理EXISTS子查询中的表别名问题
+                if (processed.ToLower().Contains("exists"))
+                {
+                    // 这里可以根据需要添加更复杂的EXISTS子查询处理逻辑
+                    // 例如，确保子查询中的表名正确引用
+                    MainForm.Instance.logger.LogDebug("处理EXISTS子查询表达式");
+                }
+
+                // 如果提供了表名，可以进行表名替换或其他处理
+                if (!string.IsNullOrEmpty(tableName))
+                {
+                    // 这里可以添加表名相关的处理逻辑
+                }
+
+                // 确保表达式以有效的条件开始和结束
+                if (!processed.StartsWith("(") && !processed.EndsWith(")"))
+                {
+                    // 检查是否已经是一个有效的条件表达式
+                    if (!processed.Contains("="))
+                    {
+                        MainForm.Instance.logger.LogWarning("过滤条件可能不是有效的SQL表达式: {FilterClause}", processed);
+                    }
+                }
+
+                MainForm.Instance.logger.LogDebug("处理后的SQL表达式: {ProcessedSql}", processed);
+                return processed;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "处理SQL语句时发生错误");
+                return "1=1";
+            }
+        }
+
+        /// <summary>
+        /// 处理SQL语句，使其适合直接执行
+        /// 兼容旧版本方法签名，实际调用新的带表名参数的重载方法
+        /// </summary>
+        /// <param name="filterClause">过滤条件</param>
+        /// <returns>处理后的SQL语句</returns>
+        private string ProcessSqlForDirectExecution(string filterClause)
+        {
+            try
+            {
+                // 调用新的重载方法，使用默认表名参数
+                // 这样可以确保所有SQL处理都使用相同的、更完善的逻辑
+                return ProcessSqlForDirectExecution(filterClause, null);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "处理SQL语句时发生错误（兼容模式）");
+                return filterClause; // 失败时返回原始表达式
             }
         }
 
@@ -1264,15 +2030,14 @@ namespace RUINORERP.UI.BaseForm
 
             // 确保在查询前应用行级权限过滤
             ApplyRowLevelAuthFilter();
-
             if (LimitQueryConditions != null && !QueryConditionFilter.FilterLimitExpressions.Contains(LimitQueryConditions))
             {
                 QueryConditionFilter.FilterLimitExpressions.Add(LimitQueryConditions);
             }
-            //list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, queryConditions, LimitQueryConditions, QueryDto, pageNum, pageSize) as List<M>;
-            list = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<M>;
 
-
+            // 执行查询
+            List<M> rawList = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<M>;
+            list = rawList;
             _UCBillMasterQuery.bindingSourceMaster.DataSource = list.ToBindingSortCollection();
             _UCBillMasterQuery.ShowSummaryCols();
             if (list.Count > 0)

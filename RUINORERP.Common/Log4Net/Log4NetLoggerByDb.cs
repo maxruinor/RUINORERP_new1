@@ -10,6 +10,7 @@ using log4net.Layout;
 using log4net.Repository;
 using log4net.Repository.Hierarchy;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Common.Helper;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.Context;
@@ -91,7 +92,7 @@ namespace RUINORERP.Common.Log4Net
                 {
                     return;
                 }
-                //Logs log = new Logs();
+                
                 // 每次创建新实例，避免共享状态
                 string message = null;
                 if (null != formatter)
@@ -100,105 +101,118 @@ namespace RUINORERP.Common.Log4Net
                     {
                         message = formatter(state, exception);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-
+                        Console.WriteLine("格式化日志消息失败: " + ex.Message);
+                        message = "无法格式化日志消息: " + state?.ToString();
                     }
                 }
-
-                var log = new Logs
+                
+                // 确保应用程序上下文和当前用户不为空
+                if (_appcontext == null)
                 {
-                    // 从上下文复制必要字段（确保线程安全）
-                    User_ID = _appcontext.log.User_ID,
-                    ModName = _appcontext.log.ModName,
-                    ActionName = _appcontext.log.ActionName,
-                    IP = _appcontext.log.IP,
-                    Path = _appcontext.log.Path,
-                    MAC = _appcontext.log.MAC,
-                    MachineName = _appcontext.log.MachineName,
-                    Operator = _appcontext.CurrentUser.客户端版本,
-                    Level = _appcontext.log.Level,
-                    Date = DateTime.Now,
-                    Message = message,
-                    Exception = exception?.StackTrace
-                };
+                    Console.WriteLine("警告: 应用程序上下文为空");
+                    return;
+                }
+                
+                if (_appcontext.CurrentUser == null)
+                {
+                    Console.WriteLine("警告: 当前用户上下文为空");
+                    return;
+                }
+                
+                // 设置log4net的上下文属性，这样自定义布局器才能正确获取这些值
+                log4net.ThreadContext.Properties["User_ID"] = _appcontext.log.User_ID;
+                log4net.ThreadContext.Properties["ModName"] = _appcontext.log.ModName;
+                log4net.ThreadContext.Properties["ActionName"] = _appcontext.log.ActionName;
+                log4net.ThreadContext.Properties["IP"] = _appcontext.log.IP;
+                log4net.ThreadContext.Properties["Path"] = _appcontext.log.Path;
+                log4net.ThreadContext.Properties["MAC"] = _appcontext.log.MAC;
+                log4net.ThreadContext.Properties["MachineName"] = _appcontext.log.MachineName;
+                log4net.ThreadContext.Properties["Operator"] = _appcontext.CurrentUser.客户端版本 ?? "未登录用户";
+                log4net.ThreadContext.Properties["Message"] = message;
+                log4net.ThreadContext.Properties["Exception"] = exception?.StackTrace;
+                
+                // 简化日志记录过程，直接使用消息和异常对象
 
                 //log = _appcontext.log;//公共部分一次给过去
 
                 #region 如果这里异常可能会卡死所有db,因为使用了DB存日志 所以加上try
-                // log.Message = message;
-                if (exception == null)
+                try
                 {
-                    log.Exception = null;
-                }
-                if (log.Exception == null && exception != null)
-                {
-                    log.Exception = exception.StackTrace;
-                }
-
-                //通过反射取出异常值
-                FieldInfo[] fieldsInfo = state.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
-                FieldInfo props = fieldsInfo.FirstOrDefault(o => o.Name == "_values");
-                object[] values = (object[])props?.GetValue(state);
-                foreach (var item in values)
-                {
-                    if (item is Exception ex)
+                    //通过反射取出异常值
+                    if (state != null)
                     {
-                        if (log.Message == null)
+                        FieldInfo[] fieldsInfo = state.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
+                        FieldInfo props = fieldsInfo.FirstOrDefault(o => o.Name == "_values");
+                        if (props != null)
                         {
-                            log.Message = string.Empty;
-                        }
-                        if (log.Message.Trim().Length > 0)
-                        {
-                            log.Message += "\r\n";
-                        }
-                        log.Message += ex.Message + "\r\n";
-                        log.Exception += ex.StackTrace + "\r\n";
-                        if (ex.InnerException != null)
-                        {
-                            log.Message += ex.InnerException.Message + "\r\n";
-                            log.Exception += ex.InnerException.StackTrace + "\r\n";
+                            object[] values = (object[])props?.GetValue(state);
+                            if (values != null)
+                            {
+                                foreach (var item in values)
+                                {
+                                    if (item is Exception ex)
+                                    {
+                                        string exMessage = ex.Message;
+                                        string exStackTrace = ex.StackTrace;
+                                        
+                                        if (ex.InnerException != null)
+                                        {
+                                            exMessage += "\r\n" + ex.InnerException.Message;
+                                            exStackTrace += "\r\n" + ex.InnerException.StackTrace;
+                                        }
+                                        
+                                        // 更新上下文属性
+                                        if (!string.IsNullOrEmpty(message))
+                                        {
+                                            log4net.ThreadContext.Properties["Message"] = message + "\r\n" + exMessage;
+                                        }
+                                        else
+                                        {
+                                            log4net.ThreadContext.Properties["Message"] = exMessage;
+                                        }
+                                        
+                                        if (!string.IsNullOrEmpty(exception?.StackTrace))
+                                        {
+                                            log4net.ThreadContext.Properties["Exception"] = exception.StackTrace + "\r\n" + exStackTrace;
+                                        }
+                                        else
+                                        {
+                                            log4net.ThreadContext.Properties["Exception"] = exStackTrace;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-                if (log.Message != null)
+                catch (Exception ex)
                 {
-                    log.Message = log.Message.Trim();
+                    Console.WriteLine("处理日志状态对象失败: " + ex.Message);
                 }
-                if (log.Exception != null)
-                {
-                    log.Exception = log.Exception.Trim();
-                }
-
+                
                 #endregion
-                Console.WriteLine($"日志处理异常: {log.Message}");
-                if (log.Date == null)
-                {
-                    log.Date = DateTime.Now;
-                }
-                if (log.User_ID == null)
-                {
-                    // log.User_ID = DBNull.Value;
-                }
+                
                 if (!string.IsNullOrEmpty(message) || exception != null)
                 {
                     switch (logLevel)
                     {
                         case LogLevel.Critical:
-                            _log.Fatal(log);
+                            _log.Fatal(message, exception);
                             break;
                         case LogLevel.Debug:
                         case LogLevel.Trace:
-                            _log.Debug(log);
+                            _log.Debug(message, exception);
                             break;
                         case LogLevel.Error:
-                            _log.Error(log);
+                            _log.Error(message, exception);
                             break;
                         case LogLevel.Information:
-                            _log.Info(log);
+                            _log.Info(message, exception);
                             break;
                         case LogLevel.Warning:
-                            _log.Warn(log);
+                            _log.Warn(message, exception);
                             break;
                         default:
                             _log.Warn($"Encountered unknown log level {logLevel}, writing out as Info.");
@@ -230,11 +244,26 @@ namespace RUINORERP.Common.Log4Net
             adoNetAppender.ConnectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version=1.0.3300.0, Culture=neutral, PublicKeyToken=b77a5c561934e089";
             if (string.IsNullOrEmpty(_ConnectionString))
             {
-                adoNetAppender.ConnectionString = "Server=192.168.0.254;Database=erpnew;UID=sa;Password=SA!@#123sa;Max Pool Size=1000;MultipleActiveResultSets=True;Min Pool Size=0;Connection Lifetime=0;";
+                // 如果连接字符串为空，尝试从配置文件获取
+                try
+                {
+                    _ConnectionString = CryptoHelper.GetDecryptedConnectionString();
+                    Console.WriteLine("从配置文件获取连接字符串成功");
+                    adoNetAppender.ConnectionString = _ConnectionString;
+                    Console.WriteLine("已应用从配置文件获取的连接字符串");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("警告：获取连接字符串失败，使用备用连接字符串: " + ex.Message);
+                    // 只有在无法从配置文件获取时才使用备用连接字符串
+                    adoNetAppender.ConnectionString = "Server=192.168.0.254;Database=erpnew;UID=sa;Password=SA!@#123sa;Max Pool Size=1000;MultipleActiveResultSets=True;Min Pool Size=0;Connection Lifetime=0;";
+                }
             }
             else
             {
+                // 如果传入了连接字符串，直接使用
                 adoNetAppender.ConnectionString = _ConnectionString;
+                Console.WriteLine("已应用传入的连接字符串进行日志数据库连接");
             }
 
             adoNetAppender.CommandText = "INSERT INTO Logs ([User_ID],[Date],[Level],[Logger],[Message],[Exception],[Operator],[ModName],[MAC],[IP],[Path],[ActionName],[MachineName]) VALUES (@User_ID,@log_date, @log_level, @logger, @Message, @Exception,@Operator,@ModName,@MAC,@IP,@Path,@ActionName,@MachineName)";
@@ -242,44 +271,44 @@ namespace RUINORERP.Common.Log4Net
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_level", DbType = System.Data.DbType.String, Size = 50, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%level")) });
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@logger", DbType = System.Data.DbType.String, Size = 255, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%logger")) });
 
-            log4net.Layout.PatternLayout layout = new CustomLayout() { ConversionPattern = "%property{Operator}" };
+            log4net.Layout.PatternLayout layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Operator}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Operator", DbType = System.Data.DbType.String, Size = 4000, Layout = new Layout2RawLayoutAdapter(layout) });
 
-            layout = new CustomLayout() { ConversionPattern = "%property{User_ID}" };
+            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{User_ID}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@User_ID", DbType = System.Data.DbType.Int64, Size = 4000, Layout = new Layout2RawLayoutAdapter(layout) });
 
-            layout = new CustomLayout() { ConversionPattern = "%property{ModName}" };
+            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{ModName}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@ModName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
 
-            layout = new CustomLayout() { ConversionPattern = "%property{MAC}" };
+            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{MAC}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@MAC", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
 
-            layout = new CustomLayout() { ConversionPattern = "%property{IP}" };
+            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{IP}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@IP", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
 
-            layout = new CustomLayout() { ConversionPattern = "%property{Path}" };
+            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Path}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Path", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
 
-            layout = new CustomLayout() { ConversionPattern = "%property{ActionName}" };
+            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{ActionName}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@ActionName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
 
-            layout = new CustomLayout() { ConversionPattern = "%property{MachineName}" };
+            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{MachineName}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@MachineName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
 
-            layout = new CustomLayout() { ConversionPattern = "%property{Message}" };
+            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Message}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Message", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
             adoNetAppender.ActivateOptions();
 
-            layout = new CustomLayout() { ConversionPattern = "%property{Exception}" };
+            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Exception}" };
             layout.ActivateOptions();
             adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Exception", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
             adoNetAppender.ActivateOptions();

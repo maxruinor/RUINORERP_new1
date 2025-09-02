@@ -2420,7 +2420,7 @@ namespace RUINORERP.UI
             bool validationSucceeded = results.IsValid;
             IList<ValidationFailure> failures = results.Errors;
 
-            db.Insertable(tbunit).ExecuteCommand(); //都是参数化实现
+            db.Insertable(tbunit).ExecuteReturnSnowflakeId(); //都是参数化实现
 
 
 

@@ -79,19 +79,11 @@ namespace RUINORERP.UI
         {
             try
             {
-                // 配置log4net
+                // 配置log4net（使用基础配置，主要日志配置由Startup中的ConfigureLogging方法处理）
                 var logRepository = LogManager.GetRepository(Assembly.GetEntryAssembly());
-                XmlConfigurator.Configure(logRepository, new FileInfo("log4net.config"));
+                BasicConfigurator.Configure(logRepository);
 
-                // 创建基础日志记录器用于启动阶段的日志记录
-                Microsoft.Extensions.Logging.ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-                {
-                    builder.AddLog4Net("log4net.config");
-                });
-
-                // 使用字符串名称而不是静态类类型
-                var logger = loggerFactory.CreateLogger("ApplicationStartup");
-                logger.LogInformation("应用程序启动 - 日志系统初始化完成");
+                Console.WriteLine("应用程序启动 - 基础日志系统初始化完成");
             }
             catch (Exception ex)
             {
@@ -320,10 +312,9 @@ namespace RUINORERP.UI
         [STAThread]
         static void Main(string[] args)
         {
-            // 初始化日志系统（最先执行）
-            // InitializeLogging();
-            // 初始化日志系统
-            RUINORERP.Common.Log4Net.Logger.Initialize();
+            // 初始化基础日志系统（最先执行）
+            InitializeLogging();
+            
             // 单实例检查
             if (!CheckSingleInstance())
                 return;

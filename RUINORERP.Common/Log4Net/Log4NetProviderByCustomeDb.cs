@@ -1,7 +1,9 @@
-﻿using System.Collections.Concurrent;
+using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Xml;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Common.Helper;
 using RUINORERP.Model.Context;
 
 namespace RUINORERP.Common.Log4Net
@@ -45,6 +47,27 @@ namespace RUINORERP.Common.Log4Net
         {
             XmlDocument log4netConfig = new XmlDocument();
             log4netConfig.Load(File.OpenRead(filename));
+            
+            // 查找并替换连接字符串占位符
+            try
+            {
+                var connectionString = CryptoHelper.GetDecryptedConnectionString();
+                XmlNodeList nodes = log4netConfig.SelectNodes("//connectionString[@value]");
+                foreach (XmlNode node in nodes)
+                {
+                    XmlAttribute valueAttr = node.Attributes["value"];
+                    if (valueAttr != null && valueAttr.Value.Contains("${ConnectionString}"))
+                    {
+                        valueAttr.Value = connectionString;
+                        Console.WriteLine("已在log4net.config中替换连接字符串占位符");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("警告：替换log4net.config中的连接字符串占位符失败: " + ex.Message);
+            }
+            
             return log4netConfig["log4net"];
         }
     }

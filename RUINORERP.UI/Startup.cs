@@ -162,17 +162,67 @@ namespace RUINORERP.UI
         /// </summary>
         private static void ConfigureLogging(IServiceCollection services)
         {
-            // 从配置文件读取数据库连接字符串
-            string conn = AppSettings.GetValue("ConnectString");
-            string key = "ruinor1234567890";
-            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
-
-            // 注册日志服务
-            services.AddLogging(logBuilder =>
+            try
             {
-                logBuilder.ClearProviders();
-                logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", newconn, Program.AppContextData));
-            });
+                // 获取解密后的数据库连接字符串
+                string connectionString = null;
+                
+                // 尝试通过CryptoHelper获取（这是标准方式）
+                try
+                {
+                    connectionString = CryptoHelper.GetDecryptedConnectionString();
+                    Console.WriteLine("通过CryptoHelper成功获取解密的连接字符串");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("警告：通过CryptoHelper获取连接字符串失败: " + ex.Message);
+                    
+                    // 备选方案：直接从应用设置和硬编码密钥获取
+                    try
+                    {
+                        string conn = AppSettings.GetValue("ConnectString");
+                        if (!string.IsNullOrEmpty(conn))
+                        {
+                            string key = "ruinor1234567890";
+                            connectionString = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+                            Console.WriteLine("通过备选方式成功获取解密的连接字符串");
+                        }
+                    }
+                    catch (Exception ex2)
+                    {
+                        Console.WriteLine("警告：备选方式获取连接字符串也失败: " + ex2.Message);
+                    }
+                }
+
+                // 注册日志服务
+                services.AddLogging(logBuilder =>
+                {
+                    // 清除所有现有提供者，避免冲突
+                    logBuilder.ClearProviders();
+                    
+                    // 添加自定义的数据库日志提供者
+                    if (!string.IsNullOrEmpty(connectionString))
+                    {
+                        Console.WriteLine("注册Log4NetProviderByCustomeDb，使用log4net.config配置数据库日志");
+                        logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", connectionString, Program.AppContextData));
+                    }
+                    else
+                    {
+                        // 如果没有有效的连接字符串，添加控制台日志作为备用
+                        Console.WriteLine("警告：没有有效的数据库连接字符串，使用控制台日志作为备用");
+                        logBuilder.AddConsole();
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("配置日志服务时出错: " + ex.Message);
+                // 即使出错，也确保有基础日志功能
+                services.AddLogging(logBuilder =>
+                {
+                    logBuilder.AddConsole();
+                });
+            }
         }
 
         /// <summary>

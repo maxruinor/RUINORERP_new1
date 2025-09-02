@@ -52,7 +52,7 @@ public interface IDefaultRowAuthRuleProvider
 ```csharp
 public interface IRowAuthService
 {
-    string GetUserRowAuthFilterClause(Type entityType);
+    string GetUserRowAuthFilterClause(Type entityType, string menuId = "");
     RowAuthConfigDto GetRowAuthConfig(long roleId, BizType bizType);
     bool SaveRowAuthConfig(RowAuthConfigDto config);
     List<tb_RowAuthPolicy> GetAllPolicies();
@@ -127,8 +127,11 @@ bool success = _rowAuthService.SaveRowAuthConfig(config);
 ### 应用行级权限过滤
 
 ```csharp
-// 获取当前用户对特定实体的过滤条件
+// 获取当前用户对特定实体的过滤条件（不指定菜单ID）
 string filterClause = _rowAuthService.GetUserRowAuthFilterClause(typeof(tb_SalesOrder));
+
+// 或者指定菜单ID以获取特定功能的数据权限
+string filterClause = _rowAuthService.GetUserRowAuthFilterClause(typeof(tb_SalesOrder), "SalesOrderList");
 
 // 将过滤条件应用到查询中
 var query = _db.Queryable<tb_SalesOrder>();

@@ -7,122 +7,9 @@ using RUINORERP.Model.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Collections.Concurrent;
 
 namespace RUINORERP.Business.RowLevelAuthService
 {
-    /// <summary>
-    /// 行级权限规则类型枚举
-    /// 用于表示系统支持的所有默认行级权限规则
-    /// </summary>
-    public enum RowLevelAuthRule
-    {
-        /// <summary>
-        /// 仅客户数据
-        /// 适用于：销售订单、销售出库单、销售退回单等销售相关单据
-        /// </summary>
-        OnlyCustomer = 1,
-
-        /// <summary>
-        /// 仅供应商数据
-        /// 适用于：采购订单、采购入库单、采购退货单等采购相关单据
-        /// </summary>
-        OnlySupplier = 2,
-
-        /// <summary>
-        /// 其他出入库单全部数据
-        /// 适用于：其他入库单、其他出库单等特殊出入库单据
-        /// </summary>
-        AllDataForOtherInOut = 3,
-
-        /// <summary>
-        /// 仅收款数据
-        /// 适用于：应收款单、收款单等收款相关单据
-        /// </summary>
-        OnlyReceivable = 4,
-
-        /// <summary>
-        /// 仅付款数据
-        /// 适用于：应付款单、付款单等付款相关单据
-        /// </summary>
-        OnlyPayable = 5,
-
-        /// <summary>
-        /// 全部数据
-        /// 适用于：所有业务类型的默认选项
-        /// </summary>
-        AllData = 99
-    }
-
-    /// <summary>
-    /// 业务类型与权限规则关系管理器
-    /// 用于管理业务类型与可用权限规则之间的从属关系
-    /// </summary>
-    public static class BizTypeRuleManager
-    {
-        private static readonly ConcurrentDictionary<BizType, List<RowLevelAuthRule>> _bizTypeToRulesMap = 
-            new ConcurrentDictionary<BizType, List<RowLevelAuthRule>>();
-
-        static BizTypeRuleManager()
-        {
-            // 初始化业务类型与规则的映射关系
-            InitializeBizTypeRuleMap();
-        }
-
-        private static void InitializeBizTypeRuleMap()
-        {
-
-            // 应收应付相关业务类型 用于对账时要共用。所以用行级权限控制
-            RegisterRulesForBizTypes(
-                new List<BizType> { BizType.应付款单, BizType.应收款单 },
-                new List<RowLevelAuthRule> { RowLevelAuthRule.OnlyCustomer, RowLevelAuthRule.OnlySupplier, RowLevelAuthRule.OnlyReceivable, RowLevelAuthRule.OnlyPayable, RowLevelAuthRule.AllData });
-
-            // 销售相关业务类型
-            RegisterRulesForBizTypes(
-                new List<BizType> { BizType.销售订单, BizType.销售出库单, BizType.销售退回单 },
-                new List<RowLevelAuthRule> { RowLevelAuthRule.OnlyCustomer, RowLevelAuthRule.AllData });
-
-            // 采购相关业务类型
-            RegisterRulesForBizTypes(
-                new List<BizType> { BizType.采购订单, BizType.采购入库单, BizType.采购退货单 },
-                new List<RowLevelAuthRule> { RowLevelAuthRule.OnlySupplier, RowLevelAuthRule.AllData });
-
-            // 其他出入库相关业务类型
-            RegisterRulesForBizTypes(
-                new List<BizType> { BizType.其他入库单, BizType.其他出库单 },
-                new List<RowLevelAuthRule> { RowLevelAuthRule.AllDataForOtherInOut, RowLevelAuthRule.AllData });
-        }
-
-        /// <summary>
-        /// 为一组业务类型注册可用的规则
-        /// </summary>
-        /// <param name="bizTypes">业务类型列表</param>
-        /// <param name="rules">可用规则列表</param>
-        public static void RegisterRulesForBizTypes(List<BizType> bizTypes, List<RowLevelAuthRule> rules)
-        {
-            foreach (var bizType in bizTypes)
-            {
-                _bizTypeToRulesMap[bizType] = rules;
-            }
-        }
-
-        /// <summary>
-        /// 获取指定业务类型支持的所有规则
-        /// </summary>
-        /// <param name="bizType">业务类型</param>
-        /// <returns>规则列表</returns>
-        public static List<RowLevelAuthRule> GetRulesForBizType(BizType bizType)
-        {
-            if (_bizTypeToRulesMap.TryGetValue(bizType, out var rules))
-            {
-                return rules;
-            }
-
-            // 默认返回只有全部数据的规则
-            return new List<RowLevelAuthRule> { RowLevelAuthRule.AllData };
-        }
-    }
-
     /// <summary>
     /// 默认行级权限规则提供者实现
     /// 提供基于业务类型的默认规则选项和创建权限策略的功能
@@ -133,6 +20,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         private readonly ApplicationContext _context;
         private readonly ILogger<DefaultRowAuthRuleProvider> _logger;
         private readonly Dictionary<RowLevelAuthRule, string> _ruleDescriptions;
+        private readonly Dictionary<RowLevelAuthRule, RuleConfiguration> _ruleConfigurations;
 
         /// <summary>
         /// 构造函数
@@ -159,12 +47,66 @@ namespace RUINORERP.Business.RowLevelAuthService
                 { RowLevelAuthRule.OnlyPayable, "只能查看和处理付款相关的数据" },
                 { RowLevelAuthRule.AllData, "可以查看和处理所有数据" }
             };
+            
+            // 初始化规则配置映射
+            _ruleConfigurations = new Dictionary<RowLevelAuthRule, RuleConfiguration>
+            {
+                { 
+                    RowLevelAuthRule.OnlyCustomer, 
+                    new RuleConfiguration {
+                        IsJoinRequired = true,
+                        JoinTable = "tb_CustomerVendor",
+                        JoinType = "INNER",
+                        JoinOnClauseTemplate = "{0}.CustomerVendor_ID = tb_CustomerVendor.Id",
+                        FilterClause = "tb_CustomerVendor.Type = '客户'",
+                        Name = "仅客户数据",
+                        Description = _ruleDescriptions[RowLevelAuthRule.OnlyCustomer]
+                    }
+                },
+                { 
+                    RowLevelAuthRule.OnlySupplier, 
+                    new RuleConfiguration {
+                        IsJoinRequired = true,
+                        JoinTable = "tb_CustomerVendor",
+                        JoinType = "INNER",
+                        JoinOnClauseTemplate = "{0}.CustomerVendor_ID = tb_CustomerVendor.Id",
+                        FilterClause = "tb_CustomerVendor.Type = '供应商'",
+                        Name = "仅供应商数据",
+                        Description = _ruleDescriptions[RowLevelAuthRule.OnlySupplier]
+                    }
+                },
+                { 
+                    RowLevelAuthRule.OnlyReceivable, 
+                    new RuleConfiguration {
+                        IsJoinRequired = false,
+                        FilterClause = "ReceivePaymentType = 1",
+                        Name = "仅收款数据",
+                        Description = _ruleDescriptions[RowLevelAuthRule.OnlyReceivable]
+                    }
+                },
+                { 
+                    RowLevelAuthRule.OnlyPayable, 
+                    new RuleConfiguration {
+                        IsJoinRequired = false,
+                        FilterClause = "ReceivePaymentType = 2",
+                        Name = "仅付款数据",
+                        Description = _ruleDescriptions[RowLevelAuthRule.OnlyPayable]
+                    }
+                },
+                { 
+                    RowLevelAuthRule.AllDataForOtherInOut, 
+                    CreateAllDataConfig("全部数据", _ruleDescriptions[RowLevelAuthRule.AllDataForOtherInOut])
+                },
+                { 
+                    RowLevelAuthRule.AllData, 
+                    CreateAllDataConfig("全部数据", _ruleDescriptions[RowLevelAuthRule.AllData])
+                }
+            };
         }
 
         /// <summary>
         /// 获取指定业务类型的所有可用的默认规则选项
         /// 这里只是在初始化加载时使用。并不能用于 具体的业务中 配置关联权限时
-        /// 
         /// </summary>
         /// <param name="bizType">业务类型</param>
         /// <returns>默认规则选项列表</returns>
@@ -213,22 +155,12 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <returns>规则名称</returns>
         private string GetRuleName(RowLevelAuthRule rule)
         {
-            switch (rule)
+            if (_ruleConfigurations.TryGetValue(rule, out var config))
             {
-                case RowLevelAuthRule.OnlyCustomer:
-                    return "仅客户数据";
-                case RowLevelAuthRule.OnlySupplier:
-                    return "仅供应商数据";
-                case RowLevelAuthRule.AllDataForOtherInOut:
-                case RowLevelAuthRule.AllData:
-                    return "全部数据";
-                case RowLevelAuthRule.OnlyReceivable:
-                    return "仅收款数据";
-                case RowLevelAuthRule.OnlyPayable:
-                    return "仅付款数据";
-                default:
-                    return "未知规则";
+                return config.Name;
             }
+            
+            return rule.ToString();
         }
 
         /// <summary>
@@ -243,6 +175,35 @@ namespace RUINORERP.Business.RowLevelAuthService
                 return description;
             }
             return "未知规则描述";
+        }
+        
+        /// <summary>
+        /// 注册新的行级权限规则配置
+        /// </summary>
+        /// <param name="rule">规则枚举值</param>
+        /// <param name="config">规则配置</param>
+        public void RegisterRuleConfiguration(RowLevelAuthRule rule, RuleConfiguration config)
+        {
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+            
+            // 验证配置有效性
+            if (!config.IsValid())
+            {
+                throw new ArgumentException("规则配置无效", nameof(config));
+            }
+            
+            _ruleConfigurations[rule] = config;
+            
+            // 如果是新规则，同时添加描述
+            if (!_ruleDescriptions.ContainsKey(rule))
+            {
+                _ruleDescriptions[rule] = config.Description;
+            }
+            
+            _logger.LogInformation("已注册新的行级权限规则配置: {RuleName}", config.Name);
         }
 
         /// <summary>
@@ -265,9 +226,7 @@ namespace RUINORERP.Business.RowLevelAuthService
             {
                 // 通过映射服务获取实体信息
                 var entityInfo = _entityBizMappingService.GetEntityInfo(bizType);
-               
-
-
+                
                 if (entityInfo == null)
                 {
                     var errorMessage = $"未找到业务类型 {bizType} 对应的实体映射";
@@ -326,34 +285,20 @@ namespace RUINORERP.Business.RowLevelAuthService
                 tableName = "";
             }
 
-            // 将long类型的Key转换为RowLevelAuthRule枚举
-            try
-            {
-                // 先检查optionKey是否可以安全地转换为int（枚举的底层类型）
-                if (optionKey >= int.MinValue && optionKey <= int.MaxValue)
+            // 优化：使用泛型版本的Enum.TryParse，这是类型安全且简洁的方式
+                try
                 {
-                    int intOptionKey = Convert.ToInt32(optionKey);
-                    // 现在检查这个整数值是否在枚举定义中
-                    if (Enum.IsDefined(typeof(RowLevelAuthRule), intOptionKey))
+                    if (Enum.TryParse(optionKey.ToString(), out RowLevelAuthRule rule))
                     {
-                        var rule = (RowLevelAuthRule)intOptionKey;
                         ConfigurePolicyFilterByRule(policy, rule, tableName);
                         return;
                     }
-                    else
-                    {
-                        _logger.LogWarning("值 {OptionKey} 不在RowLevelAuthRule枚举定义中", optionKey);
-                    }
+                    _logger.LogWarning("值 {OptionKey} 无法转换为RowLevelAuthRule枚举", optionKey);
                 }
-                else
+                catch (Exception ex)
                 {
-                    _logger.LogWarning("值 {OptionKey} 超出int范围，无法转换为RowLevelAuthRule枚举", optionKey);
+                    _logger.LogWarning(ex, "转换规则Key值时发生异常: {OptionKey}", optionKey);
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "转换规则Key值时发生异常: {OptionKey}", optionKey);
-            }
             
             // 默认设置为全部数据
             policy.IsJoinRequired = false;
@@ -368,43 +313,58 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <param name="tableName">实体表名</param>
         private void ConfigurePolicyFilterByRule(tb_RowAuthPolicy policy, RowLevelAuthRule rule, string tableName)
         {
-            switch (rule)
+            if (_ruleConfigurations.TryGetValue(rule, out var config))
             {
-                case RowLevelAuthRule.OnlyCustomer:
-                    policy.IsJoinRequired = true;
-                    policy.JoinTable = "tb_CustomerVendor";
-                    policy.JoinType = "INNER";
-                    policy.JoinOnClause = $"{tableName}.CustomerVendor_ID = tb_CustomerVendor.Id";
-                    policy.FilterClause = "tb_CustomerVendor.Type = '客户'";
-                    break;
-
-                case RowLevelAuthRule.OnlySupplier:
-                    policy.IsJoinRequired = true;
-                    policy.JoinTable = "tb_CustomerVendor";
-                    policy.JoinType = "INNER";
-                    policy.JoinOnClause = $"{tableName}.CustomerVendor_ID = tb_CustomerVendor.Id";
-                    policy.FilterClause = "tb_CustomerVendor.Type = '供应商'";
-                    break;
-
-                case RowLevelAuthRule.OnlyReceivable:
-                    policy.IsJoinRequired = false;
-                    // 对于应收款单表，过滤出收款类型的数据
-                    policy.FilterClause = "ReceivePaymentType = 1";
-                    break;
-
-                case RowLevelAuthRule.OnlyPayable:
-                    policy.IsJoinRequired = false;
-                    // 对于应付款单表，过滤出付款类型的数据
-                    policy.FilterClause = "ReceivePaymentType = 2";
-                    break;
-
-                case RowLevelAuthRule.AllDataForOtherInOut:
-                case RowLevelAuthRule.AllData:
-                default:
-                    policy.IsJoinRequired = false;
-                    policy.FilterClause = "1=1"; // 全部数据
-                    break;
+                policy.IsJoinRequired = config.IsJoinRequired;
+                
+                if (config.IsJoinRequired)
+                {
+                    policy.JoinTable = config.JoinTable;
+                    policy.JoinType = config.JoinType;
+                    policy.JoinOnClause = config.GenerateJoinOnClause(tableName);
+                }
+                
+                policy.FilterClause = config.FilterClause;
+                
+                _logger.LogDebug("已为策略配置过滤条件: {RuleName}", config.Name);
             }
+            else
+            {
+                // 默认设置为全部数据
+                policy.IsJoinRequired = false;
+                policy.FilterClause = "1=1"; // 全部数据
+                _logger.LogWarning("未找到规则的配置: {Rule}", rule);
+            }
+        }
+        
+        /// <summary>
+        /// 创建全数据访问权限的规则配置
+        /// </summary>
+        /// <param name="name">规则名称</param>
+        /// <param name="description">规则描述</param>
+        /// <returns>全数据访问权限的规则配置</returns>
+        private RuleConfiguration CreateAllDataConfig(string name, string description)
+        {
+            return new RuleConfiguration
+            {
+                IsJoinRequired = false,
+                FilterClause = "1=1",
+                Name = name,
+                Description = description
+            };
+        }
+
+        /// <summary>
+        /// 验证规则配置的有效性
+        /// </summary>
+        /// <param name="config">规则配置</param>
+        /// <returns>配置是否有效</returns>
+        private bool ValidateRuleConfiguration(RuleConfiguration config)
+        {
+            if (config == null)
+                return false;
+            
+            return config.IsValid();
         }
 
         /// <summary>

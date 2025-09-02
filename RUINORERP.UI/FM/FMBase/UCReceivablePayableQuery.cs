@@ -849,7 +849,7 @@ namespace RUINORERP.UI.FM
             }
             RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
                  && m.BizType == (int)bizType
-                 && m.BIBaseForm == "BaseBillEditGeneric`2")
+                 && m.ClassPath == "RUINORERP.UI.FM.UCReceiptStatement")
                      .FirstOrDefault();
 
             if (RelatedMenuInfo != null)

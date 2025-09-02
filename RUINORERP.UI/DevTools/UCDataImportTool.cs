@@ -828,8 +828,8 @@ new { table_catalog = "erpnew" });
                 }
                 #endregion
             }
-            MainForm.Instance.AppContext.Db.Updateable(dtDicUpdateList).AS(tableName).WhereColumns(pkColName).ExecuteCommand();
-            MainForm.Instance.AppContext.Db.Insertable(dtDicAddList).AS(tableName).ExecuteReturnEntity();
+           await MainForm.Instance.AppContext.Db.Updateable(dtDicUpdateList).AS(tableName).WhereColumns(pkColName).ExecuteCommandHasChangeAsync();
+           await MainForm.Instance.AppContext.Db.Insertable(dtDicAddList).AS(tableName).ExecuteReturnSnowflakeIdAsync();
 
             foreach (var item in lastlist)
             {

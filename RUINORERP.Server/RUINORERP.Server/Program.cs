@@ -70,11 +70,11 @@ namespace RUINORERP.Server
 
         static bool serviceStarted = false;
         /// <summary>
-        ///  ·şÎñÈİÆ÷
+        /// æœåŠ¡é›†åˆ
         /// </summary>
         static IServiceCollection Services { get; set; }
         /// <summary>
-        /// ·şÎñ¹ÜÀíÕß
+        /// æœåŠ¡æä¾›è€…
         /// </summary>
         public static IServiceProvider ServiceProvider { get; set; }
 
@@ -86,13 +86,13 @@ namespace RUINORERP.Server
         {
             if (SingleInstanceChecker.IsAlreadyRunning())
             {
-                // ¼¤»îÒÑÓĞ´°¿Ú²¢ÍË³ö
+                // å·²æœ‰å®ä¾‹è¿è¡Œåˆ™é€€å‡º
                 BringExistingInstanceToFront();
                 return;
             }
             try
             {
-                // Õı³£Æô¶¯³ÌĞò
+                // å¯åŠ¨æœåŠ¡UI
                 StartServerUI();
             }
             finally
@@ -111,17 +111,12 @@ namespace RUINORERP.Server
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-            //log4netHelperÅäÖÃÕâ¸öÎÄ¼şµÄ´úÂë
-            //ILoggerRepository repository = LogManager.CreateRepository("erpServer");
-            //XmlConfigurator.Configure(repository, new FileInfo("log4net.config"));
-            //Host..loggerRepository = repository;
 
-
-#pragma warning disable CS0168 // ÉùÃ÷ÁË±äÁ¿£¬µ«´ÓÎ´Ê¹ÓÃ¹ı
+#pragma warning disable CS0168 // å£°æ˜äº†å˜é‡ä½†ä»æœªä½¿ç”¨
             try
             {
 
-                #region ÓÃÁËcsla  
+                #region åˆå§‹åŒ–csla  
                 try
                 {
 
@@ -137,7 +132,7 @@ namespace RUINORERP.Server
                     IServiceProvider services = myhost.Services;
 
                     //https://github.com/autofac/Autofac.Extensions.DependencyInjection/releases
-                    //¸øÉÏÏÂÎÄ·şÎñÔ´
+                    //è®¾ç½®æœåŠ¡çš„æä¾›è€…
                     Startup.ServiceProvider = services;
                     AppContextData.SetServiceProvider(services);
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
@@ -147,19 +142,19 @@ namespace RUINORERP.Server
                     //Program.AppContextData.SetServiceProvider(services);
                     //Program.AppContextData.Status = "init";
 
-                    #region  Æô¶¯¹¤×÷Á÷Ö÷»ú
+                    #region å·¥ä½œæµç›¸å…³é…ç½®
 
                     var host = services.GetService<IWorkflowHost>();
                     host.OnStepError += Host_OnStepError;
 
-                    //ÕâÀïjson×¢²á£¬ºóÃæ»¹ÊÇÒ»ÑùµÄÍ¨¹ıÃû³ÆÆô¶¯
+                    //åŠ è½½jsonæ³¨å†Œï¼Œè¿™é‡Œä½¿ç”¨ä¸€ä¸ªé€šç”¨çš„å®šä¹‰åŠ è½½å™¨
                     // https://workflow-core.readthedocs.io/en/latest/json-yaml/
                     //var json = System.IO.File.ReadAllText("myflow.json");
                     //var loader = ServiceProvider.GetService<IDefinitionLoader>();
                     //loader.LoadDefinition(json, Deserializers.Json);
                     host.AddRegisterWorkflow();
 
-                    //¼ÓÔØ¹¤×÷Á÷ÅäÖÃ
+                    //åŠ è½½è‡ªå®šä¹‰å·¥ä½œæµ
                     var loader = Startup.ServiceProvider.GetService<IDefinitionLoader>();
                     string jsonpath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Workflow\\Json\\myflow.json");
                     var json = System.IO.File.ReadAllText(jsonpath);
@@ -169,7 +164,7 @@ namespace RUINORERP.Server
                     await SafetyStockWorkflowConfig.ScheduleDailySafetyStockCalculation(host);
                     await InventorySnapshotWorkflowConfig.ScheduleInventorySnapshot(host);
 
-                    // Èç¹ûhostÆô¶¯ÁË£¬²»ÄÜÔÙ´ÎÆô¶¯£¬µ«Ã»ÓĞÅĞ¶Ï·½·¨
+                    // å¯åŠ¨hostæœåŠ¡ï¼Œé¿å…é‡å¤å¯åŠ¨
                     if (!serviceStarted)
                     {
                         host.Start();
@@ -177,14 +172,14 @@ namespace RUINORERP.Server
                     }
                     WorkflowHost = host;
 
-                    // Æô¶¯¼à¿Ø
+                    // æé†’æœåŠ¡
                     //var reminderService = services.GetRequiredService<SmartReminderService_old>();
                     //Task.Run(() => reminderService.RunSystemAsync());
 
 
-                    // Æô¶¯workflow¹¤×÷Á÷
+                    // å¯åŠ¨workflowæµç¨‹
                     // host.StartWorkflow("HelloWorkflow", 1, data: null); //
-                    //host.StartWorkflow("HelloWorkflow");//, 2, data: null, Ä¬ÈÏ»áÆôÓÃ°æ±¾¸ßµÄ
+                    //host.StartWorkflow("HelloWorkflow");//, 2, data: null, é»˜è®¤ä¼šåˆ›å»ºç‰ˆæœ¬é«˜çš„
 
                     #endregion
 
@@ -218,10 +213,9 @@ namespace RUINORERP.Server
 
                 //var mainform = services.GetService<Form2>();
 
-                // var mainform = Startup.GetFromFac<Form2>(); //»ñÈ¡·şÎñService1
-                //var mainform = Startup.GetFromFac<MainForm>(); //»ñÈ¡·şÎñService1
+                // var mainform = Startup.GetFromFac<Form2>(); //è·å–æœåŠ¡Service1
+                //var mainform = Startup.GetFromFac<MainForm>(); //è·å–æœåŠ¡Service1
                 // Application.Run(mainform);
-
 
 
 
@@ -233,7 +227,7 @@ namespace RUINORERP.Server
             {
 
             }
-#pragma warning restore CS0168 // ÉùÃ÷ÁË±äÁ¿£¬µ«´ÓÎ´Ê¹ÓÃ¹ı
+#pragma warning restore CS0168 // å£°æ˜äº†å˜é‡ä½†ä»æœªä½¿ç”¨
 
 
             //Application.Run(new frmMain());
@@ -245,30 +239,30 @@ namespace RUINORERP.Server
 
             frmMain.Instance.PrintInfoLog("StartServer Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
             //var logger = new LoggerFactory().AddLog4Net().CreateLogger("logs");
-            //logger.LogError($"{DateTime.Now} LogError ÈÕÖ¾");
+            //logger.LogError($"{DateTime.Now} LogError æ—¥å¿—");
 
             var _host = MultipleServerHostBuilder.Create()
 
 
-            //µÇÂ½Æ÷
+            //ç™»å½•æœåŠ¡å™¨
             .AddServer<ServiceforLander<LanderPackageInfo>, LanderPackageInfo, LanderCommandLinePipelineFilter>(builder =>
                {
                    builder.ConfigureServerOptions((ctx, config) =>
                    {
-                       //»ñÈ¡·şÎñÅäÖÃ
+                       //è·å–é…ç½®é€‰é¡¹
                        return config.GetSection("ServiceforLander");
                    })
                .UseSession<SessionforLander>()
-               //×¢²áÓÃÓÚ´¦ÀíÁ¬½Ó¡¢¹Ø±ÕµÄSession´¦ÀíÆ÷
+               //æ³¨å†Œä¼šè¯å¤„ç†ç¨‹åºï¼ˆè¿æ¥å’Œå…³é—­Sessionäº‹ä»¶ï¼‰
                .UseSessionHandler(async (session) =>
                {
                    // sessionListLander.Add(session as SessionforLander);
-                   // PrintMsg($"{DateTime.Now} [SessionforLander] Session-µÇÂ½Æ÷ connected: {session.RemoteEndPoint}");
+                   // PrintMsg($"{DateTime.Now} [SessionforLander] Session-ç™»å½•æœåŠ¡å™¨ connected: {session.RemoteEndPoint}");
                    await Task.Delay(0);
                }, async (session, reason) =>
                {
                    //sessionListLander.Remove(session as SessionforLander);
-                   // PrintMsg($"{DateTime.Now} [SessionforLander] Session-µÇÂ½Æ÷ {session.RemoteEndPoint} closed: {reason}");
+                   // PrintMsg($"{DateTime.Now} [SessionforLander] Session-ç™»å½•æœåŠ¡å™¨ {session.RemoteEndPoint} closed: {reason}");
                    await Task.Delay(0);
                })
             //.ConfigureServices((context, services) =>
@@ -291,31 +285,31 @@ namespace RUINORERP.Server
 
                    /*
 
-                           //Ò»Ïß
+                           //ä¸šåŠ¡æœåŠ¡å™¨
                            .AddServer<ServiceforBiz<BizPackageInfo>, BizPackageInfo, BizPipelineFilter>(builder =>
                            {
                                builder.ConfigureServerOptions((ctx, config) =>
                                {
-                                   //»ñÈ¡·şÎñÅäÖÃ
+                                   //è·å–é…ç½®é€‰é¡¹
                                    // ReSharper disable once ConvertToLambdaExpression
                                    return config.GetSection("ServiceforBiz");
                                })
-                               .UsePackageDecoder<MyPackageDecoder>()//×¢²á×Ô¶¨Òå½â°üÆ÷
-                               .UseSession<SessionforBiz>()
-                           //×¢²áÓÃÓÚ´¦ÀíÁ¬½Ó¡¢¹Ø±ÕµÄSession´¦ÀíÆ÷
+                               .UsePackageDecoder<MyPackageDecoder>()//æ³¨å†Œè‡ªå®šä¹‰è§£ç å™¨
+                               .UseSession<SessionforBiz>();
+                           //æ³¨å†Œä¼šè¯å¤„ç†ç¨‹åºï¼ˆè¿æ¥å’Œå…³é—­Sessionäº‹ä»¶ï¼‰
                            .UseSessionHandler(async (session) =>
                            {
                                sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
-                               PrintMsg($"{DateTime.Now} [SessionforBiz-Ö÷Òª³ÌĞò] Session connected: {session.RemoteEndPoint}");
+                               PrintMsg($"{DateTime.Now} [SessionforBiz-ä¸šåŠ¡æœåŠ¡å™¨] Session connected: {session.RemoteEndPoint}");
                                await Task.Delay(0);
                            }, async (session, reason) =>
                            {
                                SessionforBiz sg = session as SessionforBiz;
                                //if (sg.player != null && sg.player.Online)
                                //{
-                               //   // SephirothServer.CommandServer.RoleService.½ÇÉ«ÍË³ö(sg);
+                               //   // SephirothServer.CommandServer.RoleService.è§’è‰²ç¦»çº¿(sg);
                                //}
-                               PrintMsg($"{DateTime.Now} [SessionforBiz-Ö÷Òª³ÌĞò] Session {session.RemoteEndPoint} closed: {reason}");
+                               PrintMsg($"{DateTime.Now} [SessionforBiz-ä¸šåŠ¡æœåŠ¡å™¨] Session {session.RemoteEndPoint} closed: {reason}");
                                sessionListBiz.Remove(sg.SessionID, out sg);
                                //SessionListGame.Remove(session as SessionforBiz);
                                await Task.Delay(0);
@@ -334,7 +328,7 @@ namespace RUINORERP.Server
 
                        .ConfigureLogging((hostingContext, logging) =>
                        {
-                           logging.ClearProviders(); //È¥µôÄ¬ÈÏÌí¼ÓµÄÈÕÖ¾Ìá¹©³ÌĞò
+                           logging.ClearProviders(); //ç§»é™¤é»˜è®¤æ·»åŠ çš„æ—¥å¿—æä¾›ç¨‹åº
                            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
                            // IMPORTANT: This needs to be added *before* configuration is loaded, this lets
                            // the defaults be overridden by the configuration.
@@ -349,7 +343,7 @@ namespace RUINORERP.Server
                            if (isWindows)
                            {
                                // Add the EventLogLoggerProvider on windows machines
-                               //logging.AddEventLog();//Õâ¸öĞ´µ½ÁËÊÂ¼ş²é¿´Æ÷ÖĞ¡£Ã»ÓĞ±ØÒª
+                               //logging.AddEventLog();//æ—¥å¿—å†™å…¥åˆ°äº‹ä»¶æŸ¥çœ‹å™¨
                                logging.AddFile();
                                //logging.AddLog4Net();
                            }
@@ -384,69 +378,69 @@ namespace RUINORERP.Server
 
 
 
-        #region ½ûÖ¹¶à¸ö½ø³ÌÔËĞĞ£¬µ±ÖØ¸´ÔËĞĞÊ±¼¤»îÒÔÇ°µÄ½ø³Ì
-        #region ÔÚ½ø³ÌÖĞ²éÕÒÊÇ·ñÒÑ¾­ÓĞÊµÀıÔÚÔËĞĞ
-        // È·±£³ÌĞòÖ»ÔËĞĞÒ»¸öÊµÀı
+        #region é˜²æ­¢ç¨‹åºé‡å¤è¿è¡Œï¼Œæ£€æµ‹åˆ°é‡å¤è¿è¡Œæ—¶åˆ‡æ¢åˆ°å‰ä¸€ä¸ªå®ä¾‹
+        #region åˆ¤æ–­ç³»ç»Ÿä¸­æ˜¯å¦å·²ç»å­˜åœ¨å®ä¾‹
+        // ç¡®ä¿åº”ç”¨ç¨‹åºåªæœ‰ä¸€ä¸ªå®ä¾‹
         public static Process RunningInstance()
         {
             Process currentProcess = Process.GetCurrentProcess();
             string currentProcessPath = Assembly.GetExecutingAssembly().Location;
-            currentProcessPath = Path.GetFullPath(currentProcessPath).Replace("/", "\\"); // ¹æ·¶»¯Â·¾¶
+            currentProcessPath = Path.GetFullPath(currentProcessPath).Replace("/", "\\"); // è§„èŒƒåŒ–è·¯å¾„
 
             Process[] processes = Process.GetProcessesByName(currentProcess.ProcessName);
 
             foreach (Process process in processes)
             {
                 if (process.Id == currentProcess.Id)
-                    continue; // Ìø¹ıµ±Ç°½ø³Ì
+                    continue; // è·³è¿‡å½“å‰è¿›ç¨‹
 
                 try
                 {
                     string processPath = process.MainModule.FileName;
                     processPath = Path.GetFullPath(processPath).Replace("/", "\\");
 
-                    // ²»Çø·Ö´óĞ¡Ğ´±È½ÏÂ·¾¶
+                    // ä¸åŒºåˆ†å¤§å°å†™æ¯”è¾ƒè·¯å¾„
                     if (currentProcessPath.Equals(processPath, StringComparison.OrdinalIgnoreCase))
                     {
-                        return process; // ÕÒµ½ÏàÍ¬Â·¾¶µÄÊµÀı
+                        return process; // æ‰¾åˆ°ç›¸åŒè·¯å¾„çš„å®ä¾‹
                     }
                 }
                 catch (Exception)
                 {
-                    // ÎŞÈ¨ÏŞ·ÃÎÊ¸Ã½ø³ÌĞÅÏ¢£¬ºöÂÔ
+                    // æ— æƒé™è®¿é—®è¯¥è¿›ç¨‹ä¿¡æ¯æ—¶è·³è¿‡
                     continue;
                 }
             }
-            return null; // ÎŞÆäËûÊµÀıÔËĞĞ
+            return null; // æ²¡æœ‰æ‰¾åˆ°å®ä¾‹
         }
         #endregion
 
 
-        #region µ÷ÓÃWin32API,½ø³ÌÖĞÒÑ¾­ÓĞÒ»¸öÊµÀıÔÚÔËĞĞ,¼¤»îÆä´°¿Ú²¢ÏÔÊ¾ÔÚ×îÇ°¶Ë
+        #region è°ƒç”¨Win32API,å¦‚æœå‘ç°å·²ç»æœ‰ä¸€ä¸ªå®ä¾‹è¿è¡Œï¼Œå°±å°†å®ƒæ˜¾ç¤ºåˆ°å‰å°
         private static void HandleRunningInstance(Process instance)
         {
-            //MessageBox.Show("ÒÑ¾­ÔÚÔËĞĞ!", "ÌáÊ¾ĞÅÏ¢", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //MessageBox.Show("å·²ç»æœ‰å®ä¾‹åœ¨è¿è¡Œï¼", "æç¤ºä¿¡æ¯", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            ShowWindowAsync(instance.MainWindowHandle, SW_SHOWNOMAL);//µ÷ÓÃAPIº¯Êı,Õı³£ÏÔÊ¾´°¿Ú
-            SetForegroundWindow(instance.MainWindowHandle);//½«´°¿Ú·ÅÖÃÔÚ×îÇ°¶Ë  
+            ShowWindowAsync(instance.MainWindowHandle, SW_SHOWNOMAL);//è°ƒç”¨APIå‡½æ•°ï¼Œæ­£å¸¸æ˜¾ç¤ºçª—å£
+            SetForegroundWindow(instance.MainWindowHandle);//å°†çª—å£æ”¾ç½®åˆ°å‰å°  
         }
         #endregion
 
         /// <summary>
-        /// ¸Ãº¯ÊıÉèÖÃÓÉ²»Í¬Ïß³Ì²úÉúµÄ´°¿ÚµÄÏÔÊ¾×´Ì¬  
+        /// è¯¥å‡½æ•°è®¾ç½®ç”±ä¸åŒçº¿ç¨‹äº§ç”Ÿçš„çª—å£çš„æ˜¾ç¤ºçŠ¶æ€  
         /// </summary>  
-        /// <param name="hWnd">´°¿Ú¾ä±ú</param>  
-        /// <param name="cmdShow">Ö¸¶¨´°¿ÚÈçºÎÏÔÊ¾¡£²é¿´ÔÊĞíÖµÁĞ±í</param>  
-        /// <returns>Èç¹û´°¿ÚÔ­À´¿É¼û£¬·µ»ØÖµÎª·ÇÁã£»Èç¹û´°¿ÚÔ­À´±»Òş²Ø£¬·µ»ØÖµÎªÁã</returns>                      
+        /// <param name="hWnd">çª—å£å¥æŸ„</param>  
+        /// <param name="cmdShow">æŒ‡å®šçª—å£å¦‚ä½•æ˜¾ç¤ºã€‚æŸ¥çœ‹å…è®¸å€¼åˆ—è¡¨</param>  
+        /// <returns>å¦‚æœçª—å£åŸæ¥å¯è§ï¼Œè¿”å›å€¼ä¸ºéé›¶ï¼›å¦‚æœçª—å£åŸæ¥è¢«éšè—ï¼Œè¿”å›å€¼ä¸ºé›¶</returns>                      
         [DllImport("User32.dll")]
         private static extern bool ShowWindowAsync(IntPtr hWnd, int cmdShow);
         private const int SW_SHOWNOMAL = 1;
         /// <summary>  
-        ///  ¸Ãº¯Êı½«´´½¨Ö¸¶¨´°¿ÚµÄÏß³ÌÉèÖÃµ½Ç°Ì¨£¬²¢ÇÒ¼¤»î¸Ã´°¿Ú
-        ///  ÏµÍ³¸ø´´½¨Ç°Ì¨´°¿ÚµÄÏß³Ì·ÖÅäµÄÈ¨ÏŞÉÔ¸ßÓÚÆäËûÏß³Ì¡£
+        /// è¯¥å‡½æ•°å°†åˆ›å»ºæŒ‡å®šçª—å£çš„çº¿ç¨‹è®¾ç½®åˆ°å‰å°ï¼Œå¹¶ä¸”æ¿€æ´»è¯¥çª—å£ã€‚
+        /// ç³»ç»Ÿç»™åˆ›å»ºå‰å°çª—å£çš„çº¿ç¨‹åˆ†é…çš„æƒé™ç¨é«˜äºå…¶ä»–çº¿ç¨‹ã€‚
         /// </summary>  
-        /// <param name="hWnd">½«±»¼¤»î²¢±»µ÷ÈëÇ°Ì¨µÄ´°¿Ú¾ä±ú</param>  
-        /// <returns>Èç¹û´°¿ÚÉèÈëÁËÇ°Ì¨£¬·µ»ØÖµÎª·ÇÁã£»Èç¹û´°¿ÚÎ´±»ÉèÈëÇ°Ì¨£¬·µ»ØÖµÎªÁã</returns>  
+        /// <param name="hWnd">å°†è¢«æ¿€æ´»å¹¶è¢«è°ƒå…¥å‰å°çª—å£çš„å¥æŸ„</param>  
+        /// <returns>å¦‚æœçª—å£è®¾å…¥äº†å‰å°ï¼Œè¿”å›å€¼ä¸ºéé›¶ï¼›å¦‚æœçª—å£æœªè¢«è®¾å…¥å‰å°ï¼Œè¿”å›å€¼ä¸ºé›¶</returns>  
         [DllImport("User32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
 
@@ -454,7 +448,7 @@ namespace RUINORERP.Server
 
 
         /// <summary>
-        /// Í£Ö¹¹¤×÷Á÷
+        /// åœæ­¢å·¥ä½œæµ
         /// </summary>
         private static void StopWorkflow()
         {
@@ -465,7 +459,7 @@ namespace RUINORERP.Server
 
 
         /// <summary>
-        /// ¸øÉÏÏÂÎÄÒ»Ğ©³õÊ¼Öµ
+        /// åˆå§‹åŒ–ä¸€äº›ä¸Šä¸‹æ–‡å€¼
         /// </summary>
         /// <param name="AppContextData"></param>
         /// <param name="services"></param>
@@ -500,23 +494,52 @@ namespace RUINORERP.Server
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
-            frmMain.Instance.PrintInfoLog("Application_ThreadException:" + e.Exception.Message);
+            string errorMessage = "åº”ç”¨ç¨‹åºæœªå¤„ç†çš„çº¿ç¨‹å¼‚å¸¸: " + e.Exception.Message;
+            frmMain.Instance.PrintInfoLog(errorMessage);
             frmMain.Instance.PrintInfoLog(e.Exception.StackTrace);
-            //log4netHelper.fatal("ÏµÍ³¼¶Application_ThreadException", e.Exception);
+            
+            // ä½¿ç”¨frmMainä¸­çš„loggerè®°å½•å¼‚å¸¸ï¼ˆè¿™ä¸é¡¹ç›®åŸæœ‰æ—¥å¿—ç³»ç»Ÿå…¼å®¹ï¼‰
+            try
+            {
+                if (frmMain.Instance != null && frmMain.Instance._logger != null)
+                {
+                    frmMain.Instance._logger.LogError("åº”ç”¨ç¨‹åºæœªå¤„ç†çš„çº¿ç¨‹å¼‚å¸¸", e.Exception);
+                }
+            }
+            catch (Exception logEx)
+            {
+                // å¦‚æœæ—¥å¿—è®°å½•ä¹Ÿå¤±è´¥ï¼Œç¡®ä¿æœ‰åŸºæœ¬çš„é”™è¯¯è¾“å‡º
+                Console.WriteLine("è®°å½•çº¿ç¨‹å¼‚å¸¸æ—¥å¿—å¤±è´¥: " + logEx.Message);
+            }
         }
 
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             Exception ex = (Exception)e.ExceptionObject;
-            string errorMsg = "An application error occurred. Please contact the adminstrator " +
-                              "with the following information:\n\n";
-            if (e.IsTerminating)
+            string errorMsg = "åº”ç”¨ç¨‹åºå‘ç”Ÿæœªå¤„ç†çš„å¼‚å¸¸ã€‚è¯·è”ç³»ç®¡ç†å‘˜å¹¶æä¾›ä»¥ä¸‹ä¿¡æ¯:\n\n";
+            
+            try
             {
-                frmMain.Instance.PrintInfoLog("Õâ¸öÒì³£µ¼ÖÂ³ÌĞòÖÕÖ¹");
+                if (e.IsTerminating)
+                {
+                    string terminatingMsg = "ä¸¥é‡å¼‚å¸¸å¯¼è‡´ç¨‹åºç»ˆæ­¢: " + ex.Message;
+                    frmMain.Instance.PrintInfoLog(terminatingMsg);
+                }
+                else
+                {
+                    frmMain.Instance.PrintInfoLog("CurrentDomain_UnhandledException:" + errorMsg + ex.Message);
+                }
+                
+                // ä½¿ç”¨frmMainä¸­çš„loggerè®°å½•å¼‚å¸¸ï¼ˆè¿™ä¸é¡¹ç›®åŸæœ‰æ—¥å¿—ç³»ç»Ÿå…¼å®¹ï¼‰
+                if (frmMain.Instance != null && frmMain.Instance._logger != null)
+                {
+                    frmMain.Instance._logger.LogError("åº”ç”¨ç¨‹åºåŸŸæœªå¤„ç†çš„å¼‚å¸¸", ex);
+                }
             }
-            else
+            catch (Exception logEx)
             {
-                frmMain.Instance.PrintInfoLog("CurrentDomain_UnhandledException:" + errorMsg);
+                // å¦‚æœæ—¥å¿—è®°å½•ä¹Ÿå¤±è´¥ï¼Œç¡®ä¿æœ‰åŸºæœ¬çš„é”™è¯¯è¾“å‡º
+                Console.WriteLine("è®°å½•åº”ç”¨ç¨‹åºåŸŸå¼‚å¸¸æ—¥å¿—å¤±è´¥: " + logEx.Message);
             }
         }
     }

@@ -1153,9 +1153,11 @@ namespace RUINORERP.UI.FM
                         return false;
                     }
                 }
-                if (NeedValidated && EditEntity.UntaxedTotalAmont != details.Sum(c => c.TaxLocalAmount))
+               
+
+                if (NeedValidated && EditEntity.TaxTotalAmount != details.Sum(c => c.TaxLocalAmount))
                 {
-                    if (MessageBox.Show("未税总金额和明细未税金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                    if (MessageBox.Show("税额总计和明细税额不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {
                         return false;
                     }

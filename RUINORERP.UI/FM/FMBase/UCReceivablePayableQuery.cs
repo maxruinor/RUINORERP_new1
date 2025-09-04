@@ -61,8 +61,8 @@ namespace RUINORERP.UI.FM
 
             //应收付款中的往来单位额外添加一些条件
             var lambdaCv = Expressionable.Create<tb_CustomerVendor>()
-                .AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
-                .AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
+                //.AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
+                //.AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
               .ToExpression();
             QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
             queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv);

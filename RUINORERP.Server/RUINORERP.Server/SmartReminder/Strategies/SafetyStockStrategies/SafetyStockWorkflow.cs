@@ -545,9 +545,12 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         private static List<SafetyStockConfig> GetEnabledSafetyStockConfigs()
         {
             using var db = Startup.GetFromFac<ISqlSugarClient>();
-            return db.Queryable<tb_ReminderRule>()
+            var rules = db.Queryable<tb_ReminderRule>()
                 .Where(r => r.IsEnabled && r.ReminderBizType == (int)ReminderBizType.安全库存提醒)
-                .Select(r => JsonConvert.DeserializeObject<SafetyStockConfig>(r.JsonConfig))
+                .ToList();
+            
+            return rules.Select(r => JsonConvert.DeserializeObject<SafetyStockConfig>(r.JsonConfig))
+                .Where(config => config != null)
                 .ToList();
         }
 

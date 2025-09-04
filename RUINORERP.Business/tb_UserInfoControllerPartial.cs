@@ -68,7 +68,6 @@ namespace RUINORERP.Business
         {
             List<tb_UserInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_UserInfo>().Where(exp)
                             .Includes(t => t.tb_employee, e => e.tb_department, d => d.tb_company)
-                            .Includes(a => a.tb_User_Roles, b => b.tb_roleinfo,c=>c.tb_P4RowAuthPolicyByRoles)
                             .AsNavQueryable()
                             .Includes(t => t.tb_User_Roles, ur => ur.tb_roleinfo, r => r.tb_P4Menus, s => s.tb_menuinfo)
                             .AsNavQueryable()
@@ -82,8 +81,8 @@ namespace RUINORERP.Business
                             .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIQueryConditions)
                               .AsNavQueryable()
                             .Includes(a => a.tb_User_Roles, b => b.tb_UserPersonalizeds, c => c.tb_UIMenuPersonalizations, d => d.tb_UIInputDataFields)
-
-
+                            .AsNavQueryable()
+                            .Includes(a => a.tb_User_Roles, b => b.tb_roleinfo, c => c.tb_P4RowAuthPolicyByRoles,d=>d.tb_rowauthpolicy)
                             .ToList();
 
             foreach (var item in list)
@@ -95,47 +94,7 @@ namespace RUINORERP.Business
             return list;
         }
 
-
-
-        /// <summary>
-        /// 带参数异步导航查询
-        /// 有问题@@@@！！！！
-        /// </summary>
-        /// <returns>数据列表</returns>
-        public virtual List<tb_User_Role> QueryRoleByNavWithMoreInfo(List<tb_RoleInfo> roles)
-        {
-            List<tb_User_Role> list = new List<tb_User_Role>();
-            try
-            {
-
-                var ids = roles.Select(it => new { it.RoleID }).ToArray();
-                long[] idss = new long[ids.Length];
-                for (int i = 0; i < ids.Length; i++)
-                {
-                    idss[i] = ids[i].RoleID;
-                }
-                //去重
-                // idss = ids.Distinct().ToArray();
-                list = _unitOfWorkManage.GetDbClient().Queryable<tb_User_Role>()
-               .In(it => it.RoleID, idss)
-               .Includes(t => t.tb_roleinfo)
-               .Includes(t => t.tb_roleinfo, a => a.tb_P4Menus, b => b.tb_menuinfo)
-               .Includes(t => t.tb_roleinfo, a => a.tb_P4Buttons, b => b.tb_buttoninfo)
-               .Includes(t => t.tb_roleinfo, a => a.tb_P4Fields, b => b.tb_fieldinfo)
-               .ToList();
-                foreach (var item in list)
-                {
-                    item.HasChanged = false;
-                }
-                //MyCacheManager.Instance.UpdateEntityList<tb_User_Role>(list);
-            }
-            catch (Exception ex)
-            {
-
-
-            }
-            return list;
-        }
+  
 
         /// <summary>
         /// 用事务？

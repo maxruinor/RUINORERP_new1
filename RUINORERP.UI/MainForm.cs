@@ -715,7 +715,7 @@ namespace RUINORERP.UI
             //手动初始化  打开就加载。省得登陆后还没有加载完
             BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
             BizCacheHelper.InitManager();
-            await InitCacheConfig(false);
+            InitCacheConfig(false);
 
             //先加载一遍缓存
             var tableNames = CacheInfoList.Keys.ToList();

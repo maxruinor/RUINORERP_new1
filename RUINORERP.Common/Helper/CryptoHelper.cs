@@ -124,7 +124,7 @@ namespace RUINORERP.Common.Helper
                 Console.WriteLine("连接字符串解密成功");
                 
                 // 6. 验证解密后的连接字符串是否有效
-                if (string.IsNullOrEmpty(decryptedConnectionString) || !decryptedConnectionString.Contains("data source") && !decryptedConnectionString.Contains("server"))
+                if (string.IsNullOrEmpty(decryptedConnectionString) || !decryptedConnectionString.ToLower().Contains("server"))
                 {
                     throw new ApplicationException("解密后的连接字符串无效或为空");
                 }

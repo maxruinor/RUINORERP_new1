@@ -713,7 +713,7 @@ namespace RUINORERP.Server
         {
             BizCacheHelper cacheHelper = Startup.GetFromFac<BizCacheHelper>();
             Stopwatch stopwatch = Stopwatch.StartNew();
-            cacheHelper.InitDict(LoadData);
+            cacheHelper.InitCacheDict(LoadData);
             stopwatch.Stop();
             frmMain.Instance.PrintInfoLog($"InitConfig总执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
             await Task.Delay(0);

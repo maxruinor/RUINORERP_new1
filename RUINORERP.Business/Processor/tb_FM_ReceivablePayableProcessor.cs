@@ -54,6 +54,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.PlatformOrderNo);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Currency_ID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.DepartmentID);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Employee_ID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ProjectGroup_ID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Account_id);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));

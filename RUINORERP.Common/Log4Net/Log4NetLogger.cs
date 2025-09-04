@@ -8,6 +8,7 @@ using log4net.Layout;
 using log4net.Repository;
 using log4net.Repository.Hierarchy;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.Common.Log4Net
 {
@@ -26,6 +27,9 @@ namespace RUINORERP.Common.Log4Net
             _loggerRepository = LogManager.CreateRepository(
                 Assembly.GetEntryAssembly(), typeof(Hierarchy));
             _log = LogManager.GetLogger(_loggerRepository.Name, name);
+            
+            // 处理加密的连接字符串
+            UpdateConnectionStringInXmlConfig(xmlElement);
             XmlConfigurator.Configure(_loggerRepository, xmlElement);
         }
 
@@ -102,6 +106,49 @@ namespace RUINORERP.Common.Log4Net
                         _log.Info(message, exception);
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 更新XML配置中的连接字符串，处理加密的连接字符串
+        /// </summary>
+        /// <param name="xmlElement">XML配置元素</param>
+        private void UpdateConnectionStringInXmlConfig(XmlElement xmlElement)
+        {
+            try
+            {
+                // 获取解密后的连接字符串
+                string decryptedConnectionString = CryptoHelper.GetDecryptedConnectionStringOrDefault("LogDatabase");
+                
+                if (!string.IsNullOrEmpty(decryptedConnectionString))
+                {
+                    // 查找所有connectionString属性并更新
+                    XmlNodeList connectionStringNodes = xmlElement.SelectNodes("//*[@connectionString]");
+                    foreach (XmlNode node in connectionStringNodes)
+                    {
+                        XmlAttribute connectionStringAttr = node.Attributes["connectionString"];
+                        if (connectionStringAttr != null)
+                        {
+                            connectionStringAttr.Value = decryptedConnectionString;
+                        }
+                    }
+                    
+                    // 查找所有ConnectionString属性并更新
+                    XmlNodeList ConnectionStringNodes = xmlElement.SelectNodes("//*[@ConnectionString]");
+                    foreach (XmlNode node in ConnectionStringNodes)
+                    {
+                        XmlAttribute ConnectionStringAttr = node.Attributes["ConnectionString"];
+                        if (ConnectionStringAttr != null)
+                        {
+                            ConnectionStringAttr.Value = decryptedConnectionString;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"更新连接字符串配置失败: {ex.Message}");
+                // 继续使用原始配置，不抛出异常
             }
         }
     }

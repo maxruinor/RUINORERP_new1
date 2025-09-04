@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,6 +37,8 @@ using System.Web.UI.WebControls;
 using AutoMapper;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.StatusManagerService;
+using RUINORERP.Business.RowLevelAuthService;
+using System.Collections;
 
 namespace RUINORERP.Business
 {
@@ -55,16 +57,21 @@ namespace RUINORERP.Business
         public IMapper mapper { get; set; }
         public string BizTypeText { get; set; }
         public int BizTypeInt { get; set; }
+
+        /// <summary>
+        /// 行级权限过滤器服务（注入单例）
+        /// </summary>
+        private readonly SqlSugarRowLevelAuthFilter _rowLevelAuthFilter;
         public BaseController(ILogger<BaseController<T>> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null)
         {
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
+            _rowLevelAuthFilter = _appContext.GetRequiredService<SqlSugarRowLevelAuthFilter>();
             BizTypeMapper Bizmapper = new BizTypeMapper();
             BizType bizType = Bizmapper.GetBizType(typeof(T).Name);
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
-
 
             // mapper = AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
             mapper = appContext.GetRequiredService<IMapper>();
@@ -954,19 +961,24 @@ namespace RUINORERP.Business
 
 
 
-
-        public async virtual Task<List<T>> BaseQueryByAdvancedNavWithConditionsAsync(bool useLike, QueryFilter QueryConditionFilter, object dto, int pageNum, int pageSize)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="useLike"></param>
+        /// <param name="QueryConditionFilter"></param>
+        /// <param name="dto"></param>
+        /// <param name="pageNum"></param>
+        /// <param name="pageSize"></param>
+        /// <param name="RowAuthFilter">行级数据过滤条件</param>
+        /// <returns></returns>
+        public async virtual Task<List<T>> BaseQueryByAdvancedNavWithConditionsAsync(bool useLike,
+            QueryFilter QueryConditionFilter, object dto, int pageNum, int pageSize, string additionalSqlWhere = "")
         {
             ISugarQueryable<T> querySqlQueryable;
 
             List<string> queryConditions = QueryConditionFilter.GetQueryConditions();
 
             Expression<Func<T, bool>> whereLambda = QueryConditionFilter.GetFilterExpression<T>();
-
-
-            //  .Where(useLike, queryConditions, dto);
-            var sb = GetWhereCondition(true, queryConditions, dto, typeof(T));
-
 
             //根据ISugarQueryable IN NOT的语法拼接
             List<string> sqlList = new List<string>();
@@ -1049,6 +1061,13 @@ namespace RUINORERP.Business
                 }
             }
 
+            // 添加额外的SQL条件
+            if (!string.IsNullOrEmpty(additionalSqlWhere))
+            {
+                // 应用行级权限过滤（使用注入的过滤器实例）
+                querySqlQueryable = _rowLevelAuthFilter.ApplyFilter<T>(querySqlQueryable, additionalSqlWhere);
+            }
+
             return await querySqlQueryable.ToPageListAsync(pageNum, pageSize) as List<T>;
         }
 
@@ -1056,6 +1075,8 @@ namespace RUINORERP.Business
 
         #region 2024-7-23再次优化 ,因为无法调试，所以将拼接去掉T单独出来 测试使用
 
+
+        [Obsolete("测试用的方法")]
         public static StringBuilder GetWhereCondition(bool useLike, List<string> _queryConditions, object whereObj, Type colType)
         {
             StringBuilder sb = new StringBuilder();

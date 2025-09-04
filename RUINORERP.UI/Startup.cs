@@ -67,6 +67,9 @@ using RUINORERP.Business.BizMapperService;
 using RUINORERP.UI.BusinessService.SmartMenuService;
 using RUINORERP.UI.WorkFlowDesigner;
 using RUINORERP.Business.LogicaService;
+using AutoMapper.Internal;
+using RUINORERP.Business.RowLevelAuthService;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace RUINORERP.UI
 {
@@ -166,7 +169,7 @@ namespace RUINORERP.UI
             {
                 // 获取解密后的数据库连接字符串
                 string connectionString = null;
-                
+
                 // 尝试通过CryptoHelper获取（这是标准方式）
                 try
                 {
@@ -176,7 +179,7 @@ namespace RUINORERP.UI
                 catch (Exception ex)
                 {
                     Console.WriteLine("警告：通过CryptoHelper获取连接字符串失败: " + ex.Message);
-                    
+
                     // 备选方案：直接从应用设置和硬编码密钥获取
                     try
                     {
@@ -199,7 +202,7 @@ namespace RUINORERP.UI
                 {
                     // 清除所有现有提供者，避免冲突
                     logBuilder.ClearProviders();
-                    
+
                     // 添加自定义的数据库日志提供者
                     if (!string.IsNullOrEmpty(connectionString))
                     {
@@ -1355,7 +1358,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             //       .WithRedisCacheHandle("redis", true);            // true = 作为回退
             //});
 
-           
+
 
 
             var dalAssemble_WF = System.Reflection.Assembly.LoadFrom("RUINORERP.WF.dll");
@@ -1540,7 +1543,6 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 if (tempTypes[i].Name.Contains("UseCsla"))
                 {
                     IOCCslaTypes.Add(tempTypes[i]);
-
                 }
                 else
                 {
@@ -1548,6 +1550,13 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 }
                 if (tempTypes[i].BaseType == null)
                 {
+                    if (tempTypes[i].Name.Contains("tb_SysGlobalDynamicConfigController"))
+                    {
+
+                    }
+
+
+
                     continue;
                 }
                 if (tempTypes[i].BaseType == typeof(BaseProcessor))
@@ -1590,19 +1599,13 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                     NewBaseValidatorGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
                 }
 
-                /*
-                // 强制为自定义特性
-                MenuAttribute? attribute = tempTypes[i].GetCustomAttribute(NoWantIOCAttr, false) as MenuAttribute;
-                // 如果强制失败就进入下一个循环
-                if (attribute == null)
-                    continue;
-                */
-
-
-
             }
 
+            var regList = IOCTypes.Where(c => c.Name.Contains("SysGlobalDynamicConfigController")).ToList();
+            if (regList.Count > 0)
+            {
 
+            }
             //加载RUINORERP.Business.dll并自动注册其中的服务
             var ExType = typeof(SearchType);
             builder.RegisterTypes(IOCTypes.ToArray())
@@ -1739,6 +1742,14 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
 
             // 显式注册GridViewRelated为单例，确保整个应用程序中使用同一个实例
             builder.RegisterType<GridViewRelated>().SingleInstance();
+            
+            // 注册ILogger和SqlSugarScope服务，用于SqlSugarRowLevelAuthFilter的依赖注入
+            builder.RegisterInstance(Program.AppContextData.Db).As<SqlSugarScope>().SingleInstance();
+            builder.RegisterGeneric(typeof(Logger<>)).As(typeof(ILogger<>)).InstancePerDependency();
+            builder.RegisterType<Log4NetLoggerByDb>().As<ILogger>().InstancePerDependency();
+            
+            // 注册SqlSugarRowLevelAuthFilter
+            builder.RegisterType<SqlSugarRowLevelAuthFilter>().AsSelf().InstancePerDependency();
 
             builder.RegisterModule(new AutofacServiceRegister());
         }

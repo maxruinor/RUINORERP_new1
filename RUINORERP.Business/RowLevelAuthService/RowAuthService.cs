@@ -351,6 +351,13 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <returns>SQL过滤条件子句</returns>
         public string GetUserRowAuthFilterClause(System.Type entityType, long menuId)
         {
+            // 检查是否为超级管理员，如果是则跳过行级权限过滤
+            if (_appContext != null && _appContext.IsSuperUser)
+            {
+                _logger.LogDebug("当前用户为超级管理员，跳过行级权限过滤");
+                return string.Empty;
+            }
+
             if (entityType == null)
             {
                 throw new ArgumentNullException(nameof(entityType), "实体类型不能为空");
@@ -365,7 +372,7 @@ namespace RUINORERP.Business.RowLevelAuthService
             try
             {
                 string entityName = entityType.Name;
-                string cacheKey = GenerateCacheKey(entityName, menuId);
+                string cacheKey = GenerateCacheKey(entityName, _appContext.CurrentRole.RoleID, menuId);
 
                 // 尝试从缓存获取
                 if (_cacheManager.TryGetValue(cacheKey, out object cachedValue))
@@ -396,51 +403,57 @@ namespace RUINORERP.Business.RowLevelAuthService
                     return null;
                 }
 
-                // 获取用户角色对应的权限规则（角色级别）
-                var rolePolicies = _db.Queryable<tb_RowAuthPolicy>()
-                    .InnerJoin<tb_P4RowAuthPolicyByRole>((p, r) => p.PolicyId == r.PolicyId)
-                    .Where((p, r) => p.IsEnabled && p.TargetEntity == entityName)
-                    .Where((p, r) => userRoleIds.Contains(r.RoleID))
-                    // 增加菜单ID过滤条件，只获取与当前菜单相关的规则
-                    .Where((p, r) => r.MenuID == menuId)
-                    .Select((p, r) => new tb_RowAuthPolicy
-                    {
-                        PolicyId = p.PolicyId,
-                        PolicyName = p.PolicyName,
-                        TargetEntity = p.TargetEntity,
-                        TargetTable = p.TargetTable,
-                        IsJoinRequired = p.IsJoinRequired,
-                        JoinTable = p.JoinTable,
-                        JoinType = p.JoinType,
-                        JoinOnClause = p.JoinOnClause,
-                        FilterClause = p.FilterClause
-                    })
+
+                var rolePolicies = _appContext.CurrentRole.tb_P4RowAuthPolicyByRoles.Where(k => k.MenuID == menuId)
+                    .Select(c=>c.tb_rowauthpolicy)
                     .ToList();
+
+
+                // 获取用户角色对应的权限规则（角色级别）
+                //var rolePolicies = _db.Queryable<tb_RowAuthPolicy>()
+                //    .InnerJoin<tb_P4RowAuthPolicyByRole>((p, r) => p.PolicyId == r.PolicyId)
+                //    .Where((p, r) => p.IsEnabled && p.TargetEntity == entityName)
+                //    .Where((p, r) => userRoleIds.Contains(r.RoleID))
+                //    // 增加菜单ID过滤条件，只获取与当前菜单相关的规则
+                //    .Where((p, r) => r.MenuID == menuId)
+                //    .Select((p, r) => new tb_RowAuthPolicy
+                //    {
+                //        PolicyId = p.PolicyId,
+                //        PolicyName = p.PolicyName,
+                //        TargetEntity = p.TargetEntity,
+                //        TargetTable = p.TargetTable,
+                //        IsJoinRequired = p.IsJoinRequired,
+                //        JoinTable = p.JoinTable,
+                //        JoinType = p.JoinType,
+                //        JoinOnClause = p.JoinOnClause,
+                //        FilterClause = p.FilterClause
+                //    })
+                //    .ToList();
 
                 // 获取用户直接绑定的权限规则（用户级别）
-                var userPolicies = _db.Queryable<tb_RowAuthPolicy>()
-                    .InnerJoin<tb_P4RowAuthPolicyByUser>((p, u) => p.PolicyId == u.PolicyId)
-                    .Where((p, u) => p.IsEnabled && p.TargetEntity == entityName)
-                    .Where((p, u) => u.User_ID == currentUserId)
-                    // 增加菜单ID过滤条件，只获取与当前菜单相关的规则
-                    .Where((p, u) => u.MenuID == menuId)
-                    .Select((p, u) => new tb_RowAuthPolicy
-                    {
-                        PolicyId = p.PolicyId,
-                        PolicyName = p.PolicyName,
-                        TargetEntity = p.TargetEntity,
-                        TargetTable = p.TargetTable,
-                        IsJoinRequired = p.IsJoinRequired,
-                        JoinTable = p.JoinTable,
-                        JoinType = p.JoinType,
-                        JoinOnClause = p.JoinOnClause,
-                        FilterClause = p.FilterClause
-                    })
-                    .ToList();
+                //var userPolicies = _db.Queryable<tb_RowAuthPolicy>()
+                //    .InnerJoin<tb_P4RowAuthPolicyByUser>((p, u) => p.PolicyId == u.PolicyId)
+                //    .Where((p, u) => p.IsEnabled && p.TargetEntity == entityName)
+                //    .Where((p, u) => u.User_ID == currentUserId)
+                //    // 增加菜单ID过滤条件，只获取与当前菜单相关的规则
+                //    .Where((p, u) => u.MenuID == menuId)
+                //    .Select((p, u) => new tb_RowAuthPolicy
+                //    {
+                //        PolicyId = p.PolicyId,
+                //        PolicyName = p.PolicyName,
+                //        TargetEntity = p.TargetEntity,
+                //        TargetTable = p.TargetTable,
+                //        IsJoinRequired = p.IsJoinRequired,
+                //        JoinTable = p.JoinTable,
+                //        JoinType = p.JoinType,
+                //        JoinOnClause = p.JoinOnClause,
+                //        FilterClause = p.FilterClause
+                //    })
+                //    .ToList();
 
                 // 合并角色级别和用户级别的规则（去重）
-                var policies = rolePolicies.Union(userPolicies).ToList();
-
+                //var policies = rolePolicies.Union(userPolicies).ToList();
+                var policies = rolePolicies;
                 if (policies != null && policies.Any())
                 {
                     _logger.LogDebug("找到 {PolicyCount} 条适用的行级权限规则", policies.Count);
@@ -677,9 +690,9 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <param name="entityName">实体名称</param>
         /// <param name="menuId">菜单ID，用于区分不同功能的数据规则</param>
         /// <returns>缓存键</returns>
-        private string GenerateCacheKey(string entityName, long menuId)
+        private string GenerateCacheKey(string entityName, long roleId, long menuId)
         {
-            return $"RowAuth:UserId:{GetCurrentUserId()}:Entity:{entityName}:Menu:{menuId}";
+            return $"RowAuth:UserId:{GetCurrentUserId()}:Entity:{entityName}:Role:{roleId}Menu:{menuId}";
         }
 
         /// <summary>

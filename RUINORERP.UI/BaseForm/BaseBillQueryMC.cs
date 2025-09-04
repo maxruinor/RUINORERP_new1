@@ -1029,6 +1029,13 @@ namespace RUINORERP.UI.BaseForm
                         // 预处理filterClause，移除可能导致问题的外层括号和标准化SQL语法
                         string processedFilterClause = PreprocessFilterClause(filterClause);
 
+                        #region 新逻辑
+                       
+                        #endregion
+
+                      
+
+
                         // 检查是否包含复杂SQL结构(如EXISTS子查询)
                         if (ContainsComplexSqlStructure(processedFilterClause))
                         {
@@ -1085,6 +1092,11 @@ namespace RUINORERP.UI.BaseForm
                 // 发生错误时继续执行，不阻止查询
             }
         }
+
+        #region 旧的一些方法 只是保留一些写法。有AI 可能不需要了
+
+
+        #endregion
 
         /// <summary>
         /// 检查过滤条件是否包含复杂SQL结构
@@ -2029,14 +2041,22 @@ namespace RUINORERP.UI.BaseForm
             }
 
             // 确保在查询前应用行级权限过滤
-            ApplyRowLevelAuthFilter();
+           ApplyRowLevelAuthFilter();
             if (LimitQueryConditions != null && !QueryConditionFilter.FilterLimitExpressions.Contains(LimitQueryConditions))
             {
                 QueryConditionFilter.FilterLimitExpressions.Add(LimitQueryConditions);
             }
 
+            // 获取行级权限服务
+            var rowAuthService = Startup.GetFromFac<IRowAuthService>();
+
+            // 获取实体类型
+            Type entityType = typeof(M);
+            // 获取过滤条件SQL子句
+            string filterClause = rowAuthService.GetUserRowAuthFilterClause(entityType, CurMenuInfo.MenuID);
+
             // 执行查询
-            List<M> rawList = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize) as List<M>;
+            List<M> rawList = await ctr.BaseQueryByAdvancedNavWithConditionsAsync(true, QueryConditionFilter, QueryDto, pageNum, pageSize, filterClause) as List<M>;
             list = rawList;
             _UCBillMasterQuery.bindingSourceMaster.DataSource = list.ToBindingSortCollection();
             _UCBillMasterQuery.ShowSummaryCols();
@@ -2062,14 +2082,7 @@ namespace RUINORERP.UI.BaseForm
                 // _UCOutlookGridAnalysis2.GridRelated.SetRelatedInfo<View_Inventory, tb_BOM_S>(c => c.BOM_ID, r => r.BOM_ID);
                 _UCOutlookGridAnalysis1.LoadDataToGrid<M>(list);
             }
-            //测试代码
-            //foreach (DataGridViewColumn dc in _UCBillMasterQuery.newSumDataGridViewMaster.Columns)
-            //{
-            //    if (dc.Visible==true)
-            //    {
-            //        MainForm.Instance.uclog.AddLog(dc.HeaderText);
-            //    }
-            //}
+
         }
 
         public List<Expression<Func<M, object>>> QueryConditions = new List<Expression<Func<M, object>>>();

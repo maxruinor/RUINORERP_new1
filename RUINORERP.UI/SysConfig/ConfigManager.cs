@@ -31,38 +31,7 @@ namespace RUINORERP.UI.SysConfig
 
         public async Task LoadConfigValues()
         {
-            /*
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            string resourceName = "RUINORERP.UI.SysConfig.DynamicConfig.DynamicConfig.config"; // 替换为实际的资源名称（包括命名空间）
-
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-            {
-                if (stream != null)
-                {
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        string content = reader.ReadToEnd();
-                        Console.WriteLine(content);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("未找到资源");
-                }
-            }
-
-
-            var configFileMap = new ExeConfigurationFileMap
-            {
-                ExeConfigFilename = "SysConfig/DynamicConfig/DynamicConfig.config"
-            };
-            var config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None, false);
-            var appSettings = config.AppSettings.Settings["SiteTitle"];
-            if (appSettings != null)
-            {
-                //  appSettings.Value;
-            }
-            */
+            
             List<tb_SysGlobalDynamicConfig> configEntries = new List<tb_SysGlobalDynamicConfig>();
             try
             {

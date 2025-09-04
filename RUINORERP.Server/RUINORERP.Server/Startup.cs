@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -7,6 +7,7 @@ using RUINORERP.Extensions;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Common.Log4Net;
 using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.BizMapperService;
 using Microsoft.Extensions.Configuration;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Repository.Base;
@@ -66,6 +67,7 @@ using RUINORERP.Model.Base;
 using RUINORERP.Business.CommService;
 using System.Runtime.InteropServices.JavaScript;
 using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
+using RUINORERP.Business.RowLevelAuthService;
 
 namespace RUINORERP.Server
 {
@@ -110,6 +112,7 @@ namespace RUINORERP.Server
             .SingleInstance();
             //覆盖上面自动注册的？说是最后的才是
             //builder.RegisterType<UserControl>().Named<UserControl>("MENU").InstancePerDependency();
+            ConfigureServices(services);
             ConfigureContainerForDll(builder);
             RegisterForm(builder);
 
@@ -165,7 +168,7 @@ namespace RUINORERP.Server
 
             //注册是最后的覆盖前面的 ，AOP测试时，业务控制器中的方法不生效。与 ConfigureContainer(builder); 中注册的方式有关。可能参数不对。
 
-            ConfigureServices(services);
+       
 
             string conn = AppSettings.GetValue("ConnectString");
             Program.InitAppcontextValue(Program.AppContextData);
@@ -491,7 +494,7 @@ namespace RUINORERP.Server
             //services.AddSingleton<CommandDispatcher>(provider => new CommandDispatcher(allHandlers));
 
 
-
+            services.AddEntityInfoServicesWithMappings();
 
             //setup dependency injection
             //services.AddLogging();
@@ -869,6 +872,15 @@ namespace RUINORERP.Server
                     ;
                     continue;
                 }
+                
+                if (tempTypes[i].Name == "SqlSugarRowLevelAuthFilter")
+                {
+                    builder.RegisterType<SqlSugarRowLevelAuthFilter>()
+                    .AsSelf()
+                    .SingleInstance() // 注册为单例
+                    .PropertiesAutowired();
+                    continue;
+                }
 
                 if (tempTypes[i].Name.Contains("UseCsla"))
                 {
@@ -878,7 +890,10 @@ namespace RUINORERP.Server
                 {
                     IOCTypes.Add(tempTypes[i]);
                 }
-
+                if (tempTypes[i].BaseType == null)
+                {
+                    continue;
+                }
                 if (tempTypes[i].BaseType == typeof(BaseProcessor))
                 {
                     ProcessorList.Add(new KeyValuePair<string, Type>(tempTypes[i].Name, tempTypes[i]));

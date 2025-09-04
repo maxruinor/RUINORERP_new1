@@ -59,7 +59,7 @@ namespace RUINORERP.UI.SysConfig
         private readonly IRowAuthService _rowAuthService;
         // 缓存默认的行级权限策略，避免重复从数据库加载
         private Dictionary<BizType, List<tb_RowAuthPolicy>> _policyCache = new Dictionary<BizType, List<tb_RowAuthPolicy>>();
-        
+        public GridViewDisplayTextResolver DisplayTextResolver;
         public UCRoleAuthorization()
         {
             InitializeComponent();
@@ -81,14 +81,17 @@ namespace RUINORERP.UI.SysConfig
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_检测是否重复);
+            ContextClickList.Add(NewSumDataGridView_删除行级权限);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list.Add(new ContextMenuController("【检测是否重复】", true, false, "NewSumDataGridView_检测是否重复"));
+            list.Add(new ContextMenuController("【删除行级权限】", true, false, "NewSumDataGridView_删除行级权限"));
             return list;
         }
         public void BuildContextMenuController()
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_检测是否重复);
+            ContextClickList.Add(NewSumDataGridView_删除行级权限);
 
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
@@ -109,6 +112,15 @@ namespace RUINORERP.UI.SysConfig
                 , ContextClickList, list, true
                     );
                 dataGridView2.ContextMenuStrip = newContextMenuStrip;
+            }
+
+            if (newSumDataGridViewRowAuthPolicy != null)
+            {
+                //base.dataGridView1.Use是否使用内置右键功能 = false;
+                ContextMenuStrip newContextMenuStrip = this.newSumDataGridViewRowAuthPolicy.GetContextMenu(this.newSumDataGridViewRowAuthPolicy.ContextMenuStrip
+                , ContextClickList, list, true
+                    );
+                newSumDataGridViewRowAuthPolicy.ContextMenuStrip = newContextMenuStrip;
             }
         }
 
@@ -198,6 +210,82 @@ namespace RUINORERP.UI.SysConfig
 
         #endregion
 
+        /// <summary>
+        /// 删除行级权限 - 右键菜单功能
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private async void NewSumDataGridView_删除行级权限(object sender, EventArgs e)
+        {
+      
+
+            // 获取当前选中的行
+            if (newSumDataGridViewRowAuthPolicy.CurrentRow == null)
+            {
+                MessageBox.Show("请先选择要删除的行级权限", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 获取绑定的数据对象
+            var selectedPolicy = newSumDataGridViewRowAuthPolicy.CurrentRow.DataBoundItem as tb_P4RowAuthPolicyByRole;
+            if (selectedPolicy == null)
+            {
+                MessageBox.Show("无法获取选中的行级权限数据", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 确认删除提示
+            var result = MessageBox.Show("确定要删除选中的行级权限吗？此操作不可恢复。", "确认删除",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+
+            if (result != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                // 从数据源中移除
+                bindingSourceRowAuthPolicy.Remove(selectedPolicy);
+
+                // 从数据库中删除
+                using (var db = MainForm.Instance.AppContext.Db.CopyNew())
+                {
+                    await db.Deleteable<tb_P4RowAuthPolicyByRole>()
+                          .Where(p => p.Policy_Role_RID == selectedPolicy.Policy_Role_RID)
+                          .ExecuteCommandAsync();
+                }
+
+                // 更新缓存（节点的tag）
+                if (TreeView1.SelectedNode != null && TreeView1.SelectedNode.Tag is tb_MenuInfo selectMenu)
+                {
+                    // 清除相关缓存，下次访问时会重新加载
+                    // 清除当前业务类型的策略缓存，确保下次加载时获取最新数据
+                    if (selectMenu.BizType.HasValue)
+                    {
+                        BizType bizType = (BizType)selectMenu.BizType.Value;
+                        if (_policyCache.ContainsKey(bizType))
+                        {
+                            _policyCache.Remove(bizType);
+                        }
+                    }
+
+                    // 更新节点tag中的缓存信息
+                    if (CurrentRole.tb_P4RowAuthPolicyByRoles.Contains(selectedPolicy))
+                    {
+                        CurrentRole.tb_P4RowAuthPolicyByRoles.Remove(selectedPolicy);
+                    };
+
+                }
+
+                MessageBox.Show("行级权限删除成功", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"删除行级权限时发生错误：{ex.Message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void KryptonNavigator1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (TreeView1.SelectedNode == null)
@@ -245,7 +333,7 @@ namespace RUINORERP.UI.SysConfig
         }
         private async void UCRoleAuthorization_Load(object sender, EventArgs e)
         {
-
+            DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_P4RowAuthPolicyByRole));
             kryptonNavigator1.SelectedPageChanged += KryptonNavigator1_SelectedIndexChanged;
 
             TreeView1.HideSelection = false;
@@ -273,7 +361,7 @@ namespace RUINORERP.UI.SysConfig
             // dataGridView2.ContextMenuStrip = contextMenuStrip1;
             dataGridView1.CellMouseDown += new DataGridViewCellMouseEventHandler(dataGridView1_CellMouseDown);
             dataGridView2.CellMouseDown += new DataGridViewCellMouseEventHandler(dataGridView2_CellMouseDown);
-
+            DisplayTextResolver.Initialize(newSumDataGridViewRowAuthPolicy);
         }
 
 
@@ -691,21 +779,22 @@ namespace RUINORERP.UI.SysConfig
                     foreach (var item in bindingSourceRowAuthPolicy.List)
                     {
                         tb_P4RowAuthPolicyByRole policy = item as tb_P4RowAuthPolicyByRole;
-                        if (policy != null)
+                        //只处理新增加的数据
+                        if (policy != null && policy.Policy_Role_RID == 0)
                         {
                             policies.Add(policy);
                         }
                     }
 
                     // 删除旧的关联记录
-                    await MainForm.Instance.AppContext.Db.Deleteable<tb_P4RowAuthPolicyByRole>()
-                        .Where(p => p.RoleID == roleId && p.MenuID == menuId)
-                        .ExecuteCommandAsync();
+                    //await MainForm.Instance.AppContext.Db.Deleteable<tb_P4RowAuthPolicyByRole>()
+                    //    .Where(p => p.RoleID == roleId && p.MenuID == menuId)
+                    //    .ExecuteCommandAsync();
 
                     // 保存新的关联记录
                     if (policies.Any())
                     {
-                        await MainForm.Instance.AppContext.Db.Insertable(policies).ExecuteReturnSnowflakeIdAsync();
+                        await MainForm.Instance.AppContext.Db.Insertable(policies.Where(c => c.Policy_Role_RID == 0).ToList()).ExecuteReturnSnowflakeIdAsync();
                         MainForm.Instance.logger.LogInformation("成功保存{Count}条行级权限规则", policies.Count);
                     }
 
@@ -720,7 +809,7 @@ namespace RUINORERP.UI.SysConfig
                     {
                         CurrentRole.tb_P4RowAuthPolicyByRoles.AddRange(policies);
                     }
-                    
+
                     // 清除当前业务类型的策略缓存，确保下次加载时获取最新数据
                     if (selectMenu.BizType.HasValue)
                     {
@@ -1839,7 +1928,7 @@ namespace RUINORERP.UI.SysConfig
                     Policies = _rowAuthService.GetAllPolicies(bizType);
                     _policyCache[bizType] = Policies;
                 }
-                
+
                 BindingSource bs = new BindingSource();
                 bs.DataSource = Policies;
 

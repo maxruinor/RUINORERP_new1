@@ -38,7 +38,7 @@ namespace RUINORERP.UI.SysConfig
         {
             InitializeComponent();
         }
-
+      
         tb_RoleInfoController<tb_RoleInfo> ctrRole = Startup.GetFromFac<tb_RoleInfoController<tb_RoleInfo>>();
         private async Task LoadUser()
         {
@@ -116,6 +116,7 @@ namespace RUINORERP.UI.SysConfig
 
         private void UCUserAuthorization_Load(object sender, EventArgs e)
         {
+            
             TreeView1.HideSelection = false;
             // FieldNameList = UIHelper.GetFieldNameColList(typeof(SelectDto), typeof(tb_RoleInfo));
             dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(tb_User_Role));
@@ -162,6 +163,8 @@ namespace RUINORERP.UI.SysConfig
                     CancelCheckedExceptOne(tv.Nodes, e.Node);
                 }
             }
+
+            
 
             //TreeViewSingleSelectedAndChecked(TreeView1, e);
             tb_User_RoleController<tb_User_Role> ctr = Startup.GetFromFac<tb_User_RoleController<tb_User_Role>>();

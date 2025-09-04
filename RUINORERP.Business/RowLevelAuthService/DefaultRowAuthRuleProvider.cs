@@ -57,8 +57,8 @@ namespace RUINORERP.Business.RowLevelAuthService
                         IsJoinRequired = true,
                         JoinTable = "tb_CustomerVendor",
                         JoinType = "INNER",
-                        JoinOnClauseTemplate = "{0}.CustomerVendor_ID = tb_CustomerVendor.Id",
-                        FilterClause = "tb_CustomerVendor.Type = '客户'",
+                        JoinOnClauseTemplate = "{0}.CustomerVendor_ID = tb_CustomerVendor.CustomerVendor_ID",
+                        FilterClause = "tb_CustomerVendor.IsCustomer = 1",
                         Name = "仅客户数据",
                         Description = _ruleDescriptions[RowLevelAuthRule.OnlyCustomer]
                     }
@@ -69,8 +69,8 @@ namespace RUINORERP.Business.RowLevelAuthService
                         IsJoinRequired = true,
                         JoinTable = "tb_CustomerVendor",
                         JoinType = "INNER",
-                        JoinOnClauseTemplate = "{0}.CustomerVendor_ID = tb_CustomerVendor.Id",
-                        FilterClause = "tb_CustomerVendor.Type = '供应商'",
+                        JoinOnClauseTemplate = "{0}.CustomerVendor_ID = tb_CustomerVendor.CustomerVendor_ID",
+                        FilterClause = "tb_CustomerVendor.IsVendor = 1",
                         Name = "仅供应商数据",
                         Description = _ruleDescriptions[RowLevelAuthRule.OnlySupplier]
                     }

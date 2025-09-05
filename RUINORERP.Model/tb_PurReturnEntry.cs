@@ -212,7 +212,7 @@ namespace RUINORERP.Model
 
         private DateTime _BillDate;
         /// <summary>
-        /// 单据日期
+        /// 单据日期 应该叫入库日期
         /// </summary>
         [AdvQueryAttribute(ColName = "BillDate",ColDesc = "单据日期")] 
         [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "BillDate" ,IsNullable = false,ColumnDescription = "单据日期" )]

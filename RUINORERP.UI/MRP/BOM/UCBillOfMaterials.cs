@@ -407,8 +407,8 @@ namespace RUINORERP.UI.MRP.BOM
 
             // 第StartRowIndex行：总材料数量
             int row = 0;
-            worksheet.Cells[StartRowIndex+ row, 1].Value = $"总物料费用：";
-            worksheet.Cells[StartRowIndex + row, 1, StartRowIndex+ row, costIndex].Merge = true;
+            worksheet.Cells[StartRowIndex + row, 1].Value = $"总物料费用：";
+            worksheet.Cells[StartRowIndex + row, 1, StartRowIndex + row, costIndex].Merge = true;
             worksheet.Cells[StartRowIndex + row, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
             worksheet.Cells[StartRowIndex + row, costIndex + 1].Value = EditEntity.TotalMaterialCost;
 
@@ -1545,7 +1545,7 @@ namespace RUINORERP.UI.MRP.BOM
                 item.BOM_ID = 0;
                 item.SubID = 0;
             }
-            if (EditEntity.tb_BOM_SDetailSecondaries!=null)
+            if (EditEntity.tb_BOM_SDetailSecondaries != null)
             {
                 foreach (var item in EditEntity.tb_BOM_SDetailSecondaries)
                 {
@@ -2015,7 +2015,7 @@ namespace RUINORERP.UI.MRP.BOM
 
                     decimal tempSubtotal = detail.UsedQty * detail.UnitCost;
                     tempSubtotal = Math.Round(tempSubtotal, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
-                    
+
                     detail.SubtotalUnitCost = tempSubtotal;
                 }
                 EditEntity.TotalMaterialCost = details.Sum(c => c.SubtotalUnitCost);
@@ -2063,7 +2063,7 @@ namespace RUINORERP.UI.MRP.BOM
                 EditEntity.tb_BOM_SDetailSecondaries = new List<tb_BOM_SDetailSecondary>();
                 EditEntity.tb_BOM_SDetailSecondaries.Add(new tb_BOM_SDetailSecondary());
                 EditEntity.DataStatus = (int)DataStatus.草稿;
-                if (EditEntity.is_enabled && !EditEntity.is_enabled)
+                if (NeedValidated && EditEntity.is_enabled && !EditEntity.is_enabled)
                 {
                     if (MessageBox.Show("BOM清单没有启用，确定保存吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
                     {
@@ -2072,7 +2072,7 @@ namespace RUINORERP.UI.MRP.BOM
                 }
 
 
-                if (EditEntity.is_available && !EditEntity.is_available)
+                if (NeedValidated && EditEntity.is_available && !EditEntity.is_available)
                 {
                     if (MessageBox.Show("BOM清单设置为不可用，确定保存吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.Cancel)
                     {
@@ -2082,6 +2082,16 @@ namespace RUINORERP.UI.MRP.BOM
 
 
                 EditEntity.tb_BOM_SDetails = details;
+                Summation();
+                var maxCost = Math.Max(EditEntity.OutProductionAllCosts, EditEntity.SelfProductionAllCosts);
+                //检测总成本
+                if (NeedValidated && maxCost == 0)
+                {
+                    MessageBox.Show("配方总成本不能为零。请检查数据后再保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {

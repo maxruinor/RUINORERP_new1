@@ -2041,7 +2041,7 @@ namespace RUINORERP.UI.BaseForm
             }
 
             // 确保在查询前应用行级权限过滤
-           ApplyRowLevelAuthFilter();
+           //ApplyRowLevelAuthFilter();
             if (LimitQueryConditions != null && !QueryConditionFilter.FilterLimitExpressions.Contains(LimitQueryConditions))
             {
                 QueryConditionFilter.FilterLimitExpressions.Add(LimitQueryConditions);

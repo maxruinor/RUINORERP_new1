@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/29/2025 20:39:10
+// 时间：09/04/2025 14:48:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -82,6 +82,32 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _IsJoinRequired;}
             set{SetProperty(ref _IsJoinRequired, value);}
+        }
+     
+
+        private string _TargetTableJoinField;
+        /// <summary>
+        /// 目标表关联字段
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TargetTableJoinField",ColDesc = "目标表关联字段")]
+        [SugarColumn(ColumnDataType = "nvarchar",SqlParameterDbType ="String",ColumnName = "TargetTableJoinField",Length=50,IsNullable = true,ColumnDescription = "目标表关联字段" )]
+        public string TargetTableJoinField 
+        { 
+            get{return _TargetTableJoinField;}
+            set{SetProperty(ref _TargetTableJoinField, value);}
+        }
+     
+
+        private string _JoinTableJoinField;
+        /// <summary>
+        /// 关联表关联字段
+        /// </summary>
+        [AdvQueryAttribute(ColName = "JoinTableJoinField",ColDesc = "关联表关联字段")]
+        [SugarColumn(ColumnDataType = "nvarchar",SqlParameterDbType ="String",ColumnName = "JoinTableJoinField",Length=50,IsNullable = true,ColumnDescription = "关联表关联字段" )]
+        public string JoinTableJoinField 
+        { 
+            get{return _JoinTableJoinField;}
+            set{SetProperty(ref _JoinTableJoinField, value);}
         }
      
 

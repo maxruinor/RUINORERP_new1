@@ -44,6 +44,7 @@ using NPOI.POIFS.Properties;
 using Netron.GraphLib;
 using Org.BouncyCastle.Utilities;
 using RUINORERP.Model.CommonModel;
+using ToolTip = System.Windows.Forms.ToolTip;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -56,8 +57,19 @@ namespace RUINORERP.UI.MRP.MP
         {
             InitializeComponent();
             // InitDataToCmbByEnumDynamicGeneratedDataSource<tb_ProductionDemand>(typeof(Priority), e => e.Priority, cmbOrderPriority, false);
-             GridRelated = new GridViewRelated();
+            InitializeToolTips();
+            GridRelated = new GridViewRelated();
         }
+
+        private void InitializeToolTips()
+        {
+            var toolTip = new ToolTip();
+            toolTip.SetToolTip(rdb中间件式,
+                "中间件模式：只生成选中单个组件的制令单，适用于独立组件生产");
+            toolTip.SetToolTip(rdb上层驱动,
+                "上层驱动模式：生成选中组件及其所有子级的制令单，适用于完整产品生产");
+        }
+
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_ProductionDemand ProductionDemand)
@@ -121,6 +133,7 @@ namespace RUINORERP.UI.MRP.MP
             //                .ToExpression();//注意 这一句 不能少
             //QueryConditionFilter.SetFieldLimitCondition(lambda);
         }
+        // 添加工具提示说明
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -806,7 +819,7 @@ namespace RUINORERP.UI.MRP.MP
             }
         }
         #endregion
-        public GridViewRelated GridRelated { get; set; } 
+        public GridViewRelated GridRelated { get; set; }
 
 
         private void Sgh_OnLoadMultiRowData(object rows, SourceGrid.Position position)
@@ -2189,12 +2202,10 @@ protected async override Task<ApprovalEntity> ReReview()
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void btnCreateProduction_Click(object sender, EventArgs e)
+        private async void btnCreateProduction_Click(object sender, EventArgs e)
         {
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-            //CreateProduction(rdb中间件式.Checked);
-            CreateProductionNew2024(rdb中间件式.Checked);
-
+            await CreateProductionNew2024(rdb中间件式.Checked);
         }
 
 
@@ -2217,7 +2228,12 @@ protected async override Task<ApprovalEntity> ReReview()
             if (EditEntity.PDID == 0 || !EditEntity.ApprovalResults.HasValue || !EditEntity.ApprovalResults.Value)
             {
                 btnCreateProduction.Enabled = false;
-                MessageBox.Show("请先保存单据并审核成功后才能生成制令单。");
+                // 改进建议
+                MessageBox.Show("生成制令单前需要满足以下条件：\n" +
+                    "1. 单据已保存并审核通过\n" +
+                    "2. 至少选择一个目标产品\n" +
+                    "3. 选中的产品未生成过制令单",
+                    "制令单生成条件", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             else
@@ -2331,7 +2347,7 @@ protected async override Task<ApprovalEntity> ReReview()
             if (RelatedBillMenuInfo != null && ManufacturingOrder != null)
             {
                 //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
-                menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, ManufacturingOrder);
+                await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, ManufacturingOrder);
             }
             else
             {

@@ -664,6 +664,47 @@ using var binder = new UIStateBinder(..., customEvaluator);
         }
 
 
+        // 忽略属性配置
+        // 重写忽略属性配置
+        protected override IgnorePropertyConfiguration ConfigureIgnoreProperties()
+        {
+            return base.ConfigureIgnoreProperties()
+                // 主表忽略的属性
+                .Ignore<tb_SaleOrder>(
+                    e => e.RefBillID,
+                    e => e.RefNO,
+                    e => e.SOrder_ID,
+                    e => e.SOrderNo,
+                    e => e.TotalQty,
+                    e => e.TotalTaxAmount,
+                    e => e.ForeignTotalAmount,
+                    e => e.TotalAmount,
+                    e => e.TotalCost,
+                    e => e.DataStatus,
+                    e => e.ApprovalStatus,
+                    e => e.ApprovalResults,
+                    e => e.Approver_by,
+                    e => e.Approver_at,
+                    e => e.PrintStatus,
+                    e => e.TotalCommissionAmount,
+                    e => e.Deposit,
+                    e => e.ForeignDeposit)
+                // 明细表忽略的属性
+                .Ignore<tb_SaleOrderDetail>(
+                    e => e.SaleOrderDetail_ID,
+                    e => e.TotalDeliveredQty,
+                    e => e.TotalReturnedQty,
+                    e => e.CommissionAmount,
+                    e => e.SubtotalCostAmount,
+                    e => e.Quantity,
+                    e => e.UnitCommissionAmount,
+                    e => e.SubtotalTransAmount,
+                    e => e.CustomizedCost,
+                    e => e.SubtotalTaxAmount,
+                    e => e.TaxRate,
+                    e => e.Gift);
+        }
+
         /// <summary>
         /// 从文本中提取订单编号
         /// </summary>
@@ -1086,12 +1127,12 @@ using var binder = new UIStateBinder(..., customEvaluator);
                             //    c.SubtotalCostAmount = (c.Cost + c.CustomizedCost) * c.Quantity;
                             //}
                             //c.SubtotalTransAmount = c.TransactionPrice * c.Quantity;
-                            if (c.TotalDeliveredQty > 0 && (EditEntity.tb_SaleOuts==null || EditEntity.tb_SaleOuts.Count == 0))
+                            if (c.TotalDeliveredQty > 0 && (EditEntity.tb_SaleOuts == null || EditEntity.tb_SaleOuts.Count == 0))
                             {
                                 c.TotalDeliveredQty = 0;
                             }
                             c.SubtotalTaxAmount = c.SubtotalTransAmount / (1 + c.TaxRate) * c.TaxRate;
-                            c.SubtotalTaxAmount=Math.Round(c.SubtotalTaxAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
+                            c.SubtotalTaxAmount = Math.Round(c.SubtotalTaxAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
 
                             if (c.CustomizedCost > 0)
                             {
@@ -1214,7 +1255,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     StringBuilder NegativeInventorymsg = new StringBuilder();
                     foreach (var item in details)
                     {
-                        var detail = list.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID);
+                        var detail = list.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID && c.Location_ID == item.Location_ID);
                         if (detail != null)
                         {
                             if (NeedValidated && (detail.Quantity - item.Quantity) < 0)

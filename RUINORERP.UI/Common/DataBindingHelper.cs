@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -1942,10 +1942,7 @@ namespace RUINORERP.UI.Common
 
 
         #endregion
-
-
-
-
+ 
         /// <summary>
         /// 这个绑定下拉时，比方在产品表中。T会为tb_unit，expkey为unit_id，expValue为unit_name，Unit_ID会作为外键保存在产品中。
         /// 如果外键列名和单位表本身主键ID不一致时会出错。
@@ -2038,6 +2035,13 @@ namespace RUINORERP.UI.Common
 
         public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition)
         {
+            // 检查是否需要在UI线程上执行
+            if (cmbBox.InvokeRequired)
+            {
+                cmbBox.Invoke(new Action(() => BindData4Cmb(entity, expkey, expValue, cmbBox, expCondition)));
+                return;
+            }
+
             cmbBox.DataBindings.Clear();
 
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");
@@ -2110,6 +2114,7 @@ namespace RUINORERP.UI.Common
             }
             #endregion
         }
+    
 
         public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition, bool WithClear)
         {

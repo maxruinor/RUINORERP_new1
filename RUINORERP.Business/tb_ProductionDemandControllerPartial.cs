@@ -1003,7 +1003,7 @@ namespace RUINORERP.Business
                 newDetail.ProdDetailID = group.ProdDetailID;
                 newDetail.Location_ID = group.Location_ID;
                 //newDetail.RequirementDate = group.RequirementDate;
-               
+
                 newDetail.RequirementQty = group.TotalRequirementQty;
                 newDetail.RecommendQty = group.TotalRecommendQty;
                 newDetail.ActualRequiredQty = group.TotalActualRequiredQty;
@@ -1110,11 +1110,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="demand">需求分析表</param>
         /// <param name="MakingItem">要制作的目标，如果中间件，就会是指定一个，如果是上层模式，则是一组中最顶层那个行数据</param>
-        /// <param name="needLoop">如果是循环，则是上层械，如果是否则是中间件式</param>
+        /// <param name="middlewareNeedLoop">如果是循环，则是上层械，如果是否则是中间件式</param>
         /// <returns></returns>
         public async Task<tb_ManufacturingOrder> InitManufacturingOrder(tb_ProductionDemand demand,
             tb_ProduceGoodsRecommendDetail MakingItem,
-             bool needLoop = false)
+             bool middlewareNeedLoop = false)
         {
 
             //需求分析单审核后才可以生成制令单，因为确定需求才生产
@@ -1126,14 +1126,13 @@ namespace RUINORERP.Business
             //tb_BOM_SController<tb_BOM_S> ctrBOM = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
             //一次性查出。为了性能，如果是上层模式，则全部，如果是中间件模式，则只要查下一级
             List<tb_BOM_S> MediumBomInfoList = new List<tb_BOM_S>();
-            if (needLoop)
+            if (middlewareNeedLoop)
             {
                 long[] _bomIDs = demand.tb_ProduceGoodsRecommendDetails.Where(c => c.BOM_ID.HasValue).ToList().Select(c => c.BOM_ID.Value).ToArray();
                 MediumBomInfoList = await _appContext.Db.CopyNew().Queryable<tb_BOM_S>()
                     .Includes(a => a.tb_proddetail, b => b.tb_Inventories)
-                     .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
-                        .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail)
-                        .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail, c => c.tb_Inventories)
+                    .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail, c => c.tb_bom_s)
+                    .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail, c => c.tb_Inventories)
                     .Where(c => _bomIDs.Contains(c.BOM_ID)).ToListAsync();
             }
             else
@@ -1142,10 +1141,8 @@ namespace RUINORERP.Business
                 long[] _bomIDs = demand.tb_ProduceGoodsRecommendDetails.Where(c => c.BOM_ID.HasValue && MakingItem.ProdDetailID == c.ProdDetailID && c.Location_ID == MakingItem.Location_ID).ToList().Select(c => c.BOM_ID.Value).ToArray();
                 MediumBomInfoList = await _appContext.Db.CopyNew().Queryable<tb_BOM_S>()
                     .Includes(a => a.tb_proddetail, b => b.tb_Inventories)
-                     .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
-                        .Includes(a => a.tb_BOM_SDetails, b => b.tb_bom_s)
-                        .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail)
-                        .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail, c => c.tb_Inventories)
+                    .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail, c => c.tb_bom_s)
+                    .Includes(a => a.tb_BOM_SDetails, b => b.tb_proddetail, c => c.tb_Inventories)
                     .Where(c => _bomIDs.Contains(c.BOM_ID)).ToListAsync();
 
             }
@@ -1188,7 +1185,7 @@ namespace RUINORERP.Business
             ManufacturingOrder.Location_ID = MakingItem.Location_ID;
             ManufacturingOrder.QuantityDelivered = 0;
             //标记是不是上层驱动
-            ManufacturingOrder.IncludeSubBOM = needLoop;
+            ManufacturingOrder.IncludeSubBOM = middlewareNeedLoop;
             //暂时认为一定有计划
             if (demand.tb_productionplan != null)
             {
@@ -1235,10 +1232,9 @@ namespace RUINORERP.Business
             //这里只得到了除顶层的的有BOM的数据
             //先查出所有中单节点的BOM信息。
 
-
             List<tb_ManufacturingOrderDetail> MakingGoods = new List<tb_ManufacturingOrderDetail>();
 
-            MakingGoods = await GetSubManufacturingOrderDetailLoop(demand, MediumBomInfoList, MakingItem, MakingItemBom, needLoop);
+            MakingGoods = await GetSubManufacturingOrderDetailLoop(demand, MediumBomInfoList, MakingItem, MakingItemBom, middlewareNeedLoop);
 
             ////这里是中间件ID
             //HashSet<long> excludedIds = new HashSet<long>(MakingGoods.Select(p => p.ProdDetailID));
@@ -1342,87 +1338,90 @@ namespace RUINORERP.Business
         /// 实际发料时不会分开发。会一起发。数量也好算
         /// </summary>
         /// <param name="MediumBomInfoList">一个BOM集合，如果是中间件。则只有一级，如果是上层驱动则多级</param>
-        /// <param name="MakingItem">这个是自制品表中的，选择中的一行。多行，则是最顶级的那一行</param>
-        /// <param name="MakingItemBom">选中的bom</param>
-        /// <param name="needLoop">如果上层模式，为true,否则是中间件 就不用循环</param>
+        /// <param name="mpdItem制令单母件">这个是自制品表中的，选择中的一行。多行，则是最顶级的那一行</param>
+        /// <param name="MakingItemBom制令单母件配方">选中的bom</param>
+        /// <param name="middlewareNeedLoop">如果上层模式，为true,否则是中间件 就不用循环</param>
         /// <returns></returns>
 
-        private async Task<List<tb_ManufacturingOrderDetail>> GetSubManufacturingOrderDetailLoop(tb_ProductionDemand demand,
-            List<tb_BOM_S> MediumBomInfoList, tb_ProduceGoodsRecommendDetail MakingItem, tb_BOM_S MakingItemBom,
-            bool needLoop = true
+        private async Task<List<tb_ManufacturingOrderDetail>> GetSubManufacturingOrderDetailLoop(tb_ProductionDemand demand需求分析主表,
+            List<tb_BOM_S> MediumBomInfoList, tb_ProduceGoodsRecommendDetail mpdItem制令单母件, tb_BOM_S MakingItemBom制令单母件配方,
+            bool middlewareNeedLoop = true
             )
         {
             List<tb_ManufacturingOrderDetail> AllMakingGoods = new List<tb_ManufacturingOrderDetail>();
             //找到上层的次级 ,是通过BOM明细找
-            foreach (var mItem in MakingItemBom.tb_BOM_SDetails)
+            foreach (var BomDetailItem in MakingItemBom制令单母件配方.tb_BOM_SDetails)
             {
-                //==通过库存不足那边的转换一下，再修正重要的值
-                var mpdItem = demand.tb_ProductionDemandDetails.FirstOrDefault(c => c.ProdDetailID == mItem.ProdDetailID);
-                tb_ManufacturingOrderDetail mItemGoods = mapper.Map<tb_ManufacturingOrderDetail>(mpdItem);
-                if (mItemGoods == null)
-                {
-                    //如果需求分析单已经建好保存后，再修改BOM添加了材料后。按BOM明细到分析单明细中找不到时。则直接由BOM明细生成制令单明细行
-                    mItemGoods = mapper.Map<tb_ManufacturingOrderDetail>(mItem);
-                    mItemGoods.Location_ID = MakingItem.Location_ID;
-                }
-                //===
-                mItemGoods.ActualSentQty = 0;
+    
+                //如果需求分析单已经建好保存后，再修改BOM添加了材料后。按BOM明细到分析单明细中找不到时。则直接由BOM明细生成制令单明细行
+                tb_ManufacturingOrderDetail ManufacturingOrderItem = mapper.Map<tb_ManufacturingOrderDetail>(BomDetailItem);
+                ManufacturingOrderItem.Location_ID = mpdItem制令单母件.Location_ID;
+
+                ManufacturingOrderItem.ActualSentQty = 0;
                 //不管是中间件还是原料都有上级BOM。
                 //因为可以选择上层驱动。这时物料明细中就要保存他自己的上级。这样才能计划出产出量这些数据。
                 //所属配方,制令单表中也有。是因为给了一个默认。如果是上层驱动则从裸机机取到明细。这时就是自己对应该自己的。
-                mItemGoods.Prelevel_BOM_Desc = MakingItemBom.BOM_Name;//TODO要删除
-                mItemGoods.Prelevel_BOM_ID = MakingItemBom.BOM_ID;//TODO要删除
-                mItemGoods.BOM_NO = MakingItemBom.BOM_No;
-                mItemGoods.BOM_ID = MakingItemBom.BOM_ID;
+                //参考天思：没明白
+                //配方号：在表身栏位时，当制令单是从受订单处截取过来，此栏的配方号就会回写到制令单表头的配方。当没有设定配方号，系统会抓取标准配方的第一个配方号。如需进行修改配方号，点击配方的右击在弹出的视窗选择：1.标准配方2.受订配方
+                ManufacturingOrderItem.Prelevel_BOM_Desc = MakingItemBom制令单母件配方.BOM_Name;//TODO要删除
+                ManufacturingOrderItem.Prelevel_BOM_ID = MakingItemBom制令单母件配方.BOM_ID;//TODO要删除
+                ManufacturingOrderItem.BOM_NO = MakingItemBom制令单母件配方.BOM_No;
+                ManufacturingOrderItem.BOM_ID = MakingItemBom制令单母件配方.BOM_ID;
 
                 //找次级中间件 在所有BOM中去找，通过目标BOM（成品）的明细对应的产品的BOMID,即下级BOM
-                tb_BOM_S MediumBomInfo = MediumBomInfoList.FirstOrDefault(c => c.BOM_ID == mItem.tb_proddetail.BOM_ID);
+                //tb_BOM_S MediumBomInfo = MediumBomInfoList.FirstOrDefault(c => c.BOM_ID == mItem.tb_proddetail.BOM_ID);
+                tb_BOM_S MediumBomInfo = BomDetailItem.tb_proddetail.tb_bom_s;
                 //中间件
                 if (MediumBomInfo != null)
                 {
                     //次级中间件一定是关键的必需的。
-                    mItemGoods.IsKeyMaterial = true;
+                    ManufacturingOrderItem.IsKeyMaterial = true;
                     //中间有BOM的制成品,只在子循环中引用
-                    mItemGoods.CurrentIinventory = MediumBomInfo.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Quantity);
-                    mItemGoods.UnitCost = MediumBomInfo.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Inv_Cost);
+                    ManufacturingOrderItem.CurrentIinventory = BomDetailItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == mpdItem制令单母件.Location_ID).Sum(i => i.Quantity);
+                    ManufacturingOrderItem.UnitCost = BomDetailItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == mpdItem制令单母件.Location_ID).Sum(i => i.Inv_Cost);
 
+                    //默认配方成本
+                    if (ManufacturingOrderItem.UnitCost == 0 && MediumBomInfo != null)
+                    {
+                        ManufacturingOrderItem.UnitCost = System.Math.Max(MediumBomInfo.OutProductionAllCosts, MediumBomInfo.SelfProductionAllCosts);
+                    }
                     //找下一级的材料。当前级就不需要。否则将当前级认为是中间半成品。要提供数量
-                    if (needLoop)
+                    if (middlewareNeedLoop)
                     {
                         //找下一级
                         //由UI上选择。这里不给值
-                        mItemGoods.IsExternalProduce = null;
-                        var NeedMakingItem = demand.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == MediumBomInfo.ProdDetailID);
-                        List<tb_ManufacturingOrderDetail> nextList = await GetSubManufacturingOrderDetailLoop(demand, MediumBomInfoList, NeedMakingItem, MediumBomInfo, needLoop);
+                        ManufacturingOrderItem.IsExternalProduce = null;
+                        var NeedMakingItem = demand需求分析主表.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == MediumBomInfo.ProdDetailID);
+                        List<tb_ManufacturingOrderDetail> nextList = await GetSubManufacturingOrderDetailLoop(demand需求分析主表, MediumBomInfoList, NeedMakingItem, MediumBomInfo, middlewareNeedLoop);
                         AllMakingGoods.AddRange(nextList);
                     }
                     else
                     {
                         //直接发，不存在处发还是自制
-                        mItemGoods.IsExternalProduce = null;
-                        mItemGoods.IsKeyMaterial = true;
+                        ManufacturingOrderItem.IsExternalProduce = null;
+                        ManufacturingOrderItem.IsKeyMaterial = true;
                         #region  中间件时,下级材料不发，直接认为中间件能提供，发半成品，如果制成品数量小于建议量则要发料
                         //中间件也当原，料发应该发的数量，用量*他上级的需求量
-                        tb_BOM_SDetail child_bomDetail = MakingItemBom.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == mItem.ProdDetailID);
+                        tb_BOM_SDetail child_bomDetail = MakingItemBom制令单母件配方.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == BomDetailItem.ProdDetailID);
                         //损耗量，影响领料数量？
 
-                        mItemGoods.WastageQty = mItemGoods.ShouldSendQty * child_bomDetail.LossRate;
+                        ManufacturingOrderItem.WastageQty = ManufacturingOrderItem.ShouldSendQty * child_bomDetail.LossRate;
 
                         //按自制品建议来的。这里与净毛需求无关，
                         //请制量，因为只有中间件是一层一行。所以直接就是上面传过来的makingitem
-                        mItemGoods.ShouldSendQty = MakingItem.RequirementQty * child_bomDetail.UsedQty;
+                        ManufacturingOrderItem.ShouldSendQty = mpdItem制令单母件.RequirementQty * child_bomDetail.UsedQty;
                         // 没有bom就为空。反之 要么自制，要么外发
-                        mItemGoods.IsExternalProduce = null;
+                        ManufacturingOrderItem.IsExternalProduce = null;
                         //IncludeSubBOM ==true 制令单主表中应该是上层驱动 
-                        mItemGoods.BOM_ID = MediumBomInfo.BOM_ID;
-                        mItemGoods.BOM_NO = MediumBomInfo.BOM_No;
 
-                        mItemGoods.Prelevel_BOM_Desc = MediumBomInfo.BOM_Name;//TODO要删除
-                        mItemGoods.Prelevel_BOM_ID = MediumBomInfo.BOM_ID;//TODO要删除
-                        mItemGoods.BOM_NO = MediumBomInfo.BOM_No;
-                        mItemGoods.BOM_ID = MediumBomInfo.BOM_ID;
+                        ManufacturingOrderItem.Prelevel_BOM_Desc = MediumBomInfo.BOM_Name;//TODO要删除?
+                        ManufacturingOrderItem.Prelevel_BOM_ID = MediumBomInfo.BOM_ID;//TODO要删除?
+                       //参考天思：没明白
+                        //配方号：在表身栏位时，当制令单是从受订单处截取过来，此栏的配方号就会回写到制令单表头的配方。当没有设定配方号，系统会抓取标准配方的第一个配方号。如需进行修改配方号，点击配方的右击在弹出的视窗选择：1.标准配方2.受订配方
+                        ManufacturingOrderItem.BOM_NO = MediumBomInfo.BOM_No;
+                        ManufacturingOrderItem.BOM_ID = MediumBomInfo.BOM_ID;
 
-                        AllMakingGoods.Add(mItemGoods);
+                        AllMakingGoods.Add(ManufacturingOrderItem);
                         #endregion
                     }
                 }
@@ -1430,27 +1429,28 @@ namespace RUINORERP.Business
                 {
                     //直接就是下级的原料
                     //损耗量，影响领料数量？
-                    mItemGoods.IsKeyMaterial = mItem.IsKeyMaterial;
-                    mItemGoods.WastageQty = mItemGoods.ShouldSendQty * mItem.LossRate;
+                    ManufacturingOrderItem.IsKeyMaterial = BomDetailItem.IsKeyMaterial;
+                    ManufacturingOrderItem.WastageQty = ManufacturingOrderItem.ShouldSendQty * BomDetailItem.LossRate;
                     //中间件，直接就是上级的请制量作为标准*用量
-                    mItemGoods.ShouldSendQty = MakingItem.RequirementQty * mItem.UsedQty;
-                    mItemGoods.CurrentIinventory = mItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Quantity);
+                    ManufacturingOrderItem.ShouldSendQty = mpdItem制令单母件.RequirementQty * BomDetailItem.UsedQty;
+                    ManufacturingOrderItem.CurrentIinventory = BomDetailItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == mpdItem制令单母件.Location_ID).Sum(i => i.Quantity);
 
-                    //制令单的成本来源于实时成本
-                    mItemGoods.UnitCost = mItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == MakingItem.Location_ID).Sum(i => i.Inv_Cost);
+                    //制令单的成本来源于实时成本!!!!!!!!!!!!! 如果实时成本为0，则取BOM成本,但是这里是原材料，不是中间件。没有BOM
+                    ManufacturingOrderItem.UnitCost = BomDetailItem.tb_proddetail.tb_Inventories.Where(c => c.Location_ID == mpdItem制令单母件.Location_ID).Sum(i => i.Inv_Cost);
+
                     //IncludeSubBOM ==true 制令单主表中应该是上层驱动 
 
-                    mItemGoods.BOM_ID = MakingItemBom.BOM_ID;
-                    mItemGoods.BOM_NO = MakingItemBom.BOM_No;
+                    ManufacturingOrderItem.BOM_ID = MakingItemBom制令单母件配方.BOM_ID;
+                    ManufacturingOrderItem.BOM_NO = MakingItemBom制令单母件配方.BOM_No;
 
                     // 没有bom就为空。反之 要么自制，要么外发
-                    mItemGoods.IsExternalProduce = null;
-                    AllMakingGoods.Add(mItemGoods);
+                    ManufacturingOrderItem.IsExternalProduce = null;
+                    AllMakingGoods.Add(ManufacturingOrderItem);
                 }
 
                 //这些个成本是按计划来算。实际在缴款时。按实际缴款数量来处理：如制令单 100个，实际只做了50个，
                 //则成本为50*(成本/100)
-                mItemGoods.SubtotalUnitCost = mItemGoods.UnitCost * mItemGoods.ShouldSendQty;
+                ManufacturingOrderItem.SubtotalUnitCost = ManufacturingOrderItem.UnitCost * ManufacturingOrderItem.ShouldSendQty;
             }
 
             return AllMakingGoods;

@@ -42,6 +42,8 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.JoinTable, txtJoinTable, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.JoinType, txtJoinType, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.JoinOnClause, txtJoinOnClause, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.TargetTableJoinField, txtTargetTableJoinField, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.JoinTableJoinField, txtJoinTableJoinField, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.FilterClause, txtFilterClause, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.EntityType, txtEntityType, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_RowAuthPolicy>(entity, t => t.IsEnabled, chkIsEnabled, false);

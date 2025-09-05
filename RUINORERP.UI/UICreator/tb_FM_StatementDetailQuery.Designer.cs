@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:15
+// 时间：09/04/2025 18:02:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -56,6 +56,12 @@ this.cmbStatementId = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 this.lblARAPId = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbARAPId = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
+
+this.lblDocumentDate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.dtpDocumentDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
+
+this.lblBusinessDate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.dtpBusinessDate = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
 
 this.lblCurrency_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbCurrency_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
@@ -130,143 +136,175 @@ this.Controls.Add(this.cmbARAPId);
 //属性测试75ReceivePaymentType
 //属性测试75ReceivePaymentType
 
+           //#####DocumentDate###DateTime
+this.lblDocumentDate.AutoSize = true;
+this.lblDocumentDate.Location = new System.Drawing.Point(100,100);
+this.lblDocumentDate.Name = "lblDocumentDate";
+this.lblDocumentDate.Size = new System.Drawing.Size(41, 12);
+this.lblDocumentDate.TabIndex = 4;
+this.lblDocumentDate.Text = "单据日期";
+//111======100
+this.dtpDocumentDate.Location = new System.Drawing.Point(173,96);
+this.dtpDocumentDate.Name ="dtpDocumentDate";
+this.dtpDocumentDate.ShowCheckBox =true;
+this.dtpDocumentDate.Size = new System.Drawing.Size(100, 21);
+this.dtpDocumentDate.TabIndex = 4;
+this.Controls.Add(this.lblDocumentDate);
+this.Controls.Add(this.dtpDocumentDate);
+
+           //#####BusinessDate###DateTime
+this.lblBusinessDate.AutoSize = true;
+this.lblBusinessDate.Location = new System.Drawing.Point(100,125);
+this.lblBusinessDate.Name = "lblBusinessDate";
+this.lblBusinessDate.Size = new System.Drawing.Size(41, 12);
+this.lblBusinessDate.TabIndex = 5;
+this.lblBusinessDate.Text = "业务日期";
+//111======125
+this.dtpBusinessDate.Location = new System.Drawing.Point(173,121);
+this.dtpBusinessDate.Name ="dtpBusinessDate";
+this.dtpBusinessDate.ShowCheckBox =true;
+this.dtpBusinessDate.Size = new System.Drawing.Size(100, 21);
+this.dtpBusinessDate.TabIndex = 5;
+this.Controls.Add(this.lblBusinessDate);
+this.Controls.Add(this.dtpBusinessDate);
+
            //#####Currency_ID###Int64
-//属性测试100Currency_ID
+//属性测试150Currency_ID
 this.lblCurrency_ID.AutoSize = true;
-this.lblCurrency_ID.Location = new System.Drawing.Point(100,100);
+this.lblCurrency_ID.Location = new System.Drawing.Point(100,150);
 this.lblCurrency_ID.Name = "lblCurrency_ID";
 this.lblCurrency_ID.Size = new System.Drawing.Size(41, 12);
-this.lblCurrency_ID.TabIndex = 4;
+this.lblCurrency_ID.TabIndex = 6;
 this.lblCurrency_ID.Text = "币别";
-//111======100
-this.cmbCurrency_ID.Location = new System.Drawing.Point(173,96);
+//111======150
+this.cmbCurrency_ID.Location = new System.Drawing.Point(173,146);
 this.cmbCurrency_ID.Name ="cmbCurrency_ID";
 this.cmbCurrency_ID.Size = new System.Drawing.Size(100, 21);
-this.cmbCurrency_ID.TabIndex = 4;
+this.cmbCurrency_ID.TabIndex = 6;
 this.Controls.Add(this.lblCurrency_ID);
 this.Controls.Add(this.cmbCurrency_ID);
 
            //#####ExchangeRate###Decimal
 this.lblExchangeRate.AutoSize = true;
-this.lblExchangeRate.Location = new System.Drawing.Point(100,125);
+this.lblExchangeRate.Location = new System.Drawing.Point(100,175);
 this.lblExchangeRate.Name = "lblExchangeRate";
 this.lblExchangeRate.Size = new System.Drawing.Size(41, 12);
-this.lblExchangeRate.TabIndex = 5;
+this.lblExchangeRate.TabIndex = 7;
 this.lblExchangeRate.Text = "汇率";
-//111======125
-this.txtExchangeRate.Location = new System.Drawing.Point(173,121);
+//111======175
+this.txtExchangeRate.Location = new System.Drawing.Point(173,171);
 this.txtExchangeRate.Name ="txtExchangeRate";
 this.txtExchangeRate.Size = new System.Drawing.Size(100, 21);
-this.txtExchangeRate.TabIndex = 5;
+this.txtExchangeRate.TabIndex = 7;
 this.Controls.Add(this.lblExchangeRate);
 this.Controls.Add(this.txtExchangeRate);
 
            //#####IncludedLocalAmount###Decimal
 this.lblIncludedLocalAmount.AutoSize = true;
-this.lblIncludedLocalAmount.Location = new System.Drawing.Point(100,150);
+this.lblIncludedLocalAmount.Location = new System.Drawing.Point(100,200);
 this.lblIncludedLocalAmount.Name = "lblIncludedLocalAmount";
 this.lblIncludedLocalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblIncludedLocalAmount.TabIndex = 6;
+this.lblIncludedLocalAmount.TabIndex = 8;
 this.lblIncludedLocalAmount.Text = "对账金额本币";
-//111======150
-this.txtIncludedLocalAmount.Location = new System.Drawing.Point(173,146);
+//111======200
+this.txtIncludedLocalAmount.Location = new System.Drawing.Point(173,196);
 this.txtIncludedLocalAmount.Name ="txtIncludedLocalAmount";
 this.txtIncludedLocalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtIncludedLocalAmount.TabIndex = 6;
+this.txtIncludedLocalAmount.TabIndex = 8;
 this.Controls.Add(this.lblIncludedLocalAmount);
 this.Controls.Add(this.txtIncludedLocalAmount);
 
            //#####IncludedForeignAmount###Decimal
 this.lblIncludedForeignAmount.AutoSize = true;
-this.lblIncludedForeignAmount.Location = new System.Drawing.Point(100,175);
+this.lblIncludedForeignAmount.Location = new System.Drawing.Point(100,225);
 this.lblIncludedForeignAmount.Name = "lblIncludedForeignAmount";
 this.lblIncludedForeignAmount.Size = new System.Drawing.Size(41, 12);
-this.lblIncludedForeignAmount.TabIndex = 7;
+this.lblIncludedForeignAmount.TabIndex = 9;
 this.lblIncludedForeignAmount.Text = "对账金额外币";
-//111======175
-this.txtIncludedForeignAmount.Location = new System.Drawing.Point(173,171);
+//111======225
+this.txtIncludedForeignAmount.Location = new System.Drawing.Point(173,221);
 this.txtIncludedForeignAmount.Name ="txtIncludedForeignAmount";
 this.txtIncludedForeignAmount.Size = new System.Drawing.Size(100, 21);
-this.txtIncludedForeignAmount.TabIndex = 7;
+this.txtIncludedForeignAmount.TabIndex = 9;
 this.Controls.Add(this.lblIncludedForeignAmount);
 this.Controls.Add(this.txtIncludedForeignAmount);
 
            //#####WrittenOffLocalAmount###Decimal
 this.lblWrittenOffLocalAmount.AutoSize = true;
-this.lblWrittenOffLocalAmount.Location = new System.Drawing.Point(100,200);
+this.lblWrittenOffLocalAmount.Location = new System.Drawing.Point(100,250);
 this.lblWrittenOffLocalAmount.Name = "lblWrittenOffLocalAmount";
 this.lblWrittenOffLocalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblWrittenOffLocalAmount.TabIndex = 8;
+this.lblWrittenOffLocalAmount.TabIndex = 10;
 this.lblWrittenOffLocalAmount.Text = "本次已核销本币金额";
-//111======200
-this.txtWrittenOffLocalAmount.Location = new System.Drawing.Point(173,196);
+//111======250
+this.txtWrittenOffLocalAmount.Location = new System.Drawing.Point(173,246);
 this.txtWrittenOffLocalAmount.Name ="txtWrittenOffLocalAmount";
 this.txtWrittenOffLocalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtWrittenOffLocalAmount.TabIndex = 8;
+this.txtWrittenOffLocalAmount.TabIndex = 10;
 this.Controls.Add(this.lblWrittenOffLocalAmount);
 this.Controls.Add(this.txtWrittenOffLocalAmount);
 
            //#####WrittenOffForeignAmount###Decimal
 this.lblWrittenOffForeignAmount.AutoSize = true;
-this.lblWrittenOffForeignAmount.Location = new System.Drawing.Point(100,225);
+this.lblWrittenOffForeignAmount.Location = new System.Drawing.Point(100,275);
 this.lblWrittenOffForeignAmount.Name = "lblWrittenOffForeignAmount";
 this.lblWrittenOffForeignAmount.Size = new System.Drawing.Size(41, 12);
-this.lblWrittenOffForeignAmount.TabIndex = 9;
+this.lblWrittenOffForeignAmount.TabIndex = 11;
 this.lblWrittenOffForeignAmount.Text = "本次已核销原币金额";
-//111======225
-this.txtWrittenOffForeignAmount.Location = new System.Drawing.Point(173,221);
+//111======275
+this.txtWrittenOffForeignAmount.Location = new System.Drawing.Point(173,271);
 this.txtWrittenOffForeignAmount.Name ="txtWrittenOffForeignAmount";
 this.txtWrittenOffForeignAmount.Size = new System.Drawing.Size(100, 21);
-this.txtWrittenOffForeignAmount.TabIndex = 9;
+this.txtWrittenOffForeignAmount.TabIndex = 11;
 this.Controls.Add(this.lblWrittenOffForeignAmount);
 this.Controls.Add(this.txtWrittenOffForeignAmount);
 
            //#####RemainingLocalAmount###Decimal
 this.lblRemainingLocalAmount.AutoSize = true;
-this.lblRemainingLocalAmount.Location = new System.Drawing.Point(100,250);
+this.lblRemainingLocalAmount.Location = new System.Drawing.Point(100,300);
 this.lblRemainingLocalAmount.Name = "lblRemainingLocalAmount";
 this.lblRemainingLocalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblRemainingLocalAmount.TabIndex = 10;
+this.lblRemainingLocalAmount.TabIndex = 12;
 this.lblRemainingLocalAmount.Text = "剩余未核销本币金额";
-//111======250
-this.txtRemainingLocalAmount.Location = new System.Drawing.Point(173,246);
+//111======300
+this.txtRemainingLocalAmount.Location = new System.Drawing.Point(173,296);
 this.txtRemainingLocalAmount.Name ="txtRemainingLocalAmount";
 this.txtRemainingLocalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtRemainingLocalAmount.TabIndex = 10;
+this.txtRemainingLocalAmount.TabIndex = 12;
 this.Controls.Add(this.lblRemainingLocalAmount);
 this.Controls.Add(this.txtRemainingLocalAmount);
 
            //#####RemainingForeignAmount###Decimal
 this.lblRemainingForeignAmount.AutoSize = true;
-this.lblRemainingForeignAmount.Location = new System.Drawing.Point(100,275);
+this.lblRemainingForeignAmount.Location = new System.Drawing.Point(100,325);
 this.lblRemainingForeignAmount.Name = "lblRemainingForeignAmount";
 this.lblRemainingForeignAmount.Size = new System.Drawing.Size(41, 12);
-this.lblRemainingForeignAmount.TabIndex = 11;
+this.lblRemainingForeignAmount.TabIndex = 13;
 this.lblRemainingForeignAmount.Text = "剩余未核销原币金额";
-//111======275
-this.txtRemainingForeignAmount.Location = new System.Drawing.Point(173,271);
+//111======325
+this.txtRemainingForeignAmount.Location = new System.Drawing.Point(173,321);
 this.txtRemainingForeignAmount.Name ="txtRemainingForeignAmount";
 this.txtRemainingForeignAmount.Size = new System.Drawing.Size(100, 21);
-this.txtRemainingForeignAmount.TabIndex = 11;
+this.txtRemainingForeignAmount.TabIndex = 13;
 this.Controls.Add(this.lblRemainingForeignAmount);
 this.Controls.Add(this.txtRemainingForeignAmount);
 
            //#####ARAPWriteOffStatus###Int32
-//属性测试300ARAPWriteOffStatus
-//属性测试300ARAPWriteOffStatus
-//属性测试300ARAPWriteOffStatus
+//属性测试350ARAPWriteOffStatus
+//属性测试350ARAPWriteOffStatus
+//属性测试350ARAPWriteOffStatus
 
            //#####300Summary###String
 this.lblSummary.AutoSize = true;
-this.lblSummary.Location = new System.Drawing.Point(100,325);
+this.lblSummary.Location = new System.Drawing.Point(100,375);
 this.lblSummary.Name = "lblSummary";
 this.lblSummary.Size = new System.Drawing.Size(41, 12);
-this.lblSummary.TabIndex = 13;
+this.lblSummary.TabIndex = 15;
 this.lblSummary.Text = "摘要";
-this.txtSummary.Location = new System.Drawing.Point(173,321);
+this.txtSummary.Location = new System.Drawing.Point(173,371);
 this.txtSummary.Name = "txtSummary";
 this.txtSummary.Size = new System.Drawing.Size(100, 21);
-this.txtSummary.TabIndex = 13;
+this.txtSummary.TabIndex = 15;
 this.Controls.Add(this.lblSummary);
 this.Controls.Add(this.txtSummary);
 
@@ -285,6 +323,12 @@ this.Controls.Add(this.cmbStatementId );
 this.Controls.Add(this.cmbARAPId );
 
                 
+                this.Controls.Add(this.lblDocumentDate );
+this.Controls.Add(this.dtpDocumentDate );
+
+                this.Controls.Add(this.lblBusinessDate );
+this.Controls.Add(this.dtpBusinessDate );
+
                 this.Controls.Add(this.lblCurrency_ID );
 this.Controls.Add(this.cmbCurrency_ID );
 
@@ -336,6 +380,16 @@ private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbARAPId;
     
         
               
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDocumentDate;
+private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpDocumentDate;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblBusinessDate;
+private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpBusinessDate;
+
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCurrency_ID;

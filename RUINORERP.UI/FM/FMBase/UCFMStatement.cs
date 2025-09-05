@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -56,7 +56,7 @@ namespace RUINORERP.UI.FM
 {
 
     /// <summary>
-    /// 应收应付
+    /// 应收应付对账单
     /// </summary>
     public partial class UCFMStatement : BaseBillEditGeneric<tb_FM_Statement, tb_FM_StatementDetail>, IPublicEntityObject, IToolStripMenuInfoAuth
     {
@@ -287,24 +287,25 @@ namespace RUINORERP.UI.FM
                     EditEntity.ActionStatus = ActionStatus.修改;
                 }
 
-                #region 收款信息可以根据往来单位带出 ，并且可以添加
 
-                //创建表达式
-                var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
-                            .And(t => t.Is_enabled == true)
-                            .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
-                            .ToExpression();//注意 这一句 不能少
-                BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
-                QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
-
-                DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
-                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
-
-
-                #endregion
                 if (entity.PayeeInfoID == null && (entity.StatementStatus == (int)StatementStatus.草稿) || (true && entity.StatementStatus == (int)StatementStatus.已发送))
                 {
+                    #region 收款信息可以根据往来单位带出 ，并且可以添加
+
+                    //创建表达式
+                    var lambdaPayeeInfo = Expressionable.Create<tb_FM_PayeeInfo>()
+                                .And(t => t.Is_enabled == true)
+                                .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
+                                .ToExpression();//注意 这一句 不能少
+                    BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
+                    QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
+                    queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
+
+                    DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
+                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
+
+
+                    #endregion
 
                     //设置一个默认值 如果有默认收款账号时
                     //如果原来的值，在下拉集合中，则不变。说明是对应厂商的收款信息。如果不是，则看有不有设置默认值
@@ -450,51 +451,32 @@ namespace RUINORERP.UI.FM
         }
 
         /// <summary>
-        /// 根据是否为佣金加载往来单位
-        /// 分客户和供应商
+        /// 加载客户供应商信息
         /// </summary>
         /// <param name="entity"></param>
         private void LoadCustomerVendor(tb_FM_Statement entity)
         {
+            // 检查是否需要在UI线程上执行
+            if (cmbCustomerVendor_ID.InvokeRequired)
+            {
+                cmbCustomerVendor_ID.Invoke(new Action(() => LoadCustomerVendor(entity)));
+                return;
+            }
+
+            // 客户供应商
+            Expression<Func<tb_CustomerVendor, bool>> lambda = t => t.IsVendor == true;
             if (PaymentType == ReceivePaymentType.收款)
             {
-                //创建表达式
-                var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsCustomer == true)//供应商和第三方
-                            .And(t => t.isdeleted == false)
-                            .And(t => t.Is_enabled == true)
-                            .ToExpression();//注意 这一句 不能少
-
-                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-                queryFilterC.FilterLimitExpressions.Add(lambda);
-
-                //带过滤的下拉绑定要这样
-                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-
-
-
+                lambda = t => t.IsCustomer == true;
             }
-            else
-            {
 
-                //应付  付给供应商
-                //创建表达式
-                var lambda = Expressionable.Create<tb_CustomerVendor>()
-                            .And(t => t.IsVendor == true)//供应商
-                            .And(t => t.isdeleted == false)
-                            .And(t => t.Is_enabled == true)
-                            .ToExpression();//注意 这一句 不能少
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
+            QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
+            queryFilterC.FilterLimitExpressions.Add(lambda);
 
-                BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_CustomerVendor).Name + "Processor");
-                QueryFilter queryFilterC = baseProcessor.GetQueryFilter();
-                queryFilterC.FilterLimitExpressions.Add(lambda);
-
-                //带过滤的下拉绑定要这样
-                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
-                DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-            }
+            //带过滤的下拉绑定要这样
+            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterC.GetFilterExpression<tb_CustomerVendor>(), true);
+            DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
         }
 
 
@@ -629,8 +611,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_StatementDetail>(c => c.RemainingLocalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_StatementDetail>(c => c.IncludedForeignAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_StatementDetail>(c => c.IncludedLocalAmount, CustomFormatType.CurrencyFormat);
-
-
+            listCols.SetCol_Format<tb_FM_StatementDetail>(c => c.ReceivePaymentType, CustomFormatType.EnumOptions, null, typeof(ReceivePaymentType));
 
             InitLoadGrid();
 
@@ -695,7 +676,7 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.uclog.AddLog("对账金额不能为0");
                     return;
                 }
-                EditEntity.TotalPayableLocalAmount = details.Sum(c => c.IncludedLocalAmount) ;
+                EditEntity.TotalPayableLocalAmount = details.Sum(c => c.IncludedLocalAmount);
             }
             catch (Exception ex)
             {
@@ -839,7 +820,7 @@ namespace RUINORERP.UI.FM
                 //        return false;
                 //    }
                 //}
-          
+
 
 
                 //没有经验通过下面先不计算
@@ -928,25 +909,25 @@ namespace RUINORERP.UI.FM
             {
                 //https://www.runoob.com/w3cnote/csharp-enum.html
                 var dataStatus = (StatementStatus)(EditEntity.GetPropertyValue(typeof(StatementStatus).Name).ToLong());
-                if (dataStatus == StatementStatus.已发送 || dataStatus == StatementStatus.草稿)
+                if (dataStatus <= StatementStatus.已确认)
                 {
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
-                    if (dataStatus == StatementStatus.已发送 && !AppContext.IsSuperUser)
+                    if ((dataStatus == StatementStatus.已发送 || dataStatus == StatementStatus.已确认) && !AppContext.IsSuperUser)
                     {
                         if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
                         {
-                            MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            rss.ErrorMsg = "只有创建人才能删除提交的单据。";
+                            rss.ErrorMsg = $"只有创建人才能删除{((StatementStatus)dataStatus).ToString()}的对账单。";
+                            MessageBox.Show(rss.ErrorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             rss.Succeeded = false;
                             return rss;
                         }
                     }
 
                     tb_FM_StatementController<tb_FM_Statement> ctr = Startup.GetFromFac<tb_FM_StatementController<tb_FM_Statement>>();
-                    bool rs = await ctr.BaseLogicDeleteAsync(EditEntity as tb_FM_Statement);
+                    bool rs = await ctr.BaseDeleteByNavAsync(EditEntity as tb_FM_Statement);
                     if (rs)
                     {
-                        //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", EditEntity);
+                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_Statement>("删除", EditEntity);
                         //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         //{
                         //    //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
@@ -968,8 +949,7 @@ namespace RUINORERP.UI.FM
                 }
                 else
                 {
-                    //
-                    MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
+                    MainForm.Instance.uclog.AddLog("提示", $"已【{((StatementStatus)dataStatus).ToString()}】的对账单无法删除");
                 }
             }
             return rss;
@@ -1025,3 +1005,6 @@ namespace RUINORERP.UI.FM
         }
     }
 }
+
+
+

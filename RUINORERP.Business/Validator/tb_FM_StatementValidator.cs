@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:14
+// 时间：09/04/2025 18:02:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -42,6 +42,8 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.CustomerVendor_ID).Must(CheckForeignKeyValue).WithMessage("往来单位:下拉选择值不正确。");
 
+ RuleFor(tb_FM_Statement =>tb_FM_Statement.ARAPNos).MaximumMixedLength(1000).WithMessage("应收付单号:不能超过最大长度,1000.");
+
  RuleFor(tb_FM_Statement =>tb_FM_Statement.Account_id).Must(CheckForeignKeyValueCanNull).WithMessage("公司账户:下拉选择值不正确。");
  RuleFor(tb_FM_Statement =>tb_FM_Statement.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
 
@@ -49,6 +51,9 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_Statement =>tb_FM_Statement.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
 
  RuleFor(tb_FM_Statement =>tb_FM_Statement.PayeeAccountNo).MaximumMixedLength(100).WithMessage("收款账号:不能超过最大长度,100.");
+
+//***** 
+ RuleFor(tb_FM_Statement =>tb_FM_Statement.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
 
 
 

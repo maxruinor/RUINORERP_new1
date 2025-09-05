@@ -839,17 +839,20 @@ namespace RUINORERP.UI.FM
 
             BizType bizType = 0;
             tb_MenuInfo RelatedMenuInfo = null;
+            string classpath = string.Empty;
             if (PaymentType == ReceivePaymentType.收款)
             {
                 bizType = BizType.收款对账单;
+                classpath= "RUINORERP.UI.FM.UCReceiptStatement";
             }
             else
             {
                 bizType = BizType.付款对账单;
+                classpath = "RUINORERP.UI.FM.UCPaymentStatement";
             }
             RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
                  && m.BizType == (int)bizType
-                 && m.ClassPath == "RUINORERP.UI.FM.UCReceiptStatement")
+                 && m.ClassPath == classpath)
                      .FirstOrDefault();
 
             if (RelatedMenuInfo != null)

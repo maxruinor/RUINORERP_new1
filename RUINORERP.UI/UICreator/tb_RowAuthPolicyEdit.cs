@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/29/2025 20:39:10
+// 时间：09/04/2025 14:48:19
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -50,6 +50,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -61,7 +63,9 @@ namespace RUINORERP.UI
                        entity.TargetTable = txtTargetTable.Text ;
                        entity.TargetEntity = txtTargetEntity.Text ;
                        entity.IsJoinRequired = Boolean.Parse(txtIsJoinRequired.Text);
-                        entity.JoinTable = txtJoinTable.Text ;
+                        entity.TargetTableJoinField = txtTargetTableJoinField.Text ;
+                       entity.JoinTableJoinField = txtJoinTableJoinField.Text ;
+                       entity.JoinTable = txtJoinTable.Text ;
                        entity.JoinType = txtJoinType.Text ;
                        entity.JoinOnClause = txtJoinOnClause.Text ;
                        entity.FilterClause = txtFilterClause.Text ;
@@ -87,6 +91,8 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.TargetTable, txtTargetTable, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.TargetEntity, txtTargetEntity, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4CheckBox<tb_RowAuthPolicy>(entity, t => t.IsJoinRequired, chkIsJoinRequired, false);
+           DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.TargetTableJoinField, txtTargetTableJoinField, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.JoinTableJoinField, txtJoinTableJoinField, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.JoinTable, txtJoinTable, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.JoinType, txtJoinType, BindDataType4TextBox.Text,false);
            DataBindingHelper.BindData4TextBox<tb_RowAuthPolicy>(entity, t => t.JoinOnClause, txtJoinOnClause, BindDataType4TextBox.Text,false);

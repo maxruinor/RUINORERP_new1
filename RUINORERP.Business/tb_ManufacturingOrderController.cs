@@ -248,17 +248,17 @@ namespace RUINORERP.Business
                 {
 
                     rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ManufacturingOrder>(entity as tb_ManufacturingOrder)
-                       .Include(m => m.tb_MaterialRequisitions)
-                   .Include(m => m.tb_FinishedGoodsInvs)
+                   //.Include(m => m.tb_MaterialRequisitions)
+                   //.Include(m => m.tb_FinishedGoodsInvs)
                    .Include(m => m.tb_ManufacturingOrderDetails)
                    .ExecuteCommandAsync();
                 }
                 else
                 {
                     rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ManufacturingOrder>(entity as tb_ManufacturingOrder)
-            .Include(m => m.tb_MaterialRequisitions)
-            .Include(m => m.tb_FinishedGoodsInvs)
-            .Include(m => m.tb_ManufacturingOrderDetails)
+                        //.Include(m => m.tb_MaterialRequisitions)
+                        //.Include(m => m.tb_FinishedGoodsInvs)
+                        .Include(m => m.tb_ManufacturingOrderDetails)
 
             .ExecuteCommandAsync();
 

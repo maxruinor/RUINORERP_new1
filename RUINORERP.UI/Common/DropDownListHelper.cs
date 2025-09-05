@@ -1,7 +1,7 @@
 // ----------------------------------------------------------------
-// Description : ÓÃÓÚ³õÊ¼»¯UI²ã¸÷ÖÖÏÂÀ­ÁĞ±í
+// Description : ç”¨äºåˆå§‹åŒ–UIå±‚å„ç§ä¸‹æ‹‰åˆ—è¡¨
 // Author      : watson
-// Create date : ´´½¨ÈÕÆÚ ¸ñÊ½£º2009-09-17
+// Create date : åˆ›å»ºæ—¥æœŸ æ ¼å¼ï¼š2009-09-17
 // Modify date : 
 // Modify desc : 
 // ----------------------------------------------------------------
@@ -26,13 +26,13 @@ namespace RUINORERP.UI.Common
         //=======
 
         /// <summary>
-        /// ÏÂÀ­ÁĞ±íµÄ°ó¶¨
+        /// åˆå§‹åŒ–ä¸‹æ‹‰åˆ—è¡¨æ§ä»¶
         /// </summary>
-        /// <param name="ds">Òª°ó¶¨µÄÊı¾İÔ´(¼¯)</param>
-        /// <param name="cmb">Òª°ó¶¨µÄ¿Ø¼şÃû</param>
-        /// <param name="ValueMember">ÖµµÄÁĞÃû</param>
-        /// <param name="DisplayMember">ÏÔÊ¾µÄÁĞÃû</param>
-        /// <param name="DropStyle">ÏÂÀ­Àà±ğ</param>
+        /// <param name="ds">è¦å¡«å……çš„æ•°æ®æº(è¡¨)</param>
+        /// <param name="cmb">è¦å¡«å……çš„æ§ä»¶</param>
+        /// <param name="ValueMember">å€¼æˆå‘˜åç§°</param>
+        /// <param name="DisplayMember">æ˜¾ç¤ºæˆå‘˜åç§°</param>
+        /// <param name="DropStyle">ä¸‹æ‹‰æ ·å¼</param>
         public static void InitDropListComboxDataBand(DataSet ds, ComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle)
         {
             cmb.BeginUpdate();
@@ -108,14 +108,14 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// ÏÂÀ­ÁĞ±íµÄ°ó¶¨
+        /// åˆå§‹åŒ–ä¸‹æ‹‰åˆ—è¡¨æ§ä»¶
         /// </summary>
-        /// <param name="ds">Òª°ó¶¨µÄÊı¾İÔ´(¼¯)</param>
-        /// <param name="cmb">Òª°ó¶¨µÄ¿Ø¼şÃû</param>
-        /// <param name="ValueMember">ÖµµÄÁĞÃû</param>
-        /// <param name="DisplayMember">ÏÔÊ¾µÄÁĞÃû</param>
-        /// <param name="DropStyle">ÏÂÀ­Àà±ğ</param>
-        /// <param name="auto">ÊÇ·ñÓĞ×Ô¶¯Íê³É¹¦ÄÜ</param>
+        /// <param name="ds">è¦å¡«å……çš„æ•°æ®æº(è¡¨)</param>
+        /// <param name="cmb">è¦å¡«å……çš„æ§ä»¶</param>
+        /// <param name="ValueMember">å€¼æˆå‘˜åç§°</param>
+        /// <param name="DisplayMember">æ˜¾ç¤ºæˆå‘˜åç§°</param>
+        /// <param name="DropStyle">ä¸‹æ‹‰æ ·å¼</param>
+        /// <param name="auto">æ˜¯å¦å¯ç”¨è‡ªåŠ¨å®Œæˆ</param>
         public static void InitDropList(DataSet ds, ComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto)
         {
             cmb.BeginUpdate();
@@ -149,16 +149,16 @@ namespace RUINORERP.UI.Common
 
         /*
         /// <summary>
-        /// ÏÂÀ­ÁĞ±íµÄ°ó¶¨
+        /// åˆå§‹åŒ–ä¸‹æ‹‰åˆ—è¡¨æ§ä»¶
         /// </summary>
-        /// <param name="ds">Òª°ó¶¨µÄÊı¾İÔ´(¼¯)</param>
-        /// <param name="cmb">Òª°ó¶¨µÄ¿Ø¼şÃû</param>
-        /// <param name="ValueMember">ÖµµÄÁĞÃû</param>
-        /// <param name="DisplayMember">ÏÔÊ¾µÄÁĞÃû</param>
-        /// <param name="DropStyle">ÏÂÀ­Àà±ğ</param>
-        /// <param name="auto">ÊÇ·ñÓĞ×Ô¶¯Íê³É¹¦ÄÜ</param>
-        /// <param name="addÇëÑ¡Ôñ">  ÊÇÊı¾İÔ´°ó¶¨ĞÎÊ½²»¿ÉÒÔ×ÔÓÉÌí¼Ó£¬Ö»ÄÜÔÚÊı¾İÔ´ÉÏ×öÎÄÕÂ ("ÇëÑ¡Ôñ", "-1")</param>
-        public static void InitDropList(BindingSource bs, KryptonComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto, bool addÇëÑ¡Ôñ)
+        /// <param name="ds">è¦å¡«å……çš„æ•°æ®æº(è¡¨)</param>
+        /// <param name="cmb">è¦å¡«å……çš„æ§ä»¶</param>
+        /// <param name="ValueMember">å€¼æˆå‘˜åç§°</param>
+        /// <param name="DisplayMember">æ˜¾ç¤ºæˆå‘˜åç§°</param>
+        /// <param name="DropStyle">ä¸‹æ‹‰æ ·å¼</param>
+        /// <param name="auto">æ˜¯å¦å¯ç”¨è‡ªåŠ¨å®Œæˆ</param>
+        /// <param name="addè¯·é€‰æ‹©">  å¦‚æœæ•°æ®æºä¸ºé”®å€¼å¯¹å½¢å¼ï¼Œåˆ™åœ¨æ•°æ®æºçš„æœ€å‰é¢åŠ å…¥("è¯·é€‰æ‹©", "-1")</param>
+        public static void InitDropList(BindingSource bs, KryptonComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto, bool addè¯·é€‰æ‹©)
         {
             cmb.BeginUpdate();
             cmb.DataBindings.Clear();
@@ -192,34 +192,41 @@ namespace RUINORERP.UI.Common
         */
 
         /// <summary>
-        /// ÏÂÀ­ÁĞ±íµÄ°ó¶¨
+        /// åˆå§‹åŒ–ä¸‹æ‹‰åˆ—è¡¨æ§ä»¶
         /// </summary>
-        /// <param name="ds">Òª°ó¶¨µÄÊı¾İÔ´(¼¯)</param>
-        /// <param name="cmb">Òª°ó¶¨µÄ¿Ø¼şÃû</param>
-        /// <param name="ValueMember">ÖµµÄÁĞÃû</param>
-        /// <param name="DisplayMember">ÏÔÊ¾µÄÁĞÃû</param>
-        /// <param name="DropStyle">ÏÂÀ­Àà±ğ</param>
-        /// <param name="auto">ÊÇ·ñÓĞ×Ô¶¯Íê³É¹¦ÄÜ</param>
-        /// <param name="addÇëÑ¡Ôñ">  ÊÇÊı¾İÔ´°ó¶¨ĞÎÊ½²»¿ÉÒÔ×ÔÓÉÌí¼Ó£¬Ö»ÄÜÔÚÊı¾İÔ´ÉÏ×öÎÄÕÂ ("ÇëÑ¡Ôñ", "-1")</param>
+        /// <param name="ds">è¦å¡«å……çš„æ•°æ®æº(è¡¨)</param>
+        /// <param name="cmb">è¦å¡«å……çš„æ§ä»¶</param>
+        /// <param name="ValueMember">å€¼æˆå‘˜åç§°</param>
+        /// <param name="DisplayMember">æ˜¾ç¤ºæˆå‘˜åç§°</param>
+        /// <param name="DropStyle">ä¸‹æ‹‰æ ·å¼</param>
+        /// <param name="auto">æ˜¯å¦å¯ç”¨è‡ªåŠ¨å®Œæˆ</param>
+        /// <param name="addè¯·é€‰æ‹©">  å¦‚æœæ•°æ®æºä¸ºé”®å€¼å¯¹å½¢å¼ï¼Œåˆ™åœ¨æ•°æ®æºçš„æœ€å‰é¢åŠ å…¥("è¯·é€‰æ‹©", "-1")</param>
         public static void InitDropList(BindingSource bs, KryptonComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto)
         {
+            // æ£€æŸ¥æ˜¯å¦éœ€è¦åœ¨UIçº¿ç¨‹ä¸Šæ‰§è¡Œ
+            if (cmb.InvokeRequired)
+            {
+                cmb.Invoke(new Action(() => InitDropList(bs, cmb, ValueMember, DisplayMember, DropStyle, auto)));
+                return;
+            }
+
             if (DropStyle == ComboBoxStyle.DropDownList)
             {
-                // ÆôÓÃËÑË÷¹¦ÄÜ
+                // è®¾ç½®ä¸‹æ‹‰åˆ—è¡¨æ ·å¼
                 cmb.EnableSearch = false;
             }
             else
             {
-                // ÆôÓÃËÑË÷¹¦ÄÜ
+                // è®¾ç½®ä¸‹æ‹‰æ–‡æœ¬æ¡†æ ·å¼
                 cmb.EnableSearch = false;
-                cmb.SearchDelay = 500; // ÉèÖÃ400msÑÓ³Ù
+                cmb.SearchDelay = 500; // è®¾ç½®400mså»¶è¿Ÿ
             }
             //cmb.DataSource = null;
             //cmb.DataBindings.Clear();
             cmb.BeginUpdate();
             if (!cmb.EnableSearch)
             {
-                #region ×Ô¶¯²¹È«
+                #region è‡ªåŠ¨å®Œæˆ
 
                 AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
                 foreach (var dr in bs.List)
@@ -267,20 +274,20 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// ÏÂÀ­ÁĞ±íµÄ°ó¶¨
+        /// åˆå§‹åŒ–ä¸‹æ‹‰åˆ—è¡¨æ§ä»¶
         /// </summary>
-        /// <param name="ds">Òª°ó¶¨µÄÊı¾İÔ´(¼¯)</param>
-        /// <param name="cmb">Òª°ó¶¨µÄ¿Ø¼şÃû</param>
-        /// <param name="ValueMember">ÖµµÄÁĞÃû</param>
-        /// <param name="DisplayMember">ÏÔÊ¾µÄÁĞÃû</param>
-        /// <param name="DropStyle">ÏÂÀ­Àà±ğ</param>
-        /// <param name="auto">ÊÇ·ñÓĞ×Ô¶¯Íê³É¹¦ÄÜ</param>
-        /// <param name="addÇëÑ¡Ôñ">  ÊÇÊı¾İÔ´°ó¶¨ĞÎÊ½²»¿ÉÒÔ×ÔÓÉÌí¼Ó£¬Ö»ÄÜÔÚÊı¾İÔ´ÉÏ×öÎÄÕÂ ("ÇëÑ¡Ôñ", "-1")</param>
+        /// <param name="ds">è¦å¡«å……çš„æ•°æ®æº(è¡¨)</param>
+        /// <param name="cmb">è¦å¡«å……çš„æ§ä»¶</param>
+        /// <param name="ValueMember">å€¼æˆå‘˜åç§°</param>
+        /// <param name="DisplayMember">æ˜¾ç¤ºæˆå‘˜åç§°</param>
+        /// <param name="DropStyle">ä¸‹æ‹‰æ ·å¼</param>
+        /// <param name="auto">æ˜¯å¦å¯ç”¨è‡ªåŠ¨å®Œæˆ</param>
+        /// <param name="addè¯·é€‰æ‹©">  å¦‚æœæ•°æ®æºä¸ºé”®å€¼å¯¹å½¢å¼ï¼Œåˆ™åœ¨æ•°æ®æºçš„æœ€å‰é¢åŠ å…¥("è¯·é€‰æ‹©", "-1")</param>
         public static void InitDropList(BindingSource bs, CheckBoxComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto)
         {
             cmb.BeginUpdate();
 
-            #region ×Ô¶¯²¹È«
+            #region è‡ªåŠ¨å®Œæˆ
 
             AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
             foreach (var dr in bs.List)
@@ -323,16 +330,16 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// ÏÂÀ­ÁĞ±íµÄ°ó¶¨
+        /// åˆå§‹åŒ–ä¸‹æ‹‰åˆ—è¡¨æ§ä»¶
         /// </summary>
-        /// <param name="ds">Òª°ó¶¨µÄÊı¾İÔ´(¼¯)</param>
-        /// <param name="cmb">Òª°ó¶¨µÄ¿Ø¼şÃû</param>
-        /// <param name="ValueMember">ÖµµÄÁĞÃû</param>
-        /// <param name="DisplayMember">ÏÔÊ¾µÄÁĞÃû</param>
-        /// <param name="DropStyle">ÏÂÀ­Àà±ğ</param>
-        /// <param name="auto">ÊÇ·ñÓĞ×Ô¶¯Íê³É¹¦ÄÜ</param>
-        /// <param name="addÇëÑ¡Ôñ">  ÊÇÊı¾İÔ´°ó¶¨ĞÎÊ½²»¿ÉÒÔ×ÔÓÉÌí¼Ó£¬Ö»ÄÜÔÚÊı¾İÔ´ÉÏ×öÎÄÕÂ ("ÇëÑ¡Ôñ", "-1")</param>
-        public static void InitDropList(BindingSource bs, ComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto, bool addÇëÑ¡Ôñ)
+        /// <param name="ds">è¦å¡«å……çš„æ•°æ®æº(è¡¨)</param>
+        /// <param name="cmb">è¦å¡«å……çš„æ§ä»¶</param>
+        /// <param name="ValueMember">ê°’æˆå‘˜åç§°</param>
+        /// <param name="DisplayMember">æ˜¾ç¤ºæˆå‘˜åç§°</param>
+        /// <param name="DropStyle">ä¸‹æ‹‰æ ·å¼</param>
+        /// <param name="auto">æ˜¯å¦å¯ç”¨è‡ªåŠ¨å®Œæˆ</param>
+        /// <param name="addSelect">  å¦‚æœæ•°æ®æºä¸ºé”®ê°’å¯¹å½¢å¼ï¼Œåˆ™åœ¨æ•°æ®æºçš„æœ€å‰é¢åŠ å…¥("è¯·é€‰æ‹©", "-1")</param>
+        public static void InitDropList(BindingSource bs, ComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto, bool addSelect)
         {
             cmb.BeginUpdate();
 
@@ -366,21 +373,21 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// ÏÂÀ­ÁĞ±íµÄ°ó¶¨
+        /// åˆå§‹åŒ–ä¸‹æ‹‰åˆ—è¡¨æ§ä»¶
         /// </summary>
-        /// <param name="ds">Òª°ó¶¨µÄÊı¾İÔ´(¼¯)</param>
-        /// <param name="cmb">Òª°ó¶¨µÄ¿Ø¼şÃû</param>
-        /// <param name="ValueMember">ÖµµÄÁĞÃû</param>
-        /// <param name="DisplayMember">ÏÔÊ¾µÄÁĞÃû</param>
-        /// <param name="DropStyle">ÏÂÀ­Àà±ğ</param>
-        /// <param name="auto">ÊÇ·ñÓĞ×Ô¶¯Íê³É¹¦ÄÜ</param>
-        public static void InitDropList(DataSet ds, ComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto, bool addÇëÑ¡Ôñ)
+        /// <param name="ds">è¦å¡«å……çš„æ•°æ®æº(è¡¨)</param>
+        /// <param name="cmb">è¦å¡«å……çš„æ§ä»¶</param>
+        /// <param name="ValueMember">ê°’æˆå‘˜åç§°</param>
+        /// <param name="DisplayMember">æ˜¾ç¤ºæˆå‘˜åç§°</param>
+        /// <param name="DropStyle">ä¸‹æ‹‰æ ·å¼</param>
+        /// <param name="auto">æ˜¯å¦å¯ç”¨è‡ªåŠ¨å®Œæˆ</param>
+        public static void InitDropList(DataSet ds, ComboBox cmb, string ValueMember, string DisplayMember, ComboBoxStyle DropStyle, bool auto, bool addSelect)
         {
-            if (addÇëÑ¡Ôñ)
+            if (addSelect)
             {
                 System.Data.DataRow dr = ds.Tables[0].NewRow();
 
-                dr[0] = "ÇëÑ¡Ôñ";
+                dr[0] = "è¯·é€‰æ‹©";
                 ds.Tables[0].Rows.InsertAt(dr, 0);
             }
 
@@ -413,7 +420,7 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// ¸ù¾İÃ¶¾ÙÀàĞÍ£¬ÎªÏÂÀ­¿ò°ó¶¨Êı¾İ
+        /// åˆå§‹åŒ–æšä¸¾ç±»å‹ï¼Œä¸ºä¸‹æ‹‰åˆ—è¡¨æ§ä»¶èµ‹å€¼
         /// </summary>
         /// <param name="cmbox"></param>
         /// <param name="enumTypeName">typeof(enum)</param>
@@ -437,12 +444,12 @@ namespace RUINORERP.UI.Common
 
                 cmbox.Items.Add(item);
             }
-            cmbox.Items.Insert(0, new CmbItem("-1", "ÇëÑ¡Ôñ"));
+            cmbox.Items.Insert(0, new CmbItem("-1", "è¯·é€‰æ‹©"));
             cmbox.SelectedIndex = -1;
         }
 
         /// <summary>
-        /// ¸ù¾İÃ¶¾ÙÀàĞÍ£¬ÎªÏÂÀ­¿ò°ó¶¨Êı¾İ
+        /// åˆå§‹åŒ–æšä¸¾ç±»å‹ï¼Œä¸ºä¸‹æ‹‰åˆ—è¡¨æ§ä»¶èµ‹å€¼
         /// </summary>
         /// <param name="cmbox"></param>
         /// <param name="enumTypeName"></param>
@@ -466,13 +473,13 @@ namespace RUINORERP.UI.Common
 
                 cmbox.Items.Add(item);
             }
-            cmbox.Items.Insert(0, new CmbItem("-1", "ÇëÑ¡Ôñ"));
+            cmbox.Items.Insert(0, new CmbItem("-1", "è¯·é€‰æ‹©"));
             cmbox.SelectedIndex = -1;
         }
 
 
         /// <summary>
-        /// ¸ù¾İÃ¶¾ÙÀàĞÍ£¬ÎªÏÂÀ­¿ò°ó¶¨Êı¾İ
+        /// åˆå§‹åŒ–æšä¸¾ç±»å‹ï¼Œä¸ºä¸‹æ‹‰åˆ—è¡¨æ§ä»¶èµ‹å€¼
         /// </summary>
         /// <param name="cmbox"></param>
         /// <param name="enumTypeName"></param>
@@ -498,7 +505,7 @@ namespace RUINORERP.UI.Common
             }
             if (defaultchoose)
             {
-                cmbox.Items.Insert(0, new CmbItem("-1", "ÇëÑ¡Ôñ"));
+                cmbox.Items.Insert(0, new CmbItem("-1", "è¯·é€‰æ‹©"));
             }
 
             cmbox.SelectedIndex = -1;
@@ -507,13 +514,13 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// ³õÊ¼»¯DropDownList,¸ÃÏÂÀ­ÁĞ±íµÄÖµ´æ´¢ÔÚ¶ÀÁ¢µÄ±íÖĞ
-        /// <para>  ucAddress1.cmbÊ¡.SelectedValue = int.Parse(saint.AddressÊ¡Â·); ÒªintĞÍ</para>
+        /// åˆå§‹åŒ–DropDownList,è¯¥ä¸‹æ‹‰åˆ—è¡¨çš„å€¼å­˜å‚¨åœ¨ç‹¬ç«‹çš„è¡¨ä¸­
+        /// <para>  ucAddress1.cmbçœ.SelectedValue = int.Parse(saint.Addressçœè·¯); è¦intå‹</para>
         /// </summary>
-        /// <param name="list">´æ´¢ÁĞ±íÖµµÄ±í</param>
-        /// <param name="cmb">DropDownList¿Ø¼ş</param>
-        /// <param name="ValueMember">´æ´¢ÖµÓò×Ö¶Î</param>
-        /// <param name="DisplayMember">´æ´¢ÎÄ±¾×Ö¶Î</param>
+        /// <param name="list">å­˜å‚¨åˆ—è¡¨å€¼çš„è¡¨</param>
+        /// <param name="cmb">DropDownListæ§ä»¶</param>
+        /// <param name="ValueMember">å­˜å‚¨å€¼åŸŸå­—æ®µ</param>
+        /// <param name="DisplayMember">å­˜å‚¨æ–‡æœ¬å­—æ®µ</param>
         public static void InitDropList<T>(List<T> list, System.Windows.Forms.ComboBox cmb, string ValueMember, string DisplayMember)
         {
             if (list != null)
@@ -538,26 +545,26 @@ namespace RUINORERP.UI.Common
                 //    cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
                 //    cmb.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
                 //}
-                //cmb.Items.Insert(0, new ListItem("ÇëÑ¡Ôñ", "-1"));
+                //cmb.Items.Insert(0, new ListItem("è¯·é€‰æ‹©", "-1"));
 
                 cmb.EndUpdate();
             }
             else
             {
-                // cmb.Items.Insert(0, new ListItem("ÇëÑ¡Ôñ", "-1"));
+                // cmb.Items.Insert(0, new ListItem("è¯·é€‰æ‹©", "-1"));
             }
         }
 
 
         /// <summary>
-        /// ³õÊ¼»¯DropDownList,¸ÃÏÂÀ­ÁĞ±íµÄÖµ´æ´¢ÔÚ¶ÀÁ¢µÄ±íÖĞ
+        /// åˆå§‹åŒ–DropDownList,è¯¥ä¸‹æ‹‰åˆ—è¡¨çš„å€¼å­˜å‚¨åœ¨ç‹¬ç«‹çš„è¡¨ä¸­
         /// </summary>
-        /// <param name="list">´æ´¢ÁĞ±íÖµµÄ±í</param>
-        /// <param name="cmb">DropDownList¿Ø¼ş</param>
-        /// <param name="ValueMember">´æ´¢ÖµÓò×Ö¶Î</param>
-        /// <param name="DisplayMember">´æ´¢ÎÄ±¾×Ö¶Î</param>
-        /// <param name="addÇëÑ¡Ôñ">  ÊÇÊı¾İÔ´°ó¶¨ĞÎÊ½²»¿ÉÒÔ×ÔÓÉÌí¼Ó£¬Ö»ÄÜÔÚÊı¾İÔ´ÉÏ×öÎÄÕÂ ("ÇëÑ¡Ôñ", "-1")</param>
-        public static void InitDropList<T>(List<T> list, System.Windows.Forms.ComboBox cmb, string ValueMember, string DisplayMember, bool addÇëÑ¡Ôñ)
+        /// <param name="list">å­˜å‚¨åˆ—è¡¨å€¼çš„è¡¨</param>
+        /// <param name="cmb">DropDownListæ§ä»¶</param>
+        /// <param name="ValueMember">å­˜å‚¨å€¼åŸŸå­—æ®µ</param>
+        /// <param name="DisplayMember">å­˜å‚¨æ–‡æœ¬å­—æ®µ</param>
+        /// <param name="addè¯·é€‰æ‹©">  æ˜¯æ•°æ®æºç»‘å®šå½¢å¼ä¸å¯ä»¥è‡ªç”±æ·»åŠ ï¼Œåªèƒ½åœ¨æ•°æ®æºä¸Šåšæ–‡ç«  ("è¯·é€‰æ‹©", "-1")</param>
+        public static void InitDropList<T>(List<T> list, System.Windows.Forms.ComboBox cmb, string ValueMember, string DisplayMember, bool addè¯·é€‰æ‹©)
         {
             if (list != null)
             {
@@ -573,19 +580,19 @@ namespace RUINORERP.UI.Common
                 cmb.ValueMember = ValueMember;
 
                 cmb.EndUpdate();
-                ///ÊÇÊı¾İÔ´°ó¶¨ĞÎÊ½²»¿ÉÒÔ×ÔÓÉÌí¼Ó£¬Ö»ÄÜÔÚÊı¾İÔ´ÉÏ×öÎÄÕÂ
-                ///cmb.Items.Insert(0, new ListItem("ÇëÑ¡Ôñ", "-1"));
+                ///æ˜¯æ•°æ®æºç»‘å®šå½¢å¼ä¸å¯ä»¥è‡ªç”±æ·»åŠ ï¼Œåªèƒ½åœ¨æ•°æ®æºä¸Šåšæ–‡ç« 
+                ///cmb.Items.Insert(0, new ListItem("è¯·é€‰æ‹©", "-1"));
 
             }
             else
             {
-                /// cmb.Items.Insert(0, new ListItem("ÇëÑ¡Ôñ", "-1"));
+                /// cmb.Items.Insert(0, new ListItem("è¯·é€‰æ‹©", "-1"));
             }
         }
 
 
 
-        public static void InitDropList(List<string> list, System.Windows.Forms.ComboBox dr, bool IsAddÇëÑ¡Ôñ)
+        public static void InitDropList(List<string> list, System.Windows.Forms.ComboBox dr, bool IsAddè¯·é€‰æ‹©)
         {
             if (list != null)
             {
@@ -593,21 +600,21 @@ namespace RUINORERP.UI.Common
                 {
                     dr.Items.Add(var);
                 }
-                if (IsAddÇëÑ¡Ôñ)
+                if (IsAddè¯·é€‰æ‹©)
                 {
-                    dr.Items.Insert(0, new CmbItem("ÇëÑ¡Ôñ", "-1"));
+                    dr.Items.Insert(0, new CmbItem("è¯·é€‰æ‹©", "-1"));
                 }
 
             }
             else
             {
-                dr.Items.Insert(0, new CmbItem("ÇëÑ¡Ôñ", "-1"));
+                dr.Items.Insert(0, new CmbItem("è¯·é€‰æ‹©", "-1"));
             }
             dr.SelectedIndex = -1;
         }
 
 
-        public static void InitDropList(List<KeyValuePair<string, string>> list, System.Windows.Forms.ComboBox dr, bool IsAddÇëÑ¡Ôñ)
+        public static void InitDropList(List<KeyValuePair<string, string>> list, System.Windows.Forms.ComboBox dr, bool IsAddè¯·é€‰æ‹©)
         {
             if (list != null)
             {
@@ -619,23 +626,43 @@ namespace RUINORERP.UI.Common
 
                     //  dr.Items.Add(kv.Key + "|" + kv.Value);
                 }
-                if (IsAddÇëÑ¡Ôñ)
+                if (IsAddè¯·é€‰æ‹©)
                 {
-                    CmbItem item = new CmbItem("-1", "ÇëÑ¡Ôñ");
+                    CmbItem item = new CmbItem("-1", "è¯·é€‰æ‹©");
                     dr.Items.Insert(0, item);
                 }
 
             }
             else
             {
-                CmbItem item = new CmbItem("-1", "ÇëÑ¡Ôñ");
+                CmbItem item = new CmbItem("-1", "è¯·é€‰æ‹©");
                 dr.Items.Insert(0, item);
             }
             dr.SelectedIndex = -1;
         }
 
+        /// <summary>
+        /// ä¸ºä¸‹æ‹‰åˆ—è¡¨æ·»åŠ "è¯·é€‰æ‹©"é€‰é¡¹
+        /// </summary>
+        /// <param name="dr">ä¸‹æ‹‰æ§ä»¶</param>
+        /// <param name="add">æ˜¯å¦æ·»åŠ </param>
+        public static void AddPleaseSelectOption(KryptonComboBox dr, bool add = true)
+        {
+            if (dr.DataSource != null)
+            {
+                if (add)
+                {
+                    CmbItem item = new CmbItem("-1", "è¯·é€‰æ‹©");
+                    dr.Items.Insert(0, item);
+                }
 
-
-
+            }
+            else
+            {
+                CmbItem item = new CmbItem("-1", "è¯·é€‰æ‹©");
+                dr.Items.Insert(0, item);
+            }
+            dr.SelectedIndex = -1;
+        }
     }
 }

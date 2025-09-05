@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/29/2025 20:39:10
+// 时间：09/04/2025 14:48:20
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -64,6 +64,12 @@ this.txtTargetEntity = new Krypton.Toolkit.KryptonTextBox();
 this.lblIsJoinRequired = new Krypton.Toolkit.KryptonLabel();
 this.chkIsJoinRequired = new Krypton.Toolkit.KryptonCheckBox();
 this.chkIsJoinRequired.Values.Text ="";
+
+this.lblTargetTableJoinField = new Krypton.Toolkit.KryptonLabel();
+this.txtTargetTableJoinField = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblJoinTableJoinField = new Krypton.Toolkit.KryptonLabel();
+this.txtJoinTableJoinField = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblJoinTable = new Krypton.Toolkit.KryptonLabel();
 this.txtJoinTable = new Krypton.Toolkit.KryptonTextBox();
@@ -190,175 +196,203 @@ this.chkIsJoinRequired.TabIndex = 4;
 this.Controls.Add(this.lblIsJoinRequired);
 this.Controls.Add(this.chkIsJoinRequired);
 
+           //#####50TargetTableJoinField###String
+this.lblTargetTableJoinField.AutoSize = true;
+this.lblTargetTableJoinField.Location = new System.Drawing.Point(100,125);
+this.lblTargetTableJoinField.Name = "lblTargetTableJoinField";
+this.lblTargetTableJoinField.Size = new System.Drawing.Size(41, 12);
+this.lblTargetTableJoinField.TabIndex = 5;
+this.lblTargetTableJoinField.Text = "目标表关联字段";
+this.txtTargetTableJoinField.Location = new System.Drawing.Point(173,121);
+this.txtTargetTableJoinField.Name = "txtTargetTableJoinField";
+this.txtTargetTableJoinField.Size = new System.Drawing.Size(100, 21);
+this.txtTargetTableJoinField.TabIndex = 5;
+this.Controls.Add(this.lblTargetTableJoinField);
+this.Controls.Add(this.txtTargetTableJoinField);
+
+           //#####50JoinTableJoinField###String
+this.lblJoinTableJoinField.AutoSize = true;
+this.lblJoinTableJoinField.Location = new System.Drawing.Point(100,150);
+this.lblJoinTableJoinField.Name = "lblJoinTableJoinField";
+this.lblJoinTableJoinField.Size = new System.Drawing.Size(41, 12);
+this.lblJoinTableJoinField.TabIndex = 6;
+this.lblJoinTableJoinField.Text = "关联表关联字段";
+this.txtJoinTableJoinField.Location = new System.Drawing.Point(173,146);
+this.txtJoinTableJoinField.Name = "txtJoinTableJoinField";
+this.txtJoinTableJoinField.Size = new System.Drawing.Size(100, 21);
+this.txtJoinTableJoinField.TabIndex = 6;
+this.Controls.Add(this.lblJoinTableJoinField);
+this.Controls.Add(this.txtJoinTableJoinField);
+
            //#####100JoinTable###String
 this.lblJoinTable.AutoSize = true;
-this.lblJoinTable.Location = new System.Drawing.Point(100,125);
+this.lblJoinTable.Location = new System.Drawing.Point(100,175);
 this.lblJoinTable.Name = "lblJoinTable";
 this.lblJoinTable.Size = new System.Drawing.Size(41, 12);
-this.lblJoinTable.TabIndex = 5;
+this.lblJoinTable.TabIndex = 7;
 this.lblJoinTable.Text = "需要关联的表名";
-this.txtJoinTable.Location = new System.Drawing.Point(173,121);
+this.txtJoinTable.Location = new System.Drawing.Point(173,171);
 this.txtJoinTable.Name = "txtJoinTable";
 this.txtJoinTable.Size = new System.Drawing.Size(100, 21);
-this.txtJoinTable.TabIndex = 5;
+this.txtJoinTable.TabIndex = 7;
 this.Controls.Add(this.lblJoinTable);
 this.Controls.Add(this.txtJoinTable);
 
            //#####10JoinType###String
 this.lblJoinType.AutoSize = true;
-this.lblJoinType.Location = new System.Drawing.Point(100,150);
+this.lblJoinType.Location = new System.Drawing.Point(100,200);
 this.lblJoinType.Name = "lblJoinType";
 this.lblJoinType.Size = new System.Drawing.Size(41, 12);
-this.lblJoinType.TabIndex = 6;
+this.lblJoinType.TabIndex = 8;
 this.lblJoinType.Text = "关联类型";
-this.txtJoinType.Location = new System.Drawing.Point(173,146);
+this.txtJoinType.Location = new System.Drawing.Point(173,196);
 this.txtJoinType.Name = "txtJoinType";
 this.txtJoinType.Size = new System.Drawing.Size(100, 21);
-this.txtJoinType.TabIndex = 6;
+this.txtJoinType.TabIndex = 8;
 this.Controls.Add(this.lblJoinType);
 this.Controls.Add(this.txtJoinType);
 
            //#####500JoinOnClause###String
 this.lblJoinOnClause.AutoSize = true;
-this.lblJoinOnClause.Location = new System.Drawing.Point(100,175);
+this.lblJoinOnClause.Location = new System.Drawing.Point(100,225);
 this.lblJoinOnClause.Name = "lblJoinOnClause";
 this.lblJoinOnClause.Size = new System.Drawing.Size(41, 12);
-this.lblJoinOnClause.TabIndex = 7;
+this.lblJoinOnClause.TabIndex = 9;
 this.lblJoinOnClause.Text = "关联条件";
-this.txtJoinOnClause.Location = new System.Drawing.Point(173,171);
+this.txtJoinOnClause.Location = new System.Drawing.Point(173,221);
 this.txtJoinOnClause.Name = "txtJoinOnClause";
 this.txtJoinOnClause.Size = new System.Drawing.Size(100, 21);
-this.txtJoinOnClause.TabIndex = 7;
+this.txtJoinOnClause.TabIndex = 9;
 this.Controls.Add(this.lblJoinOnClause);
 this.Controls.Add(this.txtJoinOnClause);
 
            //#####1000FilterClause###String
 this.lblFilterClause.AutoSize = true;
-this.lblFilterClause.Location = new System.Drawing.Point(100,200);
+this.lblFilterClause.Location = new System.Drawing.Point(100,250);
 this.lblFilterClause.Name = "lblFilterClause";
 this.lblFilterClause.Size = new System.Drawing.Size(41, 12);
-this.lblFilterClause.TabIndex = 8;
+this.lblFilterClause.TabIndex = 10;
 this.lblFilterClause.Text = "过滤条件";
-this.txtFilterClause.Location = new System.Drawing.Point(173,196);
+this.txtFilterClause.Location = new System.Drawing.Point(173,246);
 this.txtFilterClause.Name = "txtFilterClause";
 this.txtFilterClause.Size = new System.Drawing.Size(100, 21);
-this.txtFilterClause.TabIndex = 8;
+this.txtFilterClause.TabIndex = 10;
 this.Controls.Add(this.lblFilterClause);
 this.Controls.Add(this.txtFilterClause);
 
            //#####200EntityType###String
 this.lblEntityType.AutoSize = true;
-this.lblEntityType.Location = new System.Drawing.Point(100,225);
+this.lblEntityType.Location = new System.Drawing.Point(100,275);
 this.lblEntityType.Name = "lblEntityType";
 this.lblEntityType.Size = new System.Drawing.Size(41, 12);
-this.lblEntityType.TabIndex = 9;
+this.lblEntityType.TabIndex = 11;
 this.lblEntityType.Text = "实体的全限定类名";
-this.txtEntityType.Location = new System.Drawing.Point(173,221);
+this.txtEntityType.Location = new System.Drawing.Point(173,271);
 this.txtEntityType.Name = "txtEntityType";
 this.txtEntityType.Size = new System.Drawing.Size(100, 21);
-this.txtEntityType.TabIndex = 9;
+this.txtEntityType.TabIndex = 11;
 this.Controls.Add(this.lblEntityType);
 this.Controls.Add(this.txtEntityType);
 
            //#####IsEnabled###Boolean
 this.lblIsEnabled.AutoSize = true;
-this.lblIsEnabled.Location = new System.Drawing.Point(100,250);
+this.lblIsEnabled.Location = new System.Drawing.Point(100,300);
 this.lblIsEnabled.Name = "lblIsEnabled";
 this.lblIsEnabled.Size = new System.Drawing.Size(41, 12);
-this.lblIsEnabled.TabIndex = 10;
+this.lblIsEnabled.TabIndex = 12;
 this.lblIsEnabled.Text = "是否启用";
-this.chkIsEnabled.Location = new System.Drawing.Point(173,246);
+this.chkIsEnabled.Location = new System.Drawing.Point(173,296);
 this.chkIsEnabled.Name = "chkIsEnabled";
 this.chkIsEnabled.Size = new System.Drawing.Size(100, 21);
-this.chkIsEnabled.TabIndex = 10;
+this.chkIsEnabled.TabIndex = 12;
 this.Controls.Add(this.lblIsEnabled);
 this.Controls.Add(this.chkIsEnabled);
 
            //#####500PolicyDescription###String
 this.lblPolicyDescription.AutoSize = true;
-this.lblPolicyDescription.Location = new System.Drawing.Point(100,275);
+this.lblPolicyDescription.Location = new System.Drawing.Point(100,325);
 this.lblPolicyDescription.Name = "lblPolicyDescription";
 this.lblPolicyDescription.Size = new System.Drawing.Size(41, 12);
-this.lblPolicyDescription.TabIndex = 11;
+this.lblPolicyDescription.TabIndex = 13;
 this.lblPolicyDescription.Text = "规则描述";
-this.txtPolicyDescription.Location = new System.Drawing.Point(173,271);
+this.txtPolicyDescription.Location = new System.Drawing.Point(173,321);
 this.txtPolicyDescription.Name = "txtPolicyDescription";
 this.txtPolicyDescription.Size = new System.Drawing.Size(100, 21);
-this.txtPolicyDescription.TabIndex = 11;
+this.txtPolicyDescription.TabIndex = 13;
 this.Controls.Add(this.lblPolicyDescription);
 this.Controls.Add(this.txtPolicyDescription);
 
            //#####Created_at###DateTime
 this.lblCreated_at.AutoSize = true;
-this.lblCreated_at.Location = new System.Drawing.Point(100,300);
+this.lblCreated_at.Location = new System.Drawing.Point(100,350);
 this.lblCreated_at.Name = "lblCreated_at";
 this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_at.TabIndex = 12;
+this.lblCreated_at.TabIndex = 14;
 this.lblCreated_at.Text = "创建时间";
-//111======300
-this.dtpCreated_at.Location = new System.Drawing.Point(173,296);
+//111======350
+this.dtpCreated_at.Location = new System.Drawing.Point(173,346);
 this.dtpCreated_at.Name ="dtpCreated_at";
 this.dtpCreated_at.ShowCheckBox =true;
 this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
-this.dtpCreated_at.TabIndex = 12;
+this.dtpCreated_at.TabIndex = 14;
 this.Controls.Add(this.lblCreated_at);
 this.Controls.Add(this.dtpCreated_at);
 
            //#####Created_by###Int64
 this.lblCreated_by.AutoSize = true;
-this.lblCreated_by.Location = new System.Drawing.Point(100,325);
+this.lblCreated_by.Location = new System.Drawing.Point(100,375);
 this.lblCreated_by.Name = "lblCreated_by";
 this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
-this.lblCreated_by.TabIndex = 13;
+this.lblCreated_by.TabIndex = 15;
 this.lblCreated_by.Text = "创建人";
-this.txtCreated_by.Location = new System.Drawing.Point(173,321);
+this.txtCreated_by.Location = new System.Drawing.Point(173,371);
 this.txtCreated_by.Name = "txtCreated_by";
 this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
-this.txtCreated_by.TabIndex = 13;
+this.txtCreated_by.TabIndex = 15;
 this.Controls.Add(this.lblCreated_by);
 this.Controls.Add(this.txtCreated_by);
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
-this.lblModified_at.Location = new System.Drawing.Point(100,350);
+this.lblModified_at.Location = new System.Drawing.Point(100,400);
 this.lblModified_at.Name = "lblModified_at";
 this.lblModified_at.Size = new System.Drawing.Size(41, 12);
-this.lblModified_at.TabIndex = 14;
+this.lblModified_at.TabIndex = 16;
 this.lblModified_at.Text = "修改时间";
-//111======350
-this.dtpModified_at.Location = new System.Drawing.Point(173,346);
+//111======400
+this.dtpModified_at.Location = new System.Drawing.Point(173,396);
 this.dtpModified_at.Name ="dtpModified_at";
 this.dtpModified_at.ShowCheckBox =true;
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
-this.dtpModified_at.TabIndex = 14;
+this.dtpModified_at.TabIndex = 16;
 this.Controls.Add(this.lblModified_at);
 this.Controls.Add(this.dtpModified_at);
 
            //#####Modified_by###Int64
 this.lblModified_by.AutoSize = true;
-this.lblModified_by.Location = new System.Drawing.Point(100,375);
+this.lblModified_by.Location = new System.Drawing.Point(100,425);
 this.lblModified_by.Name = "lblModified_by";
 this.lblModified_by.Size = new System.Drawing.Size(41, 12);
-this.lblModified_by.TabIndex = 15;
+this.lblModified_by.TabIndex = 17;
 this.lblModified_by.Text = "修改人";
-this.txtModified_by.Location = new System.Drawing.Point(173,371);
+this.txtModified_by.Location = new System.Drawing.Point(173,421);
 this.txtModified_by.Name = "txtModified_by";
 this.txtModified_by.Size = new System.Drawing.Size(100, 21);
-this.txtModified_by.TabIndex = 15;
+this.txtModified_by.TabIndex = 17;
 this.Controls.Add(this.lblModified_by);
 this.Controls.Add(this.txtModified_by);
 
            //#####DefaultRuleEnum###Int32
 this.lblDefaultRuleEnum.AutoSize = true;
-this.lblDefaultRuleEnum.Location = new System.Drawing.Point(100,400);
+this.lblDefaultRuleEnum.Location = new System.Drawing.Point(100,450);
 this.lblDefaultRuleEnum.Name = "lblDefaultRuleEnum";
 this.lblDefaultRuleEnum.Size = new System.Drawing.Size(41, 12);
-this.lblDefaultRuleEnum.TabIndex = 16;
+this.lblDefaultRuleEnum.TabIndex = 18;
 this.lblDefaultRuleEnum.Text = "默认规则";
-this.txtDefaultRuleEnum.Location = new System.Drawing.Point(173,396);
+this.txtDefaultRuleEnum.Location = new System.Drawing.Point(173,446);
 this.txtDefaultRuleEnum.Name = "txtDefaultRuleEnum";
 this.txtDefaultRuleEnum.Size = new System.Drawing.Size(100, 21);
-this.txtDefaultRuleEnum.TabIndex = 16;
+this.txtDefaultRuleEnum.TabIndex = 18;
 this.Controls.Add(this.lblDefaultRuleEnum);
 this.Controls.Add(this.txtDefaultRuleEnum);
 
@@ -376,7 +410,7 @@ this.Controls.Add(this.txtDefaultRuleEnum);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 16;
+           // this.kryptonPanel1.TabIndex = 18;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -391,6 +425,12 @@ this.Controls.Add(this.txtTargetEntity );
 
                 this.Controls.Add(this.lblIsJoinRequired );
 this.Controls.Add(this.chkIsJoinRequired );
+
+                this.Controls.Add(this.lblTargetTableJoinField );
+this.Controls.Add(this.txtTargetTableJoinField );
+
+                this.Controls.Add(this.lblJoinTableJoinField );
+this.Controls.Add(this.txtJoinTableJoinField );
 
                 this.Controls.Add(this.lblJoinTable );
 this.Controls.Add(this.txtJoinTable );
@@ -469,6 +509,16 @@ private Krypton.Toolkit.KryptonTextBox txtTargetEntity;
         
               private Krypton.Toolkit.KryptonLabel lblIsJoinRequired;
 private Krypton.Toolkit.KryptonCheckBox chkIsJoinRequired;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblTargetTableJoinField;
+private Krypton.Toolkit.KryptonTextBox txtTargetTableJoinField;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblJoinTableJoinField;
+private Krypton.Toolkit.KryptonTextBox txtJoinTableJoinField;
 
     
         

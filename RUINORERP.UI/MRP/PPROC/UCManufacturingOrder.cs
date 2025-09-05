@@ -652,6 +652,7 @@ namespace RUINORERP.UI.MRP.MP
                     }
                 }
 
+                //成本的检测，放到审核阶段来
                 if (NeedValidated)
                 {
 
@@ -698,6 +699,7 @@ namespace RUINORERP.UI.MRP.MP
                         return false;
                     }
                 }
+
 
                 ReturnMainSubResults<tb_ManufacturingOrder> SaveResult = new ReturnMainSubResults<tb_ManufacturingOrder>();
                 if (NeedValidated)
@@ -1023,120 +1025,7 @@ protected override void Print()
         }
 
         BizTypeMapper mapper = new BizTypeMapper();
-
-
-        //因为太复杂。目前暂时只能由需求分析那边生成
-        /*
-
-        /// <summary>
-        /// 制令单怎么来的？ 由需求分析中转过来。也可以直接从需要求分析时转换过来。
-        /// </summary>
-        /// <param name="id"></param>
-        private async Task LoadChildItems(long? id)
-        {
-            //因为要查BOM情况。不会传过来。
-            var SourceBill = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>().Where(c => c.PDID == id)
-                .Includes(a => a.tb_productionplan, b => b.tb_saleorder, c => c.tb_customervendor)
-                .Includes(a => a.tb_productionplan, b => b.tb_saleorder, c => c.tb_SaleOrderDetails)
-          .Includes(a => a.tb_ProductionDemandDetails, b => b.tb_proddetail, c => c.tb_bom_s)
-          .Includes(a => a.tb_ProductionDemandDetails, b => b.tb_proddetail, c => c.tb_prod)
-
-          .SingleAsync();
-            //新增时才可以转单
-            if (SourceBill != null)
-            {
-                //所以这里设计一个 可选明细的UI。针对需求分析中的顶级选择。要生成的制令单
-                frmMultiSelector frmMulti = new frmMultiSelector();
-                //指定要显示的实体集合类型
-                frmMulti.entityType = typeof(tb_ProduceGoodsRecommendDetail);
-                //List<string> childlist = ExpressionHelper.ExpressionListToStringList(ChildRelatedSummaryCols);
-                // frmMulti.InvisibleCols = ExpressionHelper.ExpressionListToStringList(ChildRelatedInvisibleCols);
-                frmMulti.DefaultHideCols = new List<string>();
-                List<tb_ProductionDemandDetail> list = new List<tb_ProductionDemandDetail>();
-                list.AddRange(SourceBill.tb_ProductionDemandDetails.Where(c => c.ParentId == 0).ToList());
-                frmMulti.bindingSourceChild.DataSource = list.ToBindingSortCollection();
-                frmMulti.Loadlines();
-                //ControlColumnsInvisible(_UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols);
-                //frmMulti.SummaryCols = childlist;
-                // frmMulti.ColNameDataDictionary = ChildColNameDataDictionary;
-                if (frmMulti.ShowDialog() == DialogResult.OK)
-                {
-                    #region  
-                    tb_ProductionDemandController<tb_ProductionDemand> ctrPD = Startup.GetFromFac<tb_ProductionDemandController<tb_ProductionDemand>>();
-                    //生成制令单  以目标为基准。一个制令单，只会是一个目标单位，
-                    tb_ProductionDemandDetail recommendDetail = list.Where(c => c.Selected == true).FirstOrDefault();
-                    if (recommendDetail == null)
-                    {
-                        MessageBox.Show("请选择要生产的目标产品!");
-                        return;
-                    }
-                    tb_ManufacturingOrder entity = await ctrPD.InitManufacturingOrder(SourceBill, recommendDetail, false);
-                    entity.DataStatus = (int)DataStatus.草稿;
-                    entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                    entity.ApprovalOpinions = "";
-                    entity.ApprovalResults = null;
-                    entity.Approver_at = null;
-                    entity.Approver_by = null;
-                    entity.PreStartDate = System.DateTime.Now.AddDays(5);//这是不是一个平均时间。将来可以根据数据优化？   
-                    entity.PreEndDate = System.DateTime.Now.AddDays(15);//这是不是一个平均时间。将来可以根据数据优化？  
-                    entity.PrintStatus = 0;
-                    entity.DataStatus = (int)DataStatus.草稿;
-                    entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                    entity.ProdDetailID = recommendDetail.ProdDetailID;
-                    entity.CNName = recommendDetail.tb_proddetail.tb_prod.CNName;
-                    entity.Unit_ID = recommendDetail.tb_proddetail.tb_prod.Unit_ID;
-                    entity.Type_ID = recommendDetail.tb_proddetail.tb_prod.Type_ID;
-
-                    if (entity.PDID.HasValue && entity.PDID > 0)
-                    {
-                        entity.PDID = SourceBill.PDID;
-                        entity.PDNO = SourceBill.PDNo;
-
-                        // entity.RefBillType = (int)mapper.GetBizType(typeof(tb_ProductionDemand));
-
-                        //如果来自于计划单时，查看他是否有对应的订单
-                        //目前只处理一种情况，暂时为直是
-                        if (true)
-                        {
-                            if (SourceBill.tb_productionplan.tb_saleorder != null)
-                            {
-                                entity.CustomerVendor_ID = SourceBill.tb_productionplan.tb_saleorder.CustomerVendor_ID;
-                                entity.Priority = SourceBill.tb_productionplan.tb_saleorder.OrderPriority;
-                                tb_SaleOrderDetail orderDetail = SourceBill.tb_productionplan.tb_saleorder.tb_SaleOrderDetails.FirstOrDefault(c => c.ProdDetailID == entity.ProdDetailID);
-                                if (orderDetail != null)
-                                {
-                                    entity.CustomerPartNo = orderDetail.CustomerPartNo;
-                                }
-
-                            }
-                        }
-                    }
-
-
-                    //明细赋值--特殊情况时。
-
-                    foreach (tb_ManufacturingOrderDetail detail in entity.tb_ManufacturingOrderDetails)
-                    {
-                        //detail.CurrentIinventory=
-                    }
-
-
-
-                    BusinessHelper.Instance.InitEntity(entity);
-                    //编号已经生成，在新点开一个页面时，自动生成。
-                    if (EditEntity.MONO.IsNotEmptyOrNull())
-                    {
-                        entity.MONO = EditEntity.MONO;
-                    }
-
-                    BindData(entity);
-
-                    #endregion
-                }
-            }
-        }
-
-  */
+ 
 
         private void chkIsOutSourced_CheckedChanged(object sender, EventArgs e)
         {

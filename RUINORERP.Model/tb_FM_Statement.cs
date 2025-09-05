@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:14
+// 时间：09/04/2025 18:02:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -80,6 +80,20 @@ namespace RUINORERP.Model
                         }
         }
 
+        private string _ARAPNos;
+        /// <summary>
+        /// 应收付单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ARAPNos",ColDesc = "应收付单号")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "ARAPNos" ,Length=1000,IsNullable = true,ColumnDescription = "应收付单号" )]
+        public string ARAPNos
+        { 
+            get{return _ARAPNos;}
+            set{
+            SetProperty(ref _ARAPNos, value);
+                        }
+        }
+
         private long? _Account_id;
         /// <summary>
         /// 公司账户
@@ -123,41 +137,28 @@ namespace RUINORERP.Model
             SetProperty(ref _PayeeAccountNo, value);
                         }
         }
-        private int _ReceivePaymentType = ((0));
+
+        private int _ReceivePaymentType;
         /// <summary>
         /// 收付类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReceivePaymentType", ColDesc = "收付类型")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "ReceivePaymentType", DecimalDigits = 0, IsNullable = false, ColumnDescription = "收付类型")]
+        [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付类型" )]
         public int ReceivePaymentType
-        {
-            get { return _ReceivePaymentType; }
-            set
-            {
-                SetProperty(ref _ReceivePaymentType, value);
-            }
+        { 
+            get{return _ReceivePaymentType;}
+            set{
+            SetProperty(ref _ReceivePaymentType, value);
+                        }
         }
-        private string _ARAPNos;
-        /// <summary>
-        /// 应收付款单号
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ARAPNos", ColDesc = "应收付款单号")]
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ARAPNos", Length = 1000, IsNullable = true, ColumnDescription = "应收付款单号")]
-        public string ARAPNos
-        {
-            get { return _ARAPNos; }
-            set
-            {
-                SetProperty(ref _ARAPNos, value);
-            }
-        }
-        private DateTime? _StartDate;
+
+        private DateTime _StartDate;
         /// <summary>
         /// 对账周期起
         /// </summary>
         [AdvQueryAttribute(ColName = "StartDate",ColDesc = "对账周期起")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "StartDate" ,IsNullable = true,ColumnDescription = "对账周期起" )]
-        public DateTime? StartDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "StartDate" ,IsNullable = false,ColumnDescription = "对账周期起" )]
+        public DateTime StartDate
         { 
             get{return _StartDate;}
             set{
@@ -165,13 +166,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime? _EndDate;
+        private DateTime _EndDate;
         /// <summary>
         /// 对账周期止
         /// </summary>
         [AdvQueryAttribute(ColName = "EndDate",ColDesc = "对账周期止")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "EndDate" ,IsNullable = true,ColumnDescription = "对账周期止" )]
-        public DateTime? EndDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "EndDate" ,IsNullable = false,ColumnDescription = "对账周期止" )]
+        public DateTime EndDate
         { 
             get{return _EndDate;}
             set{

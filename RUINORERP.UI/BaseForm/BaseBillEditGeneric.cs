@@ -82,6 +82,7 @@ using RUINORERP.UI.FM;
 using RUINORERP.UI.FM.FMBase;
 using LiveChartsCore.Geo;
 using RUINORERP.UI.MRP.MP;
+using Winista.Text.HtmlParser.Lex;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -2774,49 +2775,49 @@ namespace RUINORERP.UI.BaseForm
                         #region 采购入库单如果启用了财务模块，则会生成应付款单
 
                         AuthorizeController authorizeController = MainForm.Instance.AppContext.GetRequiredService<AuthorizeController>();
-                            if (authorizeController.EnableFinancialModule())
+                        if (authorizeController.EnableFinancialModule())
+                        {
+                            if (MainForm.Instance.AppContext.FMConfig.AutoAuditPaymentable)
                             {
-                                if (MainForm.Instance.AppContext.FMConfig.AutoAuditPaymentable)
+                                #region 自动审核应付款单
+                                //销售订单审核时自动将预付款单设为"已生效"状态
+                                var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                                if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
                                 {
-                                    #region 自动审核应付款单
-                                    //销售订单审核时自动将预付款单设为"已生效"状态
-                                    var ctrpayable = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                                    if (rmr.ReturnObjectAsOtherEntity is tb_FM_ReceivablePayable payable)
+                                    if (payable.ARAPStatus == (int)ARAPStatus.待审核)
                                     {
-                                        if (payable.ARAPStatus == (int)ARAPStatus.待审核)
-                                        {
-                                            payable.ApprovalOpinions = "系统自动审核";
-                                            payable.ApprovalStatus = (int)ApprovalStatus.已审核;
-                                            payable.ApprovalResults = true;
-                                            //if (PurEntry.tb_purorder != null && !payable.PayeeInfoID.HasValue)
-                                            //{
-                                            //    //通过订单添加付款信息
-                                            //    payable.PayeeInfoID = PurEntry.tb_purorder.PayeeInfoID;
-                                            //}
+                                        payable.ApprovalOpinions = "系统自动审核";
+                                        payable.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                        payable.ApprovalResults = true;
+                                        //if (PurEntry.tb_purorder != null && !payable.PayeeInfoID.HasValue)
+                                        //{
+                                        //    //通过订单添加付款信息
+                                        //    payable.PayeeInfoID = PurEntry.tb_purorder.PayeeInfoID;
+                                        //}
 
-                                            ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
-                                            if (!autoApproval.Succeeded)
+                                        ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
+                                        if (!autoApproval.Succeeded)
+                                        {
+                                            autoApproval.Succeeded = false;
+                                            autoApproval.ErrorMsg = $"应付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                            if (MainForm.Instance.AppContext.SysConfig.ShowDebugInfo)
                                             {
-                                                autoApproval.Succeeded = false;
-                                                autoApproval.ErrorMsg = $"应付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                                                if (MainForm.Instance.AppContext.SysConfig.ShowDebugInfo)
-                                                {
-                                                    MainForm.Instance.logger.LogInformation(autoApproval.ErrorMsg);
-                                                }
-                                                await MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核失败", autoApproval.ReturnObject as tb_FM_ReceivablePayable, autoApproval.ErrorMsg);
+                                                MainForm.Instance.logger.LogInformation(autoApproval.ErrorMsg);
                                             }
-                                            else
-                                            {
-                                                MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
-                                            }
+                                            await MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核失败", autoApproval.ReturnObject as tb_FM_ReceivablePayable, autoApproval.ErrorMsg);
+                                        }
+                                        else
+                                        {
+                                            MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
                                         }
                                     }
-                                    #endregion
                                 }
+                                #endregion
                             }
+                        }
 
-                            #endregion
-                     
+                        #endregion
+
 
                     }
 
@@ -3426,6 +3427,7 @@ namespace RUINORERP.UI.BaseForm
 
         protected virtual void RelatedQuery()
         {
+            MessageBox.Show("功能开发中。。。。");
             if (EditEntity == null)
             {
                 return;
@@ -3439,6 +3441,9 @@ namespace RUINORERP.UI.BaseForm
                 // NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
 
                 NewEditEntity = EditEntity.DeepCloneByjson();
+
+                // 获取需要忽略的属性配置
+                var ignoreProperties = ConfigureIgnoreProperties();
                 //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
                 // 获取主键列名
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -3458,7 +3463,7 @@ namespace RUINORERP.UI.BaseForm
                 ResetApprovalStatus(NewEditEntity);
 
                 // 递归处理所有导航属性（明细集合）
-                ProcessNavigationProperties(NewEditEntity, PKCol);
+                ProcessNavigationProperties(NewEditEntity, PKCol, ignoreProperties);
 
                 OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
 
@@ -3479,10 +3484,18 @@ namespace RUINORERP.UI.BaseForm
             {
                 bindingSourceSub.Clear();
 
-                // NewEditEntity = Activator.CreateInstance(typeof(T)) as T;
-
                 NewEditEntity = EditEntity.DeepCloneByjson();
                 //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
+
+
+                // 获取忽略属性配置
+                var ignoreConfig = ConfigureIgnoreProperties();
+
+
+
+                // 重置需要忽略的属性
+                ResetIgnoredProperties(NewEditEntity, ignoreConfig);
+
                 // 获取主键列名
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
                 BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
@@ -3501,7 +3514,7 @@ namespace RUINORERP.UI.BaseForm
                 ResetApprovalStatus(NewEditEntity);
 
                 // 递归处理所有导航属性（明细集合）
-                ProcessNavigationProperties(NewEditEntity, PKCol);
+                ProcessNavigationProperties(NewEditEntity, PKCol, ignoreConfig);
 
                 OnBindDataToUIEvent(NewEditEntity, ActionStatus.复制);
 
@@ -3511,6 +3524,95 @@ namespace RUINORERP.UI.BaseForm
         }
 
         #region 复制性新增
+        // 忽略属性配置
+        // 基类中的配置方法，使用字符串方式配置通用属性
+        protected virtual IgnorePropertyConfiguration ConfigureIgnoreProperties()
+        {
+            var config = new IgnorePropertyConfiguration();
+
+            // 使用字符串方式配置通用属性（这些属性可能存在于各种实体中）
+            config.IgnoreIfExists<T>("DataStatus")
+                  .IgnoreIfExists<T>("PrimaryKeyID")
+                  .IgnoreIfExists<T>("Created_at")
+                  .IgnoreIfExists<T>("Created_by")
+                  .IgnoreIfExists<T>("Modified_at")
+                  .IgnoreIfExists<T>("Modified_by")
+                  .IgnoreIfExists<T>("ApprovalStatus")
+                  .IgnoreIfExists<T>("ApprovalResults")
+                  .IgnoreIfExists<T>("Approver_by")
+                  .IgnoreIfExists<T>("Approver_at")
+                  .IgnoreIfExists<T>("PrintStatus");
+
+            return config;
+        }
+
+
+
+        // 重置需要忽略的属性
+        private void ResetIgnoredProperties(object entity, IgnorePropertyConfiguration ignoreConfig)
+        {
+            if (entity == null) return;
+
+            var entityType = entity.GetType();
+            // 检查是否有为该类型定义的忽略属性
+            var ignoredProperties = ignoreConfig.GetIgnoredProperties(entityType);
+
+            // 检查是否有为该类型定义的忽略属性
+            foreach (var propName in ignoredProperties)
+            {
+                if (ReflectionHelper.ExistPropertyName(entityType, propName))
+                {
+                    var prop = entityType.GetProperty(propName);
+                    if (prop != null && prop.CanWrite)
+                    {
+                        // 根据属性类型设置默认值
+                        if (prop.PropertyType == typeof(string))
+                            prop.SetValue(entity, null);
+                        else if (prop.PropertyType == typeof(int))
+                            prop.SetValue(entity, 0);
+                        else if (prop.PropertyType == typeof(long))
+                            prop.SetValue(entity, 0L);
+                        else if (prop.PropertyType == typeof(decimal))
+                            prop.SetValue(entity, 0m);
+                        else if (prop.PropertyType == typeof(DateTime))
+                            prop.SetValue(entity, DateTime.MinValue);
+                        else if (prop.PropertyType == typeof(DateTime?))
+                            prop.SetValue(entity, null);
+                        else if (prop.PropertyType == typeof(bool))
+                            prop.SetValue(entity, false);
+                        // 可以根据需要添加更多类型的处理
+                    }
+                }
+            }
+
+            // 递归处理导航属性
+            var navigationProperties = entityType.GetProperties()
+                .Where(p => p.PropertyType.IsClass &&
+                           p.PropertyType != typeof(string) &&
+                           !p.PropertyType.IsValueType);
+
+            foreach (var navProp in navigationProperties)
+            {
+                var navValue = navProp.GetValue(entity);
+                if (navValue != null)
+                {
+                    if (navValue is System.Collections.IEnumerable &&
+                        !(navValue is string))
+                    {
+                        // 处理集合类型的导航属性
+                        foreach (var item in (System.Collections.IEnumerable)navValue)
+                        {
+                            ResetIgnoredProperties(item, ignoreConfig);
+                        }
+                    }
+                    else
+                    {
+                        // 处理单个对象的导航属性
+                        ResetIgnoredProperties(navValue, ignoreConfig);
+                    }
+                }
+            }
+        }
         // 重置实体的主键
         private void ResetPrimaryKey(object entity, string pkCol)
         {
@@ -3573,16 +3675,17 @@ namespace RUINORERP.UI.BaseForm
         }
 
         // 处理主实体及其一级明细集合
-        private void ProcessNavigationProperties(object entity, string parentPKCol)
+        private void ProcessNavigationProperties(object entity, string parentPKCol, IgnorePropertyConfiguration ignoreConfig)
         {
             if (entity == null) return;
 
             if (entity.ContainsProperty("PrimaryKeyID"))
                 entity.SetPropertyValue("PrimaryKeyID", 0);
 
-
             var type = entity.GetType();
             var entityName = type.Name;
+
+
 
             // 获取主实体的主键值，用于更新明细的外键
             long parentPKValue = (long)ReflectionHelper.GetPropertyValue(entity, parentPKCol);
@@ -3607,8 +3710,11 @@ namespace RUINORERP.UI.BaseForm
                 var fkProperty = detailType.GetProperty(detailFKCol);
                 if (fkProperty == null)
                 {
-                    // 尝试其他可能的外键命名方式
-                    fkProperty = detailType.GetProperty(parentPKCol);
+                    // 尝试查找外键属性（多种可能的命名约定）
+                    fkProperty = detailType.GetProperty($"{entityName}_ID") ??
+                                    detailType.GetProperty(parentPKCol) ??
+                                    detailType.GetProperties().FirstOrDefault(p =>
+                                        p.Name.EndsWith("_ID") && p.PropertyType == typeof(long));
                 }
 
                 if (fkProperty != null)
@@ -3626,9 +3732,10 @@ namespace RUINORERP.UI.BaseForm
 
                             // 重置明细的外键（指向主实体）
                             ReflectionHelper.SetPropertyValue(item, fkProperty.Name, 0);
-
+                            // 重置需要忽略的属性
+                            ResetIgnoredProperties(item,  ignoreConfig);
                             // 处理明细的子明细（第二级）
-                            ProcessSecondLevelDetails(item, detailPKCol, detailType.Name);
+                            ProcessSecondLevelDetails(item, detailPKCol, detailType.Name, ignoreConfig);
                         }
                     }
                 }
@@ -3636,7 +3743,8 @@ namespace RUINORERP.UI.BaseForm
         }
 
         // 处理第二级明细集合（明细的明细）
-        private void ProcessSecondLevelDetails(object entity, string parentPKCol, string parentEntityName)
+        private void ProcessSecondLevelDetails(object entity, string parentPKCol, string parentEntityName,
+            IgnorePropertyConfiguration ignoreConfig)
         {
             if (entity == null) return;
 
@@ -3648,6 +3756,15 @@ namespace RUINORERP.UI.BaseForm
                            p.PropertyType.GetGenericTypeDefinition() == typeof(List<>) &&
                            p.PropertyType.GetGenericArguments()[0].Name.EndsWith($"{parentEntityName}Detail"))
                 .ToList();
+
+            // 查找所有集合类型的导航属性（假设它们是子明细）
+            //var subDetailProperties = type.GetProperties()
+            //    .Where(p => p.PropertyType.IsGenericType &&
+            //               p.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
+            //    .ToList();
+
+
+
 
             foreach (var subDetailProperty in subDetailProperties)
             {
@@ -3663,7 +3780,10 @@ namespace RUINORERP.UI.BaseForm
                 if (fkProperty == null)
                 {
                     // 尝试其他可能的外键命名方式
-                    fkProperty = subDetailType.GetProperty(parentPKCol);
+                    fkProperty = subDetailType.GetProperty($"{parentEntityName}_ID") ??
+                         subDetailType.GetProperty(parentPKCol) ??
+                         subDetailType.GetProperties().FirstOrDefault(p =>
+                             p.Name.EndsWith("_ID") && p.PropertyType == typeof(long));
                 }
 
                 if (fkProperty != null)
@@ -3678,6 +3798,10 @@ namespace RUINORERP.UI.BaseForm
 
                             // 重置子明细的外键（指向父明细）
                             ReflectionHelper.SetPropertyValue(item, fkProperty.Name, 0);
+
+
+                            // 重置需要忽略的属性
+                            ResetIgnoredProperties(item, ignoreConfig);
                         }
                     }
                 }
@@ -3895,7 +4019,8 @@ namespace RUINORERP.UI.BaseForm
                     }
                     bool rs = false;
                     BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-                    if (typeof(C).Name.Contains("Detail"))
+                    //这个表特殊当时没有命名好
+                    if (typeof(C).Name.Contains("Detail") || typeof(C).Name.Contains("tb_ProductionDemand"))
                     {
                         rs = await ctr.BaseDeleteByNavAsync(editEntity as T);
                     }
@@ -4121,7 +4246,7 @@ namespace RUINORERP.UI.BaseForm
             return submitrs;
         }
 
-  
+
 
 
         /// <summary>提交单据</summary>

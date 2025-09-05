@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:15
+// 时间：09/04/2025 18:02:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -92,6 +92,34 @@ namespace RUINORERP.Model
             get{return _ReceivePaymentType;}
             set{
             SetProperty(ref _ReceivePaymentType, value);
+                        }
+        }
+
+        private DateTime? _DocumentDate;
+        /// <summary>
+        /// 单据日期
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DocumentDate",ColDesc = "单据日期")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "DocumentDate" ,IsNullable = true,ColumnDescription = "单据日期" )]
+        public DateTime? DocumentDate
+        { 
+            get{return _DocumentDate;}
+            set{
+            SetProperty(ref _DocumentDate, value);
+                        }
+        }
+
+        private DateTime? _BusinessDate;
+        /// <summary>
+        /// 业务日期
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BusinessDate",ColDesc = "业务日期")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "BusinessDate" ,IsNullable = true,ColumnDescription = "业务日期" )]
+        public DateTime? BusinessDate
+        { 
+            get{return _BusinessDate;}
+            set{
+            SetProperty(ref _BusinessDate, value);
                         }
         }
 

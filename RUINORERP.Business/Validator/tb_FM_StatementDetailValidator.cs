@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:15
+// 时间：09/04/2025 18:02:23
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -45,6 +45,8 @@ namespace RUINORERP.Business
 
 //***** 
  RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.ReceivePaymentType).NotNull().WithMessage("收付类型:不能为空。");
+
+
 
  RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.Currency_ID).Must(CheckForeignKeyValue).WithMessage("币别:下拉选择值不正确。");
 

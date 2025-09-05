@@ -265,11 +265,11 @@ namespace RUINORERP.Business
                 statement.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款对账单);
             }
 
-
+            //entities明细中的创建时间的最大值，最小值来决定账单的开始结束日期
+            statement.StartDate = entities.Min(c => c.Created_at).Value;
+            statement.EndDate = entities.Max(c => c.Created_at).Value;
             //statement.EndDate = System.DateTime.Now;
             // statement.Currency_ID = statement.Currency_ID;
-
-
 
             //默认给第一个
             statement.PayeeInfoID = entities[0].PayeeInfoID;

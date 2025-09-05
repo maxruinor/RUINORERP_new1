@@ -312,7 +312,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         KryptonTreeGridNodeRow SaleOutReDetailrow = SaleOutReRow.Nodes.Add(SaleOutRe.ReturnNo);
                         SaleOutReDetailrow.Tag = SaleOutRe;
                         SaleOutReDetailrow.Cells[0].Tag = "ReturnNo";// 保存列名 值对象的列名。比方值是编号：则是PDNo
-                        SaleOutReDetailrow.Cells[1].Value = SaleOutRe.ReturnDate.Value.ToString("yyyy-MM-dd");//日期
+                        SaleOutReDetailrow.Cells[1].Value = SaleOutRe.ReturnDate.ToString("yyyy-MM-dd");//日期
                         SaleOutReDetailrow.Cells[2].Value = SaleOutReDetail.Quantity;//预计数量
                         //订单明细数量只一行时。可能多次出库，多次退回，所以这里不能直接用SaleOrderDetail.qtY
                         //if (SaleOutReDetail.Quantity == SaleOrderDetail.qt)

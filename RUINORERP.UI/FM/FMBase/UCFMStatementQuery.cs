@@ -41,6 +41,8 @@ using RUINORERP.Global.Model;
 using RUINORERP.UI.ToolForm;
 using Microsoft.Extensions.Logging;
 using NPOI.SS.Formula.Functions;
+using Org.BouncyCastle.Asn1.X509.Qualified;
+using FastReport.DevComponents.DotNetBar.Controls;
 
 namespace RUINORERP.UI.FM
 {
@@ -235,7 +237,7 @@ namespace RUINORERP.UI.FM
             .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-              await  menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
             }
         }
         #endregion
@@ -277,6 +279,7 @@ namespace RUINORERP.UI.FM
         {
             base.MasterInvisibleCols.Add(c => c.StatementId);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
+            base.MasterInvisibleCols.Add(c => c.ARAPNos);
 
             if (PaymentType == ReceivePaymentType.收款)
             {
@@ -293,10 +296,16 @@ namespace RUINORERP.UI.FM
             MessageBox.Show("对账单记录不能删除？", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
-
+        public GridViewDisplayTextResolver DisplayTextResolver;
         private void UCReceivablePayableQuery_Load(object sender, EventArgs e)
         {
+            DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_FM_Statement));
+            //显示时目前只缓存了基础数据。单据也可以考虑id显示编号。后面来实现。如果缓存优化好了
+            DisplayTextResolver.Initialize(_UCBillChildQuery.newSumDataGridViewChild);
 
+            #region 双击单号后按业务类型查询显示对应业务窗体
+            _UCBillChildQuery.GridRelated.SetRelatedInfo<tb_FM_StatementDetail, tb_FM_ReceivablePayable>(c => c.ARAPId, r => r.ARAPNo);
+            #endregion
         }
     }
 }

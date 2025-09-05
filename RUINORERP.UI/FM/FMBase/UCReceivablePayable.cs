@@ -268,6 +268,13 @@ namespace RUINORERP.UI.FM
                 entity.ARAPStatus = (int)ARAPStatus.草稿;
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
+                
+                //    entity.DocumentDate = System.DateTime.Now;
+                //}
+                //if (!entity.BusinessDate.HasValue)
+                //{
+                //    entity.BusinessDate = System.DateTime.Now;
+                //}
 
                 //默认新建的都是费用，产品的话是可以转单
                 entity.IsExpenseType = true;

@@ -51,6 +51,7 @@ using NPOI.POIFS.Properties;
 using Org.BouncyCastle.Crypto;
 using NPOI.SS.UserModel;
 using Org.BouncyCastle.Asn1.Cmp;
+using RUINORERP.UI.FM;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -75,6 +76,7 @@ namespace RUINORERP.UI.SysConfig
         private void UCDataFix_Load(object sender, EventArgs e)
         {
             LoadTree();
+            treeView1.Nodes.Add(new TreeNode("应收付单据业务日期修复"));
         }
 
         private async void treeView1_MouseDoubleClick(object sender, MouseEventArgs e)
@@ -494,7 +496,171 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
 
+                if (treeView1.SelectedNode.Text == "应收付单据业务日期修复")
+                {
 
+                    if (treeViewTableList.SelectedNode.Tag != null && treeViewTableList.SelectedNode.Name == typeof(tb_FM_ReceivablePayable).Name)
+                    {
+                        #region 应收付单据业务日期修复
+
+
+                        List<tb_FM_ReceivablePayable> ReceivablePayables = MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                            .Where(c => c.SourceBizType.HasValue)
+                            .ToList();
+
+                        // 按来源业务类型分组
+                        var groupedByBizType = ReceivablePayables
+                            .GroupBy(d => d.SourceBizType)
+                            .ToList();
+
+                        foreach (var bizTypeGroup in groupedByBizType)
+                        {
+                            // 按来源单号分组
+                            long[] ids = bizTypeGroup
+                                                .Where(d => d.SourceBillId.HasValue)
+                                                .GroupBy(d => d.SourceBillId.Value)
+                                                .Select(g => g.Key)
+                                                .ToArray();
+                            BizType bizType = (BizType)bizTypeGroup.Key;
+
+                            switch (bizType)
+                            {
+                                case BizType.销售出库单:
+                                    var SaleOuts = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
+                                        .Where(c => ids.Contains(c.SaleOut_MainID))
+                                        .ToList();
+                                    foreach (var saleOut in SaleOuts)
+                                    {
+                                        var ReceivablePayable1 = ReceivablePayables.FirstOrDefault(c => c.SourceBizType == (int)bizType && c.SourceBillId == saleOut.SaleOut_MainID);
+                                        if (ReceivablePayable1 != null)
+                                        {
+                                            ReceivablePayable1.DocumentDate = saleOut.Created_at.Value;
+                                            ReceivablePayable1.BusinessDate = saleOut.OutDate;
+                                        }
+                                    }
+
+                                    break;
+                                case BizType.销售退回单:
+                                    var SaleOutRes = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutRe>()
+                                        .Where(c => ids.Contains(c.SaleOutRe_ID))
+                                        .ToList();
+
+                                    foreach (var saleOutRe in SaleOutRes)
+                                    {
+                                        var ReceivablePayable2 = ReceivablePayables.FirstOrDefault(c => c.SourceBizType == (int)bizType && c.SourceBillId == saleOutRe.SaleOutRe_ID);
+                                        if (ReceivablePayable2 != null)
+                                        {
+                                            ReceivablePayable2.DocumentDate = saleOutRe.Created_at.Value;
+                                            ReceivablePayable2.BusinessDate = saleOutRe.ReturnDate.Value;
+                                        }
+                                    }
+
+
+                                    break;
+                                case BizType.采购入库单:
+                                    var PurEntries = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>()
+                                        .Where(c => ids.Contains(c.PurEntryID))
+                                        .ToList();
+
+                                    foreach (var purEntry in PurEntries)
+                                    {
+                                        var ReceivablePayable3 = ReceivablePayables.FirstOrDefault(c => c.SourceBizType == (int)bizType && c.SourceBillId == purEntry.PurEntryID);
+                                        if (ReceivablePayable3 != null)
+                                        {
+                                            ReceivablePayable3.DocumentDate = purEntry.Created_at.Value;
+                                            ReceivablePayable3.BusinessDate = purEntry.EntryDate;
+                                        }
+                                    }
+
+
+                                    break;
+                                case BizType.采购退货单:
+                                    var PurEntriesRe = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryRe>()
+                                        .Where(c => ids.Contains(c.PurEntryRe_ID))
+                                        .ToList();
+
+                                    foreach (var purEntryRe in PurEntriesRe)
+                                    {
+                                        var ReceivablePayable4 = ReceivablePayables.FirstOrDefault(c => c.SourceBizType == (int)bizType && c.SourceBillId == purEntryRe.PurEntryRe_ID);
+                                        if (ReceivablePayable4 != null)
+                                        {
+                                            ReceivablePayable4.DocumentDate = purEntryRe.Created_at.Value;
+                                            ReceivablePayable4.BusinessDate = purEntryRe.ReturnDate;
+                                        }
+                                    }
+                                    break;
+                                case BizType.维修工单:
+                                    var RepairOrder = MainForm.Instance.AppContext.Db.Queryable<tb_AS_RepairOrder>()
+                                        .Where(c => ids.Contains(c.RepairOrderID))
+                                        .ToList();
+
+                                    foreach (var repairOrder in RepairOrder)
+                                    {
+                                        var ReceivablePayable4 = ReceivablePayables.FirstOrDefault(c => c.SourceBizType == (int)bizType && c.SourceBillId == repairOrder.RepairOrderID);
+                                        if (ReceivablePayable4 != null)
+                                        {
+                                            ReceivablePayable4.DocumentDate = repairOrder.Created_at.Value;
+                                            ReceivablePayable4.BusinessDate = repairOrder.RepairStartDate;
+                                        }
+                                    }
+                                    break;
+                                case BizType.销售价格调整单:
+                                case BizType.采购价格调整单:
+                                    var Adjustment = MainForm.Instance.AppContext.Db.Queryable<tb_FM_PriceAdjustment>()
+                                        .Where(c => ids.Contains(c.AdjustId))
+                                        .ToList();
+
+                                    foreach (var adjustment in Adjustment)
+                                    {
+                                        var ReceivablePayable4 = ReceivablePayables.FirstOrDefault(c => c.SourceBizType == (int)bizType && c.SourceBillId == adjustment.AdjustId);
+                                        if (ReceivablePayable4 != null)
+                                        {
+                                            ReceivablePayable4.DocumentDate = adjustment.Created_at.Value;
+                                            ReceivablePayable4.BusinessDate = adjustment.AdjustDate;
+                                        }
+                                    }
+                                    break;
+                                case BizType.采购退货入库:
+                                    var PurReturnEntry = MainForm.Instance.AppContext.Db.Queryable<tb_PurReturnEntry>()
+                                        .Where(c => ids.Contains(c.PurReEntry_ID))
+                                        .ToList();
+
+                                    foreach (var purReturnEntry in PurReturnEntry)
+                                    {
+                                        var ReceivablePayable4 = ReceivablePayables.FirstOrDefault(c => c.SourceBizType == (int)bizType && c.SourceBillId == purReturnEntry.PurReEntry_ID);
+                                        if (ReceivablePayable4 != null)
+                                        {
+                                            ReceivablePayable4.DocumentDate = purReturnEntry.Created_at.Value;
+                                            ReceivablePayable4.BusinessDate = purReturnEntry.BillDate;//
+                                        }
+                                    }
+                                    break;
+
+                                default:
+                                    break;
+                            }
+
+                        }
+
+
+
+
+                        //创建时间
+                        if (chkTestMode.Checked)
+                        {
+                            richTextBoxLog.AppendText($"应收付单据{ReceivablePayables.Count}个,日期没有，要补上== " + "\r\n");
+                        }
+                        else
+                        {
+                            int totalamountCounter = await MainForm.Instance.AppContext.Db.Updateable(ReceivablePayables).UpdateColumns(t => new { t.DocumentDate, t.BusinessDate }).ExecuteCommandAsync();
+                            richTextBoxLog.AppendText($"应收付单据{ReceivablePayables.Count}个,日期，修复成功  " + "\r\n");
+                        }
+
+                        #endregion
+
+                    }
+
+                }
 
                 if (treeView1.SelectedNode.Text == "采购入库单价格修复")
                 {

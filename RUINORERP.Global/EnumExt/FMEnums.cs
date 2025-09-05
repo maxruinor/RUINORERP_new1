@@ -304,7 +304,8 @@ namespace RUINORERP.Global.EnumExt
     /// </summary>
     public enum AccountType
     {
-        银行账户对公 = 1,
+        银行账户对公普票 = 0,
+        银行账户对公专票 = 1,
         银行账户对私 = 2,
         现金账户 = 3,
         微信账户 = 4,

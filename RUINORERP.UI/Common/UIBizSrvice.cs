@@ -1555,7 +1555,7 @@ namespace RUINORERP.UI.Common
         /// <param name="InvisibleCols">系统硬编码不可见和权限设置的不可见</param>
         /// <param name="DefaultHideCols">系统硬编码不可见和权限设置的不可见</param>
         /// <returns></returns>
-        public static  List<SGColDisplayHandler> SetCustomSourceGrid(SourceGridDefine gridDefine,
+        public static List<SGColDisplayHandler> SetCustomSourceGrid(SourceGridDefine gridDefine,
             tb_MenuInfo CurMenuInfo,
             HashSet<string> InvisibleCols = null,
             HashSet<string> DefaultHideCols = null,
@@ -1587,7 +1587,7 @@ namespace RUINORERP.UI.Common
                 menuPersonalization.UserPersonalizedID = userPersonalized.UserPersonalizedID;
                 menuPersonalization.QueryConditionCols = 4;//查询条件显示的列数 默认值
                 userPersonalized.tb_UIMenuPersonalizations.Add(menuPersonalization);
-                 MainForm.Instance.AppContext.Db.Insertable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteReturnEntity();
+                MainForm.Instance.AppContext.Db.Insertable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteReturnEntity();
             }
 
 
@@ -1691,7 +1691,7 @@ namespace RUINORERP.UI.Common
                 //});
 
 
-                 SaveGridSettingsAsync(menuPersonalization, GridSetting, SaveTargetColumnDisplays ?? originalColumnDisplays);
+                SaveGridSettingsAsync(menuPersonalization, GridSetting, SaveTargetColumnDisplays ?? originalColumnDisplays);
 
             }
             return originalColumnDisplays;
@@ -1871,21 +1871,29 @@ namespace RUINORERP.UI.Common
                 columnInfos.Add(sgdefine.grid.Columns[i]);
             }
 
+
+
             //放在后面
             List<ColumnInfo> OtherColumnInfos = new List<ColumnInfo>();
 
-            //根据这些重新更新ColumnDisplays的顺序
+            //根据这些重新更新ColumnDisplays的顺序,所以清空重新设置。但是要排除特殊的 选择列 和 项所以再加回来
             sgdefine.grid.Columns.Clear();
+            foreach (var col in columnInfos)
+            {
+                if (col.Tag is SGDefineColumnItem columnItem)
+                {
+                    if (columnItem.ColCaption == "项" || columnItem.ColCaption == "选择")
+                    {
+                        sgdefine.grid.Columns.Add(col);
+                    }
+
+                }
+            }
+
+      
 
             for (int i = 0; i < ColumnDisplays.Count; i++)
             {
-                //先处理掉 项 和 选择
-                if (ColumnDisplays[i].ColCaption == "项" || ColumnDisplays[i].ColCaption == "选择")
-                {
-                    var colInfoItem = columnInfos.FirstOrDefault(c => c.Tag as SGDefineColumnItem != null && c.Tag is SGDefineColumnItem columnItem && columnItem.ColName == ColumnDisplays[i].ColName);
-                    sgdefine.grid.Columns.Add(colInfoItem);
-                    continue;
-                }
                 var colInfo = columnInfos.FirstOrDefault(c => c.Tag as SGDefineColumnItem != null
                 && c.Tag is SGDefineColumnItem columnItem
                 && columnItem.BelongingObjectType != null
@@ -1900,13 +1908,22 @@ namespace RUINORERP.UI.Common
                 }
                 else
                 {
-                    OtherColumnInfos.Add(sgdefine.grid.Columns[i]);
+                    // 正确的未匹配列处理逻辑
+                    var unmatchedCol = columnInfos.FirstOrDefault(c =>
+                        c.Tag is SGDefineColumnItem columnItem &&
+                        columnItem.ColName == ColumnDisplays[i].ColName);
+
+                    if (unmatchedCol != null)
+                    {
+                        OtherColumnInfos.Add(unmatchedCol); // ← 从columnInfos中查找，而不是sgdefine.grid.Columns[i]
+                    }
+                    //OtherColumnInfos.Add(sgdefine.grid.Columns[i]);
                 }
             }
 
             foreach (var item in OtherColumnInfos)
             {
-                if (item==null)
+                if (item == null)
                 {
                     continue;
                 }

@@ -197,7 +197,7 @@ namespace RUINORERP.UI
             logger = _logger;
             _main = this;
             // 移除禁用跨线程检查的代码，这是不安全的做法
-            // System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+            System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
 
             kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
             kryptonDockableWorkspace1.ShowMaximizeButton = false;

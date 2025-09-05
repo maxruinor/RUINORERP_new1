@@ -63,6 +63,19 @@ namespace RUINORERP.UI.BI
             cmbTargetTable.SelectedIndexChanged += CmbTargetTable_SelectedIndexChanged;
             cmbJoinField.SelectedIndexChanged += CmbJoinField_SelectedIndexChanged;
             btnGenerateFilterClause.Click += BtnGenerateFilterClause_Click;
+            
+            // 初始化操作符下拉列表
+            cmbOperator.Items.AddRange(new object[] {
+                "=",
+                "<>",
+                ">",
+                "<",
+                ">=",
+                "<=",
+                "LIKE",
+                "IN"
+            });
+            cmbOperator.SelectedIndex = 0;
         }
 
         /// <summary>
@@ -497,6 +510,22 @@ namespace RUINORERP.UI.BI
                     if (!_smartRuleHelper.ValidateFilterClause(txtFilterClause.Text, out string errorMessage))
                     {
                         MessageBox.Show("过滤条件无效: " + errorMessage, "验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+                
+                // 验证关联配置
+                if (chkIsJoinRequired.Checked)
+                {
+                    if (string.IsNullOrEmpty(txtJoinTable.Text))
+                    {
+                        MessageBox.Show("请选择关联表", "验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    
+                    if (string.IsNullOrEmpty(txtJoinOnClause.Text))
+                    {
+                        MessageBox.Show("请输入关联条件", "验证失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
                 }

@@ -217,7 +217,7 @@ namespace RUINORERP.UI.SysConfig
         /// <param name="e">事件参数</param>
         private async void NewSumDataGridView_删除行级权限(object sender, EventArgs e)
         {
-      
+
 
             // 获取当前选中的行
             if (newSumDataGridViewRowAuthPolicy.CurrentRow == null)
@@ -333,6 +333,7 @@ namespace RUINORERP.UI.SysConfig
         }
         private async void UCRoleAuthorization_Load(object sender, EventArgs e)
         {
+            UIBizSrvice.RequestCache<tb_RowAuthPolicy>();
             DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_P4RowAuthPolicyByRole));
             kryptonNavigator1.SelectedPageChanged += KryptonNavigator1_SelectedIndexChanged;
 

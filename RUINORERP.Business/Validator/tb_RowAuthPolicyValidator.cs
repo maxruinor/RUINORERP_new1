@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/29/2025 20:39:11
+// 时间：09/04/2025 14:48:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,6 +47,10 @@ namespace RUINORERP.Business
  RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.TargetEntity).MaximumMixedLength(100).WithMessage("查询实体:不能超过最大长度,100.");
  RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.TargetEntity).NotEmpty().WithMessage("查询实体:不能为空。");
 
+
+ RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.TargetTableJoinField).MaximumMixedLength(50).WithMessage("目标表关联字段:不能超过最大长度,50.");
+
+ RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.JoinTableJoinField).MaximumMixedLength(50).WithMessage("关联表关联字段:不能超过最大长度,50.");
 
  RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.JoinTable).MaximumMixedLength(100).WithMessage("需要关联的表名:不能超过最大长度,100.");
 

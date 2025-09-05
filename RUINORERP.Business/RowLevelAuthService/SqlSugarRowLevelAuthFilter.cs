@@ -87,8 +87,17 @@ namespace RUINORERP.Business.RowLevelAuthService
                     return query;
                 }
 
-                // 使用SqlSugar的SubQuery方法构建EXISTS查询
-                return query.Where($"EXISTS ({BuildSqlSugarExistsQuery(joinInfo)})");
+                // 使用解析的信息构建正确的EXISTS查询
+                string mainTableName = GetTableName(joinInfo.MainEntityType);
+                string relatedTableName = GetTableName(joinInfo.RelatedEntityType);
+                
+                // 构建正确的EXISTS子查询SQL
+                string subQuerySql = $"SELECT 1 FROM {relatedTableName} jt " +
+                                   $"WHERE jt.{joinInfo.MainTableField} = {mainTableName}.{joinInfo.MainTableField} " +
+                                   $"AND jt.{joinInfo.FilterField} {joinInfo.FilterOperator} '{joinInfo.FilterValue}'";
+
+                // 使用SqlSugar的Where方法应用EXISTS查询
+                return query.Where($"EXISTS ({subQuerySql})");
             }
             catch (Exception ex)
             {
@@ -105,7 +114,8 @@ namespace RUINORERP.Business.RowLevelAuthService
             try
             {
                 // 使用正则表达式解析子查询
-                var pattern = @"FROM\s+(\w+)\s+(\w+)\s+WHERE\s+([\w\.]+)\s*=\s*([\w\.]+)\s+AND\s+\(?([\w\.]+)\s*([=<>]+)\s*'?([^']+)'?\)?";
+                // 修复正则表达式，正确处理AND条件后的括号和值
+                var pattern = @"FROM\s+(\w+)\s+(\w+)\s+WHERE\s+([\w\.]+)\s*=\s*([\w\.]+)\s+AND\s+\(*([\w\.]+)\s*([=<>]+)\s*([^\s\)]+)";
                 var match = Regex.Match(subQuery, pattern, RegexOptions.IgnoreCase);
 
                 if (!match.Success)
@@ -122,7 +132,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 string relatedTableField = match.Groups[5].Value.Contains('.') ?
                     match.Groups[5].Value.Split('.')[1] : match.Groups[5].Value;
                 string filterOperator = match.Groups[6].Value;
-                string filterValue = match.Groups[7].Value;
+                string filterValue = match.Groups[7].Value.Trim('\'', '"'); // 去除引号
 
                 // 获取主实体类型
                 Type mainEntityType = typeof(T);
@@ -161,9 +171,10 @@ namespace RUINORERP.Business.RowLevelAuthService
             try
             {
                 // 构建子查询SQL
-                string subQuerySql = $"SELECT 1 FROM {GetTableName(joinInfo.RelatedEntityType)} " +
-                                    $"WHERE {joinInfo.MainTableField} = {joinInfo.RelatedTableField} " +
-                                    $"AND {joinInfo.FilterField} {joinInfo.FilterOperator} '{joinInfo.FilterValue}'";
+                // 修复字段引用，使用正确的表别名和字段
+                string subQuerySql = $"SELECT 1 FROM {GetTableName(joinInfo.RelatedEntityType)} jt " +
+                                    $"WHERE {joinInfo.MainTableField} = jt.{joinInfo.RelatedTableField} " +
+                                    $"AND jt.{joinInfo.FilterField} {joinInfo.FilterOperator} '{joinInfo.FilterValue}'";
 
                 _logger?.LogDebug("构建的EXISTS子查询: {SubQuerySql}", subQuerySql);
                 return subQuerySql;
@@ -193,8 +204,16 @@ namespace RUINORERP.Business.RowLevelAuthService
                     return query;
                 }
 
+                // 构建完整的IN查询条件
+                string mainTableName = GetTableName(inInfo.MainEntityType);
+                string relatedTableName = GetTableName(inInfo.RelatedEntityType);
+                
+                // 构建子查询SQL
+                string subQuerySql = $"SELECT {inInfo.SelectField} FROM {relatedTableName} jt " +
+                                   $"WHERE jt.{inInfo.FilterField} {inInfo.FilterOperator} '{inInfo.FilterValue}'";
+                
                 // 构建IN查询条件
-                string condition = $"{inInfo.MainTableField} IN ({BuildSqlSugarInQuery(inInfo)})";
+                string condition = $"{mainTableName}.{inInfo.MainTableField} IN ({subQuerySql})";
                 return query.Where(condition);
             }
             catch (Exception ex)
@@ -212,7 +231,8 @@ namespace RUINORERP.Business.RowLevelAuthService
             try
             {
                 // 使用正则表达式解析IN子查询
-                var pattern = @"SELECT\s+([\w\.]+)\s+FROM\s+(\w+)\s+WHERE\s+([\w\.]+)\s*([=<>]+)\s*'?([^']+)'?";
+                // 修复正则表达式，正确处理值部分
+                var pattern = @"SELECT\s+([\w\.]+)\s+FROM\s+(\w+)\s+WHERE\s+([\w\.]+)\s*([=<>]+)\s*([^\s\)]+)";
                 var match = Regex.Match(subQuery, pattern, RegexOptions.IgnoreCase);
 
                 if (!match.Success)
@@ -228,7 +248,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 string filterField = match.Groups[3].Value.Contains('.') ?
                     match.Groups[3].Value.Split('.')[1] : match.Groups[3].Value;
                 string filterOperator = match.Groups[4].Value;
-                string filterValue = match.Groups[5].Value;
+                string filterValue = match.Groups[5].Value.Trim('\'', '"'); // 去除引号
 
                 // 获取主实体类型
                 Type mainEntityType = typeof(T);
@@ -266,8 +286,8 @@ namespace RUINORERP.Business.RowLevelAuthService
             try
             {
                 // 构建子查询SQL
-                string subQuerySql = $"SELECT {inInfo.SelectField} FROM {GetTableName(inInfo.RelatedEntityType)} " +
-                                    $"WHERE {inInfo.FilterField} {inInfo.FilterOperator} '{inInfo.FilterValue}'";
+                string subQuerySql = $"SELECT {inInfo.SelectField} FROM {GetTableName(inInfo.RelatedEntityType)} jt " +
+                                    $"WHERE jt.{inInfo.FilterField} {inInfo.FilterOperator} '{inInfo.FilterValue}'";
 
                 _logger?.LogDebug("构建的IN子查询: {SubQuerySql}", subQuerySql);
                 return subQuerySql;
@@ -439,16 +459,47 @@ namespace RUINORERP.Business.RowLevelAuthService
     /// <summary>
     /// EXISTS连接信息
     /// </summary>
-    public class ExistsJoinInfo
-    {
-        public Type MainEntityType { get; set; }
-        public Type RelatedEntityType { get; set; }
-        public string MainTableField { get; set; }
-        public string RelatedTableField { get; set; }
-        public string FilterField { get; set; }
-        public string FilterOperator { get; set; }
-        public string FilterValue { get; set; }
-    }
+/// <summary>
+/// 存在连接信息类，用于描述实体间存在关系的连接信息
+/// </summary>
+public class ExistsJoinInfo
+{
+    /// <summary>
+    /// 获取或设置主实体类型
+    /// </summary>
+    public Type MainEntityType { get; set; }
+    
+    /// <summary>
+    /// 获取或设置关联实体类型
+    /// </summary>
+    public Type RelatedEntityType { get; set; }
+    
+    /// <summary>
+    /// 获取或设置主表字段名
+    /// </summary>
+    public string MainTableField { get; set; }
+    
+    /// <summary>
+    /// 获取或设置关联表字段名
+    /// </summary>
+    public string RelatedTableField { get; set; }
+    
+    /// <summary>
+    /// 获取或设置过滤字段名
+    /// </summary>
+    public string FilterField { get; set; }
+    
+    /// <summary>
+    /// 获取或设置过滤操作符
+    /// </summary>
+    public string FilterOperator { get; set; }
+    
+    /// <summary>
+    /// 获取或设置过滤值
+    /// </summary>
+    public string FilterValue { get; set; }
+}
+
 
     /// <summary>
     /// IN连接信息

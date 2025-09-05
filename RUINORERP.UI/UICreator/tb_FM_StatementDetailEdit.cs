@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:14
+// 时间：09/04/2025 18:02:22
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,6 +47,8 @@ namespace RUINORERP.UI
         
         
         
+        
+        
 
          }
 /*
@@ -57,6 +59,8 @@ namespace RUINORERP.UI
                      entity.StatementId = Int64.Parse(txtStatementId.Text);
                         entity.ARAPId = Int64.Parse(txtARAPId.Text);
                         entity.ReceivePaymentType = Int32.Parse(txtReceivePaymentType.Text);
+                        entity.DocumentDate = DateTime.Parse(txtDocumentDate.Text);
+                        entity.BusinessDate = DateTime.Parse(txtBusinessDate.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
                         entity.IncludedLocalAmount = Decimal.Parse(txtIncludedLocalAmount.Text);
@@ -80,6 +84,8 @@ namespace RUINORERP.UI
                        // DataBindingHelper.BindData4Cmb<tb_FM_Statement>(entity, k => k.StatementId, v=>v.XXNAME, cmbStatementId);
           // DataBindingHelper.BindData4Cmb<tb_FM_ReceivablePayable>(entity, k => k.ARAPId, v=>v.XXNAME, cmbARAPId);
            DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.ReceivePaymentType, txtReceivePaymentType, BindDataType4TextBox.Qty,false);
+           DataBindingHelper.BindData4DataTime<tb_FM_StatementDetail>(entity, t => t.DocumentDate, dtpDocumentDate,false);
+           DataBindingHelper.BindData4DataTime<tb_FM_StatementDetail>(entity, t => t.BusinessDate, dtpBusinessDate,false);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_StatementDetail>(entity, t => t.IncludedLocalAmount.ToString(), txtIncludedLocalAmount, BindDataType4TextBox.Money,false);

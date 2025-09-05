@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/20/2025 16:08:13
+// 时间：09/04/2025 18:02:21
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -60,6 +60,19 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private string _ARAPNos;
+        /// <summary>
+        /// 应收付单号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ARAPNos",ColDesc = "应收付单号")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "ARAPNos",Length=1000,IsNullable = true,ColumnDescription = "应收付单号" )]
+        public string ARAPNos 
+        { 
+            get{return _ARAPNos;}
+            set{SetProperty(ref _ARAPNos, value);}
+        }
+     
+
         private long? _Account_id;
         /// <summary>
         /// 公司账户
@@ -98,6 +111,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _PayeeAccountNo;}
             set{SetProperty(ref _PayeeAccountNo, value);}
+        }
+     
+
+        private int _ReceivePaymentType;
+        /// <summary>
+        /// 收付类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "ReceivePaymentType",IsNullable = false,ColumnDescription = "收付类型" )]
+        public int ReceivePaymentType 
+        { 
+            get{return _ReceivePaymentType;}
+            set{SetProperty(ref _ReceivePaymentType, value);}
         }
      
 

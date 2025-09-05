@@ -31,6 +31,7 @@ using RUINORERP.Business.Security;
 using AutoMapper;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Business
 {
@@ -478,7 +479,49 @@ namespace RUINORERP.Business
                 return rs;
             }
         }
+        public tb_ManufacturingOrder BuildManufacturingOrder(tb_FM_OtherExpense entity)
+        {
+            //其它费用收入支出 审核时 自动生成 收付款记录
+            tb_ManufacturingOrder MOrder = new tb_ManufacturingOrder();
+            MOrder = mapper.Map<tb_ManufacturingOrder>(entity);
+            MOrder.ApprovalResults = null;
+            MOrder.ApprovalStatus = (int)ApprovalStatus.未审核;
+            MOrder.Approver_at = null;
+            MOrder.Approver_by = null;
+            MOrder.PrintStatus = 0;
+            MOrder.ActionStatus = ActionStatus.新增;
+            MOrder.ApprovalOpinions = "";
+            MOrder.Modified_at = null;
+            MOrder.Modified_by = null;
+            //0  支出  1为收入
+             
+            tb_FM_PaymentRecordDetail paymentRecordDetail = new tb_FM_PaymentRecordDetail();
+            #region 明细 
 
+
+            paymentRecordDetail.SourceBillNo = entity.ExpenseNo;
+            paymentRecordDetail.SourceBilllId = entity.ExpenseMainID;
+            if (entity.Currency_ID.HasValue)
+            {
+                paymentRecordDetail.Currency_ID = entity.Currency_ID.GetValueOrDefault();
+            }
+            else
+            {
+                paymentRecordDetail.Currency_ID = _appContext.BaseCurrency.Currency_ID;
+            }
+
+            
+            //支出不用负数。后面会通过 ReceivePaymentType
+            paymentRecordDetail.LocalAmount = entity.TotalAmount;
+            #endregion
+
+            //一单就一行时才这样
+            
+     
+            BusinessHelper.Instance.InitEntity(MOrder);
+    
+            return MOrder;
+        }
 
         public async override Task<List<T>> GetPrintDataSource(long MainID)
         {

@@ -597,7 +597,47 @@ namespace RUINORERP.UI.PSI.PUR
             base.BindData(entity);
         }
 
-     
+        // 忽略属性配置
+        // 重写忽略属性配置
+        protected override IgnorePropertyConfiguration ConfigureIgnoreProperties()
+        {
+            return base.ConfigureIgnoreProperties()
+                // 主表忽略的属性
+                .Ignore<tb_PurOrder>(
+                    e => e.PurOrder_ID,
+                    e => e.PurOrderNo,
+                    e => e.TotalQty,
+                    e => e.TotalUndeliveredQty,
+                    e => e.TotalTaxAmount,
+                    e => e.ForeignTotalAmount,
+                    e => e.TotalAmount,
+                    e => e.TotalUntaxedAmount,
+                    e => e.DataStatus,
+                    e => e.ApprovalStatus,
+                    e => e.ApprovalResults,
+                    e => e.Approver_by,
+                    e => e.Approver_at,
+                    e => e.PrintStatus,
+                    e => e.ShipCost,
+                    e => e.ForeignShipCost,
+                    e => e.Deposit,
+                    e => e.ForeignDeposit)
+                // 明细表忽略的属性
+                .Ignore<tb_PurOrderDetail>(
+                    e => e.PurOrder_ChildID,
+                    e => e.DeliveredQuantity,
+                    e => e.UndeliveredQty,
+                    e => e.TotalReturnedQty,
+                    e => e.SubtotalAmount,
+                    e => e.SubtotalUntaxedAmount,
+                    e => e.Quantity,
+                    e => e.TaxAmount,
+                    e => e.CustomizedCost,
+                    e => e.UntaxedCustomizedCost,
+                    e => e.TaxRate,
+                    e => e.IsGift);
+        }
+
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();

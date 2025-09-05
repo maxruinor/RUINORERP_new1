@@ -35,6 +35,8 @@ using RUINORERP.Business.StatusManagerService;
 using System.Drawing.Drawing2D;
 using System.Collections;
 using RUINORERP.Business.BizMapperService;
+using ZXing;
+using RUINORERP.Business.Processor;
 
 namespace RUINORERP.Business
 {
@@ -487,7 +489,9 @@ namespace RUINORERP.Business
 
             //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-
+            payable.BusinessDate=entity.RepairStartDate;
+            payable.DocumentDate=entity.Created_at.Value;
+            
             payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
 
             payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
@@ -597,6 +601,8 @@ namespace RUINORERP.Business
             payable.SourceBillNo = entity.ReturnNo;
             payable.SourceBillId = entity.SaleOutRe_ID;
             payable.SourceBizType = (int)BizType.销售退回单;
+            payable.BusinessDate = entity.ReturnDate.Value;
+            payable.DocumentDate = entity.Created_at.Value;
             if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
             {
                 payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
@@ -761,7 +767,8 @@ namespace RUINORERP.Business
                     payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
                 }
             }
-
+            payable.BusinessDate = entity.AdjustDate;
+            payable.DocumentDate = entity.Created_at.Value;
             payable.Currency_ID = entity.Currency_ID;
             var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
             if (obj != null && obj.ToString() != "System.Object")
@@ -2044,6 +2051,8 @@ namespace RUINORERP.Business
             {
                 payable.Account_id = entity.tb_saleorder.Account_id;
             }
+            payable.BusinessDate = entity.OutDate;
+            payable.DocumentDate = entity.Created_at.Value;
             payable.SourceBillNo = entity.SaleOutNo;
             payable.SourceBillId = entity.SaleOut_MainID;
             payable.SourceBizType = (int)BizType.销售出库单;
@@ -2273,7 +2282,8 @@ namespace RUINORERP.Business
             {
                 payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
             }
-
+            payable.BusinessDate = entity.EntryDate;
+            payable.DocumentDate = entity.Created_at.Value;
             //如果销售订单中付款方式不为空，并且是账期时
             if (entity.tb_purorder.Paytype_ID.HasValue && entity.tb_purorder.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
             {
@@ -2298,6 +2308,16 @@ namespace RUINORERP.Business
                 }
             }
             payable.ExchangeRate = entity.ExchangeRate;
+
+            //日期类型 业务意义    财务价值 使用场景
+            //业务发生日期 真实交易时间  确定收入成本期间 对账核心依据
+            //单据日期 债权债务确认  账期起始点 账龄计算
+            //到期日 资金计划依据  现金流管理 催款付款
+            //创建时间 系统操作时间  操作审计 内部控制
+            //审核时间 财务确认时间  审批流程 责任追溯
+
+
+
 
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_PurEntryDetails);
@@ -2396,7 +2416,8 @@ namespace RUINORERP.Business
             payable.SourceBillNo = entity.PurReEntryNo;
             payable.SourceBillId = entity.PurReEntry_ID;
             payable.SourceBizType = (int)BizType.采购退货入库;
-
+            payable.BusinessDate = entity.BillDate;
+            payable.DocumentDate = entity.Created_at.Value;
             payable.DepartmentID = entity.DepartmentID;
 
             //采购就是付款
@@ -2516,7 +2537,8 @@ namespace RUINORERP.Business
             payable.SourceBizType = (int)BizType.采购退货单;
             //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
-
+            payable.BusinessDate = entity.ReturnDate;
+            payable.DocumentDate = entity.Created_at.Value;
             payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
             if (entity.Currency_ID.HasValue)
             {

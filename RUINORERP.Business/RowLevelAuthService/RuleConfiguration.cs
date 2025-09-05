@@ -1,4 +1,6 @@
 using System.Text.RegularExpressions;
+using RUINORERP.Business.BizMapperService;
+using System;
 
 namespace RUINORERP.Business.RowLevelAuthService
 {
@@ -28,6 +30,16 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// 支持{0}作为主表名称的占位符
         /// </summary>
         public string JoinOnClauseTemplate { get; set; }
+
+        /// <summary>
+        /// 目标表关联字段
+        /// </summary>
+        public string TargetTableJoinField { get; set; }
+
+        /// <summary>
+        /// 关联表关联字段
+        /// </summary>
+        public string JoinTableJoinField { get; set; }
 
         /// <summary>
         /// 过滤条件SQL子句
@@ -77,6 +89,59 @@ namespace RUINORERP.Business.RowLevelAuthService
             // 过滤条件不能为空
             if (string.IsNullOrEmpty(FilterClause))
                 return false;
+
+            // 如果需要关联，检查关联字段配置
+            if (IsJoinRequired)
+            {
+                // 检查目标表关联字段和关联表关联字段是否都已配置
+                if (string.IsNullOrEmpty(TargetTableJoinField) || string.IsNullOrEmpty(JoinTableJoinField))
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 验证规则配置是否与指定的实体信息匹配
+        /// </summary>
+        /// <param name="entityInfo">实体信息</param>
+        /// <param name="entityInfoService">实体信息服务</param>
+        /// <returns>配置是否有效</returns>
+        public bool IsValidForEntity(EntityInfo entityInfo, IEntityInfoService entityInfoService)
+        {
+            // 首先执行基本验证
+            if (!IsValid())
+                return false;
+
+            // 如果不需要关联表，则直接返回true
+            if (!IsJoinRequired)
+                return true;
+
+            // 检查目标表是否包含目标表关联字段
+            if (entityInfo != null && !string.IsNullOrEmpty(TargetTableJoinField))
+            {
+                var mainTableField = entityInfo.GetField(TargetTableJoinField);
+                if (mainTableField == null)
+                {
+                    // 字段不存在于目标表中
+                    return false;
+                }
+            }
+
+            // 检查关联表是否包含关联表关联字段
+            if (!string.IsNullOrEmpty(JoinTable) && !string.IsNullOrEmpty(JoinTableJoinField))
+            {
+                var joinEntityInfo = entityInfoService.GetEntityInfoByTableName(JoinTable);
+                if (joinEntityInfo != null)
+                {
+                    var joinTableField = joinEntityInfo.GetField(JoinTableJoinField);
+                    if (joinTableField == null)
+                    {
+                        // 字段不存在于关联表中
+                        return false;
+                    }
+                }
+            }
 
             return true;
         }

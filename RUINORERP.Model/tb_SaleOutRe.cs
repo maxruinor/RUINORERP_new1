@@ -314,6 +314,7 @@ namespace RUINORERP.Model
         private DateTime? _ReturnDate;
         /// <summary>
         /// 退货日期
+        /// 因为建退货时。可能并不知道什么时候退回来
         /// </summary>
         [AdvQueryAttribute(ColName = "ReturnDate", ColDesc = "退货日期")]
         [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType = "DateTime", ColumnName = "ReturnDate", IsNullable = true, ColumnDescription = "退货日期")]

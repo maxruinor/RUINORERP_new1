@@ -31,6 +31,10 @@ namespace RUINORERP.UI.BI
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.txtJoinTableJoinField = new Krypton.Toolkit.KryptonTextBox();
+            this.lblJoinTableJoinField = new Krypton.Toolkit.KryptonLabel();
+            this.txtTargetTableJoinField = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTargetTableJoinField = new Krypton.Toolkit.KryptonLabel();
             this.txtPolicyDescription = new Krypton.Toolkit.KryptonTextBox();
             this.lblPolicyDescription = new Krypton.Toolkit.KryptonLabel();
             this.chkIsEnabled = new Krypton.Toolkit.KryptonCheckBox();
@@ -76,6 +80,10 @@ namespace RUINORERP.UI.BI
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.txtJoinTableJoinField);
+            this.kryptonPanel1.Controls.Add(this.lblJoinTableJoinField);
+            this.kryptonPanel1.Controls.Add(this.txtTargetTableJoinField);
+            this.kryptonPanel1.Controls.Add(this.lblTargetTableJoinField);
             this.kryptonPanel1.Controls.Add(this.txtPolicyDescription);
             this.kryptonPanel1.Controls.Add(this.lblPolicyDescription);
             this.kryptonPanel1.Controls.Add(this.chkIsEnabled);
@@ -103,6 +111,36 @@ namespace RUINORERP.UI.BI
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(516, 433);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // txtJoinTableJoinField
+            // 
+            this.txtJoinTableJoinField.Location = new System.Drawing.Point(142, 302);
+            this.txtJoinTableJoinField.Name = "txtJoinTableJoinField";
+            this.txtJoinTableJoinField.Size = new System.Drawing.Size(253, 23);
+            this.txtJoinTableJoinField.TabIndex = 26;
+            // 
+            // lblJoinTableJoinField
+            // 
+            this.lblJoinTableJoinField.Location = new System.Drawing.Point(35, 302);
+            this.lblJoinTableJoinField.Name = "lblJoinTableJoinField";
+            this.lblJoinTableJoinField.Size = new System.Drawing.Size(99, 20);
+            this.lblJoinTableJoinField.TabIndex = 25;
+            this.lblJoinTableJoinField.Values.Text = "关联表关联字段";
+            // 
+            // txtTargetTableJoinField
+            // 
+            this.txtTargetTableJoinField.Location = new System.Drawing.Point(142, 270);
+            this.txtTargetTableJoinField.Name = "txtTargetTableJoinField";
+            this.txtTargetTableJoinField.Size = new System.Drawing.Size(253, 23);
+            this.txtTargetTableJoinField.TabIndex = 24;
+            // 
+            // lblTargetTableJoinField
+            // 
+            this.lblTargetTableJoinField.Location = new System.Drawing.Point(35, 270);
+            this.lblTargetTableJoinField.Name = "lblTargetTableJoinField";
+            this.lblTargetTableJoinField.Size = new System.Drawing.Size(99, 20);
+            this.lblTargetTableJoinField.TabIndex = 23;
+            this.lblTargetTableJoinField.Values.Text = "目标表关联字段";
             // 
             // txtPolicyDescription
             // 
@@ -296,5 +334,9 @@ namespace RUINORERP.UI.BI
         private Krypton.Toolkit.KryptonLabel lblTargetEntity;
         private Krypton.Toolkit.KryptonTextBox txtTargetTable;
         private Krypton.Toolkit.KryptonLabel lblTargetTable;
+        private Krypton.Toolkit.KryptonTextBox txtJoinTableJoinField;
+        private Krypton.Toolkit.KryptonLabel lblJoinTableJoinField;
+        private Krypton.Toolkit.KryptonTextBox txtTargetTableJoinField;
+        private Krypton.Toolkit.KryptonLabel lblTargetTableJoinField;
     }
 }

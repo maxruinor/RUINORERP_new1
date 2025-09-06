@@ -399,9 +399,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
             }
             Type tableType = _mapper.GetEntityType(bizType);
-            if (tableType==null)
+            if (tableType == null)
             {
-
+                throw new Exception($"工作台中，对应的业务没有注册对应的实体，:{bizType.ToString()}");
             }
             var bizEntity = Activator.CreateInstance(tableType);
             TreeNode parentNode = new TreeNode(bizType.ToString());
@@ -948,11 +948,15 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     yield return BizType.应付款单;
                     break;
                 case 待办事项.应收款单:
+                    yield return BizType.对账单;
                     yield return BizType.应收款单;
                     break;
                 case 待办事项.收款对账单:
+                    yield return BizType.对账单;
                     yield return BizType.收款对账单;
                     break;
+                //case 待办事项.对账单:
+                //    break;
                 case 待办事项.付款对账单:
                     yield return BizType.付款对账单;
                     break;

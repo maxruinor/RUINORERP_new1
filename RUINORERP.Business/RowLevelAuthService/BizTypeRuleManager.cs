@@ -51,11 +51,78 @@ namespace RUINORERP.Business.RowLevelAuthService
                     RowLevelAuthRule.AllData 
                 });
 
+            // 借出归还相关业务类型
+            RegisterRulesForBizTypes(
+                new List<BizType> { BizType.借出单, BizType.归还单 },
+                new List<RowLevelAuthRule> { 
+                    RowLevelAuthRule.OnlyCustomer, 
+                    RowLevelAuthRule.OnlySupplier, 
+                    RowLevelAuthRule.OnlyOwner,
+                    RowLevelAuthRule.AllData 
+                });
+
             // 其他出入库相关业务类型
             RegisterRulesForBizTypes(
                 new List<BizType> { BizType.其他入库单, BizType.其他出库单 },
                 new List<RowLevelAuthRule> { 
                     RowLevelAuthRule.AllDataForOtherInOut, 
+                    RowLevelAuthRule.AllData 
+                });
+            
+            // 财务相关业务类型
+            RegisterRulesForBizTypes(
+                new List<BizType> { BizType.收款单, BizType.付款单, BizType.预收款单, BizType.预付款单 },
+                new List<RowLevelAuthRule> { 
+                    RowLevelAuthRule.OnlyCustomer, 
+                    RowLevelAuthRule.OnlySupplier, 
+                    RowLevelAuthRule.OnlyReceivable, 
+                    RowLevelAuthRule.OnlyPayable, 
+                    RowLevelAuthRule.AllData 
+                });
+            
+            // 核销相关业务类型
+            RegisterRulesForBizTypes(
+                new List<BizType> { BizType.收款核销, BizType.付款核销 },
+                new List<RowLevelAuthRule> { 
+                    RowLevelAuthRule.OnlyCustomer, 
+                    RowLevelAuthRule.OnlySupplier, 
+                    RowLevelAuthRule.OnlyReceivable, 
+                    RowLevelAuthRule.OnlyPayable, 
+                    RowLevelAuthRule.AllData 
+                });
+            
+            // 价格调整相关业务类型
+            RegisterRulesForBizTypes(
+                new List<BizType> { BizType.销售价格调整单, BizType.采购价格调整单 },
+                new List<RowLevelAuthRule> { 
+                    RowLevelAuthRule.OnlyCustomer, 
+                    RowLevelAuthRule.OnlySupplier, 
+                    RowLevelAuthRule.AllData 
+                });
+            
+            // 售后相关业务类型
+            RegisterRulesForBizTypes(
+                new List<BizType> { BizType.售后申请单, BizType.售后交付单, BizType.维修工单, 
+                    BizType.维修领料单, BizType.维修入库单, BizType.报废单, BizType.售后借出单, BizType.售后归还单 },
+                new List<RowLevelAuthRule> { 
+                    RowLevelAuthRule.OnlyCustomer, 
+                    RowLevelAuthRule.AllData 
+                });
+            
+            // 生产相关业务类型
+            RegisterRulesForBizTypes(
+                new List<BizType> { BizType.制令单, BizType.生产计划单, BizType.生产领料单, BizType.生产退料单,
+                    BizType.生产补料单, BizType.缴库单, BizType.产品分割单, BizType.产品组合单, BizType.产品转换单 },
+                new List<RowLevelAuthRule> { 
+                    RowLevelAuthRule.OnlyOwner,
+                    RowLevelAuthRule.AllData 
+                });
+            
+            // 返工相关业务类型
+            RegisterRulesForBizTypes(
+                new List<BizType> { BizType.返工退库单, BizType.返工入库单 },
+                new List<RowLevelAuthRule> { 
+                    RowLevelAuthRule.OnlyOwner,
                     RowLevelAuthRule.AllData 
                 });
         }

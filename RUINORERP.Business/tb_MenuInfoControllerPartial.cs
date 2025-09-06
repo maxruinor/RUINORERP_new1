@@ -19,6 +19,7 @@ using FluentValidation.Results;
 using RUINORERP.Services;
 using SqlSugar;
 using FluentValidation;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.Business
 {
@@ -55,7 +56,7 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public bool CheckMenuInitialized()
         {
-            bool rs =   _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>().Any();
+            bool rs = _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>().Any();
             return rs;
         }
 
@@ -137,7 +138,27 @@ namespace RUINORERP.Business
             rs = await _Itb_MenuAssemblyInfoServices.DeleteById(id);
             return rs;
         }
-
+        public async Task<bool> DeleteByNavAsync(tb_MenuInfo model)
+        {
+            tb_MenuInfo entity = model as tb_MenuInfo;
+            bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_MenuInfo>(m => m.MenuID == entity.MenuID)
+                       .Include(m => m.tb_UIMenuPersonalizations).ThenInclude(m => m.tb_UIGridSettings)
+                       .Include(m => m.tb_UIMenuPersonalizations).ThenInclude(m => m.tb_UIInputDataFields)
+                       .Include(m => m.tb_UIMenuPersonalizations).ThenInclude(m => m.tb_UIQueryConditions)
+                       .Include(m => m.tb_ButtonInfos)
+                       .Include(m => m.tb_FieldInfos)
+                       .Include(m => m.tb_P4Buttons).ThenInclude(c => c.tb_buttoninfo)
+                       .Include(m => m.tb_P4Fields).ThenInclude(m => m.tb_fieldinfo)
+                       .Include(m => m.tb_P4RowAuthPolicyByRoles)
+                       .Include(m => m.tb_P4Menus)
+                                       .ExecuteCommandAsync();
+            if (rs)
+            {
+                //////生成时暂时只考虑了一个主键的情况
+                MyCacheManager.Instance.DeleteEntityList<tb_MenuInfo>(model);
+            }
+            return rs;
+        }
 
         public async Task<bool> AddFieldInfo(List<tb_FieldInfo> infos)
         {

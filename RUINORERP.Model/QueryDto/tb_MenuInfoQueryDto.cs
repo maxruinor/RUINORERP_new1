@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/13/2024 18:43:54
+// 时间：09/06/2025 15:41:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -73,12 +73,51 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private string _UIPropertyIdentifier;
+        /// <summary>
+        /// 注入业务基类
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UIPropertyIdentifier",ColDesc = "注入业务基类")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "UIPropertyIdentifier",Length=150,IsNullable = true,ColumnDescription = "注入业务基类" )]
+        public string UIPropertyIdentifier 
+        { 
+            get{return _UIPropertyIdentifier;}
+            set{SetProperty(ref _UIPropertyIdentifier, value);}
+        }
+     
+
+        private string _BizInterface;
+        /// <summary>
+        /// 注入业务基类
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BizInterface",ColDesc = "注入业务基类")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BizInterface",Length=150,IsNullable = true,ColumnDescription = "注入业务基类" )]
+        public string BizInterface 
+        { 
+            get{return _BizInterface;}
+            set{SetProperty(ref _BizInterface, value);}
+        }
+     
+
+        private string _BIBizBaseForm;
+        /// <summary>
+        /// 业务接口标识
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BIBizBaseForm",ColDesc = "业务接口标识")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BIBizBaseForm",Length=150,IsNullable = true,ColumnDescription = "业务接口标识" )]
+        public string BIBizBaseForm 
+        { 
+            get{return _BIBizBaseForm;}
+            set{SetProperty(ref _BIBizBaseForm, value);}
+        }
+     
+
         private string _BIBaseForm;
         /// <summary>
-        /// 注入基类
+        /// 注入框架基类
         /// </summary>
-        [AdvQueryAttribute(ColName = "BIBaseForm",ColDesc = "注入基类")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BIBaseForm",Length=100,IsNullable = true,ColumnDescription = "注入基类" )]
+        [AdvQueryAttribute(ColName = "BIBaseForm",ColDesc = "注入框架基类")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "BIBaseForm",Length=100,IsNullable = true,ColumnDescription = "注入框架基类" )]
         public string BIBaseForm 
         { 
             get{return _BIBaseForm;}
@@ -335,10 +374,10 @@ namespace RUINORERP.Model.QueryDto
 
         private string _DefaultLayout;
         /// <summary>
-        /// 
+        /// 菜单默认布局
         /// </summary>
-        [AdvQueryAttribute(ColName = "DefaultLayout",ColDesc = "")]
-        [SugarColumn(ColumnDataType = "text",SqlParameterDbType ="String",ColumnName = "DefaultLayout",Length=2147483647,IsNullable = true,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "DefaultLayout",ColDesc = "菜单默认布局")]
+        [SugarColumn(ColumnDataType = "text",SqlParameterDbType ="String",ColumnName = "DefaultLayout",Length=2147483647,IsNullable = true,ColumnDescription = "菜单默认布局" )]
         public string DefaultLayout 
         { 
             get{return _DefaultLayout;}

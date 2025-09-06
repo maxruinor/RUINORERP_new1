@@ -87,11 +87,12 @@ namespace RUINORERP.UI.BI
             {
                 MainForm.Instance.AppContext.SysConfig = list[0];
                 //财务模块。直接解析一下
-                #region FMconfig
+                #region 自定义类的配置
 
                 try
                 {
                     MainForm.Instance.AppContext.FMConfig = JsonConvert.DeserializeObject<FMConfiguration>(list[0].FMConfig);
+                    MainForm.Instance.AppContext.FunctionConfig = JsonConvert.DeserializeObject<FunctionConfiguration>(list[0].FunctionConfiguration);
                 }
                 catch (Exception)
                 {
@@ -99,7 +100,7 @@ namespace RUINORERP.UI.BI
                 }
 
                 #endregion
-
+         
             }
 
             return list.ToList();

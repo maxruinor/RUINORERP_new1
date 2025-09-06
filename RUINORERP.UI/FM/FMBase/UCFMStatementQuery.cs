@@ -47,6 +47,8 @@ using FastReport.DevComponents.DotNetBar.Controls;
 namespace RUINORERP.UI.FM
 {
     //对应单查询
+    [MenuAttrAssemblyInfo("对账单查询", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.对账管理, BizType.对账单)]
+    [SharedIdRequired]
     public partial class UCFMStatementQuery : BaseBillQueryMC<tb_FM_Statement, tb_FM_StatementDetail>
     {
         public UCFMStatementQuery()
@@ -95,40 +97,6 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.保存);
         }
 
-        #region 添加生成对账单
-
-        /// <summary>
-        /// 添加回收
-        /// </summary>
-        /// <returns></returns>
-        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
-        {
-            ToolStripButton toolStripButton生成对账单 = new System.Windows.Forms.ToolStripButton();
-            toolStripButton生成对账单.Text = "生成对账单";
-            toolStripButton生成对账单.Image = global::RUINORERP.UI.Properties.Resources.MakeSureCost;
-            toolStripButton生成对账单.ImageTransparentColor = System.Drawing.Color.Magenta;
-            toolStripButton生成对账单.Name = "生成对账单MakesureCost";
-            toolStripButton生成对账单.Visible = false;//默认隐藏
-            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton生成对账单);
-            toolStripButton生成对账单.ToolTipText = "生成对账单。";
-            toolStripButton生成对账单.Click += new System.EventHandler(this.toolStripButton生成对账单_Click);
-
-            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton生成对账单 };
-            this.BaseToolStrip.Items.AddRange(extendButtons);
-            return extendButtons;
-
-        }
-
-        private void toolStripButton生成对账单_Click(object sender, EventArgs e)
-        {
-
-
-
-        }
-
-
-        #endregion
-
 
 
         #region 转为收付款单
@@ -152,7 +120,6 @@ namespace RUINORERP.UI.FM
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为收付款单);
-            ContextClickList.Add(NewSumDataGridView_生成对账单);
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
@@ -245,11 +212,7 @@ namespace RUINORERP.UI.FM
 
 
 
-        //按客户生成对账单
-        private void NewSumDataGridView_生成对账单(object sender, EventArgs e)
-        {
-
-        }
+        
 
         public override void BuildSummaryCols()
         {

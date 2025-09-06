@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/04/2025 18:02:22
+// 时间：09/06/2025 15:41:54
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -152,13 +152,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime _StartDate;
+        private DateTime? _StartDate;
         /// <summary>
         /// 对账周期起
         /// </summary>
         [AdvQueryAttribute(ColName = "StartDate",ColDesc = "对账周期起")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "StartDate" ,IsNullable = false,ColumnDescription = "对账周期起" )]
-        public DateTime StartDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "StartDate" ,IsNullable = true,ColumnDescription = "对账周期起" )]
+        public DateTime? StartDate
         { 
             get{return _StartDate;}
             set{
@@ -166,13 +166,13 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime _EndDate;
+        private DateTime? _EndDate;
         /// <summary>
         /// 对账周期止
         /// </summary>
         [AdvQueryAttribute(ColName = "EndDate",ColDesc = "对账周期止")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "EndDate" ,IsNullable = false,ColumnDescription = "对账周期止" )]
-        public DateTime EndDate
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "EndDate" ,IsNullable = true,ColumnDescription = "对账周期止" )]
+        public DateTime? EndDate
         { 
             get{return _EndDate;}
             set{

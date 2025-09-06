@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：09/04/2025 18:02:20
+// 时间：09/06/2025 15:41:53
 // **************************************
 using System;
 using SqlSugar;
@@ -292,10 +292,12 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(ARAPId))]
         public virtual tb_FM_ReceivablePayable tb_fm_receivablepayable { get; set; }
 
+
         [SugarColumn(IsIgnore = true)]
         //[Browsable(false)] 打印报表时的数据源会不显示
         [Navigate(NavigateType.OneToOne, nameof(ExpenseType_id))]
         public virtual tb_FM_ExpenseType tb_fm_expensetype { get; set; }
+
 
 
         #endregion

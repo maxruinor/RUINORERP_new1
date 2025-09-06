@@ -357,7 +357,10 @@ namespace RUINORERP.Business.RowLevelAuthService
                 _logger.LogDebug("当前用户为超级管理员，跳过行级权限过滤");
                 return string.Empty;
             }
-
+            if (!_appContext.FunctionConfig.EnableRowLevelAuth)
+            {
+                return string.Empty;
+            }
             if (entityType == null)
             {
                 throw new ArgumentNullException(nameof(entityType), "实体类型不能为空");
@@ -405,7 +408,7 @@ namespace RUINORERP.Business.RowLevelAuthService
 
 
                 var rolePolicies = _appContext.CurrentRole.tb_P4RowAuthPolicyByRoles.Where(k => k.MenuID == menuId)
-                    .Select(c=>c.tb_rowauthpolicy)
+                    .Select(c => c.tb_rowauthpolicy)
                     .ToList();
 
 

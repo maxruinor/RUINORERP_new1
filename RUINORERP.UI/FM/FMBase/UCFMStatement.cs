@@ -58,6 +58,8 @@ namespace RUINORERP.UI.FM
     /// <summary>
     /// 应收应付对账单
     /// </summary>
+    [MenuAttrAssemblyInfo("对账单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.对账管理, BizType.对账单)]
+    [SharedIdRequired]
     public partial class UCFMStatement : BaseBillEditGeneric<tb_FM_Statement, tb_FM_StatementDetail>, IPublicEntityObject, IToolStripMenuInfoAuth
     {
         public UCFMStatement()
@@ -176,7 +178,7 @@ namespace RUINORERP.UI.FM
                 {
                     if (PaymentType == ReceivePaymentType.收款)
                     {
-                        entity.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款对账单);
+                        entity.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.对账单);
                     }
                     else
                     {

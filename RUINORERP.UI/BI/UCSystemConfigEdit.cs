@@ -73,7 +73,7 @@ namespace RUINORERP.UI.BI
             //有默认值
             DataBindingHelper.BindData4CheckBox<tb_SystemConfig>(SystemConfig, t => t.EnableFinancialModule, chkEnableFinancialModule, false);
 
-            #region FMconfig
+            #region 财务模块配置
             try
             {
                 fMConfiguration = JsonConvert.DeserializeObject<FMConfiguration>(SystemConfig.FMConfig);
@@ -104,13 +104,33 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnableAutoRefundOnOrderCancel, chkEnableAutoRefundOnOrderCancel, false);
             #endregion
 
+            #region 系统功能配置
+        
+            try
+            {
+                functionConfiguration = JsonConvert.DeserializeObject<FunctionConfiguration>(SystemConfig.FunctionConfiguration);
+            }
+            catch (Exception)
+            {
+
+            }
+
+            if (functionConfiguration == null)
+            {
+                functionConfiguration = new FunctionConfiguration();
+            }
+        
+            DataBindingHelper.BindData4CheckBox<FunctionConfiguration>(functionConfiguration, t => t.EnableRowLevelAuth, chkEnableRowLevelAuth, false);
+
+            #endregion
+
             base.BindData(entity);
         }
 
 
         FMConfiguration fMConfiguration = new FMConfiguration();
 
-
+        FunctionConfiguration functionConfiguration = new FunctionConfiguration();
         private void btnCancel_Click(object sender, EventArgs e)
         {
             bindingSourceEdit.CancelEdit();
@@ -126,11 +146,14 @@ namespace RUINORERP.UI.BI
 
                 //这里不能用上面的SystemConfig，丢失？ 引用没传到值？
                 // 更新JSON数据
-                var jsonData = JsonConvert.SerializeObject(fMConfiguration);
+                var fmjsonData = JsonConvert.SerializeObject(fMConfiguration);
+                var funjsonData = JsonConvert.SerializeObject(functionConfiguration);
                 if (bindingSourceEdit.Current is tb_SystemConfig sysconfig)
                 {
-                    sysconfig.FMConfig = jsonData;
+                    sysconfig.FMConfig = fmjsonData;
+                    sysconfig.FunctionConfiguration = funjsonData;
                 }
+
                 bindingSourceEdit.EndEdit();
                 this.DialogResult = DialogResult.OK;
                 this.Close();

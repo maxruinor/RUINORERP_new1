@@ -355,7 +355,9 @@ namespace RUINORERP.Business
                 case BizType.收款对账单:
                     rule = "{S:SKS}{D:yyMMdd}{redis:{S:收款对账单}{D:yyMM}/000}";
                     break;
-
+                case BizType.对账单:
+                    rule = "{S:PS}{D:yyMMdd}{redis:{S:对账单}{D:yyMM}/000}";
+                    break;
                 case BizType.损失确认单://Loss Shortage（损失）
                     rule = "{S:LO}{D:yyMMdd}{redis:{S:损失确认单}{D:yyMM}/00}";
                     break;

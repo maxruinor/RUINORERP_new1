@@ -3328,6 +3328,8 @@ namespace RUINORERP.UI
                    {
                        AppContext.SysConfig = config[0];
                        AppContext.FMConfig = JsonConvert.DeserializeObject<FMConfiguration>(config[0].FMConfig);
+                       AppContext.FunctionConfig = JsonConvert.DeserializeObject<FunctionConfiguration>(config[0].FunctionConfiguration);
+
                    }
                    var ctrBillNoRule = Startup.GetFromFac<tb_sys_BillNoRuleController<tb_sys_BillNoRule>>();
                    List<tb_sys_BillNoRule> BillNoRules = ctrBillNoRule.Query();

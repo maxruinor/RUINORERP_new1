@@ -30,6 +30,7 @@
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonGroupBox1 = new Krypton.Toolkit.KryptonGroupBox();
+            this.chkEnableAutoRefundOnOrderCancel = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAutoAuditPaymentable = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAutoAuditPrePayment = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnablePaymentAutoOffsetAP = new Krypton.Toolkit.KryptonCheckBox();
@@ -89,7 +90,7 @@
             this.kryptonCheckBox2 = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonCheckBox3 = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonCheckBox4 = new Krypton.Toolkit.KryptonCheckBox();
-            this.chkEnableAutoRefundOnOrderCancel = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkEnableRowLevelAuth = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -103,6 +104,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.chkEnableRowLevelAuth);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBox1);
             this.kryptonPanel1.Controls.Add(this.cmbFreightAllocationRules);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel10);
@@ -148,7 +150,7 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(1022, 636);
+            this.kryptonPanel1.Size = new System.Drawing.Size(1171, 752);
             this.kryptonPanel1.TabIndex = 0;
             // 
             // kryptonGroupBox1
@@ -176,6 +178,16 @@
             this.kryptonGroupBox1.Size = new System.Drawing.Size(335, 457);
             this.kryptonGroupBox1.TabIndex = 201;
             this.kryptonGroupBox1.Values.Heading = "财务模块配置";
+            // 
+            // chkEnableAutoRefundOnOrderCancel
+            // 
+            this.chkEnableAutoRefundOnOrderCancel.Checked = true;
+            this.chkEnableAutoRefundOnOrderCancel.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableAutoRefundOnOrderCancel.Location = new System.Drawing.Point(22, 319);
+            this.chkEnableAutoRefundOnOrderCancel.Name = "chkEnableAutoRefundOnOrderCancel";
+            this.chkEnableAutoRefundOnOrderCancel.Size = new System.Drawing.Size(218, 20);
+            this.chkEnableAutoRefundOnOrderCancel.TabIndex = 208;
+            this.chkEnableAutoRefundOnOrderCancel.Values.Text = "平台订单时，取消作废会自动退款";
             // 
             // chkAutoAuditPaymentable
             // 
@@ -475,7 +487,7 @@
             // kryptonLabel11
             // 
             this.kryptonLabel11.LabelStyle = Krypton.Toolkit.LabelStyle.TitleControl;
-            this.kryptonLabel11.Location = new System.Drawing.Point(60, 463);
+            this.kryptonLabel11.Location = new System.Drawing.Point(289, 641);
             this.kryptonLabel11.Name = "kryptonLabel11";
             this.kryptonLabel11.Size = new System.Drawing.Size(556, 29);
             this.kryptonLabel11.TabIndex = 28;
@@ -536,7 +548,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(365, 534);
+            this.btnCancel.Location = new System.Drawing.Point(594, 712);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 21;
@@ -545,7 +557,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(231, 534);
+            this.btnOk.Location = new System.Drawing.Point(460, 712);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 20;
@@ -676,21 +688,21 @@
             this.kryptonCheckBox4.TabIndex = 190;
             this.kryptonCheckBox4.Values.Text = "";
             // 
-            // chkEnableAutoRefundOnOrderCancel
+            // chkEnableRowLevelAuth
             // 
-            this.chkEnableAutoRefundOnOrderCancel.Checked = true;
-            this.chkEnableAutoRefundOnOrderCancel.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnableAutoRefundOnOrderCancel.Location = new System.Drawing.Point(22, 319);
-            this.chkEnableAutoRefundOnOrderCancel.Name = "chkEnableAutoRefundOnOrderCancel";
-            this.chkEnableAutoRefundOnOrderCancel.Size = new System.Drawing.Size(218, 20);
-            this.chkEnableAutoRefundOnOrderCancel.TabIndex = 208;
-            this.chkEnableAutoRefundOnOrderCancel.Values.Text = "平台订单时，取消作废会自动退款";
+            this.chkEnableRowLevelAuth.Checked = true;
+            this.chkEnableRowLevelAuth.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableRowLevelAuth.Location = new System.Drawing.Point(184, 461);
+            this.chkEnableRowLevelAuth.Name = "chkEnableRowLevelAuth";
+            this.chkEnableRowLevelAuth.Size = new System.Drawing.Size(153, 20);
+            this.chkEnableRowLevelAuth.TabIndex = 209;
+            this.chkEnableRowLevelAuth.Values.Text = "启用行级数据权限控制";
             // 
             // UCSystemConfigEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1022, 636);
+            this.ClientSize = new System.Drawing.Size(1171, 752);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCSystemConfigEdit";
             this.Text = "UCSystemConfigEdit";
@@ -774,5 +786,6 @@
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditPrePayment;
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditPaymentable;
         private Krypton.Toolkit.KryptonCheckBox chkEnableAutoRefundOnOrderCancel;
+        private Krypton.Toolkit.KryptonCheckBox chkEnableRowLevelAuth;
     }
 }

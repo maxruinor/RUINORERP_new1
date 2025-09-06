@@ -401,6 +401,23 @@ namespace RUINORERP.Model
                         }
         }
 
+
+        private string _FunctionConfiguration;
+        /// <summary>
+        /// 功能配置
+        /// </summary>
+        [AdvQueryAttribute(ColName = "FunctionConfiguration", ColDesc = "功能配置")]
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType = "String", ColumnName = "FunctionConfiguration", Length = 2147483647, IsNullable = false, ColumnDescription = "功能配置")]
+        public string FunctionConfiguration
+        {
+            get { return _FunctionConfiguration; }
+            set
+            {
+                SetProperty(ref _FunctionConfiguration, value);
+            }
+        }
+
+
         #endregion
 
         #region 扩展属性
@@ -411,8 +428,8 @@ namespace RUINORERP.Model
 
 
 
-//如果为false,则不可以。
-private bool PK_FK_ID_Check()
+        //如果为false,则不可以。
+        private bool PK_FK_ID_Check()
 {
   bool rs=true;
 return rs;

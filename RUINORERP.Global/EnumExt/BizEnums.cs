@@ -433,7 +433,7 @@ namespace RUINORERP.Global
 
         收款对账单 = 173,
         付款对账单 = 174,
-
+        对账单 = 175,
 
 
 

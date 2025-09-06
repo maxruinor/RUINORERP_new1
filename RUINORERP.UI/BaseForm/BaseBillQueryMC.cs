@@ -1006,6 +1006,11 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
+                if (!MainForm.Instance.AppContext.FunctionConfig.EnableRowLevelAuth)
+                {
+                    return;
+                }
+
                 // 获取行级权限服务
                 var rowAuthService = Startup.GetFromFac<IRowAuthService>();
                 if (rowAuthService == null)

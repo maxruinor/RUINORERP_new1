@@ -1782,24 +1782,6 @@
     <Compile Include="FM\OtherExpenseVoucher.Designer.cs">
       <DependentUpon>OtherExpenseVoucher.cs</DependentUpon>
     </Compile>
-    <Compile Include="FM\UCStatementCreatorByPurchaser.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FM\UCStatementCreatorByPurchaser.Designer.cs">
-      <DependentUpon>UCStatementCreatorByPurchaser.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FM\UCPaymentStatement.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FM\UCPaymentStatement.Designer.cs">
-      <DependentUpon>UCPaymentStatement.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FM\UCPaymentStatementQuery.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FM\UCPaymentStatementQuery.Designer.cs">
-      <DependentUpon>UCPaymentStatementQuery.cs</DependentUpon>
-    </Compile>
     <Compile Include="FM\UCProfitConfirmQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -1853,24 +1835,6 @@
     </Compile>
     <Compile Include="FM\UCLossConfirmQuery.Designer.cs">
       <DependentUpon>UCLossConfirmQuery.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FM\UCReceiptStatement.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FM\UCReceiptStatement.Designer.cs">
-      <DependentUpon>UCReceiptStatement.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FM\UCReceiptStatementQuery.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FM\UCReceiptStatementQuery.Designer.cs">
-      <DependentUpon>UCReceiptStatementQuery.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FM\UCStatementCreatorSaler.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="FM\UCStatementCreatorSaler.Designer.cs">
-      <DependentUpon>UCStatementCreatorSaler.cs</DependentUpon>
     </Compile>
     <Compile Include="FM\UCSalePriceAdjustment.cs">
       <SubType>UserControl</SubType>
@@ -3995,12 +3959,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCLossConfirmQuery.resx">
       <DependentUpon>UCLossConfirmQuery.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCReceiptStatementQuery.resx">
-      <DependentUpon>UCReceiptStatementQuery.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FM\UCStatementCreatorSaler.resx">
-      <DependentUpon>UCStatementCreatorSaler.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FM\UCReceivedSettledQuery.resx">
       <DependentUpon>UCReceivedSettledQuery.cs</DependentUpon>

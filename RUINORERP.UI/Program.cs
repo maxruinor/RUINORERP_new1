@@ -314,7 +314,7 @@ namespace RUINORERP.UI
         {
             // 初始化基础日志系统（最先执行）
             InitializeLogging();
-            
+
             // 单实例检查
             if (!CheckSingleInstance())
                 return;
@@ -796,7 +796,7 @@ namespace RUINORERP.UI
 
             // 记录详细错误日志
             RUINORERP.Common.Log4Net.Logger.Error("应用程序未处理的线程异常", e.Exception);
-
+            
             // 显示错误信息给用户
             string userMessage = string.Format("系统发生错误：{0}\r\n\r\n请更新到最新版本，如果无法解决，请联系管理员！\r\n时间：{1}",
                 e.Exception.Message, DateTime.Now.ToString());

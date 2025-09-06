@@ -129,7 +129,7 @@ namespace RUINORERP.Business.BizMapperService
 
                 // 付款申请（无明细）
                 SafeRegister<tb_FM_PaymentApplication>(BizType.付款申请单, e => e.ApplicationID, e => e.ApplicationNo);
-
+                SafeRegister<tb_FM_Statement>(BizType.对账单, e => e.StatementId, e => e.StatementNo);
                 // 售后
                 SafeRegister<tb_AS_AfterSaleApply>(BizType.售后申请单, e => e.ASApplyID, e => e.ASApplyNo, e => e.tb_AS_AfterSaleApplyDetails);
                 SafeRegister<tb_AS_AfterSaleDelivery>(BizType.售后交付单, e => e.ASDeliveryID, e => e.ASDeliveryNo, e => e.tb_AS_AfterSaleDeliveryDetails);

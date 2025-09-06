@@ -45,6 +45,8 @@ using NPOI.SS.Formula.Functions;
 namespace RUINORERP.UI.FM
 {
     //对账单创建中心
+    [MenuAttrAssemblyInfo("对账中心", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.对账管理, BizType.付款对账单)]
+    [SharedIdRequired]
     public partial class UCStatementCreator : BaseBillQueryMC<tb_FM_ReceivablePayable, tb_FM_ReceivablePayableDetail>
     {
         public UCStatementCreator()
@@ -74,9 +76,10 @@ namespace RUINORERP.UI.FM
             string customerVendorId = "".ToFieldName<tb_CustomerVendor>(c => c.CustomerVendor_ID);
 
             //应收付款中的往来单位额外添加一些条件
+            //还是将来利用行级权限来实现？
             var lambdaCv = Expressionable.Create<tb_CustomerVendor>()
-                .AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
-                .AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
+              //.AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
+              //.AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
               .ToExpression();
             QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
             queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv);
@@ -84,10 +87,9 @@ namespace RUINORERP.UI.FM
             var lambda = Expressionable.Create<tb_FM_ReceivablePayable>()
                               .And(t => t.isdeleted == false)
                               .And(t => t.ARAPStatus == (int)ARAPStatus.待审核 || t.ARAPStatus == (int)ARAPStatus.待支付 || t.ARAPStatus == (int)ARAPStatus.部分支付)
-                            //对账时不管收付款都要查出来。所以才在这里重新建一个
-                            //.And(t => t.ReceivePaymentType == (int)PaymentType)
-                            .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),
-                             t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
+                         //对账时不管收付款都要查出来。所以才在这里重新建一个
+                         //.And(t => t.ReceivePaymentType == (int)PaymentType)
+                         // .AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
             base.LimitQueryConditions = lambda;
@@ -107,8 +109,8 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.保存);
         }
 
- 
- 
+
+
 
 
         #region 转为收付款单
@@ -786,14 +788,6 @@ namespace RUINORERP.UI.FM
 
             BizType bizType = 0;
             tb_MenuInfo RelatedMenuInfo = null;
-            if (PaymentType == ReceivePaymentType.收款)
-            {
-                bizType = BizType.收款对账单;
-            }
-            else
-            {
-                bizType = BizType.付款对账单;
-            }
             RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
                  && m.BizType == (int)bizType
                  && m.BIBaseForm == "BaseBillEditGeneric`2")

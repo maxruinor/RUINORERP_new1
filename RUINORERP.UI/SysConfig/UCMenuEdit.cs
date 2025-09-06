@@ -491,7 +491,9 @@ namespace RUINORERP.UI.SysConfig
                     {
                         foreach (TreeNode subitem in item.Nodes)
                         {
-                            await mc.DeleteMenuInfo(int.Parse(subitem.Name));
+                            //await mc.DeleteMenuInfo(int.Parse(subitem.Name));
+                            //µ¼º½É¾³ý
+                            await mc.DeleteByNavAsync(subitem.Tag as tb_MenuInfo);
                         }
                         await mc.DeleteMenuInfo(int.Parse(item.Name));
                     }

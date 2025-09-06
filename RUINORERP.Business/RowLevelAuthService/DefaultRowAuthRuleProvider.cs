@@ -45,6 +45,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 { RowLevelAuthRule.AllDataForOtherInOut, "可以查看和处理所有数据" },
                 { RowLevelAuthRule.OnlyReceivable, "只能查看和处理收款相关的数据" },
                 { RowLevelAuthRule.OnlyPayable, "只能查看和处理付款相关的数据" },
+                { RowLevelAuthRule.OnlyOwner, "只能查看和处理自己负责的数据" },
                 { RowLevelAuthRule.AllData, "可以查看和处理所有数据" }
             };
             
@@ -95,6 +96,15 @@ namespace RUINORERP.Business.RowLevelAuthService
                         FilterClause = "ReceivePaymentType = 2",
                         Name = "仅付款数据",
                         Description = _ruleDescriptions[RowLevelAuthRule.OnlyPayable]
+                    }
+                },
+                { 
+                    RowLevelAuthRule.OnlyOwner, 
+                    new RuleConfiguration {
+                        IsJoinRequired = false,
+                        FilterClause = "Employee_ID = " + (_context.CurUserInfo?.UserInfo?.Employee_ID ?? 0),
+                        Name = "仅自己负责的数据",
+                        Description = _ruleDescriptions[RowLevelAuthRule.OnlyOwner]
                     }
                 },
                 { 

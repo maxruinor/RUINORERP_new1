@@ -37,9 +37,15 @@ namespace RUINORERP.Business.RowLevelAuthService
         OnlyPayable = 5,
 
         /// <summary>
+        /// 仅自己负责的数据
+        /// 适用于：归还单等需要限制用户只能查看自己处理过的数据的单据
+        /// </summary>
+        OnlyOwner = 6,
+
+        /// <summary>
         /// 全部数据
         /// 适用于：所有业务类型，拥有最高权限
         /// </summary>
-        AllData = 6
+        AllData = 7
     }
 }

@@ -107,7 +107,7 @@ namespace RUINORERP.UI.FM
 
             EditEntity = entity;
             if (entity.StatementId > 0)
-            {
+                {
 
                 //隐藏外币相关
                 UIHelper.ControlForeignFieldInvisible<tb_FM_Statement>(this, false);
@@ -143,26 +143,6 @@ namespace RUINORERP.UI.FM
                     //清空
                     cmbPayeeInfoID.DataBindings.Clear();
                 }
-
-                //如果状态是已经生效才可能有审核，如果是待收款 才可能有反审
-                if (entity.StatementStatus == (int)StatementStatus.已确认)
-                {
-                    base.toolStripbtnReview.Visible = true;
-                }
-                else
-                {
-                    base.toolStripbtnReview.Visible = false;
-                }
-
-                if (entity.StatementStatus == (int)StatementStatus.已确认)
-                {
-                    base.toolStripBtnReverseReview.Visible = true;
-                }
-                else
-                {
-                    base.toolStripBtnReverseReview.Visible = false;
-                }
-
             }
             else
             {
@@ -607,7 +587,8 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_StatementDetail>(c => c.IncludedForeignAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_StatementDetail>(c => c.IncludedLocalAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_StatementDetail>(c => c.ReceivePaymentType, CustomFormatType.EnumOptions, null, typeof(ReceivePaymentType));
-
+            listCols.SetCol_Format<tb_FM_StatementDetail>(c => c.ARAPWriteOffStatus, CustomFormatType.EnumOptions, null, typeof(ARAPWriteOffStatus));
+            
             InitLoadGrid();
 
 

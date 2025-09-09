@@ -746,6 +746,7 @@ namespace RUINORERP.UI.BaseForm
             toolStripbtnSubmit.Enabled = FMPaymentStatusHelper.CanSubmit(statusEnum);
             toolStripbtnReview.Enabled = statusEnum is PrePaymentStatus pre && pre == PrePaymentStatus.待审核 ||
                                         statusEnum is ARAPStatus arap && arap == ARAPStatus.待审核 ||
+                                        statusEnum is StatementStatus  statementStatus && statementStatus == StatementStatus.已发送 ||
                                         statusEnum is PaymentStatus pay && pay == PaymentStatus.待审核;
 
 
@@ -801,39 +802,40 @@ namespace RUINORERP.UI.BaseForm
 
             if (entity.ContainsProperty(typeof(PaymentStatus).Name))
                 return typeof(PaymentStatus);
-
+            if (entity.ContainsProperty(typeof(StatementStatus).Name))
+                return typeof(StatementStatus);
             return null;
         }
 
-        private void HandlePrePaymentStatus(PrePaymentStatus status, ActionStatus actionStatus)
-        {
-            toolStripbtnSubmit.Enabled = status == PrePaymentStatus.草稿;
-            toolStripbtnReview.Enabled = status == PrePaymentStatus.待审核;
-            toolStripBtnReverseReview.Enabled = status == PrePaymentStatus.待核销 || status == PrePaymentStatus.已生效;
+        //private void HandlePrePaymentStatus(PrePaymentStatus status, ActionStatus actionStatus)
+        //{
+        //    toolStripbtnSubmit.Enabled = status == PrePaymentStatus.草稿;
+        //    toolStripbtnReview.Enabled = status == PrePaymentStatus.待审核;
+        //    toolStripBtnReverseReview.Enabled = status == PrePaymentStatus.待核销 || status == PrePaymentStatus.已生效;
 
-            // 结案按钮改为"退款"
-            toolStripButton结案.Text = "退款";
-            toolStripButton结案.Enabled = status == PrePaymentStatus.待核销;
-            toolStripButtonSave.Enabled = FMPaymentStatusHelper.CanModify(status);
+        //    // 结案按钮改为"退款"
+        //    toolStripButton结案.Text = "退款";
+        //    toolStripButton结案.Enabled = status == PrePaymentStatus.待核销;
+        //    toolStripButtonSave.Enabled = FMPaymentStatusHelper.CanModify(status);
 
-            if (FMPaymentStatusHelper.IsFinalStatus(status))
-            {
-                toolStripBtnReverseReview.Enabled = false;
-                toolStripbtnModify.Enabled = false;
-                toolStripbtnSubmit.Enabled = false;
-                toolStripButtonSave.Enabled = false;
-                toolStripButton结案.Enabled = false;
-            }
-        }
+        //    if (FMPaymentStatusHelper.IsFinalStatus(status))
+        //    {
+        //        toolStripBtnReverseReview.Enabled = false;
+        //        toolStripbtnModify.Enabled = false;
+        //        toolStripbtnSubmit.Enabled = false;
+        //        toolStripButtonSave.Enabled = false;
+        //        toolStripButton结案.Enabled = false;
+        //    }
+        //}
 
 
 
-        private void HandlePaymentStatus(PaymentStatus status, ActionStatus actionStatus)
-        {
-            toolStripbtnSubmit.Enabled = status == PaymentStatus.草稿;
-            toolStripbtnReview.Enabled = status == PaymentStatus.待审核;
-            toolStripButton结案.Visible = false; // 付款单不需要结案按钮
-        }
+        //private void HandlePaymentStatus(PaymentStatus status, ActionStatus actionStatus)
+        //{
+        //    toolStripbtnSubmit.Enabled = status == PaymentStatus.草稿;
+        //    toolStripbtnReview.Enabled = status == PaymentStatus.待审核;
+        //    toolStripButton结案.Visible = false; // 付款单不需要结案按钮
+        //}
 
 
         private long GetPrimaryKeyValue(BaseEntity entity)
@@ -924,12 +926,12 @@ namespace RUINORERP.UI.BaseForm
             statusDetector.RegisterStatusChangeHandler();
         }
 
-        private void HandleARAPStatus(ARAPStatus statusValue, ActionStatus actionStatus)
-        {
-            toolStripbtnSubmit.Enabled = statusValue == ARAPStatus.草稿;
-            toolStripbtnReview.Enabled = statusValue == ARAPStatus.待审核;
-            toolStripButton结案.Visible = false; // 付款单不需要结案按钮
-        }
+        //private void HandleARAPStatus(ARAPStatus statusValue, ActionStatus actionStatus)
+        //{
+        //    toolStripbtnSubmit.Enabled = statusValue == ARAPStatus.草稿;
+        //    toolStripbtnReview.Enabled = statusValue == ARAPStatus.待审核;
+        //    toolStripButton结案.Visible = false; // 付款单不需要结案按钮
+        //}
 
         /// <summary>状态检测器 - 封装状态逻辑</summary>
         private class StatusDetector
@@ -997,7 +999,13 @@ namespace RUINORERP.UI.BaseForm
                         CanClose = false;
                         CanReverse = false;
                         break;
-
+                    case StatementStatus statementStatus:
+                        CanSubmit = statementStatus == StatementStatus.草稿;
+                        CanReview = statementStatus == StatementStatus.已发送;
+                        CanReverseReview = statementStatus == StatementStatus.已确认;
+                        CanClose = false;
+                        CanReverse = false;
+                        break;
                     case DataStatus dataStatus:
                         CanSubmit = dataStatus == DataStatus.草稿;
                         CanReview = dataStatus == DataStatus.新建;

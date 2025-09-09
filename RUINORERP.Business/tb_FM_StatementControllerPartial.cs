@@ -269,7 +269,13 @@ namespace RUINORERP.Business
 
 
 
-
+        /// <summary>
+        /// 生成对账单
+        /// </summary>
+        /// <param name="entities"></param>
+        /// <param name="receivePaymentType"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public async Task<tb_FM_Statement> BuildStatement(List<tb_FM_ReceivablePayable> entities, ReceivePaymentType receivePaymentType)
         {
             //通过应收 自动生成 对账单
@@ -287,6 +293,9 @@ namespace RUINORERP.Business
             statement.ReceivePaymentType = (int)receivePaymentType;
 
             List<tb_FM_StatementDetail> details = mapper.Map<List<tb_FM_StatementDetail>>(entities);
+
+            details.ForEach(e => { e.ARAPWriteOffStatus = (int)ARAPWriteOffStatus.待核销; });
+
             //将明细按付款类型分组，求和后，再收款是进，付款是出。进行最后的净额计算决定最后的账单金额及方向
             #region 获取收款和付款的总额
             // 按收付类型分组，并汇总金额（这里以本币金额为例，外币逻辑类似）

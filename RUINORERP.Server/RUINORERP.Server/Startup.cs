@@ -881,7 +881,8 @@ namespace RUINORERP.Server
                 if (tempTypes[i].Name == "SqlSugarRowLevelAuthFilter")
                 {
                     builder.RegisterType<SqlSugarRowLevelAuthFilter>()
-                    .AsSelf()
+                    //.AsSelf()
+                      .AsImplementedInterfaces().AsSelf()
                     .SingleInstance() // 注册为单例
                     .PropertiesAutowired();
                     continue;

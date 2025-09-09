@@ -17,12 +17,10 @@ namespace RUINORERP.Business.RowLevelAuthService
     public class SqlSugarRowLevelAuthFilter
     {
         private readonly ILogger<SqlSugarRowLevelAuthFilter> _logger;
-        private readonly SqlSugarScope _db;
 
-        public SqlSugarRowLevelAuthFilter(ILogger<SqlSugarRowLevelAuthFilter> logger, SqlSugarScope db)
+        public SqlSugarRowLevelAuthFilter(ILogger<SqlSugarRowLevelAuthFilter> logger)
         {
             _logger = logger;
-            _db = db;
         }
 
         /// <summary>

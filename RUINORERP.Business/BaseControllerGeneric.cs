@@ -211,6 +211,13 @@ namespace RUINORERP.Business
                     ReflectionHelper.SetPropertyValue(entity, typeof(DataStatus).Name, DataStatus.新建);
                 }
             }
+            else if (statusName == typeof(StatementStatus).Name)
+            {
+                if (ReflectionHelper.ExistPropertyName<T>(typeof(StatementStatus).Name))
+                {
+                    ReflectionHelper.SetPropertyValue(entity, typeof(StatementStatus).Name, StatementStatus.已发送);
+                }
+            }
             else if (statusName == typeof(PrePaymentStatus).Name)
             {
                 if (ReflectionHelper.ExistPropertyName<T>(typeof(PrePaymentStatus).Name))

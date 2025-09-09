@@ -34,7 +34,7 @@ namespace RUINORERP.Business.StatusManagerService
                 return typeof(PaymentStatus);
             if (entity.ContainsProperty(typeof(StatementStatus).Name))
                 return typeof(StatementStatus);
-            
+
             return null;
         }
 
@@ -147,8 +147,6 @@ namespace RUINORERP.Business.StatusManagerService
                 return arap != ARAPStatus.部分支付 &&
                        arap != ARAPStatus.坏账;
 
-
-
             if (status is PaymentStatus pay)
                 return pay != PaymentStatus.已支付 && !hasRelatedRecords;
 
@@ -180,7 +178,6 @@ namespace RUINORERP.Business.StatusManagerService
             if (status is StatementStatus ss)
                 return ss <= StatementStatus.已发送 && !hasRelatedRecords;
 
-        
 
             if (status is PaymentStatus pay)
                 return pay <= PaymentStatus.待审核 && !hasRelatedRecords;
@@ -252,9 +249,7 @@ namespace RUINORERP.Business.StatusManagerService
             {
                 ValidateStatementStatusTransition(ssCurrent, ssTarget);
             }
-
-
-            if (current is PrePaymentStatus preCurrent &&
+            else if (current is PrePaymentStatus preCurrent &&
                 target is PrePaymentStatus preTarget)
             {
                 ValidatePrePaymentTransition(preCurrent, preTarget);
@@ -292,7 +287,7 @@ namespace RUINORERP.Business.StatusManagerService
                 throw new InvalidOperationException("已结清状态禁止变更");
 
             // 已核销不能回退
-            if (current == StatementStatus.部分结算 || current == StatementStatus.已结清) 
+            if (current == StatementStatus.部分结算 || current == StatementStatus.已结清)
                 throw new InvalidOperationException("已有结算状态不可回退");
 
             // 允许从草稿直接到已生效（自动审核）
@@ -358,6 +353,24 @@ namespace RUINORERP.Business.StatusManagerService
                 throw new InvalidOperationException("待审核状态只能转为已支付");
         }
 
+        /// <summary>
+        /// 对账单的转换验证
+        /// </summary>
+        /// <param name="current"></param>
+        /// <param name="target"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        private static void ValidateStatementTransition(StatementStatus current, StatementStatus target)
+        {
+            if (current == StatementStatus.已结清 || current == StatementStatus.已作废)
+                throw new InvalidOperationException($"【{current.ToString()}】状态禁止转换");
+
+            if (current == StatementStatus.草稿 && target != StatementStatus.已发送)
+                throw new InvalidOperationException("草稿状态只能转为已发送");
+
+            if (current == StatementStatus.已发送 && target != StatementStatus.已确认)
+                throw new InvalidOperationException("已发送状态只能转为已确认");
+
+        }
 
         private static void ValidatePaymentTransition(DataStatus current, DataStatus target)
         {

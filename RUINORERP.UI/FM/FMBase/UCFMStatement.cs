@@ -176,14 +176,7 @@ namespace RUINORERP.UI.FM
                 //entity.DueDate = System.DateTime.Now;
                 if (string.IsNullOrEmpty(entity.StatementNo))
                 {
-                    if (PaymentType == ReceivePaymentType.收款)
-                    {
-                        entity.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.对账单);
-                    }
-                    else
-                    {
-                        entity.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款对账单);
-                    }
+                    entity.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.对账单);
                 }
 
                 entity.StatementStatus = (int)StatementStatus.草稿;

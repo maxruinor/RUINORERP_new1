@@ -94,7 +94,7 @@ namespace RUINORERP.UI
         /// </summary>
         public static ILifetimeScope AutofacContainerScope { get; set; }
 
-        public Startup(bool tset)
+        public Startup()
         {
             // 初始化ID生成器
             InitializeIdGenerators();
@@ -679,7 +679,7 @@ namespace RUINORERP.UI
 
 
 
-        public IHost CslaDIPort()
+        public IHost SartUpDIPort()
         {
 
             var hostBuilder = new HostBuilder()

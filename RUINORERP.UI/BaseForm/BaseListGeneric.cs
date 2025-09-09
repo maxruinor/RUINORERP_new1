@@ -326,7 +326,7 @@ namespace RUINORERP.UI.BaseForm
                 if (!this.DesignMode)
                 {
                     frm = new frmFormProperty();
-                     GridRelated = new GridViewRelated();
+                    GridRelated = new GridViewRelated();
                     ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     //权限菜单
                     if (CurMenuInfo == null || CurMenuInfo.ClassPath.IsNullOrEmpty())
@@ -1416,7 +1416,7 @@ namespace RUINORERP.UI.BaseForm
         {
             tsbtnSelected.Visible = true;
         }
-        
+
 
 
         public virtual void QueryConditionBuilder()
@@ -1815,7 +1815,7 @@ namespace RUINORERP.UI.BaseForm
                                         }
                                         string newfileName = entity.RowImage.GetUploadfileName();
                                         ////上传新文件时要加后缀名
-                                        string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", entity.RowImage.ImageBytes, "upload");
+                                        string uploadRsult = await httpWebService.UploadImageAsyncOK("", newfileName + ".jpg", entity.RowImage.ImageBytes, "upload");
                                         if (uploadRsult.Contains("UploadSuccessful"))
                                         {
                                             //重要

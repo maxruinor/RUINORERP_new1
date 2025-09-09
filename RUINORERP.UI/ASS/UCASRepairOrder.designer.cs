@@ -511,7 +511,7 @@ namespace RUINORERP.UI.ASS
             this.kryptonHeaderGroup1.Panel.Controls.Add(this.grid2);
             this.kryptonHeaderGroup1.Size = new System.Drawing.Size(1205, 298);
             this.kryptonHeaderGroup1.TabIndex = 109;
-            this.kryptonHeaderGroup1.ValuesPrimary.Heading = "维修物料表";
+            this.kryptonHeaderGroup1.ValuesPrimary.Heading = "维修物料表-请正确选择物料所在仓库";
             this.kryptonHeaderGroup1.ValuesPrimary.Image = global::RUINORERP.UI.Properties.Resources.searcher1;
             // 
             // buttonSpecHeaderGroup1

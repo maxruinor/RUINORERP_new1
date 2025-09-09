@@ -4,6 +4,7 @@ using Netron.GraphLib;
 using NSoup.Helper;
 using Org.BouncyCastle.Asn1.Ocsp;
 using RUINORERP.Business;
+using RUINORERP.Common.Services;
 using RUINORERP.Model;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.UI.SysConfig;
@@ -36,14 +37,16 @@ namespace RUINORERP.UI.Common
         public IUnitOfWorkManage _unitOfWorkManage;
         public ILogger<HttpWebService> _logger;
         public ConfigManager _configManager;
+        public ImageProcessingService _imageProcessingService;
 
         public HttpWebService(ILogger<HttpWebService> logger, IUnitOfWorkManage unitOfWorkManage,
-          ConfigManager configManager, RUINORERP.Model.Context.ApplicationContext appContext = null)
+          ConfigManager configManager, ImageProcessingService imageProcessingService, RUINORERP.Model.Context.ApplicationContext appContext = null)
         {
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;
             _appContext = appContext;
             _configManager = configManager;
+            _imageProcessingService = imageProcessingService;
         }
 
 
@@ -262,7 +265,38 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        public async Task<string> UploadImageAsync(string fileName, byte[] imgbytes, string fileparameter = "file")
+        /// <summary>
+        /// 计算图片的MD5哈希值
+        /// </summary>
+        /// <param name="imageBytes">图片字节数组</param>
+        /// <returns>MD5哈希字符串</returns>
+        public string CalculateImageHash(byte[] imageBytes)
+        {
+            return _imageProcessingService.CalculateImageHash(imageBytes);
+        }
+
+        /// <summary>
+        /// 生成包含业务信息的图片文件名
+        /// </summary>
+        /// <param name="bizType">业务类型</param>
+        /// <param name="entityId">实体ID</param>
+        /// <param name="imageHash">图片哈希值</param>
+        /// <returns>生成的图片文件名</returns>
+        public string GenerateImageFileName(string bizType, string entityId, string imageHash)
+        {
+            return _imageProcessingService.GenerateImageFileName(bizType, entityId, imageHash);
+        }
+
+        /// <summary>
+        /// 上传图片并检查重复
+        /// </summary>
+        /// <param name="bizType">业务类型</param>
+        /// <param name="entityId">实体ID</param>
+        /// <param name="fileName">文件名</param>
+        /// <param name="imgbytes">图片字节数组</param>
+        /// <param name="fileparameter">文件参数名</param>
+        /// <returns>上传结果</returns>
+        public async Task<string> UploadImageAsync(string bizType, string entityId, string fileName, byte[] imgbytes, string fileparameter = "file")
         {
             string uploadUrl = _configManager.GetValue("WebServerUrl");
             uploadUrl += "/upload/";
@@ -270,6 +304,13 @@ namespace RUINORERP.UI.Common
             {
                 return "Error: Image file not found";
             }
+
+            // 计算图片哈希值
+            string imageHash = CalculateImageHash(imgbytes);
+            
+            // 生成包含业务信息的文件名
+            string finalFileName = GenerateImageFileName(bizType, entityId, imageHash);
+
             string result = string.Empty;
             try
             {
@@ -282,11 +323,16 @@ namespace RUINORERP.UI.Common
                 // 添加SessionID到Cookie
                 request.CookieContainer = GetCookieContainer();
 
+                // 添加业务参数到请求头
+                request.Headers.Add("bizType", bizType);
+                request.Headers.Add("entityId", entityId);
+                request.Headers.Add("imageHash", imageHash);
+
                 byte[] itemBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "\r\n");
                 byte[] endBoundaryBytes = Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
 
                 //请求头部信息
-                StringBuilder sbHeader = new StringBuilder(string.Format("Content-Disposition:form-data;name=\"" + fileparameter + "\";filename=\"{0}\"\r\nContent-Type:application/octet-stream\r\n\r\n", fileName));
+                StringBuilder sbHeader = new StringBuilder(string.Format("Content-Disposition:form-data;name=\"" + fileparameter + "\";filename=\"{0}\"\r\nContent-Type:application/octet-stream\r\n\r\n", finalFileName));
                 byte[] postHeaderBytes = Encoding.UTF8.GetBytes(sbHeader.ToString());
 
                 Stream postStream = await request.GetRequestStreamAsync();

@@ -74,7 +74,7 @@ namespace RUINORERP.Business
                 #region 这里是以付款单为准，反审。暂时不用了
 
                 var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
-                            .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.StatementId))
+                            .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.StatementId && d.SourceBizType == (int)BizType.对账单))
                               .ToListAsync();
                 if (PaymentRecordlist != null && PaymentRecordlist.Count > 0)
                 {
@@ -99,6 +99,15 @@ namespace RUINORERP.Business
                     }
                 }
                 #endregion
+
+                //反审核了。对应的收款单，还能生成对账单。正常要删除才行。所以在审核时要判断重复性
+                //对账单明细中的应收款单据 标识回写为[能再加入对账单]
+                long[] arapids = entity.tb_FM_StatementDetails.Select(m => m.ARAPId).ToArray();
+                await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>()
+                              .SetColumns(it => it.AllowAddToStatement == true)
+                              .Where(it => arapids.Contains(it.ARAPId))
+                              .ExecuteCommandAsync();
+
 
                 entity.StatementStatus = (int)StatementStatus.已发送;
                 entity.ApprovalResults = false;
@@ -175,20 +184,45 @@ namespace RUINORERP.Business
                 }
 
 
-                // 开启事务，保证数据一致性
+                long[] arapids = entity.tb_FM_StatementDetails.Select(m => m.ARAPId).ToArray();
+                //审核时，如果应收付款单中的状态不是【AllowAddToStatement==true】，则不能审核。重复了。
+                var CheckDuplicateAddList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>()
+                               .Where(it => it.AllowAddToStatement == false)
+                               .Where(it => arapids.Contains(it.ARAPId))
+                               .ToListAsync();
 
-                _unitOfWorkManage.BeginTran();
+                if (CheckDuplicateAddList.Count > 0)
+                {
+                    var NoList = CheckDuplicateAddList.Select(m => m.ARAPNo).ToArray();
+                    string ARAPNos = string.Join(",", NoList);
+                    rmrs.ErrorMsg = $"审核失败，{entity.StatementNo}对账单中的{ARAPNos}存在重复对账!请检查数据后再试！";
+                    rmrs.Succeeded = false;
+                    rmrs.ReturnObject = entity as T;
+                    return rmrs;
+                }
+                //生成时也检查了。内存处理。多处理一次也可以
+                var duplicateArapIds = entity.tb_FM_StatementDetails
+                .GroupBy(c => c.ARAPId)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+                if (duplicateArapIds.Any())
+                {
+                    throw new Exception($"对账单明细中，以下应收付款单存在重复对账：{string.Join(",", duplicateArapIds)}");
+                }
 
 
-                entity.StatementStatus = (int)StatementStatus.已确认;
+
                 if (entity.tb_FM_StatementDetails == null)
                 {
                     entity.tb_FM_StatementDetails = new List<tb_FM_StatementDetail>();
                     entity.tb_FM_StatementDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_StatementDetail>().Where(m => m.StatementId == entity.StatementId).ToListAsync();
                 }
 
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+
                 //对账单明细中的应收款单据 标识回写为不能再加入对账单
-                long[] arapids = entity.tb_FM_StatementDetails.Select(m => m.ARAPId).ToArray();
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_ReceivablePayable>()
                               .SetColumns(it => it.AllowAddToStatement == false)
                               .Where(it => arapids.Contains(it.ARAPId))
@@ -197,7 +231,7 @@ namespace RUINORERP.Business
 
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.ApprovalResults = true;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+                entity.StatementStatus = (int)StatementStatus.已确认;
 
 
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -216,7 +250,6 @@ namespace RUINORERP.Business
                     rmrs.ErrorMsg = "更新结果为零，请确保数据完整。请检查当前单据数据是否存在。";
                     return rmrs;
                 }
-
 
 
                 // 注意信息的完整性
@@ -254,16 +287,50 @@ namespace RUINORERP.Business
             statement.ReceivePaymentType = (int)receivePaymentType;
 
             List<tb_FM_StatementDetail> details = mapper.Map<List<tb_FM_StatementDetail>>(entities);
+            //将明细按付款类型分组，求和后，再收款是进，付款是出。进行最后的净额计算决定最后的账单金额及方向
+            #region 获取收款和付款的总额
+            // 按收付类型分组，并汇总金额（这里以本币金额为例，外币逻辑类似）
+            var groupedDetails = details
+                .GroupBy(d => d.ReceivePaymentType)
+                .Select(g => new
+                {
+                    ReceivePaymentType = g.Key,
+                    TotalLocalAmount = g.Sum(d => d.IncludedLocalAmount)  // 本币金额汇总
+                                                                          // 如果需要外币，可以类似汇总 IncludedForeignAmount
+                })
+                .ToList();
 
+            // 计算收款和付款的总额
+            decimal totalReceivable = groupedDetails
+                .Where(x => x.ReceivePaymentType == (int)ReceivePaymentType.收款)  // 收款类型
+                .Sum(x => x.TotalLocalAmount);
 
-            if (receivePaymentType == ReceivePaymentType.收款)
+            decimal totalPayable = groupedDetails
+                .Where(x => x.ReceivePaymentType == (int)ReceivePaymentType.付款)  // 付款类型
+                .Sum(x => x.TotalLocalAmount);
+
+            // 计算净额：付款 - 收款
+            decimal netAmount = totalPayable - totalReceivable;
+
+            // 判断最终是收款还是付款
+            if (netAmount > 0)
             {
-                statement.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款对账单);
+                statement.Summary = ($"最终需要付款给供应商，金额：{netAmount}（本币）");
+                statement.ReceivePaymentType = (int)ReceivePaymentType.付款;
+            }
+            else if (netAmount < 0)
+            {
+                statement.Summary = ($"供应商需要付款给你方（应收），金额：{Math.Abs(netAmount)}（本币）");
+                statement.ReceivePaymentType = (int)ReceivePaymentType.收款;
             }
             else
             {
-                statement.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.付款对账单);
+                statement.Summary = ("双方无欠款，金额已平。");
             }
+            #endregion
+
+
+            statement.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.对账单);
 
             //entities明细中的创建时间的最大值，最小值来决定账单的开始结束日期
             statement.StartDate = entities.Min(c => c.Created_at).Value;
@@ -300,7 +367,9 @@ namespace RUINORERP.Business
             {
                 throw new Exception($"对账单明细中，以下应收付款单存在重复对账：{string.Join(",", duplicateArapIds)}");
             }
-            statement.ARAPNos = string.Join(",", statement.tb_FM_StatementDetails.Select(t => t.ARAPId).ToArray());
+
+
+            statement.ARAPNos = string.Join(",", entities.Select(c => c.ARAPNo).ToArray());
 
             BusinessHelper.Instance.InitEntity(statement);
 

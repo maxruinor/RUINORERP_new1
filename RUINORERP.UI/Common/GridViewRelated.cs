@@ -467,6 +467,7 @@ namespace RUINORERP.UI.Common
                     && !CurrentRow.DataBoundItem.GetType().Name.Contains("View_")//排除视图
                     )
                 {
+                    //双击打开的目标是自己时，就是传入查询当前的实体，其它的，就要下面去查询了。通过：GuideToForm
                     if (RelatedMenuInfo != null)
                     {
                         menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
@@ -510,6 +511,7 @@ namespace RUINORERP.UI.Common
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutRe>()
                     .Includes(c => c.tb_SaleOutReDetails)
+                    .Includes(c => c.tb_SaleOutReRefurbishedMaterialsDetails)
                     .WhereIF(billno.GetType() == typeof(long), c => c.SaleOutRe_ID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.ReturnNo == billno.ToString())
                     .Single();
@@ -804,8 +806,26 @@ namespace RUINORERP.UI.Common
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
+            if (tableName == typeof(tb_AS_RepairMaterialPickup).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_AS_RepairMaterialPickup>()
+                    .Includes(c => c.tb_AS_RepairMaterialPickupDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.RMRID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.MaterialPickupNO == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
 
-
+            if (tableName == typeof(tb_AS_RepairOrder).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_AS_RepairOrder>()
+                    .Includes(c => c.tb_AS_RepairOrderDetails)
+                    .Includes(c => c.tb_AS_RepairOrderMaterialDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.RepairOrderID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.RepairOrderNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
 
             if (tableName == typeof(tb_MRP_ReworkReturn).Name)
             {

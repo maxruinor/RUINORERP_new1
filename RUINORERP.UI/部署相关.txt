@@ -1,4 +1,20 @@
-﻿  "RedisServer": "192.168.0.254:6379"
+﻿  https://dl.min.io/server/minio/release/windows-amd64/archive/
+  对象存储服务
+  直接部署（Windows）
+- 下载MinIO可执行文件：https://dl.min.io/server/minio/release/windows-amd64/minio.exe
+- 创建数据目录，例如：C:\MinIO\data
+- 启动MinIO服务器（CMD或PowerShell）：
+set MINIO_ROOT_USER=admin
+set MINIO_ROOT_PASSWORD=elebestlove2025
+minio.exe server G:\MinIO\data --console-address ":9001"
+
+# 临时更改执行策略以允许运行脚本
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+
+# 然后运行脚本
+.\start-minio.ps1s
+
+  "RedisServer": "192.168.0.254:6379"
 
   6379是默认端口：修改为其它 
 

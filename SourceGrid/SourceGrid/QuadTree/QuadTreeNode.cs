@@ -1,4 +1,4 @@
-﻿using SourceGrid;
+using SourceGrid;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -348,6 +348,21 @@ namespace QuadTreeLib
 				}
 			}
 
+			// Remove duplicates that might occur from overlapping queries
+			if (results.Count > 1)
+			{
+				for (int i = results.Count - 1; i >= 0; i--)
+				{
+					for (int j = 0; j < i; j++)
+					{
+						if (results[i].Equals(results[j]))
+						{
+							results.RemoveAt(i);
+							break;
+						}
+					}
+				}
+			}
 
 			return results;
 		}

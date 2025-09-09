@@ -181,6 +181,16 @@ namespace RUINORERP.Business
                     {
                         // 累加已有分组的数值字段
                         group.RepairQty += currentRepairQty;
+
+                        if (!_appContext.SysConfig.CheckNegativeInventory && (group.Inventory.Quantity - group.RepairQty) < 0)
+                        {
+                            // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                            rmrs.ErrorMsg = $"当前行仓库的SKU:{group.Inventory.tb_proddetail.SKU}库存为：{group.Inventory.Quantity}，维修领料量为：{group.RepairQty}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                            rmrs.Succeeded = false;
+                            return rmrs;
+                        }
+
+
                         inventoryGroups[key] = group; // 更新分组数据
                     }
                 }
@@ -334,14 +344,14 @@ namespace RUINORERP.Business
                     {
                         // 累加已有分组的数值字段
                         group.RepairQty += currentRepairQty;
-                        if (!_appContext.SysConfig.CheckNegativeInventory && (group.Inventory.Quantity - group.RepairQty) < 0)
-                        {
-                            // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                            rmrs.ErrorMsg = $"sku:{group.Inventory.tb_proddetail.SKU}库存为：{group.Inventory.Quantity}，维修领料数量为：{group.RepairQty}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.Succeeded = false;
-                            return rmrs;
-                        }
+                        //if (!_appContext.SysConfig.CheckNegativeInventory && (group.Inventory.Quantity + group.RepairQty) < 0)
+                        //{
+                        //    // rrs.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                        //    rmrs.ErrorMsg = $"sku:{group.Inventory.tb_proddetail.SKU}库存为：{group.Inventory.Quantity}，维修领料数量为：{group.RepairQty}\r\n 系统设置不允许负库存， 请检查出库数量与库存相关数据";
+                        //    _unitOfWorkManage.RollbackTran();
+                        //    rmrs.Succeeded = false;
+                        //    return rmrs;
+                        //}
                         inventoryGroups[key] = group; // 更新分组数据
                     }
                 }

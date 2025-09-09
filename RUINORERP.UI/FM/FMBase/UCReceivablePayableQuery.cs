@@ -177,7 +177,8 @@ namespace RUINORERP.UI.FM
             {
                 list.Add(new ContextMenuController("【转为付款单】", true, false, "NewSumDataGridView_转为收付款单"));
             }
-            list.Add(new ContextMenuController("【生成对账单】", true, false, "NewSumDataGridView_生成对账单"));
+            //对账中心处理，因为要控制是否能生成对账单
+            //list.Add(new ContextMenuController("【生成对账单】", true, false, "NewSumDataGridView_生成对账单"));
             list.Add(new ContextMenuController($"【预{PaymentType}抵扣】", true, false, "NewSumDataGridView_预收预付抵扣"));
             list.Add(new ContextMenuController($"【批量智能预{PaymentType}抵扣】", true, false, "NewSumDataGridView_批量智能预收预付抵扣"));
             list.Add(new ContextMenuController($"【撤销预{PaymentType}抵扣】", true, false, "NewSumDataGridView_撤销预收预付抵扣"));
@@ -188,7 +189,7 @@ namespace RUINORERP.UI.FM
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
             ContextClickList.Add(NewSumDataGridView_转为收付款单);
-            ContextClickList.Add(NewSumDataGridView_生成对账单);
+            //ContextClickList.Add(NewSumDataGridView_生成对账单);
             ContextClickList.Add(NewSumDataGridView_预收预付抵扣);
             ContextClickList.Add(NewSumDataGridView_批量智能预收预付抵扣);
             ContextClickList.Add(NewSumDataGridView_撤销预收预付抵扣);
@@ -757,7 +758,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-
+        /*
         //按客户生成对账单
         private async void NewSumDataGridView_生成对账单(object sender, EventArgs e)
         {
@@ -860,7 +861,7 @@ namespace RUINORERP.UI.FM
                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, statement);
             }
         }
-
+        */
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.TaxTotalAmount);
@@ -889,13 +890,11 @@ namespace RUINORERP.UI.FM
                 base.MasterInvisibleCols.Add(c => c.PayeeInfoID);
                 base.MasterInvisibleCols.Add(c => c.PayeeAccountNo);
             }
-
         }
-
 
         protected override void Delete(List<tb_FM_ReceivablePayable> Datas)
         {
-            MessageBox.Show("应收应付记录不能删除？", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("应收应付记录不能删除!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 

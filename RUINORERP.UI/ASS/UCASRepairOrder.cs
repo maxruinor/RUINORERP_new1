@@ -46,6 +46,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.PSI.SAL;
 using RUINORERP.Common.Extensions;
 using NPOI.SS.Formula.Functions;
+using ICSharpCode.SharpZipLib.Tar;
 
 
 namespace RUINORERP.UI.ASS
@@ -59,6 +60,98 @@ namespace RUINORERP.UI.ASS
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_AS_RepairOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority);
             AddPublicEntityObject(typeof(ProductSharePart));
         }
+
+        protected override async Task LoadRelatedDataToDropDownItemsAsync()
+        {
+            if (base.EditEntity is tb_AS_RepairOrder RepairOrder)
+            {
+
+
+                if (RepairOrder.ASApplyID.HasValue && RepairOrder.ASApplyID.Value > 0)
+                {
+                    RelatedQueryParameter rqp = new RelatedQueryParameter();
+                    rqp.bizType = BizType.售后申请单;
+                    rqp.billId = RepairOrder.ASApplyID.Value;
+                    rqp.billNo = RepairOrder.ASApplyNo;
+                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                    RelatedMenuItem.Name = $"{rqp.billId}";
+                    RelatedMenuItem.Tag = rqp;
+                    RelatedMenuItem.Text = $"{rqp.bizType}:{rqp.billNo}";
+                    RelatedMenuItem.Click += base.MenuItem_Click;
+                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqp.billId.ToString()))
+                    {
+                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                    }
+                }
+                if (RepairOrder.tb_AS_RepairInStocks != null && RepairOrder.tb_AS_RepairInStocks.Count > 0)
+                {
+                    foreach (var item in RepairOrder.tb_AS_RepairInStocks)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.维修入库单;
+                        rqp.billId = item.RepairInStockID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.RepairInStockNo}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.RepairInStockID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+                if (RepairOrder.tb_AS_RepairMaterialPickups != null && RepairOrder.tb_AS_RepairMaterialPickups.Count > 0)
+                {
+                    foreach (var item in RepairOrder.tb_AS_RepairMaterialPickups)
+                    {
+                        RelatedQueryParameter rqp = new RelatedQueryParameter();
+                        rqp.bizType = BizType.维修领料单;
+                        rqp.billId = item.RMRID;
+                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                        RelatedMenuItem.Name = $"{rqp.billId}";
+                        RelatedMenuItem.Tag = rqp;
+                        RelatedMenuItem.Text = $"{rqp.bizType}:{item.MaterialPickupNO}";
+                        RelatedMenuItem.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.RMRID.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                        }
+                    }
+                }
+
+                //如果有出库，则查应收
+                if (RepairOrder.DataStatus >= (int)DataStatus.确认)
+                {
+                    var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                    .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
+                                                                    && c.CustomerVendor_ID == RepairOrder.CustomerVendor_ID
+                                                                    && c.SourceBillId == RepairOrder.RepairOrderID)
+                                                                    .ToListAsync();
+                    foreach (var item in receivablePayables)
+                    {
+                        var rqpara = new Model.CommonModel.RelatedQueryParameter();
+                        rqpara.bizType = BizType.应付款单;
+                        rqpara.billId = item.ARAPId;
+                        ToolStripMenuItem RelatedMenuItemPara = new ToolStripMenuItem();
+                        RelatedMenuItemPara.Name = $"{rqpara.billId}";
+                        RelatedMenuItemPara.Tag = rqpara;
+                        RelatedMenuItemPara.Text = $"{rqpara.bizType}:{item.ARAPNo}";
+                        RelatedMenuItemPara.Click += base.MenuItem_Click;
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
+                        {
+                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemPara);
+                        }
+                    }
+                }
+
+            }
+            await base.LoadRelatedDataToDropDownItemsAsync();
+        }
+
+
+ 
 
 
         #region 维修各种动作
@@ -217,51 +310,7 @@ namespace RUINORERP.UI.ASS
         }
 
 
-        protected override async Task LoadRelatedDataToDropDownItemsAsync()
-        {
-            if (base.EditEntity is tb_AS_RepairOrder RepairOrder)
-            {
-                if (RepairOrder.ASApplyID.HasValue && RepairOrder.ASApplyID.Value > 0)
-                {
-                    RelatedQueryParameter rqp = new RelatedQueryParameter();
-                    rqp.bizType = BizType.售后申请单;
-                    rqp.billId = RepairOrder.ASApplyID.Value;
-                    rqp.billNo = RepairOrder.ASApplyNo;
-                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
-                    RelatedMenuItem.Name = $"{rqp.billId}";
-                    RelatedMenuItem.Tag = rqp;
-                    RelatedMenuItem.Text = $"{rqp.bizType}:{rqp.billNo}";
-                    RelatedMenuItem.Click += base.MenuItem_Click;
-                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqp.billId.ToString()))
-                    {
-                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
-                    }
-                }
 
-                if (RepairOrder.tb_AS_RepairInStocks != null && RepairOrder.tb_AS_RepairInStocks.Count > 0)
-                {
-                    foreach (var item in RepairOrder.tb_AS_RepairInStocks)
-                    {
-                        var rqpSub = new Model.CommonModel.RelatedQueryParameter();
-                        rqpSub.bizType = BizType.维修入库单;
-                        rqpSub.billId = item.RepairInStockID;
-                        ToolStripMenuItem RelatedMenuItemSub = new ToolStripMenuItem();
-                        RelatedMenuItemSub.Name = $"{rqpSub.billId}";
-                        RelatedMenuItemSub.Tag = rqpSub;
-                        RelatedMenuItemSub.Text = $"{rqpSub.bizType}:{item.RepairInStockNo}";
-                        RelatedMenuItemSub.Click += base.MenuItem_Click;
-                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqpSub.billId.ToString()))
-                        {
-                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemSub);
-                        }
-                    }
-
-                }
-
-
-            }
-          await  base.LoadRelatedDataToDropDownItemsAsync();
-        }
         public override void BindData(tb_AS_RepairOrder entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
             if (entity == null)

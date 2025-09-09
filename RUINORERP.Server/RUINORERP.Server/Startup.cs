@@ -68,6 +68,10 @@ using RUINORERP.Business.CommService;
 using System.Runtime.InteropServices.JavaScript;
 using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
 using RUINORERP.Business.RowLevelAuthService;
+using RUINORERP.Business.DI;
+using RUINORERP.Services.DI;
+using RUINORERP.Repository.DI;
+using RUINORERP.IServices.DI;
 
 namespace RUINORERP.Server
 {
@@ -573,6 +577,7 @@ namespace RUINORERP.Server
 
 
 
+
             //注入Log4Net
             //Services.AddLogging(cfg =>
             //{
@@ -1065,7 +1070,7 @@ namespace RUINORERP.Server
             //builder.RegisterType<TestService>().As<ITestService>().PropertiesAutowired();
             // builder.RegisterModule(new AutofacRegister());
 
-            builder.RegisterModule(new AutofacRegister());
+            builder.RegisterModule<SmartReminderModule>();
         }
 
 

@@ -30,6 +30,37 @@
         {
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblClosingBalanceForeignAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtClosingBalanceForeignAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblClosingBalanceLocalAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtClosingBalanceLocalAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalPaidForeignAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalPaidForeignAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalPaidLocalAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalPaidLocalAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalReceivedForeignAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalReceivedForeignAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalReceivedLocalAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalReceivedLocalAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalPayableForeignAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalPayableForeignAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalPayableLocalAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalPayableLocalAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalReceivableForeignAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalReceivableForeignAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalReceivableLocalAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalReceivableLocalAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblOpeningBalanceForeignAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtOpeningBalanceForeignAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblOpeningBalanceLocalAmount = new Krypton.Toolkit.KryptonLabel();
+            this.txtOpeningBalanceLocalAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblSummary = new Krypton.Toolkit.KryptonLabel();
+            this.lblStartDate = new Krypton.Toolkit.KryptonLabel();
+            this.dtpStartDate = new Krypton.Toolkit.KryptonDateTimePicker();
+            this.lblEndDate = new Krypton.Toolkit.KryptonLabel();
+            this.dtpEndDate = new Krypton.Toolkit.KryptonDateTimePicker();
+            this.lblStatementNo = new Krypton.Toolkit.KryptonLabel();
+            this.txtStatementNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblAccount_id = new Krypton.Toolkit.KryptonLabel();
             this.cmbAccount_id = new Krypton.Toolkit.KryptonComboBox();
             this.lblEmployee_ID = new Krypton.Toolkit.KryptonLabel();
@@ -48,37 +79,6 @@
             this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
-            this.lblStatementNo = new Krypton.Toolkit.KryptonLabel();
-            this.txtStatementNo = new Krypton.Toolkit.KryptonTextBox();
-            this.lblStartDate = new Krypton.Toolkit.KryptonLabel();
-            this.dtpStartDate = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.lblEndDate = new Krypton.Toolkit.KryptonLabel();
-            this.dtpEndDate = new Krypton.Toolkit.KryptonDateTimePicker();
-            this.lblSummary = new Krypton.Toolkit.KryptonLabel();
-            this.lblOpeningBalanceForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtOpeningBalanceForeignAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblOpeningBalanceLocalAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtOpeningBalanceLocalAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalReceivableForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalReceivableForeignAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalReceivableLocalAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalReceivableLocalAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalPayableForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalPayableForeignAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalPayableLocalAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalPayableLocalAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalReceivedForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalReceivedForeignAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalReceivedLocalAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalReceivedLocalAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalPaidForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalPaidForeignAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTotalPaidLocalAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtTotalPaidLocalAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblClosingBalanceForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtClosingBalanceForeignAmount = new Krypton.Toolkit.KryptonTextBox();
-            this.lblClosingBalanceLocalAmount = new Krypton.Toolkit.KryptonLabel();
-            this.txtClosingBalanceLocalAmount = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -116,7 +116,7 @@
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonSplitContainer2);
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1133, 746);
-            this.kryptonSplitContainer1.SplitterDistance = 265;
+            this.kryptonSplitContainer1.SplitterDistance = 247;
             this.kryptonSplitContainer1.TabIndex = 4;
             // 
             // kryptonPanel1
@@ -171,8 +171,247 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(1133, 265);
+            this.kryptonPanel1.Size = new System.Drawing.Size(1133, 247);
             this.kryptonPanel1.TabIndex = 4;
+            // 
+            // lblClosingBalanceForeignAmount
+            // 
+            this.lblClosingBalanceForeignAmount.Location = new System.Drawing.Point(945, 55);
+            this.lblClosingBalanceForeignAmount.Name = "lblClosingBalanceForeignAmount";
+            this.lblClosingBalanceForeignAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblClosingBalanceForeignAmount.TabIndex = 259;
+            this.lblClosingBalanceForeignAmount.Values.Text = "期末余额外币";
+            // 
+            // txtClosingBalanceForeignAmount
+            // 
+            this.txtClosingBalanceForeignAmount.Location = new System.Drawing.Point(1039, 55);
+            this.txtClosingBalanceForeignAmount.Name = "txtClosingBalanceForeignAmount";
+            this.txtClosingBalanceForeignAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtClosingBalanceForeignAmount.TabIndex = 260;
+            // 
+            // lblClosingBalanceLocalAmount
+            // 
+            this.lblClosingBalanceLocalAmount.Location = new System.Drawing.Point(945, 80);
+            this.lblClosingBalanceLocalAmount.Name = "lblClosingBalanceLocalAmount";
+            this.lblClosingBalanceLocalAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblClosingBalanceLocalAmount.TabIndex = 261;
+            this.lblClosingBalanceLocalAmount.Values.Text = "期末余额本币";
+            // 
+            // txtClosingBalanceLocalAmount
+            // 
+            this.txtClosingBalanceLocalAmount.Location = new System.Drawing.Point(1039, 80);
+            this.txtClosingBalanceLocalAmount.Name = "txtClosingBalanceLocalAmount";
+            this.txtClosingBalanceLocalAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtClosingBalanceLocalAmount.TabIndex = 262;
+            // 
+            // lblTotalPaidForeignAmount
+            // 
+            this.lblTotalPaidForeignAmount.Location = new System.Drawing.Point(945, 191);
+            this.lblTotalPaidForeignAmount.Name = "lblTotalPaidForeignAmount";
+            this.lblTotalPaidForeignAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalPaidForeignAmount.TabIndex = 255;
+            this.lblTotalPaidForeignAmount.Values.Text = "期间付款外币";
+            // 
+            // txtTotalPaidForeignAmount
+            // 
+            this.txtTotalPaidForeignAmount.Location = new System.Drawing.Point(1039, 191);
+            this.txtTotalPaidForeignAmount.Name = "txtTotalPaidForeignAmount";
+            this.txtTotalPaidForeignAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtTotalPaidForeignAmount.TabIndex = 256;
+            // 
+            // lblTotalPaidLocalAmount
+            // 
+            this.lblTotalPaidLocalAmount.Location = new System.Drawing.Point(945, 216);
+            this.lblTotalPaidLocalAmount.Name = "lblTotalPaidLocalAmount";
+            this.lblTotalPaidLocalAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalPaidLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.DarkGreen;
+            this.lblTotalPaidLocalAmount.TabIndex = 257;
+            this.lblTotalPaidLocalAmount.Values.Text = "期间付款本币";
+            // 
+            // txtTotalPaidLocalAmount
+            // 
+            this.txtTotalPaidLocalAmount.Location = new System.Drawing.Point(1039, 216);
+            this.txtTotalPaidLocalAmount.Name = "txtTotalPaidLocalAmount";
+            this.txtTotalPaidLocalAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtTotalPaidLocalAmount.TabIndex = 258;
+            // 
+            // lblTotalReceivedForeignAmount
+            // 
+            this.lblTotalReceivedForeignAmount.Location = new System.Drawing.Point(945, 120);
+            this.lblTotalReceivedForeignAmount.Name = "lblTotalReceivedForeignAmount";
+            this.lblTotalReceivedForeignAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalReceivedForeignAmount.TabIndex = 251;
+            this.lblTotalReceivedForeignAmount.Values.Text = "期间收款外币";
+            // 
+            // txtTotalReceivedForeignAmount
+            // 
+            this.txtTotalReceivedForeignAmount.Location = new System.Drawing.Point(1039, 120);
+            this.txtTotalReceivedForeignAmount.Name = "txtTotalReceivedForeignAmount";
+            this.txtTotalReceivedForeignAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtTotalReceivedForeignAmount.TabIndex = 252;
+            // 
+            // lblTotalReceivedLocalAmount
+            // 
+            this.lblTotalReceivedLocalAmount.Location = new System.Drawing.Point(945, 145);
+            this.lblTotalReceivedLocalAmount.Name = "lblTotalReceivedLocalAmount";
+            this.lblTotalReceivedLocalAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalReceivedLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.DarkGreen;
+            this.lblTotalReceivedLocalAmount.TabIndex = 253;
+            this.lblTotalReceivedLocalAmount.Values.Text = "期间收款本币";
+            // 
+            // txtTotalReceivedLocalAmount
+            // 
+            this.txtTotalReceivedLocalAmount.Location = new System.Drawing.Point(1039, 145);
+            this.txtTotalReceivedLocalAmount.Name = "txtTotalReceivedLocalAmount";
+            this.txtTotalReceivedLocalAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtTotalReceivedLocalAmount.TabIndex = 254;
+            // 
+            // lblTotalPayableForeignAmount
+            // 
+            this.lblTotalPayableForeignAmount.Location = new System.Drawing.Point(756, 191);
+            this.lblTotalPayableForeignAmount.Name = "lblTotalPayableForeignAmount";
+            this.lblTotalPayableForeignAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalPayableForeignAmount.TabIndex = 247;
+            this.lblTotalPayableForeignAmount.Values.Text = "期间应付外币";
+            // 
+            // txtTotalPayableForeignAmount
+            // 
+            this.txtTotalPayableForeignAmount.Location = new System.Drawing.Point(850, 191);
+            this.txtTotalPayableForeignAmount.Name = "txtTotalPayableForeignAmount";
+            this.txtTotalPayableForeignAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtTotalPayableForeignAmount.TabIndex = 248;
+            // 
+            // lblTotalPayableLocalAmount
+            // 
+            this.lblTotalPayableLocalAmount.Location = new System.Drawing.Point(756, 216);
+            this.lblTotalPayableLocalAmount.Name = "lblTotalPayableLocalAmount";
+            this.lblTotalPayableLocalAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalPayableLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblTotalPayableLocalAmount.TabIndex = 249;
+            this.lblTotalPayableLocalAmount.Values.Text = "期间应付本币";
+            // 
+            // txtTotalPayableLocalAmount
+            // 
+            this.txtTotalPayableLocalAmount.Location = new System.Drawing.Point(850, 216);
+            this.txtTotalPayableLocalAmount.Name = "txtTotalPayableLocalAmount";
+            this.txtTotalPayableLocalAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtTotalPayableLocalAmount.TabIndex = 250;
+            // 
+            // lblTotalReceivableForeignAmount
+            // 
+            this.lblTotalReceivableForeignAmount.Location = new System.Drawing.Point(756, 123);
+            this.lblTotalReceivableForeignAmount.Name = "lblTotalReceivableForeignAmount";
+            this.lblTotalReceivableForeignAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalReceivableForeignAmount.TabIndex = 243;
+            this.lblTotalReceivableForeignAmount.Values.Text = "期间应收外币";
+            // 
+            // txtTotalReceivableForeignAmount
+            // 
+            this.txtTotalReceivableForeignAmount.Location = new System.Drawing.Point(850, 123);
+            this.txtTotalReceivableForeignAmount.Name = "txtTotalReceivableForeignAmount";
+            this.txtTotalReceivableForeignAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtTotalReceivableForeignAmount.TabIndex = 244;
+            // 
+            // lblTotalReceivableLocalAmount
+            // 
+            this.lblTotalReceivableLocalAmount.Location = new System.Drawing.Point(756, 148);
+            this.lblTotalReceivableLocalAmount.Name = "lblTotalReceivableLocalAmount";
+            this.lblTotalReceivableLocalAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalReceivableLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
+            this.lblTotalReceivableLocalAmount.TabIndex = 245;
+            this.lblTotalReceivableLocalAmount.Values.Text = "期间应收本币";
+            // 
+            // txtTotalReceivableLocalAmount
+            // 
+            this.txtTotalReceivableLocalAmount.Location = new System.Drawing.Point(850, 148);
+            this.txtTotalReceivableLocalAmount.Name = "txtTotalReceivableLocalAmount";
+            this.txtTotalReceivableLocalAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtTotalReceivableLocalAmount.TabIndex = 246;
+            // 
+            // lblOpeningBalanceForeignAmount
+            // 
+            this.lblOpeningBalanceForeignAmount.Location = new System.Drawing.Point(756, 52);
+            this.lblOpeningBalanceForeignAmount.Name = "lblOpeningBalanceForeignAmount";
+            this.lblOpeningBalanceForeignAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblOpeningBalanceForeignAmount.TabIndex = 239;
+            this.lblOpeningBalanceForeignAmount.Values.Text = "期初余额外币";
+            // 
+            // txtOpeningBalanceForeignAmount
+            // 
+            this.txtOpeningBalanceForeignAmount.Location = new System.Drawing.Point(850, 52);
+            this.txtOpeningBalanceForeignAmount.Name = "txtOpeningBalanceForeignAmount";
+            this.txtOpeningBalanceForeignAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtOpeningBalanceForeignAmount.TabIndex = 240;
+            // 
+            // lblOpeningBalanceLocalAmount
+            // 
+            this.lblOpeningBalanceLocalAmount.Location = new System.Drawing.Point(756, 81);
+            this.lblOpeningBalanceLocalAmount.Name = "lblOpeningBalanceLocalAmount";
+            this.lblOpeningBalanceLocalAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblOpeningBalanceLocalAmount.TabIndex = 241;
+            this.lblOpeningBalanceLocalAmount.Values.Text = "期初余额本币";
+            // 
+            // txtOpeningBalanceLocalAmount
+            // 
+            this.txtOpeningBalanceLocalAmount.Location = new System.Drawing.Point(850, 81);
+            this.txtOpeningBalanceLocalAmount.Name = "txtOpeningBalanceLocalAmount";
+            this.txtOpeningBalanceLocalAmount.Size = new System.Drawing.Size(82, 23);
+            this.txtOpeningBalanceLocalAmount.TabIndex = 242;
+            // 
+            // lblSummary
+            // 
+            this.lblSummary.Location = new System.Drawing.Point(37, 165);
+            this.lblSummary.Name = "lblSummary";
+            this.lblSummary.Size = new System.Drawing.Size(36, 20);
+            this.lblSummary.TabIndex = 238;
+            this.lblSummary.Values.Text = "备注";
+            // 
+            // lblStartDate
+            // 
+            this.lblStartDate.Location = new System.Drawing.Point(497, 53);
+            this.lblStartDate.Name = "lblStartDate";
+            this.lblStartDate.Size = new System.Drawing.Size(75, 20);
+            this.lblStartDate.TabIndex = 234;
+            this.lblStartDate.Values.Text = "对账周期起";
+            // 
+            // dtpStartDate
+            // 
+            this.dtpStartDate.Location = new System.Drawing.Point(578, 54);
+            this.dtpStartDate.Name = "dtpStartDate";
+            this.dtpStartDate.ShowCheckBox = true;
+            this.dtpStartDate.Size = new System.Drawing.Size(139, 21);
+            this.dtpStartDate.TabIndex = 235;
+            // 
+            // lblEndDate
+            // 
+            this.lblEndDate.Location = new System.Drawing.Point(497, 78);
+            this.lblEndDate.Name = "lblEndDate";
+            this.lblEndDate.Size = new System.Drawing.Size(75, 20);
+            this.lblEndDate.TabIndex = 236;
+            this.lblEndDate.Values.Text = "对账周期止";
+            // 
+            // dtpEndDate
+            // 
+            this.dtpEndDate.Location = new System.Drawing.Point(578, 79);
+            this.dtpEndDate.Name = "dtpEndDate";
+            this.dtpEndDate.ShowCheckBox = true;
+            this.dtpEndDate.Size = new System.Drawing.Size(139, 21);
+            this.dtpEndDate.TabIndex = 237;
+            // 
+            // lblStatementNo
+            // 
+            this.lblStatementNo.Location = new System.Drawing.Point(6, 54);
+            this.lblStatementNo.Name = "lblStatementNo";
+            this.lblStatementNo.Size = new System.Drawing.Size(62, 20);
+            this.lblStatementNo.TabIndex = 232;
+            this.lblStatementNo.Values.Text = "对账单号";
+            // 
+            // txtStatementNo
+            // 
+            this.txtStatementNo.Location = new System.Drawing.Point(79, 50);
+            this.txtStatementNo.Name = "txtStatementNo";
+            this.txtStatementNo.Size = new System.Drawing.Size(100, 23);
+            this.txtStatementNo.TabIndex = 233;
             // 
             // lblAccount_id
             // 
@@ -287,7 +526,7 @@
             // 
             // txtSummary
             // 
-            this.txtSummary.Location = new System.Drawing.Point(79, 176);
+            this.txtSummary.Location = new System.Drawing.Point(79, 165);
             this.txtSummary.Multiline = true;
             this.txtSummary.Name = "txtSummary";
             this.txtSummary.Size = new System.Drawing.Size(385, 74);
@@ -295,7 +534,7 @@
             // 
             // lblApprovalOpinions
             // 
-            this.lblApprovalOpinions.Location = new System.Drawing.Point(510, 176);
+            this.lblApprovalOpinions.Location = new System.Drawing.Point(510, 165);
             this.lblApprovalOpinions.Name = "lblApprovalOpinions";
             this.lblApprovalOpinions.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalOpinions.TabIndex = 157;
@@ -303,7 +542,7 @@
             // 
             // txtApprovalOpinions
             // 
-            this.txtApprovalOpinions.Location = new System.Drawing.Point(578, 176);
+            this.txtApprovalOpinions.Location = new System.Drawing.Point(578, 165);
             this.txtApprovalOpinions.Multiline = true;
             this.txtApprovalOpinions.Name = "txtApprovalOpinions";
             this.txtApprovalOpinions.Size = new System.Drawing.Size(139, 74);
@@ -330,8 +569,8 @@
             // kryptonSplitContainer2.Panel1
             // 
             this.kryptonSplitContainer2.Panel1.Controls.Add(this.grid1);
-            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 476);
-            this.kryptonSplitContainer2.SplitterDistance = 439;
+            this.kryptonSplitContainer2.Size = new System.Drawing.Size(1133, 494);
+            this.kryptonSplitContainer2.SplitterDistance = 455;
             this.kryptonSplitContainer2.TabIndex = 2;
             // 
             // grid1
@@ -343,256 +582,17 @@
             this.grid1.Name = "grid1";
             this.grid1.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
             this.grid1.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-            this.grid1.Size = new System.Drawing.Size(1133, 439);
+            this.grid1.Size = new System.Drawing.Size(1133, 455);
             this.grid1.TabIndex = 2;
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
-            // lblStatementNo
-            // 
-            this.lblStatementNo.Location = new System.Drawing.Point(6, 54);
-            this.lblStatementNo.Name = "lblStatementNo";
-            this.lblStatementNo.Size = new System.Drawing.Size(62, 20);
-            this.lblStatementNo.TabIndex = 232;
-            this.lblStatementNo.Values.Text = "对账单号";
-            // 
-            // txtStatementNo
-            // 
-            this.txtStatementNo.Location = new System.Drawing.Point(79, 50);
-            this.txtStatementNo.Name = "txtStatementNo";
-            this.txtStatementNo.Size = new System.Drawing.Size(100, 23);
-            this.txtStatementNo.TabIndex = 233;
-            // 
-            // lblStartDate
-            // 
-            this.lblStartDate.Location = new System.Drawing.Point(497, 53);
-            this.lblStartDate.Name = "lblStartDate";
-            this.lblStartDate.Size = new System.Drawing.Size(75, 20);
-            this.lblStartDate.TabIndex = 234;
-            this.lblStartDate.Values.Text = "对账周期起";
-            // 
-            // dtpStartDate
-            // 
-            this.dtpStartDate.Location = new System.Drawing.Point(578, 54);
-            this.dtpStartDate.Name = "dtpStartDate";
-            this.dtpStartDate.ShowCheckBox = true;
-            this.dtpStartDate.Size = new System.Drawing.Size(139, 21);
-            this.dtpStartDate.TabIndex = 235;
-            // 
-            // lblEndDate
-            // 
-            this.lblEndDate.Location = new System.Drawing.Point(497, 78);
-            this.lblEndDate.Name = "lblEndDate";
-            this.lblEndDate.Size = new System.Drawing.Size(75, 20);
-            this.lblEndDate.TabIndex = 236;
-            this.lblEndDate.Values.Text = "对账周期止";
-            // 
-            // dtpEndDate
-            // 
-            this.dtpEndDate.Location = new System.Drawing.Point(578, 79);
-            this.dtpEndDate.Name = "dtpEndDate";
-            this.dtpEndDate.ShowCheckBox = true;
-            this.dtpEndDate.Size = new System.Drawing.Size(139, 21);
-            this.dtpEndDate.TabIndex = 237;
-            // 
-            // lblSummary
-            // 
-            this.lblSummary.Location = new System.Drawing.Point(37, 176);
-            this.lblSummary.Name = "lblSummary";
-            this.lblSummary.Size = new System.Drawing.Size(36, 20);
-            this.lblSummary.TabIndex = 238;
-            this.lblSummary.Values.Text = "备注";
-            // 
-            // lblOpeningBalanceForeignAmount
-            // 
-            this.lblOpeningBalanceForeignAmount.Location = new System.Drawing.Point(756, 52);
-            this.lblOpeningBalanceForeignAmount.Name = "lblOpeningBalanceForeignAmount";
-            this.lblOpeningBalanceForeignAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblOpeningBalanceForeignAmount.TabIndex = 239;
-            this.lblOpeningBalanceForeignAmount.Values.Text = "期初余额外币";
-            // 
-            // txtOpeningBalanceForeignAmount
-            // 
-            this.txtOpeningBalanceForeignAmount.Location = new System.Drawing.Point(850, 52);
-            this.txtOpeningBalanceForeignAmount.Name = "txtOpeningBalanceForeignAmount";
-            this.txtOpeningBalanceForeignAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtOpeningBalanceForeignAmount.TabIndex = 240;
-            // 
-            // lblOpeningBalanceLocalAmount
-            // 
-            this.lblOpeningBalanceLocalAmount.Location = new System.Drawing.Point(756, 81);
-            this.lblOpeningBalanceLocalAmount.Name = "lblOpeningBalanceLocalAmount";
-            this.lblOpeningBalanceLocalAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblOpeningBalanceLocalAmount.TabIndex = 241;
-            this.lblOpeningBalanceLocalAmount.Values.Text = "期初余额本币";
-            // 
-            // txtOpeningBalanceLocalAmount
-            // 
-            this.txtOpeningBalanceLocalAmount.Location = new System.Drawing.Point(850, 81);
-            this.txtOpeningBalanceLocalAmount.Name = "txtOpeningBalanceLocalAmount";
-            this.txtOpeningBalanceLocalAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtOpeningBalanceLocalAmount.TabIndex = 242;
-            // 
-            // lblTotalReceivableForeignAmount
-            // 
-            this.lblTotalReceivableForeignAmount.Location = new System.Drawing.Point(756, 133);
-            this.lblTotalReceivableForeignAmount.Name = "lblTotalReceivableForeignAmount";
-            this.lblTotalReceivableForeignAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblTotalReceivableForeignAmount.TabIndex = 243;
-            this.lblTotalReceivableForeignAmount.Values.Text = "期间应收外币";
-            // 
-            // txtTotalReceivableForeignAmount
-            // 
-            this.txtTotalReceivableForeignAmount.Location = new System.Drawing.Point(850, 133);
-            this.txtTotalReceivableForeignAmount.Name = "txtTotalReceivableForeignAmount";
-            this.txtTotalReceivableForeignAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtTotalReceivableForeignAmount.TabIndex = 244;
-            // 
-            // lblTotalReceivableLocalAmount
-            // 
-            this.lblTotalReceivableLocalAmount.Location = new System.Drawing.Point(756, 158);
-            this.lblTotalReceivableLocalAmount.Name = "lblTotalReceivableLocalAmount";
-            this.lblTotalReceivableLocalAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblTotalReceivableLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
-            this.lblTotalReceivableLocalAmount.TabIndex = 245;
-            this.lblTotalReceivableLocalAmount.Values.Text = "期间应收本币";
-            // 
-            // txtTotalReceivableLocalAmount
-            // 
-            this.txtTotalReceivableLocalAmount.Location = new System.Drawing.Point(850, 158);
-            this.txtTotalReceivableLocalAmount.Name = "txtTotalReceivableLocalAmount";
-            this.txtTotalReceivableLocalAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtTotalReceivableLocalAmount.TabIndex = 246;
-            // 
-            // lblTotalPayableForeignAmount
-            // 
-            this.lblTotalPayableForeignAmount.Location = new System.Drawing.Point(756, 196);
-            this.lblTotalPayableForeignAmount.Name = "lblTotalPayableForeignAmount";
-            this.lblTotalPayableForeignAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblTotalPayableForeignAmount.TabIndex = 247;
-            this.lblTotalPayableForeignAmount.Values.Text = "期间应付外币";
-            // 
-            // txtTotalPayableForeignAmount
-            // 
-            this.txtTotalPayableForeignAmount.Location = new System.Drawing.Point(850, 196);
-            this.txtTotalPayableForeignAmount.Name = "txtTotalPayableForeignAmount";
-            this.txtTotalPayableForeignAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtTotalPayableForeignAmount.TabIndex = 248;
-            // 
-            // lblTotalPayableLocalAmount
-            // 
-            this.lblTotalPayableLocalAmount.Location = new System.Drawing.Point(756, 221);
-            this.lblTotalPayableLocalAmount.Name = "lblTotalPayableLocalAmount";
-            this.lblTotalPayableLocalAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblTotalPayableLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
-            this.lblTotalPayableLocalAmount.TabIndex = 249;
-            this.lblTotalPayableLocalAmount.Values.Text = "期间应付本币";
-            // 
-            // txtTotalPayableLocalAmount
-            // 
-            this.txtTotalPayableLocalAmount.Location = new System.Drawing.Point(850, 221);
-            this.txtTotalPayableLocalAmount.Name = "txtTotalPayableLocalAmount";
-            this.txtTotalPayableLocalAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtTotalPayableLocalAmount.TabIndex = 250;
-            // 
-            // lblTotalReceivedForeignAmount
-            // 
-            this.lblTotalReceivedForeignAmount.Location = new System.Drawing.Point(945, 130);
-            this.lblTotalReceivedForeignAmount.Name = "lblTotalReceivedForeignAmount";
-            this.lblTotalReceivedForeignAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblTotalReceivedForeignAmount.TabIndex = 251;
-            this.lblTotalReceivedForeignAmount.Values.Text = "期间收款外币";
-            // 
-            // txtTotalReceivedForeignAmount
-            // 
-            this.txtTotalReceivedForeignAmount.Location = new System.Drawing.Point(1039, 130);
-            this.txtTotalReceivedForeignAmount.Name = "txtTotalReceivedForeignAmount";
-            this.txtTotalReceivedForeignAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtTotalReceivedForeignAmount.TabIndex = 252;
-            // 
-            // lblTotalReceivedLocalAmount
-            // 
-            this.lblTotalReceivedLocalAmount.Location = new System.Drawing.Point(945, 155);
-            this.lblTotalReceivedLocalAmount.Name = "lblTotalReceivedLocalAmount";
-            this.lblTotalReceivedLocalAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblTotalReceivedLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.DarkGreen;
-            this.lblTotalReceivedLocalAmount.TabIndex = 253;
-            this.lblTotalReceivedLocalAmount.Values.Text = "期间收款本币";
-            // 
-            // txtTotalReceivedLocalAmount
-            // 
-            this.txtTotalReceivedLocalAmount.Location = new System.Drawing.Point(1039, 155);
-            this.txtTotalReceivedLocalAmount.Name = "txtTotalReceivedLocalAmount";
-            this.txtTotalReceivedLocalAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtTotalReceivedLocalAmount.TabIndex = 254;
-            // 
-            // lblTotalPaidForeignAmount
-            // 
-            this.lblTotalPaidForeignAmount.Location = new System.Drawing.Point(945, 196);
-            this.lblTotalPaidForeignAmount.Name = "lblTotalPaidForeignAmount";
-            this.lblTotalPaidForeignAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblTotalPaidForeignAmount.TabIndex = 255;
-            this.lblTotalPaidForeignAmount.Values.Text = "期间付款外币";
-            // 
-            // txtTotalPaidForeignAmount
-            // 
-            this.txtTotalPaidForeignAmount.Location = new System.Drawing.Point(1039, 196);
-            this.txtTotalPaidForeignAmount.Name = "txtTotalPaidForeignAmount";
-            this.txtTotalPaidForeignAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtTotalPaidForeignAmount.TabIndex = 256;
-            // 
-            // lblTotalPaidLocalAmount
-            // 
-            this.lblTotalPaidLocalAmount.Location = new System.Drawing.Point(945, 221);
-            this.lblTotalPaidLocalAmount.Name = "lblTotalPaidLocalAmount";
-            this.lblTotalPaidLocalAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblTotalPaidLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.DarkGreen;
-            this.lblTotalPaidLocalAmount.TabIndex = 257;
-            this.lblTotalPaidLocalAmount.Values.Text = "期间付款本币";
-            // 
-            // txtTotalPaidLocalAmount
-            // 
-            this.txtTotalPaidLocalAmount.Location = new System.Drawing.Point(1039, 221);
-            this.txtTotalPaidLocalAmount.Name = "txtTotalPaidLocalAmount";
-            this.txtTotalPaidLocalAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtTotalPaidLocalAmount.TabIndex = 258;
-            // 
-            // lblClosingBalanceForeignAmount
-            // 
-            this.lblClosingBalanceForeignAmount.Location = new System.Drawing.Point(945, 55);
-            this.lblClosingBalanceForeignAmount.Name = "lblClosingBalanceForeignAmount";
-            this.lblClosingBalanceForeignAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblClosingBalanceForeignAmount.TabIndex = 259;
-            this.lblClosingBalanceForeignAmount.Values.Text = "期末余额外币";
-            // 
-            // txtClosingBalanceForeignAmount
-            // 
-            this.txtClosingBalanceForeignAmount.Location = new System.Drawing.Point(1039, 55);
-            this.txtClosingBalanceForeignAmount.Name = "txtClosingBalanceForeignAmount";
-            this.txtClosingBalanceForeignAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtClosingBalanceForeignAmount.TabIndex = 260;
-            // 
-            // lblClosingBalanceLocalAmount
-            // 
-            this.lblClosingBalanceLocalAmount.Location = new System.Drawing.Point(945, 80);
-            this.lblClosingBalanceLocalAmount.Name = "lblClosingBalanceLocalAmount";
-            this.lblClosingBalanceLocalAmount.Size = new System.Drawing.Size(88, 20);
-            this.lblClosingBalanceLocalAmount.TabIndex = 261;
-            this.lblClosingBalanceLocalAmount.Values.Text = "期末余额本币";
-            // 
-            // txtClosingBalanceLocalAmount
-            // 
-            this.txtClosingBalanceLocalAmount.Location = new System.Drawing.Point(1039, 80);
-            this.txtClosingBalanceLocalAmount.Name = "txtClosingBalanceLocalAmount";
-            this.txtClosingBalanceLocalAmount.Size = new System.Drawing.Size(82, 23);
-            this.txtClosingBalanceLocalAmount.TabIndex = 262;
-            // 
-            // UCStatement
+            // UCFMStatement
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.kryptonSplitContainer1);
-            this.Name = "UCStatement";
+            this.Name = "UCFMStatement";
             this.Size = new System.Drawing.Size(1133, 771);
             this.Load += new System.EventHandler(this.UCStockIn_Load);
             this.Controls.SetChildIndex(this.kryptonSplitContainer1, 0);

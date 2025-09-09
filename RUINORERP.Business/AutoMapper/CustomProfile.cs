@@ -33,6 +33,7 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_FM_ReceivablePayable, tb_FM_StatementDetail>()
             .ForMember(a => a.IncludedForeignAmount, o => o.MapFrom(d => d.ForeignBalanceAmount))
             .ForMember(a => a.IncludedLocalAmount, o => o.MapFrom(d => d.LocalBalanceAmount))
+            .ForMember(a => a.RemainingLocalAmount, o => o.MapFrom(d => d.LocalBalanceAmount))
             .ForMember(a => a.Summary, o => o.MapFrom(d => d.Remark));
 
             CreateMap<tb_PurReturnEntry, tb_FM_ReceivablePayable>();

@@ -59,56 +59,7 @@ namespace RUINORERP.Business.CommService
         private static MyCacheManager _manager;
 
 
-        /*
-        public static void InitManager()
-        {
-            if (_manager == null)
-            {
-                //因为是静态，系统启动就调用这里。所以这里的才是最会执行的代码
-                var cache = CacheManager.Core.CacheFactory.Build<object>(p => p.WithMicrosoftLogging(log =>
-                {
-                    // log.ClearProviders();
-                    //f.AddConsole(LogLevel.Information);
-                    //f.AddDebug(LogLevel.Verbose);
-                    //log4net.config 配置文件中最后面 定的级别
-                    Common.Log4Net.Log4NetProvider log4NetProvider = new Common.Log4Net.Log4NetProvider("Log4net_file.config");
-                    log.AddProvider(log4NetProvider);
-                })
-                .WithSystemRuntimeCacheHandle()
-                .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120))
-                );
-
-                //  var cacheA = CacheFactory.FromConfiguration<object>("myCache");
-                //因为系统启动就调用这里。所以这里的才是最会执行的代码
-                var cacheEntity = CacheManager.Core.CacheFactory.Build<object>(p => p.WithMicrosoftLogging(log =>
-                {
-                    // log.ClearProviders();
-                    //f.AddConsole(LogLevel.Information);
-                    //f.AddDebug(LogLevel.Verbose);
-                    //log4net.config 配置文件中最后面 定的级别
-                    Common.Log4Net.Log4NetProvider log4NetProvider = new Common.Log4Net.Log4NetProvider("Log4net_file.config");
-                    log.AddProvider(log4NetProvider);
-                })
-                .WithSystemRuntimeCacheHandle()
-                .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120))
-                );
-                //因为系统启动就调用这里。所以这里的才是最会执行的代码
-                var cacheEntityList = CacheManager.Core.CacheFactory.Build<object>(p => p.WithMicrosoftLogging(log =>
-                {
-                    // log.ClearProviders();
-                    //f.AddConsole(LogLevel.Information);
-                    //f.AddDebug(LogLevel.Verbose);
-                    //log4net.config 配置文件中最后面 定的级别
-                    Common.Log4Net.Log4NetProvider log4NetProvider = new Common.Log4Net.Log4NetProvider("Log4net_file.config");
-                    log.AddProvider(log4NetProvider);
-                })
-                .WithSystemRuntimeCacheHandle()
-                .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120))
-                );
-                _manager = new MyCacheManager(cache, cacheEntity, cacheEntityList);
-            }
-        }
-        */
+ 
 
         // 修正后的InitManager方法
         public static void InitManager()

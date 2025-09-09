@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,10 +8,18 @@ namespace RUINORERP.IIS
 {
     public class SessionStorage
     {
-     
-
+        // 使用带过期时间的会话存储
         private static readonly Dictionary<string, (DateTime expires, object userState)> storage = new Dictionary<string, (DateTime, object)>();
         private static readonly object lockObject = new object();
+
+        // 添加定时清理过期会话
+        private static System.Threading.Timer cleanupTimer;
+
+        static SessionStorage()
+        {
+            // 每5分钟清理一次过期会话
+            cleanupTimer = new System.Threading.Timer(CleanUpSessions, null, TimeSpan.Zero, TimeSpan.FromMinutes(5));
+        }
 
         public static string Add(string sessionId, object state, int timeoutMinutes)
         {
@@ -28,7 +36,17 @@ namespace RUINORERP.IIS
             {
                 if (storage.TryGetValue(sessionId, out var session))
                 {
-                    return session.expires > DateTime.UtcNow;
+                    // 检查会话是否过期
+                    if (session.expires > DateTime.UtcNow)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        // 会话已过期，删除它
+                        storage.Remove(sessionId);
+                        return false;
+                    }
                 }
                 return false;
             }
@@ -38,9 +56,18 @@ namespace RUINORERP.IIS
         {
             lock (lockObject)
             {
-                if (storage.TryGetValue(sessionId, out var session) && session.expires > DateTime.UtcNow)
+                if (storage.TryGetValue(sessionId, out var session))
                 {
-                    return session.userState;
+                    // 检查会话是否过期
+                    if (session.expires > DateTime.UtcNow)
+                    {
+                        return session.userState;
+                    }
+                    else
+                    {
+                        // 会话已过期，删除它
+                        storage.Remove(sessionId);
+                    }
                 }
                 return null;
             }
@@ -58,23 +85,43 @@ namespace RUINORERP.IIS
         {
             lock (lockObject)
             {
-                var keysToRemove = storage.Where(kvp => kvp.Value.expires <= DateTime.UtcNow).Select(kvp => kvp.Key).ToList();
-                foreach (var key in keysToRemove)
+                var expiredKeys = storage.Where(kvp => kvp.Value.expires <= DateTime.UtcNow)
+                                         .Select(kvp => kvp.Key)
+                                         .ToList();
+                                         
+                foreach (var key in expiredKeys)
                 {
                     storage.Remove(key);
                 }
             }
         }
 
-
-        System.Threading.Timer timer = new System.Threading.Timer(CleanUpSessions, null, 0, 60000); // 每分钟清理一次
-        private static void CleanUpSessions(object? state)
+        /// <summary>
+        /// 定期清理过期会话
+        /// </summary>
+        private static void CleanUpSessions(object state)
         {
-            /// <summary>
-            /// 定期清理过期会话
-            /// </summary>
-            SessionStorage.CleanExpiredSessions();
+            CleanExpiredSessions();
         }
 
+        // 获取当前活跃会话数量
+        public static int GetActiveSessionCount()
+        {
+            lock (lockObject)
+            {
+                return storage.Count(kvp => kvp.Value.expires > DateTime.UtcNow);
+            }
+        }
+
+        // 获取所有会话ID（用于监控）
+        public static List<string> GetAllSessionIds()
+        {
+            lock (lockObject)
+            {
+                return storage.Where(kvp => kvp.Value.expires > DateTime.UtcNow)
+                              .Select(kvp => kvp.Key)
+                              .ToList();
+            }
+        }
     }
 }

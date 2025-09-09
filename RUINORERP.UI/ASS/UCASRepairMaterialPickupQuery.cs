@@ -23,6 +23,8 @@ using RUINORERP.Business.Security;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business.Processor;
+using RUINORERP.Business.CommService;
+using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -270,9 +272,16 @@ namespace RUINORERP.UI.MRP.MP
             return true;
         }
 
+        private void UCASRepairMaterialPickupQuery_Load(object sender, EventArgs e)
+        {
+            //外键的已经配置好了
+            //#region 双击单号后按业务类型查询显示对应业务窗体
+            //////这个参数中指定要双击的列单号。是来自另一组  一对一的指向关系
+            ////因为后面代码去查找时，直接用的 从一个对象中找这个列的值。但是枚举显示的是名称。所以这里直接传入枚举的值。
+            //KeyNamePair keyNamePair = new KeyNamePair(((int)(BizType.维修工单)).ToString(), typeof(tb_AS_RepairOrder).Name);
+            //base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_AS_RepairMaterialPickup>(c => c.RepairOrderNo, keyNamePair);
 
-
-
-
+            //#endregion
+        }
     }
 }

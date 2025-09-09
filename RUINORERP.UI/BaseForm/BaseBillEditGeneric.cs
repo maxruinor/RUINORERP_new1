@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -2405,7 +2405,7 @@ namespace RUINORERP.UI.BaseForm
                         byte[] bytes = UI.Common.ImageHelper.imageToByteArray(frm.CloseCaseImage);
                         HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
                         ////上传新文件时要加后缀名
-                        string uploadRsult = await httpWebService.UploadImageAsync(strCloseCaseImagePath + ".jpg", bytes, "upload");
+                        string uploadRsult = await httpWebService.UploadImageAsyncOK("", strCloseCaseImagePath + ".jpg", bytes, "upload");
                         if (uploadRsult.Contains("UploadSuccessful"))
                         {
                             EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
@@ -3215,19 +3215,31 @@ namespace RUINORERP.UI.BaseForm
                                 MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
                             }
                             ////上传新文件时要加后缀名
-                            string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", valueImageWeb.CellImageBytes, "upload");
-                            if (uploadRsult.Contains("UploadSuccessful"))
+                            string uploadRsult = await httpWebService.UploadImageAsync(CurMenuInfo.MenuID.ToString(), (EditEntity as BaseEntity).PrimaryKeyID.ToString(), newfileName + ".jpg", valueImageWeb.CellImageBytes, "upload");
+                            if (uploadRsult.Contains("UploadSuccessful") || uploadRsult.Contains("ImageExists"))
                             {
+                                // 提取文件名（无论是新上传还是已存在）
+                                string resultFileName = uploadRsult.Contains("UploadSuccessful") ?
+                                    uploadRsult.Replace("UploadSuccessful: ", "").Trim() :
+                                    uploadRsult.Replace("ImageExists: ", "").Trim();
+
                                 valueImageWeb.UpdateImageName(newhash);
-                                grid[i, realIndex].Value = valueImageWeb.CellImageHashName;
+                                grid[i, realIndex].Value = resultFileName;
 
                                 string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
                                 object PKValue = grid[i, realIndex].Row.RowData.GetPropertyValue(detailPKName);
                                 var detail = Details.Where(x => x.GetPropertyValue(detailPKName).ToString().Equals(PKValue.ToString())).FirstOrDefault();
-                                detail.SetPropertyValue(col.ColName, valueImageWeb.CellImageHashName);
+                                detail.SetPropertyValue(col.ColName, resultFileName);
                                 rs = true;
-                                //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
-                                MainForm.Instance.PrintInfoLog("UploadSuccessful:" + newfileName);
+
+                                if (uploadRsult.Contains("UploadSuccessful"))
+                                {
+                                    MainForm.Instance.PrintInfoLog("UploadSuccessful:" + resultFileName);
+                                }
+                                else
+                                {
+                                    MainForm.Instance.PrintInfoLog("ImageExists - 使用现有图片:" + resultFileName);
+                                }
                             }
                             else
                             {
@@ -3733,7 +3745,7 @@ namespace RUINORERP.UI.BaseForm
                             // 重置明细的外键（指向主实体）
                             ReflectionHelper.SetPropertyValue(item, fkProperty.Name, 0);
                             // 重置需要忽略的属性
-                            ResetIgnoredProperties(item,  ignoreConfig);
+                            ResetIgnoredProperties(item, ignoreConfig);
                             // 处理明细的子明细（第二级）
                             ProcessSecondLevelDetails(item, detailPKCol, detailType.Name, ignoreConfig);
                         }

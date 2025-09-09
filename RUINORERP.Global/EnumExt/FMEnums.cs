@@ -28,13 +28,13 @@ namespace RUINORERP.Global.EnumExt
     public enum ARAPWriteOffStatus
     {
         [Description("待核销")]
-        PendingWriteOff = 1,  // 已纳入对账单，尚未核销任何金额
+        待核销 = 1,  // 已纳入对账单，尚未核销任何金额
 
         [Description("部分核销")]
-        PartiallyWrittenOff = 2,  // 本次对账中部分金额已核销
+        部分核销 = 2,  // 本次对账中部分金额已核销
 
         [Description("全额核销")]
-        FullyWrittenOff = 3  // 本次对账中全部未核销金额已核销
+        全额核销 = 3  // 本次对账中全部未核销金额已核销
     }
 
     /// <summary>

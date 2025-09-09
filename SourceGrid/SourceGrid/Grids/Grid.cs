@@ -16,7 +16,7 @@ namespace SourceGrid
         private ISpannedCellRangesController spannedCellReferences = null;
 
 
-        #region ºÏ¼Æ
+        #region ï¿½Ï¼ï¿½
 
         private bool _hasSummary = true;
 
@@ -50,7 +50,7 @@ namespace SourceGrid
             this.Name = "Grid";
             spannedCellReferences = new SpannedCellRangesController(
                 this,
-                new QuadTreeRangesList(Range.From(new Position(0, 0), 4, 4)));
+                new QuadTreeRangesList(Range.From(new Position(0, 0), 16, 16)));
 
             this.ResumeLayout(false);
         }

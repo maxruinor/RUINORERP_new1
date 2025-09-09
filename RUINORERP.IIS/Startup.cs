@@ -1,4 +1,35 @@
-﻿using Autofac;
+using Autofac;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Business.CommService;
+using RUINORERP.Common.CustomAttribute;
+using Autofac.Extras.DynamicProxy;
+using RUINORERP.Extensions.DI;
+
+namespace RUINORERP.Business.DI
+{
+    public static class BusinessDIConfig
+    {
+        public static void ConfigureContainer(ContainerBuilder builder)
+        {
+            // Register business layer components
+            builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
+                  .AsImplementedInterfaces()
+                  .AsSelf()
+                  .PropertiesAutowired()
+                  .InstancePerDependency()
+                  .EnableInterfaceInterceptors()
+                  .InterceptedBy(typeof(BaseDataCacheAOP));
+                  
+            // Register specific business components
+            builder.RegisterType<BillConverterFactory>()
+                  .As<IBillConverterFactory>()
+                  .SingleInstance();
+        }
+    }
+}
+
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -18,10 +49,7 @@ using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
-
 using RUINORERP.Common;
-
-
 using RUINORERP.Services;
 using RUINORERP.IServices;
 using RUINORERP.Extensions.AOP;
@@ -767,12 +795,17 @@ public IHost CslaDIPortBackup()
 
         public static void ConfigureContainer(ContainerBuilder builder)
         {
-            //var dalAssemble_common = System.Reflection.Assembly.LoadFrom("RUINORERP.Common.dll");
-            //builder.RegisterAssemblyTypes(dalAssemble_common)
-            //      .AsImplementedInterfaces().AsSelf()
-            //      .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-            //      .PropertiesAutowired();//允许属性注入
-
+            // 使用统一配置注册容器
+            UnifiedStartup.ConfigureContainer(builder);
+            
+            // 注册各项目模块的DI配置
+            BusinessDIConfig.ConfigureContainer(builder);
+            ServicesDIConfig.ConfigureContainer(builder);
+            RepositoryDIConfig.ConfigureContainer(builder);
+            IServicesDIConfig.ConfigureContainer(builder);
+            ExtensionsDIConfig.ConfigureContainer(builder);
+            
+            // IIS特有的注册
             builder.RegisterType<Extensions.Filter.GlobalExceptionsFilter>();
 
 
@@ -1097,6 +1130,11 @@ public IHost CslaDIPortBackup()
 
 
             builder.RegisterModule(new AutofacServiceRegister());
+            
+            // 注册图片处理服务
+            builder.RegisterType<ImageProcessingService>()
+                   .AsSelf()
+                   .SingleInstance();
         }
 
         //public void Configure(IApplicationBuilder app, MyContext myContext,
@@ -1285,6 +1323,3 @@ public IHost CslaDIPortBackup()
             };
             return true;
         }
-    }*/
-
-}

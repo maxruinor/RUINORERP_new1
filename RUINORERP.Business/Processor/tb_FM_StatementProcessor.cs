@@ -47,7 +47,6 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_Statement, tb_CustomerVendor>(c => c.CustomerVendor_ID);
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.PayeeInfoID);
-            queryFilter.SetQueryField<tb_FM_Statement>(c => c.CustomerVendor_ID);
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.Account_id);
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.Created_by);
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.Created_at, AdvQueryProcessType.datetimeRange, true);

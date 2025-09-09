@@ -454,14 +454,12 @@ namespace RUINORERP.UI
             try
             {
 
-                #region 用了csla  
+                #region 注册DI
                 try
                 {
                     //先定义上下文
-
-                    Startup starter = new Startup(true);
-                    IHost myhost = starter.CslaDIPort();
-                    // IHostBuilder  myhost = starter.CslaDIPort();
+                    Startup starter = new Startup();
+                    IHost myhost = starter.SartUpDIPort();
                     IServiceProvider services = myhost.Services;
                     //https://github.com/autofac/Autofac.Extensions.DependencyInjection/releases
                     //给上下文服务源
@@ -470,7 +468,6 @@ namespace RUINORERP.UI
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
                     AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);
                     BusinessHelper.Instance.SetContext(AppContextData);
-
 
 
                     #region  启动工作流主机
@@ -541,10 +538,6 @@ namespace RUINORERP.UI
                     var form1 = Startup.ServiceProvider.GetService<MainForm>();
                     Application.Run(form1);
 
-                    //ILogger<MainForm> logger = null;
-                    // MainForm form1 = new MainForm(logger,null);
-                    //Application.Run(form1);
-
                 }
                 catch (Exception ex)
                 {
@@ -563,13 +556,10 @@ namespace RUINORERP.UI
 
             }
 
-
-
-
-
-
-
         }
+
+
+
         private static void BringExistingInstanceToFront()
         {
             Process current = Process.GetCurrentProcess();
@@ -580,6 +570,8 @@ namespace RUINORERP.UI
                 break;
             }
         }
+
+
         #region 禁止多个进程运行，当重复运行时激活以前的进程
         #region 在进程中查找是否已经有实例在运行
         // 确保程序只运行一个实例

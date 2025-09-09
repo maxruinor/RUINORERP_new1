@@ -547,7 +547,7 @@ namespace RUINORERP.UI.FM
                                 }
                                 string newfileName = EditEntity.RowImage.GetUploadfileName();
                                 ////上传新文件时要加后缀名
-                                string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", EditEntity.RowImage.ImageBytes, "upload");
+                                string uploadRsult = await httpWebService.UploadImageAsyncOK("", newfileName + ".jpg", EditEntity.RowImage.ImageBytes, "upload");
                                 if (uploadRsult.Contains("UploadSuccessful"))
                                 {
                                     //重要
@@ -655,6 +655,9 @@ namespace RUINORERP.UI.FM
                         }
                     }
 
+
+
+
                     tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctr = Startup.GetFromFac<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
                     bool rs = await ctr.BaseDeleteAsync(EditEntity as tb_FM_PreReceivedPayment);
                     if (rs)
@@ -665,7 +668,8 @@ namespace RUINORERP.UI.FM
 
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
-
+                        FMAuditLogHelper fMAuditLog = Startup.GetFromFac<FMAuditLogHelper>();
+                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("删除预收款单", EditEntity as tb_FM_PreReceivedPayment);
                         //加载一个空的显示的UI
                         // bindingSourceSub.Clear();
                         //base.OnBindDataToUIEvent(EditEntity as tb_FM_ExpenseClaim, ActionStatus.删除);

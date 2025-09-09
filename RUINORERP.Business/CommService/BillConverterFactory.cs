@@ -445,6 +445,15 @@ namespace RUINORERP.Business.CommService
                         cbd.BillNoColName = GetExpressionColumnName<tb_AS_RepairInStock>(c => c.RepairInStockNo);
                     }
                     break;
+                case BizType.对账单:
+                    var Statement = Entity as tb_FM_Statement;
+                    if (Statement != null)
+                    {
+                        cbd.BillID = Statement.StatementId;
+                        cbd.BillNo = Statement.StatementNo;
+                        cbd.BillNoColName = GetExpressionColumnName<tb_FM_Statement>(c => c.StatementNo);
+                    }
+                    break;
                 case BizType.维修领料单:
                     var RepairMaterialPickup = Entity as tb_AS_RepairMaterialPickup;
                     if (RepairMaterialPickup != null)

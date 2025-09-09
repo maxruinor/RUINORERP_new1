@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using RUINORERP.Model.Context;
 using RUINORERP.Model;
@@ -28,15 +28,18 @@ namespace RUINORERP.IIS
         private readonly ILoggerService _logger; // 假设引入了日志库
         private readonly IAuthenticationService _authService;
         private readonly IAuthorizationService _authzService;
+        private readonly ImageProcessingService _imageProcessingService;
 
         public WebServer(ApplicationContext appContext, ConfigManager configManager,
-            ILoggerService logger, IAuthenticationService authService, IAuthorizationService authzService)
+            ILoggerService logger, IAuthenticationService authService, IAuthorizationService authzService, 
+            ImageProcessingService imageProcessingService)
         {
             _appContext = appContext;
             _configManager = configManager;
             _logger = logger;
             _authService = authService;
             _authzService = authzService;
+            _imageProcessingService = imageProcessingService;
         }
 
         CancellationTokenSource cts = new CancellationTokenSource();
@@ -151,57 +154,51 @@ namespace RUINORERP.IIS
             Route.Before = (rq, rp) => { Console.WriteLine($"Requested: {rq.Url.PathAndQuery}"); return false; };
             Route.Error = HandleError;
             Route.Add("/", HandleHomePage, "GET");
-            Route.Add("/{ERPImages}/", HandleViewImagesFiles, "GET");
-            //改为？号分割
-            Route.Add("/{action}/{paramA}?{paramB}", HandleUrlParsingDemo, "GET");///ERPImages/01J8Q1Y1A3SNCD545HFGGSSTQG-a71b4c9a927824741768f76a89624f32.jpg
+            
+            // 专门处理图片访问，增加安全检查
+            Route.Add("/ERPImages/{bizType}/{entityId}/{filename}", HandleImageAccess, "GET");
+            
+            Route.Add("/{action}/{paramA}?{paramB}", HandleUrlParsingDemo, "GET");
             Route.Add("/upload/", HandleFormParsingUpload, "POST");
             Route.Add("/login", HandleLogin, "POST");
             Route.Add("/api/v1/users", HandleApiDemo, "GET");
-            Route.Add("/delete", HandleDelete, "DELETE"); // 删除路由，仅处理DELETE请求
+            Route.Add("/delete", HandleDelete, "DELETE");
             Route.Add("/deleteImages", HandleDeleteImages, "DELETE");
             Route.Add("/favicon.ico", (rq, rp, args) =>
             {
                 rp.AsFile(rq, Path.Combine(webDir, "favicon.ico"));
             });
-            // 4) 处理异常演示
+            
             Route.Add("/handleException/", (rq, rp, args) =>
             {
                 throw new NotImplementedException("My not implemented exception.");
             });
 
+            // 添加一个中间件来阻止访问上传目录中的非图片文件
+            Route.Add((rq, args) =>
+            {
+                return rq.Url.LocalPath.StartsWith("/ERPImages/") && 
+                       !IsValidImageRequest(rq.Url.LocalPath);
+            }, (rq, rp, args) =>
+            {
+                rp.AsText("Forbidden", HttpStatusCode.Forbidden.GetDescription());
+            });
 
-            // 6) 删除图片
-            //Route.Add("/deleteImages/", (rq, rp, args) =>
-            //{
-            //    var serverDir = _configManager.GetValue("ServerImageDirectory");
-            //    string imagePath = Path.Combine(webDir, serverDir, args["image"]);
-            //    if (File.Exists(imagePath))
-            //    {
-            //        File.Delete(imagePath);
-            //        rp.AsText("Image deleted successfully.");
-            //    }
-            //    else
-            //    {
-            //        rp.AsText("Image not found.", HttpStatusCode.NotFound.GetDescription());
-            //    }
-            //});
-            // 7) 未找到的路由
             Route.Add("", (rq, rp, args) =>
             {
                 rp.AsText("404 Not Found", HttpStatusCode.NotFound.GetDescription());
             });
 
-            // 8) 内部服务器错误
             Route.Error = (rq, rp, ex) =>
             {
                 rp.AsText($"500 Internal Server Error: {ex.Message}", HttpStatusCode.InternalServerError.GetDescription());
             };
 
-            // 2) 服务静态文件 放到最后 包含上面有没有没有处理的情况
+            // 服务静态文件，但排除上传目录
             Route.Add((rq, args) =>
             {
                 string filePath = Path.Combine(webDir, rq.Url.LocalPath.TrimStart('/'));
-                if (File.Exists(filePath))
+                if (File.Exists(filePath) && !rq.Url.LocalPath.StartsWith("/ERPImages/"))
                 {
                     args["file"] = filePath;
                     return true;
@@ -218,11 +215,7 @@ namespace RUINORERP.IIS
             frmMain.Instance.PrintInfoLog($"Error processing request: {ex.Message}");
         }
 
-
-
-
-
-        private async void HandleHomePage(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
+        private async void HandleFormParsingUpload(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
         {
             try
             {
@@ -230,29 +223,133 @@ namespace RUINORERP.IIS
                 if (!isAuthenticated)
                 {
                     rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
-                    frmMain.Instance.PrintInfoLog("HandleHomePage-Unauthorized");
                     return;
                 }
-                // 2) 服务静态文件
-                string filePath = Path.Combine(webDir, rq.Url.LocalPath.TrimStart('/'));
-                if (File.Exists(filePath))
-                {
-                    args["file"] = filePath;
-                    var ss = Path.HasExtension(args["file"]);
-                    rp.AsFile(rq, args["file"]);
-                }
-                else
-                {
-                    rp.AsFile(rq, Path.Combine(webDir, "Index.html"));
-                }
-                // );
 
+                var files = rq.ParseBody(args);
+                
+                // 获取业务类型和实体ID参数
+                string bizType = args.ContainsKey("bizType") ? args["bizType"] : "general";
+                string entityId = args.ContainsKey("entityId") ? args["entityId"] : Guid.NewGuid().ToString();
+                string fieldName = args.ContainsKey("fieldName") ? args["fieldName"] : "image";
+                string imageHash = args.ContainsKey("imageHash") ? args["imageHash"] : "";
+                
+                // 创建按业务类型和实体ID组织的目录结构
+                string serverImagesDir = Path.Combine(webDir, "ERPImages", bizType, entityId);
+                
+                // 确保目录存在
+                if (!Directory.Exists(serverImagesDir))
+                {
+                    Directory.CreateDirectory(serverImagesDir);
+                }
 
+                var uploadedFiles = new List<string>();
+                
+                foreach (var f in files.Values)
+                {
+                    // 验证文件类型和大小
+                    if (!IsValidFileType(f.FileName) || f.Value.Length > MaxFileSize)
+                    {
+                        rp.AsText("Invalid file type or size", HttpStatusCode.BadRequest.GetDescription());
+                        return;
+                    }
+
+                    // 检查图片哈希值是否已存在
+                    if (!string.IsNullOrEmpty(imageHash))
+                    {
+                        string existingFileName = _imageProcessingService.GetExistingImageFileName(serverImagesDir, imageHash);
+                        
+                        if (!string.IsNullOrEmpty(existingFileName))
+                        {
+                            // 返回已存在的文件名，避免重复上传
+                            var response = new
+                            {
+                                Status = "ImageExists",
+                                File = $"/ERPImages/{bizType}/{entityId}/{existingFileName}"
+                            };
+                            rp.AsText(JsonConvert.SerializeObject(response), "application/json");
+                            return;
+                        }
+                    }
+
+                    // 生成文件名（使用哈希值前8位或GUID）
+                    string fileExtension = Path.GetExtension(f.FileName);
+                    string uniqueFileName = !string.IsNullOrEmpty(imageHash) ? 
+                        $"{bizType}_{entityId}_{imageHash.Substring(0, 8)}{fileExtension}" : 
+                        $"{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid():N}{fileExtension}";
+                    
+                    string filePath = Path.Combine(serverImagesDir, uniqueFileName);
+                    
+                    // 保存文件
+                    f.Save(filePath, true);
+                    uploadedFiles.Add($"/ERPImages/{bizType}/{entityId}/{uniqueFileName}");
+                }
+
+                // 返回上传成功的文件路径列表
+                var response = new
+                {
+                    Status = "UploadSuccessful",
+                    Files = uploadedFiles,
+                    FormFields = args.Where(x => !files.ContainsKey(x.Key)).ToDictionary(x => x.Key, x => x.Value)
+                };
+
+                rp.AsText(JsonConvert.SerializeObject(response), "application/json");
             }
             catch (Exception ex)
             {
-                LogError(ex);
+                HandleError(rq, rp, ex);
             }
+        }
+
+        // 处理图片访问请求
+        private async void HandleImageAccess(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
+        {
+            try
+            {
+                bool isAuthenticated = await _authService.Authenticate(rq, rp);
+                if (!isAuthenticated)
+                {
+                    rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
+                    return;
+                }
+
+                string bizType = args["bizType"];
+                string entityId = args["entityId"];
+                string filename = args["filename"];
+
+                string imagePath = Path.Combine(webDir, "ERPImages", bizType, entityId, filename);
+                
+                // 验证文件是否存在且为图片
+                if (File.Exists(imagePath) && IsValidImageRequest(filename))
+                {
+                    rp.AsFile(rq, imagePath);
+                }
+                else
+                {
+                    rp.AsText("Image not found.", HttpStatusCode.NotFound.GetDescription());
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleError(rq, rp, ex);
+            }
+        }
+
+        // 验证是否为合法的图片请求
+        private bool IsValidImageRequest(string path)
+        {
+            // 检查文件扩展名是否为允许的图片格式
+            var allowedExtensions = new HashSet<string> { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
+            var extension = Path.GetExtension(path).ToLowerInvariant();
+            return allowedExtensions.Contains(extension);
+        }
+
+        // 验证文件类型
+        private bool IsValidFileType(string fileName)
+        {
+            var validExtensions = new HashSet<string> { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
+            var extension = Path.GetExtension(fileName).ToLowerInvariant();
+            return validExtensions.Contains(extension);
         }
 
         private void HandleUrlParsingDemo(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
@@ -289,8 +386,7 @@ namespace RUINORERP.IIS
             }
         }
 
-        // 安全的文件上传处理
-        private async void HandleFormParsingUpload(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
+        private async void HandleHomePage(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
         {
             try
             {
@@ -298,73 +394,24 @@ namespace RUINORERP.IIS
                 if (!isAuthenticated)
                 {
                     rp.AsText("Unauthorized", HttpStatusCode.Unauthorized.GetDescription());
+                    frmMain.Instance.PrintInfoLog("HandleHomePage-Unauthorized");
                     return;
                 }
-
-                var files = rq.ParseBody(args);
-                string serverImagesDir = Path.Combine(webDir, "ERPImages");
-
-                foreach (var f in files.Values)
+                // 2) 服务静态文件
+                string filePath = Path.Combine(webDir, rq.Url.LocalPath.TrimStart('/'));
+                if (File.Exists(filePath))
                 {
-                    // 验证文件类型和大小
-                    if (!IsValidFileType(f.FileName) || f.Value.Length > MaxFileSize)
-                    {
-                        rp.AsText("Invalid file type or size", HttpStatusCode.BadRequest.GetDescription());
-                        return;
-                    }
-
-                    // 清理文件名以防止路径遍历攻击
-                    string safeFileName = GetSafeFileName(f.FileName);//斜/会被去掉
-                    string lastPath = Path.Combine(serverImagesDir, f.FileName);
-                    System.IO.FileInfo fileInfo = new FileInfo(lastPath);
-                    if (!fileInfo.Directory.Exists)
-                    {
-                        System.IO.Directory.CreateDirectory(fileInfo.DirectoryName);
-                    }
-                    f.Save(lastPath, true);
+                    args["file"] = filePath;
+                    var ss = Path.HasExtension(args["file"]);
+                    rp.AsFile(rq, args["file"]);
                 }
-
-                //Upload successful这个是返回给客户端的文本标记上传成功。要对应！！TODO:
-
-                var txtRp = "UploadSuccessful Form fields: " + String.Join(";  ", args.Select(x => $"'{x.Key}: {x.Value}'")) +
-                            "Files:       " + String.Join(";  ", files.Select(x => $"'{x.Key}: {x.Value.FileName}, {x.Value.ContentType}'"));
-
-                rp.AsText($"<pre>{txtRp}</pre>");
-            }
-            catch (Exception ex)
-            {
-                HandleError(rq, rp, ex);
-            }
-        }
+                else
+                {
+                    rp.AsFile(rq, Path.Combine(webDir, "Index.html"));
+                }
+                // );
 
 
-        //private void HandleFormParsingUpload(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
-        //{
-        //    try
-        //    {
-        //        var files = rq.ParseBody(args);
-        //        string serverImagesDir = Path.Combine(webDir, "ERPImages");
-
-        //        foreach (var f in files.Values)
-        //            f.Save(Path.Combine(serverImagesDir, f.FileName), true);
-
-        //        var txtRp = "Form fields: " + String.Join(";  ", args.Select(x => $"'{x.Key}: {x.Value}'")) +
-        //                    "Files:       " + String.Join(";  ", files.Select(x => $"'{x.Key}: {x.Value.FileName}, {x.Value.ContentType}'"));
-
-        //        rp.AsText($"<pre>{txtRp}</pre>");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        LogError(ex);
-        //    }
-        //}
-
-        private void HandleApiDemo(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
-        {
-            try
-            {
-                var txt = Templating.RenderFile(Path.Combine(webDir, "UrlParsingResponse.thtml"), args);
-                rp.AsText(GetUsers(rq));
             }
             catch (Exception ex)
             {
@@ -404,6 +451,19 @@ namespace RUINORERP.IIS
             //}
         }
 
+        private void HandleApiDemo(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
+        {
+            try
+            {
+                var txt = Templating.RenderFile(Path.Combine(webDir, "UrlParsingResponse.thtml"), args);
+                rp.AsText(GetUsers(rq));
+            }
+            catch (Exception ex)
+            {
+                LogError(ex);
+            }
+        }
+
         // 删除图片
         private async void HandleDeleteImages(HttpListenerRequest rq, HttpListenerResponse rp, Dictionary<string, string> args)
         {
@@ -416,14 +476,24 @@ namespace RUINORERP.IIS
                     return;
                 }
 
-                var serverDir = _configManager.GetValue("ServerImageDirectory");
-                string fileName = rq.Headers["fileName"].ToString();
-                string imagePath = Path.Combine(webDir, serverDir, fileName);
-                imagePath += ".jpg";//文件后缀
-                if (File.Exists(imagePath))
+                // 从请求参数获取业务类型、实体ID和文件名
+                string bizType = rq.Headers["bizType"]?.ToString() ?? "general";
+                string entityId = rq.Headers["entityId"]?.ToString() ?? "";
+                string fileName = rq.Headers["fileName"]?.ToString() ?? "";
+                
+                if (string.IsNullOrEmpty(entityId) || string.IsNullOrEmpty(fileName))
                 {
-                    File.Delete(imagePath);
-                    rp.AsText("Image deleted successfully.");
+                    rp.AsText("Missing required parameters", HttpStatusCode.BadRequest.GetDescription());
+                    return;
+                }
+
+                string entityImagePath = Path.Combine(webDir, "ERPImages", bizType, entityId);
+                
+                // 删除整个实体目录（包含所有尺寸的图片）
+                if (Directory.Exists(entityImagePath))
+                {
+                    Directory.Delete(entityImagePath, true);
+                    rp.AsText("Images deleted successfully.");
                 }
                 else
                 {
@@ -452,16 +522,6 @@ namespace RUINORERP.IIS
             });
         }
 
-
-        // 验证文件类型
-        private bool IsValidFileType(string fileName)
-        {
-            var validExtensions = new HashSet<string> { ".jpg", ".jpeg", ".png", ".gif" };
-            var extension = Path.GetExtension(fileName).ToLowerInvariant();
-            return validExtensions.Contains(extension);
-        }
-
-        // 获取安全的文件名
         private string GetSafeFileName(string fileName)
         {
             var invalidChars = System.IO.Path.GetInvalidFileNameChars();
@@ -488,9 +548,6 @@ namespace RUINORERP.IIS
             {
                 cts.Dispose();
             }
-            
-
-            
         }
     }
 }

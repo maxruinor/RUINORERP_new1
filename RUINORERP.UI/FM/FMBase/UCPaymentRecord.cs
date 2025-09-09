@@ -38,6 +38,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.StatusManagerService;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using LiveChartsCore.Geo;
 
 
 namespace RUINORERP.UI.FM
@@ -51,7 +52,7 @@ namespace RUINORERP.UI.FM
         {
             InitializeComponent();
             // usedActionStatus = true;
-
+            paymentController = Startup.GetFromFac<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
         }
         public override void QueryConditionBuilder()
         {
@@ -166,7 +167,7 @@ namespace RUINORERP.UI.FM
                 entity.ActionStatus = ActionStatus.加载;
                 LoadPayeeInfo(entity);
                 ControlCurrency(entity);
-                
+
             }
             else
             {
@@ -503,7 +504,7 @@ namespace RUINORERP.UI.FM
         }
 
 
-
+        private tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController = null;
         List<tb_FM_PaymentRecordDetail> details = new List<tb_FM_PaymentRecordDetail>();
         protected async override Task<bool> Save(bool NeedValidated)
         {
@@ -553,20 +554,54 @@ namespace RUINORERP.UI.FM
 
 
                 //如果主表的总金额和明细金额加总后不相等，则提示
+                //如果来源是应收应付。，是只能一次支付收款。就是总金额要等于明细。如果是来自对账单的。则可以不相等，针对对账单可以多次支付，部分支付。
                 if (NeedValidated && EditEntity.TotalForeignAmount != details.Sum(c => c.ForeignAmount))
                 {
-                    if (MessageBox.Show("总金额外币和明细金额外币总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                    if (MessageBox.Show("总金额外币和明细金额外币总计不相等，保存失败？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {
                         return false;
                     }
                 }
 
 
+                // 先进行自动分配（如果需要）
+                if (NeedValidated && EditEntity.TotalLocalAmount > 0 && details.Sum(d => d.LocalAmount) != EditEntity.TotalLocalAmount)
+                {
+                    return paymentController.AutoDistributePaymentAmount(EditEntity, details);
+                }
+
+                //不管收款单，明细中的业务类型是对账单，还是其它应收应付款单，如果有多张单，并且支付的金额小于单据总金额时，如 ，应付，500，700， 只付300时只能保存一张单且是最小的那个单
+                // 进行验证
+                if (NeedValidated && EditEntity.TotalLocalAmount > 0 && details.Sum(d => d.LocalAmount) != EditEntity.TotalLocalAmount)
+                {
+                    return paymentController.ValidatePaymentRecordDetails(EditEntity);
+                }
+
                 if (NeedValidated && EditEntity.TotalLocalAmount != details.Sum(c => c.LocalAmount))
                 {
-                    if (MessageBox.Show("总金额本币和明细金额本币总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                    if (EditEntity.tb_FM_PaymentRecordDetails.Any(c => c.SourceBizType == (int)BizType.对账单))
                     {
+                        if (MessageBox.Show("总金额本币和明细金额本币之和不相等，你确定是部分支付吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("总金额本币和明细金额本币之和不相等，请检查数据后再试!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
                         return false;
+                    }
+                }
+
+
+                if (NeedValidated && EditEntity.tb_FM_PaymentRecordDetails.Any(c => c.SourceBizType == (int)BizType.对账单))
+                {
+                    if (EditEntity.TotalLocalAmount < 0)
+                    {
+                        if (MessageBox.Show("总金额为负数，你确定吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                        {
+                            return false;
+                        }
                     }
                 }
 

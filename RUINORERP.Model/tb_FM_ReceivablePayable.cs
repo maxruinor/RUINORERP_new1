@@ -479,7 +479,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _AllowAddToStatement= false;
+        private bool _AllowAddToStatement= true;
         /// <summary>
         /// 允许加入对账
         /// </summary>

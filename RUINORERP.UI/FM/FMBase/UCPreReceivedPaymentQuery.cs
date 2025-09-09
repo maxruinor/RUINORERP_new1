@@ -548,6 +548,8 @@ namespace RUINORERP.UI.FM
                         bool rs = await ctr.BaseDeleteAsync(item);
                         if (rs)
                         {
+                            FMAuditLogHelper fMAuditLog = Startup.GetFromFac<FMAuditLogHelper>();
+                            fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("删除预收款单", item  as tb_FM_PreReceivedPayment);
                             counter++;
                         }
                     }

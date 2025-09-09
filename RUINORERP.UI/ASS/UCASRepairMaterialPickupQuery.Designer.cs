@@ -28,15 +28,41 @@
         /// </summary>
         private void InitializeComponent()
         {
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).BeginInit();
+            this.kryptonPanelMainBig.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).BeginInit();
             this.SuspendLayout();
             // 
-            // UCSaleOrderQuery
+            // kryptonPanelMainBig
+            // 
+            this.kryptonPanelMainBig.Size = new System.Drawing.Size(1083, 800);
+            // 
+            // kryptonDockableWorkspaceQuery
+            // 
+            // 
+            // 
+            // 
+            this.kryptonDockableWorkspaceQuery.Root.UniqueName = "1E691A582DF14E8443907289238B58BD";
+            this.kryptonDockableWorkspaceQuery.Root.WorkspaceControl = this.kryptonDockableWorkspaceQuery;
+            this.kryptonDockableWorkspaceQuery.Size = new System.Drawing.Size(1083, 661);
+            // 
+            // kryptonDockingManagerQuery
+            // 
+            this.kryptonDockingManagerQuery.Strings.TextAutoHide = "自动隐藏";
+            // 
+            // UCASRepairMaterialPickupQuery
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "UCSaleOrderQuery";
+            this.Name = "UCASRepairMaterialPickupQuery";
             this.Size = new System.Drawing.Size(1083, 825);
+            this.Load += new System.EventHandler(this.UCASRepairMaterialPickupQuery_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).EndInit();
+            this.kryptonPanelMainBig.ResumeLayout(false);
+            this.kryptonPanelMainBig.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonDockableWorkspaceQuery)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 

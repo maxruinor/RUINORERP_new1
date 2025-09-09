@@ -38,11 +38,7 @@ namespace RUINORERP.UI.PSI.PUR
         }
         public override List<ContextMenuController> AddContextMenu()
         {
-            List<EventHandler> ContextClickList = new List<EventHandler>();
-           // ContextClickList.Add(NewSumDataGridView_转为退货单);
-            ContextClickList.Add(NewSumDataGridView_转为应付款单);
             List<ContextMenuController> list = new List<ContextMenuController>();
-          //  list.Add(new ContextMenuController("【转为退货单】", true, false, "NewSumDataGridView_转为退货单"));
             list.Add(new ContextMenuController("【转为应付款单】", true, false, "NewSumDataGridView_转为应付款单"));
             return list;
         }

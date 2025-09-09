@@ -93,6 +93,17 @@ namespace RUINORERP.Business
                               .ToListAsync();
                 if (PaymentRecordlist != null && PaymentRecordlist.Count > 0)
                 {
+
+                    if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.待审核)
+                        && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.未审核)))
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"存在【待审核】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单，请联系上级财务删除后才能反审。";
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+
+
                     //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
                     if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
                         && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.已审核)))

@@ -1,4 +1,4 @@
-﻿using QuadTreeLib;
+using QuadTreeLib;
 using System;
 using System.Collections.Generic;
 
@@ -60,7 +60,8 @@ namespace SourceGrid
 		
 		public void MoveLeftSpannedRanges(int startIndex, int moveCount)
 		{
-			foreach (var range in this.SpannedRangesCollection.ToArray())
+			var ranges = this.SpannedRangesCollection.ToArray();
+			foreach (var range in ranges)
 			{
 				if (range.Start.Column <= startIndex)
 					continue;
@@ -72,7 +73,8 @@ namespace SourceGrid
 		
 		public void MoveUpSpannedRanges(int startIndex, int moveCount)
 		{
-			foreach (var range in this.SpannedRangesCollection.ToArray())
+			var ranges = this.SpannedRangesCollection.ToArray();
+			foreach (var range in ranges)
 			{
 				if (range.Start.Row <= startIndex)
 					continue;
@@ -110,7 +112,8 @@ namespace SourceGrid
 		
 		public void MoveDownSpannedRanges(int startIndex, int moveCount)
 		{
-			foreach (var range in this.SpannedRangesCollection.ToArray())
+			var ranges = this.SpannedRangesCollection.ToArray();
+			foreach (var range in ranges)
 			{
 				if (range.Start.Row < startIndex)
 					continue;
@@ -122,7 +125,8 @@ namespace SourceGrid
 		
 		public void MoveRightSpannedRanges(int startIndex, int moveCount)
 		{
-			foreach (var range in this.SpannedRangesCollection.ToArray())
+			var ranges = this.SpannedRangesCollection.ToArray();
+			foreach (var range in ranges)
 			{
 				if (range.Start.Column < startIndex)
 					continue;
@@ -135,19 +139,21 @@ namespace SourceGrid
 		
 		public void RemoveSpannedCellReferencesInRows(int startIndex, int count)
 		{
-			foreach (var range in this.SpannedRangesCollection.ToArray())
+			var ranges = this.SpannedRangesCollection.ToArray();
+			foreach (var range in ranges)
 			{
 				if ((range.Start.Row >= startIndex) &&
 				    (range.Start.Row < startIndex + count))
 				{
-					this.SpannedRangesCollection.Remove(range);
+	this.SpannedRangesCollection.Remove(range);
 				}
 			}
 		}
 		
 		public void RemoveSpannedCellReferencesInColumns(int startIndex, int count)
 		{
-			foreach (var range in this.SpannedRangesCollection.ToArray())
+			var ranges = this.SpannedRangesCollection.ToArray();
+			foreach (var range in ranges)
 			{
 				if ((range.Start.Column >= startIndex) &&
 				    (range.Start.Column < startIndex + count))
@@ -159,7 +165,8 @@ namespace SourceGrid
 		
 		public void ExpandSpannedColumns(int startIndex, int count)
 		{
-			foreach (var range in this.SpannedRangesCollection.ToArray())
+			var ranges = this.SpannedRangesCollection.ToArray();
+			foreach (var range in ranges)
 			{
 				bool isInsideStart = (range.Start.Column >= startIndex) && (range.Start.Column <= startIndex + count - 1);
 				bool isInsideEnd = (range.End.Column >= startIndex) && (range.End.Column <= startIndex + count - 1);
@@ -174,7 +181,8 @@ namespace SourceGrid
 		
 		public void ExpandSpannedRows(int startIndex, int count)
 		{
-			foreach (var range in this.SpannedRangesCollection.ToArray())
+			var ranges = this.SpannedRangesCollection.ToArray();
+			foreach (var range in ranges)
 			{
 				bool isInsideStart = (range.Start.Row >= startIndex) && (range.Start.Row <= startIndex + count - 1);
 				bool isInsideEnd = (range.End.Row >= startIndex) && (range.End.Row <= startIndex + count - 1);
@@ -192,7 +200,8 @@ namespace SourceGrid
 			const int startCol = 0;
 			const int endCol = 1000;
 			var removeRange = new Range(startIndex, startCol, startIndex + count - 1, endCol);
-			foreach (var range in this.SpannedRangesCollection.ToArray())
+			var ranges = this.SpannedRangesCollection.ToArray();
+			foreach (var range in ranges)
 			{
 				var intersection = range.Intersect(removeRange);
 				if (intersection.IsEmpty() == false)
@@ -214,7 +223,8 @@ namespace SourceGrid
 			const int startRow = 0;
 			const int endRow = 1000;
 			var removeRange = new Range(startRow, startIndex, endRow, startIndex + count - 1);
-			foreach (var range in this.SpannedRangesCollection.ToArray())
+			var ranges = this.SpannedRangesCollection.ToArray();
+			foreach (var range in ranges)
 			{
 				var intersection = range.Intersect(removeRange);
 				if (intersection.IsEmpty() == false)

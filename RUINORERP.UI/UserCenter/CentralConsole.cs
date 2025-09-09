@@ -62,8 +62,7 @@ namespace RUINORERP.UI.UserCenter
         预付款单,
         应收款单,
         应付款单,
-        收款对账单,
-        付款对账单,
+        对账单,
         收款单,
         付款单,
         

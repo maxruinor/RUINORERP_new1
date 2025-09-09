@@ -1352,7 +1352,7 @@ namespace RUINORERP.Business
             //找到上层的次级 ,是通过BOM明细找
             foreach (var BomDetailItem in MakingItemBom制令单母件配方.tb_BOM_SDetails)
             {
-    
+
                 //如果需求分析单已经建好保存后，再修改BOM添加了材料后。按BOM明细到分析单明细中找不到时。则直接由BOM明细生成制令单明细行
                 tb_ManufacturingOrderDetail ManufacturingOrderItem = mapper.Map<tb_ManufacturingOrderDetail>(BomDetailItem);
                 ManufacturingOrderItem.Location_ID = mpdItem制令单母件.Location_ID;
@@ -1392,6 +1392,11 @@ namespace RUINORERP.Business
                         //由UI上选择。这里不给值
                         ManufacturingOrderItem.IsExternalProduce = null;
                         var NeedMakingItem = demand需求分析主表.tb_ProduceGoodsRecommendDetails.FirstOrDefault(c => c.ProdDetailID == MediumBomInfo.ProdDetailID);
+
+                        MediumBomInfo.tb_BOM_SDetails = await _appContext.Db.CopyNew().Queryable<tb_BOM_SDetail>()
+                       .Includes(a => a.tb_proddetail, c => c.tb_bom_s)
+                       .Includes(a => a.tb_proddetail, b => b.tb_Inventories)
+                      .Where(c => c.BOM_ID == MediumBomInfo.BOM_ID).ToListAsync();
                         List<tb_ManufacturingOrderDetail> nextList = await GetSubManufacturingOrderDetailLoop(demand需求分析主表, MediumBomInfoList, NeedMakingItem, MediumBomInfo, middlewareNeedLoop);
                         AllMakingGoods.AddRange(nextList);
                     }
@@ -1416,8 +1421,8 @@ namespace RUINORERP.Business
 
                         ManufacturingOrderItem.Prelevel_BOM_Desc = MediumBomInfo.BOM_Name;//TODO要删除?
                         ManufacturingOrderItem.Prelevel_BOM_ID = MediumBomInfo.BOM_ID;//TODO要删除?
-                       //参考天思：没明白
-                        //配方号：在表身栏位时，当制令单是从受订单处截取过来，此栏的配方号就会回写到制令单表头的配方。当没有设定配方号，系统会抓取标准配方的第一个配方号。如需进行修改配方号，点击配方的右击在弹出的视窗选择：1.标准配方2.受订配方
+                                                                                      //参考天思：没明白
+                                                                                      //配方号：在表身栏位时，当制令单是从受订单处截取过来，此栏的配方号就会回写到制令单表头的配方。当没有设定配方号，系统会抓取标准配方的第一个配方号。如需进行修改配方号，点击配方的右击在弹出的视窗选择：1.标准配方2.受订配方
                         ManufacturingOrderItem.BOM_NO = MediumBomInfo.BOM_No;
                         ManufacturingOrderItem.BOM_ID = MediumBomInfo.BOM_ID;
 

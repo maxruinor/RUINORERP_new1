@@ -506,6 +506,7 @@ namespace RUINORERP.UI.SysConfig
 
                         List<tb_FM_ReceivablePayable> ReceivablePayables = MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
                             .Where(c => c.SourceBizType.HasValue)
+                            .Where(c => !c.BusinessDate.HasValue )
                             .ToList();
 
                         // 按来源业务类型分组

@@ -1,4 +1,4 @@
-﻿using SourceGrid;
+using SourceGrid;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

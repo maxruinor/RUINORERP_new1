@@ -227,6 +227,36 @@ namespace RUINORERP.Model
                         }
         }
 
+        private decimal _TotalForeignPayableAmount = ((0));
+        /// <summary>
+        /// 应付金额外币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalForeignPayableAmount", ColDesc = "应付金额外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalForeignPayableAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "应付金额外币")]
+        public decimal TotalForeignPayableAmount
+        {
+            get { return _TotalForeignPayableAmount; }
+            set
+            {
+                SetProperty(ref _TotalForeignPayableAmount, value);
+            }
+        }
+
+        private decimal _TotalLocalPayableAmount = ((0));
+        /// <summary>
+        /// 应付金额本币
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalLocalPayableAmount", ColDesc = "应付金额本币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "TotalLocalPayableAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "应付金额本币")]
+        public decimal TotalLocalPayableAmount
+        {
+            get { return _TotalLocalPayableAmount; }
+            set
+            {
+                SetProperty(ref _TotalLocalPayableAmount, value);
+            }
+        }
+
         private DateTime? _PaymentDate;
         /// <summary>
         /// 支付日期

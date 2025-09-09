@@ -1313,7 +1313,7 @@ namespace RUINORERP.UI.Common
                         }
                         string newfileName = result.ReturnObject.RowImage.GetUploadfileName();
                         ////上传新文件时要加后缀名
-                        string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", result.ReturnObject.RowImage.ImageBytes, "upload");
+                        string uploadRsult = await httpWebService.UploadImageAsyncOK("",newfileName + ".jpg", result.ReturnObject.RowImage.ImageBytes, "upload");
                         if (uploadRsult.Contains("UploadSuccessful"))
                         {
                             //重要
@@ -1401,7 +1401,7 @@ namespace RUINORERP.UI.Common
                         }
                         string newfileName = result.ReturnObject.RowImage.GetUploadfileName();
                         ////上传新文件时要加后缀名
-                        string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", result.ReturnObject.RowImage.ImageBytes, "upload");
+                        string uploadRsult = await httpWebService.UploadImageAsyncOK("", newfileName + ".jpg", result.ReturnObject.RowImage.ImageBytes, "upload");
                         if (uploadRsult.Contains("UploadSuccessful"))
                         {
                             //重要
@@ -1890,7 +1890,7 @@ namespace RUINORERP.UI.Common
                 }
             }
 
-      
+
 
             for (int i = 0; i < ColumnDisplays.Count; i++)
             {

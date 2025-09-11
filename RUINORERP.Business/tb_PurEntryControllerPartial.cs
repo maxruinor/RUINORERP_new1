@@ -481,8 +481,7 @@ namespace RUINORERP.Business
                         //出库时，全部生成应付，账期的。就加上到期日
                         //有付款过的。就去预收中抵扣，不够的金额及状态标识出来，生成应付后再用于生成对账单
                         tb_FM_ReceivablePayable Payable = await ctrpayable.BuildReceivablePayable(entity, false);
-                        var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                        ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
+                        ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
                         if (rmr.Succeeded)
                         {
                             //已经是等审核。 审核时会核销预收付款

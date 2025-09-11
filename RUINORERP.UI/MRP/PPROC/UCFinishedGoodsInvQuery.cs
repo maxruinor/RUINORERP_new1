@@ -21,12 +21,14 @@ using RUINORERP.Common.Helper;
 using RUINOR.Core;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.Processor;
+using RUINORERP.Model.Base;
+using RUINORERP.UI.UControls;
 
 namespace RUINORERP.UI.PSI.PUR
 {
 
     [MenuAttrAssemblyInfo("缴库单查询", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.缴库单)]
-    public partial class UCFinishedGoodsInvQuery : BaseBillQueryMC<tb_FinishedGoodsInv, tb_FinishedGoodsInvDetail>
+    public partial class UCFinishedGoodsInvQuery : BaseBillQueryMC<tb_FinishedGoodsInv, tb_FinishedGoodsInvDetail>, UI.AdvancedUIModule.IContextMenuInfoAuth
     {
         public UCFinishedGoodsInvQuery()
         {
@@ -44,8 +46,92 @@ namespace RUINORERP.UI.PSI.PUR
             base.MasterInvisibleCols.Add(c => c.FG_ID);
         }
 
+        public override List<ContextMenuController> AddContextMenu()
+        {
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list.Add(new ContextMenuController("【转为应付款单(制作费)】", true, false, "NewSumDataGridView_转为应付款单"));
+            return list;
+        }
 
- 
+        public override void BuildContextMenuController()
+        {
+            List<EventHandler> ContextClickList = new List<EventHandler>();
+            ContextClickList.Add(NewSumDataGridView_转为应付款单);
+            List<ContextMenuController> list = new List<ContextMenuController>();
+            list = AddContextMenu();
+
+            UIHelper.ControlContextMenuInvisible(CurMenuInfo, list);
+
+            if (_UCBillMasterQuery != null)
+            {
+                //base.dataGridView1.Use是否使用内置右键功能 = false;
+                ContextMenuStrip newContextMenuStrip = _UCBillMasterQuery.newSumDataGridViewMaster.GetContextMenu(_UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip
+                    , ContextClickList, list, true
+                    );
+                _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
+            }
+        }
+        private async void NewSumDataGridView_转为应付款单(object sender, EventArgs e)
+        {
+            List<tb_FinishedGoodsInv> selectlist = GetSelectResult();
+            if (selectlist.Count > 1)
+            {
+                MessageBox.Show("每次只能选择一个【缴库单】转成【应付款单(制作费)】");
+                return;
+            }
+            List<tb_FinishedGoodsInv> RealList = new List<tb_FinishedGoodsInv>();
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
+            foreach (var item in selectlist)
+            {
+                //只有审核状态才可以转换为应收
+                bool canConvert = item.DataStatus == (long)DataStatus.确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                if (canConvert)
+                {
+                    RealList.Add(item);
+                }
+                else
+                {
+                    msg.Append(counter.ToString() + ") ");
+                    msg.Append($"当前缴库单 {item.DeliveryBillNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生成【应付款单(制作费)】。").Append("\r\n");
+                    counter++;
+                }
+            }
+
+            if (msg.ToString().Length > 0)
+            {
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (RealList.Count == 0)
+                {
+                    return;
+                }
+            }
+
+            if (RealList.Count == 0)
+            {
+                msg.Append("请至少选择一行数据转为【应付款单(制作费)】");
+                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var ReceivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+            tb_FM_ReceivablePayable ReceivablePayable = await ReceivablePayableController.BuildReceivablePayable(RealList[0], true);
+            MenuPowerHelper menuPowerHelper;
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+            string Flag = string.Empty;
+            //付款
+            Flag = typeof(RUINORERP.UI.FM.UCPayable).FullName;
+
+            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == nameof(tb_FM_ReceivablePayable)
+                        && m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
+            .FirstOrDefault();
+            if (RelatedMenuInfo != null)
+            {
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+            }
+
+        }
 
 
         public override void BuildLimitQueryConditions()

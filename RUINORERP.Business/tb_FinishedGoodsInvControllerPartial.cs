@@ -30,6 +30,7 @@ using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using static log4net.Appender.ColoredConsoleAppender;
 using RUINORERP.Business.CommService;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Business
 {
@@ -448,6 +449,35 @@ namespace RUINORERP.Business
                     #endregion
                 }
 
+                if (entity.IsOutSourced)
+                {
+                    AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                    if (authorizeController.EnableFinancialModule())
+                    {
+                        //生成加工费用的应付款单   ,加工费一般不会预付，所以不会抵扣，要处理也只是在审核完后。这里不会处理
+                        try
+                        {
+                            #region 生成应付
+                            var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                            tb_FM_ReceivablePayable Payable = await ctrpayable.BuildReceivablePayable(entity, false);
+                            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
+                            if (rmr.Succeeded)
+                            {
+                                //已经是等审核。 审核时会核销预收付款
+                                rs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                            }
+                            #endregion
+                        }
+                        catch (Exception)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            throw new Exception("缴库时，生成加工费用的应付款单处理失败！");
+                        }
+                    }
+
+                }
+
+
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
@@ -531,7 +561,7 @@ namespace RUINORERP.Business
 
                 //处理 制令单？ 要单独处理，查出来，因为没有用强引用
                 //更新制令单的QuantityDelivered已交付数量 ,如果全交完了。则结案--的反操作
-              
+
                 if (entity.MOID > 0)
                 {
                     entity.tb_manufacturingorder = _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>()
@@ -575,16 +605,16 @@ namespace RUINORERP.Business
                         entity.tb_manufacturingorder.CloseCaseOpinions = $"缴库单:{entity.DeliveryBillNo}->制令单:{entity.tb_manufacturingorder.MONO},缴库单反审时，生产数量不等于交付数量，取消自动结案";
 
                         //缴库的反审核  要不要影响领取料呢？  应该是不影响。因为 多次领取出来的。多次缴进去。没办法对应起来了。
-                         //entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.确认);
-                         //int pomrCounter = await _unitOfWorkManage.GetDbClient()
-                         //   .Updateable<tb_MaterialRequisition>(entity.tb_manufacturingorder.tb_MaterialRequisitions)
-                         //   .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions })
-                         //   .ExecuteCommandAsync();
+                        //entity.tb_manufacturingorder.tb_MaterialRequisitions.Where(c => entity.ApprovalStatus == (int)ApprovalStatus.已审核).ToList().ForEach(c => c.DataStatus = (int)DataStatus.确认);
+                        //int pomrCounter = await _unitOfWorkManage.GetDbClient()
+                        //   .Updateable<tb_MaterialRequisition>(entity.tb_manufacturingorder.tb_MaterialRequisitions)
+                        //   .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions })
+                        //   .ExecuteCommandAsync();
                     }
 
                     //更新制令单的已交数量
                     int updatecounter = await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrder>(entity.tb_manufacturingorder)
-                         .UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions,it.QuantityDelivered })
+                         .UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions, it.QuantityDelivered })
                         .ExecuteCommandAsync();
                     if (updatecounter == 0)
                     {
@@ -627,6 +657,44 @@ namespace RUINORERP.Business
                         productionDemand.tb_productionplan.DataStatus = (int)DataStatus.确认;
 
                         await _unitOfWorkManage.GetDbClient().Updateable(productionDemand.tb_productionplan).UpdateColumns(t => new { t.DataStatus, t.TotalCompletedQuantity }).ExecuteCommandAsync();
+                    }
+
+                }
+
+
+                if (entity.IsOutSourced)
+                {
+                    AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                    if (authorizeController.EnableFinancialModule())
+                    {
+                        //生成加工费用的应付款单   ,加工费一般不会预付，所以不会抵扣，要处理也只是在审核完后。这里不会处理
+                        try
+                        {
+                            #region 生成应付
+                            var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                            var Payable = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>().Where(c => c.SourceBillId == entity.FG_ID && c.SourceBizType == (int)BizType.缴库单)
+                                .FirstAsync();
+                            if (Payable != null)
+                            {
+                                if (Payable.ARAPStatus >= (int)ARAPStatus.部分支付)
+                                {
+                                    throw new Exception("该缴库单已经有支付记录，不能反审核！");
+                                }
+                                else
+                                {
+                                    Payable.ARAPStatus = (int)ARAPStatus.待审核;
+                                    Payable.Remark += $"引用的缴库单于{System.DateTime.Now.Date}被反审";
+                                }
+                                ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
+                            }
+
+                            #endregion
+                        }
+                        catch (Exception)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            throw new Exception("缴库时，生成加工费用的应付款单处理失败！");
+                        }
                     }
 
                 }

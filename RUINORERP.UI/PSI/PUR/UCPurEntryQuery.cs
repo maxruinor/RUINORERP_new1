@@ -125,7 +125,7 @@ namespace RUINORERP.UI.PSI.PUR
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前采购入库单 {item.PurEntryNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【应付款单】。").Append("\r\n");
+                    msg.Append($"当前采购入库单 {item.PurEntryNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生成【应付款单】。").Append("\r\n");
                     counter++;
                 }
             }

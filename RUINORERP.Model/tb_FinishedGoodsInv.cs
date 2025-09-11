@@ -220,6 +220,21 @@ namespace RUINORERP.Model
             }
         }
 
+        private int? _PayStatus;
+        /// <summary>
+        /// 付款状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayStatus", ColDesc = "付款状态")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PayStatus", DecimalDigits = 0, IsNullable = true, ColumnDescription = "付款状态")]
+        public int? PayStatus
+        {
+            get { return _PayStatus; }
+            set
+            {
+                SetProperty(ref _PayStatus, value);
+            }
+        }
+
         private string _ShippingWay;
         /// <summary>
         /// 发货方式

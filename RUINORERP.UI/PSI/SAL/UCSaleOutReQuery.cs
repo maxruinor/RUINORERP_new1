@@ -88,7 +88,7 @@ namespace RUINORERP.UI.PSI.SAL
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前销售退回单 {item.ReturnNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【红字】应收款单。").Append("\r\n");
+                    msg.Append($"当前销售退回单 {item.ReturnNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生成【红字】应收款单。").Append("\r\n");
                     counter++;
                 }
             }

@@ -85,7 +85,7 @@ namespace RUINORERP.UI.PSI.PUR
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前采购退货单 {item.PurEntryReNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【红字】应付款单。").Append("\r\n");
+                    msg.Append($"当前采购退货单 {item.PurEntryReNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生成【红字】应付款单。").Append("\r\n");
                     counter++;
                 }
             }

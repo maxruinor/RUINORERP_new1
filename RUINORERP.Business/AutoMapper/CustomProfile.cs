@@ -30,6 +30,10 @@ namespace RUINORERP.Business.AutoMapper
 
             #region 财务模块
 
+            //加工费用的应付款单
+            CreateMap<tb_FinishedGoodsInv, tb_FM_ReceivablePayable>();
+            CreateMap<tb_FinishedGoodsInvDetail, tb_FM_ReceivablePayableDetail>();
+
             CreateMap<tb_FM_ReceivablePayable, tb_FM_StatementDetail>()
             .ForMember(a => a.IncludedForeignAmount, o => o.MapFrom(d => d.TotalForeignPayableAmount))
             .ForMember(a => a.IncludedLocalAmount, o => o.MapFrom(d => d.TotalLocalPayableAmount))

@@ -206,6 +206,20 @@ namespace RUINORERP.Business
                 //检测往来单位要与来源业务要一致
                 if (entity.SourceBillId.HasValue)
                 {
+                    if (entity.SourceBizType == (int)BizType.缴库单)
+                    {
+                        var PurEntry = await _appContext.Db.Queryable<tb_FinishedGoodsInv>()
+                            .Where(c => c.FG_ID == entity.SourceBillId)
+                           .SingleAsync();
+                        if (!PurEntry.CustomerVendor_ID.Equals(entity.CustomerVendor_ID))
+                        {
+                            rmrs.ErrorMsg = "付款时必需与来源业务的往来单位相同!";
+                            rmrs.Succeeded = false;
+                            rmrs.ReturnObject = entity as T;
+                            return rmrs;
+                        }
+                    }
+
                     if (entity.SourceBizType == (int)BizType.采购入库单)
                     {
                         var PurEntry = await _appContext.Db.Queryable<tb_PurEntry>()
@@ -213,7 +227,7 @@ namespace RUINORERP.Business
                            .SingleAsync();
                         if (!PurEntry.CustomerVendor_ID.Equals(entity.CustomerVendor_ID))
                         {
-                            rmrs.ErrorMsg = "收付款时必需与来源业务的往来单位相同!";
+                            rmrs.ErrorMsg = "付款时必需与来源业务的往来单位相同!";
                             rmrs.Succeeded = false;
                             rmrs.ReturnObject = entity as T;
                             return rmrs;
@@ -226,7 +240,7 @@ namespace RUINORERP.Business
                    .SingleAsync();
                         if (!PurEntryRe.CustomerVendor_ID.Equals(entity.CustomerVendor_ID))
                         {
-                            rmrs.ErrorMsg = "收付款时必需与来源业务的往来单位相同!";
+                            rmrs.ErrorMsg = "付款时必需与来源业务的往来单位相同!";
                             rmrs.Succeeded = false;
                             rmrs.ReturnObject = entity as T;
                             return rmrs;
@@ -238,7 +252,7 @@ namespace RUINORERP.Business
                     .Where(c => c.SaleOut_MainID == entity.SourceBillId)
                    .SingleAsync(); if (!SaleOut.CustomerVendor_ID.Equals(entity.CustomerVendor_ID))
                         {
-                            rmrs.ErrorMsg = "收付款时必需与来源业务的往来单位相同!";
+                            rmrs.ErrorMsg = "收款时必需与来源业务的往来单位相同!";
                             rmrs.Succeeded = false;
                             rmrs.ReturnObject = entity as T;
                             return rmrs;
@@ -250,7 +264,7 @@ namespace RUINORERP.Business
                             .Where(c => c.SaleOutRe_ID == entity.SourceBillId)
                            .SingleAsync(); if (!SaleOutRe.CustomerVendor_ID.Equals(entity.CustomerVendor_ID))
                         {
-                            rmrs.ErrorMsg = "收付款时必需与来源业务的往来单位相同!";
+                            rmrs.ErrorMsg = "收款时必需与来源业务的往来单位相同!";
                             rmrs.Succeeded = false;
                             rmrs.ReturnObject = entity as T;
                             return rmrs;
@@ -795,7 +809,7 @@ namespace RUINORERP.Business
             }
 
 
-            payable.ExchangeRate =1;
+            payable.ExchangeRate = 1;
 
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_FM_PriceAdjustmentDetails);
@@ -2388,6 +2402,129 @@ namespace RUINORERP.Business
                 payable.Account_id = null;
             }
             payable.Remark = $"采购入库单：{entity.PurEntryNo}的应付款";
+            Business.BusinessHelper.Instance.InitEntity(payable);
+            payable.ARAPStatus = (int)ARAPStatus.待审核;
+            return payable;
+        }
+
+        /// <summary>
+        /// 创建应付款单，审核时如果有预付，会先核销
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="isRefund">true为红字冲销</param>
+        /// <returns></returns>
+        public async Task<tb_FM_ReceivablePayable> BuildReceivablePayable(tb_FinishedGoodsInv entity, bool isRefund)
+        {
+            if (!entity.CustomerVendor_ID.HasValue)
+            {
+                throw new Exception("请选择正确的加工单位！");
+            }
+            //入库时，全部生成应付，账期的。就加上到期日
+            //有付款过的。就去预付中抵扣，不够的金额及状态标识出来生成对账单
+
+            tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
+            payable = mapper.Map<tb_FM_ReceivablePayable>(entity);
+            payable.ApprovalResults = null;
+            payable.ApprovalStatus = (int)ApprovalStatus.未审核;
+            payable.Approver_at = null;
+            payable.Approver_by = null;
+            payable.PrintStatus = 0;
+            payable.ActionStatus = ActionStatus.新增;
+            payable.ApprovalOpinions = "";
+            payable.Modified_at = null;
+            payable.Modified_by = null;
+            payable.SourceBillNo = entity.DeliveryBillNo;
+            payable.SourceBillId = entity.FG_ID;
+            payable.SourceBizType = (int)BizType.缴库单;
+            if (entity.tb_manufacturingorder != null)
+            {
+                payable.DepartmentID = entity.tb_manufacturingorder.DepartmentID;
+            }
+
+            payable.CustomerVendor_ID = entity.CustomerVendor_ID.Value;
+
+            payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
+            payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
+
+            payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
+
+            payable.BusinessDate = entity.DeliveryDate;
+            payable.DocumentDate = entity.Created_at.Value;
+            //如果销售订单中付款方式不为空，并且是账期时
+
+            var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+            if (obj != null && obj.ToString() != "System.Object")
+            {
+                if (obj is tb_CustomerVendor cv)
+                {
+                    entity.tb_customervendor = cv;
+                }
+            }
+            else
+            {
+                //db查询
+                entity.tb_customervendor = await _appContext.GetRequiredService<tb_CustomerVendorController<tb_CustomerVendor>>().BaseQueryByIdAsync(entity.CustomerVendor_ID);
+            }
+
+            if (entity.tb_customervendor.SupplierCreditDays.HasValue)
+            {
+                // 从入库日期开始计算到期日
+                payable.DueDate = entity.DeliveryDate.Date.AddDays(entity.tb_customervendor.SupplierCreditDays.Value).AddDays(1).AddTicks(-1);
+            }
+
+            payable.ExchangeRate = 1;
+
+            //日期类型 业务意义    财务价值 使用场景
+            //业务发生日期 真实交易时间  确定收入成本期间 对账核心依据
+            //单据日期 债权债务确认  账期起始点 账龄计算
+            //到期日 资金计划依据  现金流管理 催款付款
+            //创建时间 系统操作时间  操作审计 内部控制
+            //审核时间 财务确认时间  审批流程 责任追溯
+
+            List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_FinishedGoodsInvDetails);
+
+            for (global::System.Int32 i = 0; i < details.Count; i++)
+            {
+                var olditem = entity.tb_FinishedGoodsInvDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID && c.Sub_ID == details[i].SourceItemRowID).FirstOrDefault();
+                if (olditem != null)
+                {
+                    details[i].TaxRate = 0;
+                    details[i].TaxLocalAmount = 0;
+                    if (isRefund)
+                    {
+                        details[i].Quantity = -olditem.Qty;
+                    }
+                    //制造费   
+                    details[i].UnitPrice = olditem.ManuFee;
+                    details[i].LocalPayableAmount = olditem.ManuFee * details[i].Quantity.Value;
+                }
+                details[i].ExchangeRate = 1;
+                details[i].ActionStatus = ActionStatus.新增;
+
+            }
+
+            payable.tb_FM_ReceivablePayableDetails = details;
+
+            #region 单独处理运费 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。
+
+            payable.ShippingFee = 0;
+
+            #endregion
+            //本币时 一定会有值。
+
+            payable.LocalPaidAmount = 0;
+            payable.TotalLocalPayableAmount = details.Sum(c => c.LocalPayableAmount);
+            payable.LocalBalanceAmount = payable.TotalLocalPayableAmount;
+
+            //业务经办人
+            payable.Employee_ID = entity.Employee_ID;
+
+            //否则会关联性SQL出错，外键
+            if (payable.Account_id <= 0)
+            {
+                payable.Account_id = null;
+            }
+            payable.Remark = $"缴库单：{entity.DeliveryBillNo}制作费的应付款";
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
             return payable;

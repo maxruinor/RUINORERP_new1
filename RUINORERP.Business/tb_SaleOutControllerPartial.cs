@@ -806,12 +806,11 @@ namespace RUINORERP.Business
                     if (authorizeController.EnableFinancialModule())
                     {
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                        var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
                         if (entity.TotalAmount > 0 || entity.ForeignTotalAmount > 0)
                         {
                             #region 生成应收 
                             tb_FM_ReceivablePayable Payable = await ctrpayable.BuildReceivablePayable(entity);
-                            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
+                            ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
                             if (rmr.Succeeded)
                             {
                                 //已经是等审核。 
@@ -824,7 +823,7 @@ namespace RUINORERP.Business
                         if (entity.TotalCommissionAmount > 0)
                         {
                             tb_FM_ReceivablePayable PayableCommission = await ctrpayable.BuildReceivablePayable(entity, true);
-                            ReturnMainSubResults<tb_FM_ReceivablePayable> rmrCommission = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(PayableCommission, false);
+                            ReturnMainSubResults<tb_FM_ReceivablePayable> rmrCommission = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(PayableCommission, false);
                             if (rmrCommission.Succeeded)
                             {
                                 //已经是等审核。 审核时会核销预收付款

@@ -99,7 +99,7 @@ namespace RUINORERP.UI.ASS
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前维修工单 {item.RepairOrderNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【应收款单】。").Append("\r\n");
+                    msg.Append($"当前维修工单 {item.RepairOrderNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生成【应收款单】。").Append("\r\n");
                     counter++;
                 }
             }

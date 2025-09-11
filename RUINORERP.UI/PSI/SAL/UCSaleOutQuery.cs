@@ -129,7 +129,7 @@ namespace RUINORERP.UI.PSI.SAL
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前销售出库单 {item.SaleOutNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【应收款单】。").Append("\r\n");
+                    msg.Append($"当前销售出库单 {item.SaleOutNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生成【应收款单】。").Append("\r\n");
                     counter++;
                 }
             }
@@ -197,7 +197,7 @@ namespace RUINORERP.UI.PSI.SAL
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前销售出库单 {item.SaleOutNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生【应付款单(佣金)】。").Append("\r\n");
+                    msg.Append($"当前销售出库单 {item.SaleOutNo}状态为【 {((DataStatus)item.DataStatus).ToString()}】 无法生成【应付款单(佣金)】。").Append("\r\n");
                     counter++;
                 }
             }
@@ -232,10 +232,13 @@ namespace RUINORERP.UI.PSI.SAL
             .FirstOrDefault();
             if (RelatedMenuInfo != null)
             {
-                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+               await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
             }
 
         }
+
+
+
         public override void SetGridViewDisplayConfig()
         {
             //base.SetRelatedBillCols<tb_SaleOrder>(c => c.SOrderNo, r => r.SaleOrderNo);

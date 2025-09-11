@@ -184,7 +184,7 @@ namespace RUINORERP.Business
 
                 List<tb_FM_Statement> StatementUpdateList = new List<tb_FM_Statement>();
                 List<tb_FM_StatementDetail> StatementDetailUpdateList = new List<tb_FM_StatementDetail>();
-
+                List<tb_FinishedGoodsInv> FinishedGoodsInvUpdateList = new List<tb_FinishedGoodsInv>();
 
                 //相同客户，多个应收可以合成一个收款 。所以明细中就是对应的应收单。
                 // 开启事务，保证数据一致性
@@ -319,7 +319,7 @@ namespace RUINORERP.Business
                                 #endregion
                                 */
                                 await UpdateSourceDocumentStatus(receivablePayable, entity, saleOrderUpdateList, saleOutUpdateList, SaleOutReUpdateList, purOrderUpdateList, purEntryUpdateList, purEntryReUpdateList,
-                                      priceAdjustmentUpdateList, otherExpenseUpdateList, expenseClaimUpdateList, RepairOrderUpdateList);
+                                      priceAdjustmentUpdateList, otherExpenseUpdateList, expenseClaimUpdateList, RepairOrderUpdateList, FinishedGoodsInvUpdateList);
                 
 
                                 StatementDetailUpdateList.Add(StatementDetail);
@@ -452,7 +452,7 @@ namespace RUINORERP.Business
                             //写回业务 原始单据的完结状态，销售出库。销售订单。
                             //通过的来源类型，来源单号，来源编号分组得到原始单据数据组后再根据类型分别处理更新状态
                             await UpdateSourceDocumentStatus(receivablePayable, entity, saleOrderUpdateList, saleOutUpdateList, SaleOutReUpdateList, purOrderUpdateList, purEntryUpdateList, purEntryReUpdateList,
-                                     priceAdjustmentUpdateList, otherExpenseUpdateList, expenseClaimUpdateList, RepairOrderUpdateList);
+                                     priceAdjustmentUpdateList, otherExpenseUpdateList, expenseClaimUpdateList, RepairOrderUpdateList, FinishedGoodsInvUpdateList);
 
                           
                         }
@@ -729,9 +729,7 @@ namespace RUINORERP.Business
                                                                         && SaleOutIds.Contains(c.SourceBillId.Value))
                                                                         .ToListAsync();
 
-
-                                                        var receivablePayableController = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-
+                                                      
                                                         //一切刚刚好时才能去核销
                                                         foreach (var receivablePayable in receivablePayables)
                                                         {
@@ -740,7 +738,7 @@ namespace RUINORERP.Business
                                                             {
                                                                 List<tb_FM_PreReceivedPayment> ProcessPreReceivablePayableList = new List<tb_FM_PreReceivedPayment>();
                                                                 ProcessPreReceivablePayableList.Add(prePayment);
-                                                                await receivablePayableController.ApplyManualPaymentAllocation(receivablePayable, ProcessPreReceivablePayableList);
+                                                                await ctrpayable.ApplyManualPaymentAllocation(receivablePayable, ProcessPreReceivablePayableList);
                                                             }
                                                         }
                                                     }
@@ -836,7 +834,6 @@ namespace RUINORERP.Business
                                                                         .ToListAsync();
 
 
-                                                        var receivablePayableController = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
                                                         //一切刚刚好时才能去核销
                                                         foreach (var receivablePayable in receivablePayables)
@@ -846,7 +843,7 @@ namespace RUINORERP.Business
                                                             {
                                                                 List<tb_FM_PreReceivedPayment> ProcessPreReceivablePayableList = new List<tb_FM_PreReceivedPayment>();
                                                                 ProcessPreReceivablePayableList.Add(prePayment);
-                                                                await receivablePayableController.ApplyManualPaymentAllocation(receivablePayable, ProcessPreReceivablePayableList);
+                                                                await ctrpayable.ApplyManualPaymentAllocation(receivablePayable, ProcessPreReceivablePayableList);
                                                             }
                                                         }
                                                     }
@@ -871,7 +868,13 @@ namespace RUINORERP.Business
 
                 }
 
-
+                if (FinishedGoodsInvUpdateList.Any())
+                {
+                    var r = await _unitOfWorkManage.GetDbClient().Updateable(FinishedGoodsInvUpdateList).UpdateColumns(t => new
+                    {
+                        t.PayStatus,
+                    }).ExecuteCommandAsync();
+                }
 
                 if (StatementUpdateList.Any())
                 {
@@ -1104,7 +1107,9 @@ namespace RUINORERP.Business
             List<tb_FM_PriceAdjustment> priceAdjustmentUpdateList,
             List<tb_FM_OtherExpense> otherExpenseUpdateList,
             List<tb_FM_ExpenseClaim> expenseClaimUpdateList,
-            List<tb_AS_RepairOrder> RepairOrderUpdateList)
+            List<tb_AS_RepairOrder> RepairOrderUpdateList,
+            List<tb_FinishedGoodsInv> FinishedGoodsInvUpdateList
+            )
         {
             // 根据业务类型更新不同的源单据状态
             switch (receivablePayable.SourceBizType)
@@ -1142,6 +1147,41 @@ namespace RUINORERP.Business
                 case (int)BizType.维修工单:
                     await UpdateRepairOrderStatus(receivablePayable, entity, RepairOrderUpdateList);
                     break;
+                case (int)BizType.缴库单:
+                    await UpdateFinishedGoodsStatus(receivablePayable, entity, FinishedGoodsInvUpdateList);
+                    break;
+            }
+        }
+
+        private async Task UpdateFinishedGoodsStatus(tb_FM_ReceivablePayable receivablePayable, tb_FM_PaymentRecord entity, List<tb_FinishedGoodsInv> FinishedGoodsInvUpdateList)
+        {
+            if (receivablePayable.SourceBizType == (int)BizType.缴库单)
+            {
+                if (receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付)
+                {
+                    #region 更新对应业务的单据状态和付款情况
+
+                    tb_FinishedGoodsInv finishedGoodsInv = await _appContext.Db.Queryable<tb_FinishedGoodsInv>()
+                      .Where(c => c.DataStatus >= (int)DataStatus.确认 && c.FG_ID == receivablePayable.SourceBillId).FirstAsync();
+                    if (finishedGoodsInv != null)
+                    {
+                        //应收结清，并且结清的金额等于销售出库金额，则修改出库单的状态。同时计算对应订单情况。也更新。
+                        if (receivablePayable.LocalBalanceAmount == 0 && receivablePayable.LocalPaidAmount == finishedGoodsInv.TotalManuFee)
+                        {
+                            //财务只管财务的状态
+                            // saleOut.DataStatus = (int)DataStatus.完结;
+                            finishedGoodsInv.PayStatus = (int)PayStatus.全部付款;
+                        }
+                        else
+                        {
+                            finishedGoodsInv.PayStatus = (int)PayStatus.部分付款;
+                        }
+
+                        FinishedGoodsInvUpdateList.Add(finishedGoodsInv);
+                    }
+
+                    #endregion
+                }
             }
         }
 
@@ -1154,7 +1194,6 @@ namespace RUINORERP.Business
                     #region 更新对应业务的单据状态和付款情况
 
                     tb_AS_RepairOrder RepairOrder = await _appContext.Db.Queryable<tb_AS_RepairOrder>()
-                        .Includes(c => c.tb_as_aftersaleapply, b => b.tb_AS_AfterSaleDeliveries)
                       .Where(c => c.DataStatus >= (int)DataStatus.确认 && c.RepairOrderID == receivablePayable.SourceBillId).SingleAsync();
                     if (RepairOrder != null)
                     {

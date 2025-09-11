@@ -31,8 +31,10 @@ namespace RUINORERP.Business.AutoMapper
             #region 财务模块
 
             CreateMap<tb_FM_ReceivablePayable, tb_FM_StatementDetail>()
-            .ForMember(a => a.IncludedForeignAmount, o => o.MapFrom(d => d.ForeignBalanceAmount))
-            .ForMember(a => a.IncludedLocalAmount, o => o.MapFrom(d => d.LocalBalanceAmount))
+            .ForMember(a => a.IncludedForeignAmount, o => o.MapFrom(d => d.TotalForeignPayableAmount))
+            .ForMember(a => a.IncludedLocalAmount, o => o.MapFrom(d => d.TotalLocalPayableAmount))
+
+            .ForMember(a => a.RemainingForeignAmount, o => o.MapFrom(d => d.ForeignBalanceAmount))
             .ForMember(a => a.RemainingLocalAmount, o => o.MapFrom(d => d.LocalBalanceAmount))
             .ForMember(a => a.Summary, o => o.MapFrom(d => d.Remark));
 
@@ -97,8 +99,15 @@ namespace RUINORERP.Business.AutoMapper
             //生成预收单
             CreateMap<tb_SaleOrder, tb_FM_PreReceivedPayment>();
 
-            //费用报销单生成收款记录表
+            //对账单转收款单
+            //多个对账单转收款单 合并生成一个 付款单
             CreateMap<tb_FM_Statement, tb_FM_PaymentRecord>();
+            CreateMap<tb_FM_Statement, tb_FM_PaymentRecordDetail>()
+                .ForMember(a => a.SourceBilllId, o => o.MapFrom(d => d.StatementId))
+               .ForMember(a => a.SourceBillNo, o => o.MapFrom(d => d.StatementNo))
+               .ForMember(a => a.LocalPayableAmount, o => o.MapFrom(d => d.TotalPayableLocalAmount));
+
+
 
             //费用报销单生成收款记录表
             CreateMap<tb_FM_ExpenseClaim, tb_FM_PaymentRecord>();

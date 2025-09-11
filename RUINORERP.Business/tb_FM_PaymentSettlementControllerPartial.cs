@@ -177,8 +177,11 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PaymentRecord PaymentRecord, tb_FM_PaymentRecordDetail PaymentRecordDetail, tb_FM_ReceivablePayable receivablePayable)
+        public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PaymentRecord PaymentRecord, tb_FM_PaymentRecordDetail PaymentRecordDetail, tb_FM_ReceivablePayable receivablePayable, decimal amountToWriteOff)
         {
+
+
+
             //预收付款单 审核时 自动生成 收付款记录
             tb_FM_PaymentSettlement SettlementRecord = new tb_FM_PaymentSettlement();
             SettlementRecord = mapper.Map<tb_FM_PaymentSettlement>(PaymentRecordDetail);
@@ -206,14 +209,14 @@ namespace RUINORERP.Business
                 SettlementRecord.SourceBizType = (int)BizType.应付款单;
             }
 
-            SettlementRecord.SettledLocalAmount = PaymentRecordDetail.LocalAmount;
-            SettlementRecord.SettledForeignAmount = PaymentRecordDetail.ForeignAmount; 
             SettlementRecord.Account_id = PaymentRecord.Account_id;
-            if (SettlementRecord.SettledLocalAmount < 0 || SettlementRecord.SettledForeignAmount < 0)
+            if (amountToWriteOff < 0)
             {
                 SettlementRecord.SettlementType = (int)SettlementType.红字核销;
             }
-
+            //成熟系统的设计目标是保证财务数据的清晰性、一致性和可审计性。核销记录本身不应该使用负数来区分方向。
+            SettlementRecord.SettledLocalAmount = Math.Abs(amountToWriteOff);  // 使用绝对值确保金额为正
+            SettlementRecord.SettledForeignAmount = 0; //暂时不支付外币
             //应收单转收款
             SettlementRecord.SourceBillNo = receivablePayable.ARAPNo;
             SettlementRecord.SourceBillId = receivablePayable.ARAPId;

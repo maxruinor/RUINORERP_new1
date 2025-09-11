@@ -881,20 +881,7 @@ namespace RUINORERP.Business
         }
 
 
-
-        // 示例：封装状态更新方法
-        private void UpdatePaymentStatus(tb_FM_ReceivablePayable payable)
-        {
-            if (payable.ForeignBalanceAmount == 0 || payable.LocalBalanceAmount == 0)
-            {
-                payable.ARAPStatus = (int)ARAPStatus.全部支付;
-            }
-            else
-            {
-                payable.ARAPStatus = (int)ARAPStatus.部分支付;
-            }
-        }
-
+ 
 
 
         /// <summary>

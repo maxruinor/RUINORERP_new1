@@ -31,6 +31,19 @@ namespace RUINORERP.UI.BaseForm
             newSumDataGridViewChild.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             newSumDataGridViewChild.XmlFileName = this.Name + entityType.Name + "Child";
             newSumDataGridViewChild.FieldNameList = UIHelper.GetFieldNameColList(entityType);
+
+            //统一在这里暂时隐藏外币相关
+            foreach (var item in newSumDataGridViewChild.FieldNameList)
+            {
+                if (item.Key.Contains("Foreign") || item.Key.Contains("ExchangeRate"))
+                {
+                    if (!InvisibleCols.Contains(item.Key))
+                    {
+                        InvisibleCols.Add(item.Key);
+                    }
+                }
+            }
+
             foreach (var item in InvisibleCols)
             {
                 KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
@@ -67,12 +80,12 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
-            object bizkey = null;
+           
             if (newSumDataGridViewChild.CurrentRow != null && newSumDataGridViewChild.CurrentCell != null)
             {
                 if (newSumDataGridViewChild.CurrentRow.DataBoundItem != null)
                 {
-                    bizkey = GridRelated.GuideToForm(newSumDataGridViewChild.Columns[e.ColumnIndex].Name, newSumDataGridViewChild.CurrentRow);
+                   GridRelated.GuideToForm(newSumDataGridViewChild.Columns[e.ColumnIndex].Name, newSumDataGridViewChild.CurrentRow);
                 }
 
             }

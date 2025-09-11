@@ -59,7 +59,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ProjectGroup_ID);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Account_id);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.SourceBizType, QueryFieldType.CmbEnum, typeof(BizType));
-            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.Created_at, AdvQueryProcessType.datetimeRange, true);
+            queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.BusinessDate, AdvQueryProcessType.datetimeRange, true);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.DueDate, AdvQueryProcessType.datetimeRange, false);
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ARAPStatus, QueryFieldType.CmbEnum, typeof(ARAPStatus));
             queryFilter.SetQueryField<tb_FM_ReceivablePayable>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));

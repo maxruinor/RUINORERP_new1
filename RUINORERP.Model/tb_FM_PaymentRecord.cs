@@ -40,8 +40,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 支付记录
         /// </summary>
- 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PaymentId" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付记录" , IsPrimaryKey = true)]
+
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "PaymentId" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付记录", IsPrimaryKey = true)]
         public long PaymentId
         { 
             get{return _PaymentId;}
@@ -56,7 +56,7 @@ namespace RUINORERP.Model
         /// 支付单号
         /// </summary>
         [AdvQueryAttribute(ColName = "PaymentNo",ColDesc = "支付单号")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PaymentNo" ,Length=30,IsNullable = false,ColumnDescription = "支付单号" )]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PaymentNo" ,Length=30,IsNullable = false,ColumnDescription = "支付单号")]
         public string PaymentNo
         { 
             get{return _PaymentNo;}
@@ -201,10 +201,10 @@ namespace RUINORERP.Model
 
         private decimal _TotalForeignAmount= ((0));
         /// <summary>
-        /// 支付金额外币
+        /// 实付金额外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalForeignAmount",ColDesc = "支付金额外币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalForeignAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "支付金额外币" )]
+        [AdvQueryAttribute(ColName = "TotalForeignAmount",ColDesc = "实付金额外币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalForeignAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实付金额外币" )]
         public decimal TotalForeignAmount
         { 
             get{return _TotalForeignAmount;}
@@ -215,10 +215,10 @@ namespace RUINORERP.Model
 
         private decimal _TotalLocalAmount= ((0));
         /// <summary>
-        /// 支付金额本币
+        /// 实付金额本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "TotalLocalAmount",ColDesc = "支付金额本币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalLocalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "支付金额本币" )]
+        [AdvQueryAttribute(ColName = "TotalLocalAmount",ColDesc = "实付金额本币")] 
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalLocalAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实付金额本币" )]
         public decimal TotalLocalAmount
         { 
             get{return _TotalLocalAmount;}
@@ -226,6 +226,23 @@ namespace RUINORERP.Model
             SetProperty(ref _TotalLocalAmount, value);
                         }
         }
+
+        private string _LocalPamountInWords;
+        /// <summary>
+        /// 实付金额大写
+        /// </summary>
+        [AdvQueryAttribute(ColName = "LocalPamountInWords", ColDesc = "实付金额大写")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "LocalPamountInWords", Length = 100, IsNullable = false, ColumnDescription = "实付金额大写")]
+        public string LocalPamountInWords
+        {
+            get { return _LocalPamountInWords; }
+            set
+            {
+                SetProperty(ref _LocalPamountInWords, value);
+            }
+        }
+
+
 
         private decimal _TotalForeignPayableAmount = ((0));
         /// <summary>
@@ -262,7 +279,7 @@ namespace RUINORERP.Model
         /// 支付日期
         /// </summary>
         [AdvQueryAttribute(ColName = "PaymentDate",ColDesc = "支付日期")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "PaymentDate" ,IsNullable = true,ColumnDescription = "支付日期" )]
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "PaymentDate" ,IsNullable = true,ColumnDescription = "支付日期")]
         public DateTime? PaymentDate
         { 
             get{return _PaymentDate;}
@@ -305,7 +322,7 @@ namespace RUINORERP.Model
         /// 支付状态
         /// </summary>
         [AdvQueryAttribute(ColName = "PaymentStatus",ColDesc = "支付状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付状态" )]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "PaymentStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "支付状态")]
         public int PaymentStatus
         { 
             get{return _PaymentStatus;}

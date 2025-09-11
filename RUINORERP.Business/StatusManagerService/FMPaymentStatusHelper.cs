@@ -39,6 +39,7 @@ namespace RUINORERP.Business.StatusManagerService
         }
 
 
+
         /// <summary>是否是终态（不可修改状态）</summary>
         /// <param name="status">是状态枚举值类型</param>
         public static bool IsFinalStatus<T>(T status) where T : Enum

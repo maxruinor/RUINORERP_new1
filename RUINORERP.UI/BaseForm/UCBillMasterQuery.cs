@@ -57,6 +57,21 @@ namespace RUINORERP.UI.BaseForm
             newSumDataGridViewMaster.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             newSumDataGridViewMaster.XmlFileName = this.Name + entityType.Name + "BaseMasterQueryWithCondition";
             newSumDataGridViewMaster.FieldNameList = UIHelper.GetFieldNameColList(entityType);
+
+
+            //统一在这里暂时隐藏外币相关
+            foreach (var item in newSumDataGridViewMaster.FieldNameList)
+            {
+                if (item.Key.Contains("Foreign") || item.Key.Contains("ExchangeRate"))
+                {
+                    if (!InvisibleCols.Contains(item.Key))
+                    {
+                        InvisibleCols.Add(item.Key);
+                    }
+                }
+            }
+
+
             //这里设置了指定列不可见
             foreach (var item in InvisibleCols)
             {
@@ -164,12 +179,12 @@ namespace RUINORERP.UI.BaseForm
             {
                 return;
             }
-            object bizkey = null;
+          
             if (newSumDataGridViewMaster.CurrentRow != null && newSumDataGridViewMaster.CurrentCell != null)
             {
                 if (newSumDataGridViewMaster.CurrentRow.DataBoundItem != null)
                 {
-                    bizkey = GridRelated.GuideToForm(newSumDataGridViewMaster.Columns[e.ColumnIndex].Name, newSumDataGridViewMaster.CurrentRow);
+                   GridRelated.GuideToForm(newSumDataGridViewMaster.Columns[e.ColumnIndex].Name, newSumDataGridViewMaster.CurrentRow);
                 }
 
             }

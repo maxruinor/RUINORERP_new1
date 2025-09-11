@@ -516,6 +516,95 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
         /// <summary>
+        /// 对账单
+        /// </summary>
+        /// <param name="paymentType"></param>
+        /// <returns></returns>
+        public List<ConditionGroup> GetStatementConditionGroups(ReceivePaymentType paymentType)
+        {
+            string StatusNameDescription = string.Empty;
+            string identifier = string.Empty;
+            if (paymentType == ReceivePaymentType.付款)
+            {
+                StatusNameDescription = "待支付";
+                identifier = SharedFlag.Flag2.ToString();
+            }
+            else
+            {
+                StatusNameDescription = "待支付";
+                //硬编码的
+                identifier = SharedFlag.Flag1.ToString();
+            }
+
+            var grouplist = new List<ConditionGroup>
+        {
+                new ConditionGroup
+            {
+                 Identifier =identifier,
+                StatusName = "待提交",
+                Conditions = new List<IConditionalModel>
+                {
+                    new ConditionalModel
+                    {
+                        FieldName = "ReceivePaymentType",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)paymentType).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "StatementStatus",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)StatementStatus.草稿).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "isdeleted",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = "False",
+                        CSharpTypeName = "bool"
+                    }
+                }
+            },
+
+            new ConditionGroup
+            {
+
+                Identifier= identifier,
+                StatusName = StatusNameDescription,
+                Conditions = new List<IConditionalModel>
+                {
+                    new ConditionalModel
+                    {
+                        FieldName = "ReceivePaymentType",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)paymentType).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "StatementStatus",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)StatementStatus.已确认).ToString(),
+                        CSharpTypeName = "int"
+                    }
+                }
+            }
+        };
+
+            // 添加销售限制条件（如果有权限限制）
+            if (AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext))
+            {
+                AddEmployeeIdCondition(grouplist);
+            }
+            return grouplist;
+
+
+        }
+
+
+        /// <summary>
         /// 收付款单
         /// </summary>
         /// <param name="paymentType"></param>

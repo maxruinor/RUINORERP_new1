@@ -1,10 +1,9 @@
-﻿
-// **************************************
+﻿// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:11
+// 时间：09/11/2025 15:24:54
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -562,8 +561,10 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_employee )
                             .Includes(t => t.tb_projectgroup )
-                                        .Includes(t => t.tb_FM_PriceAdjustmentDetails )
-                        .FirstAsync();
+                        
+
+                                            .Includes(t => t.tb_FM_PriceAdjustmentDetails )
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

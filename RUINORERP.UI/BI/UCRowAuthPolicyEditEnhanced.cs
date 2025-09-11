@@ -37,7 +37,7 @@ namespace RUINORERP.UI.BI
         private IDefaultRowAuthRuleProvider _ruleProvider;
         private BizMapperService.IEntityInfoService _entityInfoService;
         private SmartRuleConfigHelper _smartRuleHelper;
-        private List<BizMapperService.EntityInfo> _allEntityInfos;
+        private List<BizMapperService.ERPEntityInfo> _allEntityInfos;
         private Dictionary<string, Type> _entityTypeCache = new Dictionary<string, Type>();
         private List<EntityFieldInfo> _currentEntityFields = new List<EntityFieldInfo>();
         private List<DefaultRuleOption> _defaultRuleOptions = new List<DefaultRuleOption>();
@@ -154,7 +154,7 @@ namespace RUINORERP.UI.BI
                 UpdateDefaultRuleComboBox();
                 
                 // 获取实体信息
-                EntityInfo entityInfo = _entityInfoService.GetEntityInfo(bizType);
+                ERPEntityInfo entityInfo = _entityInfoService.GetEntityInfo(bizType);
                 if (entityInfo != null)
                 {
                     // 填充表单
@@ -311,7 +311,7 @@ namespace RUINORERP.UI.BI
                 string tableName = cmbTargetTable.SelectedItem.ToString();
                 
                 // 根据表名获取实体信息
-                EntityInfo entityInfo = _entityInfoService.GetEntityInfoByTableName(tableName);
+                ERPEntityInfo entityInfo = _entityInfoService.GetEntityInfoByTableName(tableName);
                 if (entityInfo != null)
                 {
                     txtTargetTable.Text = entityInfo.TableName;
@@ -487,7 +487,7 @@ namespace RUINORERP.UI.BI
         {
             try
             {
-                BizMapperService.EntityInfo entityInfo = _entityInfoService.GetEntityInfoByTableName(tableName);
+                BizMapperService.ERPEntityInfo entityInfo = _entityInfoService.GetEntityInfoByTableName(tableName);
                 return entityInfo?.IdField ?? "ID";
             }
             catch

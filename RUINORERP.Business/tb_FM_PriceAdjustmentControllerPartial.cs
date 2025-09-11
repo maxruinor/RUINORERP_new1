@@ -166,20 +166,18 @@ namespace RUINORERP.Business
                         if (inv != null)
                         {
                             #region 计算成本
-                            //这里只修改成本。数量不变
-                            if (detail.UntaxedUnitPrice > 0)
+                            //这里只修改成本。数量不变,如果库存数量为0，或成本没有变化。则不执行调整成本的方法
+                            if (detail.Correct_UnitPrice_NoTax > 0 && inv.Quantity>0 && inv.Inv_Cost!= detail.Correct_UnitPrice_NoTax)
                             {
-                                CommService.CostCalculations.AdjustCostOnly(_appContext, inv, detail.UntaxedUnitPrice);
+                                CommService.CostCalculations.AdjustCostOnly(_appContext, inv, detail.Correct_UnitPrice_NoTax);
 
                                 var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
                                 // 递归更新所有上级BOM的成本
                                 await ctrbom.UpdateParentBOMsAsync(inv.ProdDetailID, inv.Inv_Cost);
                             }
-
                             #endregion
                         }
                     }
-
                 }
 
                 var paymentController = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
@@ -470,7 +468,7 @@ namespace RUINORERP.Business
                             #region 每行产品ID唯一
                             tb_SaleOutDetail item = SourceBill.tb_SaleOutDetails
                                 .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
-                            details[i].OriginalUnitPrice = item.UnitPrice;
+                            details[i].Original_UnitPrice_WithTax = item.UnitPrice;
                             NewDetails.Add(details[i]);
                             //tb_SaleOutDetail item = SourceBill.tb_SaleOutDetails
                             //    .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
@@ -560,8 +558,9 @@ namespace RUINORERP.Business
                             #region 每行产品ID唯一
                             tb_PurEntryDetail item = SourceBill.tb_PurEntryDetails
                                 .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
-                            details[i].OriginalUnitPrice = item.UnitPrice;
-                            details[i].TaxRate = item.TaxRate;
+                            details[i].Original_UnitPrice_WithTax = item.UnitPrice;
+                            details[i].Original_UnitPrice_NoTax = item.UntaxedUnitPrice;
+                            details[i].Original_TaxRate = item.TaxRate;
                             details[i].Quantity = item.Quantity;
                             NewDetails.Add(details[i]);
                             //tb_PurEntryDetail item = SourceBill.tb_PurEntryDetails

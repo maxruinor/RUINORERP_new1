@@ -83,6 +83,9 @@ using RUINORERP.UI.FM.FMBase;
 using LiveChartsCore.Geo;
 using RUINORERP.UI.MRP.MP;
 using Winista.Text.HtmlParser.Lex;
+using Org.BouncyCastle.Asn1.X509.Qualified;
+using System.Management;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -237,6 +240,7 @@ namespace RUINORERP.UI.BaseForm
                     CurrentBizTypeName = CurrentBizType.ToString();
                 }
                 menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                _entityInfoService = Startup.GetFromFac<IEntityInfoService>();
             }
         }
 
@@ -394,6 +398,9 @@ namespace RUINORERP.UI.BaseForm
 
             InitializeStateManagement();
             ToolBarEnabledControl(entity);
+
+            //暂时统一不显示外币
+            UIHelper.ControlForeignFieldInvisible<T>(this, false);
         }
 
 
@@ -722,7 +729,9 @@ namespace RUINORERP.UI.BaseForm
             }
 
             // 获取状态类型和值
-            var statusType = GetStatusType(entity as BaseEntity);
+
+            var statusType = FMPaymentStatusHelper.GetStatusType(entity as BaseEntity);
+
             if (statusType == null) return;
 
             // 动态获取状态值
@@ -746,7 +755,7 @@ namespace RUINORERP.UI.BaseForm
             toolStripbtnSubmit.Enabled = FMPaymentStatusHelper.CanSubmit(statusEnum);
             toolStripbtnReview.Enabled = statusEnum is PrePaymentStatus pre && pre == PrePaymentStatus.待审核 ||
                                         statusEnum is ARAPStatus arap && arap == ARAPStatus.待审核 ||
-                                        statusEnum is StatementStatus  statementStatus && statementStatus == StatementStatus.已发送 ||
+                                        statusEnum is StatementStatus statementStatus && statementStatus == StatementStatus.已发送 ||
                                         statusEnum is PaymentStatus pay && pay == PaymentStatus.待审核;
 
 
@@ -791,51 +800,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        /// <summary>获取实体的状态类型</summary>
-        private Type GetStatusType(BaseEntity entity)
-        {
-            if (entity.ContainsProperty(typeof(PrePaymentStatus).Name))
-                return typeof(PrePaymentStatus);
 
-            if (entity.ContainsProperty(typeof(ARAPStatus).Name))
-                return typeof(ARAPStatus);
-
-            if (entity.ContainsProperty(typeof(PaymentStatus).Name))
-                return typeof(PaymentStatus);
-            if (entity.ContainsProperty(typeof(StatementStatus).Name))
-                return typeof(StatementStatus);
-            return null;
-        }
-
-        //private void HandlePrePaymentStatus(PrePaymentStatus status, ActionStatus actionStatus)
-        //{
-        //    toolStripbtnSubmit.Enabled = status == PrePaymentStatus.草稿;
-        //    toolStripbtnReview.Enabled = status == PrePaymentStatus.待审核;
-        //    toolStripBtnReverseReview.Enabled = status == PrePaymentStatus.待核销 || status == PrePaymentStatus.已生效;
-
-        //    // 结案按钮改为"退款"
-        //    toolStripButton结案.Text = "退款";
-        //    toolStripButton结案.Enabled = status == PrePaymentStatus.待核销;
-        //    toolStripButtonSave.Enabled = FMPaymentStatusHelper.CanModify(status);
-
-        //    if (FMPaymentStatusHelper.IsFinalStatus(status))
-        //    {
-        //        toolStripBtnReverseReview.Enabled = false;
-        //        toolStripbtnModify.Enabled = false;
-        //        toolStripbtnSubmit.Enabled = false;
-        //        toolStripButtonSave.Enabled = false;
-        //        toolStripButton结案.Enabled = false;
-        //    }
-        //}
-
-
-
-        //private void HandlePaymentStatus(PaymentStatus status, ActionStatus actionStatus)
-        //{
-        //    toolStripbtnSubmit.Enabled = status == PaymentStatus.草稿;
-        //    toolStripbtnReview.Enabled = status == PaymentStatus.待审核;
-        //    toolStripButton结案.Visible = false; // 付款单不需要结案按钮
-        //}
 
 
         private long GetPrimaryKeyValue(BaseEntity entity)
@@ -1015,6 +980,8 @@ namespace RUINORERP.UI.BaseForm
                         break;
                 }
             }
+
+
 
             public Enum GetActualStatus()
             {
@@ -1945,6 +1912,24 @@ namespace RUINORERP.UI.BaseForm
 
                     #endregion
 
+                    if (parameter.bizType == BizType.对账单)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_FM_Statement).Name
+                        && m.BizType == (int)parameter.bizType
+                        && m.BIBaseForm == "BaseBillEditGeneric`2"
+                        //&& m.BIBizBaseForm == nameof(UCFMStatement)
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_FM_Statement>>(typeof(tb_FM_Statement).Name + "Controller");
+                            tb_FM_Statement entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+
 
                     if (parameter.bizType == BizType.付款单 || parameter.bizType == BizType.收款单)
                     {
@@ -1958,7 +1943,7 @@ namespace RUINORERP.UI.BaseForm
                             var controller = Startup.GetFromFacByName<BaseController<tb_FM_PaymentRecord>>(typeof(tb_FM_PaymentRecord).Name + "Controller");
                             tb_FM_PaymentRecord entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
                             //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
                         }
                     }
 
@@ -1975,7 +1960,7 @@ namespace RUINORERP.UI.BaseForm
                             var controller = Startup.GetFromFacByName<BaseController<tb_FM_ReceivablePayable>>(typeof(tb_FM_ReceivablePayable).Name + "Controller");
                             tb_FM_ReceivablePayable entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
                             //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
                         }
                     }
 
@@ -1991,7 +1976,7 @@ namespace RUINORERP.UI.BaseForm
                             var controller = Startup.GetFromFacByName<BaseController<tb_FM_PreReceivedPayment>>(typeof(tb_FM_PreReceivedPayment).Name + "Controller");
                             tb_FM_PreReceivedPayment entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
                             //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
                         }
                     }
 
@@ -2008,7 +1993,7 @@ namespace RUINORERP.UI.BaseForm
                             var controller = Startup.GetFromFacByName<BaseController<tb_FM_OtherExpense>>(typeof(tb_FM_OtherExpense).Name + "Controller");
                             tb_FM_OtherExpense entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
                             //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
                         }
                     }
                     if (parameter.bizType == BizType.采购价格调整单 || parameter.bizType == BizType.销售价格调整单)
@@ -2023,7 +2008,7 @@ namespace RUINORERP.UI.BaseForm
                             var controller = Startup.GetFromFacByName<BaseController<tb_FM_PriceAdjustment>>(typeof(tb_FM_PriceAdjustment).Name + "Controller");
                             tb_FM_PriceAdjustment entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
                             //要把单据信息传过去
-                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                            await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
                         }
                     }
 
@@ -2449,11 +2434,13 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+        private Business.BizMapperService.IEntityInfoService _entityInfoService;
+
 
         /// <summary>
         /// 审核 注意后面还需要加很多业务逻辑。
         /// 比方出库单，审核就会减少库存修改成本
-        /// （如果有月结动作，则在月结时统计修改成本，更科学，因为如果退单等会影响成本）
+        /// （如果有月结动作，则在月结时统计修改成本，更科学，因为如果退单等会影响成本）b
         /// </summary>
         protected async override Task<ReviewResult> Review()
         {
@@ -2499,15 +2486,40 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
             //如果已经审核并且审核通过，则不能再次审核
-            BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+
+
+
+            //BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
+            //CommBillData cbd = bcf.GetBillData<T>(EditEntity);
             CommonUI.frmApproval frm = new CommonUI.frmApproval();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ae.BillID = pkid;
-            CommBillData cbd = bcf.GetBillData<T>(EditEntity);
-            ae.BillNo = cbd.BillNo;
-            ae.bizType = cbd.BizType;
-            ae.bizName = cbd.BizName;
+
+            var statusType = FMPaymentStatusHelper.GetStatusType(EditEntity as BaseEntity);
+            if (statusType == typeof(DataStatus))
+            {
+                Business.BizMapperService.ERPEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>();
+                if (entityInfo != null)
+                {
+                    ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();
+                    ae.bizType = entityInfo.BizType;
+                    ae.bizName = entityInfo.BizType.ToString();
+                }
+            }
+            else
+            {
+                int flag = (int)ReflectionHelper.GetPropertyValue(EditEntity, nameof(ReceivePaymentType)); ;
+                Business.BizMapperService.ERPEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>(flag);
+                if (entityInfo != null)
+                {
+                    ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();
+                    ae.bizType = entityInfo.BizType;
+                    ae.bizName = entityInfo.BizType.ToString();
+                }
+            }
+
+
             ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
             frm.BindData(ae);
             await Task.Delay(1);

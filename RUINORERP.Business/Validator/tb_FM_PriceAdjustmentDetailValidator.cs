@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:34
+// 时间：09/11/2025 15:24:57
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -43,31 +43,48 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.ProdDetailID).Must(CheckForeignKeyValueCanNull).WithMessage("产品:下拉选择值不正确。");
  RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.ProdDetailID).NotEmpty().When(x => x.ProdDetailID.HasValue);
 
+ RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.Location_ID).Must(CheckForeignKeyValue).WithMessage("库位:下拉选择值不正确。");
+
  RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
- 
+ RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.Specifications).MaximumMixedLength(1000).WithMessage("规格:不能超过最大长度,1000.");
 
- RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
+ RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.Unit_ID).Must(CheckForeignKeyValueCanNull).WithMessage("单位:下拉选择值不正确。");
+ RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.Unit_ID).NotEmpty().When(x => x.Unit_ID.HasValue);
 
- RuleFor(x => x.OriginalUnitPrice).PrecisionScale(19,4,true).WithMessage("原始单价:小数位不能超过4。");
+ RuleFor(x => x.Original_UnitPrice_NoTax).PrecisionScale(18,4,true).WithMessage("原未税单价:小数位不能超过4。");
 
- RuleFor(x => x.AdjustedUnitPrice).PrecisionScale(19,4,true).WithMessage("调整后单价:小数位不能超过4。");
+ RuleFor(x => x.Correct_UnitPrice_NoTax).PrecisionScale(18,4,true).WithMessage("新未税单价:小数位不能超过4。");
 
- RuleFor(x => x.DiffUnitPrice).PrecisionScale(19,4,true).WithMessage("差异单价:小数位不能超过4。");
+ RuleFor(x => x.Original_TaxRate).PrecisionScale(5,2,true).WithMessage("原税率:小数位不能超过2。");
+
+ RuleFor(x => x.Correct_TaxRate).PrecisionScale(5,2,true).WithMessage("新税率:小数位不能超过2。");
+
+ RuleFor(x => x.Original_UnitPrice_WithTax).PrecisionScale(18,4,true).WithMessage("原含税单价:小数位不能超过4。");
+
+ RuleFor(x => x.Correct_UnitPrice_WithTax).PrecisionScale(18,4,true).WithMessage("新含税单价:小数位不能超过4。");
+
+ RuleFor(x => x.UnitPrice_NoTax_Diff).PrecisionScale(18,4,true).WithMessage("未税单价差异:小数位不能超过4。");
+
+ RuleFor(x => x.UnitPrice_WithTax_Diff).PrecisionScale(18,4,true).WithMessage("含税单价差异:小数位不能超过4。");
 
  RuleFor(x => x.Quantity).PrecisionScale(10,4,true).WithMessage("数量:小数位不能超过4。");
 
+ RuleFor(x => x.Original_TaxAmount).PrecisionScale(18,4,true).WithMessage("原始税额:小数位不能超过4。");
+
+ RuleFor(x => x.Correct_TaxAmount).PrecisionScale(18,4,true).WithMessage("新调税额:小数位不能超过4。");
+
+ RuleFor(x => x.TaxAmount_Diff).PrecisionScale(18,4,true).WithMessage("税额差异:小数位不能超过4。");
+
+ RuleFor(x => x.TotalAmount_Diff_NoTax).PrecisionScale(18,4,true).WithMessage("总未税差异金额:小数位不能超过4。");
+
+ RuleFor(x => x.TotalAmount_Diff_WithTax).PrecisionScale(18,4,true).WithMessage("总含税差异金额价:小数位不能超过4。");
+
+ RuleFor(x => x.TotalAmount_Diff).PrecisionScale(18,4,true).WithMessage("总差异金额:小数位不能超过4。");
+
  RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.CustomerPartNo).MaximumMixedLength(100).WithMessage("往来单位料号:不能超过最大长度,100.");
 
- RuleFor(x => x.SubtotalDiffLocalAmount).PrecisionScale(19,4,true).WithMessage("差异金额小计:小数位不能超过4。");
-
- RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.Description).MaximumMixedLength(300).WithMessage("描述:不能超过最大长度,300.");
-
- RuleFor(x => x.TaxRate).PrecisionScale(5,2,true).WithMessage("税率:小数位不能超过2。");
-
- RuleFor(x => x.TaxDiffLocalAmount).PrecisionScale(19,4,true).WithMessage("税额差异:小数位不能超过4。");
-
- RuleFor(x => x.TaxSubtotalDiffLocalAmount).PrecisionScale(19,4,true).WithMessage("税额差异小计:小数位不能超过4。");
+ RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.AdjustReason).MaximumMixedLength(500).WithMessage("调整原因:不能超过最大长度,500.");
 
  RuleFor(tb_FM_PriceAdjustmentDetail =>tb_FM_PriceAdjustmentDetail.Summary).MaximumMixedLength(300).WithMessage("摘要:不能超过最大长度,300.");
 

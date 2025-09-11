@@ -294,9 +294,8 @@ namespace RUINORERP.UI.Common
         /// <param name="GridViewColumnFieldName">SourceBillNo</param>
         /// <param name="CurrentRowEntity"></param>
         /// <param name="IsFromGridValue">是否从Grid中取值,只是用这个参数来区别一下没有实际作用,后面优化吧</param
-        public object GuideToForm(string GridViewColumnFieldName, object CurrentRowEntity)
+        public void GuideToForm(string GridViewColumnFieldName, object CurrentRowEntity)
         {
-            object bizKey = null;
             tb_MenuInfo RelatedMenuInfo = null;
 
             if (ComplexType)
@@ -345,15 +344,11 @@ namespace RUINORERP.UI.Common
                         //一般是主键和编号来关联，通过数据类型来区别
 
                         var billno = CurrentRowEntity.GetPropertyValue(relatedRelationship.SourceUniqueField);
-                        if (billno == null)
+                        if (billno != null)
                         {
-                            return null;
+                            OpenTargetEntity(RelatedMenuInfo, tableName, billno);
                         }
-                        else
-                        {
-                            bizKey = billno;
-                        }
-                        OpenTargetEntity(RelatedMenuInfo, tableName, billno);
+                       
                     }
 
                 }
@@ -389,22 +384,17 @@ namespace RUINORERP.UI.Common
                         //一般是主键和编号来关联，通过数据类型来区别
 
                         var billno = CurrentRowEntity.GetPropertyValue(relatedRelationship.SourceUniqueField);
-                        if (billno == null)
+                        if (billno != null)
                         {
-                            return null;
+                            OpenTargetEntity(RelatedMenuInfo, tableName, billno);
                         }
-                        else
-                        {
-                            bizKey = billno;
-                        }
-                        OpenTargetEntity(RelatedMenuInfo, tableName, billno);
                     }
 
                 }
                 #endregion
 
             }
-            return bizKey;
+
         }
 
 
@@ -414,9 +404,9 @@ namespace RUINORERP.UI.Common
         /// <param name="GridViewColumnFieldName"></param>
         /// <param name="CurrentRow"></param>
         /// <returns></returns>
-        public object GuideToForm(string GridViewColumnFieldName, DataGridViewRow CurrentRow)
+        public void GuideToForm(string GridViewColumnFieldName, DataGridViewRow CurrentRow)
         {
-            object bizKey = null;
+
             tb_MenuInfo RelatedMenuInfo = null;
             RelatedInfo relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName);
             if (relatedRelationship != null)
@@ -443,15 +433,30 @@ namespace RUINORERP.UI.Common
                             }
                             else
                             {
-                                Flag = this.FromMenuInfo.UIPropertyIdentifier;
+                                if (this.FromMenuInfo.UIPropertyIdentifier == null)
+                                {
+                                    //对账单没有明确指定，不是在UI窗体中指定的是由数据指定的。
+                                    var payemntType = CurrentRow.DataBoundItem.GetPropertyValue(nameof(ReceivePaymentType));
+                                    if (payemntType != null)
+                                    {
+                                        Flag = ((SharedFlag)payemntType.ToInt()).ToString();
+                                    }
+                                }
+                                else
+                                {
+                                    Flag = this.FromMenuInfo.UIPropertyIdentifier;
+                                }
                             }
 
-                            var sss = CurrentRow.DataBoundItem.GetPropertyInfo(nameof(SharedFlag));
+                            //var sss = CurrentRow.DataBoundItem.GetPropertyInfo(nameof(SharedFlag));
                             RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
                              && m.EntityName == relatedRelationship.TargetTableName.Key
                              && m.BIBaseForm == "BaseBillEditGeneric`2"
-                             && m.UIPropertyIdentifier == Flag
-                       ).FirstOrDefault();
+                             && m.UIPropertyIdentifier == Flag.ToString()).FirstOrDefault();
+
+                            var billno = CurrentRow.DataBoundItem.GetPropertyValue(relatedRelationship.SourceUniqueField);
+                            OpenTargetEntity(RelatedMenuInfo, relatedRelationship.TargetTableName.Key, billno);
+                            return;
                         }
 
                     }
@@ -480,10 +485,10 @@ namespace RUINORERP.UI.Common
                 else
                 {
                     //要查询取值,视图也适用于这里
-                    bizKey = GuideToForm(GridViewColumnFieldName, CurrentRow.DataBoundItem);
+                    GuideToForm(GridViewColumnFieldName, CurrentRow.DataBoundItem);
                 }
             }
-            return bizKey;
+
         }
 
         public void OpenTargetEntity(tb_MenuInfo RelatedMenuInfo, string tableName, object billno)
@@ -498,6 +503,7 @@ namespace RUINORERP.UI.Common
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
                 return;
             }
+
             // 加载实体数据
             //var order = _loader.LoadEntity(tableName, billno);
             //if (order != null)
@@ -505,7 +511,6 @@ namespace RUINORERP.UI.Common
             //    menuPowerHelper.ExecuteEvents(RelatedMenuInfo, order);
             //    return;
             //}
-
 
             if (tableName == typeof(tb_SaleOutRe).Name)
             {
@@ -823,6 +828,15 @@ namespace RUINORERP.UI.Common
                     .Includes(c => c.tb_AS_RepairOrderMaterialDetails)
                     .WhereIF(billno.GetType() == typeof(long), c => c.RepairOrderID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.RepairOrderNo == billno.ToString())
+                    .Single();
+                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+            if (tableName == typeof(tb_FM_Statement).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_Statement>()
+                    .Includes(c => c.tb_FM_StatementDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.StatementId == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.StatementNo == billno.ToString())
                     .Single();
                 menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }

@@ -171,10 +171,6 @@ namespace RUINORERP.Business.BizMapperService
                                 m.GetParameters()[1].ParameterType == typeof(object))
                     .MakeGenericMethod(entityType);           // 其实这里不需要再 MakeGeneric，因为 sugarType 已含 T
 
-
-         
-
-
                 // 根据主键/编号字段构造 where
                 string fieldName;
                 object param;

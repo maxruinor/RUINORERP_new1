@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:33
+// 时间：09/11/2025 15:24:55
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,8 +61,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.AdjustReason).MaximumMixedLength(400).WithMessage("调整原因:不能超过最大长度,400.");
 
- RuleFor(x => x.ExchangeRate).PrecisionScale(10,4,true).WithMessage("汇率:小数位不能超过4。");
-
 
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
@@ -75,12 +73,10 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.InvoiceId).NotEmpty().When(x => x.InvoiceId.HasValue);
 
 
- RuleFor(x => x.TotalForeignDiffAmount).PrecisionScale(19,4,true).WithMessage("金额总计外币:小数位不能超过4。");
 
- RuleFor(x => x.TotalLocalDiffAmount).PrecisionScale(19,4,true).WithMessage("金额总计本币:小数位不能超过4。");
+ RuleFor(x => x.TotalLocalDiffAmount).PrecisionScale(19,4,true).WithMessage("总差异金额:小数位不能超过4。");
 
-
- RuleFor(x => x.TaxTotalDiffLocalAmount).PrecisionScale(19,4,true).WithMessage("税额总计:小数位不能超过4。");
+ RuleFor(x => x.TaxTotalDiffLocalAmount).PrecisionScale(19,4,true).WithMessage("总差异税额:小数位不能超过4。");
 
 //***** 
  RuleFor(tb_FM_PriceAdjustment =>tb_FM_PriceAdjustment.DataStatus).NotNull().WithMessage("数据状态:不能为空。");

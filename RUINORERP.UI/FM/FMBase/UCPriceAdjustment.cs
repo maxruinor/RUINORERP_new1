@@ -64,7 +64,7 @@ namespace RUINORERP.UI.FM
         }
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
-            if (base.EditEntity is tb_FM_PriceAdjustment  priceAdjustment)
+            if (base.EditEntity is tb_FM_PriceAdjustment priceAdjustment)
             {
                 if (priceAdjustment.SourceBillId.HasValue)
                 {
@@ -93,7 +93,7 @@ namespace RUINORERP.UI.FM
                     foreach (var item in receivablePayables)
                     {
                         var rqpara = new Model.CommonModel.RelatedQueryParameter();
-                        if (PaymentType==ReceivePaymentType.收款)
+                        if (PaymentType == ReceivePaymentType.收款)
                         {
                             rqpara.bizType = BizType.应收款单;
                         }
@@ -101,7 +101,7 @@ namespace RUINORERP.UI.FM
                         {
                             rqpara.bizType = BizType.应付款单;
                         }
-          
+
                         rqpara.billId = item.ARAPId;
                         ToolStripMenuItem RelatedMenuItemPara = new ToolStripMenuItem();
                         RelatedMenuItemPara.Name = $"{rqpara.billId}";
@@ -115,7 +115,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
             }
-         await   base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
         /// <summary>
         /// 收付款方式决定对应的菜单功能
@@ -200,8 +200,6 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4CmbByEnum<tb_FM_PriceAdjustment>(entity, k => k.PayStatus, typeof(PayStatus), cmbPayStatus, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.AdjustNo, txtAdjustNo, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalForeignDiffAmount.ToString(), txtTotalForeignDiffAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalLocalDiffAmount.ToString(), txtTotalLocalDiffAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.AdjustReason, txtAdjustReason, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_FM_PriceAdjustment, BizType>(entity, k => k.SourceBizType, cmbBizType, false);
@@ -252,6 +250,7 @@ namespace RUINORERP.UI.FM
 
             DataBindingHelper.BindData4CheckBox<tb_FM_PriceAdjustment>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TaxTotalDiffLocalAmount.ToString(), txtTaxTotalDiffLocalAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalLocalDiffAmount.ToString(), txtTotalLocalDiffAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
 
@@ -264,7 +263,6 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PriceAdjustment>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             //显示 打印状态 如果是草稿状态 不显示打印
             ShowPrintStatus(lblPrintStatus, entity);
-
 
             if (PaymentType == ReceivePaymentType.收款)
             {
@@ -352,13 +350,19 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-                if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
+                if (s2.PropertyName == entity.GetPropertyName<tb_FM_PriceAdjustment>(c => c.TaxTotalDiffLocalAmount) && entity.TaxTotalDiffLocalAmount > 0)
+                {
+                    //默认为账期
+                    entity.IsIncludeTax = true;
+                }
+
+                if (s2.PropertyName == entity.GetPropertyName<tb_FM_PriceAdjustment>(c => c.PayStatus) && entity.PayStatus == (int)PayStatus.未付款)
                 {
                     //默认为账期
                     entity.Paytype_ID = MainForm.Instance.AppContext.PaymentMethodOfPeriod.Paytype_ID;
                 }
 
-                if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
+                if (s2.PropertyName == entity.GetPropertyName<tb_FM_PriceAdjustment>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
                 {
                     if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
                     {
@@ -377,14 +381,7 @@ namespace RUINORERP.UI.FM
                         }
                     }
                 }
-                if (entity.Currency_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_PriceAdjustment>(c => c.Currency_ID))
-                {
-                    //如果币别是本位币则不显示汇率列
-                    if (EditEntity != null && EditEntity.Currency_ID == MainForm.Instance.AppContext.BaseCurrency.Currency_ID)
-                    {
-                        listCols.SetCol_NeverVisible<tb_FM_PriceAdjustmentDetail>(c => c.ExchangeRate);
-                    }
-                }
+
 
                 base.ToolBarEnabledControl(entity);
 
@@ -434,7 +431,7 @@ namespace RUINORERP.UI.FM
         }
 
 
-       
+
 
 
         private void Grid1_BindingContextChanged(object sender, EventArgs e)
@@ -508,35 +505,89 @@ namespace RUINORERP.UI.FM
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
+
             //listCols.SetCol_DefaultValue<tb_FM_PriceAdjustmentDetail>(c => c.ForeignPayableAmount, 0.00M);
 
             //listCols.SetCol_DisplayFormatText<tb_FM_PriceAdjustmentDetail>(c => c.SourceBizType, 1);
 
-            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
-            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.SubtotalDiffLocalAmount, CustomFormatType.CurrencyFormat);
-            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.TaxDiffLocalAmount, CustomFormatType.CurrencyFormat);
-            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.TaxSubtotalDiffLocalAmount, CustomFormatType.CurrencyFormat);
-            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.OriginalUnitPrice, CustomFormatType.CurrencyFormat);
-            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.AdjustedUnitPrice, CustomFormatType.CurrencyFormat);
-            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.DiffUnitPrice, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.Original_TaxRate, CustomFormatType.PercentFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.Correct_TaxRate, CustomFormatType.PercentFormat);
 
-            //listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.ForeignPayableAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.Original_UnitPrice_NoTax, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.Correct_UnitPrice_NoTax, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.Original_UnitPrice_WithTax, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.Correct_UnitPrice_WithTax, CustomFormatType.CurrencyFormat);
+
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.UnitPrice_NoTax_Diff, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.UnitPrice_WithTax_Diff, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.Original_TaxAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.Correct_TaxAmount, CustomFormatType.CurrencyFormat);
+
+
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.TaxAmount_Diff, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.TotalAmount_Diff_NoTax, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.TotalAmount_Diff_WithTax, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.TotalAmount_Diff, CustomFormatType.CurrencyFormat);
+
 
             sgd = new SourceGridDefine(grid1, listCols, true);
-
-            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => b.AdjustedUnitPrice - a.OriginalUnitPrice, c => c.DiffUnitPrice);
-            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => (a.AdjustedUnitPrice - a.OriginalUnitPrice) * b.Quantity, c => c.SubtotalDiffLocalAmount);
-
-            listCols.SetCol_FormulaReverse<tb_FM_PriceAdjustmentDetail>(d => d.AdjustedUnitPrice == 0 && d.DiffUnitPrice > 0, (a, b) => a.DiffUnitPrice + a.OriginalUnitPrice, c => c.AdjustedUnitPrice);
+            //要手动输入新旧 含税单价
 
 
-            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => a.DiffUnitPrice * b.Quantity, c => c.SubtotalDiffLocalAmount);
-            listCols.SetCol_FormulaReverse<tb_FM_PriceAdjustmentDetail>(d => d.Quantity != 0, (a, b) => (a.SubtotalDiffLocalAmount / b.Quantity) - a.OriginalUnitPrice, c => c.AdjustedUnitPrice);
+            //新未税单价
+            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => a.Correct_UnitPrice_WithTax / (1 + b.Correct_TaxRate), d => d.Correct_UnitPrice_NoTax);
+
+            //原未税单价
+            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => a.Original_UnitPrice_WithTax / (1 + b.Original_TaxRate), d => d.Original_UnitPrice_NoTax);
+
+            //未税单价差异
+            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => b.Correct_UnitPrice_NoTax - a.Original_UnitPrice_NoTax, c => c.UnitPrice_NoTax_Diff);
+            //含税单价差异
+            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => b.Correct_UnitPrice_WithTax - a.Original_UnitPrice_WithTax, c => c.UnitPrice_WithTax_Diff);
+
+            //原始税额
+            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => (a.Original_UnitPrice_WithTax * a.Quantity) / (1 + b.Original_TaxRate) * c.Original_TaxRate, d => d.Original_TaxAmount);
+
+            //调整后税额
+            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => (a.Correct_UnitPrice_WithTax * a.Quantity) / (1 + b.Correct_TaxRate) * c.Correct_TaxRate, d => d.Correct_TaxAmount);
+
+            //总未税差异金额
+            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => b.UnitPrice_NoTax_Diff * a.Quantity, c => c.TotalAmount_Diff_NoTax);
+            //总含税差异金额
+            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => b.UnitPrice_WithTax_Diff * a.Quantity, c => c.TotalAmount_Diff_WithTax);
+
+            //税额差异
+            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => b.Correct_TaxAmount - a.Original_TaxAmount, c => c.TaxAmount_Diff);
+
+
+            //总差异就是包含税的，因为税款也是要交易的。但是可以抵扣而已
+            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => b.UnitPrice_WithTax_Diff * a.Quantity, c => c.TotalAmount_Diff);
+
+            //反算  已知未税及税点，算出 新旧包含税的单价
+            listCols.SetCol_FormulaReverse<tb_FM_PriceAdjustmentDetail>(d => d.Original_UnitPrice_WithTax == 0, (a, b) => a.Original_UnitPrice_NoTax * (1 + b.Correct_TaxRate), c => c.Original_UnitPrice_WithTax);
+            listCols.SetCol_FormulaReverse<tb_FM_PriceAdjustmentDetail>(d => d.Correct_UnitPrice_WithTax == 0, (a, b) => a.Correct_UnitPrice_NoTax * (1 + b.Correct_TaxRate), c => c.Correct_UnitPrice_WithTax);
+
+
+            //listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => b.Correct_UnitPrice_NoTax - a.Original_UnitPrice_NoTax, c => c.UnitPrice_WithTax_Diff);
+            //listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => a.UnitPrice_WithTax_Diff / (1 + b.Correct_TaxRate) * c.Correct_TaxRate, d => d.Correct_UnitPrice_WithTax);
+            //listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => a.UnitPrice_WithTax_Diff / (1 + b.Correct_TaxRate) * c.Correct_TaxRate, d => d.Correct_UnitPrice_NoTax);
+
+
+
+            //  listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => a.DiffUnitPrice * b.Quantity, c => c.SubtotalDiffLocalAmount);
+            // listCols.SetCol_FormulaReverse<tb_FM_PriceAdjustmentDetail>(d => d.Quantity != 0, (a, b) => (a.SubtotalDiffLocalAmount / b.Quantity) - a.OriginalUnitPrice, c => c.AdjustedUnitPrice);
             sgd.GridMasterData = EditEntity;
-            listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.SubtotalDiffLocalAmount);
-            listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.TaxSubtotalDiffLocalAmount);
-            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => a.DiffUnitPrice / (1 + b.TaxRate) * c.TaxRate, d => d.TaxDiffLocalAmount);
-            listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => a.TaxDiffLocalAmount * b.Quantity, c => c.TaxSubtotalDiffLocalAmount);
+            listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.TaxAmount_Diff);
+            listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.TotalAmount_Diff);
+            listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.TotalAmount_Diff_NoTax);
+            listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.TotalAmount_Diff_WithTax);
+
+            listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.Quantity);
+            listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.Original_TaxAmount);
+            listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.Correct_TaxAmount);
+
+            //  listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => a.DiffUnitPrice / (1 + b.TaxRate) * c.TaxRate, d => d.TaxDiffLocalAmount);
+            // listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => a.TaxDiffLocalAmount * b.Quantity, c => c.TaxSubtotalDiffLocalAmount);
             /*
             listCols.SetCol_FormulaReverse<tb_SaleOrderDetail>(d => d.UnitPrice == 0 && d.Discount != 0 && d.TransactionPrice != 0, (a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);//-->成交价是结果列
             //单价和成交价不一样时，并且单价不能为零时，可以计算出折扣的值 TODO:!!!!
@@ -598,14 +649,15 @@ namespace RUINORERP.UI.FM
 
                 //计算总金额  这些逻辑是不是放到业务层？后面要优化
                 List<tb_FM_PriceAdjustmentDetail> details = sgd.BindingSourceLines.DataSource as List<tb_FM_PriceAdjustmentDetail>;
-                details = details.Where(c => c.SubtotalDiffLocalAmount != 0).ToList();
+                details = details.Where(c => c.TotalAmount_Diff != 0).ToList();
                 if (details.Count == 0)
                 {
-                    MainForm.Instance.uclog.AddLog("差异小计金额必须大于0");
+                    MainForm.Instance.uclog.AddLog("总差异小计金额必须大于0");
                     return;
                 }
-                EditEntity.TotalLocalDiffAmount = details.Sum(c => c.SubtotalDiffLocalAmount);
-                EditEntity.TaxTotalDiffLocalAmount = details.Sum(c => c.TaxSubtotalDiffLocalAmount);
+                EditEntity.TotalLocalDiffAmount = details.Sum(c => c.TotalAmount_Diff);
+                EditEntity.TaxTotalDiffLocalAmount = details.Sum(c => c.TaxAmount_Diff);
+
             }
             catch (Exception ex)
             {
@@ -719,7 +771,7 @@ namespace RUINORERP.UI.FM
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
                 //产品ID有值才算有效值
-                details = detailentity.Where(t => t.SubtotalDiffLocalAmount != 0 || t.ProdDetailID > 0).ToList();
+                details = detailentity.Where(t => t.TotalAmount_Diff != 0 || t.ProdDetailID > 0).ToList();
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {
@@ -728,20 +780,20 @@ namespace RUINORERP.UI.FM
                 }
 
                 EditEntity.tb_FM_PriceAdjustmentDetails = details;
-                if (details.Sum(c => c.TaxSubtotalDiffLocalAmount) > 0)
+                if (details.Sum(c => c.TaxAmount_Diff) > 0 || details.Any(c => c.Correct_TaxRate > 0))
                 {
                     EditEntity.IsIncludeTax = true;
                 }
 
                 //如果主表的总金额和明细金额加总后不相等，则提示
-                if (NeedValidated && EditEntity.TotalLocalDiffAmount != details.Sum(c => c.SubtotalDiffLocalAmount))
+                if (NeedValidated && EditEntity.TotalLocalDiffAmount != details.Sum(c => c.TotalAmount_Diff))
                 {
                     if (MessageBox.Show("差异总金额和明细中差异金额小计之和不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {
                         return false;
                     }
                 }
-                if (NeedValidated && EditEntity.TaxTotalDiffLocalAmount != details.Sum(c => c.TaxSubtotalDiffLocalAmount))
+                if (NeedValidated && EditEntity.TaxTotalDiffLocalAmount != details.Sum(c => c.TaxAmount_Diff))
                 {
                     if (MessageBox.Show("总差异税额和明细差异税额小计之和不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
                     {
@@ -749,7 +801,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-             
+
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))

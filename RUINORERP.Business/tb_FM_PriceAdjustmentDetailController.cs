@@ -1,10 +1,9 @@
-﻿
-// **************************************
+﻿// **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:14
+// 时间：09/11/2025 15:24:56
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -469,7 +468,9 @@ namespace RUINORERP.Business
         {
             List<tb_FM_PriceAdjustmentDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustmentDetail>()
                                .Includes(t => t.tb_proddetail )
+                               .Includes(t => t.tb_unit )
                                .Includes(t => t.tb_fm_priceadjustment )
+                               .Includes(t => t.tb_location )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -490,7 +491,9 @@ namespace RUINORERP.Business
         {
             List<tb_FM_PriceAdjustmentDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustmentDetail>().Where(exp)
                                .Includes(t => t.tb_proddetail )
+                               .Includes(t => t.tb_unit )
                                .Includes(t => t.tb_fm_priceadjustment )
+                               .Includes(t => t.tb_location )
                                     .ToListAsync();
             
             foreach (var item in list)
@@ -511,7 +514,9 @@ namespace RUINORERP.Business
         {
             List<tb_FM_PriceAdjustmentDetail> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustmentDetail>().Where(exp)
                             .Includes(t => t.tb_proddetail )
+                            .Includes(t => t.tb_unit )
                             .Includes(t => t.tb_fm_priceadjustment )
+                            .Includes(t => t.tb_location )
                                     .ToList();
             
             foreach (var item in list)
@@ -549,8 +554,12 @@ namespace RUINORERP.Business
         {
             tb_FM_PriceAdjustmentDetail entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PriceAdjustmentDetail>().Where(w => w.AdjustDetailID == (long)id)
                              .Includes(t => t.tb_proddetail )
+                            .Includes(t => t.tb_unit )
                             .Includes(t => t.tb_fm_priceadjustment )
-                                    .FirstAsync();
+                            .Includes(t => t.tb_location )
+                        
+
+                                .FirstAsync();
             if(entity!=null)
             {
                 entity.HasChanged = false;

@@ -2821,6 +2821,9 @@ namespace RUINORERP.UI.BaseForm
             _UCBillMasterQuery.Name = "_UCBillMasterQuery";
             List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
             _UCBillMasterQuery.SummaryCols = masterlist;
+
+          
+
             _UCBillMasterQuery.InvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(MasterInvisibleCols);
 
             //一般主单的主键不用显示 这里统一处理？

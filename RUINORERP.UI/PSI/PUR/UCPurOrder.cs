@@ -715,6 +715,11 @@ namespace RUINORERP.UI.PSI.PUR
 
 
             listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);//-->成交价是结果列
+            
+            listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.TaxRate == 0, (a, b) => a.SubtotalUntaxedAmount / b.Quantity, c => c.UnitPrice);//-->成交价是结果列
+            listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.TaxRate != 0, (a, b) => a.UntaxedUnitPrice*(1 + b.TaxRate), c => c.UnitPrice);//-->成交价是结果列
+
+
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.prop, t => t.property);
 

@@ -210,10 +210,10 @@ namespace RUINORERP.Model
         }
         private decimal _ForeignPayableAmount = ((0));
         /// <summary>
-        /// 支付金额外币
+        /// 应付金额外币
         /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignPayableAmount", ColDesc = "支付金额外币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignPayableAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "支付金额外币")]
+        [AdvQueryAttribute(ColName = "ForeignPayableAmount", ColDesc = "应付金额外币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "ForeignPayableAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "应付金额外币")]
         public decimal ForeignPayableAmount
         {
             get { return _ForeignPayableAmount; }
@@ -225,10 +225,10 @@ namespace RUINORERP.Model
 
         private decimal _LocalPayableAmount = ((0));
         /// <summary>
-        /// 支付金额本币
+        /// 应付金额本币
         /// </summary>
-        [AdvQueryAttribute(ColName = "LocalPayableAmount", ColDesc = "支付金额本币")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "LocalPayableAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "支付金额本币")]
+        [AdvQueryAttribute(ColName = "LocalPayableAmount", ColDesc = "应付金额本币")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "LocalPayableAmount", DecimalDigits = 4, IsNullable = false, ColumnDescription = "应付金额本币")]
         public decimal LocalPayableAmount
         {
             get { return _LocalPayableAmount; }

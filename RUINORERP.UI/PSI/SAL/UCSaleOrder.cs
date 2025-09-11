@@ -798,6 +798,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
             listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => a.UnitCommissionAmount * b.Quantity, c => c.CommissionAmount);
             listCols.SetCol_FormulaReverse<tb_SaleOrderDetail>(d => d.Quantity != 0, (a, b) => a.CommissionAmount / b.Quantity, c => c.UnitCommissionAmount);
 
+
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTransAmount);
             //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTaxAmount);
 

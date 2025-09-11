@@ -214,10 +214,12 @@ namespace RUINORERP.UI.FM
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.TaxTotalDiffLocalAmount);
-            base.MasterSummaryCols.Add(c => c.TotalForeignDiffAmount);
             base.MasterSummaryCols.Add(c => c.TotalLocalDiffAmount);
-            base.ChildSummaryCols.Add(c => c.SubtotalDiffLocalAmount);
-            base.ChildSummaryCols.Add(c => c.TaxSubtotalDiffLocalAmount);
+            base.ChildSummaryCols.Add(c => c.TaxAmount_Diff);
+            base.ChildSummaryCols.Add(c => c.TotalAmount_Diff_WithTax);
+            base.ChildSummaryCols.Add(c => c.TotalAmount_Diff);
+            base.ChildSummaryCols.Add(c => c.Quantity);
+
         }
 
 

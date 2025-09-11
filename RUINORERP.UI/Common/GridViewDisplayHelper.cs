@@ -143,6 +143,10 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(NotifyChannel), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(NotifyChannel))));
                 }
+                else if (prop.Name == nameof(ARAPWriteOffStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ARAPWriteOffStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ARAPWriteOffStatus))));
+                }
                 else if (prop.Name == nameof(ReminderBizType))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ReminderBizType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ReminderBizType))));
@@ -167,7 +171,10 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(RefundStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(RefundStatus))));
                 }
-                
+                else if (prop.Name == nameof(StatementStatus))
+                {
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(StatementStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(StatementStatus))));
+                }
                 else if (prop.Name == nameof(PaymentStatus))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PaymentStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PaymentStatus))));

@@ -105,6 +105,7 @@ namespace RUINORERP.Model
         /// </summary>
         [AdvQueryAttribute(ColName = "ExpenseType_id", ColDesc = "费用类型")]
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ExpenseType_id", DecimalDigits = 0, IsNullable = true, ColumnDescription = "费用类型")]
+        [FKRelationAttribute("tb_FM_ExpenseType", "ExpenseType_id")]
         public long? ExpenseType_id
         {
             get { return _ExpenseType_id; }

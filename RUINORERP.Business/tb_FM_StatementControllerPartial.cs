@@ -273,11 +273,20 @@ namespace RUINORERP.Business
         /// 生成对账单
         /// </summary>
         /// <param name="entities"></param>
-        /// <param name="receivePaymentType"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public async Task<tb_FM_Statement> BuildStatement(List<tb_FM_ReceivablePayable> entities, ReceivePaymentType receivePaymentType)
+        public async Task<tb_FM_Statement> BuildStatement(List<tb_FM_ReceivablePayable> entities)
         {
+
+            //var customerVendorIds = entities.Select(e => e.CustomerVendor_ID).Distinct().ToList();
+            //if (customerVendorIds.Count > 1)
+            //{
+            //    throw new Exception("对账单只能针对同一客户/供应商生成");
+            //}
+
+            //long customerVendorId = customerVendorIds.First();
+
+
             //通过应收 自动生成 对账单
             //如果应收付款单中，已经为部分付款，或可能是从预收付款单中核销了部分。所以这里生成时需要取未核销金额的应收付金额
             tb_FM_Statement statement = new tb_FM_Statement();
@@ -290,11 +299,40 @@ namespace RUINORERP.Business
             statement.ApprovalOpinions = "";
             statement.Modified_at = null;
             statement.Modified_by = null;
-            statement.ReceivePaymentType = (int)receivePaymentType;
 
-            List<tb_FM_StatementDetail> details = mapper.Map<List<tb_FM_StatementDetail>>(entities);
 
-            details.ForEach(e => { e.ARAPWriteOffStatus = (int)ARAPWriteOffStatus.待核销; });
+            //注意 映射有逻辑，应收应付的余额为对账金额
+            List<tb_FM_StatementDetail> details = new List<tb_FM_StatementDetail>();
+
+            //.ForMember(a => a.IncludedForeignAmount, o => o.MapFrom(d => d.TotalForeignPayableAmount))
+            //.ForMember(a => a.IncludedLocalAmount, o => o.MapFrom(d => d.TotalLocalPayableAmount))
+
+            //.ForMember(a => a.RemainingForeignAmount, o => o.MapFrom(d => d.ForeignBalanceAmount))
+            //.ForMember(a => a.RemainingLocalAmount, o => o.MapFrom(d => d.LocalBalanceAmount))
+            //.ForMember(a => a.Summary, o => o.MapFrom(d => d.Remark));
+
+            foreach (var entity in entities)
+            {
+                var detail = mapper.Map<tb_FM_StatementDetail>(entity);
+                detail.ARAPWriteOffStatus = (int)ARAPWriteOffStatus.待核销;
+
+                // 使用未核销余额而不是原始金额
+                detail.IncludedLocalAmount = entity.LocalBalanceAmount;
+                detail.IncludedForeignAmount = entity.ForeignBalanceAmount;
+
+                detail.RemainingForeignAmount = entity.ForeignBalanceAmount;
+                detail.RemainingLocalAmount = entity.LocalBalanceAmount;
+                detail.Summary = entity.Remark;
+                details.Add(detail);
+            }
+
+
+            //应收的余额给到付款单。创建收款
+            statement.OpeningBalanceForeignAmount = 0;
+            statement.OpeningBalanceLocalAmount = await GetOpeningBalance(entities.Select(c => c.CustomerVendor_ID).ToArray());
+
+
+
 
             //将明细按付款类型分组，求和后，再收款是进，付款是出。进行最后的净额计算决定最后的账单金额及方向
             #region 获取收款和付款的总额
@@ -304,19 +342,33 @@ namespace RUINORERP.Business
                 .Select(g => new
                 {
                     ReceivePaymentType = g.Key,
-                    TotalLocalAmount = g.Sum(d => d.IncludedLocalAmount)  // 本币金额汇总
+                    IncludedLocalAmount = g.Sum(d => d.IncludedLocalAmount)  // 本币金额汇总
                                                                           // 如果需要外币，可以类似汇总 IncludedForeignAmount
                 })
                 .ToList();
 
-            // 计算收款和付款的总额
+            // 计算收款和付款的总额,这里的方向 是来自应收付
             decimal totalReceivable = groupedDetails
                 .Where(x => x.ReceivePaymentType == (int)ReceivePaymentType.收款)  // 收款类型
-                .Sum(x => x.TotalLocalAmount);
+                .Sum(x => x.IncludedLocalAmount);
 
             decimal totalPayable = groupedDetails
                 .Where(x => x.ReceivePaymentType == (int)ReceivePaymentType.付款)  // 付款类型
-                .Sum(x => x.TotalLocalAmount);
+                .Sum(x => x.IncludedLocalAmount);
+
+
+
+            statement.TotalPayableForeignAmount = 0;
+            statement.TotalPayableLocalAmount = details.Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款).Sum(c => c.IncludedLocalAmount);
+
+            statement.TotalReceivableForeignAmount = 0;
+            statement.TotalReceivableLocalAmount = details.Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.收款).Sum(c => c.IncludedLocalAmount);
+
+            //对于应收账款：期末余额 = 期初余额 + 期间应收 - 期间收款
+            //对于应付账款：期末余额 = 期初余额 + 期间应付 - 期间付款
+            statement.ClosingBalanceForeignAmount = 0;
+            statement.ClosingBalanceLocalAmount = statement.OpeningBalanceLocalAmount + statement.TotalReceivableLocalAmount - statement.TotalPayableLocalAmount;
+
 
             // 计算净额：付款 - 收款
             decimal netAmount = totalPayable - totalReceivable;
@@ -342,8 +394,8 @@ namespace RUINORERP.Business
             statement.StatementNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.对账单);
 
             //entities明细中的创建时间的最大值，最小值来决定账单的开始结束日期
-            statement.StartDate = entities.Min(c => c.Created_at).Value;
-            statement.EndDate = entities.Max(c => c.Created_at).Value;
+            statement.StartDate = entities.Min(c => c.BusinessDate).Value;
+            statement.EndDate = entities.Max(c => c.BusinessDate).Value;
             //statement.EndDate = System.DateTime.Now;
             // statement.Currency_ID = statement.Currency_ID;
 
@@ -353,19 +405,7 @@ namespace RUINORERP.Business
             statement.PayeeAccountNo = entities[0].PayeeAccountNo;
             statement.tb_FM_StatementDetails = details;
 
-            //应收的余额给到付款单。创建收款
-            statement.OpeningBalanceForeignAmount = 0;
-            statement.OpeningBalanceLocalAmount = await GetOpeningBalance(entities.Select(c => c.CustomerVendor_ID).ToArray());
-
-            statement.TotalPayableForeignAmount = 0;
-            statement.TotalPayableLocalAmount = details.Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款).Sum(c => c.IncludedLocalAmount);
-
-            statement.TotalReceivableForeignAmount = 0;
-            statement.TotalReceivableLocalAmount = details.Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.收款).Sum(c => c.IncludedLocalAmount);
-
-            statement.ClosingBalanceForeignAmount = 0;
-            statement.ClosingBalanceLocalAmount = statement.OpeningBalanceLocalAmount + statement.TotalReceivableLocalAmount - statement.TotalPayableLocalAmount;
-
+     
             //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
             var duplicateArapIds = statement.tb_FM_StatementDetails
             .GroupBy(c => c.ARAPId)

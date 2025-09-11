@@ -45,6 +45,7 @@ using Netron.GraphLib;
 using Org.BouncyCastle.Utilities;
 using RUINORERP.Model.CommonModel;
 using ToolTip = System.Windows.Forms.ToolTip;
+using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.MRP.MP
 {
@@ -2263,7 +2264,7 @@ protected async override Task<ApprovalEntity> ReReview()
                 MessageBox.Show("请选择要生成制令单的目标产品。");
                 return;
             }
-
+            tb_MenuInfo MoRelatedBillMenuInfo = null;
             if (MiddlewareType)
             {
                 if (MakingItems.Count > 1)
@@ -2274,11 +2275,21 @@ protected async override Task<ApprovalEntity> ReReview()
                 else
                 {
                     tb_ProduceGoodsRecommendDetail target = MakingItems.FirstOrDefault();
-                    bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID
-                                    && c.Location_ID == target.Location_ID
-                    && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID);
-                    if (IsCreatectrMO)
+                    var ExistMO = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
+                         .Where(c => c.PDID == EditEntity.PDID
+                         && c.Location_ID == target.Location_ID
+                        && c.ProdDetailID == target.ProdDetailID
+                        && c.PDCID == target.PDCID).FirstAsync();
+                    if (ExistMO != null)
                     {
+                        
+                        MoRelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_ManufacturingOrder).Name && m.ClassPath.Contains("RUINORERP.UI.MRP.MP." + typeof(UCManufacturingOrder).Name)).FirstOrDefault();
+                        if (MoRelatedBillMenuInfo != null && ExistMO != null)
+                        {
+                            MessageBox.Show("制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成,系统将打开已经存在的制令单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
+                            await menuPowerHelper.ExecuteEvents(MoRelatedBillMenuInfo, ExistMO);
+                        }
                         MainForm.Instance.uclog.AddLog($"制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成", UILogType.警告);
                         btnCreatePurRequisition.Enabled = false;
                         return;
@@ -2290,12 +2301,21 @@ protected async override Task<ApprovalEntity> ReReview()
                 //上层驱动模式
                 List<tb_ProduceGoodsRecommendDetail> MakingItemsByTop = EditEntity.tb_ProduceGoodsRecommendDetails.Where(c => c.Selected == true).ToList().OrderBy(c => c.ParentId).ToList();
                 tb_ProduceGoodsRecommendDetail target = MakingItems.FirstOrDefault();
-                bool IsCreatectrMO = await ctrMO.IsExistAsync(c => c.PDID == EditEntity.PDID
+                var ExistMO = await MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
+                         .Where(c => c.PDID == EditEntity.PDID
                 && c.ProdDetailID == target.ProdDetailID && c.PDCID == target.PDCID
-                && c.Location_ID == target.Location_ID
-                );
-                if (IsCreatectrMO)
+                && c.Location_ID == target.Location_ID).FirstAsync();
+              
+                if (ExistMO != null)
                 {
+
+                     MoRelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_ManufacturingOrder).Name && m.ClassPath.Contains("RUINORERP.UI.MRP.MP." + typeof(UCManufacturingOrder).Name)).FirstOrDefault();
+                    if (MoRelatedBillMenuInfo != null && ExistMO != null)
+                    {
+                        MessageBox.Show("制成品建议中，当前选中目标行产品，已经生成过制令单，无法重复生成,系统将打开已经存在的制令单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        //如果是给值。不在这处理。在生成时处理的。 这里只是调用到UI
+                        await menuPowerHelper.ExecuteEvents(MoRelatedBillMenuInfo, ExistMO);
+                    }
                     MainForm.Instance.uclog.AddLog($"制成品建议中，当前选中目标行产品已经生成过制令单，无法重复生成", UILogType.警告);
                     btnCreatePurRequisition.Enabled = false;
                     return;

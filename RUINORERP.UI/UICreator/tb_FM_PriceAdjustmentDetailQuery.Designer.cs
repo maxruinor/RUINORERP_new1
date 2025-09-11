@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:34
+// 时间：09/11/2025 15:24:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -56,6 +56,9 @@ this.cmbAdjustId = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 this.lblProdDetailID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbProdDetailID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
+this.lblLocation_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.cmbLocation_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
+
 this.lblproperty = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtproperty = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.txtproperty.Multiline = true;
@@ -67,39 +70,57 @@ this.txtSpecifications.Multiline = true;
 this.lblUnit_ID = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.cmbUnit_ID = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
-this.lblExchangeRate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtExchangeRate = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblOriginal_UnitPrice_NoTax = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtOriginal_UnitPrice_NoTax = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-this.lblOriginalUnitPrice = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtOriginalUnitPrice = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblCorrect_UnitPrice_NoTax = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtCorrect_UnitPrice_NoTax = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-this.lblAdjustedUnitPrice = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtAdjustedUnitPrice = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblOriginal_TaxRate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtOriginal_TaxRate = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-this.lblDiffUnitPrice = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtDiffUnitPrice = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblCorrect_TaxRate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtCorrect_TaxRate = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblOriginal_UnitPrice_WithTax = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtOriginal_UnitPrice_WithTax = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblCorrect_UnitPrice_WithTax = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtCorrect_UnitPrice_WithTax = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblUnitPrice_NoTax_Diff = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtUnitPrice_NoTax_Diff = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblUnitPrice_WithTax_Diff = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtUnitPrice_WithTax_Diff = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
 this.lblQuantity = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtQuantity = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
+this.lblOriginal_TaxAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtOriginal_TaxAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblCorrect_TaxAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtCorrect_TaxAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblTaxAmount_Diff = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtTaxAmount_Diff = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblTotalAmount_Diff_NoTax = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtTotalAmount_Diff_NoTax = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblTotalAmount_Diff_WithTax = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtTotalAmount_Diff_WithTax = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
+this.lblTotalAmount_Diff = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtTotalAmount_Diff = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+
 this.lblCustomerPartNo = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtCustomerPartNo = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 
-this.lblSubtotalDiffLocalAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtSubtotalDiffLocalAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-
-this.lblDescription = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtDescription = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-this.txtDescription.Multiline = true;
-
-this.lblTaxRate = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtTaxRate = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-
-this.lblTaxDiffLocalAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtTaxDiffLocalAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-
-this.lblTaxSubtotalDiffLocalAmount = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtTaxSubtotalDiffLocalAmount = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblAdjustReason = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.txtAdjustReason = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.txtAdjustReason.Multiline = true;
 
 this.lblSummary = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtSummary = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
@@ -143,225 +164,334 @@ this.cmbProdDetailID.TabIndex = 2;
 this.Controls.Add(this.lblProdDetailID);
 this.Controls.Add(this.cmbProdDetailID);
 
+           //#####Location_ID###Int64
+//属性测试75Location_ID
+//属性测试75Location_ID
+//属性测试75Location_ID
+//属性测试75Location_ID
+this.lblLocation_ID.AutoSize = true;
+this.lblLocation_ID.Location = new System.Drawing.Point(100,75);
+this.lblLocation_ID.Name = "lblLocation_ID";
+this.lblLocation_ID.Size = new System.Drawing.Size(41, 12);
+this.lblLocation_ID.TabIndex = 3;
+this.lblLocation_ID.Text = "库位";
+//111======75
+this.cmbLocation_ID.Location = new System.Drawing.Point(173,71);
+this.cmbLocation_ID.Name ="cmbLocation_ID";
+this.cmbLocation_ID.Size = new System.Drawing.Size(100, 21);
+this.cmbLocation_ID.TabIndex = 3;
+this.Controls.Add(this.lblLocation_ID);
+this.Controls.Add(this.cmbLocation_ID);
+
            //#####255property###String
 this.lblproperty.AutoSize = true;
-this.lblproperty.Location = new System.Drawing.Point(100,75);
+this.lblproperty.Location = new System.Drawing.Point(100,100);
 this.lblproperty.Name = "lblproperty";
 this.lblproperty.Size = new System.Drawing.Size(41, 12);
-this.lblproperty.TabIndex = 3;
+this.lblproperty.TabIndex = 4;
 this.lblproperty.Text = "属性";
-this.txtproperty.Location = new System.Drawing.Point(173,71);
+this.txtproperty.Location = new System.Drawing.Point(173,96);
 this.txtproperty.Name = "txtproperty";
 this.txtproperty.Size = new System.Drawing.Size(100, 21);
-this.txtproperty.TabIndex = 3;
+this.txtproperty.TabIndex = 4;
 this.Controls.Add(this.lblproperty);
 this.Controls.Add(this.txtproperty);
 
            //#####1000Specifications###String
 this.lblSpecifications.AutoSize = true;
-this.lblSpecifications.Location = new System.Drawing.Point(100,100);
+this.lblSpecifications.Location = new System.Drawing.Point(100,125);
 this.lblSpecifications.Name = "lblSpecifications";
 this.lblSpecifications.Size = new System.Drawing.Size(41, 12);
-this.lblSpecifications.TabIndex = 4;
+this.lblSpecifications.TabIndex = 5;
 this.lblSpecifications.Text = "规格";
-this.txtSpecifications.Location = new System.Drawing.Point(173,96);
+this.txtSpecifications.Location = new System.Drawing.Point(173,121);
 this.txtSpecifications.Name = "txtSpecifications";
 this.txtSpecifications.Size = new System.Drawing.Size(100, 21);
-this.txtSpecifications.TabIndex = 4;
+this.txtSpecifications.TabIndex = 5;
 this.Controls.Add(this.lblSpecifications);
 this.Controls.Add(this.txtSpecifications);
 
            //#####Unit_ID###Int64
-//属性测试125Unit_ID
-//属性测试125Unit_ID
+//属性测试150Unit_ID
+//属性测试150Unit_ID
 this.lblUnit_ID.AutoSize = true;
-this.lblUnit_ID.Location = new System.Drawing.Point(100,125);
+this.lblUnit_ID.Location = new System.Drawing.Point(100,150);
 this.lblUnit_ID.Name = "lblUnit_ID";
 this.lblUnit_ID.Size = new System.Drawing.Size(41, 12);
-this.lblUnit_ID.TabIndex = 5;
+this.lblUnit_ID.TabIndex = 6;
 this.lblUnit_ID.Text = "单位";
-//111======125
-this.cmbUnit_ID.Location = new System.Drawing.Point(173,121);
+//111======150
+this.cmbUnit_ID.Location = new System.Drawing.Point(173,146);
 this.cmbUnit_ID.Name ="cmbUnit_ID";
 this.cmbUnit_ID.Size = new System.Drawing.Size(100, 21);
-this.cmbUnit_ID.TabIndex = 5;
+this.cmbUnit_ID.TabIndex = 6;
 this.Controls.Add(this.lblUnit_ID);
 this.Controls.Add(this.cmbUnit_ID);
 
-           //#####ExchangeRate###Decimal
-this.lblExchangeRate.AutoSize = true;
-this.lblExchangeRate.Location = new System.Drawing.Point(100,150);
-this.lblExchangeRate.Name = "lblExchangeRate";
-this.lblExchangeRate.Size = new System.Drawing.Size(41, 12);
-this.lblExchangeRate.TabIndex = 6;
-this.lblExchangeRate.Text = "汇率";
-//111======150
-this.txtExchangeRate.Location = new System.Drawing.Point(173,146);
-this.txtExchangeRate.Name ="txtExchangeRate";
-this.txtExchangeRate.Size = new System.Drawing.Size(100, 21);
-this.txtExchangeRate.TabIndex = 6;
-this.Controls.Add(this.lblExchangeRate);
-this.Controls.Add(this.txtExchangeRate);
-
-           //#####OriginalUnitPrice###Decimal
-this.lblOriginalUnitPrice.AutoSize = true;
-this.lblOriginalUnitPrice.Location = new System.Drawing.Point(100,175);
-this.lblOriginalUnitPrice.Name = "lblOriginalUnitPrice";
-this.lblOriginalUnitPrice.Size = new System.Drawing.Size(41, 12);
-this.lblOriginalUnitPrice.TabIndex = 7;
-this.lblOriginalUnitPrice.Text = "原始单价";
+           //#####Original_UnitPrice_NoTax###Decimal
+this.lblOriginal_UnitPrice_NoTax.AutoSize = true;
+this.lblOriginal_UnitPrice_NoTax.Location = new System.Drawing.Point(100,175);
+this.lblOriginal_UnitPrice_NoTax.Name = "lblOriginal_UnitPrice_NoTax";
+this.lblOriginal_UnitPrice_NoTax.Size = new System.Drawing.Size(41, 12);
+this.lblOriginal_UnitPrice_NoTax.TabIndex = 7;
+this.lblOriginal_UnitPrice_NoTax.Text = "原未税单价";
 //111======175
-this.txtOriginalUnitPrice.Location = new System.Drawing.Point(173,171);
-this.txtOriginalUnitPrice.Name ="txtOriginalUnitPrice";
-this.txtOriginalUnitPrice.Size = new System.Drawing.Size(100, 21);
-this.txtOriginalUnitPrice.TabIndex = 7;
-this.Controls.Add(this.lblOriginalUnitPrice);
-this.Controls.Add(this.txtOriginalUnitPrice);
+this.txtOriginal_UnitPrice_NoTax.Location = new System.Drawing.Point(173,171);
+this.txtOriginal_UnitPrice_NoTax.Name ="txtOriginal_UnitPrice_NoTax";
+this.txtOriginal_UnitPrice_NoTax.Size = new System.Drawing.Size(100, 21);
+this.txtOriginal_UnitPrice_NoTax.TabIndex = 7;
+this.Controls.Add(this.lblOriginal_UnitPrice_NoTax);
+this.Controls.Add(this.txtOriginal_UnitPrice_NoTax);
 
-           //#####AdjustedUnitPrice###Decimal
-this.lblAdjustedUnitPrice.AutoSize = true;
-this.lblAdjustedUnitPrice.Location = new System.Drawing.Point(100,200);
-this.lblAdjustedUnitPrice.Name = "lblAdjustedUnitPrice";
-this.lblAdjustedUnitPrice.Size = new System.Drawing.Size(41, 12);
-this.lblAdjustedUnitPrice.TabIndex = 8;
-this.lblAdjustedUnitPrice.Text = "调整后单价";
+           //#####Correct_UnitPrice_NoTax###Decimal
+this.lblCorrect_UnitPrice_NoTax.AutoSize = true;
+this.lblCorrect_UnitPrice_NoTax.Location = new System.Drawing.Point(100,200);
+this.lblCorrect_UnitPrice_NoTax.Name = "lblCorrect_UnitPrice_NoTax";
+this.lblCorrect_UnitPrice_NoTax.Size = new System.Drawing.Size(41, 12);
+this.lblCorrect_UnitPrice_NoTax.TabIndex = 8;
+this.lblCorrect_UnitPrice_NoTax.Text = "新未税单价";
 //111======200
-this.txtAdjustedUnitPrice.Location = new System.Drawing.Point(173,196);
-this.txtAdjustedUnitPrice.Name ="txtAdjustedUnitPrice";
-this.txtAdjustedUnitPrice.Size = new System.Drawing.Size(100, 21);
-this.txtAdjustedUnitPrice.TabIndex = 8;
-this.Controls.Add(this.lblAdjustedUnitPrice);
-this.Controls.Add(this.txtAdjustedUnitPrice);
+this.txtCorrect_UnitPrice_NoTax.Location = new System.Drawing.Point(173,196);
+this.txtCorrect_UnitPrice_NoTax.Name ="txtCorrect_UnitPrice_NoTax";
+this.txtCorrect_UnitPrice_NoTax.Size = new System.Drawing.Size(100, 21);
+this.txtCorrect_UnitPrice_NoTax.TabIndex = 8;
+this.Controls.Add(this.lblCorrect_UnitPrice_NoTax);
+this.Controls.Add(this.txtCorrect_UnitPrice_NoTax);
 
-           //#####DiffUnitPrice###Decimal
-this.lblDiffUnitPrice.AutoSize = true;
-this.lblDiffUnitPrice.Location = new System.Drawing.Point(100,225);
-this.lblDiffUnitPrice.Name = "lblDiffUnitPrice";
-this.lblDiffUnitPrice.Size = new System.Drawing.Size(41, 12);
-this.lblDiffUnitPrice.TabIndex = 9;
-this.lblDiffUnitPrice.Text = "差异单价";
+           //#####Original_TaxRate###Decimal
+this.lblOriginal_TaxRate.AutoSize = true;
+this.lblOriginal_TaxRate.Location = new System.Drawing.Point(100,225);
+this.lblOriginal_TaxRate.Name = "lblOriginal_TaxRate";
+this.lblOriginal_TaxRate.Size = new System.Drawing.Size(41, 12);
+this.lblOriginal_TaxRate.TabIndex = 9;
+this.lblOriginal_TaxRate.Text = "原税率";
 //111======225
-this.txtDiffUnitPrice.Location = new System.Drawing.Point(173,221);
-this.txtDiffUnitPrice.Name ="txtDiffUnitPrice";
-this.txtDiffUnitPrice.Size = new System.Drawing.Size(100, 21);
-this.txtDiffUnitPrice.TabIndex = 9;
-this.Controls.Add(this.lblDiffUnitPrice);
-this.Controls.Add(this.txtDiffUnitPrice);
+this.txtOriginal_TaxRate.Location = new System.Drawing.Point(173,221);
+this.txtOriginal_TaxRate.Name ="txtOriginal_TaxRate";
+this.txtOriginal_TaxRate.Size = new System.Drawing.Size(100, 21);
+this.txtOriginal_TaxRate.TabIndex = 9;
+this.Controls.Add(this.lblOriginal_TaxRate);
+this.Controls.Add(this.txtOriginal_TaxRate);
+
+           //#####Correct_TaxRate###Decimal
+this.lblCorrect_TaxRate.AutoSize = true;
+this.lblCorrect_TaxRate.Location = new System.Drawing.Point(100,250);
+this.lblCorrect_TaxRate.Name = "lblCorrect_TaxRate";
+this.lblCorrect_TaxRate.Size = new System.Drawing.Size(41, 12);
+this.lblCorrect_TaxRate.TabIndex = 10;
+this.lblCorrect_TaxRate.Text = "新税率";
+//111======250
+this.txtCorrect_TaxRate.Location = new System.Drawing.Point(173,246);
+this.txtCorrect_TaxRate.Name ="txtCorrect_TaxRate";
+this.txtCorrect_TaxRate.Size = new System.Drawing.Size(100, 21);
+this.txtCorrect_TaxRate.TabIndex = 10;
+this.Controls.Add(this.lblCorrect_TaxRate);
+this.Controls.Add(this.txtCorrect_TaxRate);
+
+           //#####Original_UnitPrice_WithTax###Decimal
+this.lblOriginal_UnitPrice_WithTax.AutoSize = true;
+this.lblOriginal_UnitPrice_WithTax.Location = new System.Drawing.Point(100,275);
+this.lblOriginal_UnitPrice_WithTax.Name = "lblOriginal_UnitPrice_WithTax";
+this.lblOriginal_UnitPrice_WithTax.Size = new System.Drawing.Size(41, 12);
+this.lblOriginal_UnitPrice_WithTax.TabIndex = 11;
+this.lblOriginal_UnitPrice_WithTax.Text = "原含税单价";
+//111======275
+this.txtOriginal_UnitPrice_WithTax.Location = new System.Drawing.Point(173,271);
+this.txtOriginal_UnitPrice_WithTax.Name ="txtOriginal_UnitPrice_WithTax";
+this.txtOriginal_UnitPrice_WithTax.Size = new System.Drawing.Size(100, 21);
+this.txtOriginal_UnitPrice_WithTax.TabIndex = 11;
+this.Controls.Add(this.lblOriginal_UnitPrice_WithTax);
+this.Controls.Add(this.txtOriginal_UnitPrice_WithTax);
+
+           //#####Correct_UnitPrice_WithTax###Decimal
+this.lblCorrect_UnitPrice_WithTax.AutoSize = true;
+this.lblCorrect_UnitPrice_WithTax.Location = new System.Drawing.Point(100,300);
+this.lblCorrect_UnitPrice_WithTax.Name = "lblCorrect_UnitPrice_WithTax";
+this.lblCorrect_UnitPrice_WithTax.Size = new System.Drawing.Size(41, 12);
+this.lblCorrect_UnitPrice_WithTax.TabIndex = 12;
+this.lblCorrect_UnitPrice_WithTax.Text = "新含税单价";
+//111======300
+this.txtCorrect_UnitPrice_WithTax.Location = new System.Drawing.Point(173,296);
+this.txtCorrect_UnitPrice_WithTax.Name ="txtCorrect_UnitPrice_WithTax";
+this.txtCorrect_UnitPrice_WithTax.Size = new System.Drawing.Size(100, 21);
+this.txtCorrect_UnitPrice_WithTax.TabIndex = 12;
+this.Controls.Add(this.lblCorrect_UnitPrice_WithTax);
+this.Controls.Add(this.txtCorrect_UnitPrice_WithTax);
+
+           //#####UnitPrice_NoTax_Diff###Decimal
+this.lblUnitPrice_NoTax_Diff.AutoSize = true;
+this.lblUnitPrice_NoTax_Diff.Location = new System.Drawing.Point(100,325);
+this.lblUnitPrice_NoTax_Diff.Name = "lblUnitPrice_NoTax_Diff";
+this.lblUnitPrice_NoTax_Diff.Size = new System.Drawing.Size(41, 12);
+this.lblUnitPrice_NoTax_Diff.TabIndex = 13;
+this.lblUnitPrice_NoTax_Diff.Text = "未税单价差异";
+//111======325
+this.txtUnitPrice_NoTax_Diff.Location = new System.Drawing.Point(173,321);
+this.txtUnitPrice_NoTax_Diff.Name ="txtUnitPrice_NoTax_Diff";
+this.txtUnitPrice_NoTax_Diff.Size = new System.Drawing.Size(100, 21);
+this.txtUnitPrice_NoTax_Diff.TabIndex = 13;
+this.Controls.Add(this.lblUnitPrice_NoTax_Diff);
+this.Controls.Add(this.txtUnitPrice_NoTax_Diff);
+
+           //#####UnitPrice_WithTax_Diff###Decimal
+this.lblUnitPrice_WithTax_Diff.AutoSize = true;
+this.lblUnitPrice_WithTax_Diff.Location = new System.Drawing.Point(100,350);
+this.lblUnitPrice_WithTax_Diff.Name = "lblUnitPrice_WithTax_Diff";
+this.lblUnitPrice_WithTax_Diff.Size = new System.Drawing.Size(41, 12);
+this.lblUnitPrice_WithTax_Diff.TabIndex = 14;
+this.lblUnitPrice_WithTax_Diff.Text = "含税单价差异";
+//111======350
+this.txtUnitPrice_WithTax_Diff.Location = new System.Drawing.Point(173,346);
+this.txtUnitPrice_WithTax_Diff.Name ="txtUnitPrice_WithTax_Diff";
+this.txtUnitPrice_WithTax_Diff.Size = new System.Drawing.Size(100, 21);
+this.txtUnitPrice_WithTax_Diff.TabIndex = 14;
+this.Controls.Add(this.lblUnitPrice_WithTax_Diff);
+this.Controls.Add(this.txtUnitPrice_WithTax_Diff);
 
            //#####Quantity###Decimal
 this.lblQuantity.AutoSize = true;
-this.lblQuantity.Location = new System.Drawing.Point(100,250);
+this.lblQuantity.Location = new System.Drawing.Point(100,375);
 this.lblQuantity.Name = "lblQuantity";
 this.lblQuantity.Size = new System.Drawing.Size(41, 12);
-this.lblQuantity.TabIndex = 10;
+this.lblQuantity.TabIndex = 15;
 this.lblQuantity.Text = "数量";
-//111======250
-this.txtQuantity.Location = new System.Drawing.Point(173,246);
+//111======375
+this.txtQuantity.Location = new System.Drawing.Point(173,371);
 this.txtQuantity.Name ="txtQuantity";
 this.txtQuantity.Size = new System.Drawing.Size(100, 21);
-this.txtQuantity.TabIndex = 10;
+this.txtQuantity.TabIndex = 15;
 this.Controls.Add(this.lblQuantity);
 this.Controls.Add(this.txtQuantity);
 
+           //#####Original_TaxAmount###Decimal
+this.lblOriginal_TaxAmount.AutoSize = true;
+this.lblOriginal_TaxAmount.Location = new System.Drawing.Point(100,400);
+this.lblOriginal_TaxAmount.Name = "lblOriginal_TaxAmount";
+this.lblOriginal_TaxAmount.Size = new System.Drawing.Size(41, 12);
+this.lblOriginal_TaxAmount.TabIndex = 16;
+this.lblOriginal_TaxAmount.Text = "原始税额";
+//111======400
+this.txtOriginal_TaxAmount.Location = new System.Drawing.Point(173,396);
+this.txtOriginal_TaxAmount.Name ="txtOriginal_TaxAmount";
+this.txtOriginal_TaxAmount.Size = new System.Drawing.Size(100, 21);
+this.txtOriginal_TaxAmount.TabIndex = 16;
+this.Controls.Add(this.lblOriginal_TaxAmount);
+this.Controls.Add(this.txtOriginal_TaxAmount);
+
+           //#####Correct_TaxAmount###Decimal
+this.lblCorrect_TaxAmount.AutoSize = true;
+this.lblCorrect_TaxAmount.Location = new System.Drawing.Point(100,425);
+this.lblCorrect_TaxAmount.Name = "lblCorrect_TaxAmount";
+this.lblCorrect_TaxAmount.Size = new System.Drawing.Size(41, 12);
+this.lblCorrect_TaxAmount.TabIndex = 17;
+this.lblCorrect_TaxAmount.Text = "新调税额";
+//111======425
+this.txtCorrect_TaxAmount.Location = new System.Drawing.Point(173,421);
+this.txtCorrect_TaxAmount.Name ="txtCorrect_TaxAmount";
+this.txtCorrect_TaxAmount.Size = new System.Drawing.Size(100, 21);
+this.txtCorrect_TaxAmount.TabIndex = 17;
+this.Controls.Add(this.lblCorrect_TaxAmount);
+this.Controls.Add(this.txtCorrect_TaxAmount);
+
+           //#####TaxAmount_Diff###Decimal
+this.lblTaxAmount_Diff.AutoSize = true;
+this.lblTaxAmount_Diff.Location = new System.Drawing.Point(100,450);
+this.lblTaxAmount_Diff.Name = "lblTaxAmount_Diff";
+this.lblTaxAmount_Diff.Size = new System.Drawing.Size(41, 12);
+this.lblTaxAmount_Diff.TabIndex = 18;
+this.lblTaxAmount_Diff.Text = "税额差异";
+//111======450
+this.txtTaxAmount_Diff.Location = new System.Drawing.Point(173,446);
+this.txtTaxAmount_Diff.Name ="txtTaxAmount_Diff";
+this.txtTaxAmount_Diff.Size = new System.Drawing.Size(100, 21);
+this.txtTaxAmount_Diff.TabIndex = 18;
+this.Controls.Add(this.lblTaxAmount_Diff);
+this.Controls.Add(this.txtTaxAmount_Diff);
+
+           //#####TotalAmount_Diff_NoTax###Decimal
+this.lblTotalAmount_Diff_NoTax.AutoSize = true;
+this.lblTotalAmount_Diff_NoTax.Location = new System.Drawing.Point(100,475);
+this.lblTotalAmount_Diff_NoTax.Name = "lblTotalAmount_Diff_NoTax";
+this.lblTotalAmount_Diff_NoTax.Size = new System.Drawing.Size(41, 12);
+this.lblTotalAmount_Diff_NoTax.TabIndex = 19;
+this.lblTotalAmount_Diff_NoTax.Text = "总未税差异金额";
+//111======475
+this.txtTotalAmount_Diff_NoTax.Location = new System.Drawing.Point(173,471);
+this.txtTotalAmount_Diff_NoTax.Name ="txtTotalAmount_Diff_NoTax";
+this.txtTotalAmount_Diff_NoTax.Size = new System.Drawing.Size(100, 21);
+this.txtTotalAmount_Diff_NoTax.TabIndex = 19;
+this.Controls.Add(this.lblTotalAmount_Diff_NoTax);
+this.Controls.Add(this.txtTotalAmount_Diff_NoTax);
+
+           //#####TotalAmount_Diff_WithTax###Decimal
+this.lblTotalAmount_Diff_WithTax.AutoSize = true;
+this.lblTotalAmount_Diff_WithTax.Location = new System.Drawing.Point(100,500);
+this.lblTotalAmount_Diff_WithTax.Name = "lblTotalAmount_Diff_WithTax";
+this.lblTotalAmount_Diff_WithTax.Size = new System.Drawing.Size(41, 12);
+this.lblTotalAmount_Diff_WithTax.TabIndex = 20;
+this.lblTotalAmount_Diff_WithTax.Text = "总含税差异金额价";
+//111======500
+this.txtTotalAmount_Diff_WithTax.Location = new System.Drawing.Point(173,496);
+this.txtTotalAmount_Diff_WithTax.Name ="txtTotalAmount_Diff_WithTax";
+this.txtTotalAmount_Diff_WithTax.Size = new System.Drawing.Size(100, 21);
+this.txtTotalAmount_Diff_WithTax.TabIndex = 20;
+this.Controls.Add(this.lblTotalAmount_Diff_WithTax);
+this.Controls.Add(this.txtTotalAmount_Diff_WithTax);
+
+           //#####TotalAmount_Diff###Decimal
+this.lblTotalAmount_Diff.AutoSize = true;
+this.lblTotalAmount_Diff.Location = new System.Drawing.Point(100,525);
+this.lblTotalAmount_Diff.Name = "lblTotalAmount_Diff";
+this.lblTotalAmount_Diff.Size = new System.Drawing.Size(41, 12);
+this.lblTotalAmount_Diff.TabIndex = 21;
+this.lblTotalAmount_Diff.Text = "总差异金额";
+//111======525
+this.txtTotalAmount_Diff.Location = new System.Drawing.Point(173,521);
+this.txtTotalAmount_Diff.Name ="txtTotalAmount_Diff";
+this.txtTotalAmount_Diff.Size = new System.Drawing.Size(100, 21);
+this.txtTotalAmount_Diff.TabIndex = 21;
+this.Controls.Add(this.lblTotalAmount_Diff);
+this.Controls.Add(this.txtTotalAmount_Diff);
+
            //#####100CustomerPartNo###String
 this.lblCustomerPartNo.AutoSize = true;
-this.lblCustomerPartNo.Location = new System.Drawing.Point(100,275);
+this.lblCustomerPartNo.Location = new System.Drawing.Point(100,550);
 this.lblCustomerPartNo.Name = "lblCustomerPartNo";
 this.lblCustomerPartNo.Size = new System.Drawing.Size(41, 12);
-this.lblCustomerPartNo.TabIndex = 11;
+this.lblCustomerPartNo.TabIndex = 22;
 this.lblCustomerPartNo.Text = "往来单位料号";
-this.txtCustomerPartNo.Location = new System.Drawing.Point(173,271);
+this.txtCustomerPartNo.Location = new System.Drawing.Point(173,546);
 this.txtCustomerPartNo.Name = "txtCustomerPartNo";
 this.txtCustomerPartNo.Size = new System.Drawing.Size(100, 21);
-this.txtCustomerPartNo.TabIndex = 11;
+this.txtCustomerPartNo.TabIndex = 22;
 this.Controls.Add(this.lblCustomerPartNo);
 this.Controls.Add(this.txtCustomerPartNo);
 
-           //#####SubtotalDiffLocalAmount###Decimal
-this.lblSubtotalDiffLocalAmount.AutoSize = true;
-this.lblSubtotalDiffLocalAmount.Location = new System.Drawing.Point(100,300);
-this.lblSubtotalDiffLocalAmount.Name = "lblSubtotalDiffLocalAmount";
-this.lblSubtotalDiffLocalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblSubtotalDiffLocalAmount.TabIndex = 12;
-this.lblSubtotalDiffLocalAmount.Text = "差异金额小计";
-//111======300
-this.txtSubtotalDiffLocalAmount.Location = new System.Drawing.Point(173,296);
-this.txtSubtotalDiffLocalAmount.Name ="txtSubtotalDiffLocalAmount";
-this.txtSubtotalDiffLocalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtSubtotalDiffLocalAmount.TabIndex = 12;
-this.Controls.Add(this.lblSubtotalDiffLocalAmount);
-this.Controls.Add(this.txtSubtotalDiffLocalAmount);
-
-           //#####300Description###String
-this.lblDescription.AutoSize = true;
-this.lblDescription.Location = new System.Drawing.Point(100,325);
-this.lblDescription.Name = "lblDescription";
-this.lblDescription.Size = new System.Drawing.Size(41, 12);
-this.lblDescription.TabIndex = 13;
-this.lblDescription.Text = "描述";
-this.txtDescription.Location = new System.Drawing.Point(173,321);
-this.txtDescription.Name = "txtDescription";
-this.txtDescription.Size = new System.Drawing.Size(100, 21);
-this.txtDescription.TabIndex = 13;
-this.Controls.Add(this.lblDescription);
-this.Controls.Add(this.txtDescription);
-
-           //#####TaxRate###Decimal
-this.lblTaxRate.AutoSize = true;
-this.lblTaxRate.Location = new System.Drawing.Point(100,350);
-this.lblTaxRate.Name = "lblTaxRate";
-this.lblTaxRate.Size = new System.Drawing.Size(41, 12);
-this.lblTaxRate.TabIndex = 14;
-this.lblTaxRate.Text = "税率";
-//111======350
-this.txtTaxRate.Location = new System.Drawing.Point(173,346);
-this.txtTaxRate.Name ="txtTaxRate";
-this.txtTaxRate.Size = new System.Drawing.Size(100, 21);
-this.txtTaxRate.TabIndex = 14;
-this.Controls.Add(this.lblTaxRate);
-this.Controls.Add(this.txtTaxRate);
-
-           //#####TaxDiffLocalAmount###Decimal
-this.lblTaxDiffLocalAmount.AutoSize = true;
-this.lblTaxDiffLocalAmount.Location = new System.Drawing.Point(100,375);
-this.lblTaxDiffLocalAmount.Name = "lblTaxDiffLocalAmount";
-this.lblTaxDiffLocalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblTaxDiffLocalAmount.TabIndex = 15;
-this.lblTaxDiffLocalAmount.Text = "税额差异";
-//111======375
-this.txtTaxDiffLocalAmount.Location = new System.Drawing.Point(173,371);
-this.txtTaxDiffLocalAmount.Name ="txtTaxDiffLocalAmount";
-this.txtTaxDiffLocalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtTaxDiffLocalAmount.TabIndex = 15;
-this.Controls.Add(this.lblTaxDiffLocalAmount);
-this.Controls.Add(this.txtTaxDiffLocalAmount);
-
-           //#####TaxSubtotalDiffLocalAmount###Decimal
-this.lblTaxSubtotalDiffLocalAmount.AutoSize = true;
-this.lblTaxSubtotalDiffLocalAmount.Location = new System.Drawing.Point(100,400);
-this.lblTaxSubtotalDiffLocalAmount.Name = "lblTaxSubtotalDiffLocalAmount";
-this.lblTaxSubtotalDiffLocalAmount.Size = new System.Drawing.Size(41, 12);
-this.lblTaxSubtotalDiffLocalAmount.TabIndex = 16;
-this.lblTaxSubtotalDiffLocalAmount.Text = "税额差异小计";
-//111======400
-this.txtTaxSubtotalDiffLocalAmount.Location = new System.Drawing.Point(173,396);
-this.txtTaxSubtotalDiffLocalAmount.Name ="txtTaxSubtotalDiffLocalAmount";
-this.txtTaxSubtotalDiffLocalAmount.Size = new System.Drawing.Size(100, 21);
-this.txtTaxSubtotalDiffLocalAmount.TabIndex = 16;
-this.Controls.Add(this.lblTaxSubtotalDiffLocalAmount);
-this.Controls.Add(this.txtTaxSubtotalDiffLocalAmount);
+           //#####500AdjustReason###String
+this.lblAdjustReason.AutoSize = true;
+this.lblAdjustReason.Location = new System.Drawing.Point(100,575);
+this.lblAdjustReason.Name = "lblAdjustReason";
+this.lblAdjustReason.Size = new System.Drawing.Size(41, 12);
+this.lblAdjustReason.TabIndex = 23;
+this.lblAdjustReason.Text = "调整原因";
+this.txtAdjustReason.Location = new System.Drawing.Point(173,571);
+this.txtAdjustReason.Name = "txtAdjustReason";
+this.txtAdjustReason.Size = new System.Drawing.Size(100, 21);
+this.txtAdjustReason.TabIndex = 23;
+this.Controls.Add(this.lblAdjustReason);
+this.Controls.Add(this.txtAdjustReason);
 
            //#####300Summary###String
 this.lblSummary.AutoSize = true;
-this.lblSummary.Location = new System.Drawing.Point(100,425);
+this.lblSummary.Location = new System.Drawing.Point(100,600);
 this.lblSummary.Name = "lblSummary";
 this.lblSummary.Size = new System.Drawing.Size(41, 12);
-this.lblSummary.TabIndex = 17;
+this.lblSummary.TabIndex = 24;
 this.lblSummary.Text = "摘要";
-this.txtSummary.Location = new System.Drawing.Point(173,421);
+this.txtSummary.Location = new System.Drawing.Point(173,596);
 this.txtSummary.Name = "txtSummary";
 this.txtSummary.Size = new System.Drawing.Size(100, 21);
-this.txtSummary.TabIndex = 17;
+this.txtSummary.TabIndex = 24;
 this.Controls.Add(this.lblSummary);
 this.Controls.Add(this.txtSummary);
 
@@ -379,6 +509,9 @@ this.Controls.Add(this.cmbAdjustId );
                 this.Controls.Add(this.lblProdDetailID );
 this.Controls.Add(this.cmbProdDetailID );
 
+                this.Controls.Add(this.lblLocation_ID );
+this.Controls.Add(this.cmbLocation_ID );
+
                 this.Controls.Add(this.lblproperty );
 this.Controls.Add(this.txtproperty );
 
@@ -388,38 +521,56 @@ this.Controls.Add(this.txtSpecifications );
                 this.Controls.Add(this.lblUnit_ID );
 this.Controls.Add(this.cmbUnit_ID );
 
-                this.Controls.Add(this.lblExchangeRate );
-this.Controls.Add(this.txtExchangeRate );
+                this.Controls.Add(this.lblOriginal_UnitPrice_NoTax );
+this.Controls.Add(this.txtOriginal_UnitPrice_NoTax );
 
-                this.Controls.Add(this.lblOriginalUnitPrice );
-this.Controls.Add(this.txtOriginalUnitPrice );
+                this.Controls.Add(this.lblCorrect_UnitPrice_NoTax );
+this.Controls.Add(this.txtCorrect_UnitPrice_NoTax );
 
-                this.Controls.Add(this.lblAdjustedUnitPrice );
-this.Controls.Add(this.txtAdjustedUnitPrice );
+                this.Controls.Add(this.lblOriginal_TaxRate );
+this.Controls.Add(this.txtOriginal_TaxRate );
 
-                this.Controls.Add(this.lblDiffUnitPrice );
-this.Controls.Add(this.txtDiffUnitPrice );
+                this.Controls.Add(this.lblCorrect_TaxRate );
+this.Controls.Add(this.txtCorrect_TaxRate );
+
+                this.Controls.Add(this.lblOriginal_UnitPrice_WithTax );
+this.Controls.Add(this.txtOriginal_UnitPrice_WithTax );
+
+                this.Controls.Add(this.lblCorrect_UnitPrice_WithTax );
+this.Controls.Add(this.txtCorrect_UnitPrice_WithTax );
+
+                this.Controls.Add(this.lblUnitPrice_NoTax_Diff );
+this.Controls.Add(this.txtUnitPrice_NoTax_Diff );
+
+                this.Controls.Add(this.lblUnitPrice_WithTax_Diff );
+this.Controls.Add(this.txtUnitPrice_WithTax_Diff );
 
                 this.Controls.Add(this.lblQuantity );
 this.Controls.Add(this.txtQuantity );
 
+                this.Controls.Add(this.lblOriginal_TaxAmount );
+this.Controls.Add(this.txtOriginal_TaxAmount );
+
+                this.Controls.Add(this.lblCorrect_TaxAmount );
+this.Controls.Add(this.txtCorrect_TaxAmount );
+
+                this.Controls.Add(this.lblTaxAmount_Diff );
+this.Controls.Add(this.txtTaxAmount_Diff );
+
+                this.Controls.Add(this.lblTotalAmount_Diff_NoTax );
+this.Controls.Add(this.txtTotalAmount_Diff_NoTax );
+
+                this.Controls.Add(this.lblTotalAmount_Diff_WithTax );
+this.Controls.Add(this.txtTotalAmount_Diff_WithTax );
+
+                this.Controls.Add(this.lblTotalAmount_Diff );
+this.Controls.Add(this.txtTotalAmount_Diff );
+
                 this.Controls.Add(this.lblCustomerPartNo );
 this.Controls.Add(this.txtCustomerPartNo );
 
-                this.Controls.Add(this.lblSubtotalDiffLocalAmount );
-this.Controls.Add(this.txtSubtotalDiffLocalAmount );
-
-                this.Controls.Add(this.lblDescription );
-this.Controls.Add(this.txtDescription );
-
-                this.Controls.Add(this.lblTaxRate );
-this.Controls.Add(this.txtTaxRate );
-
-                this.Controls.Add(this.lblTaxDiffLocalAmount );
-this.Controls.Add(this.txtTaxDiffLocalAmount );
-
-                this.Controls.Add(this.lblTaxSubtotalDiffLocalAmount );
-this.Controls.Add(this.txtTaxSubtotalDiffLocalAmount );
+                this.Controls.Add(this.lblAdjustReason );
+this.Controls.Add(this.txtAdjustReason );
 
                 this.Controls.Add(this.lblSummary );
 this.Controls.Add(this.txtSummary );
@@ -446,6 +597,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbProdDetailID;
 
     
         
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblLocation_ID;
+private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbLocation_ID;
+
+    
+        
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblproperty;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtproperty;
 
@@ -461,23 +617,43 @@ private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbUnit_ID;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblExchangeRate;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtExchangeRate;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblOriginal_UnitPrice_NoTax;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtOriginal_UnitPrice_NoTax;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblOriginalUnitPrice;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtOriginalUnitPrice;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCorrect_UnitPrice_NoTax;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtCorrect_UnitPrice_NoTax;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblAdjustedUnitPrice;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtAdjustedUnitPrice;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblOriginal_TaxRate;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtOriginal_TaxRate;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDiffUnitPrice;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtDiffUnitPrice;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCorrect_TaxRate;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtCorrect_TaxRate;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblOriginal_UnitPrice_WithTax;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtOriginal_UnitPrice_WithTax;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCorrect_UnitPrice_WithTax;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtCorrect_UnitPrice_WithTax;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblUnitPrice_NoTax_Diff;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtUnitPrice_NoTax_Diff;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblUnitPrice_WithTax_Diff;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtUnitPrice_WithTax_Diff;
 
     
         
@@ -486,33 +662,43 @@ private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtQuantity;
 
     
         
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblOriginal_TaxAmount;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtOriginal_TaxAmount;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCorrect_TaxAmount;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtCorrect_TaxAmount;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTaxAmount_Diff;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTaxAmount_Diff;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTotalAmount_Diff_NoTax;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTotalAmount_Diff_NoTax;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTotalAmount_Diff_WithTax;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTotalAmount_Diff_WithTax;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTotalAmount_Diff;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTotalAmount_Diff;
+
+    
+        
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCustomerPartNo;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtCustomerPartNo;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblSubtotalDiffLocalAmount;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtSubtotalDiffLocalAmount;
-
-    
-        
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblDescription;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtDescription;
-
-    
-        
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTaxRate;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTaxRate;
-
-    
-        
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTaxDiffLocalAmount;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTaxDiffLocalAmount;
-
-    
-        
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblTaxSubtotalDiffLocalAmount;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtTaxSubtotalDiffLocalAmount;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblAdjustReason;
+private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtAdjustReason;
 
     
         

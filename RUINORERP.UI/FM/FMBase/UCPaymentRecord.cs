@@ -215,13 +215,17 @@ namespace RUINORERP.UI.FM
                 picBox红字.Visible = false;
             }
 
+
+            DataBindingHelper.BindData4Label<tb_FM_PaymentRecord>(entity, k => k.LocalPamountInWords, lblMoneyUpper, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsForCommission, chkIsForCommission, false);
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
 
-            DataBindingHelper.BindData4Cmb<tb_Employee, tb_FM_PaymentRecord>(entity, k => k.Employee_ID, v => v.Employee_Name,
-                t => t.Reimburser.Value, cmbEmployee_ID, false);
+
+            //为什么是报销人员还要理一下
+            //DataBindingHelper.BindData4Cmb<tb_Employee, tb_FM_PaymentRecord>(entity, k => k.Employee_ID, v => v.Employee_Name,
+            //    t => t.Reimburser.Value, cmbEmployee_ID, false);
 
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
@@ -230,6 +234,8 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalForeignAmount.ToString(), txtTotalForeignAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalLocalAmount.ToString(), txtTotalLocalAmount, BindDataType4TextBox.Money, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.TotalLocalPayableAmount.ToString(), txtTotalLocalPayableAmount, BindDataType4TextBox.Money, false);
+
             DataBindingHelper.BindData4TextBox<tb_FM_PaymentRecord>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_PaymentRecord>(entity, t => t.PaymentStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(PaymentStatus));
             DataBindingHelper.BindData4DataTime<tb_FM_PaymentRecord>(entity, t => t.PaymentDate, dtpPaymentDate, false);
@@ -310,6 +316,13 @@ namespace RUINORERP.UI.FM
                 {
                     LoadPayeeInfo(entity);
                 }
+
+                if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentRecord>(c => c.TotalLocalAmount))
+                {
+                    entity.LocalPamountInWords = entity.TotalLocalAmount.ToUpper();
+                    //lblMoneyUpper.Text = entity.TotalAmount.Value.ToUpper();
+                }
+
                 //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
@@ -457,7 +470,6 @@ namespace RUINORERP.UI.FM
                         RelatedMenuItem.Tag = rqp;
                         RelatedMenuItem.Text = $"{rqp.bizType}:{item.SourceBillNo}";
                         RelatedMenuItem.Click += base.MenuItem_Click;
-                        RelatedMenuItem.DropDownItemClicked += MenuItem_DropDownItemClicked;
 
                         if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.SourceBilllId.ToString()))
                         {
@@ -470,11 +482,7 @@ namespace RUINORERP.UI.FM
             await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
-
-        private void MenuItem_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-
-        }
+ 
 
         protected override void RelatedQuery()
         {
@@ -517,29 +525,38 @@ namespace RUINORERP.UI.FM
             bindingSourceSub.EndEdit();
             if (NeedValidated && (EditEntity.TotalForeignAmount == 0 && EditEntity.TotalLocalAmount == 0))
             {
-                System.Windows.Forms.MessageBox.Show("收款金额不能为零，请检查数据录入是否正确！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                System.Windows.Forms.MessageBox.Show("实付金额不能为零，请检查数据录入是否正确！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                txtTotalLocalAmount.Focus();
                 return false;
             }
             List<tb_FM_PaymentRecordDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_PaymentRecordDetail>;
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
+
+                // 先进行自动分配（如果需要）
+                if (NeedValidated && EditEntity.TotalLocalAmount > 0 && detailentity.Sum(d => d.LocalAmount) != EditEntity.TotalLocalAmount)
+                {
+                    if (!paymentController.AutoDistributePaymentAmount(EditEntity, detailentity))
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        //同步到UI
+                        sgh.UpdateGridColumn<tb_FM_PaymentRecordDetail>(c => c.LocalAmount);
+                    }
+                }
+
+
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ForeignAmount != 0 || t.LocalAmount != 0).ToList();
-
-
-                //
-
-
 
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {
-                    MessageBox.Show("请录入有效明细记录！");
+                    MessageBox.Show("明细数据中，支付金额不能为零，请录入有效记录！");
                     return false;
                 }
-
-                EditEntity.tb_FM_PaymentRecordDetails = details;
-
 
                 //收付款单中的  收款或付款账号中的币别是否与选的币别一致。
                 if (NeedValidated && EditEntity.Currency_ID > 0 && EditEntity.Account_id > 0)
@@ -564,11 +581,7 @@ namespace RUINORERP.UI.FM
                 }
 
 
-                // 先进行自动分配（如果需要）
-                if (NeedValidated && EditEntity.TotalLocalAmount > 0 && details.Sum(d => d.LocalAmount) != EditEntity.TotalLocalAmount)
-                {
-                    return paymentController.AutoDistributePaymentAmount(EditEntity, details);
-                }
+
 
                 //不管收款单，明细中的业务类型是对账单，还是其它应收应付款单，如果有多张单，并且支付的金额小于单据总金额时，如 ，应付，500，700， 只付300时只能保存一张单且是最小的那个单
                 // 进行验证
@@ -576,6 +589,7 @@ namespace RUINORERP.UI.FM
                 {
                     return paymentController.ValidatePaymentRecordDetails(EditEntity);
                 }
+
 
                 if (NeedValidated && EditEntity.TotalLocalAmount != details.Sum(c => c.LocalAmount))
                 {
@@ -604,6 +618,23 @@ namespace RUINORERP.UI.FM
                         }
                     }
                 }
+
+                if (NeedValidated && EditEntity.TotalLocalAmount != EditEntity.TotalLocalPayableAmount)
+                {
+                    if (EditEntity.TotalLocalAmount < EditEntity.TotalLocalPayableAmount)
+                    {
+                        if (MessageBox.Show("实付金额小于应付金额，确定部分支付吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
+                        {
+                            return false;
+                        }
+                    }
+                    if (EditEntity.TotalLocalAmount > EditEntity.TotalLocalPayableAmount)
+                    {
+                        MessageBox.Show("实付金额大于应付金额，请检查数据后再试!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+                        return false;
+                    }
+                }
+
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
@@ -811,6 +842,8 @@ namespace RUINORERP.UI.FM
 
             listCols.SetCol_NeverVisible<tb_FM_PaymentRecordDetail>(c => c.PaymentDetailId);
             listCols.SetCol_NeverVisible<tb_FM_PaymentRecordDetail>(c => c.SourceBilllId);
+
+
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);

@@ -389,6 +389,24 @@ namespace RUINORERP.UI.UCSourceGrid
 
         public SourceGridDefine(SourceGrid.Grid _grid, List<SGDefineColumnItem> DataColList, bool hasRowHeader)
         {
+
+
+            #region 暂时统一的不显示外币
+
+            foreach (var item in DataColList)
+            {
+                if (item != null)
+                {
+                    //主表时，字段不可用或设置为不可见时  如果是金额还可以  再增加money类型
+                    if (item.ColName.Contains("Foreign") || item.ColName.Contains("ExchangeRate"))
+                    {
+                        item.SetCol_NeverVisible(item.ColName);
+                    }
+                }
+            }
+
+            #endregion
+
             InitDefineColumns.Clear();
             //行头文字居中
             RowHeaderWithData.TextAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter;

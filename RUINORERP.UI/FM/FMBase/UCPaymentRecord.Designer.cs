@@ -33,6 +33,7 @@ namespace RUINORERP.UI.FM
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCPaymentRecord));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.picBox红字 = new System.Windows.Forms.PictureBox();
             this.chkIsForCommission = new Krypton.Toolkit.KryptonCheckBox();
             this.lblReimburser = new Krypton.Toolkit.KryptonLabel();
             this.cmbReimburser = new Krypton.Toolkit.KryptonComboBox();
@@ -74,11 +75,14 @@ namespace RUINORERP.UI.FM
             this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.grid1 = new SourceGrid.Grid();
+            this.lblLocalPamountInWords = new Krypton.Toolkit.KryptonLabel();
+            this.lblMoneyUpper = new Krypton.Toolkit.KryptonLabel();
+            this.txtTotalLocalPayableAmount = new Krypton.Toolkit.KryptonTextBox();
+            this.lblTotalLocalPayableAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalLocalAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalLocalAmount = new Krypton.Toolkit.KryptonLabel();
             this.txtTotalForeignAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblTotalForeignAmount = new Krypton.Toolkit.KryptonLabel();
-            this.picBox红字 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -89,6 +93,7 @@ namespace RUINORERP.UI.FM
             this.kryptonSplitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picBox红字)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbReimburser)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).BeginInit();
@@ -102,7 +107,6 @@ namespace RUINORERP.UI.FM
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picBox红字)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -171,6 +175,19 @@ namespace RUINORERP.UI.FM
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(1133, 251);
             this.kryptonPanel1.TabIndex = 4;
+            // 
+            // picBox红字
+            // 
+            this.picBox红字.BackColor = System.Drawing.SystemColors.InactiveCaption;
+            this.picBox红字.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("picBox红字.BackgroundImage")));
+            this.picBox红字.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.picBox红字.InitialImage = null;
+            this.picBox红字.Location = new System.Drawing.Point(79, 7);
+            this.picBox红字.Name = "picBox红字";
+            this.picBox红字.Size = new System.Drawing.Size(125, 48);
+            this.picBox红字.TabIndex = 233;
+            this.picBox红字.TabStop = false;
+            this.picBox红字.Visible = false;
             // 
             // chkIsForCommission
             // 
@@ -243,9 +260,9 @@ namespace RUINORERP.UI.FM
             // 
             this.lblEmployee_ID.Location = new System.Drawing.Point(508, 84);
             this.lblEmployee_ID.Name = "lblEmployee_ID";
-            this.lblEmployee_ID.Size = new System.Drawing.Size(75, 20);
+            this.lblEmployee_ID.Size = new System.Drawing.Size(49, 20);
             this.lblEmployee_ID.TabIndex = 195;
-            this.lblEmployee_ID.Values.Text = "业务经办人";
+            this.lblEmployee_ID.Values.Text = "经办人";
             // 
             // lblPaymentDate
             // 
@@ -514,6 +531,10 @@ namespace RUINORERP.UI.FM
             // 
             // kryptonSplitContainer2.Panel2
             // 
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblLocalPamountInWords);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblMoneyUpper);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalLocalPayableAmount);
+            this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalLocalPayableAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalLocalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.lblTotalLocalAmount);
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.txtTotalForeignAmount);
@@ -536,48 +557,74 @@ namespace RUINORERP.UI.FM
             this.grid1.TabStop = true;
             this.grid1.ToolTipText = "";
             // 
+            // lblLocalPamountInWords
+            // 
+            this.lblLocalPamountInWords.Location = new System.Drawing.Point(489, 18);
+            this.lblLocalPamountInWords.Name = "lblLocalPamountInWords";
+            this.lblLocalPamountInWords.Size = new System.Drawing.Size(62, 20);
+            this.lblLocalPamountInWords.TabIndex = 207;
+            this.lblLocalPamountInWords.Values.Text = "金额大写";
+            // 
+            // lblMoneyUpper
+            // 
+            this.lblMoneyUpper.Location = new System.Drawing.Point(559, 12);
+            this.lblMoneyUpper.Name = "lblMoneyUpper";
+            this.lblMoneyUpper.Size = new System.Drawing.Size(57, 34);
+            this.lblMoneyUpper.StateNormal.ShortText.Color1 = System.Drawing.Color.Black;
+            this.lblMoneyUpper.StateNormal.ShortText.Color2 = System.Drawing.Color.Green;
+            this.lblMoneyUpper.StateNormal.ShortText.ColorStyle = Krypton.Toolkit.PaletteColorStyle.Solid;
+            this.lblMoneyUpper.StateNormal.ShortText.Font = new System.Drawing.Font("宋体", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblMoneyUpper.StateNormal.ShortText.MultiLine = Krypton.Toolkit.InheritBool.True;
+            this.lblMoneyUpper.StateNormal.ShortText.MultiLineH = Krypton.Toolkit.PaletteRelativeAlign.Near;
+            this.lblMoneyUpper.TabIndex = 206;
+            this.lblMoneyUpper.Values.Image = global::RUINORERP.UI.Properties.Resources.人民币__32;
+            this.lblMoneyUpper.Values.Text = "0";
+            // 
+            // txtTotalLocalPayableAmount
+            // 
+            this.txtTotalLocalPayableAmount.Location = new System.Drawing.Point(101, 16);
+            this.txtTotalLocalPayableAmount.Name = "txtTotalLocalPayableAmount";
+            this.txtTotalLocalPayableAmount.Size = new System.Drawing.Size(103, 23);
+            this.txtTotalLocalPayableAmount.TabIndex = 205;
+            // 
+            // lblTotalLocalPayableAmount
+            // 
+            this.lblTotalLocalPayableAmount.Location = new System.Drawing.Point(7, 16);
+            this.lblTotalLocalPayableAmount.Name = "lblTotalLocalPayableAmount";
+            this.lblTotalLocalPayableAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalLocalPayableAmount.TabIndex = 204;
+            this.lblTotalLocalPayableAmount.Values.Text = "应付金额本币";
+            // 
             // txtTotalLocalAmount
             // 
-            this.txtTotalLocalAmount.Location = new System.Drawing.Point(394, 14);
+            this.txtTotalLocalAmount.Location = new System.Drawing.Point(339, 16);
             this.txtTotalLocalAmount.Name = "txtTotalLocalAmount";
             this.txtTotalLocalAmount.Size = new System.Drawing.Size(103, 23);
             this.txtTotalLocalAmount.TabIndex = 199;
             // 
             // lblTotalLocalAmount
             // 
-            this.lblTotalLocalAmount.Location = new System.Drawing.Point(300, 14);
+            this.lblTotalLocalAmount.Location = new System.Drawing.Point(245, 16);
             this.lblTotalLocalAmount.Name = "lblTotalLocalAmount";
             this.lblTotalLocalAmount.Size = new System.Drawing.Size(88, 20);
+            this.lblTotalLocalAmount.StateNormal.ShortText.Color1 = System.Drawing.Color.Red;
             this.lblTotalLocalAmount.TabIndex = 198;
-            this.lblTotalLocalAmount.Values.Text = "支付金额本币";
+            this.lblTotalLocalAmount.Values.Text = "实付金额本币";
             // 
             // txtTotalForeignAmount
             // 
-            this.txtTotalForeignAmount.Location = new System.Drawing.Point(800, 14);
+            this.txtTotalForeignAmount.Location = new System.Drawing.Point(1006, 13);
             this.txtTotalForeignAmount.Name = "txtTotalForeignAmount";
             this.txtTotalForeignAmount.Size = new System.Drawing.Size(103, 23);
             this.txtTotalForeignAmount.TabIndex = 203;
             // 
             // lblTotalForeignAmount
             // 
-            this.lblTotalForeignAmount.Location = new System.Drawing.Point(696, 16);
+            this.lblTotalForeignAmount.Location = new System.Drawing.Point(902, 15);
             this.lblTotalForeignAmount.Name = "lblTotalForeignAmount";
             this.lblTotalForeignAmount.Size = new System.Drawing.Size(88, 20);
             this.lblTotalForeignAmount.TabIndex = 202;
             this.lblTotalForeignAmount.Values.Text = "支付金额外币";
-            // 
-            // picBox红字
-            // 
-            this.picBox红字.BackColor = System.Drawing.SystemColors.InactiveCaption;
-            this.picBox红字.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("picBox红字.BackgroundImage")));
-            this.picBox红字.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.picBox红字.InitialImage = null;
-            this.picBox红字.Location = new System.Drawing.Point(79, 7);
-            this.picBox红字.Name = "picBox红字";
-            this.picBox红字.Size = new System.Drawing.Size(125, 48);
-            this.picBox红字.TabIndex = 233;
-            this.picBox红字.TabStop = false;
-            this.picBox红字.Visible = false;
             // 
             // UCPaymentRecord
             // 
@@ -599,6 +646,7 @@ namespace RUINORERP.UI.FM
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picBox红字)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbReimburser)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbPaytype_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbAccount_id)).EndInit();
@@ -613,7 +661,6 @@ namespace RUINORERP.UI.FM
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.picBox红字)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -671,5 +718,9 @@ namespace RUINORERP.UI.FM
         private Krypton.Toolkit.KryptonComboBox cmbReimburser;
         private Krypton.Toolkit.KryptonCheckBox chkIsForCommission;
         private System.Windows.Forms.PictureBox picBox红字;
+        private Krypton.Toolkit.KryptonTextBox txtTotalLocalPayableAmount;
+        private Krypton.Toolkit.KryptonLabel lblTotalLocalPayableAmount;
+        private Krypton.Toolkit.KryptonLabel lblLocalPamountInWords;
+        private Krypton.Toolkit.KryptonLabel lblMoneyUpper;
     }
     }

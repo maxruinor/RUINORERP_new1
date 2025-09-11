@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.ComponentModel.Design.Serialization;
@@ -57,7 +57,7 @@ namespace DevAge.ComponentModel.Validator
 
         /// <summary>
         /// Fired when converting a object to the value specified. Called from method ObjectToValue and IsValidObject
-        /// ½«¶ÔÏó×ª»»ÎªÖ¸¶¨ÖµÊ±´¥·¢¡£´Ó·½·¨ObjectToValueºÍIsValidObjectµ÷ÓÃ
+        /// å°†å¯¹è±¡è½¬æ¢ä¸ºæŒ‡å®šå€¼æ—¶è§¦å‘ã€‚ä»æ–¹æ³•ObjectToValueå’ŒIsValidObjectè°ƒç”¨
         /// </summary>
         /// <param name="e"></param>
         protected override void OnConvertingObjectToValue(ConvertingObjectEventArgs e)
@@ -77,25 +77,25 @@ namespace DevAge.ComponentModel.Validator
                 string tmp = (string)e.Value;
                 if (IsNullString(tmp) && e.DestinationType.IsAssignableFrom(typeof(string)))
                 {
-                    e.Value = "";//TODO: by watson ×¢Òâ ±¾À´ÕâÀïÓ¦¸Ã·µ»Ønull£¬µ«ÊÇÒòÎªstringÀàĞÍ²»Ö§³Önull£¬ËùÒÔÕâÀï·µ»Ø¿Õ×Ö·û´®¡£
+                    e.Value = "";//TODO: by watson æ³¨æ„ æœ¬æ¥è¿™é‡Œåº”è¯¥è¿”å›nullï¼Œä½†æ˜¯å› ä¸ºstringç±»å‹ä¸æ”¯æŒnullï¼Œæ‰€ä»¥è¿™é‡Œè¿”å›ç©ºå­—ç¬¦ä¸²ã€‚
                 }
                 else if (IsNullString(tmp) && !e.DestinationType.IsAssignableFrom(e.Value.GetType()))
                 {
-                    #region ÒıÓÃÀàĞÍ×ª»»Îª¿Õ×Ö·û´®£¬ÖµÀàĞÍ×ª»»ÎªÄ¬ÈÏÖµ£¬Êµ¼ÊÊÇÈ«²¿×ª»»ÎªnullÁË¡£ÒªÏÈÅĞ¶ÏÖµÀàĞÍ£¬ÔÙÅĞ¶ÏÒıÓÃÀàĞÍ²Å¶Ô¡£
-                    // ³¢ÊÔ½«ÒıÓÃÀàĞÍµÄÊôĞÔÉèÖÃÎª null
+                    #region å¼•ç”¨ç±»å‹è½¬æ¢ä¸ºç©ºå­—ç¬¦ä¸²ï¼Œå€¼ç±»å‹è½¬æ¢ä¸ºé»˜è®¤å€¼ï¼Œå®é™…æ˜¯å…¨éƒ¨è½¬æ¢ä¸ºnulläº†ã€‚è¦å…ˆåˆ¤æ–­å€¼ç±»å‹ï¼Œå†åˆ¤æ–­å¼•ç”¨ç±»å‹æ‰å¯¹ã€‚
+                    // å°è¯•å°†å¼•ç”¨ç±»å‹çš„å±æ€§è®¾ç½®ä¸º null
                     if (e.Value.GetType().IsClass)
                     {
                         e.Value = null;
                     }
-                    // ÖµÀàĞÍµÄÊôĞÔ²»ÄÜÉèÖÃÎª null£¬ÕâÀï¿ÉÒÔ½øĞĞÌØÊâ´¦Àí£¬ÀıÈçÖØÖÃÎªÄ¬ÈÏÖµ
+                    // å€¼ç±»å‹çš„å±æ€§ä¸èƒ½è®¾ç½®ä¸º nullï¼Œè¿™é‡Œå¯ä»¥è¿›è¡Œç‰¹æ®Šå¤„ç†ï¼Œä¾‹å¦‚é‡ç½®ä¸ºé»˜è®¤å€¼
                     else if (e.Value.GetType().IsValueType)
                     {
-                        // ÖØÖÃÎªÄ¬ÈÏÖµ
+                        // é‡ç½®ä¸ºé»˜è®¤å€¼
                         e.Value = Activator.CreateInstance(e.Value.GetType());
                     }
                     #endregion
                 }
-                else if (e.DestinationType.IsAssignableFrom(e.Value.GetType())) //Èç¹ûÄ¿±êÀàĞÍÓëÖµÀàĞÍÏàÍ¬£¬ÔòÖ±½Ó·µ»ØÖµ
+                else if (e.DestinationType.IsAssignableFrom(e.Value.GetType())) //å¦‚æœç›®æ ‡ç±»å‹ä¸å€¼ç±»å‹ç›¸åŒï¼Œåˆ™ç›´æ¥è¿”å›å€¼
                 {
 
 
@@ -113,7 +113,7 @@ namespace DevAge.ComponentModel.Validator
 
                 }
                 else
-                    throw new ApplicationException("´ËÀàĞÍµÄÑéÖ¤Æ÷²»Ö§³Ö×Ö·û´®×ª»»¡£");
+                    throw new ApplicationException("æ­¤ç±»å‹çš„éªŒè¯å™¨ä¸æ”¯æŒå­—ç¬¦ä¸²è½¬æ¢ã€‚");
             }
             else if (e.DestinationType.IsAssignableFrom(e.Value.GetType()))
             {
@@ -124,12 +124,12 @@ namespace DevAge.ComponentModel.Validator
             {
                 // For some reason string converter does not allow converting from
                 // double to string. So here is just override with simple if statemenet
-                //³öÓÚÄ³ÖÖÔ­Òò£¬×Ö·û´®×ª»»Æ÷²»ÔÊĞí´Ó
-                //double×ª»»Îªstring¡£ËùÒÔÕâÀïÖ»ÊÇÓÃ¼òµ¥µÄif statemenetÖØĞ´
+                //å‡ºäºæŸç§åŸå› ï¼Œå­—ç¬¦ä¸²è½¬æ¢å™¨ä¸å…è®¸ä»
+                //doubleè½¬æ¢ä¸ºstringã€‚æ‰€ä»¥è¿™é‡Œåªæ˜¯ç”¨ç®€å•çš„if statemeneté‡å†™
                 if (m_TypeConverter is StringConverter)
                     e.Value = SourceGridConvert.To<string>(e.Value);
                 else
-                // ·ñÔò£¬Ö»Ğè½øĞĞÕı³£×ª»»
+                // å¦åˆ™ï¼Œåªéœ€è¿›è¡Œæ­£å¸¸è½¬æ¢
                 {
                     e.Value = m_TypeConverter.ConvertFrom(EmptyTypeDescriptorContext.Empty, CultureInfo, e.Value);
                 }
@@ -157,25 +157,25 @@ namespace DevAge.ComponentModel.Validator
             }
             else if (e.DestinationType == typeof(string) && IsStringConversionSupported() == false)
             {
-                throw new ApplicationException("´ËÀàĞÍµÄÑéÖ¤Æ÷²»Ö§³Ö×Ö·û´®×ª»»¡£");
+                throw new ApplicationException("æ­¤ç±»å‹çš„éªŒè¯å™¨ä¸æ”¯æŒå­—ç¬¦ä¸²è½¬æ¢ã€‚");
             }
             else if (m_TypeConverter != null)
             {
 
                 if (m_TypeConverter.GetType().Name == "CurrencyTypeConverter")
                 {
-                    //Ğ¡ÊıÎ»
+                    //å°æ•°ä½
                     int DataPrecision = 0;
-                    string fat = "#0.##########";//Ä¬ÈÏ¸ø10Î»
+                    string fat = "#0.##########";//é»˜è®¤ç»™10ä½
                     decimal tempMoney = decimal.Parse(e.Value.ToString());
                     string tmpValue = tempMoney.ToString(fat);
                     string numStr = tmpValue.ToString();
-                    // ÅĞ¶ÏÊı×ÖÊÇ·ñÓĞĞ¡Êı
+                    // åˆ¤æ–­æ•°å­—æ˜¯å¦æœ‰å°æ•°
                     if (numStr.Contains("."))
                     {
                         int x = numStr.IndexOf(".") + 1;
                         int y = numStr.Length - x;
-                        // ·µ»ØĞ¡ÊıµãºóµÄ¸öÊı
+                        // è¿”å›å°æ•°ç‚¹åçš„ä¸ªæ•°
                         DataPrecision = y;
                     }
 
@@ -186,14 +186,22 @@ namespace DevAge.ComponentModel.Validator
                     }
                     else
                     {
-                        if (DataPrecision <= CultureInfo.NumberFormat.CurrencyDecimalDigits)
+
+                        if (CultureInfo != null)
                         {
-                            fat = "{0:C" + DataPrecision + "}";
-                            e.Value = string.Format(fat, tempMoney);
+                            if (DataPrecision <= CultureInfo.NumberFormat.CurrencyDecimalDigits)
+                            {
+                                fat = "{0:C" + DataPrecision + "}";
+                                e.Value = string.Format(fat, tempMoney);
+                            }
+                            else
+                            {
+                                e.Value = m_TypeConverter.ConvertTo(EmptyTypeDescriptorContext.Empty, CultureInfo, e.Value, e.DestinationType);
+                            }
                         }
                         else
                         {
-                            e.Value = m_TypeConverter.ConvertTo(EmptyTypeDescriptorContext.Empty, CultureInfo, e.Value, e.DestinationType);
+                            e.Value = m_TypeConverter.ConvertTo(e.Value, typeof(string));
                         }
 
                     }

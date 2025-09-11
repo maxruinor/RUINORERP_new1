@@ -1313,7 +1313,7 @@ namespace RUINORERP.UI.Common
                         }
                         string newfileName = result.ReturnObject.RowImage.GetUploadfileName();
                         ////上传新文件时要加后缀名
-                        string uploadRsult = await httpWebService.UploadImageAsyncOK("",newfileName + ".jpg", result.ReturnObject.RowImage.ImageBytes, "upload");
+                        string uploadRsult = await httpWebService.UploadImageAsyncOK("", newfileName + ".jpg", result.ReturnObject.RowImage.ImageBytes, "upload");
                         if (uploadRsult.Contains("UploadSuccessful"))
                         {
                             //重要
@@ -1868,7 +1868,11 @@ namespace RUINORERP.UI.Common
             List<ColumnInfo> columnInfos = new List<ColumnInfo>();
             for (int i = 0; i < sgdefine.grid.Columns.Count; i++)
             {
-                columnInfos.Add(sgdefine.grid.Columns[i]);
+                if (!columnInfos.Contains(sgdefine.grid.Columns[i]))
+                {
+                    columnInfos.Add(sgdefine.grid.Columns[i]);
+                }
+
             }
 
 
@@ -1901,8 +1905,12 @@ namespace RUINORERP.UI.Common
                 && columnItem.BelongingObjectType.Name == ColumnDisplays[i].BelongingObjectName
                 );
                 //如果存在 就直接添加 不需要重新创建列对象
-                if (colInfo != null)
+                if (colInfo != null && colInfo.Tag is SGDefineColumnItem columnItem)
                 {
+                    if (columnItem.ColName == "项" || columnItem.ColName == "选择")
+                    {
+                        continue;
+                    }
                     colInfo.Visible = ColumnDisplays[i].Visible;
                     sgdefine.grid.Columns.Add(colInfo);
                 }
@@ -1928,6 +1936,13 @@ namespace RUINORERP.UI.Common
                     continue;
                 }
                 item.Visible = item.Tag as SGDefineColumnItem != null && (item.Tag as SGDefineColumnItem).Visible;
+                if (item.Tag is SGDefineColumnItem columnItem)
+                {
+                    if (columnItem.ColName == "项" || columnItem.ColName == "选择")
+                    {
+                        continue;
+                    }
+                }
                 sgdefine.grid.Columns.Add(item);
             }
 

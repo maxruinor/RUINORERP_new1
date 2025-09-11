@@ -485,9 +485,17 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     var paymentType = ReceivePaymentType.收款;
                     conditionGroups.AddRange(_conditionBuilderFactory.GetPaymentConditionGroups(paymentType));
                 }
-
-
             }
+
+            if (bizEntity.ContainsProperty(typeof(StatementStatus).Name))
+            {
+                if (bizType == BizType.对账单)
+                {
+                    var paymentType = ReceivePaymentType.付款;
+                    conditionGroups.AddRange(_conditionBuilderFactory.GetStatementConditionGroups(paymentType));
+                }
+            }
+
 
             // 特殊业务类型条件（示例）
             switch (bizType)

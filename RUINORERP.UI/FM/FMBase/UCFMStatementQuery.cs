@@ -56,7 +56,7 @@ namespace RUINORERP.UI.FM
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.StatementNo);
         }
-        public ReceivePaymentType PaymentType { get; set; }
+        //public ReceivePaymentType PaymentType { get; set; }
         public override void BuildLimitQueryConditions()
         {
 
@@ -65,8 +65,8 @@ namespace RUINORERP.UI.FM
 
             //应收付款中的往来单位额外添加一些条件
             var lambdaCv = Expressionable.Create<tb_CustomerVendor>()
-                .AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
-                .AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
+              //.AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
+              //.AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
               .ToExpression();
             QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
             queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv);
@@ -74,7 +74,7 @@ namespace RUINORERP.UI.FM
 
             var lambda = Expressionable.Create<tb_FM_Statement>()
                               .And(t => t.isdeleted == false)
-                             //.And(t => t.ReceivePaymentType == (int)PaymentType)
+                         //.And(t => t.ReceivePaymentType == (int)PaymentType)
                          //.AndIF(AuthorizeController.GetOwnershipControl(MainForm.Instance.AppContext),t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)
                          .ToExpression();//注意 这一句 不能少
             QueryConditionFilter.FilterLimitExpressions.Add(lambda);
@@ -104,15 +104,7 @@ namespace RUINORERP.UI.FM
             //List<EventHandler> ContextClickList = new List<EventHandler>();
             //ContextClickList.Add(NewSumDataGridView_转为收付款单);
             List<ContextMenuController> list = new List<ContextMenuController>();
-            if (PaymentType == ReceivePaymentType.收款)
-            {
-                list.Add(new ContextMenuController("【转为收款单】", true, false, "NewSumDataGridView_转为收付款单"));
-            }
-            else
-            {
-                list.Add(new ContextMenuController("【转为付款单】", true, false, "NewSumDataGridView_转为收付款单"));
-            }
-
+            list.Add(new ContextMenuController("【转为收付款单】", true, false, "NewSumDataGridView_转为收付款单"));
             return list;
         }
         public override void BuildContextMenuController()
@@ -145,6 +137,7 @@ namespace RUINORERP.UI.FM
             int counter = 1;
             foreach (var item in selectlist)
             {
+                ReceivePaymentType PaymentType = (ReceivePaymentType)item.ReceivePaymentType;
                 //只有审核状态才可以转换为收款单
                 bool canConvert = item.StatementStatus == (int)StatementStatus.已确认 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert || item.StatementStatus == (int)StatementStatus.部分结算)
@@ -158,10 +151,37 @@ namespace RUINORERP.UI.FM
                     counter++;
                 }
             }
+
+            #region 提前判断是付款还是收款
+
+            // 计算收款和付款的总额
+            decimal totalReceivable = RealList
+                .Where(x => x.ReceivePaymentType == (int)ReceivePaymentType.收款)  // 收款类型
+                .Sum(x => x.TotalReceivedLocalAmount);
+
+            decimal totalPayable = RealList
+                .Where(x => x.ReceivePaymentType == (int)ReceivePaymentType.付款)  // 付款类型
+                .Sum(x => x.TotalPayableLocalAmount);
+
+            // 计算净额：付款 - 收款
+            decimal netAmount = totalPayable - totalReceivable;
+            ReceivePaymentType LastPaymentType = ReceivePaymentType.付款;
+            if (netAmount > 0)
+            {
+                LastPaymentType = ReceivePaymentType.付款;
+            }
+            if (netAmount < 0)
+            {
+                LastPaymentType = ReceivePaymentType.收款;
+            }
+            #endregion
+
+
             //多选时。要相同客户才能合并到一个收款单
             if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
             {
-                msg.Append($"多选时，要相同客户才能合并到一个{PaymentType.ToString()}单");
+
+                msg.Append($"多选时，要相同客户才能合并到一个{LastPaymentType.ToString()}单");
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -176,19 +196,22 @@ namespace RUINORERP.UI.FM
 
             if (RealList.Count == 0)
             {
-                msg.Append($"请至少选择一行数据转为收{PaymentType.ToString()}单");
+                msg.Append($"请至少选择一行数据转为收{LastPaymentType.ToString()}单");
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
             tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList);
+
+
             tb_FM_PaymentRecord paymentRecord = ReturnObject;
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
 
             string Flag = string.Empty;
-            if (PaymentType == ReceivePaymentType.收款)
+            //对账单的
+            if (ReturnObject.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 Flag = typeof(RUINORERP.UI.FM.UCFMReceivedRecord).FullName;
             }
@@ -240,15 +263,14 @@ namespace RUINORERP.UI.FM
         public override void BuildInvisibleCols()
         {
             base.MasterInvisibleCols.Add(c => c.StatementId);
-            base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
             base.MasterInvisibleCols.Add(c => c.ARAPNos);
 
-            if (PaymentType == ReceivePaymentType.收款)
-            {
-                //应收款，不需要对方的收款信息。付款才要显示
-                base.MasterInvisibleCols.Add(c => c.PayeeInfoID);
-                base.MasterInvisibleCols.Add(c => c.PayeeAccountNo);
-            }
+            //if (PaymentType == ReceivePaymentType.收款)
+            //{
+            //    //应收款，不需要对方的收款信息。付款才要显示
+            //    base.MasterInvisibleCols.Add(c => c.PayeeInfoID);
+            //    base.MasterInvisibleCols.Add(c => c.PayeeAccountNo);
+            //}
 
         }
 
@@ -261,6 +283,7 @@ namespace RUINORERP.UI.FM
         public GridViewDisplayTextResolver DisplayTextResolver;
         private void UCReceivablePayableQuery_Load(object sender, EventArgs e)
         {
+            base._UCBillChildQuery.GridRelated.ComplexType = true;
             DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_FM_Statement));
             //显示时目前只缓存了基础数据。单据也可以考虑id显示编号。后面来实现。如果缓存优化好了
             DisplayTextResolver.Initialize(_UCBillChildQuery.newSumDataGridViewChild);

@@ -333,9 +333,14 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsForCommission, chkIsForCommission, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             // DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
+                DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_FM_ReceivablePayable, BizType>(entity, k => k.SourceBizType, cmbBizType, false);
             DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.DueDate, dtpDueDate, false);
+            DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.BusinessDate, dtpBusinessDate, false);
+            DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.DocumentDate, dtpDocumentDate, false);
+            
+
+
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
             DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v => v.ProjectGroupName, cmbProjectGroup_ID);
 

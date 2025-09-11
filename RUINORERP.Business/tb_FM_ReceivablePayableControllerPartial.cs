@@ -301,14 +301,17 @@ namespace RUINORERP.Business
                 if (entity.LocalBalanceAmount == entity.TotalLocalPayableAmount)
                 {
                     entity.ARAPStatus = (int)ARAPStatus.待支付;
+                    entity.AllowAddToStatement = true;
                 }
                 else if (entity.TotalLocalPayableAmount == entity.LocalPaidAmount && entity.LocalBalanceAmount == 0)
                 {
                     entity.ARAPStatus = (int)ARAPStatus.全部支付;
+                    entity.AllowAddToStatement = false;
                 }
                 else
                 {
                     entity.ARAPStatus = (int)ARAPStatus.部分支付;
+                    entity.AllowAddToStatement = true;
                 }
 
 
@@ -489,9 +492,9 @@ namespace RUINORERP.Business
 
             //销售就是收款
             payable.ReceivePaymentType = (int)ReceivePaymentType.收款;
-            payable.BusinessDate=entity.RepairStartDate;
-            payable.DocumentDate=entity.Created_at.Value;
-            
+            payable.BusinessDate = entity.RepairStartDate;
+            payable.DocumentDate = entity.Created_at.Value;
+
             payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
 
             payable.Currency_ID = _appContext.BaseCurrency.Currency_ID;
@@ -792,8 +795,7 @@ namespace RUINORERP.Business
             }
 
 
-
-            payable.ExchangeRate = entity.ExchangeRate;
+            payable.ExchangeRate =1;
 
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_FM_PriceAdjustmentDetails);
@@ -804,13 +806,13 @@ namespace RUINORERP.Business
                 var olditem = entity.tb_FM_PriceAdjustmentDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID && c.AdjustDetailID == details[i].SourceItemRowID).FirstOrDefault();
                 if (olditem != null)
                 {
-                    details[i].TaxRate = olditem.TaxRate;
-                    details[i].TaxLocalAmount = olditem.TaxDiffLocalAmount;
+                    details[i].TaxRate = olditem.Correct_TaxRate;
+                    details[i].TaxLocalAmount = olditem.TaxAmount_Diff;
                     details[i].Quantity = olditem.Quantity;
-                    details[i].UnitPrice = olditem.DiffUnitPrice;
-                    details[i].LocalPayableAmount = olditem.DiffUnitPrice * olditem.Quantity;
+                    details[i].UnitPrice = olditem.UnitPrice_WithTax_Diff;
+                    details[i].LocalPayableAmount = olditem.UnitPrice_WithTax_Diff * olditem.Quantity;
                 }
-                details[i].ExchangeRate = entity.ExchangeRate;
+                details[i].Summary = entity.AdjustReason;
                 details[i].ActionStatus = ActionStatus.新增;
 
 
@@ -818,20 +820,12 @@ namespace RUINORERP.Business
 
             payable.tb_FM_ReceivablePayableDetails = details;
 
-            //外币时
-            if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
-            {
-                payable.ForeignBalanceAmount = entity.TotalForeignDiffAmount;
-                payable.ForeignPaidAmount = 0;
-                payable.TotalForeignPayableAmount = entity.TotalForeignDiffAmount;
-            }
-            else
-            {
-                //本币时
-                payable.LocalBalanceAmount = entity.TotalLocalDiffAmount;
-                payable.LocalPaidAmount = 0;
-                payable.TotalLocalPayableAmount = entity.TotalLocalDiffAmount;
-            }
+
+            //本币时
+            payable.LocalBalanceAmount = entity.TotalLocalDiffAmount;
+            payable.LocalPaidAmount = 0;
+            payable.TotalLocalPayableAmount = entity.TotalLocalDiffAmount;
+
             //否则会关联性SQL出错，外键
             if (payable.Account_id <= 0)
             {
@@ -1033,10 +1027,12 @@ namespace RUINORERP.Business
                     if (payable.LocalPaidAmount == 0)
                     {
                         payable.ARAPStatus = (int)ARAPStatus.待审核;
+                        payable.AllowAddToStatement = false;
                     }
                     else if (payable.LocalPaidAmount < payable.LocalBalanceAmount)
                     {
                         payable.ARAPStatus = (int)ARAPStatus.部分支付;
+                        payable.AllowAddToStatement = true;
                     }
 
                     #endregion
@@ -1443,14 +1439,17 @@ namespace RUINORERP.Business
                     if (payable.LocalPaidAmount == 0)
                     {
                         payable.ARAPStatus = (int)ARAPStatus.待支付;
+                        payable.AllowAddToStatement = true;
                     }
                     else if (payable.LocalPaidAmount < payable.TotalLocalPayableAmount)
                     {
                         payable.ARAPStatus = (int)ARAPStatus.部分支付;
+                        payable.AllowAddToStatement = true;
                     }
                     else if (payable.TotalLocalPayableAmount > payable.LocalBalanceAmount)//应付的金额永远大于已经付的
                     {
                         payable.ARAPStatus = (int)ARAPStatus.部分支付;
+                        payable.AllowAddToStatement = true;
                     }
 
                     #endregion
@@ -1749,14 +1748,17 @@ namespace RUINORERP.Business
                 {
                     //当预收款中的金额大于等于（超付）收款中的金额时才可能到这里
                     entity.ARAPStatus = (int)ARAPStatus.全部支付;
+                    entity.AllowAddToStatement = false;
                 }
                 else if (entity.LocalBalanceAmount == entity.TotalLocalPayableAmount)
                 {
                     entity.ARAPStatus = (int)ARAPStatus.待支付;
+                    entity.AllowAddToStatement = true;
                 }
                 else
                 {
                     entity.ARAPStatus = (int)ARAPStatus.部分支付;
+                    entity.AllowAddToStatement = true;
                 }
 
 

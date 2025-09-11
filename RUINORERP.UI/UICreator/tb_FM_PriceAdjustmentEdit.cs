@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/08/2025 13:45:33
+// 时间：09/11/2025 15:24:52
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -66,8 +66,6 @@ namespace RUINORERP.UI
         
         
         
-        
-        
 
          }
 /*
@@ -85,16 +83,14 @@ namespace RUINORERP.UI
                         entity.Paytype_ID = Int64.Parse(txtPaytype_ID.Text);
                         entity.Currency_ID = Int64.Parse(txtCurrency_ID.Text);
                         entity.AdjustReason = txtAdjustReason.Text ;
-                       entity.ExchangeRate = Decimal.Parse(txtExchangeRate.Text);
-                        entity.AdjustDate = DateTime.Parse(txtAdjustDate.Text);
+                       entity.AdjustDate = DateTime.Parse(txtAdjustDate.Text);
                         entity.DepartmentID = Int64.Parse(txtDepartmentID.Text);
                         entity.ProjectGroup_ID = Int64.Parse(txtProjectGroup_ID.Text);
                         entity.Employee_ID = Int64.Parse(txtEmployee_ID.Text);
                         entity.InvoiceId = Int64.Parse(txtInvoiceId.Text);
                         entity.Invoiced = Boolean.Parse(txtInvoiced.Text);
-                        entity.TotalForeignDiffAmount = Decimal.Parse(txtTotalForeignDiffAmount.Text);
-                        entity.TotalLocalDiffAmount = Decimal.Parse(txtTotalLocalDiffAmount.Text);
                         entity.IsIncludeTax = Boolean.Parse(txtIsIncludeTax.Text);
+                        entity.TotalLocalDiffAmount = Decimal.Parse(txtTotalLocalDiffAmount.Text);
                         entity.TaxTotalDiffLocalAmount = Decimal.Parse(txtTaxTotalDiffLocalAmount.Text);
                         entity.DataStatus = Int32.Parse(txtDataStatus.Text);
                         entity.Remark = txtRemark.Text ;
@@ -129,16 +125,14 @@ namespace RUINORERP.UI
           // DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v=>v.XXNAME, cmbPaytype_ID);
           // DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v=>v.XXNAME, cmbCurrency_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.AdjustReason, txtAdjustReason, BindDataType4TextBox.Text,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.ExchangeRate.ToString(), txtExchangeRate, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4DataTime<tb_FM_PriceAdjustment>(entity, t => t.AdjustDate, dtpAdjustDate,false);
           // DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v=>v.XXNAME, cmbDepartmentID);
           // DataBindingHelper.BindData4Cmb<tb_ProjectGroup>(entity, k => k.ProjectGroup_ID, v=>v.XXNAME, cmbProjectGroup_ID);
           // DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v=>v.XXNAME, cmbEmployee_ID);
            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.InvoiceId, txtInvoiceId, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PriceAdjustment>(entity, t => t.Invoiced, chkInvoiced, false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalForeignDiffAmount.ToString(), txtTotalForeignDiffAmount, BindDataType4TextBox.Money,false);
-           DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalLocalDiffAmount.ToString(), txtTotalLocalDiffAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4CheckBox<tb_FM_PriceAdjustment>(entity, t => t.IsIncludeTax, chkIsIncludeTax, false);
+           DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalLocalDiffAmount.ToString(), txtTotalLocalDiffAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TaxTotalDiffLocalAmount.ToString(), txtTaxTotalDiffLocalAmount, BindDataType4TextBox.Money,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.DataStatus, txtDataStatus, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text,false);

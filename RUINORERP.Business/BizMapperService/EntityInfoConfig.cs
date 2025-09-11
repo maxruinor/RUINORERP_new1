@@ -9,9 +9,6 @@ using System.Collections.Generic;
 
 namespace RUINORERP.Business.BizMapperService
 {
-    /// <summary>
-    /// 实体信息配置类 - 用于注册新体系中的实体映射规则
-    /// </summary>
     public class EntityInfoConfig
     {
         private readonly IEntityInfoService _entityInfoService;
@@ -22,16 +19,11 @@ namespace RUINORERP.Business.BizMapperService
             _entityInfoService = entityInfoService;
         }
 
-        /// <summary>
-        /// 注册所有常用实体映射 - 通过新的实体信息服务体系
-        /// </summary>
         public void RegisterCommonMappings()
         {
             try
             {
-                // 注册普通实体映射
                 RegisterEntityMappings();
-                // 注册共用表实体映射
                 RegisterSharedTableMappings();
             }
             catch (Exception ex)
@@ -41,14 +33,10 @@ namespace RUINORERP.Business.BizMapperService
             }
         }
 
-        /// <summary>
-        /// 注册普通实体映射
-        /// </summary>
         private void RegisterEntityMappings()
         {
             int successCount = 0;
             int errorCount = 0;
-
 
             void SafeRegister<TEntity>(BizType bizType,
                                 Expression<Func<TEntity, object>> idField,
@@ -57,7 +45,6 @@ namespace RUINORERP.Business.BizMapperService
             {
                 try
                 {
-                    // 关键：显式指定 TEntity
                     _entityInfoService.RegisterEntity<TEntity>(bizType, builder =>
                     {
                         builder.WithTableName(typeof(TEntity).Name)
@@ -77,7 +64,6 @@ namespace RUINORERP.Business.BizMapperService
                     errorCount++;
                 }
             }
-
 
             try
             {
@@ -130,6 +116,7 @@ namespace RUINORERP.Business.BizMapperService
                 // 付款申请（无明细）
                 SafeRegister<tb_FM_PaymentApplication>(BizType.付款申请单, e => e.ApplicationID, e => e.ApplicationNo);
                 SafeRegister<tb_FM_Statement>(BizType.对账单, e => e.StatementId, e => e.StatementNo);
+
                 // 售后
                 SafeRegister<tb_AS_AfterSaleApply>(BizType.售后申请单, e => e.ASApplyID, e => e.ASApplyNo, e => e.tb_AS_AfterSaleApplyDetails);
                 SafeRegister<tb_AS_AfterSaleDelivery>(BizType.售后交付单, e => e.ASDeliveryID, e => e.ASDeliveryNo, e => e.tb_AS_AfterSaleDeliveryDetails);
@@ -137,18 +124,6 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_AS_RepairInStock>(BizType.维修入库单, e => e.RepairInStockID, e => e.RepairInStockNo, e => e.tb_AS_RepairInStockDetails);
 
                 _logger.InfoFormat("普通实体映射注册完成，成功：{0}，失败：{1}", successCount, errorCount);
-
-                // 销售订单
-                //_entityInfoService.RegisterEntity<tb_SaleOrder>(BizType.销售订单, builder =>
-                //{
-                //    builder.WithTableName(nameof(tb_SaleOrder))
-                //           .WithDescription("销售订单")
-                //           .WithIdField(e => e.SOrder_ID)
-                //           .WithNoField(e => e.SOrderNo)
-                //           .WithDetailProperty(e => e.tb_SaleOrderDetails);
-                //});
-                //successCount++;
-
             }
             catch (Exception ex)
             {
@@ -158,16 +133,13 @@ namespace RUINORERP.Business.BizMapperService
             }
         }
 
-        /// <summary>
-        /// 注册共用表实体映射
-        /// </summary>
         private void RegisterSharedTableMappings()
         {
             int successCount = 0;
             int errorCount = 0;
 
             void SafeRegister<TEntity, TDiscriminator>(
-                IDictionary<TDiscriminator, BizType> map,        // 关键：值->BizType 字典
+                IDictionary<TDiscriminator, BizType> map,
                 Expression<Func<TEntity, TDiscriminator>> discriminatorExpr,
                 Expression<Func<TEntity, object>> idField,
                 Expression<Func<TEntity, string>> noField,
@@ -177,18 +149,28 @@ namespace RUINORERP.Business.BizMapperService
                 try
                 {
                     _entityInfoService.RegisterSharedTable<TEntity, TDiscriminator>(
-                        v => map[v],                                   // 运行时查字典
+                        map,
+                        discriminatorExpr,
                         builder =>
                         {
                             builder.WithTableName(typeof(TEntity).Name)
-                                   .WithDescription(string.Join("/", map.Values)) // 描述拼一下
+                                   .WithDescription(string.Join("/", map.Values))
                                    .WithIdField(idField)
-                                   .WithNoField(noField);
+                                   .WithNoField(noField)
+                                   .WithAddMaper<TDiscriminator>(map)
+                                   ;
 
-                            if (detailProperty != null) builder.WithDetailProperty(detailProperty);
+                            if (detailProperty != null)
+                                builder.WithDetailProperty(detailProperty);
 
                             builder.WithDiscriminator(discriminatorExpr, v => map[v]);
+
+
                         });
+
+                    
+
+
                     successCount++;
                 }
                 catch (Exception ex)
@@ -199,22 +181,17 @@ namespace RUINORERP.Business.BizMapperService
                 }
             }
 
-
             try
             {
                 _logger.Info("开始注册共用表实体映射...");
 
-
                 // 价格调整单
                 SafeRegister<tb_FM_PriceAdjustment, int>(
-
-                                    new Dictionary<int, BizType>
+                    new Dictionary<int, BizType>
                     {
-        {(int)ReceivePaymentType.收款, BizType.销售价格调整单},
-        {(int)ReceivePaymentType.付款, BizType.采购价格调整单}
+                        {(int)ReceivePaymentType.收款, BizType.销售价格调整单},
+                        {(int)ReceivePaymentType.付款, BizType.采购价格调整单}
                     },
-
-
                     e => e.ReceivePaymentType,
                     e => e.AdjustId,
                     e => e.AdjustNo,
@@ -224,36 +201,32 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_FM_PaymentRecord, int>(
                     new Dictionary<int, BizType>
                     {
-        {(int)ReceivePaymentType.收款, BizType.收款单},
-        {(int)ReceivePaymentType.付款, BizType.付款单}
+                        {(int)ReceivePaymentType.收款, BizType.收款单},
+                        {(int)ReceivePaymentType.付款, BizType.付款单}
                     },
                     e => e.ReceivePaymentType,
                     e => e.PaymentId,
                     e => e.PaymentNo,
                     e => e.tb_FM_PaymentRecordDetails);
 
-
                 // 预收/预付款
                 SafeRegister<tb_FM_PreReceivedPayment, int>(
-                                                    new Dictionary<int, BizType>
+                    new Dictionary<int, BizType>
                     {
-        {(int)ReceivePaymentType.收款, BizType.预收款单},
-        {(int)ReceivePaymentType.付款, BizType.预付款单}
+                        {(int)ReceivePaymentType.收款, BizType.预收款单},
+                        {(int)ReceivePaymentType.付款, BizType.预付款单}
                     },
-
-
                     e => e.ReceivePaymentType,
                     e => e.PreRPID,
                     e => e.PreRPNO);
 
                 // 应收/应付
                 SafeRegister<tb_FM_ReceivablePayable, int>(
-                                                    new Dictionary<int, BizType>
+                    new Dictionary<int, BizType>
                     {
-        {(int)ReceivePaymentType.收款, BizType.应收款单},
-        {(int)ReceivePaymentType.付款, BizType.应付款单}
+                        {(int)ReceivePaymentType.收款, BizType.应收款单},
+                        {(int)ReceivePaymentType.付款, BizType.应付款单}
                     },
-
                     e => e.ReceivePaymentType,
                     e => e.ARAPId,
                     e => e.ARAPNo,
@@ -261,48 +234,29 @@ namespace RUINORERP.Business.BizMapperService
 
                 // 收款/付款核销
                 SafeRegister<tb_FM_PaymentSettlement, int>(
-                                                    new Dictionary<int, BizType>
+                    new Dictionary<int, BizType>
                     {
-        {(int)ReceivePaymentType.收款, BizType.收款核销},
-        {(int)ReceivePaymentType.付款, BizType.付款核销}
+                        {(int)ReceivePaymentType.收款, BizType.收款核销},
+                        {(int)ReceivePaymentType.付款, BizType.付款核销}
                     },
-
                     e => e.ReceivePaymentType,
                     e => e.SettlementId,
                     e => e.SettlementNo,
                     e => e.tb_FM_PaymentSettlements);
 
-
-
                 // 其他费用收入/支出
                 SafeRegister<tb_FM_OtherExpense, bool>(
-                    new Dictionary<bool, BizType> { { false, BizType.其他费用支出 }, { true, BizType.其他费用收入 } },
+                    new Dictionary<bool, BizType>
+                    {
+                        { false, BizType.其他费用支出 },
+                        { true, BizType.其他费用收入 }
+                    },
                     e => e.EXPOrINC,
                     e => e.ExpenseMainID,
                     e => e.ExpenseNo,
                     e => e.tb_FM_OtherExpenseDetails);
 
                 _logger.InfoFormat("共用表实体映射注册完成，成功：{0}，失败：{1}", successCount, errorCount);
-
-
-                // 其他费用收入/支出单
-                //_entityInfoService.RegisterSharedTable<tb_FM_OtherExpense, bool>(
-                //    typeResolver: value => value == false ? BizType.其他费用收入 : BizType.其他费用支出,
-                //    configure: builder =>
-                //    {
-                //        builder.WithTableName("tb_FM_OtherExpense")
-                //               .WithDescription("其他费用收入/支出单")
-                //               .WithIdField(e => e.ExpenseMainID)
-                //               .WithNoField(e => e.ExpenseNo)
-                //               .WithDetailProperty(e => e.tb_FM_OtherExpenseDetails)
-                //               .WithDiscriminator(e => e.EXPOrINC, type =>
-                //               {
-                //                   return type == false ? BizType.其他费用收入 : BizType.其他费用支出;
-                //               });
-                //    });
-                //successCount++;
-
-                 
             }
             catch (Exception ex)
             {

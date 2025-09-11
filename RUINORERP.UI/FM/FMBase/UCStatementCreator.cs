@@ -54,7 +54,7 @@ namespace RUINORERP.UI.FM
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.ARAPNo);
         }
-        public ReceivePaymentType PaymentType { get; set; }
+        //public ReceivePaymentType PaymentType { get; set; }
 
 
         /// <summary>
@@ -87,6 +87,7 @@ namespace RUINORERP.UI.FM
             var lambda = Expressionable.Create<tb_FM_ReceivablePayable>()
                               .And(t => t.isdeleted == false)
                               .And(t => t.AllowAddToStatement == true)
+                              .And(t => t.LocalBalanceAmount > 0)
                               .And(t => t.ARAPStatus == (int)ARAPStatus.待审核 || t.ARAPStatus == (int)ARAPStatus.待支付 || t.ARAPStatus == (int)ARAPStatus.部分支付)
                          //对账时不管收付款都要查出来。所以才在这里重新建一个
                          //.And(t => t.ReceivePaymentType == (int)PaymentType)
@@ -140,7 +141,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
- 
+
         #endregion
 
         private async void NewSumDataGridView_生成对账单(object sender, EventArgs e)
@@ -152,6 +153,7 @@ namespace RUINORERP.UI.FM
             int counter = 1;
             foreach (var item in selectlist)
             {
+                ReceivePaymentType PaymentType = (ReceivePaymentType)item.ReceivePaymentType;
                 //只有审核状态才可以转换为收款单
                 bool canConvert = item.ARAPStatus == (int)ARAPStatus.待支付 && item.ApprovalStatus == (int)ApprovalStatus.已审核 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
@@ -168,7 +170,7 @@ namespace RUINORERP.UI.FM
 
             if (RealList.GroupBy(g => g.Currency_ID).Select(g => g.Key).Count() > 1)
             {
-                msg.Append($"多选时，币别相同才能合并到一个{PaymentType.ToString()}对账单");
+                msg.Append($"多选时，币别相同才能合并到一个对账单");
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -210,13 +212,13 @@ namespace RUINORERP.UI.FM
 
             if (RealList.Count == 0)
             {
-                msg.Append($"请至少选择一行数据转为收{PaymentType.ToString()}对账单");
+                msg.Append($"请至少选择一行数据转为对账单");
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
-            tb_FM_Statement statement = await paymentController.BuildStatement(RealList, PaymentType);
+            tb_FM_Statement statement = await paymentController.BuildStatement(RealList);
 
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -255,13 +257,6 @@ namespace RUINORERP.UI.FM
             base.MasterInvisibleCols.Add(c => c.ARAPId);
             base.MasterInvisibleCols.Add(c => c.ReceivePaymentType);
             base.MasterInvisibleCols.Add(c => c.SourceBillId);
-            if (PaymentType == ReceivePaymentType.收款)
-            {
-                //应收款，不需要对方的收款信息。付款才要显示
-                base.MasterInvisibleCols.Add(c => c.PayeeInfoID);
-                base.MasterInvisibleCols.Add(c => c.PayeeAccountNo);
-            }
-
         }
 
 

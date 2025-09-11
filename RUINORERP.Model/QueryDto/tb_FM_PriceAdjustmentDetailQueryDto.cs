@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/24/2025 20:27:14
+// 时间：09/11/2025 15:24:56
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,6 +61,20 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private long _Location_ID;
+        /// <summary>
+        /// 库位
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "库位")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "Location_ID",IsNullable = false,ColumnDescription = "库位" )]
+        [FKRelationAttribute("tb_Location","Location_ID")]
+        public long Location_ID 
+        { 
+            get{return _Location_ID;}
+            set{SetProperty(ref _Location_ID, value);}
+        }
+     
+
         private string _property;
         /// <summary>
         /// 属性
@@ -101,55 +115,107 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _ExchangeRate= ((1));
+        private decimal _Original_UnitPrice_NoTax= ((0));
         /// <summary>
-        /// 汇率
+        /// 原未税单价
         /// </summary>
-        [AdvQueryAttribute(ColName = "ExchangeRate",ColDesc = "汇率")]
-        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "ExchangeRate",IsNullable = false,ColumnDescription = "汇率" )]
-        public decimal ExchangeRate 
+        [AdvQueryAttribute(ColName = "Original_UnitPrice_NoTax",ColDesc = "原未税单价")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "Original_UnitPrice_NoTax",IsNullable = false,ColumnDescription = "原未税单价" )]
+        public decimal Original_UnitPrice_NoTax 
         { 
-            get{return _ExchangeRate;}
-            set{SetProperty(ref _ExchangeRate, value);}
+            get{return _Original_UnitPrice_NoTax;}
+            set{SetProperty(ref _Original_UnitPrice_NoTax, value);}
         }
      
 
-        private decimal _OriginalUnitPrice= ((0));
+        private decimal _Correct_UnitPrice_NoTax= ((0));
         /// <summary>
-        /// 原始单价
+        /// 新未税单价
         /// </summary>
-        [AdvQueryAttribute(ColName = "OriginalUnitPrice",ColDesc = "原始单价")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "OriginalUnitPrice",IsNullable = false,ColumnDescription = "原始单价" )]
-        public decimal OriginalUnitPrice 
+        [AdvQueryAttribute(ColName = "Correct_UnitPrice_NoTax",ColDesc = "新未税单价")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "Correct_UnitPrice_NoTax",IsNullable = false,ColumnDescription = "新未税单价" )]
+        public decimal Correct_UnitPrice_NoTax 
         { 
-            get{return _OriginalUnitPrice;}
-            set{SetProperty(ref _OriginalUnitPrice, value);}
+            get{return _Correct_UnitPrice_NoTax;}
+            set{SetProperty(ref _Correct_UnitPrice_NoTax, value);}
         }
      
 
-        private decimal _AdjustedUnitPrice= ((0));
+        private decimal _Original_TaxRate= ((0));
         /// <summary>
-        /// 调整后单价
+        /// 原税率
         /// </summary>
-        [AdvQueryAttribute(ColName = "AdjustedUnitPrice",ColDesc = "调整后单价")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "AdjustedUnitPrice",IsNullable = false,ColumnDescription = "调整后单价" )]
-        public decimal AdjustedUnitPrice 
+        [AdvQueryAttribute(ColName = "Original_TaxRate",ColDesc = "原税率")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "Original_TaxRate",IsNullable = false,ColumnDescription = "原税率" )]
+        public decimal Original_TaxRate 
         { 
-            get{return _AdjustedUnitPrice;}
-            set{SetProperty(ref _AdjustedUnitPrice, value);}
+            get{return _Original_TaxRate;}
+            set{SetProperty(ref _Original_TaxRate, value);}
         }
      
 
-        private decimal _DiffUnitPrice= ((0));
+        private decimal _Correct_TaxRate= ((0));
         /// <summary>
-        /// 差异单价
+        /// 新税率
         /// </summary>
-        [AdvQueryAttribute(ColName = "DiffUnitPrice",ColDesc = "差异单价")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "DiffUnitPrice",IsNullable = false,ColumnDescription = "差异单价" )]
-        public decimal DiffUnitPrice 
+        [AdvQueryAttribute(ColName = "Correct_TaxRate",ColDesc = "新税率")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "Correct_TaxRate",IsNullable = false,ColumnDescription = "新税率" )]
+        public decimal Correct_TaxRate 
         { 
-            get{return _DiffUnitPrice;}
-            set{SetProperty(ref _DiffUnitPrice, value);}
+            get{return _Correct_TaxRate;}
+            set{SetProperty(ref _Correct_TaxRate, value);}
+        }
+     
+
+        private decimal _Original_UnitPrice_WithTax= ((0));
+        /// <summary>
+        /// 原含税单价
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Original_UnitPrice_WithTax",ColDesc = "原含税单价")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "Original_UnitPrice_WithTax",IsNullable = false,ColumnDescription = "原含税单价" )]
+        public decimal Original_UnitPrice_WithTax 
+        { 
+            get{return _Original_UnitPrice_WithTax;}
+            set{SetProperty(ref _Original_UnitPrice_WithTax, value);}
+        }
+     
+
+        private decimal _Correct_UnitPrice_WithTax= ((0));
+        /// <summary>
+        /// 新含税单价
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Correct_UnitPrice_WithTax",ColDesc = "新含税单价")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "Correct_UnitPrice_WithTax",IsNullable = false,ColumnDescription = "新含税单价" )]
+        public decimal Correct_UnitPrice_WithTax 
+        { 
+            get{return _Correct_UnitPrice_WithTax;}
+            set{SetProperty(ref _Correct_UnitPrice_WithTax, value);}
+        }
+     
+
+        private decimal _UnitPrice_NoTax_Diff= ((0));
+        /// <summary>
+        /// 未税单价差异
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UnitPrice_NoTax_Diff",ColDesc = "未税单价差异")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "UnitPrice_NoTax_Diff",IsNullable = false,ColumnDescription = "未税单价差异" )]
+        public decimal UnitPrice_NoTax_Diff 
+        { 
+            get{return _UnitPrice_NoTax_Diff;}
+            set{SetProperty(ref _UnitPrice_NoTax_Diff, value);}
+        }
+     
+
+        private decimal _UnitPrice_WithTax_Diff= ((0));
+        /// <summary>
+        /// 含税单价差异
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UnitPrice_WithTax_Diff",ColDesc = "含税单价差异")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "UnitPrice_WithTax_Diff",IsNullable = false,ColumnDescription = "含税单价差异" )]
+        public decimal UnitPrice_WithTax_Diff 
+        { 
+            get{return _UnitPrice_WithTax_Diff;}
+            set{SetProperty(ref _UnitPrice_WithTax_Diff, value);}
         }
      
 
@@ -166,6 +232,84 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
+        private decimal _Original_TaxAmount= ((0));
+        /// <summary>
+        /// 原始税额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Original_TaxAmount",ColDesc = "原始税额")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "Original_TaxAmount",IsNullable = false,ColumnDescription = "原始税额" )]
+        public decimal Original_TaxAmount 
+        { 
+            get{return _Original_TaxAmount;}
+            set{SetProperty(ref _Original_TaxAmount, value);}
+        }
+     
+
+        private decimal _Correct_TaxAmount= ((0));
+        /// <summary>
+        /// 新调税额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Correct_TaxAmount",ColDesc = "新调税额")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "Correct_TaxAmount",IsNullable = false,ColumnDescription = "新调税额" )]
+        public decimal Correct_TaxAmount 
+        { 
+            get{return _Correct_TaxAmount;}
+            set{SetProperty(ref _Correct_TaxAmount, value);}
+        }
+     
+
+        private decimal _TaxAmount_Diff= ((0));
+        /// <summary>
+        /// 税额差异
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TaxAmount_Diff",ColDesc = "税额差异")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "TaxAmount_Diff",IsNullable = false,ColumnDescription = "税额差异" )]
+        public decimal TaxAmount_Diff 
+        { 
+            get{return _TaxAmount_Diff;}
+            set{SetProperty(ref _TaxAmount_Diff, value);}
+        }
+     
+
+        private decimal _TotalAmount_Diff_NoTax= ((0));
+        /// <summary>
+        /// 总未税差异金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalAmount_Diff_NoTax",ColDesc = "总未税差异金额")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "TotalAmount_Diff_NoTax",IsNullable = false,ColumnDescription = "总未税差异金额" )]
+        public decimal TotalAmount_Diff_NoTax 
+        { 
+            get{return _TotalAmount_Diff_NoTax;}
+            set{SetProperty(ref _TotalAmount_Diff_NoTax, value);}
+        }
+     
+
+        private decimal _TotalAmount_Diff_WithTax= ((0));
+        /// <summary>
+        /// 总含税差异金额价
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalAmount_Diff_WithTax",ColDesc = "总含税差异金额价")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "TotalAmount_Diff_WithTax",IsNullable = false,ColumnDescription = "总含税差异金额价" )]
+        public decimal TotalAmount_Diff_WithTax 
+        { 
+            get{return _TotalAmount_Diff_WithTax;}
+            set{SetProperty(ref _TotalAmount_Diff_WithTax, value);}
+        }
+     
+
+        private decimal _TotalAmount_Diff= ((0));
+        /// <summary>
+        /// 总差异金额
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TotalAmount_Diff",ColDesc = "总差异金额")]
+        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "TotalAmount_Diff",IsNullable = false,ColumnDescription = "总差异金额" )]
+        public decimal TotalAmount_Diff 
+        { 
+            get{return _TotalAmount_Diff;}
+            set{SetProperty(ref _TotalAmount_Diff, value);}
+        }
+     
+
         private string _CustomerPartNo;
         /// <summary>
         /// 往来单位料号
@@ -179,68 +323,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private decimal _SubtotalDiffLocalAmount= ((0));
+        private string _AdjustReason;
         /// <summary>
-        /// 差异金额小计
+        /// 调整原因
         /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalDiffLocalAmount",ColDesc = "差异金额小计")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "SubtotalDiffLocalAmount",IsNullable = false,ColumnDescription = "差异金额小计" )]
-        public decimal SubtotalDiffLocalAmount 
+        [AdvQueryAttribute(ColName = "AdjustReason",ColDesc = "调整原因")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "AdjustReason",Length=500,IsNullable = true,ColumnDescription = "调整原因" )]
+        public string AdjustReason 
         { 
-            get{return _SubtotalDiffLocalAmount;}
-            set{SetProperty(ref _SubtotalDiffLocalAmount, value);}
-        }
-     
-
-        private string _Description;
-        /// <summary>
-        /// 描述
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Description",ColDesc = "描述")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "Description",Length=300,IsNullable = true,ColumnDescription = "描述" )]
-        public string Description 
-        { 
-            get{return _Description;}
-            set{SetProperty(ref _Description, value);}
-        }
-     
-
-        private decimal _TaxRate= ((0));
-        /// <summary>
-        /// 税率
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TaxRate",ColDesc = "税率")]
-        [SugarColumn(ColumnDataType = "decimal",SqlParameterDbType ="Decimal",ColumnName = "TaxRate",IsNullable = false,ColumnDescription = "税率" )]
-        public decimal TaxRate 
-        { 
-            get{return _TaxRate;}
-            set{SetProperty(ref _TaxRate, value);}
-        }
-     
-
-        private decimal _TaxDiffLocalAmount= ((0));
-        /// <summary>
-        /// 税额差异
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TaxDiffLocalAmount",ColDesc = "税额差异")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TaxDiffLocalAmount",IsNullable = false,ColumnDescription = "税额差异" )]
-        public decimal TaxDiffLocalAmount 
-        { 
-            get{return _TaxDiffLocalAmount;}
-            set{SetProperty(ref _TaxDiffLocalAmount, value);}
-        }
-     
-
-        private decimal _TaxSubtotalDiffLocalAmount= ((0));
-        /// <summary>
-        /// 税额差异小计
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TaxSubtotalDiffLocalAmount",ColDesc = "税额差异小计")]
-        [SugarColumn(ColumnDataType = "money",SqlParameterDbType ="Decimal",ColumnName = "TaxSubtotalDiffLocalAmount",IsNullable = false,ColumnDescription = "税额差异小计" )]
-        public decimal TaxSubtotalDiffLocalAmount 
-        { 
-            get{return _TaxSubtotalDiffLocalAmount;}
-            set{SetProperty(ref _TaxSubtotalDiffLocalAmount, value);}
+            get{return _AdjustReason;}
+            set{SetProperty(ref _AdjustReason, value);}
         }
      
 

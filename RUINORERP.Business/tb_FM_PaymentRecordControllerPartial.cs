@@ -209,20 +209,29 @@ namespace RUINORERP.Business
                         {
                             tb_FM_PaymentRecordDetail RecordDetail = entity.tb_FM_PaymentRecordDetails.FirstOrDefault(c => c.SourceBilllId == statement.StatementId);
                             #region 应收单余额更新
-                            List<tb_FM_ReceivablePayable> receivablePayableList = statement.tb_FM_StatementDetails.Select(c => c.tb_fm_receivablepayable).ToList();
+
+                            decimal StatementPaidAmount = RecordDetail.LocalAmount;  // 实际支付金额 用于核销对账单
+                            decimal ARAPTotalPaidAmount = RecordDetail.LocalAmount;//用于按FIFO核销应收应付集合
+                            
+                            // 按时间FIFO排序
+                            List<tb_FM_ReceivablePayable> receivablePayableList = statement.tb_FM_StatementDetails
+                                .Select(c => c.tb_fm_receivablepayable)
+                                .OrderBy(c => c.BusinessDate)  // 按业务日期排序
+                                .ThenBy(c => c.Created_at)     // 再按创建时间排序
+                                .ToList();
+
+
                             foreach (var receivablePayable in receivablePayableList)
                             {
-                                decimal paidAmount = RecordDetail.LocalAmount;  // 实际支付金额
-
                                 #region  核销对账单
                                 var StatementDetail = statement.tb_FM_StatementDetails.FirstOrDefault(c => c.ARAPId == receivablePayable.ARAPId);
                                 // 计算本次可核销金额（取剩余未核销金额和实际支付金额的最小值）
-                                decimal amountToWriteOff = Math.Min(StatementDetail.RemainingLocalAmount, paidAmount);
+                                decimal statementAmountToWriteOff = Math.Min(StatementDetail.RemainingLocalAmount, StatementPaidAmount);
                                 // 更新核销金额和剩余金额
-                                StatementDetail.WrittenOffLocalAmount += amountToWriteOff;
-                                StatementDetail.RemainingLocalAmount -= amountToWriteOff;
+                                StatementDetail.WrittenOffLocalAmount += statementAmountToWriteOff;
+                                StatementDetail.RemainingLocalAmount -= statementAmountToWriteOff;
 
-                                // 更新核销状态（如果剩余金额为0，则完全核销）
+                                // 对账的明细的核销状态（如果剩余金额为0，则完全核销）
                                 if (StatementDetail.RemainingLocalAmount == 0)
                                 {
                                     StatementDetail.ARAPWriteOffStatus = (int)ARAPWriteOffStatus.全额核销;
@@ -232,18 +241,40 @@ namespace RUINORERP.Business
                                     StatementDetail.ARAPWriteOffStatus = (int)ARAPWriteOffStatus.部分核销;
                                 }
                                 // 减少剩余待核销金额
-                                paidAmount -= amountToWriteOff;
+                                StatementPaidAmount -= statementAmountToWriteOff;
 
 
                                 #endregion
 
+                                decimal amountToWriteOff = Math.Min(receivablePayable.LocalBalanceAmount, ARAPTotalPaidAmount);
+                                receivablePayable.LocalPaidAmount += amountToWriteOff;
+                                receivablePayable.LocalBalanceAmount -= amountToWriteOff;
+                                ARAPTotalPaidAmount -= amountToWriteOff;
+                 
+                                // 更新应收应付单状态
+                                if (receivablePayable.LocalBalanceAmount == 0)
+                                {
+                                    receivablePayable.ARAPStatus = (int)ARAPStatus.全部支付;
+                                    receivablePayable.AllowAddToStatement = false;
+                                }
+                                else if (receivablePayable.LocalBalanceAmount > 0 && receivablePayable.LocalPaidAmount > 0)
+                                {
+                                    receivablePayable.ARAPStatus = (int)ARAPStatus.部分支付;
+                                    receivablePayable.AllowAddToStatement = true;
+                                }
 
-                                #region 核销应收应付  核销原则是 看类型：支付金额 付款 用减，收款用加
+                                // 生成核销记录
+                                await settlementController.GenerateSettlement(entity, RecordDetail, receivablePayable, amountToWriteOff);
 
+
+
+                                /*
+                                #region 核销应收应付  核销原则 支付金额 付款 用减，收款用加
+                                //当核销应收款（收款类型）时，收款金额应减少应收余额，因此 paidAmount 应减少。
                                 if (receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.付款)
                                 {
-                                    paidAmount = paidAmount - receivablePayable.LocalBalanceAmount;
-                                    if (paidAmount >= 0)
+                                    StatementPaidAmount = StatementPaidAmount - receivablePayable.LocalBalanceAmount;
+                                    if (StatementPaidAmount >= 0)
                                     {
                                         receivablePayable.LocalPaidAmount += receivablePayable.LocalBalanceAmount;
                                         receivablePayable.LocalBalanceAmount -= receivablePayable.LocalBalanceAmount;
@@ -252,7 +283,7 @@ namespace RUINORERP.Business
                                     }
                                     else
                                     {
-                                        var lastPartPaid = receivablePayable.LocalBalanceAmount + paidAmount;
+                                        var lastPartPaid = receivablePayable.LocalBalanceAmount + StatementPaidAmount;
                                         receivablePayable.LocalPaidAmount += lastPartPaid;
                                         receivablePayable.LocalBalanceAmount -= lastPartPaid;
                                         receivablePayable.ARAPStatus = (int)ARAPStatus.部分支付;
@@ -260,57 +291,50 @@ namespace RUINORERP.Business
                                     }
 
                                 }
+                                //当核销应付款（付款类型）时，付款金额应减少应付余额，因此 paidAmount 应减少。
                                 if (receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款)
                                 {
-                                    paidAmount = paidAmount + receivablePayable.LocalBalanceAmount;
-                                    if (paidAmount >= 0)
+                                    StatementPaidAmount = StatementPaidAmount + receivablePayable.LocalBalanceAmount;
+                                    if (StatementPaidAmount >= 0)
                                     {
                                         receivablePayable.LocalPaidAmount += receivablePayable.LocalBalanceAmount;
                                         receivablePayable.LocalBalanceAmount -= receivablePayable.LocalBalanceAmount;
                                         receivablePayable.ARAPStatus = (int)ARAPStatus.全部支付;
                                         receivablePayable.AllowAddToStatement = false;
+                                        //应收应付 正反都 生成核销记录
+                                        await settlementController.GenerateSettlement(entity, RecordDetail, receivablePayable, receivablePayable.LocalBalanceAmount);
                                     }
                                     else
                                     {
-                                        var lastPartPaid = receivablePayable.LocalBalanceAmount - paidAmount;
+                                        var lastPartPaid = receivablePayable.LocalBalanceAmount - StatementPaidAmount;
                                         receivablePayable.LocalPaidAmount += lastPartPaid;
                                         receivablePayable.LocalBalanceAmount -= lastPartPaid;
                                         receivablePayable.ARAPStatus = (int)ARAPStatus.部分支付;
                                         receivablePayable.AllowAddToStatement = true;
+                                        //应收应付 正反都 生成核销记录
+                                        await settlementController.GenerateSettlement(entity, RecordDetail, receivablePayable, lastPartPaid);
                                     }
                                 }
 
-
+                                #endregion
+                                */
                                 await UpdateSourceDocumentStatus(receivablePayable, entity, saleOrderUpdateList, saleOutUpdateList, SaleOutReUpdateList, purOrderUpdateList, purEntryUpdateList, purEntryReUpdateList,
                                       priceAdjustmentUpdateList, otherExpenseUpdateList, expenseClaimUpdateList, RepairOrderUpdateList);
-
-                                //应收应付 正反都 生成核销记录
-                                await settlementController.GenerateSettlement(entity, RecordDetail, receivablePayable);
-                                #endregion
+                
 
                                 StatementDetailUpdateList.Add(StatementDetail);
-                                if (paidAmount == 0)
-                                {
-                                    break;  // 金额已全部核销完毕
-                                }
-                                // 如果还有剩余金额未核销，记录日志
-                                if (paidAmount > 0)
-                                {
-                                    FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                    fMAuditLog.CreateAuditLog<tb_FM_Statement>($"收款单{entity.PaymentNo}核销后仍有剩余金额{paidAmount}未核销", statement as tb_FM_Statement);
-                                }
+                               
                             }
-
+                            
                             receivablePayableUpdateList.AddRange(receivablePayableList);
 
                             #endregion
-                            
 
                             if (statement.ReceivePaymentType == (int)ReceivePaymentType.付款)
                             {
                                 statement.TotalPaidLocalAmount = statement.tb_FM_StatementDetails.Sum(c => c.WrittenOffLocalAmount);
                             }
-                            if (statement.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                            if (statement.ReceivePaymentType == (int)ReceivePaymentType.收款)
                             {
                                 statement.TotalReceivedLocalAmount = statement.tb_FM_StatementDetails.Sum(c => c.WrittenOffLocalAmount);
                             }
@@ -322,11 +346,35 @@ namespace RUINORERP.Business
                             {
                                 statement.StatementStatus = (int)StatementStatus.部分结算;
                             }
-                            statement.ClosingBalanceLocalAmount = statement.OpeningBalanceLocalAmount - statement.TotalPaidLocalAmount + statement.TotalReceivedLocalAmount;
-
+                            //对于应收账款（收款类型）：期末余额 = 期初余额 + 期间应收 - 期间收款
+                            //对于应付账款（付款类型）：期末余额 = 期初余额 + 期间应付 - 期间付款
+                            // 根据对账单类型计算期末余额
+                            if (statement.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                            {
+                                // 应收账款逻辑：期末余额 = 期初余额 + 期间应收 - 期间收款
+                                statement.ClosingBalanceLocalAmount = statement.OpeningBalanceLocalAmount
+                                                                     + statement.TotalReceivableLocalAmount
+                                                                     - statement.TotalReceivedLocalAmount;
+                            }
+                            else if (statement.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                            {
+                                // 应付账款逻辑：期末余额 = 期初余额 + 期间应付 - 期间付款
+                                statement.ClosingBalanceLocalAmount = statement.OpeningBalanceLocalAmount
+                                                                     + statement.TotalPayableLocalAmount
+                                                                     - statement.TotalPaidLocalAmount;
+                            }
 
                             StatementUpdateList.Add(statement);
-
+                            if (StatementPaidAmount == 0)
+                            {
+                                break;  // 金额已全部核销完毕
+                            }
+                            // 如果还有剩余金额未核销，记录日志
+                            if (StatementPaidAmount > 0)
+                            {
+                                FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                fMAuditLog.CreateAuditLog<tb_FM_Statement>($"收款单{entity.PaymentNo}核销后仍有剩余金额{StatementPaidAmount}未核销", statement as tb_FM_Statement);
+                            }
                         }
 
 
@@ -354,6 +402,8 @@ namespace RUINORERP.Business
                             receivablePayable.LocalPaidAmount += RecordDetail.LocalAmount;
                             receivablePayable.ForeignBalanceAmount -= RecordDetail.ForeignAmount;
                             receivablePayable.LocalBalanceAmount -= RecordDetail.LocalAmount;
+                            //应收应付 正反都 生成核销记录
+                            await settlementController.GenerateSettlement(entity, RecordDetail, receivablePayable, RecordDetail.ForeignAmount);
 
                             //应收付的退款操作，对应收付款审核时。要找他对应的正向预收付单。修改状态。和退回金额。
                             if (RecordDetail.LocalAmount < 0 || RecordDetail.ForeignAmount < 0)
@@ -363,46 +413,48 @@ namespace RUINORERP.Business
                                 //要调式
                                 //找到最原始的收款单 正数
                                 tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
-                                .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId)
+                                .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == RecordDetail.SourceBilllId)
                                 && c.PaymentStatus == (int)PaymentStatus.已支付)
-                                  .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.LocalAmount > 0))
+                                  .Where(c => c.tb_FM_PaymentRecordDetails.Any(b => b.LocalAmount > 0))
+                                  .OrderByDescending(c => c.Created_at)  // 优先选择最近的正向付款
                                  .FirstAsync();
                                 if (oldPayment != null)
                                 {
                                     // 更新原始记录 指向[负数]冲销记录
                                     oldPayment.ReversedByPaymentId = entity.PaymentId;
-                                    //oldPayment.ReversedByPaymentNo = entity.PaymentNo;
                                     oldPaymentUpdateList.Add(oldPayment);
                                     // 指向原始记录
                                     entity.ReversedOriginalId = oldPayment.PaymentId;
-                                    //entity.ReversedOriginalNo = oldPayment.PaymentNo;
+                                    entity.IsReversed = true;
                                 }
-                                entity.IsReversed = true;
+                            
 
                                 #endregion
 
                             }
 
 
-                            //付过，没付结清
-                            if ((receivablePayable.ForeignBalanceAmount > 0 && receivablePayable.ForeignPaidAmount > 0)
-                                || (receivablePayable.LocalBalanceAmount > 0 && receivablePayable.LocalPaidAmount > 0))
-                            {
-                                receivablePayable.ARAPStatus = (int)ARAPStatus.部分支付;
-                                receivablePayable.AllowAddToStatement = true;
-                            }
-                            if (receivablePayable.ForeignBalanceAmount == 0 || receivablePayable.LocalBalanceAmount == 0)
+                            // 更新应收应付单状态
+                            if (receivablePayable.LocalBalanceAmount == 0)
                             {
                                 receivablePayable.ARAPStatus = (int)ARAPStatus.全部支付;
                                 receivablePayable.AllowAddToStatement = false;
                             }
+                            else if (receivablePayable.LocalBalanceAmount > 0 && receivablePayable.LocalPaidAmount > 0)
+                            {
+                                receivablePayable.ARAPStatus = (int)ARAPStatus.部分支付;
+                                receivablePayable.AllowAddToStatement = true;
+                            }
+
+
+
+
                             //写回业务 原始单据的完结状态，销售出库。销售订单。
                             //通过的来源类型，来源单号，来源编号分组得到原始单据数据组后再根据类型分别处理更新状态
                             await UpdateSourceDocumentStatus(receivablePayable, entity, saleOrderUpdateList, saleOutUpdateList, SaleOutReUpdateList, purOrderUpdateList, purEntryUpdateList, purEntryReUpdateList,
                                      priceAdjustmentUpdateList, otherExpenseUpdateList, expenseClaimUpdateList, RepairOrderUpdateList);
 
-                            //应收应付 正反都 生成核销记录
-                            await settlementController.GenerateSettlement(entity, RecordDetail, receivablePayable);
+                          
                         }
 
                         receivablePayableUpdateList.AddRange(receivablePayableList);
@@ -467,8 +519,10 @@ namespace RUINORERP.Business
 
                                     //负数时，他一定有一个正数的收款单。并且对应一个对应的预收付单。，预收则要转为已冲销。自己则为
                                     tb_FM_PaymentRecord oldPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
-                                    .Where(c => c.tb_FM_PaymentRecordDetails.Any(c => c.SourceBilllId == RecordDetail.SourceBilllId)
-                                    && c.PaymentStatus == (int)PaymentStatus.已支付 && c.IsReversed == false && c.TotalLocalAmount > 0)
+                                    .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == RecordDetail.SourceBilllId)
+                                    && c.PaymentStatus == (int)PaymentStatus.已支付 && c.IsReversed == false
+                                    && c.TotalLocalAmount > 0)
+                                    .OrderByDescending(c => c.Created_at)  // 优先选择最近的正向付款
                                      .FirstAsync();
                                     if (oldPayment != null)
                                     {
@@ -477,9 +531,9 @@ namespace RUINORERP.Business
                                         oldPaymentUpdateList.Add(oldPayment);
                                         // 指向原始记录
                                         entity.ReversedOriginalId = oldPayment.PaymentId;
-                                        //entity.ReversedOriginalNo = oldPayment.PaymentNo;
+                                        entity.IsReversed = true;
                                     }
-                                    entity.IsReversed = true;
+                               
 
                                     #endregion
 
@@ -823,10 +877,10 @@ namespace RUINORERP.Business
                 {
                     var r = await _unitOfWorkManage.GetDbClient().Updateable(StatementUpdateList).UpdateColumns(t => new
                     {
-                         t.StatementStatus,
-                         t.ClosingBalanceForeignAmount,
-                         t.ClosingBalanceLocalAmount,
-                         t.TotalPaidLocalAmount,
+                        t.StatementStatus,
+                        t.ClosingBalanceForeignAmount,
+                        t.ClosingBalanceLocalAmount,
+                        t.TotalPaidLocalAmount,
                         t.TotalReceivedLocalAmount,
                     }).ExecuteCommandAsync();
                 }
@@ -844,14 +898,13 @@ namespace RUINORERP.Business
                 }
 
 
-
-
                 if (oldPaymentUpdateList.Any())
                 {
                     //更新原来的上一个预付记录
                     await _unitOfWorkManage.GetDbClient().Updateable(oldPaymentUpdateList).UpdateColumns(t => new
                     {
                         t.ReversedOriginalId,
+                        t.IsReversed
                     }
                     ).ExecuteCommandAsync();
                 }
@@ -1020,6 +1073,7 @@ namespace RUINORERP.Business
                     it.Paytype_ID
                 }).ExecuteCommandAsync();
 
+ 
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
@@ -1618,7 +1672,8 @@ namespace RUINORERP.Business
                 // 如果还有剩余金额，说明分配有问题
                 if (remainingAmount > 0)
                 {
-                    throw new Exception("支付金额分配失败，请检查数据。");
+                    MessageBox.Show("支付金额自动分配失败，请检查数据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
                 }
             }
             return rs;
@@ -2015,6 +2070,7 @@ namespace RUINORERP.Business
             //如果应收付款单中，已经为部分付款，或可能是从预收付款单中核销了部分。所以这里生成时需要取未核销金额的应收付金额
             tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
             paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entities[0]);
+            List<tb_FM_PaymentRecordDetail> details = mapper.Map<List<tb_FM_PaymentRecordDetail>>(entities);
             paymentRecord.ApprovalResults = null;
             paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
             paymentRecord.Approver_at = null;
@@ -2022,44 +2078,35 @@ namespace RUINORERP.Business
             paymentRecord.PrintStatus = 0;
             paymentRecord.ActionStatus = ActionStatus.新增;
             paymentRecord.ApprovalOpinions = "";
+            paymentRecord.Employee_ID = _appContext.CurUserInfo.UserInfo.Employee_ID.Value;
             paymentRecord.Modified_at = null;
             paymentRecord.Modified_by = null;
-            paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
-            paymentRecord.IsForCommission = false;
 
-            List<tb_FM_PaymentRecordDetail> details = mapper.Map<List<tb_FM_PaymentRecordDetail>>(entities);
+            paymentRecord.IsForCommission = false;
+            //默认给第一个
+            paymentRecord.PayeeInfoID = entities[0].PayeeInfoID;
+            paymentRecord.CustomerVendor_ID = entities[0].CustomerVendor_ID;
+            paymentRecord.Employee_ID = entities[0].Employee_ID;
+            paymentRecord.Currency_ID = _appContext.BaseCurrency.Currency_ID;
+
             List<tb_FM_PaymentRecordDetail> NewDetails = new List<tb_FM_PaymentRecordDetail>();
             //只处理了本币
-            decimal RemainingAmount = paymentRecord.TotalLocalAmount;
             for (int i = 0; i < details.Count; i++)
             {
+
                 #region 明细 
                 tb_FM_PaymentRecordDetail paymentRecordDetail = details[i];
-                if (RemainingAmount < paymentRecordDetail.LocalAmount)
-                {
-                    paymentRecordDetail.LocalAmount = RemainingAmount;
-                }
-                RemainingAmount = RemainingAmount - paymentRecordDetail.LocalAmount;
-                if (RemainingAmount == 0)
-                {
-                    paymentRecordDetail.LocalAmount = 0;
-                }
-
-                if (paymentRecord.ReceivePaymentType == (int)ReceivePaymentType.收款)
-                {
-                    paymentRecordDetail.SourceBizType = (int)BizType.应收款单;
-                }
-                else
-                {
-                    paymentRecordDetail.SourceBizType = (int)BizType.应付款单;
-                }
-                paymentRecordDetail.Summary = $"由应{((ReceivePaymentType)paymentRecord.ReceivePaymentType).ToString()}对账单转换自动生成。";
+                tb_FM_Statement statement = entities.FirstOrDefault(c => c.StatementId == paymentRecordDetail.SourceBilllId);
+                paymentRecordDetail.SourceBizType = (int)BizType.对账单;
+                paymentRecordDetail.Summary = $"由应{Enum.GetName(typeof(ReceivePaymentType), statement.ReceivePaymentType)}对账单转换自动生成。";
+                paymentRecordDetail.Currency_ID = paymentRecord.Currency_ID;
                 var entity = entities.FirstOrDefault(c => c.StatementId == details[i].SourceBilllId);
                 if (entity != null)
                 {
                     paymentRecordDetail.Summary += entity.Summary;
                 }
-                paymentRecordDetail.LocalPayableAmount = paymentRecordDetail.LocalAmount;
+                //应付金额 在 maper中映射了。实会为0，要手动输入
+
                 #endregion
                 NewDetails.Add(paymentRecordDetail);
             }
@@ -2071,11 +2118,19 @@ namespace RUINORERP.Business
             paymentRecord.TotalForeignAmount = NewDetails.Sum(c => c.ForeignAmount);
             paymentRecord.TotalLocalAmount = NewDetails.Sum(c => c.LocalAmount);
             paymentRecord.TotalLocalPayableAmount = NewDetails.Sum(c => c.LocalPayableAmount);
-            //默认给第一个
-            paymentRecord.PayeeInfoID = entities[0].PayeeInfoID;
-            paymentRecord.CustomerVendor_ID = entities[0].CustomerVendor_ID;
+
+
             paymentRecord.PayeeAccountNo = entities[0].PayeeAccountNo;
             paymentRecord.tb_FM_PaymentRecordDetails = NewDetails;
+
+            ////到底是付款，还是收款。要加总最后的方向
+            //if (paymentRecord.TotalLocalPayableAmount > 0)
+            //{
+
+            //}
+
+            paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
+
             if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 paymentRecord.PaymentNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.收款单);

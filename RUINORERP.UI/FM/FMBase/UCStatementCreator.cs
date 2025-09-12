@@ -87,7 +87,7 @@ namespace RUINORERP.UI.FM
             var lambda = Expressionable.Create<tb_FM_ReceivablePayable>()
                               .And(t => t.isdeleted == false)
                               .And(t => t.AllowAddToStatement == true)
-                              .And(t => t.LocalBalanceAmount > 0)
+                              .And(t => t.LocalBalanceAmount != 0)
                               .And(t => t.ARAPStatus == (int)ARAPStatus.待审核 || t.ARAPStatus == (int)ARAPStatus.待支付 || t.ARAPStatus == (int)ARAPStatus.部分支付)
                          //对账时不管收付款都要查出来。所以才在这里重新建一个
                          //.And(t => t.ReceivePaymentType == (int)PaymentType)

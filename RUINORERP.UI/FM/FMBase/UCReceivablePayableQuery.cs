@@ -894,7 +894,7 @@ namespace RUINORERP.UI.FM
 
         protected override void Delete(List<tb_FM_ReceivablePayable> Datas)
         {
-            MessageBox.Show("应收应付记录不能删除!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("应收/应付记录，请在单据详情中删除!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 

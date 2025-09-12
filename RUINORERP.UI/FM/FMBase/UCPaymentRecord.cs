@@ -759,6 +759,7 @@ namespace RUINORERP.UI.FM
                     bool rs = await ctr.BaseDeleteByNavAsync(EditEntity as tb_FM_PaymentRecord);
                     if (rs)
                     {
+                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_PaymentRecord>("删除", EditEntity);
                         //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", EditEntity);
                         //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         //{

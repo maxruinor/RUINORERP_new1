@@ -6,15 +6,7 @@ using System.Text;
 namespace TransInstruction
 {
 
-
-    //public enum DataTransCommand
-    //{
-    //    None = 0,
-    //    UserManagement = 1,
-    //    ProductManagement = 2,
-    //    OrderManagement = 3,
-    //    // 其他主指令
-    //}
+ 
 
     /// <summary>
     /// 服务器发出的消息指令

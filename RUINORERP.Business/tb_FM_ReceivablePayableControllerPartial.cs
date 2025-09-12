@@ -737,13 +737,13 @@ namespace RUINORERP.Business
             {
                 payable.SourceBizType = (int)BizType.销售价格调整单;
                 payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
-                payable.Remark = $"销售出库单调整后：{entity.SourceBillNo} 的应收款";
+                payable.Remark = $"销售出库单后【价格调整单】{entity.SourceBillNo} 的应收款";
             }
             else
             {
                 payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应付款单);
                 payable.SourceBizType = (int)BizType.采购价格调整单;
-                payable.Remark = $"采购入库单调整后：{entity.SourceBillNo} 的应付款";
+                payable.Remark = $"采购入库后【价格调整单】{entity.SourceBillNo} 的应付款";
             }
 
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话

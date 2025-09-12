@@ -24,12 +24,7 @@ namespace TransInstruction
         [Browsable(true), Description("引发外部事件，补充作用而已")]
         public event OtherHandler OtherEvent;
 
-        /*
-                  if (OtherEvent != null)
-            {
-                OtherEvent(gd);
-            }
-         */
+
 
         public static string Try解析封包为实际逻辑(OriginalData gd)
         {

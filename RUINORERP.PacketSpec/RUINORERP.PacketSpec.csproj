@@ -1,7 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SuperSocket-master\src\SuperSocket.Command\SuperSocket.Command.csproj" />
+    <ProjectReference Include="..\..\SuperSocket-master\src\SuperSocket.Server.Abstractions\SuperSocket.Server.Abstractions.csproj" />
+    <ProjectReference Include="..\..\SuperSocket-master\src\SuperSocket.Server\SuperSocket.Server.csproj" />
+    <ProjectReference Include="..\SuperSocket.ProtoBase\SuperSocket.ProtoBase.csproj" />
+  </ItemGroup>
 
 </Project>

@@ -36,46 +36,6 @@ namespace RUINORERP.Server.BizService
 {
     public class UserService
     {
-        /*
-        public static void 发送缓存数据(SessionforBiz PlayerSession, string tableName)
-        {
-            if (string.IsNullOrEmpty(tableName))
-            {
-                return;
-            }
-            try
-            {
-                if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
-                {
-                    //发送缓存数据
-                    var cvOjb = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(1740971599693221888);
-
-                    string json = JsonConvert.SerializeObject(cvOjb,
-                       new JsonSerializerSettings
-                       {
-                           ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                       });
-
-                    ByteBuff tx = new ByteBuff(100);
-                    tx.PushString(tableName);
-                    tx.PushInt(frmMain.Instance.sessionListBiz.Count);
-                    foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
-                    {
-                        tx.PushString(item.Value.SessionID);
-                        tx.PushString(item.Value.User.用户名);
-                        tx.PushString(item.Value.User.姓名);
-                    }
-
-                    PlayerSession.AddSendData((byte)ServerCmdEnum.发送缓存数据, null, tx.toByte());
-                }
-            }
-            catch (Exception ex)
-            {
-                Comm.CommService.ShowExceptionMsg("发送缓存数据:" + ex.Message);
-            }
-
-        }
-        */
 
         public static async void 发送缓存数据列表(SessionforBiz PlayerSession, string tableName)
         {

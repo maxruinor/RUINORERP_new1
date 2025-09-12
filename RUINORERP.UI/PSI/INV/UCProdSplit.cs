@@ -47,7 +47,7 @@ using RUINORERP.Global.EnumExt;
 namespace RUINORERP.UI.PSI.INV
 {
     [MenuAttrAssemblyInfo("产品分割单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.产品分割与组合, BizType.产品分割单)]
-    public partial class UCProdSplit : BaseBillEditGeneric<tb_ProdSplit, tb_ProdSplit>
+    public partial class UCProdSplit : BaseBillEditGeneric<tb_ProdSplit, tb_ProdSplitDetail>
     {
         public UCProdSplit()
         {

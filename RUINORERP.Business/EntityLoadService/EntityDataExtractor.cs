@@ -14,6 +14,7 @@ namespace RUINORERP.Business.BizMapperService
 {
     /// <summary>
     /// 实体数据内容提取器
+    /// 要优化。提高性能！！！
     /// </summary>
     public static class EntityDataExtractor
     {

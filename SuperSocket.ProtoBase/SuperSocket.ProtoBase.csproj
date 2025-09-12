@@ -6,7 +6,7 @@
     <SccLocalPath>Svn</SccLocalPath>
   </PropertyGroup>
   <PropertyGroup>
-    <TargetFramework>$(LibTargetFramework)</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Description>SuperSocket protocol decoding library.</Description>
     <OutputType>Library</OutputType>
   </PropertyGroup>

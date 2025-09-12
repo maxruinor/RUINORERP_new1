@@ -1269,18 +1269,19 @@ namespace RUINORERP.UI.FM
                     {
                         if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
                         {
-                            MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            rss.ErrorMsg = "只有创建人才能删除提交的单据。";
+                            MessageBox.Show("只有创建人或超级管理员才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            rss.ErrorMsg = "只有创建人或超级管理员才能删除提交的单据。";
                             rss.Succeeded = false;
                             return rss;
                         }
                     }
 
                     tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable> ctr = Startup.GetFromFac<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                    bool rs = await ctr.BaseLogicDeleteAsync(EditEntity as tb_FM_ReceivablePayable);
+                    //bool rs = await ctr.BaseLogicDeleteAsync(EditEntity as tb_FM_ReceivablePayable);
+                    bool rs = await ctr.BaseDeleteByNavAsync(EditEntity as tb_FM_ReceivablePayable);
                     if (rs)
                     {
-                        //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", EditEntity);
+                        MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("删除", EditEntity);
                         //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
                         //{
                         //    //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true

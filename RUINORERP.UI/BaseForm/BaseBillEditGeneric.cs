@@ -549,7 +549,7 @@ namespace RUINORERP.UI.BaseForm
                         toolStripbtnModify.Enabled = true;
                         toolStripbtnSubmit.Enabled = true;
                         toolStripbtnReview.Enabled = false;
-                        
+
                         if (actionStatus == ActionStatus.新增)
                         {
                             toolStripButtonSave.Enabled = true;
@@ -757,7 +757,7 @@ namespace RUINORERP.UI.BaseForm
             toolStripbtnSubmit.Enabled = FMPaymentStatusHelper.CanSubmit(statusEnum);
             toolStripbtnReview.Enabled = statusEnum is PrePaymentStatus pre && pre == PrePaymentStatus.待审核 ||
                                         statusEnum is ARAPStatus arap && arap == ARAPStatus.待审核 ||
-                                        statusEnum is DataStatus dataStatus1  && dataStatus1 == DataStatus.新建||
+                                        statusEnum is DataStatus dataStatus1 && dataStatus1 == DataStatus.新建 ||
                                         statusEnum is StatementStatus statementStatus && statementStatus == StatementStatus.已发送 ||
                                         statusEnum is PaymentStatus pay && pay == PaymentStatus.待审核;
 
@@ -3409,6 +3409,7 @@ namespace RUINORERP.UI.BaseForm
             SaveResult = await ctr.BaseSaveOrUpdate(EditEntity);
             if (SaveResult.Succeeded)
             {
+               // MainForm.Instance.auditLogHelper.CreateAuditLog<T>("数据特殊修正", EditEntity);
                 MainForm.Instance.PrintInfoLog($"修正成功。");
             }
             else
@@ -3416,7 +3417,7 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.PrintInfoLog($"修正失败。", Color.Red);
             }
 
-            MainForm.Instance.AuditLogHelper.CreateAuditLog("数据修正", EditEntity, $"结果:{(SaveResult.Succeeded ? "成功" : "失败")},{SaveResult.ErrorMsg}");
+           await MainForm.Instance.AuditLogHelper.CreateAuditLog("数据修正", EditEntity, $"结果:{(SaveResult.Succeeded ? "成功" : "失败")},{SaveResult.ErrorMsg}");
         }
 
         private string GetPrimaryKeyProperty(Type type)

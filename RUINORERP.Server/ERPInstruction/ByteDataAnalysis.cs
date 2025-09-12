@@ -188,33 +188,6 @@ namespace TransInstruction
     /// </summary>
     public class ByteDataAnalysisold
     {
-        /*
-                /// <summary>
-                /// 
-                /// </summary>
-                /// <param name="buffer"></param>
-                /// <param name="Index">已经解析掉的数据长度</param>
-                /// <returns></returns>
-                public static bool Getbool(byte[] buffer, ref int Index)
-                {
-                    bool b = false;
-                    try
-                    {
-                        byte[] sz = new byte[1];
-                        sz = buffer.Skip(Index).Take(1).ToArray();
-                        if (sz[0] == 1)
-                        {
-                            b = true;
-                        }
-                        Index = Index + 1;
-                    }
-                    catch (Exception ex)
-                    {
-
-                    }
-                    return b;
-                }
-                */
         public static bool Getbool(byte[] buffer, ref int Index)
         {
             if (buffer.Length < Index + 1)

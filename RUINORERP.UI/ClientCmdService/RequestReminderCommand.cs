@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using TransInstruction;
 using TransInstruction.CommandService;
 using TransInstruction.DataPortal;
+using TransInstruction.Enums;
 
 namespace RUINORERP.UI.ClientCmdService
 {

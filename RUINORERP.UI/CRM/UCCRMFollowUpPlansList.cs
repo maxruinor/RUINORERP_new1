@@ -34,6 +34,7 @@ using FastReport.DevComponents.DotNetBar;
 using RUINORERP.UI.ClientCmdService;
 using TransInstruction.CommandService;
 using System.Threading;
+using TransInstruction.Enums;
 
 namespace RUINORERP.UI.CRM
 {

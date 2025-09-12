@@ -16,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TransInstruction;
 using TransInstruction.CommandService;
+using TransInstruction.Enums;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RUINORERP.UI.Common

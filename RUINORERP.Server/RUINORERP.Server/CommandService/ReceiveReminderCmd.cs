@@ -12,8 +12,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TransInstruction;
-using TransInstruction.CommandService;
 using TransInstruction.DataPortal;
+using TransInstruction.Enums;
 using MessageType = RUINORERP.Model.TransModel.MessageType;
 
 namespace RUINORERP.Server.CommandService

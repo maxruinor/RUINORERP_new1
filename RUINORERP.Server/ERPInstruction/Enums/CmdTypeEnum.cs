@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TransInstruction.CommandService
+namespace TransInstruction.Enums
 {
     /// <summary>
     /// 发送和接收合并的指令中要有这个标识
     /// </summary>
     public enum CmdOperation
     {
-        Send=1,
-        Receive=2
+        Send = 1,
+        Receive = 2
     }
 
 
@@ -22,8 +22,8 @@ namespace TransInstruction.CommandService
 
     public enum EntityTransferCmdType
     {
-        提交实体数据=1,
-        接受实体数据=2,
+        提交实体数据 = 1,
+        接受实体数据 = 2,
         处理动态配置 = 3,
     }
 

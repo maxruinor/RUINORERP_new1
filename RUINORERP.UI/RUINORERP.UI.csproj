@@ -790,6 +790,9 @@
     <Compile Include="BusyDialog.Designer.cs">
       <DependentUpon>BusyDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="ClientCmdService\FileStorageService.cs" />
+    <Compile Include="ClientCmdService\ManagementClient.cs" />
+    <Compile Include="ClientCmdService\StorageManagementClient.cs" />
     <Compile Include="CommonUI\frmOpinion.cs">
       <SubType>Form</SubType>
     </Compile>

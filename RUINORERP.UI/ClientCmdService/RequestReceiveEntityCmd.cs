@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using TransInstruction;
 using TransInstruction.CommandService;
 using TransInstruction.DataPortal;
+using TransInstruction.Enums;
 using static RUINORERP.Extensions.ServiceExtensions.EditConfigCommand;
 
 namespace RUINORERP.UI.ClientCmdService

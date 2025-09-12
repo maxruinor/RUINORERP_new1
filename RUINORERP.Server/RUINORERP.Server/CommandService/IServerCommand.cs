@@ -6,7 +6,7 @@ using System.Threading;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using RUINORERP.Server.ServerSession;
 using TransInstruction;
-using TransInstruction.CommandService;
+using TransInstruction.Enums;
 
 namespace RUINORERP.Server.CommandService
 {

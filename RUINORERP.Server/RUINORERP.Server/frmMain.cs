@@ -65,7 +65,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
 using TransInstruction;
-using TransInstruction.CommandService;
+using TransInstruction.Enums;
 using WorkflowCore.Interface;
 using WorkflowCore.Primitives;
 using WorkflowCore.Services;

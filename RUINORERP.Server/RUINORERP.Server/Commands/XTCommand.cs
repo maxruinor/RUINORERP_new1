@@ -12,6 +12,7 @@ using RUINORERP.Server.ServerSession;
 using TransInstruction;
 using SuperSocket.Server.Abstractions.Session;
 using System.Threading;
+using TransInstruction.Enums;
 
 
 namespace RUINORERP.Server

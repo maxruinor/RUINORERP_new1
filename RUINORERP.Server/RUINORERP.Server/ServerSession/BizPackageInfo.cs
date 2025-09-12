@@ -1,6 +1,7 @@
 ﻿using RUINORERP.Server.Commands;
 using SuperSocket.ProtoBase;
 using TransInstruction.DataPortal;
+using TransInstruction.Enums;
 
 namespace RUINORERP.Server.ServerSession
 {

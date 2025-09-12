@@ -1,20 +1,12 @@
 ﻿using SuperSocket.ProtoBase;
 using TransInstruction;
 using TransInstruction.DataPortal;
+using TransInstruction.Enums;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
 
-    /// <summary>
-    /// 特殊指令
-    /// </summary>
-    public enum SpecialOrder
-    {
-        长度小于18,
-        固定256,
-        长度等于18,
-        正常
-    }
+
 
     public class BizPackageInfo : IPackageInfo<string>
     {

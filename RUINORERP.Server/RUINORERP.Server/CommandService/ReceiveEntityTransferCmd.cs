@@ -19,8 +19,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TransInstruction;
-using TransInstruction.CommandService;
 using TransInstruction.DataPortal;
+using TransInstruction.Enums;
 using static RUINORERP.Extensions.ServiceExtensions.EditConfigCommand;
 using MessageType = RUINORERP.Model.TransModel.MessageType;
 

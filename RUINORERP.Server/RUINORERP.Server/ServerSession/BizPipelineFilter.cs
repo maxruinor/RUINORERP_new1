@@ -7,6 +7,7 @@ using RUINORERP.Server.Commands;
 using TransInstruction.DataPortal;
 using TransInstruction;
 using Microsoft.Extensions.Logging;
+using TransInstruction.Enums;
 
 namespace RUINORERP.Server.ServerSession
 {

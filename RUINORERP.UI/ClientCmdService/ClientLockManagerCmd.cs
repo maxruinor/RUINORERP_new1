@@ -29,6 +29,7 @@ using TransInstruction;
 using TransInstruction.CommandService;
 using TransInstruction.DataModel;
 using TransInstruction.DataPortal;
+using TransInstruction.Enums;
 using static RUINORERP.Business.CommService.LockManager;
 using MessageType = RUINORERP.Model.TransModel.MessageType;
 
@@ -62,7 +63,7 @@ namespace RUINORERP.UI.ClientCmdService
             OperationType = operation;
         }
 
-
+ 
 
 
 

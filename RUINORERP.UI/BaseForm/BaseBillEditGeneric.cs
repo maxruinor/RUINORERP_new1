@@ -86,6 +86,7 @@ using Winista.Text.HtmlParser.Lex;
 using Org.BouncyCastle.Asn1.X509.Qualified;
 using System.Management;
 using RUINORERP.Business.BizMapperService;
+using TransInstruction.Enums;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -548,6 +549,7 @@ namespace RUINORERP.UI.BaseForm
                         toolStripbtnModify.Enabled = true;
                         toolStripbtnSubmit.Enabled = true;
                         toolStripbtnReview.Enabled = false;
+                        
                         if (actionStatus == ActionStatus.新增)
                         {
                             toolStripButtonSave.Enabled = true;
@@ -755,9 +757,9 @@ namespace RUINORERP.UI.BaseForm
             toolStripbtnSubmit.Enabled = FMPaymentStatusHelper.CanSubmit(statusEnum);
             toolStripbtnReview.Enabled = statusEnum is PrePaymentStatus pre && pre == PrePaymentStatus.待审核 ||
                                         statusEnum is ARAPStatus arap && arap == ARAPStatus.待审核 ||
+                                        statusEnum is DataStatus dataStatus1  && dataStatus1 == DataStatus.新建||
                                         statusEnum is StatementStatus statementStatus && statementStatus == StatementStatus.已发送 ||
                                         statusEnum is PaymentStatus pay && pay == PaymentStatus.待审核;
-
 
 
             // 状态检测器

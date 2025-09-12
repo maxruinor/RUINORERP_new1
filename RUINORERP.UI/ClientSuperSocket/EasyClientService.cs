@@ -28,6 +28,7 @@ using FastReport.DevComponents.DotNetBar;
 using NPOI.POIFS.Crypt.Dsig;
 
 using RUINORERP.UI.ClientSuperSocket;
+using TransInstruction.Enums;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -120,37 +121,7 @@ namespace RUINORERP.UI.SuperSocketClient
             heartbeat = new HeartbeatManager();
             heartbeat.Start();
 
-            //连上就需要做一些动作，如果登陆成功过的。
-            //每10s发送一次心跳或尝试一次重连
-            //timer = new System.Timers.Timer(2000);
-            //timer.Elapsed += new System.Timers.ElapsedEventHandler((s, x) =>
-            //{
-            //    //心跳包
-            //    if (client.IsConnected && LoginStatus)
-            //    {
-            //        try
-            //        {
-            //            if (MainForm.Instance.AppContext.CurUserInfo != null)
-            //            {
-            //                OriginalData beatData = HeartbeatCmdBuilder();
-            //               Console.WriteLine($"心跳 Thread ID: {Thread.CurrentThread.ManagedThreadId}");
-            //                MainForm.Instance.ecs.AddSendData(beatData);
-            //            }
-            //        }
-            //        catch (Exception)
-            //        {
-
-
-            //        }
-            //    }
-            //    else
-            //    {
-
-            //    }
-            //});
-            //timer.Enabled = true;
-            //timer.Start();
-
+          
 
 
         }

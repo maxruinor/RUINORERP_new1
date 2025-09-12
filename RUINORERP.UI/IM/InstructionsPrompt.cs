@@ -29,6 +29,7 @@ using System.Windows.Forms;
 using TransInstruction;
 using TransInstruction.CommandService;
 using TransInstruction.DataModel;
+using TransInstruction.Enums;
 using Timer = System.Windows.Forms.Timer;
 
 namespace RUINORERP.UI.IM

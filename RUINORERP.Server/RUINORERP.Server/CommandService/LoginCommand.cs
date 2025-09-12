@@ -15,8 +15,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TransInstruction;
-using TransInstruction.CommandService;
 using TransInstruction.DataPortal;
+using TransInstruction.Enums;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RUINORERP.Server.CommandService

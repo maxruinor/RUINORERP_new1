@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using TransInstruction;
 using TransInstruction.DataPortal;
+using TransInstruction.Enums;
 
 
 namespace RUINORERP.UI.SuperSocketClient

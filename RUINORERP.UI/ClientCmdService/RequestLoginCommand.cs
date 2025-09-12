@@ -15,6 +15,7 @@ using TransInstruction;
 using TransInstruction.CommandService;
 using TransInstruction.DataModel;
 using TransInstruction.DataPortal;
+using TransInstruction.Enums;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RUINORERP.UI.ClientCmdService

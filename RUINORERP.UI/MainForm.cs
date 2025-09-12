@@ -98,6 +98,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Business.RowLevelAuthService;
 using RUINORERP.Plugin;
+using TransInstruction.Enums;
 
 
 

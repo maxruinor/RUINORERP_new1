@@ -33,6 +33,7 @@ using RUINORERP.UI.ClientCmdService;
 using TransInstruction.CommandService;
 using System.Threading;
 using RUINORERP.Global;
+using TransInstruction.Enums;
 
 namespace RUINORERP.UI.SysConfig
 {

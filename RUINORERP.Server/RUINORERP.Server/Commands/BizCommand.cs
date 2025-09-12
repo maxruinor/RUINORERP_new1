@@ -23,9 +23,9 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using Microsoft.VisualBasic.ApplicationServices;
 using System.Numerics;
-using TransInstruction.CommandService;
 using RUINORERP.Server.CommandService;
 using RUINORERP.Model.TransModel;
+using TransInstruction.Enums;
 
 namespace RUINORERP.Server.Commands
 {

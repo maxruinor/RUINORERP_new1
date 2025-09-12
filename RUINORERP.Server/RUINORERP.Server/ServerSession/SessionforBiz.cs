@@ -129,8 +129,11 @@ namespace RUINORERP.Server.ServerSession
         {
             (this as IAppSession).SendAsync(data);
         }
-
-
+         
+        public ValueTask SendAsync(byte[] data)
+        {
+          return  (this as IAppSession).SendAsync(data);
+        }
 
         //思路 每个都有对应的队列来控制所有的数据发出
         //在角色上线后执行

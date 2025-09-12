@@ -75,32 +75,7 @@ namespace RUINORERP.UI.ClientSuperSocket
                 _cts.Token.WaitHandle.WaitOne(2000); // 可被取消的等待
             }
 
-            //while (true)
-            //{
-            //    bool isRunning;
-            //    lock (_lock)
-            //    {
-            //        isRunning = _isRunning;
-            //    }
-
-            //    if (!isRunning)
-            //    {
-            //        break;
-            //    }
-
-            //    try
-            //    {
-            //        // 发送心跳包的逻辑
-            //        SendHeartbeat();
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        Console.WriteLine($"Error sending heartbeat: {ex.Message}");
-            //    }
-
-            //    // 等待2秒
-            //    Thread.Sleep(2000);
-            //}
+         
         }
 
         private void SendHeartbeat()

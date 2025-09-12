@@ -14,28 +14,7 @@ namespace RUINORERP.UI.ClientCmdService
 {
     public class ClientCommandDispatcher
     {
-        //public void RegisterCommandHandler(IClientCommand handler)
-        //{
-        //    if (handler == null) throw new ArgumentNullException(nameof(handler));
-        //    var supportedCommandTypes = handler.GetType()
-        //        .GetInterfaces()
-        //        .Where(iface => iface.BaseType == typeof(IClientCommand))
-        //        .Select(iface => iface.GetGenericArguments()[0])
-        //        .ToList();
-        //    var registeredType = _handlers.Keys.FirstOrDefault(x => supportedCommandTypes.Contains(x));
-        //    if (registeredType != null)
-        //    {
-        //        var commands = String.Join(", ", supportedCommandTypes.Select(x => x.FullName));
-        //        var registeredHandler = _handlers[registeredType];
-        //        var message = $"The command(s) ('{commands}') handled by the received handler ('{handler}') already has a registered handler ('{registeredHandler}').";
-        //        throw new ArgumentException(message);
-        //    }
-        //    foreach (var commandType in supportedCommandTypes)
-        //    {
-        //        _handlers.Add(commandType, handler);
-        //    }
-        //}
-
+        
 
         private readonly Dictionary<Type, IClientCommand> _handlers;
 

@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -28,7 +28,7 @@ using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
 using RUINORERP.UI.SuperSocketClient;
-using TransInstruction;
+using RUINORERP.PacketSpec.Legacy;
 using AutoUpdateTools;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Common.Extensions;

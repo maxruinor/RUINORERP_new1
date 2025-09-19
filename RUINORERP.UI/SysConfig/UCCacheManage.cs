@@ -1,9 +1,9 @@
-﻿using AutoUpdateTools;
+﻿﻿using AutoUpdateTools;
 using CacheManager.Core;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using HLH.Lib.Helper;
-using RUINORERP.Business.CommService;
+using RUINORERP.Server.Comm;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;

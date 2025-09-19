@@ -4749,9 +4749,9 @@
       <Project>{fd780427-a7c6-4f2e-99f4-457e9b5bdc02}</Project>
       <Name>RUINORERP.SecurityTool</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RUINORERP.Server\ERPInstruction\TransInstruction.csproj">
-      <Project>{47792353-943e-46a7-8f7b-7cdbf31f8d08}</Project>
-      <Name>TransInstruction</Name>
+    <ProjectReference Include="..\RUINORERP.PacketSpec\RUINORERP.PacketSpec.csproj">
+      <Project>{E183B2C1-BA58-4B8C-B778-791DA2A60051}</Project>
+      <Name>RUINORERP.PacketSpec</Name>
     </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Services\RUINORERP.Services.csproj">
       <Project>{47747c47-50a6-4d24-a87a-e0e1e5c5debd}</Project>

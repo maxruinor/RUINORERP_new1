@@ -1235,26 +1235,7 @@ namespace RUINORERP.Business
             List<tb_ManufacturingOrderDetail> MakingGoods = new List<tb_ManufacturingOrderDetail>();
 
             MakingGoods = await GetSubManufacturingOrderDetailLoop(demand, MediumBomInfoList, MakingItem, MakingItemBom, middlewareNeedLoop);
-
-            ////这里是中间件ID
-            //HashSet<long> excludedIds = new HashSet<long>(MakingGoods.Select(p => p.ProdDetailID));
-
-            ////这里要以库存不足（包括了足的）为基准去生成发料明细
-            //var SubItems = demand.tb_ProductionDemandDetails.Where(s => !excludedIds.Contains(s.ProdDetailID)).ToList();
-
-            ////这里再取库存不足的，再加上有BOM的除去顶层。
-            //List<tb_ManufacturingOrderDetail> MakingGoodsOther = mapper.Map<List<tb_ManufacturingOrderDetail>>(SubItems);
-
-            ////要计算的情况
-            //foreach (tb_ManufacturingOrderDetail MODetail in MakingGoodsOther)
-            //{
-            //    tb_BOM_SDetail child_bomDetail = bom.tb_BOM_SDetails.FirstOrDefault(c => c.ProdDetailID == MODetail.ProdDetailID);
-            //    //损耗量，影响领料数量？
-            //    if (child_bomDetail.LossRate.HasValue)
-            //    {
-            //        MODetail.WastageQty = MODetail.ShouldSendQty * child_bomDetail.LossRate.Value;
-            //    }
-            //}
+          
 
             AllMakingGoods.AddRange(MakingGoods);
 

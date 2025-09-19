@@ -278,6 +278,10 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                     lblExchangeRate.Visible = false;
                     txtExchangeRate.Visible = false;
+
+                    //预交时间默认给到7天，可以不选
+                    dtpPreDeliveryDate.Value = System.DateTime.Now.AddDays(7);
+
                     UIHelper.ControlForeignFieldInvisible<tb_SaleOrder>(this, false);
                 }
             }

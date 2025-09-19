@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -10,9 +10,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
-using TransInstruction;
-using TransInstruction.DataPortal;
-using TransInstruction.DataModel;
+using RUINORERP.PacketSpec.Legacy;
+using RUINORERP.PacketSpec.Legacy;
+using RUINORERP.PacketSpec.Protocol;
 using LightTalkChatBox;
 using Krypton.Navigator;
 using SourceGrid2.Win32;

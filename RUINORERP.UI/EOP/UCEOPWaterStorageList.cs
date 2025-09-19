@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -15,7 +15,7 @@ using RUINORERP.Common.CollectionExtension;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business;
-using TransInstruction;
+using RUINORERP.PacketSpec.Legacy;
 using System.Threading;
 using RUINORERP.Global;
 using RUINORERP.Business.Processor;

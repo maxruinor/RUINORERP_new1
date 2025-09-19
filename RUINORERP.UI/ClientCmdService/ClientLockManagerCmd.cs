@@ -1,4 +1,4 @@
-﻿using Autofac.Core;
+﻿﻿﻿using Autofac.Core;
 using FastReport.Table;
 using Force.DeepCloner;
 using Krypton.Navigator;
@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NPOI.POIFS.Crypt.Dsig;
-using RUINORERP.Business.CommService;
+using RUINORERP.Server.Comm;
 using RUINORERP.Business.Security;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
@@ -27,10 +27,10 @@ using System.Web.UI.WebControls;
 using System.Windows.Forms;
 using TransInstruction;
 using TransInstruction.CommandService;
-using TransInstruction.DataModel;
+using RUINORERP.PacketSpec.Models;
 using TransInstruction.DataPortal;
 using TransInstruction.Enums;
-using static RUINORERP.Business.CommService.LockManager;
+using static RUINORERP.Server.Comm.LockManager;
 using MessageType = RUINORERP.Model.TransModel.MessageType;
 
 namespace RUINORERP.UI.ClientCmdService

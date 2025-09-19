@@ -1,4 +1,4 @@
-﻿using LightTalkChatBox;
+﻿﻿﻿using LightTalkChatBox;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,14 +8,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using TransInstruction.DataPortal;
-using TransInstruction;
-using TransInstruction.DataModel;
+using RUINORERP.PacketSpec.Legacy;
+using RUINORERP.PacketSpec.Legacy;
+using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.ClientCmdService;
 using RUINORERP.Model.TransModel;
 using System.Threading;
-using TransInstruction.CommandService;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.IM
 {
@@ -55,7 +55,7 @@ namespace RUINORERP.UI.IM
                 RequestReceiveMessageCmd request = new RequestReceiveMessageCmd(CmdOperation.Send);
                 request.MessageType = MessageType.IM;
                 request.MessageContent = txtSender.Text;
-                request.nextProcesszStep = TransInstruction.CommandService.NextProcesszStep.转发;
+                request.nextProcesszStep = RUINORERP.PacketSpec.Commands.NextProcesszStep.转发;
                 request.ReceiverSessionID = Receiver.SessionId;
                 MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
 

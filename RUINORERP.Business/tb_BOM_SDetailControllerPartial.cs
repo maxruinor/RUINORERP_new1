@@ -25,6 +25,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using System.Runtime.ConstrainedExecution;
 
 namespace RUINORERP.Business
 {
@@ -33,6 +34,10 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_BOM_SDetailController<T> : BaseController<T> where T : class
     {
+
+
+
+       
 
         /// <summary>
         /// 带参数异步导航查询

@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -30,7 +30,7 @@ using SqlSugar;
 using SourceGrid;
 using System.Linq.Expressions;
 using RUINORERP.Common.Extensions;
-using TransInstruction;
+using RUINORERP.PacketSpec.Legacy;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using RUINOR.Core;
 

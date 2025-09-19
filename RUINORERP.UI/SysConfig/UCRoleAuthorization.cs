@@ -28,7 +28,7 @@ using StackExchange.Redis;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using RUINORERP.UI.AdvancedUIModule;
-using TransInstruction;
+using RUINORERP.PacketSpec.Legacy;
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.Business.CommService;
 using System.Windows.Documents;

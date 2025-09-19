@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -29,7 +29,7 @@ using SqlSugar;
 using SourceGrid;
 using System.Linq.Expressions;
 using RUINORERP.Common.Extensions;
-using TransInstruction;
+using RUINORERP.PacketSpec.Legacy;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using RUINOR.Core;
 using RUINORERP.Business.AutoMapper;
@@ -1945,18 +1945,15 @@ namespace RUINORERP.UI.MRP.BOM
 
         protected async override Task<ReturnResults<tb_BOM_S>> Delete()
         {
-            ReturnResults<tb_BOM_S> rss = await base.Delete();
-            if (rss.Succeeded)
+
+            //删除配置前，如果其它地方没有使用，则产品默认指向了，在删除前将成品指向的配置清空
+            var ctrbom = Startup.GetFromFac<tb_BOM_SController<tb_BOM_S>>();
+            ReturnResults<tb_BOM_S> rrs = await ctrbom.DeleteBOM_SDetail_Clear_ProdDetailMapping(EditEntity as tb_BOM_S);
+            if (rrs.Succeeded)
             {
-                //清空对应产品明细中的BOM信息
-                if (rss.ReturnObject.tb_proddetail != null && rss.ReturnObject.tb_proddetail.BOM_ID.HasValue)
-                {
-                    rss.ReturnObject.tb_proddetail.BOM_ID = null;
-                    BaseController<tb_ProdDetail> ctrDetail = Startup.GetFromFacByName<BaseController<tb_ProdDetail>>(typeof(tb_ProdDetail).Name + "Controller");
-                    await ctrDetail.BaseSaveOrUpdate(rss.ReturnObject.tb_proddetail);
-                }
+                MainForm.Instance.auditLogHelper.CreateAuditLog<tb_BOM_S>("删除", EditEntity);
             }
-            return rss;
+            return rrs;
         }
 
         private void Sgh_OnLoadMultiRowData(object rows, Position position)

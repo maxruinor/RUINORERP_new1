@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,7 +12,7 @@ using RUINORERP.Business.Security;
 using RUINORERP.Model.Context;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using RUINORERP.UI.SuperSocketClient;
-using TransInstruction;
+using RUINORERP.PacketSpec.Legacy;
 using RUINORERP.UI.Common;
 using Microsoft.Extensions.Logging;
 using System.Threading;

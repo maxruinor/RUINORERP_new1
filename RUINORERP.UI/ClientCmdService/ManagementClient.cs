@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TransInstruction.CommandService;
-using TransInstruction.DataModel;
+using RUINORERP.PacketSpec.Models;
 using TransInstruction.Enums;
 using SuperSocket.ClientEngine;
 using System.Net;

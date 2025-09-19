@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+﻿﻿using Krypton.Toolkit;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using TransInstruction;
+using RUINORERP.PacketSpec.Legacy;
 
 namespace RUINORERP.UI.IM
 {

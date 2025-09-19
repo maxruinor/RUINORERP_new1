@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+﻿﻿using Krypton.Toolkit;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -26,10 +26,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using TransInstruction;
-using TransInstruction.CommandService;
-using TransInstruction.DataModel;
-using TransInstruction.Enums;
+using RUINORERP.PacketSpec.Legacy;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Enums;
 using Timer = System.Windows.Forms.Timer;
 
 namespace RUINORERP.UI.IM

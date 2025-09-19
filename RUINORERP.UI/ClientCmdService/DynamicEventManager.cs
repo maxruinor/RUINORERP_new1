@@ -1,4 +1,4 @@
-﻿using RUINORERP.Common.CustomAttribute;
+﻿﻿using RUINORERP.Common.CustomAttribute;
 using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
 using System;
@@ -12,7 +12,7 @@ using System.Web.UI.WebControls;
 using System.Windows;
 using System.Windows.Forms;
 using TransInstruction;
-using TransInstruction.DataModel;
+using RUINORERP.PacketSpec.Models;
 
 
 namespace RUINORERP.UI.ClientCmdService

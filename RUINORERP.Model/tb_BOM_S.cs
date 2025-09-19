@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 标准物料表BOM_BillOfMateria_S-要适当冗余? 生产是从0开始的。先有下级才有上级。
     /// </summary>
     [Serializable()]
-    [Description("标准物料表BOM_BillOfMateria_S-要适当冗余? 生产是从0开始的。先有下级才有上级。")]
+    [Description("标准物料表")]
     [SugarTable("tb_BOM_S")]
     public partial class tb_BOM_S: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("标准物料表BOM_BillOfMateria_S-要适当冗余? 生产是从0开始的。先有下级才有上级。tb_BOM_S" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("标准物料表tb_BOM_S" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

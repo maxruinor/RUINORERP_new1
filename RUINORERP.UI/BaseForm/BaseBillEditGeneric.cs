@@ -41,7 +41,7 @@ using System.Diagnostics;
 using SqlSugar;
 using RUINORERP.Business.Processor;
 using ExCSS;
-using RUINORERP.Business.CommService;
+using RUINORERP.Server.Comm;
 using OfficeOpenXml.FormulaParsing.Excel.Functions;
 using MySqlX.XDevAPI.Common;
 using RUINORERP.Business.Security;
@@ -65,12 +65,12 @@ using RUINORERP.UI.ClientCmdService;
 using TransInstruction.CommandService;
 using RUINORERP.Model.TransModel;
 using System.Threading;
-using static RUINORERP.Business.CommService.LockManager;
+using static RUINORERP.Server.Comm.LockManager;
 using System.Management.Instrumentation;
 using FastReport.DevComponents.DotNetBar;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
 using System.Windows.Controls.Primitives;
-using TransInstruction.DataModel;
+using RUINORERP.PacketSpec.Models;
 using RUINORERP.Common.LogHelper;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.StatusManagerService;
@@ -87,6 +87,7 @@ using Org.BouncyCastle.Asn1.X509.Qualified;
 using System.Management;
 using RUINORERP.Business.BizMapperService;
 using TransInstruction.Enums;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.UI.BaseForm
 {

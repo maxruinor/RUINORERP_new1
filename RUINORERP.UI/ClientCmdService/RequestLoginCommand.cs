@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Web.UI.WebControls;
 using TransInstruction;
 using TransInstruction.CommandService;
-using TransInstruction.DataModel;
+using RUINORERP.PacketSpec.Models;
 using TransInstruction.DataPortal;
 using TransInstruction.Enums;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;

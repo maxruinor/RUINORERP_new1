@@ -27,7 +27,7 @@ using RUINORERP.Business;
 
 using RUINORERP.UI.SuperSocketClient;
 using System.Net;
-using TransInstruction;
+using RUINORERP.PacketSpec.Legacy;
 using Microsoft.Extensions.Hosting;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Common.SnowflakeIdHelper;
@@ -43,7 +43,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Common.Log4Net;
 using System.Diagnostics;
 using RUINORERP.Business.Security;
-using TransInstruction.DataPortal;
+using RUINORERP.PacketSpec.Legacy;
 using RUINORERP.Common.Extensions;
 using Castle.Core.Smtp;
 using System.IO;
@@ -56,7 +56,7 @@ using System.Linq.Expressions;
 using Google.Protobuf.Collections;
 using ExCSS;
 using RUINORERP.Model.Models;
-using RUINORERP.Business.CommService;
+using RUINORERP.Server.Comm;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Common.Helper;
 using System.Windows.Input;
@@ -75,7 +75,7 @@ using Microsoft.Extensions.Options;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.ClientCmdService;
 using RUINORERP.Global;
-using TransInstruction.CommandService;
+using RUINORERP.PacketSpec.Commands;
 using HLH.Lib.Security;
 using System.Xml.Linq;
 using Fireasy.Common.Extensions;
@@ -98,7 +98,8 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Business.RowLevelAuthService;
 using RUINORERP.Plugin;
-using TransInstruction.Enums;
+using RUINORERP.PacketSpec.Enums;
+using RUINORERP.Business.CommService;
 
 
 

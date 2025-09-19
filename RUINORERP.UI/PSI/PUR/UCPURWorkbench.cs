@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+﻿﻿using AutoMapper;
 using FastReport.Barcode;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
@@ -66,7 +66,7 @@ using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
-using TransInstruction;
+using RUINORERP.PacketSpec.Legacy;
 using XmlDocument = System.Xml.XmlDocument;
 
 namespace RUINORERP.UI.PUR

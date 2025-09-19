@@ -35,6 +35,7 @@ using MapsterMapper;
 using IMapper = AutoMapper.IMapper;
 using System.Text;
 using System.Windows.Forms;
+using System.Runtime.ConstrainedExecution;
 
 
 namespace RUINORERP.Business
@@ -130,6 +131,30 @@ namespace RUINORERP.Business
             return tree;
         }
 
+        //删除指定配方主表和明细，同时清空产品明细中的对应关系，要使用事务处理
+        public async Task<ReturnResults<T>> DeleteBOM_SDetail_Clear_ProdDetailMapping(T bom)
+        {
+            ReturnResults<T> rrs = new Business.ReturnResults<T>();
+            try
+            {
+                tb_BOM_S _bom = bom as tb_BOM_S;
+                _unitOfWorkManage.BeginTran();
+                var affected = await _unitOfWorkManage.GetDbClient().
+                Updateable<tb_ProdDetail>()
+                .SetColumns(it => it.BOM_ID == null)
+                .Where(it => it.BOM_ID == _bom.BOM_ID).ExecuteCommandHasChangeAsync();
+
+                bool affectedDetail = await BaseDeleteByNavAsync(bom);
+                _unitOfWorkManage.CommitTran();
+                rrs.Succeeded = true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                return rrs;
+            }
+            return rrs;
+        }
 
 
         /// <summary>

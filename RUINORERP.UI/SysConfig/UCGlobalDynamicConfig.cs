@@ -28,12 +28,12 @@ using RUINORERP.Model.ConfigModel;
 using System.IO;
 using RUINORERP.Extensions.ServiceExtensions;
 using static RUINORERP.Extensions.ServiceExtensions.EditConfigCommand;
-using TransInstruction;
+using RUINORERP.PacketSpec.Legacy;
 using RUINORERP.UI.ClientCmdService;
-using TransInstruction.CommandService;
+using RUINORERP.PacketSpec.Commands;
 using System.Threading;
 using RUINORERP.Global;
-using TransInstruction.Enums;
+using RUINORERP.PacketSpec.Enums;
 
 namespace RUINORERP.UI.SysConfig
 {

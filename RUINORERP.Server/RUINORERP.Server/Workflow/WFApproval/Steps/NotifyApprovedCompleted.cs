@@ -1,12 +1,14 @@
 ﻿using Microsoft.Extensions.Logging;
 using RUINORERP.Model.Context;
+using RUINORERP.PacketSpec.Enums;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TransInstruction;
-using TransInstruction.DataPortal;
+
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 namespace RUINORERP.Server.Workflow.WFApproval.Steps
@@ -47,13 +49,13 @@ namespace RUINORERP.Server.Workflow.WFApproval.Steps
                 try
                 {
                     OriginalData exMsg = new OriginalData();
-                    exMsg.cmd = (byte)ServerCmdEnum.通知相关人员审批完成;
+                  //  exMsg.Cmd = (byte)ServerCommand.通知相关人员审批完成;
                     exMsg.One = null;
                     //这种可以写一个扩展方法  
-                    ByteBuff tx = new ByteBuff(100);
+                    ByteBuffer tx = new ByteBuffer(100);
                     tx.PushString(context.Workflow.Id);
                     tx.PushString(msg);
-                    exMsg.Two = tx.toByte();
+                    exMsg.Two = tx.ToByteArray();
                     item.Value.AddSendData(exMsg);
                 }
                 catch (Exception ex)

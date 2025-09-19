@@ -7,7 +7,6 @@ using RUINORERP.Model;
 using RUINORERP.Model.Context;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Server.ServerService;
 using RUINORERP.Server.Workflow.WFReminder;
 using System;
 using System.Collections.Concurrent;

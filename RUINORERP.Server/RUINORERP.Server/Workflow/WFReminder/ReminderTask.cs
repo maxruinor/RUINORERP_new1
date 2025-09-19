@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TransInstruction.DataPortal;
-using TransInstruction;
+
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
-using RUINORERP.Server.ServerService;
 using System.Numerics;
 using RUINORERP.Server.ServerSession;
 using Newtonsoft.Json;
@@ -16,6 +14,9 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.Model;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.BizService;
+using RUINORERP.PacketSpec.Enums;
+using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Models;
 
 namespace RUINORERP.Server.Workflow.WFReminder
 {
@@ -105,11 +106,11 @@ namespace RUINORERP.Server.Workflow.WFReminder
                                 exData.RemindTimes++;
                                 //  WorkflowServiceReceiver.发送工作流提醒();
                                 OriginalData exMsg = new OriginalData();
-                                exMsg.cmd = (byte)ServerCmdEnum.工作流提醒推送;
+                                exMsg.Cmd = (byte)PacketSpec.Commands.WorkflowCommands.WorkflowReminder;
                                 exMsg.One = null;
 
                                 //这种可以写一个扩展方法
-                                ByteBuff tx = new ByteBuff(100);
+                                ByteBuffer tx = new ByteBuffer(100);
                                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                                 tx.PushString(sendtime);
                                 string json = JsonConvert.SerializeObject(exData,
@@ -124,7 +125,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                                 //tx.PushString(exData.RemindSubject);
                                 //tx.PushString(exData.ReminderContent);
                                 tx.PushBool(true);//是否强制弹窗
-                                exMsg.Two = tx.toByte();
+                                exMsg.Two = tx.ToByteArray();
                                 item.Value.AddSendData(exMsg);
 
                                 frmMain.Instance.ReminderBizDataList.TryUpdate(BizData.BizPrimaryKey, exData, exData);

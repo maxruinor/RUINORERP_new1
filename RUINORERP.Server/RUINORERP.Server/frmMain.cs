@@ -17,7 +17,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.VisualBasic.ApplicationServices;
 using Newtonsoft.Json;
 using RUINORERP.Business;
-using RUINORERP.Business.CommService;
+using RUINORERP.Server.Comm;
 using RUINORERP.Common.Helper;
 using RUINORERP.Common.Log4Net;
 using RUINORERP.Extensions;
@@ -29,10 +29,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Server.BizService;
-using RUINORERP.Server.Comm;
 using RUINORERP.Server.Commands;
-using RUINORERP.Server.CommandService;
-using RUINORERP.Server.ServerService;
 using RUINORERP.Server.ServerSession;
 using RUINORERP.Server.SmartReminder;
 using RUINORERP.Server.Workflow.WFReminder;
@@ -64,14 +61,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
-using TransInstruction;
-using TransInstruction.Enums;
+
+
 using WorkflowCore.Interface;
 using WorkflowCore.Primitives;
 using WorkflowCore.Services;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using RUINORERP.Business.CommService;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.Server.Network.Core;
 
 namespace RUINORERP.Server
 {
@@ -137,6 +138,50 @@ namespace RUINORERP.Server
             get { return _main; }
         }
 
+        /// <summary>
+        /// 定时器用于定期更新服务器信息
+        /// </summary>
+        private System.Windows.Forms.Timer UpdateServerInfoTimer = new System.Windows.Forms.Timer();
+
+        /// <summary>
+        /// 初始化服务器信息更新定时器
+        /// </summary>
+        private void InitializeServerInfoTimer()
+        {
+            UpdateServerInfoTimer.Interval = 1000; // 每秒更新一次
+            UpdateServerInfoTimer.Tick += UpdateServerInfoTimer_Tick;
+        }
+
+        /// <summary>
+        /// 定时器事件处理方法，用于更新服务器信息
+        /// </summary>
+        private void UpdateServerInfoTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (_networkServer != null)
+                {
+                    var serverInfo = _networkServer.GetServerInfo();
+                    // 更新UI显示
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        // 更新状态栏显示服务器信息
+                        tslblStatus.Text = serverInfo.ToString();
+                        // 这里可以根据实际UI控件名称进行修改
+                        // 例如，如果有专门的标签显示端口、在线用户数等
+                        // lblPort.Text = $"端口: {serverInfo.Port}";
+                        // lblOnlineUsers.Text = $"在线会话: {serverInfo.CurrentConnections}/{serverInfo.MaxConnections}";
+                        // 记录服务器信息到日志
+                        // PrintInfoLog($"服务器信息 - IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}, 当前连接: {serverInfo.CurrentConnections}, 最大连接: {serverInfo.MaxConnections}");
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                Instance.PrintInfoLog("更新服务器信息时出错: " + ex.Message);
+            }
+        }
+
         public IWorkflowHost host;
         public frmMain(ILogger<frmMain> logger, IWorkflowHost workflowHost, IOptionsMonitor<SystemGlobalconfig> config)
         {
@@ -145,6 +190,9 @@ namespace RUINORERP.Server
             _logger = logger;
             _services = Startup.services;
             host = workflowHost;
+
+            // 初始化服务器信息更新定时器
+            InitializeServerInfoTimer();
 
             Globalconfig = config;
             // 监听配置变化
@@ -166,8 +214,6 @@ namespace RUINORERP.Server
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
         }
 
-
-        List<SessionforLander> sessionListLander = new List<SessionforLander>();
         internal ConcurrentDictionary<string, SessionforBiz> sessionListBiz = new ConcurrentDictionary<string, SessionforBiz>();
 
         async private void StartServerUI()
@@ -412,8 +458,8 @@ namespace RUINORERP.Server
                             CheckCacheList();
                             CheckReminderBizDataList();
                             lockManager.CheckLocks();
-                            ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
-                            cmd.BuildDataPacketBroadcastLockStatus();
+                            //  ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
+                            // cmd.BuildDataPacketBroadcastLockStatus();
                         }
                         ));
                     }
@@ -422,9 +468,9 @@ namespace RUINORERP.Server
                         // CheckSystemProtection();
                         CheckCacheList();
                         CheckReminderBizDataList();
-                        lockManager.CheckLocks();
-                        ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
-                        cmd.BuildDataPacketBroadcastLockStatus();
+                        // lockManager.CheckLocks();
+                        // ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
+                        // cmd.BuildDataPacketBroadcastLockStatus();
                     }
                 });
                 timer.Enabled = true;
@@ -507,7 +553,7 @@ namespace RUINORERP.Server
         {
             foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
             {
-                BizService.UserService.发送缓存信息列表(PlayerSession);
+                //BizService.UserService.发送缓存信息列表(PlayerSession);
             }
         }
 
@@ -515,7 +561,7 @@ namespace RUINORERP.Server
         {
             foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
             {
-                BizService.UserService.发送缓存信息列表(PlayerSession);
+                //  BizService.UserService.发送缓存信息列表(PlayerSession);
             }
         }
 
@@ -523,7 +569,7 @@ namespace RUINORERP.Server
         {
             foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
             {
-                BizService.UserService.发送缓存信息列表(PlayerSession);
+                //  BizService.UserService.发送缓存信息列表(PlayerSession);
             }
         }
 
@@ -531,7 +577,7 @@ namespace RUINORERP.Server
         {
             foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
             {
-                BizService.UserService.发送缓存信息列表(PlayerSession);
+                //  BizService.UserService.发送缓存信息列表(PlayerSession);
             }
         }
 
@@ -639,7 +685,7 @@ namespace RUINORERP.Server
                             //只有缓存概率有变化就发到客户端。客户端再根据这个与他本地实际的缓存数据行对比来请求真正的缓存数据
                             foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
                             {
-                                BizService.UserService.发送缓存信息列表(PlayerSession);
+                                //  BizService.UserService.发送缓存信息列表(PlayerSession);
                             }
                         }
                     }
@@ -755,251 +801,230 @@ namespace RUINORERP.Server
         }
 
         IHost _host = null;
+        private NetworkServer _networkServer;
         async Task StartServer()
         {
             frmMain.Instance.PrintInfoLog("StartServer Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
 
-
             try
             {
-                _host = MultipleServerHostBuilder.Create()
 
-                    /*
-                             //登陆器
-                             .AddServer<ServiceforLander<LanderPackageInfo>, LanderPackageInfo, LanderCommandLinePipelineFilter>(builder =>
-                             {
-                                 builder.ConfigureServerOptions((ctx, config) =>
-                                 {
-                                     //获取服务配置
-                                     return config.GetSection("ServiceforLander");
-                                 })
-                             .UseSession<SessionforLander>()
-                             //注册用于处理连接、关闭的Session处理器
-                             .UseSessionHandler(async (session) =>
-                             {
-                                 sessionListLander.Add(session as SessionforLander);
-                                 PrintMsg($"{DateTime.Now} [SessionforLander] Session-登陆器 connected: {session.RemoteEndPoint}");
-                                 await Task.Delay(0);
-                             }, async (session, reason) =>
-                             {
-                                 sessionListLander.Remove(session as SessionforLander);
-                                 PrintMsg($"{DateTime.Now} [SessionforLander] Session-登陆器 {session.RemoteEndPoint} closed: {reason}");
-                                 await Task.Delay(0);
-                             })
-                          //.ConfigureServices((context, services) =>
-                          //{
+                /*
+          _host = MultipleServerHostBuilder.Create()
+         .AddServer<ServiceforBiz<BizPackageInfo>, BizPackageInfo, BizPipelineFilter>(builder =>
+        {
+            builder.ConfigureServerOptions((ctx, config) =>
+            {
+                //获取服务配置
+                // ReSharper disable once ConvertToLambdaExpression
+                var configSection = config.GetSection("ServiceforBiz");
+                //tslblStatus.Text = "服务已启动。";
+                //if (IsDebug)
+                //{
+                //    PrintMsg($"port:{configSection.GetSection("listeners").GetSection("0").GetSection("port").Value}");
+                tslblStatus.Text = "服务已启动，端口：" + configSection.GetSection("listeners").GetSection("0").GetSection("port").Value;
+                //}
+                return configSection;
+            })
+            .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
+            .UseSession<SessionforBiz>()
 
-                          //})
-                          .UseCommand(commandOptions =>
-                              {
-                                  commandOptions.AddCommand<BaseCommand>();
-                                  commandOptions.AddCommand<getmsgCommand>();
-                                  commandOptions.AddCommand<loginCommand>();
-                                  commandOptions.AddCommand<LanderCommand>();
-                              });
-                             })
-                    */
-                    //一线
-                    .AddServer<ServiceforBiz<BizPackageInfo>, BizPackageInfo, BizPipelineFilter>(builder =>
-                    {
-                        builder.ConfigureServerOptions((ctx, config) =>
-                        {
-                            //获取服务配置
-                            // ReSharper disable once ConvertToLambdaExpression
-                            var configSection = config.GetSection("ServiceforBiz");
-                            //tslblStatus.Text = "服务已启动。";
-                            //if (IsDebug)
-                            //{
-                            //    PrintMsg($"port:{configSection.GetSection("listeners").GetSection("0").GetSection("port").Value}");
-                            tslblStatus.Text = "服务已启动，端口：" + configSection.GetSection("listeners").GetSection("0").GetSection("port").Value;
-                            //}
-                            return configSection;
-                        })
-                        .UsePackageDecoder<MyPackageDecoder>()//注册自定义解包器
-                        .UseSession<SessionforBiz>()
+        //注册用于处理连接、关闭的Session处理器
+        .UseSessionHandler(async (session) =>
+        {
+            if (session.RemoteEndPoint is IPEndPoint iP)
+            {
+                var remoteIp = iP.Address.ToString();
 
-                    //注册用于处理连接、关闭的Session处理器
-                    .UseSessionHandler(async (session) =>
-                    {
-                        if (session.RemoteEndPoint is IPEndPoint iP)
-                        {
-                            var remoteIp = iP.Address.ToString();
-
-                            // 检查IP是否被封禁
-                            if (BlacklistManager.IsIpBanned(remoteIp))
-                            {
-                                await session.CloseAsync(SuperSocket.Connection.CloseReason.ServerShutdown); // 立即关闭连接
-                                return;
-                            }
-                        }
-
-
-                        SessionforBiz sessionforBiz = session as SessionforBiz;
-                        sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
-
-
-                        if (frmuserList == null)
-                        {
-                            frmuserList = Startup.GetFromFac<frmUserList>();
-                        }
-                        if (frmuserList.IsHandleCreated)
-                        {
-                            frmuserList.Invoke(new Action(() =>
-                            {
-                                sessionforBiz.User.PropertyChanged -= frmuserList.UserInfo_PropertyChanged;
-                                sessionforBiz.User.PropertyChanged += frmuserList.UserInfo_PropertyChanged;
-                                frmuserList.UserInfos.Add(sessionforBiz.User);
-                            }));
-                        }
-
-                        if (sessionforBiz.User != null)
-                        {
-                            while (MessageList.Count > 0 && sessionforBiz.User.超级用户)
-                            {
-                                ReminderData MessageInfo = MessageList.Dequeue();
-                                SystemService.process请求协助处理(sessionforBiz, MessageInfo);
-                            }
-                        }
-                        //广播出去
-                        foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
-                        {
-                            BizService.UserService.发送在线列表(PlayerSession);
-                        }
-
-                        PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session connected: {session.RemoteEndPoint}");
-                        await Task.Delay(0);
-                    }, async (session, reason) =>
-                    {
-                        try
-                        {
-                            SessionforBiz sg = session as SessionforBiz;
-                            //if (sg.player != null && sg.player.Online)
-                            //{
-                            // SephirothServer.CommandServer.RoleService.角色退出(sg);
-                            //}
-                            if (frmuserList == null)
-                            {
-                                frmuserList = Startup.GetFromFac<frmUserList>();
-                            }
-                            if (frmuserList.IsHandleCreated)
-                            {
-                                frmuserList.Invoke(new Action(() =>
-                                {
-                                    frmuserList.UserInfos.CollectionChanged -= frmuserList.UserInfos_CollectionChanged;
-                                    frmuserList.UserInfos.CollectionChanged += frmuserList.UserInfos_CollectionChanged;
-                                    frmuserList.UserInfos.Remove(sg.User);
-                                }));
-                            }
-
-                            if (reason.Reason != SuperSocket.Connection.CloseReason.ServerShutdown)
-                            {
-                                PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序]  {session.RemoteEndPoint} closed，原因：: {reason.Reason}");
-                            }
-                            sessionListBiz.Remove(sg.SessionID, out sg);
-                            if (sg != null)
-                            {
-                                PrintMsg(sg.User.用户名 + "断开连接");
-                                //谁突然掉线或退出。服务器主动将他的锁在别人电脑上的单据释放
-                                //SystemService.process断开连接锁定释放(sg.User.UserID);
-
-                                //移除再广播出去 服务器主动将他的锁在别人电脑上的单据释放
-                                lockManager.RemoveLockByUserID(sg.User.UserID);
-                            }
-
-                            ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
-                            cmd.BuildDataPacketBroadcastLockStatus();
-
-                            //广播出去
-                            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
-                            {
-                                BizService.UserService.发送在线列表(PlayerSession);
-                            }
-
-                        }
-                        catch (Exception quitex)
-                        {
-                            frmMain.Instance._logger.LogError("客户端退出", quitex);
-
-                        }
-
-                        await Task.Delay(0);
-                    })
-                            .ConfigureServices((context, services) =>
-                            {
-                                IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
-                                // services = Startup.Services;
-                                //services.AddMemoryCache();
-                                services.AddMemoryCacheSetupWithInstance(cache);
-
-                                //services.AddSingleton<CommandDispatcher>();
-                                //services.AddTransient<ICommandHandler, LoginCommandHandler>();
-
-                                foreach (var service in Startup.services)
-                                {
-                                    // 假设 service 是一个 ServiceDescriptor 对象
-                                    // 将 service 注册添加到 OtherServices 中
-                                    services.Add(service);
-                                }
-
-                            })
-
-                            .UseCommand(commandOptions =>
-                            {
-
-                                commandOptions.AddCommand<BizCommand>();
-                                commandOptions.AddCommand<XTCommand>();
-                            });
-                    })
-
-                .ConfigureLogging((hostingContext, logging) =>
+                // 检查IP是否被封禁
+                if (BlacklistManager.IsIpBanned(remoteIp))
                 {
-                    logging.ClearProviders(); //去掉默认添加的日志提供程序
-                    var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                    // IMPORTANT: This needs to be added *before* configuration is loaded, this lets
-                    // the defaults be overridden by the configuration.
-                    if (isWindows)
+                    await session.CloseAsync(SuperSocket.Connection.CloseReason.ServerShutdown); // 立即关闭连接
+                    return;
+                }
+            }
+
+
+            SessionforBiz sessionforBiz = session as SessionforBiz;
+            sessionListBiz.TryAdd(session.SessionID, session as SessionforBiz);
+
+
+            if (frmuserList == null)
+            {
+                frmuserList = Startup.GetFromFac<frmUserList>();
+            }
+            if (frmuserList.IsHandleCreated)
+            {
+                frmuserList.Invoke(new Action(() =>
+                {
+                    sessionforBiz.User.PropertyChanged -= frmuserList.UserInfo_PropertyChanged;
+                    sessionforBiz.User.PropertyChanged += frmuserList.UserInfo_PropertyChanged;
+                    frmuserList.UserInfos.Add(sessionforBiz.User);
+                }));
+            }
+
+            if (sessionforBiz.User != null)
+            {
+                while (MessageList.Count > 0 && sessionforBiz.User.超级用户)
+                {
+                    ReminderData MessageInfo = MessageList.Dequeue();
+                    SystemService.process请求协助处理(sessionforBiz, MessageInfo);
+                }
+            }
+            //广播出去
+            foreach (SessionforBiz PlayerSession in sessionListBiz.Values.ToArray())
+            {
+                BizService.UserService.发送在线列表(PlayerSession);
+            }
+
+            PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序] Session connected: {session.RemoteEndPoint}");
+            await Task.Delay(0);
+        }, async (session, reason) =>
+        {
+            try
+            {
+                SessionforBiz sg = session as SessionforBiz;
+                //if (sg.player != null && sg.player.Online)
+                //{
+                // SephirothServer.CommandServer.RoleService.角色退出(sg);
+                //}
+                if (frmuserList == null)
+                {
+                    frmuserList = Startup.GetFromFac<frmUserList>();
+                }
+                if (frmuserList.IsHandleCreated)
+                {
+                    frmuserList.Invoke(new Action(() =>
                     {
-                        //注意这里配置日志级别 配置文件不生效？
-                        // Default the EventLogLoggerProvider to warning or above
-                        logging.AddFilter<EventLogLoggerProvider>(level => level >= Microsoft.Extensions.Logging.LogLevel.Error);
-                    }
-                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                    logging.AddConsole();
-                    if (isWindows)
+                        frmuserList.UserInfos.CollectionChanged -= frmuserList.UserInfos_CollectionChanged;
+                        frmuserList.UserInfos.CollectionChanged += frmuserList.UserInfos_CollectionChanged;
+                        frmuserList.UserInfos.Remove(sg.User);
+                    }));
+                }
+
+                if (reason.Reason != SuperSocket.Connection.CloseReason.ServerShutdown)
+                {
+                    PrintMsg($"{DateTime.Now} [SessionforBiz-主要程序]  {session.RemoteEndPoint} closed，原因：: {reason.Reason}");
+                }
+                sessionListBiz.Remove(sg.SessionID, out sg);
+                if (sg != null)
+                {
+                    PrintMsg(sg.User.用户名 + "断开连接");
+                    //谁突然掉线或退出。服务器主动将他的锁在别人电脑上的单据释放
+                    //SystemService.process断开连接锁定释放(sg.User.UserID);
+
+                    //移除再广播出去 服务器主动将他的锁在别人电脑上的单据释放
+                    lockManager.RemoveLockByUserID(sg.User.UserID);
+                }
+
+                ServerLockManagerCmd cmd = new ServerLockManagerCmd(CmdOperation.Send);
+                cmd.BuildDataPacketBroadcastLockStatus();
+
+                //广播出去
+                foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+                {
+                    BizService.UserService.发送在线列表(PlayerSession);
+                }
+
+            }
+            catch (Exception quitex)
+            {
+                frmMain.Instance._logger.LogError("客户端退出", quitex);
+
+            }
+
+            await Task.Delay(0);
+        })
+                .ConfigureServices((context, services) =>
+                {
+                    IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
+                    // services = Startup.Services;
+                    //services.AddMemoryCache();
+                    services.AddMemoryCacheSetupWithInstance(cache);
+
+                    //services.AddSingleton<CommandDispatcher>();
+                    //services.AddTransient<ICommandHandler, LoginCommandHandler>();
+
+                    foreach (var service in Startup.services)
                     {
-                        // Add the EventLogLoggerProvider on windows machines
-                        //logging.AddEventLog();//这个写到了事件查看器中。没有必要
-                        logging.ClearProviders();
-                        //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
-                        //引用的long4net.dll要版本一样。
-                        string conn = AppSettings.GetValue("ConnectString");
-                        string key = "ruinor1234567890";
-                        string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
-
-                        //logging.AddLog4Net();
-                        logging.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", newconn, Program.AppContextData));
-
+                        // 假设 service 是一个 ServiceDescriptor 对象
+                        // 将 service 注册添加到 OtherServices 中
+                        services.Add(service);
                     }
-                })//.UseLog4Net()
 
-            .Build();
+                })
 
+                .UseCommand(commandOptions =>
+                {
+
+                    commandOptions.AddCommand<BizCommand>();
+                    commandOptions.AddCommand<XTCommand>();
+                });
+        })
+
+    .ConfigureLogging((hostingContext, logging) =>
+    {
+        logging.ClearProviders(); //去掉默认添加的日志提供程序
+        var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        // IMPORTANT: This needs to be added *before* configuration is loaded, this lets
+        // the defaults be overridden by the configuration.
+        if (isWindows)
+        {
+            //注意这里配置日志级别 配置文件不生效？
+            // Default the EventLogLoggerProvider to warning or above
+            logging.AddFilter<EventLogLoggerProvider>(level => level >= Microsoft.Extensions.Logging.LogLevel.Error);
+        }
+        logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+        logging.AddConsole();
+        if (isWindows)
+        {
+            // Add the EventLogLoggerProvider on windows machines
+            //logging.AddEventLog();//这个写到了事件查看器中。没有必要
+            logging.ClearProviders();
+            //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
+            //引用的long4net.dll要版本一样。
+            string conn = AppSettings.GetValue("ConnectString");
+            string key = "ruinor1234567890";
+            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+
+            //logging.AddLog4Net();
+            logging.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", newconn, Program.AppContextData));
+
+        }
+    })//.UseLog4Net()
+
+.Build();
+
+     */
+
+                var _logger = Startup.ServiceProvider.GetService<ILogger<NetworkServer>>();
+                // 创建NetworkServer实例
+                _networkServer = new NetworkServer(Startup.services, _logger);
+
+                // 启动网络服务器，使用配置的端口（默认为8009）
+                //                int port = int.TryParse(AppSettings.GetValue("ERPServer"), out int configuredPort) ? configuredPort : 8009;
+                //              int maxConnections = int.TryParse(AppSettings.GetValue("MaxConnections"), out int configuredMax) ? configuredMax : 1000;
+
+                _host = await _networkServer.StartAsync(CancellationToken.None);
+
+                //if (started)
+                //{
+                //    //tslblStatus.Text = "服务已启动，端口：" + port;
+                //    //frmMain.Instance.PrintInfoLog($"网络服务器启动成功，监听端口: {port}");
+                //}
+                //else
+                //{
+                //    tslblStatus.Text = "服务启动失败";
+                //    frmMain.Instance.PrintInfoLog("网络服务器启动失败");
+                //}
             }
             catch (Exception hostex)
             {
-                frmMain.Instance._logger.LogError("hostex", hostex);
-                frmMain.Instance.PrintInfoLog("hostex" + hostex.Message);
+                frmMain.Instance._logger.LogError("NetworkServer启动异常", hostex);
+                frmMain.Instance.PrintInfoLog("NetworkServer启动异常: " + hostex.Message);
+                tslblStatus.Text = "服务启动异常";
             }
-
-            try
-            {
-                await _host.RunAsync();
-            }
-            catch (Exception e)
-            {
-                frmMain.Instance.PrintInfoLog("_host.RunAsync()" + e.Message);
-                _logger.LogError("socket _host RunAsync", e.Message);
-            }
+            
 
         }
 
@@ -1008,7 +1033,11 @@ namespace RUINORERP.Server
         {
             try
             {
-                _host.StartAsync().GetAwaiter();
+                // 启动新线程执行异步服务器启动
+                Task.Run(async () =>
+                {
+                    await StartServer();
+                });
             }
             catch (Exception e)
             {
@@ -1018,12 +1047,16 @@ namespace RUINORERP.Server
 
         async public void Shutdown()
         {
-
-
             try
             {
-                await DrainAllServers();
-                // 记得在程序结束时清理定时器资源
+                // 停止NetworkServer
+                if (_networkServer != null)
+                {
+                    await _networkServer.StopAsync();
+                    _networkServer = null;
+                }
+
+                // 清理定时器资源
                 if (timer != null)
                 {
                     timer.Dispose();
@@ -1032,7 +1065,6 @@ namespace RUINORERP.Server
                 {
                     ReminderTimer.Dispose();
                 }
-
             }
             catch (Exception e)
             {
@@ -1043,9 +1075,8 @@ namespace RUINORERP.Server
                 if (_host != null)
                 {
                     _host.Dispose();
-                    //关闭Socket服务器时，如果不对IHost对象调用Dispose方法，SuperSocket不会真正关闭，导致WPF进程无法正常退出。
+                    _host = null;
                 }
-
             }
         }
 
@@ -1380,6 +1411,8 @@ namespace RUINORERP.Server
             }
             InitAll();
             timer.Start();
+            // 添加定时器用于刷新服务器信息
+            UpdateServerInfoTimer.Start();
             tsBtnStartServer.Enabled = false;
         }
 

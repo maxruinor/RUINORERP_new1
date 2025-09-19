@@ -338,6 +338,7 @@ namespace RUINORERP.Business
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                 {
+                    it.AllowAddToStatement,
                     it.ForeignPaidAmount,
                     it.LocalPaidAmount,
                     it.ForeignBalanceAmount,

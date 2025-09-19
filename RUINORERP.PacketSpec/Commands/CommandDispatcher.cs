@@ -1,23 +1,42 @@
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Handlers;
+using Microsoft.Extensions.Logging;
+using System.Collections.ObjectModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
-    /// 命令调度器 - 负责将命令分发给相应的处理器
+    /// 命令调度器 - 统一的命令分发和处理中心
     /// </summary>
-    public class CommandDispatcher : IDisposable
+    public class CommandDispatcher : BaseModel, IDisposable
     {
-        private readonly Dictionary<Type, ICommandHandler> _handlers;
-        private readonly ICommandHandlerFactory _handlerFactory;
+        private readonly ConcurrentDictionary<string, ICommandHandler> _handlers;
+        private readonly ConcurrentDictionary<uint, List<ICommandHandler>> _commandHandlerMap;
         private readonly ConcurrentDictionary<string, DateTime> _commandHistory;
+        private readonly ICommandHandlerFactory _handlerFactory;
+        // 为每个命令类型维护一个信号量，实现更细粒度的并发控制
+        private readonly ConcurrentDictionary<uint, SemaphoreSlim> _commandSemaphores;
+        private int _maxConcurrencyPerCommand;
         private bool _disposed = false;
+        private bool _isInitialized = false;
+        private readonly SemaphoreSlim _dispatchSemaphore;
+
+        /// <summary>
+        /// 每个命令的最大并发数
+        /// </summary>
+        public int MaxConcurrencyPerCommand
+        {
+            get => _maxConcurrencyPerCommand;
+            set => _maxConcurrencyPerCommand = value > 0 ? value : Environment.ProcessorCount;
+        }
 
         /// <summary>
         /// 处理器数量
@@ -25,84 +44,60 @@ namespace RUINORERP.PacketSpec.Commands
         public int HandlerCount => _handlers.Count;
 
         /// <summary>
+        /// 是否已初始化
+        /// </summary>
+        public bool IsInitialized => _isInitialized;
+
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
+        protected ILogger Logger { get; set; }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="handlerFactory">处理器工厂</param>
-        public CommandDispatcher(ICommandHandlerFactory handlerFactory = null)
+        /// <param name="maxConcurrencyPerCommand">每个命令的最大并发数</param>
+        public CommandDispatcher(ICommandHandlerFactory handlerFactory = null, int maxConcurrencyPerCommand = 0)
         {
             _handlerFactory = handlerFactory ?? new DefaultCommandHandlerFactory();
-            _handlers = new Dictionary<Type, ICommandHandler>();
+            _handlers = new ConcurrentDictionary<string, ICommandHandler>();
+            _commandHandlerMap = new ConcurrentDictionary<uint, List<ICommandHandler>>();
             _commandHistory = new ConcurrentDictionary<string, DateTime>();
+            _commandSemaphores = new ConcurrentDictionary<uint, SemaphoreSlim>();
+            _dispatchSemaphore = new SemaphoreSlim(1, 1); // 添加缺失的信号量
             
-            // 自动发现并注册处理器
-            AutoDiscoverHandlers();
+            MaxConcurrencyPerCommand = maxConcurrencyPerCommand > 0 ? maxConcurrencyPerCommand : Environment.ProcessorCount;
+            
+            // 不再初始化默认的日志记录器，而是延迟初始化
         }
 
         /// <summary>
-        /// 自动发现处理器
+        /// 初始化调度器
         /// </summary>
-        private void AutoDiscoverHandlers()
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>初始化结果</returns>
+        public async Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                var handlerTypes = Assembly.GetExecutingAssembly()
-                    .GetTypes()
-                    .Where(t => typeof(ICommandHandler).IsAssignableFrom(t) && 
-                               !t.IsInterface && 
-                               !t.IsAbstract &&
-                               t.GetCustomAttribute<CommandHandlerAttribute>() != null)
-                    .OrderBy(t => t.GetCustomAttribute<CommandHandlerAttribute>()?.Priority ?? 0);
+                if (_isInitialized)
+                    return true;
 
-                foreach (var handlerType in handlerTypes)
-                {
-                    RegisterHandler(handlerType);
-                }
+                LogInfo("初始化命令调度器...");
+
+                // 自动发现并注册处理器
+                await AutoDiscoverAndRegisterHandlersAsync(cancellationToken);
+
+                _isInitialized = true;
+                LogInfo($"命令调度器初始化完成，已注册 {HandlerCount} 个处理器");
+                return true;
             }
             catch (Exception ex)
             {
-                LogError($"自动发现处理器时出错: {ex.Message}", ex);
+                LogError("初始化命令调度器失败", ex);
+                return false;
             }
-        }
-
-        /// <summary>
-        /// 注册处理器
-        /// </summary>
-        /// <param name="handlerType">处理器类型</param>
-        public void RegisterHandler(Type handlerType)
-        {
-            try
-            {
-                var handler = _handlerFactory.CreateHandler(handlerType);
-                _handlers[handlerType] = handler;
-                
-                // 初始化处理器
-                _ = Task.Run(async () => await handler.InitializeAsync());
-                
-                LogInfo($"注册处理器: {handler.Name}");
-            }
-            catch (Exception ex)
-            {
-                LogError($"注册处理器 {handlerType.Name} 时出错: {ex.Message}", ex);
-            }
-        }
-
-        /// <summary>
-        /// 注册处理器
-        /// </summary>
-        /// <typeparam name="T">处理器类型</typeparam>
-        public void RegisterHandler<T>() where T : class, ICommandHandler
-        {
-            RegisterHandler(typeof(T));
-        }
-
-        /// <summary>
-        /// 同步分发命令
-        /// </summary>
-        /// <param name="command">命令对象</param>
-        /// <returns>处理结果</returns>
-        public CommandResult Dispatch(ICommand command)
-        {
-            return DispatchAsync(command).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -115,107 +110,309 @@ namespace RUINORERP.PacketSpec.Commands
         {
             if (command == null)
             {
-                return CommandResult.CreateError("命令对象不能为空");
+                return CommandResult.Failure("命令对象不能为空", ErrorCodes.NullCommand);
             }
 
-            var startTime = DateTime.UtcNow;
-            string commandId = GenerateCommandId(command);
+            if (!_isInitialized)
+            {
+                return CommandResult.Failure("调度器未初始化", ErrorCodes.DispatcherNotInitialized);
+            }
+
+            var startTime = DateTime.Now;
+            var commandId = command.CommandId;
+            var commandIdentifier = command.CommandIdentifier;
+            
+            // 为每个命令获取或创建信号量，实现更细粒度的并发控制
+            var semaphore = _commandSemaphores.GetOrAdd(commandIdentifier, 
+                _ => new SemaphoreSlim(MaxConcurrencyPerCommand, MaxConcurrencyPerCommand));
+            
+            // 限制同一类型命令的并发处理数
+            if (!await semaphore.WaitAsync(5000, cancellationToken))
+            {
+                return CommandResult.Failure($"命令类型 {commandIdentifier} 处理繁忙，请稍后重试", ErrorCodes.DispatcherBusy);
+            }
 
             try
             {
                 // 记录命令历史
                 _commandHistory.TryAdd(commandId, startTime);
 
-                // 查找匹配的处理器
-                var handler = FindHandler(command);
-                if (handler == null)
+                LogDebug($"开始分发命令: {command.CommandIdentifier} [ID: {commandId}]");
+
+                // 查找合适的处理器
+                var handlers = FindHandlers(command);
+                if (handlers == null || !handlers.Any())
                 {
-                    return CommandResult.CreateError($"没有找到适合的处理器处理命令: {command.GetType().Name}");
+                    return CommandResult.Failure(
+                        $"没有找到适合的处理器处理命令: {command.CommandIdentifier}", 
+                        ErrorCodes.NoHandlerFound);
                 }
 
-                // 验证命令是否可以执行
-                if (!command.CanExecute())
+                // 选择最佳处理器
+                var bestHandler = SelectBestHandler(handlers, command);
+                if (bestHandler == null)
                 {
-                    return CommandResult.CreateError("命令无法执行，请检查命令状态");
+                    return CommandResult.Failure(
+                        $"无法选择合适的处理器处理命令: {command.CommandIdentifier}", 
+                        ErrorCodes.HandlerSelectionFailed);
                 }
 
-                LogInfo($"开始处理命令: {command.GetType().Name} [ID: {commandId}]");
+                LogDebug($"选择处理器: {bestHandler.Name} 处理命令: {command.CommandIdentifier}");
 
-                // 执行命令
-                var result = await handler.HandleAsync(command, cancellationToken);
+                // 分发给处理器
+                var result = await bestHandler.HandleAsync(command, cancellationToken);
                 
-                // 计算执行时间
-                result.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+                // 设置执行时间
+                if (result != null)
+                {
+                    result.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+                }
 
-                LogInfo($"命令处理完成: {command.GetType().Name} [ID: {commandId}] - {result.ExecutionTimeMs}ms");
-
-                return result;
+                LogDebug($"命令分发完成: {command.CommandIdentifier} [ID: {commandId}] - {result?.ExecutionTimeMs}ms");
+                return result ?? CommandResult.Failure("处理器返回空结果", ErrorCodes.NullResult);
             }
             catch (OperationCanceledException)
             {
-                LogWarning($"命令处理被取消: {command.GetType().Name} [ID: {commandId}]");
-                return CommandResult.CreateError("命令处理被取消");
+                LogWarning($"命令分发被取消: {command.CommandIdentifier} [ID: {commandId}]");
+                return CommandResult.Failure("命令分发被取消", ErrorCodes.DispatchCancelled);
             }
             catch (Exception ex)
             {
-                LogError($"处理命令 {command.GetType().Name} [ID: {commandId}] 时出错: {ex.Message}", ex);
-                return CommandResult.CreateError($"命令处理异常: {ex.Message}", ex.GetType().Name);
+                var executionTime = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+                LogError($"分发命令 {command.CommandIdentifier} [ID: {commandId}] 异常: {ex.Message}", ex);
+                return CommandResult.Failure($"命令分发异常: {ex.Message}", ErrorCodes.DispatchError, ex);
             }
             finally
             {
+                semaphore.Release();
+                
                 // 清理历史记录
-                CleanupCommandHistory();
+                _ = Task.Run(() => CleanupCommandHistory());
             }
         }
 
         /// <summary>
-        /// 异步分发命令到队列
+        /// 注册处理器
         /// </summary>
-        /// <param name="queue">命令队列</param>
-        /// <param name="command">命令对象</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>处理结果</returns>
-        public async Task<CommandResult> DispatchAsync(BlockingCollection<ICommand> queue, ICommand command, CancellationToken cancellationToken = default)
+        /// <param name="handlerType">处理器类型</param>
+        public async Task<bool> RegisterHandlerAsync(Type handlerType, CancellationToken cancellationToken = default)
         {
-            var handler = _handlers.Values.FirstOrDefault(h => h.CanHandle(command, queue));
-            
-            if (handler != null)
+            try
             {
-                return await handler.HandleAsync(command, cancellationToken);
-            }
+                if (!typeof(ICommandHandler).IsAssignableFrom(handlerType))
+                {
+                    LogError($"类型 {handlerType.Name} 不是有效的命令处理器");
+                    return false;
+                }
 
-            return CommandResult.CreateError("没有找到适合的处理器");
+                var handler = _handlerFactory.CreateHandler(handlerType);
+                if (handler == null)
+                {
+                    LogError($"无法创建处理器实例: {handlerType.Name}");
+                    return false;
+                }
+
+                // 初始化并启动处理器
+                if (!await handler.InitializeAsync(cancellationToken))
+                {
+                    LogError($"处理器初始化失败: {handler.Name}");
+                    handler.Dispose();
+                    return false;
+                }
+
+                if (!await handler.StartAsync(cancellationToken))
+                {
+                    LogError($"处理器启动失败: {handler.Name}");
+                    handler.Dispose();
+                    return false;
+                }
+
+                // 注册处理器
+                _handlers.TryAdd(handler.HandlerId, handler);
+
+                // 更新命令映射
+                UpdateCommandHandlerMapping(handler);
+
+                LogInfo($"注册处理器成功: {handler.Name} [ID: {handler.HandlerId}]");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LogError($"注册处理器 {handlerType.Name} 异常", ex);
+                return false;
+            }
         }
 
         /// <summary>
-        /// 查找合适的处理器
+        /// 注册处理器
+        /// </summary>
+        /// <typeparam name="T">处理器类型</typeparam>
+        public async Task<bool> RegisterHandlerAsync<T>(CancellationToken cancellationToken = default) 
+            where T : class, ICommandHandler
+        {
+            return await RegisterHandlerAsync(typeof(T), cancellationToken);
+        }
+
+        /// <summary>
+        /// 取消注册处理器
+        /// </summary>
+        /// <param name="handlerId">处理器ID</param>
+        public async Task<bool> UnregisterHandlerAsync(string handlerId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (!_handlers.TryRemove(handlerId, out var handler))
+                {
+                    return false;
+                }
+
+                // 停止处理器
+                await handler.StopAsync(cancellationToken);
+                handler.Dispose();
+
+                // 更新命令映射
+                RemoveHandlerFromMapping(handler);
+
+                LogInfo($"取消注册处理器成功: {handler.Name} [ID: {handlerId}]");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LogError($"取消注册处理器 {handlerId} 异常", ex);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取所有处理器
+        /// </summary>
+        /// <returns>处理器列表</returns>
+        public IReadOnlyList<ICommandHandler> GetAllHandlers()
+        {
+            return _handlers.Values.ToList().AsReadOnly();
+        }
+
+        /// <summary>
+        /// 获取处理器统计信息
+        /// </summary>
+        /// <returns>统计信息字典</returns>
+        public Dictionary<string, HandlerStatistics> GetHandlerStatistics()
+        {
+            return _handlers.ToDictionary(
+                kvp => kvp.Key, 
+                kvp => kvp.Value.GetStatistics()
+            );
+        }
+
+        /// <summary>
+        /// 自动发现并注册处理器
+        /// </summary>
+        private async Task AutoDiscoverAndRegisterHandlersAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var handlerTypes = Assembly.GetExecutingAssembly()
+                    .GetTypes()
+                    .Where(t => typeof(ICommandHandler).IsAssignableFrom(t) && 
+                               !t.IsInterface && 
+                               !t.IsAbstract &&
+                               t.GetCustomAttribute<CommandHandlerAttribute>() != null)
+                    .OrderByDescending(t => t.GetCustomAttribute<CommandHandlerAttribute>()?.Priority ?? 0);
+
+                var registrationTasks = handlerTypes.Select(handlerType => 
+                    RegisterHandlerAsync(handlerType, cancellationToken));
+
+                var results = await Task.WhenAll(registrationTasks);
+                var successCount = results.Count(r => r);
+
+                LogInfo($"自动发现处理器完成，成功注册 {successCount}/{results.Length} 个处理器");
+            }
+            catch (Exception ex)
+            {
+                LogError("自动发现处理器异常", ex);
+            }
+        }
+
+        /// <summary>
+        /// 查找处理器
         /// </summary>
         /// <param name="command">命令对象</param>
-        /// <returns>处理器实例</returns>
-        private ICommandHandler FindHandler(ICommand command)
+        /// <returns>处理器列表</returns>
+        private List<ICommandHandler> FindHandlers(ICommand command)
         {
-            // 先尝试精确匹配
-            var commandType = command.GetType();
-            if (_handlers.TryGetValue(commandType, out var exactHandler))
+            // 首先尝试从命令映射中查找
+            if (_commandHandlerMap.TryGetValue(command.CommandIdentifier.FullCode, out var mappedHandlers))
             {
-                return exactHandler;
+                var availableHandlers = mappedHandlers.Where(h => h.CanHandle(command)).ToList();
+                if (availableHandlers.Any())
+                {
+                    return availableHandlers;
+                }
             }
 
-            // 然后按优先级查找能处理的处理器
-            return _handlers.Values
-                .Where(h => h.CanHandle(command))
+            // 如果映射中没有找到，则遍历所有处理器
+            return _handlers.Values.Where(h => h.CanHandle(command)).ToList();
+        }
+
+        /// <summary>
+        /// 选择最佳处理器
+        /// </summary>
+        /// <param name="handlers">候选处理器列表</param>
+        /// <param name="command">命令对象</param>
+        /// <returns>最佳处理器</returns>
+        private ICommandHandler SelectBestHandler(List<ICommandHandler> handlers, ICommand command)
+        {
+            if (!handlers.Any())
+                return null;
+
+            // 按优先级和当前处理负载选择
+            return handlers
+                .Where(h => h.Status == HandlerStatus.Running)
                 .OrderByDescending(h => h.Priority)
+                .ThenBy(h => h.GetStatistics().CurrentProcessingCount)
+                .ThenBy(h => h.GetStatistics().AverageProcessingTimeMs)
                 .FirstOrDefault();
         }
 
         /// <summary>
-        /// 生成命令ID
+        /// 更新命令处理器映射
         /// </summary>
-        /// <param name="command">命令对象</param>
-        /// <returns>命令ID</returns>
-        private string GenerateCommandId(ICommand command)
+        /// <param name="handler">处理器</param>
+        private void UpdateCommandHandlerMapping(ICommandHandler handler)
         {
-            return $"{command.GetType().Name}_{DateTime.UtcNow.Ticks}_{Thread.CurrentThread.ManagedThreadId}";
+            foreach (var commandCode in handler.SupportedCommands)
+            {
+                _commandHandlerMap.AddOrUpdate(
+                    commandCode,
+                    new List<ICommandHandler> { handler },
+                    (key, existingHandlers) =>
+                    {
+                        if (!existingHandlers.Contains(handler))
+                        {
+                            existingHandlers.Add(handler);
+                        }
+                        return existingHandlers;
+                    });
+            }
+        }
+
+        /// <summary>
+        /// 从映射中移除处理器
+        /// </summary>
+        /// <param name="handler">处理器</param>
+        private void RemoveHandlerFromMapping(ICommandHandler handler)
+        {
+            foreach (var commandCode in handler.SupportedCommands)
+            {
+                if (_commandHandlerMap.TryGetValue(commandCode, out var handlers))
+                {
+                    handlers.Remove(handler);
+                    if (!handlers.Any())
+                    {
+                        _commandHandlerMap.TryRemove(commandCode, out _);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -223,16 +420,33 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void CleanupCommandHistory()
         {
-            var cutoff = DateTime.UtcNow.AddMinutes(-30); // 保留30分钟的历史
-            var keysToRemove = _commandHistory
-                .Where(kvp => kvp.Value < cutoff)
-                .Select(kvp => kvp.Key)
-                .ToList();
-
-            foreach (var key in keysToRemove)
+            try
             {
-                _commandHistory.TryRemove(key, out _);
+                var cutoff = DateTime.UtcNow.AddMinutes(-30); // 保留30分钟的历史
+                var keysToRemove = _commandHistory
+                    .Where(kvp => kvp.Value < cutoff)
+                    .Select(kvp => kvp.Key)
+                    .Take(1000) // 每次清理最多1000条记录
+                    .ToList();
+
+                foreach (var key in keysToRemove)
+                {
+                    _commandHistory.TryRemove(key, out _);
+                }
             }
+            catch (Exception ex)
+            {
+                LogError("清理命令历史异常", ex);
+            }
+        }
+
+        /// <summary>
+        /// 记录调试日志
+        /// </summary>
+        private void LogDebug(string message)
+        {
+            EnsureLoggerInitialized();
+            Logger.LogDebug(message);
         }
 
         /// <summary>
@@ -240,7 +454,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void LogInfo(string message)
         {
-            Console.WriteLine($"[CommandDispatcher] INFO: {message}");
+            EnsureLoggerInitialized();
+            Logger.LogInformation(message);
         }
 
         /// <summary>
@@ -248,7 +463,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void LogWarning(string message)
         {
-            Console.WriteLine($"[CommandDispatcher] WARNING: {message}");
+            EnsureLoggerInitialized();
+            Logger.LogWarning(message);
         }
 
         /// <summary>
@@ -256,10 +472,14 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void LogError(string message, Exception ex = null)
         {
-            Console.WriteLine($"[CommandDispatcher] ERROR: {message}");
+            EnsureLoggerInitialized();
             if (ex != null)
             {
-                Console.WriteLine($"[CommandDispatcher] Exception: {ex}");
+                Logger.LogError(ex, message);
+            }
+            else
+            {
+                Logger.LogError(message);
             }
         }
 
@@ -270,24 +490,139 @@ namespace RUINORERP.PacketSpec.Commands
         {
             if (!_disposed)
             {
-                foreach (var handler in _handlers.Values)
+                try
                 {
-                    try
+                    // 停止所有处理器
+                    var stopTasks = _handlers.Values.Select(h => h.StopAsync(CancellationToken.None));
+                    Task.WhenAll(stopTasks).GetAwaiter().GetResult();
+
+                    // 释放所有处理器
+                    foreach (var handler in _handlers.Values)
                     {
-                        _ = Task.Run(async () => await handler.CleanupAsync());
+                        try
+                        {
+                            handler.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError($"释放处理器 {handler.Name} 异常", ex);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        LogError($"清理处理器 {handler.Name} 时出错: {ex.Message}", ex);
-                    }
+
+                    _handlers.Clear();
+                    _commandHandlerMap.Clear();
+                    _commandHistory.Clear();
+                    _dispatchSemaphore?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    LogError("释放调度器资源异常", ex);
                 }
 
-                _handlers.Clear();
-                _commandHistory.Clear();
                 _disposed = true;
             }
 
             GC.SuppressFinalize(this);
         }
+
+        /// <summary>
+        /// 设置日志记录器
+        /// </summary>
+        public void SetLogger(ILogger logger)
+        {
+            Logger = logger;
+        }
+
+        /// <summary>
+        /// 确保日志记录器已初始化
+        /// </summary>
+        private void EnsureLoggerInitialized()
+        {
+            if (Logger == null)
+            {
+                // 使用控制台日志器作为后备方案
+                Logger = new Utilities.ConsoleLogger(GetType().Name);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 默认命令处理器工厂
+    /// </summary>
+    public class DefaultCommandHandlerFactory : ICommandHandlerFactory
+    {
+        private readonly ConcurrentDictionary<Type, Func<ICommandHandler>> _handlerFactories;
+
+        public DefaultCommandHandlerFactory()
+        {
+            _handlerFactories = new ConcurrentDictionary<Type, Func<ICommandHandler>>();
+        }
+
+        /// <summary>
+        /// 创建命令处理器
+        /// </summary>
+        public ICommandHandler CreateHandler(Type handlerType)
+        {
+            if (_handlerFactories.TryGetValue(handlerType, out var factory))
+            {
+                return factory();
+            }
+
+            // 使用反射创建实例
+            return (ICommandHandler)Activator.CreateInstance(handlerType);
+        }
+
+        /// <summary>
+        /// 创建命令处理器
+        /// </summary>
+        public T CreateHandler<T>() where T : class, ICommandHandler
+        {
+            return CreateHandler(typeof(T)) as T;
+        }
+
+        /// <summary>
+        /// 注册处理器工厂方法
+        /// </summary>
+        public void RegisterHandler<T>(Func<T> factory) where T : class, ICommandHandler
+        {
+            _handlerFactories.TryAdd(typeof(T), () => factory());
+        }
+
+        /// <summary>
+        /// 注册处理器
+        /// </summary>
+        public void RegisterHandler(Type handlerType)
+        {
+            if (typeof(ICommandHandler).IsAssignableFrom(handlerType))
+            {
+                _handlerFactories.TryAdd(handlerType, () => (ICommandHandler)Activator.CreateInstance(handlerType));
+            }
+        }
+    }
+
+    /// <summary>
+    /// 命令处理器工厂接口
+    /// </summary>
+    public interface ICommandHandlerFactory
+    {
+        /// <summary>
+        /// 创建命令处理器
+        /// </summary>
+        /// <param name="handlerType">处理器类型</param>
+        /// <returns>处理器实例</returns>
+        ICommandHandler CreateHandler(Type handlerType);
+
+        /// <summary>
+        /// 创建命令处理器
+        /// </summary>
+        /// <typeparam name="T">处理器类型</typeparam>
+        /// <returns>处理器实例</returns>
+        T CreateHandler<T>() where T : class, ICommandHandler;
+
+        /// <summary>
+        /// 注册处理器类型
+        /// </summary>
+        /// <param name="handlerType">处理器类型</param>
+        void RegisterHandler(Type handlerType);
     }
 }

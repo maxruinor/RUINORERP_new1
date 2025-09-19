@@ -1,109 +1,8 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Enums.Core
 {
-    /// <summary>
-    /// 数据包命令枚举
-    /// </summary>
-    public enum PacketCommand : uint
-    {
-        /// <summary>
-        /// 未知命令
-        /// </summary>
-        [Description("未知命令")]
-        Unknown = 0,
-
-        /// <summary>
-        /// 心跳包
-        /// </summary>
-        [Description("心跳包")]
-        Heartbeat = 1,
-
-        /// <summary>
-        /// 登录请求
-        /// </summary>
-        [Description("登录请求")]
-        Login = 2,
-
-        /// <summary>
-        /// 登录响应
-        /// </summary>
-        [Description("登录响应")]
-        LoginResponse = 3,
-
-        /// <summary>
-        /// 查询请求
-        /// </summary>
-        [Description("查询请求")]
-        Query = 4,
-
-        /// <summary>
-        /// 查询响应
-        /// </summary>
-        [Description("查询响应")]
-        QueryResponse = 5,
-
-        /// <summary>
-        /// 文件上传
-        /// </summary>
-        [Description("文件上传")]
-        FileUpload = 6,
-
-        /// <summary>
-        /// 文件下载
-        /// </summary>
-        [Description("文件下载")]
-        FileDownload = 7,
-
-        /// <summary>
-        /// 文件删除
-        /// </summary>
-        [Description("文件删除")]
-        FileDelete = 8,
-
-        /// <summary>
-        /// 错误响应
-        /// </summary>
-        [Description("错误响应")]
-        Error = 9,
-
-        /// <summary>
-        /// 成功响应
-        /// </summary>
-        [Description("成功响应")]
-        Success = 10,
-
-        /// <summary>
-        /// 数据同步
-        /// </summary>
-        [Description("数据同步")]
-        DataSync = 11,
-
-        /// <summary>
-        /// 缓存更新
-        /// </summary>
-        [Description("缓存更新")]
-        CacheUpdate = 12,
-
-        /// <summary>
-        /// 通知消息
-        /// </summary>
-        [Description("通知消息")]
-        Notification = 13,
-
-        /// <summary>
-        /// 广播消息
-        /// </summary>
-        [Description("广播消息")]
-        Broadcast = 14,
-
-        /// <summary>
-        /// 系统命令
-        /// </summary>
-        [Description("系统命令")]
-        System = 15
-    }
-
+ 
     /// <summary>
     /// 数据包方向枚举
     /// </summary>
@@ -131,7 +30,9 @@ namespace RUINORERP.PacketSpec.Enums.Core
         /// 双向通信
         /// </summary>
         [Description("双向通信")]
-        Bidirectional = 3
+        Bidirectional = 3,
+        Response = 4,
+        Request = 5
     }
 
     /// <summary>
@@ -185,6 +86,7 @@ namespace RUINORERP.PacketSpec.Enums.Core
         /// 已取消
         /// </summary>
         [Description("已取消")]
-        Cancelled = 7
+        Cancelled = 7,
+        Error = 8
     }
 }

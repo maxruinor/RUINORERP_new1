@@ -1,8 +1,10 @@
-﻿using System;
+﻿using RUINORERP.PacketSpec.Enums;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using TransInstruction;
-using TransInstruction.DataPortal;
+
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 
@@ -27,17 +29,17 @@ namespace RUINORERP.Server.Workflow.WFPush
                 try
                 {
                     OriginalData exMsg = new OriginalData();
-                    exMsg.cmd = (byte)ServerCmdEnum.工作流数据推送;
+                    exMsg.Cmd = (byte)PacketSpec.Commands.WorkflowCommands.WorkflowCommand; //ServerCommand.工作流数据推送;
                     exMsg.One = null;
                     //这种可以写一个扩展方法
-                    ByteBuff tx = new ByteBuff(100);
+                    ByteBuffer tx = new ByteBuffer(100);
                     string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     tx.PushString(sendtime);
                     tx.PushString(TagetTableName);
                     //  tx.PushInt(pushdata.Length);
                     //  tx.PushBytes(pushdata);
                     tx.PushString("给客户端发提示消息测试！分发测试" + TagetTableName.ToString());
-                    exMsg.Two = tx.toByte();
+                    exMsg.Two = tx.ToByteArray();
                     item.Value.AddSendData(exMsg);
                     frmMain.Instance.PrintInfoLog("工作流数据推送");
                 }

@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
-
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows7.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
@@ -11,8 +11,11 @@
 
   <ItemGroup>
     <Compile Remove="DataPortal\**" />
+    <Compile Remove="SuperSocketServices\Commands\Business\**" />
     <EmbeddedResource Remove="DataPortal\**" />
+    <EmbeddedResource Remove="SuperSocketServices\Commands\Business\**" />
     <None Remove="DataPortal\**" />
+    <None Remove="SuperSocketServices\Commands\Business\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,9 +32,38 @@
     <Compile Remove="frmUserOnline.cs" />
     <Compile Remove="frmUserOnline.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
+    <Compile Remove="Network\Commands\FileHandler.cs" />
+    <Compile Remove="Network\Commands\LoginCommandHandler.cs" />
+    <Compile Remove="Network\Commands\MessageCommandHandler.cs" />
+    <Compile Remove="Network\CoreServices\CacheService.cs" />
+    <Compile Remove="Network\CoreServices\FileStorageService.cs" />
+    <Compile Remove="Network\Interfaces\Services\IFileStorageService.cs" />
+    <Compile Remove="Network\Services\FileStorageManager.cs" />
+    <Compile Remove="Network\Services\UnifiedUserService.cs" />
     <Compile Remove="SmartReminder\CachedRuleEngineCenter.cs" />
     <Compile Remove="SmartReminder\InvReminder\InventoryAlertWorkflow.cs" />
     <Compile Remove="Startup - 复制.cs" />
+    <Compile Remove="SuperSocketServices\Commands\Legacy\BizCommand.cs" />
+    <Compile Remove="SuperSocketServices\Commands\Legacy\LegacyCommAdapter.cs" />
+    <Compile Remove="SuperSocketServices\Commands\Legacy\LegacyCommandAdapter.cs" />
+    <Compile Remove="SuperSocketServices\Commands\Legacy\ServerLockManagerCmd.cs" />
+    <Compile Remove="SuperSocketServices\Commands\Legacy\ServerLockManagerHandler.cs" />
+    <Compile Remove="SuperSocketServices\Commands\Legacy\ServerLoginCommand.cs" />
+    <Compile Remove="SuperSocketServices\Commands\System\ExceptionReportCommand.cs" />
+    <Compile Remove="SuperSocketServices\Commands\System\LockManagementCommand.cs" />
+    <Compile Remove="SuperSocketServices\Commands\System\SystemService.cs" />
+    <Compile Remove="SuperSocketServices\Core\UnifiedArchitectureAdapter.cs" />
+    <Compile Remove="SuperSocketServices\Pipeline\BizPipelineFilter.cs" />
+    <Compile Remove="SuperSocketServices\Pipeline\MyPackageDecoder.cs" />
+    <Compile Remove="SuperSocketServices\Pipeline\UnifiedPipelineFilter.cs" />
+    <Compile Remove="SuperSocketServices\Services\ServiceforLander.cs" />
+    <Compile Remove="SuperSocketServices\Services\SessionforLander.cs" />
+    <Compile Remove="SuperSocketServices\Services\SessionManagerService.cs" />
+    <Compile Remove="SuperSocketServices\Services\StorageMaintenanceScheduler.cs" />
+    <Compile Remove="SuperSocketServices\Services\UserService.cs" />
+    <Compile Remove="SuperSocketServices\Services\WorkflowServiceReceiver.cs" />
+    <Compile Remove="SuperSocketServices\Services\WorkflowServiceSender.cs" />
+    <Compile Remove="UpgradedStartupExample.cs" />
     <Compile Remove="Workflow\BillConverterFactory.cs" />
     <Compile Remove="Workflow\WFApproval\ActivityWorkflow.cs" />
     <Compile Remove="Workflow\WFApproval\BillApprovalWorkflow.cs" />
@@ -60,8 +92,6 @@
     <None Remove="ResourceFile\server.ico" />
     <None Remove="ResourceFile\ser_png.png" />
     <None Remove="Startup.cs~RFf2da576.TMP" />
-    <None Remove="SysConfigFiles\GlobalValidatorConfig.json" />
-    <None Remove="SysConfigFiles\SystemGlobalConfig.json" />
     <None Remove="Workflow\Json\myflow.json" />
     <None Remove="Workflow\Json\审批流程.json" />
   </ItemGroup>
@@ -117,14 +147,18 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="7.0.0" />
     <PackageReference Include="RulesEngine" Version="5.0.6" />
     <PackageReference Include="SqlSugarCore" Version="5.1.4.130" />
+    <PackageReference Include="SuperSocket" Version="2.0.0" />
+    <PackageReference Include="SuperSocket.ProtoBase" Version="2.0.0" />
+    <PackageReference Include="SuperSocket.Server" Version="2.0.0" />
+    <PackageReference Include="SuperSocket.Command" Version="2.0.0" />
+    <PackageReference Include="SuperSocket.Channel" Version="2.0.0-beta1-01" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageReference Include="System.Memory" Version="4.6.3" />
     <PackageReference Include="WorkflowCore.Persistence.SqlServer" Version="3.9.0" />
     <PackageReference Include="WorkflowCore.Users" Version="3.9.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\SuperSocket-master\src\SuperSocket.Command\SuperSocket.Command.csproj" />
-    <ProjectReference Include="..\..\..\SuperSocket-master\src\SuperSocket.Server\SuperSocket.Server.csproj" />
     <ProjectReference Include="..\..\BNR\BNR.csproj" />
     <ProjectReference Include="..\..\HLH.Lib\HLH.Lib.csproj" />
     <ProjectReference Include="..\..\RUINORERP.Business\RUINORERP.Business.csproj" />
@@ -140,7 +174,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="SysConfigFiles\" />
+    <Folder Include="Network\CoreServices\" />
+    <Folder Include="Network\Documentation\" />
+    <Folder Include="SuperSocketServices\Commands\Legacy\" />
+    <Folder Include="SuperSocketServices\Commands\System\" />
+    <Folder Include="SuperSocketServices\Documentation\" />
+    <Folder Include="SuperSocketServices\Pipeline\" />
     <Folder Include="Workflow\WFOrder\" />
     <Folder Include="Workflow\WFProduce\" />
   </ItemGroup>

@@ -10,11 +10,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using TransInstruction.DataPortal;
-using TransInstruction;
+
+
 using RUINORERP.Model.TransModel;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Helper;
+using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Enums;
 
 namespace RUINORERP.Server
 {
@@ -138,30 +140,30 @@ namespace RUINORERP.Server
                         {
                             try
                             {
-                                exData.RemindTimes++;
-                                //  WorkflowServiceReceiver.发送工作流提醒();
-                                OriginalData exMsg = new OriginalData();
-                                exMsg.cmd = (byte)ServerCmdEnum.工作流提醒推送;
-                                exMsg.One = null;
+                        //        exData.RemindTimes++;
+                        //        //  WorkflowServiceReceiver.发送工作流提醒();
+                        //        OriginalData exMsg = new OriginalData();
+                        //        exMsg.Cmd = (byte)ServerCommand.工作流提醒推送;
+                        //        exMsg.One = null;
 
-                                //这种可以写一个扩展方法
-                                ByteBuff tx = new ByteBuff(100);
-                                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                                tx.PushString(sendtime);
-                                string json = JsonConvert.SerializeObject(exData,
-                        new JsonSerializerSettings
-                        {
-                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                        });
+                        //        //这种可以写一个扩展方法
+                        //        ByteBufferer tx = new ByteBufferer(100);
+                        //        string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        //        tx.PushString(sendtime);
+                        //        string json = JsonConvert.SerializeObject(exData,
+                        //new JsonSerializerSettings
+                        //{
+                        //    ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+                        //});
 
-                                tx.PushString(json);
+                          //      tx.PushString(json);
                                 //tx.PushString("【系统提醒】" + System.DateTime.Now.ToString());//发送者
                                 //tx.PushString(item.Value.SessionID);
                                 //tx.PushString(exData.RemindSubject);
                                 //tx.PushString(exData.ReminderContent);
-                                tx.PushBool(true);//是否强制弹窗
-                                exMsg.Two = tx.toByte();
-                                item.Value.AddSendData(exMsg);
+                             //   tx.PushBool(true);//是否强制弹窗
+                             //   exMsg.Two = tx.toByte();
+                              //  item.Value.AddSendData(exMsg);
 
                                 if(frmMain.Instance.ReminderBizDataList.TryUpdate(exData.BizPrimaryKey, exData, exData))
                                 {

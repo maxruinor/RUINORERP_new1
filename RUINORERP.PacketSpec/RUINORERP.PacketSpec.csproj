@@ -1,22 +1,50 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ProjectGuid>{E183B2C1-BA58-4B8C-B778-791DA2A60051}</ProjectGuid>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- 编码设置 -->
+    <FileEncoding>utf-8</FileEncoding>
+    <Utf8Output>true</Utf8Output>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Memory" Version="4.5.5" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Compile Remove="Legacy\**" />
+    <EmbeddedResource Remove="Legacy\**" />
+    <None Remove="Legacy\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\SuperSocket-master\src\SuperSocket.Command\SuperSocket.Command.csproj" />
-    <ProjectReference Include="..\..\SuperSocket-master\src\SuperSocket.Server.Abstractions\SuperSocket.Server.Abstractions.csproj" />
-    <ProjectReference Include="..\..\SuperSocket-master\src\SuperSocket.Server\SuperSocket.Server.csproj" />
-    <ProjectReference Include="..\SuperSocket.ProtoBase\SuperSocket.ProtoBase.csproj" />
+    <Compile Remove="Enums\CommandHelper.cs" />
+    <Compile Remove="Enums\CommandId.cs" />
+    <Compile Remove="Enums\UsageExamples.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CacheManager.Core" Version="2.0.0" />
+    <PackageReference Include="MessagePack" Version="2.5.129" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="System.Buffers" Version="4.5.1" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="log4net" Version="2.0.15" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
+  </ItemGroup>
+
+  <!-- .NET Standard 2.0项目不需要显式引用System.Configuration -->
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Tests\" />
   </ItemGroup>
 
 </Project>

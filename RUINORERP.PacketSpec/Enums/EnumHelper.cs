@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -74,77 +74,7 @@ namespace RUINORERP.PacketSpec.Enums
             return result;
         }
 
-        /// <summary>
-        /// 获取所有命令枚举类型
-        /// </summary>
-        /// <returns>命令枚举类型列表</returns>
-        public static List<Type> GetAllCommandEnumTypes()
-        {
-            return new List<Type>
-            {
-                typeof(Core.SystemCommand),
-                typeof(Auth.AuthenticationCommand),
-                typeof(Cache.CacheCommand),
-                typeof(Message.MessageCommand),
-                typeof(Workflow.WorkflowCommand),
-                typeof(Exception.ExceptionCommand),
-                typeof(File.FileCommand),
-                typeof(DataSync.DataSyncCommand),
-                typeof(Lock.LockCommand),
-                typeof(SystemManagement.SystemManagementCommand)
-            };
-        }
-
-        /// <summary>
-        /// 根据命令值获取对应的描述
-        /// </summary>
-        /// <param name="commandValue">命令值</param>
-        /// <returns>命令描述，如果找不到返回空字符串</returns>
-        public static string GetCommandDescription(uint commandValue)
-        {
-            foreach (var enumType in GetAllCommandEnumTypes())
-            {
-                if (Enum.IsDefined(enumType, commandValue))
-                {
-                    var enumValue = Enum.ToObject(enumType, commandValue);
-                    var field = enumType.GetField(enumValue.ToString());
-                    var attribute = (DescriptionAttribute)Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute));
-                    return attribute?.Description ?? enumValue.ToString();
-                }
-            }
-            
-            return string.Empty;
-        }
-
-        /// <summary>
-        /// 检查命令值是否有效
-        /// </summary>
-        /// <param name="commandValue">命令值</param>
-        /// <returns>是否有效</returns>
-        public static bool IsValidCommand(uint commandValue)
-        {
-            return GetAllCommandEnumTypes().Any(enumType => Enum.IsDefined(enumType, commandValue));
-        }
-
-        /// <summary>
-        /// 获取所有命令值及其描述的映射
-        /// </summary>
-        /// <returns>命令值到描述的映射字典</returns>
-        public static Dictionary<uint, string> GetAllCommandDescriptions()
-        {
-            var result = new Dictionary<uint, string>();
-            
-            foreach (var enumType in GetAllCommandEnumTypes())
-            {
-                foreach (var value in Enum.GetValues(enumType))
-                {
-                    var commandValue = Convert.ToUInt32(value);
-                    var description = GetCommandDescription(commandValue);
-                    result[commandValue] = description;
-                }
-            }
-            
-            return result;
-        }
+       
+       
     }
 }

@@ -1,42 +1,7 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Enums.Core
 {
-    /// <summary>
-    /// 系统基础命令枚举
-    /// </summary>
-    public enum SystemCommand : uint
-    {
-        /// <summary>
-        /// 空命令/心跳包
-        /// </summary>
-        [Description("空命令/心跳包")]
-        None = 0x0000,
-
-        /// <summary>
-        /// 心跳包
-        /// </summary>
-        [Description("心跳包")]
-        Heartbeat = 0x0001,
-
-        /// <summary>
-        /// 心跳回复
-        /// </summary>
-        [Description("心跳回复")]
-        HeartbeatResponse = 0x0002,
-
-        /// <summary>
-        /// 系统状态查询
-        /// </summary>
-        [Description("系统状态查询")]
-        SystemStatus = 0x0003,
-
-        /// <summary>
-        /// 异常报告
-        /// </summary>
-        [Description("异常报告")]
-        ExceptionReport = 0x0004
-    }
 
     /// <summary>
     /// 数据包类型枚举
@@ -90,35 +55,10 @@ namespace RUINORERP.PacketSpec.Enums.Core
         Low = 0,
         Normal = 1,
         High = 2,
-        Critical = 3
+        Critical = 3,
+        Realtime = 4
     }
 
- 
 
-
-    /// <summary>
-    /// 过滤器状态枚举
-    /// </summary>
-    public enum FilterState
-    {
-        /// <summary>
-        /// 准备就绪
-        /// </summary>
-        Ready,
-        
-        /// <summary>
-        /// 处理中
-        /// </summary>
-        Processing,
-        
-        /// <summary>
-        /// 错误状态
-        /// </summary>
-        Error,
-        
-        /// <summary>
-        /// 完成状态
-        /// </summary>
-        Completed
-    }
+    
 }

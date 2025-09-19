@@ -1,7 +1,7 @@
-﻿using HLH.Lib.Helper;
+﻿﻿using HLH.Lib.Helper;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
-using RUINORERP.Business.CommService;
+using RUINORERP.Server.Comm;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
@@ -20,6 +20,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using RUINORERP.Business.CommService;
 
 namespace RUINORERP.Server
 {
@@ -176,7 +177,7 @@ namespace RUINORERP.Server
                     string tableName = kv.superDataTypeName;
                     SuperValue skv = cmbUser.SelectedItem as SuperValue;
                     SessionforBiz PlayerSession = frmMain.Instance.sessionListBiz[skv.superDataTypeName];
-                    UserService.发送缓存数据列表(PlayerSession, tableName);
+                    //UserService.发送缓存数据列表(PlayerSession, tableName);
                 }
 
             }
@@ -191,7 +192,7 @@ namespace RUINORERP.Server
                     foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
                     {
                         SessionforBiz sessionforBiz = item.Value as SessionforBiz;
-                        UserService.发送缓存数据列表(sessionforBiz, tableName);
+                        //UserService.发送缓存数据列表(sessionforBiz, tableName);
                     }
                 }
             }

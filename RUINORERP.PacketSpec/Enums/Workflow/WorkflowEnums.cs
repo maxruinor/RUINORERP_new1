@@ -2,89 +2,24 @@
 
 namespace RUINORERP.PacketSpec.Enums.Workflow
 {
-    /// <summary>
-    /// 工作流命令枚举
-    /// </summary>
-    public enum WorkflowCommand : uint
-    {
-        /// <summary>
-        /// 工作流提醒
-        /// </summary>
-        [Description("工作流提醒")]
-        WorkflowReminder = 0x0400,
+    ///// <summary>
+    ///// 工作流命令枚举
+    ///// </summary>
+    //public enum WorkflowCommand : uint
+    //{
+       
+    //    /// <summary>
+    //    /// 工作流提醒推送
+    //    /// </summary>
+    //    [Description("工作流提醒推送")]
+    //    WorkflowReminderPush = 0x040B,
 
-        /// <summary>
-        /// 工作流状态更新
-        /// </summary>
-        [Description("工作流状态更新")]
-        WorkflowStatusUpdate = 0x0401,
-
-        /// <summary>
-        /// 工作流审批
-        /// </summary>
-        [Description("工作流审批")]
-        WorkflowApproval = 0x0402,
-
-        /// <summary>
-        /// 工作流启动
-        /// </summary>
-        [Description("工作流启动")]
-        WorkflowStart = 0x0403,
-
-        /// <summary>
-        /// 工作流指令
-        /// </summary>
-        [Description("工作流指令")]
-        WorkflowCommand = 0x0404,
-
-        /// <summary>
-        /// 通知审批人审批
-        /// </summary>
-        [Description("通知审批人审批")]
-        NotifyApprover = 0x0405,
-
-        /// <summary>
-        /// 通知审批完成
-        /// </summary>
-        [Description("通知审批完成")]
-        NotifyApprovalComplete = 0x0406,
-
-        /// <summary>
-        /// 通知启动成功
-        /// </summary>
-        [Description("通知启动成功")]
-        NotifyStartSuccess = 0x0407,
-
-        /// <summary>
-        /// 工作流提醒请求
-        /// </summary>
-        [Description("工作流提醒请求")]
-        WorkflowReminderRequest = 0x0408,
-
-        /// <summary>
-        /// 工作流提醒变化
-        /// </summary>
-        [Description("工作流提醒变化")]
-        WorkflowReminderChanged = 0x0409,
-
-        /// <summary>
-        /// 工作流提醒回复
-        /// </summary>
-        [Description("工作流提醒回复")]
-        WorkflowReminderReply = 0x040A,
-
-        /// <summary>
-        /// 工作流提醒推送
-        /// </summary>
-        [Description("工作流提醒推送")]
-        WorkflowReminderPush = 0x040B,
-
-        /// <summary>
-        /// 工作流数据推送
-        /// </summary>
-        [Description("工作流数据推送")]
-        WorkflowDataPush = 0x040C
-    }
+    //    /// <summary>
+    //    /// 工作流数据推送
+    //    /// </summary>
+    //    [Description("工作流数据推送")]
+    //    WorkflowDataPush = 0x040C
+    //}
 
     /// <summary>
     /// 下一步处理步骤

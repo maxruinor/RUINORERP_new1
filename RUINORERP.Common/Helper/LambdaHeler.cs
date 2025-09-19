@@ -87,7 +87,7 @@ namespace RUINORERP.Common.Helper
                 case "InstanceMethodCallExpression0":
                     {
                         //// The original expression
-                        //Expression<Func<Person1, bool>> expr = (x) => x.Birthday.AddMinutes(1) > DateTime.UtcNow;
+                        //Expression<Func<Person1, bool>> expr = (x) => x.Birthday.AddMinutes(1) > DateTime.Now;
 
                         //// Decompose the original expr.
                         //ParameterExpression param = (ParameterExpression)expr.Parameters[0];

@@ -2,39 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
-    /// 命令处理器标记特性
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
-    public class CommandHandlerAttribute : Attribute
-    {
-        /// <summary>
-        /// 处理器名称
-        /// </summary>
-        public string Name { get; }
-
-        /// <summary>
-        /// 处理器优先级
-        /// </summary>
-        public int Priority { get; }
-
-        public CommandHandlerAttribute(string name = null, int priority = 0)
-        {
-            Name = name;
-            Priority = priority;
-        }
-    }
-
-    /// <summary>
     /// 命令处理器接口
     /// </summary>
-    public interface ICommandHandler
+    public interface ICommandHandler : IDisposable
     {
+        /// <summary>
+        /// 处理器唯一标识
+        /// </summary>
+        string HandlerId { get; }
+
         /// <summary>
         /// 处理器名称
         /// </summary>
@@ -44,6 +24,21 @@ namespace RUINORERP.PacketSpec.Commands
         /// 处理器优先级
         /// </summary>
         int Priority { get; }
+
+        /// <summary>
+        /// 是否已初始化
+        /// </summary>
+        bool IsInitialized { get; }
+
+        /// <summary>
+        /// 支持的命令类型
+        /// </summary>
+        IReadOnlyList<uint> SupportedCommands { get; }
+
+        /// <summary>
+        /// 处理器状态
+        /// </summary>
+        HandlerStatus Status { get; }
 
         /// <summary>
         /// 异步处理命令
@@ -57,219 +52,145 @@ namespace RUINORERP.PacketSpec.Commands
         /// 判断是否可以处理该命令
         /// </summary>
         /// <param name="command">命令对象</param>
-        /// <param name="queue">命令队列（用于重新排队）</param>
         /// <returns>是否可以处理</returns>
-        bool CanHandle(ICommand command, BlockingCollection<ICommand> queue = null);
+        bool CanHandle(ICommand command);
 
         /// <summary>
         /// 处理器初始化
         /// </summary>
+        /// <param name="cancellationToken">取消令牌</param>
         /// <returns>初始化是否成功</returns>
-        Task<bool> InitializeAsync();
+        Task<bool> InitializeAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// 处理器清理
+        /// 处理器启动
         /// </summary>
-        /// <returns>清理是否成功</returns>
-        Task<bool> CleanupAsync();
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>启动是否成功</returns>
+        Task<bool> StartAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 处理器停止
+        /// </summary>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>停止是否成功</returns>
+        Task<bool> StopAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 获取处理器统计信息
+        /// </summary>
+        /// <returns>统计信息</returns>
+        HandlerStatistics GetStatistics();
+
+        /// <summary>
+        /// 重置处理器统计信息
+        /// </summary>
+        void ResetStatistics();
     }
 
     /// <summary>
-    /// 命令处理器基类
+    /// 处理器状态
     /// </summary>
-    public abstract class BaseCommandHandler : ICommandHandler
+    public enum HandlerStatus
     {
         /// <summary>
-        /// 处理器名称
+        /// 未初始化
         /// </summary>
-        public virtual string Name => GetType().Name;
-
+        Uninitialized = 0,
+        
         /// <summary>
-        /// 处理器优先级
+        /// 已初始化
         /// </summary>
-        public virtual int Priority => 0;
-
+        Initialized = 1,
+        
         /// <summary>
-        /// 是否已初始化
+        /// 运行中
         /// </summary>
-        protected bool IsInitialized { get; private set; }
-
+        Running = 2,
+        
         /// <summary>
-        /// 异步处理命令
+        /// 已停止
         /// </summary>
-        public abstract Task<CommandResult> HandleAsync(ICommand command, CancellationToken cancellationToken = default);
-
+        Stopped = 3,
+        
         /// <summary>
-        /// 判断是否可以处理该命令
+        /// 错误状态
         /// </summary>
-        public abstract bool CanHandle(ICommand command, BlockingCollection<ICommand> queue = null);
-
+        Error = 4,
+        
         /// <summary>
-        /// 处理器初始化
+        /// 已释放
         /// </summary>
-        public virtual Task<bool> InitializeAsync()
-        {
-            IsInitialized = true;
-            return Task.FromResult(true);
-        }
-
-        /// <summary>
-        /// 处理器清理
-        /// </summary>
-        public virtual Task<bool> CleanupAsync()
-        {
-            IsInitialized = false;
-            return Task.FromResult(true);
-        }
-
-        /// <summary>
-        /// 记录日志
-        /// </summary>
-        protected virtual void LogMessage(string message, Exception ex = null)
-        {
-            Console.WriteLine($"[{Name}] {message}");
-            if (ex != null)
-            {
-                Console.WriteLine($"[{Name}] Exception: {ex.Message}");
-            }
-        }
+        Disposed = 5
     }
 
     /// <summary>
-    /// 命令处理器工厂接口
+    /// 处理器统计信息
     /// </summary>
-    public interface ICommandHandlerFactory
+    public class HandlerStatistics
     {
         /// <summary>
-        /// 创建命令处理器
+        /// 处理器启动时间
         /// </summary>
-        /// <param name="handlerType">处理器类型</param>
-        /// <returns>处理器实例</returns>
-        ICommandHandler CreateHandler(Type handlerType);
+        public DateTime StartTime { get; set; }
 
         /// <summary>
-        /// 创建命令处理器
+        /// 总处理命令数
         /// </summary>
-        /// <typeparam name="T">处理器类型</typeparam>
-        /// <returns>处理器实例</returns>
-        T CreateHandler<T>() where T : class, ICommandHandler;
+        public long TotalCommandsProcessed { get; set; }
 
         /// <summary>
-        /// 获取处理器
+        /// 成功处理命令数
         /// </summary>
-        /// <typeparam name="T">处理器类型</typeparam>
-        /// <returns>处理器实例</returns>
-        T GetHandler<T>() where T : class, ICommandHandler;
+        public long SuccessfulCommands { get; set; }
 
         /// <summary>
-        /// 注册处理器
+        /// 失败处理命令数
         /// </summary>
-        /// <typeparam name="T">处理器类型</typeparam>
-        /// <param name="handler">处理器实例</param>
-        void RegisterHandler<T>(T handler) where T : class, ICommandHandler;
+        public long FailedCommands { get; set; }
 
         /// <summary>
-        /// 注销处理器
+        /// 平均处理时间（毫秒）
         /// </summary>
-        /// <typeparam name="T">处理器类型</typeparam>
-        void UnregisterHandler<T>() where T : class, ICommandHandler;
+        public double AverageProcessingTimeMs { get; set; }
 
         /// <summary>
-        /// 注册处理器类型
+        /// 最大处理时间（毫秒）
         /// </summary>
-        /// <param name="handlerType">处理器类型</param>
-        void RegisterHandler(Type handlerType);
+        public long MaxProcessingTimeMs { get; set; }
 
         /// <summary>
-        /// 获取所有已注册的处理器类型
+        /// 最小处理时间（毫秒）
         /// </summary>
-        /// <returns>处理器类型列表</returns>
-        IEnumerable<Type> GetRegisteredHandlerTypes();
-    }
-
-    /// <summary>
-    /// 默认命令处理器工厂
-    /// </summary>
-    public class DefaultCommandHandlerFactory : ICommandHandlerFactory
-    {
-        private readonly ConcurrentDictionary<Type, Func<ICommandHandler>> _handlerFactories;
-
-        public DefaultCommandHandlerFactory()
-        {
-            _handlerFactories = new ConcurrentDictionary<Type, Func<ICommandHandler>>();
-        }
+        public long MinProcessingTimeMs { get; set; }
 
         /// <summary>
-        /// 创建命令处理器
+        /// 最后处理时间
         /// </summary>
-        public ICommandHandler CreateHandler(Type handlerType)
-        {
-            if (_handlerFactories.TryGetValue(handlerType, out var factory))
-            {
-                return factory();
-            }
-
-            // 使用反射创建实例
-            return (ICommandHandler)Activator.CreateInstance(handlerType);
-        }
+        public DateTime LastProcessTime { get; set; }
 
         /// <summary>
-        /// 创建命令处理器
+        /// 当前正在处理的命令数
         /// </summary>
-        public T CreateHandler<T>() where T : class, ICommandHandler
-        {
-            return CreateHandler(typeof(T)) as T;
-        }
+        public int CurrentProcessingCount { get; set; }
 
         /// <summary>
-        /// 获取处理器
+        /// 运行时间
         /// </summary>
-        public T GetHandler<T>() where T : class, ICommandHandler
-        {
-            return CreateHandler<T>();
-        }
+        public TimeSpan Uptime => DateTime.UtcNow - StartTime;
 
         /// <summary>
-        /// 注册处理器
+        /// 成功率
         /// </summary>
-        public void RegisterHandler<T>(T handler) where T : class, ICommandHandler
-        {
-            _handlerFactories.TryAdd(typeof(T), () => handler);
-        }
+        public double SuccessRate => TotalCommandsProcessed > 0 
+            ? (double)SuccessfulCommands / TotalCommandsProcessed * 100 
+            : 0;
 
         /// <summary>
-        /// 注销处理器
+        /// 平均处理速度（命令/秒）
         /// </summary>
-        public void UnregisterHandler<T>() where T : class, ICommandHandler
-        {
-            _handlerFactories.TryRemove(typeof(T), out _);
-        }
-
-        /// <summary>
-        /// 注册处理器类型
-        /// </summary>
-        public void RegisterHandler(Type handlerType)
-        {
-            if (typeof(ICommandHandler).IsAssignableFrom(handlerType))
-            {
-                _handlerFactories.TryAdd(handlerType, () => (ICommandHandler)Activator.CreateInstance(handlerType));
-            }
-        }
-
-        /// <summary>
-        /// 注册处理器工厂方法
-        /// </summary>
-        public void RegisterHandler<T>(Func<T> factory) where T : class, ICommandHandler
-        {
-            _handlerFactories.TryAdd(typeof(T), () => factory());
-        }
-
-        /// <summary>
-        /// 获取所有已注册的处理器类型
-        /// </summary>
-        public IEnumerable<Type> GetRegisteredHandlerTypes()
-        {
-            return _handlerFactories.Keys;
-        }
+        public double AverageProcessingRate => Uptime.TotalSeconds > 0 
+            ? TotalCommandsProcessed / Uptime.TotalSeconds 
+            : 0;
     }
 }

@@ -28,7 +28,7 @@ namespace RUINORERP.Model.TransModel
         // 可以添加通用方法，例如验证提醒时间是否在未来
         public bool IsReminderTimeInFuture()
         {
-            return ReminderTime > DateTime.UtcNow;
+            return ReminderTime > DateTime.Now;
         }
     }
 

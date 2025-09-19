@@ -1,0 +1,350 @@
+﻿using System;
+using System.Text;
+using Newtonsoft.Json;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Commands;
+
+namespace RUINORERP.PacketSpec.Models.Core
+{
+    /// <summary>
+    /// 统一数据包模型 - 核心通信协议实体
+    /// 替代原有的PacketInfo和PacketModel
+    /// 直接支持SuperSocket
+    /// </summary>
+    [Serializable]
+    public class PacketModel : BaseModel
+    {
+        #region 属性定义
+        
+        /// <summary>
+        /// 数据包唯一标识符
+        /// </summary>
+        public string PacketId { get; set; }
+
+        /// <summary>
+        /// 命令类型
+        /// </summary>
+        public CommandId Command { get; set; }
+
+        ///// <summary>
+        ///// 包标识键 - 用于SuperSocket命令匹配
+        ///// 与Command属性关联
+        ///// </summary>
+        //public uint Key
+        //{
+        //    get { return (uint)Command; }
+        //    set { 
+        //        // 从uint值创建CommandId实例
+        //        // 高8位是CommandCategory，低8位是OperationCode
+        //        CommandCategory category = (CommandCategory)(value >> 8);
+        //        byte operationCode = (byte)(value & 0xFF);
+        //        Command = new CommandId(category, operationCode); 
+        //    }
+        //}
+
+        /// <summary>
+        /// 原始命令值
+        /// </summary>
+        public string OriginalCommand { get; set; }
+
+        /// <summary>
+        /// 数据包优先级
+        /// </summary>
+        public PacketPriority Priority { get; set; }
+
+        /// <summary>
+        /// 数据包方向
+        /// </summary>
+        public PacketDirection Direction { get; set; }
+
+        /// <summary>
+        /// 数据包状态
+        /// </summary>
+        public PacketStatus Status { get; set; }
+
+        /// <summary>
+        /// 会话标识
+        /// </summary>
+        public string SessionId { get; set; }
+
+        /// <summary>
+        /// 客户端标识
+        /// </summary>
+        public string ClientId { get; set; }
+
+        /// <summary>
+        /// 数据包大小（字节）
+        /// </summary>
+        public int Size { get; set; }
+
+        /// <summary>
+        /// 校验和
+        /// </summary>
+        public string Checksum { get; set; }
+
+        /// <summary>
+        /// 扩展属性字典
+        /// </summary>
+        public System.Collections.Generic.Dictionary<string, object> Extensions { get; set; }
+
+        /// <summary>
+        /// 是否加密
+        /// </summary>
+        public bool IsEncrypted { get; set; }
+
+        /// <summary>
+        /// 是否压缩
+        /// </summary>
+        public bool IsCompressed { get; set; }
+
+        #endregion
+
+        #region 构造函数
+        
+        /// <summary>
+        /// 默认构造函数
+        /// </summary>
+        public PacketModel()
+        {
+            PacketId = GeneratePacketId();
+            CreatedTime = DateTime.UtcNow;
+            Priority = PacketPriority.Normal;
+            Direction = PacketDirection.Unknown;
+            Status = PacketStatus.Created;
+            Extensions = new System.Collections.Generic.Dictionary<string, object>();
+        }
+
+        /// <summary>
+        /// 从原始数据创建数据包
+        /// </summary>
+        /// <param name="originalData">原始数据</param>
+        /// <param name="command">命令标识符</param>
+        public PacketModel(byte[] originalData, CommandId command = default(CommandId))
+            : this()
+        {
+            Body = originalData;
+            Command = command;
+            Size = originalData?.Length ?? 0;
+        }
+
+        #endregion
+
+        #region 核心方法
+        
+        /// <summary>
+        /// 从原始数据创建数据包
+        /// </summary>
+        /// <param name="originalData">原始数据字节数组</param>
+        /// <param name="command">命令标识符</param>
+        /// <returns>PacketModel实例</returns>
+        public static PacketModel FromOriginalData(byte[] originalData, CommandId command = default(CommandId))
+        {
+            return new PacketModel(originalData, command);
+        }
+
+        /// <summary>
+        /// 从KX数据格式创建数据包
+        /// </summary>
+        /// <param name="kxData">KX格式数据</param>
+        /// <returns>PacketModel实例</returns>
+        public static PacketModel FromKxData(string kxData)
+        {
+            if (string.IsNullOrEmpty(kxData))
+                throw new ArgumentException("KX数据不能为空", nameof(kxData));
+
+            var packet = new PacketModel
+            {
+                OriginalCommand = kxData,
+                Body = Encoding.UTF8.GetBytes(kxData)
+            };
+
+            packet.Size = packet.Body.Length;
+            return packet;
+        }
+
+        /// <summary>
+        /// 设置会话信息
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <param name="clientId">客户端ID</param>
+        /// <returns>当前实例</returns>
+        public PacketModel SetSessionInfo(string sessionId, string clientId = null)
+        {
+            SessionId = sessionId;
+            ClientId = clientId;
+            return this;
+        }
+
+        /// <summary>
+        /// 设置数据内容
+        /// </summary>
+        /// <param name="data">数据字节数组</param>
+        /// <returns>当前实例</returns>
+        public PacketModel SetData(byte[] data)
+        {
+            Body = data;
+            Size = data?.Length ?? 0;
+            LastUpdatedTime = DateTime.UtcNow;
+            return this;
+        }
+
+        /// <summary>
+        /// 设置JSON数据
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="data">数据对象</param>
+        /// <returns>当前实例</returns>
+        public PacketModel SetJsonData<T>(T data)
+        {
+            var json = JsonConvert.SerializeObject(data);
+            Body = Encoding.UTF8.GetBytes(json);
+            Size = Body.Length;
+            LastUpdatedTime = DateTime.UtcNow;
+            return this;
+        }
+
+        /// <summary>
+        /// 获取数据为文本格式
+        /// </summary>
+        /// <param name="encoding">编码格式，默认UTF-8</param>
+        /// <returns>文本数据</returns>
+        public string GetDataAsText(Encoding encoding = null)
+        {
+            if (Body == null || Body.Length == 0)
+                return string.Empty;
+
+            encoding ??= Encoding.UTF8;
+            return encoding.GetString(Body);
+        }
+
+        /// <summary>
+        /// 获取JSON数据为指定类型
+        /// </summary>
+        /// <typeparam name="T">目标类型</typeparam>
+        /// <returns>反序列化后的对象</returns>
+        public T GetJsonData<T>()
+        {
+            if (Body == null || Body.Length == 0)
+                return default;
+
+            var json = Encoding.UTF8.GetString(Body);
+            return JsonConvert.DeserializeObject<T>(json);
+        }
+
+        /// <summary>
+        /// 验证数据包有效性
+        /// </summary>
+        /// <returns>是否有效</returns>
+        public override bool IsValid()
+        {
+            return base.IsValid() &&
+                   !string.IsNullOrEmpty(PacketId) &&
+                   Body != null &&
+                   Body.Length > 0 &&
+                   Size == Body.Length;
+        }
+
+        /// <summary>
+        /// 清理敏感数据
+        /// </summary>
+        public override void ClearSensitiveData()
+        {
+            base.ClearSensitiveData();
+            SessionId = null;
+            ClientId = null;
+            Extensions?.Clear();
+        }
+
+        /// <summary>
+        /// 创建数据包克隆
+        /// </summary>
+        /// <returns>克隆实例</returns>
+        public PacketModel Clone()
+        {
+            return new PacketModel
+            {
+                PacketId = GeneratePacketId(),
+                Command = Command,
+                OriginalCommand = OriginalCommand,
+                Priority = Priority,
+                Direction = Direction,
+                Status = Status,
+                SessionId = SessionId,
+                ClientId = ClientId,
+                Body = Body?.Clone() as byte[],
+                Size = Size,
+                Checksum = Checksum,
+                CreatedTime = CreatedTime,
+                LastUpdatedTime = LastUpdatedTime,
+                Extensions = new System.Collections.Generic.Dictionary<string, object>(Extensions),
+                Flag = Flag,
+                Version = Version,
+                Timestamp = Timestamp
+            };
+        }
+
+        /// <summary>
+        /// 从二进制数据创建PacketModel实例
+        /// </summary>
+        /// <param name="binaryData">二进制数据</param>
+        /// <returns>PacketModel实例</returns>
+        public static PacketModel FromBinary(byte[] binaryData)
+        {
+            if (binaryData == null || binaryData.Length == 0)
+                throw new ArgumentException("二进制数据不能为空", nameof(binaryData));
+
+            // 这里应该使用实际的反序列化逻辑
+            // 暂时返回一个基本实现
+            var packet = new PacketModel();
+            packet.Body = binaryData;
+            packet.Size = binaryData.Length;
+            return packet;
+        }
+
+        /// <summary>
+        /// 转换为二进制数据
+        /// </summary>
+        /// <returns>二进制数据</returns>
+        public byte[] ToBinary()
+        {
+            return Body?.Clone() as byte[] ?? new byte[0];
+        }
+
+        #endregion
+
+        #region 私有辅助方法
+        
+        /// <summary>
+        /// 生成数据包ID
+        /// </summary>
+        /// <returns>唯一数据包ID</returns>
+        private static string GeneratePacketId()
+        {
+            return $"PKT_{DateTime.UtcNow:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}";
+        }
+
+        /// <summary>
+        /// 计算数据包大小
+        /// </summary>
+        /// <returns>数据包大小</returns>
+        private int CalculateSize()
+        {
+            return Body?.Length ?? 0;
+        }
+
+        #endregion
+
+        #region 重写方法
+        
+        /// <summary>
+        /// 转换为字符串表示
+        /// </summary>
+        /// <returns>数据包信息字符串</returns>
+        public override string ToString()
+        {
+            return $"Packet[Id:{PacketId}, Command:{Command}, Size:{Size}, Status:{Status}]";
+        }
+
+        #endregion
+    }
+}

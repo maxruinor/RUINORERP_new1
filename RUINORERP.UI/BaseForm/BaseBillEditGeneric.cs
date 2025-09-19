@@ -2058,6 +2058,21 @@ namespace RUINORERP.UI.BaseForm
                             menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
                         }
                     }
+                    if (parameter.bizType == BizType.采购退货入库)
+                    {
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                        && m.EntityName == typeof(tb_PurReturnEntry).Name
+                        && m.MenuName.Contains(parameter.bizType.ToString())
+                        ).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            var controller = Startup.GetFromFacByName<BaseController<tb_PurReturnEntry>>(typeof(tb_PurReturnEntry).Name + "Controller");
+                            tb_PurReturnEntry entity = await controller.BaseQueryByIdNavAsync(parameter.billId);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, entity);
+                        }
+                    }
+
                     if (parameter.bizType == BizType.归还单)
                     {
                         var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble

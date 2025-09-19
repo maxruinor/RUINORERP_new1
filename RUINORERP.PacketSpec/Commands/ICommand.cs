@@ -1,100 +1,180 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Models;
-using OriginalData = RUINORERP.PacketSpec.Protocol.OriginalData;
+using RUINORERP.PacketSpec.Protocol;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 命令操作类型
     /// </summary>
-    public enum CmdOperation
+    public enum CommandDirection
     {
         /// <summary>
-        /// 接收命令
+        /// 接收命令（从客户端到服务器）
         /// </summary>
         Receive = 0,
 
         /// <summary>
-        /// 发送命令
+        /// 发送命令（从服务器到客户端）
         /// </summary>
         Send = 1,
 
         /// <summary>
-        /// 转发命令
+        /// 双向命令（可发送可接收）
         /// </summary>
-        Forward = 2,
-
-        /// <summary>
-        /// 广播命令
-        /// </summary>
-        Broadcast = 3
+        Bidirectional = 2
     }
 
     /// <summary>
-    /// 服务器命令接口 - 定义命令的基本结构和行为
+    /// 命令优先级
+    /// </summary>
+    public enum CommandPriority
+    {
+        /// <summary>
+        /// 低优先级
+        /// </summary>
+        Low = 0,
+        
+        /// <summary>
+        /// 普通优先级
+        /// </summary>
+        Normal = 1,
+        
+        /// <summary>
+        /// 高优先级
+        /// </summary>
+        High = 2,
+        
+        /// <summary>
+        /// 紧急优先级
+        /// </summary>
+        Critical = 3
+    }
+
+    /// <summary>
+    /// 命令状态
+    /// </summary>
+    public enum CommandStatus
+    {
+        /// <summary>
+        /// 已创建
+        /// </summary>
+        Created = 0,
+        
+        /// <summary>
+        /// 等待处理
+        /// </summary>
+        Pending = 1,
+        
+        /// <summary>
+        /// 正在处理
+        /// </summary>
+        Processing = 2,
+        
+        /// <summary>
+        /// 处理完成
+        /// </summary>
+        Completed = 3,
+        
+        /// <summary>
+        /// 处理失败
+        /// </summary>
+        Failed = 4,
+        
+        /// <summary>
+        /// 已取消
+        /// </summary>
+        Cancelled = 5
+    }
+
+    /// <summary>
+    /// 统一命令接口 - 定义所有命令的基本契约
     /// </summary>
     public interface ICommand
     {
         /// <summary>
-        /// 操作类型
+        /// 命令唯一标识（字符串形式）
         /// </summary>
-        CmdOperation OperationType { get; set; }
+        string CommandId { get; }
 
         /// <summary>
-        /// 数据包
+        /// 命令标识符（类型安全命令系统）
         /// </summary>
-        OriginalData? DataPacket { get; set; }
+        CommandId CommandIdentifier { get; }
 
         /// <summary>
-        /// 命令执行异步方法
+        /// 命令方向
+        /// </summary>
+        CommandDirection Direction { get; set; }
+
+        /// <summary>
+        /// 命令优先级
+        /// </summary>
+        CommandPriority Priority { get; set; }
+
+        /// <summary>
+        /// 命令状态
+        /// </summary>
+        CommandStatus Status { get; set; }
+
+        /// <summary>
+        /// 原始数据包
+        /// </summary>
+        OriginalData OriginalData { get; set; }
+
+        /// <summary>
+        /// 命令创建时间
+        /// </summary>
+        DateTime CreatedAt { get; }
+
+        /// <summary>
+        /// 命令超时时间（毫秒）
+        /// </summary>
+        int TimeoutMs { get; set; }
+
+        /// <summary>
+        /// 执行命令
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>执行结果</returns>
         Task<CommandResult> ExecuteAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// 解析数据包
+        /// 验证命令是否可以执行
         /// </summary>
-        /// <param name="data">原始数据</param>
-        /// <param name="sessionInfo">会话信息</param>
-        /// <returns>解析是否成功</returns>
-        bool AnalyzeDataPacket(OriginalData data, SessionInfo sessionInfo);
+        /// <returns>验证结果</returns>
+        CommandValidationResult Validate();
 
         /// <summary>
-        /// 构建数据包
+        /// 序列化命令数据
         /// </summary>
-        /// <param name="request">请求对象</param>
-        void BuildDataPacket(object request = null);
+        /// <returns>序列化后的数据</returns>
+        byte[] Serialize();
 
         /// <summary>
-        /// 验证命令是否可以处理
+        /// 反序列化命令数据
         /// </summary>
-        /// <returns>是否可以处理</returns>
-        bool CanExecute();
+        /// <param name="data">数据</param>
+        /// <returns>反序列化是否成功</returns>
+        bool Deserialize(byte[] data);
     }
 
     /// <summary>
-    /// 命令执行结果
+    /// 命令验证结果
     /// </summary>
-    public class CommandResult
+    public class CommandValidationResult
     {
         /// <summary>
-        /// 执行是否成功
+        /// 是否有效
         /// </summary>
-        public bool Success { get; set; }
+        public bool IsValid { get; set; }
 
         /// <summary>
-        /// 结果消息
+        /// 错误消息
         /// </summary>
-        public string Message { get; set; }
-
-        /// <summary>
-        /// 返回数据
-        /// </summary>
-        public object Data { get; set; }
+        public string ErrorMessage { get; set; }
 
         /// <summary>
         /// 错误代码
@@ -102,105 +182,117 @@ namespace RUINORERP.PacketSpec.Commands
         public string ErrorCode { get; set; }
 
         /// <summary>
-        /// 执行时间（毫秒）
-        /// </summary>
-        public long ExecutionTimeMs { get; set; }
-
-        /// <summary>
         /// 创建成功结果
         /// </summary>
-        public static CommandResult CreateSuccess(object data = null, string message = "执行成功")
+        public static CommandValidationResult Success()
         {
-            return new CommandResult
-            {
-                Success = true,
-                Message = message,
-                Data = data
-            };
+            return new CommandValidationResult { IsValid = true };
         }
 
         /// <summary>
         /// 创建失败结果
         /// </summary>
-        public static CommandResult CreateError(string message, string errorCode = null)
+        public static CommandValidationResult Failure(string message, string code = null)
         {
-            return new CommandResult
+            return new CommandValidationResult
             {
-                Success = false,
-                Message = message,
-                ErrorCode = errorCode
+                IsValid = false,
+                ErrorMessage = message,
+                ErrorCode = code
             };
         }
     }
 
     /// <summary>
-    /// 命令处理器基类
+    /// 命令执行结果
     /// </summary>
-    public abstract class BaseCommand : ICommand
+    public class CommandResult : BaseModel
     {
         /// <summary>
-        /// 操作类型
+        /// 是否成功
         /// </summary>
-        public CmdOperation OperationType { get; set; }
+        public bool IsSuccess { get; set; }
+        
+        /// <summary>
+        /// 结果消息
+        /// </summary>
+        public string Message { get; set; }
 
         /// <summary>
-        /// 数据包
+        /// 错误代码
         /// </summary>
-        public OriginalData? DataPacket { get; set; }
+        public string ErrorCode { get; set; }
 
         /// <summary>
-        /// 会话信息
+        /// 返回数据
         /// </summary>
-        public SessionInfo SessionInfo { get; set; }
+        public object Data { get; set; }
 
         /// <summary>
-        /// 创建时间
+        /// 执行时间（毫秒）
         /// </summary>
-        public DateTime CreatedTime { get; private set; }
+        public long ExecutionTimeMs { get; set; }
 
         /// <summary>
-        /// 构造函数
+        /// 异常信息
         /// </summary>
-        protected BaseCommand(CmdOperation operationType = CmdOperation.Receive)
+        public Exception Exception { get; set; }
+
+        /// <summary>
+        /// 响应数据包（用于发送回客户端）
+        /// </summary>
+        OriginalData ResponseData { get; set; }
+
+        /// <summary>
+        /// 创建成功结果
+        /// </summary>
+        public static CommandResult Success(object data = null, string message = "操作成功")
         {
-            OperationType = operationType;
-            CreatedTime = DateTime.UtcNow;
-        }
-
-        /// <summary>
-        /// 执行命令
-        /// </summary>
-        public abstract Task<CommandResult> ExecuteAsync(CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// 解析数据包
-        /// </summary>
-        public abstract bool AnalyzeDataPacket(OriginalData data, SessionInfo sessionInfo);
-
-        /// <summary>
-        /// 构建数据包
-        /// </summary>
-        public abstract void BuildDataPacket(object request = null);
-
-        /// <summary>
-        /// 验证命令是否可以处理
-        /// </summary>
-        public virtual bool CanExecute()
-        {
-            return DataPacket.HasValue || OperationType == CmdOperation.Send;
-        }
-
-        /// <summary>
-        /// 记录执行日志
-        /// </summary>
-        protected virtual void LogExecution(string message, Exception ex = null)
-        {
-            // 这里可以集成实际的日志系统
-            Console.WriteLine($"[Command] {GetType().Name}: {message}");
-            if (ex != null)
+            var result = new CommandResult
             {
-                Console.WriteLine($"[Command] Exception: {ex.Message}");
-            }
+                IsSuccess = true,
+                Message = message,
+                Data = data
+            };
+            return result;
+        }
+
+        /// <summary>
+        /// 创建失败结果
+        /// </summary>
+        public static CommandResult Failure(string message, string errorCode = null, Exception exception = null)
+        {
+            var result = new CommandResult
+            {
+                IsSuccess = false,
+                Message = message,
+                ErrorCode = errorCode,
+                Exception = exception
+            };
+            return result;
+        }
+
+        /// <summary>
+        /// 创建带响应数据的成功结果
+        /// </summary>
+        public static CommandResult SuccessWithResponse(OriginalData responseData, object data = null, string message = "操作成功")
+        {
+            var result = new CommandResult
+            {
+                IsSuccess = true,
+                Message = message,
+                Data = data,
+                ResponseData = responseData
+            };
+            return result;
+        }
+
+        /// <summary>
+        /// 创建错误结果
+        /// </summary>
+        public static CommandResult CreateError(string message, string errorCode = null, Exception ex = null)
+        {
+            return Failure(message, errorCode, ex);
         }
     }
 }

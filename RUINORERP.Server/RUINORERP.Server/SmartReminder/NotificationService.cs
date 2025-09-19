@@ -101,7 +101,7 @@ namespace RUINORERP.Server.SmartReminder
                                     {
                                         msg = message,
                                     };
-                                    UserService.给客户端发消息实体(session, msb, true);
+                                    //UserService.给客户端发消息实体(session, msb, true);
 
                                     #region
                                     // 处理不同通知通道

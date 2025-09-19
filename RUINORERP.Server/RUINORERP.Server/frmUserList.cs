@@ -542,7 +542,7 @@ namespace RUINORERP.Server
                     {
                         if (sb.State == SessionState.Connected)
                         {
-                            UserService.切换服务器(sb, frmInput.InputContent);
+                            //UserService.切换服务器(sb, frmInput.InputContent);
                         }
                     }
                 }
@@ -574,7 +574,7 @@ namespace RUINORERP.Server
                 {
                     if (SB.State == SessionState.Connected)
                     {
-                        UserService.强制用户退出(SB);
+                        //UserService.强制用户退出(SB);
                         RemoveUserFromListView(user); // 调用移除方法
                     }
                 }
@@ -589,7 +589,7 @@ namespace RUINORERP.Server
                 {
                     if (sb.State == SessionState.Connected)
                     {
-                        UserService.删除列配置文件(sb);
+                        //UserService.删除列配置文件(sb);
                     }
                 }
             }
@@ -610,7 +610,7 @@ namespace RUINORERP.Server
                             {
                                 msg = frm.Message,
                             };
-                            UserService.给客户端发消息实体(sb, message, frm.MustDisplay);
+                            //UserService.给客户端发消息实体(sb, message, frm.MustDisplay);
                         }
                     }
                 }
@@ -625,7 +625,7 @@ namespace RUINORERP.Server
                 {
                     if (sb.State == SessionState.Connected)
                     {
-                        UserService.推送版本更新(sb);
+                        //UserService.推送版本更新(sb);
                     }
                 }
             }
@@ -640,7 +640,7 @@ namespace RUINORERP.Server
                 {
                     if (sb.State == SessionState.Connected)
                     {
-                        UserService.更新全局配置(sb);
+                        //UserService.更新全局配置(sb);
                     }
                 }
             }
@@ -656,7 +656,7 @@ namespace RUINORERP.Server
                     {
                         foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
                         {
-                            UserService.发送缓存数据列表(sb, tableName);
+                            //UserService.发送缓存数据列表(sb, tableName);
                         }
                     }
                 }
@@ -671,7 +671,7 @@ namespace RUINORERP.Server
                 {
                     if (sb.State == SessionState.Connected)
                     {
-                        UserService.强制用户关机(sb);
+                        //UserService.强制用户关机(sb);
                     }
                 }
             }

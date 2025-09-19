@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text.RegularExpressions;
 
 namespace RUINORERP.PacketSpec.Utilities
@@ -68,7 +68,7 @@ namespace RUINORERP.PacketSpec.Utilities
         public static bool ValidateTimestamp(DateTime timestamp, TimeSpan? allowedDrift = null)
         {
             var drift = allowedDrift ?? TimeSpan.FromMinutes(5);
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             return timestamp >= now - drift && timestamp <= now + drift;
         }
 
@@ -186,30 +186,7 @@ namespace RUINORERP.PacketSpec.Utilities
             return defaultValue;
         }
 
-        /// <summary>
-        /// 生成校验和
-        /// </summary>
-        public static byte CalculateChecksum(byte[] data)
-        {
-            if (data == null || data.Length == 0)
-                return 0;
-
-            byte checksum = 0;
-            foreach (byte b in data)
-            {
-                checksum = (byte)(checksum ^ b);
-            }
-            return checksum;
-        }
-
-        /// <summary>
-        /// 验证校验和
-        /// </summary>
-        public static bool ValidateChecksum(byte[] data, byte expectedChecksum)
-        {
-            return CalculateChecksum(data) == expectedChecksum;
-        }
-
+  
         /// <summary>
         /// 清理敏感数据
         /// </summary>

@@ -1104,6 +1104,15 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     {
                         return false;
                     }
+                    else
+                    {
+                        //检查是不是同一个业务员，如果不是，则提示不能保存。
+                        if (saleOrder.Employee_ID != EditEntity.Employee_ID)
+                        {
+                            MessageBox.Show("平台单号重复，但是业务员不同，不能保存。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return false;
+                        }
+                    }
                 }
 
             }

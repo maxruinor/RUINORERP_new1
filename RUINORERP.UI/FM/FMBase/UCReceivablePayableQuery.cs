@@ -172,17 +172,21 @@ namespace RUINORERP.UI.FM
             if (PaymentType == ReceivePaymentType.收款)
             {
                 list.Add(new ContextMenuController("【转为收款单】", true, false, "NewSumDataGridView_转为收付款单"));
+                list.Add(new ContextMenuController($"【预{PaymentType}抵扣】", true, false, "NewSumDataGridView_预收预付抵扣"));
+                list.Add(new ContextMenuController($"【批量智能预{PaymentType}抵扣】", true, false, "NewSumDataGridView_批量智能预收预付抵扣"));
+                list.Add(new ContextMenuController($"【撤销预{PaymentType}抵扣】", true, false, "NewSumDataGridView_撤销预收预付抵扣"));
+                list.Add(new ContextMenuController($"【快捷全额{PaymentType}】", true, false, "NewSumDataGridView_快捷全额收付款"));
             }
             else
             {
                 list.Add(new ContextMenuController("【转为付款单】", true, false, "NewSumDataGridView_转为收付款单"));
+                list.Add(new ContextMenuController($"【预{PaymentType}抵扣】", true, false, "NewSumDataGridView_预收预付抵扣"));
+                list.Add(new ContextMenuController($"【批量智能预{PaymentType}抵扣】", true, false, "NewSumDataGridView_批量智能预收预付抵扣"));
+                list.Add(new ContextMenuController($"【撤销预{PaymentType}抵扣】", true, false, "NewSumDataGridView_撤销预收预付抵扣"));
+                list.Add(new ContextMenuController($"【快捷全额{PaymentType}】", true, false, "NewSumDataGridView_快捷全额收付款"));
             }
             //对账中心处理，因为要控制是否能生成对账单
             //list.Add(new ContextMenuController("【生成对账单】", true, false, "NewSumDataGridView_生成对账单"));
-            list.Add(new ContextMenuController($"【预{PaymentType}抵扣】", true, false, "NewSumDataGridView_预收预付抵扣"));
-            list.Add(new ContextMenuController($"【批量智能预{PaymentType}抵扣】", true, false, "NewSumDataGridView_批量智能预收预付抵扣"));
-            list.Add(new ContextMenuController($"【撤销预{PaymentType}抵扣】", true, false, "NewSumDataGridView_撤销预收预付抵扣"));
-            list.Add(new ContextMenuController($"【快捷全额{PaymentType}】", true, false, "NewSumDataGridView_快捷全额收付款"));
             return list;
         }
         public override void BuildContextMenuController()

@@ -16,62 +16,7 @@ namespace RUINORERP.Model.TransModel
         public DateTime Timestamp { get; set; } // 时间戳，记录消息发送的时间
     }
 
-    /// <summary>
-    /// 锁单指令
-    /// </summary>
-    public enum LockCmd
-    {
-        LOCK, // 锁定
-        //UNLOCK, // 未锁定
-        //ISLOCKED, // 已经锁定
-        UNLOCK, // 释放锁一个单据
-        //GetLockedBy, // 释放锁
-
-        UnLockByBizName, // 释放锁一个单据
-        /// <summary>
-        /// 请求释放锁
-        /// </summary>
-        RequestUnLock, // 
-
-
-        /// <summary>
-        /// 拒绝释放锁
-        /// </summary>
-        RefuseUnLock,
-
-
-        /// <summary>
-        /// 新登陆的客户 要收到全部锁的情况。状态更新
-        /// </summary>
-        Broadcast, // 请求释放锁
-        //GETLOCKEDBY,  // 获取锁定人
-        //UNKNOWN_COMMAND, // 未知指令
-    }
-
-    public enum MessageType
-    {
-        Text, // 文本消息
-        BusinessData, // 业务数据
-        Prompt, // 提示
-        Event,  // 事件通知
-        IM, // 即时通
-    }
-
-    public enum PromptType
-    {
-
-        提示窗口,
-
-
-        通知窗口,
-
-
-        确认窗口,
-
-        //只是显示到日志行
-        日志消息,
-
-    }
+ 
 
     public class TextMessage : MessageBase
     {

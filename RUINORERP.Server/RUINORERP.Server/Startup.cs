@@ -56,9 +56,8 @@ using Autofac.Core;
 using RUINORERP.Business.Security;
 using RUINORERP.Model.ConfigModel;
 using System.Configuration;
-using TransInstruction;
-using TransInstruction.CommandService;
-using RUINORERP.Server.CommandService;
+
+using RUINORERP.Server.SuperSocketServices;
 using ZXing;
 using RUINORERP.Server.SmartReminder;
 using RUINORERP.Server.SmartReminder.ReminderRuleStrategy;
@@ -72,6 +71,8 @@ using RUINORERP.Business.DI;
 using RUINORERP.Services.DI;
 using RUINORERP.Repository.DI;
 using RUINORERP.IServices.DI;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.Server.Network.DI;
 
 namespace RUINORERP.Server
 {
@@ -290,6 +291,9 @@ namespace RUINORERP.Server
             //    .AddCheck<MonitorHealthCheck>("inventory_monitor");
 
             #endregion
+            // 配置网络服务容器
+            builder.ConfigureNetworkServicesContainer();
+            
             builder.RegisterModule<SmartReminderModule>();
 
             //后面需要研究
@@ -341,7 +345,7 @@ namespace RUINORERP.Server
                    {
                        services = _services;
                        services.AddSingleton<SessionforBiz>();
-                       services.AddSingleton<BizPackageInfo>();
+                       ／／services.AddSingleton<BizPackageInfo>(); // 不再需要，使用PacketSpec版本
                        services.AddSingleton<BizPipelineFilter>();
                        services.AddSingleton<BizCommand>();
                        services.AddSingleton<XTCommand>();
@@ -467,33 +471,35 @@ namespace RUINORERP.Server
         {
 
 
-            // 注册 CommandPublisher 和 CommandSubscriber
-            //  services.AddSingleton<IMessageQueue, MyMessageQueue>(); // 假设使用自定义消息队列实现
-            //services.AddTransient<CommandPublisher>();
-            // services.AddTransient<CommandSubscriber>();
+            //// 注册 CommandPublisher 和 CommandSubscriber
+            ////  services.AddSingleton<IMessageQueue, MyMessageQueue>(); // 假设使用自定义消息队列实现
+            ////services.AddTransient<CommandPublisher>();
+            //// services.AddTransient<CommandSubscriber>();
 
-            // 注册 CommandQueue
-            //services.AddSingleton<CommandQueue>();
-            //后面优化要指注册
-            // 注册 ICommandHandler 实现
-            services.AddTransient<ICommandHandler, LoginCommandHandler>();
-            services.AddTransient<ICommandHandler, ReceiveReminderCmdHandler>();
-            services.AddTransient<ICommandHandler, ReceiveResponseMessageCmdHandler>();
-            services.AddTransient<ICommandHandler, ReceiveEntityTransferCmdHandler>();
-            // 注册 Command 实现
-            services.AddTransient<IServerCommand, LoginCommand>();
-            services.AddTransient<IServerCommand, ReceiveReminderCmd>();
-            services.AddTransient<IServerCommand, ReceiveResponseMessageCmd>();
-            services.AddTransient<IServerCommand, ReceiveEntityTransferCmd>();
+            //// 注册 CommandQueue
+            ////services.AddSingleton<CommandQueue>();
+            ////后面优化要指注册
+            //// 注册 ICommandHandler 实现
+            //services.AddTransient<ICommandHandler, LoginCommandHandler>();
+            //services.AddTransient<ICommandHandler, ReceiveReminderCmdHandler>();
+            //services.AddTransient<ICommandHandler, ReceiveResponseMessageCmdHandler>();
+            //services.AddTransient<ICommandHandler, ReceiveEntityTransferCmdHandler>();
+            //// 注册 Command 实现
+            //services.AddTransient<IServerCommand, LoginCommand>();
+            //services.AddTransient<IServerCommand, ReceiveReminderCmd>();
+            //services.AddTransient<IServerCommand, ReceiveResponseMessageCmd>();
+            //services.AddTransient<IServerCommand, ReceiveEntityTransferCmd>();
 
-            // 注册 CommandDispatcher 和其他相关服务
-            ///services.AddSingleton<ICommandHandler<LoginCommand>, LoginCommandHandler>();
-            // 可以添加更多的处理器
-            // 注册命令处理器工厂
-            services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();
+            //// 注册 CommandDispatcher 和其他相关服务
+            /////services.AddSingleton<ICommandHandler<LoginCommand>, LoginCommandHandler>();
+            //// 可以添加更多的处理器
+            //// 注册命令处理器工厂
+            //services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();
 
-            // 注册CommandDispatcher和它的处理器
+            // 注册旧系统CommandDispatcher（临时保留，逐步迁移）
             services.AddSingleton<CommandDispatcher>();
+            
+ 
             // 注册 CommandDispatcher，只传递 allHandlers
             //services.AddSingleton<CommandDispatcher>(provider => new CommandDispatcher(allHandlers));
 
@@ -574,6 +580,12 @@ namespace RUINORERP.Server
             //这是新增加工作流的服务
             services.AddWorkflowCoreServicesNew();
 
+            // 添加新的SuperSocket服务
+            IConfigurationBuilder configurationBuilder2 = new ConfigurationBuilder();
+            var cfgBuilder2 = configurationBuilder2.AddJsonFile("appsettings.json");
+            IConfiguration configuration2 = cfgBuilder2.Build();
+      
+
 
 
 
@@ -631,7 +643,7 @@ namespace RUINORERP.Server
             services.AddSingleton<IMapper>(mapper);
             services.AddAutoMapperInstall();
             */
-            services.AddSingleton<UserService>();
+            
             services.AddSingleton<DataServiceChannel>();
             //映射暂时注释掉
 
@@ -648,7 +660,12 @@ namespace RUINORERP.Server
             // 注册审计日志服务
             services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
 
+            // 注册网络服务
+            services.AddNetworkServices();
+ 
+
             //services.AddCorsSetup();
+            
             //services.AddMiniProfilerSetup();
             //services.AddSwaggerSetup();
             //services.AddQuartzNetJobSetup();
@@ -1070,6 +1087,9 @@ namespace RUINORERP.Server
             ////属性注入
             //builder.RegisterType<TestService>().As<ITestService>().PropertiesAutowired();
             // builder.RegisterModule(new AutofacRegister());
+
+            // 配置SuperSocket服务Autofac容器
+            builder.ConfigureNetworkServicesContainer();
 
             builder.RegisterModule<SmartReminderModule>();
         }

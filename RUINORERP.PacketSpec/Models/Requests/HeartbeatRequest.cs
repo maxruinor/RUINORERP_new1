@@ -16,7 +16,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 用户ID
         /// </summary>
-        public int UserId { get; set; }
+        public long UserId { get; set; }
 
         /// <summary>
         /// 客户端时间戳
@@ -41,7 +41,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 创建心跳请求
         /// </summary>
-        public static HeartbeatRequest Create(string sessionToken, int userId, 
+        public static HeartbeatRequest Create(string sessionToken, long userId, 
             string clientStatus = "Normal")
         {
             return new HeartbeatRequest

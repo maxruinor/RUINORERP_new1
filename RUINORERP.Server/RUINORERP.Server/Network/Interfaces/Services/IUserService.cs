@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using RUINORERP.Model;
 using RUINORERP.PacketSpec.Handlers;
+using RUINORERP.PacketSpec.Models;
 using RUINORERP.Server.Network.Models;
 
 namespace RUINORERP.Server.Network.Interfaces.Services
@@ -224,36 +225,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         public List<string> RoleIds { get; set; }
     }
 
-    /// <summary>
-    /// 令牌验证结果模型
-    /// </summary>
-    public class TokenValidationResult
-    {
-        /// <summary>
-        /// 验证是否成功
-        /// </summary>
-        public bool IsValid { get; set; }
-
-        /// <summary>
-        /// 用户ID
-        /// </summary>
-        public string UserId { get; set; }
-
-        /// <summary>
-        /// 用户名
-        /// </summary>
-        public string Username { get; set; }
-
-        /// <summary>
-        /// 过期时间
-        /// </summary>
-        public DateTime ExpiresAt { get; set; }
-
-        /// <summary>
-        /// 验证失败消息
-        /// </summary>
-        public string ErrorMessage { get; set; }
-    }
+    
 
     /// <summary>
     /// 在线用户信息模型

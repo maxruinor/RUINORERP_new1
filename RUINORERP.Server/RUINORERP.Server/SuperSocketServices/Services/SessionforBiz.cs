@@ -13,6 +13,7 @@ using RUINORERP.PacketSpec.Protocol;
 using SuperSocket.Connection;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Models;
+using UserInfo = RUINORERP.Model.CommonModel.UserInfo;
 
 namespace RUINORERP.Server.ServerSession
 {

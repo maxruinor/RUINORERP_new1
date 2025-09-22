@@ -1,22 +1,24 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Protocol;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Handlers;
 using Microsoft.Extensions.Logging;
-using RUINORERP.PacketSpec.Enums.Exception;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 命令基类 - 提供命令的通用实现
     /// </summary>
-    public abstract class BaseCommand : BaseModel, ICommand
-    {
+    public abstract class BaseCommand : ITraceable, IValidatable, ICommand
+    {    /// <summary>
+         /// 日志记录器
+         /// </summary>
+        protected ILogger Logger { get; set; }
         /// <summary>
         /// 命令唯一标识
         /// </summary>
@@ -57,12 +59,41 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public DateTime CreatedAt { get; private set; }
 
+        #region ITraceable 接口实现
         /// <summary>
-        /// 日志记录器
+        /// 创建时间（UTC时间）
         /// </summary>
-        protected ILogger Logger { get; set; }
+        public DateTime CreatedTime { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// 最后更新时间（UTC时间）
+        /// </summary>
+        public DateTime? LastUpdatedTime { get; set; }
+
+        /// <summary>
+        /// 时间戳（UTC时间）
+        /// </summary>
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// 模型版本
+        /// </summary>
+        public string Version { get; set; } = "2.0";
+
+        /// <summary>
+        /// 更新时间戳
+        /// </summary>
+        public void UpdateTimestamp()
+        {
+            Timestamp = DateTime.UtcNow;
+            LastUpdatedTime = Timestamp;
+        }
+        #endregion
+
+    
 
         public int TimeoutMs { get; set; }
+        public string SessionID { get; set ; }
 
         /// <summary>
         /// 构造函数
@@ -74,9 +105,26 @@ namespace RUINORERP.PacketSpec.Commands
             Priority = CommandPriority.Normal;
             Status = CommandStatus.Created;
             CreatedAt = DateTime.Now;
+            
+            // 初始化ITraceable属性
+            CreatedTime = DateTime.UtcNow;
+            Timestamp = DateTime.UtcNow;
+            Version = "2.0";
 
             // 不再初始化默认的日志记录器，而是延迟初始化
         }
+
+        #region IValidatable 接口实现
+        /// <summary>
+        /// 验证模型有效性
+        /// </summary>
+        /// <returns>是否有效</returns>
+        public bool IsValid()
+        {
+            return CreatedTime <= DateTime.UtcNow &&
+                   CreatedTime >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
+        }
+        #endregion
 
         /// <summary>
         /// 设置日志记录器
@@ -86,17 +134,7 @@ namespace RUINORERP.PacketSpec.Commands
             Logger = logger;
         }
 
-        /// <summary>
-        /// 确保日志记录器已初始化
-        /// </summary>
-        private void EnsureLoggerInitialized()
-        {
-            if (Logger == null)
-            {
-                // 使用控制台日志器作为后备方案
-                Logger = new Utilities.ConsoleLogger(GetType().Name);
-            }
-        }
+         
 
         /// <summary>
         /// 执行命令 - 模板方法模式
@@ -105,7 +143,6 @@ namespace RUINORERP.PacketSpec.Commands
         {
             try
             {
-                EnsureLoggerInitialized();
                 LogInfo($"开始执行命令: {GetType().Name} [ID: {CommandId}]");
 
                 // 验证命令
@@ -175,7 +212,11 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 return CommandValidationResult.Failure("该命令需要有效的数据包", ErrorCodes.DataRequired);
             }
-
+ // 添加 SessionID 验证（如果需要）
+    if (RequiresSession() && string.IsNullOrEmpty(SessionID))
+    {
+        return CommandValidationResult.Failure("该命令需要有效的会话ID", ErrorCodes.SessionRequired);
+    }
             return CommandValidationResult.Success();
         }
 
@@ -379,7 +420,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogDebug(string message)
         {
-            EnsureLoggerInitialized();
             Logger.LogDebug(message);
         }
 
@@ -388,7 +428,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogInfo(string message)
         {
-            EnsureLoggerInitialized();
             Logger.LogInformation(message);
         }
 
@@ -397,7 +436,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogWarning(string message)
         {
-            EnsureLoggerInitialized();
             Logger.LogWarning(message);
         }
 
@@ -406,7 +444,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogError(string message, Exception ex = null)
         {
-            EnsureLoggerInitialized();
             if (ex != null)
             {
                 Logger.LogError(ex, message);
@@ -420,9 +457,20 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 创建响应数据包
         /// </summary>
+        /// <param name="responseCommand">完整的响应命令ID</param>
+        /// <param name="data1">第一部分数据</param>
+        /// <param name="data2">第二部分数据</param>
+        /// <returns>原始数据包</returns>
         protected OriginalData CreateResponseData(uint responseCommand, byte[] data1 = null, byte[] data2 = null)
         {
-            return new OriginalData((byte)Math.Min(responseCommand, 255), data1, data2);
+            // 将uint类型的命令ID转换为字节数组
+            byte[] commandBytes = BitConverter.GetBytes(responseCommand);
+            
+            // 构造OriginalData: Cmd使用命令ID的低8位(Category)，One使用命令ID的次低8位(OperationCode)
+            byte cmd = commandBytes[0]; // 命令类别
+            byte[] one = commandBytes.Length > 1 ? new byte[] { commandBytes[1] } : Array.Empty<byte>(); // 操作码
+            
+            return new OriginalData(cmd, one, data2);
         }
 
         /// <summary>

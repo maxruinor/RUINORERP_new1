@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
@@ -119,27 +119,36 @@ namespace RUINORERP.PacketSpec.Commands
             try
             {
                 // 根据数据类型创建适当的原始数据
+                // 将完整的CommandId正确分解为Category和OperationCode
+                byte category = (byte)(CommandType & 0xFF); // 取低8位作为Category
+                byte operationCode = (byte)((CommandType >> 8) & 0xFF); // 取次低8位作为OperationCode
+                
                 if (data is byte[] byteData)
                 {
-                    return new OriginalData((byte)(CommandType & 0xFF), byteData, null);
+                    return new OriginalData(category, new byte[] { operationCode }, byteData);
                 }
                 else if (data is string stringData)
                 {
                     var bytes = System.Text.Encoding.UTF8.GetBytes(stringData);
-                    return new OriginalData((byte)(CommandType & 0xFF), bytes, null);
+                    return new OriginalData(category, new byte[] { operationCode }, bytes);
                 }
                 else
                 {
                     // 对于其他类型的数据，序列化为JSON字符串
                     var json = Newtonsoft.Json.JsonConvert.SerializeObject(data);
                     var bytes = System.Text.Encoding.UTF8.GetBytes(json);
-                    return new OriginalData((byte)(CommandType & 0xFF), bytes, null);
+                    return new OriginalData(category, new byte[] { operationCode }, bytes);
                 }
             }
             catch (System.Exception ex)
             {
                 LogError("创建原始数据失败: " + ex.Message, ex);
-                return new OriginalData((byte)(CommandType & 0xFF), null, null);
+                
+                // 将完整的CommandId正确分解为Category和OperationCode
+                byte category = (byte)(CommandType & 0xFF); // 取低8位作为Category
+                byte operationCode = (byte)((CommandType >> 8) & 0xFF); // 取次低8位作为OperationCode
+                
+                return new OriginalData(category, new byte[] { operationCode }, null);
             }
         }
 

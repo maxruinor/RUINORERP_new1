@@ -6,7 +6,7 @@ using TransInstruction.DataPortal;
 namespace TransInstruction
 {
     /// <summary>
-    /// 一个加密解密协议的工具类，所有的加密解密都通过这个类。解析的过程也通过这个类
+    /// 一个加密解密协议的工具类，用于socket通讯系统中的数据处理，所有的加密解密都通过这个类。解析的过程也通过这个类
     /// 注意：cmd,one,two。
     /// cmd：指令码   长度：一个字节（byte）的取值范围是 0 到 255 ，共 256 个不同的值。
     /// one：子指令码 长度：int 通常占用 4 个字节（32 位）。

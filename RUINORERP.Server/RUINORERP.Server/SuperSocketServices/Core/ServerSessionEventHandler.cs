@@ -49,11 +49,11 @@ namespace RUINORERP.Server.SuperSocketServices
     public class ServerSessionEventHandler : IServerSessionEventHandler
     {
         private readonly ILogger<ServerSessionEventHandler> _logger;
-        private readonly ISessionManager _sessionManager;
+        private readonly ISessionService _sessionManager;
 
         public ServerSessionEventHandler(
             ILogger<ServerSessionEventHandler> logger,
-            ISessionManager sessionManager)
+            ISessionService sessionManager)
         {
             _logger = logger;
             _sessionManager = sessionManager;

@@ -20,57 +20,44 @@ using SuperSocket.Server.Abstractions;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Threading;
+using Microsoft.Extensions.Configuration;
+using System.Diagnostics;
+using static RUINORERP.Server.Network.Core.ListenerOptions;
+using RUINORERP.Server.Network.Commands;
 
 namespace RUINORERP.Server.Network.Core
 {
     /// <summary>
-    /// 网络服务器 - 基于SuperSocket的实现
-    /// 集成CommandDispatcher进行命令处理，提供完整的网络通信功能
+    /// 网络服务器核心类，负责初始化和管理SuperSocket服务器实例
+    /// 基于SuperSocket的实现，集成CommandDispatcher进行命令处理
+    /// 提供完整的网络通信功能，包括会话管理、命令分发和消息处理
     /// </summary>
     public class NetworkServer
     {
         private readonly ILogger<NetworkServer> _logger;
-        private readonly ISessionManager _sessionManager;
+        private readonly ISessionService _sessionManager;
         private readonly CommandDispatcher _commandDispatcher;
-        private IServiceCollection NetWorkServerServices { get; set; }
         private IHost _host;
 
 
-        public NetworkServer(IServiceCollection services, ILogger<NetworkServer> logger = null)
+        public NetworkServer(ILogger<NetworkServer> logger = null)
         {
             _logger = logger;
-            NetWorkServerServices = new ServiceCollection();
-
-            // 确保传入的services不为null
-            if (services != null)
-            {
-                foreach (var service in services)
-                {
-                    // 假设 service 是一个 ServiceDescriptor 对象
-                    // 将 service 注册添加到 NetWorkServerServices 中
-                    NetWorkServerServices.Add(service);
-                }
-            }
-
-            // 从Startup中添加服务
-            if (Startup.services != null)
-            {
-                foreach (var service in Startup.services)
-                {
-                    NetWorkServerServices.Add(service);
-                }
-            }
-
-            // 创建依赖注入服务容器来解析SessionManager
-            NetWorkServerServices.AddSingleton<ISessionManager, SessionManager>();
-            NetWorkServerServices.AddSingleton<SessionManager>();
-
-            // 使用NetWorkServerServices来构建服务提供器，而不是传入的services
-            var serviceProvider = NetWorkServerServices.BuildServiceProvider();
-            _sessionManager = serviceProvider.GetRequiredService<ISessionManager>();
+            
+            // 使用全局服务提供者，避免创建多个SessionService实例
+            _sessionManager = Program.ServiceProvider.GetRequiredService<ISessionService>();
             _commandDispatcher = new CommandDispatcher();
         }
+        
+        /// <summary>
+        /// 为了保持向后兼容性，保留这个构造函数
+        /// </summary>
+        public NetworkServer(IServiceCollection services, ILogger<NetworkServer> logger = null) : this(logger)
+        {
+            // 注意：这里不再使用传入的services参数，因为我们现在使用全局的Program.ServiceProvider
+        }
 
+        public int Serverport { get; set; } = 7538;
         /// <summary>
         /// 启动服务器
         /// </summary>
@@ -80,51 +67,83 @@ namespace RUINORERP.Server.Network.Core
             {
                 // 初始化命令调度器
                 await _commandDispatcher.InitializeAsync();
+                // 设置默认端口，以防配置读取失败
 
+                // 声明一个外部作用域的变量，将在ConfigureServerOptions中被赋值
+                ERPServerOptions serverOptions = null;
 
+                _logger.LogInformation("正在初始化SuperSocket服务器...");
                 _host = MultipleServerHostBuilder.Create()
                 .AddServer<SuperSocketService<ServerPackageInfo>, ServerPackageInfo, PacketPipelineFilter>(builder =>
                 {
+
                     builder.ConfigureServerOptions((ctx, config) =>
                        {
-                           //获取服务配置
-                           var configSection = config.GetSection("ERPServer");
+                           // 根据SuperSocket 2.0文档，配置应该从"serverOptions"节点读取
+                           // 1. 首先尝试从"serverOptions"节点读取配置（符合SuperSocket官方文档）
+                           ERPServerOptions localServerOptions = config.GetSection("serverOptions").Get<ERPServerOptions>();
 
-                           int maxConnections = config.GetSection("MaxConnectionCount").ObjToInt();
-                           // 设置最大会话数
-                           (_sessionManager as SessionManager)!.MaxSessionCount = maxConnections;
-                           // LogInfo($"正在启动网络服务器，端口: {port}");
-                           //tslblStatus.Text = "服务已启动。";
-                           //if (IsDebug)
-                           //{
-                           //    PrintMsg($"port:{configSection.GetSection("listeners").GetSection("0").GetSection("port").Value}");
-                           //   tslblStatus.Text = "服务已启动，端口：" + configSection.GetSection("listeners").GetSection("0").GetSection("port").Value;
-                           //}
-                           return configSection;
+                           // 2. 如果"serverOptions"节点不存在或配置无效，则尝试从"ERPServer"节点读取（向后兼容）
+                           if (localServerOptions == null || !localServerOptions.Listeners.Any())
+                           {
+                               localServerOptions = config.GetSection("ERPServer").Get<ERPServerOptions>() ?? new ERPServerOptions();
+
+                               // 3. 确保至少有一个监听器配置
+                               localServerOptions.Validate();
+                           }
+
+                           // 设置外部作用域的变量，以便ConfigureSuperSocket回调可以使用
+                           serverOptions = localServerOptions;
+
+                           // 设置服务器端口和最大连接数
+                           Serverport = localServerOptions.Listeners[0].Port;
+                           (_sessionManager as SessionService)!.MaxSessionCount = localServerOptions.MaxConnectionCount;
+
+                           // 返回配置节点，以便SuperSocket可以使用
+                           return config.GetSection("serverOptions").Exists() ? config.GetSection("serverOptions") : config.GetSection("ERPServer");
                        })
                    .UseSession<SessionInfo>()
                    .UseCommand(commandOptions =>
                    {
                        // 注册SuperSocket命令适配器
                        commandOptions.AddCommand<SuperSocketCommandAdapter<IAppSession>>();
+                       //commandOptions.AddCommand<SuperSocketCommandAdapter>();
                    })
-                   .ConfigureSuperSocket(options =>
-                   {
-                       options.Name = "RUINORERP.Network.Server";
-                       options.Listeners = new List<ListenOptions>
-                       {
-                           new ListenOptions
-                           {
-                               Ip = "Any",
-                               Port = 3006 // 默认端口，可以从配置中读取
-                           }
-                       };
-                       options.MaxPackageLength = 1024 * 1024; // 1MB
-                       options.ReceiveBufferSize = 4096;
-                       options.SendBufferSize = 4096;
-                       options.ReceiveTimeout = 120000; // 2分钟
-                       options.SendTimeout = 60000; // 1分钟
-                   })
+
+                    .ConfigureSuperSocket(options =>
+                    {
+                        if (serverOptions != null)
+                        {
+                            // 使用从配置中读取的serverOptions对象设置SuperSocket选项
+                            options.Listeners = serverOptions.Listeners.Select(l => new ListenOptions
+                            {
+                                Ip = l.Ip ?? "Any",  // 使用配置中的Ip，如果为空则使用默认值
+                                Port = l.Port
+                            }).ToList();
+                            options.MaxPackageLength = serverOptions.MaxPackageLength;
+                            options.ReceiveBufferSize = serverOptions.ReceiveBufferSize;
+                            options.SendBufferSize = serverOptions.SendBufferSize;
+                            options.ReceiveTimeout = serverOptions.ReceiveTimeout;
+                            options.SendTimeout = serverOptions.SendTimeout;
+
+                            // 如果设置了安全模式，则应用它
+                            if (!string.IsNullOrEmpty(serverOptions.SecurityMode))
+                            {
+                                foreach (var listener in options.Listeners)
+                                {
+                                    listener.NoDelay = true; // 设置为true可以减少TCP延迟
+                                    // 在实际应用中，根据安全模式配置SSL/TLS
+                                    // 这里只是示例，实际配置可能需要证书等信息
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // 如果没有有效的配置，使用默认值
+                            options.Listeners = new List<ListenOptions> { new ListenOptions { Ip = "Any", Port = Serverport } };
+                        }
+                    })
+
                    .UseSessionHandler(async (session) =>
                    {
                        // 会话连接
@@ -137,21 +156,26 @@ namespace RUINORERP.Server.Network.Core
                        await _sessionManager.RemoveSessionAsync(session.SessionID);
                    });
                 })
+                    .ConfigureLogging((hostCtx, loggingBuilder) =>
+                    {
+                        loggingBuilder.AddConsole();
+                    })
+
                  .ConfigureServices((context, services) =>
                   {
-                      // 注册核心服务
-                      services.AddSingleton<ISessionManager>(_sessionManager);
-                      foreach (var service in NetWorkServerServices)
-                      {
-                          services.Add(service);
-                      }
+                      // 注册核心服务 - 使用与全局相同的ISessionService实例
+                      services.AddSingleton<ISessionService>(_sessionManager);
 
-                      //services.AddSingleton<IUserService, UnifiedUserService>();
-                      // services.AddSingleton<CacheService>();
+                      // 从全局服务提供者获取并注册CommandDispatcher
+                      // 这解决了SuperSocketCommandAdapter无法解析CommandDispatcher的问题
+                      var commandDispatcher = Program.ServiceProvider.GetRequiredService<CommandDispatcher>();
+                      services.AddSingleton<CommandDispatcher>(commandDispatcher);
+
+                      // 注册ICommandFactory服务，SuperSocketCommandAdapter也依赖它
+                      var commandFactory = Program.ServiceProvider.GetRequiredService<ICommandFactory>();
+                      services.AddSingleton<ICommandFactory>(commandFactory);
 
                       // 注册命令调度器和适配器
-                      // services.AddSingleton(_commandDispatcher);
-                      services.AddSingleton<SuperSocketCommandAdapter<IAppSession>>();
                       services.AddLogging(builder =>
                       {
                           builder.AddConsole();
@@ -221,9 +245,9 @@ namespace RUINORERP.Server.Network.Core
             return new ServerInfo
             {
                 Status = _host != null ? "运行中" : "已停止",
-                Port = 3006, // 从配置中获取的端口号
+                Port = Serverport, // 从配置中获取的端口号
                 ServerIp = "0.0.0.0", // 表示监听所有IP地址
-                MaxConnections = (_sessionManager as SessionManager)?.MaxSessionCount ?? 1000,
+                MaxConnections = (_sessionManager as SessionService)?.MaxSessionCount ?? 1000,
                 CurrentConnections = stats.CurrentConnections,
                 TotalConnections = stats.TotalConnections,
                 PeakConnections = stats.PeakConnections,

@@ -7,6 +7,14 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Server.Network.Models;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Handlers;
+using RUINORERP.PacketSpec.Models;
+using HLH.Lib.Security;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+using Microsoft.VisualBasic.ApplicationServices;
+using RUINORERP.Model;
+using RUINORERP.Server.Network.Interfaces.Services;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net.Sockets;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -16,6 +24,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 移除了65%的重复代码，统一了登录认证核心逻辑
     /// </summary>
     [CommandHandler("LoginCommandHandler", priority: 100)]
+
     public class LoginCommandHandler : BaseCommandHandler
     {
         private const int MaxLoginAttempts = 5;
@@ -23,6 +32,11 @@ namespace RUINORERP.Server.Network.Commands
         private static readonly Dictionary<string, int> _loginAttempts = new Dictionary<string, int>();
         private static readonly HashSet<string> _activeSessions = new HashSet<string>();
         private static readonly object _lock = new object();
+
+        /// <summary>
+        /// 会话管理服务
+        /// </summary>
+        private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
 
         /// <summary>
         /// 支持的命令类型
@@ -43,28 +57,45 @@ namespace RUINORERP.Server.Network.Commands
         public override int Priority => 100;
 
         /// <summary>
-        /// 执行核心处理逻辑
+        /// 核心处理方法，根据命令类型分发到对应的处理函数
         /// </summary>
-        protected override async Task<CommandResult> OnHandleAsync(ICommand command, CancellationToken cancellationToken)
+        /// <param name="command">命令对象</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>命令处理结果</returns>
+        protected override async Task<CommandResult> OnHandleAsync(ICommand command, CancellationToken cancellationToken = default)
         {
             try
             {
                 var commandId = command.CommandIdentifier;
 
                 if (commandId == AuthenticationCommands.PrepareLogin)
+                {
                     return await HandlePrepareLoginAsync(command, cancellationToken);
+                }
                 else if (commandId == AuthenticationCommands.LoginRequest)
+                {
                     return await HandleLoginRequestAsync(command, cancellationToken);
+                }
                 else if (commandId == AuthenticationCommands.LoginValidation)
+                {
                     return await HandleLoginValidationAsync(command, cancellationToken);
+                }
                 else if (commandId == AuthenticationCommands.ValidateToken)
+                {
                     return await HandleTokenValidationAsync(command, cancellationToken);
+                }
                 else if (commandId == AuthenticationCommands.RefreshToken)
+                {
                     return await HandleTokenRefreshAsync(command, cancellationToken);
+                }
                 else if (commandId == AuthenticationCommands.Logout)
+                {
                     return await HandleLogoutAsync(command, cancellationToken);
+                }
                 else
+                {
                     return CommandResult.Failure($"不支持的命令类型: {command.CommandIdentifier}", "UNSUPPORTED_COMMAND");
+                }
             }
             catch (Exception ex)
             {
@@ -78,10 +109,8 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<CommandResult> HandlePrepareLoginAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo($"处理准备登录请求 [会话: {command.SessionInfo?.SessionId}]");
-
             // 检查并发用户数限制
-            if (_activeSessions.Count >= MaxConcurrentUsers)
+            if (SessionService.ActiveSessionCount >= MaxConcurrentUsers)
             {
                 return CommandResult.Failure("服务器达到最大用户数限制", "MAX_USERS_EXCEEDED");
             }
@@ -102,8 +131,6 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<CommandResult> HandleLoginRequestAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo($"处理登录请求 [会话: {command.SessionInfo?.SessionId}]");
-
             try
             {
                 // 解析登录数据
@@ -116,11 +143,16 @@ namespace RUINORERP.Server.Network.Commands
                 // 检查重复登录
                 if (IsUserAlreadyLoggedIn(loginData.Username))
                 {
-                    return CommandResult.Failure("用户已登录", "ALREADY_LOGGED_IN");
+                    // 检查是否允许重复登录
+                    bool allowMultipleSessions = false; // 可配置项
+                    if (!allowMultipleSessions)
+                    {
+                        return CommandResult.Failure("用户已在其他地方登录", "ALREADY_LOGGED_IN");
+                    }
                 }
 
                 // 检查黑名单
-                if (await IsUserBlacklistedAsync(loginData.Username, command.SessionInfo?.ClientIp))
+                if (IsUserBlacklisted(loginData.Username, loginData.ClientInfo))
                 {
                     return CommandResult.Failure("用户或IP在黑名单中", "BLACKLISTED");
                 }
@@ -128,7 +160,7 @@ namespace RUINORERP.Server.Network.Commands
                 // 检查登录尝试次数
                 if (GetLoginAttempts(loginData.Username) >= MaxLoginAttempts)
                 {
-                    return CommandResult.Failure("登录尝试次数过多", "TOO_MANY_ATTEMPTS");
+                    return CommandResult.Failure("登录尝试次数过多，请稍后再试", "TOO_MANY_ATTEMPTS");
                 }
 
                 // 验证用户凭据
@@ -142,17 +174,34 @@ namespace RUINORERP.Server.Network.Commands
                 // 重置登录尝试次数
                 ResetLoginAttempts(loginData.Username);
 
-                // 创建或更新会话
-                UpdateSessionInfo(command.SessionInfo, validationResult.UserInfo);
+                // 获取或创建会话信息
+                var sessionInfo = SessionService.GetSession(command.SessionID);
+                if (sessionInfo == null)
+                {
+                    // 创建新会话
+                    string clientIp = "127.0.0.1"; // 实际应用中应从command或网络连接中获取
+                    sessionInfo = SessionService.CreateSession(command.SessionID, clientIp);
+                    if (sessionInfo == null)
+                    {
+                        return CommandResult.Failure("创建会话失败", "SESSION_CREATION_FAILED");
+                    }
+                }
+
+                // 更新会话信息
+                UpdateSessionInfo(sessionInfo, validationResult.UserInfo);
+                SessionService.UpdateSession(sessionInfo);
 
                 // 记录活跃会话
-                AddActiveSession(command.sessionInfo.SessionID);
+                AddActiveSession(command.SessionID);
 
                 // 生成Token
                 var tokenInfo = GenerateTokenInfo(validationResult.UserInfo);
 
                 // 创建登录成功响应
                 var responseData = CreateLoginSuccessResponse(validationResult.UserInfo, tokenInfo);
+
+                // 记录登录日志
+                LogInfo($"用户登录成功: {loginData.Username}, SessionID: {command.SessionID}");
 
                 return CommandResult.SuccessWithResponse(
                     responseData,
@@ -172,31 +221,38 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<CommandResult> HandleLoginValidationAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo($"处理登录验证 [会话: {command.SessionInfo?.SessionId}]");
+            LogInfo($"处理登录验证 [会话: {command.SessionID}]");
 
             await Task.Delay(5, cancellationToken);
 
-            if (command.SessionInfo == null || string.IsNullOrEmpty(command.sessionInfo.SessionID))
+            // 使用SessionService验证会话有效性
+            if (!SessionService.IsValidSession(command.SessionID))
             {
                 return CommandResult.Failure("会话无效", "INVALID_SESSION");
             }
 
-            if (!command.SessionInfo.IsAuthenticated)
+            var sessionInfo = SessionService.GetSession(command.SessionID);
+            if (sessionInfo == null)
+            {
+                return CommandResult.Failure("获取会话信息失败", "SESSION_NOT_FOUND");
+            }
+
+            if (!sessionInfo.IsAuthenticated)
             {
                 return CommandResult.Failure("会话未认证", "SESSION_NOT_AUTHENTICATED");
             }
 
             // 检查会话是否仍然活跃
-            if (!_activeSessions.Contains(command.sessionInfo.SessionID))
+            if (!_activeSessions.Contains(command.SessionID))
             {
                 return CommandResult.Failure("会话已过期", "SESSION_EXPIRED");
             }
 
-            var responseData = CreateValidationResponse(command.SessionInfo);
+            var responseData = CreateValidationResponse(sessionInfo);
 
             return CommandResult.SuccessWithResponse(
                 responseData,
-                data: new { SessionId = command.sessionInfo.SessionID, UserId = command.SessionInfo.UserId },
+                data: new { SessionId = command.SessionID, UserId = sessionInfo.UserId },
                 message: "验证成功"
             );
         }
@@ -206,7 +262,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<CommandResult> HandleTokenValidationAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo($"处理Token验证 [会话: {command.SessionInfo?.SessionId}]");
+            LogInfo($"处理Token验证 [会话: {command.SessionID}]");
 
             try
             {
@@ -217,7 +273,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 验证Token
-                var validationResult = await ValidateTokenAsync(tokenData.Token, command.SessionInfo?.SessionId);
+                var validationResult = await ValidateTokenAsync(tokenData.Token, command.SessionID);
 
                 if (!validationResult.IsValid)
                 {
@@ -244,7 +300,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<CommandResult> HandleTokenRefreshAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo($"处理Token刷新 [会话: {command.SessionInfo?.SessionId}]");
+            LogInfo($"处理Token刷新 [会话: {command.SessionID}]");
 
             try
             {
@@ -286,19 +342,26 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<CommandResult> HandleLogoutAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo($"处理注销请求 [会话: {command.SessionInfo?.SessionId}]");
+            LogInfo($"处理注销请求 [会话: {command.SessionID}]");
 
             try
             {
-                if (command.SessionInfo == null || string.IsNullOrEmpty(command.sessionInfo.SessionID))
+                // 使用SessionService验证会话有效性
+                if (!SessionService.IsValidSession(command.SessionID))
                 {
                     return CommandResult.Failure("会话信息无效", "INVALID_SESSION");
                 }
 
+                var sessionInfo = SessionService.GetSession(command.SessionID);
+                if (sessionInfo == null)
+                {
+                    return CommandResult.Failure("获取会话信息失败", "SESSION_NOT_FOUND");
+                }
+
                 // 执行注销
                 var logoutResult = await LogoutAsync(
-                    command.sessionInfo.SessionID,
-                    command.SessionInfo.UserId.ToString()
+                    command.SessionID,
+                    sessionInfo.UserId.ToString()
                 );
 
                 if (!logoutResult)
@@ -310,7 +373,7 @@ namespace RUINORERP.Server.Network.Commands
 
                 return CommandResult.SuccessWithResponse(
                     responseData,
-                    data: new { LoggedOut = true, SessionId = command.sessionInfo.SessionID },
+                    data: new { LoggedOut = true, SessionId = command.SessionID },
                     message: "注销成功"
                 );
             }
@@ -370,44 +433,37 @@ namespace RUINORERP.Server.Network.Commands
                     ErrorMessage = "用户名或密码不能为空"
                 };
             }
+            //password = EncryptionHelper.AesDecryptByHashKey(enPwd, username);
+            string EnPassword = EncryptionHelper.AesEncryptByHashKey(loginData.Password, loginData.Username);
 
-            // 模拟数据库验证 - 这里应该替换为实际的数据库查询
-            if (loginData.Username == "admin" && loginData.Password == "123456")
+            var user = await Program.AppContextData.Db.CopyNew().Queryable<tb_UserInfo>()
+                     .Where(u => u.UserName == loginData.Username && u.Password == EnPassword)
+               .Includes(x => x.tb_employee)
+                     .Includes(x => x.tb_User_Roles)
+                     .SingleAsync();
+            if (user != null)
             {
                 return new UserValidationResult
                 {
                     IsValid = true,
                     UserInfo = new UserInfo
                     {
-                        UserId = "admin",
-                        Username = "admin",
-                        DisplayName = "系统管理员",
+                        UserId = user.User_ID,
+                        Username = user.UserName,
+                        DisplayName = user.tb_employee.Employee_Name,
                         IsAdmin = true,
-                        Roles = new[] { "Administrator", "User" }
+                        Roles = user.tb_User_Roles
                     }
                 };
             }
-            else if (loginData.Username == "user" && loginData.Password == "password")
+            else
             {
                 return new UserValidationResult
                 {
-                    IsValid = true,
-                    UserInfo = new UserInfo
-                    {
-                        UserId = "user",
-                        Username = "user",
-                        DisplayName = "普通用户",
-                        IsAdmin = false,
-                        Roles = new[] { "User" }
-                    }
+                    IsValid = false,
+                    ErrorMessage = "用户名或密码错误"
                 };
             }
-
-            return new UserValidationResult
-            {
-                IsValid = false,
-                ErrorMessage = "用户名或密码错误"
-            };
         }
 
         /// <summary>
@@ -418,11 +474,10 @@ namespace RUINORERP.Server.Network.Commands
             if (sessionInfo != null && userInfo != null)
             {
                 sessionInfo.UserId = userInfo.UserId;
+                sessionInfo.Username = userInfo.Username;
                 sessionInfo.IsAuthenticated = true;
-                sessionInfo.IsAuthenticated = userInfo.IsAdmin;
-                sessionInfo.LastActivityTime = DateTime.Now;
-
-                sessionInfo.AdditionalInfo["UserInfo"] = userInfo;
+                sessionInfo.UpdateActivity();
+                // sessionInfo.AdditionalInfo["UserInfo"] = userInfo;
             }
         }
 
@@ -441,16 +496,11 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 检查用户或IP是否在黑名单中
         /// </summary>
-        private async Task<bool> IsUserBlacklistedAsync(string username, string ipAddress)
+        private bool IsUserBlacklisted(string username, string ipAddress)
         {
-            await Task.Delay(10);
-
-            // 这里应该查询黑名单数据库，这里简化为硬编码检查
-            var blacklistedUsers = new[] { "baduser", "hacker" };
-            var blacklistedIps = new[] { "192.168.1.100", "10.0.0.50" };
-
-            return blacklistedUsers.Contains(username) ||
-                   (!string.IsNullOrEmpty(ipAddress) && blacklistedIps.Contains(ipAddress));
+            // 检查IP是否被封禁
+            return BlacklistManager.IsIpBanned(username) ||
+                   (!string.IsNullOrEmpty(ipAddress) && BlacklistManager.IsIpBanned(ipAddress));
         }
 
         /// <summary>
@@ -629,8 +679,9 @@ namespace RUINORERP.Server.Network.Commands
 
             RemoveActiveSession(sessionId);
             ResetLoginAttempts(userId);
-
-            return true;
+            
+            // 通过SessionService移除会话
+            return SessionService.RemoveSession(sessionId);
         }
 
         #endregion
@@ -642,10 +693,15 @@ namespace RUINORERP.Server.Network.Commands
             var responseMessage = $"READY|{MaxConcurrentUsers}";
             var data = System.Text.Encoding.UTF8.GetBytes(responseMessage);
 
+            // 将完整的CommandId正确分解为Category和OperationCode
+            uint commandId = (uint)AuthenticationCommands.LoginResponse;
+            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
+            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
+
             return new OriginalData(
-                (byte)AuthenticationCommands.LoginResponse,
-                data,
-                null
+                category,
+                new byte[] { operationCode },
+                data
             );
         }
 
@@ -654,10 +710,15 @@ namespace RUINORERP.Server.Network.Commands
             var responseData = $"SUCCESS|{userInfo.UserId}|{userInfo.DisplayName}|{tokenInfo.AccessToken}|{tokenInfo.RefreshToken}|{tokenInfo.ExpiresIn}";
             var data = System.Text.Encoding.UTF8.GetBytes(responseData);
 
+            // 将完整的CommandId正确分解为Category和OperationCode
+            uint commandId = (uint)AuthenticationCommands.LoginResponse;
+            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
+            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
+
             return new OriginalData(
-                (byte)AuthenticationCommands.LoginResponse,
-                data,
-                null
+                category,
+                new byte[] { operationCode },
+                data
             );
         }
 
@@ -666,10 +727,15 @@ namespace RUINORERP.Server.Network.Commands
             var responseData = $"VALID|{sessionInfo.SessionID}|{sessionInfo.UserId}";
             var data = System.Text.Encoding.UTF8.GetBytes(responseData);
 
+            // 将完整的CommandId正确分解为Category和OperationCode
+            uint commandId = (uint)AuthenticationCommands.LoginValidation;
+            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
+            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
+
             return new OriginalData(
-                (byte)AuthenticationCommands.LoginValidation,
-                data,
-                null
+                category,
+                new byte[] { operationCode },
+                data
             );
         }
 
@@ -678,10 +744,15 @@ namespace RUINORERP.Server.Network.Commands
             var responseData = $"TOKEN_VALID|{validationResult.UserId}";
             var data = System.Text.Encoding.UTF8.GetBytes(responseData);
 
+            // 将完整的CommandId正确分解为Category和OperationCode
+            uint commandId = (uint)AuthenticationCommands.ValidateToken;
+            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
+            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
+
             return new OriginalData(
-                (byte)AuthenticationCommands.TokenValidation,
-                data,
-                null
+                category,
+                new byte[] { operationCode },
+                data
             );
         }
 
@@ -690,10 +761,15 @@ namespace RUINORERP.Server.Network.Commands
             var responseData = $"TOKEN_REFRESHED|{refreshResult.AccessToken}|{refreshResult.RefreshToken}|{refreshResult.ExpiresIn}";
             var data = System.Text.Encoding.UTF8.GetBytes(responseData);
 
+            // 将完整的CommandId正确分解为Category和OperationCode
+            uint commandId = (uint)AuthenticationCommands.RefreshToken;
+            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
+            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
+
             return new OriginalData(
-                (byte)AuthenticationCommands.TokenRefresh,
-                data,
-                null
+                category,
+                new byte[] { operationCode },
+                data
             );
         }
 
@@ -702,10 +778,15 @@ namespace RUINORERP.Server.Network.Commands
             var responseData = "LOGGED_OUT";
             var data = System.Text.Encoding.UTF8.GetBytes(responseData);
 
+            // 将完整的CommandId正确分解为Category和OperationCode
+            uint commandId = (uint)AuthenticationCommands.Logout;
+            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
+            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
+
             return new OriginalData(
-                (byte)AuthenticationCommands.Logout,
-                data,
-                null
+                category,
+                new byte[] { operationCode },
+                data
             );
         }
 
@@ -755,89 +836,5 @@ namespace RUINORERP.Server.Network.Commands
         #endregion
     }
 
-    #region 数据模型类
 
-    /// <summary>
-    /// 登录数据
-    /// </summary>
-    public class LoginData
-    {
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string ClientInfo { get; set; }
-    }
-
-    /// <summary>
-    /// 用户验证结果
-    /// </summary>
-    public class UserValidationResult
-    {
-        public bool IsValid { get; set; }
-        public string ErrorMessage { get; set; }
-        public UserInfo UserInfo { get; set; }
-    }
-
-    /// <summary>
-    /// 用户信息
-    /// </summary>
-    public class UserInfo
-    {
-        public string UserId { get; set; }
-        public string Username { get; set; }
-        public string DisplayName { get; set; }
-        public bool IsAdmin { get; set; }
-        public string[] Roles { get; set; }
-    }
-
-    /// <summary>
-    /// Token信息
-    /// </summary>
-    public class TokenInfo
-    {
-        public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
-        public int ExpiresIn { get; set; }
-        public string TokenType { get; set; }
-    }
-
-    /// <summary>
-    /// Token验证结果
-    /// </summary>
-    public class TokenValidationResult
-    {
-        public bool IsValid { get; set; }
-        public string ErrorMessage { get; set; }
-        public string UserId { get; set; }
-    }
-
-    /// <summary>
-    /// Token刷新结果
-    /// </summary>
-    public class TokenRefreshResult
-    {
-        public bool IsSuccess { get; set; }
-        public string ErrorMessage { get; set; }
-        public string AccessToken { get; set; }
-        public string RefreshToken { get; set; }
-        public int ExpiresIn { get; set; }
-    }
-
-    /// <summary>
-    /// Token数据
-    /// </summary>
-    public class TokenData
-    {
-        public string Token { get; set; }
-    }
-
-    /// <summary>
-    /// 刷新数据
-    /// </summary>
-    public class RefreshData
-    {
-        public string RefreshToken { get; set; }
-        public string CurrentToken { get; set; }
-    }
-
-    #endregion
 }

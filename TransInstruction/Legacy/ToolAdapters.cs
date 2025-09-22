@@ -1,7 +1,4 @@
 using System;
-using RUINORERP.PacketSpec.Utilities;
-using RUINORERP.PacketSpec.Security;
-using RUINORERP.PacketSpec.Protocol;
 using TransInstruction.DataPortal;
 
 namespace TransInstruction.Legacy

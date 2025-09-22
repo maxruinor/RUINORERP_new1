@@ -7,6 +7,8 @@
   <ItemGroup>
     <Compile Remove="CommandService\CommandDispatcher.cs" />
     <Compile Remove="CommandService\CommandPublisher.cs" />
+    <Compile Remove="DI\PacketSpecDIConfig.cs" />
+    <Compile Remove="Legacy\ToolAdapters.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -15,8 +17,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DI\" />
+    <Folder Include="Legacy\" />
     <Folder Include="Protocols\" />
     <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
   </ItemGroup>
 
 </Project>

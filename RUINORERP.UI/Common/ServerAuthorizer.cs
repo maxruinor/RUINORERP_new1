@@ -3,6 +3,10 @@ using Netron.Neon;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.UI.ClientCmdService;
 using RUINORERP.UI.SuperSocketClient;
 using SourceGrid2.Win32;
@@ -28,42 +32,7 @@ namespace RUINORERP.UI.Common
     internal class ServerAuthorizer
     {
 
-        ///// <summary>
-        ///// 3秒超时返回
-        ///// </summary>
-        ///// <param name="userName"></param>
-        ///// <param name="password"></param>
-        ///// <param name="timeOutSec"></param>
-        ///// <returns></returns>
-        //public async Task LongRunningOperationAsync(EasyClientService _ecs, string userName, string password, int timeOutSec)
-        //{
-        //    using (var tokenSource = new CancellationTokenSource())
-        //    {
-        //        var startTime = DateTime.Now;
-        //        // 在任务执行期间定期检查 CancellationToken，
-        //        //發送帳號密碼
-        //        LoginServerByEasyClient(_ecs, userName, password);
-
-        //        //等待授权成功后需要1秒钟
-        //        await Task.Delay(TimeSpan.FromSeconds(1));
-
-        //        // 如果它已取消，可以安全地退出。
-        //        while (!_ecs.LoginStatus)
-        //        {
-        //            if ((DateTime.Now - startTime) >= TimeSpan.FromSeconds(timeOutSec))
-        //            {
-        //                tokenSource.Cancel();
-        //            }
-        //            if (tokenSource.IsCancellationRequested)
-        //            {
-        //                return;
-        //            }
-        //            await Task.Delay(TimeSpan.FromSeconds(2));
-        //        }
-        //    }
-        //}
-
-
+      
         /// <summary>
         /// 验证是否已经登陆并等待响应，最多等待指定的超时时间。
         /// </summary>
@@ -135,71 +104,133 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        [Obsolete]
-        public async Task<bool> LoginServerByEasyClient11(EasyClientService _ecs, string userName, string password, CancellationToken cancellationToken)
+
+        public async Task<bool> LoginToServer(
+          EasyClientService _ecs,
+          string userName,
+          string password,
+          CancellationToken cancellationToken)
         {
-            bool rs = false;
+            const int DnsTimeoutSeconds = 5;
+            const int ConnectTimeoutSeconds = 10;
+
             try
             {
-
-                IPHostEntry ipHostInfo = null;
-                if (IsIpAddress(UserGlobalConfig.Instance.ServerIP))
+                // 参数校验
+                if (string.IsNullOrWhiteSpace(UserGlobalConfig.Instance.ServerIP))
                 {
-                    ipHostInfo = Dns.GetHostEntry(UserGlobalConfig.Instance.ServerIP);
-                }
-                else if (IsHostname(UserGlobalConfig.Instance.ServerIP))
-                {
-                    //主机名
-                    ipHostInfo = Dns.GetHostEntry(UserGlobalConfig.Instance.ServerIP);
-                    UserGlobalConfig.Instance.ServerIP = ipHostInfo.AddressList[0].ToString();
-                }
-                else
-                {
-                    //默认一个
-                    ipHostInfo = Dns.GetHostEntry("192.168.0.254");
-                    UserGlobalConfig.Instance.ServerIP = "192.168.0.254";
+                    throw new ArgumentException("服务器地址不能为空");
                 }
 
-                //TransPackProcess tpp = new TransPackProcess();
-
-                if (_ecs == null)
-                {
-                    _ecs = new EasyClientService();
-                }
+                // 新建客户端实例（如果需要）
+                _ecs ??= new EasyClientService();
                 if (!_ecs.IsConnected)
                 {
-                    //ecs.ServerIp = "127.0.0.1";
-                    _ecs.ServerIp = UserGlobalConfig.Instance.ServerIP;
-                    _ecs.Port = UserGlobalConfig.Instance.ServerPort.ToInt();
-                    rs = await _ecs.Connect();
+
+                    // 智能解析服务器地址
+                    IPAddress[] serverAddresses;
+                    if (IPAddress.TryParse(UserGlobalConfig.Instance.ServerIP, out var ip))
+                    {
+                        // 直接使用IP地址
+                        serverAddresses = new[] { ip };
+                    }
+                    else
+                    {
+                        // 域名解析（带超时和取消）
+                        var dnsTask = Dns.GetHostAddressesAsync(UserGlobalConfig.Instance.ServerIP);
+                        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(DnsTimeoutSeconds), cancellationToken);
+
+                        var completedTask = await Task.WhenAny(dnsTask, timeoutTask);
+
+                        if (completedTask == timeoutTask)
+                        {
+                            throw new TimeoutException($"DNS解析超时（{DnsTimeoutSeconds}秒）");
+                        }
+
+                        serverAddresses = (await dnsTask)
+                            .Where(addr => addr.AddressFamily == AddressFamily.InterNetwork ||
+                                            addr.AddressFamily == AddressFamily.InterNetworkV6)
+                            .ToArray();
+
+                        if (serverAddresses.Length == 0)
+                        {
+                            throw new SocketException((int)SocketError.HostNotFound);
+                        }
+                    }
+
+                    // 尝试连接所有解析到的地址
+                    foreach (var address in serverAddresses)
+                    {
+                        try
+                        {
+                            _ecs.ServerIp = address.ToString();
+                            _ecs.Port = UserGlobalConfig.Instance.ServerPort.ToInt();
+
+                            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(ConnectTimeoutSeconds)))
+                            {
+                                var connectTask = _ecs.Connect();
+                                await connectTask.WaitAsync(cts.Token); // 使用自定义WaitAsync
+                            }
+
+                            if (_ecs.IsConnected) break;
+                        }
+                        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                        {
+                            throw; // 用户取消
+                        }
+                        catch
+                        {
+                            // 记录失败日志，继续尝试下一个地址
+                            RUINORERP.Common.Log4Net.Logger.Warn($"连接 {address} 失败");
+                        }
+                    }
+                    if (!_ecs.IsConnected)
+                    {
+                        throw new Exception($"无法连接到服务器（尝试了 {serverAddresses.Length} 个地址）");
+                    }
                 }
 
-                //连接上准备
-                //OriginalData od = ActionForClient.UserReayLogin();
-                //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(od);
-                //_ecs.client.Send(buffer);
+
+                // 创建登录请求数据包
+                var loginPacket = PacketBuilder.Create()
+                    .AsLoginRequest("admin", "password123", "1.0.0")
+                    .WithSession("session_abc")
+                    .WithRequestId("req_001")
+                    .Build();
 
 
 
-                //OriginalData od1 = ActionForClient.UserLogin(userName, password);
-                //byte[] buffer1 = CryptoProtocol.EncryptClientPackToServer(od1);
-                //_ecs.client.Send(buffer1);
+                // 发送登录请求
+                var request = new LoginRequest(CmdOperation.Send)
+                {
+                    OperationType = CmdOperation.Send,
+                    requestType = LoginProcessType.用户登陆,
+                    Username = userName,
+                    Password = password
+                };
 
-                RequestLoginCommand request = new RequestLoginCommand(CmdOperation.Send);
-                request.requestType = LoginProcessType.用户登陆;
-                request.Username = userName;
-                request.Password = password;
+                // 创建自定义命令数据包
+                var customPacket = PacketBuilder.Create()
+                    .WithCommand(MessageCommands.SendPopupMessage)  // 使用预定义的命令
+                    .WithPriority(PacketPriority.High)
+                    .WithDirection(PacketDirection.ClientToServer)
+                    .WithJsonData(new { Title = "通知", Content = "这是一条测试消息" })
+                    .Build();
+
+
                 MainForm.Instance.dispatcher.DispatchAsync(request, cancellationToken);
-                rs = _ecs.client.IsConnected;
+
+                // 持久化配置
                 UserGlobalConfig.Instance.Serialize();
+
+                return _ecs.client.IsConnected;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                MainForm.Instance.logger.LogError(ex.Message);
-                MainForm.Instance.ShowStatusText(ex.Message);
-                rs = false;
+                MainForm.Instance.ShowStatusText(GetUserFriendlyError(ex));
+                MainForm.Instance.logger.Debug(ex, "登录失败" + ex.Message);
+                return false;
             }
-            return rs;
         }
 
 

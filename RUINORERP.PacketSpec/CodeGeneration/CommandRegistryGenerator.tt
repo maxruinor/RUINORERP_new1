@@ -38,7 +38,7 @@ namespace RUINORERP.PacketSpec.CodeGeneration
     // 这里会在实际的源代码生成器中通过反射扫描所有标记了CommandHandler特性的类
     // 示例数据:
 #>
-            { 0x0304, typeof(MessageCommandHandlerV2) },
+            { 0x0304, typeof(MessageCommandHandler) },
             // 更多命令处理器会在这里自动生成
         };
 

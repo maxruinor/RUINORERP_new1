@@ -20,6 +20,9 @@
     <Compile Remove="Enums\CommandHelper.cs" />
     <Compile Remove="Enums\CommandId.cs" />
     <Compile Remove="Enums\UsageExamples.cs" />
+    <Compile Remove="Security\EncryptedProtocolPool.cs" />
+    <Compile Remove="Security\KxCryptographyService.cs" />
+    <Compile Remove="Security\UnifiedCryptographyService.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,7 +47,20 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Tests\" />
+    <None Update="CodeGeneration\CommandRegistryGenerator.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>CommandRegistryGenerator.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="CodeGeneration\CommandRegistryGenerator.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CommandRegistryGenerator.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

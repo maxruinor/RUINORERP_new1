@@ -1,46 +1,102 @@
-using System.Threading.Tasks;
-using System.Threading;
-using Microsoft.Extensions.Logging;
-using SuperSocket.Command;
-using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.Server.Network.Interfaces;
-using RUINORERP.Server.Network.Models;
-using RUINORERP.PacketSpec.Enums.Exception;
-using Newtonsoft.Json;
-using SuperSocket.Server.Abstractions.Session;
 using System;
-using RUINORERP.PacketSpec.Enums.Core;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using global::RUINORERP.PacketSpec.Commands;
+using global::RUINORERP.PacketSpec.Models.Core;
+using global::RUINORERP.PacketSpec.Serialization;
+using global::RUINORERP.Server.Network.Models;
+using global::RUINORERP.Server.Network.Interfaces.Services;
+using global::SuperSocket.Command;
+using global::SuperSocket.Server.Abstractions.Session;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.PacketSpec;
+using RUINORERP.PacketSpec.Enums.Core;
 using ICommand = RUINORERP.PacketSpec.Commands.ICommand;
-using CommandAttribute = RUINORERP.PacketSpec.Commands.CommandAttribute;
-using MessagePack.Formatters;
-using System.Diagnostics;
+using CommandAttribute = SuperSocket.Command.CommandAttribute;
 
 namespace RUINORERP.Server.Network.Commands.SuperSocket
 {
     /// <summary>
-    /// SuperSocket命令适配器
-    /// 将SuperSocket的命令调用转换为现有的命令处理系统
+    /// 统一的SuperSocket命令适配器
+    /// 整合了原有的SimplifiedSuperSocketAdapter、SocketCommand和SuperSocketCommandAdapter的功能
     /// </summary>
-    /// <typeparam name="TAppSession">SuperSocket会话类型</typeparam>
-    public class SuperSocketCommandAdapter<TAppSession> : IAsyncCommand<TAppSession, PacketModel>
+    [Command(Key = "SuperSocketCommandAdapter")]
+    public class SuperSocketCommandAdapter<TAppSession> : IAsyncCommand<TAppSession, ServerPackageInfo>
         where TAppSession : IAppSession
     {
         private readonly CommandDispatcher _commandDispatcher;
         private readonly ILogger _logger;
         private readonly Dictionary<uint, Type> _commandTypeMap;
+        private readonly ICommandFactory _commandFactory;
+        private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
+
+        #region 错误代码字典化处理
+        /// <summary>
+        /// 错误代码映射字典
+        /// </summary>
+        private static readonly Dictionary<string, (int code, string message)> ErrorCodeMap = new Dictionary<string, (int code, string message)>
+        {
+            { ErrorCodes.CommandNotFound, (404, "命令未找到") },
+            { ErrorCodes.UnhandledException, (500, "处理命令时发生未预期的异常") },
+            { ErrorCodes.UnknownError, (999, "发生未知错误") },
+            { "SessionNotFound", (401, "会话不存在或已过期") } // 添加会话不存在的错误码
+        };
+
+        /// <summary>
+        /// 根据错误代码获取对应的错误消息和数字代码
+        /// </summary>
+        /// <param name="errorCode">错误代码</param>
+        /// <returns>错误代码数字值和消息</returns>
+        protected virtual (int code, string message) GetErrorInfoByCode(string errorCode)
+        {
+            if (ErrorCodeMap.TryGetValue(errorCode, out var errorInfo))
+            {
+                return errorInfo;
+            }
+
+            // 默认返回错误代码本身
+            return (1, errorCode);
+        }
+
+        /// <summary>
+        /// 根据错误代码获取对应的错误消息
+        /// </summary>
+        /// <param name="errorCode">错误代码</param>
+        /// <returns>错误消息</returns>
+        protected virtual string GetErrorMessageByCode(string errorCode)
+        {
+            return GetErrorInfoByCode(errorCode).message;
+        }
+
+        /// <summary>
+        /// 获取错误代码对应的数字值
+        /// </summary>
+        /// <param name="errorCode">错误代码</param>
+        /// <returns>错误代码数字值</returns>
+        protected virtual int GetErrorCodeNumber(string errorCode)
+        {
+            return GetErrorInfoByCode(errorCode).code;
+        }
+        #endregion
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="commandDispatcher">命令调度器</param>
+        /// <param name="commandFactory">命令工厂</param>
         /// <param name="logger">日志记录器</param>
-        public SuperSocketCommandAdapter(CommandDispatcher commandDispatcher, ILogger logger = null)
+        public SuperSocketCommandAdapter(
+            CommandDispatcher commandDispatcher,
+            ICommandFactory commandFactory,
+            ILogger logger = null)
         {
             _commandDispatcher = commandDispatcher;
+            _commandFactory = commandFactory;
             _logger = logger;
             _commandTypeMap = new Dictionary<uint, Type>();
             InitializeCommandMap();
@@ -55,17 +111,17 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             try
             {
                 // 动态扫描并注册所有实现ICommand接口的命令类型
-                var assembly = Assembly.GetAssembly(typeof(ICommand));
+                var assembly = Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommand));
                 if (assembly != null)
                 {
                     var commandTypes = assembly.GetTypes()
-                        .Where(t => typeof(ICommand).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
+                        .Where(t => typeof(PacketSpec.Commands.ICommand).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
                         .ToList();
 
                     foreach (var commandType in commandTypes)
                     {
                         // 尝试获取命令特性
-                        var commandAttribute = commandType.GetCustomAttribute<CommandAttribute>();
+                        var commandAttribute = commandType.GetCustomAttribute<PacketSpec.Commands.CommandAttribute>();
                         if (commandAttribute != null && commandAttribute.Id > 0)
                         {
                             _commandTypeMap[commandAttribute.Id] = commandType;
@@ -92,11 +148,12 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <param name="package">数据包</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>执行结果任务</returns>
-        public async ValueTask ExecuteAsync(TAppSession session, PacketModel package, CancellationToken cancellationToken)
+        public async ValueTask ExecuteAsync(TAppSession session, ServerPackageInfo package, CancellationToken cancellationToken)
         {
             if (package == null)
             {
                 _logger?.LogWarning("接收到空的数据包");
+                await SendErrorResponseAsync(session, package, ErrorCodes.NullCommand, cancellationToken);
                 return;
             }
 
@@ -114,8 +171,20 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     InitializeCommandMap();
                 }
 
-                SessionInfo sessionInfo = new SessionInfo();
-                //这里先这样，先跑起来  todo by watson
+                // 获取现有会话信息
+                var sessionInfo = SessionService.GetSession(session.SessionID);
+                if (sessionInfo == null)
+                {
+                    // 如果会话不存在，可能是连接已断开或会话已过期
+                    await SendErrorResponseAsync(session, package, "SessionNotFound", cancellationToken);
+                    return;
+                }
+
+                // 更新会话的最后活动时间
+                sessionInfo.UpdateActivity(); // 使用专门的UpdateActivity方法更新活动时间
+                SessionService.UpdateSession(sessionInfo);
+                // 同时调用专门的UpdateSessionActivity方法确保活动时间被正确更新
+                SessionService.UpdateSessionActivity(session.SessionID);
 
                 // 创建命令对象
                 var command = CreateCommand(package, sessionInfo);
@@ -157,7 +226,17 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         {
             try
             {
-                // 根据命令ID查找对应的命令类型
+                // 优先使用命令工厂创建命令
+                if (_commandFactory != null)
+                {
+                    var command = _commandFactory.CreateCommand(package);
+                    if (command != null)
+                    {
+                        return command;
+                    }
+                }
+
+                // 如果命令工厂无法创建命令，尝试根据命令ID查找对应的命令类型
                 if (_commandTypeMap.TryGetValue(package.Command, out var commandType))
                 {
                     // 尝试使用构造函数创建命令实例
@@ -302,19 +381,14 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 Direction = requestPackage.Direction == PacketDirection.Request ? PacketDirection.Response : requestPackage.Direction,
                 SessionId = requestPackage.SessionId,
                 ClientId = requestPackage.ClientId,
-                Status = PacketStatus.Completed
+                Status = PacketStatus.Completed,
+                Extensions = new Dictionary<string, object>
+                {
+                    ["Data"] = result.Data,
+                    ["Message"] = result.Message,
+                    ["Success"] = result.IsSuccess
+                }
             };
-
-            // 设置响应数据
-            if (result.Data != null)
-            {
-                response.Extensions["Data"] = result.Data;
-            }
-
-            if (!string.IsNullOrEmpty(result.Message))
-            {
-                response.Extensions["Message"] = result.Message;
-            }
 
             return response;
         }
@@ -328,8 +402,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <returns>发送结果任务</returns>
         protected virtual async ValueTask SendResponseAsync(TAppSession session, PacketModel package, CancellationToken cancellationToken)
         {
-            // 这里需要实现数据包的序列化和发送逻辑
-            // 实际实现应根据项目的序列化方式进行调整
+            // 使用统一的序列化方法
             var serializedData = SerializePacket(package);
             await session.SendAsync(serializedData, cancellationToken);
         }
@@ -348,66 +421,24 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             string errorCode,
             CancellationToken cancellationToken)
         {
+            var errorInfo = GetErrorInfoByCode(errorCode);
             var errorResponse = new PacketModel
             {
-                PacketId = GenerateResponseId(requestPackage.PacketId),
-                Command = requestPackage.Command,
+                PacketId = GenerateResponseId(requestPackage?.PacketId ?? Guid.NewGuid().ToString()),
+                Command = requestPackage?.Command ?? default(CommandId),
                 Direction = PacketDirection.Response,
-                SessionId = requestPackage.SessionId,
-                ClientId = requestPackage.ClientId,
+                SessionId = requestPackage?.SessionId,
+                ClientId = requestPackage?.ClientId,
                 Status = PacketStatus.Error,
                 Extensions = new Dictionary<string, object>
-                    {
-                        { "ErrorCode", GetErrorCodeNumber(errorCode) },
-                        { "ErrorMessage", GetErrorMessageByCode(errorCode) }
-                    }
+                {
+                    ["ErrorCode"] = errorInfo.code,
+                    ["ErrorMessage"] = errorInfo.message,
+                    ["Success"] = false
+                }
             };
 
             await SendResponseAsync(session, errorResponse, cancellationToken);
-        }
-
-        /// <summary>
-        /// 根据错误代码获取对应的错误消息
-        /// </summary>
-        /// <param name="errorCode">错误代码</param>
-        /// <returns>错误消息</returns>
-        protected virtual string GetErrorMessageByCode(string errorCode)
-        {
-            // 根据错误代码返回对应的错误消息
-            // 这里可以实现一个更完整的错误消息映射
-            switch (errorCode)
-            {
-                case ErrorCodes.CommandNotFound:
-                    return "命令未找到";
-                case ErrorCodes.UnhandledException:
-                    return "处理命令时发生未预期的异常";
-                case ErrorCodes.UnknownError:
-                    return "发生未知错误";
-                default:
-                    return errorCode; // 默认返回错误代码本身
-            }
-        }
-        
-        /// <summary>
-        /// 获取错误代码对应的数字值
-        /// </summary>
-        /// <param name="errorCode">错误代码</param>
-        /// <returns>错误代码数字值</returns>
-        protected virtual int GetErrorCodeNumber(string errorCode)
-        {
-            // 将字符串错误代码映射到数字
-            // 这里可以实现一个更完整的错误代码数字映射
-            switch (errorCode)
-            {
-                case ErrorCodes.CommandNotFound:
-                    return 404;
-                case ErrorCodes.UnhandledException:
-                    return 500;
-                case ErrorCodes.UnknownError:
-                    return 999;
-                default:
-                    return 1; // 默认错误代码
-            }
         }
 
         /// <summary>
@@ -417,10 +448,8 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <returns>序列化后的字节数组</returns>
         protected virtual byte[] SerializePacket(PacketModel package)
         {
-            // 实际实现应根据项目的序列化方式进行调整
-            // 这里只是一个示例
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(package);
-            return System.Text.Encoding.UTF8.GetBytes(json);
+            // 使用统一的序列化方法
+            return UnifiedSerializationService.SerializeToBinary(package);
         }
 
         /// <summary>
@@ -432,5 +461,19 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         {
             return $"RESP_{requestId}_{Guid.NewGuid().ToString().Substring(0, 8)}";
         }
+    }
+
+    /// <summary>
+    /// 非泛型版本的统一SuperSocket命令适配器，便于在不需要指定会话类型的场景中使用
+    /// </summary>
+    [Command(Key = "SuperSocketCommandAdapter")]
+    public class SuperSocketCommandAdapter : SuperSocketCommandAdapter<IAppSession>
+    {
+        public SuperSocketCommandAdapter(
+            CommandDispatcher commandDispatcher,
+            ICommandFactory commandFactory,
+            ILogger logger = null) 
+            : base(commandDispatcher, commandFactory, logger)
+        { }
     }
 }

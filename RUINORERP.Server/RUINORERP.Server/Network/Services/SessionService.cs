@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
 using SuperSocket.Server.Abstractions.Session;
+using SuperSocket.Server;
+using SuperSocket.Channel;
+using SuperSocket.Connection;
 
 
 namespace RUINORERP.Server.Network.Services
@@ -17,8 +20,9 @@ namespace RUINORERP.Server.Network.Services
     /// ✅ [统一架构] 统一会话管理器 - 整合SuperSocket和Network会话管理功能
     /// 合并了原有的SessionManager和SuperSocket SessionManager功能
     /// 提供完整的会话生命周期管理、事件机制、统计监控和SuperSocket集成
+    /// 会话管理行为严格基于SuperSocket连接和断开事件实现
     /// </summary>
-    public class SessionManager : ISessionManager, IDisposable
+    public class SessionService : ISessionService, IDisposable, RUINORERP.Server.SuperSocketServices.IServerSessionEventHandler
     {
         #region 字段和属性
 
@@ -29,7 +33,7 @@ namespace RUINORERP.Server.Network.Services
         private readonly SessionStatistics _statistics;
         private readonly object _lockObject = new object();
         private bool _disposed = false;
-        private readonly ILogger<SessionManager> _logger;
+        private readonly ILogger<SessionService> _logger;
 
         /// <summary>
         /// 活动会话数量
@@ -65,7 +69,7 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="maxSessionCount">最大会话数量</param>
-        public SessionManager(ILogger<SessionManager> logger, int maxSessionCount = 1000)
+        public SessionService(ILogger<SessionService> logger, int maxSessionCount = 1000)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             MaxSessionCount = maxSessionCount;
@@ -109,7 +113,7 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 var sessionInfo = SessionInfo.Create(sessionId, clientIp, clientPort);
-                
+
                 if (_sessions.TryAdd(sessionId, sessionInfo))
                 {
                     lock (_lockObject)
@@ -151,7 +155,7 @@ namespace RUINORERP.Server.Network.Services
                 if (_sessions.TryGetValue(sessionId, out var sessionInfo))
                 {
                     // 更新最后访问时间
-                    sessionInfo.LastActivityTime = DateTime.Now;
+                    sessionInfo.UpdateActivity();
                     return sessionInfo;
                 }
 
@@ -183,7 +187,7 @@ namespace RUINORERP.Server.Network.Services
                     existingSession.Username = sessionInfo.Username;
                     existingSession.IsAuthenticated = sessionInfo.IsAuthenticated;
                     //existingSession.IsAdmin = sessionInfo.IsAdmin;
-                    existingSession.LastActivityTime = DateTime.Now;
+                    existingSession.UpdateActivity();
                     existingSession.DataContext = sessionInfo.DataContext;
 
                     // 触发会话更新事件
@@ -273,79 +277,42 @@ namespace RUINORERP.Server.Network.Services
         }
 
         #endregion
-
-        #region ISessionManager 实现 - SuperSocket集成
+  
+        #region ISessionEventHandler 实现
 
         /// <summary>
-        /// 注册SuperSocket会话（为兼容旧版接口）
+        /// 处理会话连接事件 - 基于SuperSocket连接事件触发
+        /// 严格按照SuperSocket的连接事件处理会话创建和管理
         /// </summary>
-        /// <param name="sessionInfo">会话信息</param>
-        /// <param name="session">SuperSocket会话</param>
-        /// <returns>注册结果</returns>
-        public async Task<bool> RegisterSessionAsync(SessionInfo sessionInfo, IAppSession session)
+        /// <param name="session">连接的会话</param>
+        /// <returns>异步任务</returns>
+        public async ValueTask OnSessionConnectedAsync(IAppSession session)
         {
             try
             {
-                // 确保会话信息正确设置
-                if (sessionInfo != null && string.IsNullOrEmpty(sessionInfo.SessionID))
+                // 检查是否已达到最大会话数
+                if (ActiveSessionCount >= MaxSessionCount)
                 {
-                    //sessionInfo.SessionID = session.SessionID;
+                    _logger.LogWarning($"达到最大会话数量限制: {MaxSessionCount}，拒绝新连接");
+                    await session.CloseAsync(CloseReason.ServerShutdown);
+                    return;
                 }
-                
-                // 调用现有的AddSessionAsync方法
-                var result = await AddSessionAsync(session);
-                
-                // 如果会话信息不为空，更新会话信息
-                if (result && sessionInfo != null)
-                {
-                    UpdateSession(sessionInfo);
-                }
-                
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "注册会话失败");
-                return false;
-            }
-        }
 
-        /// <summary>
-        /// 注销SuperSocket会话（为兼容旧版接口）
-        /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <returns>注销结果</returns>
-        public async Task<bool> UnregisterSessionAsync(string sessionId)
-        {
-            // 直接调用现有的RemoveSessionAsync方法
-            return await RemoveSessionAsync(sessionId);
-        }
+                SessionInfo sessionInfo = session as SessionInfo;
 
-        /// <summary>
-        /// 添加SuperSocket会话
-        /// </summary>
-        /// <param name="session">SuperSocket会话</param>
-        /// <returns>添加结果</returns>
-        public async Task<bool> AddSessionAsync(IAppSession session)
-        {
-            try
-            {
-                var sessionInfo = new SessionInfo
-                {
-                    //SessionID = session.SessionID,
-                    //RemoteEndPoint = session.RemoteEndPoint?.ToString(),
-                    //LocalEndPoint = session.LocalEndPoint?.ToString(),
-                    //ConnectedTime = DateTime.UtcNow,
-                    //LastActiveTime = DateTime.UtcNow,
-                    IsConnected = true,
-                    Properties = new Dictionary<string, object>()
-                };
+                // 创建会话信息
+                sessionInfo.ConnectedTime = DateTime.Now;
+                sessionInfo.UpdateActivity();
+                sessionInfo.IsConnected = true;
+                sessionInfo.Properties = new Dictionary<string, object>();
 
+
+                // 存储会话
                 var added = _sessions.TryAdd(session.SessionID, sessionInfo);
                 if (added)
                 {
                     _appSessions.TryAdd(session.SessionID, session);
-                    
+
                     lock (_lockObject)
                     {
                         _statistics.TotalConnections++;
@@ -355,21 +322,181 @@ namespace RUINORERP.Server.Network.Services
 
                     // 触发会话连接事件
                     SessionConnected?.Invoke(sessionInfo);
+                    // 调用IServerSessionEventHandler接口的会话连接方法
+                    await OnSessionConnectedAsync(sessionInfo);
 
-                    _logger.LogInformation($"SuperSocket会话已添加: SessionID={session.SessionID}, RemoteIP={sessionInfo.RemoteEndPoint}");
+                    _logger.LogInformation($"SuperSocket会话已连接: SessionID={session.SessionID}, RemoteIP={sessionInfo.RemoteEndPoint}");
                 }
                 else
                 {
-                    _logger.LogWarning($"SuperSocket会话添加失败，SessionID已存在: {session.SessionID}");
+                    _logger.LogWarning($"SuperSocket会话连接失败，SessionID已存在: {session.SessionID}");
                 }
-
-                return added;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"添加SuperSocket会话时出错: SessionID={session?.SessionID}");
-                return false;
+                _logger.LogError(ex, $"处理会话连接事件时出错: SessionID={session?.SessionID}");
             }
+        }
+
+        /// <summary>
+        /// 会话连接事件处理 - 项目自定义接口实现
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>异步任务</returns>
+        public async Task OnSessionConnectedAsync(SessionInfo sessionInfo)
+        {
+            try
+            {
+                // 可以在这里添加额外的连接后处理逻辑
+                // 例如记录连接信息、初始化会话状态等
+                _logger.LogDebug($"执行会话连接后的自定义处理逻辑: {sessionInfo.SessionID}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"执行会话连接自定义处理逻辑时出错: {sessionInfo.SessionID}");
+            }
+        }
+
+        /// <summary>
+        /// 处理会话断开事件 - 基于SuperSocket断开事件触发
+        /// 严格按照SuperSocket的断开事件处理会话清理和资源释放
+        /// </summary>
+        /// <param name="session">断开的会话</param>
+        /// <param name="closeReason">断开原因</param>
+        /// <returns>异步任务</returns>
+        public async ValueTask OnSessionClosedAsync(IAppSession session, CloseEventArgs closeReason)
+        {
+            try
+            {
+
+                // 获取会话信息
+                _sessions.TryGetValue(session.SessionID, out var sessionInfo);
+
+                await RemoveSessionAsync(session.SessionID);
+
+                // 如果存在会话信息，调用IServerSessionEventHandler接口的会话断开方法
+                if (sessionInfo != null)
+                {
+                    await OnSessionDisconnectedAsync(sessionInfo, closeReason.Reason.ToString());
+                }
+
+                _logger.LogInformation($"SuperSocket会话已断开: SessionID={session.SessionID}, 原因={closeReason.Reason}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"处理会话断开事件时出错: SessionID={session?.SessionID}");
+            }
+        }
+
+        /// <summary>
+        /// 会话断开事件处理 - 项目自定义接口实现
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <param name="reason">断开原因</param>
+        /// <returns>异步任务</returns>
+        public async Task OnSessionDisconnectedAsync(SessionInfo sessionInfo, string reason)
+        {
+            try
+            {
+                // 可以在这里添加额外的断开后处理逻辑
+                // 例如清理资源、保存会话历史等
+                _logger.LogDebug($"执行会话断开后的自定义处理逻辑: {sessionInfo.SessionID}, 原因: {reason}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"执行会话断开自定义处理逻辑时出错: {sessionInfo.SessionID}");
+            }
+        }
+
+        /// <summary>
+        /// 用户认证成功事件处理 - 项目自定义接口实现
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>异步任务</returns>
+        public async Task OnUserAuthenticatedAsync(SessionInfo sessionInfo)
+        {
+            try
+            {
+                _logger.LogInformation($"用户认证成功: SessionID={sessionInfo.SessionID}, Username={sessionInfo.Username}");
+                // 认证成功后的处理逻辑
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"处理用户认证成功事件时出错: {sessionInfo.SessionID}");
+            }
+        }
+
+        /// <summary>
+        /// 用户认证失败事件处理 - 项目自定义接口实现
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <param name="reason">失败原因</param>
+        /// <returns>异步任务</returns>
+        public async Task OnAuthenticationFailedAsync(SessionInfo sessionInfo, string reason)
+        {
+            try
+            {
+                _logger.LogWarning($"用户认证失败: SessionID={sessionInfo.SessionID}, 原因: {reason}");
+                // 认证失败后的处理逻辑
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"处理用户认证失败事件时出错: {sessionInfo.SessionID}");
+            }
+        }
+
+        /// <summary>
+        /// 会话超时事件处理 - 项目自定义接口实现
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>异步任务</returns>
+        public async Task OnSessionTimeoutAsync(SessionInfo sessionInfo)
+        {
+            try
+            {
+                _logger.LogInformation($"会话超时: SessionID={sessionInfo.SessionID}");
+                // 会话超时后的处理逻辑
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"处理会话超时事件时出错: {sessionInfo.SessionID}");
+            }
+        }
+
+        /// <summary>
+        /// 会话错误事件处理 - 项目自定义接口实现
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <param name="error">错误异常</param>
+        /// <returns>异步任务</returns>
+        public async Task OnSessionErrorAsync(SessionInfo sessionInfo, Exception error)
+        {
+            try
+            {
+                _logger.LogError(error, $"会话错误: SessionID={sessionInfo.SessionID}");
+                // 会话错误后的处理逻辑
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"处理会话错误事件时出错: {sessionInfo.SessionID}");
+            }
+        }
+
+        #endregion
+
+        #region ISessionService 实现 - SuperSocket集成
+
+        /// <summary>
+        /// 添加SuperSocket会话
+        /// </summary>
+        /// <param name="session">SuperSocket会话</param>
+        /// <returns>添加结果</returns>
+        public async Task<bool> AddSessionAsync(IAppSession session)
+        {
+            // 此方法现在通过OnSessionConnectedAsync处理SuperSocket连接事件
+            // 保留此方法以保持接口兼容性
+            await OnSessionConnectedAsync(session);
+            return _sessions.ContainsKey(session.SessionID);
         }
 
         /// <summary>
@@ -437,7 +564,7 @@ namespace RUINORERP.Server.Network.Services
 
                 await Task.WhenAll(tasks);
                 _logger.LogInformation($"消息广播完成: 目标会话={activeSessions.Count}, 成功发送={successCount}");
-                
+
                 return successCount;
             }
             catch (Exception ex)
@@ -449,6 +576,8 @@ namespace RUINORERP.Server.Network.Services
 
         /// <summary>
         /// 更新会话活动时间
+        /// 确保会话活动时间正确更新，以便会话超时清理机制正常工作
+        /// 使用SessionInfo类提供的UpdateActivity()方法更新活动时间，避免直接设置属性可能出现的问题
         /// </summary>
         /// <param name="sessionId">会话ID</param>
         /// <returns>更新结果</returns>
@@ -458,7 +587,8 @@ namespace RUINORERP.Server.Network.Services
             {
                 if (_sessions.TryGetValue(sessionId, out var sessionInfo))
                 {
-                    //sessionInfo.LastActiveTime = DateTime.Now;
+                    // 使用专门的UpdateActivity方法更新活动时间和心跳计数
+                    sessionInfo.UpdateActivity();
                     return true;
                 }
                 return false;
@@ -603,7 +733,7 @@ namespace RUINORERP.Server.Network.Services
                 // 暂时使用JSON序列化
                 var jsonMessage = Newtonsoft.Json.JsonConvert.SerializeObject(message);
                 var messageBytes = System.Text.Encoding.UTF8.GetBytes(jsonMessage);
-                
+
                 await session.SendAsync(messageBytes);
             }
             catch (Exception ex)
@@ -666,6 +796,23 @@ namespace RUINORERP.Server.Network.Services
             {
                 _cleanupTimer?.Dispose();
                 _heartbeatTimer?.Dispose();
+
+                // 关闭并清理所有活动会话
+                foreach (var sessionId in _appSessions.Keys.ToList())
+                {
+                    if (_appSessions.TryGetValue(sessionId, out var session))
+                    {
+                        try
+                        {
+                            session.CloseAsync(CloseReason.ServerShutdown).AsTask().Wait(100);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, $"关闭会话时出错: {sessionId}");
+                        }
+                    }
+                }
+
                 _sessions?.Clear();
                 _appSessions?.Clear();
                 _disposed = true;

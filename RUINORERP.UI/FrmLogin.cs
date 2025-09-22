@@ -12,7 +12,6 @@ using RUINORERP.Business.Security;
 using RUINORERP.Model.Context;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using RUINORERP.UI.SuperSocketClient;
-using RUINORERP.PacketSpec.Legacy;
 using RUINORERP.UI.Common;
 using Microsoft.Extensions.Logging;
 using System.Threading;

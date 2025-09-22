@@ -4,17 +4,17 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Utilities;
 using RUINORERP.PacketSpec.Serialization;
-using RUINORERP.PacketSpec.Enums.Exception;
+using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 命令处理器基类 - 提供命令处理器的通用实现
     /// </summary>
-    public abstract class BaseCommandHandler : BaseModel, ICommandHandler
+    public abstract class BaseCommandHandler : ITraceable, IValidatable, ICommandHandler
     {
         private readonly object _lockObject = new object();
         private bool _disposed = false;
@@ -24,6 +24,37 @@ namespace RUINORERP.PacketSpec.Commands
         /// 处理器唯一标识
         /// </summary>
         public string HandlerId { get; private set; }
+
+        #region ITraceable 接口实现
+        /// <summary>
+        /// 创建时间（UTC时间）
+        /// </summary>
+        public DateTime CreatedTime { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// 最后更新时间（UTC时间）
+        /// </summary>
+        public DateTime? LastUpdatedTime { get; set; }
+
+        /// <summary>
+        /// 时间戳（UTC时间）
+        /// </summary>
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// 模型版本
+        /// </summary>
+        public string Version { get; set; } = "2.0";
+
+        /// <summary>
+        /// 更新时间戳
+        /// </summary>
+        public void UpdateTimestamp()
+        {
+            Timestamp = DateTime.UtcNow;
+            LastUpdatedTime = Timestamp;
+        }
+        #endregion
 
         /// <summary>
         /// 处理器名称
@@ -63,27 +94,29 @@ namespace RUINORERP.PacketSpec.Commands
             HandlerId = GenerateHandlerId();
             _statistics = new HandlerStatistics();
             
+            // 初始化ITraceable属性
+            CreatedTime = DateTime.UtcNow;
+            Timestamp = DateTime.UtcNow;
+            Version = "2.0";
+            
             // 不再初始化默认的日志记录器，而是延迟初始化
         }
 
+        #region IValidatable 接口实现
         /// <summary>
-        /// 设置日志记录器
+        /// 验证模型有效性
         /// </summary>
-        public void SetLogger(ILogger logger)
+        /// <returns>是否有效</returns>
+        public bool IsValid()
         {
-            Logger = logger;
+            return CreatedTime <= DateTime.UtcNow &&
+                   CreatedTime >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
         }
+        #endregion
 
-        /// <summary>
-        /// 确保日志记录器已初始化
-        /// </summary>
-        private void EnsureLoggerInitialized()
-        {
-            if (Logger == null)
-            {
-                Logger = new ConsoleLogger(Name);
-            }
-        }
+
+
+ 
 
         /// <summary>
         /// 异步处理命令
@@ -110,7 +143,7 @@ namespace RUINORERP.PacketSpec.Commands
 
             try
             {
-                EnsureLoggerInitialized();
+               
                 LogDebug($"开始处理命令: {command.CommandIdentifier} [ID: {command.CommandId}]");
 
                 // 验证命令
@@ -140,13 +173,13 @@ namespace RUINORERP.PacketSpec.Commands
                 var processingTime = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
                 UpdateStatistics(result.IsSuccess, processingTime);
 
-                EnsureLoggerInitialized();
+               
                 LogDebug($"命令处理完成: {command.CommandIdentifier} [ID: {command.CommandId}] - {processingTime}ms");
                 return result;
             }
             catch (OperationCanceledException)
             {
-                EnsureLoggerInitialized();
+               
                 LogWarning($"命令处理被取消: {command.CommandIdentifier} [ID: {command.CommandId}]");
                 UpdateStatistics(false, (long)(DateTime.UtcNow - startTime).TotalMilliseconds);
                 return CommandResult.Failure("命令处理被取消", ErrorCodes.CommandCancelled);
@@ -154,7 +187,7 @@ namespace RUINORERP.PacketSpec.Commands
             catch (Exception ex)
             {
                 var processingTime = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                EnsureLoggerInitialized();
+               
                 LogError($"命令处理异常: {command.CommandIdentifier} [ID: {command.CommandId}]", ex);
                 UpdateStatistics(false, processingTime);
                 return CommandResult.Failure($"处理异常: {ex.Message}", ErrorCodes.ProcessError, ex);
@@ -189,7 +222,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (IsInitialized)
                     return true;
 
-                EnsureLoggerInitialized();
+               
                 LogInfo($"初始化处理器: {Name}");
 
                 var result = await OnInitializeAsync(cancellationToken);
@@ -197,13 +230,13 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     IsInitialized = true;
                     Status = HandlerStatus.Initialized;
-                    EnsureLoggerInitialized();
+                   
                     LogInfo($"处理器初始化成功: {Name}");
                 }
                 else
                 {
                     Status = HandlerStatus.Error;
-                    EnsureLoggerInitialized();
+                   
                     LogError($"处理器初始化失败: {Name}");
                 }
 
@@ -212,7 +245,7 @@ namespace RUINORERP.PacketSpec.Commands
             catch (Exception ex)
             {
                 Status = HandlerStatus.Error;
-                EnsureLoggerInitialized();
+               
                 LogError($"处理器初始化异常: {Name}", ex);
                 return false;
             }
@@ -235,7 +268,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (Status == HandlerStatus.Running)
                     return true;
 
-                EnsureLoggerInitialized();
+               
                 LogInfo($"启动处理器: {Name}");
 
                 var result = await OnStartAsync(cancellationToken);
@@ -243,13 +276,13 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     Status = HandlerStatus.Running;
                     _statistics.StartTime = DateTime.UtcNow;
-                    EnsureLoggerInitialized();
+                   
                     LogInfo($"处理器启动成功: {Name}");
                 }
                 else
                 {
                     Status = HandlerStatus.Error;
-                    EnsureLoggerInitialized();
+                   
                     LogError($"处理器启动失败: {Name}");
                 }
 
@@ -258,7 +291,7 @@ namespace RUINORERP.PacketSpec.Commands
             catch (Exception ex)
             {
                 Status = HandlerStatus.Error;
-                EnsureLoggerInitialized();
+               
                 LogError($"处理器启动异常: {Name}", ex);
                 return false;
             }
@@ -274,19 +307,19 @@ namespace RUINORERP.PacketSpec.Commands
                 if (Status == HandlerStatus.Stopped || Status == HandlerStatus.Disposed)
                     return true;
 
-                EnsureLoggerInitialized();
+               
                 LogInfo($"停止处理器: {Name}");
 
                 var result = await OnStopAsync(cancellationToken);
                 if (result)
                 {
                     Status = HandlerStatus.Stopped;
-                    EnsureLoggerInitialized();
+                   
                     LogInfo($"处理器停止成功: {Name}");
                 }
                 else
                 {
-                    EnsureLoggerInitialized();
+                   
                     LogError($"处理器停止失败: {Name}");
                 }
 
@@ -294,7 +327,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
             catch (Exception ex)
             {
-                EnsureLoggerInitialized();
+               
                 LogError($"处理器停止异常: {Name}", ex);
                 return false;
             }
@@ -404,6 +437,68 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
+        /// 创建成功响应结果
+        /// </summary>
+        /// <typeparam name="T">响应数据类型</typeparam>
+        /// <param name="command">命令ID</param>
+        /// <param name="data">响应数据</param>
+        /// <param name="msg">响应消息</param>
+        /// <returns>命令处理结果</returns>
+        protected CommandResult Success<T>(uint command, T data, string msg = null)
+        {
+            var responseData = CreateMessageResponse(command, data);
+            return CommandResult.SuccessWithResponse(responseData, data, msg ?? "操作成功");
+        }
+
+        /// <summary>
+        /// 创建失败响应结果
+        /// </summary>
+        /// <param name="msg">错误消息</param>
+        /// <param name="code">错误代码</param>
+        /// <param name="ex">异常信息</param>
+        /// <returns>命令处理结果</returns>
+        protected CommandResult Fail(string msg, string code = null, Exception ex = null)
+        {
+            return CommandResult.Failure(msg, code ?? "GENERAL_ERROR", ex);
+        }
+
+        /// <summary>
+        /// 创建消息响应数据包
+        /// </summary>
+        /// <typeparam name="T">响应数据类型</typeparam>
+        /// <param name="command">命令ID</param>
+        /// <param name="data">响应数据</param>
+        /// <returns>原始数据包</returns>
+        protected virtual OriginalData CreateMessageResponse<T>(uint command, T data)
+        {
+            try
+            {
+                // 将命令ID转换为字节数组
+                byte[] commandBytes = BitConverter.GetBytes(command);
+                
+                // 序列化数据部分
+                byte[] dataBytes = Array.Empty<byte>();
+                if (data != null)
+                {
+                    string json = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+                    dataBytes = System.Text.Encoding.UTF8.GetBytes(json);
+                }
+                
+                // 构造OriginalData: Cmd使用命令ID的低8位，One使用命令ID的高8位，Two使用序列化后的数据
+                byte cmd = commandBytes[0]; // 命令类别
+                byte[] one = commandBytes.Length > 1 ? new byte[] { commandBytes[1] } : Array.Empty<byte>(); // 操作码
+                
+                return new OriginalData(cmd, one, dataBytes);
+            }
+            catch (Exception ex)
+            {
+                LogError("创建消息响应失败: " + ex.Message, ex);
+                // 返回空的响应数据包
+                return OriginalData.Empty;
+            }
+        }
+
+        /// <summary>
         /// 更新统计信息
         /// </summary>
         private void UpdateStatistics(bool isSuccess, long processingTimeMs)
@@ -436,7 +531,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogDebug(string message)
         {
-            EnsureLoggerInitialized();
+           
             Logger.LogDebug(message);
         }
 
@@ -445,7 +540,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogInfo(string message)
         {
-            EnsureLoggerInitialized();
+           
             Logger.LogInformation(message);
         }
 
@@ -454,7 +549,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogWarning(string message)
         {
-            EnsureLoggerInitialized();
+           
             Logger.LogWarning(message);
         }
 
@@ -463,7 +558,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogError(string message, Exception ex = null)
         {
-            EnsureLoggerInitialized();
+           
             if (ex != null)
             {
                 Logger.LogError(ex, message);
@@ -474,37 +569,9 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        /// <summary>
-        /// 序列化命令数据（使用MessagePack）
-        /// </summary>
-        protected virtual byte[] SerializeCommandData(object data)
-        {
-            try
-            {
-                return MessagePackService.Serialize(data);
-            }
-            catch (Exception ex)
-            {
-                LogError($"序列化命令数据失败: {ex.Message}", ex);
-                return null;
-            }
-        }
+ 
 
-        /// <summary>
-        /// 反序列化命令数据（使用MessagePack）
-        /// </summary>
-        protected virtual T DeserializeCommandData<T>(byte[] data)
-        {
-            try
-            {
-                return MessagePackService.Deserialize<T>(data);
-            }
-            catch (Exception ex)
-            {
-                LogError($"反序列化命令数据失败: {ex.Message}", ex);
-                return default(T);
-            }
-        }
+ 
 
         #endregion
 
@@ -523,7 +590,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
                 catch (Exception ex)
                 {
-                    EnsureLoggerInitialized();
+                   
                     LogError($"释放处理器时停止失败: {Name}", ex);
                 }
 

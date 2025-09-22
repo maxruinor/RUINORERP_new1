@@ -134,6 +134,7 @@ namespace RUINORERP.Server
                     //https://github.com/autofac/Autofac.Extensions.DependencyInjection/releases
                     //设置服务的提供者
                     Startup.ServiceProvider = services;
+                    Program.ServiceProvider = services; // 同时给Program.ServiceProvider赋值
                     AppContextData.SetServiceProvider(services);
                     Startup.AutofacContainerScope = services.GetAutofacRoot();
                     AppContextData.SetAutofacContainerScope(Startup.AutofacContainerScope);

@@ -118,29 +118,7 @@ namespace RUINORERP.PacketSpec.Serialization
             }
         }
 
-        /// <summary>
-        /// 解码二进制数据为业务数据包
-        /// </summary>
-        /// <param name="buffer">数据缓冲区</param>
-        /// <param name="context">上下文对象</param>
-        /// <returns>业务数据包</returns>
-        public BusinessPacket DecodeBusinessPacket(ref ReadOnlySequence<byte> buffer, object context)
-        {
-            var unifiedPacket = Decode(ref buffer, context);
-            return unifiedPacket != null ? BusinessPacket.FromUnifiedPacket(unifiedPacket) : null;
-        }
-
-        /// <summary>
-        /// 使用MessagePack解码二进制数据为业务数据包
-        /// </summary>
-        /// <param name="buffer">数据缓冲区</param>
-        /// <param name="context">上下文对象</param>
-        /// <returns>业务数据包</returns>
-        public BusinessPacket DecodeBusinessPacketWithMessagePack(ref ReadOnlySequence<byte> buffer, object context)
-        {
-            var unifiedPacket = DecodeWithMessagePack(ref buffer, context);
-            return unifiedPacket != null ? BusinessPacket.FromUnifiedPacket(unifiedPacket) : null;
-        }
+  
 
         /// <summary>
         /// 安全解码（捕获异常返回null）

@@ -1,78 +1,223 @@
 ﻿using System;
+using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Security;
 
 namespace RUINORERP.PacketSpec.Protocol
 {
     /// <summary>
-    /// 网络传输层 - 原始数据包结构
-    /// 轻量级结构体，专用于网络数据传输，保持高性能
+    /// 原始数据包结构 - 表示未加密的数据
     /// </summary>
     public struct OriginalData
     {
         /// <summary>
-        /// 命令字节（支持256个基础命令）
+        /// 命令字节
+        /// CommandId的CommandCategory
         /// </summary>
+        [JsonProperty("cmd")]
         public byte Cmd;
-        
+
         /// <summary>
-        /// 第一数据段
+        /// 第一部分数据
+        /// CommandId的OperationCode子指令
         /// </summary>
+        [JsonProperty("one")]
         public byte[] One;
-        
+
         /// <summary>
-        /// 第二数据段（子命令或扩展数据）
+        /// 第二部分数据
         /// </summary>
+        [JsonProperty("two")]
         public byte[] Two;
-        
+
+        /// <summary>
+        /// 数据包总长度
+        /// </summary>
+        public int Length
+        {
+            get
+            {
+                int len = 1; // Cmd 字节
+                if (One != null)
+                {
+                    len += One.Length;
+                }
+                if (Two != null)
+                {
+                    len += Two.Length;
+                }
+                return len;
+            }
+        }
+
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="cmd">命令字节</param>
-        /// <param name="one">第一数据段</param>
-        /// <param name="two">第二数据段</param>
         public OriginalData(byte cmd, byte[] one, byte[] two)
         {
             Cmd = cmd;
             One = one ?? Array.Empty<byte>();
             Two = two ?? Array.Empty<byte>();
         }
-        
+
         /// <summary>
-        /// 获取数据包总长度
+        /// 构造函数 - 只包含命令和第一部分数据
         /// </summary>
-        public readonly int Length => 1 + (One?.Length ?? 0) + (Two?.Length ?? 0);
-        
+        public OriginalData(byte cmd, byte[] one)
+            : this(cmd, one, Array.Empty<byte>())
+        { }
+
         /// <summary>
-        /// 检查数据包是否有效
+        /// 构造函数 - 只包含命令
         /// </summary>
-        public readonly bool IsValid => Cmd != 0;
-        
+        public OriginalData(byte cmd)
+            : this(cmd, Array.Empty<byte>(), Array.Empty<byte>())
+        { }
+
         /// <summary>
-        /// 创建空数据包
+        /// 判断数据包是否有效
         /// </summary>
-        public static OriginalData Empty => new OriginalData(0, Array.Empty<byte>(), Array.Empty<byte>());
-        
-        
+        public bool IsValid
+        {
+            get
+            {
+                return Cmd > 0;
+            }
+        }
+
+        /// <summary>
+        /// 创建空的数据包
+        /// </summary>
+        public static OriginalData Empty
+        {
+            get
+            {
+                return new OriginalData(0, Array.Empty<byte>(), Array.Empty<byte>());
+            }
+        }
+
+        /// <summary>
+        /// 从命令和字符串数据创建数据包
+        /// </summary>
+        public static OriginalData FromString(byte cmd, string data)
+        {
+            return new OriginalData(cmd, data != null ? System.Text.Encoding.UTF8.GetBytes(data) : Array.Empty<byte>());
+        }
+
+        /// <summary>
+        /// 获取第一部分数据的字符串表示
+        /// </summary>
+        public string GetOneAsString()
+        {
+            return One != null && One.Length > 0 ? System.Text.Encoding.UTF8.GetString(One) : string.Empty;
+        }
+
+        /// <summary>
+        /// 获取第二部分数据的字符串表示
+        /// </summary>
+        public string GetTwoAsString()
+        {
+            return Two != null && Two.Length > 0 ? System.Text.Encoding.UTF8.GetString(Two) : string.Empty;
+        }
+
+        /// <summary>
+        /// 转换为字节数组
+        /// </summary>
+        public byte[] ToByteArray()
+        {
+            byte[] result = new byte[Length];
+            result[0] = Cmd;
+            int offset = 1;
+
+            if (One != null && One.Length > 0)
+            {
+                Buffer.BlockCopy(One, 0, result, offset, One.Length);
+                offset += One.Length;
+            }
+
+            if (Two != null && Two.Length > 0)
+            {
+                Buffer.BlockCopy(Two, 0, result, offset, Two.Length);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 复制当前数据包
+        /// </summary>
+        public OriginalData Clone()
+        {
+            byte[] oneCopy = One != null ? (byte[])One.Clone() : Array.Empty<byte>();
+            byte[] twoCopy = Two != null ? (byte[])Two.Clone() : Array.Empty<byte>();
+            return new OriginalData(Cmd, oneCopy, twoCopy);
+        }
     }
 
     /// <summary>
-    /// 网络传输层 - 加密后的数据包结构
-    /// 用于在网络中传输已加密的数据
+    /// 加密数据包结构 - 表示已加密的数据
     /// </summary>
     public struct EncryptedData
     {
+        /// <summary>
+        /// 包头部数据
+        /// </summary>
         public byte[] Head;
+
+        /// <summary>
+        /// 第一部分加密数据
+        /// </summary>
         public byte[] One;
+
+        /// <summary>
+        /// 第二部分加密数据
+        /// </summary>
         public byte[] Two;
-        
+
+        /// <summary>
+        /// 数据包总长度
+        /// </summary>
+        public int Length
+        {
+            get
+            {
+                int len = 0;
+                if (Head != null) len += Head.Length;
+                if (One != null) len += One.Length;
+                if (Two != null) len += Two.Length;
+                return len;
+            }
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
         public EncryptedData(byte[] head, byte[] one, byte[] two)
         {
-            Head = head;
-            One = one;
-            Two = two;
+            Head = head ?? Array.Empty<byte>();
+            One = one ?? Array.Empty<byte>();
+            Two = two ?? Array.Empty<byte>();
         }
-        
-      
-      
+
+        /// <summary>
+        /// 判断数据包是否有效
+        /// </summary>
+        public bool IsValid
+        {
+            get
+            {
+                return Head != null && Head.Length > 0;
+            }
+        }
+
+        /// <summary>
+        /// 创建空的加密数据包
+        /// </summary>
+        public static EncryptedData Empty
+        {
+            get
+            {
+                return new EncryptedData(Array.Empty<byte>(), Array.Empty<byte>(), Array.Empty<byte>());
+            }
+        }
     }
 }

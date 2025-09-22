@@ -9,7 +9,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
     /// 会话管理服务接口 - 提供统一的会话生命周期管理
     /// 整合SuperSocket和Network会话管理器的功能
     /// </summary>
-    public interface ISessionManager : IDisposable
+    public interface ISessionService : IDisposable
     {
         #region 会话管理
         

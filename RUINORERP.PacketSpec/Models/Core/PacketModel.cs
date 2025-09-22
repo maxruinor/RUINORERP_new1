@@ -3,6 +3,7 @@ using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Core;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {
@@ -12,10 +13,10 @@ namespace RUINORERP.PacketSpec.Models.Core
     /// 直接支持SuperSocket
     /// </summary>
     [Serializable]
-    public class PacketModel : BaseModel
+    public class PacketModel : BasePacketData, ITraceable, IValidatable
     {
         #region 属性定义
-        
+
         /// <summary>
         /// 数据包唯一标识符
         /// </summary>
@@ -25,22 +26,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 命令类型
         /// </summary>
         public CommandId Command { get; set; }
-
-        ///// <summary>
-        ///// 包标识键 - 用于SuperSocket命令匹配
-        ///// 与Command属性关联
-        ///// </summary>
-        //public uint Key
-        //{
-        //    get { return (uint)Command; }
-        //    set { 
-        //        // 从uint值创建CommandId实例
-        //        // 高8位是CommandCategory，低8位是OperationCode
-        //        CommandCategory category = (CommandCategory)(value >> 8);
-        //        byte operationCode = (byte)(value & 0xFF);
-        //        Command = new CommandId(category, operationCode); 
-        //    }
-        //}
 
         /// <summary>
         /// 原始命令值
@@ -62,10 +47,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// </summary>
         public PacketStatus Status { get; set; }
 
-        /// <summary>
-        /// 会话标识
-        /// </summary>
-        public string SessionId { get; set; }
 
         /// <summary>
         /// 客户端标识
@@ -99,8 +80,41 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         #endregion
 
+        #region ITraceable 接口实现
+
+        /// <summary>
+        /// 创建时间（UTC时间）
+        /// </summary>
+        public DateTime CreatedTime { get; set; }
+
+        /// <summary>
+        /// 最后更新时间（UTC时间）
+        /// </summary>
+        public DateTime? LastUpdatedTime { get; set; }
+
+        /// <summary>
+        /// 时间戳（UTC时间）
+        /// </summary>
+        public DateTime Timestamp { get; set; }
+
+        /// <summary>
+        /// 模型版本
+        /// </summary>
+        public string Version { get; set; } = "2.0";
+
+        /// <summary>
+        /// 更新时间戳
+        /// </summary>
+        public void UpdateTimestamp()
+        {
+            Timestamp = DateTime.UtcNow;
+            LastUpdatedTime = Timestamp;
+        }
+
+        #endregion
+
         #region 构造函数
-        
+
         /// <summary>
         /// 默认构造函数
         /// </summary>
@@ -108,6 +122,8 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             PacketId = GeneratePacketId();
             CreatedTime = DateTime.UtcNow;
+            Timestamp = CreatedTime;
+            Version = "2.0";
             Priority = PacketPriority.Normal;
             Direction = PacketDirection.Unknown;
             Status = PacketStatus.Created;
@@ -130,7 +146,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         #endregion
 
         #region 核心方法
-        
+
         /// <summary>
         /// 从原始数据创建数据包
         /// </summary>
@@ -235,13 +251,23 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 验证数据包有效性
         /// </summary>
         /// <returns>是否有效</returns>
-        public override bool IsValid()
+        public bool IsValid()
         {
-            return base.IsValid() &&
+            return CreatedTime <= DateTime.UtcNow &&
+                   CreatedTime >= DateTime.UtcNow.AddYears(-1) &&
                    !string.IsNullOrEmpty(PacketId) &&
                    Body != null &&
                    Body.Length > 0 &&
                    Size == Body.Length;
+        }
+
+        /// <summary>
+        /// 验证数据包有效性 - IValidatable接口实现
+        /// </summary>
+        /// <returns>是否有效</returns>
+        bool IValidatable.IsValid()
+        {
+            return IsValid();
         }
 
         /// <summary>
@@ -313,7 +339,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         #endregion
 
         #region 私有辅助方法
-        
+
         /// <summary>
         /// 生成数据包ID
         /// </summary>
@@ -335,7 +361,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         #endregion
 
         #region 重写方法
-        
+
         /// <summary>
         /// 转换为字符串表示
         /// </summary>

@@ -2824,9 +2824,10 @@ namespace RUINORERP.UI.BaseForm
                                 {
                                     if (payable.ARAPStatus == (int)ARAPStatus.待审核)
                                     {
-                                        payable.ApprovalOpinions = "系统自动审核";
+                                        payable.ApprovalOpinions = $"由采购入库单确认{payable.SourceBillNo},系统自动审核";
                                         payable.ApprovalStatus = (int)ApprovalStatus.已审核;
                                         payable.ApprovalResults = true;
+                                    
                                         //if (PurEntry.tb_purorder != null && !payable.PayeeInfoID.HasValue)
                                         //{
                                         //    //通过订单添加付款信息
@@ -3425,7 +3426,7 @@ namespace RUINORERP.UI.BaseForm
             SaveResult = await ctr.BaseSaveOrUpdate(EditEntity);
             if (SaveResult.Succeeded)
             {
-               // MainForm.Instance.auditLogHelper.CreateAuditLog<T>("数据特殊修正", EditEntity);
+                // MainForm.Instance.auditLogHelper.CreateAuditLog<T>("数据特殊修正", EditEntity);
                 MainForm.Instance.PrintInfoLog($"修正成功。");
             }
             else
@@ -3433,7 +3434,7 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.PrintInfoLog($"修正失败。", Color.Red);
             }
 
-           await MainForm.Instance.AuditLogHelper.CreateAuditLog("数据修正", EditEntity, $"结果:{(SaveResult.Succeeded ? "成功" : "失败")},{SaveResult.ErrorMsg}");
+            await MainForm.Instance.AuditLogHelper.CreateAuditLog("数据修正", EditEntity, $"结果:{(SaveResult.Succeeded ? "成功" : "失败")},{SaveResult.ErrorMsg}");
         }
 
         private string GetPrimaryKeyProperty(Type type)

@@ -54,6 +54,21 @@ namespace RUINORERP.Server.Network.Models
         {
             try
             {
+                // 创建新会话
+                var sessionInfo = new SessionInfo
+                {
+                   // SessionID = this.SessionID,
+                   // RemoteEndPoint = this.RemoteEndPoint?.ToString(),
+                    ConnectedTime = DateTime.Now,
+                    Status = SessionStatus.Connected
+                };
+                sessionInfo.UpdateActivity();
+
+                // 保存到会话管理器
+                // await SessionService.AddSessionAsync(sessionInfo);
+
+                await base.OnSessionConnectedAsync();
+
                 ////通知客户端一条消息 - 使用增强的通讯组件
                 //OriginalData WelcomeMsg = new OriginalData
                 //{
@@ -256,14 +271,15 @@ namespace RUINORERP.Server.Network.Models
         public static SessionInfo Create(string sessionId, string clientIp, int clientPort = 0)
         {
             var now = DateTime.Now;
-            return new SessionInfo
+            var sessionInfo = new SessionInfo
             {
                 ClientIp = clientIp,
                 ClientPort = clientPort,
                 ConnectedTime = now,
-                LastActivityTime = now,
                 Status = SessionStatus.Connected
             };
+            sessionInfo.UpdateActivity();
+            return sessionInfo;
         }
 
         /// <summary>
@@ -316,79 +332,7 @@ namespace RUINORERP.Server.Network.Models
         }
     }
 
-    /// <summary>
-    /// 用户信息 网络会话层？
-    /// </summary>
-    public class UserInfo
-    {
-        /// <summary>
-        /// 用户ID
-        /// </summary>
-        public long UserId { get; set; }
 
-        /// <summary>
-        /// 用户名
-        /// </summary>
-        public string Username { get; set; }
-
-        /// <summary>
-        /// 显示名称
-        /// </summary>
-        public string DisplayName { get; set; }
-
-        /// <summary>
-        /// 会话ID
-        /// </summary>
-        public string SessionId { get; set; }
-
-        /// <summary>
-        /// 客户端IP
-        /// </summary>
-        public string ClientIp { get; set; }
-
-        /// <summary>
-        /// 在线状态
-        /// </summary>
-        public bool IsOnline { get; set; }
-
-        /// <summary>
-        /// 最后登录时间
-        /// </summary>
-        public DateTime LastLoginTime { get; set; } = DateTime.Now;
-
-        /// <summary>
-        /// 角色权限
-        /// </summary>
-        public string[] Roles { get; set; }
-
-        /// <summary>
-        /// 部门信息
-        /// </summary>
-        public string Department { get; set; }
-
-        /// <summary>
-        /// 创建用户信息
-        /// </summary>
-        /// <param name="userId">用户ID</param>
-        /// <param name="username">用户名</param>
-        /// <param name="sessionId">会话ID</param>
-        /// <param name="clientIp">客户端IP</param>
-        /// <returns>用户信息对象</returns>
-        public static UserInfo Create(long userId, string username, string sessionId = null, string clientIp = null)
-        {
-            return new UserInfo
-            {
-                UserId = userId,
-                Username = username,
-                SessionId = sessionId,
-                ClientIp = clientIp,
-                IsOnline = true,
-                Roles = Array.Empty<string>()
-            };
-        }
-
-
-    }
 
     /// <summary>
     /// 会话状态枚举

@@ -7,6 +7,7 @@ using RUINORERP.Server.Network.Models;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.Server.Network.Services;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -41,11 +42,11 @@ namespace RUINORERP.Server.Network.Commands
             {
                 return packet.Command switch
                 {
-                    (uint)Commands.FileUpload => await HandleFileUpload(session, packet),
-                    (uint)Commands.FileDownload => await HandleFileDownload(session, packet),
-                    (uint)Commands.FileDelete => await HandleFileDelete(session, packet),
-                    (uint)Commands.FileList => await HandleFileList(session, packet),
-                    (uint)Commands.FileInfo => await HandleFileInfo(session, packet),
+                    (uint)FileCommands.FileUpload => await HandleFileUpload(session, packet),
+                    (uint)FileCommands.FileDownload => await HandleFileDownload(session, packet),
+                    (uint)FileCommands.FileDelete => await HandleFileDelete(session, packet),
+                    (uint)FileCommands.FileList => await HandleFileList(session, packet),
+                    (uint)FileCommands.FileInfo => await HandleFileInfo(session, packet),
                     _ => packet.CreateResponse(new { Error = "Unsupported file command", Command = packet.Command })
                 };
             }

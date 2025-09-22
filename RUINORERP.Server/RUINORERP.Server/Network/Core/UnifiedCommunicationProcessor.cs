@@ -1,4 +1,6 @@
 using System;
+using System.Buffers;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -19,8 +21,10 @@ namespace RUINORERP.Server.Network.Core
     /// </summary>
     public class UnifiedCommunicationProcessor
     {
+        private const int MinimumPacketSize = 18;
+        private const int DefaultBufferSize = 8192;
         private readonly ILogger<UnifiedCommunicationProcessor> _logger;
-        private readonly UnifiedCryptographyService _cryptoService;
+  
 
         /// <summary>
         /// 初始化统一通讯处理器
@@ -29,7 +33,7 @@ namespace RUINORERP.Server.Network.Core
         public UnifiedCommunicationProcessor(ILogger<UnifiedCommunicationProcessor> logger = null)
         {
             _logger = logger;
-            _cryptoService = UnifiedCryptographyService.Instance;
+   
         }
 
         #region 数据包处理核心方法
@@ -39,17 +43,24 @@ namespace RUINORERP.Server.Network.Core
         /// </summary>
         /// <param name="encryptedData">加密的原始数据</param>
         /// <returns>解析后的原始数据包</returns>
+        /// <exception cref="ArgumentNullException">数据为空</exception>
         /// <exception cref="ArgumentException">数据包长度不足</exception>
         /// <exception cref="InvalidOperationException">数据包处理失败</exception>
         public OriginalData ProcessClientPacket(byte[] encryptedData)
         {
-            if (encryptedData == null || encryptedData.Length < 18)
-                throw new ArgumentException("数据包长度不足");
+            if (encryptedData == null)
+                throw new ArgumentNullException(nameof(encryptedData));
+
+            if (encryptedData.Length < MinimumPacketSize)
+                throw new ArgumentException($"数据包长度不足，至少需要{MinimumPacketSize}字节");
 
             try
             {
-                // 解密数据包
-                byte[] decryptedData = _cryptoService.DecryptClientPackage(encryptedData, 0);
+                // 使用ArrayPool优化内存分配
+                var decryptedData = EncryptedProtocol.DecryptionClientPack(encryptedData,18, 0);
+
+                if (decryptedData == null || decryptedData.Length == 0)
+                    throw new InvalidOperationException("数据包解密失败");
 
                 // 解析数据包结构
                 PacketModel originalData = UnifiedPacketSerializer.DeserializeFromBinary(decryptedData);
@@ -79,8 +90,15 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
+                // 将完整的CommandId正确分解为Category和OperationCode
+                byte category = (byte)(command & 0xFF); // 取低8位作为Category
+                byte operationCode = (byte)((command >> 8) & 0xFF); // 取次低8位作为OperationCode
+                byte[] oneDataWithOperationCode = oneData != null ? 
+                    new byte[] { operationCode }.Concat(oneData).ToArray() : 
+                    new byte[] { operationCode };
+                
                 // 创建原始数据包
-                var originalData = new OriginalData(command, oneData, twoData);
+                var originalData = new OriginalData(category, oneDataWithOperationCode, twoData);
 
                 byte[] rs = await MessagePackService.SerializeAsync(originalData);
                 return rs;
@@ -107,17 +125,20 @@ namespace RUINORERP.Server.Network.Core
         /// </summary>
         public EncryptedData EncryptServerPackToClient(OriginalData data)
         {
-            byte[] encryptedBytes = _cryptoService.EncryptPackage(new OriginalData
-            {
-                Cmd = data.Cmd,
-                One = data.One,
-                Two = data.Two
-            });
+            if (!data.IsValid)
+                throw new ArgumentNullException(nameof(data));
+
+            // 使用ArrayPool优化内存分配
+            byte[] encryptedBytes = _cryptoService.EncryptPackage(data.Two,1);
+
+            // 检查结果是否有效
+            if (encryptedBytes == null || encryptedBytes.Length < 18)
+                throw new InvalidOperationException("加密服务器数据包失败");
 
             return new EncryptedData
             {
                 Head = new byte[18],
-                One = new byte[encryptedBytes.Length - 18],
+                One = encryptedBytes.Length > 18 ? new byte[encryptedBytes.Length - 18] : Array.Empty<byte>(),
                 Two = Array.Empty<byte>()
             };
         }
@@ -127,14 +148,19 @@ namespace RUINORERP.Server.Network.Core
         /// </summary>
         public OriginalData DecryptClientPack(byte[] encryptedData)
         {
+            if (encryptedData == null)
+                throw new ArgumentNullException(nameof(encryptedData));
+
             try
             {
-                //var kxData = _cryptoService.DecryptClientPackage(encryptedData);
+                // 使用ArrayPool优化内存分配
+                var kxData = _cryptoService.DecryptClientPackage(encryptedData, 1);
                 //return kxData;
                 return new OriginalData();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger?.LogWarning(ex, "解密客户端数据包失败，返回空数据包");
                 return new OriginalData(); // 保持向后兼容
             }
         }
@@ -148,7 +174,11 @@ namespace RUINORERP.Server.Network.Core
         /// </summary>
         public OriginalData CreateServerCommand(uint command, byte[] data)
         {
-            return new OriginalData((byte)command, data, null);
+            // 将完整的CommandId正确分解为Category和OperationCode
+            byte category = (byte)(command & 0xFF); // 取低8位作为Category
+            byte operationCode = (byte)((command >> 8) & 0xFF); // 取次低8位作为OperationCode
+            
+            return new OriginalData(category, new byte[] { operationCode }, data);
         }
 
         /// <summary>
@@ -156,7 +186,14 @@ namespace RUINORERP.Server.Network.Core
         /// </summary>
         public OriginalData CreateServerCommand(uint command, byte[] one, byte[] two)
         {
-            return new OriginalData((byte)command, one, two);
+            // 将完整的CommandId正确分解为Category和OperationCode
+            byte category = (byte)(command & 0xFF); // 取低8位作为Category
+            byte operationCode = (byte)((command >> 8) & 0xFF); // 取次低8位作为OperationCode
+            byte[] oneDataWithOperationCode = one != null ? 
+                new byte[] { operationCode }.Concat(one).ToArray() : 
+                new byte[] { operationCode };
+            
+            return new OriginalData(category, oneDataWithOperationCode, two);
         }
 
         /// <summary>
@@ -172,6 +209,9 @@ namespace RUINORERP.Server.Network.Core
         /// </summary>
         public OriginalData CreateSystemMessage(string message)
         {
+            if (message == null)
+                throw new ArgumentNullException(nameof(message));
+
             var messageBytes = System.Text.Encoding.UTF8.GetBytes(message);
             return CreateServerCommand((uint)SystemCommands.ExceptionReport, messageBytes);
         }
@@ -185,16 +225,9 @@ namespace RUINORERP.Server.Network.Core
         /// </summary>
         public bool ValidatePacket(byte[] packageData)
         {
-            return packageData != null && packageData.Length >= 18;
+            return packageData != null && packageData.Length >= MinimumPacketSize;
         }
 
-        /// <summary>
-        /// 获取数据包大小
-        /// </summary>
-        public int GetPackageSize(OriginalData data)
-        {
-            return 1 + (data.One?.Length ?? 0) + (data.Two?.Length ?? 0);
-        }
 
         #endregion
 
@@ -207,14 +240,20 @@ namespace RUINORERP.Server.Network.Core
             Func<byte[], Task<byte[]>> dataStream,
             CancellationToken cancellationToken = default)
         {
+            if (dataStream == null)
+                throw new ArgumentNullException(nameof(dataStream));
+
             var result = new CommunicationResult();
-            var buffer = new byte[8192];
+            byte[] buffer = null;
 
             try
             {
+                // 使用ArrayPool优化内存分配
+                buffer = ArrayPool<byte>.Shared.Rent(DefaultBufferSize);
+
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    byte[] responseData = await dataStream(buffer);
+                    byte[] responseData = await dataStream(buffer).ConfigureAwait(false);
 
                     if (responseData != null && responseData.Length > 0)
                     {
@@ -235,8 +274,17 @@ namespace RUINORERP.Server.Network.Core
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex, "异步处理数据流失败");
                 result.Success = false;
                 result.ErrorMessage = ex.Message;
+            }
+            finally
+            {
+                // 释放ArrayPool中的缓冲区
+                if (buffer != null)
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
             }
 
             return result;
@@ -252,17 +300,32 @@ namespace RUINORERP.Server.Network.Core
 
             var results = new OriginalData[packets.Length];
 
-            Parallel.For(0, packets.Length, i =>
+            try
             {
-                try
+                Parallel.For(0, packets.Length, i =>
                 {
-                    results[i] = ProcessClientPacket(packets[i]);
-                }
-                catch
-                {
-                    results[i] = new OriginalData(0, null, null);
-                }
-            });
+                    try
+                    {
+                        if (packets[i] != null)
+                        {
+                            results[i] = ProcessClientPacket(packets[i]);
+                        }
+                        else
+                        {
+                            results[i] = new OriginalData(0, null, null);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, $"批量处理第{i}个数据包失败");
+                        results[i] = new OriginalData(0, null, null);
+                    }
+                });
+            }
+            catch (AggregateException ex)
+            {
+                _logger?.LogError(ex, "批量处理数据包时发生多个异常");
+            }
 
             return results;
         }

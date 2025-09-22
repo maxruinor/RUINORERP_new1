@@ -1,4 +1,4 @@
-namespace RUINORERP.PacketSpec
+﻿namespace RUINORERP.PacketSpec
 {
     /// <summary>
     /// 错误码常量定义类
@@ -18,6 +18,8 @@ namespace RUINORERP.PacketSpec
         public const string CommandValidationFailed = "COMMAND_VALIDATION_FAILED";
         public const string ProcessCancelled = "PROCESS_CANCELLED";
         public const string ProcessError = "PROCESS_ERROR";
+		 public const string UnsupportedCommand = "UNSUPPORTED_COMMAND";
+        public const string CommandNotFound = "COMMAND_NOT_FOUND"; // 命令未找到
 
         // 调度器相关错误码
         public const string DispatcherNotInitialized = "DISPATCHER_NOT_INITIALIZED";
@@ -27,7 +29,6 @@ namespace RUINORERP.PacketSpec
         public const string NullResult = "NULL_RESULT";
         public const string DispatchCancelled = "DISPATCH_CANCELLED";
         public const string DispatchError = "DISPATCH_ERROR";
-        public const string UnsupportedCommand = "UNSUPPORTED_COMMAND";
 
         // 消息处理相关错误码
         public const string InvalidPopupData = "INVALID_POPUP_DATA";
@@ -43,6 +44,8 @@ namespace RUINORERP.PacketSpec
         public const string NotificationError = "NOTIFICATION_ERROR";
         public const string UnsupportedMessageCommand = "UNSUPPORTED_MESSAGE_COMMAND";
         public const string MessageHandlerError = "MESSAGE_HANDLER_ERROR";
+        
+        // 新增的消息处理相关错误码
         public const string InvalidUserData = "INVALID_USER_DATA";
         public const string UserMessageSendError = "USER_MESSAGE_SEND_ERROR";
         public const string InvalidDepartmentData = "INVALID_DEPARTMENT_DATA";
@@ -55,6 +58,13 @@ namespace RUINORERP.PacketSpec
         public const string HandlerDisposed = "HANDLER_DISPOSED";
         public const string HandlerInitializeFailed = "HANDLER_INIT_FAILED";
         public const string HandlerNotInitialized = "HANDLER_NOT_INITIALIZED";
+        public const string HandlerNotRunning = "HANDLER_NOT_RUNNING";
         public const string HandlerBusy = "HANDLER_BUSY";
+        public const string UnhandledException = "UNHANDLED_EXCEPTION"; // 未处理的异常
+        
+ 
+
+        // 通用错误码
+        public const string UnknownError = "UNKNOWN_ERROR"; // 未知错误
     }
 }

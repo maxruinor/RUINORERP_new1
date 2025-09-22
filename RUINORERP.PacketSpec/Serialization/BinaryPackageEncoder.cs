@@ -74,18 +74,6 @@ namespace RUINORERP.PacketSpec.Serialization
             }
         }
 
-        /// <summary>
-        /// 编码业务数据包为二进制数据
-        /// </summary>
-        /// <param name="writer">缓冲区写入器</param>
-        /// <param name="packet">业务数据包</param>
-        /// <returns>写入的字节数</returns>
-        public int Encode(IBufferWriter<byte> writer, BusinessPacket packet)
-        {
-            if (packet == null)
-                return 0;
-
-            return Encode(writer, packet.UnifiedPacket);
-        }
+        
     }
 }

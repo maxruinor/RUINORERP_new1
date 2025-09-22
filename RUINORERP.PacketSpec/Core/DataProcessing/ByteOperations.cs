@@ -115,6 +115,218 @@ namespace RUINORERP.PacketSpec.Core.DataProcessing
             return value;
         }
 
+        /// <summary>
+        /// 从字节数组获取字符串（自动从数据中读取长度前缀）
+        /// 兼容原始ByteDataAnalysis类的业务逻辑
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="index">读取位置索引（引用传递，读取后自动递增）</param>
+        /// <returns>读取的字符串</returns>
+        /// <exception cref="InvalidOperationException">数据长度不足时抛出</exception>
+        public static string GetString(byte[] data, ref int index)
+        {
+            if (data == null)
+            {
+                return string.Empty;
+            }
+            if (data.Length < index + 4)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            int len = GetInt32(data, ref index);
+
+            if (data.Length < index + len)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            byte[] msg = new byte[len];
+            Buffer.BlockCopy(data, index, msg, 0, len);
+            index += len;
+            index += 1; // 跳过结束符
+            return DefaultEncoding.GetString(msg);
+        }
+
+        /// <summary>
+        /// 从字节数组获取字符串（自动从数据中读取长度前缀）并返回未解析的数据
+        /// 兼容原始ByteDataAnalysis类的业务逻辑
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="unparsedData">未解析的数据</param>
+        /// <param name="index">读取位置索引（引用传递，读取后自动递增）</param>
+        /// <returns>读取的字符串</returns>
+        /// <exception cref="InvalidOperationException">数据长度不足时抛出</exception>
+        public static string GetString(byte[] data, out byte[] unparsedData, ref int index)
+        {
+            if (data.Length < index + 4)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            int len = GetInt32(data, ref index);
+
+            if (data.Length < index + len)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            byte[] msg = new byte[len];
+            Buffer.BlockCopy(data, index, msg, 0, len);
+            index += len;
+            index += 1; // 跳过结束符
+            
+            unparsedData = new byte[data.Length - index];
+            if (unparsedData.Length > 0)
+            {
+                Buffer.BlockCopy(data, index, unparsedData, 0, unparsedData.Length);
+            }
+
+            return DefaultEncoding.GetString(msg);
+        }
+
+        /// <summary>
+        /// 尝试从字节数组获取32位整数，不抛出异常
+        /// 兼容原始ByteDataAnalysis类的业务逻辑
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="success">是否成功读取</param>
+        /// <param name="index">读取位置索引（引用传递，读取后自动递增）</param>
+        /// <returns>读取的整数值，如果读取失败则返回0</returns>
+        public static int TryGetInt(byte[] data, out bool success, ref int index)
+        {
+            success = true;
+            if (data == null || data.Length < index + 4)
+            {
+                success = false;
+                return 0;
+            }
+
+            int value = GetInt32(data, ref index);
+            return value;
+        }
+
+        /// <summary>
+        /// 尝试从字节数组获取字符串，不抛出异常
+        /// 兼容原始ByteDataAnalysis类的业务逻辑
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="success">是否成功读取</param>
+        /// <param name="index">读取位置索引（引用传递，读取后自动递增）</param>
+        /// <returns>读取的字符串，如果读取失败则返回null</returns>
+        public static string TryGetString(byte[] data, out bool success, ref int index)
+        {
+            success = false;
+            if (data == null || data.Length < index + 4)
+                return null;
+
+            try
+            {
+                int len = GetInt32(data, ref index);
+
+                if (data.Length < index + len)
+                    return null;
+
+                byte[] msg = new byte[len];
+                Buffer.BlockCopy(data, index, msg, 0, len);
+                index += len;
+                
+                success = true;
+                return DefaultEncoding.GetString(msg);
+            }
+            catch
+            {
+                success = false;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 从字节数组获取32位整数并返回未解析的数据
+        /// 兼容原始ByteDataAnalysis类的业务逻辑
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="unparsedData">未解析的数据</param>
+        /// <param name="index">读取位置索引（引用传递，读取后自动递增）</param>
+        /// <returns>读取的整数值</returns>
+        public static int GetInt(byte[] data, out byte[] unparsedData, ref int index)
+        {
+            // 检查是否有足够的数据来读取一个int
+            if (data == null || data.Length < index + 4)
+            {
+                unparsedData = Array.Empty<byte>(); // 没有足够的数据，返回空数组
+                return 0;
+            }
+
+            // 读取int值
+            int value = GetInt32(data, ref index);
+
+            // 获取剩余的未解析数据
+            unparsedData = new byte[data.Length - index];
+            if (unparsedData.Length > 0)
+            {
+                Buffer.BlockCopy(data, index, unparsedData, 0, unparsedData.Length);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// 获取指定长度的字节数组
+        /// 兼容原始ByteDataAnalysis类的业务逻辑
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="dataLen">要获取的字节长度</param>
+        /// <param name="index">读取位置索引（引用传递，读取后自动递增）</param>
+        /// <returns>读取的字节数组</returns>
+        /// <exception cref="InvalidOperationException">数据长度不足时抛出</exception>
+        public static byte[] GetBytes(byte[] data, int dataLen, ref int index)
+        {
+            if (data == null || data.Length < index + dataLen)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            byte[] bytes = new byte[dataLen];
+            Buffer.BlockCopy(data, index, bytes, 0, dataLen);
+            index += dataLen;
+            return bytes;
+        }
+
+        /// <summary>
+        /// 从字节数组获取布尔值（1表示true，0表示false）
+        /// 兼容原始ByteDataAnalysis类的业务逻辑
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="index">读取位置索引（引用传递，读取后自动递增）</param>
+        /// <returns>读取的布尔值</returns>
+        /// <exception cref="InvalidOperationException">数据长度不足时抛出</exception>
+        public static bool GetBool(byte[] data, ref int index)
+        {
+            if (data == null || index >= data.Length)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            bool b = data[index++] == 1;
+            return b;
+        }
+
+        /// <summary>
+        /// 从字节数组获取单精度浮点数
+        /// 兼容原始ByteDataAnalysis类的业务逻辑
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="index">读取位置索引（引用传递，读取后自动递增）</param>
+        /// <returns>读取的浮点数值</returns>
+        /// <exception cref="InvalidOperationException">数据长度不足时抛出</exception>
+        /// <summary>
+        /// 从指定索引位置的字节数组中读取一个float值（单精度浮点数）
+        /// </summary>
+        /// <param name="data">包含数据的字节数组</param>
+        /// <param name="index">当前读取索引，会在方法执行后更新</param>
+        /// <returns>读取到的float值</returns>
+        /// <exception cref="InvalidOperationException">当缓冲区不足或为空时抛出</exception>
+        public static float GetFloat(byte[] data, ref int index)
+        {
+            if (data == null || index + 4 > data.Length)
+                throw new InvalidOperationException("Buffer underflow.");
+
+            // 在.NET Standard 2.0中手动实现小端序读取float
+            uint intValue = (uint)(data[index] | (data[index + 1] << 8) | (data[index + 2] << 16) | (data[index + 3] << 24));
+            float value = BitConverter.ToSingle(BitConverter.GetBytes(intValue), 0);
+            index += 4;
+            return value;
+        }
+
         #endregion
 
         #region 字节数组写入操作
@@ -393,6 +605,26 @@ namespace RUINORERP.PacketSpec.Core.DataProcessing
                 byte[] stringBytes = DefaultEncoding.GetBytes(value);
                 AddInt32(stringBytes.Length);
                 _buffer.AddRange(stringBytes);
+            }
+
+            /// <summary>
+            /// 添加字符串（包含长度前缀和结束符）
+            /// 兼容原始ByteDataAnalysis类的业务逻辑
+            /// </summary>
+            /// <param name="value">要添加的字符串</param>
+            public void AddStringWithTerminator(string value)
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    AddInt32(0);
+                    AddByte(0); // 添加结束符
+                    return;
+                }
+
+                byte[] stringBytes = DefaultEncoding.GetBytes(value);
+                AddInt32(stringBytes.Length);
+                _buffer.AddRange(stringBytes);
+                AddByte(0); // 添加结束符
             }
 
             /// <summary>

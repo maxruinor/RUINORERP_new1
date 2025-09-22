@@ -33,10 +33,11 @@
     <Compile Remove="frmUserOnline.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
     <Compile Remove="Network\Commands\FileHandler.cs" />
-    <Compile Remove="Network\Commands\LoginCommandHandler.cs" />
     <Compile Remove="Network\Commands\MessageCommandHandler.cs" />
     <Compile Remove="Network\CoreServices\CacheService.cs" />
     <Compile Remove="Network\CoreServices\FileStorageService.cs" />
+    <Compile Remove="Network\Core\NetworkCommandMiddleware.cs" />
+    <Compile Remove="Network\Core\UnifiedCommunicationProcessor.cs" />
     <Compile Remove="Network\Interfaces\Services\IFileStorageService.cs" />
     <Compile Remove="Network\Services\FileStorageManager.cs" />
     <Compile Remove="Network\Services\UnifiedUserService.cs" />
@@ -182,6 +183,7 @@
     <Folder Include="SuperSocketServices\Pipeline\" />
     <Folder Include="Workflow\WFOrder\" />
     <Folder Include="Workflow\WFProduce\" />
+    <Folder Include="文档\" />
   </ItemGroup>
 
   <ItemGroup>

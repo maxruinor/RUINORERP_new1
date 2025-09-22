@@ -14,7 +14,7 @@ namespace RUINORERP.Server.SuperSocketServices
     public class SuperSocketServerSession
     {
         private readonly ILogger<SuperSocketServerSession> _logger;
-        private readonly ISessionManager _sessionManager;
+        private readonly ISessionService _sessionManager;
         private readonly IServerSessionEventHandler _eventHandler;
         private SessionInfo _sessionInfo;
         private readonly string _sessionId;
@@ -25,7 +25,7 @@ namespace RUINORERP.Server.SuperSocketServices
 
         public SuperSocketServerSession(
             ILogger<SuperSocketServerSession> logger,
-            ISessionManager sessionManager,
+            ISessionService sessionManager,
             IServerSessionEventHandler eventHandler)
         {
             _logger = logger;
@@ -49,10 +49,10 @@ namespace RUINORERP.Server.SuperSocketServices
                 {
                     ClientIp = _remoteEndPoint,
                     ConnectedTime = DateTime.Now,
-                    LastActivityTime = DateTime.Now,
                     IsAuthenticated = false,
                     Status = SessionStatus.Connected
                 };
+                _sessionInfo.UpdateActivity();
 
                 // 注册会话到会话管理器
                 await _sessionManager.RemoveSessionAsync(this.SessionID);
@@ -106,7 +106,7 @@ namespace RUINORERP.Server.SuperSocketServices
                 // 更新最后活动时间
                 if (_sessionInfo != null)
                 {
-                    _sessionInfo.LastActivityTime = DateTime.Now;
+                    _sessionInfo.UpdateActivity();
                     _sessionInfo.ReceivedPacketsCount++;
                 }
 

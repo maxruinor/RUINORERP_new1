@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -94,6 +94,11 @@ namespace RUINORERP.PacketSpec.Commands
     /// </summary>
     public interface ICommand
     {
+        /// <summary>
+        /// 每个指令都存在于一个对应的socket（连接）会话
+        /// </summary>
+        string SessionID { get; set; }
+
         /// <summary>
         /// 命令唯一标识（字符串形式）
         /// </summary>
@@ -206,7 +211,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 命令执行结果
     /// </summary>
-    public class CommandResult : BaseModel
+    public class CommandResult : ITraceable, IValidatable
     {
         /// <summary>
         /// 是否成功
@@ -238,6 +243,49 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public Exception Exception { get; set; }
 
+        #region ITraceable 接口实现
+        /// <summary>
+        /// 创建时间（UTC时间）
+        /// </summary>
+        public DateTime CreatedTime { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// 最后更新时间（UTC时间）
+        /// </summary>
+        public DateTime? LastUpdatedTime { get; set; }
+
+        /// <summary>
+        /// 时间戳（UTC时间）
+        /// </summary>
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// 模型版本
+        /// </summary>
+        public string Version { get; set; } = "2.0";
+
+        /// <summary>
+        /// 更新时间戳
+        /// </summary>
+        public void UpdateTimestamp()
+        {
+            Timestamp = DateTime.UtcNow;
+            LastUpdatedTime = Timestamp;
+        }
+        #endregion
+
+        #region IValidatable 接口实现
+        /// <summary>
+        /// 验证模型有效性
+        /// </summary>
+        /// <returns>是否有效</returns>
+        public bool IsValid()
+        {
+            return CreatedTime <= DateTime.UtcNow &&
+                   CreatedTime >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
+        }
+        #endregion
+
         /// <summary>
         /// 响应数据包（用于发送回客户端）
         /// </summary>
@@ -252,7 +300,10 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 IsSuccess = true,
                 Message = message,
-                Data = data
+                Data = data,
+                CreatedTime = DateTime.UtcNow,
+                Timestamp = DateTime.UtcNow,
+                Version = "2.0"
             };
             return result;
         }
@@ -267,7 +318,10 @@ namespace RUINORERP.PacketSpec.Commands
                 IsSuccess = false,
                 Message = message,
                 ErrorCode = errorCode,
-                Exception = exception
+                Exception = exception,
+                CreatedTime = DateTime.UtcNow,
+                Timestamp = DateTime.UtcNow,
+                Version = "2.0"
             };
             return result;
         }
@@ -282,10 +336,14 @@ namespace RUINORERP.PacketSpec.Commands
                 IsSuccess = true,
                 Message = message,
                 Data = data,
-                ResponseData = responseData
+                ResponseData = responseData,
+                CreatedTime = DateTime.UtcNow,
+                Timestamp = DateTime.UtcNow,
+                Version = "2.0"
             };
             return result;
         }
+
 
         /// <summary>
         /// 创建错误结果

@@ -309,7 +309,7 @@ namespace RUINORERP.Business
 
                 // 开启事务，保证数据一致性
 
-                _unitOfWorkManage.BeginTran();
+                entity.ARAPStatus = (int)ARAPStatus.待支付;
 
                 //出库生成应付，应付审核时如果有预收付核销后应该是部分支付了。
                 if (entity.LocalBalanceAmount == entity.TotalLocalPayableAmount)
@@ -331,10 +331,12 @@ namespace RUINORERP.Business
 
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
                 entity.ApprovalResults = true;
-                entity.ApprovalStatus = (int)ApprovalStatus.已审核;
+
                 entity.AllowAddToStatement = true;
 
                 BusinessHelper.Instance.ApproverEntity(entity);
+
+                _unitOfWorkManage.BeginTran();
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                 {

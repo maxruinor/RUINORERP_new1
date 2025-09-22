@@ -5,8 +5,21 @@
     /// </summary>
     public struct OriginalData
     {
+
+        /// <summary>
+        /// 主指令
+        /// </summary>
         public byte cmd;
+
+
+        /// <summary>
+        /// 子指令
+        /// </summary>
         public byte[] One;
+
+        /// <summary>
+        /// 数据体
+        /// </summary>
         public byte[] Two;
     }
 

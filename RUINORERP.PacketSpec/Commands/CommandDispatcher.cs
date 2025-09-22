@@ -1,13 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models;
-using RUINORERP.PacketSpec.Handlers;
+using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Results;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 
@@ -16,7 +15,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 命令调度器 - 统一的命令分发和处理中心
     /// </summary>
-    public class CommandDispatcher : BaseModel, IDisposable
+    public class CommandDispatcher : IDisposable
     {
         private readonly ConcurrentDictionary<string, ICommandHandler> _handlers;
         private readonly ConcurrentDictionary<uint, List<ICommandHandler>> _commandHandlerMap;
@@ -83,6 +82,12 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 if (_isInitialized)
                     return true;
+
+                // 初始化日志记录器（如果尚未设置）
+                if (Logger == null)
+                {
+                    Logger = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+                }
 
                 LogInfo("初始化命令调度器...");
 
@@ -445,7 +450,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void LogDebug(string message)
         {
-            EnsureLoggerInitialized();
             Logger.LogDebug(message);
         }
 
@@ -454,7 +458,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void LogInfo(string message)
         {
-            EnsureLoggerInitialized();
             Logger.LogInformation(message);
         }
 
@@ -463,7 +466,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void LogWarning(string message)
         {
-            EnsureLoggerInitialized();
             Logger.LogWarning(message);
         }
 
@@ -472,7 +474,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void LogError(string message, Exception ex = null)
         {
-            EnsureLoggerInitialized();
             if (ex != null)
             {
                 Logger.LogError(ex, message);
@@ -525,25 +526,6 @@ namespace RUINORERP.PacketSpec.Commands
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        /// 设置日志记录器
-        /// </summary>
-        public void SetLogger(ILogger logger)
-        {
-            Logger = logger;
-        }
-
-        /// <summary>
-        /// 确保日志记录器已初始化
-        /// </summary>
-        private void EnsureLoggerInitialized()
-        {
-            if (Logger == null)
-            {
-                // 使用控制台日志器作为后备方案
-                Logger = new Utilities.ConsoleLogger(GetType().Name);
-            }
-        }
     }
 
     /// <summary>

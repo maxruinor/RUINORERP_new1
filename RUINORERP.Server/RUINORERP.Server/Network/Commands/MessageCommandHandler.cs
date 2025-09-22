@@ -736,16 +736,25 @@ namespace RUINORERP.Server.Network.Commands
                 var json = JsonConvert.SerializeObject(responseData);
                 var dataBytes = Encoding.UTF8.GetBytes(json);
 
+                // 将完整的CommandId正确分解为Category和OperationCode
+                byte category = (byte)(responseCommand & 0xFF); // 取低8位作为Category
+                byte operationCode = (byte)((responseCommand >> 8) & 0xFF); // 取次低8位作为OperationCode
+                
                 return new OriginalData(
-                    (byte)responseCommand,
-                    dataBytes,
-                    null
+                    category,
+                    new byte[] { operationCode },
+                    dataBytes
                 );
             }
             catch (Exception ex)
             {
                 LogError($"创建消息响应异常: {ex.Message}", ex);
-                return new OriginalData((byte)responseCommand, null, null);
+                
+                // 将完整的CommandId正确分解为Category和OperationCode
+                byte category = (byte)(responseCommand & 0xFF); // 取低8位作为Category
+                byte operationCode = (byte)((responseCommand >> 8) & 0xFF); // 取次低8位作为OperationCode
+                
+                return new OriginalData(category, new byte[] { operationCode }, null);
             }
         }
 

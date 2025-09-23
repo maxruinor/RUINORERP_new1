@@ -214,6 +214,12 @@
     <Reference Include="MathNet.Numerics, Version=5.0.0.0, Culture=neutral, PublicKeyToken=cd8b63ad3d691a37, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.Signed.5.0.0\lib\net48\MathNet.Numerics.dll</HintPath>
     </Reference>
+    <Reference Include="MessagePack, Version=3.1.4.0, Culture=neutral, PublicKeyToken=b4a0369545f0a1be, processorArchitecture=MSIL">
+      <HintPath>..\packages\MessagePack.3.1.4\lib\net472\MessagePack.dll</HintPath>
+    </Reference>
+    <Reference Include="MessagePack.Annotations, Version=3.1.4.0, Culture=neutral, PublicKeyToken=b4a0369545f0a1be, processorArchitecture=MSIL">
+      <HintPath>..\packages\MessagePack.Annotations.3.1.4\lib\netstandard2.0\MessagePack.Annotations.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.0-preview.5.24306.7\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -307,6 +313,9 @@
     <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.IO.RecyclableMemoryStream.3.0.0\lib\netstandard2.0\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.NET.StringTools, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.NET.StringTools.17.11.4\lib\net472\Microsoft.NET.StringTools.dll</HintPath>
+    </Reference>
     <Reference Include="MySql.Data, Version=8.4.0.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\packages\MySql.Data.8.4.0\lib\net48\MySql.Data.dll</HintPath>
     </Reference>
@@ -393,6 +402,9 @@
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Collections.Immutable.8.0.0\lib\net462\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.Collections.Specialized, Version=4.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Collections.Specialized.4.3.0\lib\net46\System.Collections.Specialized.dll</HintPath>
@@ -861,9 +873,15 @@
     <Compile Include="BusyDialog.Designer.cs">
       <DependentUpon>BusyDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="ClientCmdService\FileStorageService.cs" />
-    <Compile Include="ClientCmdService\ManagementClient.cs" />
-    <Compile Include="ClientCmdService\StorageManagementClient.cs" />
+    <Compile Include="ClientSuperSocket\BizPackageInfo.cs" />
+    <Compile Include="ClientSuperSocket\BizPipelineFilter.cs" />
+    <Compile Include="ClientSuperSocket\ClientDataBuilder.cs" />
+    <Compile Include="ClientSuperSocket\EasyClientService.cs" />
+    <Compile Include="ClientSuperSocket\HeartbeatManager.cs" />
+    <Compile Include="ClientSuperSocket\ReceiveFilter.cs" />
+    <Compile Include="ClientSuperSocket\SocketClientHelper.cs" />
+    <Compile Include="ClientSuperSocket\SystemOptimizerService.cs" />
+    <Compile Include="ClientSuperSocket\WorkflowService.cs" />
     <Compile Include="CommonUI\frmOpinion.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1638,17 +1656,6 @@
     </Compile>
     <Compile Include="ChartFramework\Shared\Extensions\UI\ChartDataService.cs" />
     <Compile Include="ChartFramework\Shared\Utilities\ListToDataTable.cs" />
-    <Compile Include="ClientCmdService\ClientCommandDispatcher.cs" />
-    <Compile Include="ClientCmdService\ClientCommandRegistry.cs" />
-    <Compile Include="ClientCmdService\DynamicEventManager.cs" />
-    <Compile Include="ClientCmdService\IClientCommand.cs" />
-    <Compile Include="ClientCmdService\RequestReceiveEntityCmd.cs" />
-    <Compile Include="ClientCmdService\ReceiveCacheCommand.cs" />
-    <Compile Include="ClientCmdService\ClientLockManagerCmd.cs" />
-    <Compile Include="ClientCmdService\RequestReceiveMessageCmd.cs" />
-    <Compile Include="ClientCmdService\RequestLoginCommand.cs" />
-    <Compile Include="ClientCmdService\RequestReminderCommand.cs" />
-    <Compile Include="ClientSuperSocket\HeartbeatManager.cs" />
     <Compile Include="CommonUI\frmInputObject.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2230,24 +2237,28 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Network\BaseCommand.cs" />
+    <Compile Include="Network\BizPackageInfo.cs" />
+    <Compile Include="Network\BizPipelineFilter.cs" />
+    <Compile Include="Network\ClientCommandDispatcher.cs" />
+    <Compile Include="Network\ClientCommandFactory.cs" />
     <Compile Include="Network\ClientCommunicationService.cs" />
-    <Compile Include="Network\ClientPacketService.cs" />
-    <Compile Include="Network\CommandFactory.cs" />
-    <Compile Include="Network\Commands\CommandAttribute.cs" />
-    <Compile Include="Network\Commands\GetUserDataCommand.cs" />
+    <Compile Include="Network\ClientEventManager.cs" />
     <Compile Include="Network\Commands\HeartbeatCommand.cs" />
+    <Compile Include="Network\Commands\LoginCommand.cs" />
     <Compile Include="Network\CommunicationManager.cs" />
+    <Compile Include="Network\DI\NetworkServicesDependencyInjection.cs" />
     <Compile Include="Network\EventArgs.cs" />
     <Compile Include="Network\Examples\CommunicationExample.cs" />
+    <Compile Include="Network\Examples\CompleteUsageExample.cs" />
+    <Compile Include="Network\Examples\LoginExample.cs" />
     <Compile Include="Network\HeartbeatManager.cs" />
     <Compile Include="Network\IClientCommunicationService.cs" />
-    <Compile Include="Network\ICommandFactory.cs" />
     <Compile Include="Network\ISocketClient.cs" />
-    <Compile Include="Network\Models\ApiResponse.cs" />
-    <Compile Include="Network\PacketBuilderAdapter.cs" />
-    <Compile Include="Network\PacketService.cs" />
-    <Compile Include="Network\SocketClientImpl.cs" />
+    <Compile Include="Network\RequestResponseManager.cs" />
+    <Compile Include="Network\Services\CacheSyncService.cs" />
+    <Compile Include="Network\Services\MessageNotificationService.cs" />
+    <Compile Include="Network\Services\UserLoginService.cs" />
+    <Compile Include="Network\SuperSocketClient.cs" />
     <Compile Include="Plugin\IPlugin.cs" />
     <Compile Include="Plugin\OrderImport1688Plugin.cs" />
     <Compile Include="Plugin\PluginBase.cs" />
@@ -2909,16 +2920,6 @@
     </Compile>
     <Compile Include="Startup.cs" />
     <Compile Include="StatusBusy.cs" />
-    <Compile Include="ClientSuperSocket\BizPackageInfo.cs" />
-    <Compile Include="ClientSuperSocket\BizPipelineFilter.cs" />
-    <Compile Include="ClientSuperSocket\ClientDataBuilder.cs" />
-    <Compile Include="ClientSuperSocket\ClientService.cs" />
-    <Compile Include="ClientSuperSocket\EasyClientService.cs" />
-    <Compile Include="ClientSuperSocket\ReceiveFilter.cs" />
-    <Compile Include="ClientSuperSocket\SocketClientHelper.cs" />
-    <Compile Include="ClientSuperSocket\SocketSession.cs" />
-    <Compile Include="ClientSuperSocket\SystemOptimizerService.cs" />
-    <Compile Include="ClientSuperSocket\WorkflowService.cs" />
     <Compile Include="SysConfig\ConfigManager.cs" />
     <Compile Include="SysConfig\DataImportExportManager.cs" />
     <Compile Include="SysConfig\UCButtonInfoEdit.cs">
@@ -3435,6 +3436,7 @@
     <None Include="OpenTK.dll.config" />
     <None Include="ResourceFile\import_32x32.ico" />
     <Content Include="ChartFramework\分层架构设计.txt" />
+    <Content Include="ClientSuperSocket\通讯中心.txt" />
     <Content Include="CRM\商机总览.sql" />
     <Content Include="EOP\Eop.txt" />
     <Content Include="FM\应收付.txt" />
@@ -4976,7 +4978,6 @@
     <Content Include="SqlScript\死锁维护.sql" />
     <Content Include="SqlScript\维护.sql" />
     <Content Include="SqlScript\销售报表.sql" />
-    <Content Include="ClientSuperSocket\通讯中心.txt" />
     <EmbeddedResource Include="SysConfig\DynamicConfig\DynamicConfig.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
@@ -5145,6 +5146,7 @@
     <Folder Include="IMResources\Images\" />
     <Folder Include="Monitoring\Alerts\" />
     <Folder Include="MRP\RR\" />
+    <Folder Include="Network\Models\" />
     <Folder Include="Other\" />
     <Folder Include="PM\" />
     <Folder Include="RM\" />
@@ -5177,8 +5179,10 @@
     <Error Condition="!Exists('..\packages\HarfBuzzSharp.NativeAssets.Win32.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.Win32.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\HarfBuzzSharp.NativeAssets.Win32.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.Win32.targets'))" />
     <Error Condition="!Exists('..\packages\SkiaSharp.NativeAssets.macOS.2.88.9\build\net462\SkiaSharp.NativeAssets.macOS.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.NativeAssets.macOS.2.88.9\build\net462\SkiaSharp.NativeAssets.macOS.targets'))" />
     <Error Condition="!Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets'))" />
+    <Error Condition="!Exists('..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets'))" />
   </Target>
   <Import Project="..\packages\HarfBuzzSharp.NativeAssets.Win32.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.Win32.targets" Condition="Exists('..\packages\HarfBuzzSharp.NativeAssets.Win32.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.Win32.targets')" />
   <Import Project="..\packages\SkiaSharp.NativeAssets.macOS.2.88.9\build\net462\SkiaSharp.NativeAssets.macOS.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.macOS.2.88.9\build\net462\SkiaSharp.NativeAssets.macOS.targets')" />
   <Import Project="..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets')" />
+  <Import Project="..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets" Condition="Exists('..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets')" />
 </Project>

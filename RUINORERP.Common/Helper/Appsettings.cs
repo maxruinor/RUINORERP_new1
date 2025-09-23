@@ -44,6 +44,15 @@ namespace RUINORERP.Common.Helper
         }
 
         /// <summary>
+        /// 从IConfiguration初始化配置
+        /// </summary>
+        /// <param name="configuration">配置对象</param>
+        public static void Initialize(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        /// <summary>
         /// 封装要操作的字符
         /// </summary>
         /// <param name="sections">节点配置</param>
@@ -52,13 +61,21 @@ namespace RUINORERP.Common.Helper
         {
             try
             {
+                if (Configuration == null)
+                {
+                    RUINORERP.Common.Log4Net.Logger.Warn("配置对象为null，无法获取配置对象");
+                    return "";
+                }
 
                 if (sections.Any())
                 {
-                    return Configuration[string.Join(":", sections)];
+                    return Configuration[string.Join(":", sections)] ?? "";
                 }
             }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                RUINORERP.Common.Log4Net.Logger.Error("获取配置对象失败", ex);
+            }
 
             return "";
         }
@@ -71,10 +88,24 @@ namespace RUINORERP.Common.Helper
         /// <returns></returns>
         public static List<T> app<T>(params string[] sections)
         {
-            List<T> list = new List<T>();
-            // 引用 Microsoft.Extensions.Configuration.Binder 包
-            Configuration.Bind(string.Join(":", sections), list);
-            return list;
+            try
+            {
+                if (Configuration == null)
+                {
+                    RUINORERP.Common.Log4Net.Logger.Warn("配置对象为null，无法获取配置数组");
+                    return new List<T>();
+                }
+                
+                List<T> list = new List<T>();
+                // 引用 Microsoft.Extensions.Configuration.Binder 包
+                Configuration.Bind(string.Join(":", sections), list);
+                return list;
+            }
+            catch (Exception ex)
+            {
+                RUINORERP.Common.Log4Net.Logger.Error("获取配置数组失败", ex);
+                return new List<T>();
+            }
         }
 
 
@@ -87,9 +118,17 @@ namespace RUINORERP.Common.Helper
         {
             try
             {
-                return Configuration[sectionsPath];
+                if (Configuration == null)
+                {
+                    RUINORERP.Common.Log4Net.Logger.Warn("配置对象为null，无法获取配置值: " + sectionsPath);
+                    return "";
+                }
+                return Configuration[sectionsPath] ?? "";
             }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                RUINORERP.Common.Log4Net.Logger.Error("获取配置值失败: " + sectionsPath, ex);
+            }
 
             return "";
 

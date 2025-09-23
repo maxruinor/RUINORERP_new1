@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.Server.Network.Models;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Handlers;
@@ -15,6 +16,7 @@ using RUINORERP.Model;
 using RUINORERP.Server.Network.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Sockets;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -24,7 +26,6 @@ namespace RUINORERP.Server.Network.Commands
     /// 移除了65%的重复代码，统一了登录认证核心逻辑
     /// </summary>
     [CommandHandler("LoginCommandHandler", priority: 100)]
-
     public class LoginCommandHandler : BaseCommandHandler
     {
         private const int MaxLoginAttempts = 5;
@@ -43,18 +44,28 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         public override IReadOnlyList<uint> SupportedCommands => new uint[]
         {
-            (uint)AuthenticationCommands.PrepareLogin,
-            (uint)AuthenticationCommands.LoginRequest,
-            (uint)AuthenticationCommands.LoginValidation,
-            (uint)AuthenticationCommands.ValidateToken,
-            (uint)AuthenticationCommands.RefreshToken,
-            (uint)AuthenticationCommands.Logout
+            AuthenticationCommands.Login.FullCode,
+            AuthenticationCommands.Logout.FullCode,
+            AuthenticationCommands.ValidateToken.FullCode,
+            AuthenticationCommands.RefreshToken.FullCode
         };
 
         /// <summary>
         /// 处理器优先级
         /// </summary>
         public override int Priority => 100;
+
+        /// <summary>
+        /// 判断是否可以处理指定命令
+        /// </summary>
+        public override bool CanHandle(ICommand command)
+        {
+            return command is LoginCommand || 
+                   command.CommandIdentifier == AuthenticationCommands.Login ||
+                   command.CommandIdentifier == AuthenticationCommands.Logout ||
+                   command.CommandIdentifier == AuthenticationCommands.ValidateToken ||
+                   command.CommandIdentifier == AuthenticationCommands.RefreshToken;
+        }
 
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数
@@ -68,17 +79,13 @@ namespace RUINORERP.Server.Network.Commands
             {
                 var commandId = command.CommandIdentifier;
 
-                if (commandId == AuthenticationCommands.PrepareLogin)
+                if (commandId == AuthenticationCommands.Login)
                 {
-                    return await HandlePrepareLoginAsync(command, cancellationToken);
+                    return await HandleLoginAsync(command as LoginCommand, cancellationToken);
                 }
-                else if (commandId == AuthenticationCommands.LoginRequest)
+                else if (commandId == AuthenticationCommands.Logout)
                 {
-                    return await HandleLoginRequestAsync(command, cancellationToken);
-                }
-                else if (commandId == AuthenticationCommands.LoginValidation)
-                {
-                    return await HandleLoginValidationAsync(command, cancellationToken);
+                    return await HandleLogoutAsync(command, cancellationToken);
                 }
                 else if (commandId == AuthenticationCommands.ValidateToken)
                 {
@@ -87,10 +94,6 @@ namespace RUINORERP.Server.Network.Commands
                 else if (commandId == AuthenticationCommands.RefreshToken)
                 {
                     return await HandleTokenRefreshAsync(command, cancellationToken);
-                }
-                else if (commandId == AuthenticationCommands.Logout)
-                {
-                    return await HandleLogoutAsync(command, cancellationToken);
                 }
                 else
                 {
@@ -105,43 +108,31 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 处理准备登录命令
+        /// 处理登录命令
         /// </summary>
-        private async Task<CommandResult> HandlePrepareLoginAsync(ICommand command, CancellationToken cancellationToken)
-        {
-            // 检查并发用户数限制
-            if (SessionService.ActiveSessionCount >= MaxConcurrentUsers)
-            {
-                return CommandResult.Failure("服务器达到最大用户数限制", "MAX_USERS_EXCEEDED");
-            }
-
-            await Task.Delay(10, cancellationToken);
-
-            var responseData = CreatePrepareLoginResponse();
-
-            return CommandResult.SuccessWithResponse(
-                responseData,
-                data: new { Status = "Ready", MaxUsers = MaxConcurrentUsers },
-                message: "准备登录完成"
-            );
-        }
-
-        /// <summary>
-        /// 处理登录请求命令 - 整合了重复登录检查、人数限制、黑名单验证
-        /// </summary>
-        private async Task<CommandResult> HandleLoginRequestAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<CommandResult> HandleLoginAsync(LoginCommand command, CancellationToken cancellationToken)
         {
             try
             {
-                // 解析登录数据
-                var loginData = ParseLoginData(command.OriginalData);
-                if (loginData == null)
+                // 检查并发用户数限制
+                if (SessionService.ActiveSessionCount >= MaxConcurrentUsers)
                 {
-                    return CommandResult.Failure("登录数据格式错误", "INVALID_LOGIN_DATA");
+                    return CommandResult.Failure("服务器达到最大用户数限制", "MAX_USERS_EXCEEDED");
+                }
+
+                // 验证登录请求数据
+                if (command.LoginRequest == null)
+                {
+                    return CommandResult.Failure("登录请求数据不能为空", "EMPTY_LOGIN_REQUEST");
+                }
+
+                if (!command.LoginRequest.IsValid())
+                {
+                    return CommandResult.Failure("登录请求数据无效", "INVALID_LOGIN_REQUEST");
                 }
 
                 // 检查重复登录
-                if (IsUserAlreadyLoggedIn(loginData.Username))
+                if (IsUserAlreadyLoggedIn(command.LoginRequest.Username))
                 {
                     // 检查是否允许重复登录
                     bool allowMultipleSessions = false; // 可配置项
@@ -152,27 +143,27 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 检查黑名单
-                if (IsUserBlacklisted(loginData.Username, loginData.ClientInfo))
+                if (IsUserBlacklisted(command.LoginRequest.Username, command.LoginRequest.ClientInfo))
                 {
                     return CommandResult.Failure("用户或IP在黑名单中", "BLACKLISTED");
                 }
 
                 // 检查登录尝试次数
-                if (GetLoginAttempts(loginData.Username) >= MaxLoginAttempts)
+                if (GetLoginAttempts(command.LoginRequest.Username) >= MaxLoginAttempts)
                 {
                     return CommandResult.Failure("登录尝试次数过多，请稍后再试", "TOO_MANY_ATTEMPTS");
                 }
 
                 // 验证用户凭据
-                var validationResult = await ValidateUserCredentialsAsync(loginData, cancellationToken);
+                var validationResult = await ValidateUserCredentialsAsync(command.LoginRequest, cancellationToken);
                 if (!validationResult.IsValid)
                 {
-                    IncrementLoginAttempts(loginData.Username);
+                    IncrementLoginAttempts(command.LoginRequest.Username);
                     return CommandResult.Failure(validationResult.ErrorMessage, "LOGIN_FAILED");
                 }
 
                 // 重置登录尝试次数
-                ResetLoginAttempts(loginData.Username);
+                ResetLoginAttempts(command.LoginRequest.Username);
 
                 // 获取或创建会话信息
                 var sessionInfo = SessionService.GetSession(command.SessionID);
@@ -197,22 +188,25 @@ namespace RUINORERP.Server.Network.Commands
                 // 生成Token
                 var tokenInfo = GenerateTokenInfo(validationResult.UserInfo);
 
-                // 创建登录成功响应
-                var responseData = CreateLoginSuccessResponse(validationResult.UserInfo, tokenInfo);
+                // 创建响应数据
+                var responseData = CreateLoginResponse(tokenInfo, validationResult.UserInfo);
 
-                // 记录登录日志
-                LogInfo($"用户登录成功: {loginData.Username}, SessionID: {command.SessionID}");
-
+                // 返回成功结果
                 return CommandResult.SuccessWithResponse(
                     responseData,
-                    data: new { UserInfo = validationResult.UserInfo, TokenInfo = tokenInfo },
+                    data: new { 
+                        UserId = validationResult.UserInfo.UserId, 
+                        Username = validationResult.UserInfo.Username,
+                        Token = tokenInfo.Token,
+                        ExpiresIn = tokenInfo.ExpiresIn
+                    },
                     message: "登录成功"
                 );
             }
             catch (Exception ex)
             {
-                LogError($"处理登录请求异常: {ex.Message}", ex);
-                return CommandResult.Failure($"登录处理异常: {ex.Message}", "LOGIN_ERROR", ex);
+                LogError($"处理登录命令异常: {ex.Message}", ex);
+                return CommandResult.Failure($"登录异常: {ex.Message}", "LOGIN_EXCEPTION", ex);
             }
         }
 

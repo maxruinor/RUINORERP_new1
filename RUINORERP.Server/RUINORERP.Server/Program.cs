@@ -120,10 +120,7 @@ namespace RUINORERP.Server
                 try
                 {
 
-                    //IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
-                    //tb_PurOrder purOrder= new tb_PurOrder();
-                    //purOrder.PurOrderNo = "12312";
-                    //var employeeDto = mapper.Map<tb_PurEntry>(purOrder);
+                    
 
                     Startup starter = new Startup();
                     IHost myhost = starter.CslaDIPort();

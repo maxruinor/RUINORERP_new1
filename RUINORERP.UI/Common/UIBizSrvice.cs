@@ -20,6 +20,7 @@ using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.UI.UControls;
@@ -43,7 +44,7 @@ using System.Web.Caching;
 using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Windows.Markup;
-using TransInstruction;
+
 
 namespace RUINORERP.UI.Common
 {
@@ -1277,9 +1278,12 @@ namespace RUINORERP.UI.Common
                 if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_Contact).Name, out pair))
                 {
                     //如果有更新变动就上传到服务器再分发到所有客户端
-                    OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_Contact>(result.ReturnObject);
-                    byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                    MainForm.Instance.ecs.client.Send(buffer);
+
+                    // 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                    //OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_Contact>(result.ReturnObject);
+                    //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                    //MainForm.Instance.ecs.client.Send(buffer);
                 }
             }
         }
@@ -1365,9 +1369,13 @@ namespace RUINORERP.UI.Common
                 if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_FM_PayeeInfo).Name, out pair))
                 {
                     //如果有更新变动就上传到服务器再分发到所有客户端
-                    OriginalData odforCache = ActionForClient.更新缓存<tb_FM_PayeeInfo>(result.ReturnObject);
-                    byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                    MainForm.Instance.ecs.client.Send(buffer);
+
+                    // 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+                    //OriginalData odforCache = ActionForClient.更新缓存<tb_FM_PayeeInfo>(result.ReturnObject);
+                    //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                    //MainForm.Instance.ecs.client.Send(buffer);
                 }
             }
         }
@@ -1445,9 +1453,14 @@ namespace RUINORERP.UI.Common
                 if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_BillingInformation).Name, out pair))
                 {
                     //如果有更新变动就上传到服务器再分发到所有客户端
-                    OriginalData odforCache = ActionForClient.更新缓存<tb_BillingInformation>(result.ReturnObject);
-                    byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                    MainForm.Instance.ecs.client.Send(buffer);
+
+                    // 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+
+                    //OriginalData odforCache = ActionForClient.更新缓存<tb_BillingInformation>(result.ReturnObject);
+                    //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                    //MainForm.Instance.ecs.client.Send(buffer);
                 }
             }
         }
@@ -1470,8 +1483,9 @@ namespace RUINORERP.UI.Common
                 //请求本身
                 var rslist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                 if (NeedRequesCache(rslist, tableName) && BizCacheHelper.Instance.typeNames.Contains(tableName))
-                {
-                    ClientService.请求缓存(tableName);
+                {// 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                    //ClientService.请求缓存(tableName);
                 }
             }
 
@@ -1499,7 +1513,9 @@ namespace RUINORERP.UI.Common
                     //并且要存在于缓存列表的表集合中才取。有些是没有缓存的业务单据表。不需要取缓存
                     if (NeedRequesCache(rslist, item.Value) && BizCacheHelper.Instance.typeNames.Contains(item.Value))
                     {
-                        ClientService.请求缓存(item.Value);
+                        // 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                        //ClientService.请求缓存(item.Value);
                     }
 
                 }

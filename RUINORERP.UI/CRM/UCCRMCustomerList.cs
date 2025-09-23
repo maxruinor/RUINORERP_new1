@@ -30,11 +30,12 @@ using RUINORERP.UI.AdvancedUIModule;
 using Netron.GraphLib;
 using RUINORERP.UI.CommonUI;
 using RUINORERP.Business.CommService;
-using TransInstruction;
+
 using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
 using RUINORERP.UI.SuperSocketClient;
 using FastReport.DevComponents.DotNetBar;
+using RUINORERP.PacketSpec.Protocol;
 
 namespace RUINORERP.UI.CRM
 {
@@ -254,9 +255,12 @@ namespace RUINORERP.UI.CRM
                                     if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CustomerVendor).Name, out pair))
                                     {
                                         //如果有更新变动就上传到服务器再分发到所有客户端
-                                        OriginalData odforCache = ActionForClient.更新缓存<tb_CustomerVendor>(result.ReturnObject);
-                                        byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                        MainForm.Instance.ecs.client.Send(buffer);
+
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+                                        //OriginalData odforCache = ActionForClient.更新缓存<tb_CustomerVendor>(result.ReturnObject);
+                                        //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                        //MainForm.Instance.ecs.client.Send(buffer);
                                     }
                                 }
                                 MainForm.Instance.ShowStatusText("添加成功!");

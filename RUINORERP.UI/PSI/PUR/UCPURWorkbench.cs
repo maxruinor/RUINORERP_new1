@@ -66,7 +66,7 @@ using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
-using RUINORERP.PacketSpec.Legacy;
+
 using XmlDocument = System.Xml.XmlDocument;
 
 namespace RUINORERP.UI.PUR

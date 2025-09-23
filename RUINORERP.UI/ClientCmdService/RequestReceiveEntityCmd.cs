@@ -4,6 +4,9 @@ using Newtonsoft.Json.Linq;
 using RUINORERP.Extensions.ServiceExtensions;
 using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Core.DataProcessing;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -53,12 +56,12 @@ namespace RUINORERP.UI.ClientCmdService
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string sendTime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string TransferObjectName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
-                EntityTransferCmdType subRequestType = (EntityTransferCmdType)ByteDataAnalysis.GetInt(gd.Two, ref index);
-                NextProcesszStep subNextProcesszStep = (NextProcesszStep)ByteDataAnalysis.GetInt(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string sendTime = ByteOperations.GetString(gd.Two, ref index);
+                string TransferObjectName = ByteOperations.GetString(gd.Two, ref index);
+                string json = ByteOperations.GetString(gd.Two, ref index);
+                EntityTransferCmdType subRequestType = (EntityTransferCmdType)ByteOperations.GetInt(gd.Two, ref index);
+                NextProcesszStep subNextProcesszStep = (NextProcesszStep)ByteOperations.GetInt(gd.Two, ref index);
                 // 将item转换为JObject
                  var obj = JObject.Parse(json);
                 switch (subRequestType)

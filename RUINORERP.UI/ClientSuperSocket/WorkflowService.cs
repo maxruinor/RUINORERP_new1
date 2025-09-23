@@ -1,4 +1,7 @@
 ﻿using RUINORERP.Business.CommService;
+using RUINORERP.PacketSpec.Core.DataProcessing;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.WorkFlow;
 using System;
@@ -7,8 +10,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TransInstruction;
-using TransInstruction.DataPortal;
+
+
 using static RUINORERP.UI.MainForm;
 
 namespace RUINORERP.UI.SuperSocketClient
@@ -27,9 +30,9 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string Workflowid = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string msg = ByteDataAnalysis.GetString(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string Workflowid = ByteOperations.GetString(gd.Two, ref index);
+                string msg = ByteOperations.GetString(gd.Two, ref index);
                 //这里要弹出窗口提示 需要做一个队列处理。不要阻塞UI界面
                 MainForm.Instance.PrintInfoLog(msg, System.Drawing.Color.Red);
                 WorkflowItem item = new WorkflowItem();
@@ -56,9 +59,9 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string Workflowd = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string msg = ByteDataAnalysis.GetString(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string Workflowd = ByteOperations.GetString(gd.Two, ref index);
+                string msg = ByteOperations.GetString(gd.Two, ref index);
                 //这里要弹出窗口提示 需要做一个队列处理。不要阻塞UI界面
                 MainForm.Instance.PrintInfoLog(msg, System.Drawing.Color.Red);
                 var para = "";
@@ -82,9 +85,9 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string Workflowd = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string msg = ByteDataAnalysis.GetString(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string Workflowd = ByteOperations.GetString(gd.Two, ref index);
+                string msg = ByteOperations.GetString(gd.Two, ref index);
                 //这里要弹出窗口提示 需要做一个队列处理。不要阻塞UI界面
                 MainForm.Instance.PrintInfoLog(msg, System.Drawing.Color.Red);
 
@@ -108,14 +111,14 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
 
-                //string Workflowd = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string Time = ByteDataAnalysis.GetString(gd.Two, ref index);
-                //int dataLen = ByteDataAnalysis.GetInt(gd.Two, ref index);
+                //string Workflowd = ByteOperations.GetString(gd.Two, ref index);
+                string Time = ByteOperations.GetString(gd.Two, ref index);
+                //int dataLen = ByteOperations.GetInt(gd.Two, ref index);
                 //byte[] data = new byte[dataLen];
-                //data=ByteDataAnalysis.Getbytes(gd.Two,dataLen,ref index);
-                string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                //data=ByteOperations.Getbytes(gd.Two,dataLen,ref index);
+                string tableName = ByteOperations.GetString(gd.Two, ref index);
 
                 //这里要弹出窗口提示 需要做一个队列处理。不要阻塞UI界面
                 MainForm.Instance.PrintInfoLog(tableName, System.Drawing.Color.Red);

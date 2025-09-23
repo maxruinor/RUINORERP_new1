@@ -53,7 +53,7 @@ using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.IM;
 using System.Net.Mail;
 using StackExchange.Redis;
-using RUINORERP.UI.ClientCmdService;
+
 using FastReport.DevComponents.DotNetBar;
 using RUINORERP.UI.FM;
 using RUINORERP.Global.EnumExt;
@@ -70,7 +70,13 @@ using RUINORERP.Business.LogicaService;
 using AutoMapper.Internal;
 using RUINORERP.Business.RowLevelAuthService;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
-
+using RUINORERP.PacketSpec.DI;
+using RUINORERP.UI.Network;
+using RUINORERP.UI.Network.DI;
+using RUINORERP.Business.DI;
+using RUINORERP.IServices.DI;
+using RUINORERP.Services.DI;
+using RUINORERP.Repository.DI;
 namespace RUINORERP.UI
 {
     public class Startup
@@ -125,8 +131,9 @@ namespace RUINORERP.UI
         /// </summary>
         void ConfigureAutofacContainer(HostBuilderContext bc, ContainerBuilder builder)
         {
-            Services = new ServiceCollection();
 
+            Services = new ServiceCollection();
+            MainRegister(bc, builder);
             // 配置基础服务
             ConfigureBaseServices(Services);
 
@@ -313,6 +320,7 @@ namespace RUINORERP.UI
         /// </summary>
         private static void ConfigureWorkflow(IServiceCollection services)
         {
+            //默认就是内存模式?
             services.AddWorkflow();
             services.AddWorkflowDSL();
 
@@ -330,6 +338,12 @@ namespace RUINORERP.UI
         /// </summary>
         private static void ConfigureOtherServices(IServiceCollection services)
         {
+            // 注册网络通信服务
+            services.AddNetworkServices();
+            
+            // 注册PacketSpec服务
+            services.AddPacketSpecServices();
+            
             services.AddMemoryCacheSetup();
             services.AddAppContext(Program.AppContextData);
 
@@ -341,8 +355,7 @@ namespace RUINORERP.UI
                 options.EnableAudit = true;
             });
 
-            services.AddSingleton<IAuditLogService, AuditLogService>();
-            services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
+   
             services.AddSingleton(typeof(MenuTracker));
 
             // 注册主窗体
@@ -352,6 +365,10 @@ namespace RUINORERP.UI
             services.AddSingleton(typeof(RUINORERP.Plugin.PluginManager));
         }
 
+   
+
+
+ 
         /// <summary>
         /// 配置Autofac容器
         /// </summary>
@@ -377,8 +394,26 @@ namespace RUINORERP.UI
                 .AsImplementedInterfaces()
                 .AsSelf();
 
-            // 配置DLL程序集注册
-            ConfigureContainerTodll(builder);
+            // 使用新的扩展方法注册服务
+            try
+            {
+                // 调用各模块的ConfigureContainer方法进行服务注册
+
+                #region 使用各项目的DI配置类
+                // 配置各项目的依赖注入
+                BusinessDIConfig.ConfigureContainer(builder);      // Business项目
+                ServicesDIConfig.ConfigureContainer(builder);      // Services项目
+                RepositoryDIConfig.ConfigureContainer(builder);    // Repository项目
+                IServicesDIConfig.ConfigureContainer(builder);     // IServices项目
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("警告：使用新的扩展方法注册服务失败，回退到传统方式注册。错误信息：" + ex.Message);
+                
+                // 回退到传统方式注册
+                ConfigureContainerTodll(builder);
+            }
 
             // 注册窗体
             RegisterForm(builder);
@@ -503,7 +538,7 @@ namespace RUINORERP.UI
         /// </summary>
         /// <param name="bc"></param>
         /// <param name="builder"></param>
-        void cb(HostBuilderContext bc, ContainerBuilder builder)
+        void MainRegister(HostBuilderContext bc, ContainerBuilder builder)
         {
             #region  注册
             Services = new ServiceCollection();
@@ -660,21 +695,13 @@ namespace RUINORERP.UI
             // 注册 AuditLogHelper 为可注入服务
             builder.RegisterType<AuditLogHelper>()
                    .AsSelf()
-                   .InstancePerLifetimeScope(); // 或根据需要使用 SingleInstance() 或根据需要选择生命周期
-
+                   .InstancePerLifetimeScope() // 或根据需要使用 SingleInstance() 或根据需要选择生命周期
+                  .PropertiesAutowired();
 
 
             //_containerBuilder = builder;
             //AutoFacContainer = builder.Build();
             #endregion
-
-            //ILifetimeScope autofacRoot;//= app.ApplicationServices.GetAutofacRoot();
-            // var repository = autofacRoot.Resolve<>();
-            //public interface IAutofacConfiguration
-            //{
-            //    ILifetimeScope LifetimeScope { get; }
-            //    ILifetimeScope RegisterTypes(Action<ContainerBuilder> configurationAction);
-            //}
         }
 
 
@@ -683,27 +710,23 @@ namespace RUINORERP.UI
         {
 
             var hostBuilder = new HostBuilder()
-         /*
-  .ConfigureAppConfiguration((context, config) =>
-  {
-      try
-      {
-          var env = context.HostingEnvironment;
-          config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
-          config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-      }
-      catch (Exception ex)
-      {
+         .ConfigureAppConfiguration((context, config) =>
+         {
+             try
+             {
+                 var env = context.HostingEnvironment;
+                 config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
+                 config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+             }
+             catch (Exception ex)
+             {
+                 RUINORERP.Common.Log4Net.Logger.Error("配置应用程序设置失败", ex);
+             }
 
-
-      }
-
-  })
-
-         */
+         })
          .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-        //使用了后面cb方法注册的
-        .ConfigureContainer<ContainerBuilder>(new Action<HostBuilderContext, ContainerBuilder>(cb))
+        //正确配置Autofac容器
+        .ConfigureContainer<ContainerBuilder>(ConfigureAutofacContainer)
          /*
         .ConfigureContainer<ContainerBuilder>(builder =>
          {
@@ -1144,8 +1167,7 @@ namespace RUINORERP.UI
             //为了修改为DB添加字段，覆盖这前面的
 
 
-            //默认就是内存模式？
-            services.AddWorkflow();
+       
 
             //services.AddWorkflow(x => x.UseMySQL(@"Server=127.0.0.1;Database=workflow;User=root;Password=password;", true, true));
 

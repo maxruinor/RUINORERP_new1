@@ -29,7 +29,7 @@ using Krypton.Navigator;
 using System.Linq.Expressions;
 using RUINORERP.Common.Extensions;
 using System.Collections;
-using TransInstruction;
+
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using RUINORERP.Model.CommonModel;
@@ -41,7 +41,7 @@ using System.Diagnostics;
 using SqlSugar;
 using RUINORERP.Business.Processor;
 using ExCSS;
-using RUINORERP.Server.Comm;
+
 using OfficeOpenXml.FormulaParsing.Excel.Functions;
 using MySqlX.XDevAPI.Common;
 using RUINORERP.Business.Security;
@@ -61,11 +61,10 @@ using Newtonsoft.Json.Linq;
 using System.Web.Caching;
 using Microsoft.Extensions.Caching.Memory;
 using RUINORERP.UI.PSI.SAL;
-using RUINORERP.UI.ClientCmdService;
-using TransInstruction.CommandService;
+
+
 using RUINORERP.Model.TransModel;
 using System.Threading;
-using static RUINORERP.Server.Comm.LockManager;
 using System.Management.Instrumentation;
 using FastReport.DevComponents.DotNetBar;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
@@ -86,8 +85,11 @@ using Winista.Text.HtmlParser.Lex;
 using Org.BouncyCastle.Asn1.X509.Qualified;
 using System.Management;
 using RUINORERP.Business.BizMapperService;
-using TransInstruction.Enums;
+
 using RUINORERP.Business.CommService;
+using RUINORERP.UI.Network;
+using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -305,10 +307,12 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
                             });
-                        OriginalData odforCache = ActionForClient.请求协助处理(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
-                          MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name, frm.Content, json, typeof(T).Name);
-                        byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
-                        MainForm.Instance.ecs.client.Send(buffer);
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+                        //OriginalData odforCache = ActionForClient.请求协助处理(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
+                        //  MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name, frm.Content, json, typeof(T).Name);
+                        //byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
+                        //MainForm.Instance.ecs.client.Send(buffer);
                         #endregion
                     }
                 }
@@ -617,6 +621,9 @@ namespace RUINORERP.UI.BaseForm
                     //解锁这个业务的自己名下的其它单
                     UNLockByBizName(userid);
 
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+                    /*
                     if (MainForm.Instance.lockManager.GetLockedBy(pkid) > 0)
                     {
                         var lockinfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
@@ -667,6 +674,9 @@ namespace RUINORERP.UI.BaseForm
                         tsBtnLocked.Visible = false;
                         tsBtnLocked.Tag = null;
                     }
+                    */
+
+
                 }
 
                 #region 数据状态修改时也会影响到按钮
@@ -1033,6 +1043,8 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>处理单据锁定状态</summary>
         private void HandleLockStatus(BaseEntity entity, StatusDetector detector)
         {
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+            /*
             if (entity == null) return;
 
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -1078,7 +1090,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 自己锁定时启用适当操作
                 EnableOperationsBasedOnStatus(detector.GetActualStatus());
-            }
+            }*/
         }
         /// <summary>根据状态启用操作按钮</summary>
         private void EnableOperationsBasedOnStatus(Enum status)
@@ -1576,6 +1588,8 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.联查:
                     break;
                 case MenuItemEnums.已锁定:
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                    /*
                     if (tsBtnLocked.Tag is LockInfo lockRequest)
                     {
                         //如果是自己时则不能申请
@@ -1589,7 +1603,7 @@ namespace RUINORERP.UI.BaseForm
                             RequestUnLock();
                         }
                     }
-
+                    */
                     break;
                 case MenuItemEnums.新增:
                     Add();
@@ -2226,27 +2240,28 @@ namespace RUINORERP.UI.BaseForm
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (pkid > 0)
             {
-
-                var lockeduserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
-                if (lockeduserid != userid)
-                {
-                    if (lockeduserid > 0)
-                    {
-                        //被人锁了
-                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
-                    }
-                    else
-                    {
-                        LockBill(pkid, userid);
-                    }
-                }
-
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
                 /*
-                #region 锁定当前单据  后面流程上也要能锁定
+              var lockeduserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
+              if (lockeduserid != userid)
+              {
+                  if (lockeduserid > 0)
+                  {
+                      //被人锁了
+                      this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.Lockbill;
+                  }
+                  else
+                  {
+                      LockBill(pkid, userid);
+                  }
+              }
 
 
-                #endregion
-                */
+              #region 锁定当前单据  后面流程上也要能锁定
+
+
+              #endregion
+              */
             }
         }
 
@@ -2267,7 +2282,9 @@ namespace RUINORERP.UI.BaseForm
                 MenuID = CurMenuInfo.MenuID
             };
 
-            using (ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send))
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+            /*
+            using (ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send))
             {
                 lockRequest.PacketId = cmd.PacketId;
                 cmd.lockCmd = LockCmd.LOCK;
@@ -2293,10 +2310,13 @@ namespace RUINORERP.UI.BaseForm
 
 
             }
+            */
         }
 
         private bool IsLock()
         {
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+            /*
             //如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
             if (tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
             {
@@ -2322,7 +2342,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
             }
-
+            */
             bool isLocked = false;
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = 0;
@@ -2332,7 +2352,9 @@ namespace RUINORERP.UI.BaseForm
                 pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                 if (pkid > 0)
                 {
-                    var lockuserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                  
+                    /*var lockuserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
                     if (lockuserid > 0)
                     {
                         if (lockuserid != MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
@@ -2342,7 +2364,7 @@ namespace RUINORERP.UI.BaseForm
                             isLocked = true;
                         }
                     }
-
+                    */
                 }
             }
             #endregion
@@ -3967,18 +3989,19 @@ namespace RUINORERP.UI.BaseForm
 
                 if (IsLock())
                 {
-                    string tipmsg = string.Empty;
-                    //如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
-                    if (tsBtnLocked.Visible && tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
-                    {
-                        //显示锁定认为锁定。要刷新数据
-                        tipmsg = $"单据已被【{lockInfo.LockedByName}】锁定，请刷新后再试";
-                    }
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                    //string tipmsg = string.Empty;
+                    ////如果已经有锁定标记了。即使已经释放了锁。也要刷新数据后才可以保存。不然数据不会统一。
+                    //if (tsBtnLocked.Visible && tsBtnLocked.Tag != null && tsBtnLocked.Tag is LockInfo lockInfo)
+                    //{
+                    //    //显示锁定认为锁定。要刷新数据
+                    //    tipmsg = $"单据已被【{lockInfo.LockedByName}】锁定，请刷新后再试";
+                    //}
 
                     return new ReturnMainSubResults<T>()
                     {
                         Succeeded = false,
-                        ErrorMsg = tipmsg
+                       // ErrorMsg = tipmsg
                     };
                 }
             }
@@ -4577,6 +4600,9 @@ namespace RUINORERP.UI.BaseForm
                 long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                 if (pkid > 0)
                 {
+                #warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                    /*
+
                     //如果这个锁是自己锁的。就释放
                     long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
                     var LockInfo = MainForm.Instance.lockManager.GetLockStatus(pkid);
@@ -4587,7 +4613,7 @@ namespace RUINORERP.UI.BaseForm
                         CommBillData cbd = new CommBillData();
                         cbd = bcf.GetBillData(typeof(T), EditEntity);
 
-                        ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
+                        ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
 
                         cmd.lockCmd = LockCmd.RequestUnLock;
 
@@ -4608,7 +4634,7 @@ namespace RUINORERP.UI.BaseForm
                             MessageBox.Show($"已经向锁定者【{lockRequest.LockedUserName}】发送了解锁请求。等待结果中");
                         };
                     }
-
+                    */
                 }
             }
         }
@@ -4623,17 +4649,19 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //如果这个锁是自己锁的。就释放
                     long userid = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    if (MainForm.Instance.lockManager.GetLockedBy(pkid) == userid)
-                    {
-                        UNLock(pkid, userid);
-                        //先本地再服务器
-                        if (MainForm.Instance.lockManager.Unlock(pkid, userid))
-                        {
-                            MainForm.Instance.PrintInfoLog($"本地删除{pkid}锁成功");
-                        }
-                        this.tsBtnLocked.Visible = true;
-                        this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
-                    }
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+                    //if (MainForm.Instance.lockManager.GetLockedBy(pkid) == userid)
+                    //{
+                    //    UNLock(pkid, userid);
+                    //    //先本地再服务器
+                    //    if (MainForm.Instance.lockManager.Unlock(pkid, userid))
+                    //    {
+                    //        MainForm.Instance.PrintInfoLog($"本地删除{pkid}锁成功");
+                    //    }
+                    //    this.tsBtnLocked.Visible = true;
+                    //    this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
+                    //}
 
                     //BizTypeMapper mapper = new BizTypeMapper();
                     //OriginalData od = ActionForClient.单据锁定释放(pkid, MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
@@ -4651,8 +4679,10 @@ namespace RUINORERP.UI.BaseForm
             CommBillData cbd = new CommBillData();
             cbd = bcf.GetBillData(typeof(T), EditEntity);
 
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+            /*
             //得到了锁
-            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
+            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
             cmd.lockCmd = LockCmd.UnLockByBizName;
             UnLockInfo lockRequest = new UnLockInfo();
             lockRequest.BillData = cbd;
@@ -4668,7 +4698,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 MainForm.Instance.PrintInfoLog($"向服务器发送【业务类型】解锁{lockRequest.BillData.BizName}成功");
             }
-
+            */
         }
 
 
@@ -4677,9 +4707,10 @@ namespace RUINORERP.UI.BaseForm
             BillConverterFactory bcf = Startup.GetFromFac<BillConverterFactory>();
             CommBillData cbd = new CommBillData();
             cbd = bcf.GetBillData(typeof(T), EditEntity);
-
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+            /*
             //得到了锁
-            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
+            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
             cmd.lockCmd = LockCmd.UNLOCK;
             UnLockInfo lockRequest = new UnLockInfo();
             lockRequest.BillData = cbd;
@@ -4710,7 +4741,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
             };
-
+            */
         }
 
         internal override void CloseTheForm(object thisform)

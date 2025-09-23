@@ -15,6 +15,9 @@ using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Core.DataProcessing;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.IM;
@@ -29,8 +32,8 @@ using System.Threading.Tasks;
 using System.Web.Caching;
 using System.Web.WebSockets;
 using System.Windows.Forms;
-using TransInstruction;
-using TransInstruction.DataPortal;
+
+
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -63,15 +66,15 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                bool islogin = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                bool islogin = ByteOperations.GetBool(gd.Two, ref index);
                 rs = islogin;
                 if (islogin)
                 {
-                    string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
-                    long userid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                    string userName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                    string empName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    string SessionID = ByteOperations.GetString(gd.Two, ref index);
+                    long userid = ByteOperations.GetInt64(gd.Two, ref index);
+                    string userName = ByteOperations.GetString(gd.Two, ref index);
+                    string empName = ByteOperations.GetString(gd.Two, ref index);
                     UserInfo onlineuser = new UserInfo();
                     onlineuser.SessionId = SessionID;
                     onlineuser.UserID = userid;
@@ -102,12 +105,12 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                bool alreadyLogged = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                bool alreadyLogged = ByteOperations.GetBool(gd.Two, ref index);
                 if (alreadyLogged)
                 {
                     rs = alreadyLogged;
-                    string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    string SessionID = ByteOperations.GetString(gd.Two, ref index);
                     //如果正好是自己登陆的。不算已经登陆
                     if (MainForm.Instance.AppContext.CurrentUser.SessionId == SessionID)
                     {
@@ -132,16 +135,16 @@ namespace RUINORERP.UI.SuperSocketClient
             bool rs = false;
             try
             {
-                ByteBuff tx = new ByteBuff(100);
+                ByteBuffer tx = new ByteBuffer(100);
                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 tx.PushString(sendtime);
                 tx.PushString(UserName);
                 //排除自己当前的SessionId
                 tx.PushString(MainForm.Instance.AppContext.CurrentUser.SessionId);
                 OriginalData gd = new OriginalData();
-                gd.cmd = (byte)ClientCmdEnum.请求强制用户下线;
+                gd.Cmd = (byte)ClientCmdEnum.请求强制用户下线;
                 gd.One = null;
-                gd.Two = tx.toByte();
+                gd.Two = tx.ToByteArray();
                 byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(gd);
                 MainForm.Instance.ecs.client.Send(buffer);
             }
@@ -163,16 +166,16 @@ namespace RUINORERP.UI.SuperSocketClient
             bool rs = false;
             try
             {
-                ByteBuff tx = new ByteBuff(100);
+                ByteBuffer tx = new ByteBuffer(100);
                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 tx.PushString(sendtime);
                 tx.PushString(userName);
                 //排除自己当前的SessionId
                 tx.PushString(MainForm.Instance.AppContext.CurrentUser.SessionId);
                 OriginalData gd = new OriginalData();
-                gd.cmd = (byte)ClientCmdEnum.请求强制登陆上线;
+                gd.Cmd = (byte)ClientCmdEnum.请求强制登陆上线;
                 gd.One = null;
-                gd.Two = tx.toByte();
+                gd.Two = tx.ToByteArray();
                 byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(gd);
                 MainForm.Instance.ecs.client.Send(buffer);
             }
@@ -190,10 +193,10 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
                 //清空
                 MainForm.Instance.UserInfos = new List<UserInfo>();
-                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string json = ByteOperations.GetString(gd.Two, ref index);
                 if (!string.IsNullOrEmpty(json))
                 {
                     if (json != "null")
@@ -225,11 +228,11 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                //ByteBuff bg = new ByteBuff(gd.Two);
+                //ByteBuffer bg = new ByteBuffer(gd.Two);
 
                 //清空
                 MainForm.Instance.CacheInfoList = new System.Collections.Concurrent.ConcurrentDictionary<string, CacheInfo>();
-                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string json = ByteOperations.GetString(gd.Two, ref index);
                 if (!string.IsNullOrEmpty(json))
                 {
                     if (json != "null")
@@ -266,9 +269,9 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string tablename = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string tablename = ByteOperations.GetString(gd.Two, ref index);
+                string json = ByteOperations.GetString(gd.Two, ref index);
                 if (!string.IsNullOrEmpty(json))
                 {
                     if (json != "null")
@@ -368,9 +371,9 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string IpPort = ByteDataAnalysis.GetString(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string sendtime = ByteOperations.GetString(gd.Two, ref index);
+                string IpPort = ByteOperations.GetString(gd.Two, ref index);
                 try
                 {
                     string newIP = IpPort.Split(':')[0];
@@ -430,12 +433,12 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string modelName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string messageJson = ByteDataAnalysis.GetString(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string modelName = ByteOperations.GetString(gd.Two, ref index);
+                string messageJson = ByteOperations.GetString(gd.Two, ref index);
                 JObject obj = JObject.Parse(messageJson);
                 MessageModel MessageInfo = obj.ToObject<MessageModel>();
-                bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                bool MustDisplay = ByteOperations.GetBool(gd.Two, ref index);
                 MainForm.Instance.PrintInfoLog(MessageInfo.msg);
                 if (MessageInfo.msg.Contains("换IP"))
                 {
@@ -495,11 +498,11 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
 
                 //清空
                 MainForm.Instance.UserInfos = new List<UserInfo>();
-                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string json = ByteOperations.GetString(gd.Two, ref index);
                 if (!string.IsNullOrEmpty(json))
                 {
                     if (json != "null")
@@ -534,12 +537,12 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string 发送者姓名 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                Message = ByteDataAnalysis.GetString(gd.Two, ref index);
-                bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string sendtime = ByteOperations.GetString(gd.Two, ref index);
+                string SessionID = ByteOperations.GetString(gd.Two, ref index);
+                string 发送者姓名 = ByteOperations.GetString(gd.Two, ref index);
+                Message = ByteOperations.GetString(gd.Two, ref index);
+                bool MustDisplay = ByteOperations.GetBool(gd.Two, ref index);
                 if (!MustDisplay)
                 {
                     MainForm.Instance.PrintInfoLog(Message);
@@ -568,15 +571,15 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string 发送者姓名 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string 电脑机器名 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string IP = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string Msg = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string ExCode = ByteDataAnalysis.GetString(gd.Two, ref index);
-                bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string sendtime = ByteOperations.GetString(gd.Two, ref index);
+                string SessionID = ByteOperations.GetString(gd.Two, ref index);
+                string 发送者姓名 = ByteOperations.GetString(gd.Two, ref index);
+                string 电脑机器名 = ByteOperations.GetString(gd.Two, ref index);
+                string IP = ByteOperations.GetString(gd.Two, ref index);
+                string Msg = ByteOperations.GetString(gd.Two, ref index);
+                string ExCode = ByteOperations.GetString(gd.Two, ref index);
+                bool MustDisplay = ByteOperations.GetBool(gd.Two, ref index);
 
                 ReminderData MessageInfo = new ReminderData();
                 MessageInfo.SendTime = sendtime;
@@ -598,14 +601,14 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
 
-                string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                long RequestUserID = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                string RequestEmpName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string RequestContent = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string BillType = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string BillData = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string sendtime = ByteOperations.GetString(gd.Two, ref index);
+                long RequestUserID = ByteOperations.GetInt64(gd.Two, ref index);
+                string RequestEmpName = ByteOperations.GetString(gd.Two, ref index);
+                string RequestContent = ByteOperations.GetString(gd.Two, ref index);
+                string BillType = ByteOperations.GetString(gd.Two, ref index);
+                string BillData = ByteOperations.GetString(gd.Two, ref index);
                 var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.UserID == RequestUserID);
                 if (userinfo == null)
                 {
@@ -648,9 +651,9 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string 时间 = ByteOperations.GetString(gd.Two, ref index);
+                string tableName = ByteOperations.GetString(gd.Two, ref index);
+                string json = ByteOperations.GetString(gd.Two, ref index);
 
                 // 将item转换为JObject
                 var obj = JObject.Parse(json);
@@ -672,9 +675,9 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                string 时间 = ByteOperations.GetString(gd.Two, ref index);
+                string tableName = ByteOperations.GetString(gd.Two, ref index);
+                string json = ByteOperations.GetString(gd.Two, ref index);
 
                 // 将item转换为JObject
                 var obj = JObject.Parse(json);
@@ -695,10 +698,10 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string tableName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string PKColName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                long PKValue = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+                string 时间 = ByteOperations.GetString(gd.Two, ref index);
+                string tableName = ByteOperations.GetString(gd.Two, ref index);
+                string PKColName = ByteOperations.GetString(gd.Two, ref index);
+                long PKValue = ByteOperations.GetInt64(gd.Two, ref index);
 
                 MyCacheManager.Instance.DeleteEntityList(tableName, PKColName, PKValue);
                 if (MainForm.Instance.authorizeController.GetDebugInfoAuth())
@@ -719,11 +722,11 @@ namespace RUINORERP.UI.SuperSocketClient
           try
           {
               int index = 0;
-              string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-              long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-              string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
-              long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-              int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
+              string 时间 = ByteOperations.GetString(gd.Two, ref index);
+              long lockUserid = ByteOperations.GetInt64(gd.Two, ref index);
+              string lockName = ByteOperations.GetString(gd.Two, ref index);
+              long billid = ByteOperations.GetInt64(gd.Two, ref index);
+              int BizType = ByteOperations.GetInt(gd.Two, ref index);
 
               if (!MainForm.Instance.LockInfoList.ContainsKey(billid))
               {
@@ -762,13 +765,13 @@ namespace RUINORERP.UI.SuperSocketClient
           try
           {
               int index = 0;
-              string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-              long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-              string lockName = ByteDataAnalysis.GetString(gd.Two, ref index);
-              long billid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-              int BizType = ByteDataAnalysis.GetInt(gd.Two, ref index);
+              string 时间 = ByteOperations.GetString(gd.Two, ref index);
+              long lockUserid = ByteOperations.GetInt64(gd.Two, ref index);
+              string lockName = ByteOperations.GetString(gd.Two, ref index);
+              long billid = ByteOperations.GetInt64(gd.Two, ref index);
+              int BizType = ByteOperations.GetInt(gd.Two, ref index);
               //菜单ID
-              long MenuID = ByteDataAnalysis.GetInt(gd.Two, ref index);
+              long MenuID = ByteOperations.GetInt(gd.Two, ref index);
 
               BillLockInfo lockInfo = null;
               if (MainForm.Instance.LockInfoList.TryGetValue(billid, out lockInfo))
@@ -824,8 +827,8 @@ namespace RUINORERP.UI.SuperSocketClient
           try
           {
               int index = 0;
-              string 时间 = ByteDataAnalysis.GetString(gd.Two, ref index);
-              long lockUserid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
+              string 时间 = ByteOperations.GetString(gd.Two, ref index);
+              long lockUserid = ByteOperations.GetInt64(gd.Two, ref index);
 
               var tempList = MainForm.Instance.LockInfoList.Where(c => c.Value.LockedUserID == lockUserid).ToList();
               foreach (var item in tempList)
@@ -853,13 +856,13 @@ namespace RUINORERP.UI.SuperSocketClient
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string sendtime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string sendtime = ByteOperations.GetString(gd.Two, ref index);
+                string json = ByteOperations.GetString(gd.Two, ref index);
 
                 // 将item转换为JObject
                 var obj = JObject.Parse(json);
-                bool MustDisplay = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                bool MustDisplay = ByteOperations.GetBool(gd.Two, ref index);
                 if (!MustDisplay)
                 {
                     MainForm.Instance.PrintInfoLog(Message);

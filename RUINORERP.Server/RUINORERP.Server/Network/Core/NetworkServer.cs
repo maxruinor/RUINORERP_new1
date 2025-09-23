@@ -24,6 +24,7 @@ using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
 using static RUINORERP.Server.Network.Core.ListenerOptions;
 using RUINORERP.Server.Network.Commands;
+using RUINORERP.PacketSpec.DI;
 
 namespace RUINORERP.Server.Network.Core
 {
@@ -166,10 +167,12 @@ namespace RUINORERP.Server.Network.Core
                       // 注册核心服务 - 使用与全局相同的ISessionService实例
                       services.AddSingleton<ISessionService>(_sessionManager);
 
+                      services.AddPacketSpecServices();
                       // 从全局服务提供者获取并注册CommandDispatcher
                       // 这解决了SuperSocketCommandAdapter无法解析CommandDispatcher的问题
                       var commandDispatcher = Program.ServiceProvider.GetRequiredService<CommandDispatcher>();
                       services.AddSingleton<CommandDispatcher>(commandDispatcher);
+
 
                       // 注册ICommandFactory服务，SuperSocketCommandAdapter也依赖它
                       var commandFactory = Program.ServiceProvider.GetRequiredService<ICommandFactory>();

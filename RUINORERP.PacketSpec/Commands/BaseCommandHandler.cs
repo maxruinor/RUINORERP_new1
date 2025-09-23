@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,6 +8,8 @@ using RUINORERP.PacketSpec.Utilities;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Models.Core;
+using System.Text;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -481,7 +483,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (data != null)
                 {
                     string json = Newtonsoft.Json.JsonConvert.SerializeObject(data);
-                    dataBytes = System.Text.Encoding.UTF8.GetBytes(json);
+                    dataBytes = Encoding.UTF8.GetBytes(json);
                 }
                 
                 // 构造OriginalData: Cmd使用命令ID的低8位，One使用命令ID的高8位，Two使用序列化后的数据

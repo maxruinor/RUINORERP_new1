@@ -74,7 +74,7 @@ namespace RUINORERP.Server.Network.Core
 
             try
             {
-                int bodyLength3 = PacketSpec.Security.EncryptedProtocolV2.AnalyzeClientPackHeader(headCopy3);
+                int bodyLength3 = PacketSpec.Security.EncryptedProtocol.AnalyzeClientPackHeader(headCopy3);
             }
             catch (Exception)
             {
@@ -101,38 +101,7 @@ namespace RUINORERP.Server.Network.Core
         /// </summary>
         protected override ServerPackageInfo DecodePackage(ref ReadOnlySequence<byte> buffer)
         {
-            /*
-            #region
-            try
-            {
-                // 将缓冲区转换为字节数组
-                var packageBytes = buffer.ToArray();
 
-                // 使用PacketSpec的统一序列化器
-                var packet = UnifiedPacketSerializer.DeserializeFromBinary(packageBytes);
-
-                if (packet != null && packet.IsValid())
-                {
-                    // 创建并返回ServerPackageInfo对象
-                    return new ServerPackageInfo
-                    {
-                        Command = packet.Command,
-                        Key = packet.PacketId,
-                        Body = packageBytes
-                    };
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-
-            #endregion
-            */
             try
             {
                 // 将缓冲区转换为字节数组
@@ -141,30 +110,43 @@ namespace RUINORERP.Server.Network.Core
                 byte[] Head = new byte[HeaderLength];
                 //取出18位包头长的数据
                 Array.Copy(packageBytes, 0, Head, 0, HeaderLength);
+                // 解密数据
+                var decryptedData = PacketSpec.Security.EncryptedProtocol.DecryptionClientPack(Head, HeaderLength, packageBytes);
 
+                // 反序列化数据包
+                PacketModel packet;
 
-                TestDecode_deep(Head, packageBytes);
+                packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(decryptedData.Two);
 
+                if (packet.IsValid())
+                { // 如果没有请求ID，或者对应的任务已完成，则视为服务器主动推送的命令
+                    if (!packet.Extensions.ContainsKey("RequestId"))
+                    {
+                        // 提取命令ID和数据
+                        object commandData = null;
+                        try
+                        {
+                            // 尝试解析命令数据
+                            commandData = packet.GetJsonData<object>();
+                        }
+                        catch (Exception ex)
+                        {
 
-                var kxData = PacketSpec.Security.EncryptedProtocol.DecryptionClientPack(Head, HeaderLength, packageBytes);
-                //ReadOnlySpan<byte> span = Head.AsSpan();
-                //ReadOnlySpan<byte> body = packageBytes.AsSpan();
-                int index = 0;
-                string sendTime2 = ByteOperations.GetString(kxData.Two, ref index);
-                string u2 = ByteOperations.GetString(kxData.Two, ref index);
-                string p2 = ByteOperations.GetString(kxData.Two, ref index);
-                //if (kxData.Cmd == )
-                //{
+                        }
+                    }
 
-                //}
-
-                //return new ServerPackageInfo
-                //{
-                //    //Command = kxData.Cmd, // 假设Command是uint类型
-                //    Key = "SimplifiedSocketCommand",    // 使用PacketId作为Key
-                //    Body = packageBytes      // 保存原始数据包
-                //};
-
+                    // 创建并返回ServerPackageInfo对象
+                    return new ServerPackageInfo
+                    {
+                        Command = packet.Command, // 假设Command是uint类型
+                        Key = "SuperSocketCommandAdapter",    // 使用PacketId作为Key
+                        Body = packageBytes      // 保存原始数据包
+                    };
+                }
+                else
+                {
+                    return null;
+                }
 
                 return new ServerPackageInfo
                 {
@@ -173,53 +155,10 @@ namespace RUINORERP.Server.Network.Core
                     Body = packageBytes      // 保存原始数据包
                 };
 
-
-                // 使用PacketSpec的统一序列化器
-                var packet = UnifiedPacketSerializer.DeserializeFromBinary(packageBytes);
-
-                if (packet != null && packet.IsValid())
-                {
-
-                    // 创建并返回ServerPackageInfo对象
-                    return new ServerPackageInfo
-                    {
-                        Command = packet.Command, // 假设Command是uint类型
-                        Key = packet.PacketId,    // 使用PacketId作为Key
-                        Body = packageBytes      // 保存原始数据包
-                    };
-                }
-                else
-                {
-                    return null;
-                }
             }
             catch (Exception ex)
             {
                 return null;
-            }
-        }
-
-
-
-
-     
-
-        private void TestDecode_deep(byte[] head, byte[] alldata)
-        {
-            try
-            {
-
-                byte[] headCopy = (byte[])head.Clone();
-                byte[] alldataCopy = (byte[])alldata.Clone();
-                var kxData_v2 = PacketSpec.Security.EncryptedProtocolV2.DecryptionClientPack(headCopy, alldataCopy);
-                int index = 0;
-                string sendTime2 = ByteOperations.GetString(kxData_v2.Two, ref index);
-                string u2 = ByteOperations.GetString(kxData_v2.Two, ref index);
-                string p2 = ByteOperations.GetString(kxData_v2.Two, ref index);
-            }
-            catch (Exception ex)
-            {
-
             }
         }
 

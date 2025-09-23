@@ -5,22 +5,28 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using global::RUINORERP.PacketSpec.Commands;
 using global::RUINORERP.PacketSpec.Models.Core;
 using global::RUINORERP.PacketSpec.Serialization;
 using global::RUINORERP.Server.Network.Models;
 using global::RUINORERP.Server.Network.Interfaces.Services;
-using global::SuperSocket.Command;
 using global::SuperSocket.Server.Abstractions.Session;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.PacketSpec;
 using RUINORERP.PacketSpec.Enums.Core;
 using ICommand = RUINORERP.PacketSpec.Commands.ICommand;
-using CommandAttribute = SuperSocket.Command.CommandAttribute;
+using SuperSocket.Command;
 
 namespace RUINORERP.Server.Network.Commands.SuperSocket
-{
+{   
     /// <summary>
     /// 统一的SuperSocket命令适配器
     /// 整合了原有的SimplifiedSuperSocketAdapter、SocketCommand和SuperSocketCommandAdapter的功能
@@ -121,12 +127,18 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     foreach (var commandType in commandTypes)
                     {
                         // 尝试获取命令特性
-                        var commandAttribute = commandType.GetCustomAttribute<PacketSpec.Commands.CommandAttribute>();
-                        if (commandAttribute != null && commandAttribute.Id > 0)
+                        var commandAttribute = commandType.GetCustomAttribute<PacketSpec.Commands.PacketCommandAttribute>();
+                        if (commandAttribute != null)
                         {
-                            _commandTypeMap[commandAttribute.Id] = commandType;
-                            _logger?.LogDebug("注册命令类型映射: CommandId={CommandId}, Type={TypeName}, Name={CommandName}",
-                                commandAttribute.Id, commandType.FullName, commandAttribute.Name);
+                            // 使用命令类型的哈希码作为命令ID
+                            var hash = commandType.FullName?.GetHashCode() ?? 0;
+                            var commandId = hash > 0 ? (uint)hash : 0;
+                            if (commandId > 0)
+                            {
+                                _commandTypeMap[commandId] = commandType;
+                                _logger?.LogDebug("注册命令类型映射: CommandId={CommandId}, Type={TypeName}, Name={CommandName}",
+                                    commandId, commandType.FullName, commandAttribute.Name);
+                            }
                         }
                     }
                 }

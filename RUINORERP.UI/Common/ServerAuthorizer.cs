@@ -7,7 +7,6 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.UI.ClientCmdService;
 using RUINORERP.UI.SuperSocketClient;
 using SourceGrid2.Win32;
 using System;
@@ -18,9 +17,6 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TransInstruction;
-using TransInstruction.CommandService;
-using TransInstruction.Enums;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RUINORERP.UI.Common
@@ -32,7 +28,7 @@ namespace RUINORERP.UI.Common
     internal class ServerAuthorizer
     {
 
-      
+
         /// <summary>
         /// 验证是否已经登陆并等待响应，最多等待指定的超时时间。
         /// </summary>
@@ -198,16 +194,17 @@ namespace RUINORERP.UI.Common
                     .WithRequestId("req_001")
                     .Build();
 
-
-
+                // 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                LoginRequest request = new LoginRequest();
                 // 发送登录请求
-                var request = new LoginRequest(CmdOperation.Send)
-                {
-                    OperationType = CmdOperation.Send,
-                    requestType = LoginProcessType.用户登陆,
-                    Username = userName,
-                    Password = password
-                };
+                //var request = new LoginRequest(CommandDirection.Send)
+                //{
+                //    OperationType = CommandDirection.Send,
+                //    requestType = LoginProcessType.用户登陆,
+                //    Username = userName,
+                //    Password = password
+                //};
 
                 // 创建自定义命令数据包
                 var customPacket = PacketBuilder.Create()
@@ -217,8 +214,9 @@ namespace RUINORERP.UI.Common
                     .WithJsonData(new { Title = "通知", Content = "这是一条测试消息" })
                     .Build();
 
-
-                MainForm.Instance.dispatcher.DispatchAsync(request, cancellationToken);
+                // 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                // MainForm.Instance.dispatcher.DispatchAsync(request, cancellationToken);
 
                 // 持久化配置
                 UserGlobalConfig.Instance.Serialize();
@@ -318,17 +316,19 @@ namespace RUINORERP.UI.Common
                         throw new Exception($"无法连接到服务器（尝试了 {serverAddresses.Length} 个地址）");
                     }
                 }
-
+                // 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                // var request = new RequestLoginCommand(CommandDirection.Send);
                 // 发送登录请求
-                var request = new RequestLoginCommand(CmdOperation.Send)
-                {
-                    OperationType = CmdOperation.Send,
-                    requestType = LoginProcessType.用户登陆,
-                    Username = userName,
-                    Password = password
-                };
+                //var request = new RequestLoginCommand(CommandDirection.Send)
+                //{
+                //    OperationType = CommandDirection.Send,
+                //    requestType = LoginProcessType.用户登陆,
+                //    Username = userName,
+                //    Password = password
+                //};
 
-                MainForm.Instance.dispatcher.DispatchAsync(request, cancellationToken);
+                //   MainForm.Instance.dispatcher.DispatchAsync(request, cancellationToken);
 
                 // 持久化配置
                 UserGlobalConfig.Instance.Serialize();
@@ -338,7 +338,7 @@ namespace RUINORERP.UI.Common
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 MainForm.Instance.ShowStatusText(GetUserFriendlyError(ex));
-                MainForm.Instance.logger.Debug(ex, "登录失败"+ex.Message);
+                MainForm.Instance.logger.Debug(ex, "登录失败" + ex.Message);
                 return false;
             }
         }

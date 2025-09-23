@@ -31,7 +31,7 @@ using SqlSugar;
 using SourceGrid;
 using System.Linq.Expressions;
 using RUINORERP.Common.Extensions;
-using RUINORERP.PacketSpec.Legacy;
+
 using Microsoft.Extensions.Logging;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using RUINOR.Core;

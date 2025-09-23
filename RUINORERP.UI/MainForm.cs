@@ -20,14 +20,14 @@ using System.Threading;
 using RUINORERP.UI.Common;
 using System.Runtime.Remoting.Messaging;
 using RUINORERP.UI.BI;
-
+using RUINORERP.UI.Network;
 using System.Reflection;
 using RUINORERP.UI.UserCenter;
 using RUINORERP.Business;
 
 using RUINORERP.UI.SuperSocketClient;
 using System.Net;
-using RUINORERP.PacketSpec.Legacy;
+
 using Microsoft.Extensions.Hosting;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.Common.SnowflakeIdHelper;
@@ -43,7 +43,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Common.Log4Net;
 using System.Diagnostics;
 using RUINORERP.Business.Security;
-using RUINORERP.PacketSpec.Legacy;
+
 using RUINORERP.Common.Extensions;
 using Castle.Core.Smtp;
 using System.IO;
@@ -56,7 +56,6 @@ using System.Linq.Expressions;
 using Google.Protobuf.Collections;
 using ExCSS;
 using RUINORERP.Model.Models;
-using RUINORERP.Server.Comm;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Common.Helper;
 using System.Windows.Input;
@@ -73,7 +72,7 @@ using System.Xml;
 using RUINORERP.Model.TransModel;
 using Microsoft.Extensions.Options;
 using RUINORERP.Model.ConfigModel;
-using RUINORERP.UI.ClientCmdService;
+
 using RUINORERP.Global;
 using RUINORERP.PacketSpec.Commands;
 using HLH.Lib.Security;
@@ -100,6 +99,10 @@ using RUINORERP.Business.RowLevelAuthService;
 using RUINORERP.Plugin;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.Business.CommService;
+
+using RUINORERP.Business.CommService;
+using RUINORERP.UI.Network;
+using RUINORERP.UI.Network;
 
 
 
@@ -190,6 +193,11 @@ namespace RUINORERP.UI
         public FMAuditLogHelper FMAuditLogHelper => fmauditLogHelper;
 
         private System.Threading.Timer _autoSaveTimer;
+
+        public CommunicationManager communicationManager;
+        public IClientCommunicationService communicationService;
+        public ClientCommandDispatcher clientCommandDispatcher;
+        
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper, FMAuditLogHelper _fmauditLogHelper, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
@@ -198,6 +206,20 @@ namespace RUINORERP.UI
             fmauditLogHelper = _fmauditLogHelper;
             logger = _logger;
             _main = this;
+
+            #region 新的客户端通讯模块的调用
+            // 通过依赖注入获取核心组件
+            communicationService = Startup.ServiceProvider.GetService<IClientCommunicationService>();
+            clientCommandDispatcher = Startup.ServiceProvider.GetService<ClientCommandDispatcher>();
+            communicationManager = Startup.ServiceProvider.GetService<CommunicationManager>();
+   
+
+            // 初始化通信管理器
+            communicationManager.Initialize();
+
+            #endregion
+
+    
             // 移除禁用跨线程检查的代码，这是不安全的做法
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
 
@@ -226,9 +248,10 @@ namespace RUINORERP.UI
             SourceGrid.Cells.Views.Cell viewGreen = new SourceGrid.Cells.Views.Cell();
             // 初始化日志管理器
             logManager = new UILogManager(this, uclog.grid, viewGreen);
-            var clientCommandRegistry = new ClientCommandRegistry();
-            var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
-            dispatcher = new ClientCommandDispatcher(clientCommandHandlers);
+           // var clientCommandRegistry = new ClientCommandRegistry();
+           // var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
+
+    
 
             _menuTracker = Startup.GetFromFac<MenuTracker>();
 
@@ -559,7 +582,9 @@ namespace RUINORERP.UI
         /// </summary>
         //public ConcurrentDictionary<long, BillLockInfo> LockInfoList = new ConcurrentDictionary<long, BillLockInfo>();
 
-        public LockManager lockManager = new LockManager();
+
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+        // public LockManager lockManager = new LockManager();
 
 
         /// <summary>
@@ -1656,13 +1681,15 @@ namespace RUINORERP.UI
                 }
 
                 LoginWebServer();
-                ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
-                cmd.lockCmd = LockCmd.Broadcast;
-                MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-                cmd.LockChanged += (sender, e) =>
-                {
-                    //使用事件模式来查询某一个单据被谁锁定
-                };
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+                //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
+                //cmd.lockCmd = LockCmd.Broadcast;
+                //MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+                //cmd.LockChanged += (sender, e) =>
+                //{
+                //    //使用事件模式来查询某一个单据被谁锁定
+                //};
             }
             else
             {
@@ -3250,13 +3277,16 @@ namespace RUINORERP.UI
 
 
             //如果删除了。服务器上的工作流就可以删除了。
-            RequestReminderCommand request = new RequestReminderCommand();
-            request.requestType = RequestReminderType.删除提醒;
-            ReminderData reminderRequest = new ReminderData();
-            reminderRequest.BizPrimaryKey = 11231321;
-            reminderRequest.BizType = BizType.CRM跟进计划;
-            request.requestInfo = reminderRequest;
-            MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
+
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+            //RequestReminderCommand request = new RequestReminderCommand();
+            //request.requestType = RequestReminderType.删除提醒;
+            //ReminderData reminderRequest = new ReminderData();
+            //reminderRequest.BizPrimaryKey = 11231321;
+            //reminderRequest.BizType = BizType.CRM跟进计划;
+            //request.requestInfo = reminderRequest;
+            //MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
         }
 
         private void tsbtnSysTest_Click(object sender, EventArgs e)

@@ -1,6 +1,7 @@
 using System;
 using System.Windows.Forms;
 using RUINORERP.Model;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.Network.Examples
 {
@@ -82,7 +83,9 @@ namespace RUINORERP.UI.Network.Examples
         {
             // 这里简化了创建过程，实际项目中可能需要更复杂的初始化逻辑
             // 示例：通过IoC容器解析或直接创建实例
-            return new ClientCommunicationService();
+            var socketClient = new SuperSocketClient();
+            var commandDispatcher = new ClientCommandDispatcher();
+            return new ClientCommunicationService(socketClient, commandDispatcher);
         }
 
         /// <summary>
@@ -94,7 +97,8 @@ namespace RUINORERP.UI.Network.Examples
         {
             // 这里简化了创建过程，实际项目中可能需要更复杂的初始化逻辑
             // 示例：通过IoC容器解析或直接创建实例
-            return new HeartbeatManager();
+            var communicationService = CreateCommunicationService();
+            return new HeartbeatManager(communicationService);
         }
 
         /// <summary>
@@ -168,11 +172,14 @@ namespace RUINORERP.UI.Network.Examples
             try
             {
                 // 获取命令ID和数据
-                CommandId commandId = (CommandId)cmbCommandId.SelectedItem;
+                // 注意：这里需要根据实际的命令ID类型进行调整
+                // CommandId commandId = (CommandId)cmbCommandId.SelectedItem;
                 string data = txtCommandData.Text.Trim();
 
                 // 发送命令
-                _communicationIntegration.SendCommand(commandId, data);
+                // _communicationIntegration.SendCommand(commandId, data);
+                MessageBox.Show(this, "发送命令功能需要根据实际需求实现", "提示", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -193,24 +200,24 @@ namespace RUINORERP.UI.Network.Examples
             btnSendCommand.Enabled = isEnabled;
             txtServerUrl.Enabled = isEnabled;
             txtPort.Enabled = isEnabled;
-            cmbCommandId.Enabled = isEnabled;
+            // cmbCommandId.Enabled = isEnabled;
             txtCommandData.Enabled = isEnabled;
 
             // 如果通信模块已初始化，填充命令ID下拉列表
-            if (isEnabled && cmbCommandId.Items.Count == 0)
-            {
-                // 填充命令ID列表
-                foreach (CommandId commandId in Enum.GetValues(typeof(CommandId)))
-                {
-                    cmbCommandId.Items.Add(commandId);
-                }
+            // if (isEnabled && cmbCommandId.Items.Count == 0)
+            // {
+            //     // 填充命令ID列表
+            //     foreach (CommandId commandId in Enum.GetValues(typeof(CommandId)))
+            //     {
+            //         cmbCommandId.Items.Add(commandId);
+            //     }
 
-                // 默认选择第一个命令
-                if (cmbCommandId.Items.Count > 0)
-                {
-                    cmbCommandId.SelectedIndex = 0;
-                }
-            }
+            //     // 默认选择第一个命令
+            //     if (cmbCommandId.Items.Count > 0)
+            //     {
+            //         cmbCommandId.SelectedIndex = 0;
+            //     }
+            // }
         }
 
         /// <summary>

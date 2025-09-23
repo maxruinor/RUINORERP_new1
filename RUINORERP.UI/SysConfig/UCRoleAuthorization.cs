@@ -28,7 +28,7 @@ using StackExchange.Redis;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using RUINORERP.UI.AdvancedUIModule;
-using RUINORERP.PacketSpec.Legacy;
+
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.Business.CommService;
 using System.Windows.Documents;
@@ -45,6 +45,7 @@ using RUINORERP.Global;
 using Netron.GraphLib;
 using Microsoft.Extensions.DependencyInjection;
 using System.Management;
+using RUINORERP.PacketSpec.Protocol;
 
 
 namespace RUINORERP.UI.SysConfig
@@ -2720,10 +2721,12 @@ namespace RUINORERP.UI.SysConfig
                     //只处理需要缓存的表
                     if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
                     {
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
                         //如果有更新变动就上传到服务器再分发到所有客户端
+                        /*
                         OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
                         byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                        MainForm.Instance.ecs.client.Send(buffer);
+                        MainForm.Instance.ecs.client.Send(buffer);*/
                     }
                 }
 

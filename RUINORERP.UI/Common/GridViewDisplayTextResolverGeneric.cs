@@ -34,7 +34,7 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Business.Processor;
 using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
-using TransInstruction;
+
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.Model.Models;
 using System.Diagnostics;

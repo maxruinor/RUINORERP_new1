@@ -10,7 +10,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
 using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.ClientCmdService;
+
 using RUINORERP.UI.Common;
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.UI.UserCenter;
@@ -26,7 +26,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.PacketSpec.Legacy;
+
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Enums;
@@ -137,21 +137,22 @@ namespace RUINORERP.UI.IM
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
             //通知服务器解锁
-            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
-            cmd.lockCmd = LockCmd.UNLOCK;
-            UnLockInfo lockRequest = new UnLockInfo();
-            lockRequest.BillID = ReminderData.BizKeyID;
-            lockRequest.LockedUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-            lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            lockRequest.MenuID = 0;
-            lockRequest.PacketId = cmd.PacketId;
-            if (lockRequest.BillData == null && ReminderData.BizData != null)
-            {
-                lockRequest.BillData = ReminderData.BizData as CommBillData;
-            }
-            cmd.RequestInfo = lockRequest;
-            MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+            //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
+            //cmd.lockCmd = LockCmd.UNLOCK;
+            //UnLockInfo lockRequest = new UnLockInfo();
+            //lockRequest.BillID = ReminderData.BizKeyID;
+            //lockRequest.LockedUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            //lockRequest.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+            //lockRequest.MenuID = 0;
+            //lockRequest.PacketId = cmd.PacketId;
+            //if (lockRequest.BillData == null && ReminderData.BizData != null)
+            //{
+            //    lockRequest.BillData = ReminderData.BizData as CommBillData;
+            //}
+            //cmd.RequestInfo = lockRequest;
+            //MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
             this.DialogResult = DialogResult.OK;
             this.Close();
             return;
@@ -273,29 +274,31 @@ namespace RUINORERP.UI.IM
         /// <param name="billid"></param>
         private void RefuseUnLock(ReminderData reminderData)
         {
-            //谁拒绝谁的什么请求
-            ClientLockManagerCmd cmd = new ClientLockManagerCmd(CmdOperation.Send);
-            cmd.lockCmd = LockCmd.RefuseUnLock;
-            RefuseUnLockInfo lockRequest = new RefuseUnLockInfo();
-            lockRequest.BillID = reminderData.BizKeyID;
-            if (lockRequest.BillData == null && ReminderData.BizData != null)
-            {
-                lockRequest.BillData = ReminderData.BizData as CommBillData;
-            }
-            lockRequest.RefuseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
-            lockRequest.RefuseUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
 
-            lockRequest.RequestUserName = reminderData.SenderEmployeeName;
-            lockRequest.RequestUserID = reminderData.SenderEmployeeID;
+            ////谁拒绝谁的什么请求
+            //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
+            //cmd.lockCmd = LockCmd.RefuseUnLock;
+            //RefuseUnLockInfo lockRequest = new RefuseUnLockInfo();
+            //lockRequest.BillID = reminderData.BizKeyID;
+            //if (lockRequest.BillData == null && ReminderData.BizData != null)
+            //{
+            //    lockRequest.BillData = ReminderData.BizData as CommBillData;
+            //}
+            //lockRequest.RefuseUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name;
+            //lockRequest.RefuseUserID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
 
-            lockRequest.PacketId = cmd.PacketId;
+            //lockRequest.RequestUserName = reminderData.SenderEmployeeName;
+            //lockRequest.RequestUserID = reminderData.SenderEmployeeID;
+
+            //lockRequest.PacketId = cmd.PacketId;
             //拒绝谁？
-            cmd.RequestInfo = lockRequest;
-            MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-            cmd.LockChanged += (sender, e) =>
-            {
-                MessageBox.Show("已经向锁定者发送了解锁请求。等待结果中");
-            };
+            //cmd.RequestInfo = lockRequest;
+            //MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+            //cmd.LockChanged += (sender, e) =>
+            //{
+            //    MessageBox.Show("已经向锁定者发送了解锁请求。等待结果中");
+            //};
         }
 
         #region 生成稍候提醒的指令

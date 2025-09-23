@@ -3,7 +3,7 @@ using CacheManager.Core;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using HLH.Lib.Helper;
-using RUINORERP.Server.Comm;
+using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
 using RUINORERP.UI.BaseForm;
@@ -76,13 +76,13 @@ namespace RUINORERP.UI.SysConfig
                     }
                 }
             }
-
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
             //添加锁定信息
-            if (MainForm.Instance.lockManager != null)
-            {
-                SuperValue kv = new SuperValue($"锁定信息列表{MainForm.Instance.lockManager.GetLockItemCount()}", "锁定信息列表");
-                listBoxTableList.Items.Add(kv);
-            }
+            //if (MainForm.Instance.lockManager != null)
+            //{
+            //    SuperValue kv = new SuperValue($"锁定信息列表{MainForm.Instance.lockManager.GetLockItemCount()}", "锁定信息列表");
+            //    listBoxTableList.Items.Add(kv);
+            //}
         }
 
         private void btnRefreshCache_Click(object sender, EventArgs e)
@@ -103,8 +103,9 @@ namespace RUINORERP.UI.SysConfig
                 if (tableName == "锁定信息列表")
                 {
                     this.dataGridView1.SetUseCustomColumnDisplay(false);
-                   
-                    dataGridView1.DataSource = MainForm.Instance.lockManager.GetLockItems();
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                    // dataGridView1.DataSource = MainForm.Instance.lockManager.GetLockItems();
+
                 }
                 else
                 {

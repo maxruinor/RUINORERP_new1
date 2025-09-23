@@ -15,7 +15,7 @@ using RUINORERP.Common.CollectionExtension;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business;
-using TransInstruction;
+
 using System.Threading;
 using RUINORERP.Global;
 

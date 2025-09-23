@@ -1,13 +1,11 @@
-using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Protocol;
-using RUINORERP.PacketSpec.CodeGeneration;
 using Microsoft.Extensions.Logging;
-using System;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -70,15 +68,18 @@ namespace RUINORERP.PacketSpec.Commands
     {
         private readonly ILogger<DefaultCommandFactory> _logger;
         private readonly Dictionary<uint, Func<PacketModel, ICommand>> _commandCreators;
+        private readonly CommandTypeHelper _commandTypeHelper;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        public DefaultCommandFactory(ILogger<DefaultCommandFactory> logger = null)
+        /// <param name="commandTypeHelper">命令类型助手</param>
+        public DefaultCommandFactory(ILogger<DefaultCommandFactory> logger = null, CommandTypeHelper commandTypeHelper = null)
         {
             _logger = logger;
             _commandCreators = new Dictionary<uint, Func<PacketModel, ICommand>>();
+            _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
         }
 
         /// <summary>
@@ -110,8 +111,9 @@ namespace RUINORERP.PacketSpec.Commands
                     }
                 }
 
-                // 然后尝试从自动生成的命令注册表中获取
-                if (GeneratedCommandRegistry.CommandIdentifiers.TryGetValue(commandId, out var commandType))
+                // 然后尝试从命令类型助手中获取命令类型并创建实例
+                var commandType = _commandTypeHelper.GetCommandType(commandId);
+                if (commandType != null)
                 {
                     try
                     {

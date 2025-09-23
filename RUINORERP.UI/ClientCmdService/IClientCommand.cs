@@ -1,13 +1,12 @@
 ﻿using RUINORERP.Global;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TransInstruction;
-using TransInstruction.CommandService;
-using TransInstruction.Enums;
 
 namespace RUINORERP.UI.ClientCmdService
 {
@@ -17,7 +16,7 @@ namespace RUINORERP.UI.ClientCmdService
     /// </summary>
     public interface IClientCommand : IExcludeFromRegistration
     {
-        CmdOperation OperationType { get; set; }
+        CommandDirection OperationType { get; set; }
         //执行要操作的指令
         Task ExecuteAsync(CancellationToken cancellationToken, object parameters = null);
 

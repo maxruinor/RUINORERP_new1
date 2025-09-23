@@ -7,11 +7,11 @@ using SuperSocket.ClientEngine;
 using SuperSocket.ProtoBase;
 using System.IO;
 using System.Net;
-using TransInstruction;
+
 using System.Threading;
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using TransInstruction.DataPortal;
+
 using Microsoft.Extensions.Logging;
 using RUINORERP.UI.Common;
 using System.Windows.Forms;
@@ -21,14 +21,14 @@ using SourceLibrary.Security;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using RUINORERP.Model.CommonModel;
 using System.Drawing;
-using RUINORERP.UI.ClientCmdService;
+
 using RUINORERP.Model.TransModel;
-using TransInstruction.CommandService;
+
 using FastReport.DevComponents.DotNetBar;
 using NPOI.POIFS.Crypt.Dsig;
 
 using RUINORERP.UI.ClientSuperSocket;
-using TransInstruction.Enums;
+using RUINORERP.PacketSpec.Protocol;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -65,7 +65,7 @@ namespace RUINORERP.UI.SuperSocketClient
         /// <param name="od"></param>
         public void AddSendData(OriginalData od)
         {
-            byte[] buffer = CryptoProtocol.EncryptClientPackToServer(od);
+            byte[] buffer = PacketSpec.Security.EncryptedProtocol.EncryptClientPackToServer(od);
             DataQueue.Enqueue(buffer);
         }
 
@@ -78,11 +78,13 @@ namespace RUINORERP.UI.SuperSocketClient
         public void AddSendData(byte cmd, byte[] one, byte[] two)
         {
             OriginalData od = new OriginalData();
-            od.cmd = cmd;
+            od.Cmd = cmd;
             od.One = one;
             od.Two = two;
-            byte[] buffer = CryptoProtocol.EncryptClientPackToServer(od);
+            byte[] buffer = PacketSpec.Security.EncryptedProtocol.EncryptClientPackToServer(od);
             DataQueue.Enqueue(buffer);
+
+            #warning TODO: 这里需要完善具体逻辑，当前仅为占位
         }
 
         public EasyClient<BizPackageInfo> client;
@@ -160,7 +162,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     MainForm.Instance.uclog.AddLog($"{System.Threading.Thread.CurrentThread.ManagedThreadId}正在连接...");
                 }
                 
-                var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port), _cancellationTokenSource.Token);
+                var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port));
                 if (connected)
                 {
                     await ConnectSuccessed();
@@ -272,7 +274,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     MainForm.Instance.lblServerInfo.Text = msg;
                 }
                 
-                var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port), cancellationToken);
+                var connected = await client.ConnectAsync(new IPEndPoint(IPAddress.Parse(ServerIp), Port));
                 if (connected)
                 {
                     // 连接成功
@@ -465,198 +467,199 @@ namespace RUINORERP.UI.SuperSocketClient
             //            这里的 ParseCommandFromPackage 是一个假设的方法，你需要根据实际的包格式来实现它，以从接收到的数据包中解析出命令和必要的参数。
 
             //通过这种方式，你的代码将更加模块化，易于扩展和维护。每个命令和处理器都是独立的，这有助于降低系统的复杂性并提高可测试性。
+            // 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+            //if (e.Package.ecode == SpecialOrder.正常)
+            //{
+            //    #region  
 
-            if (e.Package.ecode == SpecialOrder.正常)
-            {
-                #region  
+            //    try
+            //    {
+            //        string rs = string.Empty;
+            //        ServerCmdEnum serverCmd = (ServerCmdEnum)e.Package.od.cmd;
+            //        OriginalData od = e.Package.od;
+            //        if (ServerCmdEnum.心跳回复 != serverCmd)
+            //        {
 
-                try
-                {
-                    string rs = string.Empty;
-                    ServerCmdEnum serverCmd = (ServerCmdEnum)e.Package.od.cmd;
-                    OriginalData od = e.Package.od;
-                    if (ServerCmdEnum.心跳回复 != serverCmd)
-                    {
+            //        }
+            //        switch (serverCmd)
+            //        {
+            //            case ServerCmdEnum.更新全局配置:
+            //                MainForm.Instance.RefreshGlobalConfig();
+            //                break;
 
-                    }
-                    switch (serverCmd)
-                    {
-                        case ServerCmdEnum.更新全局配置:
-                            MainForm.Instance.RefreshGlobalConfig();
-                            break;
+            //            case ServerCmdEnum.复合型登陆处理:
+            //                var loginCommand = new RequestLoginCommand(CommandDirection.Receive);
+            //                loginCommand.DataPacket = od;
+            //                MainForm.Instance.dispatcher.DispatchAsync(loginCommand, CancellationToken.None);
+            //                break;
 
-                        case ServerCmdEnum.复合型登陆处理:
-                            var loginCommand = new RequestLoginCommand(CmdOperation.Receive);
-                            loginCommand.DataPacket = od;
-                            MainForm.Instance.dispatcher.DispatchAsync(loginCommand, CancellationToken.None);
-                            break;
+            //            case ServerCmdEnum.复合型实体处理:
+            //                RequestReceiveEntityCmd ReceiverEntityCmd = new RequestReceiveEntityCmd(CommandDirection.Receive);
+            //                ReceiverEntityCmd.DataPacket = od;
+            //                MainForm.Instance.dispatcher.DispatchAsync(ReceiverEntityCmd, CancellationToken.None);
+            //                break;
 
-                        case ServerCmdEnum.复合型实体处理:
-                            RequestReceiveEntityCmd ReceiverEntityCmd = new RequestReceiveEntityCmd(CmdOperation.Receive);
-                            ReceiverEntityCmd.DataPacket = od;
-                            MainForm.Instance.dispatcher.DispatchAsync(ReceiverEntityCmd, CancellationToken.None);
-                            break;
+            //            case ServerCmdEnum.复合型消息处理:
+            //                var MsgCommand = new RequestReceiveMessageCmd(CommandDirection.Receive);
+            //                MsgCommand.DataPacket = od;
+            //                MainForm.Instance.dispatcher.DispatchAsync(MsgCommand, CancellationToken.None);
+            //                break;
 
-                        case ServerCmdEnum.复合型消息处理:
-                            var MsgCommand = new RequestReceiveMessageCmd(CmdOperation.Receive);
-                            MsgCommand.DataPacket = od;
-                            MainForm.Instance.dispatcher.DispatchAsync(MsgCommand, CancellationToken.None);
-                            break;
+            //            case ServerCmdEnum.工作流提醒推送:
+            //                ClientService.接收工作流的提醒消息(od);
+            //                break;
+            //            case ServerCmdEnum.复合型锁单处理:
+            //                var LockCommand = new ClientLockManagerCmd(CommandDirection.Receive);
+            //                LockCommand.DataPacket = od;
+            //                MainForm.Instance.dispatcher.DispatchAsync(LockCommand, CancellationToken.None);
+            //                break;
 
-                        case ServerCmdEnum.工作流提醒推送:
-                            ClientService.接收工作流的提醒消息(od);
-                            break;
-                        case ServerCmdEnum.复合型锁单处理:
-                            var LockCommand = new ClientLockManagerCmd(CmdOperation.Receive);
-                            LockCommand.DataPacket = od;
-                            MainForm.Instance.dispatcher.DispatchAsync(LockCommand, CancellationToken.None);
-                            break;
+            //            case ServerCmdEnum.转发更新动态配置:
+            //                //单个实例
+            //                ClientService.接收转发更新动态配置(od);
+            //                break;
+            //            case ServerCmdEnum.转发更新缓存:
+            //                //单个实例
+            //                ClientService.接收转发更新缓存(od);
+            //                break;
+            //            case ServerCmdEnum.转发删除缓存:
+            //                //单个实例
+            //                ClientService.接收转发删除缓存(od);
+            //                break;
+            //            case ServerCmdEnum.发送缓存数据列表:
+            //                //实例集合
+            //                ClientService.接收缓存数据列表(od);
+            //                break;
+            //            case ServerCmdEnum.工作流数据推送:
+            //                WorkflowService.接收工作流数据(od);
+            //                break;
 
-                        case ServerCmdEnum.转发更新动态配置:
-                            //单个实例
-                            ClientService.接收转发更新动态配置(od);
-                            break;
-                        case ServerCmdEnum.转发更新缓存:
-                            //单个实例
-                            ClientService.接收转发更新缓存(od);
-                            break;
-                        case ServerCmdEnum.转发删除缓存:
-                            //单个实例
-                            ClientService.接收转发删除缓存(od);
-                            break;
-                        case ServerCmdEnum.发送缓存数据列表:
-                            //实例集合
-                            ClientService.接收缓存数据列表(od);
-                            break;
-                        case ServerCmdEnum.工作流数据推送:
-                            WorkflowService.接收工作流数据(od);
-                            break;
+            //            case ServerCmdEnum.删除列的配置文件:
+            //                MainForm.Instance.DeleteColumnsConfigFiles();
+            //                break;
 
-                        case ServerCmdEnum.删除列的配置文件:
-                            MainForm.Instance.DeleteColumnsConfigFiles();
-                            break;
-
-                        case ServerCmdEnum.未知指令:
-                            break;
-                        case ServerCmdEnum.切换服务器:
-                            ClientService.接收切换服务器消息(od);
-                            break;
-                        case ServerCmdEnum.通知审批人审批:
-                            //这里会弹出内容，没有实现具体功能前不生效
-                            //WorkflowService.接收服务器审核通知(od);
-                            break;
-                        case ServerCmdEnum.通知相关人员审批完成:
-                            WorkflowService.接收服务器审核完成通知(od);
-                            break;
-                        //case ServerCmdEnum.用户登陆回复:
-                        //    bool Successed = ClientService.用户登陆回复(od);
-                        //    LoginStatus = Successed;
-                        //    Program.AppContextData.IsOnline = Successed;
-                        //    break;
-                        //case ServerCmdEnum.回复用户重复登陆:
-                        //    Program.AppContextData.AlreadyLogged = ClientService.接收回复用户重复登陆(od);
-                        //    break;
-                        case ServerCmdEnum.发送在线列表:
-                            ClientService.接收在线用户列表(od);
-                            break;
-                        case ServerCmdEnum.发送缓存信息列表:
-                            ClientService.接收缓存信息列表(od);
-                            break;
-                        case ServerCmdEnum.转发弹窗消息:
-                            //别人发消息过来了
-                            #region 
-                            ClientService.接收服务器弹窗消息(od);
-
-
-                            #endregion
-
-                            break;
-                        case ServerCmdEnum.转发异常:
-                            //服务转发异常来了。管理员看看啊。
-                            #region 
-                            ClientService.接收服务器转发异常消息(od);
-                            #endregion
-                            break;
-                        case ServerCmdEnum.转发协助处理:
-                            //服务转发协助处理:来了。管理员看看啊。
-                            #region 
-                            ClientService.接收服务器转发的协助处理请求(od);
-                            #endregion
-                            break;
-                        case ServerCmdEnum.关机:
-                            //执行关机代码
-                            System.Diagnostics.Process.Start("shutdown", "/s /t 120");
-                            MainForm.Instance.uclog.AddLog($"关机关机关机关机");
-                            break;
-                        case ServerCmdEnum.推送版本更新:
-                            await MainForm.Instance.UpdateSys(false);
-                            break;
-                        case ServerCmdEnum.强制用户退出:
-                            //加个倒计时？
-                            try
-                            {
-                                // 保存当前工作
-                                // SaveCurrentWork();
-
-                                // 通知用户
-                                // NotifyUserAboutForcedExit();
-
-                                // 关闭所有资源
-                                //CloseAllResources();
-                                int index = 0;
-                                ByteBuff bg = new ByteBuff(od.Two);
-                                string msg1 = ByteDataAnalysis.GetString(od.Two, ref index);
-                                string msg2 = ByteDataAnalysis.GetString(od.Two, ref index);
-                                if (!string.IsNullOrEmpty(msg2))
-                                {
-                                    // MessageBox.Show(msg2, msg1, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                    //提示3秒后退出
-                                    MainForm.Instance.ShowMsg(msg2, "系统5秒后退出");
-                                    Thread.Sleep(5000);
-                                }
-                                // 安全退出
-                                Environment.Exit(0);
-                            }
-                            catch (Exception ex)
-                            {
-                                // 异常处理
-                                // LogError(ex, "强制用户退出时发生错误");
-                            }
-                            Process.GetCurrentProcess().Kill();
-                            break;
-
-                        case ServerCmdEnum.给客户端发提示消息:
-                            ClientService.接收服务器提示消息(od);
-
-                            //尝试找到销售订单：
-                            //var ss = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell.Pages.Count;
-
-                            break;
-                        case ServerCmdEnum.心跳回复:
-                            //客户端发送到服务器。 不再返回。将来看是否需要
-                            //ClientService.接收服务器心跳回复(od);
-                            break;
-                        default:
-                            break;
-                    }
-                    //ise.ClientActionDefault
-                    if (TransService.ServerActionList.Count > 0)
-                    {
-                        rs += TransService.PorcessServerMsg(serverCmd, TransService.ServerActionList[serverCmd], od);
-                        rs += serverCmd.ToString() + "|";
-                        MainForm.Instance.PrintInfoLog("【收到服务器数据】" + rs.ToString());
-                    }
+            //            case ServerCmdEnum.未知指令:
+            //                break;
+            //            case ServerCmdEnum.切换服务器:
+            //                ClientService.接收切换服务器消息(od);
+            //                break;
+            //            case ServerCmdEnum.通知审批人审批:
+            //                //这里会弹出内容，没有实现具体功能前不生效
+            //                //WorkflowService.接收服务器审核通知(od);
+            //                break;
+            //            case ServerCmdEnum.通知相关人员审批完成:
+            //                WorkflowService.接收服务器审核完成通知(od);
+            //                break;
+            //            //case ServerCmdEnum.用户登陆回复:
+            //            //    bool Successed = ClientService.用户登陆回复(od);
+            //            //    LoginStatus = Successed;
+            //            //    Program.AppContextData.IsOnline = Successed;
+            //            //    break;
+            //            //case ServerCmdEnum.回复用户重复登陆:
+            //            //    Program.AppContextData.AlreadyLogged = ClientService.接收回复用户重复登陆(od);
+            //            //    break;
+            //            case ServerCmdEnum.发送在线列表:
+            //                ClientService.接收在线用户列表(od);
+            //                break;
+            //            case ServerCmdEnum.发送缓存信息列表:
+            //                ClientService.接收缓存信息列表(od);
+            //                break;
+            //            case ServerCmdEnum.转发弹窗消息:
+            //                //别人发消息过来了
+            //                #region 
+            //                ClientService.接收服务器弹窗消息(od);
 
 
+            //                #endregion
 
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.PrintInfoLog("Server", ex);
-                }
+            //                break;
+            //            case ServerCmdEnum.转发异常:
+            //                //服务转发异常来了。管理员看看啊。
+            //                #region 
+            //                ClientService.接收服务器转发异常消息(od);
+            //                #endregion
+            //                break;
+            //            case ServerCmdEnum.转发协助处理:
+            //                //服务转发协助处理:来了。管理员看看啊。
+            //                #region 
+            //                ClientService.接收服务器转发的协助处理请求(od);
+            //                #endregion
+            //                break;
+            //            case ServerCmdEnum.关机:
+            //                //执行关机代码
+            //                System.Diagnostics.Process.Start("shutdown", "/s /t 120");
+            //                MainForm.Instance.uclog.AddLog($"关机关机关机关机");
+            //                break;
+            //            case ServerCmdEnum.推送版本更新:
+            //                await MainForm.Instance.UpdateSys(false);
+            //                break;
+            //            case ServerCmdEnum.强制用户退出:
+            //                //加个倒计时？
+            //                try
+            //                {
+            //                    // 保存当前工作
+            //                    // SaveCurrentWork();
 
-                #endregion
-            }
+            //                    // 通知用户
+            //                    // NotifyUserAboutForcedExit();
+
+            //                    // 关闭所有资源
+            //                    //CloseAllResources();
+            //                    int index = 0;
+            //                    ByteBuffer bg = new ByteBuffer(od.Two);
+            //                    string msg1 = ByteOperations.GetString(od.Two, ref index);
+            //                    string msg2 = ByteOperations.GetString(od.Two, ref index);
+            //                    if (!string.IsNullOrEmpty(msg2))
+            //                    {
+            //                        // MessageBox.Show(msg2, msg1, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            //                        //提示3秒后退出
+            //                        MainForm.Instance.ShowMsg(msg2, "系统5秒后退出");
+            //                        Thread.Sleep(5000);
+            //                    }
+            //                    // 安全退出
+            //                    Environment.Exit(0);
+            //                }
+            //                catch (Exception ex)
+            //                {
+            //                    // 异常处理
+            //                    // LogError(ex, "强制用户退出时发生错误");
+            //                }
+            //                Process.GetCurrentProcess().Kill();
+            //                break;
+
+            //            case ServerCmdEnum.给客户端发提示消息:
+            //                ClientService.接收服务器提示消息(od);
+
+            //                //尝试找到销售订单：
+            //                //var ss = MainForm.Instance.kryptonDockableWorkspace1.ActiveCell.Pages.Count;
+
+            //                break;
+            //            case ServerCmdEnum.心跳回复:
+            //                //客户端发送到服务器。 不再返回。将来看是否需要
+            //                //ClientService.接收服务器心跳回复(od);
+            //                break;
+            //            default:
+            //                break;
+            //        }
+            //        //ise.ClientActionDefault
+            //        if (TransService.ServerActionList.Count > 0)
+            //        {
+            //            rs += TransService.PorcessServerMsg(serverCmd, TransService.ServerActionList[serverCmd], od);
+            //            rs += serverCmd.ToString() + "|";
+            //            MainForm.Instance.PrintInfoLog("【收到服务器数据】" + rs.ToString());
+            //        }
+
+
+
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        MainForm.Instance.PrintInfoLog("Server", ex);
+            //    }
+
+            //    #endregion
+            //}
         }
 
 

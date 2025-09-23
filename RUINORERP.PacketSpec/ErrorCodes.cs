@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.PacketSpec
+namespace RUINORERP.PacketSpec
 {
     /// <summary>
     /// 错误码常量定义类
@@ -6,6 +6,13 @@
     /// </summary>
     public static class ErrorCodes
     {
+        // 基础错误码
+        public const string InvalidCommand = "INVALID_COMMAND";
+        public const string CommandTimeout = "COMMAND_TIMEOUT";
+        public const string AuthorizationFailed = "AUTHORIZATION_FAILED";
+        public const string ValidationFailed = "VALIDATION_FAILED";
+
+
         // 命令相关错误码
         public const string NullCommand = "NULL_COMMAND";
         public const string InvalidCommandId = "INVALID_COMMAND_ID";
@@ -18,7 +25,7 @@
         public const string CommandValidationFailed = "COMMAND_VALIDATION_FAILED";
         public const string ProcessCancelled = "PROCESS_CANCELLED";
         public const string ProcessError = "PROCESS_ERROR";
-		 public const string UnsupportedCommand = "UNSUPPORTED_COMMAND";
+        public const string UnsupportedCommand = "UNSUPPORTED_COMMAND";
         public const string CommandNotFound = "COMMAND_NOT_FOUND"; // 命令未找到
 
         // 调度器相关错误码

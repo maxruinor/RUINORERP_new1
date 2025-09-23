@@ -26,15 +26,16 @@ using RUINORERP.Global;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.UI.SysConfig;
-using TransInstruction;
+
 using AutoUpdateTools;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Business.CommService;
 using FastReport.DevComponents.DotNetBar;
-using RUINORERP.UI.ClientCmdService;
-using TransInstruction.CommandService;
+
+
 using System.Threading;
-using TransInstruction.Enums;
+using RUINORERP.PacketSpec.Protocol;
+
 
 namespace RUINORERP.UI.CRM
 {
@@ -74,13 +75,15 @@ namespace RUINORERP.UI.CRM
             if (rs)
             {
                 //如果删除了。服务器上的工作流就可以删除了。
-                RequestReminderCommand request = new RequestReminderCommand();
-                request.requestType = RequestReminderType.删除提醒;
-                ReminderData reminderRequest = new ReminderData();
-                reminderRequest.BizPrimaryKey = PKValue.ToLong();
-                reminderRequest.BizType = BizType.CRM跟进计划;
-                request.requestInfo = reminderRequest;
-                MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+                //RequestReminderCommand request = new RequestReminderCommand();
+                //request.requestType = RequestReminderType.删除提醒;
+                //ReminderData reminderRequest = new ReminderData();
+                //reminderRequest.BizPrimaryKey = PKValue.ToLong();
+                //reminderRequest.BizType = BizType.CRM跟进计划;
+                //request.requestInfo = reminderRequest;
+                //MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
             }
             return rs;
         }
@@ -289,9 +292,10 @@ namespace RUINORERP.UI.CRM
                                         if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_FollowUpRecords).Name, out pair))
                                         {
                                             //如果有更新变动就上传到服务器再分发到所有客户端
-                                            OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_FollowUpRecords>(result.ReturnObject);
-                                            byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                            MainForm.Instance.ecs.client.Send(buffer);
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                                            //OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_FollowUpRecords>(result.ReturnObject);
+                                            //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                            //MainForm.Instance.ecs.client.Send(buffer);
                                         }
                                     }
 

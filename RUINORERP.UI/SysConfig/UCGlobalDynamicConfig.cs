@@ -28,12 +28,13 @@ using RUINORERP.Model.ConfigModel;
 using System.IO;
 using RUINORERP.Extensions.ServiceExtensions;
 using static RUINORERP.Extensions.ServiceExtensions.EditConfigCommand;
-using RUINORERP.PacketSpec.Legacy;
-using RUINORERP.UI.ClientCmdService;
+
+
 using RUINORERP.PacketSpec.Commands;
 using System.Threading;
 using RUINORERP.Global;
 using RUINORERP.PacketSpec.Enums;
+using RUINORERP.PacketSpec.Protocol;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -320,11 +321,12 @@ namespace RUINORERP.UI.SysConfig
                 // 保存到文件
                 // File.WriteAllText("config.json", json);
 
-
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
                 //如果有更新变动就上传到服务器再分发到所有客户端
+                /*
                 OriginalData odforCache = ActionForClient.更新动态配置<T>(configObject);
                 byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                MainForm.Instance.ecs.client.Send(buffer);
+                MainForm.Instance.ecs.client.Send(buffer);*/
             }
 
             //// 保存到JSON或XML
@@ -364,16 +366,20 @@ namespace RUINORERP.UI.SysConfig
             //如果有更新变动就上传到服务器再分发到所有客户端
 
             //SystemGlobalconfig 下面类型有问题应该要根据选择的节点来配置
+
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+            /*
             OriginalData odforCache = ActionForClient.更新动态配置<SystemGlobalconfig>(propertyGrid1.SelectedObject);
             byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
             MainForm.Instance.ecs.client.Send(buffer);
 
-            RequestReceiveEntityCmd request = new RequestReceiveEntityCmd(CmdOperation.Send);
+            RequestReceiveEntityCmd request = new RequestReceiveEntityCmd(CommandDirection.Send);
             request.requestType = EntityTransferCmdType.处理动态配置;
             request.nextProcesszStep = NextProcesszStep.转发;
             request.SendObject = propertyGrid1.SelectedObject;
             MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
-
+            */
 
             //// 保存到JSON或XML
             //File.WriteAllText("config.json", jsonConfig.ToString());

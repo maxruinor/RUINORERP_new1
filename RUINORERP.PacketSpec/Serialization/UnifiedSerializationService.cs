@@ -17,9 +17,24 @@ namespace RUINORERP.PacketSpec.Serialization
         #region MessagePack配置
         
         // 配置MessagePack序列化选项
-        private static readonly MessagePackSerializerOptions _messagePackOptions = MessagePackSerializerOptions.Standard
-            .WithResolver(ContractlessStandardResolver.Instance)
-            .WithCompression(MessagePackCompression.Lz4Block);
+        private static readonly MessagePackSerializerOptions _messagePackOptions;
+        
+        // 静态构造函数，用于初始化MessagePack选项
+        static UnifiedSerializationService()
+        {
+            try
+            {
+                _messagePackOptions = MessagePackSerializerOptions.Standard
+                    .WithResolver(ContractlessStandardResolver.Instance)
+                    .WithCompression(MessagePackCompression.Lz4Block);
+            }
+            catch (Exception ex)
+            {
+                // 记录初始化异常，但不抛出，避免类型初始化器异常
+                System.Diagnostics.Debug.WriteLine($"UnifiedSerializationService初始化失败: {ex}");
+                throw new InvalidOperationException("MessagePack序列化服务初始化失败", ex);
+            }
+        }
         
         #endregion
         
@@ -45,7 +60,14 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <returns>序列化后的字节数组</returns>
         public static byte[] SerializeWithMessagePack<T>(T obj)
         {
-            return MessagePackSerializer.Serialize(obj, _messagePackOptions);
+            try
+            {
+                return MessagePackSerializer.Serialize(obj, _messagePackOptions);
+            }
+            catch (Exception ex)
+            {
+                throw new SerializationException($"MessagePack序列化失败: {ex.Message}", ex);
+            }
         }
 
         /// <summary>
@@ -56,9 +78,16 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <returns>序列化后的字节数组</returns>
         public static async Task<byte[]> SerializeWithMessagePackAsync<T>(T obj)
         {
-            using var stream = new MemoryStream();
-            await MessagePackSerializer.SerializeAsync(stream, obj, _messagePackOptions);
-            return stream.ToArray();
+            try
+            {
+                using var stream = new MemoryStream();
+                await MessagePackSerializer.SerializeAsync(stream, obj, _messagePackOptions);
+                return stream.ToArray();
+            }
+            catch (Exception ex)
+            {
+                throw new SerializationException($"MessagePack异步序列化失败: {ex.Message}", ex);
+            }
         }
 
         /// <summary>
@@ -72,7 +101,14 @@ namespace RUINORERP.PacketSpec.Serialization
             if (data == null || data.Length == 0)
                 return default(T);
 
-            return MessagePackSerializer.Deserialize<T>(data, _messagePackOptions);
+            try
+            {
+                return MessagePackSerializer.Deserialize<T>(data, _messagePackOptions);
+            }
+            catch (Exception ex)
+            {
+                throw new SerializationException($"MessagePack反序列化失败: {ex.Message}", ex);
+            }
         }
 
         /// <summary>
@@ -86,8 +122,15 @@ namespace RUINORERP.PacketSpec.Serialization
             if (data == null || data.Length == 0)
                 return default(T);
 
-            using var stream = new MemoryStream(data);
-            return await MessagePackSerializer.DeserializeAsync<T>(stream, _messagePackOptions);
+            try
+            {
+                using var stream = new MemoryStream(data);
+                return await MessagePackSerializer.DeserializeAsync<T>(stream, _messagePackOptions);
+            }
+            catch (Exception ex)
+            {
+                throw new SerializationException($"MessagePack异步反序列化失败: {ex.Message}", ex);
+            }
         }
 
         /// <summary>

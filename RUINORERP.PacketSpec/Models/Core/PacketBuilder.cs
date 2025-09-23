@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Commands;
-using static RUINORERP.PacketSpec.Commands.AuthenticationCommands;
-using static RUINORERP.PacketSpec.Commands.FileCommands;
+using static RUINORERP.PacketSpec.Commands.FileTransfer.FileCommands;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Commands.FileTransfer;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {

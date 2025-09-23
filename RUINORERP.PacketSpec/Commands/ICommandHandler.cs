@@ -1,3 +1,4 @@
+﻿using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
 using System.Threading;

@@ -33,7 +33,7 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using System.IO;
-using TransInstruction;
+
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.Model.Models;
 using System.Diagnostics;
@@ -58,6 +58,7 @@ using Netron.Automatology;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.UI.Monitoring.Auditing;
+using RUINORERP.PacketSpec.Protocol;
 
 
 
@@ -1033,9 +1034,11 @@ namespace RUINORERP.UI.BaseForm
                     if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
                     {
                         //如果有更新变动就上传到服务器再分发到所有客户端
-                        OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
-                        byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                        MainForm.Instance.ecs.client.Send(buffer);
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
+                        //OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
+                        //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                        //MainForm.Instance.ecs.client.Send(buffer);
 
                     }
 
@@ -1127,10 +1130,11 @@ namespace RUINORERP.UI.BaseForm
                     //只处理需要缓存的表
                     if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
                     {
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
                         //如果有更新变动就上传到服务器再分发到所有客户端
-                        OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
-                        byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                        MainForm.Instance.ecs.client.Send(buffer);
+                        //OriginalData odforCache = ActionForClient.删除缓存<T>(PKColName, PKValue.ToLong());
+                        //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                        //MainForm.Instance.ecs.client.Send(buffer);
                     }
                 }
 
@@ -1849,10 +1853,12 @@ namespace RUINORERP.UI.BaseForm
                             //只处理需要缓存的表
                             if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(T).Name, out pair))
                             {
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+
                                 //如果有更新变动就上传到服务器再分发到所有客户端
-                                OriginalData odforCache = ActionForClient.更新缓存<T>(rr.ReturnObject);
-                                byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                MainForm.Instance.ecs.client.Send(buffer);
+                                //OriginalData odforCache = ActionForClient.更新缓存<T>(rr.ReturnObject);
+                                //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                //MainForm.Instance.ecs.client.Send(buffer);
                             }
 
                         }

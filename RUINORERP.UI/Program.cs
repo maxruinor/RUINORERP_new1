@@ -461,6 +461,10 @@ namespace RUINORERP.UI
                     Startup starter = new Startup();
                     IHost myhost = starter.SartUpDIPort();
                     IServiceProvider services = myhost.Services;
+                    //获取配置对象并初始化AppSettings
+                    IConfiguration configuration = services.GetRequiredService<IConfiguration>();
+                    RUINORERP.Common.Helper.AppSettings.Initialize(configuration);
+                    
                     //https://github.com/autofac/Autofac.Extensions.DependencyInjection/releases
                     //给上下文服务源
                     Startup.ServiceProvider = services;

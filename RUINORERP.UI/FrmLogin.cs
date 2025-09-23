@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -20,6 +20,8 @@ using System.Net;
 using RUINORERP.Business;
 using HLH.Lib.Security;
 using AutoUpdateTools;
+using RUINORERP.UI.Network.Examples;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI
 {
@@ -126,7 +128,7 @@ namespace RUINORERP.UI
 
             Console.WriteLine($"UI: {Thread.CurrentThread.ManagedThreadId}");
 
-            
+
             txtUserName.Focus();
 
         }
@@ -200,39 +202,91 @@ namespace RUINORERP.UI
                             if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
                             {
                                 ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
-                                bool result = await serverAuthorizer.loginRunningOperationAsync(ecs, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
-                                //UITools.SuperSleep(1000);
-                                if (!result)
-                                {
-                                    MessageBox.Show("验证失败或超时请重试");
-                                    //MainForm.Instance.logger.LogInformation("验证失败或超时请重试");
-                                    //base.Cursor = Cursors.Default;
-                                    return;
-                                }
-                                else
-                                {
-                                    MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
-                                }
 
-                                //如果已经登陆 ，则提示要不要T掉原来的。
-                                bool AlreadyLogged = await serverAuthorizer.AlreadyloggedinAsync(ecs, UserGlobalConfig.Instance.UseName, 3);
-                                if (AlreadyLogged)
+                                // 通过依赖注入获取UserLoginService
+                                var userLogin = Startup.ServiceProvider.GetService<UserLoginService>();
+                                
+                                // 如果依赖注入未能获取到服务，则手动创建（向后兼容）
+                                if (userLogin == null)
                                 {
-                                    if (MessageBox.Show("该用户已经登陆，是否强制在线用户下线\r\n否则系统即将退出。", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
+                                    userLogin = new UserLoginService(MainForm.Instance.communicationService, MainForm.Instance.clientCommandDispatcher);
+                                }
+                                
+                                try
+                                {
+                                    // 在执行登录操作前，先连接到服务器
+                                    var serverIp = txtServerIP.Text.Trim();
+                                    if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
                                     {
-                                        //新的要保留，只传用户名不行。
-                                        ClientService.请求强制用户下线(UserGlobalConfig.Instance.UseName);
+                                        MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        //base.Cursor = Cursors.Default;
+                                        return;
+                                    }
+                                    
+                                    // 检查是否已经连接，如果没有则建立连接
+                                    if (!MainForm.Instance.communicationManager.IsConnected)
+                                    {
+                                        var connected = await MainForm.Instance.communicationManager.ConnectAsync(serverIp, serverPort);
+                                        if (!connected)
+                                        {
+                                            MessageBox.Show("无法连接到服务器，请检查网络连接和服务器配置。", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                            //base.Cursor = Cursors.Default;
+                                            return;
+                                        }
+                                    }
+                                    
+                                    // 8. 执行登录操作
+                                    var loginSuccess = await userLogin.LoginAsync(txtUserName.Text.Trim(), txtPassWord.Text.Trim());
+                                    
+                                    // 检查登录结果
+                                    if (!loginSuccess.Success)
+                                    {
+                                        MessageBox.Show($"登录失败: {loginSuccess.Message}", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        //base.Cursor = Cursors.Default;
+                                        return;
+                                    }
+                                    
+                                    // 登录成功，继续执行后续操作
+                                    bool result = await serverAuthorizer.loginRunningOperationAsync(ecs, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
+                                    //UITools.SuperSleep(1000);
+                                    if (!result)
+                                    {
+                                        MessageBox.Show("验证失败或超时请重试");
+                                        //MainForm.Instance.logger.LogInformation("验证失败或超时请重试");
+                                        //base.Cursor = Cursors.Default;
+                                        return;
                                     }
                                     else
                                     {
-                                        //自己退出
-                                        Application.Exit();
-                                        return;
+                                        MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
                                     }
-                                }
-                                //如果为初始密码则提示弹窗！
-                                IsInitPassword = isInitPwd;
 
+                                    //如果已经登陆 ，则提示要不要T掉原来的。
+                                    bool AlreadyLogged = await serverAuthorizer.AlreadyloggedinAsync(ecs, UserGlobalConfig.Instance.UseName, 3);
+                                    if (AlreadyLogged)
+                                    {
+                                        if (MessageBox.Show("该用户已经登陆，是否强制在线用户下线\r\n否则系统即将退出。", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
+                                        {
+                                            //新的要保留，只传用户名不行。
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                                            //ClientService.请求强制用户下线(UserGlobalConfig.Instance.UseName);
+                                        }
+                                        else
+                                        {
+                                            //自己退出
+                                            Application.Exit();
+                                            return;
+                                        }
+                                    }
+                                    //如果为初始密码则提示弹窗！
+                                    IsInitPassword = isInitPwd;
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show($"登录过程中发生异常: {ex.Message}\n\n详细信息: {ex.InnerException?.Message}", "登录异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    //base.Cursor = Cursors.Default;
+                                    return;
+                                }
                             }
                             else
                             {

@@ -22,7 +22,7 @@ using RUINORERP.Global;
 using RUINORERP.Common.Extensions;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.UI.SuperSocketClient;
-using TransInstruction;
+
 
 
 namespace RUINORERP.UI.BI

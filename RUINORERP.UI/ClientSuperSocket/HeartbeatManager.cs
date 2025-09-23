@@ -1,4 +1,6 @@
 ﻿using MySqlX.XDevAPI;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,8 +8,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls;
-using TransInstruction;
-using TransInstruction.DataPortal;
+
+
 
 namespace RUINORERP.UI.ClientSuperSocket
 {
@@ -118,8 +120,11 @@ namespace RUINORERP.UI.ClientSuperSocket
                 {
                     MainForm.HeartbeatCounter = 0;
                 }
-                var tx = new ByteBuff(36);
-                tx.PushInt16(MainForm.HeartbeatCounter++); //累加数
+
+                // 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                var tx = new ByteBuffer(36);
+                //tx.PushInt16(MainForm.HeartbeatCounter++); //累加数
                 tx.PushInt(0);
                 tx.PushInt64(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
@@ -145,9 +150,11 @@ namespace RUINORERP.UI.ClientSuperSocket
 
                 tx.PushBool(MainForm.Instance.AppContext.CurrentUser.授权状态);
                 tx.PushString(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));//客户端时间，用来对比服务器的时间，如果多个客户端时间与服务器不一样。则服务器有问题。相差一个小时以上。就直接断开客户端
-                gd.cmd = (byte)ClientCmdEnum.客户端心跳包;
+                                                                                   // 临时代码：标记需要完善的部分
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                //gd.Cmd = (byte)ClientCmdEnum.客户端心跳包;
                 gd.One = null;
-                gd.Two = tx.toByte();
+                gd.Two = tx.ToByteArray();
                 //  RoleService.实时更新相关数据(PlayerSession);
             }
             catch (Exception)

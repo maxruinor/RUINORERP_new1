@@ -33,7 +33,7 @@ using System.Reflection;
 using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using System.IO;
-using TransInstruction;
+
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.Model.Models;
 using System.Diagnostics;

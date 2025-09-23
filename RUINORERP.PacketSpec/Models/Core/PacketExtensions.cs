@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -6,8 +6,7 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
-using static RUINORERP.PacketSpec.Commands.AuthenticationCommands;
-using static RUINORERP.PacketSpec.Commands.FileCommands;
+using static RUINORERP.PacketSpec.Commands.FileTransfer.FileCommands;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {

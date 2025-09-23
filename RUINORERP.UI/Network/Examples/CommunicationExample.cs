@@ -1,5 +1,5 @@
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.UI.Network.Models;
+using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,19 +12,18 @@ namespace RUINORERP.UI.Network.Examples
     /// </summary>
     public class CommunicationExample
     {
-        private readonly CommunicationManager _communicationManager;
+        private readonly IClientCommunicationService _communicationService;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="communicationManager">通信管理器实例</param>
-        public CommunicationExample(CommunicationManager communicationManager)
+        /// <param name="communicationService">客户端通信服务实例</param>
+        public CommunicationExample(IClientCommunicationService communicationService)
         {
-            _communicationManager = communicationManager ?? throw new ArgumentNullException(nameof(communicationManager));
+            _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
 
             // 注册事件处理
-            _communicationManager.ConnectionStatusChanged += OnConnectionStatusChanged;
-            _communicationManager.ErrorOccurred += OnErrorOccurred;
+            _communicationService.CommandReceived += OnCommandReceived;
         }
 
         /// <summary>
@@ -39,11 +38,8 @@ namespace RUINORERP.UI.Network.Examples
             {
                 Console.WriteLine($"正在连接到服务器: {serverUrl}:{port}");
                 
-                // 设置自动重连
-                _communicationManager.AutoReconnect = true;
-                
                 // 连接服务器
-                var connected = await _communicationManager.ConnectAsync(
+                var connected = await _communicationService.ConnectAsync(
                     serverUrl, 
                     port, 
                     CancellationToken.None);
@@ -84,7 +80,7 @@ namespace RUINORERP.UI.Network.Examples
                 // 发送请求并等待响应
                 // 注意：这里使用的是假设的命令ID，实际使用时需要替换为真实的命令ID
                 var commandId = new CommandId(CommandCategory.DataSync, 0x01);
-                var response = await _communicationManager.SendCommandAsync<object, UserDataResponse>(
+                var response = await _communicationService.SendCommandAsync<object, UserDataResponse>(
                     commandId, 
                     requestData,
                     CancellationToken.None,
@@ -104,7 +100,7 @@ namespace RUINORERP.UI.Network.Examples
             catch (Exception ex)
             {
                 Console.WriteLine($"获取用户数据时发生异常: {ex.Message}");
-                return ApiResponse<UserDataResponse>.Failure(ex.Message);
+                return ApiResponse<UserDataResponse>.Failure(ex.Message, 500);
             }
         }
 
@@ -124,8 +120,8 @@ namespace RUINORERP.UI.Network.Examples
                 
                 // 发送单向命令（不等待响应）
                 // 注意：这里使用的是假设的命令ID，实际使用时需要替换为真实的命令ID
-                var commandId = new CommandId(CommandCategory.Logging, 0x01);
-                return await _communicationManager.SendOneWayCommandAsync(
+                var commandId = new CommandId(CommandCategory.Authentication, 0x01);
+                return await _communicationService.SendOneWayCommandAsync(
                     commandId, 
                     logData,
                     CancellationToken.None);
@@ -145,7 +141,7 @@ namespace RUINORERP.UI.Network.Examples
             try
             {
                 Console.WriteLine("正在断开服务器连接...");
-                _communicationManager.Disconnect();
+                _communicationService.Disconnect();
             }
             catch (Exception ex)
             {
@@ -154,22 +150,14 @@ namespace RUINORERP.UI.Network.Examples
         }
 
         /// <summary>
-        /// 处理连接状态变更事件
+        /// 处理接收到的命令
         /// </summary>
-        /// <param name="isConnected">是否已连接</param>
-        private void OnConnectionStatusChanged(bool isConnected)
+        /// <param name="commandId">命令ID</param>
+        /// <param name="data">命令数据</param>
+        private void OnCommandReceived(CommandId commandId, object data)
         {
-            Console.WriteLine($"连接状态变更: {(isConnected ? "已连接" : "已断开")}");
-        }
-
-        /// <summary>
-        /// 处理错误发生事件
-        /// </summary>
-        /// <param name="ex">异常信息</param>
-        private void OnErrorOccurred(Exception ex)
-        {
-            Console.WriteLine($"通信错误: {ex.Message}");
-            // 可以在这里添加错误日志记录或用户提示
+            Console.WriteLine($"接收到服务器推送命令: {commandId}");
+            // 可以在这里处理服务器主动推送的消息
         }
 
         /// <summary>

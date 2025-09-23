@@ -1,10 +1,12 @@
-﻿using System;
+﻿using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Protocol;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TransInstruction.DataPortal;
-using TransInstruction;
+
+
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -18,7 +20,7 @@ namespace RUINORERP.UI.SuperSocketClient
             OriginalData gd = new OriginalData();
             try
             {
-                var tx = new ByteBuff(100);
+                var tx = new ByteBuffer(100);
                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 tx.PushString(sendtime);
                 if (MainForm.Instance.AppContext.CurUserInfo==null)
@@ -42,9 +44,9 @@ namespace RUINORERP.UI.SuperSocketClient
                 tx.PushString(HLH.Lib.Net.IpAddressHelper.GetLocIP());
                 tx.PushString(message);
                 tx.PushString(exception.StackTrace);
-                gd.cmd = (byte)ClientCmdEnum.实时汇报异常;
+                gd.Cmd = (byte)PacketSpec.Commands.SystemCommands.ExceptionReport.OperationCode;
                 gd.One = null;
-                gd.Two = tx.toByte();
+                gd.Two = tx.ToByteArray();
                 //如果自己是超级管理员就不发送
                 if (!MainForm.Instance.AppContext.IsSuperUser)
                 {
@@ -64,7 +66,7 @@ namespace RUINORERP.UI.SuperSocketClient
             OriginalData gd = new OriginalData();
             try
             {
-                var tx = new ByteBuff(100);
+                var tx = new ByteBuffer(100);
                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 tx.PushString(sendtime);
                 tx.PushString(MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name);
@@ -72,9 +74,9 @@ namespace RUINORERP.UI.SuperSocketClient
                 tx.PushString(HLH.Lib.Net.IpAddressHelper.GetLocIP());
                 tx.PushString(message);
                 tx.PushString(string.Empty);
-                gd.cmd = (byte)ClientCmdEnum.实时汇报异常;
+                gd.Cmd = (byte)PacketSpec.Commands.SystemCommands.ExceptionReport.OperationCode;
                 gd.One = null;
-                gd.Two = tx.toByte();
+                gd.Two = tx.ToByteArray();
                 //如果自己是超级管理员就不发送
                 //if (!MainForm.Instance.AppContext.IsSuperUser)
                 //{

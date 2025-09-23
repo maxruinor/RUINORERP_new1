@@ -1,11 +1,12 @@
-﻿using SuperSocket.ProtoBase;
+﻿using RUINORERP.PacketSpec.Protocol;
+using SuperSocket.ProtoBase;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
-using TransInstruction;
-using TransInstruction.DataPortal;
-using TransInstruction.Enums;
+
+
+
 
 
 namespace RUINORERP.UI.SuperSocketClient
@@ -28,7 +29,7 @@ namespace RUINORERP.UI.SuperSocketClient
         {
 
         }
-        TransPackProcess tpp = new TransPackProcess();
+ 
         /// <summary>
         /// 业务上通过包头18个里面的内容 解释出 还有多少len是一个完整的包。
         /// </summary>
@@ -39,7 +40,7 @@ namespace RUINORERP.UI.SuperSocketClient
             //kx数据包，以18个头，通过头 解析 得到 第一部分长度和第二部分长度。
 
             //解包头
-            KxData ret = new KxData();
+            OriginalData ret = new OriginalData();
             int lenOne = 0;
             //byte[] src = { 1, 2, 3, 4, 5 };
             //byte[] dest = new byte[src.Length];
@@ -55,7 +56,7 @@ namespace RUINORERP.UI.SuperSocketClient
             //2023-6-10
             bufferStream.Read(Head, 0, 18);
 
-            int len = CryptoProtocol.AnalyzeSeverPackHeader(Head);
+            int len =PacketSpec.Security.EncryptedProtocol.AnalyzeSeverPackHeader(Head);
             return len;
             try
             {
@@ -73,48 +74,7 @@ namespace RUINORERP.UI.SuperSocketClient
 
             }
 
-            //先把头解密了，后面的就好说了
-            byte[] KEY = null;
-            uint 掩码 = 0;
-            var 解码 = false;
-            int pi = 0; //已经解密到哪个点了
-            for (int i = 0; i < 4; i++)
-            {
-                KEY = KxSocket.GetKey((i + m_日期KEY) % 4);
-                掩码 = KxSocket.加密(KEY, Head, 0, 0);
-
-                byte hi = 0, low = 0;
-                for (int ii = 0; ii < 8; ii++)
-                {
-                    hi ^= Head[ii * 2];
-                    low ^= Head[ii * 2 + 1];
-                }
-                if (Head[16] == hi && Head[17] == low)
-                {
-                    m_日期KEY = i;
-                    解码 = true;
-                    pi += 18;
-                    break;
-                }
-            }
-            if (解码 == false)
-            {
-                //这里用256是因为连接上 服务器就给了一个固定的256长的串
-                return 256 - HeaderLen;
-                // throw new Exception($"非法字符串:{Tools.Hex2Str(Head, 0, Head.Length, true)}");
-            }
-
-            // var outs = Tools.Hex2Str(Head, 0, 18, true);
-            // ret.cmd = Head[0];
-            lenOne = (int)Head[3];
-            lenOne <<= 8;
-            lenOne |= (int)Head[2];
-
-            int lenTwo = (int)Head[5];
-            lenTwo <<= 8;
-            lenTwo |= (int)Head[4];
-
-            return lenOne + lenTwo;
+           
         }
 
 
@@ -161,21 +121,21 @@ namespace RUINORERP.UI.SuperSocketClient
                 {
                     gpi.Key = "XT";
                     //gpi.Key = "KXGame";
-                    gpi.ecode = SpecialOrder.固定256;
+                   // gpi.ecode = SpecialOrder.固定256;
                     return gpi;
                 }
                 if (PackageContents.Length == 18)
                 {
                     gpi.Key = "XT";
                     //gpi.Key = "KXGame";
-                    gpi.ecode = SpecialOrder.长度等于18;
+                  //  gpi.ecode = SpecialOrder.长度等于18;
                     return gpi;
                 }
                 if (PackageContents.Length < 18)
                 {
                     gpi.Key = "XT";
                     //gpi.Key = "KXGame";
-                    gpi.ecode = SpecialOrder.长度小于18;
+                   // gpi.ecode = SpecialOrder.长度小于18;
                     gpi.Flag = "空包";
                     gpi.Body = PackageContents;
                     //                    gpi..cmd = 1;//0可以算空包吗？
@@ -200,10 +160,10 @@ namespace RUINORERP.UI.SuperSocketClient
                     {
 
                     }
-                    gpi.od = TransInstruction.CryptoProtocol.DecryptServerPack(gpi.Body);
+                   // gpi.od = TransInstruction.CryptoProtocol.DecryptServerPack(gpi.Body);
                     //  gpi.od = pp.UnServerPack(gpi.Body);
 
-                    gpi.ecode = SpecialOrder.正常;
+                  //  gpi.ecode = SpecialOrder.正常;
                     #endregion
 
                 }

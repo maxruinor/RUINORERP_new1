@@ -11,12 +11,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls;
-using TransInstruction;
-using TransInstruction.CommandService;
+
 using RUINORERP.PacketSpec.Models;
-using TransInstruction.DataPortal;
-using TransInstruction.Enums;
+
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Protocol;
 
 namespace RUINORERP.UI.ClientCmdService
 {
@@ -25,9 +25,9 @@ namespace RUINORERP.UI.ClientCmdService
     /// </summary>
     public class RequestLoginCommand : IClientCommand
     {
-        public CmdOperation OperationType { get; set; }
+        public CommandDirection OperationType { get; set; }
         public OriginalData DataPacket { get; set; }
-        public LoginProcessType requestType { get; set; }
+    
         public string Username { get; set; }
         public string Password { get; set; }
 
@@ -36,7 +36,7 @@ namespace RUINORERP.UI.ClientCmdService
         //    ExecuteAsync(CancellationToken.None, parameters).GetAwaiter().GetResult();
         //}
 
-        public RequestLoginCommand(CmdOperation operation)
+        public RequestLoginCommand(CommandDirection operation)
         {
             OperationType = operation;
         }
@@ -76,7 +76,8 @@ namespace RUINORERP.UI.ClientCmdService
             OriginalData gd = new OriginalData();
             try
             {
-                var tx = new ByteBuff(50);
+                
+                var tx = new ByteBuffer(50);
                 string json = JsonConvert.SerializeObject(request,
                new JsonSerializerSettings
                {
@@ -103,9 +104,9 @@ namespace RUINORERP.UI.ClientCmdService
         public bool AnalyzeDataPacket(OriginalData gd)
         {
             int index = 0;
-            ByteBuff bg = new ByteBuff(gd.Two);
-            string sendTime = ByteDataAnalysis.GetString(gd.Two, ref index);
-            LoginProcessType loginCmd = (LoginProcessType)ByteDataAnalysis.GetInt(gd.Two, ref index);
+            ByteBuffer bg = new ByteBuffer(gd.Two);
+            string sendTime = ByteOperations.GetString(gd.Two, ref index);
+            LoginProcessType loginCmd = (LoginProcessType)ByteOperations.GetInt(gd.Two, ref index);
             switch (loginCmd)
             {
                 case LoginProcessType.登陆回复:
@@ -113,13 +114,13 @@ namespace RUINORERP.UI.ClientCmdService
                     try
                     {
                         //MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
-                        bool isSuccess = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                        bool isSuccess = ByteOperations.Getbool(gd.Two, ref index);
                         if (isSuccess)
                         {
-                            string SessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
-                            long userid = ByteDataAnalysis.GetInt64(gd.Two, ref index);
-                            string userName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                            string empName = ByteDataAnalysis.GetString(gd.Two, ref index);
+                            string SessionID = ByteOperations.GetString(gd.Two, ref index);
+                            long userid = ByteOperations.GetInt64(gd.Two, ref index);
+                            string userName = ByteOperations.GetString(gd.Two, ref index);
+                            string empName = ByteOperations.GetString(gd.Two, ref index);
                             UserInfo onlineuser = new UserInfo();
                             onlineuser.SessionId = SessionID;
                             onlineuser.UserID = userid;
@@ -142,7 +143,7 @@ namespace RUINORERP.UI.ClientCmdService
                     #endregion
                     break;
                 case LoginProcessType.已经在线:
-                    bool isOnline = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                    bool isOnline = ByteOperations.Getbool(gd.Two, ref index);
                     Program.AppContextData.AlreadyLogged = isOnline;
                     break;
                 case LoginProcessType.超过限制:
@@ -150,7 +151,7 @@ namespace RUINORERP.UI.ClientCmdService
                     try
                     {
                         //被拒绝后的 得到服务器的通知
-                        string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        string json = ByteOperations.GetString(gd.Two, ref index);
                         JObject obj = JObject.Parse(json);
                         RefuseUnLockInfo lockRequest = obj.ToObject<RefuseUnLockInfo>();
 

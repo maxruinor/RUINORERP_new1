@@ -73,10 +73,10 @@ namespace RUINORERP.UI.ClientCmdService
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string sendTime = ByteDataAnalysis.GetString(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string sendTime = ByteOperations.GetString(gd.Two, ref index);
                 //解析时的类型不是实例化时的类型
-                MessageType messageType = (MessageType)ByteDataAnalysis.GetInt(gd.Two, ref index);
+                MessageType messageType = (MessageType)ByteOperations.GetInt(gd.Two, ref index);
                 switch (messageType)
                 {
                     case MessageType.Text:
@@ -84,8 +84,8 @@ namespace RUINORERP.UI.ClientCmdService
                     case MessageType.BusinessData:
                         break;
                     case MessageType.Prompt:
-                        string json = ByteDataAnalysis.GetString(gd.Two, ref index);
-                        PromptType promptType = (PromptType)ByteDataAnalysis.GetInt(gd.Two, ref index);
+                        string json = ByteOperations.GetString(gd.Two, ref index);
+                        PromptType promptType = (PromptType)ByteOperations.GetInt(gd.Two, ref index);
                         // 将item转换为JObject
                         var obj = JObject.Parse(json);
                         switch (promptType)
@@ -107,9 +107,9 @@ namespace RUINORERP.UI.ClientCmdService
                     case MessageType.Event:
                         break;
                     case MessageType.IM:
-                        string message = ByteDataAnalysis.GetString(gd.Two, ref index);
-                        NextProcesszStep nextProcesszStep = (NextProcesszStep)ByteDataAnalysis.GetInt(gd.Two, ref index);
-                        string fromSessionID = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        string message = ByteOperations.GetString(gd.Two, ref index);
+                        NextProcesszStep nextProcesszStep = (NextProcesszStep)ByteOperations.GetInt(gd.Two, ref index);
+                        string fromSessionID = ByteOperations.GetString(gd.Two, ref index);
                         MessageContent = message;
                         //这里指定的是IM的，则会影响IM窗体
                         //判断是不是打开。打开就显示内容。弹出提示？

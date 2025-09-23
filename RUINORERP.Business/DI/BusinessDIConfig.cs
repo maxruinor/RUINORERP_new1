@@ -3,6 +3,8 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.LogicaService;
+using RUINORERP.Business.ReminderService;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -76,6 +78,60 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .SingleInstance()
                 .PropertiesAutowired();
+                
+            // 注册BizCacheHelper缓存帮助类
+            builder.RegisterType<BizCacheHelper>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+                
+            // 注册实体加载服务
+            builder.RegisterType<EntityLoader>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+                
+            builder.RegisterType<DuplicateCheckService>()
+                .As<IDuplicateCheckService>()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+                
+            builder.RegisterType<UnitController>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+                
+            // 注册提醒服务
+            builder.RegisterType<ReminderResultManager>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+
+ 
+            // 注册审计日志服务
+            builder.RegisterType<AuditLogService>()
+                .As<IAuditLogService>()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+            
+            // 注册财务模块审计日志服务
+            builder.RegisterType<FMAuditLogService>()
+                .As<IFMAuditLogService>()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+            
+
+            // 注册审计日志帮助类
+            builder.RegisterType<RUINORERP.Business.CommService.FMAuditLogHelper>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+                
+            // 注册缓存管理器工厂
+            //builder.RegisterType<CacheManagerFactory>()
+            //    .As<ICacheManagerFactory>()
+            //    .SingleInstance()
+            //    .PropertiesAutowired();
                 
             // 注册业务处理器
             RegisterBusinessProcessors(builder);

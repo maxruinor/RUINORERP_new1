@@ -59,7 +59,7 @@ var response = new BaseResponse<string>
 
 **新代码**:
 ```csharp
-var response = ApiResponse<string>.Success("result data", "操作成功");
+var response = ApiResponse<string>.CreateSuccess("result data", "操作成功");
 ```
 
 ### 步骤 3: 处理文件操作
@@ -162,7 +162,7 @@ var response = new BaseResponse<List<User>>
 
 **新代码**:
 ```csharp
-var response = ApiResponse<List<User>>.Success(usersList, "查询成功");
+var response = ApiResponse<List<User>>.CreateSuccess(usersList, "查询成功");
 ```
 
 ## 性能优化建议

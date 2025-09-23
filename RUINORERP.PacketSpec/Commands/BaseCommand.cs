@@ -1,4 +1,4 @@
-using System;
+﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Protocol;
@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Core;
+using System.Text;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -241,7 +242,7 @@ namespace RUINORERP.PacketSpec.Commands
                 };
 
                 var json = JsonConvert.SerializeObject(commandData);
-                return System.Text.Encoding.UTF8.GetBytes(json);
+                return Encoding.UTF8.GetBytes(json);
             }
             catch (Exception ex)
             {
@@ -289,7 +290,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (data == null || data.Length == 0)
                     return false;
 
-                var json = System.Text.Encoding.UTF8.GetString(data);
+                var json = Encoding.UTF8.GetString(data);
                 var commandData = JsonConvert.DeserializeObject<dynamic>(json);
 
                 // 恢复基本属性
@@ -390,7 +391,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 获取可序列化的数据
         /// </summary>
-        protected virtual object GetSerializableData()
+        public virtual object GetSerializableData()
         {
             return null;
         }

@@ -1,4 +1,5 @@
 ﻿using RUINORERP.Model.CommonModel;
+using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -6,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using TransInstruction;
+
 
 
 namespace RUINORERP.UI.SuperSocketClient
@@ -126,7 +127,7 @@ namespace RUINORERP.UI.SuperSocketClient
                     {
                         string rs = string.Empty;// = tester.CheckServerCmd(gd);
                                                  //ServerCmdEnum msg = tester.GetServerCmd(gd);
-                        ServerCmdEnum msg = (ServerCmdEnum)gd.cmd;
+                        ServerCmdEnum msg = (ServerCmdEnum)gd.Cmd;
                         switch (msg)
                         {
                             case ServerCmdEnum.未知指令:
@@ -282,9 +283,9 @@ namespace RUINORERP.UI.SuperSocketClient
 
         public void AddSendData(byte cmd, byte[] one, byte[] two)
         {
-            //pp.WriteClientData((byte)SephirothInstruction.ServerCmd.ISMainMsg.主动10, null, tx.toByte());
+            //pp.WriteClientData((byte)SephirothInstruction.ServerCmd.ISMainMsg.主动10, null, tx.ToByteArray());
             OriginalData gd = new OriginalData();
-            gd.cmd = cmd;
+            gd.Cmd = cmd;
             gd.One = one;
             gd.Two = two;
     

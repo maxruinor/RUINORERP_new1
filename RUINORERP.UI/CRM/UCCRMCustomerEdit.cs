@@ -34,7 +34,7 @@ using System.Reflection;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
 using System.Numerics;
-using TransInstruction;
+
 
 namespace RUINORERP.UI.CRM
 {
@@ -667,9 +667,12 @@ namespace RUINORERP.UI.CRM
                             if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_FollowUpRecords).Name, out pair))
                             {
                                 //如果有更新变动就上传到服务器再分发到所有客户端
-                                OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_FollowUpRecords>(result.ReturnObject);
-                                byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                MainForm.Instance.ecs.client.Send(buffer);
+
+
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                                //OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_FollowUpRecords>(result.ReturnObject);
+                                //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
+                                //MainForm.Instance.ecs.client.Send(buffer);
                             }
                         }
                     }

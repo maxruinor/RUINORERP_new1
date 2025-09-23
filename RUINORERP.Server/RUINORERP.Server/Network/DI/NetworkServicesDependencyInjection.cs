@@ -9,6 +9,7 @@ using RUINORERP.Server.Network.Commands;
 using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Services;
+using RUINORERP.Server.Network.Communication.Handlers;
 
 namespace RUINORERP.Server.Network.DI
 {
@@ -45,6 +46,8 @@ namespace RUINORERP.Server.Network.DI
             // 注册文件存储管理器
         //    services.AddSingleton<FileStorageManager>();
             
+            // 注册服务器端登录请求处理器
+            services.AddTransient<ServerLoginRequestHandler>();
             
             // 注册命令调度器
             services.AddSingleton<CommandDispatcher>();
@@ -105,6 +108,10 @@ namespace RUINORERP.Server.Network.DI
         //    builder.RegisterType<UserService>().As<IUserService>().AsSelf().SingleInstance();
             //builder.RegisterType<SuperSocketAdapter>().AsSelf().SingleInstance();
           //  builder.RegisterType<FileStorageManager>().AsSelf().SingleInstance();
+            
+            // 注册服务器端登录请求处理器
+            builder.RegisterType<ServerLoginRequestHandler>().AsSelf().InstancePerDependency();
+            
             builder.RegisterType<CommandDispatcher>().AsSelf().SingleInstance();
             builder.RegisterType<CommandHandlerFactory>().As<ICommandHandlerFactory>().SingleInstance();
             

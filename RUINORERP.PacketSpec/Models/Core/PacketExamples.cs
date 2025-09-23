@@ -2,6 +2,9 @@
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Commands.FileTransfer;
+using RUINORERP.PacketSpec.Commands.System;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;

@@ -97,7 +97,7 @@ namespace RUINORERP.UI.Network
                         {
                             // 心跳发送失败，增加失败计数器
                             _failedAttempts++;
-                            OnHeartbeatFailed(response.ErrorMessage);
+                            OnHeartbeatFailed(response.Message);
                         }
                     }
                     else if (_failedAttempts < _reconnectAttempts)
@@ -170,6 +170,16 @@ namespace RUINORERP.UI.Network
         /// 重连失败事件
         /// </summary>
         public event Action OnReconnectionFailed = delegate { };
+
+        /// <summary>
+        /// 连接丢失事件
+        /// </summary>
+        public event Action ConnectionLost = delegate { };
+
+        /// <summary>
+        /// 心跳失败事件
+        /// </summary>
+        public event Action<Exception> HeartbeatFailed = delegate { };
 
         #endregion
     }

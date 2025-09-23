@@ -1,16 +1,38 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.UI.Network.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.Network
 {
     /// <summary>
-    /// 通信管理器
-    /// 整合所有通信组件，提供统一的客户端与服务器通信入口
+    /// 通信管理器 - 应用层统一通信入口
+    /// 
+    /// 设计目的：
+    /// 1. 整合所有通信组件，提供统一的客户端与服务器通信入口
+    /// 2. 负责连接管理、心跳检测、自动重连等基础设施功能
+    /// 3. 作为应用层（UI层、控制器层）的通信管理中枢
+    /// 
+    /// 使用场景：
+    /// - 在应用层（如 MainForm、FrmLogin 等）使用 CommunicationManager 来管理整体通信
+    /// - 负责连接/断开连接、监控连接状态、处理重连等
+    /// 
+    /// 注意事项：
+    /// - 业务层应使用 IClientCommunicationService 进行具体的通信操作
+    /// - 不要在业务层直接使用 CommunicationManager 进行通信操作
+    /// - CommunicationManager.IsConnected 委托给内部的 IClientCommunicationService.IsConnected
+    /// 
+    /// 使用示例：
+    /// // 在应用层检查连接状态和执行连接操作
+    /// if (!communicationManager.IsConnected)
+    /// {
+    ///     var connected = await communicationManager.ConnectAsync("127.0.0.1", 7538);
+    /// }
+    /// 
+    /// // 在业务层使用通信服务发送命令
+    /// var response = await communicationService.SendCommandAsync&lt;LoginRequest, LoginResult&gt;(
+    ///     CommandId.Login, loginRequest);
     /// </summary>
     public class CommunicationManager : IDisposable
     {
@@ -210,7 +232,7 @@ namespace RUINORERP.UI.Network
                     
                     if (!IsConnected)
                     {
-                        return ApiResponse<TResponse>.Failure("未连接到服务器");
+                        return ApiResponse<TResponse>.Failure("未连接到服务器", 500);
                     }
                 }
                 
@@ -224,7 +246,7 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 OnErrorOccurred(ex);
-                return ApiResponse<TResponse>.Failure(ex.Message);
+                return ApiResponse<TResponse>.Failure(ex.Message, 500);
             }
         }
 
@@ -246,7 +268,7 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 OnErrorOccurred(ex);
-                return ApiResponse<TResponse>.Failure(ex.Message);
+                return ApiResponse<TResponse>.Failure(ex.Message, 500);
             }
         }
 

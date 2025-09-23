@@ -25,13 +25,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls;
 using System.Windows.Forms;
-using TransInstruction;
-using TransInstruction.CommandService;
 using RUINORERP.PacketSpec.Models;
-using TransInstruction.DataPortal;
-using TransInstruction.Enums;
-using static RUINORERP.Server.Comm.LockManager;
-using MessageType = RUINORERP.Model.TransModel.MessageType;
+
 
 namespace RUINORERP.UI.ClientCmdService
 {
@@ -72,12 +67,12 @@ namespace RUINORERP.UI.ClientCmdService
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string sendTime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                LockCmd lockCmd = (LockCmd)ByteDataAnalysis.GetInt(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string sendTime = ByteOperations.GetString(gd.Two, ref index);
+                LockCmd lockCmd = (LockCmd)ByteOperations.GetInt(gd.Two, ref index);
                 if (lockCmd == LockCmd.Broadcast)
                 {
-                    string lockDictionaryJson = ByteDataAnalysis.GetString(gd.Two, ref index);
+                    string lockDictionaryJson = ByteOperations.GetString(gd.Two, ref index);
                     MainForm.Instance.lockManager.UpdateLockStatusByJson(lockDictionaryJson);
                 }
             }
@@ -94,18 +89,18 @@ namespace RUINORERP.UI.ClientCmdService
             try
             {
                 int index = 0;
-                ByteBuff bg = new ByteBuff(gd.Two);
-                string sendTime = ByteDataAnalysis.GetString(gd.Two, ref index);
-                LockCmd lockCmd = (LockCmd)ByteDataAnalysis.GetInt(gd.Two, ref index);
+                ByteBuffer bg = new ByteBuffer(gd.Two);
+                string sendTime = ByteOperations.GetString(gd.Two, ref index);
+                LockCmd lockCmd = (LockCmd)ByteOperations.GetInt(gd.Two, ref index);
 
                 switch (lockCmd)
                 {
                     //客户端请求锁定后 服务器返回结果 本地要更新状态
                     case LockCmd.LOCK:
-                        string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        string json = ByteOperations.GetString(gd.Two, ref index);
                         JObject obj = JObject.Parse(json);
                         LockedInfo lockRequest = obj.ToObject<LockedInfo>();
-                        bool isSuccess = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                        bool isSuccess = ByteOperations.Getbool(gd.Two, ref index);
                         if (isSuccess)
                         {
                             //自己也锁。实际服务器收到后还会广播一次 包括自己 只是这里已经锁，不会重复添加
@@ -125,10 +120,10 @@ namespace RUINORERP.UI.ClientCmdService
 
                         break;
                     case LockCmd.UNLOCK:
-                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        json = ByteOperations.GetString(gd.Two, ref index);
                         obj = JObject.Parse(json);
                         UnLockInfo unLockInfo = obj.ToObject<UnLockInfo>();
-                        isSuccess = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                        isSuccess = ByteOperations.Getbool(gd.Two, ref index);
                         if (isSuccess)
                         {
                             if (MainForm.Instance.lockManager.Unlock(unLockInfo.BillID, unLockInfo.LockedUserID))
@@ -146,10 +141,10 @@ namespace RUINORERP.UI.ClientCmdService
                         ClientEventManager.Instance.RaiseCommandEvent(unLockInfo.PacketId, UNLOCKargs);
                         break;
                     case LockCmd.UnLockByBizName:
-                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        json = ByteOperations.GetString(gd.Two, ref index);
                         obj = JObject.Parse(json);
                         UnLockInfo unLockInfoBizName = obj.ToObject<UnLockInfo>();
-                        isSuccess = ByteDataAnalysis.Getbool(gd.Two, ref index);
+                        isSuccess = ByteOperations.Getbool(gd.Two, ref index);
                         if (isSuccess)
                         {
                             if (MainForm.Instance.lockManager.RemoveLockByBizName(unLockInfoBizName.LockedUserID, unLockInfoBizName.BillData.BizName))
@@ -168,7 +163,7 @@ namespace RUINORERP.UI.ClientCmdService
                         //ClientEventManager.Instance.RaiseCommandEvent(unLockInfo.PacketId, UNLOCKargs);
                         break;
                     case LockCmd.RequestUnLock:
-                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        json = ByteOperations.GetString(gd.Two, ref index);
                         obj = JObject.Parse(json);
                         RequestUnLockInfo requestUnLockInfo = obj.ToObject<RequestUnLockInfo>();
                         ////发送提醒
@@ -200,7 +195,7 @@ namespace RUINORERP.UI.ClientCmdService
 
                     case LockCmd.RefuseUnLock:
 
-                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        json = ByteOperations.GetString(gd.Two, ref index);
                         obj = JObject.Parse(json);
                         RefuseUnLockInfo refuseUnLockInfo = obj.ToObject<RefuseUnLockInfo>();
 
@@ -216,7 +211,7 @@ namespace RUINORERP.UI.ClientCmdService
                         MainForm.Instance.MessageList.Enqueue(RefuseInfo);
                         break;
                     case LockCmd.Broadcast:
-                        json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                        json = ByteOperations.GetString(gd.Two, ref index);
                         MainForm.Instance.lockManager.UpdateLockStatusByJson(json);
                         break;
 
@@ -260,9 +255,9 @@ namespace RUINORERP.UI.ClientCmdService
                 if (OperationType == CmdOperation.Receive)
                 {
                     int index = 0;
-                    ByteBuff bg = new ByteBuff(DataPacket.Two);
-                    string sendTime = ByteDataAnalysis.GetString(DataPacket.Two, ref index);
-                    lockCmd = (LockCmd)ByteDataAnalysis.GetInt(DataPacket.Two, ref index);
+                    ByteBuffer bg = new ByteBuffer(DataPacket.Two);
+                    string sendTime = ByteOperations.GetString(DataPacket.Two, ref index);
+                    lockCmd = (LockCmd)ByteOperations.GetInt(DataPacket.Two, ref index);
                     switch (lockCmd)
                     {
                         case LockCmd.LOCK:
@@ -277,7 +272,7 @@ namespace RUINORERP.UI.ClientCmdService
                             try
                             {
                                 //被拒绝后的 得到服务器的通知
-                                string json = ByteDataAnalysis.GetString(gd.Two, ref index);
+                                string json = ByteOperations.GetString(gd.Two, ref index);
                                 JObject obj = JObject.Parse(json);
                                 RefuseUnLockInfo lockRequest = obj.ToObject<RefuseUnLockInfo>();
 
@@ -315,7 +310,7 @@ namespace RUINORERP.UI.ClientCmdService
             OriginalData gd = new OriginalData();
             try
             {
-                var tx = new ByteBuff(100);
+                var tx = new ByteBuffer(100);
                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 tx.PushString(sendtime);
                 tx.PushInt((int)lockCmd);
@@ -342,7 +337,7 @@ namespace RUINORERP.UI.ClientCmdService
             OriginalData gd = new OriginalData();
             try
             {
-                var tx = new ByteBuff(100);
+                var tx = new ByteBuffer(100);
                 string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 tx.PushString(sendtime);
                 tx.PushInt((int)lockCmd);

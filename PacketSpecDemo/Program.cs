@@ -160,7 +160,7 @@ namespace PacketSpecDemo
             Console.WriteLine("-".PadRight(50, '-'));
 
             // 创建成功响应
-            var successResponse = ApiResponse<string>.Success("登录成功", "操作完成");
+            var successResponse = ApiResponse<string>.CreateSuccess("登录成功", "操作完成");
             Console.WriteLine($"成功响应:");
             Console.WriteLine($"  成功: {successResponse.Success}");
             Console.WriteLine($"  消息: {successResponse.Message}");

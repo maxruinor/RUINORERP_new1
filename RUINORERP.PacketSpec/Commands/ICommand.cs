@@ -1,8 +1,9 @@
-﻿using System;
+﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -164,6 +165,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="data">数据</param>
         /// <returns>反序列化是否成功</returns>
         bool Deserialize(byte[] data);
+
+        /// <summary>
+        /// 获取可序列化的数据
+        /// </summary>
+        /// <returns>可序列化的数据</returns>
+        object GetSerializableData();
     }
 
     /// <summary>
@@ -208,149 +215,5 @@ namespace RUINORERP.PacketSpec.Commands
         }
     }
 
-    /// <summary>
-    /// 命令执行结果
-    /// </summary>
-    public class CommandResult : ITraceable, IValidatable
-    {
-        /// <summary>
-        /// 是否成功
-        /// </summary>
-        public bool IsSuccess { get; set; }
-        
-        /// <summary>
-        /// 结果消息
-        /// </summary>
-        public string Message { get; set; }
-
-        /// <summary>
-        /// 错误代码
-        /// </summary>
-        public string ErrorCode { get; set; }
-
-        /// <summary>
-        /// 返回数据
-        /// </summary>
-        public object Data { get; set; }
-
-        /// <summary>
-        /// 执行时间（毫秒）
-        /// </summary>
-        public long ExecutionTimeMs { get; set; }
-
-        /// <summary>
-        /// 异常信息
-        /// </summary>
-        public Exception Exception { get; set; }
-
-        #region ITraceable 接口实现
-        /// <summary>
-        /// 创建时间（UTC时间）
-        /// </summary>
-        public DateTime CreatedTime { get; set; } = DateTime.UtcNow;
-
-        /// <summary>
-        /// 最后更新时间（UTC时间）
-        /// </summary>
-        public DateTime? LastUpdatedTime { get; set; }
-
-        /// <summary>
-        /// 时间戳（UTC时间）
-        /// </summary>
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-
-        /// <summary>
-        /// 模型版本
-        /// </summary>
-        public string Version { get; set; } = "2.0";
-
-        /// <summary>
-        /// 更新时间戳
-        /// </summary>
-        public void UpdateTimestamp()
-        {
-            Timestamp = DateTime.UtcNow;
-            LastUpdatedTime = Timestamp;
-        }
-        #endregion
-
-        #region IValidatable 接口实现
-        /// <summary>
-        /// 验证模型有效性
-        /// </summary>
-        /// <returns>是否有效</returns>
-        public bool IsValid()
-        {
-            return CreatedTime <= DateTime.UtcNow &&
-                   CreatedTime >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
-        }
-        #endregion
-
-        /// <summary>
-        /// 响应数据包（用于发送回客户端）
-        /// </summary>
-        OriginalData ResponseData { get; set; }
-
-        /// <summary>
-        /// 创建成功结果
-        /// </summary>
-        public static CommandResult Success(object data = null, string message = "操作成功")
-        {
-            var result = new CommandResult
-            {
-                IsSuccess = true,
-                Message = message,
-                Data = data,
-                CreatedTime = DateTime.UtcNow,
-                Timestamp = DateTime.UtcNow,
-                Version = "2.0"
-            };
-            return result;
-        }
-
-        /// <summary>
-        /// 创建失败结果
-        /// </summary>
-        public static CommandResult Failure(string message, string errorCode = null, Exception exception = null)
-        {
-            var result = new CommandResult
-            {
-                IsSuccess = false,
-                Message = message,
-                ErrorCode = errorCode,
-                Exception = exception,
-                CreatedTime = DateTime.UtcNow,
-                Timestamp = DateTime.UtcNow,
-                Version = "2.0"
-            };
-            return result;
-        }
-
-        /// <summary>
-        /// 创建带响应数据的成功结果
-        /// </summary>
-        public static CommandResult SuccessWithResponse(OriginalData responseData, object data = null, string message = "操作成功")
-        {
-            var result = new CommandResult
-            {
-                IsSuccess = true,
-                Message = message,
-                Data = data,
-                ResponseData = responseData,
-                CreatedTime = DateTime.UtcNow,
-                Timestamp = DateTime.UtcNow,
-                Version = "2.0"
-            };
-            return result;
-        }
-
-
-        /// <summary>
-        /// 创建错误结果
-        /// </summary>
-        public static CommandResult CreateError(string message, string errorCode = null, Exception ex = null)
-        {
-            return Failure(message, errorCode, ex);
-        }
-    }
+   
 }

@@ -20,6 +20,7 @@
     <Compile Remove="Enums\CommandHelper.cs" />
     <Compile Remove="Enums\CommandId.cs" />
     <Compile Remove="Enums\UsageExamples.cs" />
+    <Compile Remove="Security\CryptoProtocol_deep.cs" />
     <Compile Remove="Security\EncryptedProtocolPool.cs" />
     <Compile Remove="Security\KxCryptographyService.cs" />
     <Compile Remove="Security\UnifiedCryptographyService.cs" />
@@ -27,7 +28,8 @@
 
   <ItemGroup>
     <PackageReference Include="CacheManager.Core" Version="2.0.0" />
-    <PackageReference Include="MessagePack" Version="2.5.129" />
+    <PackageReference Include="MessagePack" Version="3.1.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
     <PackageReference Include="System.Memory" Version="4.5.5" />

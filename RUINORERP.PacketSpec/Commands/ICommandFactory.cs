@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -232,7 +232,7 @@ namespace RUINORERP.PacketSpec.Commands
             // 如果命令是BaseCommand类型，设置更多属性
             if (command is BaseCommand baseCommand)
             {
-                baseCommand.packetModel = packet;
+                baseCommand.Packet = packet;
                 baseCommand.Timestamp = packet.Timestamp;
                 baseCommand.CreatedTime = packet.CreatedTime;
             }

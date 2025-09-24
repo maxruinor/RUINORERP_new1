@@ -219,5 +219,37 @@ namespace RUINORERP.PacketSpec.Protocol
                 return new EncryptedData(Array.Empty<byte>(), Array.Empty<byte>(), Array.Empty<byte>());
             }
         }
+
+        /// <summary>
+        /// 将加密后的数据包转换为字节数组
+        /// </summary>
+        /// <returns>按顺序包含Head、One和Two数据的ReadOnlyMemory</returns>
+        public ReadOnlyMemory<byte> ToByteArray()
+        {
+            // 创建足够大的字节数组来存储所有数据
+            byte[] result = new byte[Length];
+            int offset = 0;
+
+            // 按顺序复制数据
+            if (Head != null && Head.Length > 0)
+            {
+                Buffer.BlockCopy(Head, 0, result, offset, Head.Length);
+                offset += Head.Length;
+            }
+
+            if (One != null && One.Length > 0)
+            {
+                Buffer.BlockCopy(One, 0, result, offset, One.Length);
+                offset += One.Length;
+            }
+
+            if (Two != null && Two.Length > 0)
+            {
+                Buffer.BlockCopy(Two, 0, result, offset, Two.Length);
+            }
+
+            // 返回ReadOnlyMemory视图
+            return new ReadOnlyMemory<byte>(result);
+        }
     }
 }

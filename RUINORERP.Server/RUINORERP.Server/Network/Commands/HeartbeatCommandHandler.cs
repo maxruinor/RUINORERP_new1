@@ -8,8 +8,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using RUINORERP.Server.Network.Services;
+// using RUINORERP.Server.Network.Services; // 暂时注释，缺少ISessionService接口定义
 using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.Server.Network.Interfaces.Services;
+// using RUINORERP.Server.Network.Interfaces.Services; // 暂时注释，缺少ISessionService接口定义
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -20,24 +22,24 @@ namespace RUINORERP.Server.Network.Commands
     [CommandHandler("HeartbeatCommandHandler", priority: 50)]
     public class HeartbeatCommandHandler : UnifiedCommandHandlerBase
     {
-        private readonly ISessionService _sessionService;
+         private readonly ISessionService _sessionService; 
 
         /// <summary>
         /// 无参构造函数，以支持Activator.CreateInstance创建实例
         /// </summary>
         public HeartbeatCommandHandler() : base()
         {
-            _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
+             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>(); 
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public HeartbeatCommandHandler(
-            ISessionService sessionService,
+             ISessionService sessionService,
             ILogger<HeartbeatCommandHandler> logger = null) : base(logger)
         {
-            _sessionService = sessionService;
+            _sessionService = sessionService; // 暂时注释，缺少ISessionService接口定义
         }
 
         /// <summary>
@@ -87,16 +89,15 @@ namespace RUINORERP.Server.Network.Commands
             {
                 LogInfo($"处理心跳命令 [会话: {command.SessionID}]");
 
-                // 更新会话活动时间
-                if (!string.IsNullOrEmpty(command.SessionID))
-                {
-                    var session = _sessionService.GetSession(command.SessionID);
-                    if (session != null)
-                    {
-                        session.UpdateActivity();
-                        _sessionService.UpdateSession(session);
-                    }
-                }
+                 if (!string.IsNullOrEmpty(command.SessionID))
+                 {
+                     var session = _sessionService.GetSession(command.SessionID);
+                     if (session != null)
+                     {
+                         session.UpdateActivity();
+                         _sessionService.UpdateSession(session);
+                     }
+                 }
 
                 // 创建心跳响应数据
                 var responseData = CreateHeartbeatResponse();

@@ -20,7 +20,7 @@ using ICommand = RUINORERP.PacketSpec.Commands.ICommand;
 using SuperSocket.Command;
 
 namespace RUINORERP.Server.Network.Commands.SuperSocket
-{   
+{
     /// <summary>
     /// 统一的SuperSocket命令适配器
     /// 整合了原有的SimplifiedSuperSocketAdapter、SocketCommand和SuperSocketCommandAdapter的功能
@@ -218,22 +218,30 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <param name="package">数据包</param>
         /// <param name="sessionContext">会话上下文</param>
         /// <returns>创建的命令对象</returns>
-        protected virtual ICommand CreateCommand(PacketModel package, SessionInfo sessionContext)
+        protected virtual ICommand CreateCommand(ServerPackageInfo package, SessionInfo sessionContext)
         {
             try
             {
                 // 优先使用命令工厂创建命令
                 if (_commandFactory != null)
                 {
-                    var command = _commandFactory.CreateCommand(package);
+                    var command = _commandFactory.CreateCommand(package as PacketModel);
                     if (command != null)
                     {
+                        // 设置命令的会话ID和数据包模型
+                        command.SessionID = sessionContext.SessionID;
+                        command.Packet = package;
+
+                        // 尝试从数据包中获取业务数据 这里晚再再看
+                        // businessDataCommand.BusinessData = packetModel.GetJsonData<object>();
+
+
                         return command;
                     }
                 }
 
                 // 如果命令工厂无法创建命令，尝试根据命令ID查找对应的命令类型
-                if (_commandTypeMap.TryGetValue(package.Command, out var commandType))
+                if (_commandTypeMap.TryGetValue(package.Command.FullCode, out var commandType))
                 {
                     // 尝试使用构造函数创建命令实例
                     var constructor = GetSuitableConstructor(commandType);
@@ -241,6 +249,14 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     {
                         var parameters = PrepareConstructorParameters(constructor, package, sessionContext);
                         var command = Activator.CreateInstance(commandType, parameters) as ICommand;
+
+                        // 设置命令的会话ID和数据包模型
+                            if (command != null)
+                            {
+                                command.SessionID = sessionContext.SessionID;
+                                command.Packet = package;
+                            }
+
                         _logger?.LogDebug("根据命令ID创建命令实例: CommandId={CommandId}, Type={TypeName}",
                             package.Command, commandType.FullName);
                         return command;
@@ -248,21 +264,41 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 }
 
                 // 如果没有找到对应的命令类型或无法创建实例，使用默认的MessageCommand
+                var packetModelForDefault = new PacketModel(package.Body, package.Command)
+                {
+                    SessionId = package.SessionId,
+                    PacketId = package.PacketId
+                };
+
                 var defaultCommand = new MessageCommand(
                     package.Command,
-                    package,
+                    packetModelForDefault,
                     package.Body);
-                _logger?.LogDebug("使用默认MessageCommand创建命令实例: CommandId={CommandId}", package.Command);
+                defaultCommand.SessionID = sessionContext.SessionID;
+
+                // 尝试从数据包中获取业务数据
+                //  defaultBusinessDataCommand.BusinessData = packetModelForDefault.GetJsonData<object>();
+
+
                 return defaultCommand;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "创建命令对象时出错: CommandId={CommandId}", package.Command);
                 // 如果创建失败，返回一个默认的命令对象
+                var packetModelForError = new PacketModel(package.Body, package.Command)
+                {
+                    SessionId = package.SessionId,
+                    PacketId = package.PacketId
+                };
+
                 return new MessageCommand(
                     package.Command,
-                    package,
-                    package.Body);
+                    packetModelForError,
+                    package.Body)
+                {
+                    SessionID = sessionContext.SessionID
+                };
             }
         }
 
@@ -278,10 +314,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             foreach (var constructor in constructors)
             {
                 var parameters = constructor.GetParameters();
-                if (parameters.Length == 3 &&
-                    parameters[0].ParameterType == typeof(uint) &&
-                    typeof(SessionInfo).IsAssignableFrom(parameters[1].ParameterType) &&
-                    parameters[2].ParameterType == typeof(object))
+                if (parameters.Length >= 1 && parameters[0].ParameterType == typeof(PacketModel))
                 {
                     return constructor;
                 }
@@ -298,24 +331,30 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <param name="package">数据包</param>
         /// <param name="sessionContext">会话上下文</param>
         /// <returns>参数数组</returns>
-        protected virtual object[] PrepareConstructorParameters(ConstructorInfo constructor, PacketModel package, SessionInfo sessionContext)
+        protected virtual object[] PrepareConstructorParameters(ConstructorInfo constructor, ServerPackageInfo package, SessionInfo sessionContext)
         {
             var parameters = constructor.GetParameters();
             var parameterValues = new object[parameters.Length];
 
             for (int i = 0; i < parameters.Length; i++)
             {
-                if (parameters[i].ParameterType == typeof(uint) && i == 0)
+                if (parameters[i].ParameterType == typeof(PacketModel))
                 {
-                    parameterValues[i] = package.Command;
+                    // 创建PacketModel对象
+                    parameterValues[i] = new PacketModel(package.Body, package.Command)
+                    {
+                        SessionId = package.SessionId,
+                        PacketId = package.PacketId,
+                        Extensions = package.Extensions ?? new Dictionary<string, object>()
+                    };
                 }
-                else if (typeof(SessionInfo).IsAssignableFrom(parameters[i].ParameterType) && i == 1)
-                {
-                    parameterValues[i] = sessionContext as SessionInfo;
-                }
-                else if (parameters[i].ParameterType == typeof(object) && i == 2)
+                else if (parameters[i].ParameterType == typeof(byte[]))
                 {
                     parameterValues[i] = package.Body;
+                }
+                else if (parameters[i].ParameterType == typeof(CommandId))
+                {
+                    parameterValues[i] = package.Command;
                 }
                 else if (parameters[i].ParameterType == typeof(string))
                 {
@@ -341,7 +380,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <returns>处理结果任务</returns>
         protected virtual async ValueTask HandleCommandResultAsync(
             TAppSession session,
-            PacketModel requestPackage,
+            ServerPackageInfo requestPackage,
             CommandResult result,
             CancellationToken cancellationToken)
         {
@@ -368,7 +407,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <param name="requestPackage">请求数据包</param>
         /// <param name="result">命令执行结果</param>
         /// <returns>响应数据包</returns>
-        protected virtual PacketModel CreateResponsePackage(PacketModel requestPackage, CommandResult result)
+        protected virtual PacketModel CreateResponsePackage(ServerPackageInfo requestPackage, CommandResult result)
         {
             var response = new PacketModel
             {
@@ -377,7 +416,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 Direction = requestPackage.Direction == PacketDirection.Request ? PacketDirection.Response : requestPackage.Direction,
                 SessionId = requestPackage.SessionId,
                 ClientId = requestPackage.ClientId,
-                Status = PacketStatus.Completed,
+                Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error,
                 Extensions = new Dictionary<string, object>
                 {
                     ["Data"] = result.Data,
@@ -385,6 +424,25 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     ["Success"] = result.IsSuccess
                 }
             };
+
+            // 优先使用WithJsonData设置业务响应数据
+            if (result.Data != null)
+            {
+                try
+                {
+                    response.WithJsonData(result.Data);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "Failed to set JSON data for response packet {PacketId}", response.PacketId);
+                }
+            }
+
+            // 兼容旧的ResponseData处理方式
+            if (result is CommandResult commandResult && commandResult.ResponseData.IsValid)
+            {
+                response.SetData(commandResult.ResponseData.ToByteArray());
+            }
 
             return response;
         }
@@ -400,7 +458,16 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         {
             // 使用统一的序列化方法
             var serializedData = SerializePacket(package);
-            await session.SendAsync(serializedData, cancellationToken);
+
+            // 加密数据
+            var originalData = new RUINORERP.PacketSpec.Protocol.OriginalData(
+                (byte)package.Command.Category,
+                new byte[] { package.Command.OperationCode },
+                serializedData
+            );
+            var encryptedData = RUINORERP.PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
+
+            await session.SendAsync(encryptedData.ToByteArray(), cancellationToken);
         }
 
         /// <summary>
@@ -413,7 +480,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <returns>发送结果任务</returns>
         protected virtual async ValueTask SendErrorResponseAsync(
             TAppSession session,
-            PacketModel requestPackage,
+            ServerPackageInfo requestPackage,
             string errorCode,
             CancellationToken cancellationToken)
         {
@@ -445,7 +512,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         protected virtual byte[] SerializePacket(PacketModel package)
         {
             // 使用统一的序列化方法
-            return UnifiedSerializationService.SerializeToBinary(package);
+            return UnifiedSerializationService.SerializeWithMessagePack(package);
         }
 
         /// <summary>
@@ -468,7 +535,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             ICommandFactory commandFactory,
-            ILogger<SuperSocketCommandAdapter> logger = null) 
+            ILogger<SuperSocketCommandAdapter> logger = null)
             : base(commandDispatcher, commandFactory, logger)
         { }
     }

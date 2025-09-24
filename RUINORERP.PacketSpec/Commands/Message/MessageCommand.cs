@@ -43,15 +43,9 @@ namespace RUINORERP.PacketSpec.Commands.Message
 
             CommandType = commandType;
             CommandIdentifier = new CommandId(GetCommandCategory(commandType), GetCommandCode(commandType));
-            // packetModel = packetModel;
+            Packet = packetModel;
             Data = data;
             TimeoutMs = 30000; // 默认超时时间30秒
-
-            // 如果提供了数据，设置原始数据
-            if (data != null)
-            {
-                OriginalData = CreateOriginalDataFromObject(data);
-            }
         }
 
         /// <summary>
@@ -111,48 +105,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
             return (byte)(commandType & 0xFF);
         }
 
-        /// <summary>
-        /// 从对象创建原始数据
-        /// </summary>
-        /// <param name="data">数据对象</param>
-        /// <returns>原始数据</returns>
-        private OriginalData CreateOriginalDataFromObject(object data)
-        {
-            try
-            {
-                // 根据数据类型创建适当的原始数据
-                // 将完整的CommandId正确分解为Category和OperationCode
-                byte category = (byte)(CommandType & 0xFF); // 取低8位作为Category
-                byte operationCode = (byte)(CommandType >> 8 & 0xFF); // 取次低8位作为OperationCode
-
-                if (data is byte[] byteData)
-                {
-                    return new OriginalData(category, new byte[] { operationCode }, byteData);
-                }
-                else if (data is string stringData)
-                {
-                    var bytes = Encoding.UTF8.GetBytes(stringData);
-                    return new OriginalData(category, new byte[] { operationCode }, bytes);
-                }
-                else
-                {
-                    // 对于其他类型的数据，序列化为JSON字符串
-                    var json = Newtonsoft.Json.JsonConvert.SerializeObject(data);
-                    var bytes = Encoding.UTF8.GetBytes(json);
-                    return new OriginalData(category, new byte[] { operationCode }, bytes);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError("创建原始数据失败: " + ex.Message, ex);
-
-                // 将完整的CommandId正确分解为Category和OperationCode
-                byte category = (byte)(CommandType & 0xFF); // 取低8位作为Category
-                byte operationCode = (byte)(CommandType >> 8 & 0xFF); // 取次低8位作为OperationCode
-
-                return new OriginalData(category, new byte[] { operationCode }, null);
-            }
-        }
+       
 
         /// <summary>
         /// 执行核心逻辑

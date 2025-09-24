@@ -126,9 +126,9 @@ namespace RUINORERP.PacketSpec.Commands
         CommandStatus Status { get; set; }
 
         /// <summary>
-        /// 原始数据包
+        /// 数据包模型 - 包含完整的数据包信息和业务数据
         /// </summary>
-        OriginalData OriginalData { get; set; }
+        PacketModel Packet { get; set; }
 
         /// <summary>
         /// 命令创建时间

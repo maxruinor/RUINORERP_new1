@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Models;
+﻿﻿using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using System;
@@ -42,6 +42,8 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         public LoginCommand(string username, string password, string clientInfo = null)
         {
             LoginRequest = LoginRequest.Create(username, password, clientInfo);
+            // ClientIp将在服务器端命令处理器中设置，这里不硬编码
+
             Priority = CommandPriority.High; // 登录命令优先级高
             TimeoutMs = 30000; // 登录超时时间30秒
             Direction = CommandDirection.Send;

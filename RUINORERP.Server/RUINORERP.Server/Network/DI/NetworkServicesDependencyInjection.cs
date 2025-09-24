@@ -2,14 +2,12 @@ using Autofac;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Autofac;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Server.Network.Commands;
 using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Services;
-using RUINORERP.Server.Network.Communication.Handlers;
 
 namespace RUINORERP.Server.Network.DI
 {
@@ -47,7 +45,7 @@ namespace RUINORERP.Server.Network.DI
         //    services.AddSingleton<FileStorageManager>();
             
             // 注册服务器端登录请求处理器
-            services.AddTransient<ServerLoginRequestHandler>();
+            // services.AddTransient<ServerLoginRequestHandler>();
             
             // 注册命令调度器
             services.AddSingleton<CommandDispatcher>();
@@ -110,7 +108,7 @@ namespace RUINORERP.Server.Network.DI
           //  builder.RegisterType<FileStorageManager>().AsSelf().SingleInstance();
             
             // 注册服务器端登录请求处理器
-            builder.RegisterType<ServerLoginRequestHandler>().AsSelf().InstancePerDependency();
+            // builder.RegisterType<ServerLoginRequestHandler>().AsSelf().InstancePerDependency();
             
             builder.RegisterType<CommandDispatcher>().AsSelf().SingleInstance();
             // 移除对自定义CommandHandlerFactory的注册，使用PacketSpec中的默认实现

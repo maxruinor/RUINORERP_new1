@@ -8,6 +8,7 @@ using RUINORERP.PacketSpec.Enums;
 using RUINORERP.Server.Network.Services;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands.FileTransfer;
 
 namespace RUINORERP.Server.Network.Commands
 {

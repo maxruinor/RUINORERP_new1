@@ -46,14 +46,10 @@ namespace RUINORERP.PacketSpec.Commands
         public CommandStatus Status { get; set; }
 
         /// <summary>
-        /// 会话信息中的数据包
+        /// 数据包模型 - 包含完整的数据包信息和业务数据
         /// </summary>
-        public PacketModel packetModel { get; set; }
+        public PacketModel Packet { get; set; }
 
-        /// <summary>
-        /// 原始数据包
-        /// </summary>
-        public OriginalData OriginalData { get; set; }
 
         /// <summary>
         /// 命令创建时间
@@ -92,6 +88,7 @@ namespace RUINORERP.PacketSpec.Commands
         #endregion
 
     
+
 
         public int TimeoutMs { get; set; }
         public string SessionID { get; set ; }
@@ -135,7 +132,7 @@ namespace RUINORERP.PacketSpec.Commands
             Logger = logger;
         }
 
-         
+          
 
         /// <summary>
         /// 执行命令 - 模板方法模式
@@ -203,13 +200,13 @@ namespace RUINORERP.PacketSpec.Commands
             }
 
             // 会话验证（如果需要）
-            if (RequiresSession() && packetModel == null)
+            if (RequiresSession() && Packet == null)
             {
                 return CommandValidationResult.Failure("该命令需要有效的会话信息", ErrorCodes.SessionRequired);
             }
 
             // 数据验证（如果需要）
-            if (RequiresData() && OriginalData.IsValid)
+            if (RequiresData() && !Packet.IsValid())
             {
                 return CommandValidationResult.Failure("该命令需要有效的数据包", ErrorCodes.DataRequired);
             }
@@ -237,7 +234,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Status,
                     CreatedAt,
                     TimeoutMs,
-                    packetModel,
+                    Packet,
                     Data = GetSerializableData()
                 };
 
@@ -267,7 +264,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Status,
                     CreatedAt,
                     TimeoutMs,
-                    packetModel,
+                    Packet,
                     Data = GetSerializableData()
                 };
 

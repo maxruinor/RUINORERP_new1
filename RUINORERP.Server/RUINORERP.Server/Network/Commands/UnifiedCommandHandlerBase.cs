@@ -8,6 +8,7 @@ using global::RUINORERP.PacketSpec.Protocol;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Models.Core;
 using System.Threading;
+using Newtonsoft.Json;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -109,7 +110,7 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 从原始数据解析对象
+        /// 从原始数据解析对象 - 使用系统默认的JSON序列化器
         /// </summary>
         protected T ParseData<T>(OriginalData originalData) where T : class
         {
@@ -126,6 +127,51 @@ namespace RUINORERP.Server.Network.Commands
                 LogError($"解析数据失败: {ex.Message}", ex);
                 return null;
             }
+        }
+
+        /// <summary>
+        /// 使用GetJsonData方法从PacketModel中解析业务数据
+        /// 推荐使用此方法以确保数据解析的统一性
+        /// </summary>
+        /// <typeparam name="T">目标数据类型</typeparam>
+        /// <param name="command">命令对象</param>
+        /// <returns>解析后的数据对象，如果解析失败则返回null</returns>
+        protected T ParseBusinessData<T>(ICommand command) where T : class
+        {
+            try
+            {
+                // 检查命令是否包含原始数据
+                if (command == null || command == null)
+                {
+                    LogWarning("命令或原始数据为空，无法解析业务数据");
+                    return null;
+                }
+                //TODO 这里要这样吗
+
+                // 创建PacketModel并填充数据
+                var packetModel = new PacketModel
+                {
+                    Command = command.CommandIdentifier,
+                    SessionId = command.SessionID,
+                    Body = command.Packet.Body
+                };
+
+                // 使用GetJsonData方法解析业务数据
+                return packetModel.GetJsonData<T>();
+            }
+            catch (Exception ex)
+            {
+                LogError($"解析业务数据失败: {ex.Message}", ex);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 记录警告日志
+        /// </summary>
+        protected void LogWarning(string message)
+        {
+            logger?.LogWarning($"[{GetType().Name}] {message}");
         }
 
         /// <summary>

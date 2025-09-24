@@ -80,16 +80,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             return this;
         }
 
-        /// <summary>
-        /// 设置原始命令
-        /// </summary>
-        /// <param name="originalCommand">原始命令</param>
-        /// <returns>当前构建器实例</returns>
-        public PacketBuilder WithOriginalCommand(string originalCommand)
-        {
-            _packet.OriginalCommand = originalCommand;
-            return this;
-        }
 
         /// <summary>
         /// 设置二进制数据

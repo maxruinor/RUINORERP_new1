@@ -20,6 +20,7 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Commands.Handlers;
 using Microsoft.Extensions.Logging;
+using RUINORERP.PacketSpec.Commands.Cache;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -60,7 +61,7 @@ Disposed（已释放）
      */
     /// </summary>
     [CommandHandler("LoginCommandHandler", priority: 100)]
-    public class LoginCommandHandler : BaseCommandHandler
+    public class LoginCommandHandler : UnifiedCommandHandlerBase
     {
         private const int MaxLoginAttempts = 5;
         private const int MaxConcurrentUsers = 1000;
@@ -70,7 +71,7 @@ Disposed（已释放）
         protected ILogger<LoginCommandHandler> logger { get; set; }
         
         // 添加无参构造函数，以支持Activator.CreateInstance创建实例
-        public LoginCommandHandler() : base(new LoggerFactory().CreateLogger<BaseCommandHandler>())
+        public LoginCommandHandler() : base(new LoggerFactory().CreateLogger<UnifiedCommandHandlerBase>())
         {
             logger = new LoggerFactory().CreateLogger<LoginCommandHandler>();
         }
@@ -79,6 +80,9 @@ Disposed（已释放）
         {
             logger = _Logger;
         }
+
+
+
         /// <summary>
         /// 会话管理服务
         /// </summary>
@@ -90,9 +94,11 @@ Disposed（已释放）
         public override IReadOnlyList<uint> SupportedCommands => new uint[]
         {
             AuthenticationCommands.Login.FullCode,
+            AuthenticationCommands.LoginRequest.FullCode,
             AuthenticationCommands.Logout.FullCode,
             AuthenticationCommands.ValidateToken.FullCode,
-            AuthenticationCommands.RefreshToken.FullCode
+            AuthenticationCommands.RefreshToken.FullCode,
+            AuthenticationCommands.PrepareLogin.FullCode
         };
 
         /// <summary>
@@ -118,39 +124,54 @@ Disposed（已释放）
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<CommandResult> OnHandleAsync(ICommand command, CancellationToken cancellationToken = default)
+        protected override async Task<CommandResult> ProcessCommandAsync(ICommand command, CancellationToken cancellationToken)
         {
             try
             {
-                var commandId = command.CommandIdentifier;
+                try
+                {
+                    var commandId = command.CommandIdentifier;
 
-                if (commandId == AuthenticationCommands.Login)
-                {
-                    return await HandleLoginAsync(command as LoginCommand, cancellationToken);
+                    if (commandId == AuthenticationCommands.Login || commandId == AuthenticationCommands.LoginRequest)
+                    {
+                        // LoginRequest和Login命令使用相同的处理逻辑
+                        return await HandleLoginAsync(command as LoginCommand, cancellationToken);
+                    }
+                    else if (commandId == AuthenticationCommands.Logout)
+                    {
+                        return await HandleLogoutAsync(command, cancellationToken);
+                    }
+                    else if (commandId == AuthenticationCommands.ValidateToken)
+                    {
+                        return await HandleTokenValidationAsync(command, cancellationToken);
+                    }
+                    else if (commandId == AuthenticationCommands.RefreshToken)
+                    {
+                        return await HandleTokenRefreshAsync(command, cancellationToken);
+                    }
+                    else if (commandId == AuthenticationCommands.PrepareLogin)
+                    {
+                        return await HandlePrepareLoginAsync(command, cancellationToken);
+                    }
+                    else
+                    {
+                        return CommandResult.Failure($"不支持的命令类型: {command.CommandIdentifier}", "UNSUPPORTED_COMMAND");
+                    }
                 }
-                else if (commandId == AuthenticationCommands.Logout)
+                catch (Exception ex)
                 {
-                    return await HandleLogoutAsync(command, cancellationToken);
-                }
-                else if (commandId == AuthenticationCommands.ValidateToken)
-                {
-                    return await HandleTokenValidationAsync(command, cancellationToken);
-                }
-                else if (commandId == AuthenticationCommands.RefreshToken)
-                {
-                    return await HandleTokenRefreshAsync(command, cancellationToken);
-                }
-                else
-                {
-                    return CommandResult.Failure($"不支持的命令类型: {command.CommandIdentifier}", "UNSUPPORTED_COMMAND");
+                    LogError($"处理登录命令异常: {ex.Message}", ex);
+                    return CommandResult.Failure($"处理异常: {ex.Message}", "HANDLER_ERROR", ex);
                 }
             }
             catch (Exception ex)
             {
-                LogError($"处理登录命令异常: {ex.Message}", ex);
+                LogError($"处理缓存同步命令异常: {ex.Message}", ex);
                 return CommandResult.Failure($"处理异常: {ex.Message}", "HANDLER_ERROR", ex);
             }
         }
+
+
 
         /// <summary>
         /// 处理登录命令
@@ -214,8 +235,8 @@ Disposed（已释放）
                 var sessionInfo = SessionService.GetSession(command.SessionID);
                 if (sessionInfo == null)
                 {
-                    // 创建新会话
-                    string clientIp = "127.0.0.1"; // 实际应用中应从command或网络连接中获取
+                    // 从命令或网络连接中获取客户端真实IP
+                    string clientIp = GetClientIpAddress(command);
                     sessionInfo = SessionService.CreateSession(command.SessionID, clientIp);
                     if (sessionInfo == null)
                     {
@@ -305,7 +326,7 @@ Disposed（已释放）
 
             try
             {
-                var tokenData = ParseTokenData(command.OriginalData);
+                var tokenData = command.Packet.GetJsonData<TokenData>();
                 if (string.IsNullOrEmpty(tokenData.Token))
                 {
                     return CommandResult.Failure("Token不能为空", "INVALID_TOKEN");
@@ -343,7 +364,7 @@ Disposed（已释放）
 
             try
             {
-                var refreshData = ParseRefreshData(command.OriginalData);
+                var refreshData = command.Packet.GetJsonData<RefreshData>();
                 if (string.IsNullOrEmpty(refreshData.RefreshToken) || string.IsNullOrEmpty(refreshData.CurrentToken))
                 {
                     return CommandResult.Failure("刷新Token和当前Token都不能为空", "INVALID_REFRESH_DATA");
@@ -420,6 +441,31 @@ Disposed（已释放）
             {
                 LogError($"注销异常: {ex.Message}", ex);
                 return CommandResult.Failure($"注销异常: {ex.Message}", "LOGOUT_ERROR", ex);
+            }
+        }
+
+        /// <summary>
+        /// 处理准备登录命令
+        /// </summary>
+        private async Task<CommandResult> HandlePrepareLoginAsync(ICommand command, CancellationToken cancellationToken)
+        {
+            LogInfo($"处理准备登录命令 [会话: {command.SessionID}]");
+
+            try
+            {
+                // 创建准备登录响应
+                var responseData = CreatePrepareLoginResponse();
+
+                return CommandResult.SuccessWithResponse(
+                    responseData,
+                    data: new { Status = "Ready", MaxConcurrentUsers = MaxConcurrentUsers },
+                    message: "准备登录完成"
+                );
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理准备登录命令异常: {ex.Message}", ex);
+                return CommandResult.Failure($"准备登录异常: {ex.Message}", "PREPARE_LOGIN_ERROR", ex);
             }
         }
 
@@ -743,17 +789,69 @@ Disposed（已释放）
             return SessionService.RemoveSession(sessionId);
         }
 
+        /// <summary>
+        /// 获取客户端IP地址
+        /// </summary>
+        /// <param name="command">命令对象</param>
+        /// <returns>客户端IP地址</returns>
+        private string GetClientIpAddress(ICommand command)
+        {
+            // 首先尝试从命令的SessionInfo中获取IP
+            if (command != null && !string.IsNullOrEmpty(command.SessionID))
+            {
+                var session = SessionService.GetSession(command.SessionID);
+                if (session != null && !string.IsNullOrEmpty(session.ClientIp))
+                {
+                    return session.ClientIp;
+                }
+                
+                // 如果SessionInfo中没有IP，尝试从RemoteEndPoint获取
+                var appSession = SessionService.GetAppSession(command.SessionID);
+                if (appSession != null && appSession.RemoteEndPoint != null)
+                {
+                    var ipEndpoint = appSession.RemoteEndPoint as System.Net.IPEndPoint;
+                    if (ipEndpoint != null)
+                    {
+                        return ipEndpoint.Address.ToString();
+                    }
+                }
+            }
+
+            // 如果无法从Session获取，则返回默认值
+            return "0.0.0.0"; // 使用0.0.0.0表示未知IP
+        }
+
         #endregion
 
         #region 响应创建方法
 
+        private OriginalData CreateLogoutResponse()
+        {
+            var responseData = "LOGGED_OUT";
+            var data = System.Text.Encoding.UTF8.GetBytes(responseData);
+
+            // 将完整的CommandId正确分解为Category和OperationCode
+            uint commandId = (uint)AuthenticationCommands.Logout;
+            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
+            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
+
+            return new OriginalData(
+                category,
+                new byte[] { operationCode },
+                data
+            );
+        }
+
+        /// <summary>
+        /// 创建准备登录响应
+        /// </summary>
         private OriginalData CreatePrepareLoginResponse()
         {
             var responseMessage = $"READY|{MaxConcurrentUsers}";
             var data = System.Text.Encoding.UTF8.GetBytes(responseMessage);
 
             // 将完整的CommandId正确分解为Category和OperationCode
-            uint commandId = (uint)AuthenticationCommands.LoginResponse;
+            uint commandId = (uint)AuthenticationCommands.PrepareLogin;
             byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
             byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
 
@@ -764,23 +862,9 @@ Disposed（已释放）
             );
         }
 
-        private OriginalData CreateLoginSuccessResponse(UserInfo userInfo, TokenInfo tokenInfo)
-        {
-            var responseData = $"SUCCESS|{userInfo.UserId}|{userInfo.DisplayName}|{tokenInfo.AccessToken}|{tokenInfo.RefreshToken}|{tokenInfo.ExpiresIn}";
-            var data = System.Text.Encoding.UTF8.GetBytes(responseData);
-
-            // 将完整的CommandId正确分解为Category和OperationCode
-            uint commandId = (uint)AuthenticationCommands.LoginResponse;
-            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
-            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
-
-            return new OriginalData(
-                category,
-                new byte[] { operationCode },
-                data
-            );
-        }
-
+        /// <summary>
+        /// 创建登录验证响应
+        /// </summary>
         private OriginalData CreateValidationResponse(SessionInfo sessionInfo)
         {
             var responseData = $"VALID|{sessionInfo.SessionID}|{sessionInfo.UserId}";
@@ -798,6 +882,9 @@ Disposed（已释放）
             );
         }
 
+        /// <summary>
+        /// 创建Token验证响应
+        /// </summary>
         private OriginalData CreateTokenValidationResponse(TokenValidationResult validationResult)
         {
             var responseData = $"TOKEN_VALID|{validationResult.UserId}";
@@ -815,6 +902,9 @@ Disposed（已释放）
             );
         }
 
+        /// <summary>
+        /// 创建Token刷新响应
+        /// </summary>
         private OriginalData CreateTokenRefreshResponse(TokenRefreshResult refreshResult)
         {
             var responseData = $"TOKEN_REFRESHED|{refreshResult.AccessToken}|{refreshResult.RefreshToken}|{refreshResult.ExpiresIn}";
@@ -822,23 +912,6 @@ Disposed（已释放）
 
             // 将完整的CommandId正确分解为Category和OperationCode
             uint commandId = (uint)AuthenticationCommands.RefreshToken;
-            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
-            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
-
-            return new OriginalData(
-                category,
-                new byte[] { operationCode },
-                data
-            );
-        }
-
-        private OriginalData CreateLogoutResponse()
-        {
-            var responseData = "LOGGED_OUT";
-            var data = System.Text.Encoding.UTF8.GetBytes(responseData);
-
-            // 将完整的CommandId正确分解为Category和OperationCode
-            uint commandId = (uint)AuthenticationCommands.Logout;
             byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
             byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
 

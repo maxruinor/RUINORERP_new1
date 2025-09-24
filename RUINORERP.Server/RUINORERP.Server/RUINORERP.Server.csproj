@@ -178,6 +178,7 @@
   <ItemGroup>
     <Folder Include="Network\CoreServices\" />
     <Folder Include="Network\Documentation\" />
+    <Folder Include="Network\Tests\" />
     <Folder Include="SuperSocketServices\Commands\Legacy\" />
     <Folder Include="SuperSocketServices\Commands\System\" />
     <Folder Include="SuperSocketServices\Documentation\" />

@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Core;
+﻿using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 是否成功
         /// </summary>
         public bool IsSuccess { get; set; }
-        
+
         /// <summary>
         /// 结果消息
         /// </summary>
@@ -97,7 +97,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 响应数据包（用于发送回客户端）
         /// </summary>
-        OriginalData ResponseData { get; set; }
+        public OriginalData ResponseData { get; set; }
 
         /// <summary>
         /// 构造函数

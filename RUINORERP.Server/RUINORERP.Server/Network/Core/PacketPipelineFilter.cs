@@ -17,6 +17,8 @@ using Microsoft.VisualBasic;
 using System.Drawing.Printing;
 using RUINORERP.PacketSpec.Core.DataProcessing;
 using Fireasy.Common.ComponentModel;
+using RUINORERP.PacketSpec.Commands.System;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace RUINORERP.Server.Network.Core
 {
@@ -84,24 +86,11 @@ namespace RUINORERP.Server.Network.Core
             return bodyLength;
         }
 
-
-
-
-
-
-
-
-
-        //54才是对的
-
-
-
         /// <summary>
-        /// 解码数据包
+        /// 解码数据包,根据supersocket机制。这里的buffer的长度就是上面的bodyLength
         /// </summary>
         protected override ServerPackageInfo DecodePackage(ref ReadOnlySequence<byte> buffer)
         {
-
             try
             {
                 // 将缓冲区转换为字节数组
@@ -119,7 +108,18 @@ namespace RUINORERP.Server.Network.Core
                 packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(decryptedData.Two);
 
                 if (packet.IsValid())
-                { // 如果没有请求ID，或者对应的任务已完成，则视为服务器主动推送的命令
+                {
+                    //为了方便调试把心跳判断一下
+                    if (packet.Command.Category == PacketSpec.Commands.CommandCategory.System && packet.Command.FullCode == SystemCommands.Heartbeat)
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
+
+                    // 如果没有请求ID，或者对应的任务已完成，则视为服务器主动推送的命令
                     if (!packet.Extensions.ContainsKey("RequestId"))
                     {
                         // 提取命令ID和数据
@@ -135,36 +135,28 @@ namespace RUINORERP.Server.Network.Core
                         }
                     }
 
-                    // 创建并返回ServerPackageInfo对象
+                    // 创建并返回ServerPackageInfo对象，包含所有必要的信息
                     return new ServerPackageInfo
                     {
-                        Command = packet.Command, // 假设Command是uint类型
-                        Key = "SuperSocketCommandAdapter",    // 使用PacketId作为Key
-                        Body = packageBytes      // 保存原始数据包
+                        Command = packet.Command,
+                        Key = "SuperSocketCommandAdapter",
+                        Body = decryptedData.Two, // 保存解密后的数据包内容
+                        SessionId = packet.SessionId, // 保存会话ID
+                        PacketId = packet.PacketId, // 保存数据包ID
+                        Extensions = packet.Extensions ?? new System.Collections.Generic.Dictionary<string, object>() // 保存扩展属性
                     };
                 }
                 else
                 {
                     return null;
                 }
-
-                return new ServerPackageInfo
-                {
-                    //Command = kxData.Cmd, // 假设Command是uint类型
-                    Key = "SuperSocketCommandAdapter",    // 使用PacketId作为Key
-                    Body = packageBytes      // 保存原始数据包
-                };
-
             }
             catch (Exception ex)
             {
+                // 记录异常但不抛出，避免影响其他处理
                 return null;
             }
         }
-
-
-
-
 
         public override ServerPackageInfo Filter(ref SequenceReader<byte> reader)
         {

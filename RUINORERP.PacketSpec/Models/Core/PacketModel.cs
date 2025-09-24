@@ -28,11 +28,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         public CommandId Command { get; set; }
 
         /// <summary>
-        /// 原始命令值
-        /// </summary>
-        public string OriginalCommand { get; set; }
-
-        /// <summary>
         /// 数据包优先级
         /// </summary>
         public PacketPriority Priority { get; set; }
@@ -158,25 +153,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             return new PacketModel(originalData, command);
         }
 
-        /// <summary>
-        /// 从KX数据格式创建数据包
-        /// </summary>
-        /// <param name="kxData">KX格式数据</param>
-        /// <returns>PacketModel实例</returns>
-        public static PacketModel FromKxData(string kxData)
-        {
-            if (string.IsNullOrEmpty(kxData))
-                throw new ArgumentException("KX数据不能为空", nameof(kxData));
-
-            var packet = new PacketModel
-            {
-                OriginalCommand = kxData,
-                Body = Encoding.UTF8.GetBytes(kxData)
-            };
-
-            packet.Size = packet.Body.Length;
-            return packet;
-        }
+        
 
         /// <summary>
         /// 设置会话信息
@@ -291,7 +268,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             {
                 PacketId = GeneratePacketId(),
                 Command = Command,
-                OriginalCommand = OriginalCommand,
                 Priority = Priority,
                 Direction = Direction,
                 Status = Status,

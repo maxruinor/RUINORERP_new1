@@ -101,7 +101,7 @@ namespace RUINORERP.Server.SuperSocketServices
         {
             try
             {
-                _logger.LogDebug($"收到数据包: SessionId={_sessionId}, Command={package.Command}, Size={package.Body?.Length ?? 0}");
+                _logger.LogDebug($"收到数据包: SessionId={_sessionId}, Command={package.Packet.Command}, Size={package.Packet.Body?.Length ?? 0}");
 
                 // 更新最后活动时间
                 if (_sessionInfo != null)

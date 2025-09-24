@@ -186,14 +186,14 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 var command = CreateCommand(package, sessionInfo);
                 if (command == null)
                 {
-                    _logger?.LogWarning("无法创建命令对象: CommandId={CommandId}", package.Command);
+                    _logger?.LogWarning("无法创建命令对象: CommandId={CommandId}", package.Packet.Command);
                     await SendErrorResponseAsync(session, package, ErrorCodes.CommandNotFound, cancellationToken);
                     return;
                 }
 
                 // 记录命令执行开始的日志
                 _logger?.LogDebug("开始执行命令: CommandId={CommandId}, Type={TypeName}",
-                    package.Command, command.GetType().FullName);
+                    package.Packet.Command, command.GetType().FullName);
 
                 // 通过现有的命令调度器处理命令
                 var result = await _commandDispatcher.DispatchAsync(command, cancellationToken);
@@ -201,11 +201,11 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
 
                 // 记录命令执行完成的日志
                 _logger?.LogDebug("命令执行完成: CommandId={CommandId}, Success={Success}",
-                    package.Command, result?.IsSuccess ?? false);
+                    package.Packet.Command, result?.IsSuccess ?? false);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理SuperSocket命令时发生异常: CommandId={CommandId}", package.Command);
+                _logger?.LogError(ex, "处理SuperSocket命令时发生异常: CommandId={CommandId}", package.Packet.Command);
                 // 发送错误响应给客户端
                 await SendErrorResponseAsync(session, package, ErrorCodes.UnhandledException, cancellationToken);
             }
@@ -225,12 +225,12 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 // 优先使用命令工厂创建命令
                 if (_commandFactory != null)
                 {
-                    var command = _commandFactory.CreateCommand(package as PacketModel);
+                    var command = _commandFactory.CreateCommand(package.Packet as PacketModel);
                     if (command != null)
                     {
                         // 设置命令的会话ID和数据包模型
                         command.SessionID = sessionContext.SessionID;
-                        command.Packet = package;
+                        command.Packet = package.Packet;
 
                         // 尝试从数据包中获取业务数据 这里晚再再看
                         // businessDataCommand.BusinessData = packetModel.GetJsonData<object>();
@@ -241,7 +241,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 }
 
                 // 如果命令工厂无法创建命令，尝试根据命令ID查找对应的命令类型
-                if (_commandTypeMap.TryGetValue(package.Command.FullCode, out var commandType))
+                if (_commandTypeMap.TryGetValue(package.Packet.Command.FullCode, out var commandType))
                 {
                     // 尝试使用构造函数创建命令实例
                     var constructor = GetSuitableConstructor(commandType);
@@ -254,26 +254,26 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                             if (command != null)
                             {
                                 command.SessionID = sessionContext.SessionID;
-                                command.Packet = package;
+                                command.Packet = package.Packet;
                             }
 
                         _logger?.LogDebug("根据命令ID创建命令实例: CommandId={CommandId}, Type={TypeName}",
-                            package.Command, commandType.FullName);
+                            package.Packet.Command, commandType.FullName);
                         return command;
                     }
                 }
 
                 // 如果没有找到对应的命令类型或无法创建实例，使用默认的MessageCommand
-                var packetModelForDefault = new PacketModel(package.Body, package.Command)
+                var packetModelForDefault = new PacketModel(package.Packet.Body, package.Packet.Command)
                 {
-                    SessionId = package.SessionId,
-                    PacketId = package.PacketId
+                    SessionId = package.Packet.SessionId,
+                    PacketId = package.Packet.PacketId
                 };
 
                 var defaultCommand = new MessageCommand(
-                    package.Command,
+                    package.Packet.Command,
                     packetModelForDefault,
-                    package.Body);
+                    package.Packet.Body);
                 defaultCommand.SessionID = sessionContext.SessionID;
 
                 // 尝试从数据包中获取业务数据
@@ -284,18 +284,18 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "创建命令对象时出错: CommandId={CommandId}", package.Command);
+                _logger?.LogError(ex, "创建命令对象时出错: CommandId={CommandId}", package.Packet.Command);
                 // 如果创建失败，返回一个默认的命令对象
-                var packetModelForError = new PacketModel(package.Body, package.Command)
+                var packetModelForError = new PacketModel(package.Packet.Body, package.Packet.Command)
                 {
-                    SessionId = package.SessionId,
-                    PacketId = package.PacketId
+                    SessionId = package.Packet.SessionId,
+                    PacketId = package.Packet.PacketId
                 };
 
                 return new MessageCommand(
-                    package.Command,
+                    package.Packet.Command,
                     packetModelForError,
-                    package.Body)
+                    package.Packet.Body)
                 {
                     SessionID = sessionContext.SessionID
                 };
@@ -341,24 +341,24 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 if (parameters[i].ParameterType == typeof(PacketModel))
                 {
                     // 创建PacketModel对象
-                    parameterValues[i] = new PacketModel(package.Body, package.Command)
+                    parameterValues[i] = new PacketModel(package.Packet.Body, package.Packet.Command)
                     {
-                        SessionId = package.SessionId,
-                        PacketId = package.PacketId,
-                        Extensions = package.Extensions ?? new Dictionary<string, object>()
+                        SessionId = package.Packet.SessionId,
+                        PacketId = package.Packet.PacketId,
+                        Extensions = package.Packet.Extensions ?? new Dictionary<string, object>()
                     };
                 }
                 else if (parameters[i].ParameterType == typeof(byte[]))
                 {
-                    parameterValues[i] = package.Body;
+                    parameterValues[i] = package.Packet.Body;
                 }
                 else if (parameters[i].ParameterType == typeof(CommandId))
                 {
-                    parameterValues[i] = package.Command;
+                    parameterValues[i] = package.Packet.Command;
                 }
                 else if (parameters[i].ParameterType == typeof(string))
                 {
-                    parameterValues[i] = package.SessionId;
+                    parameterValues[i] = package.Packet.SessionId;
                 }
                 else
                 {
@@ -411,11 +411,11 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         {
             var response = new PacketModel
             {
-                PacketId = GenerateResponseId(requestPackage.PacketId),
-                Command = requestPackage.Command,
-                Direction = requestPackage.Direction == PacketDirection.Request ? PacketDirection.Response : requestPackage.Direction,
-                SessionId = requestPackage.SessionId,
-                ClientId = requestPackage.ClientId,
+                PacketId = GenerateResponseId(requestPackage.Packet.PacketId),
+                Command = requestPackage.Packet.Command,
+                Direction = requestPackage.Packet.Direction == PacketDirection.Request ? PacketDirection.Response : requestPackage.Packet.Direction,
+                SessionId = requestPackage.Packet.SessionId,
+                ClientId = requestPackage.Packet.ClientId,
                 Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error,
                 Extensions = new Dictionary<string, object>
                 {
@@ -487,11 +487,11 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             var errorInfo = GetErrorInfoByCode(errorCode);
             var errorResponse = new PacketModel
             {
-                PacketId = GenerateResponseId(requestPackage?.PacketId ?? Guid.NewGuid().ToString()),
-                Command = requestPackage?.Command ?? default(CommandId),
+                PacketId = GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
+                Command = requestPackage.Packet?.Command ?? default(CommandId),
                 Direction = PacketDirection.Response,
-                SessionId = requestPackage?.SessionId,
-                ClientId = requestPackage?.ClientId,
+                SessionId = requestPackage.Packet?.SessionId,
+                ClientId = requestPackage.Packet?.ClientId,
                 Status = PacketStatus.Error,
                 Extensions = new Dictionary<string, object>
                 {

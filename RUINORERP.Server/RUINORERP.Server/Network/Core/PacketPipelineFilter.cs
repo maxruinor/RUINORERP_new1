@@ -122,28 +122,14 @@ namespace RUINORERP.Server.Network.Core
                     // 如果没有请求ID，或者对应的任务已完成，则视为服务器主动推送的命令
                     if (!packet.Extensions.ContainsKey("RequestId"))
                     {
-                        // 提取命令ID和数据
-                        object commandData = null;
-                        try
-                        {
-                            // 尝试解析命令数据
-                            commandData = packet.GetJsonData<object>();
-                        }
-                        catch (Exception ex)
-                        {
 
-                        }
                     }
-
                     // 创建并返回ServerPackageInfo对象，包含所有必要的信息
                     return new ServerPackageInfo
                     {
-                        Command = packet.Command,
+
                         Key = "SuperSocketCommandAdapter",
-                        Body = decryptedData.Two, // 保存解密后的数据包内容
-                        SessionId = packet.SessionId, // 保存会话ID
-                        PacketId = packet.PacketId, // 保存数据包ID
-                        Extensions = packet.Extensions ?? new System.Collections.Generic.Dictionary<string, object>() // 保存扩展属性
+                        Packet = packet
                     };
                 }
                 else

@@ -8,8 +8,9 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Server.Network.Models
 {
-    public class ServerPackageInfo : PacketModel,IKeyedPackageInfo<string>
+    public class ServerPackageInfo : IKeyedPackageInfo<string>
     {
         public string Key { get; set; }
+        public PacketModel Packet { get; set; }
     }
 }

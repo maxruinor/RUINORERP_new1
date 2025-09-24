@@ -110,7 +110,7 @@ namespace RUINORERP.UI.Network
             // 如果命令是BaseCommand类型，设置更多属性
             if (command is BaseCommand baseCommand)
             {
-                baseCommand.packetModel = packet;
+                baseCommand.Packet = packet;
                 baseCommand.Timestamp = packet.Timestamp;
                 baseCommand.CreatedTime = packet.CreatedTime;
             }

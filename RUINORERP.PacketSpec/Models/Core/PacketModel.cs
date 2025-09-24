@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Core;
+using System.Runtime.CompilerServices;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {
@@ -153,7 +154,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             return new PacketModel(originalData, command);
         }
 
-        
+
 
         /// <summary>
         /// 设置会话信息
@@ -320,9 +321,9 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 生成数据包ID
         /// </summary>
         /// <returns>唯一数据包ID</returns>
-        private static string GeneratePacketId()
+        private string GeneratePacketId()
         {
-            return $"PKT_{DateTime.UtcNow:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}";
+            return $"PKT_{Command.Category.ToString()}_{DateTime.UtcNow:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}";
         }
 
         /// <summary>

@@ -72,7 +72,7 @@ namespace RUINORERP.UI.Network
                     .WithTimeout(timeoutMs)
                     .WithDirection(RUINORERP.PacketSpec.Enums.Core.PacketDirection.ClientToServer)
                     .Build();
-
+                
                 // 序列化数据
                 byte[] payload;
                 try

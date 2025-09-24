@@ -39,6 +39,26 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public ClientResourceUsage ResourceUsage { get; set; }
 
         /// <summary>
+        /// 客户端ID
+        /// </summary>
+        public string ClientId { get; set; }
+
+        /// <summary>
+        /// 客户端版本
+        /// </summary>
+        public string ClientVersion { get; set; }
+
+        /// <summary>
+        /// 客户端IP地址
+        /// </summary>
+        public string ClientIp { get; set; }
+
+        /// <summary>
+        /// 时间戳
+        /// </summary>
+        public DateTime Timestamp { get; set; }
+
+        /// <summary>
         /// 创建心跳请求
         /// </summary>
         public static HeartbeatRequest Create(string sessionToken, long userId, 

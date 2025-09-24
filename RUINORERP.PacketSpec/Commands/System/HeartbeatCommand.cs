@@ -1,7 +1,7 @@
 ﻿using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Commands.System;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Requests;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +26,16 @@ namespace RUINORERP.PacketSpec.Commands.System
         public string ClientId { get; set; }
 
         /// <summary>
+        /// 会话令牌
+        /// </summary>
+        public string SessionToken { get; set; }
+
+        /// <summary>
+        /// 用户ID
+        /// </summary>
+        public long UserId { get; set; }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public HeartbeatCommand()
@@ -48,16 +58,74 @@ namespace RUINORERP.PacketSpec.Commands.System
         }
 
         /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="clientId">客户端ID</param>
+        /// <param name="sessionToken">会话令牌</param>
+        /// <param name="userId">用户ID</param>
+        public HeartbeatCommand(string clientId, string sessionToken, long userId)
+        {
+            ClientId = clientId;
+            SessionToken = sessionToken;
+            UserId = userId;
+            Priority = CommandPriority.Normal;
+            TimeoutMs = 10000; // 心跳命令超时时间10秒
+            Timestamp = DateTime.UtcNow;
+        }
+
+        // 客户端信息属性，由客户端设置
+        public string ClientVersion { get; set; }
+        public string ClientIp { get; set; }
+        public string ClientStatus { get; set; }
+        public int ProcessUptime { get; set; }
+
+        // 网络延迟信息，由客户端设置
+        public int NetworkLatency { get; set; }
+
+        // 客户端资源使用情况，由客户端设置
+        public ClientResourceUsage ResourceUsage { get; set; }
+
+        /// <summary>
         /// 获取可序列化的数据
         /// </summary>
         /// <returns>可序列化的心跳数据</returns>
         public override object GetSerializableData()
         {
-            return new
+            try
             {
-                ClientId = this.ClientId,
-                Timestamp = this.Timestamp
-            };
+                // 确保ResourceUsage不为空
+                var resourceUsage = this.ResourceUsage ?? new ClientResourceUsage();
+                
+                // 设置ProcessUptime到ResourceUsage中
+                if (this.ProcessUptime > 0)
+                {
+                    resourceUsage.ProcessUptime = this.ProcessUptime;
+                }
+                
+                return new HeartbeatRequest
+                {
+                    ClientId = this.ClientId,
+                    SessionToken = this.SessionToken,
+                    UserId = this.UserId,
+                    Timestamp = this.Timestamp,
+                    ClientTime = DateTime.UtcNow,
+                    NetworkLatency = this.NetworkLatency,
+                    ClientVersion = this.ClientVersion,
+                    ClientIp = this.ClientIp,
+                    ResourceUsage = resourceUsage,
+                    ClientStatus = this.ClientStatus
+                };
+            }
+            catch (Exception ex)
+            {
+                // 发生异常时返回基本数据
+                return new
+                {
+                    ClientId = this.ClientId,
+                    Timestamp = this.Timestamp,
+                    ErrorMessage = "Failed to collect full heartbeat data"
+                };
+            }
         }
 
         /// <summary>
@@ -104,6 +172,12 @@ namespace RUINORERP.PacketSpec.Commands.System
             if (string.IsNullOrEmpty(ClientId))
             {
                 return CommandValidationResult.Failure("客户端ID不能为空");
+            }
+
+            // 验证会话令牌（如果设置了）
+            if (UserId > 0 && string.IsNullOrEmpty(SessionToken))
+            {
+                return CommandValidationResult.Failure("已登录用户必须提供会话令牌");
             }
 
             return CommandValidationResult.Success();

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Serialization;
@@ -17,15 +18,17 @@ namespace RUINORERP.UI.Network
     public class RequestResponseManager : IDisposable
     {
         private readonly ConcurrentDictionary<string, PendingRequest> _pendingRequests;
-
+        private readonly ILogger<RequestResponseManager> _logger;
         private bool _disposed = false;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public RequestResponseManager()
+        /// <param name="logger">日志记录器</param>
+        public RequestResponseManager(ILogger<RequestResponseManager> logger = null)
         {
             _pendingRequests = new ConcurrentDictionary<string, PendingRequest>();
+            _logger = logger;
         }
 
         /// <summary>
@@ -57,7 +60,8 @@ namespace RUINORERP.UI.Network
             var pendingRequest = new PendingRequest
             {
                 TaskCompletionSource = tcs,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                TimeoutMs = timeoutMs
             };
 
             _pendingRequests.TryAdd(requestId, pendingRequest);
@@ -72,7 +76,7 @@ namespace RUINORERP.UI.Network
                     .WithTimeout(timeoutMs)
                     .WithDirection(RUINORERP.PacketSpec.Enums.Core.PacketDirection.ClientToServer)
                     .Build();
-                
+
                 // 序列化数据
                 byte[] payload;
                 try
@@ -166,7 +170,7 @@ namespace RUINORERP.UI.Network
                         pendingRequest.TaskCompletionSource.TrySetResult(data); // 传递原始加密数据
                     }
                 }
-               
+
             }
             catch (Exception ex)
             {
@@ -240,6 +244,23 @@ namespace RUINORERP.UI.Network
             /// 超时时间（毫秒）
             /// </summary>
             public int TimeoutMs { get; set; } = 30000;
+        }
+
+        /// <summary>
+        /// 记录错误日志
+        /// </summary>
+        /// <param name="message">日志消息</param>
+        /// <param name="exception">异常对象</param>
+        private void LogError(string message, Exception exception = null)
+        {
+            if (exception == null)
+            {
+                _logger?.LogError(message);
+            }
+            else
+            {
+                _logger?.LogError(exception, message);
+            }
         }
     }
 }

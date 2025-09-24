@@ -14,17 +14,20 @@ namespace RUINORERP.UI.Network
     /// 继承自公共的CommunicationHandlerBase，实现客户端特定的通信逻辑
     /// 负责向服务器发送请求和命令，并处理服务器响应
     /// </summary>
-    public class ClientCommunicationHandler : CommunicationHandlerBase
+    public class ClientCommunicationHandler : CommunicationHandler
     {
+
+
+        private readonly ILogger<ClientCommunicationHandler> _logger;
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="commandDispatcher">命令调度器</param>
         /// <param name="logger">日志记录器</param>
-        public ClientCommunicationHandler(ICommandDispatcher commandDispatcher, ILogger<CommunicationHandlerBase> logger)
-            : base(commandDispatcher)
+        public ClientCommunicationHandler(ICommandDispatcher commandDispatcher, ILogger<ClientCommunicationHandler> logger)
+            : base(commandDispatcher,logger)
         {
-            Logger = logger;
+            _logger = logger;
         }
 
         /// <summary>
@@ -41,19 +44,19 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                Logger.LogDebug("准备发送请求到服务器: {RequestType}", typeof(TRequest).Name);
+                _logger.LogDebug("准备发送请求到服务器: {RequestType}", typeof(TRequest).Name);
                 
                 // 客户端特定的请求处理逻辑
                 // 这里应该将请求序列化并发送到服务器，然后等待响应
                 
                 var response = await SendRequestToServerAsync<TRequest, TResponse>(request, cancellationToken);
-                
-                Logger.LogDebug("请求处理完成: {RequestType}", typeof(TRequest).Name);
+
+                _logger.LogDebug("请求处理完成: {RequestType}", typeof(TRequest).Name);
                 return ApiResponse<TResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "发送请求到服务器时发生异常: {RequestType}", typeof(TRequest).Name);
+                _logger.LogError(ex, "发送请求到服务器时发生异常: {RequestType}", typeof(TRequest).Name);
                 return ApiResponse<TResponse>.Failure("发送请求失败: " + ex.Message);
             }
         }
@@ -82,10 +85,10 @@ namespace RUINORERP.UI.Network
         /// <returns>初始化结果</returns>
         public async Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
         {
-            Logger.LogInformation("初始化客户端通信处理器...");
-            
+            _logger.LogInformation("初始化客户端通信处理器...");
+
             // 客户端特有的初始化逻辑
-            Logger.LogInformation("客户端通信处理器初始化成功");
+            _logger.LogInformation("客户端通信处理器初始化成功");
             
             return true;
         }

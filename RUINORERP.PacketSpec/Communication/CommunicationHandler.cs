@@ -1,6 +1,7 @@
 ﻿using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
-
+using RUINORERP.PacketSpec.Serialization;
+using RUINORERP.PacketSpec.Protocol;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
@@ -9,25 +10,23 @@ using System.Threading.Tasks;
 namespace RUINORERP.PacketSpec.Communication
 {
     /// <summary>
-    /// 通信处理器基类
-    /// 提供命令分发和结果处理的通用实现
+    /// 统一通信处理器
+    /// 整合命令分发和结果处理的通用实现，同时支持服务器端和客户端
     /// </summary>
-    public abstract class CommunicationHandlerBase
+    public class CommunicationHandler
     {
         private readonly ICommandDispatcher _commandDispatcher;
-
-        /// <summary>
-        /// 日志记录器
-        /// </summary>
-        protected ILogger<CommunicationHandlerBase> Logger { get; set; }
+        private readonly ILogger<CommunicationHandler> _logger;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="commandDispatcher">命令调度器</param>
-        protected CommunicationHandlerBase(ICommandDispatcher commandDispatcher)
+        /// <param name="logger">日志记录器</param>
+        public CommunicationHandler(ICommandDispatcher commandDispatcher, ILogger<CommunicationHandler> logger)
         {
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
+            _logger = logger;
         }
 
         /// <summary>
@@ -36,7 +35,7 @@ namespace RUINORERP.PacketSpec.Communication
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令执行结果</returns>
-        protected async Task<CommandResult> HandleCommandAsync(ICommand command, CancellationToken cancellationToken = default)
+        public async Task<CommandResult> HandleCommandAsync(ICommand command, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -56,21 +55,11 @@ namespace RUINORERP.PacketSpec.Communication
                 // 执行命令
                 var result = await _commandDispatcher.DispatchAsync(command, cancellationToken);
 
-                // 将CommandResult转换为CoreCommandResult
-                var coreResult = new CommandResult
-                {
-                    IsSuccess = result.IsSuccess,
-                    Message = result.Message,
-                    ErrorCode = result.ErrorCode,
-                    Data = result.Data,
-                    CommandId = result.CommandId
-                };
-
                 // 命令后置处理
-                await OnAfterCommandAsync(command, coreResult, cancellationToken);
+                await OnAfterCommandAsync(command, result, cancellationToken);
 
-                LogDebug($"命令处理完成: {command.GetType().Name} [ID: {command.CommandId}], 结果: {(coreResult.IsSuccess ? "成功" : "失败")}");
-                return coreResult;
+                LogDebug($"命令处理完成: {command.GetType().Name} [ID: {command.CommandId}], 结果: {(result.IsSuccess ? "成功" : "失败")}");
+                return result;
             }
             catch (OperationCanceledException)
             {
@@ -90,10 +79,20 @@ namespace RUINORERP.PacketSpec.Communication
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>验证结果</returns>
-        protected virtual Task<CommandValidationResult> ValidateCommandAsync(ICommand command, CancellationToken cancellationToken)
+        protected virtual Task<ValidationResult> ValidateCommandAsync(ICommand command, CancellationToken cancellationToken)
         {
-            // 默认实现，子类可以重写
-            return Task.FromResult(CommandValidationResult.Success());
+            // 默认验证：命令不能为空且必须有有效的CommandId
+            if (command == null)
+            {
+                return Task.FromResult(new ValidationResult { IsValid = false, ErrorMessage = "命令对象不能为空" });
+            }
+
+            if (command.Packet.Command.Category == 0 && command.Packet.Command.OperationCode == 0)
+            {
+                return Task.FromResult(new ValidationResult { IsValid = false, ErrorMessage = "命令ID无效" });
+            }
+
+            return Task.FromResult(new ValidationResult { IsValid = true });
         }
 
         /// <summary>
@@ -125,18 +124,18 @@ namespace RUINORERP.PacketSpec.Communication
         /// 记录调试日志
         /// </summary>
         /// <param name="message">日志消息</param>
-        protected virtual void LogDebug(string message)
+        protected void LogDebug(string message)
         {
-            Logger?.LogDebug(message);
+            _logger?.LogDebug(message);
         }
 
         /// <summary>
         /// 记录警告日志
         /// </summary>
         /// <param name="message">日志消息</param>
-        protected virtual void LogWarning(string message)
+        protected void LogWarning(string message)
         {
-            Logger?.LogWarning(message);
+            _logger?.LogWarning(message);
         }
 
         /// <summary>
@@ -144,16 +143,25 @@ namespace RUINORERP.PacketSpec.Communication
         /// </summary>
         /// <param name="message">日志消息</param>
         /// <param name="exception">异常对象</param>
-        protected virtual void LogError(string message, Exception exception = null)
+        protected void LogError(string message, Exception exception = null)
         {
             if (exception == null)
             {
-                Logger?.LogError(message);
+                _logger?.LogError(message);
             }
             else
             {
-                Logger?.LogError(exception, message);
+                _logger?.LogError(exception, message);
             }
+        }
+
+        /// <summary>
+        /// 验证结果类
+        /// </summary>
+        protected class ValidationResult
+        {
+            public bool IsValid { get; set; }
+            public string ErrorMessage { get; set; }
         }
     }
 }

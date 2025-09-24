@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Handlers;
@@ -20,7 +20,7 @@ namespace RUINORERP.PacketSpec.Examples
         public CommandSystemExample()
         {
             // 创建命令调度器实例
-            _commandDispatcher = new CommandDispatcher();
+            _commandDispatcher = null;  //new ServerCommandDispatcher();ID?
         }
 
         /// <summary>
@@ -31,15 +31,15 @@ namespace RUINORERP.PacketSpec.Examples
         {
             // 初始化命令调度器
             await _commandDispatcher.InitializeAsync();
-            
+
             // 注册命令类型
             _commandDispatcher.RegisterCommandType(new CommandId(CommandCategory.Special, 0x01), typeof(EchoCommand));
-            
+
             // 创建并注册命令处理器
-            var echoHandler = new EchoCommandHandler();
-            // 注意：实际应用中可能需要通过依赖注入或其他方式注册处理器
-            // 这里为了简化示例，直接使用CommandDispatcher的注册方法
-            
+           // var echoHandler = new(null); //DI;
+                                         // 注意：实际应用中可能需要通过依赖注入或其他方式注册处理器
+                                         // 这里为了简化示例，直接使用CommandDispatcher的注册方法
+
             Console.WriteLine("命令系统示例已初始化完成");
         }
 
@@ -53,13 +53,13 @@ namespace RUINORERP.PacketSpec.Examples
             try
             {
                 Console.WriteLine($"\n执行回显命令，消息: '{message}'");
-                
+
                 // 创建命令实例
                 var echoCommand = new EchoCommand
                 {
                     Message = message
                 };
-                
+
                 // 验证命令
                 var validationResult = echoCommand.Validate();
                 if (!validationResult.IsValid)
@@ -67,10 +67,10 @@ namespace RUINORERP.PacketSpec.Examples
                     Console.WriteLine($"命令验证失败: {validationResult.ErrorMessage} ({validationResult.ErrorCode})");
                     return;
                 }
-                
+
                 // 使用命令调度器分发命令
                 var result = await _commandDispatcher.DispatchAsync(echoCommand);
-                
+
                 // 处理命令结果
                 if (result.IsSuccess)
                 {
@@ -102,10 +102,10 @@ namespace RUINORERP.PacketSpec.Examples
         {
             var example = new CommandSystemExample();
             await example.InitializeAsync();
-            
+
             // 测试成功的命令
             await example.RunEchoCommandExample("Hello, Command System!");
-            
+
             // 测试失败的命令（空消息）
             await example.RunEchoCommandExample("");
         }

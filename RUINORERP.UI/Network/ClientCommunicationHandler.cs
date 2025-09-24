@@ -2,6 +2,7 @@ using RUINORERP.PacketSpec.Communication;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -20,9 +21,10 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <param name="commandDispatcher">命令调度器</param>
         /// <param name="logger">日志记录器</param>
-        public ClientCommunicationHandler(ICommandDispatcher commandDispatcher, ILogger logger)
-            : base(commandDispatcher, logger)
+        public ClientCommunicationHandler(ICommandDispatcher commandDispatcher, ILogger<CommunicationHandlerBase> logger)
+            : base(commandDispatcher)
         {
+            Logger = logger;
         }
 
         /// <summary>
@@ -33,7 +35,7 @@ namespace RUINORERP.UI.Network
         /// <param name="request">请求对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        public override async Task<ApiResponse<TResponse>> HandleRequestAsync<TRequest, TResponse>(
+        public async Task<ApiResponse<TResponse>> HandleRequestAsync<TRequest, TResponse>(
             TRequest request,
             CancellationToken cancellationToken = default)
         {
@@ -47,7 +49,7 @@ namespace RUINORERP.UI.Network
                 var response = await SendRequestToServerAsync<TRequest, TResponse>(request, cancellationToken);
                 
                 Logger.LogDebug("请求处理完成: {RequestType}", typeof(TRequest).Name);
-                return ApiResponse<TResponse>.Success(response);
+                return ApiResponse<TResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
@@ -78,24 +80,14 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>初始化结果</returns>
-        public override async Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
+        public async Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
         {
             Logger.LogInformation("初始化客户端通信处理器...");
             
-            // 调用基类初始化
-            var result = await base.InitializeAsync(cancellationToken);
+            // 客户端特有的初始化逻辑
+            Logger.LogInformation("客户端通信处理器初始化成功");
             
-            if (result)
-            {
-                // 客户端特有的初始化逻辑
-                Logger.LogInformation("客户端通信处理器初始化成功");
-            }
-            else
-            {
-                Logger.LogError("客户端通信处理器初始化失败");
-            }
-            
-            return result;
+            return true;
         }
     }
 }

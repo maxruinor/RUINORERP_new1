@@ -2241,10 +2241,9 @@
     <Compile Include="Network\BizPipelineFilter.cs" />
     <Compile Include="Network\ClientCommandDispatcher.cs" />
     <Compile Include="Network\ClientCommandFactory.cs" />
+    <Compile Include="Network\ClientCommunicationHandler.cs" />
     <Compile Include="Network\ClientCommunicationService.cs" />
     <Compile Include="Network\ClientEventManager.cs" />
-    <Compile Include="Network\Commands\HeartbeatCommand.cs" />
-    <Compile Include="Network\Commands\LoginCommand.cs" />
     <Compile Include="Network\CommunicationManager.cs" />
     <Compile Include="Network\DI\NetworkServicesDependencyInjection.cs" />
     <Compile Include="Network\EventArgs.cs" />

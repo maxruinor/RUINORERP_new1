@@ -1,3 +1,4 @@
+using RUINORERP.PacketSpec.Commands.System;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Threading;
@@ -84,7 +85,7 @@ namespace RUINORERP.UI.Network
                     if (_communicationService.IsConnected)
                     {
                         // 创建并发送心跳命令
-                        var heartbeatCommand = new Commands.HeartbeatCommand();
+                        var heartbeatCommand = new RUINORERP.PacketSpec.Commands.System.HeartbeatCommand();
                         var response = await _communicationService.SendCommandAsync<object>(heartbeatCommand, _cancellationTokenSource.Token);
 
                         if (response.Success)

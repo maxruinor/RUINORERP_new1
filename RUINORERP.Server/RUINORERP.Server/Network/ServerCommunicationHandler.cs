@@ -21,7 +21,7 @@ namespace RUINORERP.Server.Network
         /// </summary>
         /// <param name="commandDispatcher">命令调度器</param>
         /// <param name="logger">日志记录器</param>
-        public ServerCommunicationHandler(ICommandDispatcher commandDispatcher, ILogger logger)
+        public ServerCommunicationHandler(ICommandDispatcher commandDispatcher, ILogger<CommunicationHandlerBase> logger)
             : base(commandDispatcher)
         {
             Logger = logger;
@@ -74,6 +74,21 @@ namespace RUINORERP.Server.Network
             // 默认实现 - 实际项目中应替换为具体业务逻辑
             // 这里简单返回default值，实际应用中应根据请求类型创建命令并通过CommandDispatcher执行
             return Task.FromResult(default(TResponse));
+        }
+
+        /// <summary>
+        /// 初始化服务器通信处理器
+        /// </summary>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>初始化结果</returns>
+        public async Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
+        {
+            Logger.LogInformation("初始化服务器通信处理器...");
+            
+            // 服务器端特有的初始化逻辑
+            Logger.LogInformation("服务器通信处理器初始化成功");
+            
+            return true;
         }
     }
 }

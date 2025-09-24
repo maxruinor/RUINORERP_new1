@@ -101,3 +101,64 @@ public class GetUserInfoCommand : BaseCommand
 
 - SuperSocket.ClientEngine
 - RUINORERP.PacketSpec（公共协议包）
+
+一、三条决策路径
+表格
+复制
+路径	适用场景	必须写的类	不写/复用	示例
+① 最小路径	单向或一次性请求
+只在一个窗体出现	指令类	服务类、处理器类复用 ApiResponse<T>	获取服务器时间
+② 标准路径	两个以上窗体/模块调用	指令类 + 指令服务类	处理器类复用 ApiResponse<T>	查询用户档案
+③ 完整路径	服务端需复杂校验、流程、事件	指令类 + 指令服务类 + 指令处理器类	复用 ApiResponse<T>	创建订单、审批流程
+二、三步落地模板
+指令类（任何路径都必须）
+csharp
+复制
+[PacketCommand("Xxx", CommandCategory.Business)]
+public class XxxCommand : BaseCommand
+{
+    public override CommandId CommandIdentifier 
+        => new(CommandCategory.Business, 0x??);
+
+    public XxxRequest Request { get; set; }   // 可选
+
+    protected override Task<CommandResult> OnExecuteAsync(CancellationToken ct)
+        => Task.FromResult(CommandResult.Success(Request)); // 仅打包
+}
+指令服务类（②③ 需要）
+csharp
+复制
+public class XxxService
+{
+    private readonly IClientCommunicationService _comm;
+    public XxxService(IClientCommunicationService comm) => _comm = comm;
+
+    public async Task<ApiResponse<XxxResponse>> DoAsync(XxxRequest req)
+    {
+        var cmd = new XxxCommand { Request = req };
+        return await _comm.SendCommandAsync<XxxResponse>(cmd);
+    }
+}
+指令处理器类（仅③ 需要，放在服务端）
+csharp
+复制
+public class XxxHandler : BaseCommandHandler
+{
+    public override IReadOnlyList<uint> SupportedCommands => 
+        new[] { new CommandId(CommandCategory.Business, 0x??).FullCode };
+
+    protected override Task<CommandResult> OnHandleAsync(ICommand cmd, CancellationToken ct)
+    {
+        // 复杂业务、校验、仓储、事件
+        return Task.FromResult(CommandResult.Success(result));
+    }
+}
+三、调用口诀
+复制
+// ① 最小路径
+ApiResponse<Resp> rsp = await _comm.SendCommandAsync<Resp>(new XxxCommand());
+
+// ②③ 标准路径
+ApiResponse<Resp> rsp = await _xxxService.DoAsync(request);
+四、前面对话一句话总结
+“指令类是身份证，服务类是复用层，处理器是服务端专属；响应永远用 ApiResponse<T>，按场景选①②③即可。”

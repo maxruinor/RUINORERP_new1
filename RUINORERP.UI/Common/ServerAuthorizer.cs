@@ -4,6 +4,7 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands.Message;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;

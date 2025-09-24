@@ -17,13 +17,47 @@ using RUINORERP.Server.Network.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Sockets;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Commands.Handlers;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.Server.Network.Commands
 {
     /// <summary>
     /// 统一登录命令处理器 - 整合了命令模式和处理器模式的登录处理
     /// 包含重复登录检查、人数限制、黑名单验证、Token验证和刷新机制
-    /// 移除了65%的重复代码，统一了登录认证核心逻辑
+    /*
+     关于LoginCommandHandler的具体指令处理类使用DI注入时的状态：
+注入生命周期：
+根据NetworkServicesDependencyInjection.cs中的RegisterNetworkCommandHandlers方法，命令处理器是使用InstancePerDependency()生命周期注册的
+这意味着每次请求时都会创建一个新的实例
+依赖注入方式：
+LoginCommandHandler通过构造函数注入方式获取依赖
+它的构造函数接收一个ILogger<LoginCommandHandler>参数：
+csharp
+public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
+{
+    logger = _Logger;
+}
+处理器状态管理：
+LoginCommandHandler继承自BaseCommandHandler，后者实现了ICommandHandler接口
+处理器有以下状态：
+Uninitialized（未初始化）
+Initialized（已初始化）
+Running（运行中）
+Stopped（已停止）
+Error（错误状态）
+Disposed（已释放）
+处理器的状态通过Status属性进行管理
+初始化流程：
+处理器需要先调用InitializeAsync进行初始化
+然后调用StartAsync启动处理器
+只有在Running状态下才能处理命令
+依赖注入容器配置：
+在NetworkServicesDependencyInjection.cs中，通过ConfigureNetworkServicesContainer方法配置了CommandHandlerFactory
+命令处理器通过RegisterNetworkCommandHandlers方法自动注册到Autofac容器中
+总结：LoginCommandHandler是通过构造函数注入ILogger依赖的，使用InstancePerDependency生命周期，每次请求都会创建新实例。处理器具有完整的状态管理机制，需要经过初始化和启动流程后才能处理命令。
+     */
     /// </summary>
     [CommandHandler("LoginCommandHandler", priority: 100)]
     public class LoginCommandHandler : BaseCommandHandler
@@ -33,7 +67,18 @@ namespace RUINORERP.Server.Network.Commands
         private static readonly Dictionary<string, int> _loginAttempts = new Dictionary<string, int>();
         private static readonly HashSet<string> _activeSessions = new HashSet<string>();
         private static readonly object _lock = new object();
-
+        protected ILogger<LoginCommandHandler> logger { get; set; }
+        
+        // 添加无参构造函数，以支持Activator.CreateInstance创建实例
+        public LoginCommandHandler() : base(new LoggerFactory().CreateLogger<BaseCommandHandler>())
+        {
+            logger = new LoggerFactory().CreateLogger<LoginCommandHandler>();
+        }
+        
+        public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
+        {
+            logger = _Logger;
+        }
         /// <summary>
         /// 会话管理服务
         /// </summary>
@@ -143,7 +188,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 检查黑名单
-                if (IsUserBlacklisted(command.LoginRequest.Username, command.LoginRequest.ClientInfo))
+                if (IsUserBlacklisted(command.LoginRequest.Username, command.LoginRequest.ClientIp))
                 {
                     return CommandResult.Failure("用户或IP在黑名单中", "BLACKLISTED");
                 }
@@ -415,11 +460,11 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 验证用户凭据
         /// </summary>
-        private async Task<UserValidationResult> ValidateUserCredentialsAsync(LoginData loginData, CancellationToken cancellationToken)
+        private async Task<UserValidationResult> ValidateUserCredentialsAsync(LoginRequest loginRequest, CancellationToken cancellationToken)
         {
             await Task.Delay(50, cancellationToken);
 
-            if (string.IsNullOrEmpty(loginData.Username) || string.IsNullOrEmpty(loginData.Password))
+            if (string.IsNullOrEmpty(loginRequest.Username) || string.IsNullOrEmpty(loginRequest.Password))
             {
                 return new UserValidationResult
                 {
@@ -428,10 +473,10 @@ namespace RUINORERP.Server.Network.Commands
                 };
             }
             //password = EncryptionHelper.AesDecryptByHashKey(enPwd, username);
-            string EnPassword = EncryptionHelper.AesEncryptByHashKey(loginData.Password, loginData.Username);
+            string EnPassword = EncryptionHelper.AesEncryptByHashKey(loginRequest.Password, loginRequest.Username);
 
             var user = await Program.AppContextData.Db.CopyNew().Queryable<tb_UserInfo>()
-                     .Where(u => u.UserName == loginData.Username && u.Password == EnPassword)
+                     .Where(u => u.UserName == loginRequest.Username && u.Password == EnPassword)
                .Includes(x => x.tb_employee)
                      .Includes(x => x.tb_User_Roles)
                      .SingleAsync();
@@ -577,6 +622,26 @@ namespace RUINORERP.Server.Network.Commands
                 ExpiresIn = 3600,
                 TokenType = "Bearer"
             };
+        }
+
+        /// <summary>
+        /// 创建登录响应
+        /// </summary>
+        private OriginalData CreateLoginResponse(TokenInfo tokenInfo, UserInfo userInfo)
+        {
+            var responseData = $"SUCCESS|{userInfo.UserId}|{userInfo.DisplayName}|{tokenInfo.AccessToken}|{tokenInfo.RefreshToken}|{tokenInfo.ExpiresIn}";
+            var data = System.Text.Encoding.UTF8.GetBytes(responseData);
+
+            // 将完整的CommandId正确分解为Category和OperationCode
+            uint commandId = (uint)AuthenticationCommands.LoginResponse;
+            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
+            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
+
+            return new OriginalData(
+                category,
+                new byte[] { operationCode },
+                data
+            );
         }
 
         /// <summary>

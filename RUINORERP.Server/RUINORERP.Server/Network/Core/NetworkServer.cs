@@ -25,6 +25,9 @@ using System.Diagnostics;
 using static RUINORERP.Server.Network.Core.ListenerOptions;
 using RUINORERP.Server.Network.Commands;
 using RUINORERP.PacketSpec.DI;
+using System.Reflection;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Commands.Message;
 
 namespace RUINORERP.Server.Network.Core
 {
@@ -37,19 +40,19 @@ namespace RUINORERP.Server.Network.Core
     {
         private readonly ILogger<NetworkServer> _logger;
         private readonly ISessionService _sessionManager;
-        private readonly CommandDispatcher _commandDispatcher;
+        private readonly CommandDispatcher _commandDispatcher;  // 修改为具体类型
         private IHost _host;
 
 
         public NetworkServer(ILogger<NetworkServer> logger = null)
         {
             _logger = logger;
-            
+
             // 使用全局服务提供者，避免创建多个SessionService实例
             _sessionManager = Program.ServiceProvider.GetRequiredService<ISessionService>();
-            _commandDispatcher = new CommandDispatcher();
+            _commandDispatcher = Program.ServiceProvider.GetRequiredService<CommandDispatcher>();  // 修改为具体类型
         }
-        
+
         /// <summary>
         /// 为了保持向后兼容性，保留这个构造函数
         /// </summary>
@@ -68,6 +71,31 @@ namespace RUINORERP.Server.Network.Core
             {
                 // 初始化命令调度器
                 await _commandDispatcher.InitializeAsync();
+                
+                // 扫描并注册所有命令类型到命令调度器
+                // 这会确保所有实现了ICommand接口并使用PacketCommandAttribute特性的命令都被正确注册
+                var commandScanner = Startup.GetFromFac<CommandScanner>();
+                // 扫描RUINORERP.PacketSpec程序集以及其他相关程序集
+                var packetSpecAssembly = Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommand));
+                var serverAssembly = Assembly.GetExecutingAssembly();
+                
+                _logger.LogInformation($"正在扫描命令类型，PacketSpec程序集: {packetSpecAssembly?.GetName().Name}, 服务器程序集: {serverAssembly?.GetName().Name}");
+                commandScanner.ScanAndRegisterCommands(_commandDispatcher, null, packetSpecAssembly, serverAssembly);
+                
+                // 扫描并注册服务器端的命令处理器
+                // 命令处理器与业务逻辑紧密相关，通常位于服务器项目中
+                _logger.LogInformation($"正在扫描命令处理器，开始调用AutoDiscoverAndRegisterHandlersAsync方法");
+                _logger.LogInformation($"PacketSpec程序集位置: {packetSpecAssembly?.Location}");
+                _logger.LogInformation($"服务器程序集位置: {serverAssembly?.Location}");
+                await _commandDispatcher.AutoDiscoverAndRegisterHandlersAsync(cancellationToken, serverAssembly, packetSpecAssembly);
+                
+                // 添加日志记录，检查注册的处理器数量
+                var handlerCount = _commandDispatcher.HandlerCount;  // 直接使用具体类型属性
+                _logger.LogInformation($"命令处理器注册完成，当前已注册处理器数量: {handlerCount}");
+                
+                // 显示已注册的处理器信息
+                LogRegisteredHandlers();
+                
                 // 设置默认端口，以防配置读取失败
 
                 // 声明一个外部作用域的变量，将在ConfigureServerOptions中被赋值
@@ -361,6 +389,94 @@ namespace RUINORERP.Server.Network.Core
             if (ex != null)
             {
                 Console.WriteLine($"[NetworkServer] Exception: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// 记录已注册的命令处理器信息
+        /// </summary>
+        private void LogRegisteredHandlers()
+        {
+            try
+            {
+                var handlers = _commandDispatcher.GetAllHandlers();  // 直接调用具体类型方法
+                _logger.LogInformation($"当前已注册的命令处理器数量: {handlers.Count}");
+                
+                foreach (var handler in handlers)
+                {
+                    _logger.LogInformation($"处理器: {handler.Name} (ID: {handler.HandlerId}), 优先级: {handler.Priority}, 状态: {handler.Status}");
+                    
+                    // 记录支持的命令类型
+                    if (handler.SupportedCommands != null)
+                    {
+                        var commandCodes = string.Join(", ", handler.SupportedCommands);
+                        _logger.LogInformation($"  支持的命令类型: [{commandCodes}]");
+                    }
+                }
+                
+                // 记录命令处理器映射信息
+                LogCommandHandlerMapping();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "记录已注册命令处理器信息时出错");
+            }
+        }
+        
+        /// <summary>
+        /// 记录命令处理器映射信息
+        /// </summary>
+        private void LogCommandHandlerMapping()
+        {
+            try
+            {
+                // 直接使用具体类型，无需类型转换
+                var mappingInfo = _commandDispatcher.GetCommandHandlerMappingInfo();
+                _logger.LogInformation($"命令处理器映射数量: {mappingInfo.Count}");
+                
+                foreach (var kvp in mappingInfo)
+                {
+                    var handlerNames = string.Join(", ", kvp.Value);
+                    _logger.LogInformation($"命令代码 {kvp.Key} 映射到处理器: [{handlerNames}]");
+                }
+                
+                // 检查一些关键命令是否已映射
+                CheckKeyCommandsMapping();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "记录命令处理器映射信息时出错");
+            }
+        }
+        
+        /// <summary>
+        /// 检查关键命令是否已映射
+        /// </summary>
+        private void CheckKeyCommandsMapping()
+        {
+            try
+            {
+                // 检查登录命令
+                var loginCommandCode = AuthenticationCommands.Login.FullCode;
+                var isLoginMapped = _commandDispatcher.IsCommandMapped(loginCommandCode);
+                var loginHandlerCount = _commandDispatcher.GetMappedHandlerCount(loginCommandCode);
+                _logger.LogInformation($"登录命令 (代码: {loginCommandCode}) 是否已映射: {isLoginMapped}, 处理器数量: {loginHandlerCount}");
+                
+                // 检查登出命令
+                var logoutCommandCode = AuthenticationCommands.Logout.FullCode;
+                var isLogoutMapped = _commandDispatcher.IsCommandMapped(logoutCommandCode);
+                var logoutHandlerCount = _commandDispatcher.GetMappedHandlerCount(logoutCommandCode);
+                _logger.LogInformation($"登出命令 (代码: {logoutCommandCode}) 是否已映射: {isLogoutMapped}, 处理器数量: {logoutHandlerCount}");
+                
+                // 检查广播消息命令
+                var broadcastCommandCode = MessageCommands.BroadcastMessage.FullCode;
+                var isBroadcastMapped = _commandDispatcher.IsCommandMapped(broadcastCommandCode);
+                var broadcastHandlerCount = _commandDispatcher.GetMappedHandlerCount(broadcastCommandCode);
+                _logger.LogInformation($"广播消息命令 (代码: {broadcastCommandCode}) 是否已映射: {isBroadcastMapped}, 处理器数量: {broadcastHandlerCount}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查关键命令映射时出错");
             }
         }
     }

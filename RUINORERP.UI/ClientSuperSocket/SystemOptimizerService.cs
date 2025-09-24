@@ -1,4 +1,5 @@
-﻿using RUINORERP.PacketSpec.Models;
+﻿using RUINORERP.PacketSpec.Commands.System;
+using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Collections.Generic;
@@ -44,7 +45,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 tx.PushString(HLH.Lib.Net.IpAddressHelper.GetLocIP());
                 tx.PushString(message);
                 tx.PushString(exception.StackTrace);
-                gd.Cmd = (byte)PacketSpec.Commands.SystemCommands.ExceptionReport.OperationCode;
+                //gd.Cmd = (byte)system  ExceptionReport.OperationCode;
                 gd.One = null;
                 gd.Two = tx.ToByteArray();
                 //如果自己是超级管理员就不发送
@@ -74,7 +75,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 tx.PushString(HLH.Lib.Net.IpAddressHelper.GetLocIP());
                 tx.PushString(message);
                 tx.PushString(string.Empty);
-                gd.Cmd = (byte)PacketSpec.Commands.SystemCommands.ExceptionReport.OperationCode;
+                gd.Cmd = (byte)SystemCommands.ExceptionReport.OperationCode;
                 gd.One = null;
                 gd.Two = tx.ToByteArray();
                 //如果自己是超级管理员就不发送

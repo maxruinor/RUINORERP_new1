@@ -13,16 +13,19 @@ namespace RUINORERP.Server.Network
     /// </summary>
     public class ServerCommandDispatcher : CommandDispatcher
     {
+
+        protected ILogger<CommandDispatcher> Logger { get; set; }
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="commandTypeHelper">命令类型辅助类</param>
-        public ServerCommandDispatcher(ILogger logger = null, CommandTypeHelper commandTypeHelper = null)
-            : base(null, commandTypeHelper)
+        public ServerCommandDispatcher(ILogger<CommandDispatcher> _logger, CommandTypeHelper commandTypeHelper = null)
+            : base(_logger, null, commandTypeHelper)
         {
             // 设置日志记录器
-            Logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+            Logger = _logger;
         }
 
         /// <summary>
@@ -34,10 +37,10 @@ namespace RUINORERP.Server.Network
         public async Task AutoDiscoverAndRegisterServerHandlersAsync(CancellationToken cancellationToken = default)
         {
             LogInfo("开始扫描并注册服务器端命令处理器...");
-            
+
             // 扫描服务器项目中的处理器
             await AutoDiscoverAndRegisterHandlersAsync(
-                cancellationToken, 
+                cancellationToken,
                 Assembly.GetExecutingAssembly() // 服务器项目程序集
             );
         }

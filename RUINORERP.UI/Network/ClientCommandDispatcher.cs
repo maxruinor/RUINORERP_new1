@@ -147,30 +147,44 @@ namespace RUINORERP.UI.Network
         private void RegisterClientCommands()
         {
             // 获取当前程序集中的所有命令类型
-            var commandTypes = Assembly.GetExecutingAssembly()
-                .GetTypes()
-                .Where(t => typeof(ICommand).IsAssignableFrom(t) &&
-                           !t.IsInterface &&
-                           !t.IsAbstract &&
-                           t.Namespace != null &&
-                           t.Namespace.StartsWith("RUINORERP.UI.Network.Commands"));
-
-            foreach (var commandType in commandTypes)
+            var assembliesToScan = new List<Assembly>
             {
-                try
+                Assembly.GetExecutingAssembly(), // 客户端程序集
+                Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommand)) // PacketSpec程序集
+            };
+
+            foreach (var assembly in assembliesToScan)
+            {
+                if (assembly == null) continue;
+
+                var commandTypes = assembly
+                    .GetTypes()
+                    .Where(t => typeof(ICommand).IsAssignableFrom(t) &&
+                               !t.IsInterface &&
+                               !t.IsAbstract);
+
+                foreach (var commandType in commandTypes)
                 {
-                    // 尝试通过CommandIdentifier属性获取命令ID
-                    var commandInstance = Activator.CreateInstance(commandType) as ICommand;
-                    if (commandInstance != null)
+                    try
                     {
-                        var commandId = commandInstance.CommandIdentifier.FullCode;
-                        RegisterCommand(commandId, commandType);
+                        // 检查命令是否使用了PacketCommandAttribute特性
+                        var commandAttribute = commandType.GetCustomAttribute<PacketCommandAttribute>();
+                        if (commandAttribute != null)
+                        {
+                            // 尝试通过CommandIdentifier属性获取命令ID
+                            var commandInstance = Activator.CreateInstance(commandType) as ICommand;
+                            if (commandInstance != null)
+                            {
+                                var commandId = commandInstance.CommandIdentifier.FullCode;
+                                RegisterCommand(commandId, commandType);
+                            }
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    // 在实际应用中应添加日志记录
-                    Console.WriteLine($"注册命令类型 {commandType.Name} 失败: {ex.Message}");
+                    catch (Exception ex)
+                    {
+                        // 在实际应用中应添加日志记录
+                        Console.WriteLine($"注册命令类型 {commandType.Name} 失败: {ex.Message}");
+                    }
                 }
             }
         }
@@ -221,21 +235,21 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 注册命令类型
         /// </summary>
-        /// <param name="commandId">命令ID</param>
+        /// <param name="commandCode">命令代码</param>
         /// <param name="commandType">命令类型</param>
-        public void RegisterCommandType(uint commandId, Type commandType)
+        public void RegisterCommandType(uint commandCode, Type commandType)
         {
-            RegisterCommand(commandId, commandType);
+            RegisterCommand(commandCode, commandType);
         }
 
         /// <summary>
         /// 获取命令类型
         /// </summary>
-        /// <param name="commandId">命令ID</param>
+        /// <param name="commandCode">命令代码</param>
         /// <returns>命令类型</returns>
-        public Type GetCommandType(uint commandId)
+        public Type GetCommandType(uint commandCode)
         {
-            return _commandTypeHelper.GetCommandType(commandId);
+            return _commandTypeHelper.GetCommandType(commandCode);
         }
 
         #endregion

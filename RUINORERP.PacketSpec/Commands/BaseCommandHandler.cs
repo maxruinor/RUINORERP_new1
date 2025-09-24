@@ -86,16 +86,23 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 日志记录器
         /// </summary>
-        protected ILogger Logger { get; set; }
+        protected ILogger<BaseCommandHandler> Logger { get; set; }
+
+        /// <summary>
+        /// 无参构造函数，以支持Activator.CreateInstance创建实例
+        /// </summary>
+        protected BaseCommandHandler() : this(new LoggerFactory().CreateLogger<BaseCommandHandler>())
+        {
+        }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        protected BaseCommandHandler()
+        protected BaseCommandHandler(ILogger<BaseCommandHandler> _logger)
         {
             HandlerId = GenerateHandlerId();
             _statistics = new HandlerStatistics();
-            
+            Logger = _logger;
             // 初始化ITraceable属性
             CreatedTime = DateTime.UtcNow;
             Timestamp = DateTime.UtcNow;

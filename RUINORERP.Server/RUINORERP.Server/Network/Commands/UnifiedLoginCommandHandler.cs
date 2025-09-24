@@ -13,6 +13,8 @@ using System.Text.Json;
 using RUINORERP.PacketSpec.Communication.Handlers;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -24,6 +26,14 @@ namespace RUINORERP.Server.Network.Commands
     public class UnifiedLoginCommandHandler : UnifiedCommandHandlerBase
     {
         private readonly ServerLoginRequestHandler _loginRequestHandler;
+
+        /// <summary>
+        /// 无参构造函数，以支持Activator.CreateInstance创建实例
+        /// </summary>
+        public UnifiedLoginCommandHandler() : base(new LoggerFactory().CreateLogger<UnifiedCommandHandlerBase>())
+        {
+            _loginRequestHandler = Program.ServiceProvider.GetRequiredService<ServerLoginRequestHandler>();
+        }
 
         public UnifiedLoginCommandHandler(
             ServerLoginRequestHandler loginRequestHandler,

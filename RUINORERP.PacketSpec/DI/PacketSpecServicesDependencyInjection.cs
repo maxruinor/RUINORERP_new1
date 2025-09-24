@@ -24,7 +24,7 @@ namespace RUINORERP.PacketSpec.DI
             
             // 注册命令调度器
             services.AddSingleton<CommandDispatcher>();
-            
+            services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
             // 注册命令工厂
             services.AddSingleton<ICommandFactory, DefaultCommandFactory>();
             services.AddSingleton<ICommandFactoryAsync, DefaultCommandFactory>();

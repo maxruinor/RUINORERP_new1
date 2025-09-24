@@ -19,7 +19,7 @@ namespace RUINORERP.PacketSpec.Communication
         /// <summary>
         /// 日志记录器
         /// </summary>
-        protected ILogger Logger { get; set; }
+        protected ILogger<CommunicationHandlerBase> Logger { get; set; }
 
         /// <summary>
         /// 构造函数

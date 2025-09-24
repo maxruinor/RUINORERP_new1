@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
@@ -12,10 +12,17 @@ namespace RUINORERP.PacketSpec.Commands
     /// 命令扫描器 - 统一的命令类型扫描工具
     /// 负责扫描指定程序集中的所有命令类型并提供注册功能
     /// 用于解决客户端和服务器端命令扫描机制不一致的问题
+    /// 
+    /// 工作流程：
+    /// 1. NetworkServer在启动时创建CommandScanner实例
+    /// 2. CommandScanner扫描所有实现了ICommand接口的命令类型
+    /// 3. 通过PacketCommandAttribute特性和CommandIdentifier属性获取命令ID
+    /// 4. 将扫描到的命令类型注册到CommandDispatcher中
+    /// 5. CommandDispatcher使用这些命令类型创建和处理命令实例
     /// </summary>
     public class CommandScanner
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<CommandScanner> _logger;
         private readonly CommandTypeHelper _commandTypeHelper;
 
         /// <summary>
@@ -23,7 +30,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="logger">日志记录器，可选参数</param>
         /// <param name="commandTypeHelper">命令类型助手，可选参数</param>
-        public CommandScanner(ILogger logger = null, CommandTypeHelper commandTypeHelper = null)
+        public CommandScanner(ILogger<CommandScanner> logger = null, CommandTypeHelper commandTypeHelper = null)
         {
             _logger = logger;
             _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
@@ -50,14 +57,14 @@ namespace RUINORERP.PacketSpec.Commands
                 try
                 {
                     IEnumerable<Type> typesQuery = assembly.GetTypes()
-                        .Where(t => typeof(ICommand).IsAssignableFrom(t) && 
-                                  !t.IsAbstract && 
+                        .Where(t => typeof(ICommand).IsAssignableFrom(t) &&
+                                  !t.IsAbstract &&
                                   !t.IsInterface);
 
                     // 如果指定了命名空间过滤器，则只扫描该命名空间下的命令
                     if (!string.IsNullOrEmpty(namespaceFilter))
                     {
-                        typesQuery = typesQuery.Where(t => t.Namespace != null && 
+                        typesQuery = typesQuery.Where(t => t.Namespace != null &&
                                                          t.Namespace.StartsWith(namespaceFilter));
                     }
 
@@ -152,7 +159,7 @@ namespace RUINORERP.PacketSpec.Commands
 
             // 先扫描并注册到命令类型助手
             var commandTypes = ScanCommands(namespaceFilter, assemblies);
-            
+
             // 也注册到命令调度器
             foreach (var kvp in commandTypes)
             {

@@ -16,6 +16,13 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 命令调度器 - 统一的命令分发和处理中心
     /// 实现ICommandDispatcher接口
+    /// 
+    /// 工作流程：
+    /// 1. NetworkServer启动时通过CommandScanner扫描并注册所有命令类型
+    /// 2. CommandDispatcher自动发现并注册所有带有CommandHandlerAttribute特性的命令处理器
+    /// 3. 当SuperSocketCommandAdapter接收到命令时，通过DispatchAsync方法分发命令
+    /// 4. 根据命令ID查找对应的处理器并执行命令处理逻辑
+    /// 5. 返回处理结果给SuperSocketCommandAdapter
     /// </summary>
     public class CommandDispatcher : IDisposable, ICommandDispatcher
     {
@@ -54,7 +61,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 日志记录器
         /// </summary>
-        protected ILogger Logger { get; set; }
+        protected ILogger<CommandDispatcher> Logger { get; set; }
 
         /// <summary>
         /// 构造函数
@@ -62,8 +69,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="handlerFactory">处理器工厂</param>
         /// <param name="commandTypeHelper">命令类型辅助类</param>
         /// <param name="maxConcurrencyPerCommand">每个命令的最大并发数</param>
-        public CommandDispatcher(ICommandHandlerFactory handlerFactory = null, CommandTypeHelper commandTypeHelper = null, int maxConcurrencyPerCommand = 0)
+        public CommandDispatcher(ILogger<CommandDispatcher> _Logger, ICommandHandlerFactory handlerFactory = null,
+            CommandTypeHelper commandTypeHelper = null, int maxConcurrencyPerCommand = 0)
         {
+            Logger = _Logger;
             _handlerFactory = handlerFactory ?? new DefaultCommandHandlerFactory();
             _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
             _handlers = new ConcurrentDictionary<string, ICommandHandler>();
@@ -89,11 +98,6 @@ namespace RUINORERP.PacketSpec.Commands
                 if (_isInitialized)
                     return true;
 
-                // 初始化日志记录器（如果尚未设置）
-                if (Logger == null)
-                {
-                    Logger = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-                }
 
                 LogInfo("初始化命令调度器...");
 
@@ -338,20 +342,37 @@ namespace RUINORERP.PacketSpec.Commands
                     assemblies = new[] { Assembly.GetExecutingAssembly() };
                 }
 
-                LogInfo("开始自动发现并注册命令处理器...");
+                LogInfo($"开始自动发现并注册命令处理器，扫描程序集数量: {assemblies.Length}");
                 var handlerTypes = new List<Type>();
 
                 foreach (var assembly in assemblies)
                 {
                     try
                     {
+                        LogInfo($"正在扫描程序集: {assembly.GetName().Name}");
                         var types = assembly.GetTypes()
                             .Where(t => typeof(ICommandHandler).IsAssignableFrom(t) &&
                                       !t.IsInterface &&
                                       !t.IsAbstract &&
                                       t.GetCustomAttribute<CommandHandlerAttribute>() != null)
                             .ToList();
+                        
+                        LogInfo($"在程序集 {assembly.GetName().Name} 中发现 {types.Count} 个命令处理器");
                         handlerTypes.AddRange(types);
+                        
+                        // 记录发现的处理器类型
+                        foreach (var type in types)
+                        {
+                            LogInfo($"发现命令处理器: {type.FullName}");
+                            
+                            // 记录处理器支持的命令类型
+                            var attr = type.GetCustomAttribute<CommandHandlerAttribute>();
+                            if (attr != null)
+                            {
+                                var supportedCommands = string.Join(", ", attr.SupportedCommands);
+                                LogInfo($"  处理器 {type.Name} 支持的命令类型: [{supportedCommands}]");
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -369,18 +390,47 @@ namespace RUINORERP.PacketSpec.Commands
                     .OrderByDescending(h => h.Attribute?.Priority ?? 0)
                     .ToList();
 
+                LogInfo($"总共发现 {sortedHandlers.Count} 个命令处理器，开始注册...");
+
                 // 注册处理器
                 var registrationTasks = sortedHandlers.Select(handlerInfo =>
-                    RegisterHandlerAsync(handlerInfo.Type, cancellationToken));
+                {
+                    LogInfo($"正在注册处理器: {handlerInfo.Type.FullName}");
+                    return RegisterHandlerAsync(handlerInfo.Type, cancellationToken);
+                });
 
                 var results = await Task.WhenAll(registrationTasks);
                 var successCount = results.Count(r => r);
 
                 LogInfo($"命令处理器自动注册完成，共注册 {successCount}/{results.Length} 个处理器");
+                
+                // 记录注册后的处理器映射信息
+                LogCommandHandlerMapping();
             }
             catch (Exception ex)
             {
                 LogError("自动发现处理器异常", ex);
+            }
+        }
+        
+        /// <summary>
+        /// 记录命令处理器映射信息（用于调试）
+        /// </summary>
+        private void LogCommandHandlerMapping()
+        {
+            try
+            {
+                LogInfo($"当前命令处理器映射数量: {_commandHandlerMap.Count}");
+                
+                foreach (var kvp in _commandHandlerMap)
+                {
+                    var handlerNames = string.Join(", ", kvp.Value.Select(h => h.Name));
+                    LogInfo($"命令代码 {kvp.Key} 映射到处理器: [{handlerNames}]");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError("记录命令处理器映射信息时出错", ex);
             }
         }
 
@@ -616,6 +666,47 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 LogError("清理命令类型异常", ex);
             }
+        }
+
+        /// <summary>
+        /// 获取命令处理器映射信息（用于调试）
+        /// </summary>
+        /// <returns>命令代码到处理器列表的映射</returns>
+        public Dictionary<uint, List<string>> GetCommandHandlerMappingInfo()
+        {
+            var mappingInfo = new Dictionary<uint, List<string>>();
+            
+            foreach (var kvp in _commandHandlerMap)
+            {
+                var handlerNames = kvp.Value.Select(h => h.Name).ToList();
+                mappingInfo[kvp.Key] = handlerNames;
+            }
+            
+            return mappingInfo;
+        }
+        
+        /// <summary>
+        /// 检查特定命令代码是否已映射到处理器
+        /// </summary>
+        /// <param name="commandCode">命令代码</param>
+        /// <returns>是否已映射</returns>
+        public bool IsCommandMapped(uint commandCode)
+        {
+            return _commandHandlerMap.ContainsKey(commandCode);
+        }
+        
+        /// <summary>
+        /// 获取映射到特定命令代码的处理器数量
+        /// </summary>
+        /// <param name="commandCode">命令代码</param>
+        /// <returns>处理器数量</returns>
+        public int GetMappedHandlerCount(uint commandCode)
+        {
+            if (_commandHandlerMap.TryGetValue(commandCode, out var handlers))
+            {
+                return handlers.Count;
+            }
+            return 0;
         }
 
         /// <summary>

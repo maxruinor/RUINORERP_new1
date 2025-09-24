@@ -19,7 +19,7 @@ namespace RUINORERP.PacketSpec.Commands
     {    /// <summary>
          /// 日志记录器
          /// </summary>
-        protected ILogger Logger { get; set; }
+        protected ILogger<BaseCommand> Logger { get; set; }
         /// <summary>
         /// 命令唯一标识
         /// </summary>
@@ -130,7 +130,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 设置日志记录器
         /// </summary>
-        public void SetLogger(ILogger logger)
+        public void SetLogger(ILogger<BaseCommand> logger)
         {
             Logger = logger;
         }

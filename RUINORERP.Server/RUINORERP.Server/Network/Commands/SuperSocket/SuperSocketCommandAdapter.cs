@@ -5,14 +5,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using global::RUINORERP.PacketSpec.Commands;
+using global::RUINORERP.PacketSpec.Commands.Message;
 using global::RUINORERP.PacketSpec.Models.Core;
 using global::RUINORERP.PacketSpec.Serialization;
 using global::RUINORERP.Server.Network.Models;
@@ -30,13 +24,21 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
     /// <summary>
     /// 统一的SuperSocket命令适配器
     /// 整合了原有的SimplifiedSuperSocketAdapter、SocketCommand和SuperSocketCommandAdapter的功能
+    /// 
+    /// 工作流程：
+    /// 1. SuperSocket接收到来自客户端的数据包
+    /// 2. SuperSocketCommandAdapter.ExecuteAsync方法被调用
+    /// 3. 从CommandDispatcher获取已注册的命令类型映射
+    /// 4. 根据数据包中的命令ID创建对应的命令实例
+    /// 5. 通过CommandDispatcher.DispatchAsync方法分发命令给相应的处理器
+    /// 6. 处理结果通过网络返回给客户端
     /// </summary>
     [Command(Key = "SuperSocketCommandAdapter")]
     public class SuperSocketCommandAdapter<TAppSession> : IAsyncCommand<TAppSession, ServerPackageInfo>
         where TAppSession : IAppSession
     {
         private readonly CommandDispatcher _commandDispatcher;
-        private readonly ILogger _logger;
+        private readonly ILogger<SuperSocketCommandAdapter> _logger;
         private readonly Dictionary<uint, Type> _commandTypeMap;
         private readonly ICommandFactory _commandFactory;
         private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
@@ -99,7 +101,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             ICommandFactory commandFactory,
-            ILogger logger = null)
+            ILogger<SuperSocketCommandAdapter> logger = null)
         {
             _commandDispatcher = commandDispatcher;
             _commandFactory = commandFactory;
@@ -110,37 +112,19 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
 
         /// <summary>
         /// 初始化命令类型映射
-        /// 扫描程序集中所有实现ICommand接口的命令类型，并通过CommandAttribute注册
+        /// 使用CommandDispatcher中已注册的命令类型
         /// </summary>
         protected virtual void InitializeCommandMap()
         {
             try
             {
-                // 动态扫描并注册所有实现ICommand接口的命令类型
-                var assembly = Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommand));
-                if (assembly != null)
+                // 直接使用CommandDispatcher中已注册的命令类型，避免重复扫描
+                var commandTypes = _commandDispatcher.GetAllCommandTypes();
+                foreach (var kvp in commandTypes)
                 {
-                    var commandTypes = assembly.GetTypes()
-                        .Where(t => typeof(PacketSpec.Commands.ICommand).IsAssignableFrom(t) && !t.IsAbstract && !t.IsInterface)
-                        .ToList();
-
-                    foreach (var commandType in commandTypes)
-                    {
-                        // 尝试获取命令特性
-                        var commandAttribute = commandType.GetCustomAttribute<PacketSpec.Commands.PacketCommandAttribute>();
-                        if (commandAttribute != null)
-                        {
-                            // 使用命令类型的哈希码作为命令ID
-                            var hash = commandType.FullName?.GetHashCode() ?? 0;
-                            var commandId = hash > 0 ? (uint)hash : 0;
-                            if (commandId > 0)
-                            {
-                                _commandTypeMap[commandId] = commandType;
-                                _logger?.LogDebug("注册命令类型映射: CommandId={CommandId}, Type={TypeName}, Name={CommandName}",
-                                    commandId, commandType.FullName, commandAttribute.Name);
-                            }
-                        }
-                    }
+                    _commandTypeMap[kvp.Key] = kvp.Value;
+                    _logger?.LogDebug("注册命令类型映射: CommandId={CommandId}, Type={TypeName}",
+                        kvp.Key, kvp.Value.FullName);
                 }
 
                 _logger?.LogInformation("命令类型映射初始化完成，共注册{Count}个命令类型", _commandTypeMap.Count);
@@ -484,7 +468,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             ICommandFactory commandFactory,
-            ILogger logger = null) 
+            ILogger<SuperSocketCommandAdapter> logger = null) 
             : base(commandDispatcher, commandFactory, logger)
         { }
     }

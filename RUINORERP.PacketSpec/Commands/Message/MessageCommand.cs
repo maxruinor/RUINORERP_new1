@@ -38,8 +38,8 @@ namespace RUINORERP.PacketSpec.Commands.Message
         public MessageCommand(uint commandType, PacketModel packetModel, object data)
             : base(CommandDirection.Receive)
         {
-
-            throw new Exception("  这里要调试处理");
+            // 注释掉调试用的异常抛出
+            // throw new Exception("  这里要调试处理");
 
             CommandType = commandType;
             CommandIdentifier = new CommandId(GetCommandCategory(commandType), GetCommandCode(commandType));

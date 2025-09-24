@@ -51,6 +51,15 @@ namespace RUINORERP.Server.Network.Commands
         public override int Priority => 90;
 
         /// <summary>
+        /// 无参构造函数，以支持Activator.CreateInstance创建实例
+        /// </summary>
+        public MessageCommandsHandler() : base(new LoggerFactory().CreateLogger<BaseCommandHandler>())
+        {
+            _sessionService = Program.ServiceProvider.GetRequiredService<SessionService>();
+            _logger = new LoggerFactory().CreateLogger<MessageCommandsHandler>();
+        }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public MessageCommandsHandler(SessionService sessionService, ILogger<MessageCommandsHandler> logger = null)
@@ -66,20 +75,46 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                var commandType = (MessageCommands)command.CommandType;
+                // 使用命令标识符而不是命令类型进行switch-case判断
+                var commandId = command.CommandIdentifier;
                 
-                return commandType switch
+                // 注意：这里需要使用CommandId进行比较，而不是MessageCommands枚举
+                if (commandId == MessageCommands.SendMessage)
                 {
-                    MessageCommands.SendMessage => await HandleSendMessageAsync(command, cancellationToken),
-                    MessageCommands.ReceiveMessage => await HandleReceiveMessageAsync(command, cancellationToken),
-                    MessageCommands.MessageRead => await HandleMessageReadAsync(command, cancellationToken),
-                    MessageCommands.BroadcastMessage => await HandleBroadcastMessageAsync(command, cancellationToken),
-                    MessageCommands.SendPopupMessage => await HandleSendPopupMessageAsync(command, cancellationToken),
-                    MessageCommands.ForwardPopupMessage => await HandleForwardPopupMessageAsync(command, cancellationToken),
-                    MessageCommands.NotificationMessage => await HandleNotificationAsync(command, cancellationToken),
-                    MessageCommands.BusinessData => await HandleBusinessDataAsync(command, cancellationToken),
-                    _ => CommandResult.Failure($"不支持的消息命令类型: {commandType}", "UNSUPPORTED_MESSAGE_COMMAND")
-                };
+                    return await HandleSendMessageAsync(command, cancellationToken);
+                }
+                else if (commandId == MessageCommands.ReceiveMessage)
+                {
+                    return await HandleReceiveMessageAsync(command, cancellationToken);
+                }
+                else if (commandId == MessageCommands.MessageRead)
+                {
+                    return await HandleMessageReadAsync(command, cancellationToken);
+                }
+                else if (commandId == MessageCommands.BroadcastMessage)
+                {
+                    return await HandleBroadcastMessageAsync(command, cancellationToken);
+                }
+                else if (commandId == MessageCommands.SendPopupMessage)
+                {
+                    return await HandleSendPopupMessageAsync(command, cancellationToken);
+                }
+                else if (commandId == MessageCommands.ForwardPopupMessage)
+                {
+                    return await HandleForwardPopupMessageAsync(command, cancellationToken);
+                }
+                else if (commandId == MessageCommands.NotificationMessage)
+                {
+                    return await HandleNotificationAsync(command, cancellationToken);
+                }
+                else if (commandId == MessageCommands.BusinessData)
+                {
+                    return await HandleBusinessDataAsync(command, cancellationToken);
+                }
+                else
+                {
+                    return CommandResult.Failure($"不支持的消息命令类型: {commandId}", "UNSUPPORTED_MESSAGE_COMMAND");
+                }
             }
             catch (Exception ex)
             {

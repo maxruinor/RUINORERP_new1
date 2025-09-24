@@ -114,6 +114,7 @@ namespace RUINORERP.PacketSpec.Models
         public string RefreshToken { get; set; }
         public int ExpiresIn { get; set; }
         public string TokenType { get; set; }
+        public string Token { get; set; }
     }
 
     /// <summary>

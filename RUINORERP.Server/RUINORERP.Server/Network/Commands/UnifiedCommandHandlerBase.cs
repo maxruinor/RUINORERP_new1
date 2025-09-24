@@ -16,12 +16,23 @@ namespace RUINORERP.Server.Network.Commands
     /// </summary>
     public abstract class UnifiedCommandHandlerBase : BaseCommandHandler
     {
-        protected readonly ILogger _logger;
 
-        protected UnifiedCommandHandlerBase(ILogger logger = null)
+        protected ILogger<UnifiedCommandHandlerBase> logger { get; set; }
+        
+        /// <summary>
+        /// 无参构造函数，以支持Activator.CreateInstance创建实例
+        /// </summary>
+        protected UnifiedCommandHandlerBase() : base(new LoggerFactory().CreateLogger<BaseCommandHandler>())
         {
-            _logger = logger;
+            logger = new LoggerFactory().CreateLogger<UnifiedCommandHandlerBase>();
         }
+
+        public UnifiedCommandHandlerBase(ILogger<UnifiedCommandHandlerBase> _Logger) : base(_Logger)
+        {
+            logger = _Logger;
+        }
+
+        
 
         /// <summary>
         /// 执行核心处理逻辑（模板方法模式）
@@ -86,7 +97,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         protected void LogInfo(string message)
         {
-            _logger?.LogInformation($"[{GetType().Name}] {message}");
+            logger?.LogInformation($"[{GetType().Name}] {message}");
         }
 
         /// <summary>
@@ -94,7 +105,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         protected void LogError(string message, Exception ex = null)
         {
-            _logger?.LogError(ex, $"[{GetType().Name}] {message}");
+            logger?.LogError(ex, $"[{GetType().Name}] {message}");
         }
 
         /// <summary>

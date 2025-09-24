@@ -6,7 +6,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RUINORERP.UI.Network.Commands
+namespace RUINORERP.PacketSpec.Commands.System
 {
     /// <summary>
     /// 心跳命令

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 
@@ -34,11 +35,28 @@ namespace RUINORERP.PacketSpec.Commands.Handlers
         /// </summary>
         public override IReadOnlyList<uint> SupportedCommands => _supportedCommands;
 
+        protected ILogger<EchoCommandHandler> logger { get; set; }
+        
+        /// <summary>
+        /// 无参构造函数，以支持Activator.CreateInstance创建实例
+        /// </summary>
+        public EchoCommandHandler() : base()
+        {
+            logger = new LoggerFactory().CreateLogger<EchoCommandHandler>();
+            // 注册支持的命令类型
+            // 使用Special类别和0x01操作码，与EchoCommand中定义的一致
+            _supportedCommands = new List<uint>
+            {
+                new CommandId(CommandCategory.Special, 0x01).FullCode
+            };
+        }
+
         /// <summary>
         /// 构造函数
         /// </summary>
-        public EchoCommandHandler()
+        public EchoCommandHandler(ILogger<EchoCommandHandler> _Logger):base (_Logger)
         {
+            logger = _Logger;
             // 注册支持的命令类型
             // 使用Special类别和0x01操作码，与EchoCommand中定义的一致
             _supportedCommands = new List<uint>

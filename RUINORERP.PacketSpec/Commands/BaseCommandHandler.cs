@@ -10,6 +10,7 @@ using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using System.Text;
+using RUINORERP.Global.CustomAttribute;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -387,6 +388,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行核心处理逻辑
         /// </summary>
+        [MustOverride]
         protected abstract Task<CommandResult> OnHandleAsync(ICommand command, CancellationToken cancellationToken);
 
         #endregion

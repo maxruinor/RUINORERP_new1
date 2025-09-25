@@ -456,18 +456,53 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <returns>发送结果任务</returns>
         protected virtual async ValueTask SendResponseAsync(TAppSession session, PacketModel package, CancellationToken cancellationToken)
         {
-            // 使用统一的序列化方法
-            var serializedData = SerializePacket(package);
+            try
+            {
+                // 检查会话是否有效
+                if (session == null)
+                {
+                    _logger?.LogWarning("尝试发送响应到空会话: PacketId={PacketId}, CommandId={CommandId}", 
+                        package.PacketId, package.Command);
+                    return;
+                }
 
-            // 加密数据
-            var originalData = new RUINORERP.PacketSpec.Protocol.OriginalData(
-                (byte)package.Command.Category,
-                new byte[] { package.Command.OperationCode },
-                serializedData
-            );
-            var encryptedData = RUINORERP.PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
+                // 使用统一的序列化方法
+                var serializedData = SerializePacket(package);
 
-            await session.SendAsync(encryptedData.ToByteArray(), cancellationToken);
+                // 加密数据
+                var originalData = new RUINORERP.PacketSpec.Protocol.OriginalData(
+                    (byte)package.Command.Category,
+                    new byte[] { package.Command.OperationCode },
+                    serializedData
+                );
+                var encryptedData = RUINORERP.PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
+
+                // 发送数据并捕获可能的异常
+                try
+                {
+                    await session.SendAsync(encryptedData.ToByteArray(), cancellationToken);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
+                {
+                    // 处理管道写入器已完成的特定异常
+                    _logger?.LogWarning(ex, "管道写入器已完成，无法发送响应: SessionId={SessionId}, PacketId={PacketId}",
+                        package.SessionId, package.PacketId);
+                    // 忽略此异常，因为会话可能已经关闭
+                }
+                catch (Exception ex)
+                {
+                    // 记录其他发送异常
+                    _logger?.LogError(ex, "发送响应时发生异常: SessionId={SessionId}, PacketId={PacketId}",
+                        package.SessionId, package.PacketId);
+                    // 可以选择是否向上传播异常
+                    // throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 捕获所有其他异常以确保方法不会失败
+                _logger?.LogError(ex, "处理响应发送时发生未预期的异常");
+            }
         }
 
         /// <summary>

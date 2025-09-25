@@ -16,7 +16,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 缓存同步命令处理器 - 处理客户端与服务器之间的缓存同步请求
     /// </summary>
     [CommandHandler("CacheSyncCommandHandler", priority: 80)]
-    public class CacheSyncCommandHandler : UnifiedCommandHandlerBase
+    public class CacheSyncCommandHandler : CommandHandlerBase
     {
         // private readonly ICacheService _cacheService; // 暂时注释，缺少ICacheService接口定义
 

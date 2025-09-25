@@ -16,7 +16,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 系统管理命令处理器 - 处理系统管理相关的命令
     /// </summary>
     [CommandHandler("SystemManagementCommandHandler", priority: 60)]
-    public class SystemManagementCommandHandler : UnifiedCommandHandlerBase
+    public class SystemManagementCommandHandler : CommandHandlerBase
     {
         // private readonly ISystemManagementService _systemManagementService; // 暂时注释，缺少ISystemManagementService接口定义
 

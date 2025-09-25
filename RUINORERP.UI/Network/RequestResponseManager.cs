@@ -235,7 +235,6 @@ namespace RUINORERP.UI.Network
             }
         }
 
-        /* -------------------- 私有模板 -------------------- */
 
         private async Task SendCoreAsync<TRequest>(
             ISocketClient client,
@@ -245,21 +244,42 @@ namespace RUINORERP.UI.Network
             int timeoutMs,
             CancellationToken ct)
         {
-            var packet = PacketBuilder.Create()
-                                      .WithCommand(cmd)
-                                      .WithJsonData(body)
-                                      .WithRequestId(requestId)
-                                      .WithTimeout(timeoutMs)
-                                      .Build();
+            try
+            {
+                var packet = PacketBuilder.Create()
+                                          .WithCommand(cmd)
+                                          .WithJsonData(body)
+                                          .WithRequestId(requestId)
+                                          .WithTimeout(timeoutMs)
+                                          .Build();
 
-            var payload = UnifiedSerializationService.SerializeWithMessagePack(packet);
-            var original = new OriginalData(
-                (byte)cmd.Category,
-                new[] { cmd.OperationCode },
-                payload);
+                packet.ClientId = client.ClientID;
 
-            var encrypted = RUINORERP.PacketSpec.Security.EncryptedProtocol.EncryptClientPackToServer(original);
-            await client.SendAsync(encrypted, ct);
+                var payload = UnifiedSerializationService.SerializeWithMessagePack(packet);
+                var original = new OriginalData(
+                    (byte)cmd.Category,
+                    new[] { cmd.OperationCode },
+                    payload);
+
+                var encrypted = RUINORERP.PacketSpec.Security.EncryptedProtocol.EncryptClientPackToServer(original);
+                await client.SendAsync(encrypted, ct);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed") ||
+                                                       ex.Message.Contains("连接已断开"))
+            {
+                // 处理管道写入器已完成或连接断开的特定异常
+                _logger?.LogWarning(ex, "发送请求时发生连接问题: CommandId={CommandId}, RequestId={RequestId}",
+                    cmd.FullCode, requestId);
+                // 不需要重新抛出异常，因为SuperSocketClient中的SendAsync已经会抛出异常
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // 记录其他发送异常
+                _logger?.LogError(ex, "发送请求时发生异常: CommandId={CommandId}, RequestId={RequestId}",
+                    cmd.FullCode, requestId);
+                throw;
+            }
         }
 
         private static TResponse DeserializeResponse<TResponse>(byte[] raw)

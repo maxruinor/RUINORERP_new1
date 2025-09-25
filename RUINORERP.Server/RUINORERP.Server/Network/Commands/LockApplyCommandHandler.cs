@@ -16,7 +16,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 锁申请命令处理器 - 处理客户端的资源锁申请请求
     /// </summary>
     [CommandHandler("LockApplyCommandHandler", priority: 85)]
-    public class LockApplyCommandHandler : UnifiedCommandHandlerBase
+    public class LockApplyCommandHandler : CommandHandlerBase
     {
         // private readonly ILockService _lockService; // 暂时注释，缺少ILockService接口定义
 

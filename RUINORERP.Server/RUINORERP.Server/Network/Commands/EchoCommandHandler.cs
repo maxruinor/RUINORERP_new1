@@ -14,7 +14,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 处理EchoCommand命令的处理器实现
     /// </summary>
     [CommandHandler("EchoCommandHandler", priority: 10)]
-    public class EchoCommandHandler : UnifiedCommandHandlerBase
+    public class EchoCommandHandler : CommandHandlerBase
     {
         /// <summary>
         /// 支持的命令类型列表

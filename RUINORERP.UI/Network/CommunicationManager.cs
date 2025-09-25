@@ -10,48 +10,12 @@ using System.Threading.Tasks;
 namespace RUINORERP.UI.Network
 {
 /// <summary>
-    /// 增强型通信管理器 - 【整合ClientNetworkManager优势】
-    /// 
-    /// 🚀 架构升级：
-    /// ✅ 保留CommunicationManager优秀的心跳管理设计
-    /// ✅ 集成ClientNetworkManager的事件管理和Socket处理能力
-    /// ✅ 统一网络通信接口，消除架构重复
-    /// ✅ 增强异常处理和状态监控能力
-    /// 
-    /// 🎯 核心能力：
-    /// 1. 心跳生命周期与连接状态自动同步（CommunicationManager优势）
-    /// 2. 智能重连策略和故障恢复（CommunicationManager优势）  
-    /// 3. 直接PacketModel数据处理和事件分发（ClientNetworkManager优势）
-    /// 4. 统一的事件管理和异常处理（ClientNetworkManager优势）
-    /// 5. 完整的资源管理和内存泄漏防护（双方优势整合）
-    /// 
-    /// 🔗 新架构定位：
-    /// 取代原有的ClientNetworkManager和CommunicationManager，
-    /// 成为统一的网络通信核心协调器
-    /// 
-    /// 💡 设计原则：
-    /// - 保持向后兼容性
-    /// - 增强而非替换核心功能
-    /// - 提供更完善的错误处理和监控能力
+  
     /// </summary>
     public class CommunicationManager : IDisposable
     {
         private readonly IClientCommunicationService _service;
         /// <summary>
-        /// 心跳管理器 - 【核心组件】
-        /// 
-        /// 🎯 设计亮点：
-        /// ✅ 自动启动/停止：与连接生命周期同步
-        /// ✅ 智能重连：基于失败次数触发重连策略
-        /// ✅ 资源监控：集成CPU、内存、网络延迟监控
-        /// ✅ 事件通知：完整的连接状态变化通知
-        /// ✅ 异常处理：分层处理网络/业务/超时异常
-        /// 
-        /// 💡 新架构应该保留的核心功能：
-        /// - 心跳生命周期自动管理
-        /// - 连接状态与心跳状态同步
-        /// - 基于失败次数的智能重连
-        /// - 系统资源监控集成
         /// </summary>
         private readonly HeartbeatManager _heartbeat;
         private readonly ILogger<CommunicationManager> _logger;

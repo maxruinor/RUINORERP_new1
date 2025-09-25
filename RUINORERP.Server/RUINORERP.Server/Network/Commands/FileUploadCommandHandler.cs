@@ -16,7 +16,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 文件上传命令处理器 - 处理客户端的文件上传请求
     /// </summary>
     [CommandHandler("FileUploadCommandHandler", priority: 70)]
-    public class FileUploadCommandHandler : UnifiedCommandHandlerBase
+    public class FileUploadCommandHandler : CommandHandlerBase
     {
         // private readonly IFileService _fileService; // 暂时注释，缺少IFileService接口定义
 

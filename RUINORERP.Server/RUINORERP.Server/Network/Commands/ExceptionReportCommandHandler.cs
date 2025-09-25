@@ -16,7 +16,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 异常报告命令处理器 - 处理客户端上报的异常信息
     /// </summary>
     [CommandHandler("ExceptionReportCommandHandler", priority: 50)]
-    public class ExceptionReportCommandHandler : UnifiedCommandHandlerBase
+    public class ExceptionReportCommandHandler : CommandHandlerBase
     {
         // private readonly IExceptionReportService _exceptionReportService; // 暂时注释，缺少IExceptionReportService接口定义
 

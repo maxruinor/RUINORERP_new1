@@ -6,34 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace RUINORERP.UI.Network
 {
 /// <summary>
-    /// 客户端事件管理器 - 网络事件总线
-    /// 
-    /// 🔄 事件处理流程：
-    /// 1. 接收网络层事件（数据接收、连接状态、错误等）
-    /// 2. 线程安全地触发对应事件
-    /// 3. 通知所有订阅的处理器
-    /// 4. 异常捕获与处理
-    /// 5. 事件日志记录
-    /// 
-    /// 📋 核心职责：
-    /// - 网络事件统一管理
-    /// - 线程安全事件触发
-    /// - 事件订阅与分发
-    /// - 异常处理与隔离
-    /// - 事件日志记录
-    /// - 处理器生命周期管理
-    /// 
-    /// 🔗 与架构集成：
-    /// - CommunicationManager 触发 CommandReceived 事件（接收BizPipelineFilter解析的数据）
-    /// - SuperSocketClient 触发连接状态事件
-    /// - ClientCommunicationService 订阅 CommandReceived 事件
-    /// - 其他组件订阅错误和状态事件
-    /// 
-    /// 📡 支持的事件类型：
-    /// - CommandReceived: 命令接收事件
-    /// - ConnectionStatusChanged: 连接状态变化
-    /// - ErrorOccurred: 错误发生事件
-    /// - ConnectionClosed: 连接关闭事件
+    
     /// </summary>
     public class ClientEventManager
     {

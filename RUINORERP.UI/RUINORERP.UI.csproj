@@ -897,6 +897,7 @@
     <Compile Include="Common\CheckedListBoxHelper.cs" />
     <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlExtensions.cs" />
+    <Compile Include="Common\HardwareHelper.cs" />
     <Compile Include="Common\MenuItemEnumsExtensions.cs" />
     <Compile Include="Common\ProgressExtensions.cs" />
     <Compile Include="Common\ProgressHelper.cs" />
@@ -2243,18 +2244,15 @@
     <Compile Include="Network\ClientCommandFactory.cs" />
     <!-- ClientCommandProcessor.cs 已整合到ClientCommunicationService.cs，不再单独编译 -->
     <!-- <Compile Include="Network\ClientCommandProcessor.cs" /> -->
-    <Compile Include="Network\ClientCommunicationService.cs" />
     <Compile Include="Network\ClientEventManager.cs" />
-    <Compile Include="Network\CommunicationManager.cs" />
     <!-- ClientNetworkManager.cs 已作废 - 功能整合到CommunicationManager.cs -->
     <!-- <Compile Include="Network\ClientNetworkManager.cs" /> -->
     <Compile Include="Network\DI\NetworkServicesDependencyInjection.cs" />
     <Compile Include="Network\EventArgs.cs" />
-    <Compile Include="Network\Examples\CommunicationExample.cs" />
-    <Compile Include="Network\Examples\LoginExample.cs" />
     <Compile Include="Network\HeartbeatManager.cs" />
     <Compile Include="Network\IClientCommunicationService.cs" />
     <Compile Include="Network\ISocketClient.cs" />
+    <Compile Include="Network\Optimized\ClientCommunicationService.cs" />
     <Compile Include="Network\RequestResponseManager.cs" />
     <Compile Include="Network\Services\CacheService.cs" />
     <Compile Include="Network\Services\CacheSyncService.cs" />
@@ -5149,6 +5147,7 @@
     <Folder Include="IMResources\Images\" />
     <Folder Include="Monitoring\Alerts\" />
     <Folder Include="MRP\RR\" />
+    <Folder Include="Network\Examples\" />
     <Folder Include="Network\Models\" />
     <Folder Include="Other\" />
     <Folder Include="PM\" />

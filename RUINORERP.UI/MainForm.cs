@@ -144,10 +144,7 @@ namespace RUINORERP.UI
 
         #endregion
 
-        /// <summary>
-        /// 指令调度员
-        /// </summary>
-        public ClientCommandDispatcher dispatcher;
+ 
 
 
         /// <summary>
@@ -194,10 +191,15 @@ namespace RUINORERP.UI
 
         private System.Threading.Timer _autoSaveTimer;
 
-        public CommunicationManager communicationManager;
+        //public CommunicationManager communicationManager;
         public IClientCommunicationService communicationService;
         public ClientCommandDispatcher clientCommandDispatcher;
         
+        /// <summary>
+        /// 指令调度员
+        /// </summary>
+        public ClientCommandDispatcher dispatcher;
+
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper, FMAuditLogHelper _fmauditLogHelper, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
@@ -211,11 +213,9 @@ namespace RUINORERP.UI
             // 通过依赖注入获取核心组件
             communicationService = Startup.ServiceProvider.GetService<IClientCommunicationService>();
             clientCommandDispatcher = Startup.ServiceProvider.GetService<ClientCommandDispatcher>();
-            communicationManager = Startup.ServiceProvider.GetService<CommunicationManager>();
-   
-
+            //communicationManager = Startup.ServiceProvider.GetService<CommunicationManager>();
             // 初始化通信管理器
-            communicationManager.Initialize();
+            //communicationManager.Initialize();
 
             #endregion
 

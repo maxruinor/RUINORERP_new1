@@ -15,7 +15,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 数据同步命令处理器 - 处理数据同步相关的命令
     /// </summary>
     [CommandHandler("DataSyncCommandHandler", priority: 65)]
-    public class DataSyncCommandHandler : UnifiedCommandHandlerBase
+    public class DataSyncCommandHandler : CommandHandlerBase
     {
         // private readonly IDataSyncService _dataSyncService; // 暂时注释，缺少IDataSyncService接口定义
 

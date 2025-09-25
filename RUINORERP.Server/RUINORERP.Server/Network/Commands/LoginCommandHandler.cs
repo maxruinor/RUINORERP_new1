@@ -63,7 +63,7 @@ Disposed（已释放）
      */
     /// </summary>
     [CommandHandler("LoginCommandHandler", priority: 100)]
-    public class LoginCommandHandler : UnifiedCommandHandlerBase
+    public class LoginCommandHandler : CommandHandlerBase
     {
         private const int MaxLoginAttempts = 5;
         private const int MaxConcurrentUsers = 1000;
@@ -73,7 +73,7 @@ Disposed（已释放）
         protected ILogger<LoginCommandHandler> logger { get; set; }
         
         // 添加无参构造函数，以支持Activator.CreateInstance创建实例
-        public LoginCommandHandler() : base(new LoggerFactory().CreateLogger<UnifiedCommandHandlerBase>())
+        public LoginCommandHandler() : base(new LoggerFactory().CreateLogger<CommandHandlerBase>())
         {
             logger = new LoggerFactory().CreateLogger<LoginCommandHandler>();
         }
@@ -119,6 +119,10 @@ Disposed（已释放）
                    command.CommandIdentifier == AuthenticationCommands.ValidateToken ||
                    command.CommandIdentifier == AuthenticationCommands.RefreshToken;
         }
+
+
+
+
 
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数

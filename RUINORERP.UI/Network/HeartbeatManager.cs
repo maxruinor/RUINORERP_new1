@@ -12,69 +12,16 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.Network
 {
-/// <summary>
-    /// 心跳管理器 - 连接健康监控
-    /// 
-    /// 🔄 新架构心跳数据流：
-    /// 1. HeartbeatManager创建心跳命令
-    /// 2. 通过ClientCommunicationService发送心跳请求
-    /// 3. ClientNetworkManager协调网络通信
-    /// 4. SuperSocketClient处理网络传输
-    /// 5. 服务器处理心跳请求并返回响应
-    /// 6. BizPipelineFilter接收并解析响应数据
-    /// 7. ClientCommunicationService处理心跳响应命令
-    /// 8. 响应结果返回给ClientCommunicationService
-    /// 9. HeartbeatManager接收响应并更新连接状态
-    /// 
-    /// 📋 核心职责：
-    /// - 定期心跳发送（使用ClientCommunicationService）
-    /// - 连接健康监控（基于新架构响应流）
-    /// - 超时检测与处理（支持CancellationToken）
-    /// - 自动重连触发（通过ClientCommunicationService）
-    /// - 心跳配置管理（可配置参数）
-    /// - 性能统计与日志（使用ILogger）
-    /// - 客户端状态收集（资源使用、网络延迟等）
-    /// 
-    /// 🔗 新架构集成：
-    /// - 依赖注入：IClientCommunicationService + ILogger<HeartbeatManager>
-    /// - 数据流：HeartbeatCommand → ClientCommunicationService → CommunicationManager → 网络传输
-    /// - 响应流：网络数据 → BizPipelineFilter → ClientCommunicationService → HeartbeatManager
-    /// - 事件流：连接状态变化 → ClientEventManager → UI组件/业务逻辑
-    /// 
-    /// ⚙️ 配置参数：
-    /// - HeartbeatIntervalMs: 心跳间隔（默认30秒）
-    /// - ReconnectAttempts: 重连尝试次数（默认3次）
-    /// - ReconnectIntervalMs: 重连间隔（默认5秒）
-    /// 
-    /// 💡 新架构设计特点：
-    /// - TAP异步模式：完全支持async/await
-    /// - 依赖注入：支持构造函数注入和可选参数
-    /// - 强类型命令：使用HeartbeatCommand类型
-    /// - 超时支持：通过CancellationToken实现
-    /// - 错误处理：分层异常处理（网络/业务/超时）
-    /// - 可观测性：详细日志记录和事件通知
-    /// - 线程安全：使用lock确保并发安全
-    /// - 资源管理：正确实现IDisposable模式
-    /// 
-    /// 🔄 支持的命令：
-    /// - HeartbeatCommand: 心跳命令（系统命令）
-    /// - ReconnectAsync: 重连命令（通过ClientCommunicationService）
-    /// 
-    /// 📊 监控指标：
-    /// - 心跳成功率
-    /// - 平均响应时间
-    /// - 重连次数统计
-    /// - 连接状态变化
-    /// </summary>
+
     public class HeartbeatManager : IDisposable
     {
-        private readonly IClientCommunicationService _service;
+        private readonly ISocketClient _socketClient;
+        private readonly RequestResponseManager _requestResponseManager;
         private readonly int _heartbeatIntervalMs;
-        private readonly int _reconnectAttempts;
-        private readonly int _reconnectIntervalMs;
         private CancellationTokenSource _cancellationTokenSource;
         private Task _heartbeatTask;
         private int _failedAttempts;
@@ -105,9 +52,9 @@ namespace RUINORERP.UI.Network
         /// - 性能分析和优化
         /// 
         /// 🔗 新架构集成：
-        /// - 基于ClientCommunicationService的响应结果统计
-        /// - 与CommunicationManager连接状态同步
-        /// - 通过ClientEventManager触发状态变化事件
+        /// - 基于RequestResponseManager的响应结果统计
+        /// - 与SocketClient连接状态同步
+        /// - 直接使用ISocketClient发送心跳数据
         /// </summary>
         public HeartbeatStatistics Statistics
         {
@@ -122,42 +69,37 @@ namespace RUINORERP.UI.Network
                         _failedHeartbeats,
                         _lastHeartbeatTime,
                         0, // averageResponseTime 暂时设为0
-                        _service.IsConnected,
+                        _socketClient.IsConnected,
                         _heartbeatTask != null && !_heartbeatTask.IsCompleted,
                         _failedAttempts,
-                        _service.IsConnected ? "Connected" : "Disconnected"
+                        _socketClient.IsConnected ? "Connected" : "Disconnected"
                     );
                 }
             }
         }
 
-       
+
+        /// <summary>
+        /// 心跳管理器构造函数 - 直接使用ISocketClient和RequestResponseManager
         /// </summary>
-        /// <param name="communicationService">通信服务接口，用于发送心跳命令和重连操作</param>
+        /// <param name="socketClient">Socket客户端接口，用于直接发送心跳数据</param>
+        /// <param name="requestResponseManager">请求响应管理器，用于处理心跳请求和响应</param>
         /// <param name="heartbeatIntervalMs">心跳间隔（毫秒），默认30秒</param>
-        /// <param name="reconnectAttempts">重连尝试次数，默认3次</param>
-        /// <param name="reconnectIntervalMs">重连间隔（毫秒），默认5秒</param>
         /// <param name="logger">日志记录器，可选参数，用于记录心跳过程中的信息和异常</param>
         public HeartbeatManager(
-            IClientCommunicationService communicationService,
+            ISocketClient socketClient,
+            RequestResponseManager requestResponseManager,
             int heartbeatIntervalMs = 30000,
-            int reconnectAttempts = 3,
-            int reconnectIntervalMs = 5000,
             ILogger<HeartbeatManager> logger = null)
         {
-            _service = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
-            
+            _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
+            _requestResponseManager = requestResponseManager ?? throw new ArgumentNullException(nameof(requestResponseManager));
+
             // 参数验证
             if (heartbeatIntervalMs <= 0)
                 throw new ArgumentOutOfRangeException(nameof(heartbeatIntervalMs), "心跳间隔必须大于0");
-            if (reconnectAttempts < 0)
-                throw new ArgumentOutOfRangeException(nameof(reconnectAttempts), "重连次数不能为负数");
-            if (reconnectIntervalMs <= 0)
-                throw new ArgumentOutOfRangeException(nameof(reconnectIntervalMs), "重连间隔必须大于0");
 
             _heartbeatIntervalMs = heartbeatIntervalMs;
-            _reconnectAttempts = reconnectAttempts;
-            _reconnectIntervalMs = reconnectIntervalMs;
             _cancellationTokenSource = new CancellationTokenSource();
             _logger = logger;
         }
@@ -214,7 +156,7 @@ namespace RUINORERP.UI.Network
             }
         }
 
-      
+
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>心跳执行结果，包含成功状态、响应消息和执行时间</returns>
@@ -225,7 +167,7 @@ namespace RUINORERP.UI.Network
                 return (false, "心跳管理器已释放", TimeSpan.Zero);
             }
 
-            if (!_service.IsConnected)
+            if (!_socketClient.IsConnected)
             {
                 return (false, "连接未建立，无法发送心跳", TimeSpan.Zero);
             }
@@ -234,41 +176,47 @@ namespace RUINORERP.UI.Network
             try
             {
                 _logger?.LogInformation("手动心跳测试开始");
-                
+
                 // 创建心跳命令
                 var heartbeatCommand = CreateHeartbeatCommand();
                 _logger?.LogDebug("手动心跳命令已创建: CommandId={CommandId}", heartbeatCommand.CommandId);
-                
-                // 通过新架构发送心跳
-                var response = await _service.SendCommandAsync<object>(heartbeatCommand, cancellationToken);
-                
+
+                // 直接使用RequestResponseManager发送心跳请求
+                var response = await _requestResponseManager.SendRequestAsync<object, HeartbeatRequest>(
+                    _socketClient,
+                    heartbeatCommand.CommandIdentifier,
+                    heartbeatCommand.GetSerializableData(),
+                    cancellationToken,
+                    5000 // 心跳超时时间5秒
+                );
+
                 stopwatch.Stop();
-                
+
                 // 更新统计信息
                 lock (_lock)
                 {
                     _totalHeartbeats++;
+                    _successfulHeartbeats++;
                     _lastHeartbeatTime = DateTime.UtcNow;
-                    if (response.Success)
-                    {
-                        _successfulHeartbeats++;
-                    }
-                    else
-                    {
-                        _failedHeartbeats++;
-                    }
                 }
-                
-                if (response.Success)
+
+                _logger?.LogInformation("手动心跳测试成功，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+                return (true, $"心跳成功", stopwatch.Elapsed);
+            }
+            catch (TimeoutException ex)
+            {
+                stopwatch.Stop();
+                _logger?.LogWarning(ex, "手动心跳测试超时，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+
+                // 更新统计信息
+                lock (_lock)
                 {
-                    _logger?.LogInformation("手动心跳测试成功，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
-                    return (true, $"心跳成功: {response.Message}", stopwatch.Elapsed);
+                    _totalHeartbeats++;
+                    _failedHeartbeats++;
+                    _lastHeartbeatTime = DateTime.UtcNow;
                 }
-                else
-                {
-                    _logger?.LogWarning("手动心跳测试失败: {Message}，耗时: {ElapsedMs}ms", response.Message, stopwatch.ElapsedMilliseconds);
-                    return (false, $"心跳失败: {response.Message}", stopwatch.Elapsed);
-                }
+
+                return (false, $"心跳超时: {ex.Message}", stopwatch.Elapsed);
             }
             catch (OperationCanceledException)
             {
@@ -280,38 +228,53 @@ namespace RUINORERP.UI.Network
             {
                 stopwatch.Stop();
                 _logger?.LogError(ex, "手动心跳测试异常，耗时: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+
+                // 更新统计信息
+                lock (_lock)
+                {
+                    _totalHeartbeats++;
+                    _failedHeartbeats++;
+                    _lastHeartbeatTime = DateTime.UtcNow;
+                }
+
                 return (false, $"心跳异常: {ex.Message}", stopwatch.Elapsed);
             }
         }
 
-       
+
         /// </summary>
         /// <returns>异步任务，心跳循环任务</returns>
         private async Task SendHeartbeatsAsync()
         {
             _logger?.LogInformation("心跳任务已启动，开始定期发送心跳");
-            
+
             while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
                 try
                 {
-                    if (_service.IsConnected)
+                    if (_socketClient.IsConnected)
                     {
-                        // 🔄 新架构心跳发送流程
+                        // 🔄 新架构心跳发送流程 - 直接使用RequestResponseManager
                         _logger?.LogDebug("开始构建心跳命令...");
-                        
+
                         // 步骤1: 创建心跳命令对象
                         var heartbeatCommand = CreateHeartbeatCommand();
-                        _logger?.LogDebug("心跳命令已创建: CommandId={CommandId}, ClientId={ClientId}", 
+                        _logger?.LogDebug("心跳命令已创建: CommandId={CommandId}, ClientId={ClientId}",
                             heartbeatCommand.CommandId, heartbeatCommand.ClientId);
-                        
-                        // 步骤2-8: 通过新架构发送命令并等待响应
-                        _logger?.LogDebug("通过ClientCommunicationService发送心跳命令...");
-                        var response = await _service.SendCommandAsync<object>(heartbeatCommand, _cancellationTokenSource.Token);
-                        
-                        // 步骤9: 处理响应结果
-                        if (response.Success)
+
+                        try
                         {
+                            // 步骤2-8: 直接使用RequestResponseManager发送命令并等待响应
+                            _logger?.LogDebug("通过RequestResponseManager发送心跳命令...");
+                            await _requestResponseManager.SendRequestAsync<object, HeartbeatRequest>(
+                                _socketClient,
+                                heartbeatCommand.CommandIdentifier,
+                                heartbeatCommand.GetSerializableData(),
+                                _cancellationTokenSource.Token,
+                                5000 // 心跳超时时间5秒
+                            );
+
+                            // 步骤9: 处理响应结果
                             // 心跳发送成功，更新统计信息
                             lock (_lock)
                             {
@@ -320,12 +283,12 @@ namespace RUINORERP.UI.Network
                                 _failedAttempts = 0;
                                 _lastHeartbeatTime = DateTime.UtcNow;
                             }
-                            _logger?.LogDebug("心跳发送成功，服务器响应: {Message}", response.Message);
+                            _logger?.LogDebug("心跳发送成功");
                             OnHeartbeatSuccess();
                         }
-                        else
+                        catch (TimeoutException ex)
                         {
-                            // 心跳发送失败，更新统计信息
+                            // 心跳发送超时
                             lock (_lock)
                             {
                                 _totalHeartbeats++;
@@ -333,63 +296,37 @@ namespace RUINORERP.UI.Network
                                 _failedAttempts++;
                                 _lastHeartbeatTime = DateTime.UtcNow;
                             }
-                            _logger?.LogWarning("心跳发送失败: {Message}，连续失败次数: {FailedAttempts}", 
-                                response.Message, _failedAttempts);
-                            HandleHeartbeatFailure(response.Message);
-                        }
-                    }
-                    else if (_failedAttempts < _reconnectAttempts)
-                    {
-                        // 连接断开，触发重连机制
-                        _failedAttempts++;
-                        _logger?.LogWarning("连接已断开，正在尝试重连... 第 {FailedAttempts}/{ReconnectAttempts} 次", 
-                            _failedAttempts, _reconnectAttempts);
-                        OnReconnectionAttempt(_failedAttempts);
-
-                        // 等待重连间隔后尝试重新连接
-                        try
-                        {
-                            _logger?.LogDebug("等待 {ReconnectIntervalMs} 毫秒后开始重连", _reconnectIntervalMs);
-                            await Task.Delay(_reconnectIntervalMs, _cancellationTokenSource.Token);
-                            
-                            _logger?.LogInformation("开始执行重连操作...");
-                            await _service.ReconnectAsync(_cancellationTokenSource.Token);
-                            
-                            if (_service.IsConnected)
-                            {
-                                _logger?.LogInformation("重连成功，连接已恢复");
-                                _failedAttempts = 0; // 重置失败计数器
-                            }
-                            else
-                            {
-                                _logger?.LogWarning("重连失败，连接仍未恢复");
-                            }
-                        }
-                        catch (TaskCanceledException)
-                        {
-                            // 任务被取消，正常退出
-                            _logger?.LogInformation("重连任务被取消");
-                            break;
+                            _logger?.LogWarning("心跳发送超时: {Message}，连续失败次数: {FailedAttempts}",
+                                ex.Message, _failedAttempts);
+                            HandleHeartbeatFailure(ex.Message);
                         }
                         catch (Exception ex)
                         {
-                            _logger?.LogError(ex, "第 {FailedAttempts} 次重连尝试失败", _failedAttempts);
+                            // 心跳发送失败
+                            lock (_lock)
+                            {
+                                _totalHeartbeats++;
+                                _failedHeartbeats++;
+                                _failedAttempts++;
+                                _lastHeartbeatTime = DateTime.UtcNow;
+                            }
+                            _logger?.LogWarning("心跳发送失败: {Message}，连续失败次数: {FailedAttempts}",
+                                ex.Message, _failedAttempts);
+                            HandleHeartbeatFailure(ex.Message);
                         }
                     }
                     else
                     {
-                        // 超过最大重连次数，触发连接丢失事件
-                        _logger?.LogError("已达到最大重连次数 {ReconnectAttempts}，连接完全丢失，需要手动干预", 
-                            _reconnectAttempts);
-                        OnReconnectionFailed();
-                        OnConnectionLost();
-                        
-                        // 重置失败计数器，避免重复触发事件
-                        _failedAttempts = 0;
-                        
-                        // 可以选择停止心跳或继续尝试
-                        // 这里选择继续尝试，但延长间隔
-                        _logger?.LogInformation("将继续监控连接状态，但延长检查间隔");
+                        // 连接断开，监控连接状态
+                        _logger?.LogInformation("连接已断开，监控连接状态...");
+
+                        // 重置失败计数器
+                        lock (_lock)
+                        {
+                            _failedAttempts = 0;
+                        }
+
+                        // 不执行重连逻辑，重连由ClientCommunicationService负责
                     }
                 }
                 catch (TaskCanceledException)
@@ -425,7 +362,7 @@ namespace RUINORERP.UI.Network
                     break;
                 }
             }
-            
+
             _logger?.LogInformation("心跳任务已结束");
         }
 
@@ -444,34 +381,33 @@ namespace RUINORERP.UI.Network
             }
         }
 
-     
+
         /// </summary>
         /// <returns>配置完整的心跳命令对象，用于发送给服务器</returns>
         private RUINORERP.PacketSpec.Commands.System.HeartbeatCommand CreateHeartbeatCommand()
         {
             try
             {
-                // 生成客户端ID
-                string clientId = GenerateClientId();
-                
+
+
                 // 获取会话信息
                 string sessionToken = GetSessionToken();
                 long userId = GetCurrentUserId();
-                
+
                 // 创建心跳命令
-                var command = new RUINORERP.PacketSpec.Commands.System.HeartbeatCommand(clientId, sessionToken, userId);
-                
+                var command = new RUINORERP.PacketSpec.Commands.System.HeartbeatCommand(_socketClient.ClientID, sessionToken, userId);
+
                 // 设置客户端信息
                 command.ClientVersion = GetClientVersion();
                 command.ClientIp = GetClientIp();
                 command.ClientStatus = "Normal";
                 command.ProcessUptime = (int)Process.GetCurrentProcess().TotalProcessorTime.TotalSeconds;
-                
+
                 // 设置网络和资源使用信息
                 command.NetworkLatency = EstimateNetworkLatency();
                 command.ResourceUsage = GetResourceUsage();
-                
-                _logger?.LogDebug("心跳命令已创建: 客户端ID={ClientId}, IP={ClientIp}", clientId, command.ClientIp);
+
+                _logger?.LogDebug("心跳命令已创建: 客户端ID={ClientId}, IP={ClientIp}", _socketClient.ClientID, command.ClientIp);
                 return command;
             }
             catch (Exception ex)
@@ -482,113 +418,7 @@ namespace RUINORERP.UI.Network
             }
         }
 
-        /// <summary>
-        /// 生成客户端ID
-        /// 结合机器唯一标识、应用实例ID和进程ID确保唯一性
-        /// </summary>
-        /// <returns>唯一的客户端ID字符串</returns>
-        private string GenerateClientId()
-        {
-            try
-            {
-                // 使用机器唯一标识、应用实例ID和进程ID组合生成唯一客户端ID
-                string machineId = GetMachineUniqueId();
-                string appInstanceId = GetApplicationInstanceId();
-                string processId = Process.GetCurrentProcess().Id.ToString();
-                
-                // 客户端ID格式: {机器唯一标识}_{应用实例ID}_{进程ID}
-                return $"{machineId}_{appInstanceId}_{processId}";
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "生成客户端ID失败，使用备用ID");
-                // 出现异常时返回基于时间戳的备用ID
-                return $"fallback_{DateTime.UtcNow.Ticks}";
-            }
-        }
 
-        /// <summary>
-        /// 获取机器唯一标识
-        /// 优先使用Windows特定的标识方法
-        /// </summary>
-        /// <returns>机器唯一标识字符串</returns>
-        private string GetMachineUniqueId()
-        {
-            try
-            {
-                // 在Windows环境下使用主板序列号或MAC地址
-                return GetWindowsMachineId();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "获取Windows机器唯一标识失败，使用系统信息哈希");
-                // 获取失败时返回基于系统信息的哈希值
-                string systemInfo = $"{Environment.OSVersion}_{Environment.ProcessorCount}_{Environment.MachineName}";
-                return systemInfo.GetHashCode().ToString("X");
-            }
-        }
-
-        /// <summary>
-        /// 获取Windows机器唯一标识
-        /// 尝试从WMI获取主板序列号，如果失败则尝试获取MAC地址
-        /// </summary>
-        /// <returns>Windows机器唯一标识字符串</returns>
-        private string GetWindowsMachineId()
-        {
-            try
-            {
-                // 使用WMI获取主板序列号
-                using (var searcher = new ManagementObjectSearcher("SELECT SerialNumber FROM Win32_BaseBoard"))
-                {
-                    foreach (var queryObj in searcher.Get())
-                    {
-                        string serial = queryObj["SerialNumber"]?.ToString()?.Trim();
-                        if (!string.IsNullOrEmpty(serial))
-                        {
-                            return Regex.Replace(serial, @"\s+", "");
-                        }
-                    }
-                }
-
-                _logger?.LogDebug("未获取到主板序列号，尝试获取MAC地址");
-                // 如果获取主板序列号失败，尝试获取MAC地址
-                foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
-                {
-                    if (nic.OperationalStatus == OperationalStatus.Up && 
-                        !nic.Description.ToLower().Contains("virtual") && 
-                        !nic.Description.ToLower().Contains("loopback"))
-                    {
-                        return nic.GetPhysicalAddress().ToString();
-                    }
-                }
-
-                return "unknown";
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "获取Windows机器唯一标识失败");
-                return "unknown";
-            }
-        }
-
-        /// <summary>
-        /// 获取应用实例ID
-        /// 使用AppDomain的ID作为当前应用实例的标识
-        /// </summary>
-        /// <returns>应用实例ID字符串</returns>
-        private string GetApplicationInstanceId()
-        {
-            try
-            {
-                // 使用AppDomain的ID作为实例标识
-                return AppDomain.CurrentDomain.Id.ToString();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "获取应用实例ID失败，使用默认值");
-                return "1";
-            }
-        }
 
         /// <summary>
         /// 获取客户端资源使用情况
@@ -600,13 +430,13 @@ namespace RUINORERP.UI.Network
             try
             {
                 var process = Process.GetCurrentProcess();
-                
+
                 // 获取内存使用量（MB）
                 long memoryUsage = process.WorkingSet64 / (1024 * 1024);
-                
+
                 // 获取进程运行时间（秒）
                 long processUptime = (long)(DateTime.UtcNow - process.StartTime.ToUniversalTime()).TotalSeconds;
-                
+
                 // 估算CPU使用率
                 float cpuUsage = 0;
                 try
@@ -626,7 +456,7 @@ namespace RUINORERP.UI.Network
                     // 如果无法获取CPU使用率，使用处理器数量作为默认值
                     cpuUsage = Environment.ProcessorCount;
                 }
-                
+
                 // 估算磁盘可用空间（GB）
                 float diskFreeSpace = 0;
                 try
@@ -645,13 +475,13 @@ namespace RUINORERP.UI.Network
                     _logger?.LogWarning(ex, "获取磁盘可用空间失败，使用默认值");
                     diskFreeSpace = 100; // 默认值
                 }
-                
+
                 // 网络带宽使用暂时设为0
                 float networkUsage = 0;
-                
-                _logger?.LogDebug("资源使用情况 - CPU: {CpuUsage}%, 内存: {MemoryUsage}MB, 磁盘空间: {DiskFreeSpace}GB", 
+
+                _logger?.LogDebug("资源使用情况 - CPU: {CpuUsage}%, 内存: {MemoryUsage}MB, 磁盘空间: {DiskFreeSpace}GB",
                     cpuUsage, memoryUsage, diskFreeSpace);
-                
+
                 return ClientResourceUsage.Create(cpuUsage, memoryUsage, networkUsage, diskFreeSpace, processUptime);
             }
             catch (Exception ex)
@@ -671,26 +501,13 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 这里实现了简单的网络延迟测量逻辑
-                if (_service.IsConnected && !string.IsNullOrEmpty(_service.ServerAddress))
+                if (_socketClient.IsConnected)
                 {
                     try
                     {
-                        // 创建一个简单的TCP连接来测量延迟
-                        using (var socket = new System.Net.Sockets.Socket(
-                            System.Net.Sockets.AddressFamily.InterNetwork,
-                            System.Net.Sockets.SocketType.Stream,
-                            System.Net.Sockets.ProtocolType.Tcp))
-                        {
-                            var sw = Stopwatch.StartNew();
-                            IAsyncResult result = socket.BeginConnect(_service.ServerAddress, _service.ServerPort, null, null);
-                            bool success = result.AsyncWaitHandle.WaitOne(1000); // 1秒超时
-                            sw.Stop();
-                            socket.Close();
-                            int latency = success ? (int)sw.ElapsedMilliseconds : 1000;
-                            _logger?.LogDebug("网络延迟估算: {Latency}ms 到 {ServerAddress}:{ServerPort}", 
-                                latency, _service.ServerAddress, _service.ServerPort);
-                            return latency;
-                        }
+                        // 由于无法直接从ISocketClient获取服务器地址和端口
+                        // 这里简化实现，返回固定值或从配置中获取
+                        return 50; // 默认延迟值
                     }
                     catch (Exception ex)
                     {
@@ -853,17 +670,17 @@ namespace RUINORERP.UI.Network
                 // 获取事件处理程序的快照，避免在多线程环境下触发时可能发生的问题
                 Action<string> failedHandler;
                 Action<Exception> exceptionHandler;
-                
+
                 lock (_lock)
                 {
                     failedHandler = OnHeartbeatFailed;
                     exceptionHandler = HeartbeatFailed;
                 }
-                
+
                 // 触发带消息的失败事件
                 if (failedHandler != null)
                     failedHandler.Invoke(message);
-                
+
                 // 触发带异常的失败事件
                 if (exceptionHandler != null)
                     exceptionHandler.Invoke(new Exception(message));
@@ -887,17 +704,17 @@ namespace RUINORERP.UI.Network
                 // 获取事件处理程序的快照
                 Action<Exception> exceptionHandler;
                 Action<Exception> failedHandler;
-                
+
                 lock (_lock)
                 {
                     exceptionHandler = OnHeartbeatException;
                     failedHandler = HeartbeatFailed;
                 }
-                
+
                 // 触发异常事件
                 if (exceptionHandler != null)
                     exceptionHandler.Invoke(ex);
-                
+
                 // 触发失败事件
                 if (failedHandler != null)
                     failedHandler.Invoke(ex);
@@ -919,12 +736,12 @@ namespace RUINORERP.UI.Network
             {
                 // 获取事件处理程序的快照
                 Action handler;
-                
+
                 lock (_lock)
                 {
                     handler = ConnectionLost;
                 }
-                
+
                 if (handler != null)
                     handler.Invoke();
             }
@@ -1041,7 +858,7 @@ namespace RUINORERP.UI.Network
         {
             var status = IsConnected ? "已连接" : "未连接";
             var lastTime = LastHeartbeatTime?.ToString("HH:mm:ss") ?? "从未";
-            
+
             return $"心跳统计: 总计{TotalHeartbeats}次, 成功率{SuccessRate:F1}%, " +
                    $"状态:{status}, 最后:{lastTime}, 平均响应:{AverageResponseTime:F0}ms";
         }

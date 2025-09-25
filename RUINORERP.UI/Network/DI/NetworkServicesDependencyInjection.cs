@@ -26,8 +26,6 @@ namespace RUINORERP.UI.Network.DI
             
             // 注册管理器
             services.AddSingleton<HeartbeatManager>();
-            // services.AddSingleton<ClientNetworkManager>(); // 已整合到CommunicationManager，不再单独注册
-            // services.AddSingleton<ClientCommandProcessor>(); // 已整合到ClientCommunicationService，不再单独注册
             
             // 注册业务服务
             services.AddSingleton<UserLoginService>();
@@ -44,19 +42,22 @@ namespace RUINORERP.UI.Network.DI
             // 注册核心网络组件
             builder.RegisterType<SuperSocketClient>().As<ISocketClient>().SingleInstance();
             builder.RegisterType<ClientCommandDispatcher>().AsSelf().SingleInstance();
+            
+            // 注册ClientCommunicationService
             builder.RegisterType<ClientCommunicationService>().As<IClientCommunicationService>().SingleInstance();
+            
             builder.RegisterType<RequestResponseManager>().AsSelf().SingleInstance();
             builder.RegisterType<ClientEventManager>().AsSelf().SingleInstance();
             
-            // 注册管理器
+            // 注册HeartbeatManager，并使用属性注入解决循环依赖
             builder.RegisterType<HeartbeatManager>().AsSelf().SingleInstance();
-            // builder.RegisterType<ClientNetworkManager>().AsSelf().SingleInstance(); // 已作废
-            // builder.RegisterType<ClientCommandProcessor>().AsSelf().SingleInstance(); // 已整合到ClientCommunicationService，不再单独注册
             
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
             builder.RegisterType<CacheSyncService>().AsSelf().InstancePerDependency();
             builder.RegisterType<MessageNotificationService>().AsSelf().InstancePerDependency();
+            
+            // 移除RegisterBuildCallback回调，因为我们已经通过构造函数注入解决了循环依赖问题
         }
 
         /// <summary>

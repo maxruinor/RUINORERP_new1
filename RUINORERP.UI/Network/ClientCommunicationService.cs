@@ -66,6 +66,8 @@ namespace RUINORERP.UI.Network
         private readonly ICommandDispatcher _commandDispatcher;
         // 日志记录器
         private readonly ILogger<ClientCommunicationService> _logger;
+        // 心跳管理器
+        private readonly HeartbeatManager _heartbeatManager;
         // 连接状态标志
         private bool _isConnected;
         // 用于线程同步的锁
@@ -82,22 +84,30 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <param name="socketClient">Socket客户端接口，提供底层网络通信能力</param>
         /// <param name="commandDispatcher">命令调度器，用于分发命令到对应的处理类</param>
+        /// <param name="requestResponseManager">请求-响应管理器，处理请求和响应的匹配</param>
+        /// <param name="clientEventManager">客户端事件管理器，管理连接状态和命令接收事件</param>
+        /// <param name="heartbeatManager">心跳管理器，负责定期发送心跳包</param>
         /// <param name="logger">日志记录器</param>
         /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
         public ClientCommunicationService(
             ISocketClient socketClient,
             ICommandDispatcher commandDispatcher,
+            RequestResponseManager requestResponseManager,
+            ClientEventManager clientEventManager,
+            HeartbeatManager heartbeatManager,
             ILogger<ClientCommunicationService> logger)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
+            _rrManager = requestResponseManager ?? throw new ArgumentNullException(nameof(requestResponseManager));
+            _eventManager = clientEventManager ?? throw new ArgumentNullException(nameof(clientEventManager));
+            _heartbeatManager = heartbeatManager ?? throw new ArgumentNullException(nameof(heartbeatManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _rrManager = new RequestResponseManager();
-            _eventManager = new ClientEventManager();
 
             // 注册事件处理程序
             _socketClient.Received += OnReceived;
             _socketClient.Closed += OnClosed;
+            _heartbeatManager.OnHeartbeatFailed += OnHeartbeatFailed;
 
             // 订阅命令接收事件
             SubscribeCommandEvents();
@@ -569,6 +579,33 @@ namespace RUINORERP.UI.Network
             
             _eventManager.OnConnectionClosed();
             _eventManager.OnConnectionStatusChanged(false);
+        }
+        
+        /// <summary>
+        /// 处理心跳失败事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void OnHeartbeatFailed(object sender, EventArgs e)
+        {
+            _logger.LogWarning("心跳失败，检查连接状态");
+            
+            // 如果心跳连续失败，考虑断开连接并尝试重连
+            if (_socketClient != null && !_socketClient.IsConnected)
+            {
+                _logger.LogError("心跳失败，连接已断开，尝试重连");
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await ReconnectAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "重连过程中发生错误");
+                    }
+                });
+            }
         }
     }
 }

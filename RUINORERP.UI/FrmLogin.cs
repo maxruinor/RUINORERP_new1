@@ -20,7 +20,6 @@ using System.Net;
 using RUINORERP.Business;
 using HLH.Lib.Security;
 using AutoUpdateTools;
-using RUINORERP.UI.Network.Examples;
 using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI
@@ -224,9 +223,9 @@ namespace RUINORERP.UI
                                     }
                                     
                                     // 检查是否已经连接，如果没有则建立连接
-                                    if (!MainForm.Instance.communicationManager.IsConnected)
+                                    if (!MainForm.Instance.communicationService.IsConnected)
                                     {
-                                        var connected = await MainForm.Instance.communicationManager.ConnectAsync(serverIp, serverPort);
+                                        var connected = await MainForm.Instance.communicationService.ConnectAsync(serverIp, serverPort);
                                         if (!connected)
                                         {
                                             MessageBox.Show("无法连接到服务器，请检查网络连接和服务器配置。", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);

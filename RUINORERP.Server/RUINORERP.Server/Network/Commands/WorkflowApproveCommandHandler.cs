@@ -16,7 +16,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 工作流审批命令处理器 - 处理工作流审批任务
     /// </summary>
     [CommandHandler("WorkflowApproveCommandHandler", priority: 75)]
-    public class WorkflowApproveCommandHandler : UnifiedCommandHandlerBase
+    public class WorkflowApproveCommandHandler : CommandHandlerBase
     {
         // private readonly IWorkflowService _workflowService; // 暂时注释，缺少IWorkflowService接口定义
 

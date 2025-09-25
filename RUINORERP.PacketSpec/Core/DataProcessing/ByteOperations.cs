@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
-
+using Newtonsoft.Json;
 namespace RUINORERP.PacketSpec.Core.DataProcessing
 {
     /// <summary>
@@ -792,7 +792,11 @@ namespace RUINORERP.PacketSpec.Core.DataProcessing
         public static byte[] FloatToBytes(float value)
         {
             byte[] bytes = new byte[4];
-            BinaryPrimitives.WriteSingleLittleEndian(bytes, value);
+            // 在.NET Standard 2.0中手动实现小端序写入float
+            byte[] floatBytes = BitConverter.GetBytes(value);
+            if (!BitConverter.IsLittleEndian)
+                Array.Reverse(floatBytes);
+            Buffer.BlockCopy(floatBytes, 0, bytes, 0, 4);
             return bytes;
         }
 
@@ -805,7 +809,11 @@ namespace RUINORERP.PacketSpec.Core.DataProcessing
         public static byte[] DoubleToBytes(double value)
         {
             byte[] bytes = new byte[8];
-            BinaryPrimitives.WriteDoubleLittleEndian(bytes, value);
+            // 在.NET Standard 2.0中手动实现小端序写入double
+            byte[] doubleBytes = BitConverter.GetBytes(value);
+            if (!BitConverter.IsLittleEndian)
+                Array.Reverse(doubleBytes);
+            Buffer.BlockCopy(doubleBytes, 0, bytes, 0, 8);
             return bytes;
         }
 
@@ -905,48 +913,8 @@ namespace RUINORERP.PacketSpec.Core.DataProcessing
 
         #region 高级数据处理功能
 
-        /// <summary>
-        /// 将对象序列化为字节数组
-        /// </summary>
-        /// <param name="obj">要序列化的对象</param>
-        /// <returns>序列化后的字节数组，如果输入为null或序列化失败则返回空数组</returns>
-        public static byte[] SerializeObject(object obj)
-        {
-            if (obj == null)
-                return Array.Empty<byte>();
-
-            try
-            {
-                string json = System.Text.Json.JsonSerializer.Serialize(obj);
-                return DefaultEncoding.GetBytes(json);
-            }
-            catch
-            {
-                return Array.Empty<byte>();
-            }
-        }
-
-        /// <summary>
-        /// 从字节数组反序列化对象
-        /// </summary>
-        /// <typeparam name="T">目标对象类型</typeparam>
-        /// <param name="bytes">源字节数组</param>
-        /// <returns>反序列化后的对象，如果输入为null、空或反序列化失败则返回null</returns>
-        public static T DeserializeObject<T>(byte[] bytes) where T : class
-        {
-            if (bytes == null || bytes.Length == 0)
-                return null;
-
-            try
-            {
-                string json = DefaultEncoding.GetString(bytes);
-                return System.Text.Json.JsonSerializer.Deserialize<T>(json);
-            }
-            catch
-            {
-                return null;
-            }
-        }
+         
+ 
 
         /// <summary>
         /// 计算字节数组的CRC32校验和
@@ -1074,7 +1042,10 @@ namespace RUINORERP.PacketSpec.Core.DataProcessing
         {
             if (bytes == null || startIndex < 0 || startIndex + 4 > bytes.Length)
                 return 0;
-            return BinaryPrimitives.ReadSingleLittleEndian(bytes.AsSpan(startIndex));
+            // 在.NET Standard 2.0中手动实现小端序读取float
+            uint intValue = (uint)(bytes[startIndex] | (bytes[startIndex + 1] << 8) | (bytes[startIndex + 2] << 16) | (bytes[startIndex + 3] << 24));
+            float value = BitConverter.ToSingle(BitConverter.GetBytes(intValue), 0);
+            return value;
         }
 
         /// <summary>
@@ -1088,7 +1059,13 @@ namespace RUINORERP.PacketSpec.Core.DataProcessing
         {
             if (bytes == null || startIndex < 0 || startIndex + 8 > bytes.Length)
                 return 0;
-            return BinaryPrimitives.ReadDoubleLittleEndian(bytes.AsSpan(startIndex));
+            // 在.NET Standard 2.0中手动实现小端序读取double
+            byte[] doubleBytes = new byte[8];
+            Buffer.BlockCopy(bytes, startIndex, doubleBytes, 0, 8);
+            if (!BitConverter.IsLittleEndian)
+                Array.Reverse(doubleBytes);
+            double value = BitConverter.ToDouble(doubleBytes, 0);
+            return value;
         }
 
         /// <summary>

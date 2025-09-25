@@ -16,7 +16,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 发送弹窗消息命令处理器 - 处理向客户端发送弹窗消息的请求
     /// </summary>
     [CommandHandler("SendPopupMessageCommandHandler", priority: 88)]
-    public class SendPopupMessageCommandHandler : UnifiedCommandHandlerBase
+    public class SendPopupMessageCommandHandler : CommandHandlerBase
     {
         // private readonly IMessageService _messageService; // 暂时注释，缺少IMessageService接口定义
 

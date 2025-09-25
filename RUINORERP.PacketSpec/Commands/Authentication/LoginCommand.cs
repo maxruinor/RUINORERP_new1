@@ -1,4 +1,4 @@
-﻿﻿using RUINORERP.PacketSpec.Models;
+﻿using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using System;
@@ -69,7 +69,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             {
                 // 登录命令契约只定义数据结构，实际的业务逻辑在Handler中实现
                 // 这里只做基本的数据验证
-                
+
                 // 验证登录请求数据
                 if (LoginRequest == null)
                 {
@@ -83,7 +83,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
 
                 // 构建登录数据
                 var loginData = GetSerializableData();
-                
+
                 // 返回成功结果，实际的网络请求由通信服务处理
                 var result = CommandResult.Success(loginData, "登录命令构建成功");
                 return Task.FromResult(result);
@@ -106,7 +106,10 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             {
                 return baseResult;
             }
-
+            if (this.Packet != null)
+            {
+                LoginRequest = this.Packet.GetJsonData<LoginRequest>();
+            }
             // 验证登录请求数据
             if (LoginRequest == null)
             {

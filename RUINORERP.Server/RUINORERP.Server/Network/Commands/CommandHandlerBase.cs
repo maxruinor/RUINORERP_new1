@@ -9,26 +9,27 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Models.Core;
 using System.Threading;
 using Newtonsoft.Json;
+using RUINORERP.Global.CustomAttribute;
 
 namespace RUINORERP.Server.Network.Commands
 {
     /// <summary>
     /// 统一命令处理器基类 - 提供标准化的命令处理模板
     /// </summary>
-    public abstract class UnifiedCommandHandlerBase : BaseCommandHandler
+    public abstract class CommandHandlerBase : BaseCommandHandler
     {
 
-        protected ILogger<UnifiedCommandHandlerBase> logger { get; set; }
+        protected ILogger<CommandHandlerBase> logger { get; set; }
         
         /// <summary>
         /// 无参构造函数，以支持Activator.CreateInstance创建实例
         /// </summary>
-        protected UnifiedCommandHandlerBase() : base(new LoggerFactory().CreateLogger<BaseCommandHandler>())
+        protected CommandHandlerBase() : base(new LoggerFactory().CreateLogger<BaseCommandHandler>())
         {
-            logger = new LoggerFactory().CreateLogger<UnifiedCommandHandlerBase>();
+            logger = new LoggerFactory().CreateLogger<CommandHandlerBase>();
         }
 
-        public UnifiedCommandHandlerBase(ILogger<UnifiedCommandHandlerBase> _Logger) : base(_Logger)
+        public CommandHandlerBase(ILogger<CommandHandlerBase> _Logger) : base(_Logger)
         {
             logger = _Logger;
         }
@@ -67,6 +68,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 具体的命令处理逻辑（由子类实现）
         /// </summary>
+        [MustOverride]
         protected abstract Task<CommandResult> ProcessCommandAsync(ICommand command, CancellationToken cancellationToken);
 
         /// <summary>

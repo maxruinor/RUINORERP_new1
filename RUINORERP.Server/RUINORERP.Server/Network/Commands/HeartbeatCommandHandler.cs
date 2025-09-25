@@ -20,7 +20,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 处理客户端发送的心跳命令，维持连接活跃状态
     /// </summary>
     [CommandHandler("HeartbeatCommandHandler", priority: 50)]
-    public class HeartbeatCommandHandler : UnifiedCommandHandlerBase
+    public class HeartbeatCommandHandler : CommandHandlerBase
     {
          private readonly ISessionService _sessionService; 
 

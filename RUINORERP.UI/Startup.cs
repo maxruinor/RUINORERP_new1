@@ -338,6 +338,7 @@ namespace RUINORERP.UI
         /// </summary>
         private static void ConfigureOtherServices(IServiceCollection services)
         {
+            services.AddSingleton<HardwareInfo>();
             // 注册网络通信服务
             services.AddNetworkServices();
             

@@ -7,40 +7,7 @@ using System.Threading;
 
 namespace RUINORERP.UI.Network
 {
-    /// <summary>
-    /// 客户端通信服务接口 - 业务层通信抽象
-    /// 
-    /// 🔄 接口设计目标：
-    /// 1. 为业务层提供统一通信接口
-    /// 2. 抽象底层网络通信细节
-    /// 3. 支持请求-响应模式
-    /// 4. 便于依赖注入和测试
-    /// 
-    /// 📋 核心功能：
-    /// - 业务命令发送
-    /// - 响应数据处理
-    /// - 连接状态管理
-    /// - 超时控制
-    /// - 错误处理
-    /// - 性能监控
-    /// 
-    /// 🔗 与架构集成：
-    /// - ClientCommunicationService 的具体实现
-    /// - 被业务层服务（如UserLoginService）使用
-    /// - 使用 CommunicationManager 进行网络通信
-    /// - 支持依赖注入容器
-    /// 
-    /// 📡 支持的通信模式：
-    /// - SendCommandAsync: 标准命令发送
-    /// - 泛型支持：请求/响应类型
-    /// - 匿名对象快速调用
-    /// - 超时和取消支持
-    /// 
-    /// 💡 设计特点：
-    /// - 异步操作优先
-    /// - 强类型支持
-    /// - 详细的错误信息
-    /// - 性能监控集成
+
     /// </summary>
     public interface IClientCommunicationService : IDisposable
     {

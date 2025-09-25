@@ -736,6 +736,13 @@ namespace RUINORERP.Server.Network.Services
 
                 await session.SendAsync(messageBytes);
             }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
+            {
+                // 处理管道写入器已完成的特定异常
+                _logger.LogWarning(ex, $"管道写入器已完成，无法发送消息到会话: SessionID={session.SessionID}");
+                // 忽略此异常，因为会话可能已经关闭
+                // 不向上抛出异常，避免级联错误
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"发送消息到会话时出错: SessionID={session.SessionID}");

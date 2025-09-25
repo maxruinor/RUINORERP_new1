@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -10,48 +11,6 @@ namespace RUINORERP.UI.Network.Services
 {
 /// <summary>
     /// 用户登录服务 - 新架构业务层示例实现
-    /// 
-    /// 🔄 登录业务流程（新架构）：
-    /// 1. 接收用户登录请求
-    /// 2. 验证输入参数完整性
-    /// 3. 构建登录命令对象（LoginCommand）
-    /// 4. 通过 ClientCommunicationService 发送命令
-    /// 5. ClientCommunicationService → CommunicationManager → SuperSocketClient
-    /// 6. 等待服务器响应（通过 RequestResponseManager 协调）
-    /// 7. ClientDataFlowHandler 处理响应数据流
-    /// 8. ClientCommunicationService 执行命令响应处理
-    /// 9. 返回登录结果给业务层
-    /// 10. 管理用户会话状态（令牌、会话ID等）
-    /// 
-    /// 📋 核心职责：
-    /// - 用户身份验证业务逻辑
-    /// - 登录/登出会话管理
-    /// - 访问令牌和刷新令牌管理
-    /// - 登录状态维护与验证
-    /// - 与 ClientCommunicationService 集成
-    /// - 统一的错误处理和业务日志
-    /// 
-    /// 🔗 新架构集成：
-    /// - 依赖注入：通过 IClientCommunicationService 接口
-    /// - 数据流：业务请求 → ClientCommunicationService → CommunicationManager
-    /// - 响应流：SuperSocketClient → ClientDataFlowHandler → ClientCommandProcessor → 业务层
-    /// - 事件流：ClientEventManager 协调连接状态和命令事件
-    /// - 作为业务服务层的标准实现模板
-    /// 
-    /// 📡 支持的认证命令：
-    /// - Login: 用户登录认证
-    /// - Logout: 用户安全登出
-    /// - ValidateToken: 访问令牌有效性验证
-    /// - RefreshToken: 刷新访问令牌
-    /// 
-    /// 💡 新架构设计特点：
-    /// - 完全异步的 TAP 模式（Task-based Asynchronous Pattern）
-    /// - 强类型命令对象和响应模型
-    /// - 统一的超时和取消令牌支持
-    /// - 与 ClientCommunicationService 深度集成
-    /// - 支持依赖注入和单元测试
-    /// - 遵循单一职责原则（SRP）
-    /// - 提供详细的业务操作日志
     /// </summary>
     public class UserLoginService
     {

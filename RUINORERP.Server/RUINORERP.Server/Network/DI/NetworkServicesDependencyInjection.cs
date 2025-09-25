@@ -71,7 +71,7 @@ namespace RUINORERP.Server.Network.DI
             // 自动注册所有命令处理器
             var handlerTypes = Assembly.GetExecutingAssembly().GetTypes()
                 .Where(t => t.IsClass && !t.IsAbstract &&
-                           (t.IsSubclassOf(typeof(UnifiedCommandHandlerBase)) ||
+                           (t.IsSubclassOf(typeof(CommandHandlerBase)) ||
                             t.IsSubclassOf(typeof(BaseCommandHandler))))
                 .ToList();
 

@@ -8,35 +8,7 @@ using RUINORERP.PacketSpec.Models.Core;
 namespace RUINORERP.UI.Network
 {
     /// <summary>
-    /// 业务管道过滤器 - SuperSocket数据包解析器
-    /// 
-    /// 🔄 数据包解析流程：
-    /// 1. SuperSocket接收原始字节流
-    /// 2. 解析固定18字节包头
-    /// 3. 提取包体长度信息
-    /// 4. 等待完整包体数据到达
-    /// 5. 创建BizPackageInfo实例
-    /// 6. 填充数据包信息
-    /// 
-    /// 📋 核心职责：
-    /// - 固定头部解析（18字节）
-    /// - 包体长度计算
-    /// - 数据包完整性验证
-    /// - 数据包信息封装
-    /// - 多包处理支持
-    /// - 错误处理与日志
-    /// 
-    /// 🔗 与架构集成：
-    /// - 继承 SuperSocket FixedHeaderReceiveFilter
-    /// - 创建 BizPackageInfo 数据包实例
-    /// - 为 SuperSocketClient 提供解析后的数据
-    /// - 使用 EncryptedProtocol 进行协议解析
-    /// 
-    /// 📐 数据包格式：
-    /// - 包头：固定18字节
-    /// - 包体：变长，长度由包头指定
-    /// - 总大小：包头+包体
-    /// - 验证：完整性检查
+   
     /// </summary>
     public class BizPipelineFilter : FixedHeaderReceiveFilter<BizPackageInfo>
     {

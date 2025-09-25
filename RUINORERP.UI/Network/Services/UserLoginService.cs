@@ -1,3 +1,4 @@
+using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -7,167 +8,215 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.UI.Network.Services
 {
-    /// <summary>
-    /// 用户登录服务
-    /// 处理用户身份验证和会话管理相关功能
+/// <summary>
+    /// 用户登录服务 - 新架构业务层示例实现
+    /// 
+    /// 🔄 登录业务流程（新架构）：
+    /// 1. 接收用户登录请求
+    /// 2. 验证输入参数完整性
+    /// 3. 构建登录命令对象（LoginCommand）
+    /// 4. 通过 ClientCommunicationService 发送命令
+    /// 5. ClientCommunicationService → CommunicationManager → SuperSocketClient
+    /// 6. 等待服务器响应（通过 RequestResponseManager 协调）
+    /// 7. ClientDataFlowHandler 处理响应数据流
+    /// 8. ClientCommunicationService 执行命令响应处理
+    /// 9. 返回登录结果给业务层
+    /// 10. 管理用户会话状态（令牌、会话ID等）
+    /// 
+    /// 📋 核心职责：
+    /// - 用户身份验证业务逻辑
+    /// - 登录/登出会话管理
+    /// - 访问令牌和刷新令牌管理
+    /// - 登录状态维护与验证
+    /// - 与 ClientCommunicationService 集成
+    /// - 统一的错误处理和业务日志
+    /// 
+    /// 🔗 新架构集成：
+    /// - 依赖注入：通过 IClientCommunicationService 接口
+    /// - 数据流：业务请求 → ClientCommunicationService → CommunicationManager
+    /// - 响应流：SuperSocketClient → ClientDataFlowHandler → ClientCommandProcessor → 业务层
+    /// - 事件流：ClientEventManager 协调连接状态和命令事件
+    /// - 作为业务服务层的标准实现模板
+    /// 
+    /// 📡 支持的认证命令：
+    /// - Login: 用户登录认证
+    /// - Logout: 用户安全登出
+    /// - ValidateToken: 访问令牌有效性验证
+    /// - RefreshToken: 刷新访问令牌
+    /// 
+    /// 💡 新架构设计特点：
+    /// - 完全异步的 TAP 模式（Task-based Asynchronous Pattern）
+    /// - 强类型命令对象和响应模型
+    /// - 统一的超时和取消令牌支持
+    /// - 与 ClientCommunicationService 深度集成
+    /// - 支持依赖注入和单元测试
+    /// - 遵循单一职责原则（SRP）
+    /// - 提供详细的业务操作日志
     /// </summary>
     public class UserLoginService
     {
         private readonly IClientCommunicationService _communicationService;
-        private readonly ClientCommandDispatcher _commandDispatcher;
+        private readonly ILogger<UserLoginService> _logger;
 
         /// <summary>
-        /// 构造函数
+        /// 用户登录服务构造函数
         /// </summary>
-        /// <param name="communicationService">通信服务</param>
-        /// <param name="commandDispatcher">命令调度器</param>
-        public UserLoginService(
-            IClientCommunicationService communicationService,
-            ClientCommandDispatcher commandDispatcher)
+        /// <param name="communicationService">客户端通信服务，通过依赖注入提供</param>
+        /// <param name="logger">日志记录器，可选</param>
+        /// <remarks>
+        /// 新架构依赖注入示例：
+        /// services.AddSingleton&lt;IClientCommunicationService, ClientCommunicationService&gt;();
+        /// services.AddTransient&lt;UserLoginService&gt;();
+        /// 
+        /// 使用方式：
+        /// var loginService = serviceProvider.GetService&lt;UserLoginService&gt;();
+        /// </remarks>
+        public UserLoginService(IClientCommunicationService communicationService, ILogger<UserLoginService> logger = null)
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
-            _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
+            _logger = logger;
         }
 
         /// <summary>
-        /// 用户登录
+        /// 用户登录 - 新架构完整流程
         /// </summary>
         /// <param name="username">用户名</param>
         /// <param name="password">密码</param>
-        /// <param name="clientInfo">客户端信息</param>
+        /// <param name="clientInfo">客户端信息（可选）</param>
         /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>登录响应</returns>
-        public async Task<ApiResponse<LoginResponse>> LoginAsync(
-            string username, 
-            string password, 
+        /// <returns>登录响应结果</returns>
+        /// <remarks>
+        /// 新架构数据流：
+        /// 1. 构建 LoginCommand 命令对象
+        /// 2. 调用 ClientCommunicationService.SendCommandAsync
+        /// 3. ClientCommunicationService → ClientNetworkManager
+        /// 4. ClientNetworkManager → SuperSocketClient（网络发送）
+        /// 5. 服务器处理并返回响应
+        /// 6. SuperSocketClient → BizPipelineFilter（接收响应）
+        /// 7. BizPipelineFilter → ClientCommunicationService（处理响应）
+        /// 8. ClientCommunicationService → UserLoginService（返回结果）
+        /// 9. ClientCommunicationService → UserLoginService（业务结果）
+        /// 
+        /// 异常处理：
+        /// - 网络异常：由 CommunicationManager 处理
+        /// - 序列化异常：由 BizPipelineFilter 处理
+        /// - 业务异常：由服务器返回的错误信息处理
+        /// - 超时异常：由 RequestResponseManager 处理
+        /// </remarks>
+        public Task<ApiResponse<LoginResponse>> LoginAsync(
+            string username,
+            string password,
             string clientInfo = null,
             CancellationToken cancellationToken = default)
         {
-            // 创建登录命令
-            var loginCommand = new LoginCommand(username, password, clientInfo);
+            _logger?.LogInformation("开始用户登录流程，用户名: {Username}", username);
             
-            // 验证命令
-            var validationResult = loginCommand.Validate();
-            if (!validationResult.IsValid)
-            {
-                return ApiResponse<LoginResponse>.Failure(validationResult.ErrorMessage, 400);
-            }
-
-            // 发送命令并等待响应
-            var response = await _communicationService.SendCommandAsync<LoginResponse>(
-                loginCommand, 
-                cancellationToken);
-
-            return response;
+            var command = new LoginCommand(username, password, clientInfo);
+            _logger?.LogDebug("构建登录命令对象: CommandId={CommandId}, Category={Category}", 
+                command.CommandIdentifier, command.CommandIdentifier.Category);
+            
+            return ExecuteCommandAsync<LoginResponse>(command, cancellationToken);
         }
 
         /// <summary>
         /// 用户登出
         /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>登出结果</returns>
-        public async Task<ApiResponse<bool>> LogoutAsync(
+        public Task<ApiResponse<bool>> LogoutAsync(
             string sessionId,
             CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                // 准备登出数据
-                var logoutData = new 
-                { 
-                    SessionId = sessionId,
-                    Timestamp = DateTime.UtcNow 
-                };
-
-                // 发送登出请求
-                var success = await _communicationService.SendOneWayCommandAsync(
-                    AuthenticationCommands.Logout,
-                    logoutData,
-                    cancellationToken);
-
-                if (success)
-                {
-                    return ApiResponse<bool>.CreateSuccess(true, "用户登出成功");
-                }
-                else
-                {
-                    return ApiResponse<bool>.Failure("用户登出失败", 500);
-                }
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<bool>.Failure($"登出过程中发生异常: {ex.Message}", 500);
-            }
-        }
+            => ExecuteCommandAsync<bool>(
+                new { SessionId = sessionId, Timestamp = DateTime.UtcNow },
+                AuthenticationCommands.Logout,
+                cancellationToken);
 
         /// <summary>
         /// 验证Token有效性
         /// </summary>
-        /// <param name="token">访问令牌</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>验证结果</returns>
-        public async Task<ApiResponse<bool>> ValidateTokenAsync(
+        public Task<ApiResponse<bool>> ValidateTokenAsync(
             string token,
             CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                // 准备验证数据
-                var validateData = new 
-                { 
-                    Token = token,
-                    Timestamp = DateTime.UtcNow 
-                };
-
-                // 发送验证请求并等待响应
-                var response = await _communicationService.SendCommandAsync<object, bool>(
-                    AuthenticationCommands.ValidateToken,
-                    validateData,
-                    cancellationToken);
-
-                // 直接返回响应，因为 SendCommandAsync 已经返回了 ApiResponse<bool>
-                return response;
-            }
-            catch (Exception ex)
-            {
-                return ApiResponse<bool>.Failure($"Token验证过程中发生异常: {ex.Message}", 500);
-            }
-        }
+            => ExecuteCommandAsync<bool>(
+                new { Token = token, Timestamp = DateTime.UtcNow },
+                AuthenticationCommands.ValidateToken,
+                cancellationToken);
 
         /// <summary>
         /// 刷新访问令牌
         /// </summary>
-        /// <param name="refreshToken">刷新令牌</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>新的访问令牌信息</returns>
-        public async Task<ApiResponse<TokenInfo>> RefreshTokenAsync(
+        public Task<ApiResponse<TokenInfo>> RefreshTokenAsync(
             string refreshToken,
             CancellationToken cancellationToken = default)
+            => ExecuteCommandAsync<TokenInfo>(
+                new { RefreshToken = refreshToken, Timestamp = DateTime.UtcNow },
+                AuthenticationCommands.RefreshToken,
+                cancellationToken);
+
+        /* -------------------- 私有公共模板 -------------------- */
+
+        /// <summary>
+        /// 统一命令执行模板 - 新架构集成
+        /// </summary>
+        /// <typeparam name="TResponse">响应类型</typeparam>
+        /// <param name="command">命令对象</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>API响应结果</returns>
+        /// <remarks>
+        /// 新架构集成流程：
+        /// 1. 命令验证（参数完整性、业务规则）
+        /// 2. 调用 ClientCommunicationService.SendCommandAsync
+        /// 3. ClientCommunicationService 构建请求数据包
+        /// 4. CommunicationManager 协调网络发送
+        /// 5. SuperSocketClient 执行实际网络通信
+        /// 6. 等待服务器响应（通过 RequestResponseManager）
+        /// 7. BizPipelineFilter 处理响应数据流
+        /// 8. ClientCommunicationService 执行命令响应处理
+        /// 9. 返回最终业务结果
+        /// 
+        /// 错误处理层次：
+        /// - 验证错误：本地业务验证（400状态码）
+        /// - 网络错误：CommunicationManager 处理（500状态码）
+        /// - 超时错误：RequestResponseManager 处理（408状态码）
+        /// - 服务器错误：业务响应中包含错误信息
+        /// </remarks>
+        private async Task<ApiResponse<TResponse>> ExecuteCommandAsync<TResponse>(
+            ICommand command,
+            CancellationToken cancellationToken)
         {
+            _logger?.LogDebug("开始执行命令: {CommandId}, 类型: {CommandType}", 
+                command.CommandIdentifier, command.GetType().Name);
+            
+            // 步骤1：命令验证
+            var validationResult = command.Validate();
+            if (!validationResult.IsValid)
+            {
+                _logger?.LogWarning("命令验证失败: {ErrorMessage}", validationResult.ErrorMessage);
+                return ApiResponse<TResponse>.Failure(validationResult.ErrorMessage, 400);
+            }
+            
             try
             {
-                // 准备刷新数据
-                var refreshData = new 
-                { 
-                    RefreshToken = refreshToken,
-                    Timestamp = DateTime.UtcNow 
-                };
-
-                // 发送刷新请求并等待响应
-                var response = await _communicationService.SendCommandAsync<object, TokenInfo>(
-                    AuthenticationCommands.RefreshToken,
-                    refreshData,
-                    cancellationToken);
-
-                // 直接返回响应，因为 SendCommandAsync 已经返回了 ApiResponse<TokenInfo>
+                // 步骤2-8：通过新架构发送命令并等待响应
+                _logger?.LogDebug("通过新架构发送命令，超时时间: {Timeout}ms", command.TimeoutMs);
+                var response = await _communicationService.SendCommandAsync<TResponse>(command, cancellationToken);
+                
+                _logger?.LogDebug("命令执行完成，响应状态: {Success}", response.Success);
                 return response;
             }
             catch (Exception ex)
             {
-                return ApiResponse<TokenInfo>.Failure($"令牌刷新过程中发生异常: {ex.Message}", 500);
+                _logger?.LogError(ex, "命令执行异常: {CommandId}", command.CommandIdentifier);
+                return ApiResponse<TResponse>.Failure($"命令执行失败: {ex.Message}", 500);
             }
         }
+
+        /// <summary>
+        /// 匿名请求体快速重载（用于无专用 Command 的简单场景）
+        /// </summary>
+        private Task<ApiResponse<TResponse>> ExecuteCommandAsync<TResponse>(
+            object requestBody,
+            CommandId commandId,
+            CancellationToken cancellationToken)
+            => _communicationService.SendCommandAsync<object, TResponse>(commandId, requestBody, cancellationToken);
     }
 
     /// <summary>

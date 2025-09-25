@@ -1,3 +1,4 @@
+using RUINORERP.PacketSpec.Models.Core;
 using SuperSocket.ClientEngine;
 using SuperSocket.ProtoBase;
 using System;
@@ -7,35 +8,38 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.UI.Network
 {
-    /// <summary>
-    /// 基于SuperSocket.ClientEngine的Socket客户端实现
+/// <summary>
+    /// SuperSocket客户端 - 底层Socket通信实现
     /// 
-    /// DI兼容性说明：
-    /// 1. 通过无参构造函数支持依赖注入容器实例化
-    /// 2. 实现ISocketClient接口便于接口注入
-    /// 3. 实现IDisposable接口便于资源管理
-    /// 4. 注册为单例服务以保持连接状态一致性
+    /// 🔄 Socket通信流程：
+    /// 1. 建立TCP连接
+    /// 2. 配置SuperSocket管道过滤器
+    /// 3. 接收网络数据流
+    /// 4. 使用BizPipelineFilter解析数据包
+    /// 5. 触发数据接收事件
+    /// 6. 发送响应数据
     /// 
-    /// 线程安全说明：
-    /// 1. 连接状态字段使用volatile关键字确保可见性
-    /// 2. 事件处理方法中对共享状态的访问是安全的
+    /// 📋 核心职责：
+    /// - TCP连接管理
+    /// - 原始数据收发
+    /// - 数据包解析协调
+    /// - 连接事件处理
+    /// - 错误处理与重连
+    /// - 性能统计
     /// 
-    /// 使用示例：
-    /// // 通过依赖注入获取实例
-    /// public class ClientCommunicationService
-    /// {
-    ///     private readonly ISocketClient _socketClient;
-    ///     
-    ///     public ClientCommunicationService(ISocketClient socketClient)
-    ///     {
-    ///         _socketClient = socketClient;
-    ///     }
-    ///     
-    ///     public async Task<bool> ConnectAsync(string serverUrl, int port)
-    ///     {
-    ///         return await _socketClient.ConnectAsync(serverUrl, port);
-    ///     }
-    /// }
+    /// 🔗 与架构集成：
+    /// - 被 CommunicationManager 管理
+    /// - 使用 BizPipelineFilter 解析数据
+    /// - 触发 ClientEventManager 连接事件
+    /// - 为 CommunicationManager 提供解析后的PacketModel数据
+    /// - 接收 ClientCommunicationService 的发送请求
+    /// 
+    /// ⚙️ 技术特性：
+    /// - 基于SuperSocket框架
+    /// - 支持异步数据收发
+    /// - 内置连接池管理
+    /// - 自动重连机制
+    /// - 详细的连接日志
     /// </summary>
     public class SuperSocketClient : ISocketClient
     {
@@ -65,9 +69,9 @@ namespace RUINORERP.UI.Network
         public bool IsConnected => _isConnected;
 
         /// <summary>
-        /// 接收到数据时触发的事件
+        /// 接收到数据包时触发的事件 - 直接传递PacketModel，避免重复序列化/反序列化
         /// </summary>
-        public event Action<byte[]> Received;
+        public event Action<PacketModel> Received;
 
         /// <summary>
         /// 连接关闭时触发的事件
@@ -149,16 +153,18 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 处理接收到数据包事件
+        /// 处理接收到数据包事件 - 直接传递解析后的PacketModel，避免重复处理
         /// </summary>
         private void OnPackageReceived(object sender, PackageEventArgs<BizPackageInfo> e)
         {
-            // 将接收到的数据包转换为字节数组并触发Received事件
-            if (e.Package.Body != null)
+            // 直接传递解析后的PacketModel，不再重新序列化
+            if (e.Package?.Packet != null)
             {
-                Received?.Invoke(e.Package.Body);
+                Received?.Invoke(e.Package.Packet);
             }
         }
+
+
 
         /// <summary>
         /// 处理客户端错误事件

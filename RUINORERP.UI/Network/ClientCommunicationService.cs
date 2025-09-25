@@ -1,316 +1,259 @@
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Security;
 using RUINORERP.PacketSpec.Serialization;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.UI.Network
 {
-    /// <summary>
-    /// 客户端通信服务实现类 - IClientCommunicationService 的具体实现
+/// <summary>
+    /// 客户端通信与命令处理服务 - 业务层通信统一入口与命令处理核心
     /// 
-    /// 设计目的：
-    /// 1. 提供 IClientCommunicationService 接口的具体实现
-    /// 2. 处理与服务器的具体通信逻辑
-    /// 3. 作为业务层和底层Socket通信之间的桥梁
+    /// 🔄 完整通信流程：
+    /// 发送方向：
+    /// 1. 接收业务层命令请求
+    /// 2. 序列化命令数据
+    /// 3. 通过 CommunicationManager 发送数据
+    /// 4. 等待响应或处理超时
+    /// 5. 返回业务执行结果
     /// 
-    /// 职责说明：
-    /// 1. 管理与服务器的连接状态
-    /// 2. 发送和接收数据包
-    /// 3. 处理命令请求和响应
-    /// 4. 管理事件分发
+    /// 接收方向：
+    /// 1. 订阅 ClientEventManager.CommandReceived 事件
+    /// 2. 接收服务器命令ID和业务数据
+    /// 3. 使用 ClientCommandDispatcher 查找对应处理器
+    /// 4. 创建命令实例并初始化
+    /// 5. 执行具体业务逻辑
+    /// 6. 处理执行结果和异常
     /// 
-    /// 使用说明：
-    /// - 此类通过依赖注入容器自动注册和解析
-    /// - 业务层应通过 IClientCommunicationService 接口使用此类
-    /// - 不要直接实例化此类，应通过依赖注入获取实例
+    /// 📋 核心职责：
+    /// - 业务层通信接口（发送）
+    /// - 服务器命令处理（接收）
+    /// - 请求-响应生命周期管理
+    /// - 命令生命周期管理（创建→初始化→执行→清理）
+    /// - 异步操作支持
+    /// - 超时控制
+    /// - 错误处理与重试
+    /// - 性能监控与日志
+    /// - 线程安全管理
     /// 
-    /// 分层架构：
-    /// 业务层 (UserLoginService 等) 
-    ///     → 接口层 (IClientCommunicationService)
-    ///     → 实现层 (ClientCommunicationService)
-    ///     → 传输层 (ISocketClient/SuperSocketClient)
+    /// 🔗 与架构集成：
+    /// - 为业务层提供统一通信接口
+    /// - 使用 CommunicationManager 进行网络通信
+    /// - 接收并处理服务器主动推送的命令
+    /// - 协调请求-响应匹配
+    /// - 处理业务层超时和重试
     /// 
-    /// 关联组件：
-    /// - 依赖 ISocketClient 进行底层Socket通信
-    /// - 使用 ClientCommandDispatcher 进行命令分发
-    /// - 使用 RequestResponseManager 处理请求响应
-    /// - 使用 ClientEventManager 管理事件
+    /// 💡 使用场景：
+    /// - UserLoginService 等具体业务服务
+    /// - 需要与服务器通信的所有业务组件
+    /// - 需要请求-响应模式的业务操作
+    /// - 需要处理服务器主动推送命令的场景
     /// </summary>
-    public class ClientCommunicationService : IClientCommunicationService
+    public class ClientCommunicationService : IClientCommunicationService, IDisposable
     {
+        // Socket客户端，负责底层网络通信
         private readonly ISocketClient _socketClient;
-        private readonly ClientCommandDispatcher _commandDispatcher;
-        private readonly ClientCommandFactory _commandFactory;
-        private readonly RequestResponseManager _requestResponseManager;
+        // 请求-响应管理器，处理请求和响应的匹配
+        private readonly RequestResponseManager _rrManager;
+        // 客户端事件管理器，管理连接状态和命令接收事件
         private readonly ClientEventManager _eventManager;
+        // 命令调度器，用于分发命令到对应的处理类
+        private readonly ICommandDispatcher _commandDispatcher;
+        // 日志记录器
+        private readonly ILogger<ClientCommunicationService> _logger;
+        // 连接状态标志
         private bool _isConnected;
+        // 用于线程同步的锁
+        private readonly object _syncLock = new object();
+        // 是否已释放资源
+        private bool _disposed = false;
+        // 服务器地址
+        private string _serverAddress;
+        // 服务器端口
+        private int _serverPort;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="socketClient">Socket客户端</param>
-        /// <param name="commandDispatcher">客户端命令调度器</param>
+        /// <param name="socketClient">Socket客户端接口，提供底层网络通信能力</param>
+        /// <param name="commandDispatcher">命令调度器，用于分发命令到对应的处理类</param>
+        /// <param name="logger">日志记录器</param>
+        /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
         public ClientCommunicationService(
             ISocketClient socketClient,
-            ClientCommandDispatcher commandDispatcher)
+            ICommandDispatcher commandDispatcher,
+            ILogger<ClientCommunicationService> logger)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
-            _commandFactory = new ClientCommandFactory(_commandDispatcher);
-            _requestResponseManager = new RequestResponseManager();
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _rrManager = new RequestResponseManager();
             _eventManager = new ClientEventManager();
 
-            // 注册响应处理事件
+            // 注册事件处理程序
             _socketClient.Received += OnReceived;
             _socketClient.Closed += OnClosed;
+
+            // 订阅命令接收事件
+            SubscribeCommandEvents();
         }
 
         /// <summary>
-        /// 连接状态
+        /// 获取当前连接状态
         /// </summary>
         public bool IsConnected => _isConnected;
 
         /// <summary>
-        /// 当接收到服务器命令时触发的事件
+        /// 获取服务器地址
+        /// </summary>
+        public string ServerAddress => _serverAddress;
+
+        /// <summary>
+        /// 获取服务器端口
+        /// </summary>
+        public int ServerPort => _serverPort;
+
+        /// <summary>
+        /// 命令接收事件，当从服务器接收到命令时触发
         /// </summary>
         public event Action<CommandId, object> CommandReceived
         {
-            add { _eventManager.CommandReceived += value; }
-            remove { _eventManager.CommandReceived -= value; }
+            add => _eventManager.CommandReceived += value;
+            remove => _eventManager.CommandReceived -= value;
         }
 
         /// <summary>
-        /// 连接到服务器
+        /// 异步连接到服务器
         /// </summary>
-        /// <param name="serverUrl">服务器地址</param>
-        /// <param name="port">端口号</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>连接是否成功</returns>
-        public async Task<bool> ConnectAsync(string serverUrl, int port, CancellationToken cancellationToken = default)
+        /// <param name="serverUrl">服务器URL或IP地址</param>
+        /// <param name="port">服务器端口号</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>连接成功返回true，失败返回false</returns>
+        public Task<bool> ConnectAsync(string serverUrl, int port, CancellationToken ct = default)
         {
-            if (_isConnected)
-            {
-                return true;
-            }
+            if (string.IsNullOrEmpty(serverUrl))
+                throw new ArgumentException("服务器URL不能为空", nameof(serverUrl));
+            
+            if (port <= 0 || port > 65535)
+                throw new ArgumentOutOfRangeException(nameof(port), "端口号必须在1-65535范围内");
 
-            try
-            {
-                // 直接使用_socketClient的连接结果，它已经处理了状态同步
-                _isConnected = await _socketClient.ConnectAsync(serverUrl, port, cancellationToken);
-                _eventManager.OnConnectionStatusChanged(_isConnected);
-                return _isConnected;
-            }
-            catch (Exception ex)
-            {
-                // 记录连接失败异常
-                _eventManager.OnErrorOccurred(new Exception($"连接服务器失败: {ex.Message}", ex));
-                _isConnected = false;
-                return false;
-            }
+            return SafeConnectAsync(serverUrl, port, ct);
         }
 
         /// <summary>
-        /// 断开连接
+        /// 断开与服务器的连接
         /// </summary>
         public void Disconnect()
         {
-            if (_isConnected)
+            lock (_syncLock)
             {
-                _socketClient.Disconnect();
-                _isConnected = false;
-                _eventManager.OnConnectionStatusChanged(_isConnected);
-            }
-        }
-
-        /// <summary>
-        /// 发送命令并等待响应
-        /// </summary>
-        public async Task<ApiResponse<TResponse>> SendCommandAsync<TRequest, TResponse>(
-            CommandId commandId,
-            TRequest requestData,
-            CancellationToken cancellationToken = default,
-            int timeoutMs = 30000)
-        {
-            if (!_isConnected)
-            {
-                _eventManager.OnErrorOccurred(new Exception("未连接到服务器"));
-                return ApiResponse<TResponse>.Failure("未连接到服务器");
-            }
-
-            try
-            {
-                return await _requestResponseManager.SendRequestAsync<TRequest, ApiResponse<TResponse>>(
-                    _socketClient,
-                    commandId,
-                    requestData,
-                    cancellationToken,
-                    timeoutMs);
-            }
-            catch (TimeoutException ex)
-            {
-                _eventManager.OnErrorOccurred(new Exception($"请求超时: {commandId}", ex));
-                return ApiResponse<TResponse>.Failure("请求超时");
-            }
-            catch (OperationCanceledException ex)
-            {
-                _eventManager.OnErrorOccurred(new Exception($"请求被取消: {commandId}", ex));
-                return ApiResponse<TResponse>.Failure("请求被取消");
-            }
-            catch (Exception ex)
-            {
-                _eventManager.OnErrorOccurred(new Exception($"发送命令失败: {commandId}, {ex.Message}", ex));
-                return ApiResponse<TResponse>.Failure($"发送命令失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 发送命令并等待响应（使用命令对象）
-        /// </summary>
-        public async Task<ApiResponse<TResponse>> SendCommandAsync<TResponse>(
-            ICommand command,
-            CancellationToken cancellationToken = default)
-        {
-            if (command == null)
-            {
-                _eventManager.OnErrorOccurred(new ArgumentNullException(nameof(command)));
-                throw new ArgumentNullException(nameof(command));
-            }
-
-            // 从命令对象中提取数据
-            object requestData = null;
-            var timeoutMs = command.TimeoutMs;
-
-            // 如果命令是BaseCommand类型，可以获取可序列化的数据
-            requestData = command.GetSerializableData();
-
-            // 调用通用方法
-            return await SendCommandAsync<object, TResponse>(
-                command.CommandIdentifier,
-                requestData,
-                cancellationToken,
-                timeoutMs);
-        }
-
-        /// <summary>
-        /// 发送单向命令（不等待响应）
-        /// </summary>
-        public async Task<bool> SendOneWayCommandAsync<TRequest>(
-            CommandId commandId,
-            TRequest requestData,
-            CancellationToken cancellationToken = default)
-        {
-            if (!_isConnected)
-            {
-                _eventManager.OnErrorOccurred(new Exception("未连接到服务器"));
-                return false;
-            }
-
-            try
-            {
-                // 创建数据包
-                var packet = PacketBuilder.Create()
-                    .WithCommand(commandId)
-                    .WithJsonData(requestData)
-                    .WithResponseRequired(false)
-                    .WithDirection(PacketDirection.ClientToServer)
-                    .Build();
-
-                // 序列化
-                byte[] payload;
-                try
+                if (_isConnected && !_disposed)
                 {
-                    payload = UnifiedSerializationService.SerializeWithMessagePack(packet);
-                }
-                catch (Exception ex)
-                {
-                    _eventManager.OnErrorOccurred(new Exception($"序列化数据包失败: {ex.Message}", ex));
-                    return false;
-                }
-
-                // 分解CommandId
-                byte category = (byte)commandId.Category;
-                byte operationCode = commandId.OperationCode;
-
-                var original = new OriginalData(category, new byte[] { operationCode }, payload);
-                byte[] encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptClientPackToServer(original);
-
-                // 发送数据
-                await _socketClient.SendAsync(encryptedData, cancellationToken);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _eventManager.OnErrorOccurred(new Exception($"发送单向命令失败: {commandId}, {ex.Message}", ex));
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 处理接收到的数据
-        /// </summary>
-        private void OnReceived(byte[] data)
-        {
-            try
-            {
-                // 让请求响应管理器先处理响应数据
-                _requestResponseManager.HandleResponse(data);
-
-                // 解密数据
-                var decryptedData = PacketSpec.Security.EncryptedProtocol.DecryptServerPack(data);
-
-                // 反序列化数据包
-                PacketModel packet;
-                try
-                {
-                    packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(decryptedData.Two);
-                }
-                catch (Exception ex)
-                {
-                    _eventManager.OnErrorOccurred(new Exception($"反序列化数据包失败: {ex.Message}", ex));
-                    return;
-                }
-
-                // 如果没有请求ID，或者对应的任务已完成，则视为服务器主动推送的命令
-                if (packet != null&& !packet.Extensions.ContainsKey("RequestId"))
-                {
-                    // 提取命令ID和数据
-                    if (packet.Command != null)
+                    try
                     {
-                        object commandData = null;
-                        try
-                        {
-                            // 尝试解析命令数据
-                            commandData = packet.GetJsonData<object>();
-                        }
-                        catch (Exception ex)
-                        {
-                            _eventManager.OnErrorOccurred(new Exception($"解析命令数据失败: {ex.Message}", ex));
-                        }
-
-                        // 触发命令接收事件
-                        _eventManager.OnCommandReceived(packet.Command, commandData);
+                        _socketClient.Disconnect();
+                    }
+                    catch (Exception ex)
+                    {
+                        _eventManager.OnErrorOccurred(new Exception($"断开连接时发生错误: {ex.Message}", ex));
+                    }
+                    finally
+                    {
+                        _isConnected = false;
+                        _eventManager.OnConnectionStatusChanged(false);
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                _eventManager.OnErrorOccurred(new Exception($"处理接收到的数据失败: {ex.Message}", ex));
-            }
         }
 
         /// <summary>
-        /// 处理连接关闭事件
+        /// 异步发送命令到服务器并等待响应
         /// </summary>
-        private void OnClosed(EventArgs e)
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="requestData">请求数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="timeoutMs">超时时间（毫秒），默认为30000毫秒</param>
+        /// <returns>包含响应数据的ApiResponse对象</returns>
+        public Task<ApiResponse<TResponse>> SendCommandAsync<TRequest, TResponse>(
+            CommandId commandId,
+            TRequest requestData,
+            CancellationToken ct = default,
+            int timeoutMs = 30000)
         {
-            _isConnected = false;
-            _eventManager.OnConnectionClosed();
-            _eventManager.OnConnectionStatusChanged(_isConnected);
+            if (!Enum.IsDefined(typeof(CommandCategory), commandId.Category))
+                throw new ArgumentException($"无效的命令类别: {commandId.Category}", nameof(commandId));
+            
+            if (timeoutMs <= 0)
+                throw new ArgumentOutOfRangeException(nameof(timeoutMs), "超时时间必须大于0");
+
+            return _rrManager.SendRequestAsync<TRequest, ApiResponse<TResponse>>(
+                _socketClient, commandId, requestData, ct, timeoutMs);
+        }
+
+        /// <summary>
+        /// 异步发送命令对象到服务器并等待响应
+        /// </summary>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="command">命令对象</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>包含响应数据的ApiResponse对象</returns>
+        public Task<ApiResponse<TResponse>> SendCommandAsync<TResponse>(
+            ICommand command,
+            CancellationToken ct = default)
+        {
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+
+            return SendCommandAsync<object, TResponse>(
+                command.CommandIdentifier,
+                command.GetSerializableData(),
+                ct,
+                command.TimeoutMs > 0 ? command.TimeoutMs : 30000);
+        }
+
+        /// <summary>
+        /// 异步发送单向命令到服务器（不等待响应）
+        /// </summary>
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="requestData">请求数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>发送成功返回true，失败返回false</returns>
+        public Task<bool> SendOneWayCommandAsync<TRequest>(
+            CommandId commandId,
+            TRequest requestData,
+            CancellationToken ct = default)
+        {
+            if (!Enum.IsDefined(typeof(CommandCategory), commandId.Category))
+                throw new ArgumentException($"无效的命令类别: {commandId.Category}", nameof(commandId));
+
+            return SafeSendOneWayAsync(commandId, requestData, ct);
+        }
+
+        /// <summary>
+        /// 重新连接到服务器
+        /// </summary>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>重连是否成功</returns>
+        public async Task<bool> ReconnectAsync(CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(_serverAddress) || _serverPort <= 0)
+            {
+                return false;
+            }
+
+            // 断开当前连接
+            Disconnect();
+            
+            // 重新连接
+            return await ConnectAsync(_serverAddress, _serverPort, cancellationToken);
         }
 
         /// <summary>
@@ -318,11 +261,314 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public void Dispose()
         {
-            _socketClient.Received -= OnReceived;
-            _socketClient.Closed -= OnClosed;
-            _socketClient.Dispose();
-            _requestResponseManager.Dispose();
-            _isConnected = false;
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 释放资源的实际实现
+        /// </summary>
+        /// <param name="disposing">是否由Dispose方法调用</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            if (disposing)
+            {
+                // 取消订阅命令事件
+                if (_eventManager != null)
+                {
+                    _eventManager.CommandReceived -= OnCommandReceived;
+                }
+
+                // 移除事件处理程序
+                _socketClient.Received -= OnReceived;
+                _socketClient.Closed -= OnClosed;
+                
+                // 断开连接
+                try
+                {
+                    Disconnect();
+                }
+                catch { }
+                
+                // 释放托管资源
+                _socketClient?.Dispose();
+                _rrManager?.Dispose();
+            }
+
+            _disposed = true;
+        }
+
+        /* -------------------- 命令处理方法 -------------------- */
+
+        /// <summary>
+        /// 订阅命令接收事件
+        /// </summary>
+        private void SubscribeCommandEvents()
+        {
+            _eventManager.CommandReceived += OnCommandReceived;
+            _logger.LogInformation("客户端命令处理器已启动，开始监听服务器命令");
+        }
+
+        /// <summary>
+        /// 当接收到服务器命令时触发
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="data">命令数据</param>
+        private async void OnCommandReceived(CommandId commandId, object data)
+        {
+            try
+            {
+                _logger.LogInformation("接收到服务器命令: {CommandId}", commandId);
+                
+                // 使用命令调度器处理命令
+                await ProcessCommandAsync(commandId, data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理服务器命令时发生错误: {CommandId}", commandId);
+                _eventManager.OnErrorOccurred(new Exception($"处理命令 {commandId} 时发生错误: {ex.Message}", ex));
+            }
+        }
+
+        /// <summary>
+        /// 处理服务器命令
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="data">命令数据</param>
+        private async Task ProcessCommandAsync(CommandId commandId, object data)
+        {
+            try
+            {
+                // 创建命令实例
+                var command = _commandDispatcher.CreateCommand(commandId);
+                if (command == null)
+                {
+                    _logger.LogWarning("无法创建命令实例: {CommandId}", commandId);
+                    throw new InvalidOperationException($"无法创建命令实例: {commandId}");
+                }
+
+                // 设置命令属性
+                if (data != null)
+                {
+                    await InitializeCommandAsync(command, data);
+                }
+
+                // 执行命令
+                _logger.LogInformation("开始执行命令: {CommandId}", commandId);
+                var result = await command.ExecuteAsync();
+                
+                _logger.LogInformation("命令执行完成: {CommandId}, 结果: {Result}", commandId, result);
+                
+                // 无需清理命令，由命令调度器自行管理命令实例
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "命令执行失败: {CommandId}", commandId);
+                throw new Exception($"命令 {commandId} 执行失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 初始化命令
+        /// </summary>
+        /// <param name="command">命令实例</param>
+        /// <param name="data">命令数据</param>
+        private async Task InitializeCommandAsync(ICommand command, object data)
+        {
+            try
+            {
+                if (data != null)
+                {
+                    // 简化命令初始化
+                        if (data is PacketModel packetModel)
+                        {
+                            // 使用BaseCommand类型和PacketModel.Body属性
+                            if (command is RUINORERP.PacketSpec.Commands.BaseCommand baseCommand)
+                            {
+                                // 设置PacketModel对象到命令的Packet属性
+                                baseCommand.Packet = packetModel;
+                            }
+                        }
+                        else if (data is byte[] byteData)
+                        {
+                            // 如果是字节数据，反序列化为PacketModel后处理
+                            var packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(byteData);
+                            if (packet != null && command is RUINORERP.PacketSpec.Commands.BaseCommand baseCommand)
+                            {
+                                baseCommand.Packet = packet;
+                            }
+                        }
+                        else if (command is RUINORERP.PacketSpec.Commands.BaseCommand baseCommand)
+                        {
+                            // 如果有其他数据类型，创建新的PacketModel并设置Body
+                            var packet = new RUINORERP.PacketSpec.Models.Core.PacketModel();
+                            if (data != null)
+                            {
+                                // 将数据转换为JSON字符串后设置为Body
+                                var jsonData = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+                                packet.SetJsonData(jsonData);
+                            }
+                            baseCommand.Packet = packet;
+                        }
+                }
+
+                _logger.LogDebug("命令初始化完成: {CommandType}", command.GetType().Name);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "命令初始化失败: {CommandType}", command.GetType().Name);
+                throw new Exception($"命令 {command.GetType().Name} 初始化失败: {ex.Message}", ex);
+            }
+        }
+
+        /* -------------------- 私有方法 -------------------- */
+
+        /// <summary>
+        /// 安全地异步连接到服务器（包含异常处理）
+        /// </summary>
+        /// <param name="serverUrl">服务器URL</param>
+        /// <param name="port">服务器端口</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>连接成功返回true，失败返回false</returns>
+        private async Task<bool> SafeConnectAsync(string serverUrl, int port, CancellationToken ct)
+        {
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+                
+                lock (_syncLock)
+                {
+                    if (_disposed)
+                        throw new ObjectDisposedException(nameof(ClientCommunicationService));
+                }
+
+                _isConnected = await _socketClient.ConnectAsync(serverUrl, port, ct);
+                if (_isConnected)
+                {
+                    _serverAddress = serverUrl;
+                    _serverPort = port;
+                }
+                _eventManager.OnConnectionStatusChanged(_isConnected);
+                return _isConnected;
+            }
+            catch (OperationCanceledException)
+            {
+                _eventManager.OnErrorOccurred(new Exception("连接操作被取消"));
+                _isConnected = false;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _eventManager.OnErrorOccurred(new Exception($"连接服务器失败: {ex.Message}", ex));
+                _isConnected = false;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 安全地异步发送单向命令（包含异常处理）
+        /// </summary>
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="data">请求数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>发送成功返回true，失败返回false</returns>
+        private async Task<bool> SafeSendOneWayAsync<TRequest>(CommandId commandId, TRequest data, CancellationToken ct)
+        {
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+                
+                lock (_syncLock)
+                {
+                    if (!_isConnected)
+                        return false;
+                    
+                    if (_disposed)
+                        throw new ObjectDisposedException(nameof(ClientCommunicationService));
+                }
+
+                // 序列化请求数据
+                var payload = UnifiedSerializationService.SerializeWithMessagePack(data);
+                
+                // 创建原始数据包
+                var original = new OriginalData(
+                    (byte)commandId.Category,
+                    new[] { commandId.OperationCode },
+                    payload);
+
+                // 加密数据包
+                var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
+                
+                // 发送数据
+                await _socketClient.SendAsync(encrypted, ct);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                _eventManager.OnErrorOccurred(new Exception("发送命令操作被取消"));
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _eventManager.OnErrorOccurred(new Exception($"单向命令发送失败: {ex.Message}", ex));
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 处理接收到的数据
+        /// </summary>
+        /// <param name="data">接收到的原始数据</param>
+        private void OnReceived(byte[] data)
+        {
+            try
+            {
+                if (data == null || data.Length == 0)
+                    return;
+
+                // 首先尝试将数据作为响应处理
+                bool isResponse = _rrManager.HandleResponse(data);
+                
+                // 如果不是响应，则尝试作为命令处理
+                if (!isResponse)
+                {
+                    // 解密服务器数据包
+                    var decrypted = EncryptedProtocol.DecryptServerPack(data);
+                    if (decrypted.Two == null)
+                        return;
+
+                    // 反序列化数据包
+                    var packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(decrypted.Two);
+                    if (packet?.Command != null && !packet.Extensions.ContainsKey("RequestId"))
+                    {
+                        // 触发命令接收事件
+                        _eventManager.OnCommandReceived(packet.Command, packet.GetJsonData<object>());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _eventManager.OnErrorOccurred(new Exception($"接收数据处理失败: {ex.Message}", ex));
+            }
+        }
+
+        /// <summary>
+        /// 处理连接关闭事件
+        /// </summary>
+        /// <param name="e">事件参数</param>
+        private void OnClosed(EventArgs e)
+        {
+            lock (_syncLock)
+            {
+                _isConnected = false;
+            }
+            
+            _eventManager.OnConnectionClosed();
+            _eventManager.OnConnectionStatusChanged(false);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
@@ -74,6 +74,13 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         try
                         {
+                            // 跳过泛型定义类型（如 GenericCommand<>）
+                            if (commandType.IsGenericTypeDefinition)
+                            {
+                                _logger?.LogDebug("跳过泛型定义类型: {TypeName}", commandType.FullName);
+                                continue;
+                            }
+
                             // 获取命令特性
                             var commandAttribute = commandType.GetCustomAttribute<PacketCommandAttribute>();
                             uint commandId = 0;
@@ -82,11 +89,22 @@ namespace RUINORERP.PacketSpec.Commands
                             if (commandAttribute != null)
                             {
                                 commandName = commandAttribute.Name;
-                                // 尝试通过CommandIdentifier属性获取命令ID
-                                var commandInstance = Activator.CreateInstance(commandType) as ICommand;
-                                if (commandInstance != null)
+                                
+                                // 对于非泛型类型，尝试创建实例获取命令ID
+                                if (!commandType.IsGenericType)
                                 {
-                                    commandId = commandInstance.CommandIdentifier.FullCode;
+                                    try
+                                    {
+                                        var commandInstance = Activator.CreateInstance(commandType) as ICommand;
+                                        if (commandInstance != null)
+                                        {
+                                            commandId = commandInstance.CommandIdentifier.FullCode;
+                                        }
+                                    }
+                                    catch (Exception createEx)
+                                    {
+                                        _logger?.LogWarning(createEx, "创建命令实例 {TypeName} 时出错，将使用备用方案生成命令ID", commandType.FullName);
+                                    }
                                 }
                             }
 
@@ -112,6 +130,8 @@ namespace RUINORERP.PacketSpec.Commands
                             _logger?.LogWarning(ex, "处理命令类型 {TypeName} 时出错", commandType.FullName);
                         }
                     }
+
+                   
                 }
                 catch (Exception ex)
                 {
@@ -172,6 +192,10 @@ namespace RUINORERP.PacketSpec.Commands
                     _logger?.LogWarning(ex, "注册命令 {CommandId} 到命令调度器时出错", kvp.Key);
                 }
             }
+
+
+            // 2. 再把泛型定义当作“模板”塞进去（只塞一次） 新旧兼容，这里是用泛型定义来模拟泛型命令，而不是用泛型命令类
+            commandDispatcher.RegisterCommandType(0xFFFFEEEE, typeof(GenericCommand<>));   // 用一个不可能冲突的伪码
         }
 
         /// <summary>

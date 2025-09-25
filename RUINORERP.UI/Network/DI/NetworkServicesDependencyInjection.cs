@@ -26,7 +26,8 @@ namespace RUINORERP.UI.Network.DI
             
             // 注册管理器
             services.AddSingleton<HeartbeatManager>();
-            services.AddSingleton<CommunicationManager>();
+            // services.AddSingleton<ClientNetworkManager>(); // 已整合到CommunicationManager，不再单独注册
+            // services.AddSingleton<ClientCommandProcessor>(); // 已整合到ClientCommunicationService，不再单独注册
             
             // 注册业务服务
             services.AddSingleton<UserLoginService>();
@@ -49,7 +50,8 @@ namespace RUINORERP.UI.Network.DI
             
             // 注册管理器
             builder.RegisterType<HeartbeatManager>().AsSelf().SingleInstance();
-            builder.RegisterType<CommunicationManager>().AsSelf().SingleInstance();
+            // builder.RegisterType<ClientNetworkManager>().AsSelf().SingleInstance(); // 已作废
+            // builder.RegisterType<ClientCommandProcessor>().AsSelf().SingleInstance(); // 已整合到ClientCommunicationService，不再单独注册
             
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
@@ -64,10 +66,11 @@ namespace RUINORERP.UI.Network.DI
         public static string GetNetworkServicesStatistics()
         {
             return $"Network服务依赖注入配置完成。\n" +
-                   $"已注册服务: 9个核心服务\n" +
+                   $"已注册服务: 11个核心服务\n" +
                    $"已注册接口: 2个服务接口\n" +
                    $"生命周期: 单例模式和瞬态模式\n" +
-                   $"AOP支持: 已启用接口拦截器";
+                   $"AOP支持: 已启用接口拦截器\n" +
+                   $"架构版本: 重构后新架构";
         }
     }
 }

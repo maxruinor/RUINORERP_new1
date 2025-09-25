@@ -43,6 +43,9 @@ namespace RUINORERP.PacketSpec.DI
         /// <param name="builder">容器构建器</param>
         public static void ConfigurePacketSpecServicesContainer(this ContainerBuilder builder)
         {
+
+         
+
             // 注册序列化服务包装器
             builder.RegisterType<UnifiedSerializationServiceWrapper>()
                 .As<IUnifiedSerializationService>()

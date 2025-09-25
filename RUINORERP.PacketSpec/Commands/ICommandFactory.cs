@@ -6,6 +6,8 @@ using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Protocol;
 using Microsoft.Extensions.Logging;
+using System.Data;
+using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -22,12 +24,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>命令对象</returns>
         ICommand CreateCommand(PacketModel packet);
 
-        /// <summary>
-        /// 从OriginalData创建命令
-        /// </summary>
-        /// <param name="originalData">原始数据</param>
-        /// <returns>命令对象</returns>
-        ICommand CreateCommand(OriginalData originalData);
 
         /// <summary>
         /// 注册命令创建器
@@ -49,15 +45,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令对象</returns>
         Task<ICommand> CreateCommandAsync(PacketModel packet, CancellationToken cancellationToken = default);
-
-
-        /// <summary>
-        /// 异步从OriginalData创建命令
-        /// </summary>
-        /// <param name="originalData">原始数据</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>命令对象</returns>
-        Task<ICommand> CreateCommandAsync(OriginalData originalData, CancellationToken cancellationToken = default);
+      
     }
 
     /// <summary>
@@ -134,6 +122,26 @@ namespace RUINORERP.PacketSpec.Commands
                     }
                 }
 
+                //新的简化版本测试 
+                // 如果无法创建命令，返回null 
+                // 2. 再看新注册表
+                var payloadType = CommandRegistry.GetPayloadType(packet.Command);
+                if (payloadType != null)
+                {
+                    //var closedType = typeof(GenericCommand<>).MakeGenericType(payloadType);
+                    //return (ICommand)Activator.CreateInstance(closedType, commandId, null);
+
+                    // 2.1 先从缓存里拿“开放泛型定义”
+                    if (!_commandTypeHelper.GetAllCommandTypes().TryGetValue(0xFFFFEEEE, out var openGeneric))
+                        throw new InvalidOperationException("GenericCommand<> 模板未注册");
+
+                    // 2.2 MakeGenericType 产生封闭类型
+                    var closedType = openGeneric.MakeGenericType(payloadType);
+                    return (ICommand)Activator.CreateInstance(closedType, packet.Command, null);
+
+                }
+
+
                 _logger?.LogWarning("未找到命令ID: {CommandId} 对应的命令类型", commandId);
                 return null;
             }
@@ -144,38 +152,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        /// <summary>
-        /// 从OriginalData创建命令
-        /// </summary>
-        /// <param name="originalData">原始数据</param>
-        /// <returns>命令对象，如果无法创建则返回null</returns>
-        public ICommand CreateCommand(OriginalData originalData)
-        {
-            if (!originalData.IsValid)
-            {
-                _logger?.LogWarning("尝试从无效的OriginalData创建命令");
-                return null;
-            }
-
-            try
-            {
-                // 从原始数据创建PacketModel
-                var packet = CreatePacketModelFromOriginalData(originalData);
-                if (packet == null)
-                {
-                    return null;
-                }
-
-                // 使用PacketModel创建命令
-                return CreateCommand(packet);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "从OriginalData创建命令时发生异常");
-                return null;
-            }
-        }
-
+       
         /// <summary>
         /// 异步从统一数据包创建命令
         /// </summary>
@@ -188,18 +165,7 @@ namespace RUINORERP.PacketSpec.Commands
             return await Task.Run(() => CreateCommand(packet), cancellationToken);
         }
 
-        /// <summary>
-        /// 异步从OriginalData创建命令
-        /// </summary>
-        /// <param name="originalData">原始数据</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>命令对象</returns>
-        public async Task<ICommand> CreateCommandAsync(OriginalData originalData, CancellationToken cancellationToken = default)
-        {
-            // 异步包装同步方法
-            return await Task.Run(() => CreateCommand(originalData), cancellationToken);
-        }
-
+     
         /// <summary>
         /// 注册命令创建器
         /// </summary>
@@ -243,6 +209,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="originalData">原始数据</param>
         /// <returns>创建的PacketModel对象</returns>
+        [Obsolete("暂时作废")]
         private PacketModel CreatePacketModelFromOriginalData(OriginalData originalData)
         {
             try

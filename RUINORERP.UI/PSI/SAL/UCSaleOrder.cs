@@ -1043,7 +1043,10 @@ using var binder = new UIStateBinder(..., customEvaluator);
                         }
                     }
                 }
-
+                if (EditEntity.Account_id.HasValue && EditEntity.Account_id.Value == -1)
+                {
+                    EditEntity.Account_id = null;
+                }
                 if (EditEntity.PayStatus == (int)PayStatus.未付款)
                 {
                     //如果订金大于零时，则不能是未付款
@@ -1443,9 +1446,9 @@ using var binder = new UIStateBinder(..., customEvaluator);
             }
         }
 
-    
 
-      
+
+
         protected async override Task<bool> AntiCloseCaseAsync()
         {
             if (EditEntity == null)

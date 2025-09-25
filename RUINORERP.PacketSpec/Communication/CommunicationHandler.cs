@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Protocol;
@@ -10,23 +10,29 @@ using System.Threading.Tasks;
 namespace RUINORERP.PacketSpec.Communication
 {
     /// <summary>
-    /// 统一通信处理器
-    /// 整合命令分发和结果处理的通用实现，同时支持服务器端和客户端
+    /// 统一通信处理器基类
+    /// 提供命令验证、执行和结果处理的标准化框架，支持服务器端和客户端的通信处理
+    /// 包含完整的异常处理、日志记录和生命周期管理机制
     /// </summary>
-    public class CommunicationHandler
+    public class CommunicationHandler : IDisposable
     {
         private readonly ICommandDispatcher _commandDispatcher;
         private readonly ILogger<CommunicationHandler> _logger;
+        private readonly object _lock = new object();
+        private bool _disposed = false;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="commandDispatcher">命令调度器</param>
         /// <param name="logger">日志记录器</param>
+        /// <exception cref="ArgumentNullException">当commandDispatcher为null时抛出</exception>
         public CommunicationHandler(ICommandDispatcher commandDispatcher, ILogger<CommunicationHandler> logger)
         {
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
             _logger = logger;
+            
+            LogDebug($"CommunicationHandler已初始化，命令调度器类型: {commandDispatcher.GetType().Name}");
         }
 
         /// <summary>
@@ -35,8 +41,16 @@ namespace RUINORERP.PacketSpec.Communication
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令执行结果</returns>
+        /// <exception cref="ObjectDisposedException">当对象已释放时抛出</exception>
+        /// <exception cref="ArgumentNullException">当command为null时抛出</exception>
         public async Task<CommandResult> HandleCommandAsync(ICommand command, CancellationToken cancellationToken = default)
         {
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(CommunicationHandler));
+
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
+
             try
             {
                 LogDebug($"准备处理命令: {command.GetType().Name} [ID: {command.CommandId}]");
@@ -126,6 +140,7 @@ namespace RUINORERP.PacketSpec.Communication
         /// <param name="message">日志消息</param>
         protected void LogDebug(string message)
         {
+            if (_disposed) return;
             _logger?.LogDebug(message);
         }
 
@@ -135,6 +150,7 @@ namespace RUINORERP.PacketSpec.Communication
         /// <param name="message">日志消息</param>
         protected void LogWarning(string message)
         {
+            if (_disposed) return;
             _logger?.LogWarning(message);
         }
 
@@ -145,6 +161,8 @@ namespace RUINORERP.PacketSpec.Communication
         /// <param name="exception">异常对象</param>
         protected void LogError(string message, Exception exception = null)
         {
+            if (_disposed) return;
+            
             if (exception == null)
             {
                 _logger?.LogError(message);
@@ -152,6 +170,39 @@ namespace RUINORERP.PacketSpec.Communication
             else
             {
                 _logger?.LogError(exception, message);
+            }
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        /// <param name="disposing">是否释放托管资源</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // 释放托管资源
+                    lock (_lock)
+                    {
+                        LogDebug("开始释放CommunicationHandler资源");
+                        // 可以在这里释放其他托管资源
+                    }
+                }
+
+                // 释放非托管资源
+                _disposed = true;
+                LogDebug("CommunicationHandler资源已释放");
             }
         }
 

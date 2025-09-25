@@ -8,47 +8,39 @@ using System.Threading;
 namespace RUINORERP.UI.Network
 {
     /// <summary>
-    /// 客户端通信服务接口 - 业务层通信操作接口
+    /// 客户端通信服务接口 - 业务层通信抽象
     /// 
-    /// 设计目的：
-    /// 1. 定义客户端与服务器通信的标准方法
-    /// 2. 为业务层提供统一的通信操作接口
-    /// 3. 隐藏底层通信实现细节，提供简洁的API
+    /// 🔄 接口设计目标：
+    /// 1. 为业务层提供统一通信接口
+    /// 2. 抽象底层网络通信细节
+    /// 3. 支持请求-响应模式
+    /// 4. 便于依赖注入和测试
     /// 
-    /// 使用场景：
-    /// 1. 在业务服务类（如 UserLoginService、CacheSyncService 等）中使用
-    /// 2. 执行具体的通信操作，如发送命令、接收响应等
-    /// 3. 检查连接状态和执行业务相关的通信操作
+    /// 📋 核心功能：
+    /// - 业务命令发送
+    /// - 响应数据处理
+    /// - 连接状态管理
+    /// - 超时控制
+    /// - 错误处理
+    /// - 性能监控
     /// 
-    /// 注意事项：
-    /// - 不要在应用层（如 MainForm、FrmLogin 等）直接使用此接口进行连接管理
-    /// - 连接管理应由 CommunicationManager 负责
-    /// - 此接口的实现由依赖注入容器提供
+    /// 🔗 与架构集成：
+    /// - ClientCommunicationService 的具体实现
+    /// - 被业务层服务（如UserLoginService）使用
+    /// - 使用 CommunicationManager 进行网络通信
+    /// - 支持依赖注入容器
     /// 
-    /// 使用示例：
-    /// // 在业务服务中发送命令
-    /// public class UserLoginService
-    /// {
-    ///     private readonly IClientCommunicationService _communicationService;
-    ///     
-    ///     public UserLoginService(IClientCommunicationService communicationService)
-    ///     {
-    ///         _communicationService = communicationService;
-    ///     }
-    ///     
-    ///     public async Task&lt;ApiResponse&lt;LoginResult&gt;&gt; LoginAsync(string username, string password)
-    ///     {
-    ///         var request = new LoginRequest { Username = username, Password = password };
-    ///         return await _communicationService.SendCommandAsync&lt;LoginRequest, LoginResult&gt;(
-    ///             CommandId.Login, request);
-    ///     }
-    /// }
+    /// 📡 支持的通信模式：
+    /// - SendCommandAsync: 标准命令发送
+    /// - 泛型支持：请求/响应类型
+    /// - 匿名对象快速调用
+    /// - 超时和取消支持
     /// 
-    /// // 在应用层使用 CommunicationManager 进行连接管理
-    /// if (!communicationManager.IsConnected)
-    /// {
-    ///     await communicationManager.ConnectAsync("127.0.0.1", 7538);
-    /// }
+    /// 💡 设计特点：
+    /// - 异步操作优先
+    /// - 强类型支持
+    /// - 详细的错误信息
+    /// - 性能监控集成
     /// </summary>
     public interface IClientCommunicationService : IDisposable
     {
@@ -115,5 +107,22 @@ namespace RUINORERP.UI.Network
         /// 断开连接
         /// </summary>
         void Disconnect();
+
+        /// <summary>
+        /// 重新连接到服务器
+        /// </summary>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>重连是否成功</returns>
+        Task<bool> ReconnectAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 服务器地址
+        /// </summary>
+        string ServerAddress { get; }
+
+        /// <summary>
+        /// 服务器端口
+        /// </summary>
+        int ServerPort { get; }
     }
 }

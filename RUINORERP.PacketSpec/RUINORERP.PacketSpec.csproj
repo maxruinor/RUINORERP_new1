@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Commands\Authentication\AuthHandler.cs" />
     <Compile Remove="Enums\CommandHelper.cs" />
     <Compile Remove="Enums\CommandId.cs" />
     <Compile Remove="Enums\UsageExamples.cs" />

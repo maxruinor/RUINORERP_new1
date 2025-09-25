@@ -209,11 +209,11 @@ namespace RUINORERP.UI
                                 // 如果依赖注入未能获取到服务，则手动创建（向后兼容）
                                 if (userLogin == null)
                                 {
-                                    userLogin = new UserLoginService(MainForm.Instance.communicationService, MainForm.Instance.clientCommandDispatcher);
+                                    userLogin = new UserLoginService(MainForm.Instance.communicationService);
                                 }
-                                
+
                                 try
-                                {
+                                {                                
                                     // 在执行登录操作前，先连接到服务器
                                     var serverIp = txtServerIP.Text.Trim();
                                     if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))

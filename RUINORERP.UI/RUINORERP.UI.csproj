@@ -2241,20 +2241,24 @@
     <Compile Include="Network\BizPipelineFilter.cs" />
     <Compile Include="Network\ClientCommandDispatcher.cs" />
     <Compile Include="Network\ClientCommandFactory.cs" />
-    <Compile Include="Network\ClientCommunicationHandler.cs" />
+    <!-- ClientCommandProcessor.cs 已整合到ClientCommunicationService.cs，不再单独编译 -->
+    <!-- <Compile Include="Network\ClientCommandProcessor.cs" /> -->
     <Compile Include="Network\ClientCommunicationService.cs" />
     <Compile Include="Network\ClientEventManager.cs" />
     <Compile Include="Network\CommunicationManager.cs" />
+    <!-- ClientNetworkManager.cs 已作废 - 功能整合到CommunicationManager.cs -->
+    <!-- <Compile Include="Network\ClientNetworkManager.cs" /> -->
     <Compile Include="Network\DI\NetworkServicesDependencyInjection.cs" />
     <Compile Include="Network\EventArgs.cs" />
     <Compile Include="Network\Examples\CommunicationExample.cs" />
-    <Compile Include="Network\Examples\CompleteUsageExample.cs" />
     <Compile Include="Network\Examples\LoginExample.cs" />
     <Compile Include="Network\HeartbeatManager.cs" />
     <Compile Include="Network\IClientCommunicationService.cs" />
     <Compile Include="Network\ISocketClient.cs" />
     <Compile Include="Network\RequestResponseManager.cs" />
+    <Compile Include="Network\Services\CacheService.cs" />
     <Compile Include="Network\Services\CacheSyncService.cs" />
+    <Compile Include="Network\Services\ClientServiceBase.cs" />
     <Compile Include="Network\Services\MessageNotificationService.cs" />
     <Compile Include="Network\Services\UserLoginService.cs" />
     <Compile Include="Network\SuperSocketClient.cs" />

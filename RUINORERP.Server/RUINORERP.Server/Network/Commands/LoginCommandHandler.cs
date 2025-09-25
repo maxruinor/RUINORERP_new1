@@ -21,6 +21,8 @@ using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Commands.Handlers;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands.Cache;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ZXing.Common.ReedSolomon;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -154,9 +156,45 @@ Disposed（已释放）
                         return await HandlePrepareLoginAsync(command, cancellationToken);
                     }
                     else
+
+                        // 新类统一转泛型
+                        //if (commandId.GetType().IsGenericType &&
+                        //    commandId.GetType().GetGenericTypeDefinition() == typeof(GenericCommand<>))
+                        //{
+                        //    var payload = commandId.GetSerializableData();
+                        //    return commandId.FullCode switch
+                        //    {
+                        //        var id when id == AuthenticationCommands.Login
+                        //            => HandleLogin((LoginPayload)payload),
+                        //        var id when id == CacheCommands.CacheUpdate
+                        //            => HandleCacheUpdate((CacheUpdatePayload)payload),
+                        //        _ => Task.FromResult(CommandResult.Failure("未实现"))
+                        //    };
+                        //}
+
+                        // 统一转基类
+                    //    var generic = (ICommand)cmd;
+                    //var payload = generic.GetSerializableData();   // 就是 LoginPayLoad / LogoutPayLoad …
+
+                    //return cmd.CommandIdentifier switch
+                    //{
+                    //    var id when id == AuthenticationCommands.Login =>
+                    //        HandleLogin((LoginPayLoad)payload),
+
+                    //    var id when id == AuthenticationCommands.Logout =>
+                    //        HandleLogout((LogoutPayLoad)payload),
+
+                    //    _ => Task.FromResult(CommandResult.Failure("未实现"))
+                    //};
+
+                     
                     {
                         return CommandResult.Failure($"不支持的命令类型: {command.CommandIdentifier}", "UNSUPPORTED_COMMAND");
                     }
+
+                   
+
+
                 }
                 catch (Exception ex)
                 {

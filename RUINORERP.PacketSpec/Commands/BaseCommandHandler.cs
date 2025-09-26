@@ -8,7 +8,7 @@ using RUINORERP.PacketSpec.Utilities;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Core;
-using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using System.Text;
 using RUINORERP.Global.CustomAttribute;
 
@@ -131,83 +131,41 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 异步处理命令
         /// </summary>
-        public async Task<CommandResult> HandleAsync(ICommand command, CancellationToken cancellationToken = default)
+        public async Task<ResponseBase> HandleAsync(ICommand command, CancellationToken cancellationToken = default)
         {
-            if (_disposed)
-            {
-                return CommandResult.Failure("处理器已释放", ErrorCodes.HandlerDisposed);
-            }
-
-            if (Status != HandlerStatus.Running)
-            {
-                return CommandResult.Failure("处理器未运行", ErrorCodes.HandlerNotInitialized);
-            }
-
-            var startTime = DateTime.UtcNow;
-            
-            lock (_lockObject)
-            {
-                _statistics.CurrentProcessingCount++;
-                _statistics.TotalCommandsProcessed++;
-            }
+            if (command == null)
+                throw new ArgumentNullException(nameof(command));
 
             try
             {
-               
-                LogDebug($"开始处理命令: {command.CommandIdentifier} [ID: {command.CommandId}]");
+                // 命令前置处理
+                var beforeResult = await OnBeforeHandleAsync(command, cancellationToken);
+                if (beforeResult != null)
+                    return beforeResult;
 
-                // 验证命令
-                if (!CanHandle(command))
-                {
-                    return CommandResult.Failure("处理器无法处理该命令", ErrorCodes.UnsupportedCommand);
-                }
-
-                // 执行前置处理
-                var preResult = await OnBeforeHandleAsync(command, cancellationToken);
-                if (preResult != null && !preResult.IsSuccess)
-                {
-                    return preResult;
-                }
-
-                // 执行核心处理逻辑
+                // 执行命令处理
                 var result = await OnHandleAsync(command, cancellationToken);
 
-                // 执行后置处理
-                var postResult = await OnAfterHandleAsync(command, result, cancellationToken);
-                if (postResult != null)
-                {
-                    result = postResult;
-                }
+                // 命令后置处理
+                var afterResult = await OnAfterHandleAsync(command, result, cancellationToken);
+                if (afterResult != null)
+                    return afterResult;
 
-                // 更新统计信息
-                var processingTime = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                UpdateStatistics(result.IsSuccess, processingTime);
-
-               
-                LogDebug($"命令处理完成: {command.CommandIdentifier} [ID: {command.CommandId}] - {processingTime}ms");
                 return result;
             }
             catch (OperationCanceledException)
             {
-               
-                LogWarning($"命令处理被取消: {command.CommandIdentifier} [ID: {command.CommandId}]");
-                UpdateStatistics(false, (long)(DateTime.UtcNow - startTime).TotalMilliseconds);
-                return CommandResult.Failure("命令处理被取消", ErrorCodes.CommandCancelled);
+                var errorResponse = ResponseBase.CreateError("命令处理被取消", 503)
+                    .WithMetadata("ErrorCode", "PROCESS_CANCELLED");
+                return ConvertToResponseBase(errorResponse);
             }
             catch (Exception ex)
             {
-                var processingTime = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-               
-                LogError($"命令处理异常: {command.CommandIdentifier} [ID: {command.CommandId}]", ex);
-                UpdateStatistics(false, processingTime);
-                return CommandResult.Failure($"处理异常: {ex.Message}", ErrorCodes.ProcessError, ex);
-            }
-            finally
-            {
-                lock (_lockObject)
-                {
-                    _statistics.CurrentProcessingCount--;
-                }
+                var errorResponse = ResponseBase.CreateError($"命令处理异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "PROCESS_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
+                return ConvertToResponseBase(errorResponse);
             }
         }
 
@@ -389,7 +347,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 执行核心处理逻辑
         /// </summary>
         [MustOverride]
-        protected abstract Task<CommandResult> OnHandleAsync(ICommand command, CancellationToken cancellationToken);
+        protected abstract Task<ResponseBase> OnHandleAsync(ICommand command, CancellationToken cancellationToken);
 
         #endregion
 
@@ -422,17 +380,17 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行前置处理
         /// </summary>
-        protected virtual Task<CommandResult> OnBeforeHandleAsync(ICommand command, CancellationToken cancellationToken)
+        protected virtual Task<ResponseBase> OnBeforeHandleAsync(ICommand command, CancellationToken cancellationToken)
         {
-            return Task.FromResult<CommandResult>(null);
+            return Task.FromResult<ResponseBase>(null);
         }
 
         /// <summary>
         /// 执行后置处理
         /// </summary>
-        protected virtual Task<CommandResult> OnAfterHandleAsync(ICommand command, CommandResult result, CancellationToken cancellationToken)
+        protected virtual Task<ResponseBase> OnAfterHandleAsync(ICommand command, ResponseBase result, CancellationToken cancellationToken)
         {
-            return Task.FromResult<CommandResult>(null);
+            return Task.FromResult<ResponseBase>(null);
         }
 
         #endregion
@@ -454,11 +412,41 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令ID</param>
         /// <param name="data">响应数据</param>
         /// <param name="msg">响应消息</param>
-        /// <returns>命令处理结果</returns>
-        protected CommandResult Success<T>(uint command, T data, string msg = null)
+        /// <returns>API响应结果</returns>
+        protected ResponseBase Success<T>(uint command, T data, string msg = null)
         {
             var responseData = CreateMessageResponse(command, data);
-            return CommandResult.SuccessWithResponse(responseData, data, msg ?? "操作成功");
+            
+            // 创建非泛型ResponseBase实例
+            var result = new ResponseBase
+            {
+                IsSuccess = true,
+                Message = msg ?? "操作成功",
+                Code = 200,
+                Timestamp = DateTime.UtcNow
+            };
+            
+            // 添加元数据 - 修复WithMetadata返回ResponseBase的问题
+            result = (ResponseBase)result.WithMetadata("ResponseData", responseData);
+            
+            // 确保数据可以正确序列化和存储
+            if (data != null)
+            {
+                try
+                {
+                    // 序列化数据为JSON字符串以避免类型转换问题
+                    string serializedData = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+                    result = (ResponseBase)result.WithMetadata("Data", serializedData);
+                }
+                catch (Exception ex)
+                {
+                    LogWarning($"无法序列化响应数据: {ex.Message}");
+                    // 如果序列化失败，仍然添加原始数据，但记录警告
+                    result = (ResponseBase)result.WithMetadata("Data", data);
+                }
+            }
+            
+            return result;
         }
 
         /// <summary>
@@ -467,10 +455,16 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="msg">错误消息</param>
         /// <param name="code">错误代码</param>
         /// <param name="ex">异常信息</param>
-        /// <returns>命令处理结果</returns>
-        protected CommandResult Fail(string msg, string code = null, Exception ex = null)
+        /// <returns>API响应结果</returns>
+        protected ResponseBase Fail(string msg, string code = null, Exception ex = null)
         {
-            return CommandResult.Failure(msg, code ?? "GENERAL_ERROR", ex);
+            ResponseBase ResponseBase = (ResponseBase)ResponseBase.CreateError(msg, 500).WithMetadata("ErrorCode", code ?? "GENERAL_ERROR");
+            if (ex != null)
+            {
+                ResponseBase = (ResponseBase)((ResponseBase)ResponseBase).WithMetadata("Exception", ex.Message)
+                                        .WithMetadata("StackTrace", ex.StackTrace);
+            }
+            return ResponseBase;
         }
 
         /// <summary>
@@ -610,6 +604,26 @@ namespace RUINORERP.PacketSpec.Commands
             }
 
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 将ResponseBase转换为ResponseBase
+        /// </summary>
+        /// <param name="baseResponse">基础响应对象</param>
+        /// <returns>ResponseBase对象</returns>
+        protected ResponseBase ConvertToResponseBase(ResponseBase baseResponse)
+        {
+            var response = new ResponseBase
+            {
+                IsSuccess = baseResponse.IsSuccess,
+                Message = baseResponse.Message,
+                Code = baseResponse.Code,
+                Timestamp = baseResponse.Timestamp,
+                RequestId = baseResponse.RequestId,
+                Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                ExecutionTimeMs = baseResponse.ExecutionTimeMs
+            };
+            return response;
         }
 
         #endregion

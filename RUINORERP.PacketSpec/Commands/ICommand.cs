@@ -1,9 +1,10 @@
-﻿﻿using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -144,8 +145,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// 执行命令
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>执行结果</returns>
-        Task<CommandResult> ExecuteAsync(CancellationToken cancellationToken = default);
+        /// <returns>命令执行结果</returns>
+        Task<ResponseBase> ExecuteAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 验证命令是否可以执行

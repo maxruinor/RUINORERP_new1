@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using RUINORERP.Extensions.ServiceExtensions;
 using RUINORERP.PacketSpec.Enums.Workflow;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.Server.Commands
 {
@@ -64,7 +65,7 @@ namespace RUINORERP.Server.Commands
                    SyncType != EntitySyncType.Unknown;
         }
 
-        public async Task<CommandResult> ExecuteAsync(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse> ExecuteAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -74,7 +75,7 @@ namespace RUINORERP.Server.Commands
                 var validationResult = ValidateParameters();
                 if (!validationResult.IsValid)
                 {
-                    return CommandResult.CreateError(validationResult.ErrorMessage);
+                    return ApiResponse.CreateError(validationResult.ErrorMessage, 400).WithMetadata("ErrorCode", "VALIDATION_FAILED");
                 }
 
                 // 根据操作类型执行相应操作
@@ -82,10 +83,10 @@ namespace RUINORERP.Server.Commands
                 {
                     CmdOperation.Receive => await HandleReceiveSyncAsync(),
                     CmdOperation.Send => await HandleSendSyncAsync(),
-                    _ => CommandResult.CreateError("不支持的操作类型")
+                    _ => ApiResponse.CreateError("不支持的操作类型", 400).WithMetadata("ErrorCode", "UNSUPPORTED_OPERATION")
                 };
 
-                if (result.Success)
+                if (result.IsSuccess)
                 {
                     _logger.LogInformation($"实体同步处理成功: Type={SyncType}, Object={SyncObjectName}");
                 }
@@ -99,7 +100,10 @@ namespace RUINORERP.Server.Commands
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"实体同步处理异常: Type={SyncType}, Object={SyncObjectName}");
-                return CommandResult.CreateError("实体同步处理异常");
+                return ApiResponse.CreateError("实体同步处理异常", 500)
+                    .WithMetadata("ErrorCode", "ENTITY_SYNC_EXCEPTION")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
@@ -226,7 +230,7 @@ namespace RUINORERP.Server.Commands
         /// <summary>
         /// 处理接收同步
         /// </summary>
-        private async Task<CommandResult> HandleReceiveSyncAsync()
+        private async Task<ApiResponse> HandleReceiveSyncAsync()
         {
             try
             {
@@ -236,20 +240,23 @@ namespace RUINORERP.Server.Commands
                     EntitySyncType.CacheData => await HandleCacheDataSyncAsync(),
                     EntitySyncType.UserData => await HandleUserDataSyncAsync(),
                     EntitySyncType.SystemData => await HandleSystemDataSyncAsync(),
-                    _ => CommandResult.CreateError($"不支持的同步类型: {SyncType}")
+                    _ => ApiResponse.CreateError($"不支持的同步类型: {SyncType}", 400).WithMetadata("ErrorCode", "UNSUPPORTED_SYNC_TYPE")
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理接收同步时出错");
-                return CommandResult.CreateError("处理接收同步异常");
+                return ApiResponse.CreateError("处理接收同步异常", 500)
+                    .WithMetadata("ErrorCode", "RECEIVE_SYNC_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理发送同步
         /// </summary>
-        private async Task<CommandResult> HandleSendSyncAsync()
+        private async Task<ApiResponse> HandleSendSyncAsync()
         {
             try
             {
@@ -258,7 +265,7 @@ namespace RUINORERP.Server.Commands
 
                 if (DataPacket == null)
                 {
-                    return CommandResult.CreateError("构建数据包失败");
+                    return ApiResponse.CreateError("构建数据包失败", 400).WithMetadata("ErrorCode", "BUILD_PACKET_FAILED");
                 }
 
                 // 发送同步数据
@@ -269,31 +276,34 @@ namespace RUINORERP.Server.Commands
                     if (targetSession != null)
                     {
                         await SendSyncToSessionAsync(targetSession);
-                        return CommandResult.CreateSuccess("实体同步发送成功");
+                        return ApiResponse.CreateSuccess("实体同步发送成功");
                     }
                     else
                     {
-                        return CommandResult.CreateError("目标会话不存在或不在线");
+                        return ApiResponse.CreateError("目标会话不存在或不在线", 400).WithMetadata("ErrorCode", "TARGET_SESSION_NOT_FOUND");
                     }
                 }
                 else
                 {
                     // 广播给所有在线会话
                     await BroadcastSyncAsync();
-                    return CommandResult.CreateSuccess("实体同步广播成功");
+                    return ApiResponse.CreateSuccess("实体同步广播成功");
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理发送同步时出错");
-                return CommandResult.CreateError("处理发送同步异常");
+                return ApiResponse.CreateError("处理发送同步异常", 500)
+                    .WithMetadata("ErrorCode", "SEND_SYNC_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理动态配置同步
         /// </summary>
-        private async Task<CommandResult> HandleDynamicConfigSyncAsync()
+        private async Task<ApiResponse> HandleDynamicConfigSyncAsync()
         {
             try
             {
@@ -328,19 +338,22 @@ namespace RUINORERP.Server.Commands
                 }
 
                 await Task.CompletedTask;
-                return CommandResult.CreateSuccess("动态配置同步成功");
+                return ApiResponse.CreateSuccess("动态配置同步成功");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理动态配置同步时出错");
-                return CommandResult.CreateError("动态配置同步失败");
+                return ApiResponse.CreateError("动态配置同步失败", 500)
+                    .WithMetadata("ErrorCode", "DYNAMIC_CONFIG_SYNC_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理缓存数据同步
         /// </summary>
-        private async Task<CommandResult> HandleCacheDataSyncAsync()
+        private async Task<ApiResponse> HandleCacheDataSyncAsync()
         {
             try
             {
@@ -350,19 +363,22 @@ namespace RUINORERP.Server.Commands
                 // 这里可以调用BizCacheHelper或相关的缓存服务
 
                 await Task.CompletedTask;
-                return CommandResult.CreateSuccess("缓存数据同步成功");
+                return ApiResponse.CreateSuccess("缓存数据同步成功");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理缓存数据同步时出错");
-                return CommandResult.CreateError("缓存数据同步失败");
+                return ApiResponse.CreateError("缓存数据同步失败", 500)
+                    .WithMetadata("ErrorCode", "CACHE_DATA_SYNC_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理用户数据同步
         /// </summary>
-        private async Task<CommandResult> HandleUserDataSyncAsync()
+        private async Task<ApiResponse> HandleUserDataSyncAsync()
         {
             try
             {
@@ -371,19 +387,22 @@ namespace RUINORERP.Server.Commands
                 // TODO: 实现用户数据同步逻辑
 
                 await Task.CompletedTask;
-                return CommandResult.CreateSuccess("用户数据同步成功");
+                return ApiResponse.CreateSuccess("用户数据同步成功");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理用户数据同步时出错");
-                return CommandResult.CreateError("用户数据同步失败");
+                return ApiResponse.CreateError("用户数据同步失败", 500)
+                    .WithMetadata("ErrorCode", "USER_DATA_SYNC_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理系统数据同步
         /// </summary>
-        private async Task<CommandResult> HandleSystemDataSyncAsync()
+        private async Task<ApiResponse> HandleSystemDataSyncAsync()
         {
             try
             {
@@ -392,12 +411,15 @@ namespace RUINORERP.Server.Commands
                 // TODO: 实现系统数据同步逻辑
 
                 await Task.CompletedTask;
-                return CommandResult.CreateSuccess("系统数据同步成功");
+                return ApiResponse.CreateSuccess("系统数据同步成功");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理系统数据同步时出错");
-                return CommandResult.CreateError("系统数据同步失败");
+                return ApiResponse.CreateError("系统数据同步失败", 500)
+                    .WithMetadata("ErrorCode", "SYSTEM_DATA_SYNC_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 

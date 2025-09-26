@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -37,6 +37,12 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 数据包方向
         /// </summary>
         public PacketDirection Direction { get; set; }
+
+        /// <summary>
+        /// 消息类型
+        /// 用于明确区分数据包是请求、响应还是通知
+        /// </summary>
+        public RUINORERP.PacketSpec.Enums.Core.MessageType MessageType { get; set; }
 
         /// <summary>
         /// 数据包状态
@@ -122,6 +128,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             Version = "2.0";
             Priority = PacketPriority.Normal;
             Direction = PacketDirection.Unknown;
+            MessageType = RUINORERP.PacketSpec.Enums.Core.MessageType.Request;
             Status = PacketStatus.Created;
             Extensions = new System.Collections.Generic.Dictionary<string, object>();
         }
@@ -137,6 +144,20 @@ namespace RUINORERP.PacketSpec.Models.Core
             Body = originalData;
             Command = command;
             Size = originalData?.Length ?? 0;
+        }
+
+        /// <summary>
+        /// 从原始数据创建指定类型的数据包
+        /// </summary>
+        /// <param name="originalData">原始数据字节数组</param>
+        /// <param name="messageType">消息类型</param>
+        /// <param name="command">命令标识符</param>
+        /// <returns>PacketModel实例</returns>
+        public static PacketModel FromOriginalData(byte[] originalData, RUINORERP.PacketSpec.Enums.Core.MessageType messageType, CommandId command = default(CommandId))
+        {
+            var packet = new PacketModel(originalData, command);
+            packet.MessageType = messageType;
+            return packet;
         }
 
         #endregion

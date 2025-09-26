@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using RUINORERP.Extensions.AOP;
-using RUINORERP.Extensions.Filter;
 using RUINORERP.Extensions.ServiceExtensions;
 
 namespace RUINORERP.Extensions.DI
@@ -26,9 +25,7 @@ namespace RUINORERP.Extensions.DI
             builder.RegisterType<BlogRedisCacheAOP>();
             builder.RegisterType<BlogTranAOP>();
             builder.RegisterType<BlogUserAuditAOP>();
-            
-            // 注册过滤器
-            builder.RegisterType<GlobalExceptionsFilter>();
+         
             
             // 注册服务扩展相关类
             builder.RegisterType<AutofacRegister>();

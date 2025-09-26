@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Protocol;
@@ -7,6 +7,7 @@ using RUINORERP.PacketSpec.Handlers;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Core;
 using System.Text;
 
@@ -137,7 +138,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行命令 - 模板方法模式
         /// </summary>
-        public async Task<CommandResult> ExecuteAsync(CancellationToken cancellationToken = default)
+        public async Task<ResponseBase> ExecuteAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -148,9 +149,8 @@ namespace RUINORERP.PacketSpec.Commands
                 if (!validationResult.IsValid)
                 {
                     LogWarning($"命令验证失败: {validationResult.ErrorMessage}");
-                    return CommandResult.Failure(
-                        validationResult.ErrorMessage,
-                        validationResult.ErrorCode ?? ErrorCodes.CommandValidationFailed);
+                    ResponseBase errorResponse = ResponseBase.CreateError(validationResult.ErrorMessage, 400).WithMetadata("ErrorCode", validationResult.ErrorCode ?? "VALIDATION_FAILED");
+                    return errorResponse;
                 }
 
                 // 执行前处理
@@ -168,12 +168,17 @@ namespace RUINORERP.PacketSpec.Commands
             catch (OperationCanceledException)
             {
                 LogWarning($"命令执行被取消: {GetType().Name} [ID: {CommandId}]");
-                return CommandResult.Failure("命令执行被取消", ErrorCodes.ProcessCancelled);
+                ResponseBase errorResponse = ResponseBase.CreateError("命令执行被取消", 503).WithMetadata("ErrorCode", "PROCESS_CANCELLED");
+                return errorResponse;
             }
             catch (Exception ex)
             {
                 LogError($"执行命令 {GetType().Name} [ID: {CommandId}] 异常: {ex.Message}", ex);
-                return CommandResult.Failure($"执行异常: {ex.Message}", ErrorCodes.ProcessError, ex);
+                ResponseBase errorResponse = ResponseBase.CreateError($"执行异常: {ex.Message}", 500)
+                        .WithMetadata("ErrorCode", "PROCESS_ERROR")
+                        .WithMetadata("Exception", ex.Message)
+                        .WithMetadata("StackTrace", ex.StackTrace);
+                return errorResponse;
             }
         }
 
@@ -347,7 +352,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行核心逻辑
         /// </summary>
-        protected abstract Task<CommandResult> OnExecuteAsync(CancellationToken cancellationToken);
+        protected abstract Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken);
 
         #endregion
 

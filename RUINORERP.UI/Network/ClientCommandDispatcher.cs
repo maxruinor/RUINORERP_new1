@@ -1,5 +1,6 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Serialization;
 using System;
@@ -263,9 +264,9 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>命令结果，默认为成功</returns>
+        /// <returns>API响应结果，默认为成功</returns>
         /// <exception cref="ArgumentNullException">当命令为空时抛出</exception>
-        public Task<CommandResult> DispatchAsync(ICommand command, CancellationToken cancellationToken = default)
+        public Task<ResponseBase> DispatchAsync(ICommand command, CancellationToken cancellationToken = default)
         {
             if (command == null)
             {
@@ -274,7 +275,7 @@ namespace RUINORERP.UI.Network
             
             // 客户端命令分发逻辑
             // 在实际应用中，这里应该将命令发送到服务器
-            return Task.FromResult(CommandResult.Success());
+            return Task.FromResult(ResponseBase.CreateSuccess("命令分发成功"));
         }
 
         /// <summary>

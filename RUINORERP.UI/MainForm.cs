@@ -1593,7 +1593,7 @@ namespace RUINORERP.UI
             RUINORERP.Business.Security.PTPrincipal.Logout(AppContext);
             // if (this.LoginToolStripButton.Text == "登出")
             //{
-            FrmLogin loginForm = new FrmLogin(ecs);
+            FrmLogin loginForm = new FrmLogin();
             if (loginForm.ShowDialog(this) == DialogResult.OK)
             {
                 tb_SystemConfigController<tb_SystemConfig> ctr = Startup.GetFromFac<tb_SystemConfigController<tb_SystemConfig>>();
@@ -3105,7 +3105,7 @@ namespace RUINORERP.UI
 
 
                 // 您的抓取缓存逻辑FetchCacheForTable
-                //UIBizSrvice.RequestCache(nextTableName);
+                UIBizSrvice.RequestCache(nextTableName);
                 bool needRequestCache = false;
                 //Type elementType = null;
                 #region

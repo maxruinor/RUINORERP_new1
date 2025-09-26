@@ -97,10 +97,10 @@ namespace RUINORERP.Server.SmartReminder
                                 if (session.State == SessionState.Connected)
                                 {
                                     //  "库存预警通知";
-                                    MessageModel msb = new MessageModel
-                                    {
-                                        msg = message,
-                                    };
+                                    //MessageModel msb = new MessageModel
+                                    //{
+                                    //    msg = message,
+                                    //};
                                     //UserService.给客户端发消息实体(session, msb, true);
 
                                     #region

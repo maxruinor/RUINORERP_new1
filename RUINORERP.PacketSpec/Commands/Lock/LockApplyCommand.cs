@@ -1,4 +1,5 @@
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -92,14 +93,11 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令执行结果</returns>
-        protected override Task<CommandResult> OnExecuteAsync(CancellationToken cancellationToken)
+        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
         {
             // 申请锁命令契约只定义数据结构，实际的业务逻辑在Handler中实现
-            var result = CommandResult.Success(
-                data: new { ResourceId = ResourceId, LockType = LockType, TimeoutMs = TimeoutMs },
-                message: "申请锁命令构建成功"
-            );
-            return Task.FromResult(result);
+            // 创建并返回成功响应
+            return Task.FromResult(ResponseBase.CreateSuccess("锁定申请操作成功"));
         }
     }
 }

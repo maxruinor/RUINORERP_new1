@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using RUINORERP.UI.Network;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -18,19 +19,19 @@ namespace RUINORERP.UI.Network.DI
         public static void AddNetworkServices(this IServiceCollection services)
         {
             // 注册核心网络组件
-            services.AddSingleton<ISocketClient, SuperSocketClient>();
             services.AddSingleton<ClientCommandDispatcher>();
+            services.AddSingleton<ISocketClient, SuperSocketClient>();
+            services.AddSingleton<ICommandDispatcher, ClientCommandDispatcher>();
             services.AddSingleton<IClientCommunicationService, ClientCommunicationService>();
             services.AddSingleton<RequestResponseManager>();
             services.AddSingleton<ClientEventManager>();
-            
-            // 注册管理器
             services.AddSingleton<HeartbeatManager>();
-            
-            // 注册业务服务
-            services.AddSingleton<UserLoginService>();
-            services.AddTransient<CacheSyncService>();
-            services.AddTransient<MessageNotificationService>();
+ 
+
+            // 注册业务服务 使用瞬态
+            services.AddTransient<UserLoginService>();
+            //services.AddTransient<CacheSyncService>();
+            //services.AddTransient<MessageNotificationService>();
         }
 
         /// <summary>
@@ -54,8 +55,8 @@ namespace RUINORERP.UI.Network.DI
             
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
-            builder.RegisterType<CacheSyncService>().AsSelf().InstancePerDependency();
-            builder.RegisterType<MessageNotificationService>().AsSelf().InstancePerDependency();
+            //builder.RegisterType<CacheSyncService>().AsSelf().InstancePerDependency();
+            //builder.RegisterType<MessageNotificationService>().AsSelf().InstancePerDependency();
             
             // 移除RegisterBuildCallback回调，因为我们已经通过构造函数注入解决了循环依赖问题
         }

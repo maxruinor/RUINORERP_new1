@@ -72,6 +72,7 @@ namespace RUINORERP.UI.Common
         /// <param name="password">密码</param>
         /// <param name="timeOutSec">超时时间（秒）</param>
         /// <returns>如果登录成功，返回true；否则返回false。</returns>
+        [Obsolete]
         public async Task<bool> loginRunningOperationAsync(EasyClientService _ecs, string userName, string password, int timeOutSec)
         {
             using (var tokenSource = new CancellationTokenSource())

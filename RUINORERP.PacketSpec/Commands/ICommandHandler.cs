@@ -1,4 +1,5 @@
 ﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -47,7 +48,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        Task<CommandResult> HandleAsync(ICommand command, CancellationToken cancellationToken = default);
+        Task<ResponseBase> HandleAsync(ICommand command, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 判断是否可以处理该命令
@@ -176,6 +177,26 @@ namespace RUINORERP.PacketSpec.Commands
         public int CurrentProcessingCount { get; set; }
 
         /// <summary>
+        /// 超时次数（处理时间超过阈值的次数）
+        /// </summary>
+        public long TimeoutCount { get; set; }
+
+        /// <summary>
+        /// 最后一次错误信息
+        /// </summary>
+        public string LastError { get; set; }
+
+        /// <summary>
+        /// 最后一次错误时间
+        /// </summary>
+        public DateTime? LastErrorTime { get; set; }
+
+        /// <summary>
+        /// 最后一次错误堆栈跟踪
+        /// </summary>
+        public string LastErrorStackTrace { get; set; }
+
+        /// <summary>
         /// 运行时间
         /// </summary>
         public TimeSpan Uptime => DateTime.UtcNow - StartTime;
@@ -193,5 +214,25 @@ namespace RUINORERP.PacketSpec.Commands
         public double AverageProcessingRate => Uptime.TotalSeconds > 0 
             ? TotalCommandsProcessed / Uptime.TotalSeconds 
             : 0;
+            
+        /// <summary>
+        /// 获取详细的统计信息报告
+        /// </summary>
+        /// <returns>统计信息报告</returns>
+        public string GetStatisticsReport()
+        {
+            return $"处理器统计信息:\n" +
+                   $"  运行时间: {Uptime}\n" +
+                   $"  总处理命令数: {TotalCommandsProcessed}\n" +
+                   $"  成功处理命令数: {SuccessfulCommands}\n" +
+                   $"  失败处理命令数: {FailedCommands}\n" +
+                   $"  成功率: {SuccessRate:F2}%\n" +
+                   $"  平均处理时间: {AverageProcessingTimeMs:F2}ms\n" +
+                   $"  最大处理时间: {MaxProcessingTimeMs}ms\n" +
+                   $"  最小处理时间: {MinProcessingTimeMs}ms\n" +
+                   $"  超时次数: {TimeoutCount}\n" +
+                   $"  当前处理中: {CurrentProcessingCount}\n" +
+                   $"  平均处理速度: {AverageProcessingRate:F2} 命令/秒";
+        }
     }
 }

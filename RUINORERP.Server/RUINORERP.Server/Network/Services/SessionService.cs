@@ -169,6 +169,29 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
+        /// 获取指定用户名的所有会话
+        /// </summary>
+        /// <param name="username">用户名</param>
+        /// <returns>会话信息列表</returns>
+        public IEnumerable<SessionInfo> GetUserSessions(string username)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(username))
+                    return Enumerable.Empty<SessionInfo>();
+
+                return _sessions.Values
+                    .Where(s => s.IsAuthenticated && s.Username == username)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"获取用户会话信息失败: {username}");
+                return Enumerable.Empty<SessionInfo>();
+            }
+        }
+
+        /// <summary>
         /// 更新会话信息
         /// </summary>
         /// <param name="sessionInfo">会话信息</param>
@@ -516,6 +539,11 @@ namespace RUINORERP.Server.Network.Services
         /// <returns>SuperSocket会话</returns>
         public IAppSession GetAppSession(string sessionId)
         {
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                return null;
+            }
+            
             _appSessions.TryGetValue(sessionId, out var appSession);
             return appSession;
         }
@@ -832,3 +860,6 @@ namespace RUINORERP.Server.Network.Services
         #endregion
     }
 }
+
+
+

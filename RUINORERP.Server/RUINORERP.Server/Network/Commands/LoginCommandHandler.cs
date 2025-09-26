@@ -16,13 +16,15 @@ using RUINORERP.Model;
 using RUINORERP.Server.Network.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net.Sockets;
-using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Commands.Handlers;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands.Cache;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ZXing.Common.ReedSolomon;
+using SuperSocket.Channel;
+using SuperSocket.Connection;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -71,13 +73,13 @@ Disposed（已释放）
         private static readonly HashSet<string> _activeSessions = new HashSet<string>();
         private static readonly object _lock = new object();
         protected ILogger<LoginCommandHandler> logger { get; set; }
-        
+
         // 添加无参构造函数，以支持Activator.CreateInstance创建实例
         public LoginCommandHandler() : base(new LoggerFactory().CreateLogger<CommandHandlerBase>())
         {
             logger = new LoggerFactory().CreateLogger<LoginCommandHandler>();
         }
-        
+
         public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
         {
             logger = _Logger;
@@ -113,8 +115,9 @@ Disposed（已释放）
         /// </summary>
         public override bool CanHandle(ICommand command)
         {
-            return command is LoginCommand || 
+            return command is LoginCommand ||
                    command.CommandIdentifier == AuthenticationCommands.Login ||
+                   command.CommandIdentifier == AuthenticationCommands.LoginRequest ||
                    command.CommandIdentifier == AuthenticationCommands.Logout ||
                    command.CommandIdentifier == AuthenticationCommands.ValidateToken ||
                    command.CommandIdentifier == AuthenticationCommands.RefreshToken;
@@ -130,14 +133,13 @@ Disposed（已释放）
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<CommandResult> ProcessCommandAsync(ICommand command, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> ProcessCommandAsync(ICommand command, CancellationToken cancellationToken)
         {
             try
             {
                 try
                 {
                     var commandId = command.CommandIdentifier;
-
                     if (commandId == AuthenticationCommands.Login || commandId == AuthenticationCommands.LoginRequest)
                     {
                         // LoginRequest和Login命令使用相同的处理逻辑
@@ -161,22 +163,22 @@ Disposed（已释放）
                     }
                     else
 
-                        // 新类统一转泛型
-                        //if (commandId.GetType().IsGenericType &&
-                        //    commandId.GetType().GetGenericTypeDefinition() == typeof(GenericCommand<>))
-                        //{
-                        //    var payload = commandId.GetSerializableData();
-                        //    return commandId.FullCode switch
-                        //    {
-                        //        var id when id == AuthenticationCommands.Login
-                        //            => HandleLogin((LoginPayload)payload),
-                        //        var id when id == CacheCommands.CacheUpdate
-                        //            => HandleCacheUpdate((CacheUpdatePayload)payload),
-                        //        _ => Task.FromResult(CommandResult.Failure("未实现"))
-                        //    };
-                        //}
+                    // 新类统一转泛型
+                    //if (commandId.GetType().IsGenericType &&
+                    //    commandId.GetType().GetGenericTypeDefinition() == typeof(GenericCommand<>))
+                    //{
+                    //    var payload = commandId.GetSerializableData();
+                    //    return commandId.FullCode switch
+                    //    {
+                    //        var id when id == AuthenticationCommands.Login
+                    //            => HandleLogin((LoginPayload)payload),
+                    //        var id when id == CacheCommands.CacheUpdate
+                    //            => HandleCacheUpdate((CacheUpdatePayload)payload),
+                    //        _ => Task.FromResult(CommandResult.Failure("未实现"))
+                    //    };
+                    //}
 
-                        // 统一转基类
+                    // 统一转基类
                     //    var generic = (ICommand)cmd;
                     //var payload = generic.GetSerializableData();   // 就是 LoginPayLoad / LogoutPayLoad …
 
@@ -191,25 +193,35 @@ Disposed（已释放）
                     //    _ => Task.FromResult(CommandResult.Failure("未实现"))
                     //};
 
-                     
+
                     {
-                        return CommandResult.Failure($"不支持的命令类型: {command.CommandIdentifier}", "UNSUPPORTED_COMMAND");
+                        var errorResponse = ResponseBase.CreateError($"不支持的命令类型: {command.CommandIdentifier}", 400)
+                            .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
+                        return ConvertToApiResponse(errorResponse);
                     }
 
-                   
+
 
 
                 }
                 catch (Exception ex)
                 {
                     LogError($"处理登录命令异常: {ex.Message}", ex);
-                    return CommandResult.Failure($"处理异常: {ex.Message}", "HANDLER_ERROR", ex);
+                    var errorResponse = ResponseBase.CreateError($"处理异常: {ex.Message}", 500)
+                        .WithMetadata("ErrorCode", "HANDLER_ERROR")
+                        .WithMetadata("Exception", ex.Message)
+                        .WithMetadata("StackTrace", ex.StackTrace);
+                    return ConvertToApiResponse(errorResponse);
                 }
             }
             catch (Exception ex)
             {
                 LogError($"处理缓存同步命令异常: {ex.Message}", ex);
-                return CommandResult.Failure($"处理异常: {ex.Message}", "HANDLER_ERROR", ex);
+                var errorResponse = ResponseBase.CreateError($"处理异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "HANDLER_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
+                return ConvertToApiResponse(errorResponse);
             }
         }
 
@@ -218,48 +230,42 @@ Disposed（已释放）
         /// <summary>
         /// 处理登录命令
         /// </summary>
-        private async Task<CommandResult> HandleLoginAsync(LoginCommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleLoginAsync(LoginCommand command, CancellationToken cancellationToken)
         {
             try
             {
                 // 检查并发用户数限制
                 if (SessionService.ActiveSessionCount >= MaxConcurrentUsers)
                 {
-                    return CommandResult.Failure("服务器达到最大用户数限制", "MAX_USERS_EXCEEDED");
+                    return ConvertToApiResponse(ResponseBase.CreateError("服务器达到最大用户数限制", 400)
+                        .WithMetadata("ErrorCode", "MAX_USERS_EXCEEDED"));
                 }
 
                 // 验证登录请求数据
                 if (command.LoginRequest == null)
                 {
-                    return CommandResult.Failure("登录请求数据不能为空", "EMPTY_LOGIN_REQUEST");
+                    return ConvertToApiResponse(ResponseBase.CreateError("登录请求数据不能为空", 400)
+                        .WithMetadata("ErrorCode", "EMPTY_LOGIN_REQUEST"));
                 }
 
                 if (!command.LoginRequest.IsValid())
                 {
-                    return CommandResult.Failure("登录请求数据无效", "INVALID_LOGIN_REQUEST");
-                }
-
-                // 检查重复登录
-                if (IsUserAlreadyLoggedIn(command.LoginRequest.Username))
-                {
-                    // 检查是否允许重复登录
-                    bool allowMultipleSessions = false; // 可配置项
-                    if (!allowMultipleSessions)
-                    {
-                        return CommandResult.Failure("用户已在其他地方登录", "ALREADY_LOGGED_IN");
-                    }
+                    return ConvertToApiResponse(ResponseBase.CreateError("登录请求数据无效", 400)
+                        .WithMetadata("ErrorCode", "INVALID_LOGIN_REQUEST"));
                 }
 
                 // 检查黑名单
                 if (IsUserBlacklisted(command.LoginRequest.Username, command.LoginRequest.ClientIp))
                 {
-                    return CommandResult.Failure("用户或IP在黑名单中", "BLACKLISTED");
+                    return ConvertToApiResponse(ResponseBase.CreateError("用户或IP在黑名单中", 403)
+                        .WithMetadata("ErrorCode", "BLACKLISTED"));
                 }
 
                 // 检查登录尝试次数
                 if (GetLoginAttempts(command.LoginRequest.Username) >= MaxLoginAttempts)
                 {
-                    return CommandResult.Failure("登录尝试次数过多，请稍后再试", "TOO_MANY_ATTEMPTS");
+                    return ConvertToApiResponse(ResponseBase.CreateError("登录尝试次数过多，请稍后再试", 429)
+                        .WithMetadata("ErrorCode", "TOO_MANY_ATTEMPTS"));
                 }
 
                 // 验证用户凭据
@@ -267,11 +273,27 @@ Disposed（已释放）
                 if (!validationResult.IsValid)
                 {
                     IncrementLoginAttempts(command.LoginRequest.Username);
-                    return CommandResult.Failure(validationResult.ErrorMessage, "LOGIN_FAILED");
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.ErrorMessage, 401)
+                        .WithMetadata("ErrorCode", "LOGIN_FAILED"));
                 }
 
                 // 重置登录尝试次数
                 ResetLoginAttempts(command.LoginRequest.Username);
+
+                // 检查是否已经登录，如果是则发送重复登录确认请求
+                var existingSessions = CheckExistingUserSessions(command.LoginRequest.Username);
+                if (existingSessions.Any() && !IsDuplicateLoginConfirmed(command))
+                {
+                    // 发送重复登录确认请求给客户端
+                    return await RequestDuplicateLoginConfirmation(command, existingSessions, cancellationToken);
+                }
+
+                // 处理重复登录确认后的逻辑
+                if (IsDuplicateLoginConfirmed(command))
+                {
+                    // 踢掉之前的登录
+                    KickExistingSessions(existingSessions, command.LoginRequest.Username);
+                }
 
                 // 获取或创建会话信息
                 var sessionInfo = SessionService.GetSession(command.SessionID);
@@ -282,46 +304,50 @@ Disposed（已释放）
                     sessionInfo = SessionService.CreateSession(command.SessionID, clientIp);
                     if (sessionInfo == null)
                     {
-                        return CommandResult.Failure("创建会话失败", "SESSION_CREATION_FAILED");
+                        return ConvertToApiResponse(ResponseBase.CreateError("创建会话失败", 500)
+                            .WithMetadata("ErrorCode", "SESSION_CREATION_FAILED"));
                     }
                 }
 
                 // 更新会话信息
-                UpdateSessionInfo(sessionInfo, validationResult.UserInfo);
+                UpdateSessionInfo(sessionInfo, validationResult.UserSessionInfo);
                 SessionService.UpdateSession(sessionInfo);
 
                 // 记录活跃会话
                 AddActiveSession(command.SessionID);
 
                 // 生成Token
-                var tokenInfo = GenerateTokenInfo(validationResult.UserInfo);
+                var tokenInfo = GenerateTokenInfo(validationResult.UserSessionInfo);
 
                 // 创建响应数据
-                var responseData = CreateLoginResponse(tokenInfo, validationResult.UserInfo);
+                var responseData = CreateLoginResponse(tokenInfo, validationResult.UserSessionInfo);
 
                 // 返回成功结果
-                return CommandResult.SuccessWithResponse(
-                    responseData,
-                    data: new { 
-                        UserId = validationResult.UserInfo.UserId, 
-                        Username = validationResult.UserInfo.Username,
-                        Token = tokenInfo.Token,
-                        ExpiresIn = tokenInfo.ExpiresIn
-                    },
+                return ConvertToApiResponse(ResponseBase.CreateSuccess(
                     message: "登录成功"
-                );
+                ).WithMetadata("Data", new
+                {
+                    UserId = validationResult.UserSessionInfo.UserInfo.User_ID,
+                    Username = validationResult.UserSessionInfo.UserInfo.UserName,
+                    Token = tokenInfo.Token,
+                    ExpiresIn = tokenInfo.ExpiresIn
+                }));
             }
             catch (Exception ex)
             {
                 LogError($"处理登录命令异常: {ex.Message}", ex);
-                return CommandResult.Failure($"登录异常: {ex.Message}", "LOGIN_EXCEPTION", ex);
+                var errorResponse = ResponseBase.CreateError($"登录异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "LOGIN_EXCEPTION")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
+                return ConvertToApiResponse(errorResponse);
             }
         }
 
         /// <summary>
         /// 处理登录验证命令
         /// </summary>
-        private async Task<CommandResult> HandleLoginValidationAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleLoginValidationAsync(ICommand command, CancellationToken cancellationToken)
         {
             LogInfo($"处理登录验证 [会话: {command.SessionID}]");
 
@@ -330,39 +356,41 @@ Disposed（已释放）
             // 使用SessionService验证会话有效性
             if (!SessionService.IsValidSession(command.SessionID))
             {
-                return CommandResult.Failure("会话无效", "INVALID_SESSION");
+                return ConvertToApiResponse(ResponseBase.CreateError("会话无效", 401)
+                    .WithMetadata("ErrorCode", "INVALID_SESSION"));
             }
 
             var sessionInfo = SessionService.GetSession(command.SessionID);
             if (sessionInfo == null)
             {
-                return CommandResult.Failure("获取会话信息失败", "SESSION_NOT_FOUND");
+                return ConvertToApiResponse(ResponseBase.CreateError("获取会话信息失败", 404)
+                    .WithMetadata("ErrorCode", "SESSION_NOT_FOUND"));
             }
 
             if (!sessionInfo.IsAuthenticated)
             {
-                return CommandResult.Failure("会话未认证", "SESSION_NOT_AUTHENTICATED");
+                return ConvertToApiResponse(ResponseBase.CreateError("会话未认证", 401)
+                    .WithMetadata("ErrorCode", "SESSION_NOT_AUTHENTICATED"));
             }
 
             // 检查会话是否仍然活跃
             if (!_activeSessions.Contains(command.SessionID))
             {
-                return CommandResult.Failure("会话已过期", "SESSION_EXPIRED");
+                return ConvertToApiResponse(ResponseBase.CreateError("会话已过期", 401)
+                    .WithMetadata("ErrorCode", "SESSION_EXPIRED"));
             }
 
             var responseData = CreateValidationResponse(sessionInfo);
 
-            return CommandResult.SuccessWithResponse(
-                responseData,
-                data: new { SessionId = command.SessionID, UserId = sessionInfo.UserId },
+            return ConvertToApiResponse(ResponseBase.CreateSuccess(
                 message: "验证成功"
-            );
+            ).WithMetadata("Data", new { SessionId = command.SessionID, UserId = sessionInfo.UserId }));
         }
 
         /// <summary>
         /// 处理Token验证命令 - 整合了Token验证机制
         /// </summary>
-        private async Task<CommandResult> HandleTokenValidationAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleTokenValidationAsync(ICommand command, CancellationToken cancellationToken)
         {
             LogInfo($"处理Token验证 [会话: {command.SessionID}]");
 
@@ -371,7 +399,8 @@ Disposed（已释放）
                 var tokenData = command.Packet.GetJsonData<TokenData>();
                 if (string.IsNullOrEmpty(tokenData.Token))
                 {
-                    return CommandResult.Failure("Token不能为空", "INVALID_TOKEN");
+                    return ConvertToApiResponse(ResponseBase.CreateError("Token不能为空", 400)
+                        .WithMetadata("ErrorCode", "INVALID_TOKEN"));
                 }
 
                 // 验证Token
@@ -379,28 +408,30 @@ Disposed（已释放）
 
                 if (!validationResult.IsValid)
                 {
-                    return CommandResult.Failure(validationResult.ErrorMessage, "TOKEN_VALIDATION_FAILED");
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.ErrorMessage, 401)
+                        .WithMetadata("ErrorCode", "TOKEN_VALIDATION_FAILED"));
                 }
 
                 var responseData = CreateTokenValidationResponse(validationResult);
 
-                return CommandResult.SuccessWithResponse(
-                    responseData,
-                    data: new { UserId = validationResult.UserId, IsValid = true },
+                return ConvertToApiResponse(ResponseBase.CreateSuccess(
                     message: "Token验证成功"
-                );
+                ).WithMetadata("Data", new { UserId = validationResult.UserId, IsValid = true }));
             }
             catch (Exception ex)
             {
                 LogError($"Token验证异常: {ex.Message}", ex);
-                return CommandResult.Failure($"Token验证异常: {ex.Message}", "TOKEN_ERROR", ex);
+                return ConvertToApiResponse(ResponseBase.CreateError($"Token验证异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "TOKEN_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace));
             }
         }
 
         /// <summary>
         /// 处理Token刷新命令 - 整合了Token刷新机制
         /// </summary>
-        private async Task<CommandResult> HandleTokenRefreshAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleTokenRefreshAsync(ICommand command, CancellationToken cancellationToken)
         {
             LogInfo($"处理Token刷新 [会话: {command.SessionID}]");
 
@@ -409,7 +440,8 @@ Disposed（已释放）
                 var refreshData = command.Packet.GetJsonData<RefreshData>();
                 if (string.IsNullOrEmpty(refreshData.RefreshToken) || string.IsNullOrEmpty(refreshData.CurrentToken))
                 {
-                    return CommandResult.Failure("刷新Token和当前Token都不能为空", "INVALID_REFRESH_DATA");
+                    return ConvertToApiResponse(ResponseBase.CreateError("刷新Token和当前Token都不能为空", 400)
+                        .WithMetadata("ErrorCode", "INVALID_REFRESH_DATA"));
                 }
 
                 // 刷新Token
@@ -417,32 +449,34 @@ Disposed（已释放）
 
                 if (!refreshResult.IsSuccess)
                 {
-                    return CommandResult.Failure(refreshResult.ErrorMessage, "REFRESH_FAILED");
+                    return ConvertToApiResponse(ResponseBase.CreateError(refreshResult.ErrorMessage, 401)
+                        .WithMetadata("ErrorCode", "REFRESH_FAILED"));
                 }
 
                 var responseData = CreateTokenRefreshResponse(refreshResult);
 
-                return CommandResult.SuccessWithResponse(
-                    responseData,
-                    data: new
-                    {
-                        AccessToken = refreshResult.AccessToken,
-                        RefreshToken = refreshResult.RefreshToken
-                    },
+                return ConvertToApiResponse(ResponseBase.CreateSuccess(
                     message: "Token刷新成功"
-                );
+                ).WithMetadata("Data", new
+                {
+                    AccessToken = refreshResult.AccessToken,
+                    RefreshToken = refreshResult.RefreshToken
+                }));
             }
             catch (Exception ex)
             {
                 LogError($"Token刷新异常: {ex.Message}", ex);
-                return CommandResult.Failure($"Token刷新异常: {ex.Message}", "REFRESH_ERROR", ex);
+                return ConvertToApiResponse(ResponseBase.CreateError($"Token刷新异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "REFRESH_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace));
             }
         }
 
         /// <summary>
         /// 处理注销命令
         /// </summary>
-        private async Task<CommandResult> HandleLogoutAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleLogoutAsync(ICommand command, CancellationToken cancellationToken)
         {
             LogInfo($"处理注销请求 [会话: {command.SessionID}]");
 
@@ -451,13 +485,15 @@ Disposed（已释放）
                 // 使用SessionService验证会话有效性
                 if (!SessionService.IsValidSession(command.SessionID))
                 {
-                    return CommandResult.Failure("会话信息无效", "INVALID_SESSION");
+                    return ConvertToApiResponse(ResponseBase.CreateError("会话信息无效", 401)
+                        .WithMetadata("ErrorCode", "INVALID_SESSION"));
                 }
 
                 var sessionInfo = SessionService.GetSession(command.SessionID);
                 if (sessionInfo == null)
                 {
-                    return CommandResult.Failure("获取会话信息失败", "SESSION_NOT_FOUND");
+                    return ConvertToApiResponse(ResponseBase.CreateError("获取会话信息失败", 404)
+                        .WithMetadata("ErrorCode", "SESSION_NOT_FOUND"));
                 }
 
                 // 执行注销
@@ -468,28 +504,30 @@ Disposed（已释放）
 
                 if (!logoutResult)
                 {
-                    return CommandResult.Failure("注销失败", "LOGOUT_FAILED");
+                    return ConvertToApiResponse(ResponseBase.CreateError("注销失败", 500)
+                        .WithMetadata("ErrorCode", "LOGOUT_FAILED"));
                 }
 
                 var responseData = CreateLogoutResponse();
 
-                return CommandResult.SuccessWithResponse(
-                    responseData,
-                    data: new { LoggedOut = true, SessionId = command.SessionID },
+                return ConvertToApiResponse(ResponseBase.CreateSuccess(
                     message: "注销成功"
-                );
+                ).WithMetadata("Data", new { LoggedOut = true, SessionId = command.SessionID }));
             }
             catch (Exception ex)
             {
                 LogError($"注销异常: {ex.Message}", ex);
-                return CommandResult.Failure($"注销异常: {ex.Message}", "LOGOUT_ERROR", ex);
+                return ConvertToApiResponse(ResponseBase.CreateError($"注销异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "LOGOUT_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace));
             }
         }
 
         /// <summary>
         /// 处理准备登录命令
         /// </summary>
-        private async Task<CommandResult> HandlePrepareLoginAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandlePrepareLoginAsync(ICommand command, CancellationToken cancellationToken)
         {
             LogInfo($"处理准备登录命令 [会话: {command.SessionID}]");
 
@@ -498,16 +536,17 @@ Disposed（已释放）
                 // 创建准备登录响应
                 var responseData = CreatePrepareLoginResponse();
 
-                return CommandResult.SuccessWithResponse(
-                    responseData,
-                    data: new { Status = "Ready", MaxConcurrentUsers = MaxConcurrentUsers },
+                return ConvertToApiResponse(ResponseBase.CreateSuccess(
                     message: "准备登录完成"
-                );
+                ).WithMetadata("Data", new { Status = "Ready", MaxConcurrentUsers = MaxConcurrentUsers }));
             }
             catch (Exception ex)
             {
                 LogError($"处理准备登录命令异常: {ex.Message}", ex);
-                return CommandResult.Failure($"准备登录异常: {ex.Message}", "PREPARE_LOGIN_ERROR", ex);
+                return ConvertToApiResponse(ResponseBase.CreateError($"准备登录异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "PREPARE_LOGIN_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace));
             }
         }
 
@@ -573,14 +612,7 @@ Disposed（已释放）
                 return new UserValidationResult
                 {
                     IsValid = true,
-                    UserInfo = new UserInfo
-                    {
-                        UserId = user.User_ID,
-                        Username = user.UserName,
-                        DisplayName = user.tb_employee.Employee_Name,
-                        IsAdmin = true,
-                        Roles = user.tb_User_Roles
-                    }
+                    UserSessionInfo = UserSessionInfo.Create(user)
                 };
             }
             else
@@ -596,12 +628,12 @@ Disposed（已释放）
         /// <summary>
         /// 更新会话信息
         /// </summary>
-        private void UpdateSessionInfo(SessionInfo sessionInfo, UserInfo userInfo)
+        private void UpdateSessionInfo(SessionInfo sessionInfo, UserSessionInfo userSessionInfo)
         {
-            if (sessionInfo != null && userInfo != null)
+            if (sessionInfo != null && userSessionInfo != null)
             {
-                sessionInfo.UserId = userInfo.UserId;
-                sessionInfo.Username = userInfo.Username;
+                sessionInfo.UserId = userSessionInfo.UserInfo.User_ID;
+                sessionInfo.Username = userSessionInfo.UserInfo.UserName;
                 sessionInfo.IsAuthenticated = true;
                 sessionInfo.UpdateActivity();
                 // sessionInfo.AdditionalInfo["UserInfo"] = userInfo;
@@ -609,14 +641,176 @@ Disposed（已释放）
         }
 
         /// <summary>
-        /// 检查用户是否已登录
+        /// 检查用户是否已登录（基于有效的Token）
+        /// </summary>
+        private IEnumerable<SessionInfo> CheckExistingUserSessions(string username)
+        {
+            try
+            {
+                // 获取指定用户名的所有会话
+                var allSessions = SessionService.GetUserSessions(username);
+
+                // 过滤出有有效Token的会话
+                var validSessions = new List<SessionInfo>();
+                foreach (var session in allSessions)
+                {
+                    // 检查会话是否已认证且有有效的Token
+                    if (session.IsAuthenticated && !string.IsNullOrEmpty(session.SessionID))
+                    {
+                        // 检查会话是否仍在活跃状态
+                        if (_activeSessions.Contains(session.SessionID))
+                        {
+                            validSessions.Add(session);
+                        }
+                    }
+                }
+
+                return validSessions;
+            }
+            catch (Exception ex)
+            {
+                LogError($"检查现有用户会话失败: {ex.Message}", ex);
+                return Enumerable.Empty<SessionInfo>();
+            }
+        }
+
+        /// <summary>
+        /// 检查是否已确认重复登录
+        /// </summary>
+        private bool IsDuplicateLoginConfirmed(LoginCommand command)
+        {
+            // 检查登录请求中是否包含重复登录确认标志
+            if (command?.LoginRequest?.AdditionalData != null &&
+                command.LoginRequest.AdditionalData.ContainsKey("DuplicateLoginConfirmed"))
+            {
+                return Convert.ToBoolean(command.LoginRequest.AdditionalData["DuplicateLoginConfirmed"]);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 请求重复登录确认
+        /// </summary>
+        private async Task<ResponseBase> RequestDuplicateLoginConfirmation(LoginCommand command,
+            IEnumerable<SessionInfo> existingSessions, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 收集现有会话信息
+                var sessionInfos = existingSessions.Select(s => new
+                {
+                    SessionId = s.SessionID,
+                    LoginTime = s.LoginTime,
+                    ClientIp = s.ClientIp,
+                    DeviceInfo = s.DeviceInfo
+                }).ToList();
+
+                // 创建重复登录确认请求
+                var confirmationRequest = new OriginalData(
+                    (byte)CommandCategory.Authentication,
+                    new byte[] { AuthenticationCommands.DuplicateLoginNotification.OperationCode }, // DuplicateLoginNotification命令码
+                    System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new
+                    {
+                        Message = "您的账号已在其他地方登录",
+                        ExistingSessions = sessionInfos,
+                        ActionRequired = "ConfirmDuplicateLogin"
+                    }))
+                );
+
+                // 发送确认请求给客户端
+                var appSession = SessionService.GetAppSession(command.SessionID);
+                if (appSession != null)
+                {
+                    await appSession.SendAsync(confirmationRequest.ToByteArray());
+                }
+
+                // 返回需要确认的响应
+                return ConvertToApiResponse(ResponseBase.CreateSuccess("需要重复登录确认")
+                    .WithMetadata("ActionRequired", "DuplicateLoginConfirmation")
+                    .WithMetadata("ExistingSessions", sessionInfos));
+            }
+            catch (Exception ex)
+            {
+                LogError($"请求重复登录确认失败: {ex.Message}", ex);
+                return ConvertToApiResponse(ResponseBase.CreateError("请求重复登录确认失败", 500)
+                    .WithMetadata("ErrorCode", "DUPLICATE_LOGIN_CONFIRMATION_FAILED"));
+            }
+        }
+
+        /// <summary>
+        /// 踢掉现有会话
+        /// </summary>
+        private void KickExistingSessions(IEnumerable<SessionInfo> existingSessions, string username)
+        {
+            // 主动踢掉之前的登录
+            foreach (var session in existingSessions)
+            {
+                // 发送重复登录通知
+                if (!string.IsNullOrEmpty(session.SessionID))
+                {
+                    SendDuplicateLoginNotification(session.SessionID, username);
+
+                    // 断开之前的会话
+                    var appSession = SessionService.GetAppSession(session.SessionID);
+                    if (appSession != null)
+                    {
+                        appSession.CloseAsync(CloseReason.ProtocolError);
+                    }
+
+                    // 从活跃会话列表中移除
+                    RemoveActiveSession(session.SessionID);
+
+                    // 从会话服务中移除
+                    SessionService.RemoveSession(session.SessionID);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 检查用户是否已登录，并处理重复登录情况
         /// </summary>
         private bool IsUserAlreadyLoggedIn(string username)
         {
-            lock (_lock)
+            // 获取指定用户名的所有已认证会话
+            var authenticatedSessions = SessionService.GetUserSessions(username);
+
+            if (authenticatedSessions.Any())
             {
-                // 这里应该检查数据库或会话存储，这里简化为检查活跃会话
-                return _activeSessions.Any(s => s.Contains(username));
+                // 主动踢掉之前的登录
+                KickExistingSessions(authenticatedSessions, username);
+                return true; // 表示之前有登录，但已被踢掉
+            }
+
+            return false; // 表示之前没有登录
+        }
+
+        /// <summary>
+        /// 发送重复登录通知
+        /// </summary>
+        private void SendDuplicateLoginNotification(string sessionId, string username)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(sessionId))
+                {
+                    var appSession = SessionService.GetAppSession(sessionId);
+                    if (appSession != null)
+                    {
+                        // 创建重复登录通知消息
+                        var notificationMessage = new OriginalData(
+                            (byte)CommandCategory.Authentication,
+                            new byte[] { AuthenticationCommands.DuplicateLoginNotification.OperationCode },
+                            System.Text.Encoding.UTF8.GetBytes($"您的账号在其他地方登录，您已被强制下线。")
+                        );
+
+                        // 发送通知消息
+                        appSession.SendAsync(notificationMessage.ToByteArray());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"发送重复登录通知失败: {ex.Message}", ex);
             }
         }
 
@@ -701,12 +895,12 @@ Disposed（已释放）
         /// <summary>
         /// 生成Token信息
         /// </summary>
-        private TokenInfo GenerateTokenInfo(UserInfo userInfo)
+        private TokenInfo GenerateTokenInfo(UserSessionInfo userSessionInfo)
         {
             return new TokenInfo
             {
-                AccessToken = $"access_token_{userInfo.UserId}_{Guid.NewGuid()}",
-                RefreshToken = $"refresh_token_{userInfo.UserId}_{Guid.NewGuid()}",
+                AccessToken = $"access_token_{userSessionInfo.UserInfo.User_ID}_{Guid.NewGuid()}",
+                RefreshToken = $"refresh_token_{userSessionInfo.UserInfo.User_ID}_{Guid.NewGuid()}",
                 ExpiresIn = 3600,
                 TokenType = "Bearer"
             };
@@ -715,10 +909,19 @@ Disposed（已释放）
         /// <summary>
         /// 创建登录响应
         /// </summary>
-        private OriginalData CreateLoginResponse(TokenInfo tokenInfo, UserInfo userInfo)
+        private OriginalData CreateLoginResponse(TokenInfo tokenInfo, UserSessionInfo userSessionInfo)
         {
-            var responseData = $"SUCCESS|{userInfo.UserId}|{userInfo.DisplayName}|{tokenInfo.AccessToken}|{tokenInfo.RefreshToken}|{tokenInfo.ExpiresIn}";
-            var data = System.Text.Encoding.UTF8.GetBytes(responseData);
+
+            LoginResponse loginResponse = new LoginResponse();
+            loginResponse.Username = userSessionInfo.UserInfo.UserName;
+            loginResponse.UserId = userSessionInfo.UserInfo.User_ID;
+            loginResponse.DisplayName = userSessionInfo.UserInfo.tb_employee?.Employee_Name;
+            loginResponse.AccessToken = tokenInfo.AccessToken;
+            loginResponse.RefreshToken = tokenInfo.RefreshToken;
+            loginResponse.ExpiresIn = tokenInfo.ExpiresIn;
+            loginResponse.TokenType = tokenInfo.TokenType;
+
+            var data = RUINORERP.PacketSpec.Serialization.UnifiedSerializationService.SerializeToBinary<LoginResponse>(loginResponse);
 
             // 将完整的CommandId正确分解为Category和OperationCode
             uint commandId = (uint)AuthenticationCommands.LoginResponse;
@@ -826,7 +1029,7 @@ Disposed（已释放）
 
             RemoveActiveSession(sessionId);
             ResetLoginAttempts(userId);
-            
+
             // 通过SessionService移除会话
             return SessionService.RemoveSession(sessionId);
         }
@@ -846,7 +1049,7 @@ Disposed（已释放）
                 {
                     return session.ClientIp;
                 }
-                
+
                 // 如果SessionInfo中没有IP，尝试从RemoteEndPoint获取
                 var appSession = SessionService.GetAppSession(command.SessionID);
                 if (appSession != null && appSession.RemoteEndPoint != null)
@@ -1008,6 +1211,26 @@ Disposed（已释放）
         }
 
         #endregion
+
+        /// <summary>
+        /// 将ResponseBase转换为ApiResponse
+        /// </summary>
+        /// <param name="baseResponse">基础响应对象</param>
+        /// <returns>ApiResponse对象</returns>
+        private ResponseBase ConvertToApiResponse(ResponseBase baseResponse)
+        {
+            var response = new ResponseBase
+            {
+                IsSuccess = baseResponse.IsSuccess,
+                Message = baseResponse.Message,
+                Code = baseResponse.Code,
+                Timestamp = baseResponse.Timestamp,
+                RequestId = baseResponse.RequestId,
+                Metadata = baseResponse.Metadata,
+                ExecutionTimeMs = baseResponse.ExecutionTimeMs
+            };
+            return response;
+        }
     }
 
 

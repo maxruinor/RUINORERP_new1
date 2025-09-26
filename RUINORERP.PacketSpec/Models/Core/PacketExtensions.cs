@@ -137,16 +137,16 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <typeparam name="T">响应数据类型</typeparam>
         /// <param name="packet">数据包实例</param>
         /// <returns>API响应实例</returns>
-        public static ApiResponse<T> ToApiResponse<T>(this PacketModel packet)
+        public static ResponseBase<T> ToApiResponse<T>(this PacketModel packet)
         {
             try
             {
                 var data = packet.GetJsonData<T>();
-                return ApiResponse<T>.CreateSuccess(data, "数据包处理成功");
+                return ResponseBase<T>.CreateSuccess(data, "数据包处理成功");
             }
             catch (Exception ex)
             {
-                return ApiResponse<T>.Failure($"数据包解析失败: {ex.Message}");
+                return ResponseBase<T>.Failure($"数据包解析失败: {ex.Message}");
             }
         }
 

@@ -20,20 +20,20 @@ namespace RUINORERP.Business.CommService
     /// <summary>
     /// 公共的一个控制器。直接调用底层的方法
     /// </summary>
-    public class CommonController
+    public class CommonController : ICommonController
     {
 
         public ApplicationContext _appContext;
 
         private readonly IUnitOfWorkManage _unitOfWorkManage;
-        public IUnitServices _unitServices { get; set; }
         private readonly ILogger<CommonController> _logger;
-        public Itb_UnitServices _Itb_UnitServices { get; set; }
-        public CommonController(ILogger<CommonController> logger, Itb_UnitServices Itb_UnitServices, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null)
+        public Itb_UnitServices _itbUnitServices { get; set; }
+
+        public CommonController(ILogger<CommonController> logger, Itb_UnitServices itbUnitServices, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null)
         {
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;
-            _Itb_UnitServices = Itb_UnitServices;
+            _itbUnitServices = itbUnitServices;
             _appContext = appContext;
         }
 
@@ -57,7 +57,7 @@ namespace RUINORERP.Business.CommService
 
         public List<T> GetBindSource<T>(string tableName, Expression<Func<T, bool>> expCondition)
         {
-                return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(expCondition).AS(tableName).ToList();
+            return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(expCondition).AS(tableName).ToList();
         }
 
         public object GetBindSourceList(string tableName)
@@ -67,57 +67,10 @@ namespace RUINORERP.Business.CommService
 
         public async Task<List<tb_Unit>> Query()
         {
-            List<tb_Unit> list = await _Itb_UnitServices.QueryAsync();
+            List<tb_Unit> list = await _itbUnitServices.QueryAsync();
             return list;
         }
 
-        public async Task<bool> TransTest()
-        {
-            //var data = new MessageModel<string>() { success = true, msg = "" };
-            bool rs = true;
-            if (true)
-            {
-                try
-                {
-                    Model.tb_Unit unit = new tb_Unit();
-                    unit.Unit_ID = 6;
-                    unit.UnitName = "transtest";
-                    // 开启事务，保证数据一致性
-                    _unitOfWorkManage.BeginTran();
-                    //先添加再删除
-                    //await _unitServices.Add(unit);
-                    //await _unitServices.DeleteById(1);
-                    ////先删除再添加
-                    ///
-                    Model.tb_Unit unit1 = new tb_Unit();
-                    unit1.Unit_ID = 4;
-                    unit1.UnitName = "transtest44";
-
-                    await _unitServices.Add(unit);
-
-                    await _unitServices.Add(unit1);
-
-                    await _unitServices.DeleteById(110);
-
-                    // 注意信息的完整性
-                    _unitOfWorkManage.CommitTran();
-
-                    rs = true;
-                }
-                catch (Exception ex)
-                {
-                    _unitOfWorkManage.RollbackTran();
-                    _logger.Error(ex);
-                }
-            }
-            else
-            {
-                //data.success = false;
-                //data.msg = "当前不处于开发模式，代码生成不可用！";
-            }
-
-            return rs;
-        }
 
 
     }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Commands.Handlers
 {
@@ -81,12 +82,12 @@ namespace RUINORERP.PacketSpec.Commands.Handlers
         /// <param name="command">要处理的命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<CommandResult> OnHandleAsync(ICommand command, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnHandleAsync(ICommand command, CancellationToken cancellationToken)
         {
             var echoCommand = command as EchoCommand;
             if (echoCommand == null)
             {
-                return CommandResult.Failure("无效的命令类型", "INVALID_COMMAND_TYPE");
+                return ConvertToApiResponse(ResponseBase.CreateError("无效的命令类型", 400).WithMetadata("ErrorCode", "INVALID_COMMAND_TYPE"));
             }
 
             try
@@ -95,21 +96,53 @@ namespace RUINORERP.PacketSpec.Commands.Handlers
                 LogDebug($"处理回显命令: {echoCommand.Message}");
 
                 // 创建成功结果，返回处理后的消息
-                var result = CommandResult.Success(new {
+                var responseData = new {
                     OriginalMessage = echoCommand.Message,
                     Timestamp = DateTime.UtcNow,
                     HandlerId = this.HandlerId
-                });
-                result.Message = "回显命令处理成功";
-
+                };
+                
+                var result = new ResponseBase
+                {
+                    IsSuccess = true,
+                    Message = "回显命令处理成功",
+                    Code = 200,
+                    Timestamp = DateTime.UtcNow
+                };
+                
+                result.WithMetadata("Data", responseData);
+                
                 // 模拟一些处理延迟
                 return result;
             }
             catch (Exception ex)
             {
                 LogError("处理回显命令时发生异常", ex);
-                return CommandResult.Failure($"处理回显命令时发生异常: {ex.Message}", "PROCESSING_ERROR", ex);
+                return ConvertToApiResponse(ResponseBase.CreateError($"处理回显命令时发生异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "PROCESSING_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace));
             }
+        }
+
+        /// <summary>
+        /// 将ResponseBase转换为ApiResponse
+        /// </summary>
+        /// <param name="baseResponse">基础响应对象</param>
+        /// <returns>ApiResponse对象</returns>
+        private ResponseBase ConvertToApiResponse(ResponseBase baseResponse)
+        {
+            var response = new ResponseBase
+            {
+                IsSuccess = baseResponse.IsSuccess,
+                Message = baseResponse.Message,
+                Code = baseResponse.Code,
+                Timestamp = baseResponse.Timestamp,
+                RequestId = baseResponse.RequestId,
+                Metadata = baseResponse.Metadata,
+                ExecutionTimeMs = baseResponse.ExecutionTimeMs
+            };
+            return response;
         }
     }
 }

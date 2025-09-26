@@ -24,32 +24,18 @@ namespace RUINORERP.PacketSpec.Models
     {
         public bool IsValid { get; set; }
         public string ErrorMessage { get; set; }
-        public UserInfo UserInfo { get; set; }
+        public UserSessionInfo UserSessionInfo { get; set; }
     }
 
-
     /// <summary>
-    /// 用户信息 网络会话层？
+    /// 用户会话信息
     /// </summary>
-    public class UserInfo
+    public class UserSessionInfo
     {
- 
- 
-        public bool IsAdmin { get; set; }
         /// <summary>
-        /// 用户ID
+        /// 数据库用户信息
         /// </summary>
-        public long UserId { get; set; }
-
-        /// <summary>
-        /// 用户名
-        /// </summary>
-        public string Username { get; set; }
-
-        /// <summary>
-        /// 显示名称
-        /// </summary>
-        public string DisplayName { get; set; }
+        public tb_UserInfo UserInfo { get; set; }
 
         /// <summary>
         /// 会话ID
@@ -82,38 +68,50 @@ namespace RUINORERP.PacketSpec.Models
         public string Department { get; set; }
 
         /// <summary>
-        /// 创建用户信息
+        /// 创建用户会话信息
         /// </summary>
-        /// <param name="userId">用户ID</param>
-        /// <param name="username">用户名</param>
+        /// <param name="userInfo">用户信息</param>
         /// <param name="sessionId">会话ID</param>
         /// <param name="clientIp">客户端IP</param>
-        /// <returns>用户信息对象</returns>
-        public static UserInfo Create(long userId, string username, string sessionId = null, string clientIp = null)
+        /// <returns>用户会话信息对象</returns>
+        public static UserSessionInfo Create(tb_UserInfo userInfo, string sessionId = null, string clientIp = null)
         {
-            return new UserInfo
+            return new UserSessionInfo
             {
-                UserId = userId,
-                Username = username,
+                UserInfo = userInfo,
                 SessionId = sessionId,
                 ClientIp = clientIp,
                 IsOnline = true,
-                //Roles = Array.Empty<string>()
+                Roles = new List<tb_User_Role>()
             };
         }
-
-
     }
-   
+
     /// <summary>
     /// Token信息
     /// </summary>
     public class TokenInfo
     {
+        /// <summary>
+        /// 访问令牌
+        /// </summary>
         public string AccessToken { get; set; }
+
+        /// <summary>
+        /// 刷新令牌
+        /// </summary>
         public string RefreshToken { get; set; }
+
+        /// <summary>
+        /// 过期时间（秒）
+        /// </summary>
         public int ExpiresIn { get; set; }
+
+        /// <summary>
+        /// 令牌类型
+        /// </summary>
         public string TokenType { get; set; }
+
         public string Token { get; set; }
     }
 

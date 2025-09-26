@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
@@ -30,21 +30,21 @@ namespace RUINORERP.PacketSpec.Handlers
 
         public override string Name => $"GenericHandler<{typeof(TPayload).Name}>";
 
-        protected override Task<CommandResult> OnHandleAsync(ICommand cmd, CancellationToken ct)
+        protected override Task<ApiResponse> OnHandleAsync(ICommand cmd, CancellationToken ct)
         {
             // 框架保证只会把 GenericCommand<TPayload> 派过来
             var payload = cmd.GetSerializableData();
             if (payload is not TPayload biz)
-                return Task.FromResult(CommandResult.Failure("Payload 类型不匹配"));
+                return Task.FromResult(ApiResponse.CreateError(400).WithMetadata("ErrorCode", "INVALID_PAYLOAD_TYPE").WithMetadata("ErrorMessage", "Payload 类型不匹配"));
 
             // 这里写统一业务入口，也可以再分派到更细的逻辑
             return HandleCoreAsync(biz, ct);
         }
 
-        private Task<CommandResult> HandleCoreAsync(TPayload payload, CancellationToken ct)
+        private Task<ApiResponse> HandleCoreAsync(TPayload payload, CancellationToken ct)
         {
             // 示例：直接返回成功 + 原数据
-            return Task.FromResult(CommandResult.Success(payload, $"[{typeof(TPayload).Name}] 处理成功"));
+            return Task.FromResult(ApiResponse.CreateSuccess(payload).WithMetadata("Message", $"[{typeof(TPayload).Name}] 处理成功"));
         }
     }
 }

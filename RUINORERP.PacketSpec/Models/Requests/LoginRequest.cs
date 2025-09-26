@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic; // 添加这行
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
@@ -6,7 +7,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// 登录请求数据模型
     /// </summary>
     [Serializable]
-    public class LoginRequest
+    public class LoginRequest : RequestBase
     {
         /// <summary>
         /// 用户名
@@ -42,6 +43,11 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 客户端类型（Web、Desktop、Mobile等）
         /// </summary>
         public string ClientType { get; set; }
+
+        /// <summary>
+        /// 附加数据，用于传递额外信息，如重复登录确认等
+        /// </summary>
+        public Dictionary<string, object> AdditionalData { get; set; } // 添加这行
 
         /// <summary>
         /// 创建登录请求

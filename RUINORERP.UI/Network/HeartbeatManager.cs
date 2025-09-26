@@ -111,6 +111,11 @@ namespace RUINORERP.UI.Network
         /// <exception cref="ObjectDisposedException">对象已被释放时抛出</exception>
         public void Start()
         {
+            //为了正常业务测试，在系统启用前不开始心跳
+            //TOTO 
+                # warning 为了正常业务测试，在系统启用前不开始心跳
+            return;
+
             if (_isDisposed)
             {
                 throw new ObjectDisposedException(nameof(HeartbeatManager));

@@ -10,7 +10,7 @@ namespace RUINORERP.PacketSpec.Models
     /// <summary>
     /// 广播结果 - 使用统一的ApiResponse模式
     /// </summary>
-    public class BroadcastResult : ApiResponse<BroadcastResultData>
+    public class BroadcastResult : ResponseBase<BroadcastResultData>
     {
         /// <summary>
         /// 默认构造函数
@@ -21,7 +21,13 @@ namespace RUINORERP.PacketSpec.Models
         /// 带参数的构造函数
         /// </summary>
         public BroadcastResult(bool success, string message, BroadcastResultData data = null, int code = 200) 
-            : base(success, message, data, code) { }
+        {
+            this.IsSuccess = success;
+            this.Message = message;
+            this.Data = data;
+            this.Code = code;
+            this.Timestamp = DateTime.UtcNow;
+        }
 
         /// <summary>
         /// 创建成功结果

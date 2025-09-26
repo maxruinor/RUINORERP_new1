@@ -1,10 +1,15 @@
-﻿using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Protocol;
 
 namespace RUINORERP.PacketSpec.Commands.System
 {
@@ -133,25 +138,37 @@ namespace RUINORERP.PacketSpec.Commands.System
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>执行结果</returns>
-        protected override async Task<CommandResult> OnExecuteAsync(CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
         {
             try
             {
                 // 验证客户端ID
                 if (string.IsNullOrEmpty(ClientId))
                 {
-                    return CommandResult.Failure("客户端ID不能为空", "EMPTY_CLIENT_ID");
+                    return ConvertToApiResponse(ResponseBase.CreateError("客户端ID不能为空", 400)
+                        .WithMetadata("ErrorCode", "EMPTY_CLIENT_ID"));
                 }
 
                 // 构建心跳数据
                 var heartbeatData = GetSerializableData();
 
                 // 返回成功结果，实际的网络请求由通信服务处理
-                return CommandResult.Success(heartbeatData, "心跳命令构建成功");
+                var result = new ResponseBase
+                {
+                    IsSuccess = true,
+                    Message = "心跳命令构建成功",
+                    Code = 200,
+                    Timestamp = DateTime.UtcNow
+                };
+                result.WithMetadata("Data", heartbeatData);
+                return result;
             }
             catch (Exception ex)
             {
-                return CommandResult.Failure($"心跳命令执行异常: {ex.Message}", "HEARTBEAT_EXCEPTION", ex);
+                return ConvertToApiResponse(ResponseBase.CreateError($"心跳命令执行异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "HEARTBEAT_EXCEPTION")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace));
             }
         }
 
@@ -181,6 +198,26 @@ namespace RUINORERP.PacketSpec.Commands.System
             }
 
             return CommandValidationResult.Success();
+        }
+
+        /// <summary>
+        /// 将ResponseBase转换为ApiResponse
+        /// </summary>
+        /// <param name="baseResponse">基础响应对象</param>
+        /// <returns>ApiResponse对象</returns>
+        private ResponseBase ConvertToApiResponse(ResponseBase baseResponse)
+        {
+            var response = new ResponseBase
+            {
+                IsSuccess = baseResponse.IsSuccess,
+                Message = baseResponse.Message,
+                Code = baseResponse.Code,
+                Timestamp = baseResponse.Timestamp,
+                RequestId = baseResponse.RequestId,
+                Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                ExecutionTimeMs = baseResponse.ExecutionTimeMs
+            };
+            return response;
         }
     }
 }

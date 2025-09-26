@@ -31,9 +31,6 @@ namespace RUINORERP.Business.DI
             //services.AddSingleton<ILoggerService, Log4NetService>();
             //services.AddSingleton<IAuthorizationService, AuthorizationService>();
             //services.AddSingleton<IAuthenticationService, AuthenticationService>();
- 
- 
-
 
             // Register business layer components
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
@@ -43,6 +40,17 @@ namespace RUINORERP.Business.DI
                   .InstancePerDependency()
                   .EnableInterfaceInterceptors()
                   .InterceptedBy(typeof(BaseDataCacheAOP));
+
+
+//问题是CommonController类没有实现任何公共接口，但注册时却启用了接口拦截(EnableInterfaceInterceptors())。根据我们之前的经验教训，Autofac使用接口拦截时，目标类必须实现至少一个公共接口。
+
+            builder.RegisterType<CommonController>()
+             .As<ICommonController>()
+             .PropertiesAutowired()
+             .SingleInstance()
+             .EnableInterfaceInterceptors()
+             .InterceptedBy(typeof(BaseDataCacheAOP));
+
 
             // Register specific business components
             builder.RegisterType<BillConverterFactory>()

@@ -6,10 +6,10 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Core;
-
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -121,16 +121,16 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        public async Task<CommandResult> DispatchAsync(ICommand command, CancellationToken cancellationToken = default)
+        public async Task<ResponseBase> DispatchAsync(ICommand command, CancellationToken cancellationToken = default)
         {
             if (command == null)
             {
-                return CommandResult.Failure("命令对象不能为空", ErrorCodes.NullCommand);
+                return ConvertToApiResponse(ResponseBase.CreateError("命令对象不能为空", 400).WithMetadata("ErrorCode", "NULL_COMMAND"));
             }
 
             if (!_isInitialized)
             {
-                return CommandResult.Failure("调度器未初始化", ErrorCodes.DispatcherNotInitialized);
+                return ConvertToApiResponse(ResponseBase.CreateError("调度器未初始化", 500).WithMetadata("ErrorCode", "DISPATCHER_NOT_INITIALIZED"));
             }
 
             var startTime = DateTime.Now;
@@ -143,9 +143,9 @@ namespace RUINORERP.PacketSpec.Commands
 
             // 限制同一类型命令的并发处理数
             if (!await semaphore.WaitAsync(5000, cancellationToken))
-            {
-                return CommandResult.Failure($"命令类型 {commandIdentifier} 处理繁忙，请稍后重试", ErrorCodes.DispatcherBusy);
-            }
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError($"命令类型 {commandIdentifier} 处理繁忙，请稍后重试", 503).WithMetadata("ErrorCode", "DISPATCHER_BUSY"));
+                }
 
             try
             {
@@ -158,18 +158,16 @@ namespace RUINORERP.PacketSpec.Commands
                 var handlers = FindHandlers(command);
                 if (handlers == null || !handlers.Any())
                 {
-                    return CommandResult.Failure(
-                        $"没有找到适合的处理器处理命令: {command.CommandIdentifier}",
-                        ErrorCodes.NoHandlerFound);
+                    return ConvertToApiResponse(ResponseBase.CreateError(
+                        $"没有找到适合的处理器处理命令: {command.CommandIdentifier}", 404).WithMetadata("ErrorCode", "NO_HANDLER_FOUND"));
                 }
 
                 // 选择最佳处理器
                 var bestHandler = SelectBestHandler(handlers, command);
                 if (bestHandler == null)
                 {
-                    return CommandResult.Failure(
-                        $"无法选择合适的处理器处理命令: {command.CommandIdentifier}",
-                        ErrorCodes.HandlerSelectionFailed);
+                    return ConvertToApiResponse(ResponseBase.CreateError(
+                        $"无法选择合适的处理器处理命令: {command.CommandIdentifier}", 500).WithMetadata("ErrorCode", "HANDLER_SELECTION_FAILED"));
                 }
 
                 LogDebug($"选择处理器: {bestHandler.Name} 处理命令: {command.CommandIdentifier}");
@@ -184,18 +182,35 @@ namespace RUINORERP.PacketSpec.Commands
                 }
 
                 LogDebug($"命令分发完成: {command.CommandIdentifier} [ID: {commandId}] - {result?.ExecutionTimeMs}ms");
-                return result ?? CommandResult.Failure("处理器返回空结果", ErrorCodes.NullResult);
+                
+                // 确保返回ApiResponse类型
+                if (result is ResponseBase apiResponseBase && !(result is ResponseBase))
+                {
+                    return ConvertToApiResponse(apiResponseBase);
+                }
+                
+                if (result == null)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError("处理器返回空结果", 500)
+                        .WithMetadata("ErrorCode", "NULL_RESULT"));
+                }
+                
+                return result;
             }
             catch (OperationCanceledException)
             {
                 LogWarning($"命令分发被取消: {command.CommandIdentifier} [ID: {commandId}]");
-                return CommandResult.Failure("命令分发被取消", ErrorCodes.DispatchCancelled);
+                return ConvertToApiResponse(ResponseBase.CreateError("命令分发被取消", 503)
+                    .WithMetadata("ErrorCode", "DISPATCH_CANCELLED"));
             }
             catch (Exception ex)
             {
                 var executionTime = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
                 LogError($"分发命令 {command.CommandIdentifier} [ID: {commandId}] 异常: {ex.Message}", ex);
-                return CommandResult.Failure($"命令分发异常: {ex.Message}", ErrorCodes.DispatchError, ex);
+                return ConvertToApiResponse(ResponseBase.CreateError($"命令分发异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "DISPATCH_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace));
             }
             finally
             {
@@ -751,6 +766,25 @@ namespace RUINORERP.PacketSpec.Commands
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// 将ResponseBase转换为ApiResponse
+        /// </summary>
+        /// <param name="baseResponse">基础响应对象</param>
+        /// <returns>ApiResponse对象</returns>
+        private ResponseBase ConvertToApiResponse(ResponseBase baseResponse)
+        {
+            var response = new ResponseBase
+            {
+                IsSuccess = baseResponse.IsSuccess,
+                Message = baseResponse.Message,
+                Code = baseResponse.Code,
+                Timestamp = baseResponse.Timestamp,
+                RequestId = baseResponse.RequestId,
+                Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                ExecutionTimeMs = baseResponse.ExecutionTimeMs
+            };
+            return response;
+        }
     }
 
     /// <summary>

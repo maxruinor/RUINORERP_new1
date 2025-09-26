@@ -1,4 +1,5 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,7 +17,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
      AuthenticationCommands.RefreshToken)]
     public sealed class AuthHandler : BaseCommandHandler
     {
-        protected override Task<CommandResult> OnHandleAsync(ICommand cmd, CancellationToken ct)
+        protected override Task<ResponseBase> OnHandleAsync(ICommand cmd, CancellationToken ct)
         {
             // 统一转基类
             var generic = (ICommand)cmd;
@@ -30,7 +31,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                 var id when id == AuthenticationCommands.Logout =>
                     HandleLogout((LogoutPayLoad)payload),
 
-                _ => Task.FromResult(CommandResult.Failure("未实现"))
+                _ => Task.FromResult((ResponseBase)ResponseBase.CreateError("未实现", 400).WithMetadata("ErrorCode", "NOT_IMPLEMENTED"))
             };
         }
     }

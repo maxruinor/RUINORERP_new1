@@ -12,7 +12,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// 文件下载请求类
     /// 客户端通过此请求从服务器下载文件
     /// </summary>
-    public class FileDownloadRequest
+    public class FileDownloadRequest : RequestBase
     {
         /// <summary>
         /// 文件唯一标识符（服务器存储的文件名）
@@ -104,7 +104,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// 文件下载响应类
     /// 服务器返回给客户端的下载结果 - 使用统一的ApiResponse模式
     /// </summary>
-    public class FileDownloadResponse : ApiResponse<FileDownloadResponseData>
+    public class FileDownloadResponse : ResponseBase<FileDownloadResponseData>
     {
         /// <summary>
         /// 默认构造函数
@@ -115,7 +115,13 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 带参数的构造函数
         /// </summary>
         public FileDownloadResponse(bool success, string message, FileDownloadResponseData data = null, int code = 200) 
-            : base(success, message, data, code) { }
+        {
+            this.IsSuccess = success;
+            this.Message = message;
+            this.Data = data;
+            this.Code = code;
+            this.Timestamp = DateTime.UtcNow;
+        }
 
         /// <summary>
         /// 创建成功结果

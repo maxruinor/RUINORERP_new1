@@ -6,7 +6,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// 心跳请求数据模型
     /// </summary>
     [Serializable]
-    public class HeartbeatRequest
+    public class HeartbeatRequest : RequestBase
     {
         /// <summary>
         /// 客户端会话令牌

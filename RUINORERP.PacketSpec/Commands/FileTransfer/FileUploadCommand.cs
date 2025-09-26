@@ -1,4 +1,5 @@
 ﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -98,12 +99,12 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令执行结果</returns>
-        protected override Task<CommandResult> OnExecuteAsync(CancellationToken cancellationToken)
+        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
         {
             // 文件上传命令契约只定义数据结构，实际的业务逻辑在Handler中实现
-            var result = CommandResult.Success(
-                data: new { FileName = FileName, FileSize = FileSize, TargetPath = TargetPath },
-                message: "文件上传命令构建成功"
+            var result = (ResponseBase)ResponseBase.CreateSuccess(
+               // new { FileName = FileName, FileSize = FileSize, TargetPath = TargetPath },
+                "文件上传命令构建成功"
             );
             return Task.FromResult(result);
         }

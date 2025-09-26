@@ -1,4 +1,5 @@
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -80,14 +81,12 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令执行结果</returns>
-        protected override Task<CommandResult> OnExecuteAsync(CancellationToken cancellationToken)
+        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
         {
             // 缓存同步命令契约只定义数据结构，实际的业务逻辑在Handler中实现
-            var result = CommandResult.Success(
-                data: new { CacheKeys = CacheKeys, SyncMode = SyncMode },
-                message: "缓存同步命令构建成功"
-            );
-            return Task.FromResult(result);
+            var result = ResponseBase.CreateSuccess("缓存同步命令构建成功")
+                .WithMetadata("Data", new { CacheKeys = CacheKeys, SyncMode = SyncMode });
+            return Task.FromResult((ResponseBase)result);
         }
     }
 }

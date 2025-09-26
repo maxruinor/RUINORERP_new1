@@ -7,6 +7,7 @@ using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.Server.SuperSocketServices;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.Server.Commands
 {
@@ -54,7 +55,7 @@ namespace RUINORERP.Server.Commands
                    !string.IsNullOrEmpty(SyncKey);
         }
 
-        public async Task<CommandResult> ExecuteAsync(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse> ExecuteAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -64,7 +65,7 @@ namespace RUINORERP.Server.Commands
                 var validationResult = ValidateParameters();
                 if (!validationResult.IsValid)
                 {
-                    return CommandResult.CreateError(validationResult.ErrorMessage);
+                    return ApiResponse.CreateError(validationResult.ErrorMessage, 400).WithMetadata("ErrorCode", "VALIDATION_FAILED");
                 }
 
                 // 根据同步类型执行相应操作
@@ -75,10 +76,10 @@ namespace RUINORERP.Server.Commands
                     SyncOperationType.GetSyncStatus => await HandleGetSyncStatusAsync(),
                     SyncOperationType.ResetSync => await HandleResetSyncAsync(),
                     SyncOperationType.ValidateData => await HandleValidateDataAsync(),
-                    _ => CommandResult.CreateError("不支持的同步操作类型")
+                    _ => ApiResponse.CreateError("不支持的同步操作类型", 400).WithMetadata("ErrorCode", "UNSUPPORTED_SYNC_TYPE")
                 };
 
-                if (result.Success)
+                if (result.IsSuccess)
                 {
                     _logger.LogInformation($"数据同步成功: Type={SyncType}, Key={SyncKey}");
                 }
@@ -92,7 +93,10 @@ namespace RUINORERP.Server.Commands
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"数据同步异常: Type={SyncType}, Key={SyncKey}");
-                return CommandResult.CreateError("数据同步异常");
+                return ApiResponse.CreateError("数据同步异常", 500)
+                    .WithMetadata("ErrorCode", "SYNC_EXCEPTION")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
@@ -175,7 +179,7 @@ namespace RUINORERP.Server.Commands
         /// <summary>
         /// 处理拉取变更
         /// </summary>
-        private async Task<CommandResult> HandlePullChangesAsync()
+        private async Task<ApiResponse> HandlePullChangesAsync()
         {
             try
             {
@@ -194,7 +198,7 @@ namespace RUINORERP.Server.Commands
                         Message = "没有新的变更"
                     };
 
-                    return CommandResult.CreateSuccess("没有新的变更", noChangesResponse.Message);
+                    return ApiResponse<DataSyncResponse>.CreateSuccess(noChangesResponse, "没有新的变更");
                 }
 
                 // 更新缓存中的同步状态
@@ -211,34 +215,43 @@ namespace RUINORERP.Server.Commands
                     Message = $"获取到 {changes.Count} 条变更"
                 };
 
-                return CommandResult.CreateSuccess("拉取变更成功", response.Message);
+                return ApiResponse<DataSyncResponse>.CreateSuccess(response, "拉取变更成功");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"拉取变更处理异常: {SyncKey}");
-                return CommandResult.CreateError("拉取变更处理异常");
+                return ApiResponse.CreateError("拉取变更处理异常", 500)
+                    .WithMetadata("ErrorCode", "PULL_CHANGES_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理推送变更
         /// </summary>
-        private async Task<CommandResult> HandlePushChangesAsync()
+        private async Task<ApiResponse> HandlePushChangesAsync()
         {
             try
             {
+                // 验证推送数据
+                if (SyncData == null)
+                {
+                    return ApiResponse.CreateError("推送数据不能为空", 400).WithMetadata("ErrorCode", "EMPTY_PUSH_DATA");
+                }
+
                 // 验证推送数据的完整性
                 var validationResult = await _dataSyncService.ValidateChangesAsync(SyncData);
                 if (!validationResult.IsValid)
                 {
-                    return CommandResult.CreateError($"数据验证失败: {validationResult.ErrorMessage}");
+                    return ApiResponse.CreateError($"数据验证失败: {validationResult.ErrorMessage}", 400).WithMetadata("ErrorCode", "VALIDATION_FAILED");
                 }
 
                 // 执行数据推送
                 var pushResult = await _dataSyncService.ApplyChangesAsync(SyncKey, SyncData, SessionInfo.UserId.ToString());
                 if (!pushResult.Success)
                 {
-                    return CommandResult.CreateError($"推送变更失败: {pushResult.Message}");
+                    return ApiResponse.CreateError($"推送变更失败: {pushResult.Message}", 400).WithMetadata("ErrorCode", "PUSH_PROCESSING_FAILED");
                 }
 
                 // 更新缓存
@@ -246,7 +259,7 @@ namespace RUINORERP.Server.Commands
                 await _cacheManager.SetSyncStatusAsync(SyncKey, SessionInfo.UserId.ToString(), DateTime.Now);
 
                 // 通知其他客户端数据变更
-                await NotifyOtherClientsAsync(SyncKey, sessionInfo.SessionID);
+                await NotifyOtherClientsAsync(SyncKey, SessionInfo.SessionId);
 
                 var response = new DataSyncResponse
                 {
@@ -257,48 +270,52 @@ namespace RUINORERP.Server.Commands
                     Message = $"成功推送 {pushResult.ProcessedCount} 条变更"
                 };
 
-                return CommandResult.CreateSuccess("推送变更成功", response.Message);
+                return ApiResponse<DataSyncResponse>.CreateSuccess(response, "推送变更成功");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"推送变更处理异常: {SyncKey}");
-                return CommandResult.CreateError("推送变更处理异常");
+                return ApiResponse.CreateError("推送变更处理异常", 500)
+                    .WithMetadata("ErrorCode", "PUSH_CHANGES_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理获取同步状态
         /// </summary>
-        private async Task<CommandResult> HandleGetSyncStatusAsync()
+        private async Task<ApiResponse> HandleGetSyncStatusAsync()
         {
             try
             {
-                var syncStatus = await _dataSyncService.GetSyncStatusAsync(SyncKey, SessionInfo.UserId.ToString());
-                
-                var response = new SyncStatusResponse
+                var syncStatus = await _cacheManager.GetSyncStatusAsync(SyncKey, SessionInfo.UserId.ToString());
+
+                var response = new DataSyncResponse
                 {
                     Success = true,
                     SyncKey = SyncKey,
-                    LastSyncTime = syncStatus.LastSyncTime,
-                    IsSyncing = syncStatus.IsSyncing,
-                    PendingChanges = syncStatus.PendingChanges,
-                    SyncVersion = syncStatus.Version,
-                    Message = "获取同步状态成功"
+                    LastSyncTime = syncStatus?.LastSyncTime ?? DateTime.MinValue,
+                    IsSyncing = syncStatus?.IsSyncing ?? false,
+                    Message = syncStatus != null ? "获取同步状态成功" : "未找到同步状态"
                 };
 
-                return CommandResult.CreateSuccess("获取同步状态成功", response.Message);
+                return ApiResponse<DataSyncResponse>.CreateSuccess(response, "获取同步状态成功");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"获取同步状态异常: {SyncKey}");
-                return CommandResult.CreateError("获取同步状态异常");
+                return ApiResponse.CreateError("获取同步状态异常", 500)
+                    .WithMetadata("ErrorCode", "GET_SYNC_STATUS_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理重置同步
         /// </summary>
-        private async Task<CommandResult> HandleResetSyncAsync()
+        private async Task<ApiResponse> HandleResetSyncAsync()
         {
             try
             {
@@ -306,7 +323,7 @@ namespace RUINORERP.Server.Commands
                 var resetResult = await _dataSyncService.ResetSyncAsync(SyncKey, SessionInfo.UserId.ToString());
                 if (!resetResult.Success)
                 {
-                    return CommandResult.CreateError($"重置同步失败: {resetResult.Message}");
+                    return ApiResponse.CreateError($"重置同步失败: {resetResult.Message}", 400).WithMetadata("ErrorCode", "RESET_SYNC_FAILED");
                 }
 
                 // 清除相关缓存
@@ -320,19 +337,22 @@ namespace RUINORERP.Server.Commands
                     Message = "同步重置成功"
                 };
 
-                return CommandResult.CreateSuccess("同步重置成功", response.Message);
+                return ApiResponse<DataSyncResponse>.CreateSuccess(response, "同步重置成功");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"重置同步异常: {SyncKey}");
-                return CommandResult.CreateError("重置同步异常");
+                return ApiResponse.CreateError("重置同步异常", 500)
+                    .WithMetadata("ErrorCode", "RESET_SYNC_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理数据验证
         /// </summary>
-        private async Task<CommandResult> HandleValidateDataAsync()
+        private async Task<ApiResponse> HandleValidateDataAsync()
         {
             try
             {
@@ -348,12 +368,15 @@ namespace RUINORERP.Server.Commands
                     Message = validationResult.IsValid ? "数据验证通过" : "数据验证失败"
                 };
 
-                return CommandResult.CreateSuccess(response.Message, response.Message);
+                return ApiResponse<DataValidationResponse>.CreateSuccess(response, "数据验证完成");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"数据验证异常: {SyncKey}");
-                return CommandResult.CreateError("数据验证异常");
+                return ApiResponse.CreateError("数据验证异常", 500)
+                    .WithMetadata("ErrorCode", "VALIDATE_DATA_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 

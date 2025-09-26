@@ -1,6 +1,7 @@
 ﻿using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,7 +64,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>执行结果</returns>
-        protected override Task<CommandResult> OnExecuteAsync(CancellationToken cancellationToken)
+        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -73,29 +74,40 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                 // 验证登录请求数据
                 if (LoginRequest == null)
                 {
-                    return Task.FromResult(CommandResult.Failure("登录请求数据不能为空", "EMPTY_LOGIN_REQUEST"));
+                    return Task.FromResult(ResponseBase.CreateError("登录请求数据不能为空", 400).WithMetadata("ErrorCode", "EMPTY_LOGIN_REQUEST"));
                 }
 
                 if (!LoginRequest.IsValid())
                 {
-                    return Task.FromResult(CommandResult.Failure("登录请求数据无效", "INVALID_LOGIN_REQUEST"));
+                    return Task.FromResult(ResponseBase.CreateError("登录请求数据无效", 400).WithMetadata("ErrorCode", "INVALID_LOGIN_REQUEST"));
                 }
 
                 // 构建登录数据
                 var loginData = GetSerializableData();
 
                 // 返回成功结果，实际的网络请求由通信服务处理
-                var result = CommandResult.Success(loginData, "登录命令构建成功");
-                return Task.FromResult(result);
+                var result = new ResponseBase
+                {
+                    IsSuccess = true,
+                    Message = "登录命令构建成功",
+                    Code = 200,
+                    Timestamp = DateTime.UtcNow
+                };
+                result.WithMetadata("Data", loginData);
+                return Task.FromResult((ResponseBase)result);
             }
             catch (Exception ex)
             {
-                return Task.FromResult(CommandResult.Failure($"登录命令执行异常: {ex.Message}", "LOGIN_EXCEPTION", ex));
+                return Task.FromResult((ResponseBase)ResponseBase.CreateError($"登录命令执行异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "LOGIN_EXCEPTION")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace));
             }
         }
 
         /// <summary>
         /// 验证命令数据
+        /// 只做“参数级”校验，不做业务校验
         /// </summary>
         /// <returns>验证结果</returns>
         public override CommandValidationResult Validate()

@@ -493,7 +493,7 @@ namespace RUINORERP.Server.Network.CoreServices
                     {
                         var fileInfo = await GetFileInfoFromCacheAsync(fileId.ToString());
                         if (fileInfo != null && 
-                            fileInfo.OriginalName.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                            fileInfo.OriginalName.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0)
                         {
                             results.Add(fileInfo);
                         }

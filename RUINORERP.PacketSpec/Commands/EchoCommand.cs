@@ -1,4 +1,5 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -63,12 +64,18 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令执行结果</returns>
-        protected override Task<CommandResult> OnExecuteAsync(CancellationToken cancellationToken)
+        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
         {
             // 创建成功结果，返回原始消息
-            var result = CommandResult.Success(Message);
-            result.Message = "Echo command executed successfully";
-            return Task.FromResult(result);
+            var result = new ResponseBase
+            {
+                IsSuccess = true,
+                Message = "Echo command executed successfully",
+                Code = 200,
+                Timestamp = DateTime.UtcNow
+            };
+            result.WithMetadata("Data", Message);
+            return Task.FromResult((ResponseBase)result);
         }
     }
 }

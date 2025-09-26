@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using global::RUINORERP.PacketSpec.Commands;
 using global::RUINORERP.PacketSpec.Commands.Message;
-using global::RUINORERP.PacketSpec.Models.Core;
+using global::RUINORERP.PacketSpec.Models.Responses;
 using global::RUINORERP.PacketSpec.Serialization;
 using global::RUINORERP.Server.Network.Models;
 using global::RUINORERP.Server.Network.Interfaces.Services;
@@ -18,6 +18,8 @@ using RUINORERP.PacketSpec;
 using RUINORERP.PacketSpec.Enums.Core;
 using ICommand = RUINORERP.PacketSpec.Commands.ICommand;
 using SuperSocket.Command;
+using Azure;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.Server.Network.Commands.SuperSocket
 {
@@ -381,7 +383,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         protected virtual async ValueTask HandleCommandResultAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
-            CommandResult result,
+            ResponseBase result,
             CancellationToken cancellationToken)
         {
             if (result.IsSuccess)
@@ -396,7 +398,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 await SendErrorResponseAsync(
                     session,
                     requestPackage,
-                    result.ErrorCode ?? ErrorCodes.UnknownError,
+                    result.Code.ToString(),
                     cancellationToken);
             }
         }
@@ -407,7 +409,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <param name="requestPackage">请求数据包</param>
         /// <param name="result">命令执行结果</param>
         /// <returns>响应数据包</returns>
-        protected virtual PacketModel CreateResponsePackage(ServerPackageInfo requestPackage, CommandResult result)
+        protected virtual PacketModel CreateResponsePackage(ServerPackageInfo requestPackage, ResponseBase result)
         {
             var response = new PacketModel
             {
@@ -419,29 +421,46 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error,
                 Extensions = new Dictionary<string, object>
                 {
-                    ["Data"] = result.Data,
+                    ["Data"] = result,
                     ["Message"] = result.Message,
-                    ["Success"] = result.IsSuccess
+                    ["Success"] = result.IsSuccess,
+                    ["Code"] = result.Code,
+                    ["Timestamp"] = result.Timestamp
                 }
             };
+     
+            // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
+            if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
+            {
+                response.Extensions["RequestId"] = requestId;
+            }
+
+            // 设置请求标识
+            if (!string.IsNullOrEmpty(result.RequestId))
+            {
+                response.Extensions["RequestId"] = result.RequestId;
+            }
+
+            // 添加元数据
+            if (result.Metadata != null && result.Metadata.Count > 0)
+            {
+                foreach (var metadata in result.Metadata)
+                {
+                    response.Extensions[metadata.Key] = metadata.Value;
+                }
+            }
 
             // 优先使用WithJsonData设置业务响应数据
-            if (result.Data != null)
+            if (result != null)
             {
                 try
                 {
-                    response.WithJsonData(result.Data);
+                    response.WithJsonData(result);
                 }
                 catch (Exception ex)
                 {
                     _logger?.LogWarning(ex, "Failed to set JSON data for response packet {PacketId}", response.PacketId);
                 }
-            }
-
-            // 兼容旧的ResponseData处理方式
-            if (result is CommandResult commandResult && commandResult.ResponseData.IsValid)
-            {
-                response.SetData(commandResult.ResponseData.ToByteArray());
             }
 
             return response;
@@ -535,6 +554,12 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     ["Success"] = false
                 }
             };
+
+            // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
+            if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
+            {
+                errorResponse.Extensions["RequestId"] = requestId;
+            }
 
             await SendResponseAsync(session, errorResponse, cancellationToken);
         }

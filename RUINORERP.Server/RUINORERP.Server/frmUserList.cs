@@ -606,10 +606,10 @@ namespace RUINORERP.Server
                     {
                         if (sb.State == SessionState.Connected)
                         {
-                            MessageModel message = new MessageModel
-                            {
-                                msg = frm.Message,
-                            };
+                            //MessageModel message = new MessageModel
+                            //{
+                            //    msg = frm.Message,
+                            //};
                             //UserService.给客户端发消息实体(sb, message, frm.MustDisplay);
                         }
                     }

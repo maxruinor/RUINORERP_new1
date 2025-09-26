@@ -64,7 +64,7 @@ namespace RUINORERP.Server.Commands
                    LockAction != LockCmd.Unknown;
         }
 
-        public async Task<CommandResult> ExecuteAsync(CancellationToken cancellationToken = default)
+        public async Task<ApiResponse> ExecuteAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -74,7 +74,7 @@ namespace RUINORERP.Server.Commands
                 var validationResult = ValidateParameters();
                 if (!validationResult.IsValid)
                 {
-                    return CommandResult.CreateError(validationResult.ErrorMessage);
+                    return ApiResponse.CreateError(500).WithMetadata("ErrorCode", "VALIDATION_ERROR").WithMetadata("ErrorMessage", validationResult.ErrorMessage);
                 }
 
                 // 根据锁动作执行相应操作
@@ -87,7 +87,7 @@ namespace RUINORERP.Server.Commands
                     LockCmd.Broadcast => await HandleBroadcastAsync(),
                     LockCmd.RequestUnlock => await HandleRequestUnlockAsync(),
                     LockCmd.RefuseUnlock => await HandleRefuseUnlockAsync(),
-                    _ => CommandResult.CreateError($"不支持的锁操作: {LockAction}")
+                    _ => ApiResponse.CreateError(400).WithMetadata("ErrorCode", "UNSUPPORTED_OPERATION").WithMetadata("ErrorMessage", $"不支持的锁操作: {LockAction}")
                 };
 
                 if (result.Success)
@@ -104,7 +104,7 @@ namespace RUINORERP.Server.Commands
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"锁管理处理异常: Action={LockAction}, Table={BillTableName}, BillId={BillId}");
-                return CommandResult.CreateError("锁管理处理异常");
+                return ApiResponse.CreateError(500).WithMetadata("ErrorCode", "EXCEPTION").WithMetadata("Exception", ex.Message).WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
@@ -399,7 +399,7 @@ namespace RUINORERP.Server.Commands
         /// <summary>
         /// 处理锁定操作
         /// </summary>
-        private async Task<CommandResult> HandleLockAsync()
+        private async Task<ApiResponse> HandleLockAsync()
         {
             try
             {
@@ -426,19 +426,19 @@ namespace RUINORERP.Server.Commands
                     LockTime = DateTime.Now
                 };
 
-                return CommandResult.CreateSuccess(response);
+                return ApiResponse.CreateSuccess(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理锁定操作时出错");
-                return CommandResult.CreateError("锁定操作失败");
+                return ApiResponse.CreateError(500).WithMetadata("ErrorCode", "LOCK_ERROR").WithMetadata("Exception", ex.Message).WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理解锁操作
         /// </summary>
-        private async Task<CommandResult> HandleUnlockAsync()
+        private async Task<ApiResponse> HandleUnlockAsync()
         {
             try
             {
@@ -448,7 +448,7 @@ namespace RUINORERP.Server.Commands
                 // var lockInfo = await GetLockInfo(BillTableName, BillId);
                 // if (lockInfo != null && lockInfo.LockerUserId != SessionInfo.UserId && !SessionInfo.IsSuperUser)
                 // {
-                //     return CommandResult.CreateError("您没有权限解锁此单据");
+                //     return ApiResponse.CreateError(403).WithMetadata("ErrorCode", "PERMISSION_DENIED").WithMetadata("ErrorMessage", "您没有权限解锁此单据");
                 // }
 
                 // TODO: 删除锁记录
@@ -469,19 +469,19 @@ namespace RUINORERP.Server.Commands
                     UnlockTime = DateTime.Now
                 };
 
-                return CommandResult.CreateSuccess(response);
+                return ApiResponse.CreateSuccess(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理解锁操作时出错");
-                return CommandResult.CreateError("解锁操作失败");
+                return ApiResponse.CreateError(500).WithMetadata("ErrorCode", "UNLOCK_ERROR").WithMetadata("Exception", ex.Message).WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理强制解锁操作
         /// </summary>
-        private async Task<CommandResult> HandleForceUnlockAsync()
+        private async Task<ApiResponse> HandleForceUnlockAsync()
         {
             try
             {
@@ -490,7 +490,7 @@ namespace RUINORERP.Server.Commands
                 // TODO: 验证管理员权限
                 // if (!SessionInfo.IsSuperUser)
                 // {
-                //     return CommandResult.CreateError("您没有强制解锁权限");
+                //     return ApiResponse.CreateError(403).WithMetadata("ErrorCode", "PERMISSION_DENIED").WithMetadata("ErrorMessage", "您没有强制解锁权限");
                 // }
 
                 // TODO: 强制删除锁记录
@@ -501,19 +501,19 @@ namespace RUINORERP.Server.Commands
 
                 _logger.LogInformation($"单据强制解锁成功: {BillTableName}({BillId})");
 
-                return CommandResult.CreateSuccess("强制解锁成功");
+                return ApiResponse.CreateSuccess("强制解锁成功");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理强制解锁操作时出错");
-                return CommandResult.CreateError("强制解锁操作失败");
+                return ApiResponse.CreateError(500).WithMetadata("ErrorCode", "FORCE_UNLOCK_ERROR").WithMetadata("Exception", ex.Message).WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理检查锁状态操作
         /// </summary>
-        private async Task<CommandResult> HandleCheckLockAsync()
+        private async Task<ApiResponse> HandleCheckLockAsync()
         {
             try
             {
@@ -532,19 +532,19 @@ namespace RUINORERP.Server.Commands
                 };
 
                 await Task.CompletedTask;
-                return CommandResult.CreateSuccess(response);
+                return ApiResponse.CreateSuccess(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "检查锁状态时出错");
-                return CommandResult.CreateError("检查锁状态失败");
+                return ApiResponse.CreateError(500).WithMetadata("ErrorCode", "CHECK_LOCK_ERROR").WithMetadata("Exception", ex.Message).WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理广播操作
         /// </summary>
-        private async Task<CommandResult> HandleBroadcastAsync()
+        private async Task<ApiResponse> HandleBroadcastAsync()
         {
             try
             {
@@ -552,19 +552,19 @@ namespace RUINORERP.Server.Commands
 
                 await BroadcastLockNotificationAsync(LockAction);
 
-                return CommandResult.CreateSuccess("广播成功");
+                return ApiResponse.CreateSuccess("广播成功");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理广播操作时出错");
-                return CommandResult.CreateError("广播操作失败");
+                return ApiResponse.CreateError(500).WithMetadata("ErrorCode", "BROADCAST_ERROR").WithMetadata("Exception", ex.Message).WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理请求解锁操作
         /// </summary>
-        private async Task<CommandResult> HandleRequestUnlockAsync()
+        private async Task<ApiResponse> HandleRequestUnlockAsync()
         {
             try
             {
@@ -574,19 +574,19 @@ namespace RUINORERP.Server.Commands
                 // await SendUnlockRequestToLocker(BillTableName, BillId, SessionInfo);
 
                 await Task.CompletedTask;
-                return CommandResult.CreateSuccess("解锁请求已发送");
+                return ApiResponse.CreateSuccess("解锁请求已发送");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理请求解锁操作时出错");
-                return CommandResult.CreateError("请求解锁操作失败");
+                return ApiResponse.CreateError(500).WithMetadata("ErrorCode", "REQUEST_UNLOCK_ERROR").WithMetadata("Exception", ex.Message).WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理拒绝解锁操作
         /// </summary>
-        private async Task<CommandResult> HandleRefuseUnlockAsync()
+        private async Task<ApiResponse> HandleRefuseUnlockAsync()
         {
             try
             {
@@ -595,12 +595,12 @@ namespace RUINORERP.Server.Commands
                 // TODO: 回复拒绝解锁消息
 
                 await Task.CompletedTask;
-                return CommandResult.CreateSuccess("已拒绝解锁请求");
+                return ApiResponse.CreateSuccess("已拒绝解锁请求");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理拒绝解锁操作时出错");
-                return CommandResult.CreateError("拒绝解锁操作失败");
+                return ApiResponse.CreateError(500).WithMetadata("ErrorCode", "REFUSE_UNLOCK_ERROR").WithMetadata("Exception", ex.Message).WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 

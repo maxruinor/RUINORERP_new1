@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
-using System.Threading;
-using System.Threading.Tasks;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Commands.Message
 {
@@ -104,14 +103,12 @@ namespace RUINORERP.PacketSpec.Commands.Message
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令执行结果</returns>
-        protected override Task<CommandResult> OnExecuteAsync(CancellationToken cancellationToken)
+        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
         {
             // 发送弹窗消息命令契约只定义数据结构，实际的业务逻辑在Handler中实现
-            var result = CommandResult.Success(
-                data: new { Title = Title, Content = Content, MessageType = MessageType, TargetUserIds = TargetUserIds },
-                message: "发送弹窗消息命令构建成功"
-            );
-            return Task.FromResult(result);
+            var result = ResponseBase.CreateSuccess("发送弹窗消息命令构建成功")
+                .WithMetadata("Data", new { Title = Title, Content = Content, MessageType = MessageType, TargetUserIds = TargetUserIds });
+            return Task.FromResult((ResponseBase)result);
         }
     }
 }

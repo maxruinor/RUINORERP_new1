@@ -1,6 +1,6 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.System;
-using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Collections.Generic;
@@ -58,7 +58,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 具体的命令处理逻辑
         /// </summary>
-        protected override async Task<CommandResult> ProcessCommandAsync(ICommand command, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> ProcessCommandAsync(ICommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -70,20 +70,24 @@ namespace RUINORERP.Server.Network.Commands
                 }
                 else
                 {
-                    return CommandResult.Failure($"不支持的命令类型: {command.CommandIdentifier}", "UNSUPPORTED_COMMAND");
+                    return ResponseBase.CreateError($"不支持的命令类型: {command.CommandIdentifier}", 400)
+                        .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
                 }
             }
             catch (Exception ex)
             {
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
-                return CommandResult.Failure($"处理异常: {ex.Message}", "HANDLER_ERROR", ex);
+                return ResponseBase.CreateError($"处理异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "HANDLER_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 
         /// <summary>
         /// 处理心跳命令
         /// </summary>
-        private async Task<CommandResult> HandleHeartbeatAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleHeartbeatAsync(ICommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -102,20 +106,21 @@ namespace RUINORERP.Server.Network.Commands
                 // 创建心跳响应数据
                 var responseData = CreateHeartbeatResponse();
 
-                return CommandResult.SuccessWithResponse(
-                    responseData,
-                    data: new { 
+                return ResponseBase.CreateSuccess(
+                    message: "心跳响应成功"
+                ).WithMetadata("Data", new { 
                         Timestamp = DateTime.UtcNow,
                         SessionId = command.SessionID,
                         Status = "Alive"
-                    },
-                    message: "心跳响应成功"
-                );
+                    });
             }
             catch (Exception ex)
             {
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
-                return CommandResult.Failure($"心跳处理异常: {ex.Message}", "HEARTBEAT_ERROR", ex);
+                return ResponseBase.CreateError($"心跳处理异常: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "HEARTBEAT_ERROR")
+                    .WithMetadata("Exception", ex.Message)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -27,13 +28,8 @@ namespace RUINORERP.PacketSpec.Commands
                 ? CommandValidationResult.Failure("Payload为空")
                 : CommandValidationResult.Success();
 
+        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken _)
+            => Task.FromResult((ResponseBase)ResponseBase.CreateSuccess("执行成功").WithMetadata("Data", Payload));
 
-       
-
-        protected override Task<CommandResult> OnExecuteAsync(CancellationToken _)
-            => Task.FromResult(CommandResult.Success(Payload));
-
-  
-      
     }
 }

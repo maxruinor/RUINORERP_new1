@@ -8,6 +8,13 @@ using System.Threading.Tasks;
 using Org.BouncyCastle.Bcpg;
 using RUINORERP.PacketSpec.Security;
 using System.Collections.Concurrent;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.UI.Network.RetryStrategy;
+using RUINORERP.UI.Network.TimeoutStatistics;
+using RUINORERP.UI.Network.ErrorHandling;
+using System.Diagnostics;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace RUINORERP.UI.Network
 {
@@ -23,6 +30,15 @@ namespace RUINORERP.UI.Network
         private readonly ILogger<RequestResponseManager> _logger;
         private readonly object _lock = new object();
         private bool _disposed = false;
+        
+        // 超时统计管理器
+        private readonly TimeoutStatisticsManager _timeoutStatistics;
+        
+        // 错误处理策略工厂
+        private readonly ErrorHandlingStrategyFactory _errorHandlingStrategyFactory;
+        
+        // 默认重试策略
+        private readonly IRetryStrategy _defaultRetryStrategy;
 
         /// <summary>
         /// 构造函数
@@ -31,7 +47,218 @@ namespace RUINORERP.UI.Network
         public RequestResponseManager(ILogger<RequestResponseManager> logger = null)
         {
             _logger = logger;
+            _timeoutStatistics = new TimeoutStatisticsManager();
+            _errorHandlingStrategyFactory = new ErrorHandlingStrategyFactory();
+            _defaultRetryStrategy = new ExponentialBackoffRetryStrategy(3, 1000, 2.0, 10000);
             _logger?.LogDebug("RequestResponseManager已初始化");
+        }
+        
+        /// <summary>
+        /// 发送请求并等待响应，支持重试策略
+        /// 提供带重试逻辑的异步请求-响应模式，支持超时、取消操作和自动重试
+        /// 特别适用于网络不稳定环境下的可靠通信
+        /// </summary>
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="socketClient">Socket客户端实例，用于发送请求</param>
+        /// <param name="commandId">命令ID，标识请求的命令类型</param>
+        /// <param name="requestData">请求数据对象</param>
+        /// <param name="retryStrategy">重试策略，如果为null则使用默认策略</param>
+        /// <param name="ct">取消令牌，用于取消请求</param>
+        /// <param name="timeoutMs">单次请求超时时间（毫秒），默认30秒</param>
+        /// <returns>响应数据对象</returns>
+        /// <exception cref="ArgumentNullException">当socketClient为空时抛出</exception>
+        /// <exception cref="TimeoutException">当所有重试都超时时抛出</exception>
+        /// <exception cref="OperationCanceledException">当请求被取消时抛出</exception>
+        /// <exception cref="InvalidOperationException">当请求处理过程中发生不可重试的异常时抛出</exception>
+        public async Task<TResponse> SendRequestWithRetryAsync<TRequest, TResponse>(
+            ISocketClient socketClient, 
+            RUINORERP.PacketSpec.Commands.CommandId commandId, 
+            TRequest requestData,
+            IRetryStrategy retryStrategy = null,
+            CancellationToken ct = default,
+            int timeoutMs = 30000)
+        {
+            if (socketClient == null)
+                throw new ArgumentNullException(nameof(socketClient));
+            
+            // 使用提供的重试策略或默认策略
+            var strategy = retryStrategy ?? _defaultRetryStrategy;
+            
+            int attempt = 0;
+            Exception lastException = null;
+            
+            var stopwatch = Stopwatch.StartNew();
+            
+            try
+            {
+                while (true)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    
+                    try
+                    {
+                        _logger?.LogDebug("开始发送请求，命令ID: {CommandId}，尝试次数: {Attempt}", commandId, attempt + 1);
+                        
+                        // 记录开始时间
+                        var startTime = DateTime.Now;
+                        
+                        // 发送请求并获取响应
+                        var response = await SendRequestAsync<TRequest, TResponse>(
+                            socketClient, 
+                            commandId, 
+                            requestData, 
+                            ct, 
+                            timeoutMs);
+                        
+                        // 计算处理时间
+                        var processingTimeMs = (long)(DateTime.Now - startTime).TotalMilliseconds;
+                        
+                        // 记录成功信息
+                        _timeoutStatistics.RecordSuccess(commandId.ToString(), processingTimeMs);
+                        
+                        _logger?.LogDebug("请求成功完成，命令ID: {CommandId}，总耗时: {TotalTime}ms，尝试次数: {Attempt}", 
+                            commandId, stopwatch.ElapsedMilliseconds, attempt + 1);
+                        
+                        return response;
+                    }
+                    catch (Exception ex) when (IsRetryableException(ex))
+                    {
+                        lastException = ex;
+                        
+                        // 检查是否应该继续重试
+                        if (!strategy.ShouldContinue(attempt))
+                        {
+                            _logger?.LogError(ex, "请求重试失败，已达到最大重试次数，命令ID: {CommandId}", commandId);
+                            throw;
+                        }
+                        
+                        // 获取下一次重试的延迟时间
+                        int delayMs = strategy.GetNextDelay(attempt);
+                        
+                        _logger?.LogWarning(ex, "请求失败将重试，命令ID: {CommandId}，尝试次数: {Attempt}，延迟时间: {DelayMs}ms", 
+                            commandId, attempt + 1, delayMs);
+                        
+                        // 等待重试延迟
+                        await Task.Delay(delayMs, ct);
+                        attempt++;
+                    }
+                    catch (TimeoutException ex)
+                    {
+                        lastException = ex;
+                        
+                        // 记录超时信息
+                        _timeoutStatistics.RecordTimeout(commandId.ToString(), timeoutMs);
+                        
+                        // 处理超时错误
+                        await _errorHandlingStrategyFactory.GetStrategy(TimeoutStatistics.NetworkErrorType.TimeoutError)
+                            .HandleErrorAsync(TimeoutStatistics.NetworkErrorType.TimeoutError, ex.Message, commandId.ToString());
+                        
+                        // 检查是否应该继续重试
+                        if (!strategy.ShouldContinue(attempt))
+                        {
+                            _logger?.LogError(ex, "请求超时失败，已达到最大重试次数，命令ID: {CommandId}", commandId);
+                            throw;
+                        }
+                        
+                        // 获取下一次重试的延迟时间
+                        int delayMs = strategy.GetNextDelay(attempt);
+                        
+                        _logger?.LogWarning(ex, "请求超时将重试，命令ID: {CommandId}，尝试次数: {Attempt}，延迟时间: {DelayMs}ms", 
+                            commandId, attempt + 1, delayMs);
+                        
+                        // 等待重试延迟
+                        await Task.Delay(delayMs, ct);
+                        attempt++;
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // 不重试取消操作
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        // 处理不可重试的异常
+                        lastException = ex;
+                        
+                        // 识别错误类型
+                        var errorType = IdentifyErrorType(ex);
+                        
+                        // 记录错误统计
+                        if (errorType == TimeoutStatistics.NetworkErrorType.TimeoutError)
+                        {
+                            _timeoutStatistics.RecordTimeout(commandId.ToString(), timeoutMs);
+                        }
+                        
+                        // 处理错误
+                        await _errorHandlingStrategyFactory.GetStrategy(errorType)
+                            .HandleErrorAsync(errorType, ex.Message, commandId.ToString());
+                        
+                        _logger?.LogError(ex, "请求处理失败，不可重试的错误，命令ID: {CommandId}", commandId);
+                        throw;
+                    }
+                }
+            }
+            finally
+            {
+                stopwatch.Stop();
+            }
+        }
+        
+        /// <summary>
+        /// 判断异常是否可重试
+        /// </summary>
+        /// <param name="ex">异常</param>
+        /// <returns>是否可重试</returns>
+        private bool IsRetryableException(Exception ex)
+        {
+            // 根据异常类型判断是否可重试
+            // 这里可以根据实际业务需求进行扩展
+            return ex is TimeoutException ||
+                   ex is System.IO.IOException ||
+                   ex is System.Net.Sockets.SocketException ||
+                   ex.Message.IndexOf("connection", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   ex.Message.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+        
+        /// <summary>
+        /// 识别错误类型
+        /// </summary>
+        /// <param name="ex">异常</param>
+        /// <returns>错误类型</returns>
+        private NetworkErrorType IdentifyErrorType(Exception ex)
+        {
+            // 根据异常类型和消息识别错误类型
+            // 这里可以根据实际业务需求进行扩展
+            if (ex is TimeoutException)
+                return NetworkErrorType.TimeoutError;
+            else if (ex is System.IO.IOException || ex is System.Net.Sockets.SocketException)
+                return NetworkErrorType.ConnectionError;
+            else if (ex.Message.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     ex.Message.IndexOf("permission", StringComparison.OrdinalIgnoreCase) >= 0)
+                return NetworkErrorType.AuthorizationError;
+            else if (ex.Message.IndexOf("authenticate", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                     ex.Message.IndexOf("login", StringComparison.OrdinalIgnoreCase) >= 0)
+                return NetworkErrorType.AuthenticationError;
+            else if (ex.Message.IndexOf("serialize", StringComparison.OrdinalIgnoreCase) >= 0)
+                return NetworkErrorType.SerializationError;
+            else if (ex.Message.IndexOf("deserialize", StringComparison.OrdinalIgnoreCase) >= 0)
+                return NetworkErrorType.DeserializationError;
+            else if (ex.Message.IndexOf("command", StringComparison.OrdinalIgnoreCase) >= 0)
+                return NetworkErrorType.CommandError;
+            else if (ex.Message.IndexOf("server", StringComparison.OrdinalIgnoreCase) >= 0)
+                return NetworkErrorType.ServerError;
+            else
+                return NetworkErrorType.UnknownError;
+        }
+        
+        /// <summary>
+        /// 获取超时统计信息
+        /// </summary>
+        /// <returns>超时统计管理器</returns>
+        public TimeoutStatisticsManager GetTimeoutStatistics()
+        {
+            return _timeoutStatistics;
         }
 
         /// <summary> 
@@ -57,26 +284,18 @@ namespace RUINORERP.UI.Network
             CancellationToken ct = default,
             int timeoutMs = 30000)
         {
-            if (_disposed) throw new ObjectDisposedException(nameof(RequestResponseManager));
-            if (socketClient == null) throw new ArgumentNullException(nameof(socketClient), "Socket客户端不能为空");
-            if (commandId == null) throw new ArgumentNullException(nameof(commandId), "命令ID不能为空");
-            if (requestData == null) throw new ArgumentNullException(nameof(requestData), "请求数据不能为空");
-            if (timeoutMs <= 0) throw new ArgumentException("超时时间必须大于0", nameof(timeoutMs));
-
+            
             var requestId = Guid.NewGuid().ToString("N");
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(timeoutMs);
 
-            var tcs = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var tcs = new TaskCompletionSource<PacketModel>(TaskCreationOptions.RunContinuationsAsynchronously);
             var pendingRequest = new PendingRequest { Tcs = tcs, CreatedAt = DateTime.UtcNow, CommandId = commandId.ToString() };
 
             if (!_pending.TryAdd(requestId, pendingRequest))
             {
                 throw new InvalidOperationException($"无法添加请求到待处理列表，请求ID: {requestId}");
             }
-
-            _logger?.LogDebug("发送请求，请求ID: {RequestId}, 命令ID: {CommandId}, 超时时间: {TimeoutMs}ms",
-                requestId, commandId.FullCode, timeoutMs);
 
             try
             {
@@ -85,7 +304,6 @@ namespace RUINORERP.UI.Network
                 // 等待响应或超时
                 var timeoutTask = Task.Delay(timeoutMs, cts.Token);
                 var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
-
                 if (completedTask == timeoutTask)
                 {
                     _logger?.LogError("请求超时，请求ID: {RequestId}", requestId);
@@ -96,8 +314,8 @@ namespace RUINORERP.UI.Network
                 ct.ThrowIfCancellationRequested();
 
                 // 确保任务已完成并获取结果
-                var raw = await tcs.Task;
-                var response = DeserializeResponse<TResponse>(raw);
+            var responsePacket = await tcs.Task;
+            var response = responsePacket.GetJsonData<TResponse>();
 
                 _logger?.LogDebug("成功接收响应，请求ID: {RequestId}", requestId);
                 return response;
@@ -115,53 +333,38 @@ namespace RUINORERP.UI.Network
                 }
             }
         }
+ 
 
-        /// <summary> 
-        /// 处理接收到的响应数据 
-        /// 解密响应数据，提取请求ID，并匹配对应的待处理请求 
-        /// </summary> 
-        /// <param name="data">接收到的原始响应数据</param> 
-        /// <exception cref="ArgumentNullException">当数据为空时抛出</exception> 
-        /// <exception cref="ArgumentException">当数据长度无效时抛出</exception> 
-        public bool HandleResponse(byte[] data)
+
+        /// <summary>
+        /// 处理接收到的响应数据包
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        /// <returns>是否是响应包</returns>
+        public bool HandleResponse(PacketModel packet)
         {
             if (_disposed) throw new ObjectDisposedException(nameof(RequestResponseManager));
 
-
             try
             {
-                if (data == null || data.Length == 0)
+                if (packet?.Extensions?.TryGetValue("RequestId", out var requestIdObj) == true)
                 {
-                    _logger?.LogWarning("接收到的响应数据为空");
-                    return false;
-                }
+                    var requestId = requestIdObj?.ToString();
 
-                // 解密服务器数据包
-                var decrypted = EncryptedProtocol.DecryptServerPack(data);
-                if (decrypted.Two == null)
-                {
-                    _logger?.LogWarning("解密响应数据失败");
-                    return false;
+                    if (!string.IsNullOrEmpty(requestId) &&
+                        _pending.TryRemove(requestId, out var pendingRequest))
+                    {
+                        // ✅ 直接设置PacketModel作为结果
+                        return pendingRequest.Tcs.TrySetResult(packet);
+                    }
                 }
-
-                // 反序列化数据包
-                var packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(decrypted.Two);
-                if (packet?.Extensions?.TryGetValue("RequestId", out var rid) == true &&
-                    _pending.TryRemove(rid.ToString(), out var pr))
-                {
-                    _logger?.LogDebug("成功匹配响应到请求，请求ID: {RequestId}", rid);
-                    return pr.Tcs.TrySetResult(data);
-                }
-                else
-                {
-                    return false;
-                }
+                return false;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理响应失败，数据长度: {DataLength}", data?.Length ?? 0);
+                _logger?.LogError(ex, "处理响应包时发生错误");
+                return false;
             }
-            return false;
         }
 
         /// <summary> 
@@ -282,12 +485,7 @@ namespace RUINORERP.UI.Network
             }
         }
 
-        private static TResponse DeserializeResponse<TResponse>(byte[] raw)
-        {
-            var decrypted = RUINORERP.PacketSpec.Security.EncryptedProtocol.DecryptServerPack(raw);
-            var pkt = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(decrypted.Two);
-            return pkt.GetJsonData<TResponse>();
-        }
+       
 
         /* -------------------- 内部类型 -------------------- */
 
@@ -298,7 +496,7 @@ namespace RUINORERP.UI.Network
         private class PendingRequest
         {
             /// <summary>异步完成源，用于等待请求响应</summary>
-            public TaskCompletionSource<byte[]> Tcs { get; set; }
+            public TaskCompletionSource<PacketModel> Tcs { get; set; }
 
             /// <summary>请求创建时间</summary>
             public DateTime CreatedAt { get; set; }

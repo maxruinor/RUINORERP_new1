@@ -1347,7 +1347,6 @@ namespace RUINORERP.UI
             //      .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
             //      .PropertiesAutowired();//允许属性注入
 
-            builder.RegisterType<Extensions.Filter.GlobalExceptionsFilter>();
 
             /*
              Autofac 只会把 接口 IDuplicateCheckService 注册到容器；

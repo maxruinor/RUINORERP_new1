@@ -373,5 +373,35 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             return builder.WithDirection(PacketDirection.ServerToClient);
         }
+        
+        /// <summary>
+        /// 为请求创建数据包
+        /// </summary>
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <param name="builder">构建器实例</param>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="request">请求数据</param>
+        /// <returns>构建器实例</returns>
+        public static PacketBuilder ForRequest<TRequest>(this PacketBuilder builder, RUINORERP.PacketSpec.Commands.CommandId commandId, TRequest request)
+        {
+            return builder.WithCommand(commandId)
+                         .WithDirection(PacketDirection.ClientToServer)
+                         .WithJsonData(request);
+        }
+
+        /// <summary>
+        /// 为响应创建数据包
+        /// </summary>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="builder">构建器实例</param>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="response">响应数据</param>
+        /// <returns>构建器实例</returns>
+        public static PacketBuilder ForResponse<TResponse>(this PacketBuilder builder, RUINORERP.PacketSpec.Commands.CommandId commandId, TResponse response)
+        {
+            return builder.WithCommand(commandId)
+                         .WithDirection(PacketDirection.ServerToClient)
+                         .WithJsonData(response);
+        }
     }
 }

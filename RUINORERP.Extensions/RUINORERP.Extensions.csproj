@@ -24,12 +24,6 @@
     <Compile Remove="Authorizations\Policys\PermissionRequirement.cs" />
     <Compile Remove="EventHandling\BlogQueryIntegrationEvent.cs" />
     <Compile Remove="EventHandling\BlogQueryIntegrationEventHandler.cs" />
-    <Compile Remove="Filter\AutofacPropertityModuleReg.cs" />
-    <Compile Remove="Filter\CustomRouteAttribute.cs" />
-    <Compile Remove="Filter\GlobalAuthorizeFilter.cs" />
-    <Compile Remove="Filter\GlobalRoutePrefixFilter.cs" />
-    <Compile Remove="Filter\UserRegisterVo.cs" />
-    <Compile Remove="Filter\UseServiceDIAttribute.cs" />
     <Compile Remove="Middlewares\AllServicesMiddleware.cs" />
     <Compile Remove="Middlewares\ByPassAuthMiddleware.cs" />
     <Compile Remove="Middlewares\ConsulMiddleware.cs" />

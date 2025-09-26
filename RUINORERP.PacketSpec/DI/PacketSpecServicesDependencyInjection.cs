@@ -2,7 +2,6 @@
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Communication;
 
 namespace RUINORERP.PacketSpec.DI
 {

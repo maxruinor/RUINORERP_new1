@@ -566,8 +566,6 @@ namespace RUINORERP.UI.Common
 
     public class DataBindingHelper
     {
-
-
         public static List<EnumItem> GetTimeSelectTypeItems(Type enumType)
         {
             var items = new List<EnumItem>();
@@ -3398,9 +3396,7 @@ namespace RUINORERP.UI.Common
         {
 
             BindingSource bs = new BindingSource();
-
-
-            Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+            ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
             var list = bdc.GetBindSource<T>(tableName, expCondition);
             // Func<T, bool> funCondition = ExpressionHelper.ConvertToFunc<T>(expCondition);
             List<T> Newlist = list.ToList();

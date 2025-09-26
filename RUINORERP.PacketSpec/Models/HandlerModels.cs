@@ -236,7 +236,7 @@ namespace RUINORERP.PacketSpec.Handlers
     /// <summary>
     /// 操作结果 - 使用统一的ApiResponse模式
     /// </summary>
-    public class OperationResult : ApiResponse<object>
+    public class OperationResult : ResponseBase<object>
     {
         /// <summary>
         /// 默认构造函数
@@ -247,7 +247,13 @@ namespace RUINORERP.PacketSpec.Handlers
         /// 带参数的构造函数
         /// </summary>
         public OperationResult(bool success, string message, object data = null, int code = 200) 
-            : base(success, message, data, code) { }
+        {
+            this.IsSuccess = success;
+            this.Message = message;
+            this.Data = data;
+            this.Code = code;
+            this.Timestamp = DateTime.UtcNow;
+        }
 
         /// <summary>
         /// 创建成功结果

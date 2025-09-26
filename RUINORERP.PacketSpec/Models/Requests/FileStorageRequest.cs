@@ -1,14 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RUINORERP.Model;
 using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
     // 文件上传请求
-    public class FileUploadRequest
+    public class FileUploadRequest : RequestBase
     {
         public string FileName { get; set; }
         public string Category { get; set; } // 分类: Expenses/Products/Payments等
@@ -21,7 +22,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// <summary>
     /// 文件上传响应 - 使用统一的ApiResponse模式
     /// </summary>
-    public class FileUploadResponse : ApiResponse<FileUploadResponseData>
+    public class FileUploadResponse : ResponseBase<FileUploadResponseData>
     {
         /// <summary>
         /// 默认构造函数
@@ -32,7 +33,13 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 带参数的构造函数
         /// </summary>
         public FileUploadResponse(bool success, string message, FileUploadResponseData data = null, int code = 200) 
-            : base(success, message, data, code) { }
+        {
+            this.IsSuccess = success;
+            this.Message = message;
+            this.Data = data;
+            this.Code = code;
+            this.Timestamp = DateTime.UtcNow;
+        }
 
         /// <summary>
         /// 创建成功结果
@@ -89,7 +96,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     }
 
     // 请求和响应类
-    public class FileDeleteRequest
+    public class FileDeleteRequest : RequestBase
     {
         public string FileId { get; set; }
     }
@@ -97,7 +104,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// <summary>
     /// 文件删除响应 - 使用统一的ApiResponse模式
     /// </summary>
-    public class FileDeleteResponse : ApiResponse
+    public class FileDeleteResponse : ResponseBase
     {
         /// <summary>
         /// 默认构造函数
@@ -108,7 +115,11 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 带参数的构造函数
         /// </summary>
         public FileDeleteResponse(bool success, string message, int code = 200) 
-            : base(success, message, code) { }
+        {
+            IsSuccess = success;
+            Message = message;
+            Code = code;
+        }
 
         /// <summary>
         /// 创建成功结果
@@ -127,7 +138,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         }
     }
 
-    public class FileInfoRequest
+    public class FileInfoRequest : RequestBase
     {
         public string FileId { get; set; }
     }
@@ -135,7 +146,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// <summary>
     /// 文件信息响应 - 使用统一的ApiResponse模式
     /// </summary>
-    public class FileInfoResponse : ApiResponse<FileInfo>
+    public class FileInfoResponse : ResponseBase<FileInfo>
     {
         /// <summary>
         /// 默认构造函数
@@ -146,7 +157,13 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 带参数的构造函数
         /// </summary>
         public FileInfoResponse(bool success, string message, FileInfo data = null, int code = 200) 
-            : base(success, message, data, code) { }
+        {
+            this.IsSuccess = success;
+            this.Message = message;
+            this.Data = data;
+            this.Code = code;
+            this.Timestamp = DateTime.UtcNow;
+        }
 
         /// <summary>
         /// 创建成功结果
@@ -165,7 +182,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         }
     }
 
-    public class FileListRequest
+    public class FileListRequest : RequestBase
     {
         public string Category { get; set; }
         public string Pattern { get; set; } // 文件名模式匹配
@@ -202,7 +219,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// <summary>
     /// 文件列表响应 - 使用统一的ApiResponse模式
     /// </summary>
-    public class FileListResponse : ApiResponse<FileListResponseData>
+    public class FileListResponse : ResponseBase<FileListResponseData>
     {
         /// <summary>
         /// 默认构造函数
@@ -213,7 +230,13 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 带参数的构造函数
         /// </summary>
         public FileListResponse(bool success, string message, FileListResponseData data = null, int code = 200) 
-            : base(success, message, data, code) { }
+        {
+            this.IsSuccess = success;
+            this.Message = message;
+            this.Data = data;
+            this.Code = code;
+            this.Timestamp = DateTime.UtcNow;
+        }
 
         /// <summary>
         /// 创建成功结果

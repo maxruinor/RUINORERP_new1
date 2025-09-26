@@ -42,7 +42,7 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 连接状态
         /// </summary>
-        public bool IsConnected => _isConnected;
+        public bool IsConnected => _client?.Socket?.Connected == true;
 
         /// <summary>
         /// 接收到数据包时触发的事件 - 直接传递PacketModel，避免重复序列化/反序列化
@@ -126,7 +126,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 检查连接是否有效
-                if (!_client.Socket.Connected)
+                if (_client.Socket == null || !_client.Socket.Connected)
                 {
                     _isConnected = false;
                     throw new InvalidOperationException("连接已断开");

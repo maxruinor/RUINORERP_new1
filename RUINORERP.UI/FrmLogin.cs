@@ -21,15 +21,18 @@ using RUINORERP.Business;
 using HLH.Lib.Security;
 using AutoUpdateTools;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.UI.Network.PacketAdapter;
 
 namespace RUINORERP.UI
 {
     public partial class FrmLogin : Krypton.Toolkit.KryptonForm
     {
-        public FrmLogin(EasyClientService _ecs)
+        public FrmLogin()
         {
             InitializeComponent();
-            ecs = _ecs;
+           
         }
         private bool m_showing = true;
         private void fadeTimer_Tick(object sender, EventArgs e)
@@ -70,26 +73,6 @@ namespace RUINORERP.UI
 
         private void frmLogin_Load(object sender, EventArgs e)
         {
-
-            /*
-            object obj = null;
-            obj = DbHelperSQL.GetSingle("select F9 from tb_information where F20='EN001' ");
-            if (obj != null)
-            {
-                UserSettings.Instance.RegisterCode = obj.ToString();
-            }
-            else
-            {
-                ToolForm.frmUserGuide guide = new ToolForm.frmUserGuide();
-                if (guide.ShowDialog() != DialogResult.OK)
-                {
-                    //this.DialogResult = DialogResult.Cancel;
-                }
-            }
-            */
-
-
-
             //Opacity = 0.0;
             //fadeTimer.Start();
 
@@ -133,7 +116,7 @@ namespace RUINORERP.UI
         }
 
         static CancellationTokenSource source = new CancellationTokenSource();
-        public EasyClientService ecs { get; set; }
+
 
         public bool IsInitPassword { get; set; } = false;
 
@@ -166,32 +149,23 @@ namespace RUINORERP.UI
                         UserGlobalConfig.Instance.PassWord = this.txtPassWord.Text;
                         UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
                         UserGlobalConfig.Instance.ServerPort = txtPort.Text;
-                        if (ecs != null)
-                        {
-                            if (ecs.client != null && ecs.client.IsConnected == true)
-                            {
-                                if (!ecs.client.Socket.Connected)
-                                {
-                                    await ecs.Stop();
-                                }
-                            }
-                        }
+                        
 
                         //远程授权 ，如果切换了服务器。前面的链接就要断开重新来。
-                        if (ecs != null && ecs.IsConnected)
-                        {
-                            if (ecs.ServerIp != txtServerIP.Text || ecs.Port.ToString() != txtPort.Text)
-                            {
-                                //IP都换了。要全部重新连接
-                                ecs.LoginStatus = false;
-                                Program.AppContextData.IsOnline = false;
-                                bool status = await ecs.Stop();
-                                if (status)
-                                {
-                                    MainForm.Instance.ShowMsg("服务器切换中，请稍后...");
-                                }
-                            }
-                        }
+                        //if (ecs != null && ecs.IsConnected)
+                        //{
+                        //    if (ecs.ServerIp != txtServerIP.Text || ecs.Port.ToString() != txtPort.Text)
+                        //    {
+                        //        //IP都换了。要全部重新连接
+                        //        ecs.LoginStatus = false;
+                        //        Program.AppContextData.IsOnline = false;
+                        //        bool status = await ecs.Stop();
+                        //        if (status)
+                        //        {
+                        //            MainForm.Instance.ShowMsg("服务器切换中，请稍后...");
+                        //        }
+                        //    }
+                        //}
 
                         bool isInitPwd = false;
                         //传入账号密码返回结果
@@ -204,15 +178,11 @@ namespace RUINORERP.UI
 
                                 // 通过依赖注入获取UserLoginService
                                 var userLogin = Startup.ServiceProvider.GetService<UserLoginService>();
-                                
-                                // 如果依赖注入未能获取到服务，则手动创建（向后兼容）
-                                if (userLogin == null)
-                                {
-                                    userLogin = new UserLoginService(MainForm.Instance.communicationService);
-                                }
+
+                              
 
                                 try
-                                {                                
+                                {
                                     // 在执行登录操作前，先连接到服务器
                                     var serverIp = txtServerIP.Text.Trim();
                                     if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
@@ -221,7 +191,7 @@ namespace RUINORERP.UI
                                         //base.Cursor = Cursors.Default;
                                         return;
                                     }
-                                    
+
                                     // 检查是否已经连接，如果没有则建立连接
                                     if (!MainForm.Instance.communicationService.IsConnected)
                                     {
@@ -233,18 +203,35 @@ namespace RUINORERP.UI
                                             return;
                                         }
                                     }
-                                    
+
+
+                                    //////CancellationToken ct = default;
+                                    //////LoginResponse loginResp = await MainForm.Instance.communicationService
+                                    //////    .CallAsync<LoginRequest, LoginResponse>(
+                                    //////    new LoginRequest { Username = txtUserName.Text.Trim(), Password = txtPassWord.Text.Trim() },
+                                    //////    new LoginPacketAdapter(), ct);
+
+
+                                    //////// 如果依赖注入未能获取到服务，则手动创建（向后兼容）
+                                    //////if (loginResp != null)
+                                    //////{
+                                    //////    userLogin = new UserLoginService(MainForm.Instance.communicationService);
+                                    //////}
                                     // 8. 执行登录操作
-                                    var loginSuccess = await userLogin.LoginAsync(txtUserName.Text.Trim(), txtPassWord.Text.Trim());
-                                    
+                                    var loginSuccess = await userLogin.LoginAsync(UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord);
+
                                     // 检查登录结果
-                                    if (!loginSuccess.Success)
+                                    if (!loginSuccess.IsSuccess)
                                     {
-                                        MessageBox.Show($"登录失败: {loginSuccess.Message}", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        MessageBox.Show($"登录失败: {loginSuccess.ErrorMessage}", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                         //base.Cursor = Cursors.Default;
                                         return;
                                     }
-                                    
+                                    else
+                                    {
+                                        MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
+                                    }
+                                    /*
                                     // 登录成功，继续执行后续操作
                                     bool result = await serverAuthorizer.loginRunningOperationAsync(ecs, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
                                     //UITools.SuperSleep(1000);
@@ -258,25 +245,25 @@ namespace RUINORERP.UI
                                     else
                                     {
                                         MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
-                                    }
+                                    }*/
 
                                     //如果已经登陆 ，则提示要不要T掉原来的。
-                                    bool AlreadyLogged = await serverAuthorizer.AlreadyloggedinAsync(ecs, UserGlobalConfig.Instance.UseName, 3);
-                                    if (AlreadyLogged)
-                                    {
-                                        if (MessageBox.Show("该用户已经登陆，是否强制在线用户下线\r\n否则系统即将退出。", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
-                                        {
-                                            //新的要保留，只传用户名不行。
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                                            //ClientService.请求强制用户下线(UserGlobalConfig.Instance.UseName);
-                                        }
-                                        else
-                                        {
-                                            //自己退出
-                                            Application.Exit();
-                                            return;
-                                        }
-                                    }
+                                    //bool AlreadyLogged = await serverAuthorizer.AlreadyloggedinAsync(ecs, UserGlobalConfig.Instance.UseName, 3);
+                                    //if (AlreadyLogged)
+                                    //{
+                                    //    if (MessageBox.Show("该用户已经登陆，是否强制在线用户下线\r\n否则系统即将退出。", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
+                                    //    {
+                                    //        //新的要保留，只传用户名不行。
+                                    //    #warning TODO: 这里需要完善具体逻辑，当前仅为占位
+                                    //        //ClientService.请求强制用户下线(UserGlobalConfig.Instance.UseName);
+                                    //    }
+                                    //    else
+                                    //    {
+                                    //        //自己退出
+                                    //        Application.Exit();
+                                    //        return;
+                                    //    }
+                                    //}
                                     //如果为初始密码则提示弹窗！
                                     IsInitPassword = isInitPwd;
                                 }

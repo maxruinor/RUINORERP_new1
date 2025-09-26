@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Text;
@@ -110,7 +111,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
         /// <summary>
         /// 执行核心逻辑
         /// </summary>
-        protected override async Task<CommandResult> OnExecuteAsync(CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -120,19 +121,19 @@ namespace RUINORERP.PacketSpec.Commands.Message
                 // 实际的命令处理应该在具体的命令处理器中完成
                 await Task.Delay(10, cancellationToken);
 
-                return CommandResult.Success(
-                    data: Data,
-                    message: $"消息命令执行成功: {{CommandType}}"
+                return ResponseBase.CreateSuccess(
+                    $"消息命令执行成功: {{CommandType}}"
                 );
             }
             catch (Exception ex)
             {
                 LogError($"执行消息命令异常: {{ex.Message}}", ex);
-                return CommandResult.Failure(
-                    message: $"执行消息命令失败: {{ex.Message}}",
-                    errorCode: "MESSAGE_COMMAND_EXECUTION_FAILED",
-                    exception: ex
-                );
+                return ResponseBase.CreateError(
+                    $"执行消息命令失败: {{ex.Message}}",
+                    500
+                ).WithMetadata("ErrorCode", "MESSAGE_COMMAND_EXECUTION_FAILED")
+                 .WithMetadata("Exception", ex.Message)
+                 .WithMetadata("StackTrace", ex.StackTrace);
             }
         }
 

@@ -369,7 +369,6 @@ namespace RUINORERP.Server
         /// <param name="builder">容器构建器</param>
         public static void ConfigureContainerForDll(ContainerBuilder builder)
         {
-            builder.RegisterType<Extensions.Filter.GlobalExceptionsFilter>();
 
             #region Extensions程序集依赖注入
             var dalAssemble_Extensions = System.Reflection.Assembly.LoadFrom("RUINORERP.Extensions.dll");

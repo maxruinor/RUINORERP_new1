@@ -111,11 +111,11 @@ namespace RUINORERP.PacketSpec.Models.Core
             Console.WriteLine("\n=== 响应处理示例 ===");
 
             // 创建成功响应
-            var successResponse = ApiResponse<string>.CreateSuccess("登录成功", "操作完成");
+            var successResponse = ResponseBase<string>.CreateSuccess("登录成功", "操作完成");
             Console.WriteLine($"成功响应: {successResponse}");
 
             // 创建失败响应
-            var failureResponse = ApiResponse<object>.Failure("用户名或密码错误", 401);
+            var failureResponse = ResponseBase<object>.Failure("用户名或密码错误");
             Console.WriteLine($"失败响应: {failureResponse}");
 
             // 使用数据包转换为响应
@@ -126,7 +126,7 @@ namespace RUINORERP.PacketSpec.Models.Core
 
             var apiResponse = dataPacket.ToApiResponse<string[]>();
             Console.WriteLine($"API响应: {apiResponse}");
-            if (apiResponse.Success)
+            if (apiResponse.IsSuccess)
             {
                 Console.WriteLine($"响应数据: {string.Join(", ", apiResponse.Data)}");
             }
@@ -250,7 +250,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>成功响应数据包</returns>
         public static PacketModel CreateSuccessResponse<T>(T data, string message = "成功", string requestId = null)
         {
-            var response = ApiResponse<T>.CreateSuccess(data, message);
+            var response = ResponseBase<T>.CreateSuccess(data, message);
             if (!string.IsNullOrEmpty(requestId))
             {
                 response.RequestId = requestId;
@@ -272,7 +272,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>错误响应数据包</returns>
         public static PacketModel CreateErrorResponse(string message, int code = 500, string requestId = null)
         {
-            var response = ApiResponse<object>.Failure(message, code);
+            var response = ResponseBase<object>.Failure(message);
             if (!string.IsNullOrEmpty(requestId))
             {
                 response.RequestId = requestId;

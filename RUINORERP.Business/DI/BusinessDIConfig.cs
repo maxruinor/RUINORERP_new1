@@ -61,23 +61,8 @@ namespace RUINORERP.Business.DI
                 .PropertiesAutowired()
                 .SingleInstance();
 
-            // 注册实体业务映射服务 (整合自ServiceCollectionExtensions)
-            builder.RegisterType<EntityInfoService>()
-                .As<IEntityInfoService>()
-                .AsSelf()
-                .SingleInstance()
-                .PropertiesAutowired();
-                
-            builder.RegisterType<EntityInfoConfig>()
-                .AsSelf()
-                .SingleInstance()
-                .PropertiesAutowired();
-                
-            // 注册实体信息初始化器
-            builder.RegisterType<EntityInfoConfig.EntityInfoInitializer>()
-                .As<IStartupInitializer>()
-                .SingleInstance()
-                .PropertiesAutowired();
+            // 实体业务映射服务已通过AddEntityInfoServicesWithMappings方法注册
+            // 此处不再重复注册，以避免冲突
 
             // 注册BizCacheHelper缓存帮助类
             builder.RegisterType<BizCacheHelper>()
@@ -133,6 +118,8 @@ namespace RUINORERP.Business.DI
             
             // 注册行级权限服务
             RegisterRowLevelAuthServices(builder);
+
+            AddBusinessServices(builder);
         }
         
         /// <summary>
@@ -143,25 +130,29 @@ namespace RUINORERP.Business.DI
         {
             try
             {
+                // 获取当前程序集
                 var businessAssembly = Assembly.GetExecutingAssembly();
                 Type[] tempTypes = businessAssembly.GetTypes();
                 
+                // 存储需要注册的处理器
                 List<KeyValuePair<string, Type>> ProcessorList = new List<KeyValuePair<string, Type>>();
                 var NoWantIOCAttr = typeof(NoWantIOCAttribute);
                 
+                // 筛选继承自BaseProcessor且未标记NoWantIOCAttribute的类型
                 for (int i = 0; i < tempTypes.Length; i++)
                 {
-                    // 是否为自定义特性，否则跳过，进入下一个循环
+                    // 跳过标记了NoWantIOCAttribute的类型
                     if (tempTypes[i].IsDefined(NoWantIOCAttr, false))
                         continue;
                         
+                    // 筛选BaseProcessor的子类
                     if (tempTypes[i].BaseType == typeof(BaseProcessor))
                     {
                         ProcessorList.Add(new KeyValuePair<string, Type>(tempTypes[i].Name, tempTypes[i]));
                     }
                 }
                 
-                // 用名称注册处理器
+                // 注册所有筛选出的处理器
                 foreach (var item in ProcessorList)
                 {
                     builder.RegisterType(item.Value).Named(item.Key, typeof(BaseProcessor))
@@ -290,15 +281,25 @@ namespace RUINORERP.Business.DI
         }
         
         /// <summary>
-        /// 配置Business项目的服务集合，初始化实体映射
+        /// 配置Business项目的服务，初始化实体映射
         /// </summary>
-        /// <param name="services">服务集合</param>
-        /// <returns>服务集合</returns>
-        public static IServiceCollection AddBusinessServices(this IServiceCollection services)
+        /// <param name="builder">Autofac容器构建器</param>
+        public static void AddBusinessServices(this ContainerBuilder builder)
         {
-            // 注册实体信息初始化服务
-            services.AddSingleton<IStartupInitializer, EntityInfoConfig.EntityInfoInitializer>();
-            return services;
+            // 注册实体信息服务及其依赖项
+            builder.RegisterType<BusinessEntityMappingService>()
+                .As<IBusinessEntityMappingService>()
+                .SingleInstance()
+                .PropertiesAutowired();
+                
+            builder.RegisterType<DefaultRowAuthPolicyInitializationService>()
+                .As<IDefaultRowAuthPolicyInitializationService>()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+                
+            builder.RegisterType<EntityInfoConfig>()
+                .SingleInstance()
+                .PropertiesAutowired();
         }
     }
 }

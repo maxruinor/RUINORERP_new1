@@ -14,6 +14,10 @@ namespace RUINORERP.UI.Common
 
         public static KryptonPage NewPage(string name, Control content)
         {
+            if (content==null)
+            {
+
+            }
             // Create new page with title and image
             KryptonPage p = new KryptonPage();
             p.Text = name;

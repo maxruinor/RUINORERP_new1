@@ -244,7 +244,7 @@ namespace RUINORERP.UI.BaseForm
                     CurrentBizTypeName = CurrentBizType.ToString();
                 }
                 menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                _entityInfoService = Startup.GetFromFac<IEntityInfoService>();
+                _entityInfoService = Startup.GetFromFac<IBusinessEntityMappingService>();
             }
         }
 
@@ -2474,7 +2474,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        private Business.BizMapperService.IEntityInfoService _entityInfoService;
+        private Business.BizMapperService.IBusinessEntityMappingService _entityInfoService;
 
 
         /// <summary>

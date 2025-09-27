@@ -707,6 +707,18 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
                 }
             }
+            ,
+              new ConditionGroup
+            {
+                Identifier="1",
+                StatusName = "被驳回",
+                Conditions = new List<IConditionalModel>
+                {
+                    new ConditionalModel { FieldName = "ApprovalStatus", ConditionalType = ConditionalType.Equal, FieldValue = "2", CSharpTypeName = "int" },
+                   // new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue =((int)DataStatus.确认).ToString(), CSharpTypeName = "int" },
+                    new ConditionalModel { FieldName = "isdeleted", ConditionalType = ConditionalType.Equal, FieldValue = "False", CSharpTypeName = "bool" }
+                }
+            }
         };
         }
 

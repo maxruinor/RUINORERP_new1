@@ -10,7 +10,7 @@ namespace RUINORERP.Business.BizMapperService
     /// <summary>
     /// 字段配置模型
     /// </summary>
-    public class EntityFieldConfig
+    public class EntityFieldConfigBuilder
     {
         public string IdField { get; set; }
         public string NoField { get; set; }
@@ -22,9 +22,9 @@ namespace RUINORERP.Business.BizMapperService
         /// 创建实体字段配置实例
         /// </summary>
         /// <returns></returns>
-        public static EntityFieldConfig Create()
+        public static EntityFieldConfigBuilder Create()
         {
-            return new EntityFieldConfig();
+            return new EntityFieldConfigBuilder();
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace RUINORERP.Business.BizMapperService
         /// </summary>
         /// <param name="fieldName"></param>
         /// <returns></returns>
-        public EntityFieldConfig WithIdField(string fieldName)
+        public EntityFieldConfigBuilder WithIdField(string fieldName)
         {
             IdField = fieldName;
             return this;
@@ -43,7 +43,7 @@ namespace RUINORERP.Business.BizMapperService
         /// </summary>
         /// <param name="fieldName"></param>
         /// <returns></returns>
-        public EntityFieldConfig WithNoField(string fieldName)
+        public EntityFieldConfigBuilder WithNoField(string fieldName)
         {
             NoField = fieldName;
             return this;
@@ -54,7 +54,7 @@ namespace RUINORERP.Business.BizMapperService
         /// </summary>
         /// <param name="fieldName"></param>
         /// <returns></returns>
-        public EntityFieldConfig WithDescriptionField(string fieldName)
+        public EntityFieldConfigBuilder WithDescriptionField(string fieldName)
         {
             DescriptionField = fieldName;
             return this;
@@ -65,7 +65,7 @@ namespace RUINORERP.Business.BizMapperService
         /// </summary>
         /// <param name="propertyName"></param>
         /// <returns></returns>
-        public EntityFieldConfig WithDetailProperty(string propertyName)
+        public EntityFieldConfigBuilder WithDetailProperty(string propertyName)
         {
             DetailProperty = propertyName;
             return this;
@@ -76,13 +76,12 @@ namespace RUINORERP.Business.BizMapperService
         /// </summary>
         /// <param name="fieldName"></param>
         /// <returns></returns>
-        public EntityFieldConfig WithDiscriminatorField(string fieldName)
+        public EntityFieldConfigBuilder WithDiscriminatorField(string fieldName)
         {
             DiscriminatorField = fieldName;
             return this;
         }
     }
-
- 
-
+    
+   
 }

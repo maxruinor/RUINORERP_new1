@@ -526,8 +526,8 @@ namespace RUINORERP.UI
             try
             {
                 // 直接注册实体信息服务和实体业务映射服务
-                builder.RegisterType(typeof(RUINORERP.Business.BizMapperService.EntityInfoService))
-                    .As(typeof(RUINORERP.Business.BizMapperService.IEntityInfoService))
+                builder.RegisterType(typeof(RUINORERP.Business.BizMapperService.BusinessEntityMappingService))
+                    .As(typeof(RUINORERP.Business.BizMapperService.IBusinessEntityMappingService))
                     .SingleInstance()
                     .PropertiesAutowired();
 

@@ -35,7 +35,7 @@ namespace RUINORERP.UI.BI
     public partial class UCRowAuthPolicyEditEnhanced : BaseEditGeneric<tb_RowAuthPolicy>
     {
         private IDefaultRowAuthRuleProvider _ruleProvider;
-        private BizMapperService.IEntityInfoService _entityInfoService;
+        private BizMapperService.IBusinessEntityMappingService _entityInfoService;
         private SmartRuleConfigHelper _smartRuleHelper;
         private List<BizMapperService.ERPEntityInfo> _allEntityInfos;
         private Dictionary<string, Type> _entityTypeCache = new Dictionary<string, Type>();
@@ -48,7 +48,7 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
             _ruleProvider = Startup.GetFromFac<IDefaultRowAuthRuleProvider>();
-            _entityInfoService = Startup.GetFromFac<IEntityInfoService>();
+            _entityInfoService = Startup.GetFromFac<IBusinessEntityMappingService>();
             // 使用DI容器获取SmartRuleConfigHelper实例
             _smartRuleHelper = new SmartRuleConfigHelper(_entityInfoService, Startup.GetFromFac<ILoggerFactory>());
             InitializeSmartComponents();

@@ -1074,7 +1074,7 @@ namespace RUINORERP.UI
                     // 尝试通过IEntityInfoService获取表的中文描述
                     try
                     {
-                        var entityInfoService = Startup.GetFromFac<RUINORERP.Business.BizMapperService.IEntityInfoService>();
+                        var entityInfoService = Startup.GetFromFac<RUINORERP.Business.BizMapperService.IBusinessEntityMappingService>();
                         if (entityInfoService != null && !string.IsNullOrEmpty(tableName))
                         {
                             var entityInfo = entityInfoService.GetEntityInfoByTableName(tableName);
@@ -3270,7 +3270,7 @@ namespace RUINORERP.UI
         private void tsbtnloginFileServer_Click(object sender, EventArgs e)
         {
 
-            var entityInfoService = Startup.GetFromFac<Business.BizMapperService.IEntityInfoService>();
+            var entityInfoService = Startup.GetFromFac<Business.BizMapperService.IBusinessEntityMappingService>();
 
             // 获取实体信息
             var entityInfo = entityInfoService.GetEntityInfo(BizType.借出单);

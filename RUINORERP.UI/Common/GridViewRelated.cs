@@ -35,13 +35,13 @@ namespace RUINORERP.UI.Common
     {
 
         private readonly EntityLoader _loader;
-        private readonly IEntityInfoService _mappingService;
+        private readonly IBusinessEntityMappingService _mappingService;
         public GridViewRelated()
         {
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             // 通过依赖注入获取服务实例 - 关键修复：使用接口而不是具体实现类
             _loader = Startup.GetFromFac<EntityLoader>();
-            _mappingService = Startup.GetFromFac<IEntityInfoService>();
+            _mappingService = Startup.GetFromFac<IBusinessEntityMappingService>();
         }
 
 

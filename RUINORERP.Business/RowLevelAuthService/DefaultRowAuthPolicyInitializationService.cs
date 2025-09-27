@@ -17,7 +17,7 @@ namespace RUINORERP.Business.RowLevelAuthService
     {
         private readonly ISqlSugarClient _db;
         private readonly IDefaultRowAuthRuleProvider _defaultRuleProvider;
-        private readonly IEntityInfoService _entityInfoService;
+        private readonly IBusinessEntityMappingService _entityInfoService;
         private readonly ILogger<DefaultRowAuthPolicyInitializationService> _logger;
         private readonly ApplicationContext _appContext;
         // 使用并发集合跟踪已初始化的业务类型，避免重复检查
@@ -26,7 +26,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         public DefaultRowAuthPolicyInitializationService(
             ISqlSugarClient db,
             IDefaultRowAuthRuleProvider defaultRuleProvider,
-            IEntityInfoService entityInfoService,
+            IBusinessEntityMappingService entityInfoService,
             ILogger<DefaultRowAuthPolicyInitializationService> logger,
             ApplicationContext appContext)
         {

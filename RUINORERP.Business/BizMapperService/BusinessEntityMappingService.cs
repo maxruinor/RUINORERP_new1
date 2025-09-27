@@ -11,9 +11,10 @@ using System.Linq.Expressions;
 
 namespace RUINORERP.Business.BizMapperService
 {
-    public class EntityInfoService : IEntityInfoService
+    public class BusinessEntityMappingService : IBusinessEntityMappingService
     {
         private readonly ILogger _logger;
+        private readonly EntityInfoConfig _config;
         private readonly ConcurrentDictionary<BizType, ERPEntityInfo> _bizTypeToEntityInfo = new ConcurrentDictionary<BizType, ERPEntityInfo>();
         private readonly ConcurrentDictionary<Type, ERPEntityInfo> _entityTypeToEntityInfo = new ConcurrentDictionary<Type, ERPEntityInfo>();
         private readonly ConcurrentDictionary<string, ERPEntityInfo> _tableNameToEntityInfo = new ConcurrentDictionary<string, ERPEntityInfo>(StringComparer.OrdinalIgnoreCase);
@@ -21,15 +22,23 @@ namespace RUINORERP.Business.BizMapperService
         private bool _initialized = false;
         private readonly object _lock = new object();
 
-        public EntityInfoService(ILoggerFactory loggerFactory)
+        public BusinessEntityMappingService(EntityInfoConfig config, ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<EntityInfoService>();
+            _logger = loggerFactory.CreateLogger<BusinessEntityMappingService>();
+            _config= config;
+            _config.RegisterCommonMappings();
         }
 
+        /// <summary>
+        /// 初始化实体信息服务
+        /// 此方法仅检查初始化状态，实际的实体映射注册通过InitializeMappings方法完成
+        /// </summary>
         public void Initialize()
         {
             EnsureInitialized();
         }
+
+        
 
         private void EnsureInitialized()
         {

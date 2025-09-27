@@ -7,24 +7,27 @@ using System.Linq.Expressions;
 namespace RUINORERP.Business.BizMapperService
 {
     /// <summary>
-    /// 实体信息服务接口
+    /// 业务实体映射服务接口
+    /// 提供业务类型(BizType)与实体类型(Type)、数据库表名之间的相互转换功能
     /// </summary>
-    public interface IEntityInfoService
+    public interface IBusinessEntityMappingService
     {
         /// <summary>
-        /// 初始化实体信息服务
+        /// 初始化业务实体映射服务
+        /// 此方法仅检查初始化状态，实际的实体映射注册通过InitializeMappings方法完成
         /// </summary>
         void Initialize();
+        
+
         
         ERPEntityInfo GetEntityInfo(BizType bizType);
         ERPEntityInfo GetEntityInfo(Type entityType);
 
         /// <summary>
-        /// 根据指定枚举类型的值来判断 是哪种业务类型
+        /// 根据指定枚举类型的值来判断是哪种业务类型
         /// </summary>
-        /// <typeparam name="TEnum"></typeparam>
         /// <param name="entityType"></param>
-        /// <param name="Flag"></param>
+        /// <param name="EnumFlag"></param>
         /// <returns></returns>
         ERPEntityInfo GetEntityInfo(Type entityType, int EnumFlag);
         ERPEntityInfo GetEntityInfoByTableName(string tableName);
@@ -44,25 +47,25 @@ namespace RUINORERP.Business.BizMapperService
         (long Id, string Name) GetIdAndName(object entity);
     }
 
-    public static class EntityInfoServiceExtensions
+    public static class BusinessEntityMappingServiceExtensions
     {
 
-        public static ERPEntityInfo GetEntityInfo<TEntity>(this IEntityInfoService service, int Flag) where TEntity : class 
+        public static ERPEntityInfo GetEntityInfo<TEntity>(this IBusinessEntityMappingService service, int Flag) where TEntity : class 
         {
             return service.GetEntityInfo(typeof(TEntity), Flag);
         }
 
-        public static ERPEntityInfo GetEntityInfo<TEntity>(this IEntityInfoService service) where TEntity : class
+        public static ERPEntityInfo GetEntityInfo<TEntity>(this IBusinessEntityMappingService service) where TEntity : class
         {
             return service.GetEntityInfo(typeof(TEntity));
         }
 
-        public static Type GetEntityType<T>(this IEntityInfoService service) where T : class
+        public static Type GetEntityType<T>(this IBusinessEntityMappingService service) where T : class
         {
             return typeof(T);
         }
 
-        public static BizType GetBizType<T>(this IEntityInfoService service, T entity) where T : class
+        public static BizType GetBizType<T>(this IBusinessEntityMappingService service, T entity) where T : class
         {
             if (entity == null)
                 return BizType.无对应数据;

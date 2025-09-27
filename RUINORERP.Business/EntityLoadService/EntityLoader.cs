@@ -21,12 +21,12 @@ namespace RUINORERP.Business.BizMapperService
     /// </summary>
     public class EntityLoader
     {
-        private readonly IEntityInfoService _mappingService;
+        private readonly IBusinessEntityMappingService _mappingService;
         private readonly ApplicationContext _context;
         private readonly ILogger<EntityLoader> _logger;
 
         public EntityLoader(
-            IEntityInfoService mappingService,
+            IBusinessEntityMappingService mappingService,
             ApplicationContext context,
             ILogger<EntityLoader> logger)
         {
@@ -216,7 +216,7 @@ namespace RUINORERP.Business.BizMapperService
         }
 
         // 把反射逻辑封装到泛型方法里
-        private object LoadEntityCore<T>(EntityFieldConfig cfg, object billNo) where T : class, new()
+        private object LoadEntityCore<T>(EntityFieldConfigBuilder cfg, object billNo) where T : class, new()
         {
             var q = CreateQueryable<T>(cfg);
 
@@ -231,7 +231,7 @@ namespace RUINORERP.Business.BizMapperService
         /// <summary>
         /// 创建泛型查询对象
         /// </summary>
-        private ISugarQueryable<T> CreateQueryable<T>(EntityFieldConfig config) where T : class
+        private ISugarQueryable<T> CreateQueryable<T>(EntityFieldConfigBuilder config) where T : class
         {
             var queryable = _context.Db.Queryable<T>();
 

@@ -1,0 +1,89 @@
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Responses;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace RUINORERP.PacketSpec.Commands.Lock
+{
+    /// <summary>
+    /// 强制解锁命令 - 管理员强制解锁业务单据
+    /// </summary>
+    [PacketCommand("ForceUnlock", CommandCategory.Lock)]
+    public class ForceUnlockCommand : BaseCommand
+    {
+        /// <summary>
+        /// 命令标识符
+        /// </summary>
+        public override CommandId CommandIdentifier => LockCommands.ForceReleaseLock;
+
+        /// <summary>
+        /// 单据ID
+        /// </summary>
+        public long BillId { get; set; }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public ForceUnlockCommand()
+        {
+            Direction = CommandDirection.Send;
+            TimeoutMs = 30000; // 默认超时时间30秒
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        public ForceUnlockCommand(long billId)
+        {
+            BillId = billId;
+            Direction = CommandDirection.Send;
+            TimeoutMs = 30000; // 默认超时时间30秒
+        }
+
+        /// <summary>
+        /// 获取可序列化的数据
+        /// </summary>
+        /// <returns>可序列化的强制解锁数据</returns>
+        public override object GetSerializableData()
+        {
+            return new
+            {
+                BillId = this.BillId
+            };
+        }
+
+        /// <summary>
+        /// 验证命令参数
+        /// </summary>
+        /// <returns>验证结果</returns>
+        public override CommandValidationResult Validate()
+        {
+            var result = base.Validate();
+            if (!result.IsValid)
+            {
+                return result;
+            }
+
+            // 验证单据ID
+            if (BillId <= 0)
+            {
+                return CommandValidationResult.Failure("单据ID必须大于0", "INVALID_BILL_ID");
+            }
+
+            return CommandValidationResult.Success();
+        }
+
+        /// <summary>
+        /// 执行命令的核心逻辑
+        /// </summary>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>命令执行结果</returns>
+        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
+        {
+            // 强制解锁命令契约只定义数据结构，实际的业务逻辑在Handler中实现
+            // 创建并返回成功响应
+            return Task.FromResult(ResponseBase.CreateSuccess("强制解锁操作成功"));
+        }
+    }
+}

@@ -78,6 +78,16 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// 缓存统计信息 - 获取缓存统计信息
         /// </summary>
         public static readonly CommandId CacheStatistics = new CommandId(CommandCategory.Cache, 0x09);
+        
+        /// <summary>
+        /// 缓存订阅 - 订阅缓存变更
+        /// </summary>
+        public static readonly CommandId CacheSubscribe = new CommandId(CommandCategory.Cache, 0x0A);
+
+        /// <summary>
+        /// 缓存取消订阅 - 取消订阅缓存变更
+        /// </summary>
+        public static readonly CommandId CacheUnsubscribe = new CommandId(CommandCategory.Cache, 0x0B);
         #endregion
     }
 }

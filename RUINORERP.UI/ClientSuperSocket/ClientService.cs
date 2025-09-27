@@ -43,17 +43,17 @@ namespace RUINORERP.UI.SuperSocketClient
     public class ClientService
     {
 
-        public static void 请求缓存(string tableName)
-        {
-            OriginalData odforCache = ActionForClient.请求发送缓存(tableName);
-            byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
-            MainForm.Instance.ecs.client.Send(buffer);
+        //public static void 请求缓存(string tableName)
+        //{
+        //    OriginalData odforCache = ActionForClient.请求发送缓存(tableName);
+        //    byte[] buffer = TransInstruction.CryptoProtocol.EncryptClientPackToServer(odforCache);
+        //    MainForm.Instance.ecs.client.Send(buffer);
 
-            if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
-            {
-                MainForm.Instance.uclog.AddLog($"请求缓存：{tableName}");
-            }
-        }
+        //    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+        //    {
+        //        MainForm.Instance.uclog.AddLog($"请求缓存：{tableName}");
+        //    }
+        //}
 
         /// <summary>
         /// 解析服务器的回复 意义是？

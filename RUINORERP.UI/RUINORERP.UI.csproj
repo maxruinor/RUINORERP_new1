@@ -253,11 +253,11 @@
     <Reference Include="Microsoft.Extensions.Configuration.UserSecrets, Version=7.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Configuration.UserSecrets.7.0.0\lib\net462\Microsoft.Extensions.Configuration.UserSecrets.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=7.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.7.0.0\lib\net462\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=8.0.0.1, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.8.0.1\lib\net462\Microsoft.Extensions.DependencyInjection.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=8.0.0.1, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.8.0.1\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=8.0.0.2, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.8.0.2\lib\net462\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Extensions.FileProviders.Abstractions, Version=9.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.FileProviders.Abstractions.9.0.0-preview.5.24306.7\lib\net462\Microsoft.Extensions.FileProviders.Abstractions.dll</HintPath>
@@ -878,7 +878,6 @@
     <Compile Include="ClientSuperSocket\ClientDataBuilder.cs" />
     <Compile Include="ClientSuperSocket\EasyClientService.cs" />
     <Compile Include="ClientSuperSocket\HeartbeatManager.cs" />
-    <Compile Include="ClientSuperSocket\ReceiveFilter.cs" />
     <Compile Include="ClientSuperSocket\SocketClientHelper.cs" />
     <Compile Include="ClientSuperSocket\SystemOptimizerService.cs" />
     <Compile Include="ClientSuperSocket\WorkflowService.cs" />
@@ -2257,13 +2256,15 @@
     <Compile Include="Network\HeartbeatManager.cs" />
     <Compile Include="Network\IClientCommunicationService.cs" />
     <Compile Include="Network\ISocketClient.cs" />
-    <Compile Include="Network\Optimized\ClientCommunicationService.cs" />
+    <Compile Include="Network\ClientCommunicationService.cs" />
+    <Compile Include="Network\PacketAdapter\CachePacketAdapter.cs" />
     <Compile Include="Network\PacketAdapter\LoginPacketAdapter.cs" />
     <Compile Include="Network\RequestResponseManager.cs" />
     <Compile Include="Network\RetryStrategy\EnhancedRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\ExponentialBackoffRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\FixedIntervalRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\IRetryStrategy.cs" />
+    <Compile Include="Network\Services\CacheClientService.cs" />
     <Compile Include="Network\Services\UserLoginService.cs" />
     <Compile Include="Network\Simplified\CommunicationException.cs" />
     <Compile Include="Network\Simplified\EnhancedUsageExample.cs" />
@@ -5161,6 +5162,7 @@
     <Folder Include="IMResources\Images\" />
     <Folder Include="Monitoring\Alerts\" />
     <Folder Include="MRP\RR\" />
+    <Folder Include="Network\Cache\" />
     <Folder Include="Network\Examples\" />
     <Folder Include="Network\Models\" />
     <Folder Include="Other\" />

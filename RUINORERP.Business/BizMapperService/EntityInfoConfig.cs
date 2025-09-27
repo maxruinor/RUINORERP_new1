@@ -9,14 +9,52 @@ using System.Collections.Generic;
 
 namespace RUINORERP.Business.BizMapperService
 {
+    /// <summary>
+    /// 启动初始化器接口
+    /// </summary>
+    public interface IStartupInitializer
+    {
+        void Initialize();
+    }
+    
     public class EntityInfoConfig
     {
         private readonly IEntityInfoService _entityInfoService;
         private static readonly ILog _logger = LogManager.GetLogger(typeof(EntityInfoConfig));
+        
+        /// <summary>
+        /// 实体信息初始化器，负责在应用启动时初始化实体映射
+        /// </summary>
+        public class EntityInfoInitializer : IStartupInitializer
+        {
+            private readonly IEntityInfoService _entityInfoService;
+            private static readonly ILog _initializerLogger = LogManager.GetLogger(typeof(EntityInfoInitializer));
+            
+            public EntityInfoInitializer(IEntityInfoService entityInfoService)
+            {
+                _entityInfoService = entityInfoService;
+            }
+            
+            public void Initialize()
+            {
+                try
+                {
+                    _initializerLogger.Info("开始注册实体映射");
+                    var config = new EntityInfoConfig(_entityInfoService);
+                    _initializerLogger.Info("实体映射注册完成");
+                }
+                catch (Exception ex)
+                {
+                    _initializerLogger.Error("注册实体映射失败", ex);
+                    throw;
+                }
+            }
+        }
 
         public EntityInfoConfig(IEntityInfoService entityInfoService)
         {
             _entityInfoService = entityInfoService;
+            RegisterCommonMappings();
         }
 
         public void RegisterCommonMappings()

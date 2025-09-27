@@ -3327,7 +3327,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
                         if (cachelist == null || cachelist.Count == 0)
                         {
-                            Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+                            Business.CommService.ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
                             var list = bdc.GetBindSourceList(tableName);
                         }
                         else

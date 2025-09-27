@@ -348,6 +348,23 @@ namespace RUINORERP.UI
             services.AddMemoryCacheSetup();
             services.AddAppContext(Program.AppContextData);
 
+            // 添加CacheManager缓存服务
+            services.AddSingleton<ICacheManager<object>>(provider =>
+            {
+                return CacheFactory.Build<object>(settings =>
+                {
+                    settings
+                        .WithSystemRuntimeCacheHandle()
+                        .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30));
+                });
+            });
+
+      
+
+            // 注册客户端缓存管理器
+            // services.AddSingleton<ClientCacheManager>();
+            // services.AddSingleton<CacheSyncCommandHandler>();
+
             // 注册审计日志
             services.Configure<AuditLogOptions>(options =>
             {
@@ -1142,14 +1159,10 @@ namespace RUINORERP.UI
             services.AddScoped(typeof(UserControl));
             services.AddScoped(typeof(BaseListWithTree));
 
-            services.AddScoped(typeof(Model.CacheInfo));
             services.AddScoped(typeof(ReminderData));
-            services.AddScoped(typeof(Model.LastCacheFetchInfo));
-            services.AddScoped(typeof(Model.CacheFetchManager));
             services.AddSingleton<ICacheService, SqlSugarMemoryCacheService>();
 
 
-            services.AddEntityInfoServicesWithMappings();
 
             // 添加其他服务...
             services.AddScoped<EntityLoader>();

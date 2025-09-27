@@ -8,20 +8,20 @@ using Netron.Neon.HtmlHelp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NPOI.POIFS.Crypt.Dsig;
-
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
-using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.SuperSocketClient;
 using RUINORERP.UI.UControls;
 using RUINORERP.UI.UCSourceGrid;
@@ -1475,7 +1475,7 @@ namespace RUINORERP.UI.Common
         {
             RequestCache(type.Name, type);
         }
-        public static void RequestCache(string tableName, Type type = null)
+        public static async void RequestCache(string tableName, Type type = null)
         {
             //优先处理本身，比方 BOM_ID显示BOM_NO，只要传tb_BOM_S
             if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
@@ -1484,6 +1484,9 @@ namespace RUINORERP.UI.Common
                 var rslist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                 if (NeedRequesCache(rslist, tableName) && BizCacheHelper.Instance.typeNames.Contains(tableName))
                 {// 临时代码：标记需要完善的部分
+
+                    CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
+                    await cacheClient.RequestCacheAsync(tableName);
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
                     //ClientService.请求缓存(tableName);
                 }

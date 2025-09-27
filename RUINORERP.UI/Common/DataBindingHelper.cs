@@ -3322,7 +3322,7 @@ namespace RUINORERP.UI.Common
                 var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                 if (cachelist == null)
                 {
-                    Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+                    Business.CommService.ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
                     tlist = bdc.GetBindSource<T>(tableName);
                 }
                 else
@@ -3425,8 +3425,7 @@ namespace RUINORERP.UI.Common
             {
                 expCondition = c => true;
             }
-            // BindingSource bs = new BindingSource();
-            Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+            ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
             var list = bdc.GetBindSource<T>(tableName, expCondition);
             // Func<T, bool> funCondition = ExpressionHelper.ConvertToFunc<T>(expCondition);
             List<T> Newlist = list.ToList();
@@ -3609,7 +3608,7 @@ namespace RUINORERP.UI.Common
                     var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
                     if (cachelist == null)
                     {
-                        Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+                        Business.CommService.ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
                         tlist = bdc.GetBindSource<T>(tableName);
                         if (HasSelectItem)
                         {
@@ -3741,7 +3740,7 @@ namespace RUINORERP.UI.Common
         /// <param name="cmbBox"></param>
         public static void InitDataToCmb(BindingSource bs, string ValueMember, string DisplayMember, KryptonComboBox cmbBox)
         {
-            //Business.CommService.CommonController bdc = Startup.GetFromFac<Business.CommService.CommonController>();
+            //Business.CommService.ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
             ComboBoxHelper.InitDropList(bs, cmbBox, ValueMember, DisplayMember, ComboBoxStyle.DropDownList, false);
         }
 

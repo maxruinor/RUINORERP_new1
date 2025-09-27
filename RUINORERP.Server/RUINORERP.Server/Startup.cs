@@ -74,6 +74,8 @@ using RUINORERP.IServices.DI;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Server.Network.DI;
 using RUINORERP.PacketSpec.DI;
+// 添加缓存相关的using语句
+using CacheManager.Core;
 
 namespace RUINORERP.Server
 {
@@ -278,7 +280,6 @@ namespace RUINORERP.Server
             // 注册旧系统CommandDispatcher（临时保留，逐步迁移）
             services.AddSingleton<CommandDispatcher>();
 
-            services.AddEntityInfoServicesWithMappings();
 
             #region 配置文件创建
             // 配置文件所在的目录
@@ -337,6 +338,24 @@ namespace RUINORERP.Server
             services.AddMemoryCache();
             services.AddMemoryCacheSetup();
             services.AddDistributedMemoryCache();
+
+            // 添加CacheManager缓存服务
+            services.AddSingleton<ICacheManager<object>>(provider =>
+            {
+                return CacheFactory.Build<object>(settings =>
+                {
+                    settings
+                        .WithSystemRuntimeCacheHandle()
+                        .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30));
+                });
+            });
+
+           
+
+            // 注册统一缓存管理器
+            // services.AddSingleton<UnifiedCacheManager>();
+            // services.AddSingleton<CacheSyncService>();
+            // services.AddSingleton<CacheEventPublisher>();
 
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录

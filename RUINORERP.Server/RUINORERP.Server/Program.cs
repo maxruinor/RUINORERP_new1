@@ -77,6 +77,7 @@ namespace RUINORERP.Server
         /// 服务提供者
         /// </summary>
         public static IServiceProvider ServiceProvider { get; set; }
+        public static string AppVersion { get; internal set; }
 
         /// <summary>
         ///  The main entry point for the application.

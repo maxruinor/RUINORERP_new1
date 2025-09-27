@@ -24,6 +24,7 @@
   <ItemGroup>
     <Compile Remove="AutoMapperConfig.cs" />
     <Compile Remove="BizService\LockManager.cs" />
+    <Compile Remove="Cache\ServerCacheManager.cs" />
     <Compile Remove="CommandService\CommandProcessor.cs" />
     <Compile Remove="CommandService\CommandQueue.cs" />
     <Compile Remove="Comm\AutoMapperProfile.cs" />
@@ -52,6 +53,7 @@
     <Compile Remove="Network\CoreServices\FileStorageService.cs" />
     <Compile Remove="Network\Core\NetworkCommandMiddleware.cs" />
     <Compile Remove="Network\Core\UnifiedCommunicationProcessor.cs" />
+    <Compile Remove="Network\Interfaces\Services\ICacheSyncService.cs" />
     <Compile Remove="Network\Interfaces\Services\IFileStorageService.cs" />
     <Compile Remove="Network\Services\FileStorageManager.cs" />
     <Compile Remove="Network\Services\UnifiedUserService.cs" />
@@ -153,6 +155,12 @@
     <PackageReference Include="Autofac.Extras.DynamicProxy" Version="7.0.0" />
     <PackageReference Include="AutoMapper" Version="10.1.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.0" />
+    <PackageReference Include="CacheManager.Core" Version="2.0.0" />
+    <PackageReference Include="CacheManager.Microsoft.Extensions.Caching.Memory" Version="2.0.0" />
+    <PackageReference Include="CacheManager.Microsoft.Extensions.Configuration" Version="2.0.0" />
+    <PackageReference Include="CacheManager.Serialization.Json" Version="2.0.0" />
+    <PackageReference Include="CacheManager.StackExchange.Redis" Version="2.0.0" />
+    <PackageReference Include="CacheManager.SystemRuntimeCaching" Version="2.0.0" />
     <PackageReference Include="Huanent.Logging.File" Version="3.0.2" />
     <PackageReference Include="log4net" Version="2.0.15" />
     <PackageReference Include="MessagePack" Version="3.1.4" />
@@ -190,6 +198,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Cache\" />
     <Folder Include="Network\CoreServices\" />
     <Folder Include="Network\Documentation\" />
     <Folder Include="SuperSocketServices\Commands\Legacy\" />

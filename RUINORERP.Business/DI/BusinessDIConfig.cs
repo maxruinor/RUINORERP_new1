@@ -4,6 +4,7 @@ using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.LogicaService;
+using RUINORERP.Extensions;
 using RUINORERP.Business.ReminderService;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,7 @@ using RUINORERP.Business.RowLevelAuthService;
 using Autofac.Core;
 using Autofac.Extras.DynamicProxy;
 using RUINORERP.Extensions.AOP;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace RUINORERP.Business.DI
 {
@@ -28,10 +30,6 @@ namespace RUINORERP.Business.DI
         /// <param name="builder">容器构建器</param>
         public static void ConfigureContainer(ContainerBuilder builder)
         {
-            //services.AddSingleton<ILoggerService, Log4NetService>();
-            //services.AddSingleton<IAuthorizationService, AuthorizationService>();
-            //services.AddSingleton<IAuthenticationService, AuthenticationService>();
-
             // Register business layer components
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.Load("RUINORERP.Business"))
                   .AsImplementedInterfaces()
@@ -41,21 +39,13 @@ namespace RUINORERP.Business.DI
                   .EnableInterfaceInterceptors()
                   .InterceptedBy(typeof(BaseDataCacheAOP));
 
-
-//问题是CommonController类没有实现任何公共接口，但注册时却启用了接口拦截(EnableInterfaceInterceptors())。根据我们之前的经验教训，Autofac使用接口拦截时，目标类必须实现至少一个公共接口。
-
+            // 注册CommonController
             builder.RegisterType<CommonController>()
              .As<ICommonController>()
              .PropertiesAutowired()
              .SingleInstance()
              .EnableInterfaceInterceptors()
              .InterceptedBy(typeof(BaseDataCacheAOP));
-
-
-            // Register specific business components
-            builder.RegisterType<BillConverterFactory>()
-                  .As<BillConverterFactory>()
-                  .SingleInstance();
 
             // 注册业务特定的服务
             builder.RegisterType<AuthorizeController>()
@@ -64,18 +54,14 @@ namespace RUINORERP.Business.DI
                 .PropertiesAutowired()
                 .SingleInstance();
                 
+            // 注册BillConverterFactory - 移除重复注册
             builder.RegisterType<BillConverterFactory>()
                 .AsImplementedInterfaces()
                 .AsSelf()
                 .PropertiesAutowired()
                 .SingleInstance();
-                
-            builder.RegisterType<SqlSugarRowLevelAuthFilter>()
-                .AsSelf()
-                .SingleInstance()
-                .PropertiesAutowired();
-                
-            // 注册实体业务映射服务
+
+            // 注册实体业务映射服务 (整合自ServiceCollectionExtensions)
             builder.RegisterType<EntityInfoService>()
                 .As<IEntityInfoService>()
                 .AsSelf()
@@ -87,6 +73,12 @@ namespace RUINORERP.Business.DI
                 .SingleInstance()
                 .PropertiesAutowired();
                 
+            // 注册实体信息初始化器
+            builder.RegisterType<EntityInfoConfig.EntityInfoInitializer>()
+                .As<IStartupInitializer>()
+                .SingleInstance()
+                .PropertiesAutowired();
+
             // 注册BizCacheHelper缓存帮助类
             builder.RegisterType<BizCacheHelper>()
                 .AsSelf()
@@ -115,7 +107,6 @@ namespace RUINORERP.Business.DI
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
 
- 
             // 注册审计日志服务
             builder.RegisterType<AuditLogService>()
                 .As<IAuditLogService>()
@@ -128,19 +119,12 @@ namespace RUINORERP.Business.DI
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
             
-
             // 注册审计日志帮助类
             builder.RegisterType<RUINORERP.Business.CommService.FMAuditLogHelper>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
-                
-            // 注册缓存管理器工厂
-            //builder.RegisterType<CacheManagerFactory>()
-            //    .As<ICacheManagerFactory>()
-            //    .SingleInstance()
-            //    .PropertiesAutowired();
-                
+
             // 注册业务处理器
             RegisterBusinessProcessors(builder);
             
@@ -269,6 +253,12 @@ namespace RUINORERP.Business.DI
         {
             try
             {
+                // 注册行级权限过滤器
+                builder.RegisterType<SqlSugarRowLevelAuthFilter>()
+                    .AsSelf()
+                    .SingleInstance()
+                    .PropertiesAutowired();
+                    
                 // 注册默认行级权限规则提供者
                 builder.RegisterType<DefaultRowAuthRuleProvider>()
                     .AsImplementedInterfaces()
@@ -276,12 +266,39 @@ namespace RUINORERP.Business.DI
                     .SingleInstance()
                     .PropertiesAutowired();
                     
-                
+                // 注册行级权限服务
+                builder.RegisterType<RowAuthService>()
+                    .As<IRowAuthService>()
+                    .AsSelf()
+                    .InstancePerLifetimeScope()
+                    .PropertiesAutowired();
+                    
+                // 注册默认行级权限策略初始化服务
+                // 注意：这里使用Scoped生命周期以匹配ServiceCollectionExtensions中的配置
+                builder.RegisterType<DefaultRowAuthPolicyInitializationService>()
+                    .As<IDefaultRowAuthPolicyInitializationService>()
+                    .AsSelf()
+                    .InstancePerLifetimeScope()
+                    .PropertiesAutowired();
+                    
+              
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"注册行级权限服务失败: {ex.Message}");
             }
+        }
+        
+        /// <summary>
+        /// 配置Business项目的服务集合，初始化实体映射
+        /// </summary>
+        /// <param name="services">服务集合</param>
+        /// <returns>服务集合</returns>
+        public static IServiceCollection AddBusinessServices(this IServiceCollection services)
+        {
+            // 注册实体信息初始化服务
+            services.AddSingleton<IStartupInitializer, EntityInfoConfig.EntityInfoInitializer>();
+            return services;
         }
     }
 }

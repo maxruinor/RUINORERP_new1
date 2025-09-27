@@ -11,6 +11,11 @@ namespace RUINORERP.Business.BizMapperService
     /// </summary>
     public interface IEntityInfoService
     {
+        /// <summary>
+        /// 初始化实体信息服务
+        /// </summary>
+        void Initialize();
+        
         ERPEntityInfo GetEntityInfo(BizType bizType);
         ERPEntityInfo GetEntityInfo(Type entityType);
 

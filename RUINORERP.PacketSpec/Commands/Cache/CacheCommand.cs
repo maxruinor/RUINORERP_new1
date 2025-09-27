@@ -1,8 +1,9 @@
-using RUINORERP.PacketSpec.Models.Core;
+﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using RUINORERP.PacketSpec.Commands; // 引用BaseCommand
 
 namespace RUINORERP.PacketSpec.Commands.Cache
 {
@@ -10,7 +11,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
     /// 缓存同步命令 - 用于同步客户端与服务器之间的缓存数据
     /// </summary>
     [PacketCommand("CacheSync", CommandCategory.Cache)]
-    public class CacheSyncCommand : BaseCommand
+    public class CacheCommand : BaseCommand
     {
         /// <summary>
         /// 命令标识符
@@ -30,7 +31,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// <summary>
         /// 构造函数
         /// </summary>
-        public CacheSyncCommand()
+        public CacheCommand()
         {
             CacheKeys = new List<string>();
             SyncMode = "FULL"; // 默认全量同步
@@ -42,7 +43,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// </summary>
         /// <param name="cacheKeys">缓存键列表</param>
         /// <param name="syncMode">同步模式</param>
-        public CacheSyncCommand(List<string> cacheKeys, string syncMode = "FULL")
+        public CacheCommand(List<string> cacheKeys, string syncMode = "FULL")
         {
             CacheKeys = cacheKeys ?? new List<string>();
             SyncMode = syncMode;

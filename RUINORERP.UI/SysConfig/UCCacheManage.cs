@@ -6,6 +6,7 @@ using HLH.Lib.Helper;
 using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using System;

@@ -1,4 +1,4 @@
-﻿using CacheManager.Core;
+using CacheManager.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,7 +59,7 @@ namespace RUINORERP.Business.CommService
         private static MyCacheManager _manager;
 
 
- 
+
 
         // 修正后的InitManager方法
         public static void InitManager()
@@ -100,6 +100,7 @@ namespace RUINORERP.Business.CommService
                 _manager = new MyCacheManager(cache, cacheEntity, cacheEntityList);
             }
         }
+
         //private ConcurrentDictionary<string, object> _Dict = new ConcurrentDictionary<string, object>();
 
         //public ConcurrentDictionary<string, object> Dict { get => _Dict; set => _Dict = value; }
@@ -169,7 +170,7 @@ namespace RUINORERP.Business.CommService
                 }
                 else
                 {
-                    if(entity.GetType().Name != "Object")
+                    if (entity.GetType().Name != "Object")
                     {
                         return default(T);
                     }
@@ -383,21 +384,14 @@ namespace RUINORERP.Business.CommService
                 if (LoadData || AutoLoad)
                 {
                     //第一次先查询一次载入
-                    CommonController bdc = _context.GetRequiredService<CommonController>();
+                    ICommonController bdc = _context.GetRequiredService<ICommonController>();
                     var list = bdc.GetBindSource<T>(tableName);
                     //设置绑定数据源
                     //只处理需要缓存的表
                     if (Manager.NewTableList.ContainsKey(tableName))
                     {
                         //设置属性的值
-                        if (Manager.CacheEntityList.Exists(tableName))
-                        {
-                            Manager.UpdateEntityList<T>(list, true);
-                        }
-                        else
-                        {
-                            Manager.AddCacheEntityList<T>(tableName, list, true);
-                        }
+                        Manager.UpdateEntityList<T>(list, true);
                     }
                     lastList = list;
                 }

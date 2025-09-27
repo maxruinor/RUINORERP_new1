@@ -13,7 +13,6 @@ namespace RUINORERP.Business.BizMapperService
     [Serializable()]
     public class ERPEntityInfo : ICloneable
     {
-
         /// <summary>
         /// 付款类型的值对应业务类型收/付款
         /// </summary>

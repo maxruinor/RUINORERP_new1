@@ -121,6 +121,11 @@ namespace RUINORERP.Server.Network.DI
                 .SingleInstance();
           //  builder.RegisterType<WorkflowServiceReceiver>().AsSelf().SingleInstance();
             
+            // 注册锁管理服务
+            builder.RegisterType<LockManagerService>().As<ILockManagerService>().SingleInstance();
+            
+           
+            
             // 注册网络命令处理器
             RegisterNetworkCommandHandlers(builder);
             

@@ -26,6 +26,11 @@ namespace RUINORERP.Business.BizMapperService
             _logger = loggerFactory.CreateLogger<EntityInfoService>();
         }
 
+        public void Initialize()
+        {
+            EnsureInitialized();
+        }
+
         private void EnsureInitialized()
         {
             if (_initialized)

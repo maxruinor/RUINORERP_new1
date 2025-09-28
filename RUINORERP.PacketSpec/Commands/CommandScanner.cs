@@ -56,7 +56,28 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 try
                 {
-                    IEnumerable<Type> typesQuery = assembly.GetTypes()
+                    // 处理 ReflectionTypeLoadException 异常
+                    Type[] types;
+                    try
+                    {
+                        types = assembly.GetTypes();
+                    }
+                    catch (ReflectionTypeLoadException ex)
+                    {
+                        // 记录加载失败的类型信息
+                        _logger?.LogWarning(ex, "加载程序集 {AssemblyName} 的类型时出错，将跳过无法加载的类型", assembly.GetName().Name);
+                        
+                        // 只使用成功加载的类型
+                        types = ex.Types.Where(t => t != null).ToArray();
+                        
+                        // 记录无法加载的类型
+                        foreach (var loaderException in ex.LoaderExceptions)
+                        {
+                            _logger?.LogWarning(loaderException, "类型加载异常");
+                        }
+                    }
+
+                    IEnumerable<Type> typesQuery = types
                         .Where(t => typeof(ICommand).IsAssignableFrom(t) &&
                                   !t.IsAbstract &&
                                   !t.IsInterface);

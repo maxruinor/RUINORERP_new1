@@ -27,45 +27,12 @@ using SuperSocket.Channel;
 using SuperSocket.Connection;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Concurrent;
-using System.Threading;
 
 namespace RUINORERP.Server.Network.Commands
 {
     /// <summary>
     /// 统一登录命令处理器 - 整合了命令模式和处理器模式的登录处理
     /// 包含重复登录检查、人数限制、黑名单验证、Token验证和刷新机制
-    /*
-     关于LoginCommandHandler的具体指令处理类使用DI注入时的状态：
-注入生命周期：
-根据NetworkServicesDependencyInjection.cs中的RegisterNetworkCommandHandlers方法，命令处理器是使用InstancePerDependency()生命周期注册的
-这意味着每次请求时都会创建一个新的实例
-依赖注入方式：
-LoginCommandHandler通过构造函数注入方式获取依赖
-它的构造函数接收一个ILogger<LoginCommandHandler>参数：
-csharp
-public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
-{
-    logger = _Logger;
-}
-处理器状态管理：
-LoginCommandHandler继承自BaseCommandHandler，后者实现了ICommandHandler接口
-处理器有以下状态：
-Uninitialized（未初始化）
-Initialized（已初始化）
-Running（运行中）
-Stopped（已停止）
-Error（错误状态）
-Disposed（已释放）
-处理器的状态通过Status属性进行管理
-初始化流程：
-处理器需要先调用InitializeAsync进行初始化
-然后调用StartAsync启动处理器
-只有在Running状态下才能处理命令
-依赖注入容器配置：
-在NetworkServicesDependencyInjection.cs中，通过ConfigureNetworkServicesContainer方法配置了CommandHandlerFactory
-命令处理器通过RegisterNetworkCommandHandlers方法自动注册到Autofac容器中
-总结：LoginCommandHandler是通过构造函数注入ILogger依赖的，使用InstancePerDependency生命周期，每次请求都会创建新实例。处理器具有完整的状态管理机制，需要经过初始化和启动流程后才能处理命令。
-     */
     /// </summary>
     [CommandHandler("LoginCommandHandler", priority: 100)]
     public class LoginCommandHandler : CommandHandlerBase
@@ -75,8 +42,13 @@ Disposed（已释放）
         private static readonly ConcurrentDictionary<string, int> _loginAttempts = new ConcurrentDictionary<string, int>();
         private static readonly HashSet<string> _activeSessions = new HashSet<string>();
         private static readonly object _lock = new object();
-        //  protected ILogger<LoginCommandHandler> logger { get; set; }
 
+        /// <summary>
+        /// 无参构造函数，用于动态创建实例
+        /// </summary>
+        public LoginCommandHandler() : base()
+        {
+        }
 
         public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
         {

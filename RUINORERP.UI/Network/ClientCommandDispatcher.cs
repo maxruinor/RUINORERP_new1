@@ -155,14 +155,8 @@ namespace RUINORERP.UI.Network
             }
         }
 
-        /// <summary>
-        /// 获取所有已注册的命令类型
-        /// </summary>
-        /// <returns>命令类型的只读字典</returns>
-        public IReadOnlyDictionary<uint, Type> GetRegisteredCommandTypes()
-        {
-            return _commandTypeHelper.GetRegisteredCommandTypes();
-        }
+    
+
 
         /// <summary>
         /// 获取所有活动的命令实例

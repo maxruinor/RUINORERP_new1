@@ -10,6 +10,7 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Core;
 using System.Text;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -88,29 +89,27 @@ namespace RUINORERP.PacketSpec.Commands
         }
         #endregion
 
-    
 
 
         public int TimeoutMs { get; set; }
-        public string SessionID { get; set ; }
+        public string SessionID { get; set; }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        protected BaseCommand(CommandDirection direction = CommandDirection.Receive)
+        protected BaseCommand(CommandDirection direction = CommandDirection.Receive, ILogger<BaseCommand> logger = null)
         {
             CommandId = GenerateCommandId();
             Direction = direction;
             Priority = CommandPriority.Normal;
             Status = CommandStatus.Created;
             CreatedAt = DateTime.Now;
-            
+
             // 初始化ITraceable属性
             CreatedTime = DateTime.UtcNow;
             Timestamp = DateTime.UtcNow;
             Version = "2.0";
-
-            // 不再初始化默认的日志记录器，而是延迟初始化
+            Logger = logger ?? NullLogger<BaseCommand>.Instance;
         }
 
         #region IValidatable 接口实现
@@ -125,15 +124,6 @@ namespace RUINORERP.PacketSpec.Commands
         }
         #endregion
 
-        /// <summary>
-        /// 设置日志记录器
-        /// </summary>
-        public void SetLogger(ILogger<BaseCommand> logger)
-        {
-            Logger = logger;
-        }
-
-          
 
         /// <summary>
         /// 执行命令 - 模板方法模式
@@ -215,11 +205,11 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 return CommandValidationResult.Failure("该命令需要有效的数据包", ErrorCodes.DataRequired);
             }
- // 添加 SessionID 验证（如果需要）
-    if (RequiresSession() && string.IsNullOrEmpty(SessionID))
-    {
-        return CommandValidationResult.Failure("该命令需要有效的会话ID", ErrorCodes.SessionRequired);
-    }
+            // 添加 SessionID 验证（如果需要）
+            if (RequiresSession() && string.IsNullOrEmpty(SessionID))
+            {
+                return CommandValidationResult.Failure("该命令需要有效的会话ID", ErrorCodes.SessionRequired);
+            }
             return CommandValidationResult.Success();
         }
 
@@ -399,6 +389,16 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
+        /// 获取强类型的数据载荷
+        /// </summary>
+        /// <typeparam name="T">数据载荷类型</typeparam>
+        /// <returns>指定类型的载荷数据</returns>
+        public virtual T GetPayload<T>()
+        {
+            return (T)GetSerializableData();
+        }
+
+        /// <summary>
         /// 反序列化自定义数据
         /// </summary>
         protected virtual bool DeserializeCustomData(dynamic data)
@@ -468,11 +468,11 @@ namespace RUINORERP.PacketSpec.Commands
         {
             // 将uint类型的命令ID转换为字节数组
             byte[] commandBytes = BitConverter.GetBytes(responseCommand);
-            
+
             // 构造OriginalData: Cmd使用命令ID的低8位(Category)，One使用命令ID的次低8位(OperationCode)
             byte cmd = commandBytes[0]; // 命令类别
             byte[] one = commandBytes.Length > 1 ? new byte[] { commandBytes[1] } : Array.Empty<byte>(); // 操作码
-            
+
             return new OriginalData(cmd, one, data2);
         }
 

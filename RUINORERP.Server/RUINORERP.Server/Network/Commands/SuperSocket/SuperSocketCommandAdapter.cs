@@ -41,7 +41,6 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
     {
         private readonly CommandDispatcher _commandDispatcher;
         private readonly ILogger<SuperSocketCommandAdapter> _logger;
-        private readonly Dictionary<uint, Type> _commandTypeMap;
         private readonly ICommandFactory _commandFactory;
         private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
 
@@ -108,35 +107,9 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             _commandDispatcher = commandDispatcher;
             _commandFactory = commandFactory;
             _logger = logger;
-            _commandTypeMap = new Dictionary<uint, Type>();
-            InitializeCommandMap();
         }
 
-        /// <summary>
-        /// 初始化命令类型映射
-        /// 使用CommandDispatcher中已注册的命令类型
-        /// </summary>
-        protected virtual void InitializeCommandMap()
-        {
-            try
-            {
-                // 直接使用CommandDispatcher中已注册的命令类型，避免重复扫描
-                var commandTypes = _commandDispatcher.GetAllCommandTypes();
-                foreach (var kvp in commandTypes)
-                {
-                    _commandTypeMap[kvp.Key] = kvp.Value;
-                    _logger?.LogDebug("注册命令类型映射: CommandId={CommandId}, Type={TypeName}",
-                        kvp.Key, kvp.Value.FullName);
-                }
-
-                _logger?.LogInformation("命令类型映射初始化完成，共注册{Count}个命令类型", _commandTypeMap.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "初始化命令类型映射时出错");
-                // 即使出错也要继续执行，使用默认的命令映射
-            }
-        }
+ 
 
         /// <summary>
         /// 执行命令
@@ -161,12 +134,6 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 if (!_commandDispatcher.IsInitialized)
                 {
                     await _commandDispatcher.InitializeAsync(cancellationToken);
-                }
-
-                // 确保命令类型映射已初始化
-                if (_commandTypeMap == null || _commandTypeMap.Count == 0)
-                {
-                    InitializeCommandMap();
                 }
 
                 // 获取现有会话信息
@@ -247,7 +214,9 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 }
 
                 // 如果命令工厂无法创建命令，尝试根据命令ID查找对应的命令类型
-                if (_commandTypeMap.TryGetValue(package.Packet.Command.FullCode, out var commandType))
+                // 直接使用CommandDispatcher中的方法获取命令类型
+                var commandType = _commandDispatcher.GetCommandType(package.Packet.Command.FullCode);
+                if (commandType != null)
                 {
                     // 尝试使用构造函数创建命令实例
                     var constructor = GetSuitableConstructor(commandType);

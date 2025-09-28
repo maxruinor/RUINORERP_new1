@@ -8,6 +8,9 @@ namespace RUINORERP.PacketSpec.Utilities
     /// </summary>
     public static class ValidationHelper
     {
+
+
+
         /// <summary>
         /// 会话令牌正则表达式
         /// </summary>

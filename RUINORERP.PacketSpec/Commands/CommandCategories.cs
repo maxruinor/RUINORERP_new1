@@ -35,6 +35,18 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
+        /// 从ushort创建CommandId
+        /// </summary>
+        /// <param name="value">ushort值</param>
+        /// <returns>CommandId实例</returns>
+        public static CommandId FromUInt16(ushort value)
+        {
+            byte category = (byte)(value >> 8);
+            byte operationCode = (byte)(value & 0xFF);
+            return new CommandId((CommandCategory)category, operationCode);
+        }
+
+        /// <summary>
         /// 隐式转换为ushort
         /// </summary>
         /// <param name="id">CommandId实例</param>
@@ -73,35 +85,6 @@ namespace RUINORERP.PacketSpec.Commands
         public override int GetHashCode() => FullCode.GetHashCode();
     }
 
-
-    /*
-     // 新代码
-// 方式1: 使用CommandId直接比较
-var targetCommandId = new CommandId(1001);
-if (command.CommandIdentifier.Equals(targetCommandId))
-{
-    // 处理命令
-}
-
-// 方式2: 利用隐式转换
-if (command.CommandIdentifier == (uint)1001)
-{
-    // 处理命令
-}
-
-// 方式3: 定义命令常量（推荐）
-public static class CommandIds
-{
-    public static readonly CommandId Login = new CommandId(1001);
-    public static readonly CommandId Logout = new CommandId(1002);
-}
-
-// 使用常量比较
-if (command.CommandIdentifier == CommandIds.Login)
-{
-    // 处理登录命令
-}
-     */
 
 
     /// <summary>

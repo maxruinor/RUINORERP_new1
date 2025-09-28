@@ -4,6 +4,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text;
+using System.Collections.Generic;
+using System.IO.Pipelines;
 
 namespace RUINORERP.PacketSpec.Commands.FileTransfer
 {
@@ -29,9 +31,9 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
         public long FileSize { get; set; }
 
         /// <summary>
-        /// 文件内容（Base64编码）
+        /// 文件内容管道读取器
         /// </summary>
-        public string FileContent { get; set; }
+        public PipeReader FileContentReader { get; set; }
 
         /// <summary>
         /// 目标路径
@@ -50,15 +52,48 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
         /// 构造函数
         /// </summary>
         /// <param name="fileName">文件名</param>
-        /// <param name="fileContent">文件内容</param>
+        /// <param name="fileContentReader">文件内容管道读取器</param>
         /// <param name="targetPath">目标路径</param>
-        public FileUploadCommand(string fileName, string fileContent, string targetPath = "")
+        public FileUploadCommand(string fileName, PipeReader fileContentReader, string targetPath = "")
         {
             FileName = fileName;
-            FileContent = fileContent;
+            FileContentReader = fileContentReader;
             TargetPath = targetPath;
-            FileSize = Encoding.UTF8.GetByteCount(fileContent);
             Direction = CommandDirection.Send;
+        }
+
+        /// <summary>
+        /// 获取文件内容的异步流
+        /// </summary>
+        /// <returns>文件内容的异步可枚举集合</returns>
+        public async IAsyncEnumerable<ReadOnlyMemory<byte>> ChunkStream()
+        {
+            if (FileContentReader == null)
+            {
+                yield break;
+            }
+
+            try
+            {
+                ReadResult result;
+                do
+                {
+                    result = await FileContentReader.ReadAsync();
+                    var buffer = result.Buffer;
+
+                    foreach (var memory in buffer)
+                    {
+                        yield return memory;
+                    }
+
+                    FileContentReader.AdvanceTo(buffer.End);
+                }
+                while (!result.IsCompleted);
+            }
+            finally
+            {
+                await FileContentReader.CompleteAsync();
+            }
         }
 
         /// <summary>
@@ -79,10 +114,10 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
                 return CommandValidationResult.Failure("文件名不能为空", "INVALID_FILE_NAME");
             }
 
-            // 验证文件内容
-            if (string.IsNullOrWhiteSpace(FileContent))
+            // 验证文件内容读取器
+            if (FileContentReader == null)
             {
-                return CommandValidationResult.Failure("文件内容不能为空", "INVALID_FILE_CONTENT");
+                return CommandValidationResult.Failure("文件内容读取器不能为空", "INVALID_FILE_CONTENT");
             }
 
             // 验证文件大小

@@ -2,6 +2,7 @@
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,6 +33,11 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// 菜单ID
         /// </summary>
         public long MenuId { get; set; }
+        
+        /// <summary>
+        /// 分布 式锁实例
+        /// </summary>
+        public static IDistributedLock DistributedLock { get; set; } = new LocalDistributedLock();
 
         /// <summary>
         /// 构造函数
@@ -120,6 +126,38 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             // 申请锁定单据命令契约只定义数据结构，实际的业务逻辑在Handler中实现
             // 创建并返回成功响应
             return Task.FromResult(ResponseBase.CreateSuccess("锁定申请操作成功"));
+        }
+        
+        /// <summary>
+        /// 尝试获取分布式锁
+        /// </summary>
+        /// <param name="lockKey">锁的键</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>如果成功获取锁则返回true，否则返回false</returns>
+        public static async Task<bool> TryAcquireLockAsync(string lockKey, TimeSpan timeout, CancellationToken cancellationToken = default)
+        {
+            return await DistributedLock.TryAcquireAsync(lockKey, timeout, cancellationToken);
+        }
+        
+        /// <summary>
+        /// 释放分布式锁
+        /// </summary>
+        /// <param name="lockKey">锁的键</param>
+        /// <returns>任务</returns>
+        public static async Task ReleaseLockAsync(string lockKey)
+        {
+            await DistributedLock.ReleaseAsync(lockKey);
+        }
+        
+        /// <summary>
+        /// 检查锁是否存在
+        /// </summary>
+        /// <param name="lockKey">锁的键</param>
+        /// <returns>如果锁存在则返回true，否则返回false</returns>
+        public static async Task<bool> IsLockExistsAsync(string lockKey)
+        {
+            return await DistributedLock.ExistsAsync(lockKey);
         }
     }
 }

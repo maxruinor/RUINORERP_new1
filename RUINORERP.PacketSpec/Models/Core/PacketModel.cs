@@ -5,6 +5,8 @@ using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Core;
 using System.Runtime.CompilerServices;
+using System.Collections.Concurrent;
+using System.Security.Cryptography;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {
@@ -18,6 +20,11 @@ namespace RUINORERP.PacketSpec.Models.Core
     {
         #region 属性定义
 
+        /// <summary>
+        /// JSON序列化缓存，用于缓存高频序列化操作（如心跳包）
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, byte[]> _jsonCache = new ConcurrentDictionary<string, byte[]>();
+        
         /// <summary>
         /// 数据包唯一标识符
         /// </summary>
@@ -67,6 +74,7 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         /// <summary>
         /// 扩展属性字典
+        /// 包含：RequestId，
         /// </summary>
         public System.Collections.Generic.Dictionary<string, object> Extensions { get; set; }
 
@@ -211,8 +219,23 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>当前实例</returns>
         public PacketModel SetJsonData<T>(T data)
         {
+            // 生成缓存键：类型名 + 数据哈希
+            var type = typeof(T);
             var json = JsonConvert.SerializeObject(data);
-            Body = Encoding.UTF8.GetBytes(json);
+            var jsonBytes = Encoding.UTF8.GetBytes(json);
+            
+            // 计算JSON的哈希值作为缓存键的一部分
+            string hash;
+            using (var sha256 = SHA256.Create())
+            {
+                var hashBytes = sha256.ComputeHash(jsonBytes);
+                hash = Convert.ToBase64String(hashBytes);
+            }
+            
+            var cacheKey = $"{type.FullName}:{hash}";
+            
+            // 尝试从缓存获取或添加
+            Body = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
             Size = Body.Length;
             LastUpdatedTime = DateTime.UtcNow;
             return this;

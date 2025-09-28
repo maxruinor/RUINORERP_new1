@@ -6,6 +6,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Server.Network.Models
@@ -39,7 +40,13 @@ namespace RUINORERP.Server.Network.Models
         /// <summary>
         /// 最后活动时间
         /// </summary>
-        public DateTime LastActivityTime { get; set; } = DateTime.Now;
+        private long _lastActivityTime = DateTime.Now.ToBinary();
+        
+        public DateTime LastActivityTime
+        {
+            get => DateTime.FromBinary(Interlocked.Read(ref _lastActivityTime));
+            set => Interlocked.Exchange(ref _lastActivityTime, value.ToBinary());
+        }
 
         /// <summary>
         /// 最后心跳时间（兼容性属性）
@@ -287,7 +294,7 @@ namespace RUINORERP.Server.Network.Models
         /// </summary>
         public void UpdateActivity()
         {
-            LastActivityTime = DateTime.Now;
+            Interlocked.Exchange(ref _lastActivityTime, DateTime.Now.ToBinary());
             HeartbeatCount++;
             //UpdateTimestamp();
         }

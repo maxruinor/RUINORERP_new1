@@ -693,13 +693,14 @@ namespace RUINORERP.Server.Network.Services
                     .ToList();
 
                 var removedCount = 0;
-                foreach (var session in timeoutSessions)
-                {
+                
+                // 使用Parallel.ForEach并行处理超时会话的移除
+                Parallel.ForEach(timeoutSessions, session => {
                     if (RemoveSession(session.SessionID))
                     {
-                        removedCount++;
+                        Interlocked.Increment(ref removedCount);
                     }
-                }
+                });
 
                 if (removedCount > 0)
                 {
@@ -860,6 +861,8 @@ namespace RUINORERP.Server.Network.Services
         #endregion
     }
 }
+
+
 
 
 

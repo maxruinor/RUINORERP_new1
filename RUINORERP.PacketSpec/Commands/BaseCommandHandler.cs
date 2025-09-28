@@ -19,6 +19,11 @@ namespace RUINORERP.PacketSpec.Commands
     /// </summary>
     public abstract class BaseCommandHandler : ITraceable, IValidatable, ICommandHandler
     {
+        // 定义结构化日志消息
+        private static readonly Action<ILogger, string, long, bool, Exception> _logHandled = 
+            LoggerMessage.Define<string, long, bool>(LogLevel.Information, new EventId(1001, "Handled"), 
+                "Command {CommandId} handled in {Elapsed}ms, Success: {Success}");
+
         private readonly object _lockObject = new object();
         private bool _disposed = false;
         private readonly HandlerStatistics _statistics;
@@ -136,6 +141,9 @@ namespace RUINORERP.PacketSpec.Commands
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
 
+            var startTime = DateTime.UtcNow;
+            bool success = true; // 默认认为成功
+            
             try
             {
                 // 命令前置处理
@@ -155,17 +163,26 @@ namespace RUINORERP.PacketSpec.Commands
             }
             catch (OperationCanceledException)
             {
+                success = false;
                 var errorResponse = ResponseBase.CreateError("命令处理被取消", 503)
                     .WithMetadata("ErrorCode", "PROCESS_CANCELLED");
                 return ConvertToResponseBase(errorResponse);
             }
             catch (Exception ex)
             {
+                success = false;
                 var errorResponse = ResponseBase.CreateError($"命令处理异常: {ex.Message}", 500)
                     .WithMetadata("ErrorCode", "PROCESS_ERROR")
                     .WithMetadata("Exception", ex.Message)
                     .WithMetadata("StackTrace", ex.StackTrace);
                 return ConvertToResponseBase(errorResponse);
+            }
+            finally
+            {
+                var elapsed = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+                
+                // 记录结构化日志
+                _logHandled(Logger, command.CommandId, elapsed, success, null);
             }
         }
 

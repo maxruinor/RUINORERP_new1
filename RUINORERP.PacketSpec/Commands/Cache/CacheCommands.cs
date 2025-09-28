@@ -12,82 +12,82 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// <summary>
         /// 缓存更新
         /// </summary>
-        public static readonly CommandId CacheUpdate = new CommandId(CommandCategory.Cache, 0x00);
+        public static readonly CommandId CacheUpdate = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheUpdate & 0xFF));
 
         /// <summary>
         /// 缓存清理
         /// </summary>
-        public static readonly CommandId CacheClear = new CommandId(CommandCategory.Cache, 0x01);
+        public static readonly CommandId CacheClear = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheClear & 0xFF));
 
         /// <summary>
         /// 缓存统计
         /// </summary>
-        public static readonly CommandId CacheStats = new CommandId(CommandCategory.Cache, 0x02);
+        public static readonly CommandId CacheStats = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheStats & 0xFF));
 
         /// <summary>
         /// 请求缓存
         /// </summary>
-        public static readonly CommandId CacheRequest = new CommandId(CommandCategory.Cache, 0x03);
+        public static readonly CommandId CacheRequest = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheRequest & 0xFF));
 
         /// <summary>
         /// 发送缓存数据
         /// </summary>
-        public static readonly CommandId CacheDataSend = new CommandId(CommandCategory.Cache, 0x04);
+        public static readonly CommandId CacheDataSend = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheDataSend & 0xFF));
 
         /// <summary>
         /// 删除缓存
         /// </summary>
-        public static readonly CommandId CacheDelete = new CommandId(CommandCategory.Cache, 0x05);
+        public static readonly CommandId CacheDelete = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheDelete & 0xFF));
 
         /// <summary>
         /// 缓存数据列表
         /// </summary>
-        public static readonly CommandId CacheDataList = new CommandId(CommandCategory.Cache, 0x06);
+        public static readonly CommandId CacheDataList = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheDataList & 0xFF));
 
         /// <summary>
         /// 缓存信息列表
         /// </summary>
-        public static readonly CommandId CacheInfoList = new CommandId(CommandCategory.Cache, 0x07);
+        public static readonly CommandId CacheInfoList = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheInfoList & 0xFF));
 
         /// <summary>
         /// 缓存状态查询 - 查询缓存状态信息
         /// </summary>
-        public static readonly CommandId CacheStatus = new CommandId(CommandCategory.Cache, 0x04);
+        public static readonly CommandId CacheStatus = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheStatus & 0xFF));
 
         /// <summary>
         /// 批量缓存操作 - 执行批量缓存操作
         /// </summary>
-        public static readonly CommandId CacheBatchOperation = new CommandId(CommandCategory.Cache, 0x05);
+        public static readonly CommandId CacheBatchOperation = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheBatchOperation & 0xFF));
 
         /// <summary>
         /// 缓存同步 - 同步缓存数据
         /// </summary>
-        public static readonly CommandId CacheSync = new CommandId(CommandCategory.Cache, 0x06);
+        public static readonly CommandId CacheSync = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheSync & 0xFF));
 
         /// <summary>
         /// 缓存预热 - 预热缓存数据
         /// </summary>
-        public static readonly CommandId CacheWarmup = new CommandId(CommandCategory.Cache, 0x07);
+        public static readonly CommandId CacheWarmup = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheWarmup & 0xFF));
 
         /// <summary>
         /// 缓存失效 - 使缓存数据失效
         /// </summary>
-        public static readonly CommandId CacheInvalidate = new CommandId(CommandCategory.Cache, 0x08);
+        public static readonly CommandId CacheInvalidate = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheInvalidate & 0xFF));
 
         /// <summary>
         /// 缓存统计信息 - 获取缓存统计信息
         /// </summary>
-        public static readonly CommandId CacheStatistics = new CommandId(CommandCategory.Cache, 0x09);
+        public static readonly CommandId CacheStatistics = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheStatistics & 0xFF));
         
         /// <summary>
         /// 缓存订阅 - 订阅缓存变更
         /// </summary>
-        public static readonly CommandId CacheSubscribe = new CommandId(CommandCategory.Cache, 0x0A);
+        public static readonly CommandId CacheSubscribe = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheSubscribe & 0xFF));
 
         /// <summary>
         /// 缓存取消订阅 - 取消订阅缓存变更
         /// </summary>
-        public static readonly CommandId CacheUnsubscribe = new CommandId(CommandCategory.Cache, 0x0B);
+        public static readonly CommandId CacheUnsubscribe = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheUnsubscribe & 0xFF));
         #endregion
     }
 }

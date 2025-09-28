@@ -25,6 +25,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ZXing.Common.ReedSolomon;
 using SuperSocket.Channel;
 using SuperSocket.Connection;
+using Microsoft.Extensions.Logging.Abstractions;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -69,22 +72,16 @@ Disposed（已释放）
     {
         private const int MaxLoginAttempts = 5;
         private const int MaxConcurrentUsers = 1000;
-        private static readonly Dictionary<string, int> _loginAttempts = new Dictionary<string, int>();
+        private static readonly ConcurrentDictionary<string, int> _loginAttempts = new ConcurrentDictionary<string, int>();
         private static readonly HashSet<string> _activeSessions = new HashSet<string>();
         private static readonly object _lock = new object();
-        protected ILogger<LoginCommandHandler> logger { get; set; }
+        //  protected ILogger<LoginCommandHandler> logger { get; set; }
 
-        // 添加无参构造函数，以支持Activator.CreateInstance创建实例
-        public LoginCommandHandler() : base(new LoggerFactory().CreateLogger<CommandHandlerBase>())
-        {
-            logger = new LoggerFactory().CreateLogger<LoginCommandHandler>();
-        }
 
         public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
         {
             logger = _Logger;
         }
-
 
 
         /// <summary>
@@ -829,10 +826,7 @@ Disposed（已释放）
         /// </summary>
         private int GetLoginAttempts(string username)
         {
-            lock (_lock)
-            {
-                return _loginAttempts.TryGetValue(username, out var attempts) ? attempts : 0;
-            }
+            return _loginAttempts.TryGetValue(username, out var attempts) ? attempts : 0;
         }
 
         /// <summary>
@@ -840,17 +834,7 @@ Disposed（已释放）
         /// </summary>
         private void IncrementLoginAttempts(string username)
         {
-            lock (_lock)
-            {
-                if (_loginAttempts.ContainsKey(username))
-                {
-                    _loginAttempts[username]++;
-                }
-                else
-                {
-                    _loginAttempts[username] = 1;
-                }
-            }
+            _loginAttempts.AddOrUpdate(username, 1, (key, oldValue) => oldValue + 1);
         }
 
         /// <summary>
@@ -858,13 +842,7 @@ Disposed（已释放）
         /// </summary>
         private void ResetLoginAttempts(string username)
         {
-            lock (_lock)
-            {
-                if (_loginAttempts.ContainsKey(username))
-                {
-                    _loginAttempts.Remove(username);
-                }
-            }
+            _loginAttempts.TryRemove(username, out _);
         }
 
         /// <summary>

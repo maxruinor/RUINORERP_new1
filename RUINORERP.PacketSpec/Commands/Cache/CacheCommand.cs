@@ -22,6 +22,11 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// 需要同步的缓存键列表
         /// </summary>
         public List<string> CacheKeys { get; set; }
+        
+        /// <summary>
+        /// 缓存键枚举器
+        /// </summary>
+        public IAsyncEnumerable<string> CacheKeysEnumerator { get; set; }
 
         /// <summary>
         /// 同步模式
@@ -49,6 +54,51 @@ namespace RUINORERP.PacketSpec.Commands.Cache
             SyncMode = syncMode;
             Direction = CommandDirection.Send;
         }
+        
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="cacheKeysEnumerator">缓存键枚举器</param>
+        /// <param name="syncMode">同步模式</param>
+        public CacheCommand(IAsyncEnumerable<string> cacheKeysEnumerator, string syncMode = "FULL")
+        {
+            CacheKeysEnumerator = cacheKeysEnumerator;
+            SyncMode = syncMode;
+            Direction = CommandDirection.Send;
+        }
+
+        /// <summary>
+        /// 枚举缓存键
+        /// </summary>
+        /// <returns>缓存键的异步可枚举集合</returns>
+        public IAsyncEnumerable<string> EnumerateKeys()
+        {
+            if (CacheKeysEnumerator != null)
+            {
+                return CacheKeysEnumerator;
+            }
+            
+            if (CacheKeys != null)
+            {
+                return EnumerateList(CacheKeys);
+            }
+            
+            return EmptyAsyncEnumerable<string>.Instance;
+        }
+        
+        /// <summary>
+        /// 将列表转换为异步可枚举集合
+        /// </summary>
+        /// <typeparam name="T">元素类型</typeparam>
+        /// <param name="list">列表</param>
+        /// <returns>异步可枚举集合</returns>
+        private async IAsyncEnumerable<T> EnumerateList<T>(List<T> list)
+        {
+            foreach (var item in list)
+            {
+                yield return item;
+            }
+        }
 
         /// <summary>
         /// 验证命令参数
@@ -69,7 +119,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
             }
 
             // 验证缓存键列表
-            if (CacheKeys == null)
+            if (CacheKeys == null && CacheKeysEnumerator == null)
             {
                 return CommandValidationResult.Failure("缓存键列表不能为空", "INVALID_CACHE_KEYS");
             }
@@ -86,8 +136,38 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         {
             // 缓存同步命令契约只定义数据结构，实际的业务逻辑在Handler中实现
             var result = ResponseBase.CreateSuccess("缓存同步命令构建成功")
-                .WithMetadata("Data", new { CacheKeys = CacheKeys, SyncMode = SyncMode });
+                .WithMetadata("Data", new { SyncMode = SyncMode });
             return Task.FromResult((ResponseBase)result);
         }
+    }
+    
+    /// <summary>
+    /// 空的异步可枚举集合
+    /// </summary>
+    /// <typeparam name="T">元素类型</typeparam>
+    internal class EmptyAsyncEnumerable<T> : IAsyncEnumerable<T>
+    {
+        public static readonly EmptyAsyncEnumerable<T> Instance = new EmptyAsyncEnumerable<T>();
+        
+        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            return new EmptyAsyncEnumerator<T>();
+        }
+        
+        private class EmptyAsyncEnumerator<T> : IAsyncEnumerator<T>
+        {
+            public T Current => default;
+            
+            public ValueTask DisposeAsync()
+            {
+                return new ValueTask();
+            }
+            
+            public ValueTask<bool> MoveNextAsync()
+            {
+                return new ValueTask<bool>(false);
+            }
+        }
+
     }
 }

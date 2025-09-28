@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -98,17 +98,6 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        /// <summary>
-        /// 获取所有注册的命令类型（只读字典版本）
-        /// 为兼容客户端代码而提供
-        /// </summary>
-        /// <returns>命令代码和类型的只读映射</returns>
-        public IReadOnlyDictionary<uint, Type> GetRegisteredCommandTypes()
-        {
-            lock (_lock)
-            {
-                return new Dictionary<uint, Type>(_commandTypes);
-            }
-        }
+ 
     }
 }

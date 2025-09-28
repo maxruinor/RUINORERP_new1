@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using CircularBuffer;
 
 namespace RUINORERP.PacketSpec.Commands.EnhancedHandlerStatistics
 {
@@ -91,11 +92,8 @@ namespace RUINORERP.PacketSpec.Commands.EnhancedHandlerStatistics
         // 最大处理时间（毫秒）
         private long _maxProcessingTime;
         
-        // 最近执行记录队列
-        private readonly ConcurrentQueue<CommandExecutionRecord> _recentRecords;
-        
-        // 最大最近记录数
-        private const int MaxRecentRecords = 100;
+        // 最近执行记录队列（使用固定大小的循环缓冲区，避免无界增长）
+        private readonly CircularBuffer<CommandExecutionRecord> _recentRecords = new CircularBuffer<CommandExecutionRecord>(100);
         
         // 命令类型统计字典
         private readonly ConcurrentDictionary<string, CommandTypeStatistics> _commandTypeStats;
@@ -163,7 +161,6 @@ namespace RUINORERP.PacketSpec.Commands.EnhancedHandlerStatistics
             _totalProcessingTime = 0;
             _minProcessingTime = long.MaxValue;
             _maxProcessingTime = 0;
-            _recentRecords = new ConcurrentQueue<CommandExecutionRecord>();
             _commandTypeStats = new ConcurrentDictionary<string, CommandTypeStatistics>();
         }
         
@@ -211,15 +208,9 @@ namespace RUINORERP.PacketSpec.Commands.EnhancedHandlerStatistics
             var commandStats = _commandTypeStats.GetOrAdd(commandId, id => new CommandTypeStatistics(id));
             commandStats.RecordExecution(startTime, endTime, isSuccess, isTimeout, errorMessage);
             
-            // 添加到最近记录队列
+            // 添加到最近记录队列（循环缓冲区会自动管理大小）
             var record = new CommandExecutionRecord(commandId, startTime, endTime, isSuccess, errorMessage);
-            _recentRecords.Enqueue(record);
-            
-            // 限制队列大小
-            while (_recentRecords.Count > MaxRecentRecords)
-            {
-                _recentRecords.TryDequeue(out _);
-            }
+            _recentRecords.PushBack(record);
         }
         
         /// <summary>
@@ -232,11 +223,13 @@ namespace RUINORERP.PacketSpec.Commands.EnhancedHandlerStatistics
             if (count <= 0)
                 count = 50;
             
-            var list = _recentRecords.ToList();
-            if (list.Count <= count)
-                return list;
-            
-            return list.Skip(Math.Max(0, list.Count - count)).ToList();
+            // 从循环缓冲区获取所有记录，然后取最后count条
+            var allRecords = _recentRecords.ToArray();
+            if (allRecords.Length <= count)
+                return allRecords.ToList();
+                
+            // 取最后count条记录
+            return allRecords.Skip(Math.Max(0, allRecords.Length - count)).ToList();
         }
         
         /// <summary>
@@ -279,7 +272,10 @@ namespace RUINORERP.PacketSpec.Commands.EnhancedHandlerStatistics
             }
             
             // 清空最近记录队列
-            while (_recentRecords.TryDequeue(out _)) { }
+            while (_recentRecords.Size > 0)
+            {
+                _recentRecords.PopFront();
+            }
             _commandTypeStats.Clear();
         }
         

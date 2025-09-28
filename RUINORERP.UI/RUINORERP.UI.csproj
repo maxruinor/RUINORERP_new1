@@ -2298,6 +2298,7 @@
     <Compile Include="SmartReminderClient\ReminderCenterForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Startup.cs" />
     <Compile Include="UControls\JsonViewer.cs" />
     <Compile Include="UControls\JsonViewer.Designer.cs">
       <DependentUpon>JsonViewer.cs</DependentUpon>
@@ -2934,7 +2935,6 @@
     <Compile Include="SS\UCPermissionConfig.Designer.cs">
       <DependentUpon>UCPermissionConfig.cs</DependentUpon>
     </Compile>
-    <Compile Include="Startup.cs" />
     <Compile Include="StatusBusy.cs" />
     <Compile Include="SysConfig\ConfigManager.cs" />
     <Compile Include="SysConfig\DataImportExportManager.cs" />

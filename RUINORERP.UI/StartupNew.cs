@@ -1,4 +1,4 @@
-using Autofac;
+﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -53,7 +53,6 @@ using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.IM;
 using System.Net.Mail;
 using StackExchange.Redis;
-
 using FastReport.DevComponents.DotNetBar;
 using RUINORERP.UI.FM;
 using RUINORERP.Global.EnumExt;
@@ -70,14 +69,12 @@ using RUINORERP.Business.LogicaService;
 using AutoMapper.Internal;
 using RUINORERP.Business.RowLevelAuthService;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
-using RUINORERP.PacketSpec.DI;
-using RUINORERP.UI.Network;
-using RUINORERP.UI.Network.DI;
 using RUINORERP.Business.DI;
 using RUINORERP.IServices.DI;
-using RUINORERP.Services.DI;
 using RUINORERP.Repository.DI;
-using RUINORERP.UI.UserCenter.DataParts;
+using RUINORERP.Services.DI;
+using RUINORERP.UI.Network.DI;
+using RUINORERP.PacketSpec.DI;
 namespace RUINORERP.UI
 {
     public class Startup
@@ -101,7 +98,7 @@ namespace RUINORERP.UI
         /// </summary>
         public static ILifetimeScope AutofacContainerScope { get; set; }
 
-        public Startup()
+        public Startup(bool tset)
         {
             // 初始化ID生成器
             InitializeIdGenerators();
@@ -132,8 +129,8 @@ namespace RUINORERP.UI
         /// </summary>
         void ConfigureAutofacContainer(HostBuilderContext bc, ContainerBuilder builder)
         {
-            //要在第一行，里面有         Services = new ServiceCollection();
-            MainRegister(bc, builder);
+            Services = new ServiceCollection();
+
             // 配置基础服务
             ConfigureBaseServices(Services);
 
@@ -320,7 +317,6 @@ namespace RUINORERP.UI
         /// </summary>
         private static void ConfigureWorkflow(IServiceCollection services)
         {
-            //默认就是内存模式?
             services.AddWorkflow();
             services.AddWorkflowDSL();
 
@@ -345,8 +341,6 @@ namespace RUINORERP.UI
             // 注册PacketSpec服务
             services.AddPacketSpecServices();
 
-            services.AddMemoryCacheSetup();
-            services.AddAppContext(Program.AppContextData);
 
             // 添加CacheManager缓存服务
             services.AddSingleton<ICacheManager<object>>(provider =>
@@ -359,10 +353,8 @@ namespace RUINORERP.UI
                 });
             });
 
-
-            // 注册客户端缓存管理器
-            // services.AddSingleton<ClientCacheManager>();
-            // services.AddSingleton<CacheSyncCommandHandler>();
+            services.AddMemoryCacheSetup();
+            services.AddAppContext(Program.AppContextData);
 
             // 注册审计日志
             services.Configure<AuditLogOptions>(options =>
@@ -372,7 +364,8 @@ namespace RUINORERP.UI
                 options.EnableAudit = true;
             });
 
-
+            services.AddSingleton<IAuditLogService, AuditLogService>();
+            services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
             services.AddSingleton(typeof(MenuTracker));
 
             // 注册主窗体
@@ -382,23 +375,36 @@ namespace RUINORERP.UI
             services.AddSingleton(typeof(RUINORERP.Plugin.PluginManager));
         }
 
-
-
-
-
         /// <summary>
-        /// 配置Autofac容器 - 集中管理服务注册，避免重复代码
+        /// 配置Autofac容器
         /// </summary>
         public static void ConfigureContainer(ContainerBuilder builder)
         {
-            // 基础服务注册
-            RegisterBaseServices(builder);
+            // 注册基础类型
+            builder.RegisterGeneric(typeof(DbHelper<>))
+                .As(typeof(DbHelper<>))
+                .AsImplementedInterfaces()
+                .AsSelf()
+                .PropertiesAutowired()
+                .SingleInstance();
 
-            // 项目模块服务注册 - UI层只需引用其他项目DI目录中的注册服务类
-            RegisterProjectModuleServices(builder);
+            // 注册当前程序集
+            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+                .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type))
+                .AsImplementedInterfaces()
+                .AsSelf();
 
-            // 特定UI组件注册
-            RegisterUIComponents(builder);
+            // 注册特定组件
+            builder.RegisterType<RUINORERP.UI.SS.MenuInit>()
+                .Named<UserControl>("MENU")
+                .AsImplementedInterfaces()
+                .AsSelf();
+
+            // 配置DLL程序集注册
+            ConfigureContainerTodll(builder);
+
+            // 注册窗体
+            RegisterForm(builder);
 
             // 注册AOP相关
             ConfigureAOP(builder);
@@ -410,86 +416,6 @@ namespace RUINORERP.UI
                 .InstancePerLifetimeScope()
                 .EnableInterfaceInterceptors()
                 .InterceptedBy(typeof(BaseDataCacheAOP));
-        }
-
-        /// <summary>
-        /// 注册基础服务
-        /// </summary>
-        private static void RegisterBaseServices(ContainerBuilder builder)
-        {
-            // 注册基础类型
-            builder.RegisterGeneric(typeof(DbHelper<>))
-                .As(typeof(DbHelper<>))
-                .AsImplementedInterfaces()
-                .AsSelf()
-                .PropertiesAutowired()
-                .SingleInstance();
-
-            // 注册当前程序集 - 排除不需要注册的类型
-            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-                .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type))
-                .AsImplementedInterfaces()
-                .AsSelf();
-        }
-
-        /// <summary>
-        /// 注册各项目模块服务 - UI层只需引用其他项目DI目录中的注册服务类
-        /// </summary>
-        private static void RegisterProjectModuleServices(ContainerBuilder builder)
-        {
-            try
-            {
-                // 配置各项目的依赖注入
-                BusinessDIConfig.ConfigureContainer(builder);      // Business项目
-                ServicesDIConfig.ConfigureContainer(builder);      // Services项目
-                RepositoryDIConfig.ConfigureContainer(builder);    // Repository项目
-                IServicesDIConfig.ConfigureContainer(builder);     // IServices项目
-                
-                
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("警告：使用模块DI配置类注册服务失败，回退到传统方式注册。错误信息：" + ex.Message);
-
-                // 回退到传统方式注册
-                ConfigureContainerTodll(builder);
-            }
-        }
-
-        /// <summary>
-        /// 注册特定UI组件
-        /// </summary>
-        private static void RegisterUIComponents(ContainerBuilder builder)
-        {
-            // 注册菜单项
-            builder.RegisterType<RUINORERP.UI.SS.MenuInit>()
-                .Named<UserControl>("MENU")
-                .AsImplementedInterfaces()
-                .AsSelf();
-
-            // 注册UCTodoList用户控件 - 由于没有MenuAttrAssemblyInfo特性，需要单独注册
-            RegisterUCTodoList(builder);
-
-            // 注册所有带MenuAttrAssemblyInfo特性的窗体
-            RegisterForm(builder);
-        }
-
-        /// <summary>
-        /// 注册UCTodoList用户控件
-        /// </summary>
-        private static void RegisterUCTodoList(ContainerBuilder builder)
-        {
-            try
-            {
-                builder.RegisterType<RUINORERP.UI.UserCenter.DataParts.UCTodoList>()
-                    .AsSelf()
-                    .PropertiesAutowired()
-                    .InstancePerDependency();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(string.Format("注册UCTodoList失败: {0}", ex.Message));
-            }
         }
 
         /// <summary>
@@ -531,6 +457,9 @@ namespace RUINORERP.UI
             RegisterAssemblyTypes(builder, "RUINORERP.Services.dll");
             RegisterAssemblyTypes(builder, "RUINORERP.Business.dll");
 
+            // 注册实体业务映射服务
+            RegisterEntityBizMappingServiceDirect(builder);
+
             // 注册GridViewRelated为单例
             builder.RegisterType<GridViewRelated>().SingleInstance();
 
@@ -557,7 +486,37 @@ namespace RUINORERP.UI
                 Console.WriteLine($"加载程序集 {assemblyName} 失败: {ex.Message}");
             }
         }
- 
+
+        /// <summary>
+        /// 直接注册实体业务映射服务 - 作为降级方案
+        /// </summary>
+        /// <param name="builder">Autofac容器构建器</param>
+        private static void RegisterEntityBizMappingServiceDirect(ContainerBuilder builder)
+        {
+            try
+            {
+                // 直接注册实体信息服务和实体业务映射服务
+                builder.RegisterType(typeof(RUINORERP.Business.BizMapperService.BusinessEntityMappingService))
+                    .As(typeof(RUINORERP.Business.BizMapperService.IBusinessEntityMappingService))
+                    .SingleInstance()
+                    .PropertiesAutowired();
+
+                // 注册实体信息配置类
+                builder.RegisterType(typeof(RUINORERP.Business.BizMapperService.EntityInfoConfig))
+                    .SingleInstance()
+                    .PropertiesAutowired();
+
+                //// 注册实体业务映射服务
+                //builder.RegisterType(typeof(RUINORERP.Business.BizMapperService.EntityBizMappingService))
+                //    .As(typeof(RUINORERP.Business.BizMapperService.IEntityBizMappingService))
+                //    .SingleInstance()
+                //    .PropertiesAutowired();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(string.Format("Failed to directly register entity biz mapping services: {0}", ex.Message));
+            }
+        }
 
 
 
@@ -567,7 +526,7 @@ namespace RUINORERP.UI
         /// </summary>
         /// <param name="bc"></param>
         /// <param name="builder"></param>
-        void MainRegister(HostBuilderContext bc, ContainerBuilder builder)
+        void cb(HostBuilderContext bc, ContainerBuilder builder)
         {
             #region  注册
             Services = new ServiceCollection();
@@ -724,39 +683,47 @@ namespace RUINORERP.UI
             // 注册 AuditLogHelper 为可注入服务
             builder.RegisterType<AuditLogHelper>()
                    .AsSelf()
-                   .InstancePerLifetimeScope() // 或根据需要使用 SingleInstance() 或根据需要选择生命周期
-                  .PropertiesAutowired();
+                   .InstancePerLifetimeScope(); // 或根据需要使用 SingleInstance() 或根据需要选择生命周期
+
 
 
             //_containerBuilder = builder;
             //AutoFacContainer = builder.Build();
             #endregion
+
+
+            // 项目模块服务注册 - UI层只需引用其他项目DI目录中的注册服务类
+            RegisterProjectModuleServices(builder);
         }
 
 
 
-        public IHost SartUpDIPort()
+        public IHost CslaDIPort()
         {
 
             var hostBuilder = new HostBuilder()
-         .ConfigureAppConfiguration((context, config) =>
-         {
-             try
-             {
-                 var env = context.HostingEnvironment;
-                 config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
-                 config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-             }
-             catch (Exception ex)
-             {
-                 RUINORERP.Common.Log4Net.Logger.Error("配置应用程序设置失败", ex);
-             }
+         /*
+  .ConfigureAppConfiguration((context, config) =>
+  {
+      try
+      {
+          var env = context.HostingEnvironment;
+          config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
+          config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+      }
+      catch (Exception ex)
+      {
 
-         })
+
+      }
+
+  })
+
+         */
          .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-        //正确配置Autofac容器
-        .ConfigureContainer<ContainerBuilder>(ConfigureAutofacContainer)
-      /*
+        //使用了后面cb方法注册的
+        .ConfigureContainer<ContainerBuilder>(new Action<HostBuilderContext, ContainerBuilder>(cb))
+         /*
         .ConfigureContainer<ContainerBuilder>(builder =>
          {
              #region  注册
@@ -764,6 +731,9 @@ namespace RUINORERP.UI
              //BatchServiceRegister(Services);
              //ConfigureServices(Services);
 
+
+
+             builder.RegisterType<RuntimeInfo>().As<IRuntimeInfo>().AsImplementedInterfaces().AsSelf();
              //注册当前程序集的所有类成员
              builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
                  .AsImplementedInterfaces().AsSelf();
@@ -792,6 +762,7 @@ namespace RUINORERP.UI
 
              builder.RegisterType<AutoComplete>()
              .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
+             builder.RegisterType<BizCodeGenerationHelper>(); // 注册拦截器
                                                               // 注册依赖
              builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器
                                                        //builder.RegisterType<LogInterceptor>(); // 注册拦截器
@@ -799,6 +770,7 @@ namespace RUINORERP.UI
              builder.RegisterType<Person>().InterceptedBy(typeof(BaseDataCacheAOP)).EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
                                                                                                                 //builder.RegisterType<AOPDllTest.PersonDLL>().InterceptedBy(typeof(BaseDataCacheAOP)).EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
              builder.RegisterType<PersonBus>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
+             builder.RegisterType<tb_DepartmentController>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
 
              builder.RegisterType<tb_DepartmentServices>().As<Itb_DepartmentServices>()
                  .AsImplementedInterfaces()
@@ -816,22 +788,44 @@ namespace RUINORERP.UI
 
              //注册是最后的覆盖前面的 ，AOP测试时，业务控制器中的方法不生效。与 ConfigureContainer(builder); 中注册的方式有关。可能参数不对。
              //后面需要研究
-             builder.Populate(Services);//将自带的也注入到autofac
+             //builder.Populate(Services);//将自带的也注入到autofac
 
-             //AutoFacContainer = builder.Build();
-             ////var container = containerBuilder.Build();
-             //new AutofacServiceProvider(AutoFacContainer);
+             AutoFacContainer = builder.Build();
+
+             //var container = containerBuilder.Build();
+             new AutofacServiceProvider(AutoFacContainer);
 
              //   _containerBuilder = builder;
              #endregion
 
          })
-      */
+         */
          .ConfigureServices((context, services) =>
          {
-
-       
              services.AddAutofac();
+
+             //services.AddCsla(options => options.AddWindowsForms());
+             //services.AddCsla(); //ApplicationContext applicationContext
+             //  services.AddCsla(options => options.AddWindowsForms().RegisterContextManager<>
+             //  .DataPortal().PropertyChangedMode(Csla.ApplicationContext.PropertyChangedModes.Windows)
+             //  );
+             //services.AddLogging(configure => configure.AddConsole());
+
+             //services.AddTransient<Business.UseCsla.Itb_LocationTypeDal, Business.UseCsla.tb_LocationTypeDal>();
+             //services.AddTransient<Csla.Runtime.IRuntimeInfo, Csla.Runtime.RuntimeInfo>();
+             //services.AddTransient<tb_LocationType>();
+             //services.AddTransient<Form2>();
+             //ConfigureServices(services);
+             // register other services here
+             //AutofacContainerScope = services.BuildServiceProvider(false).GetAutofacRoot();
+             //AutofacContainerScope=services.BuildServiceProvider().CreateScope().ServiceProvider.GetAutofacRoot();
+             //.Add<ServiceA>("key1")
+             //.Add<ServiceB>("key2")
+             //.Add<ServiceC>("key3")
+             //.Build();
+             //测试服务 
+             //services.AddHostedService<DemoService>();
+
          }).Build();
 
             return hostBuilder;
@@ -840,10 +834,7 @@ namespace RUINORERP.UI
 
         #region 注入窗体-开始
 
-        /// <summary>
-        /// 这里主要 是注册了  菜单特性的窗体[MenuAttrAssemblyInfo("其他费用支出统计", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用管理, BizType.其他费用统计)]
-        /// </summary>
-        /// <param name="_builder"></param>
+
         private static void RegisterForm(ContainerBuilder _builder)
         {
             System.Reflection.Assembly Assemblyobj = System.Reflection.Assembly.GetExecutingAssembly();
@@ -1005,10 +996,7 @@ namespace RUINORERP.UI
                     {
 
                     }
-                    if (type.Name == nameof(UCTodoList))
-                    {
 
-                    }
 
                     //// 域注入
                     //Services.AddScoped(type);
@@ -1153,7 +1141,6 @@ namespace RUINORERP.UI
             services.AddSingleton<ICacheService, SqlSugarMemoryCacheService>();
 
 
-
             // 添加其他服务...
             services.AddScoped<EntityLoader>();
 
@@ -1171,7 +1158,8 @@ namespace RUINORERP.UI
             //为了修改为DB添加字段，覆盖这前面的
 
 
-
+            //默认就是内存模式？
+            services.AddWorkflow();
 
             //services.AddWorkflow(x => x.UseMySQL(@"Server=127.0.0.1;Database=workflow;User=root;Password=password;", true, true));
 
@@ -1336,7 +1324,29 @@ namespace RUINORERP.UI
             return false;
         }
 
+        /// <summary>
+        /// 注册各项目模块服务 - UI层只需引用其他项目DI目录中的注册服务类
+        /// </summary>
+        private static void RegisterProjectModuleServices(ContainerBuilder builder)
+        {
+            try
+            {
+                // 配置各项目的依赖注入
+                BusinessDIConfig.ConfigureContainer(builder);      // Business项目
+                ServicesDIConfig.ConfigureContainer(builder);      // Services项目
+                RepositoryDIConfig.ConfigureContainer(builder);    // Repository项目
+                IServicesDIConfig.ConfigureContainer(builder);     // IServices项目
+                //// 协议相关服务
+                //PacketSpecDIConfig.ConfigureContainer(builder);    // PacketSpec项目
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("警告：使用模块DI配置类注册服务失败，回退到传统方式注册。错误信息：" + ex.Message);
 
+                // 回退到传统方式注册
+                ConfigureContainerTodll(builder);
+            }
+        }
 
         /// <summary>
         /// 
@@ -1741,7 +1751,29 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
 
             //AutofacDependencyResolver.Current.RequestLifetimeScope.ResolveNamed<INewsHelper>("news");
             //模块化注入 - 使用服务注册契约统一管理服务注册
-          
+            try
+            {
+                // 加载RUINORERP.Business.dll并注册ServiceRegistrationModule
+                var businessAssembly = System.Reflection.Assembly.LoadFrom("RUINORERP.Business.dll");
+                var moduleType = businessAssembly.GetType("RUINORERP.Business.BizMapperService.ServiceRegistrationModule");
+                if (moduleType != null)
+                {
+                    var module = Activator.CreateInstance(moduleType);
+                    builder.RegisterModule((Autofac.Module)module);
+                }
+                else
+                {
+                    // 降级方案：直接注册实体业务映射服务
+                    Console.WriteLine("ServiceRegistrationModule not found, using direct registration for entity biz mapping services.");
+                    RegisterEntityBizMappingServiceDirect(builder);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(string.Format("Failed to register service registration module: {0}", ex.Message));
+                // 降级方案：直接注册实体业务映射服务
+                RegisterEntityBizMappingServiceDirect(builder);
+            }
 
             // 显式注册GridViewRelated为单例，确保整个应用程序中使用同一个实例
             builder.RegisterType<GridViewRelated>().SingleInstance();

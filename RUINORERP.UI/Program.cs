@@ -459,11 +459,13 @@ namespace RUINORERP.UI
                     //先定义上下文
                     Startup starter = new Startup();
                     IHost myhost = starter.SartUpDIPort();
+                   
+
                     IServiceProvider services = myhost.Services;
                     //获取配置对象并初始化AppSettings
                     IConfiguration configuration = services.GetRequiredService<IConfiguration>();
                     RUINORERP.Common.Helper.AppSettings.Initialize(configuration);
-                    
+
                     //https://github.com/autofac/Autofac.Extensions.DependencyInjection/releases
                     //给上下文服务源
                     Startup.ServiceProvider = services;
@@ -533,7 +535,7 @@ namespace RUINORERP.UI
 
 
                     #endregion
- 
+
 
                     var form1 = Startup.ServiceProvider.GetService<MainForm>();
                     Application.Run(form1);
@@ -788,7 +790,7 @@ namespace RUINORERP.UI
 
             // 记录详细错误日志
             RUINORERP.Common.Log4Net.Logger.Error("应用程序未处理的线程异常", e.Exception);
-            
+
             // 显示错误信息给用户
             string userMessage = string.Format("系统发生错误：{0}\r\n\r\n请更新到最新版本，如果无法解决，请联系管理员！\r\n时间：{1}",
                 e.Exception.Message, DateTime.Now.ToString());

@@ -15,139 +15,57 @@ namespace RUINORERP.Business.BizMapperService
     {
         private readonly ILogger _logger;
         private readonly EntityInfoConfig _config;
-        private readonly ConcurrentDictionary<BizType, ERPEntityInfo> _bizTypeToEntityInfo = new ConcurrentDictionary<BizType, ERPEntityInfo>();
-        private readonly ConcurrentDictionary<Type, ERPEntityInfo> _entityTypeToEntityInfo = new ConcurrentDictionary<Type, ERPEntityInfo>();
-        private readonly ConcurrentDictionary<string, ERPEntityInfo> _tableNameToEntityInfo = new ConcurrentDictionary<string, ERPEntityInfo>(StringComparer.OrdinalIgnoreCase);
-        private readonly ConcurrentDictionary<Type, ERPEntityInfo> _sharedTableConfigs = new ConcurrentDictionary<Type, ERPEntityInfo>();
         private bool _initialized = false;
         private readonly object _lock = new object();
 
         public BusinessEntityMappingService(EntityInfoConfig config, ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<BusinessEntityMappingService>();
-            _config= config;
-            _config.RegisterCommonMappings();
+            _config = config;
         }
 
         /// <summary>
-        /// 初始化实体信息服务
-        /// 此方法仅检查初始化状态，实际的实体映射注册通过InitializeMappings方法完成
+        /// 确保服务已初始化
+        /// 如果尚未初始化，则调用配置的注册方法初始化实体映射
+        /// </summary>
+        private void EnsureInitialized()
+        {
+            if (!_initialized)
+            {
+                lock (_lock)
+                {
+                    if (!_initialized)
+                    {
+                        try
+                        {
+                            _config.RegisterCommonMappings();
+                            _initialized = true;
+                            _logger.LogDebug("BusinessEntityMappingService 初始化完成");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "BusinessEntityMappingService 初始化失败");
+                            throw;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 初始化业务实体映射服务
+        /// 此方法仅检查初始化状态，实际的实体映射注册通过EnsureInitialized方法完成
         /// </summary>
         public void Initialize()
         {
             EnsureInitialized();
         }
 
-        
-
-        private void EnsureInitialized()
-        {
-            if (_initialized)
-                return;
-
-            lock (_lock)
-            {
-                if (_initialized)
-                    return;
-
-                try
-                {
-                    _logger.LogDebug("当前已注册的业务类型数量: {0}", _bizTypeToEntityInfo.Count);
-                    _logger.LogDebug("当前已注册的实体类型数量: {0}", _entityTypeToEntityInfo.Count);
-                    _logger.LogDebug("当前已注册的表名数量: {0}", _tableNameToEntityInfo.Count);
-                    _logger.LogDebug("当前已注册的共用表数量: {0}", _sharedTableConfigs.Count);
-
-                    bool allEmpty = _bizTypeToEntityInfo.Count == 0 &&
-                                  _entityTypeToEntityInfo.Count == 0 &&
-                                  _tableNameToEntityInfo.Count == 0 &&
-                                  _sharedTableConfigs.Count == 0;
-
-                    if (allEmpty)
-                    {
-                        _logger.LogWarning("所有实体映射集合都为空，可能是服务注册或初始化过程中出现严重问题");
-                    }
-                    else
-                    {
-                        if (_tableNameToEntityInfo.Count == 0)
-                        {
-                            _logger.LogWarning("_tableNameToEntityInfo集合为空，开始强制重建");
-                            ForceRebuildTableNameToEntityInfo();
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "检查实体信息初始化状态时发生错误: {ErrorMessage}", ex.Message);
-                }
-                finally
-                {
-                    _initialized = true;
-                }
-            }
-        }
-
-        private void ForceRebuildTableNameToEntityInfo()
-        {
-            try
-            {
-                _tableNameToEntityInfo.Clear();
-
-                if (_entityTypeToEntityInfo.Count > 0)
-                {
-                    _logger.LogInformation("从_entityTypeToEntityInfo重建_tableNameToEntityInfo集合");
-                    foreach (var entityInfo in _entityTypeToEntityInfo.Values)
-                    {
-                        if (!string.IsNullOrEmpty(entityInfo.TableName))
-                        {
-                            _tableNameToEntityInfo.TryAdd(entityInfo.TableName, entityInfo);
-                        }
-                    }
-                }
-
-                if (_bizTypeToEntityInfo.Count > 0)
-                {
-                    _logger.LogInformation("从_bizTypeToEntityInfo补充_tableNameToEntityInfo集合");
-                    foreach (var entityInfo in _bizTypeToEntityInfo.Values)
-                    {
-                        if (!string.IsNullOrEmpty(entityInfo.TableName) &&
-                            !_tableNameToEntityInfo.ContainsKey(entityInfo.TableName))
-                        {
-                            _tableNameToEntityInfo.TryAdd(entityInfo.TableName, entityInfo);
-                        }
-                    }
-                }
-
-                if (_sharedTableConfigs.Count > 0)
-                {
-                    _logger.LogInformation("从_sharedTableConfigs补充_tableNameToEntityInfo集合");
-                    foreach (var entityInfo in _sharedTableConfigs.Values)
-                    {
-                        if (!string.IsNullOrEmpty(entityInfo.TableName) &&
-                            !_tableNameToEntityInfo.ContainsKey(entityInfo.TableName))
-                        {
-                            _tableNameToEntityInfo.TryAdd(entityInfo.TableName, entityInfo);
-                        }
-                    }
-                }
-
-                _logger.LogInformation("强制重建后_tableNameToEntityInfo集合大小: {0}", _tableNameToEntityInfo.Count);
-
-                if (_tableNameToEntityInfo.Count == 0)
-                {
-                    _logger.LogWarning("强制重建_tableNameToEntityInfo集合失败，集合仍然为空");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "强制重建_tableNameToEntityInfo集合时发生错误: {ErrorMessage}", ex.Message);
-            }
-        }
-
         public ERPEntityInfo GetEntityInfo(BizType bizType)
         {
             EnsureInitialized();
 
-            if (_bizTypeToEntityInfo.TryGetValue(bizType, out var entityInfo))
+            if (_config.BizTypeToEntityInfo.TryGetValue(bizType, out var entityInfo))
             {
                 return entityInfo;
             }
@@ -169,32 +87,32 @@ namespace RUINORERP.Business.BizMapperService
                 {
                     case BizType.应收款单:
                     case BizType.应付款单:
-                        return _sharedTableConfigs.Values
+                        return _config.SharedTableConfigs.Values
                             .FirstOrDefault(info => info.TableName == "tb_FM_ReceivablePayable");
 
                     case BizType.收款单:
                     case BizType.付款单:
-                        return _sharedTableConfigs.Values
+                        return _config.SharedTableConfigs.Values
                             .FirstOrDefault(info => info.TableName == "tb_FM_PaymentRecord");
 
                     case BizType.预收款单:
                     case BizType.预付款单:
-                        return _sharedTableConfigs.Values
+                        return _config.SharedTableConfigs.Values
                             .FirstOrDefault(info => info.TableName == "tb_FM_PreReceivedPayment");
 
                     case BizType.收款核销:
                     case BizType.付款核销:
-                        return _sharedTableConfigs.Values
+                        return _config.SharedTableConfigs.Values
                             .FirstOrDefault(info => info.TableName == "tb_FM_PaymentSettlement");
 
                     case BizType.其他费用收入:
                     case BizType.其他费用支出:
-                        return _sharedTableConfigs.Values
+                        return _config.SharedTableConfigs.Values
                             .FirstOrDefault(info => info.TableName == "tb_FM_OtherExpense");
 
                     case BizType.销售价格调整单:
                     case BizType.采购价格调整单:
-                        return _sharedTableConfigs.Values
+                        return _config.SharedTableConfigs.Values
                             .FirstOrDefault(info => info.TableName == "tb_FM_PriceAdjustment");
 
                     default:
@@ -215,12 +133,12 @@ namespace RUINORERP.Business.BizMapperService
             if (entityType == null)
                 throw new ArgumentNullException(nameof(entityType));
 
-            if (_entityTypeToEntityInfo.TryGetValue(entityType, out var entityInfo))
+            if (_config.EntityTypeToEntityInfo.TryGetValue(entityType, out var entityInfo))
             {
                 EnsureTableNameMapping(entityInfo);
                 if (entityInfo.BizType == BizType.无对应数据)
                 {
-                    foreach (var item in _bizTypeToEntityInfo.Values)
+                    foreach (var item in _config.BizTypeToEntityInfo.Values)
                     {
                         if (item.FullTypeName == entityInfo.FullTypeName)
                         {
@@ -245,12 +163,12 @@ namespace RUINORERP.Business.BizMapperService
             if (entityType == null)
                 throw new ArgumentNullException(nameof(entityType));
 
-            if (_entityTypeToEntityInfo.TryGetValue(entityType, out var entityInfo))
+            if (_config.EntityTypeToEntityInfo.TryGetValue(entityType, out var entityInfo))
             {
                 EnsureTableNameMapping(entityInfo);
                 if (entityInfo.BizType == BizType.无对应数据)
                 {
-                    foreach (var item in _bizTypeToEntityInfo.Values)
+                    foreach (var item in _config.BizTypeToEntityInfo.Values)
                     {
                         if (item.FullTypeName == entityInfo.FullTypeName)
                         {
@@ -261,8 +179,7 @@ namespace RUINORERP.Business.BizMapperService
                 }
                 if (entityInfo.EnumMaper != null && entityInfo.EnumMaper.Count > 0)
                 {
-
-                    var maperlist = _bizTypeToEntityInfo.Values.Where(c => c.EnumMaper != null);
+                    var maperlist = _config.BizTypeToEntityInfo.Values.Where(c => c.EnumMaper != null);
                     foreach (var item in maperlist)
                     {
                         if (item.FullTypeName == entityInfo.FullTypeName)
@@ -292,12 +209,12 @@ namespace RUINORERP.Business.BizMapperService
             if (string.IsNullOrEmpty(tableName))
                 throw new ArgumentNullException(nameof(tableName));
 
-            if (_tableNameToEntityInfo.TryGetValue(tableName, out var entityInfo))
+            if (_config.TableNameToEntityInfo.TryGetValue(tableName, out var entityInfo))
             {
                 return entityInfo;
             }
 
-            entityInfo = _sharedTableConfigs.Values
+            entityInfo = _config.SharedTableConfigs.Values
                 .FirstOrDefault(info => string.Equals(info.TableName, tableName, StringComparison.OrdinalIgnoreCase));
 
             if (entityInfo != null)
@@ -308,10 +225,10 @@ namespace RUINORERP.Business.BizMapperService
                 return entityInfo;
             }
 
-            if (_tableNameToEntityInfo.Count == 0 && _entityTypeToEntityInfo.Count > 0)
+            if (_config.TableNameToEntityInfo.Count == 0 && _config.EntityTypeToEntityInfo.Count > 0)
             {
                 _logger.LogDebug("尝试通过_entityTypeToEntityInfo查找表名 {0} 对应的实体信息", tableName);
-                entityInfo = _entityTypeToEntityInfo.Values
+                entityInfo = _config.EntityTypeToEntityInfo.Values
                     .FirstOrDefault(info => string.Equals(info.TableName, tableName, StringComparison.OrdinalIgnoreCase));
 
                 if (entityInfo != null)
@@ -331,8 +248,8 @@ namespace RUINORERP.Business.BizMapperService
         {
             EnsureInitialized();
 
-            var allEntityInfos = _bizTypeToEntityInfo.Values
-                .Concat(_sharedTableConfigs.Values)
+            var allEntityInfos = _config.BizTypeToEntityInfo.Values
+                .Concat(_config.SharedTableConfigs.Values)
                 .GroupBy(info => new { Type = info.EntityType?.AssemblyQualifiedName, Table = info.TableName })
                 .Select(g => g.First())
                 .ToList();
@@ -371,18 +288,18 @@ namespace RUINORERP.Business.BizMapperService
             if (entityType == null)
                 throw new ArgumentNullException(nameof(entityType));
 
-            if (_entityTypeToEntityInfo.TryGetValue(entityType, out var entityInfo))
+            if (_config.EntityTypeToEntityInfo.TryGetValue(entityType, out var entityInfo))
             {
                 return entityInfo.BizType;
             }
 
-            if (_sharedTableConfigs.TryGetValue(entityType, out var sharedConfig))
+            if (_config.SharedTableConfigs.TryGetValue(entityType, out var sharedConfig))
             {
                 if (sharedConfig.TypeResolver != null && entity != null)
                 {
                     try
                     {
-                        var discriminatorValue = GetPropertyValue(entity, sharedConfig.DiscriminatorField);
+                        var discriminatorValue = entity.GetPropertyValue(sharedConfig.DiscriminatorField);
                         var resolvedBizType = sharedConfig.TypeResolver(discriminatorValue);
 
                         _logger.LogDebug("通过共用表鉴别器解析业务类型: EntityType={0}, DiscriminatorField={1}, DiscriminatorValue={2}, ResolvedBizType={3}",
@@ -431,88 +348,20 @@ namespace RUINORERP.Business.BizMapperService
             if (entityInfo == null || string.IsNullOrEmpty(entityInfo.TableName))
                 return;
 
-            if (!_tableNameToEntityInfo.ContainsKey(entityInfo.TableName))
+            if (!_config.TableNameToEntityInfo.ContainsKey(entityInfo.TableName))
             {
-                _tableNameToEntityInfo.TryAdd(entityInfo.TableName, entityInfo);
+                _config.TableNameToEntityInfo.TryAdd(entityInfo.TableName, entityInfo);
                 _logger.LogDebug("添加表名到实体信息的映射: TableName={0}, EntityType={1}",
                     entityInfo.TableName, entityInfo.EntityType.Name);
             }
         }
 
-        public void RegisterEntity<TEntity>(BizType bizType, Action<EntityInfoBuilder<TEntity>> configure = null) where TEntity : class
-        {
-            var builder = new EntityInfoBuilder<TEntity>();
-            builder.WithBizType(bizType);
-
-            configure?.Invoke(builder);
-
-            var entityInfo = builder.Build();
-
-            _bizTypeToEntityInfo.TryAdd(bizType, entityInfo);
-            _entityTypeToEntityInfo.TryAdd(typeof(TEntity), entityInfo);
-            _tableNameToEntityInfo.TryAdd(entityInfo.TableName, entityInfo);
-
-            _logger.LogDebug("已注册实体信息: BizType={0}, EntityType={1}, TableName={2}",
-                bizType, typeof(TEntity).Name, entityInfo.TableName);
-        }
-
-
-        /// <summary>
-        /// 这里是注册共享类型的实体信息，根据业务类型如付款方向 。会在_bizTypeToEntityInfo 业务信息集合对应的中添加两条
-        /// </summary>
-        /// <typeparam name="TEntity"></typeparam>
-        /// <typeparam name="TDiscriminator"></typeparam>
-        /// <param name="typeMapping"></param>
-        /// <param name="discriminatorExpr"></param>
-        /// <param name="configure"></param>
-        public void RegisterSharedTable<TEntity, TDiscriminator>(
-            IDictionary<TDiscriminator, BizType> typeMapping,
-            Expression<Func<TEntity, TDiscriminator>> discriminatorExpr,
-            Action<EntityInfoBuilder<TEntity>> configure = null) where TEntity : class
-        {
-            var builder = new EntityInfoBuilder<TEntity>();
-            var entityType = typeof(TEntity);
-
-
-            builder.WithTableName(entityType.Name);
-
-            configure?.Invoke(builder);
-
-            var entityInfo = builder.Build();
-
-            // 设置鉴别器和类型解析器
-            var fieldName = GetMemberName(discriminatorExpr);
-            entityInfo.DiscriminatorField = fieldName;
-            entityInfo.TypeResolver = value =>
-            {
-                if (value is TDiscriminator discriminatorValue && typeMapping.TryGetValue(discriminatorValue, out var bizType))
-                {
-                    return bizType;
-                }
-                return BizType.无对应数据;
-            };
-
-            // 预注册所有可能的业务类型 收款，付款，对应一个基本信息
-            foreach (var mapping in typeMapping)
-            {
-                var newEntityInfo = entityInfo.DeepClone();
-                newEntityInfo.BizType = mapping.Value;
-                _bizTypeToEntityInfo.TryAdd(mapping.Value, newEntityInfo);
-            }
-
-            _entityTypeToEntityInfo.TryAdd(entityType, entityInfo);
-            _tableNameToEntityInfo.TryAdd(entityInfo.TableName, entityInfo);
-            _sharedTableConfigs.TryAdd(entityType, entityInfo);
-
-            _logger.LogDebug("已注册共用表实体信息: EntityType={0}, TableName={1}, 预注册业务类型数量={2}",
-                entityType.Name, entityInfo.TableName, typeMapping.Count);
-        }
 
         public bool IsRegistered(BizType bizType)
         {
             EnsureInitialized();
 
-            return _bizTypeToEntityInfo.ContainsKey(bizType);
+            return _config.BizTypeToEntityInfo.ContainsKey(bizType);
         }
 
         public bool IsRegistered(Type entityType)
@@ -522,8 +371,8 @@ namespace RUINORERP.Business.BizMapperService
             if (entityType == null)
                 return false;
 
-            return _entityTypeToEntityInfo.ContainsKey(entityType) ||
-                   _sharedTableConfigs.ContainsKey(entityType);
+            return _config.EntityTypeToEntityInfo.ContainsKey(entityType) ||
+                   _config.SharedTableConfigs.ContainsKey(entityType);
         }
 
         public bool IsRegisteredByTableName(string tableName)
@@ -533,32 +382,9 @@ namespace RUINORERP.Business.BizMapperService
             if (string.IsNullOrEmpty(tableName))
                 return false;
 
-            return _tableNameToEntityInfo.ContainsKey(tableName);
+            return _config.TableNameToEntityInfo.ContainsKey(tableName);
         }
 
-        private object GetPropertyValue(object obj, string propertyName)
-        {
-            if (obj == null || string.IsNullOrEmpty(propertyName))
-                return null;
-
-            var property = obj.GetType().GetProperty(propertyName);
-            return property?.GetValue(obj);
-        }
-
-        private string GetMemberName<TEntity, T>(Expression<Func<TEntity, T>> expression)
-        {
-            if (expression.Body is MemberExpression memberExpr)
-            {
-                return memberExpr.Member.Name;
-            }
-
-            if (expression.Body is UnaryExpression unaryExpr && unaryExpr.Operand is MemberExpression memberExpr2)
-            {
-                return memberExpr2.Member.Name;
-            }
-
-            throw new ArgumentException("Expression must be a member access expression.", nameof(expression));
-        }
 
         public (long Id, string Name) GetIdAndName(object entity)
         {
@@ -570,7 +396,7 @@ namespace RUINORERP.Business.BizMapperService
 
             if (entityInfo == null)
             {
-                if (_sharedTableConfigs.TryGetValue(entityType, out entityInfo))
+                if (_config.SharedTableConfigs.TryGetValue(entityType, out entityInfo))
                 {
                     var bizType = GetBizType(entityType, entity);
                     entityInfo = GetEntityInfo(bizType);
@@ -588,17 +414,17 @@ namespace RUINORERP.Business.BizMapperService
                 object idValue = null;
                 if (!string.IsNullOrEmpty(entityInfo.IdField))
                 {
-                    idValue = GetPropertyValue(entity, entityInfo.IdField);
+                    idValue = entity.GetPropertyValue(entityInfo.IdField);
                 }
 
                 object nameValue = null;
                 if (!string.IsNullOrEmpty(entityInfo.DescriptionField))
                 {
-                    nameValue = GetPropertyValue(entity, entityInfo.DescriptionField);
+                    nameValue = entity.GetPropertyValue(entityInfo.DescriptionField);
                 }
                 else if (!string.IsNullOrEmpty(entityInfo.NoField))
                 {
-                    nameValue = GetPropertyValue(entity, entityInfo.NoField);
+                    nameValue = entity.GetPropertyValue(entityInfo.NoField);
                 }
 
                 return (idValue.ToLong(), nameValue?.ToString());
@@ -609,5 +435,12 @@ namespace RUINORERP.Business.BizMapperService
                 return (0, null);
             }
         }
+
+
+
+
+
+
+
     }
 }

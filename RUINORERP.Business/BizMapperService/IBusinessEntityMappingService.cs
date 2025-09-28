@@ -36,11 +36,11 @@ namespace RUINORERP.Business.BizMapperService
         BizType GetBizType(Type entityType, object entity = null);
         BizType GetBizTypeByEntity(object entity);
         Type GetEntityTypeByTableName(string tableName);
-        void RegisterEntity<TEntity>(BizType bizType, Action<EntityInfoBuilder<TEntity>> configure = null) where TEntity : class;
-        void RegisterSharedTable<TEntity, TDiscriminator>(
-            IDictionary<TDiscriminator, BizType> typeMapping,
-            Expression<Func<TEntity, TDiscriminator>> discriminatorExpr,
-            Action<EntityInfoBuilder<TEntity>> configure = null) where TEntity : class;
+        //void RegisterEntity<TEntity>(BizType bizType, Action<EntityInfoBuilder<TEntity>> configure = null) where TEntity : class;
+        //void RegisterSharedTable<TEntity, TDiscriminator>(
+        //    IDictionary<TDiscriminator, BizType> typeMapping,
+        //    Expression<Func<TEntity, TDiscriminator>> discriminatorExpr,
+        //    Action<EntityInfoBuilder<TEntity>> configure = null) where TEntity : class;
         bool IsRegistered(BizType bizType);
         bool IsRegistered(Type entityType);
         bool IsRegisteredByTableName(string tableName);

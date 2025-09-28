@@ -199,6 +199,10 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
 
                 // 通过现有的命令调度器处理命令
                 var result = await _commandDispatcher.DispatchAsync(command, cancellationToken);
+                if (!result.IsSuccess)
+                {
+                    _logger?.LogDebug($"命令执行完成:{result.Message}, Success={result.IsSuccess}");
+                }
                 await HandleCommandResultAsync(session, package, result, cancellationToken);
 
                 // 记录命令执行完成的日志

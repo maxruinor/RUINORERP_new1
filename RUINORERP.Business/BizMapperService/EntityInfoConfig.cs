@@ -6,25 +6,49 @@ using System;
 using System.Windows.Media.TextFormatting;
 using System.Linq.Expressions;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using Castle.Core.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.Business.BizMapperService
 {
     public class EntityInfoConfig
     {
-        private readonly IBusinessEntityMappingService _entityInfoService;
-        private static readonly ILog _logger = LogManager.GetLogger(typeof(EntityInfoConfig));
+        private readonly ILogger<EntityInfoConfig> _logger;
+        private readonly ConcurrentDictionary<BizType, ERPEntityInfo> _bizTypeToEntityInfo = new ConcurrentDictionary<BizType, ERPEntityInfo>();
+        private readonly ConcurrentDictionary<Type, ERPEntityInfo> _entityTypeToEntityInfo = new ConcurrentDictionary<Type, ERPEntityInfo>();
+        private readonly ConcurrentDictionary<string, ERPEntityInfo> _tableNameToEntityInfo = new ConcurrentDictionary<string, ERPEntityInfo>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<Type, ERPEntityInfo> _sharedTableConfigs = new ConcurrentDictionary<Type, ERPEntityInfo>();
+
+        /// <summary>
+        /// 业务类型到实体信息的映射字典
+        /// </summary>
+        public ConcurrentDictionary<BizType, ERPEntityInfo> BizTypeToEntityInfo => _bizTypeToEntityInfo;
+        
+        /// <summary>
+        /// 实体类型到实体信息的映射字典
+        /// </summary>
+        public ConcurrentDictionary<Type, ERPEntityInfo> EntityTypeToEntityInfo => _entityTypeToEntityInfo;
+        
+        /// <summary>
+        /// 表名到实体信息的映射字典（不区分大小写）
+        /// </summary>
+        public ConcurrentDictionary<string, ERPEntityInfo> TableNameToEntityInfo => _tableNameToEntityInfo;
+        
+        /// <summary>
+        /// 共用表配置字典
+        /// </summary>
+        public ConcurrentDictionary<Type, ERPEntityInfo> SharedTableConfigs => _sharedTableConfigs;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="entityInfoService">实体信息服务</param>
-        public EntityInfoConfig(IBusinessEntityMappingService entityInfoService)
+        /// <param name="logger">日志记录器</param>
+        public EntityInfoConfig(ILogger<EntityInfoConfig> logger)
         {
-            _entityInfoService = entityInfoService;
-            // 不再在构造函数中自动注册映射，而是通过外部调用InitializeMappings方法来触发注册
+            _logger = logger;
+            // 不再在构造函数中自动注册映射，而是通过外部调用RegisterCommonMappings方法来触发注册
         }
-
-       
 
         public void RegisterCommonMappings()
         {
@@ -35,8 +59,7 @@ namespace RUINORERP.Business.BizMapperService
             }
             catch (Exception ex)
             {
-                _logger.ErrorFormat("注册实体映射时发生错误: {0}", ex.Message);
-                _logger.Debug("异常详情:", ex);
+                _logger.Debug("注册实体映射时发生错误", ex);
             }
         }
 
@@ -52,7 +75,7 @@ namespace RUINORERP.Business.BizMapperService
             {
                 try
                 {
-                    _entityInfoService.RegisterEntity<TEntity>(bizType, builder =>
+                    RegisterEntity<TEntity>(bizType, builder =>
                     {
                         builder.WithTableName(typeof(TEntity).Name)
                                .WithDescription(bizType.ToString())
@@ -66,9 +89,8 @@ namespace RUINORERP.Business.BizMapperService
                 }
                 catch (Exception ex)
                 {
-                    _logger.ErrorFormat("注册实体 {0}({1}) 时发生错误：{2}", typeof(TEntity).Name, bizType, ex.Message);
-                    _logger.Debug("异常详情:", ex);
                     errorCount++;
+                    _logger.Error($"注册实体映射失败: {typeof(TEntity).Name}, 业务类型: {bizType}", ex);
                 }
             }
 
@@ -130,12 +152,11 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_AS_RepairOrder>(BizType.维修工单, e => e.RepairOrderID, e => e.RepairOrderNo, e => e.tb_AS_RepairOrderDetails);
                 SafeRegister<tb_AS_RepairInStock>(BizType.维修入库单, e => e.RepairInStockID, e => e.RepairInStockNo, e => e.tb_AS_RepairInStockDetails);
 
-                _logger.InfoFormat("普通实体映射注册完成，成功：{0}，失败：{1}", successCount, errorCount);
+                _logger.LogInformation("普通实体映射注册完成，成功：{0}，失败：{1}", successCount, errorCount);
             }
             catch (Exception ex)
             {
-                _logger.ErrorFormat("注册实体映射时发生错误: {0}", ex.Message);
-                _logger.Debug("异常详情:", ex);
+                _logger.Debug("注册实体映射时发生错误: {0}", ex.Message);
                 errorCount++;
             }
         }
@@ -155,7 +176,7 @@ namespace RUINORERP.Business.BizMapperService
             {
                 try
                 {
-                    _entityInfoService.RegisterSharedTable<TEntity, TDiscriminator>(
+                    RegisterSharedTable<TEntity, TDiscriminator>(
                         map,
                         discriminatorExpr,
                         builder =>
@@ -175,15 +196,14 @@ namespace RUINORERP.Business.BizMapperService
 
                         });
 
-                    
+
 
 
                     successCount++;
                 }
                 catch (Exception ex)
                 {
-                    _logger.ErrorFormat("注册共用表 {0} 时发生错误：{1}", typeof(TEntity).Name, ex.Message);
-                    _logger.Debug("异常详情:", ex);
+                    _logger.Debug("注册共用表 {0} 时发生错误：{1}", typeof(TEntity).Name, ex.Message);
                     errorCount++;
                 }
             }
@@ -263,13 +283,103 @@ namespace RUINORERP.Business.BizMapperService
                     e => e.ExpenseNo,
                     e => e.tb_FM_OtherExpenseDetails);
 
-                _logger.InfoFormat("共用表实体映射注册完成，成功：{0}，失败：{1}", successCount, errorCount);
+                _logger.Debug("共用表实体映射注册完成，成功：{0}，失败：{1}", successCount, errorCount);
             }
             catch (Exception ex)
             {
-                _logger.ErrorFormat("注册共用表实体映射时发生错误: {0}", ex.Message);
-                _logger.Debug("异常详情:", ex);
+                _logger.Debug("注册共用表实体映射时发生错误: {0}", ex.Message);
             }
         }
+
+
+        #region 注册方法
+
+        public void RegisterEntity<TEntity>(BizType bizType, Action<EntityInfoBuilder<TEntity>> configure = null) where TEntity : class
+        {
+            var builder = new EntityInfoBuilder<TEntity>();
+            builder.WithBizType(bizType);
+
+            configure?.Invoke(builder);
+
+            var entityInfo = builder.Build();
+
+            _bizTypeToEntityInfo.TryAdd(bizType, entityInfo);
+            _entityTypeToEntityInfo.TryAdd(typeof(TEntity), entityInfo);
+            _tableNameToEntityInfo.TryAdd(entityInfo.TableName, entityInfo);
+
+            _logger.LogDebug("已注册实体信息: BizType={0}, EntityType={1}, TableName={2}",
+                bizType, typeof(TEntity).Name, entityInfo.TableName);
+        }
+
+        /// <summary>
+        /// 这里是注册共享类型的实体信息，根据业务类型如付款方向 。会在_bizTypeToEntityInfo 业务信息集合对应的中添加两条
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <typeparam name="TDiscriminator"></typeparam>
+        /// <param name="typeMapping"></param>
+        /// <param name="discriminatorExpr"></param>
+        /// <param name="configure"></param>
+        public void RegisterSharedTable<TEntity, TDiscriminator>(
+            IDictionary<TDiscriminator, BizType> typeMapping,
+            Expression<Func<TEntity, TDiscriminator>> discriminatorExpr,
+            Action<EntityInfoBuilder<TEntity>> configure = null) where TEntity : class
+        {
+            var builder = new EntityInfoBuilder<TEntity>();
+            var entityType = typeof(TEntity);
+
+
+            builder.WithTableName(entityType.Name);
+
+            configure?.Invoke(builder);
+
+            var entityInfo = builder.Build();
+
+            // 设置鉴别器和类型解析器
+            var fieldName = GetMemberName(discriminatorExpr);
+            entityInfo.DiscriminatorField = fieldName;
+            entityInfo.TypeResolver = value =>
+            {
+                if (value is TDiscriminator discriminatorValue && typeMapping.TryGetValue(discriminatorValue, out var bizType))
+                {
+                    return bizType;
+                }
+                return BizType.无对应数据;
+            };
+
+            // 预注册所有可能的业务类型 收款，付款，对应一个基本信息
+            foreach (var mapping in typeMapping)
+            {
+                var newEntityInfo = entityInfo.DeepClone();
+                newEntityInfo.BizType = mapping.Value;
+                _bizTypeToEntityInfo.TryAdd(mapping.Value, newEntityInfo);
+            }
+
+            _entityTypeToEntityInfo.TryAdd(entityType, entityInfo);
+            _tableNameToEntityInfo.TryAdd(entityInfo.TableName, entityInfo);
+            _sharedTableConfigs.TryAdd(entityType, entityInfo);
+
+            _logger.LogDebug("已注册共用表实体信息: EntityType={0}, TableName={1}, 预注册业务类型数量={2}",
+                entityType.Name, entityInfo.TableName, typeMapping.Count);
+        }
+
+
+        private string GetMemberName<TEntity, T>(Expression<Func<TEntity, T>> expression)
+        {
+            if (expression.Body is MemberExpression memberExpr)
+            {
+                return memberExpr.Member.Name;
+            }
+
+            if (expression.Body is UnaryExpression unaryExpr && unaryExpr.Operand is MemberExpression memberExpr2)
+            {
+                return memberExpr2.Member.Name;
+            }
+
+            throw new ArgumentException("Expression must be a member access expression.", nameof(expression));
+        }
+      
+
+    
+        #endregion
     }
 }

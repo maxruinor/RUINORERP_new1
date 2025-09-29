@@ -2266,10 +2266,6 @@
     <Compile Include="Network\RetryStrategy\IRetryStrategy.cs" />
     <Compile Include="Network\Services\CacheClientService.cs" />
     <Compile Include="Network\Services\UserLoginService.cs" />
-    <Compile Include="Network\Simplified\CommunicationException.cs" />
-    <Compile Include="Network\Simplified\EnhancedUsageExample.cs" />
-    <Compile Include="Network\Simplified\ISimplifiedClient.cs" />
-    <Compile Include="Network\Simplified\SimplifiedClient.cs" />
     <Compile Include="Network\SuperSocketClient.cs" />
     <Compile Include="Network\TimeoutStatistics\CommandTimeoutStats.cs" />
     <Compile Include="Network\TimeoutStatistics\NetworkErrorType.cs" />

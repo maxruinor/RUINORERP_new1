@@ -46,17 +46,7 @@ namespace RUINORERP.Server.Network.DI
             
             // 注册服务器端登录请求处理器
             // services.AddTransient<ServerLoginRequestHandler>();
-            
-            // 注册命令调度器
-            services.AddSingleton<CommandDispatcher>();
-            
-            // 注册命令处理器工厂，使用PacketSpec中的默认实现
-            services.AddSingleton<ICommandHandlerFactory, DefaultCommandHandlerFactory>();
-            
-            // 注册命令工厂 - 解决Microsoft.Extensions.DependencyInjection中的依赖解析问题
-            services.AddSingleton<RUINORERP.PacketSpec.Commands.ICommandFactory, RUINORERP.PacketSpec.Commands.DefaultCommandFactory>();
-            services.AddSingleton<RUINORERP.PacketSpec.Commands.ICommandFactoryAsync, RUINORERP.PacketSpec.Commands.DefaultCommandFactory>();
-            
+  
             // 注册工作流服务接收器
          //   services.AddSingleton<WorkflowServiceReceiver>();
         }
@@ -111,8 +101,8 @@ namespace RUINORERP.Server.Network.DI
             // builder.RegisterType<ServerLoginRequestHandler>().AsSelf().InstancePerDependency();
             
             builder.RegisterType<CommandDispatcher>().AsSelf().SingleInstance();
-            // 移除对自定义CommandHandlerFactory的注册，使用PacketSpec中的默认实现
-            // builder.RegisterType<CommandHandlerFactory>().As<ICommandHandlerFactory>().SingleInstance();
+            // 注册命令处理器工厂
+            builder.RegisterType<CommandHandlerFactory>().As<ICommandHandlerFactory>().SingleInstance();
             
             // 注册命令工厂
             builder.RegisterType<RUINORERP.PacketSpec.Commands.DefaultCommandFactory>()

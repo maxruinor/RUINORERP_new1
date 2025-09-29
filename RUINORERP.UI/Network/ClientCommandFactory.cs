@@ -117,7 +117,7 @@ namespace RUINORERP.UI.Network
                     {
                         baseCommand.Packet = packet;
                         baseCommand.Timestamp = packet.Timestamp;
-                        baseCommand.CreatedTime = packet.CreatedTime;
+                        baseCommand.CreatedTimeUtc = packet.CreatedTimeUtc;
                        // baseCommand.CommandId = packet.Command.FullCode;
                     }
                 }
@@ -147,7 +147,7 @@ namespace RUINORERP.UI.Network
                     var packet = new PacketModel
                     {
                         PacketId = Guid.NewGuid().ToString(),
-                        CreatedTime = DateTime.UtcNow,
+                        CreatedTimeUtc = DateTime.UtcNow,
                         Timestamp = DateTime.UtcNow,
                         Size = originalData.Length,
                         IsEncrypted = false,

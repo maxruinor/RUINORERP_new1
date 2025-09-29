@@ -43,7 +43,7 @@ namespace RUINORERP.PacketSpec.Core
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
-        DateTime CreatedTime { get; set; }
+        DateTime CreatedTimeUtc { get; set; }
 
         /// <summary>
         /// 最后更新时间（UTC时间）

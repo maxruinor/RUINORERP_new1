@@ -58,7 +58,7 @@ namespace RUINORERP.PacketSpec.Serialization
                 return new PacketModel
                 {
                     Body = packageData,
-                    CreatedTime = DateTime.UtcNow,
+                    CreatedTimeUtc = DateTime.UtcNow,
                     LastUpdatedTime = DateTime.UtcNow
                 };
             }

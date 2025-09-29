@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.RetryStrategy;
 using Newtonsoft.Json;
-using RUINORERP.UI.Network.Simplified;
 using System.ComponentModel.Design;
 using Org.BouncyCastle.Ocsp;
 using System.Diagnostics;
@@ -248,8 +247,7 @@ namespace RUINORERP.UI.Network
                    ex is System.Net.Sockets.SocketException ||
                    ex is System.IO.IOException ||
                     ex.Message.Contains("connection") ||
-                     ex.Message.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0 ||
-            (ex is CommunicationException commEx && commEx.Code >= 500); // 服务器错误支持重试
+                     ex.Message.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0; // 服务器错误支持重试
         }
 
 
@@ -381,7 +379,7 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _eventManager.OnErrorOccurred(ex);
-                _logger.LogError(ex, "操作执行失败");
+                _logger.LogError("操作执行失败", ex);
 
                 // 连接断开时尝试重连
                 if (_autoReconnect && !_isConnected)

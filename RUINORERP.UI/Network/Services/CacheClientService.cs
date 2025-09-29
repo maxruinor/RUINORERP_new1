@@ -80,7 +80,7 @@ namespace RUINORERP.UI.Network.Services
                 if (string.IsNullOrEmpty(tableName))
                     throw new ArgumentException("表名不能为空", nameof(tableName));
 
-                _log?.LogInformation("请求缓存数据，表名={0}，强制刷新={1}", tableName, forceRefresh);
+                _log?.LogDebug("请求缓存数据，表名={0}，强制刷新={1}", tableName, forceRefresh);
 
                 // 使用工厂方法创建请求对象
                 var request = CacheRequest.Create(tableName, forceRefresh);

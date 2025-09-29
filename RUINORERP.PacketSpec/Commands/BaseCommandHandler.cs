@@ -37,7 +37,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
-        public DateTime CreatedTime { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedTimeUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// 最后更新时间（UTC时间）
@@ -110,7 +110,7 @@ namespace RUINORERP.PacketSpec.Commands
             _statistics = new HandlerStatistics();
             Logger = _logger;
             // 初始化ITraceable属性
-            CreatedTime = DateTime.UtcNow;
+            CreatedTimeUtc = DateTime.UtcNow;
             Timestamp = DateTime.UtcNow;
             Version = "2.0";
             
@@ -124,8 +124,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>是否有效</returns>
         public bool IsValid()
         {
-            return CreatedTime <= DateTime.UtcNow &&
-                   CreatedTime >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
+            return CreatedTimeUtc <= DateTime.UtcNow &&
+                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
         }
         #endregion
 

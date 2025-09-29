@@ -235,7 +235,7 @@ namespace RUINORERP.Server.Network.Commands
                         FileId = fileNameWithoutExt,
                         FileName = fileInfo.Name,
                         FileSize = fileInfo.Length,
-                        CreatedTime = fileInfo.CreationTime,
+                        CreatedTimeUtc = fileInfo.CreationTime,
                         ModifiedTime = fileInfo.LastWriteTime
                     };
                 }).ToList();
@@ -375,7 +375,8 @@ namespace RUINORERP.Server.Network.Commands
         public string FileId { get; set; }
         public string FileName { get; set; }
         public long FileSize { get; set; }
-        public DateTime CreatedTime { get; set; }
+        public DateTime CreatedTimeUtc { get; set; }
         public DateTime ModifiedTime { get; set; }
     }
 }
+

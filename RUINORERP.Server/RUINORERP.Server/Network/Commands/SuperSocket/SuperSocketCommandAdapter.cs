@@ -50,9 +50,9 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// </summary>
         private static readonly Dictionary<string, (int code, string message)> ErrorCodeMap = new Dictionary<string, (int code, string message)>
         {
-            { ErrorCodes.CommandNotFound, (404, "命令未找到") },
-            { ErrorCodes.UnhandledException, (500, "处理命令时发生未预期的异常") },
-            { ErrorCodes.UnknownError, (999, "发生未知错误") },
+            { "CommandNotFound", (404, "命令未找到") },
+            { "UnhandledException", (500, "处理命令时发生未预期的异常") },
+            { "UnknownError", (999, "发生未知错误") },
             { "SessionNotFound", (401, "会话不存在或已过期") } // 添加会话不存在的错误码
         };
 
@@ -72,25 +72,8 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             return (1, errorCode);
         }
 
-        /// <summary>
-        /// 根据错误代码获取对应的错误消息
-        /// </summary>
-        /// <param name="errorCode">错误代码</param>
-        /// <returns>错误消息</returns>
-        protected virtual string GetErrorMessageByCode(string errorCode)
-        {
-            return GetErrorInfoByCode(errorCode).message;
-        }
 
-        /// <summary>
-        /// 获取错误代码对应的数字值
-        /// </summary>
-        /// <param name="errorCode">错误代码</param>
-        /// <returns>错误代码数字值</returns>
-        protected virtual int GetErrorCodeNumber(string errorCode)
-        {
-            return GetErrorInfoByCode(errorCode).code;
-        }
+
         #endregion
 
         /// <summary>
@@ -124,7 +107,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             if (package == null)
             {
                 _logger?.LogWarning("接收到空的数据包");
-                await SendErrorResponseAsync(session, package, ErrorCodes.NullCommand, cancellationToken);
+                await SendErrorResponseAsync(session, package, "NullCommand", cancellationToken);
                 return;
             }
 
@@ -156,7 +139,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 if (command == null)
                 {
                     _logger?.LogWarning("无法创建命令对象: CommandId={CommandId}", package.Packet.Command);
-                    await SendErrorResponseAsync(session, package, ErrorCodes.CommandNotFound, cancellationToken);
+                    await SendErrorResponseAsync(session, package, "CommandNotFound", cancellationToken);
                     return;
                 }
 
@@ -180,7 +163,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             {
                 _logger?.LogError(ex, "处理SuperSocket命令时发生异常: CommandId={CommandId}", package.Packet.Command);
                 // 发送错误响应给客户端
-                await SendErrorResponseAsync(session, package, ErrorCodes.UnhandledException, cancellationToken);
+                await SendErrorResponseAsync(session, package, "UnhandledException", cancellationToken);
             }
         }
 
@@ -284,19 +267,27 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <returns>构造函数信息</returns>
         protected virtual ConstructorInfo GetSuitableConstructor(Type commandType)
         {
-            // 查找包含CommandId、SessionInfo和Data参数的构造函数
-            var constructors = commandType.GetConstructors();
-            foreach (var constructor in constructors)
+            try
             {
-                var parameters = constructor.GetParameters();
-                if (parameters.Length >= 1 && parameters[0].ParameterType == typeof(PacketModel))
+                // 查找包含CommandId、SessionInfo和Data参数的构造函数
+                var constructors = commandType.GetConstructors();
+                foreach (var constructor in constructors)
                 {
-                    return constructor;
+                    var parameters = constructor.GetParameters();
+                    if (parameters.Length >= 1 && parameters[0].ParameterType == typeof(PacketModel))
+                    {
+                        return constructor;
+                    }
                 }
-            }
 
-            // 如果没有找到理想的构造函数，返回第一个可用的构造函数
-            return constructors.FirstOrDefault();
+                // 如果没有找到理想的构造函数，返回第一个可用的构造函数
+                return constructors.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取命令类型 {CommandType} 的构造函数时出错", commandType?.FullName ?? "null");
+                return null;
+            }
         }
 
         /// <summary>
@@ -308,41 +299,49 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <returns>参数数组</returns>
         protected virtual object[] PrepareConstructorParameters(ConstructorInfo constructor, ServerPackageInfo package, SessionInfo sessionContext)
         {
-            var parameters = constructor.GetParameters();
-            var parameterValues = new object[parameters.Length];
-
-            for (int i = 0; i < parameters.Length; i++)
+            try
             {
-                if (parameters[i].ParameterType == typeof(PacketModel))
-                {
-                    // 创建PacketModel对象
-                    parameterValues[i] = new PacketModel(package.Packet.Body, package.Packet.Command)
-                    {
-                        SessionId = package.Packet.SessionId,
-                        PacketId = package.Packet.PacketId,
-                        Extensions = package.Packet.Extensions ?? new Dictionary<string, object>()
-                    };
-                }
-                else if (parameters[i].ParameterType == typeof(byte[]))
-                {
-                    parameterValues[i] = package.Packet.Body;
-                }
-                else if (parameters[i].ParameterType == typeof(CommandId))
-                {
-                    parameterValues[i] = package.Packet.Command;
-                }
-                else if (parameters[i].ParameterType == typeof(string))
-                {
-                    parameterValues[i] = package.Packet.SessionId;
-                }
-                else
-                {
-                    // 对于其他类型的参数，尝试使用默认值或null
-                    parameterValues[i] = parameters[i].HasDefaultValue ? parameters[i].DefaultValue : null;
-                }
-            }
+                var parameters = constructor.GetParameters();
+                var parameterValues = new object[parameters.Length];
 
-            return parameterValues;
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    if (parameters[i].ParameterType == typeof(PacketModel))
+                    {
+                        // 创建PacketModel对象
+                        parameterValues[i] = new PacketModel(package.Packet.Body, package.Packet.Command)
+                        {
+                            SessionId = package.Packet.SessionId,
+                            PacketId = package.Packet.PacketId,
+                            Extensions = package.Packet.Extensions ?? new Dictionary<string, object>()
+                        };
+                    }
+                    else if (parameters[i].ParameterType == typeof(byte[]))
+                    {
+                        parameterValues[i] = package.Packet.Body;
+                    }
+                    else if (parameters[i].ParameterType == typeof(CommandId))
+                    {
+                        parameterValues[i] = package.Packet.Command;
+                    }
+                    else if (parameters[i].ParameterType == typeof(string))
+                    {
+                        parameterValues[i] = package.Packet.SessionId;
+                    }
+                    else
+                    {
+                        // 对于其他类型的参数，尝试使用默认值或null
+                        parameterValues[i] = parameters[i].HasDefaultValue ? parameters[i].DefaultValue : null;
+                    }
+                }
+
+                return parameterValues;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "准备构造函数参数时出错");
+                return new object[0];
+            }
         }
 
         /// <summary>

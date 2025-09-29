@@ -95,7 +95,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
-        public DateTime CreatedTime { get; set; }
+        public DateTime CreatedTimeUtc { get; set; }
 
         /// <summary>
         /// 最后更新时间（UTC时间）
@@ -131,8 +131,8 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketModel()
         {
             PacketId = GeneratePacketId();
-            CreatedTime = DateTime.UtcNow;
-            Timestamp = CreatedTime;
+            CreatedTimeUtc = DateTime.UtcNow;
+            Timestamp = CreatedTimeUtc;
             Version = "2.0";
             Priority = PacketPriority.Normal;
             Direction = PacketDirection.Unknown;
@@ -275,8 +275,8 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>是否有效</returns>
         public bool IsValid()
         {
-            return CreatedTime <= DateTime.UtcNow &&
-                   CreatedTime >= DateTime.UtcNow.AddYears(-1) &&
+            return CreatedTimeUtc <= DateTime.UtcNow &&
+                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1) &&
                    !string.IsNullOrEmpty(PacketId) &&
                    Body != null &&
                    Body.Length > 0 &&
@@ -321,7 +321,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 Body = Body?.Clone() as byte[],
                 Size = Size,
                 Checksum = Checksum,
-                CreatedTime = CreatedTime,
+                CreatedTimeUtc = CreatedTimeUtc,
                 LastUpdatedTime = LastUpdatedTime,
                 Extensions = new System.Collections.Generic.Dictionary<string, object>(Extensions),
                 Flag = Flag,

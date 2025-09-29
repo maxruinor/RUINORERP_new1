@@ -49,36 +49,35 @@ namespace RUINORERP.Server.Network.Commands
                     throw new ArgumentNullException(nameof(command));
                 }
                 
-                LogInfo($"开始处理命令: {command.CommandIdentifier}");
+                LogInfo(command, $"开始处理命令: {command.CommandIdentifier}");
 
                 // 验证命令
                 var validationResult = command.Validate();
                 if (!validationResult.IsValid)
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.ErrorMessage, 400).WithMetadata("ErrorCode", "VALIDATION_FAILED"));
+                    // 使用ResponseFactory统一处理验证失败
+                    return ResponseFactory.Fail(
+                        RUINORERP.PacketSpec.Errors.ErrorCode.Command_ValidateFail, 
+                        validationResult.ErrorMessage);
                 }
 
                 // 执行具体处理
                 var result = await ProcessCommandAsync(command, cancellationToken);
 
-                LogInfo($"命令处理完成: {command.CommandIdentifier}, 结果: {result.IsSuccess}");
+                LogInfo(command, $"命令处理完成: {command.CommandIdentifier}, 结果: {result.IsSuccess}");
                 return result;
             }
             catch (OperationCanceledException ex)
             {
                 LogError($"命令处理被取消: {ex.Message}", ex);
-                return ConvertToApiResponse(ResponseBase.CreateError("命令处理被取消", 429)
-                    .WithMetadata("ErrorCode", "OPERATION_CANCELLED")
-                    .WithMetadata("ExceptionType", ex.GetType().FullName));
+                // 使用ResponseFactory统一处理取消异常
+                return ResponseFactory.Except(ex, RUINORERP.PacketSpec.Errors.ErrorCode.Command_Timeout);
             }
             catch (Exception ex)
             {
                 LogError($"处理命令异常: {ex.Message}", ex);
-                return ConvertToApiResponse(ResponseBase.CreateError($"处理异常: {ex.Message}", 500)
-                    .WithMetadata("ErrorCode", "PROCESS_ERROR")
-                    .WithMetadata("Exception", ex.Message)
-                    .WithMetadata("ExceptionType", ex.GetType().FullName)
-                    .WithMetadata("StackTrace", ex.StackTrace));
+                // 使用ResponseFactory统一处理其他异常
+                return ResponseFactory.Except(ex);
             }
         }
 
@@ -93,30 +92,32 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         protected ResponseBase CreateSuccessResult(object data = null, string message = "操作成功")
         {
-            var successResponse = ResponseBase.CreateSuccess(message);
-            return ConvertToApiResponse(successResponse);
+            if (data != null)
+            {
+                return ResponseFactory.Ok(data, message);
+            }
+            else
+            {
+                return ResponseFactory.Ok(message);
+            }
         }
-
-        ///// <summary>
-        ///// 创建带响应数据的成功结果
-        ///// </summary>
-        //protected ApiResponse CreateSuccessWithResponse(OriginalData responseData, object data = null, string message = "操作成功")
-        //{
-        //    var response = ApiResponse.CreateSuccess(data, message);
-        //    if (responseData != null)
-        //    {
-        //        response = response.WithMetadata("ResponseData", responseData);
-        //    }
-        //    return response;
-        //}
 
         /// <summary>
         /// 创建失败响应
         /// </summary>
         protected ResponseBase CreateFailureResult(string message, string errorCode = "OPERATION_FAILED")
         {
-            var errorResponse = ResponseBase.CreateError(message, 500).WithMetadata("ErrorCode", errorCode);
-            return ConvertToApiResponse(errorResponse);
+            // 尝试将错误代码转换为枚举
+            if (Enum.TryParse<RUINORERP.PacketSpec.Errors.ErrorCode>(errorCode, out var parsedErrorCode))
+            {
+                return ResponseFactory.Fail(parsedErrorCode, message);
+            }
+            else
+            {
+                // 如果无法解析，则使用通用错误代码
+                return ResponseFactory.Fail(RUINORERP.PacketSpec.Errors.ErrorCode.System_Error, message)
+                    .WithMetadata("OriginalErrorCode", errorCode);
+            }
         }
 
         /// <summary>
@@ -125,6 +126,28 @@ namespace RUINORERP.Server.Network.Commands
         protected void LogInfo(string message)
         {
             logger?.LogInformation($"[{GetType().Name}] {message}");
+        }
+        
+        /// <summary>
+        /// 记录信息日志（带RequestId）
+        /// </summary>
+        protected void LogInfo(ICommand command, string message)
+        {
+            var requestId = "N/A";
+            // 尝试从BaseCommand获取RequestId
+            if (command is RUINORERP.PacketSpec.Commands.BaseCommand baseCommand && !string.IsNullOrEmpty(baseCommand.RequestId))
+            {
+                requestId = baseCommand.RequestId;
+            }
+            // 如果没有RequestId，尝试从Packet的Extensions中获取
+            else if (command?.Packet?.Extensions != null && 
+                     command.Packet.Extensions.TryGetValue("RequestId", out var requestIdObj) && 
+                     requestIdObj is string rid && !string.IsNullOrEmpty(rid))
+            {
+                requestId = rid;
+            }
+            
+            logger?.LogInformation("[{RequestId}] {Message}", requestId, $"[{GetType().Name}] {message}");
         }
 
         /// <summary>

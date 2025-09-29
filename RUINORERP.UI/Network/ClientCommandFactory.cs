@@ -116,7 +116,7 @@ namespace RUINORERP.UI.Network
                     if (command is BaseCommand baseCommand)
                     {
                         baseCommand.Packet = packet;
-                        baseCommand.Timestamp = packet.Timestamp;
+                        baseCommand.TimestampUtc = packet.TimestampUtc;
                         baseCommand.CreatedTimeUtc = packet.CreatedTimeUtc;
                        // baseCommand.CommandId = packet.Command.FullCode;
                     }
@@ -148,7 +148,7 @@ namespace RUINORERP.UI.Network
                     {
                         PacketId = Guid.NewGuid().ToString(),
                         CreatedTimeUtc = DateTime.UtcNow,
-                        Timestamp = DateTime.UtcNow,
+                        TimestampUtc = DateTime.UtcNow,
                         Size = originalData.Length,
                         IsEncrypted = false,
                         IsCompressed = false,

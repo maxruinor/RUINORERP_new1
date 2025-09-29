@@ -263,7 +263,7 @@ namespace RUINORERP.Server.Network.Commands
                 IsSuccess = baseResponse.IsSuccess,
                 Message = baseResponse.Message,
                 Code = baseResponse.Code,
-                Timestamp = baseResponse.Timestamp,
+                TimestampUtc = baseResponse.TimestampUtc,
                 RequestId = baseResponse.RequestId,
                 Metadata = baseResponse.Metadata,
                 ExecutionTimeMs = baseResponse.ExecutionTimeMs

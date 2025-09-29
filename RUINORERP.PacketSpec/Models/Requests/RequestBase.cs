@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace RUINORERP.PacketSpec.Models.Requests
@@ -22,7 +22,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 请求时间戳（UTC时间）
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime TimestampUtc { get; set; }
 
         /// <summary>
         /// 客户端信息
@@ -40,7 +40,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         protected RequestBase()
         {
             RequestId = Guid.NewGuid().ToString();
-            Timestamp = DateTime.UtcNow;
+            TimestampUtc = DateTime.UtcNow;
             Metadata = new Dictionary<string, object>();
         }
 

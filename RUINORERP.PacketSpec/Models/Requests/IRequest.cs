@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -19,7 +19,7 @@ public interface IRequest
     /// <summary>
     /// 请求时间戳（UTC时间）
     /// </summary>
-    DateTime Timestamp { get; set; }
+    DateTime TimestampUtc { get; set; }
 
     /// <summary>
     /// 客户端信息

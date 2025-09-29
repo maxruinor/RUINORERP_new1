@@ -47,7 +47,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 时间戳（UTC时间）
         /// </summary>
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// 模型版本
@@ -59,8 +59,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public void UpdateTimestamp()
         {
-            Timestamp = DateTime.UtcNow;
-            LastUpdatedTime = Timestamp;
+            TimestampUtc = DateTime.UtcNow;
+            LastUpdatedTime = TimestampUtc;
         }
         #endregion
 
@@ -111,7 +111,7 @@ namespace RUINORERP.PacketSpec.Commands
             Logger = _logger;
             // 初始化ITraceable属性
             CreatedTimeUtc = DateTime.UtcNow;
-            Timestamp = DateTime.UtcNow;
+            TimestampUtc = DateTime.UtcNow;
             Version = "2.0";
             
             // 不再初始化默认的日志记录器，而是延迟初始化
@@ -440,7 +440,7 @@ namespace RUINORERP.PacketSpec.Commands
                 IsSuccess = true,
                 Message = msg ?? "操作成功",
                 Code = 200,
-                Timestamp = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow
             };
             
             // 添加元数据 - 修复WithMetadata返回ResponseBase的问题
@@ -635,7 +635,7 @@ namespace RUINORERP.PacketSpec.Commands
                 IsSuccess = baseResponse.IsSuccess,
                 Message = baseResponse.Message,
                 Code = baseResponse.Code,
-                Timestamp = baseResponse.Timestamp,
+                TimestampUtc = baseResponse.TimestampUtc,
                 RequestId = baseResponse.RequestId,
                 Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 ExecutionTimeMs = baseResponse.ExecutionTimeMs

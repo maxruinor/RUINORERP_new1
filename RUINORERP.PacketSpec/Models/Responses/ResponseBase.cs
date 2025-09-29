@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -32,7 +32,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <summary>
         /// 响应时间戳（UTC时间）
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime TimestampUtc { get; set; }
 
         /// <summary>
         /// 响应代码
@@ -59,7 +59,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// </summary>
         public ResponseBase()
         {
-            Timestamp = DateTime.UtcNow;
+            TimestampUtc = DateTime.UtcNow;
             Metadata = new Dictionary<string, object>();
         }
 

@@ -134,7 +134,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 命令创建时间
         /// </summary>
-        DateTime CreatedAt { get; }
+        DateTime CreatedAtUtc { get; }
 
         /// <summary>
         /// 命令超时时间（毫秒）

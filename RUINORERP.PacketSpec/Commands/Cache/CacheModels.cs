@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 
 namespace RUINORERP.PacketSpec.Commands.Cache
 {
@@ -18,9 +18,9 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         public string Type { get; set; }
 
         /// <summary>
-        /// 创建时间
+        /// 创建时间（UTC）
         /// </summary>
-        public DateTime CreatedTime { get; set; }
+        public DateTime CreatedTimeUtc { get; set; }
 
         /// <summary>
         /// 过期时间
@@ -31,7 +31,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// 是否已过期
         /// </summary>
         public bool IsExpired => Expiration.HasValue &&
-            DateTime.Now > CreatedTime.Add(Expiration.Value);
+            DateTime.UtcNow > CreatedTimeUtc.Add(Expiration.Value);
     }
 
     /// <summary>

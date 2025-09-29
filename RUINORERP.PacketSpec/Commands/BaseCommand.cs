@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Protocol;
@@ -54,9 +54,9 @@ namespace RUINORERP.PacketSpec.Commands
 
 
         /// <summary>
-        /// 命令创建时间
+        /// 命令创建时间（UTC时间）
         /// </summary>
-        public DateTime CreatedAt { get; private set; }
+        public DateTime CreatedAtUtc { get; private set; }
 
         #region ITraceable 接口实现
         /// <summary>
@@ -72,7 +72,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 时间戳（UTC时间）
         /// </summary>
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// 模型版本
@@ -84,8 +84,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public void UpdateTimestamp()
         {
-            Timestamp = DateTime.UtcNow;
-            LastUpdatedTime = Timestamp;
+            TimestampUtc = DateTime.UtcNow;
+            LastUpdatedTime = TimestampUtc;
         }
         #endregion
 
@@ -104,11 +104,11 @@ namespace RUINORERP.PacketSpec.Commands
             Direction = direction;
             Priority = CommandPriority.Normal;
             Status = CommandStatus.Created;
-            CreatedAt = DateTime.Now;
+            CreatedAtUtc = DateTime.UtcNow;
 
             // 初始化ITraceable属性
             CreatedTimeUtc = DateTime.UtcNow;
-            Timestamp = DateTime.UtcNow;
+            TimestampUtc = DateTime.UtcNow;
             Version = "2.0";
             Logger = logger ?? NullLogger<BaseCommand>.Instance;
         }
@@ -228,7 +228,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Direction,
                     Priority,
                     Status,
-                    CreatedAt,
+                    CreatedAtUtc,
                     TimeoutMs,
                     Packet,
                     Data = GetSerializableData()
@@ -258,7 +258,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Direction,
                     Priority,
                     Status,
-                    CreatedAt,
+                    CreatedAtUtc,
                     TimeoutMs,
                     Packet,
                     Data = GetSerializableData()
@@ -482,7 +482,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected bool IsTimeout()
         {
-            return (DateTime.UtcNow - CreatedAt).TotalMilliseconds > TimeoutMs;
+            return (DateTime.UtcNow - CreatedAtUtc).TotalMilliseconds > TimeoutMs;
         }
 
         #endregion

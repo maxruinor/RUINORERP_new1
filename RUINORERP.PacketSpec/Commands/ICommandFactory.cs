@@ -199,7 +199,7 @@ namespace RUINORERP.PacketSpec.Commands
             if (command is BaseCommand baseCommand)
             {
                 baseCommand.Packet = packet;
-                baseCommand.Timestamp = packet.Timestamp;
+                baseCommand.TimestampUtc = packet.TimestampUtc;
                 baseCommand.CreatedTimeUtc = packet.CreatedTimeUtc;
             }
         }
@@ -218,7 +218,7 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     PacketId = Guid.NewGuid().ToString(),
                     CreatedTimeUtc = DateTime.UtcNow,
-                    Timestamp = DateTime.UtcNow,
+                    TimestampUtc = DateTime.UtcNow,
                     Size = originalData.Length,
                     IsEncrypted = false,
                     IsCompressed = false,

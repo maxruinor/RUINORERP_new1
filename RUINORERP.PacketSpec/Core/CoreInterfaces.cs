@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINORERP.PacketSpec.Enums.Core;
+using System;
 
 namespace RUINORERP.PacketSpec.Core
 {
@@ -53,7 +54,7 @@ namespace RUINORERP.PacketSpec.Core
         /// <summary>
         /// 时间戳（UTC时间）
         /// </summary>
-        DateTime Timestamp { get; set; }
+        DateTime TimestampUtc { get; set; }
 
         /// <summary>
         /// 模型版本
@@ -99,6 +100,21 @@ namespace RUINORERP.PacketSpec.Core
         /// 会话ID
         /// </summary>
         public string SessionId { get; set; }
+
+        /// <summary>
+        /// 数据包方向
+        /// </summary>
+        public PacketDirection Direction { get; set; }
+
+        /// <summary>
+        /// 数据包优先级
+        /// </summary>
+        public PacketPriority Priority { get; set; } = PacketPriority.Normal;
+
+        /// <summary>
+        /// 模型版本
+        /// </summary>
+        public string Version { get; set; } = "2.0";
 
         /// <summary>
         /// 获取包大小

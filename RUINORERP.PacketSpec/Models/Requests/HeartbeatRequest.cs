@@ -56,7 +56,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 时间戳
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime TimestampUtc { get; set; }
 
         /// <summary>
         /// 创建心跳请求

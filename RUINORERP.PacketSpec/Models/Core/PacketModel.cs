@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿﻿﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -35,15 +35,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// </summary>
         public CommandId Command { get; set; }
 
-        /// <summary>
-        /// 数据包优先级
-        /// </summary>
-        public PacketPriority Priority { get; set; }
 
-        /// <summary>
-        /// 数据包方向
-        /// </summary>
-        public PacketDirection Direction { get; set; }
 
         /// <summary>
         /// 消息类型
@@ -105,20 +97,17 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 时间戳（UTC时间）
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime TimestampUtc { get; set; }
 
-        /// <summary>
-        /// 模型版本
-        /// </summary>
-        public string Version { get; set; } = "2.0";
+
 
         /// <summary>
         /// 更新时间戳
         /// </summary>
         public void UpdateTimestamp()
         {
-            Timestamp = DateTime.UtcNow;
-            LastUpdatedTime = Timestamp;
+            TimestampUtc = DateTime.UtcNow;
+            LastUpdatedTime = TimestampUtc;
         }
 
         #endregion
@@ -132,7 +121,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             PacketId = GeneratePacketId();
             CreatedTimeUtc = DateTime.UtcNow;
-            Timestamp = CreatedTimeUtc;
+            TimestampUtc = CreatedTimeUtc;
             Version = "2.0";
             Priority = PacketPriority.Normal;
             Direction = PacketDirection.Unknown;
@@ -313,8 +302,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             {
                 PacketId = GeneratePacketId(),
                 Command = Command,
-                Priority = Priority,
-                Direction = Direction,
                 Status = Status,
                 SessionId = SessionId,
                 ClientId = ClientId,
@@ -325,8 +312,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 LastUpdatedTime = LastUpdatedTime,
                 Extensions = new System.Collections.Generic.Dictionary<string, object>(Extensions),
                 Flag = Flag,
-                Version = Version,
-                Timestamp = Timestamp
+                TimestampUtc = TimestampUtc
             };
         }
 

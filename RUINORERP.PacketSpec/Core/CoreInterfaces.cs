@@ -37,10 +37,15 @@ namespace RUINORERP.PacketSpec.Core
     }
 
     /// <summary>
-    /// 可跟踪对象接口 - 定义可被跟踪的对象基本结构
+    /// 核心实体接口 - 定义核心实体的基本属性和方法
     /// </summary>
-    public interface ITraceable
+    public interface ICoreEntity
     {
+        /// <summary>
+        /// 实体唯一标识
+        /// </summary>
+        string Id { get; set; }
+
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
@@ -56,6 +61,11 @@ namespace RUINORERP.PacketSpec.Core
         /// </summary>
         DateTime TimestampUtc { get; set; }
 
+        /// <summary>
+        /// 验证模型有效性
+        /// </summary>
+        /// <returns>是否有效</returns>
+        bool IsValid();
 
         /// <summary>
         /// 更新时间戳
@@ -63,20 +73,7 @@ namespace RUINORERP.PacketSpec.Core
         void UpdateTimestamp();
     }
 
-    /// <summary>
-    /// 可验证对象接口 - 定义可被验证的对象
-    /// </summary>
-    public interface IValidatable
-    {
-        /// <summary>
-        /// 验证模型有效性
-        /// </summary>
-        /// <returns>是否有效</returns>
-        bool IsValid();
-    }
-
+    // 移除已弃用的接口定义
+    // ITraceable 和 IValidatable 接口已合并到 ICoreEntity 接口中
     
- 
-     
-  
 }

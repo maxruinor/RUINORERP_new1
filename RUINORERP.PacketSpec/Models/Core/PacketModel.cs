@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -16,7 +16,7 @@ namespace RUINORERP.PacketSpec.Models.Core
     /// 直接支持SuperSocket
     /// </summary>
     [Serializable]
-    public class PacketModel : ITraceable, IValidatable, IPacketData
+    public class PacketModel : ICoreEntity, IPacketData
     {
         #region 公共属性
 
@@ -63,8 +63,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             return Body?.Length ?? 0;
         }
 
-       
-
         #endregion
 
         #region 属性定义
@@ -80,17 +78,23 @@ namespace RUINORERP.PacketSpec.Models.Core
         public string PacketId { get; set; }
 
         /// <summary>
+        /// 实体唯一标识（实现 ICoreEntity 接口）
+        /// </summary>
+        public string Id 
+        { 
+            get => PacketId; 
+            set => PacketId = value; 
+        }
+
+        /// <summary>
         /// 命令类型
         /// </summary>
         public CommandId Command { get; set; }
-
-
 
         /// <summary>
         /// 数据包状态
         /// </summary>
         public PacketStatus Status { get; set; }
-
 
         /// <summary>
         /// 客户端标识
@@ -125,7 +129,7 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         #endregion
 
-        #region ITraceable 接口实现
+        #region ICoreEntity 接口实现
 
         /// <summary>
         /// 创建时间（UTC时间）
@@ -143,10 +147,22 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// </summary>
         public DateTime TimestampUtc { get; set; }
 
-
+        /// <summary>
+        /// 验证模型有效性（实现 ICoreEntity 接口）
+        /// </summary>
+        /// <returns>是否有效</returns>
+        public bool IsValid()
+        {
+            return CreatedTimeUtc <= DateTime.UtcNow &&
+                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1) &&
+                   !string.IsNullOrEmpty(PacketId) &&
+                   Body != null &&
+                   Body.Length > 0 &&
+                   Size == Body.Length;
+        }
 
         /// <summary>
-        /// 更新时间戳
+        /// 更新时间戳（实现 ICoreEntity 接口）
         /// </summary>
         public void UpdateTimestamp()
         {
@@ -211,8 +227,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             return new PacketModel(originalData, command);
         }
-
-
 
         /// <summary>
         /// 设置会话信息
@@ -299,29 +313,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         }
 
         /// <summary>
-        /// 验证数据包有效性
-        /// </summary>
-        /// <returns>是否有效</returns>
-        public bool IsValid()
-        {
-            return CreatedTimeUtc <= DateTime.UtcNow &&
-                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1) &&
-                   !string.IsNullOrEmpty(PacketId) &&
-                   Body != null &&
-                   Body.Length > 0 &&
-                   Size == Body.Length;
-        }
-
-        /// <summary>
-        /// 验证数据包有效性 - IValidatable接口实现
-        /// </summary>
-        /// <returns>是否有效</returns>
-        bool IValidatable.IsValid()
-        {
-            return IsValid();
-        }
-
-        /// <summary>
         /// 安全清理敏感数据
         /// </summary>
         public void ClearSensitiveData()
@@ -337,14 +328,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             }
         }
 
-        /// <summary>
-        /// 设置命令名称
-        /// </summary>
-        /// <param name="name">命令名称</param>
-        public void SetCommandName(string name)
-        {
-            Extensions["__cmdName"] = name;
-        }
+        
         /// <summary>
         /// 创建数据包克隆
         /// </summary>

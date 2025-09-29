@@ -20,15 +20,26 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 命令基类 - 提供命令的通用实现
     /// </summary>
-    public abstract class BaseCommand : ITraceable, IValidatable, ICommand
-    {    /// <summary>
-         /// 日志记录器
-         /// </summary>
+    public abstract class BaseCommand : ICoreEntity, ICommand
+    {    
+        /// <summary>
+        /// 日志记录器
+        /// </summary>
         protected ILogger<BaseCommand> Logger { get; set; }
+        
         /// <summary>
         /// 命令唯一标识
         /// </summary>
         public string CommandId { get; private set; }
+
+        /// <summary>
+        /// 实体唯一标识（实现 ICoreEntity 接口）
+        /// </summary>
+        public string Id 
+        { 
+            get => CommandId; 
+            set => CommandId = value; 
+        }
 
         /// <summary>
         /// 命令标识符（类型安全命令系统）
@@ -55,13 +66,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public PacketModel Packet { get; set; }
 
-
         /// <summary>
         /// 命令创建时间（UTC时间）
         /// </summary>
         public DateTime CreatedAtUtc { get; private set; }
 
-        #region ITraceable 接口实现
+        #region ICoreEntity 接口实现
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
@@ -77,10 +87,18 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
-
+        /// <summary>
+        /// 验证模型有效性（实现 ICoreEntity 接口）
+        /// </summary>
+        /// <returns>是否有效</returns>
+        public bool IsValid()
+        {
+            return CreatedTimeUtc <= DateTime.UtcNow &&
+                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
+        }
 
         /// <summary>
-        /// 更新时间戳
+        /// 更新时间戳（实现 ICoreEntity 接口）
         /// </summary>
         public void UpdateTimestamp()
         {
@@ -89,45 +107,12 @@ namespace RUINORERP.PacketSpec.Commands
         }
         #endregion
 
-
-
         public int TimeoutMs { get; set; }
         public string SessionId { get; set; }
         public string ClientId { get; set; }
         public string RequestId { get; set; }
 
-        private string _commandName;
-        /// <summary>
-        /// 命令名称
-        /// </summary>
-        public string CommandName
-        {
-            get
-            {
-                /// <summary>
-                /// 命令名称
-                /// </summary>
-                _commandName = CommandIdentifier.Name;
-
-                if (!string.IsNullOrEmpty(_commandName))
-                    return _commandName;
-
-                // 检查是否有PacketCommandAttribute特性指定了名称
-                var attr = this.GetType().GetCustomAttributes(typeof(PacketCommandAttribute), false)
-                    .Cast<PacketCommandAttribute>()
-                    .FirstOrDefault();
-
-                if (attr != null && !string.IsNullOrEmpty(attr.Name))
-                    return _commandName = attr.Name;
-
-                // 默认使用类型名称
-                return _commandName = this.GetType().Name;
-            }
-            set
-            {
-                _commandName = value;
-            }
-        }
+  
 
         /// <summary>
         /// 构造函数
@@ -140,24 +125,11 @@ namespace RUINORERP.PacketSpec.Commands
             Status = CommandStatus.Created;
             CreatedAtUtc = DateTime.UtcNow;
 
-            // 初始化ITraceable属性
+            // 初始化ICoreEntity属性
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = DateTime.UtcNow;
             Logger = logger ?? NullLogger<BaseCommand>.Instance;
         }
-
-        #region IValidatable 接口实现
-        /// <summary>
-        /// 验证模型有效性
-        /// </summary>
-        /// <returns>是否有效</returns>
-        public bool IsValid()
-        {
-            return CreatedTimeUtc <= DateTime.UtcNow &&
-                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
-        }
-        #endregion
-
 
         /// <summary>
         /// 执行命令 - 模板方法模式

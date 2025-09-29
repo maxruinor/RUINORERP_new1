@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
@@ -120,6 +120,7 @@ namespace RUINORERP.PacketSpec.Commands
                                         if (commandInstance != null)
                                         {
                                             commandId = commandInstance.CommandIdentifier.FullCode;
+                                          
                                         }
                                     }
                                     catch (Exception createEx)

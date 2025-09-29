@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -17,7 +17,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 命令处理器基类 - 提供命令处理器的通用实现
     /// </summary>
-    public abstract class BaseCommandHandler : ITraceable, IValidatable, ICommandHandler
+    public abstract class BaseCommandHandler : ICoreEntity, ICommandHandler
     {
         // 定义结构化日志消息
         private static readonly Action<ILogger, string, long, bool, Exception> _logHandled = 
@@ -33,7 +33,16 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public string HandlerId { get; private set; }
 
-        #region ITraceable 接口实现
+        /// <summary>
+        /// 实体唯一标识（实现 ICoreEntity 接口）
+        /// </summary>
+        public string Id 
+        { 
+            get => HandlerId; 
+            set => HandlerId = value; 
+        }
+
+        #region ICoreEntity 接口实现
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
@@ -49,10 +58,18 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
-
+        /// <summary>
+        /// 验证模型有效性（实现 ICoreEntity 接口）
+        /// </summary>
+        /// <returns>是否有效</returns>
+        public bool IsValid()
+        {
+            return CreatedTimeUtc <= DateTime.UtcNow &&
+                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
+        }
 
         /// <summary>
-        /// 更新时间戳
+        /// 更新时间戳（实现 ICoreEntity 接口）
         /// </summary>
         public void UpdateTimestamp()
         {
@@ -106,28 +123,12 @@ namespace RUINORERP.PacketSpec.Commands
             HandlerId = GenerateHandlerId();
             _statistics = new HandlerStatistics();
             Logger = _logger;
-            // 初始化ITraceable属性
+            // 初始化ICoreEntity属性
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = DateTime.UtcNow;
             
             // 不再初始化默认的日志记录器，而是延迟初始化
         }
-
-        #region IValidatable 接口实现
-        /// <summary>
-        /// 验证模型有效性
-        /// </summary>
-        /// <returns>是否有效</returns>
-        public bool IsValid()
-        {
-            return CreatedTimeUtc <= DateTime.UtcNow &&
-                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
-        }
-        #endregion
-
-
-
- 
 
         /// <summary>
         /// 异步处理命令
@@ -586,10 +587,6 @@ namespace RUINORERP.PacketSpec.Commands
                 Logger.LogError(message);
             }
         }
-
- 
-
- 
 
         #endregion
 

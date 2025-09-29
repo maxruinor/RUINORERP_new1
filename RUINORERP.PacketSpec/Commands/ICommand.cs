@@ -122,10 +122,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         int TimeoutMs { get; set; }
 
-        /// <summary>
-        /// 命令名称
-        /// </summary>
-        string CommandName { get; set; }
+  
 
         /// <summary>
         /// 执行命令

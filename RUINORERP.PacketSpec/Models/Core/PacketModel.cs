@@ -330,14 +330,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             }
         }
 
-        /// <summary>
-        /// 设置命令名称
-        /// </summary>
-        /// <param name="name">命令名称</param>
-        public void SetCommandName(string name)
-        {
-            Extensions["__cmdName"] = name;
-        }
+ 
         
         /// <summary>
         /// 创建数据包克隆

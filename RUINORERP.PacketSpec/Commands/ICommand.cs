@@ -10,31 +10,7 @@ using RUINORERP.PacketSpec.Enums.Core;
 namespace RUINORERP.PacketSpec.Commands
 {
 
-    /// <summary>
-    /// 命令优先级
-    /// </summary>
-    public enum CommandPriority
-    {
-        /// <summary>
-        /// 低优先级
-        /// </summary>
-        Low = 0,
-        
-        /// <summary>
-        /// 普通优先级
-        /// </summary>
-        Normal = 1,
-        
-        /// <summary>
-        /// 高优先级
-        /// </summary>
-        High = 2,
-        
-        /// <summary>
-        /// 紧急优先级
-        /// </summary>
-        Critical = 3
-    }
+    
 
     /// <summary>
     /// 命令状态
@@ -100,7 +76,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 命令优先级
         /// </summary>
-        CommandPriority Priority { get; set; }
+        PacketPriority  Priority { get; set; }
 
         /// <summary>
         /// 命令状态
@@ -122,7 +98,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         int TimeoutMs { get; set; }
 
-  
 
         /// <summary>
         /// 执行命令

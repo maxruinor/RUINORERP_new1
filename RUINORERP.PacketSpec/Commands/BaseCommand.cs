@@ -54,7 +54,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 命令优先级
         /// </summary>
-        public CommandPriority Priority { get; set; }
+        public PacketPriority  Priority { get; set; }
 
         /// <summary>
         /// 命令状态
@@ -119,7 +119,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             CommandId = IdGenerator.GenerateCommandId(GetType().Name);
             Direction = direction;
-            Priority = CommandPriority.Normal;
+            Priority = PacketPriority.Normal;
             Status = CommandStatus.Created;
             CreatedAtUtc = DateTime.UtcNow;
 
@@ -300,7 +300,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Direction = (PacketDirection)commandData.Direction;
 
                 if (commandData.Priority != null)
-                    Priority = (CommandPriority)commandData.Priority;
+                    Priority = (PacketPriority )commandData.Priority;
 
                 if (commandData.TimeoutMs != null)
                     TimeoutMs = commandData.TimeoutMs;
@@ -332,7 +332,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Direction = (PacketDirection)commandData.Direction;
 
                 if (commandData.Priority != null)
-                    Priority = (CommandPriority)commandData.Priority;
+                    Priority = (PacketPriority )commandData.Priority;
 
                 if (commandData.TimeoutMs != null)
                     TimeoutMs = commandData.TimeoutMs;

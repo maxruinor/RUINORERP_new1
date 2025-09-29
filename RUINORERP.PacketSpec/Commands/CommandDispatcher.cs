@@ -12,6 +12,7 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using Polly;
 using System.Threading.Channels;
+using RUINORERP.PacketSpec.Enums.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -230,13 +231,13 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="priority">命令优先级</param>
         /// <returns>Channel队列索引 (0=高优先级, 1=普通优先级, 2=低优先级)</returns>
-        private int GetPriorityChannel(CommandPriority priority)
+        private int GetPriorityChannel(PacketPriority  priority)
         {
             return priority switch
             {
-                CommandPriority.High => 0,
-                CommandPriority.Normal => 1,
-                CommandPriority.Low => 2,
+                PacketPriority .High => 0,
+                PacketPriority .Normal => 1,
+                PacketPriority .Low => 2,
                 _ => 1 // 默认使用普通优先级
             };
         }

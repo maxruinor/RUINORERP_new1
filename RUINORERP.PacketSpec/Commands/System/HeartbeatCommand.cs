@@ -40,7 +40,7 @@ namespace RUINORERP.PacketSpec.Commands.System
         /// </summary>
         public HeartbeatCommand()
         {
-            Priority = CommandPriority.Normal;
+            Priority = PacketPriority .Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
             TimestampUtc = DateTime.UtcNow;
         }
@@ -52,7 +52,7 @@ namespace RUINORERP.PacketSpec.Commands.System
         public HeartbeatCommand(string clientId)
         {
             ClientId = clientId;
-            Priority = CommandPriority.Normal;
+            Priority = PacketPriority .Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
             TimestampUtc = DateTime.UtcNow;
         }
@@ -68,7 +68,7 @@ namespace RUINORERP.PacketSpec.Commands.System
             ClientId = clientId;
             SessionToken = sessionToken;
             UserId = userId;
-            Priority = CommandPriority.Normal;
+            Priority = PacketPriority .Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
             TimestampUtc = DateTime.UtcNow;
         }

@@ -63,18 +63,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             return Body?.Length ?? 0;
         }
 
-        /// <summary>
-        /// 安全清理敏感数据
-        /// </summary>
-        public virtual void ClearSensitiveData()
-        {
-            // 清理包体数据
-            if (Body != null)
-            {
-                Array.Clear(Body, 0, Body.Length);
-                Body = null;
-            }
-        }
+       
 
         #endregion
 
@@ -332,16 +321,20 @@ namespace RUINORERP.PacketSpec.Models.Core
         }
 
         /// <summary>
-        /// 清理敏感数据
+        /// 安全清理敏感数据
         /// </summary>
-        public override void ClearSensitiveData()
+        public void ClearSensitiveData()
         {
-            base.ClearSensitiveData();
             SessionId = null;
             ClientId = null;
             Extensions?.Clear();
+            // 清理包体数据
+            if (Body != null)
+            {
+                Array.Clear(Body, 0, Body.Length);
+                Body = null;
+            }
         }
-
         /// <summary>
         /// 创建数据包克隆
         /// </summary>

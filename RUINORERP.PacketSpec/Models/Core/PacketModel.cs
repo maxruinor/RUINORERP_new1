@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿﻿﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -335,6 +335,15 @@ namespace RUINORERP.PacketSpec.Models.Core
                 Array.Clear(Body, 0, Body.Length);
                 Body = null;
             }
+        }
+
+        /// <summary>
+        /// 设置命令名称
+        /// </summary>
+        /// <param name="name">命令名称</param>
+        public void SetCommandName(string name)
+        {
+            Extensions["__cmdName"] = name;
         }
         /// <summary>
         /// 创建数据包克隆

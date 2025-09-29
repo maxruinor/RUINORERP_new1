@@ -1,4 +1,4 @@
-﻿﻿﻿using RUINORERP.PacketSpec.Models;
+﻿﻿using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;

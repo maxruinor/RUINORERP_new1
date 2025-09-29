@@ -1,4 +1,4 @@
-﻿﻿using Krypton.Toolkit;
+﻿using Krypton.Toolkit;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -246,14 +246,15 @@ namespace RUINORERP.UI.IM
 
         private void ResponseToServer(MessageStatus status = MessageStatus.Unprocessed, int interval = 20)
         {
+            #warning  todo by watson
             //回复服务器
-            ClientResponseData response = new ClientResponseData();
-            response.BizPrimaryKey = ReminderData.BizPrimaryKey;
-            response.Status = status;
-            response.RemindInterval = interval;
-            //向服务器推送工作流提醒的列表 typeof(T).Name
-            OriginalData beatDataDel = ClientDataBuilder.工作流提醒回复(response);
-            MainForm.Instance.ecs.AddSendData(beatDataDel);
+            //ClientResponseData response = new ClientResponseData();
+            //response.BizPrimaryKey = ReminderData.BizPrimaryKey;
+            //response.Status = status;
+            //response.RemindInterval = interval;
+            ////向服务器推送工作流提醒的列表 typeof(T).Name
+            //OriginalData beatDataDel = ClientDataBuilder.工作流提醒回复();
+            //MainForm.Instance.ecs.AddSendData(beatDataDel);
         }
 
         #region 生成稍候提醒的指令

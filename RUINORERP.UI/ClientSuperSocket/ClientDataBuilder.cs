@@ -88,34 +88,34 @@ namespace RUINORERP.UI.SuperSocketClient
         }
 
 
-        public static OriginalData 工作流提醒回复(ClientResponseData response)
-        {
-            //要定一个回复规则
-            OriginalData gd = new OriginalData();
-            try
-            {
-                var tx = new ByteBuffer(100);
-                //发送缓存数据
-                string json = JsonConvert.SerializeObject(response,
-                   new JsonSerializerSettings
-                   {
-                       ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                   });
-                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                tx.PushString(sendtime);
-                tx.PushString(json);
-                //将来再加上提醒配置规则
-                // 临时代码：标记需要完善的部分
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                //  gd.Cmd = (byte)ClientCmdEnum.工作流提醒回复;
-                gd.One = new byte[] { (byte)BizType.CRM跟进计划 };
-                gd.Two = tx.ToByteArray();
-            }
-            catch (Exception)
-            {
+//        public static OriginalData 工作流提醒回复()
+//        {
+//            //要定一个回复规则
+//            OriginalData gd = new OriginalData();
+//            try
+//            {
+//                var tx = new ByteBuffer(100);
+//                //发送缓存数据
+//                string json = JsonConvert.SerializeObject(response,
+//                   new JsonSerializerSettings
+//                   {
+//                       ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
+//                   });
+//                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+//                tx.PushString(sendtime);
+//                tx.PushString(json);
+//                //将来再加上提醒配置规则
+//                // 临时代码：标记需要完善的部分
+//#warning TODO: 这里需要完善具体逻辑，当前仅为占位
+//                //  gd.Cmd = (byte)ClientCmdEnum.工作流提醒回复;
+//                gd.One = new byte[] { (byte)BizType.CRM跟进计划 };
+//                gd.Two = tx.ToByteArray();
+//            }
+//            catch (Exception)
+//            {
 
-            }
-            return gd;
-        }
+//            }
+//            return gd;
+//        }
     }
 }

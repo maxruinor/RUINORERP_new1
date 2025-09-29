@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Protocol;
@@ -121,6 +121,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// 命令超时时间（毫秒）
         /// </summary>
         int TimeoutMs { get; set; }
+
+        /// <summary>
+        /// 命令名称
+        /// </summary>
+        string CommandName { get; set; }
 
         /// <summary>
         /// 执行命令

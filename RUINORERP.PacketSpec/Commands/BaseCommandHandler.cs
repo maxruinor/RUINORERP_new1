@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -49,10 +49,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
-        /// <summary>
-        /// 模型版本
-        /// </summary>
-        public string Version { get; set; } = "2.0";
+
 
         /// <summary>
         /// 更新时间戳
@@ -112,7 +109,6 @@ namespace RUINORERP.PacketSpec.Commands
             // 初始化ITraceable属性
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = DateTime.UtcNow;
-            Version = "2.0";
             
             // 不再初始化默认的日志记录器，而是延迟初始化
         }

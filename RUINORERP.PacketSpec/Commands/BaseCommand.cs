@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Protocol;
@@ -74,10 +74,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
-        /// <summary>
-        /// 模型版本
-        /// </summary>
-        public string Version { get; set; } = "2.0";
+
 
         /// <summary>
         /// 更新时间戳
@@ -109,7 +106,6 @@ namespace RUINORERP.PacketSpec.Commands
             // 初始化ITraceable属性
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = DateTime.UtcNow;
-            Version = "2.0";
             Logger = logger ?? NullLogger<BaseCommand>.Instance;
         }
 

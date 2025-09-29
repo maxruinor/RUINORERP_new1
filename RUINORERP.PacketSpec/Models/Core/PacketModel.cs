@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿using System;
+﻿﻿﻿﻿﻿﻿﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -16,8 +16,68 @@ namespace RUINORERP.PacketSpec.Models.Core
     /// 直接支持SuperSocket
     /// </summary>
     [Serializable]
-    public class PacketModel : BasePacketData, ITraceable, IValidatable
+    public class PacketModel : ITraceable, IValidatable, IPacketData
     {
+        #region 公共属性
+
+        /// <summary>
+        /// 包标志位
+        /// </summary>
+        public string Flag { get; set; }
+
+        /// <summary>
+        /// 包体数据
+        /// </summary>
+        public byte[] Body { get; set; }
+
+        /// <summary>
+        /// 会话ID
+        /// </summary>
+        public string SessionId { get; set; }
+
+        /// <summary>
+        /// 数据包方向
+        /// </summary>
+        public PacketDirection Direction { get; set; }
+
+        /// <summary>
+        /// 数据包优先级
+        /// </summary>
+        public PacketPriority Priority { get; set; } = PacketPriority.Normal;
+
+        /// <summary>
+        /// 模型版本
+        /// </summary>
+        public string Version { get; set; } = "2.0";
+
+        /// <summary>
+        /// 消息类型
+        /// </summary>
+        public MessageType MessageType { get; set; } = MessageType.Request;
+
+        /// <summary>
+        /// 获取包大小
+        /// </summary>
+        public int GetPackageSize()
+        {
+            return Body?.Length ?? 0;
+        }
+
+        /// <summary>
+        /// 安全清理敏感数据
+        /// </summary>
+        public virtual void ClearSensitiveData()
+        {
+            // 清理包体数据
+            if (Body != null)
+            {
+                Array.Clear(Body, 0, Body.Length);
+                Body = null;
+            }
+        }
+
+        #endregion
+
         #region 属性定义
 
         /// <summary>
@@ -36,12 +96,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         public CommandId Command { get; set; }
 
 
-
-        /// <summary>
-        /// 消息类型
-        /// 用于明确区分数据包是请求、响应还是通知
-        /// </summary>
-        public RUINORERP.PacketSpec.Enums.Core.MessageType MessageType { get; set; }
 
         /// <summary>
         /// 数据包状态
@@ -122,10 +176,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             PacketId = GeneratePacketId();
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = CreatedTimeUtc;
-            Version = "2.0";
-            Priority = PacketPriority.Normal;
-            Direction = PacketDirection.Unknown;
-            MessageType = RUINORERP.PacketSpec.Enums.Core.MessageType.Request;
             Status = PacketStatus.Created;
             Extensions = new System.Collections.Generic.Dictionary<string, object>();
         }

@@ -56,10 +56,6 @@ namespace RUINORERP.PacketSpec.Core
         /// </summary>
         DateTime TimestampUtc { get; set; }
 
-        /// <summary>
-        /// 模型版本
-        /// </summary>
-        string Version { get; set; }
 
         /// <summary>
         /// 更新时间戳
@@ -80,63 +76,7 @@ namespace RUINORERP.PacketSpec.Core
     }
 
     
-
-    /// <summary>
-    /// 基础数据包实现
-    /// </summary>
-    public class BasePacketData : IPacketData
-    {
-        /// <summary>
-        /// 包标志位
-        /// </summary>
-        public string Flag { get; set; }
-
-        /// <summary>
-        /// 包体数据
-        /// </summary>
-        public byte[] Body { get; set; }
-
-        /// <summary>
-        /// 会话ID
-        /// </summary>
-        public string SessionId { get; set; }
-
-        /// <summary>
-        /// 数据包方向
-        /// </summary>
-        public PacketDirection Direction { get; set; }
-
-        /// <summary>
-        /// 数据包优先级
-        /// </summary>
-        public PacketPriority Priority { get; set; } = PacketPriority.Normal;
-
-        /// <summary>
-        /// 模型版本
-        /// </summary>
-        public string Version { get; set; } = "2.0";
-
-        /// <summary>
-        /// 获取包大小
-        /// </summary>
-        public int GetPackageSize()
-        {
-            return Body?.Length ?? 0;
-        }
-
-        /// <summary>
-        /// 安全清理敏感数据
-        /// </summary>
-        public virtual void ClearSensitiveData()
-        {
-            // 清理包体数据
-            if (Body != null)
-            {
-                Array.Clear(Body, 0, Body.Length);
-                Body = null;
-            }
-        }
-    }
+ 
      
   
 }

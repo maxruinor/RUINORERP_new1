@@ -125,7 +125,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 IsSuccess = true,
                 Message = message,
                 Code = 200,
-                Timestamp = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow
             };
         }
 
@@ -142,7 +142,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 IsSuccess = false,
                 Message = message,
                 Code = code,
-                Timestamp = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow
             };
         }
     }
@@ -174,7 +174,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             this.Message = message;
             this.Data = data;
             this.Code = code;
-            this.Timestamp = DateTime.UtcNow;
+            this.TimestampUtc = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 IsSuccess = true,
                 Message = message,
                 Code = 200,
-                Timestamp = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow
             };
         }
 
@@ -208,7 +208,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 IsSuccess = false,
                 Message = message,
                 Code = code,
-                Timestamp = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow
             };
         }
 
@@ -225,7 +225,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 IsSuccess = false,
                 Message = message,
                 Code = code,
-                Timestamp = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow
             };
         }
     }

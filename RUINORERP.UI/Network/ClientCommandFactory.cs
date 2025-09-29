@@ -110,7 +110,7 @@ namespace RUINORERP.UI.Network
                 lock (_lock)
                 {
                     // 设置会话ID
-                    command.SessionID = packet.ClientId;
+                    command.SessionId = packet.ClientId;
 
                     // 如果命令是BaseCommand类型，设置更多属性
                     if (command is BaseCommand baseCommand)
@@ -122,7 +122,7 @@ namespace RUINORERP.UI.Network
                     }
                 }
                 
-                _logger?.LogTrace("已初始化命令属性，会话ID: {SessionId}", command.SessionID);
+                _logger?.LogTrace("已初始化命令属性，会话ID: {SessionId}", command.SessionId);
             }
             catch (Exception ex)
             {

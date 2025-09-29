@@ -1,3 +1,4 @@
+﻿using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -28,7 +29,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// </summary>
         public BroadcastLockStatusCommand()
         {
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ServerToClient;
             TimeoutMs = 30000; // 默认超时时间30秒
         }
 
@@ -39,7 +40,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         public BroadcastLockStatusCommand(List<LockedInfo> lockedDocuments)
         {
             LockedDocuments = lockedDocuments;
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ServerToClient;
             TimeoutMs = 30000; // 默认超时时间30秒
         }
 

@@ -1,7 +1,8 @@
-﻿using RUINORERP.PacketSpec.Models;
+﻿﻿﻿using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Enums.Core;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         {
             Priority = CommandPriority.High; // 登录命令优先级高
             TimeoutMs = 30000; // 登录超时时间30秒
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
         }
 
         /// <summary>
@@ -47,7 +48,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
 
             Priority = CommandPriority.High; // 登录命令优先级高
             TimeoutMs = 30000; // 登录超时时间30秒
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
         }
 
         /// <summary>
@@ -91,7 +92,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                     IsSuccess = true,
                     Message = "登录命令构建成功",
                     Code = 200,
-                    Timestamp = DateTime.UtcNow
+                    TimestampUtc = DateTime.UtcNow
                 };
                 result.WithMetadata("Data", loginData);
                 return Task.FromResult((ResponseBase)result);

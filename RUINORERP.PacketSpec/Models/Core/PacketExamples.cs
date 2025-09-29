@@ -36,7 +36,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 .WithCommand(new CommandId(CommandCategory.System, 0xF0))
                 .WithPriority(PacketPriority.Low)
                 .WithSession("session_123")
-                .WithJsonData(new { Timestamp = DateTime.UtcNow })
+                .WithJsonData(new { TimestampUtc = DateTime.UtcNow })
                 .Build();
 
             Console.WriteLine($"方法2: {packet2}");
@@ -167,7 +167,7 @@ namespace RUINORERP.PacketSpec.Models.Core
 
             var packet = PacketBuilder.Create()
                 .WithCommand(new CommandId(CommandCategory.System, 0xF0))
-                .WithJsonData(new { Status = "OK", Timestamp = DateTime.UtcNow })
+                .WithJsonData(new { Status = "OK", TimestampUtc = DateTime.UtcNow })
                 .Build();
 
             // 序列化为JSON

@@ -1,3 +1,4 @@
+﻿using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
@@ -26,7 +27,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// </summary>
         public ForceUnlockCommand()
         {
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
         }
 
@@ -37,7 +38,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         public ForceUnlockCommand(long billId)
         {
             BillId = billId;
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
         }
 

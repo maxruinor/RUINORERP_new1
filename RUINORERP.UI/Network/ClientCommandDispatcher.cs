@@ -145,7 +145,7 @@ namespace RUINORERP.UI.Network
             
             var cutoffTime = DateTime.UtcNow.AddMinutes(-expirationMinutes);
             var expiredCommands = _commandInstances
-                .Where(kvp => kvp.Value.CreatedAt < cutoffTime)
+                .Where(kvp => kvp.Value.CreatedAtUtc < cutoffTime)
                 .Select(kvp => kvp.Key)
                 .ToList();
 

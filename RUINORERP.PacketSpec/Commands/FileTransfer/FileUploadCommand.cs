@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Collections.Generic;
 using System.IO.Pipelines;
+using RUINORERP.PacketSpec.Enums.Core;
 
 namespace RUINORERP.PacketSpec.Commands.FileTransfer
 {
@@ -45,7 +46,7 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
         /// </summary>
         public FileUploadCommand()
         {
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
         }
 
         /// <summary>
@@ -59,7 +60,7 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
             FileName = fileName;
             FileContentReader = fileContentReader;
             TargetPath = targetPath;
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
         }
 
         /// <summary>

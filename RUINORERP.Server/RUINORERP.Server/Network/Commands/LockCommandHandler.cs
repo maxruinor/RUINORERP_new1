@@ -154,7 +154,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 获取会话信息
-                var sessionInfo = SessionService.GetSession(command.SessionID);
+                var sessionInfo = SessionService.GetSession(command.SessionId);
                 if (sessionInfo == null || !sessionInfo.IsAuthenticated)
                 {
                     return ConvertToApiResponse(ResponseBase.CreateError("会话无效或未认证", 401)
@@ -203,7 +203,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 获取会话信息
-                var sessionInfo = SessionService.GetSession(command.SessionID);
+                var sessionInfo = SessionService.GetSession(command.SessionId);
                 if (sessionInfo == null || !sessionInfo.IsAuthenticated)
                 {
                     return ConvertToApiResponse(ResponseBase.CreateError("会话无效或未认证", 401)
@@ -260,7 +260,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 获取会话信息
-                var sessionInfo = SessionService.GetSession(command.SessionID);
+                var sessionInfo = SessionService.GetSession(command.SessionId);
                 if (sessionInfo == null || !sessionInfo.IsAuthenticated)
                 {
                     return ConvertToApiResponse(ResponseBase.CreateError("会话无效或未认证", 401)
@@ -320,7 +320,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 获取会话信息
-                var sessionInfo = SessionService.GetSession(command.SessionID);
+                var sessionInfo = SessionService.GetSession(command.SessionId);
                 if (sessionInfo == null || !sessionInfo.IsAuthenticated)
                 {
                     return ConvertToApiResponse(ResponseBase.CreateError("会话无效或未认证", 401)
@@ -369,7 +369,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 获取会话信息
-                var sessionInfo = SessionService.GetSession(command.SessionID);
+                var sessionInfo = SessionService.GetSession(command.SessionId);
                 if (sessionInfo == null || !sessionInfo.IsAuthenticated)
                 {
                     return ConvertToApiResponse(ResponseBase.CreateError("会话无效或未认证", 401)
@@ -434,7 +434,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 获取会话信息
-                var sessionInfo = SessionService.GetSession(command.SessionID);
+                var sessionInfo = SessionService.GetSession(command.SessionId);
                 if (sessionInfo == null || !sessionInfo.IsAuthenticated)
                 {
                     return ConvertToApiResponse(ResponseBase.CreateError("会话无效或未认证", 401)
@@ -501,7 +501,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 获取会话信息
-                var sessionInfo = SessionService.GetSession(command.SessionID);
+                var sessionInfo = SessionService.GetSession(command.SessionId);
                 if (sessionInfo == null || !sessionInfo.IsAuthenticated)
                 {
                     return ConvertToApiResponse(ResponseBase.CreateError("会话无效或未认证", 401)
@@ -559,7 +559,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 获取会话信息
-                var sessionInfo = SessionService.GetSession(command.SessionID);
+                var sessionInfo = SessionService.GetSession(command.SessionId);
                 if (sessionInfo == null || !sessionInfo.IsAuthenticated)
                 {
                     return ConvertToApiResponse(ResponseBase.CreateError("会话无效或未认证", 401)
@@ -738,7 +738,7 @@ namespace RUINORERP.Server.Network.Commands
                 IsSuccess = baseResponse.IsSuccess,
                 Message = baseResponse.Message,
                 Code = baseResponse.Code,
-                Timestamp = baseResponse.Timestamp,
+                TimestampUtc = baseResponse.TimestampUtc,
                 RequestId = baseResponse.RequestId,
                 Metadata = baseResponse.Metadata,
                 ExecutionTimeMs = baseResponse.ExecutionTimeMs

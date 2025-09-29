@@ -185,7 +185,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     if (command != null)
                     {
                         // 设置命令的会话ID和数据包模型
-                        command.SessionID = sessionContext.SessionID;
+                        command.SessionId = sessionContext.SessionID;
                         command.Packet = package.Packet;
 
                         // 尝试从数据包中获取业务数据 这里晚再再看
@@ -211,7 +211,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                         // 设置命令的会话ID和数据包模型
                             if (command != null)
                             {
-                                command.SessionID = sessionContext.SessionID;
+                                command.SessionId = sessionContext.SessionID;
                                 command.Packet = package.Packet;
                             }
 
@@ -232,7 +232,6 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     package.Packet.Command,
                     packetModelForDefault,
                     package.Packet.Body);
-                defaultCommand.SessionID = sessionContext.SessionID;
 
                 // 尝试从数据包中获取业务数据
                 //  defaultBusinessDataCommand.BusinessData = packetModelForDefault.GetJsonData<object>();
@@ -255,7 +254,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     packetModelForError,
                     package.Packet.Body)
                 {
-                    SessionID = sessionContext.SessionID
+                    SessionId = sessionContext.SessionID
                 };
             }
         }
@@ -397,7 +396,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     ["Message"] = result.Message,
                     ["Success"] = result.IsSuccess,
                     ["Code"] = result.Code,
-                    ["Timestamp"] = result.Timestamp
+                    ["TimestampUtc"] = result.TimestampUtc
                 }
             };
      

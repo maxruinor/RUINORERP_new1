@@ -1,7 +1,8 @@
-﻿using RUINORERP.Model.CommonModel;
+﻿﻿﻿﻿using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Enums.Core;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,7 +45,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// </summary>
         public DocumentLockApplyCommand()
         {
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
         }
 
@@ -59,7 +60,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             BillId = billId;
             BillData = billData;
             MenuId = menuId;
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
         }
 

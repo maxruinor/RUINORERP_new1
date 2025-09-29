@@ -120,7 +120,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             this.Message = message;
             this.Data = data;
             this.Code = code;
-            this.Timestamp = DateTime.UtcNow;
+            this.TimestampUtc = DateTime.UtcNow;
         }
 
         /// <summary>

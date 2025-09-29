@@ -98,7 +98,7 @@ namespace RUINORERP.PacketSpec.Commands.Handlers
                 // 创建成功结果，返回处理后的消息
                 var responseData = new {
                     OriginalMessage = echoCommand.Message,
-                    Timestamp = DateTime.UtcNow,
+                    TimestampUtc = DateTime.UtcNow,
                     HandlerId = this.HandlerId
                 };
                 
@@ -107,7 +107,7 @@ namespace RUINORERP.PacketSpec.Commands.Handlers
                     IsSuccess = true,
                     Message = "回显命令处理成功",
                     Code = 200,
-                    Timestamp = DateTime.UtcNow
+                    TimestampUtc = DateTime.UtcNow
                 };
                 
                 result.WithMetadata("Data", responseData);
@@ -137,7 +137,7 @@ namespace RUINORERP.PacketSpec.Commands.Handlers
                 IsSuccess = baseResponse.IsSuccess,
                 Message = baseResponse.Message,
                 Code = baseResponse.Code,
-                Timestamp = baseResponse.Timestamp,
+                TimestampUtc = baseResponse.TimestampUtc,
                 RequestId = baseResponse.RequestId,
                 Metadata = baseResponse.Metadata,
                 ExecutionTimeMs = baseResponse.ExecutionTimeMs

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Enums.Core;
 
 namespace RUINORERP.PacketSpec.Commands.Message
 {
@@ -46,7 +47,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
         {
             TargetUserIds = new string[0];
             MessageType = "INFO"; // 默认信息类型
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ServerToClient;
         }
 
         /// <summary>
@@ -62,7 +63,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
             Content = content;
             MessageType = messageType;
             TargetUserIds = targetUserIds ?? new string[0];
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ServerToClient;
         }
 
         /// <summary>

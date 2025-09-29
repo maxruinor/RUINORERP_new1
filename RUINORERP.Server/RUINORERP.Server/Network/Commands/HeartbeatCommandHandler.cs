@@ -91,11 +91,11 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                LogInfo($"处理心跳命令 [会话: {command.SessionID}]");
+                LogInfo($"处理心跳命令 [会话: {command.SessionId}]");
 
-                 if (!string.IsNullOrEmpty(command.SessionID))
+                 if (!string.IsNullOrEmpty(command.SessionId))
                  {
-                     var session = _sessionService.GetSession(command.SessionID);
+                     var session = _sessionService.GetSession(command.SessionId);
                      if (session != null)
                      {
                          session.UpdateActivity();
@@ -110,7 +110,7 @@ namespace RUINORERP.Server.Network.Commands
                     message: "心跳响应成功"
                 ).WithMetadata("Data", new { 
                         Timestamp = DateTime.UtcNow,
-                        SessionId = command.SessionID,
+                        SessionId = command.SessionId,
                         Status = "Alive"
                     });
             }

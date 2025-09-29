@@ -192,8 +192,8 @@ namespace RUINORERP.PacketSpec.Commands
             if (command == null || packet == null)
                 return;
 
-            // 设置会话ID
-            command.SessionID = packet.ClientId;
+            // 设置会话  这不逻辑不对TODO by watson
+            command.SessionId = packet.ClientId;
 
             // 如果命令是BaseCommand类型，设置更多属性
             if (command is BaseCommand baseCommand)

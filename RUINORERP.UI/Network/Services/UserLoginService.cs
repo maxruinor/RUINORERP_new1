@@ -51,7 +51,7 @@ namespace RUINORERP.UI.Network.Services
 
             return _comm.SendAsync<object, bool>(
                 AuthenticationCommands.Logout,
-                new { SessionId = sessionId, Timestamp = DateTime.UtcNow },
+                new { SessionId = sessionId, TimestampUtc = DateTime.UtcNow },
                 null,   // 用默认 JsonPacketAdapter
                 ct);
         }
@@ -66,7 +66,7 @@ namespace RUINORERP.UI.Network.Services
 
             return _comm.SendAsync<object, bool>(
                 AuthenticationCommands.ValidateToken,
-                new { Token = token, Timestamp = DateTime.UtcNow },
+                new { Token = token, TimestampUtc = DateTime.UtcNow },
                 null,
                 ct);
         }
@@ -81,7 +81,7 @@ namespace RUINORERP.UI.Network.Services
 
             return _comm.SendAsync<object, TokenInfo>(
                 AuthenticationCommands.RefreshToken,
-                new { RefreshToken = refreshToken, Timestamp = DateTime.UtcNow },
+                new { RefreshToken = refreshToken, TimestampUtc = DateTime.UtcNow },
                 null,
                 ct);
         }

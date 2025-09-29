@@ -3,7 +3,8 @@ using RUINORERP.PacketSpec.Models.Responses;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Commands; // 引用BaseCommand
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Enums.Core; // 引用BaseCommand
 
 namespace RUINORERP.PacketSpec.Commands.Cache
 {
@@ -40,7 +41,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         {
             CacheKeys = new List<string>();
             SyncMode = "FULL"; // 默认全量同步
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.Request;
         }
 
         /// <summary>
@@ -52,7 +53,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         {
             CacheKeys = cacheKeys ?? new List<string>();
             SyncMode = syncMode;
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.Request;
         }
         
         /// <summary>
@@ -64,7 +65,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         {
             CacheKeysEnumerator = cacheKeysEnumerator;
             SyncMode = syncMode;
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.Request;
         }
 
         /// <summary>

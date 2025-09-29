@@ -26,7 +26,7 @@ namespace RUINORERP.PacketSpec.Models
             this.Message = message;
             this.Data = data;
             this.Code = code;
-            this.Timestamp = DateTime.UtcNow;
+            this.TimestampUtc = DateTime.UtcNow;
         }
 
         /// <summary>

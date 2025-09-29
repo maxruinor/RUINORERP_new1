@@ -8,17 +8,17 @@ namespace RUINORERP.PacketSpec.Models.Responses
     {
         // ---------- 成功 ----------
         public static ResponseBase Ok(string msg = "OK") 
-            => new() { IsSuccess = true, Code = (int)ErrorCode.OK, Message = msg, Timestamp = DateTime.UtcNow };
+            => new() { IsSuccess = true, Code = (int)ErrorCode.OK, Message = msg, TimestampUtc = DateTime.UtcNow };
 
         public static ResponseBase<T> Ok<T>(T data, string msg = "OK") 
-            => new() { IsSuccess = true, Code = (int)ErrorCode.OK, Message = msg, Data = data, Timestamp = DateTime.UtcNow };
+            => new() { IsSuccess = true, Code = (int)ErrorCode.OK, Message = msg, Data = data, TimestampUtc = DateTime.UtcNow };
 
         // ---------- 失败 ----------
         public static ResponseBase Fail(ErrorCode code, string userMsg = null)
-            => new() { IsSuccess = false, Code = (int)code, Message = userMsg ?? GetDefaultMsg(code), Timestamp = DateTime.UtcNow };
+            => new() { IsSuccess = false, Code = (int)code, Message = userMsg ?? GetDefaultMsg(code), TimestampUtc = DateTime.UtcNow };
 
         public static ResponseBase<T> Fail<T>(ErrorCode code, string userMsg = null)
-            => new() { IsSuccess = false, Code = (int)code, Message = userMsg ?? GetDefaultMsg(code), Data = default, Timestamp = DateTime.UtcNow };
+            => new() { IsSuccess = false, Code = (int)code, Message = userMsg ?? GetDefaultMsg(code), Data = default, TimestampUtc = DateTime.UtcNow };
 
         // ---------- 异常 ----------
         public static ResponseBase Except(Exception ex, ErrorCode fallback = ErrorCode.System_Error)

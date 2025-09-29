@@ -32,7 +32,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <summary>
         /// 响应时间戳（UTC时间）
         /// </summary>
-        DateTime Timestamp { get; set; }
+        DateTime TimestampUtc { get; set; }
 
         /// <summary>
         /// 响应代码

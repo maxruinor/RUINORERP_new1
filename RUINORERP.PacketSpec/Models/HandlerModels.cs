@@ -252,7 +252,7 @@ namespace RUINORERP.PacketSpec.Handlers
             this.Message = message;
             this.Data = data;
             this.Code = code;
-            this.Timestamp = DateTime.UtcNow;
+            this.TimestampUtc = DateTime.UtcNow;
         }
 
         /// <summary>

@@ -1,3 +1,4 @@
+﻿using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
@@ -38,7 +39,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         {
             LockType = "EXCLUSIVE"; // 默认排他锁
             TimeoutMs = 30000; // 默认超时时间30秒
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
         }
 
         /// <summary>
@@ -52,7 +53,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             ResourceId = resourceId;
             LockType = lockType;
             TimeoutMs = timeoutMs;
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
         }
 
         /// <summary>

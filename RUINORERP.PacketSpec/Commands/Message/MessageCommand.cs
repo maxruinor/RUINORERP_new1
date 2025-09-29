@@ -6,6 +6,7 @@ using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Text;
+using RUINORERP.PacketSpec.Enums.Core;
 
 namespace RUINORERP.PacketSpec.Commands.Message
 {
@@ -37,7 +38,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
         /// <param name="packetModel">会话信息</param>
         /// <param name="data">命令数据</param>
         public MessageCommand(uint commandType, PacketModel packetModel, object data)
-            : base(CommandDirection.Receive)
+            : base(PacketDirection.Response)
         {
             // 注释掉调试用的异常抛出
             // throw new Exception("  这里要调试处理");

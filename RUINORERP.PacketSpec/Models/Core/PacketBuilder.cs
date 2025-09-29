@@ -190,7 +190,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 .WithPriority(PacketPriority.Low)
                 .WithDirection(PacketDirection.ClientToServer)
                 .WithSession(sessionId, clientId)
-                .WithJsonData(new { Timestamp = DateTime.UtcNow });
+                .WithJsonData(new { TimestampUtc = DateTime.UtcNow });
         }
 
         /// <summary>

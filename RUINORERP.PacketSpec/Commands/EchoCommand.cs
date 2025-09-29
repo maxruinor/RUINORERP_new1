@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using RUINORERP.PacketSpec.Enums.Core;
 
 
 namespace RUINORERP.PacketSpec.Commands
@@ -28,7 +29,7 @@ namespace RUINORERP.PacketSpec.Commands
             // 设置命令标识符
             _commandIdentifier = new CommandId(CommandCategory.Special, 0x01);
             // 设置命令方向
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ServerToClient;
         }
         
         private readonly CommandId _commandIdentifier;
@@ -72,7 +73,7 @@ namespace RUINORERP.PacketSpec.Commands
                 IsSuccess = true,
                 Message = "Echo command executed successfully",
                 Code = 200,
-                Timestamp = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow
             };
             result.WithMetadata("Data", Message);
             return Task.FromResult((ResponseBase)result);

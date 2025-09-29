@@ -201,7 +201,7 @@ namespace RUINORERP.Server.Network.Commands
                 var packetModel = new RUINORERP.PacketSpec.Models.Core.PacketModel
                 {
                     Command = command.CommandIdentifier,
-                    SessionId = command.SessionID,
+                    SessionId = command.SessionId,
                     Body = command.Packet.Body
                 };
 

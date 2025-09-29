@@ -1,5 +1,6 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+﻿﻿﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Enums.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,7 +19,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             CommandIdentifier = id;
             Payload = payload;
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ServerToClient;
         }
 
         public override object GetSerializableData() => Payload;

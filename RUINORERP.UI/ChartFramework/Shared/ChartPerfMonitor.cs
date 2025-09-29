@@ -37,7 +37,7 @@ namespace RUINORERP.UI.ChartFramework.Diagnostics
         {
             var metrics = new
             {
-                Timestamp = DateTime.UtcNow,
+                TimestampUtc = DateTime.UtcNow,
                 RenderTime = elapsedMs,
                // SeriesCount = _chart.Series.Count,
                // DataPoints = _chart.Series.Sum(s => s.Values?.Count ?? 0),

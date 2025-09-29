@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Protocol;
@@ -9,6 +9,7 @@ using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Enums.Core;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -35,7 +36,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 命令方向
         /// </summary>
-        public CommandDirection Direction { get; set; }
+        public PacketDirection Direction { get; set; }
 
         /// <summary>
         /// 命令优先级
@@ -89,13 +90,14 @@ namespace RUINORERP.PacketSpec.Commands
 
 
         public int TimeoutMs { get; set; }
-        public string SessionID { get; set; }
+        public string SessionId { get; set; }
+        public string ClientId { get; set; }
         public string RequestId { get; set; }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        protected BaseCommand(CommandDirection direction = CommandDirection.Receive, ILogger<BaseCommand> logger = null)
+        protected BaseCommand(PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
         {
             CommandId = GenerateCommandId();
             Direction = direction;
@@ -202,8 +204,8 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 return CommandValidationResult.Failure("该命令需要有效的数据包", ErrorCodes.DataRequired);
             }
-            // 添加 SessionID 验证（如果需要）
-            if (RequiresSession() && string.IsNullOrEmpty(SessionID))
+            // 添加 SessionId 验证（如果需要）
+            if (RequiresSession() && string.IsNullOrEmpty(SessionId))
             {
                 return CommandValidationResult.Failure("该命令需要有效的会话ID", ErrorCodes.SessionRequired);
             }
@@ -226,6 +228,9 @@ namespace RUINORERP.PacketSpec.Commands
                     Status,
                     CreatedAtUtc,
                     TimeoutMs,
+                    SessionId,
+                    ClientId,
+                    RequestId,
                     Packet,
                     Data = GetSerializableData()
                 };
@@ -256,6 +261,9 @@ namespace RUINORERP.PacketSpec.Commands
                     Status,
                     CreatedAtUtc,
                     TimeoutMs,
+                    SessionId,
+                    ClientId,
+                    RequestId,
                     Packet,
                     Data = GetSerializableData()
                 };
@@ -284,7 +292,7 @@ namespace RUINORERP.PacketSpec.Commands
 
                 // 恢复基本属性
                 if (commandData.Direction != null)
-                    Direction = (CommandDirection)commandData.Direction;
+                    Direction = (PacketDirection)commandData.Direction;
 
                 if (commandData.Priority != null)
                     Priority = (CommandPriority)commandData.Priority;
@@ -316,7 +324,7 @@ namespace RUINORERP.PacketSpec.Commands
 
                 // 恢复基本属性
                 if (commandData.Direction != null)
-                    Direction = (CommandDirection)commandData.Direction;
+                    Direction = (PacketDirection)commandData.Direction;
 
                 if (commandData.Priority != null)
                     Priority = (CommandPriority)commandData.Priority;

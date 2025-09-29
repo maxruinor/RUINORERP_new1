@@ -5,29 +5,10 @@ using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Enums.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {
-    /// <summary>
-    /// 命令操作类型
-    /// </summary>
-    public enum CommandDirection
-    {
-        /// <summary>
-        /// 接收命令（从客户端到服务器）
-        /// </summary>
-        Receive = 0,
-
-        /// <summary>
-        /// 发送命令（从服务器到客户端）
-        /// </summary>
-        Send = 1,
-
-        /// <summary>
-        /// 双向命令（可发送可接收）
-        /// </summary>
-        Bidirectional = 2
-    }
 
     /// <summary>
     /// 命令优先级
@@ -99,7 +80,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 每个指令都存在于一个对应的socket（连接）会话
         /// </summary>
-        string SessionID { get; set; }
+        string SessionId { get; set; }
 
         /// <summary>
         /// 命令唯一标识（字符串形式）
@@ -114,7 +95,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 命令方向
         /// </summary>
-        CommandDirection Direction { get; set; }
+        PacketDirection Direction { get; set; }
 
         /// <summary>
         /// 命令优先级

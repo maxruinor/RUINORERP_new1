@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Commands;
+﻿using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -47,7 +47,7 @@ namespace RUINORERP.PacketSpec.Commands.System
         {
             Priority = CommandPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
-            Timestamp = DateTime.UtcNow;
+            TimestampUtc = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace RUINORERP.PacketSpec.Commands.System
             ClientId = clientId;
             Priority = CommandPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
-            Timestamp = DateTime.UtcNow;
+            TimestampUtc = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace RUINORERP.PacketSpec.Commands.System
             UserId = userId;
             Priority = CommandPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
-            Timestamp = DateTime.UtcNow;
+            TimestampUtc = DateTime.UtcNow;
         }
 
         // 客户端信息属性，由客户端设置
@@ -112,7 +112,7 @@ namespace RUINORERP.PacketSpec.Commands.System
                     ClientId = this.ClientId,
                     SessionToken = this.SessionToken,
                     UserId = this.UserId,
-                    Timestamp = this.Timestamp,
+                    TimestampUtc = this.TimestampUtc,
                     ClientTime = DateTime.UtcNow,
                     NetworkLatency = this.NetworkLatency,
                     ClientVersion = this.ClientVersion,
@@ -127,7 +127,7 @@ namespace RUINORERP.PacketSpec.Commands.System
                 return new
                 {
                     ClientId = this.ClientId,
-                    Timestamp = this.Timestamp,
+                    Timestamp = this.TimestampUtc,
                     ErrorMessage = "Failed to collect full heartbeat data"
                 };
             }
@@ -158,7 +158,7 @@ namespace RUINORERP.PacketSpec.Commands.System
                     IsSuccess = true,
                     Message = "心跳命令构建成功",
                     Code = 200,
-                    Timestamp = DateTime.UtcNow
+                    TimestampUtc = DateTime.UtcNow
                 };
                 result.WithMetadata("Data", heartbeatData);
                 return result;
@@ -212,7 +212,7 @@ namespace RUINORERP.PacketSpec.Commands.System
                 IsSuccess = baseResponse.IsSuccess,
                 Message = baseResponse.Message,
                 Code = baseResponse.Code,
-                Timestamp = baseResponse.Timestamp,
+                TimestampUtc = baseResponse.TimestampUtc,
                 RequestId = baseResponse.RequestId,
                 Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 ExecutionTimeMs = baseResponse.ExecutionTimeMs

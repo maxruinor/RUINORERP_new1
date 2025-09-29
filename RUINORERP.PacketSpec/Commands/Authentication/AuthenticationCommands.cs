@@ -12,7 +12,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// 用户登录 - 客户端向服务器发起登录请求
         /// </summary>
         public static readonly CommandId Login = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_Login & 0xFF));
-
+        
         /// <summary>
         /// 用户登出 - 用户主动或被动退出系统
         /// </summary>

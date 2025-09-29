@@ -262,7 +262,7 @@ namespace RUINORERP.Server.Network.Commands
                 ResetLoginAttempts(command.LoginRequest.Username);
 
                 // 检查是否已经登录，如果是则发送重复登录确认请求
-                var (hasExistingSessions, authorizedSessions) = CheckUserLoginStatus(command.LoginRequest.Username, command.SessionID);
+                var (hasExistingSessions, authorizedSessions) = CheckUserLoginStatus(command.LoginRequest.Username, command.SessionId);
                 if (hasExistingSessions && !IsDuplicateLoginConfirmed(command))
                 {
                     // 发送重复登录确认请求给客户端
@@ -277,12 +277,12 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 获取或创建会话信息
-                var sessionInfo = SessionService.GetSession(command.SessionID);
+                var sessionInfo = SessionService.GetSession(command.SessionId);
                 if (sessionInfo == null)
                 {
                     // 从命令或网络连接中获取客户端真实IP
                     string clientIp = GetClientIpAddress(command);
-                    sessionInfo = SessionService.CreateSession(command.SessionID, clientIp);
+                    sessionInfo = SessionService.CreateSession(command.SessionId, clientIp);
                     if (sessionInfo == null)
                     {
                         return ConvertToApiResponse(ResponseFactory.Fail(
@@ -297,7 +297,7 @@ namespace RUINORERP.Server.Network.Commands
                 SessionService.UpdateSession(sessionInfo);
 
                 // 记录活跃会话
-                AddActiveSession(command.SessionID);
+                AddActiveSession(command.SessionId);
 
                 // 生成Token
                 var tokenInfo = GenerateTokenInfo(validationResult.UserSessionInfo);
@@ -338,12 +338,12 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<ResponseBase> HandleLoginValidationAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo(command, $"处理登录验证 [会话: {command.SessionID}]");
+            LogInfo(command, $"处理登录验证 [会话: {command.SessionId}]");
 
             await Task.Delay(5, cancellationToken);
 
             // 使用SessionService验证会话有效性
-            if (!SessionService.IsValidSession(command.SessionID))
+            if (!SessionService.IsValidSession(command.SessionId))
             {
                 return ConvertToApiResponse(ResponseFactory.Fail(
                     RUINORERP.PacketSpec.Errors.ErrorCode.Auth_TokenExpired, 
@@ -351,7 +351,7 @@ namespace RUINORERP.Server.Network.Commands
                     .WithMetadata("ErrorCode", "INVALID_SESSION"));
             }
 
-            var sessionInfo = SessionService.GetSession(command.SessionID);
+            var sessionInfo = SessionService.GetSession(command.SessionId);
             if (sessionInfo == null)
             {
                 return ConvertToApiResponse(ResponseFactory.Fail(
@@ -369,7 +369,7 @@ namespace RUINORERP.Server.Network.Commands
             }
 
             // 检查会话是否仍然活跃
-            if (!_activeSessions.Contains(command.SessionID))
+            if (!_activeSessions.Contains(command.SessionId))
             {
                 return ConvertToApiResponse(ResponseFactory.Fail(
                     RUINORERP.PacketSpec.Errors.ErrorCode.Auth_TokenExpired, 
@@ -380,9 +380,9 @@ namespace RUINORERP.Server.Network.Commands
             var responseData = CreateValidationResponse(sessionInfo);
 
             return ConvertToApiResponse(ResponseFactory.Ok(
-                new { SessionId = command.SessionID, UserId = sessionInfo.UserId }, 
+                new { SessionId = command.SessionId, UserId = sessionInfo.UserId }, 
                 "验证成功")
-                .WithMetadata("Data", new { SessionId = command.SessionID, UserId = sessionInfo.UserId }));
+                .WithMetadata("Data", new { SessionId = command.SessionId, UserId = sessionInfo.UserId }));
         }
 
         /// <summary>
@@ -390,7 +390,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<ResponseBase> HandleTokenValidationAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo(command, $"处理Token验证 [会话: {command.SessionID}]");
+            LogInfo(command, $"处理Token验证 [会话: {command.SessionId}]");
 
             try
             {
@@ -404,7 +404,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 验证Token
-                var validationResult = await ValidateTokenAsync(tokenData.Token, command.SessionID);
+                var validationResult = await ValidateTokenAsync(tokenData.Token, command.SessionId);
 
                 if (!validationResult.IsValid)
                 {
@@ -436,7 +436,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<ResponseBase> HandleTokenRefreshAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo($"处理Token刷新 [会话: {command.SessionID}]");
+            LogInfo($"处理Token刷新 [会话: {command.SessionId}]");
 
             try
             {
@@ -481,18 +481,18 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<ResponseBase> HandleLogoutAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo($"处理注销请求 [会话: {command.SessionID}]");
+            LogInfo($"处理注销请求 [会话: {command.SessionId}]");
 
             try
             {
                 // 使用SessionService验证会话有效性
-                if (!SessionService.IsValidSession(command.SessionID))
+                if (!SessionService.IsValidSession(command.SessionId))
                 {
                     return ConvertToApiResponse(ResponseBase.CreateError("会话信息无效", 401)
                         .WithMetadata("ErrorCode", "INVALID_SESSION"));
                 }
 
-                var sessionInfo = SessionService.GetSession(command.SessionID);
+                var sessionInfo = SessionService.GetSession(command.SessionId);
                 if (sessionInfo == null)
                 {
                     return ConvertToApiResponse(ResponseBase.CreateError("获取会话信息失败", 404)
@@ -501,7 +501,7 @@ namespace RUINORERP.Server.Network.Commands
 
                 // 执行注销
                 var logoutResult = await LogoutAsync(
-                    command.SessionID,
+                    command.SessionId,
                     sessionInfo.UserId.ToString()
                 );
 
@@ -515,7 +515,7 @@ namespace RUINORERP.Server.Network.Commands
 
                 return ConvertToApiResponse(ResponseBase.CreateSuccess(
                     message: "注销成功"
-                ).WithMetadata("Data", new { LoggedOut = true, SessionId = command.SessionID }));
+                ).WithMetadata("Data", new { LoggedOut = true, SessionId = command.SessionId }));
             }
             catch (Exception ex)
             {
@@ -532,7 +532,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<ResponseBase> HandlePrepareLoginAsync(ICommand command, CancellationToken cancellationToken)
         {
-            LogInfo($"处理准备登录命令 [会话: {command.SessionID}]");
+            LogInfo($"处理准备登录命令 [会话: {command.SessionId}]");
 
             try
             {
@@ -756,7 +756,7 @@ namespace RUINORERP.Server.Network.Commands
                 //);
 
                 // 发送确认请求给客户端
-                //var appSession = SessionService.GetAppSession(command.SessionID);
+                //var appSession = SessionService.GetAppSession(command.SessionId);
                 //if (appSession != null)
                 //{
 
@@ -1063,16 +1063,16 @@ namespace RUINORERP.Server.Network.Commands
         private string GetClientIpAddress(ICommand command)
         {
             // 首先尝试从命令的SessionInfo中获取IP
-            if (command != null && !string.IsNullOrEmpty(command.SessionID))
+            if (command != null && !string.IsNullOrEmpty(command.SessionId))
             {
-                var session = SessionService.GetSession(command.SessionID);
+                var session = SessionService.GetSession(command.SessionId);
                 if (session != null && !string.IsNullOrEmpty(session.ClientIp))
                 {
                     return session.ClientIp;
                 }
 
                 // 如果SessionInfo中没有IP，尝试从RemoteEndPoint获取
-                var appSession = SessionService.GetAppSession(command.SessionID);
+                var appSession = SessionService.GetAppSession(command.SessionId);
                 if (appSession != null && appSession.RemoteEndPoint != null)
                 {
                     var ipEndpoint = appSession.RemoteEndPoint as System.Net.IPEndPoint;

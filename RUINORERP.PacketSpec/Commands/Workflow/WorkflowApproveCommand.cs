@@ -1,5 +1,6 @@
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Enums.Core;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -42,7 +43,7 @@ namespace RUINORERP.PacketSpec.Commands.Workflow
         public WorkflowApproveCommand()
         {
             Approved = true; // 默认审批通过
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
         }
 
         /// <summary>
@@ -58,7 +59,7 @@ namespace RUINORERP.PacketSpec.Commands.Workflow
             TaskId = taskId;
             Approved = approved;
             ApprovalComment = approvalComment;
-            Direction = CommandDirection.Send;
+            Direction = PacketDirection.ClientToServer;
         }
 
         /// <summary>

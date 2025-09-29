@@ -179,7 +179,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// </summary>
         public PacketModel()
         {
-            PacketId = GeneratePacketId();
+            PacketId = IdGenerator.GeneratePacketId("DEFAULT");
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = CreatedTimeUtc;
             Status = PacketStatus.Created;
@@ -197,6 +197,8 @@ namespace RUINORERP.PacketSpec.Models.Core
             Body = originalData;
             Command = command;
             Size = originalData?.Length ?? 0;
+            // 重新生成PacketId，使用命令类别
+            PacketId = IdGenerator.GeneratePacketId(command.Category.ToString());
         }
 
         /// <summary>
@@ -328,6 +330,14 @@ namespace RUINORERP.PacketSpec.Models.Core
             }
         }
 
+        /// <summary>
+        /// 设置命令名称
+        /// </summary>
+        /// <param name="name">命令名称</param>
+        public void SetCommandName(string name)
+        {
+            Extensions["__cmdName"] = name;
+        }
         
         /// <summary>
         /// 创建数据包克隆
@@ -337,7 +347,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             return new PacketModel
             {
-                PacketId = GeneratePacketId(),
+                PacketId = IdGenerator.GeneratePacketId(Command.Category.ToString()),
                 Command = Command,
                 Status = Status,
                 SessionId = SessionId,
@@ -383,15 +393,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         #endregion
 
         #region 私有辅助方法
-
-        /// <summary>
-        /// 生成数据包ID
-        /// </summary>
-        /// <returns>唯一数据包ID</returns>
-        private string GeneratePacketId()
-        {
-            return $"PKT_{Command.Category.ToString()}_{DateTime.UtcNow:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}";
-        }
 
         /// <summary>
         /// 计算数据包大小

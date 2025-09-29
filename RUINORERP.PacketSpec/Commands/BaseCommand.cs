@@ -112,14 +112,45 @@ namespace RUINORERP.PacketSpec.Commands
         public string ClientId { get; set; }
         public string RequestId { get; set; }
 
-  
+        private string _commandName;
+        /// <summary>
+        /// 命令名称
+        /// </summary>
+        public string CommandName
+        {
+            get
+            {
+                /// <summary>
+                /// 命令名称
+                /// </summary>
+                _commandName = CommandIdentifier.Name;
+
+                if (!string.IsNullOrEmpty(_commandName))
+                    return _commandName;
+
+                // 检查是否有PacketCommandAttribute特性指定了名称
+                var attr = this.GetType().GetCustomAttributes(typeof(PacketCommandAttribute), false)
+                    .Cast<PacketCommandAttribute>()
+                    .FirstOrDefault();
+
+                if (attr != null && !string.IsNullOrEmpty(attr.Name))
+                    return _commandName = attr.Name;
+
+                // 默认使用类型名称
+                return _commandName = this.GetType().Name;
+            }
+            set
+            {
+                _commandName = value;
+            }
+        }
 
         /// <summary>
         /// 构造函数
         /// </summary>
         protected BaseCommand(PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
         {
-            CommandId = GenerateCommandId();
+            CommandId = IdGenerator.GenerateCommandId(GetType().Name);
             Direction = direction;
             Priority = CommandPriority.Normal;
             Status = CommandStatus.Created;
@@ -421,14 +452,6 @@ namespace RUINORERP.PacketSpec.Commands
         #endregion
 
         #region 辅助方法
-
-        /// <summary>
-        /// 生成命令ID
-        /// </summary>
-        private string GenerateCommandId()
-        {
-            return $"{GetType().Name}_{Ulid.NewUlid()}";
-        }
 
         /// <summary>
         /// 记录调试日志

@@ -120,7 +120,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected BaseCommandHandler(ILogger<BaseCommandHandler> _logger)
         {
-            HandlerId = GenerateHandlerId();
+            HandlerId = IdGenerator.GenerateHandlerId(GetType().Name);
             _statistics = new HandlerStatistics();
             Logger = _logger;
             // 初始化ICoreEntity属性
@@ -410,14 +410,6 @@ namespace RUINORERP.PacketSpec.Commands
         #endregion
 
         #region 辅助方法
-
-        /// <summary>
-        /// 生成处理器ID
-        /// </summary>
-        private string GenerateHandlerId()
-        {
-            return $"{GetType().Name}_{DateTime.UtcNow.Ticks}_{Guid.NewGuid():N}";
-        }
 
         /// <summary>
         /// 创建成功响应结果

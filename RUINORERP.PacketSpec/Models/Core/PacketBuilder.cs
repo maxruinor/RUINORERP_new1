@@ -343,16 +343,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             return builder.WithPriority(PacketPriority.High);
         }
-
-        /// <summary>
-        /// 设置实时优先级
-        /// </summary>
-        /// <param name="builder">构建器实例</param>
-        /// <returns>构建器实例</returns>
-        public static PacketBuilder WithRealtimePriority(this PacketBuilder builder)
-        {
-            return builder.WithPriority(PacketPriority.Realtime);
-        }
+ 
 
         /// <summary>
         /// 设置客户端到服务器方向

@@ -12,21 +12,21 @@ using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Enums.Core;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Collections.Generic;
+using System.Linq;
+
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 命令基类 - 提供命令的通用实现
-    /// 专注于业务逻辑，不直接依赖PacketModel
     /// </summary>
     public abstract class BaseCommand : ICoreEntity, ICommand
-    {    
+    {
         /// <summary>
         /// 日志记录器
         /// </summary>
         protected ILogger<BaseCommand> Logger { get; set; }
-        
+
         /// <summary>
         /// 命令唯一标识
         /// </summary>
@@ -35,10 +35,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 实体唯一标识（实现 ICoreEntity 接口）
         /// </summary>
-        public string Id 
-        { 
-            get => CommandId; 
-            set => CommandId = value; 
+        public string Id
+        {
+            get => CommandId;
+            set => CommandId = value;
         }
 
         /// <summary>
@@ -60,6 +60,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// 命令状态
         /// </summary>
         public CommandStatus Status { get; set; }
+
+        /// <summary>
+        /// 数据包模型 - 包含完整的数据包信息和业务数据
+        /// </summary>
+        public PacketModel Packet { get; set; }
 
         /// <summary>
         /// 命令创建时间（UTC时间）
@@ -193,6 +198,22 @@ namespace RUINORERP.PacketSpec.Commands
                 return CommandValidationResult.Failure("超时时间必须大于0", ErrorCodes.InvalidTimeout);
             }
 
+            // 会话验证（如果需要）
+            if (RequiresSession() && Packet == null)
+            {
+                return CommandValidationResult.Failure("该命令需要有效的会话信息", ErrorCodes.SessionRequired);
+            }
+
+            // 数据验证（如果需要）
+            if (RequiresData() && !Packet.IsValid())
+            {
+                return CommandValidationResult.Failure("该命令需要有效的数据包", ErrorCodes.DataRequired);
+            }
+            // 添加 SessionId 验证（如果需要）
+            if (RequiresSession() && string.IsNullOrEmpty(SessionId))
+            {
+                return CommandValidationResult.Failure("该命令需要有效的会话ID", ErrorCodes.SessionRequired);
+            }
             return CommandValidationResult.Success();
         }
 
@@ -215,6 +236,7 @@ namespace RUINORERP.PacketSpec.Commands
                     SessionId,
                     ClientId,
                     RequestId,
+                    Packet,
                     Data = GetSerializableData()
                 };
 
@@ -247,6 +269,7 @@ namespace RUINORERP.PacketSpec.Commands
                     SessionId,
                     ClientId,
                     RequestId,
+                    Packet,
                     Data = GetSerializableData()
                 };
 
@@ -277,7 +300,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Direction = (PacketDirection)commandData.Direction;
 
                 if (commandData.Priority != null)
-                    Priority = (PacketPriority )commandData.Priority;
+                    Priority = (PacketPriority)commandData.Priority;
 
                 if (commandData.TimeoutMs != null)
                     TimeoutMs = commandData.TimeoutMs;
@@ -309,7 +332,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Direction = (PacketDirection)commandData.Direction;
 
                 if (commandData.Priority != null)
-                    Priority = (PacketPriority )commandData.Priority;
+                    Priority = (PacketPriority)commandData.Priority;
 
                 if (commandData.TimeoutMs != null)
                     TimeoutMs = commandData.TimeoutMs;
@@ -349,6 +372,22 @@ namespace RUINORERP.PacketSpec.Commands
         protected virtual Task OnAfterExecuteAsync(CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 是否需要会话信息
+        /// </summary>
+        protected virtual bool RequiresSession()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// 是否需要数据包
+        /// </summary>
+        protected virtual bool RequiresData()
+        {
+            return false;
         }
 
         /// <summary>
@@ -418,6 +457,25 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 Logger.LogError(message);
             }
+        }
+
+        /// <summary>
+        /// 创建响应数据包
+        /// </summary>
+        /// <param name="responseCommand">完整的响应命令ID</param>
+        /// <param name="data1">第一部分数据</param>
+        /// <param name="data2">第二部分数据</param>
+        /// <returns>原始数据包</returns>
+        protected OriginalData CreateResponseData(uint responseCommand, byte[] data1 = null, byte[] data2 = null)
+        {
+            // 将uint类型的命令ID转换为字节数组
+            byte[] commandBytes = BitConverter.GetBytes(responseCommand);
+
+            // 构造OriginalData: Cmd使用命令ID的低8位(Category)，One使用命令ID的次低8位(OperationCode)
+            byte cmd = commandBytes[0]; // 命令类别
+            byte[] one = commandBytes.Length > 1 ? new byte[] { commandBytes[1] } : Array.Empty<byte>(); // 操作码
+
+            return new OriginalData(cmd, one, data2);
         }
 
         /// <summary>

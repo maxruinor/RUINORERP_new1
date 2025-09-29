@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Enums.Core;
 
 namespace RUINORERP.PacketSpec.Commands.System
 {
@@ -40,7 +41,7 @@ namespace RUINORERP.PacketSpec.Commands.System
         /// </summary>
         public HeartbeatCommand()
         {
-            Priority = PacketPriority .Normal;
+            Priority = PacketPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
             TimestampUtc = DateTime.UtcNow;
         }
@@ -52,7 +53,7 @@ namespace RUINORERP.PacketSpec.Commands.System
         public HeartbeatCommand(string clientId)
         {
             ClientId = clientId;
-            Priority = PacketPriority .Normal;
+            Priority = PacketPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
             TimestampUtc = DateTime.UtcNow;
         }
@@ -68,7 +69,7 @@ namespace RUINORERP.PacketSpec.Commands.System
             ClientId = clientId;
             SessionToken = sessionToken;
             UserId = userId;
-            Priority = PacketPriority .Normal;
+            Priority = PacketPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
             TimestampUtc = DateTime.UtcNow;
         }
@@ -95,13 +96,13 @@ namespace RUINORERP.PacketSpec.Commands.System
             {
                 // 确保ResourceUsage不为空
                 var resourceUsage = this.ResourceUsage ?? new ClientResourceUsage();
-                
+
                 // 设置ProcessUptime到ResourceUsage中
                 if (this.ProcessUptime > 0)
                 {
                     resourceUsage.ProcessUptime = this.ProcessUptime;
                 }
-                
+
                 return new HeartbeatRequest
                 {
                     ClientId = this.ClientId,

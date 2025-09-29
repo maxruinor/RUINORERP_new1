@@ -27,10 +27,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// </summary>
         public string LockType { get; set; }
 
-        /// <summary>
-        /// 超时时间（毫秒）
-        /// </summary>
-        public int TimeoutMs { get; set; }
+ 
 
         /// <summary>
         /// 构造函数

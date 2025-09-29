@@ -54,6 +54,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
             CacheKeys = cacheKeys ?? new List<string>();
             SyncMode = syncMode;
             Direction = PacketDirection.Request;
+            TimeoutMs= 10000;
         }
         
         /// <summary>
@@ -66,6 +67,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
             CacheKeysEnumerator = cacheKeysEnumerator;
             SyncMode = syncMode;
             Direction = PacketDirection.Request;
+            TimeoutMs = 10000;
         }
 
         /// <summary>

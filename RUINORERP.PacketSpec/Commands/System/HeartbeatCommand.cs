@@ -26,11 +26,6 @@ namespace RUINORERP.PacketSpec.Commands.System
         public override CommandId CommandIdentifier => SystemCommands.Heartbeat;
 
         /// <summary>
-        /// 客户端ID
-        /// </summary>
-        public string ClientId { get; set; }
-
-        /// <summary>
         /// 会话令牌
         /// </summary>
         public string SessionToken { get; set; }

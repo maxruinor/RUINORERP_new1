@@ -37,12 +37,8 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 客户端请求的版本号（用于支持文件版本控制）
         /// 如果为null或空字符串，则返回最新版本
         /// </summary>
-        public string Version { get; set; }
+        public string FileVersion { get; set; }
 
-        /// <summary>
-        /// 客户端标识（用于统计和日志记录）
-        /// </summary>
-        public string ClientId { get; set; }
 
         /// <summary>
         /// 请求时间戳（用于验证请求有效性）

@@ -139,6 +139,7 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         /// <summary>
         /// 时间戳（UTC时间）
+        /// 时间戳（用于验证请求有效性）
         /// </summary>
         public DateTime TimestampUtc { get; set; }
 

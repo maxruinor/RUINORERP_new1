@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
@@ -53,10 +53,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// </summary>
         public string ClientIp { get; set; }
 
-        /// <summary>
-        /// 时间戳
-        /// </summary>
-        public DateTime TimestampUtc { get; set; }
 
         /// <summary>
         /// 创建心跳请求

@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+// 添加System.Linq.Expressions命名空间引用
+using System.Linq.Expressions;
+// 添加System.Collections.Concurrent命名空间引用
+using System.Collections.Concurrent;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -12,6 +16,8 @@ namespace RUINORERP.PacketSpec.Commands
     {
         private readonly Dictionary<uint, Type> _commandTypes;
         private readonly object _lock = new object();
+        // 新增命令构造函数缓存
+        private static readonly ConcurrentDictionary<uint, Func<ICommand>> _ctorCache = new();
 
         /// <summary>
         /// 构造函数
@@ -52,6 +58,22 @@ namespace RUINORERP.PacketSpec.Commands
                 _commandTypes.TryGetValue(commandCode, out Type commandType);
                 return commandType;
             }
+        }
+
+        /// <summary>
+        /// 获取命令构造函数
+        /// </summary>
+        /// <param name="commandCode">命令代码</param>
+        /// <returns>命令构造函数，如果找不到类型则返回null</returns>
+        public Func<ICommand> GetCommandCtor(uint commandCode)
+        {
+            return _ctorCache.GetOrAdd(commandCode, code =>
+            {
+                var t = GetCommandType(code);
+                return Expression.Lambda<Func<ICommand>>(
+                           Expression.New(t.GetConstructor(Type.EmptyTypes)))
+                       .Compile();
+            });
         }
 
         /// <summary>

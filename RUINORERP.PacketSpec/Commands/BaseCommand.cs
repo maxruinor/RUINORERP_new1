@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Protocol;
@@ -100,10 +100,15 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 命令名称
         /// </summary>
-        public string CommandName 
-        { 
+        public string CommandName
+        {
             get
             {
+                /// <summary>
+                /// 命令名称
+                /// </summary>
+                _commandName = CommandIdentifier.Name;
+
                 if (!string.IsNullOrEmpty(_commandName))
                     return _commandName;
 
@@ -111,10 +116,10 @@ namespace RUINORERP.PacketSpec.Commands
                 var attr = this.GetType().GetCustomAttributes(typeof(PacketCommandAttribute), false)
                     .Cast<PacketCommandAttribute>()
                     .FirstOrDefault();
-                
+
                 if (attr != null && !string.IsNullOrEmpty(attr.Name))
                     return _commandName = attr.Name;
-                
+
                 // 默认使用类型名称
                 return _commandName = this.GetType().Name;
             }

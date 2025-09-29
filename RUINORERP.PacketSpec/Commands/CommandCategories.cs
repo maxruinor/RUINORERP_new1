@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -12,6 +13,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// 命令类别
         /// </summary>
         public CommandCategory Category { get; }
+
+
+        // 添加命令名称属性
+        public string Name { get; }
+
 
         /// <summary>
         /// 操作码
@@ -28,10 +34,76 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="category">命令类别</param>
         /// <param name="operationCode">操作码</param>
-        public CommandId(CommandCategory category, byte operationCode)
+        /// <summary>
+        /// 构造函数 - 核心构造函数，在命令定义类中被广泛使用
+        /// </summary>
+        /// <param name="category">命令类别</param>
+        /// <param name="operationCode">操作码</param>
+        /// <remarks>
+        /// 此构造函数用于在AuthenticationCommands、CacheCommands等命令定义类中创建命令常量
+        /// 虽然没有直接设置Name属性，但Name会在第一次访问时通过属性getter自动解析
+        /// </remarks>
+        //public CommandId(CommandCategory category, byte operationCode)
+        //{
+        //    Category = category;
+        //    OperationCode = operationCode;
+        //}
+
+        /// <summary>
+        /// 构造函数 - 允许显式指定命令名称
+        /// </summary>
+        /// <param name="category">命令类别</param>
+        /// <param name="operationCode">操作码</param>
+        /// <param name="name">命令名称</param>
+        public CommandId(CommandCategory category, byte operationCode, string name = null)
         {
             Category = category;
             OperationCode = operationCode;
+            Name = name ?? GetDefaultName(category, operationCode);
+        }
+
+        /// <summary>
+        /// 从特性或类型信息获取默认名称的辅助方法
+        /// </summary>
+        /// <param name="category">命令类别</param>
+        /// <param name="operationCode">操作码</param>
+        /// <returns>命令名称，如果无法获取则返回null</returns>
+        private static string GetDefaultName(CommandCategory category, byte operationCode)
+        {
+            try
+            {
+                // 构建完整的命令码
+                ushort fullCode = (ushort)(((byte)category << 8) | operationCode);
+                
+                // 获取CommandCatalog类的所有公共常量字段
+                var fields = typeof(CommandCatalog).GetFields(BindingFlags.Public | 
+                                                         BindingFlags.Static | 
+                                                         BindingFlags.FlattenHierarchy);
+                
+                // 查找与完整命令码匹配的常量
+                foreach (var field in fields)
+                {
+                    if (field.FieldType == typeof(ushort) && 
+                        (ushort)field.GetValue(null) == fullCode)
+                    {
+                        // 从常量名称中提取命令名称（去掉类别前缀）
+                        string fieldName = field.Name;
+                        int underscoreIndex = fieldName.IndexOf('_');
+                        if (underscoreIndex > 0 && underscoreIndex < fieldName.Length - 1)
+                        {
+                            return fieldName.Substring(underscoreIndex + 1);
+                        }
+                        return fieldName;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // 如果发生异常，返回null
+            }
+            
+            // 如果没有找到匹配的命令，返回null
+            return null;
         }
 
         /// <summary>

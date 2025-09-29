@@ -816,7 +816,9 @@ namespace RUINORERP.PacketSpec.Commands
         {
             try
             {
-                var command = _commandTypeHelper.CreateCommand(commandCode);
+                // 使用预编译的构造函数创建命令实例
+                var ctor = _commandTypeHelper.GetCommandCtor(commandCode);
+                var command = ctor();
                 if (command != null)
                 {
                     LogDebug($"创建命令实例成功: {commandCode}");

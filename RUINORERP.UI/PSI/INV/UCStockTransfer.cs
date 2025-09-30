@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -144,8 +144,13 @@ namespace RUINORERP.UI.PSI.INV
                 }
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
-                    base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_StockTransferValidator> (), kryptonPanelMainInfo.Controls);
-                    // base.InitEditItemToControl(entity, kryptonPanelMainInfo.Controls);
+                    base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_StockTransferValidator>(), kryptonPanelMainInfo.Controls);
+
+                    if (s2.PropertyName == entity.GetPropertyName<tb_StockTransferDetail>(c => c.SubtotalCostAmount))
+                    {
+                        //计算总金额
+                    }
+                    
                 }
                 //显示 打印状态 如果是草稿状态 不显示打印
                 if ((DataStatus)EditEntity.DataStatus != DataStatus.草稿)
@@ -170,7 +175,7 @@ namespace RUINORERP.UI.PSI.INV
 
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService <tb_StockTransferValidator> (), kryptonPanelMainInfo.Controls);
+                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_StockTransferValidator>(), kryptonPanelMainInfo.Controls);
             }
             base.BindData(entity);
         }
@@ -262,7 +267,7 @@ namespace RUINORERP.UI.PSI.INV
             if (RowDetails != null)
             {
                 List<tb_StockTransferDetail> details = new List<tb_StockTransferDetail>();
-                
+
                 foreach (var item in RowDetails)
                 {
                     tb_StockTransferDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_StockTransferDetail>(item);
@@ -295,7 +300,6 @@ namespace RUINORERP.UI.PSI.INV
                 EditEntity.TotalQty = details.Sum(c => c.Qty);
                 EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty);
                 EditEntity.TotalTransferAmount = details.Sum(c => c.TransPrice * c.Qty);
-                
             }
             catch (Exception ex)
             {

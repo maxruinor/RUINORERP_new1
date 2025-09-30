@@ -1,4 +1,5 @@
-﻿using RUINORERP.PacketSpec.Enums.Core;
+﻿using FluentValidation.Results;
+using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
@@ -12,10 +13,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     [PacketCommand("LockApply", CommandCategory.Lock)]
     public class LockApplyCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => LockCommands.LockRequest;
+   
 
         /// <summary>
         /// 资源标识符
@@ -37,6 +35,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             LockType = "EXCLUSIVE"; // 默认排他锁
             TimeoutMs = 30000; // 默认超时时间30秒
             Direction = PacketDirection.ClientToServer;
+            CommandIdentifier = LockCommands.LockRequest;
         }
 
         /// <summary>
@@ -51,15 +50,16 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             LockType = lockType;
             TimeoutMs = timeoutMs;
             Direction = PacketDirection.ClientToServer;
+            CommandIdentifier = LockCommands.LockRequest;
         }
 
         /// <summary>
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
+            var result = await base.ValidateAsync(cancellationToken);
             if (!result.IsValid)
             {
                 return result;
@@ -68,22 +68,22 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             // 验证资源标识符
             if (string.IsNullOrWhiteSpace(ResourceId))
             {
-                return CommandValidationResult.Failure("资源标识符不能为空", "INVALID_RESOURCE_ID");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(ResourceId), "资源标识符不能为空") });
             }
 
             // 验证锁类型
             if (string.IsNullOrWhiteSpace(LockType))
             {
-                return CommandValidationResult.Failure("锁类型不能为空", "INVALID_LOCK_TYPE");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(LockType), "锁类型不能为空") });
             }
 
             // 验证超时时间
             if (TimeoutMs <= 0)
             {
-                return CommandValidationResult.Failure("超时时间必须大于0", "INVALID_TIMEOUT");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(TimeoutMs), "超时时间必须大于0") });
             }
 
-            return CommandValidationResult.Success();
+            return new ValidationResult();
         }
 
         /// <summary>

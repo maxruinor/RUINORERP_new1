@@ -29,17 +29,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             return packet;
         }
 
-        /// <summary>
-        /// 设置数据包优先级
-        /// </summary>
-        /// <param name="packet">数据包实例</param>
-        /// <param name="priority">优先级</param>
-        /// <returns>当前数据包实例</returns>
-        public static PacketModel WithPriority(this PacketModel packet, PacketPriority priority)
-        {
-            packet.Priority = priority;
-            return packet;
-        }
+ 
 
         /// <summary>
         /// 设置数据包方向
@@ -218,7 +208,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>当前数据包实例</returns>
         public static PacketModel WithDataDirect(this PacketModel packet, byte[] data)
         {
-            packet.Body = data;
+            packet.Data = data;
             packet.Size = data?.Length ?? 0;
             packet.LastUpdatedTime = DateTime.UtcNow;
             return packet;
@@ -233,11 +223,11 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>数据切片</returns>
         public static byte[] GetDataSlice(this PacketModel packet, int offset, int count)
         {
-            if (packet.Body == null || offset < 0 || count <= 0 || offset + count > packet.Body.Length)
+            if (packet.Data == null || offset < 0 || count <= 0 || offset + count > packet.Data.Length)
                 return Array.Empty<byte>();
 
             var slice = new byte[count];
-            Buffer.BlockCopy(packet.Body, offset, slice, 0, count);
+            Buffer.BlockCopy(packet.Data, offset, slice, 0, count);
             return slice;
         }
 
@@ -248,11 +238,11 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>哈希值</returns>
         public static string ComputeHash(this PacketModel packet)
         {
-            if (packet.Body == null || packet.Body.Length == 0)
+            if (packet.Data == null || packet.Data.Length == 0)
                 return string.Empty;
 
             using var sha256 = System.Security.Cryptography.SHA256.Create();
-            var hash = sha256.ComputeHash(packet.Body);
+            var hash = sha256.ComputeHash(packet.Data);
             return BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
 

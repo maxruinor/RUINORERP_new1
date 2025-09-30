@@ -16,7 +16,7 @@ public class PacketModel : IKeyedPackageInfo<uint> {
     public string PacketId { get; set; }
     public CommandId Command { get; set; }
     public uint Key => (uint)Command;
-    public byte[] Body { get; set; }
+    public byte[] Data { get; set; }
 }
 ```
 
@@ -41,7 +41,7 @@ public class CommandDispatcher {
 ```csharp
 public static PacketModel FromOriginalData(byte[] data) {
     return new PacketModel {
-        Body = data,
+        Data = data,
         Size = data.Length,
         Checksum = ComputeSHA256(data)
     };

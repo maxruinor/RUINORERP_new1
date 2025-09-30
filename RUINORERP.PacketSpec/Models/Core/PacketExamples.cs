@@ -26,7 +26,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             // 方法1: 直接实例化
             var packet1 = new PacketModel()
                 .WithCommand(AuthenticationCommands.Login)
-                .WithPriority(PacketPriority.High)
                 .WithTextData("username=admin&password=123456");
 
             Console.WriteLine($"方法1: {packet1}");
@@ -34,7 +33,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             // 方法2: 使用构建器模式
             var packet2 = PacketBuilder.Create()
                 .WithCommand(new CommandId(CommandCategory.System, 0xF0))
-                .WithPriority(PacketPriority.Low)
                 .WithSession("session_123")
                 .WithJsonData(new { TimestampUtc = DateTime.UtcNow })
                 .Build();
@@ -44,7 +42,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             // 方法3: 使用扩展方法链
             var packet3 = new PacketModel()
                 .WithCommand(new CommandId(CommandCategory.System, 0xF1))
-                .WithPriority(PacketPriority.Normal)
                 .WithDirection(PacketDirection.ClientToServer)
                 .WithTextData("SELECT * FROM Users")
                 .WithExtension("QueryType", "SQL");
@@ -68,8 +65,8 @@ namespace RUINORERP.PacketSpec.Models.Core
 
             Console.WriteLine($"登录包: {loginPacket}");
             Console.WriteLine($"命令类型: {loginPacket.Command}");
-            Console.WriteLine($"优先级: {loginPacket.Priority}");
             Console.WriteLine($"数据大小: {loginPacket.Size} bytes");
+      
 
             // 提取JSON数据
             var loginData = loginPacket.GetJsonData<dynamic>();
@@ -87,7 +84,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             // 文件下载请求
             var downloadPacket = PacketBuilder.Create()
                 .AsFileDownloadRequest("file_789", "documents")
-                .WithHighPriority()
                 .WithTimeout(30000) // 30秒超时
                 .Build();
 
@@ -96,7 +92,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             // 文件上传请求
             var uploadPacket = PacketBuilder.Create()
                 .AsFileUploadRequest("report.pdf", 1024000, "reports") // 1MB文件
-                .WithPriority(PacketPriority.Normal)
                 .WithExtension("Chunked", true)
                 .Build();
 

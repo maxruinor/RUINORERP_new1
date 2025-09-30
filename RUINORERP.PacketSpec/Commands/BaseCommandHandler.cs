@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -11,13 +11,15 @@ using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Text;
 using RUINORERP.Global.CustomAttribute;
+using Newtonsoft.Json;
+using RUINORERP.PacketSpec.Errors;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 命令处理器基类 - 提供命令处理器的通用实现
     /// </summary>
-    public abstract class BaseCommandHandler : ICoreEntity, ICommandHandler
+    public abstract class BaseCommandHandler :  ICommandHandler
     {
         // 定义结构化日志消息
         private static readonly Action<ILogger, string, long, bool, Exception> _logHandled = 
@@ -33,14 +35,41 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public string HandlerId { get; private set; }
 
-        /// <summary>
-        /// 实体唯一标识（实现 ICoreEntity 接口）
-        /// </summary>
-        public string Id 
-        { 
-            get => HandlerId; 
-            set => HandlerId = value; 
+        #region 上下文的支持
+
+        protected CommandExecutionContext GetCommandContext(ICommand command)
+        {
+            if (command is BaseCommand baseCommand)
+            {
+                return baseCommand.ExecutionContext;
+            }
+            return new CommandExecutionContext();
         }
+
+        protected string GetSessionId(ICommand command)
+            => GetCommandContext(command)?.SessionId;
+
+        protected string GetClientId(ICommand command)
+            => GetCommandContext(command)?.ClientId;
+
+        protected T GetExtension<T>(ICommand command, string key)
+        {
+            var context = GetCommandContext(command);
+            if (context?.Extensions != null && context.Extensions.ContainsKey(key))
+            {
+                try
+                {
+                    return (T)context.Extensions[key];
+                }
+                catch
+                {
+                    return default(T);
+                }
+            }
+            return default(T);
+        }
+
+        #endregion
 
         #region ICoreEntity 接口实现
         /// <summary>
@@ -81,7 +110,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 处理器名称
         /// </summary>
-        public virtual string Name => GetType().Name;
+        public virtual string Name => this.GetType().Name;
 
         /// <summary>
         /// 处理器优先级
@@ -120,14 +149,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected BaseCommandHandler(ILogger<BaseCommandHandler> _logger)
         {
-            HandlerId = IdGenerator.GenerateHandlerId(GetType().Name);
+            HandlerId = IdGenerator.GenerateHandlerId(this.GetType().Name);
             _statistics = new HandlerStatistics();
             Logger = _logger;
             // 初始化ICoreEntity属性
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = DateTime.UtcNow;
-            
-            // 不再初始化默认的日志记录器，而是延迟初始化
         }
 
         /// <summary>
@@ -143,6 +170,47 @@ namespace RUINORERP.PacketSpec.Commands
             
             try
             {
+                // 记录开始处理时间
+                var logStartTime = DateTime.UtcNow;
+                
+                // 安全获取命令ID（通过反射）
+                string commandId = null;
+                try 
+                {
+                    var commandWithId = command as dynamic;
+                    commandId = commandWithId.CommandId ?? "N/A";
+                }
+                catch
+                {
+                    commandId = "N/A";
+                }
+                
+                Logger.LogInformation($"开始处理命令: {command.GetType().Name}, CommandId: {commandId}");
+
+                // 验证命令
+                var validationResult = await command.ValidateAsync(cancellationToken);
+                if (!validationResult.IsValid)
+                {
+                    Logger.LogWarning($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
+                    return ResponseFactory.Fail(UnifiedErrorCodes.Command_ValidationFailed, $"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
+                }
+
+                // 检查命令是否过期（如果命令有实现ExpirationTimeUtc属性）
+                try 
+                {
+                    var commandWithExpiration = command as dynamic;
+                    if (commandWithExpiration.ExpirationTimeUtc != null && 
+                        commandWithExpiration.ExpirationTimeUtc < DateTime.UtcNow)
+                    {
+                        Logger.LogWarning($"命令已过期: {commandWithExpiration.ExpirationTimeUtc}");
+                        return ResponseFactory.Fail(UnifiedErrorCodes.Command_Timeout, "命令已过期");
+                    }
+                }
+                catch
+                {
+                    // 如果命令没有ExpirationTimeUtc属性，则跳过检查
+                }
+
                 // 命令前置处理
                 var beforeResult = await OnBeforeHandleAsync(command, cancellationToken);
                 if (beforeResult != null)
@@ -156,30 +224,28 @@ namespace RUINORERP.PacketSpec.Commands
                 if (afterResult != null)
                     return afterResult;
 
+                // 记录处理完成时间
+                var endTime = DateTime.UtcNow;
+                Logger.LogInformation($"命令处理完成: {command.GetType().Name}, CommandId: {command.CommandIdentifier}, 结果: {result.IsSuccess}, 执行时间: {(endTime - logStartTime).TotalMilliseconds} ms");
+
                 return result;
             }
             catch (OperationCanceledException)
             {
                 success = false;
-                var errorResponse = ResponseBase.CreateError("命令处理被取消", 503)
-                    .WithMetadata("ErrorCode", "PROCESS_CANCELLED");
-                return ConvertToResponseBase(errorResponse);
+                return ResponseFactory.Fail(UnifiedErrorCodes.Command_ProcessCancelled);
             }
             catch (Exception ex)
             {
                 success = false;
-                var errorResponse = ResponseBase.CreateError($"命令处理异常: {ex.Message}", 500)
-                    .WithMetadata("ErrorCode", "PROCESS_ERROR")
-                    .WithMetadata("Exception", ex.Message)
-                    .WithMetadata("StackTrace", ex.StackTrace);
-                return ConvertToResponseBase(errorResponse);
+                return ResponseFactory.Except(ex, UnifiedErrorCodes.Command_ExecuteFailed);
             }
             finally
             {
                 var elapsed = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
                 
                 // 记录结构化日志
-                _logHandled(Logger, command.CommandId, elapsed, success, null);
+                _logHandled(Logger, command.ToString(), elapsed, success, null);
             }
         }
 
@@ -455,23 +521,7 @@ namespace RUINORERP.PacketSpec.Commands
             return result;
         }
 
-        /// <summary>
-        /// 创建失败响应结果
-        /// </summary>
-        /// <param name="msg">错误消息</param>
-        /// <param name="code">错误代码</param>
-        /// <param name="ex">异常信息</param>
-        /// <returns>API响应结果</returns>
-        protected ResponseBase Fail(string msg, string code = null, Exception ex = null)
-        {
-            ResponseBase ResponseBase = (ResponseBase)ResponseBase.CreateError(msg, 500).WithMetadata("ErrorCode", code ?? "GENERAL_ERROR");
-            if (ex != null)
-            {
-                ResponseBase = (ResponseBase)((ResponseBase)ResponseBase).WithMetadata("Exception", ex.Message)
-                                        .WithMetadata("StackTrace", ex.StackTrace);
-            }
-            return ResponseBase;
-        }
+
 
         /// <summary>
         /// 创建消息响应数据包
@@ -580,6 +630,92 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
+        ///// <summary>
+        ///// 从原始数据解析对象 - 使用系统默认的JSON序列化器
+        ///// </summary>
+        //protected T ParseData<T>(OriginalData originalData) where T : class
+        //{
+        //    if (originalData.One == null || originalData.One.Length == 0)
+        //        return null;
+
+        //    try
+        //    {
+        //        var json = Encoding.UTF8.GetString(originalData.One);
+        //        return JsonSerializer.Deserialize<T>(json);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        LogError($"解析数据失败: {ex.Message}", ex);
+        //        return null;
+        //    }
+        //}
+
+        /// <summary>
+        /// 使用GetJsonData方法从PacketModel中解析业务数据
+        /// 推荐使用此方法以确保数据解析的统一性
+        /// </summary>
+        /// <typeparam name="T">目标数据类型</typeparam>
+        /// <param name="command">命令对象</param>
+        /// <returns>解析后的数据对象，如果解析失败则返回null</returns>
+        protected T ParseBusinessData<T>(ICommand command) where T : class
+        {
+            if (command is BaseCommand baseCmd)
+            {
+                return baseCmd.GetObjectData<T>();
+            }
+            return null;
+        }
+
+  
+
+        /// <summary>
+        /// 创建响应数据
+        /// </summary>
+        //protected OriginalData CreateResponseData(uint command, object data)
+        //{
+        //    try
+        //    {
+        //        var json = System.Text.Json.JsonSerializer.Serialize(data);
+        //        var dataBytes = System.Text.Encoding.UTF8.GetBytes(json);
+                
+        //        // 将完整的CommandId正确分解为Category和OperationCode
+        //        byte category = (byte)(command & 0xFF); // 取低8位作为Category
+        //        byte operationCode = (byte)((command >> 8) & 0xFF); // 取次低8位作为OperationCode
+                
+        //        return new OriginalData(category, new byte[] { operationCode }, dataBytes);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        LogError($"创建响应数据失败: {ex.Message}", ex);
+                
+        //        // 将完整的CommandId正确分解为Category和OperationCode
+        //        byte category = (byte)(command & 0xFF); // 取低8位作为Category
+        //        byte operationCode = (byte)((command >> 8) & 0xFF); // 取次低8位作为OperationCode
+                
+        //        return new OriginalData(category, new byte[] { operationCode }, null);
+        //    }
+        //}
+
+        /// <summary>
+        /// 将ResponseBase转换为ResponseBase
+        /// </summary>
+        /// <param name="baseResponse">基础响应对象</param>
+        /// <returns>ResponseBase对象</returns>
+        protected ResponseBase ConvertToResponseBase(ResponseBase baseResponse)
+        {
+            var response = new ResponseBase
+            {
+                IsSuccess = baseResponse.IsSuccess,
+                Message = baseResponse.Message,
+                Code = baseResponse.Code,
+                TimestampUtc = baseResponse.TimestampUtc,
+                RequestId = baseResponse.RequestId,
+                Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                ExecutionTimeMs = baseResponse.ExecutionTimeMs
+            };
+            return response;
+        }
+
         #endregion
 
         #region IDisposable
@@ -606,26 +742,6 @@ namespace RUINORERP.PacketSpec.Commands
             }
 
             GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// 将ResponseBase转换为ResponseBase
-        /// </summary>
-        /// <param name="baseResponse">基础响应对象</param>
-        /// <returns>ResponseBase对象</returns>
-        protected ResponseBase ConvertToResponseBase(ResponseBase baseResponse)
-        {
-            var response = new ResponseBase
-            {
-                IsSuccess = baseResponse.IsSuccess,
-                Message = baseResponse.Message,
-                Code = baseResponse.Code,
-                TimestampUtc = baseResponse.TimestampUtc,
-                RequestId = baseResponse.RequestId,
-                Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                ExecutionTimeMs = baseResponse.ExecutionTimeMs
-            };
-            return response;
         }
 
         #endregion

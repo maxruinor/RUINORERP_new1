@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using RUINORERP.Model.CommonModel;
+﻿﻿﻿﻿﻿﻿using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -6,6 +6,7 @@ using RUINORERP.PacketSpec.Enums.Core;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentValidation.Results;
 
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
@@ -15,10 +16,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     [PacketCommand("DocumentLockApply", CommandCategory.Lock)]
     public class DocumentLockApplyCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => LockCommands.RequestLock;
+ 
 
         /// <summary>
         /// 单据ID
@@ -47,6 +45,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         {
             Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
+            CommandIdentifier = LockCommands.RequestLock;
         }
 
         /// <summary>
@@ -62,6 +61,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             MenuId = menuId;
             Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
+            CommandIdentifier = LockCommands.RequestLock;
         }
 
         /// <summary>
@@ -82,39 +82,11 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
-            if (!result.IsValid)
-            {
-                return result;
-            }
-
-            // 验证单据ID
-            if (BillId <= 0)
-            {
-                return CommandValidationResult.Failure("单据ID必须大于0", "INVALID_BILL_ID");
-            }
-
-            // 验证单据信息
-            if (BillData == null)
-            {
-                return CommandValidationResult.Failure("单据信息不能为空", "INVALID_BILL_DATA");
-            }
-
-            // 验证业务名称
-            if (string.IsNullOrWhiteSpace(BillData.BizName))
-            {
-                return CommandValidationResult.Failure("业务名称不能为空", "INVALID_BIZ_NAME");
-            }
-
-            // 验证单据编号
-            if (string.IsNullOrWhiteSpace(BillData.BillNo))
-            {
-                return CommandValidationResult.Failure("单据编号不能为空", "INVALID_BILL_NO");
-            }
-
-            return CommandValidationResult.Success();
+            // 调用基类验证方法，将使用独立的验证器类进行验证
+            var result = await base.ValidateAsync(cancellationToken);
+            return result;
         }
 
         /// <summary>

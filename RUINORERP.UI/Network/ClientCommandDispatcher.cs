@@ -20,7 +20,7 @@ namespace RUINORERP.UI.Network
     public class ClientCommandDispatcher : ICommandDispatcher
     {
         private readonly CommandTypeHelper _commandTypeHelper;
-        private readonly ConcurrentDictionary<string, ICommand> _commandInstances;
+        private readonly ConcurrentDictionary<ushort, ICommand> _commandInstances;
         private readonly object _lockObject = new object();
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace RUINORERP.UI.Network
         public ClientCommandDispatcher(CommandTypeHelper commandTypeHelper = null)
         {
             _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
-            _commandInstances = new ConcurrentDictionary<string, ICommand>();
+            _commandInstances = new ConcurrentDictionary<ushort, ICommand>();
             
             // 自动注册客户端命令
             RegisterClientCommands();
@@ -64,10 +64,10 @@ namespace RUINORERP.UI.Network
             try
             {
                 //var command = _commandTypeHelper.CreateCommand(commandCode, parameters);
-                var command = _commandTypeHelper.CreateCommand(commandCode);
+                var command = CreateCommand(commandCode);
                 if (command != null)
                 {
-                    _commandInstances.TryAdd(command.CommandId, command);
+                    _commandInstances.TryAdd(command.CommandIdentifier, command);
                 }
                 return command;
             }
@@ -87,10 +87,10 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                var command = _commandTypeHelper.CreateCommand(commandCode);
+                var command = CreateCommand(commandCode);
                 if (command != null)
                 {
-                    _commandInstances.TryAdd(command.CommandId, command);
+                    _commandInstances.TryAdd(command.CommandIdentifier, command);
                 }
                 return command;
             }
@@ -99,37 +99,9 @@ namespace RUINORERP.UI.Network
                 throw new InvalidOperationException($"创建命令实例失败: {ex.Message}", ex);
             }
         }
+ 
 
-        /// <summary>
-        /// 获取命令实例
-        /// </summary>
-        /// <param name="commandId">命令ID</param>
-        /// <returns>命令实例，如果找不到则返回null</returns>
-        public ICommand GetCommand(string commandId)
-        {
-            if (string.IsNullOrEmpty(commandId))
-            {
-                return null;
-            }
-            
-            _commandInstances.TryGetValue(commandId, out var command);
-            return command;
-        }
-
-        /// <summary>
-        /// 移除命令实例
-        /// </summary>
-        /// <param name="commandId">命令ID</param>
-        /// <returns>是否成功移除</returns>
-        public bool RemoveCommand(string commandId)
-        {
-            if (string.IsNullOrEmpty(commandId))
-            {
-                return false;
-            }
-            
-            return _commandInstances.TryRemove(commandId, out _);
-        }
+        
 
         /// <summary>
         /// 清理过期的命令实例
@@ -145,7 +117,7 @@ namespace RUINORERP.UI.Network
             
             var cutoffTime = DateTime.UtcNow.AddMinutes(-expirationMinutes);
             var expiredCommands = _commandInstances
-                .Where(kvp => kvp.Value.CreatedAtUtc < cutoffTime)
+                .Where(kvp => kvp.Value.CreatedTimeUtc < cutoffTime)
                 .Select(kvp => kvp.Key)
                 .ToList();
 
@@ -162,9 +134,9 @@ namespace RUINORERP.UI.Network
         /// 获取所有活动的命令实例
         /// </summary>
         /// <returns>命令实例的只读字典</returns>
-        public IReadOnlyDictionary<string, ICommand> GetActiveCommands()
+        public IReadOnlyDictionary<ushort, ICommand> GetActiveCommands()
         {
-            return new ReadOnlyDictionary<string, ICommand>(_commandInstances);
+            return new ReadOnlyDictionary<ushort, ICommand>(_commandInstances);
         }
 
         /// <summary>

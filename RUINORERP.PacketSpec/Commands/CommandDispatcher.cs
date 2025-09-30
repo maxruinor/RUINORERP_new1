@@ -45,8 +45,8 @@ namespace RUINORERP.PacketSpec.Commands
         private static readonly List<ICommandHandler> EmptyList = new List<ICommandHandler>();
 
         private readonly ConcurrentDictionary<uint, List<ICommandHandler>> _commandHandlerMap;
-        private readonly ConcurrentDictionary<string, DateTime> _commandHistory;
-        private readonly ICommandHandlerFactory _handlerFactory;
+        private readonly ConcurrentDictionary<ushort, DateTime> _commandHistory;
+        private ICommandHandlerFactory _handlerFactory;
         // 移除每个命令类型的信号量，改为使用Channel队列
         // private readonly ConcurrentDictionary<uint, SemaphoreSlim> _commandSemaphores;
         private int _maxConcurrencyPerCommand;
@@ -94,15 +94,15 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="commandTypeHelper">命令类型辅助类</param>
         /// <param name="maxConcurrencyPerCommand">每个命令的最大并发数</param>
         /// <param name="circuitBreakerPolicy">熔断器策略，默认为6次失败后熔断，30秒后恢复</param>
-        public CommandDispatcher(ILogger<CommandDispatcher> _Logger, ICommandHandlerFactory handlerFactory = null,
+        public CommandDispatcher(ILogger<CommandDispatcher> logger, ICommandHandlerFactory handlerFactory = null,
             CommandTypeHelper commandTypeHelper = null, int maxConcurrencyPerCommand = 0,
             IAsyncPolicy<ResponseBase> circuitBreakerPolicy = null)
         {
-            Logger = _Logger;
-            _handlerFactory = handlerFactory ?? new DefaultCommandHandlerFactory();
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _handlerFactory = handlerFactory;
             _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
             _commandHandlerMap = new ConcurrentDictionary<uint, List<ICommandHandler>>();
-            _commandHistory = new ConcurrentDictionary<string, DateTime>();
+            _commandHistory = new ConcurrentDictionary<ushort, DateTime>();
             _dispatchSemaphore = new SemaphoreSlim(1, 1); // 添加缺失的信号量
 
             MaxConcurrencyPerCommand = maxConcurrencyPerCommand > 0 ? maxConcurrencyPerCommand : Environment.ProcessorCount;
@@ -145,6 +145,11 @@ namespace RUINORERP.PacketSpec.Commands
                 if (_isInitialized)
                     return true;
 
+                // 确保处理器工厂已初始化
+                if (_handlerFactory == null)
+                {
+                    _handlerFactory = new DefaultCommandHandlerFactory();
+                }
 
                 LogInfo("初始化命令调度器...");
 
@@ -231,13 +236,13 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="priority">命令优先级</param>
         /// <returns>Channel队列索引 (0=高优先级, 1=普通优先级, 2=低优先级)</returns>
-        private int GetPriorityChannel(PacketPriority  priority)
+        private int GetPriorityChannel(CommandPriority priority)
         {
             return priority switch
             {
-                PacketPriority .High => 0,
-                PacketPriority .Normal => 1,
-                PacketPriority .Low => 2,
+                CommandPriority.High => 0,
+                CommandPriority.Normal => 1,
+                CommandPriority.Low => 2,
                 _ => 1 // 默认使用普通优先级
             };
         }
@@ -251,29 +256,25 @@ namespace RUINORERP.PacketSpec.Commands
         private async Task<ResponseBase> ProcessAsync(ICommand cmd, CancellationToken ct)
         {
             // 检查幂等性
-            string requestId = null;
-            if (cmd.Packet?.Extensions != null &&
-                cmd.Packet.Extensions.TryGetValue("RequestId", out var requestIdObj) &&
-                requestIdObj is string rid)
+
+            if (cmd.CommandIdentifier != 0)
             {
-                requestId = rid;
-                if (_idempotent.TryGetCached(requestId, out var cached))
+                if (_idempotent.TryGetCached(cmd.CommandIdentifier.ToString(), out var cached))
                 {
                     return cached;
                 }
             }
 
             var startTime = DateTime.Now;
-            var commandId = cmd.CommandId;
             var commandIdentifier = cmd.CommandIdentifier;
 
             ResponseBase result = null;
             try
             {
                 // 记录命令历史
-                _commandHistory.TryAdd(commandId, startTime);
+                _commandHistory.TryAdd(commandIdentifier.FullCode, startTime);
 
-                LogDebug($"开始分发命令: {cmd.CommandIdentifier} [ID: {commandId}]");
+                LogDebug($"开始分发命令: {cmd.CommandIdentifier} [ID: {commandIdentifier.FullCode}]");
 
                 // 查找合适的处理器和命令类型
                 var handlerCollection = FindHandlers(cmd);
@@ -305,7 +306,7 @@ namespace RUINORERP.PacketSpec.Commands
                 catch (Polly.CircuitBreaker.BrokenCircuitException ex)
                 {
                     // 熔断器已打开，记录详细信息并返回适当的错误
-                    LogWarning($"命令 {cmd.CommandIdentifier} [ID: {commandId}] 的熔断器已打开，拒绝执行: {ex.Message}");
+                    LogWarning($"命令 {cmd.CommandIdentifier} [ID: {commandIdentifier.FullCode}] 的熔断器已打开，拒绝执行: {ex.Message}");
                     result = ResponseBase.CreateError($"服务暂时不可用，熔断器已打开: {ex.Message}", 503);
                     return result;
                 }
@@ -316,7 +317,7 @@ namespace RUINORERP.PacketSpec.Commands
                     result.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
                 }
 
-                LogDebug($"命令分发完成: {cmd.CommandIdentifier} [ID: {commandId}] - {result?.ExecutionTimeMs}ms");
+                LogDebug($"命令分发完成: {cmd.CommandIdentifier} [ID: {commandIdentifier.FullCode}] - {result?.ExecutionTimeMs}ms");
 
                 if (result == null)
                 {
@@ -327,23 +328,23 @@ namespace RUINORERP.PacketSpec.Commands
             }
             catch (OperationCanceledException)
             {
-                LogWarning($"命令分发被取消: {cmd.CommandIdentifier} [ID: {commandId}]");
+                LogWarning($"命令分发被取消: {cmd.CommandIdentifier} [ID: {commandIdentifier.FullCode}]");
                 result = ResponseBase.CreateError("命令分发被取消", 503);
                 return result;
             }
             catch (Exception ex)
             {
                 var executionTime = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                LogError($"分发命令 {cmd.CommandIdentifier} [ID: {commandId}] 异常: {ex.Message}", ex);
+                LogError($"分发命令 {cmd.CommandIdentifier} [ID: {commandIdentifier.FullCode}] 异常: {ex.Message}", ex);
                 result = ResponseBase.CreateError($"命令分发异常: {ex.Message}", 500);
                 return result;
             }
             finally
             {
                 // 缓存结果以实现幂等性
-                if (requestId != null && result != null)
+                if (!string.IsNullOrEmpty(cmd.CommandIdentifier.ToString()) && result != null)
                 {
-                    _idempotent.Cache(requestId, result);
+                    _idempotent.Cache(cmd.CommandIdentifier.ToString(), result);
                 }
 
                 // 清理历史记录
@@ -357,6 +358,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="handlerType">处理器类型</param>
         public async Task<bool> RegisterHandlerAsync(Type handlerType, CancellationToken cancellationToken = default)
         {
+            if (_handlerFactory == null)
+            {
+                LogError("处理器工厂未初始化");
+                return false;
+            }
+
             try
             {
                 if (!typeof(ICommandHandler).IsAssignableFrom(handlerType))

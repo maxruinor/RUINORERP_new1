@@ -1,50 +1,20 @@
 ﻿using RUINORERP.PacketSpec.Enums.Core;
 using System;
 
-namespace RUINORERP.PacketSpec.Core
+namespace RUINORERP.PacketSpec.Models.Core
 {
-    
-
     /// <summary>
     /// 数据包接口 - 定义数据包的基本结构
     /// </summary>
     public interface IPacketData
     {
+        // 传输数据
+        byte[] Data { get; set; }
+
         /// <summary>
         /// 包标志位
         /// </summary>
         string Flag { get; set; }
-
-        /// <summary>
-        /// 包体数据
-        /// </summary>
-        byte[] Body { get; set; }
-
-        /// <summary>
-        /// 会话ID
-        /// </summary>
-        string SessionId { get; set; }
-
-        /// <summary>
-        /// 获取包大小
-        /// </summary>
-        int GetPackageSize();
-
-        /// <summary>
-        /// 安全清理敏感数据
-        /// </summary>
-        void ClearSensitiveData();
-    }
-
-    /// <summary>
-    /// 核心实体接口 - 定义核心实体的基本属性和方法
-    /// </summary>
-    public interface ICoreEntity
-    {
-        /// <summary>
-        /// 实体唯一标识
-        /// </summary>
-        string Id { get; set; }
 
         /// <summary>
         /// 创建时间（UTC时间）
@@ -71,9 +41,21 @@ namespace RUINORERP.PacketSpec.Core
         /// 更新时间戳
         /// </summary>
         void UpdateTimestamp();
+
+        /// <summary>
+        /// 会话ID
+        /// </summary>
+        string SessionId { get; set; }
+
+        ///// <summary>
+        ///// 获取包大小
+        ///// </summary>
+       int GetPackageSize();
+
+        ///// <summary>
+        ///// 安全清理敏感数据
+        ///// </summary>
+        void ClearSensitiveData();
     }
 
-    // 移除已弃用的接口定义
-    // ITraceable 和 IValidatable 接口已合并到 ICoreEntity 接口中
-    
 }

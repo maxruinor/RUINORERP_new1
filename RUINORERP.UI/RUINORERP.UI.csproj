@@ -2237,6 +2237,8 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Network\Authentication\ClientTokenStorage.cs" />
+    <Compile Include="Network\Authentication\SilentTokenRefresher.cs" />
     <Compile Include="Network\BizPackageInfo.cs" />
     <Compile Include="Network\BizPipelineFilter.cs" />
     <Compile Include="Network\ClientCommandDispatcher.cs" />
@@ -2253,6 +2255,7 @@
     <Compile Include="Network\ErrorHandling\IErrorHandlingStrategy.cs" />
     <Compile Include="Network\ErrorHandling\TimeoutErrorHandlingStrategy.cs" />
     <Compile Include="Network\EventArgs.cs" />
+    <Compile Include="Network\Exceptions\NetworkCommunicationException.cs" />
     <Compile Include="Network\HeartbeatManager.cs" />
     <Compile Include="Network\IClientCommunicationService.cs" />
     <Compile Include="Network\ISocketClient.cs" />

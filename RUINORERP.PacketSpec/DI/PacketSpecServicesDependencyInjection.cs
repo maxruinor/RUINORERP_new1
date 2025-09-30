@@ -2,6 +2,11 @@
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using Microsoft.Extensions.Configuration;
+using RUINORERP.Model.ConfigModel;
+using System.IO;
 
 namespace RUINORERP.PacketSpec.DI
 {
@@ -15,15 +20,38 @@ namespace RUINORERP.PacketSpec.DI
         /// 配置PacketSpec服务依赖注入
         /// </summary>
         /// <param name="services">服务集合</param>
-        public static void AddPacketSpecServices(this IServiceCollection services)
+        /// <param name="configuration">配置</param>
+        public static void AddPacketSpecServices(this IServiceCollection services, IConfiguration configuration)
         {
             // 注册序列化服务包装器
             // 为静态UnifiedSerializationService类提供可注入的实例包装
             services.AddSingleton<IUnifiedSerializationService, UnifiedSerializationServiceWrapper>();
+
+            services.AddSingleton<ITokenService, JwtTokenService>();
             
+            // 直接从配置中读取值，不依赖于扩展方法
+            services.Configure<TokenServiceOptions>(options =>
+            {
+                options.SecretKey = configuration["TokenService:SecretKey"];
+                if (int.TryParse(configuration["TokenService:DefaultExpiryHours"], out var defaultExpiryHours))
+                {
+                    options.DefaultExpiryHours = defaultExpiryHours;
+                }
+                if (int.TryParse(configuration["TokenService:RefreshTokenExpiryHours"], out var refreshTokenExpiryHours))
+                {
+                    options.RefreshTokenExpiryHours = refreshTokenExpiryHours;
+                }
+            });
+
+            // 注册Token验证服务
+            services.AddSingleton<TokenValidationService>();
+
             // 注册命令调度器
             services.AddSingleton<CommandDispatcher>();
             services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
+            
+ 
+            
             // 注册命令工厂
             services.AddSingleton<ICommandFactory, DefaultCommandFactory>();
             services.AddSingleton<ICommandFactoryAsync, DefaultCommandFactory>();
@@ -31,6 +59,15 @@ namespace RUINORERP.PacketSpec.DI
             // 注册命令扫描和类型辅助服务
             services.AddSingleton<CommandScanner>();
             services.AddSingleton<CommandTypeHelper>();
+            
+            // 注册命令处理器工厂
+            services.AddSingleton<ICommandHandlerFactory, DefaultCommandHandlerFactory>();
+            
+            // 注册适配器
+            services.AddSingleton<CommandPacketAdapter>();
+            
+
+            
             
             // 注意：不注册抽象的RequestHandlerBase<TRequest, TResponse>类
             // 具体的请求处理器应该在各自的服务项目中注册
@@ -42,7 +79,6 @@ namespace RUINORERP.PacketSpec.DI
         /// <param name="builder">容器构建器</param>
         public static void ConfigurePacketSpecServicesContainer(this ContainerBuilder builder)
         {
-
             // 注册序列化服务包装器
             builder.RegisterType<UnifiedSerializationServiceWrapper>()
                 .As<IUnifiedSerializationService>()
@@ -51,11 +87,34 @@ namespace RUINORERP.PacketSpec.DI
             // 注册命令调度器
             builder.RegisterType<CommandDispatcher>().AsSelf().SingleInstance();
             
+    
+            // 注册Token服务
+            builder.RegisterType<JwtTokenService>()
+                .As<ITokenService>()
+                .SingleInstance();
+
+            // 注册Token验证服务
+            builder.RegisterType<TokenValidationService>()
+                .AsSelf()
+                .SingleInstance();
+            
             // 注册命令工厂
             builder.RegisterType<DefaultCommandFactory>()
                 .As<ICommandFactory>()
                 .As<ICommandFactoryAsync>()
                 .SingleInstance();
+                
+            // 注册命令处理器工厂
+            builder.RegisterType<DefaultCommandHandlerFactory>()
+                .As<ICommandHandlerFactory>()
+                .SingleInstance();
+                
+            // 注册适配器
+            builder.RegisterType<CommandPacketAdapter>().SingleInstance();
+                
+            
+            // 注册Token验证服务
+            builder.RegisterType<TokenValidationService>().SingleInstance();
                 
             // 注意：不注册抽象的RequestHandlerBase<TRequest, TResponse>类
             // 具体的请求处理器应该在各自的服务项目中注册

@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -45,16 +45,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             return this;
         }
 
-        /// <summary>
-        /// 设置优先级
-        /// </summary>
-        /// <param name="priority">优先级</param>
-        /// <returns>当前构建器实例</returns>
-        public PacketBuilder WithPriority(PacketPriority priority)
-        {
-            _packet.Priority = priority;
-            return this;
-        }
+ 
 
         /// <summary>
         /// 设置方向
@@ -76,7 +67,10 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketBuilder WithSession(string sessionId, string clientId = null)
         {
             _packet.SessionId = sessionId;
-            _packet.ClientId = clientId;
+            if (!string.IsNullOrEmpty(clientId))
+            {
+                _packet.Extensions["ClientId"] = clientId;
+            }
             return this;
         }
 
@@ -171,7 +165,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketBuilder AsLoginRequest(string username, string password, string clientVersion = null)
         {
             return WithCommand(AuthenticationCommands.LoginRequest)
-                .WithPriority(PacketPriority.High)
+             
                 .WithDirection(PacketDirection.ClientToServer)
                 .WithJsonData(new { Username = username, Password = password, ClientVersion = clientVersion })
                 .WithExtension("AuthType", "Basic");
@@ -187,7 +181,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             // 使用系统管理命令中的心跳命令
             return WithCommand(new CommandId(CommandCategory.System, 0xF0))
-                .WithPriority(PacketPriority.Low)
                 .WithDirection(PacketDirection.ClientToServer)
                 .WithSession(sessionId, clientId)
                 .WithJsonData(new { TimestampUtc = DateTime.UtcNow });
@@ -202,7 +195,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketBuilder AsFileDownloadRequest(string fileId, string category = null)
         {
             return WithCommand(FileCommands.FileDownload)
-                .WithPriority(PacketPriority.Normal)
                 .WithDirection(PacketDirection.ClientToServer)
                 .WithJsonData(new { FileId = fileId, Category = category });
         }
@@ -217,7 +209,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketBuilder AsFileUploadRequest(string fileName, long fileSize, string category = null)
         {
             return WithCommand(FileCommands.FileUpload)
-                .WithPriority(PacketPriority.Normal)
                 .WithDirection(PacketDirection.ClientToServer)
                 .WithJsonData(new { FileName = fileName, FileSize = fileSize, Category = category });
         }
@@ -232,7 +223,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             // 使用系统命令作为查询命令
             return WithCommand(new CommandId(CommandCategory.System, 0xF1))
-                .WithPriority(PacketPriority.Normal)
                 .WithDirection(PacketDirection.ClientToServer)
                 .WithJsonData(query);
         }
@@ -334,15 +324,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             return builder.AsQueryRequest(query);
         }
 
-        /// <summary>
-        /// 设置高优先级
-        /// </summary>
-        /// <param name="builder">构建器实例</param>
-        /// <returns>构建器实例</returns>
-        public static PacketBuilder WithHighPriority(this PacketBuilder builder)
-        {
-            return builder.WithPriority(PacketPriority.High);
-        }
+      
  
 
         /// <summary>

@@ -8,9 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Enums.Core;
+using FluentValidation.Results;
 
 namespace RUINORERP.PacketSpec.Commands.System
 {
@@ -19,12 +19,9 @@ namespace RUINORERP.PacketSpec.Commands.System
     /// 用于客户端向服务器发送心跳包，维持连接活跃状态
     /// </summary>
     [PacketCommandAttribute("Heartbeat", CommandCategory.System, Description = "心跳命令")]
-    public class HeartbeatCommand : RUINORERP.PacketSpec.Commands.BaseCommand
+    public class HeartbeatCommand :  BaseCommand<HeartbeatRequest, ResponseBase>
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => SystemCommands.Heartbeat;
+ 
 
         /// <summary>
         /// 会话令牌
@@ -41,7 +38,7 @@ namespace RUINORERP.PacketSpec.Commands.System
         /// </summary>
         public HeartbeatCommand()
         {
-            Priority = PacketPriority.Normal;
+            Priority = CommandPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
             TimestampUtc = DateTime.UtcNow;
         }
@@ -52,10 +49,10 @@ namespace RUINORERP.PacketSpec.Commands.System
         /// <param name="clientId">客户端ID</param>
         public HeartbeatCommand(string clientId)
         {
-            ClientId = clientId;
-            Priority = PacketPriority.Normal;
+            Priority = CommandPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
             TimestampUtc = DateTime.UtcNow;
+            CommandIdentifier = SystemCommands.Heartbeat;
         }
 
         /// <summary>
@@ -66,12 +63,20 @@ namespace RUINORERP.PacketSpec.Commands.System
         /// <param name="userId">用户ID</param>
         public HeartbeatCommand(string clientId, string sessionToken, long userId)
         {
-            ClientId = clientId;
+            Request = new HeartbeatRequest
+            {
+                ClientId = clientId,
+                SessionToken = sessionToken,
+                UserId = userId
+                // 数据会自动被容器管理
+            };
+
             SessionToken = sessionToken;
             UserId = userId;
-            Priority = PacketPriority.Normal;
+            Priority = CommandPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
             TimestampUtc = DateTime.UtcNow;
+            CommandIdentifier = SystemCommands.Heartbeat;
         }
 
         // 客户端信息属性，由客户端设置
@@ -90,6 +95,7 @@ namespace RUINORERP.PacketSpec.Commands.System
         /// 获取可序列化的数据
         /// </summary>
         /// <returns>可序列化的心跳数据</returns>
+        [Obsolete("用新的数据容器，不再需要重写GetSerializableData")]
         public override object GetSerializableData()
         {
             try
@@ -105,7 +111,6 @@ namespace RUINORERP.PacketSpec.Commands.System
 
                 return new HeartbeatRequest
                 {
-                    ClientId = this.ClientId,
                     SessionToken = this.SessionToken,
                     UserId = this.UserId,
                     TimestampUtc = this.TimestampUtc,
@@ -122,7 +127,6 @@ namespace RUINORERP.PacketSpec.Commands.System
                 // 发生异常时返回基本数据
                 return new
                 {
-                    ClientId = this.ClientId,
                     Timestamp = this.TimestampUtc,
                     ErrorMessage = "Failed to collect full heartbeat data"
                 };
@@ -138,13 +142,6 @@ namespace RUINORERP.PacketSpec.Commands.System
         {
             try
             {
-                // 验证客户端ID
-                if (string.IsNullOrEmpty(ClientId))
-                {
-                    return ConvertToApiResponse(ResponseBase.CreateError("客户端ID不能为空", 400)
-                        .WithMetadata("ErrorCode", "EMPTY_CLIENT_ID"));
-                }
-
                 // 构建心跳数据
                 var heartbeatData = GetSerializableData();
 
@@ -166,34 +163,6 @@ namespace RUINORERP.PacketSpec.Commands.System
                     .WithMetadata("Exception", ex.Message)
                     .WithMetadata("StackTrace", ex.StackTrace));
             }
-        }
-
-        /// <summary>
-        /// 验证命令数据
-        /// </summary>
-        /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
-        {
-            // 调用基类验证
-            var baseResult = base.Validate();
-            if (!baseResult.IsValid)
-            {
-                return baseResult;
-            }
-
-            // 验证客户端ID
-            if (string.IsNullOrEmpty(ClientId))
-            {
-                return CommandValidationResult.Failure("客户端ID不能为空");
-            }
-
-            // 验证会话令牌（如果设置了）
-            if (UserId > 0 && string.IsNullOrEmpty(SessionToken))
-            {
-                return CommandValidationResult.Failure("已登录用户必须提供会话令牌");
-            }
-
-            return CommandValidationResult.Success();
         }
 
         /// <summary>

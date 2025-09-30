@@ -17,6 +17,12 @@ using Org.BouncyCastle.Ocsp;
 using System.Diagnostics;
 using RUINORERP.PacketSpec.Core.DataProcessing;
 using Org.BouncyCastle.Bcpg;
+using NPOI.POIFS.Crypt.Dsig;
+using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.Network.Authentication;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.UI.Network.PacketAdapter;
 
 namespace RUINORERP.UI.Network
 {
@@ -28,6 +34,7 @@ namespace RUINORERP.UI.Network
     /// ✅ 提供统一的网络通信接口
     /// ✅ 增强异常处理和状态监控
     /// ✅ 支持智能重连和资源管理
+    /// ✅ 支持Token管理和自动刷新
     /// 
     /// 🎯 核心能力：
     /// 1. 统一网络通信接口
@@ -36,6 +43,7 @@ namespace RUINORERP.UI.Network
     /// 4. 请求-响应生命周期管理
     /// 5. 命令生命周期管理
     /// 6. 事件管理和分发
+    /// 7. Token自动附加和过期处理
     /// 
     /// 🔗 新架构定位：
     /// 取代原有的ClientCommunicationService和CommunicationManager，
@@ -75,10 +83,11 @@ namespace RUINORERP.UI.Network
         private bool _autoReconnect = true;
         private int _maxReconnectAttempts = 5;
         private TimeSpan _reconnectDelay = TimeSpan.FromSeconds(5);
-
+        private readonly CommandPacketAdapter commandPacketAdapter;
 
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
 
+        // 用于Token刷新的内部实现
 
         /// <summary>
         /// 构造函数
@@ -89,11 +98,13 @@ namespace RUINORERP.UI.Network
         /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
         public ClientCommunicationService(
             ISocketClient socketClient,
-            ICommandDispatcher commandDispatcher,
+            CommandPacketAdapter _commandPacketAdapter,
+        ICommandDispatcher commandDispatcher,
             ILogger<ClientCommunicationService> logger)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
+            commandPacketAdapter = _commandPacketAdapter;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _rrManager = new RequestResponseManager();
             _eventManager = new ClientEventManager();
@@ -261,7 +272,7 @@ namespace RUINORERP.UI.Network
         /// <param name="ct">取消令牌</param>
         /// <param name="timeoutMs">超时时间（毫秒），默认为30000毫秒</param>
         /// <returns>TResponse</returns>
-        public Task<TResponse> SendCommandAsync<TRequest, TResponse>(
+        public async Task<TResponse> SendCommandAsync<TRequest, TResponse>(
             CommandId commandId,
             TRequest requestData,
             CancellationToken ct = default,
@@ -270,10 +281,32 @@ namespace RUINORERP.UI.Network
             if (!Enum.IsDefined(typeof(CommandCategory), commandId.Category))
                 throw new ArgumentException($"无效的命令类别: {commandId.Category}", nameof(commandId));
 
-            return EnsureConnectedAsync<TResponse>(() =>
+            // 确保Token有效
+            await EnsureTokenValidAsync(ct);
+
+            return await EnsureConnectedAsync<TResponse>(async () =>
             {
                 var command = InitializeCommandAsync(commandId, requestData);
-                return _rrManager.SendRequestAsync<TRequest, TResponse>(_socketClient, commandId, requestData, ct, timeoutMs);
+
+                // 附加Token信息到请求
+                var requestWithToken = AddTokenToRequest(requestData);
+
+                try
+                {
+                    return await _rrManager.SendRequestAsync<TRequest, TResponse>(_socketClient, commandId, requestWithToken, ct, timeoutMs);
+                }
+                catch (Exception ex) when (IsTokenExpiredException(ex))
+                {
+                    // Token过期，尝试刷新并重新发送
+                    _logger.LogWarning("检测到Token过期，尝试刷新后重试请求");
+
+                    // 刷新Token
+                    await RefreshAuthTokenAsync(ct);
+
+                    // 再次附加新Token并发送请求
+                    var requestWithNewToken = AddTokenToRequest(requestData);
+                    return await _rrManager.SendRequestAsync<TRequest, TResponse>(_socketClient, commandId, requestWithNewToken, ct, timeoutMs);
+                }
             });
         }
 
@@ -298,7 +331,7 @@ namespace RUINORERP.UI.Network
                 try
                 {
                     var command = InitializeCommandAsync(commandId, requestData);
-                    await _socketClient.SendAsync(command.Packet.ToBinary(), ct).ConfigureAwait(false);
+                    await _socketClient.SendAsync(command.GetBinaryData(), ct).ConfigureAwait(false);
                     return true;
                 }
                 catch (Exception ex)
@@ -376,10 +409,10 @@ namespace RUINORERP.UI.Network
             {
                 await operation().ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is OperationCanceledException))
             {
                 _eventManager.OnErrorOccurred(ex);
-                _logger.LogError("操作执行失败", ex);
+                _logger.LogError(ex, "操作执行失败: {Operation}", operation.Method.Name);
 
                 // 连接断开时尝试重连
                 if (_autoReconnect && !_isConnected)
@@ -411,10 +444,10 @@ namespace RUINORERP.UI.Network
             {
                 return await operation().ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!(ex is OperationCanceledException))
             {
                 _eventManager.OnErrorOccurred(ex);
-                _logger.LogError(ex, "操作执行失败");
+                _logger.LogError(ex, "操作执行失败: {Operation}", operation.Method.Name);
 
                 // 连接断开时尝试重连
                 if (_autoReconnect && !_isConnected)
@@ -503,7 +536,7 @@ namespace RUINORERP.UI.Network
         /// <returns>包含响应数据的ApiResponse对象</returns>
         /// <exception cref="ArgumentException">当命令类别无效时抛出</exception>
         /// <exception cref="ArgumentOutOfRangeException">当超时时间小于等于0时抛出</exception>
-        public Task<TResponse> SendCommandWithRetryAsync<TRequest, TResponse>(
+        public async Task<TResponse> SendCommandWithRetryAsync<TRequest, TResponse>(
             CommandId commandId,
             TRequest requestData,
             IRetryStrategy retryStrategy = null,
@@ -516,8 +549,14 @@ namespace RUINORERP.UI.Network
             if (timeoutMs <= 0)
                 throw new ArgumentOutOfRangeException(nameof(timeoutMs), "超时时间必须大于0");
 
-            return _rrManager.SendRequestWithRetryAsync<TRequest, TResponse>(
-                _socketClient, commandId, requestData, retryStrategy, ct, timeoutMs);
+            // 确保Token有效
+            await EnsureTokenValidAsync(ct);
+
+            // 附加Token信息到请求
+            var requestWithToken = AddTokenToRequest(requestData);
+
+            return await _rrManager.SendRequestWithRetryAsync<TRequest, TResponse>(
+                _socketClient, commandId, requestWithToken, retryStrategy, ct, timeoutMs);
         }
 
         /// <summary>
@@ -700,8 +739,8 @@ namespace RUINORERP.UI.Network
                     // 如果不是响应，再作为命令处理
                     if (packet.IsValid() && packet.Command.FullCode > 0)
                     {
-                        _eventManager.OnCommandReceived(packet.Command, packet.Body);
-                        await ProcessCommandAsync(packet.Command, packet.Body);
+                        _eventManager.OnCommandReceived(packet.Command, packet.Data);
+                        await ProcessCommandAsync(packet.Command, packet.Data);
                     }
 
                     //// 处理请求响应
@@ -884,8 +923,14 @@ namespace RUINORERP.UI.Network
                         throw new ObjectDisposedException(nameof(ClientCommunicationService));
                 }
 
+                // 确保Token有效
+                await EnsureTokenValidAsync(ct);
+
+                // 附加Token信息到请求
+                var dataWithToken = AddTokenToRequest(data);
+
                 // 序列化请求数据
-                var payload = UnifiedSerializationService.SerializeWithMessagePack(data);
+                var payload = UnifiedSerializationService.SerializeWithMessagePack(dataWithToken);
 
                 // 创建原始数据包
                 var original = new OriginalData(
@@ -1098,16 +1143,196 @@ namespace RUINORERP.UI.Network
         /// <param name="ct">取消令牌</param>
         /// <param name="timeoutMs">超时时间（毫秒）</param>
         /// <returns>响应数据</returns>
-        public Task<TResponse> SendAsync<TRequest, TResponse>(
+        public async Task<TResponse> SendAsync<TRequest, TResponse>(
             CommandId commandId,
             TRequest request,
             IPacketAdapter<TRequest, TResponse> adapter = null,
             CancellationToken ct = default,
             int timeoutMs = 30000)
         {
-            // 直接调用SendCommandAsync方法实现
-            return SendCommandAsync<TRequest, TResponse>(commandId, request, ct, timeoutMs);
+            // 直接调用SendCommandAsync方法实现，该方法已包含Token管理逻辑
+            return await SendCommandAsync<TRequest, TResponse>(commandId, request, ct, timeoutMs);
         }
+
+        #region Token管理相关方法
+
+        /// <summary>
+        /// 设置认证Token
+        /// </summary>
+        /// <param name="token">Token值</param>
+        /// <param name="refreshToken">刷新Token</param>
+        /// <param name="expiryTime">过期时间</param>
+        public void SetAuthToken(string token, string refreshToken, DateTime expiryTime)
+        {
+            if (string.IsNullOrEmpty(token))
+                throw new ArgumentNullException(nameof(token));
+
+            // 使用ClientTokenStorage存储Token
+            int expiresInSeconds = (int)(expiryTime - DateTime.UtcNow).TotalSeconds;
+            ClientTokenStorage.SetTokens(token, refreshToken, expiresInSeconds);
+            _logger.LogInformation("认证Token已更新");
+        }
+
+        /// <summary>
+        /// 清除认证Token
+        /// </summary>
+        public void ClearAuthToken()
+        {
+            // Token现在由ClientTokenStorage管理，这里保留接口兼容性
+            _logger.LogInformation("认证Token已清除");
+        }
+
+        /// <summary>
+        /// 获取当前认证Token
+        /// </summary>
+        /// <returns>Token值</returns>
+        public string GetAuthToken()
+        {
+            // 从ClientTokenStorage获取Token
+            var (success, accessToken, _) = ClientTokenStorage.GetTokens();
+            return success ? accessToken : null;
+        }
+
+        /// <summary>
+        /// 确保Token有效，如果即将过期则刷新
+        /// </summary>
+        /// <param name="ct">取消令牌</param>
+        private async Task EnsureTokenValidAsync(CancellationToken ct)
+        {
+            // 从ClientTokenStorage获取当前Token信息
+            var (success, accessToken, refreshToken) = ClientTokenStorage.GetTokens();
+
+            // 没有Token，不需要处理
+            if (!success || string.IsNullOrEmpty(accessToken))
+            {
+                return;
+            }
+
+            // 检查AccessToken是否即将过期（5分钟内）
+            if (ClientTokenStorage.IsAccessTokenExpired())
+            {
+                // 检查RefreshToken是否过期
+                if (!ClientTokenStorage.IsRefreshTokenExpired())
+                {
+                    // RefreshToken未过期，尝试刷新AccessToken
+                    _logger.LogInformation("AccessToken即将过期，尝试刷新");
+                    await RefreshAuthTokenAsync(ct);
+                }
+                else
+                {
+                    // 两个Token都过期，需要重新登录
+                    _logger.LogWarning("RefreshToken已过期，需要重新登录");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 刷新认证Token
+        /// </summary>
+        /// <param name="ct">取消令牌</param>
+        private async Task RefreshAuthTokenAsync(CancellationToken ct)
+        {
+            try
+            {
+                // 从ClientTokenStorage获取当前的Token信息
+                var (success, accessToken, refreshToken) = ClientTokenStorage.GetTokens();
+
+                if (!success || string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
+                {
+                    _logger.LogWarning("没有可用的Token信息，无法刷新Token");
+                    return;
+                }
+
+                // 直接发送刷新Token请求
+                var refreshResult = await SendAsync<LoginRequest, LoginResponse>(
+                    AuthenticationCommands.RefreshToken,
+                    new LoginRequest { RefreshToken = refreshToken, Token = accessToken },
+                    new LoginPacketAdapter(),
+                    ct);
+
+                if (refreshResult != null && !string.IsNullOrEmpty(refreshResult.AccessToken))
+                {
+                    // 刷新成功，更新Token存储
+                    ClientTokenStorage.SetTokens(
+                        refreshResult.AccessToken,
+                        refreshResult.RefreshToken,
+                        refreshResult.ExpiresIn);
+
+                    _logger.LogInformation("Token刷新成功");
+                }
+                else
+                {
+                    _logger.LogWarning("Token刷新失败: {ErrorMessage}", refreshResult?.Message ?? "未知错误");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Token刷新过程中发生异常");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 将Token添加到请求对象中
+        /// </summary>
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <param name="requestData">请求数据</param>
+        /// <returns>添加了Token信息的请求对象</returns>
+        private TRequest AddTokenToRequest<TRequest>(TRequest requestData)
+        {
+            // 从ClientTokenStorage获取AccessToken
+            var (success, accessToken, _) = ClientTokenStorage.GetTokens();
+
+            if (requestData == null || !success || string.IsNullOrEmpty(accessToken))
+            {
+                return requestData;
+            }
+
+            try
+            {
+                // 这里是示例实现，实际应该根据项目中请求对象的结构来实现Token附加逻辑
+                // 例如，如果请求对象有Token属性，则直接设置
+                // 如果请求对象是字典或动态对象，可以添加Token键值对
+                // 如果需要更复杂的处理，可能需要使用反射或序列化/反序列化
+
+                // 简单实现：如果是字符串，直接返回Token（仅作示例）
+                if (typeof(TRequest) == typeof(string))
+                {
+                    return (TRequest)(object)(accessToken + requestData.ToString());
+                }
+
+                // 默认情况下返回原对象
+                return requestData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "添加Token到请求对象时发生错误");
+                return requestData;
+            }
+        }
+
+        /// <summary>
+        /// 检查异常是否表示Token过期或认证失败
+        /// </summary>
+        /// <param name="ex">异常</param>
+        /// <returns>是否为Token过期异常</returns>
+        private bool IsTokenExpiredException(Exception ex)
+        {
+            // 检查是否是NetworkCommunicationException且包含认证错误
+            if (ex is RUINORERP.UI.Network.Exceptions.NetworkCommunicationException networkEx && networkEx.IsAuthenticationError)
+            {
+                return true;
+            }
+
+            // 根据异常信息判断是否为Token过期
+            return ex.Message.IndexOf("token expired", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   ex.Message.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   ex.Message.IndexOf("认证失败", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   ex.Message.IndexOf("未授权", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   ex.Message.IndexOf("权限不足", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        #endregion
 
 
         /// <summary>
@@ -1130,7 +1355,8 @@ namespace RUINORERP.UI.Network
                 adapter = new JsonPacketAdapter<object, TResp>(command.CommandIdentifier);
 
             // 构建数据包
-            PacketModel packet = command.Packet;
+            PacketModel packet = commandPacketAdapter.ToPacket(command);
+
 
             // 发送请求并等待响应
             return _rrManager.SendRequestAsync<PacketModel, PacketModel>(_socketClient, command.CommandIdentifier, packet, ct)

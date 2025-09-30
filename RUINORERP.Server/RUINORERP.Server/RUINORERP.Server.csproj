@@ -36,7 +36,9 @@
     <Compile Remove="frmUserOnline.cs" />
     <Compile Remove="frmUserOnline.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
+    <Compile Remove="Network\Commands\CacheCommandHandler.cs" />
     <Compile Remove="Network\Commands\CacheSyncCommandHandler.cs" />
+    <Compile Remove="Network\Commands\CommandHandlerBase.cs" />
     <Compile Remove="Network\Commands\DataSyncCommandHandler.cs" />
     <Compile Remove="Network\Commands\EchoCommandHandler.cs" />
     <Compile Remove="Network\Commands\ExceptionReportCommandHandler.cs" />
@@ -45,6 +47,7 @@
     <Compile Remove="Network\Commands\GenericCommandHandler.cs" />
     <Compile Remove="Network\Commands\ITestableCommandHandler.cs" />
     <Compile Remove="Network\Commands\LockApplyCommandHandler.cs" />
+    <Compile Remove="Network\Commands\LockCommandHandler.cs" />
     <Compile Remove="Network\Commands\MessageCommandHandler.cs" />
     <Compile Remove="Network\Commands\SendPopupMessageCommandHandler.cs" />
     <Compile Remove="Network\Commands\SystemManagementCommandHandler.cs" />

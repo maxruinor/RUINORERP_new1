@@ -78,6 +78,7 @@ using RUINORERP.IServices.DI;
 using RUINORERP.Services.DI;
 using RUINORERP.Repository.DI;
 using RUINORERP.UI.UserCenter.DataParts;
+using RUINORERP.UI.Network.Authentication;
 namespace RUINORERP.UI
 {
     public class Startup
@@ -342,8 +343,7 @@ namespace RUINORERP.UI
             // 注册网络通信服务
             services.AddNetworkServices();
 
-            // 注册PacketSpec服务
-            services.AddPacketSpecServices();
+      
 
             services.AddMemoryCacheSetup();
             services.AddAppContext(Program.AppContextData);
@@ -372,6 +372,9 @@ namespace RUINORERP.UI
                 options.EnableAudit = true;
             });
 
+            // 注册审计日志服务
+            services.AddSingleton<IAuditLogService, AuditLogService>();
+            services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
 
             services.AddSingleton(typeof(MenuTracker));
 
@@ -1096,6 +1099,7 @@ namespace RUINORERP.UI
         /// <param name="services"></param>
         public static void ConfigureServices(IServiceCollection services)
         {
+            services.AddSingleton<ClientTokenStorage>();
             services.AddSingleton<SmtpClient>(new SmtpClient("your.smtp.server"));
             services.AddTransient<INotificationSender, EmailNotificationSender>();
             #region 创建配置文件-开始
@@ -1238,6 +1242,8 @@ namespace RUINORERP.UI
             string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
             services.AddSqlsugarSetup(Program.AppContextData, newconn);
 
+            // 注册PacketSpec服务
+            services.AddPacketSpecServices(configuration);
             // 添加审计日志配置 （如果存在）
             services.Configure<AuditLogOptions>(configuration.GetSection("AuditLog"));
 

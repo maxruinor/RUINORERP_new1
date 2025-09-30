@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic; // 添加这行
+using System.Collections.Generic;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
@@ -40,14 +40,19 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public string ClientIp { get; set; }
 
         /// <summary>
-        /// 客户端类型（Web、Desktop、Mobile等）
-        /// </summary>
-        public string ClientType { get; set; }
-
-        /// <summary>
         /// 附加数据，用于传递额外信息，如重复登录确认等
         /// </summary>
-        public Dictionary<string, object> AdditionalData { get; set; } // 添加这行
+        public Dictionary<string, object> AdditionalData { get; set; }
+
+        /// <summary>
+        /// 客户端Token（用于Token刷新场景）
+        /// </summary>
+        public string Token { get; set; }
+
+        /// <summary>
+        /// 刷新Token（用于Token刷新场景）
+        /// </summary>
+        public string RefreshToken { get; set; }
 
         /// <summary>
         /// 创建登录请求
@@ -62,7 +67,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
                 ClientVersion = Protocol.ProtocolVersion.Current,
                 DeviceId = deviceId ?? Guid.NewGuid().ToString(),
                 LoginTime = DateTime.UtcNow,
-                ClientType = clientType
             };
         }
 

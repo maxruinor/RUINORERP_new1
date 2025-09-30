@@ -1,4 +1,5 @@
-﻿using RUINORERP.PacketSpec.Enums.Core;
+﻿using FluentValidation.Results;
+using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
@@ -12,10 +13,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     [PacketCommand("ForceUnlock", CommandCategory.Lock)]
     public class ForceUnlockCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => LockCommands.ForceReleaseLock;
+ 
 
         /// <summary>
         /// 单据ID
@@ -29,6 +27,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         {
             Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
+            CommandIdentifier = LockCommands.ForceReleaseLock;
         }
 
         /// <summary>
@@ -40,6 +39,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             BillId = billId;
             Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
+            CommandIdentifier = LockCommands.ForceReleaseLock;
         }
 
         /// <summary>
@@ -58,9 +58,9 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
+            var result = await base.ValidateAsync(cancellationToken);
             if (!result.IsValid)
             {
                 return result;
@@ -69,10 +69,10 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             // 验证单据ID
             if (BillId <= 0)
             {
-                return CommandValidationResult.Failure("单据ID必须大于0", "INVALID_BILL_ID");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(BillId), "单据ID必须大于0") });
             }
 
-            return CommandValidationResult.Success();
+            return new ValidationResult();
         }
 
         /// <summary>

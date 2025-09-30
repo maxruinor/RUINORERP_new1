@@ -1,8 +1,9 @@
-using RUINORERP.PacketSpec.Models.Core;
+﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Enums.Core;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentValidation.Results;
 
 namespace RUINORERP.PacketSpec.Commands.Workflow
 {
@@ -12,10 +13,7 @@ namespace RUINORERP.PacketSpec.Commands.Workflow
     [PacketCommand("WorkflowApprove", CommandCategory.Workflow)]
     public class WorkflowApproveCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => WorkflowCommands.WorkflowApproval;
+
 
         /// <summary>
         /// 工作流实例ID
@@ -44,6 +42,7 @@ namespace RUINORERP.PacketSpec.Commands.Workflow
         {
             Approved = true; // 默认审批通过
             Direction = PacketDirection.ClientToServer;
+            CommandIdentifier = WorkflowCommands.WorkflowApproval;
         }
 
         /// <summary>
@@ -60,33 +59,18 @@ namespace RUINORERP.PacketSpec.Commands.Workflow
             Approved = approved;
             ApprovalComment = approvalComment;
             Direction = PacketDirection.ClientToServer;
+            CommandIdentifier = WorkflowCommands.WorkflowApproval;
         }
 
         /// <summary>
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
-            if (!result.IsValid)
-            {
-                return result;
-            }
-
-            // 验证工作流实例ID
-            if (string.IsNullOrWhiteSpace(WorkflowInstanceId))
-            {
-                return CommandValidationResult.Failure("工作流实例ID不能为空", "INVALID_WORKFLOW_INSTANCE_ID");
-            }
-
-            // 验证任务ID
-            if (string.IsNullOrWhiteSpace(TaskId))
-            {
-                return CommandValidationResult.Failure("任务ID不能为空", "INVALID_TASK_ID");
-            }
-
-            return CommandValidationResult.Success();
+            // 调用基类验证方法，将使用独立的验证器类进行验证
+            var result = await base.ValidateAsync(cancellationToken);
+            return result;
         }
 
         /// <summary>

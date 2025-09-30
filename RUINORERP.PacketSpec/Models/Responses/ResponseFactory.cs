@@ -1,5 +1,6 @@
-using RUINORERP.PacketSpec.Errors;
+﻿using RUINORERP.PacketSpec.Errors;
 using System;
+using RUINORERP.PacketSpec.Errors;
 
 namespace RUINORERP.PacketSpec.Models.Responses
 {
@@ -7,32 +8,31 @@ namespace RUINORERP.PacketSpec.Models.Responses
     public static class ResponseFactory
     {
         // ---------- 成功 ----------
-        public static ResponseBase Ok(string msg = "OK") 
-            => new() { IsSuccess = true, Code = (int)ErrorCode.OK, Message = msg, TimestampUtc = DateTime.UtcNow };
+        public static ResponseBase Ok(string msg = "操作成功") 
+            => new() { IsSuccess = true, Code = 0, Message = msg, TimestampUtc = DateTime.UtcNow };
 
-        public static ResponseBase<T> Ok<T>(T data, string msg = "OK") 
-            => new() { IsSuccess = true, Code = (int)ErrorCode.OK, Message = msg, Data = data, TimestampUtc = DateTime.UtcNow };
+        public static ResponseBase<T> Ok<T>(T data, string msg = "操作成功") 
+            => new() { IsSuccess = true, Code = 0, Message = msg, Data = data, TimestampUtc = DateTime.UtcNow };
 
         // ---------- 失败 ----------
-        public static ResponseBase Fail(ErrorCode code, string userMsg = null)
-            => new() { IsSuccess = false, Code = (int)code, Message = userMsg ?? GetDefaultMsg(code), TimestampUtc = DateTime.UtcNow };
+        public static ResponseBase Fail(ErrorCode errorCode, string additionalMessage = null)
+        {
+            var message = string.IsNullOrEmpty(additionalMessage) ? errorCode.Message : $"{errorCode.Message}: {additionalMessage}";
+            return new() { IsSuccess = false, Code = errorCode.Code, Message = message, TimestampUtc = DateTime.UtcNow };
+        }
 
-        public static ResponseBase<T> Fail<T>(ErrorCode code, string userMsg = null)
-            => new() { IsSuccess = false, Code = (int)code, Message = userMsg ?? GetDefaultMsg(code), Data = default, TimestampUtc = DateTime.UtcNow };
+        public static ResponseBase<T> Fail<T>(ErrorCode errorCode, string additionalMessage = null)
+        {
+            var message = string.IsNullOrEmpty(additionalMessage) ? errorCode.Message : $"{errorCode.Message}: {additionalMessage}";
+            return new() { IsSuccess = false, Code = errorCode.Code, Message = message, Data = default, TimestampUtc = DateTime.UtcNow };
+        }
 
         // ---------- 异常 ----------
-        public static ResponseBase Except(Exception ex, ErrorCode fallback = ErrorCode.System_Error)
-            => Fail(fallback, $"[{ex.GetType().Name}] {ex.Message}")
-                .WithMetadata("StackTrace", ex.StackTrace);
-
-        // ---------- 辅助 ----------
-        private static string GetDefaultMsg(ErrorCode c) => c switch
+        public static ResponseBase Except(Exception ex, ErrorCode fallback = default)
         {
-            ErrorCode.Auth_UserNotFound    => "用户不存在",
-            ErrorCode.Auth_PasswordWrong   => "密码错误",
-            ErrorCode.Command_NotFound     => "指令未找到",
-            ErrorCode.Biz_LockConflict     => "业务锁冲突",
-            _                              => "操作失败"
-        };
+            var errorCode = fallback.Code == 0 ? UnifiedErrorCodes.System_InternalError : fallback;
+            return Fail(errorCode, $"[{ex.GetType().Name}] {ex.Message}")
+                .WithMetadata("StackTrace", ex.StackTrace);
+        }
     }
 }

@@ -111,10 +111,9 @@ namespace RUINORERP.UI.Network
         /// <exception cref="ObjectDisposedException">对象已被释放时抛出</exception>
         public void Start()
         {
-            //为了正常业务测试，在系统启用前不开始心跳
-            //TOTO 
-                # warning 为了正常业务测试，在系统启用前不开始心跳
-            return;
+            // 系统启用前暂停心跳，待业务稳定后启用
+            // _heartbeatTask = Task.Run(SendHeartbeatsAsync, _cancellationTokenSource.Token);
+            _logger?.LogInformation("心跳任务已创建，当前处于测试模式暂不启动");
 
             if (_isDisposed)
             {
@@ -264,8 +263,8 @@ namespace RUINORERP.UI.Network
 
                         // 步骤1: 创建心跳命令对象
                         var heartbeatCommand = CreateHeartbeatCommand();
-                        _logger?.LogDebug("心跳命令已创建: CommandId={CommandId}, ClientId={ClientId}",
-                            heartbeatCommand.CommandId, heartbeatCommand.ClientId);
+                        _logger?.LogDebug("心跳命令已创建: CommandId={CommandId}",
+                            heartbeatCommand.CommandId);
 
                         try
                         {

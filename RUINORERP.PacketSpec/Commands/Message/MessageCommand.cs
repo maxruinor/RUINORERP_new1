@@ -7,6 +7,7 @@ using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Text;
 using RUINORERP.PacketSpec.Enums.Core;
+using FluentValidation.Results;
 
 namespace RUINORERP.PacketSpec.Commands.Message
 {
@@ -16,10 +17,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
     [PacketCommand("MessageCommand", CommandCategory.Message, Description = "通用消息命令基类")]
     public class MessageCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier { get; }
+ 
 
         /// <summary>
         /// 命令类型
@@ -45,7 +43,6 @@ namespace RUINORERP.PacketSpec.Commands.Message
 
             CommandType = commandType;
             CommandIdentifier = new CommandId(GetCommandCategory(commandType), GetCommandCode(commandType));
-            Packet = packetModel;
             Data = data;
             TimeoutMs = 30000; // 默认超时时间30秒
         }
@@ -141,9 +138,9 @@ namespace RUINORERP.PacketSpec.Commands.Message
         /// <summary>
         /// 验证命令
         /// </summary>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var baseResult = base.Validate();
+            var baseResult = await base.ValidateAsync(cancellationToken);
             if (!baseResult.IsValid)
             {
                 return baseResult;
@@ -152,10 +149,10 @@ namespace RUINORERP.PacketSpec.Commands.Message
             // 额外的命令验证
             if (CommandType == 0)
             {
-                return CommandValidationResult.Failure("命令类型不能为空", "INVALID_COMMAND_TYPE");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(CommandType), "命令类型不能为空") });
             }
 
-            return CommandValidationResult.Success();
+            return new ValidationResult();
         }
 
         /// <summary>

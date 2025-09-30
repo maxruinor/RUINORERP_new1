@@ -146,10 +146,10 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 验证命令数据
-                var validationResult = lockApplyCommand.Validate();
+                var validationResult = await lockApplyCommand.ValidateAsync(cancellationToken);
                 if (!validationResult.IsValid)
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.ErrorMessage, 400)
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.Errors[0].ErrorMessage, 400)
                         .WithMetadata("ErrorCode", "INVALID_LOCK_REQUEST"));
                 }
 
@@ -426,10 +426,10 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 验证命令数据
-                var validationResult = documentLockApplyCommand.Validate();
+                var validationResult = await documentLockApplyCommand.ValidateAsync(cancellationToken);
                 if (!validationResult.IsValid)
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.ErrorMessage, 400)
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.Errors[0].ErrorMessage, 400)
                         .WithMetadata("ErrorCode", "INVALID_DOCUMENT_LOCK_REQUEST"));
                 }
 
@@ -493,10 +493,10 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 验证命令数据
-                var validationResult = documentUnlockCommand.Validate();
+                var validationResult = await documentUnlockCommand.ValidateAsync(cancellationToken);
                 if (!validationResult.IsValid)
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.ErrorMessage, 400)
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.Errors[0].ErrorMessage, 400)
                         .WithMetadata("ErrorCode", "INVALID_DOCUMENT_UNLOCK_REQUEST"));
                 }
 
@@ -551,10 +551,10 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 验证命令数据
-                var validationResult = forceUnlockCommand.Validate();
+                var validationResult = await forceUnlockCommand.ValidateAsync(cancellationToken);
                 if (!validationResult.IsValid)
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.ErrorMessage, 400)
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.Errors[0].ErrorMessage, 400)
                         .WithMetadata("ErrorCode", "INVALID_FORCE_UNLOCK_REQUEST"));
                 }
 
@@ -610,10 +610,10 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 验证命令数据
-                var validationResult = queryLockStatusCommand.Validate();
+                var validationResult = await queryLockStatusCommand.ValidateAsync(cancellationToken);
                 if (!validationResult.IsValid)
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.ErrorMessage, 400)
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.Errors[0].ErrorMessage, 400)
                         .WithMetadata("ErrorCode", "INVALID_QUERY_LOCK_STATUS_REQUEST"));
                 }
 
@@ -642,7 +642,7 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // 获取广播锁状态数据
+                // 获取广播锁状态申请数据
                 var broadcastLockStatusCommand = command as BroadcastLockStatusCommand;
                 if (broadcastLockStatusCommand == null)
                 {
@@ -651,12 +651,14 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 验证命令数据
-                var validationResult = broadcastLockStatusCommand.Validate();
+                var validationResult = await broadcastLockStatusCommand.ValidateAsync(cancellationToken);
                 if (!validationResult.IsValid)
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.ErrorMessage, 400)
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.Errors[0].ErrorMessage, 400)
                         .WithMetadata("ErrorCode", "INVALID_BROADCAST_LOCK_STATUS_REQUEST"));
                 }
+
+                // 获取会话信息（广播命令通常不需要会话信息）
 
                 // 广播锁定状态变化到所有客户端
                 await BroadcastLockStatusToAllClientsAsync(broadcastLockStatusCommand.LockedDocuments);

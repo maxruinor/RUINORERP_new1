@@ -42,6 +42,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         private readonly CommandDispatcher _commandDispatcher;
         private readonly ILogger<SuperSocketCommandAdapter> _logger;
         private readonly ICommandFactory _commandFactory;
+        private readonly CommandPacketAdapter packetAdapter;
         private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
 
         #region 错误代码字典化处理
@@ -84,15 +85,17 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
         /// <param name="logger">日志记录器</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
+            CommandPacketAdapter _packetAdapter,
             ICommandFactory commandFactory,
             ILogger<SuperSocketCommandAdapter> logger = null)
         {
+            packetAdapter = _packetAdapter;
             _commandDispatcher = commandDispatcher;
             _commandFactory = commandFactory;
             _logger = logger;
         }
 
- 
+
 
         /// <summary>
         /// 执行命令
@@ -135,7 +138,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 SessionService.UpdateSessionActivity(session.SessionID);
 
                 // 创建命令对象
-                var command = CreateCommand(package, sessionInfo);
+                var command = packetAdapter.CreateCommand(package.Packet);
                 if (command == null)
                 {
                     _logger?.LogWarning("无法创建命令对象: CommandId={CommandId}", package.Packet.Command);
@@ -167,6 +170,8 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             }
         }
 
+
+        /*
         /// <summary>
         /// 创建命令对象
         /// 根据命令ID和数据包内容创建适当类型的命令对象
@@ -343,6 +348,9 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             }
         }
 
+        */
+
+
         /// <summary>
         /// 处理命令执行结果
         /// </summary>
@@ -388,7 +396,6 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 Command = requestPackage.Packet.Command,
                 Direction = requestPackage.Packet.Direction == PacketDirection.Request ? PacketDirection.Response : requestPackage.Packet.Direction,
                 SessionId = requestPackage.Packet.SessionId,
-                ClientId = requestPackage.Packet.ClientId,
                 Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error,
                 Extensions = new Dictionary<string, object>
                 {
@@ -399,7 +406,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     ["TimestampUtc"] = result.TimestampUtc
                 }
             };
-     
+
             // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
             if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
             {
@@ -451,7 +458,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 // 检查会话是否有效
                 if (session == null)
                 {
-                    _logger?.LogWarning("尝试发送响应到空会话: PacketId={PacketId}, CommandId={CommandId}", 
+                    _logger?.LogWarning("尝试发送响应到空会话: PacketId={PacketId}, CommandId={CommandId}",
                         package.PacketId, package.Command);
                     return;
                 }
@@ -516,7 +523,6 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 Command = requestPackage.Packet?.Command ?? default(CommandId),
                 Direction = PacketDirection.Response,
                 SessionId = requestPackage.Packet?.SessionId,
-                ClientId = requestPackage.Packet?.ClientId,
                 Status = PacketStatus.Error,
                 Extensions = new Dictionary<string, object>
                 {
@@ -565,9 +571,10 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
     {
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
+            CommandPacketAdapter _packetAdapter,
             ICommandFactory commandFactory,
             ILogger<SuperSocketCommandAdapter> logger = null)
-            : base(commandDispatcher, commandFactory, logger)
+            : base(commandDispatcher, _packetAdapter, commandFactory, logger)
         { }
     }
 }

@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using System.Linq.Expressions;
 // 添加System.Collections.Concurrent命名空间引用
 using System.Collections.Concurrent;
+using System.Xml.Serialization;
+using RUINORERP.PacketSpec.Models.Core;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -19,9 +22,6 @@ namespace RUINORERP.PacketSpec.Commands
         // 新增命令构造函数缓存
         private static readonly ConcurrentDictionary<uint, Func<ICommand>> _ctorCache = new();
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
         public CommandTypeHelper()
         {
             _commandTypes = new Dictionary<uint, Type>();
@@ -76,26 +76,7 @@ namespace RUINORERP.PacketSpec.Commands
             });
         }
 
-        /// <summary>
-        /// 创建命令实例
-        /// </summary>
-        /// <param name="commandCode">命令代码</param>
-        /// <returns>命令实例，如果找不到类型或创建失败则返回null</returns>
-        public ICommand CreateCommand(uint commandCode)
-        {
-            try
-            {
-                var commandType = GetCommandType(commandCode);
-                if (commandType == null)
-                    return null;
-
-                return (ICommand)Activator.CreateInstance(commandType);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
+   
 
         /// <summary>
         /// 清理注册的命令类型

@@ -1,9 +1,10 @@
-﻿using RUINORERP.PacketSpec.Enums.Core;
+﻿﻿﻿using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentValidation.Results;
 
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
@@ -13,10 +14,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     [PacketCommand("DocumentUnlock", CommandCategory.Lock)]
     public class DocumentUnlockCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => LockCommands.ReleaseLock;
+ 
 
         /// <summary>
         /// 单据ID
@@ -35,6 +33,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         {
             Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
+            CommandIdentifier = LockCommands.ReleaseLock;
         }
 
         /// <summary>
@@ -48,6 +47,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             UserId = userId;
             Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
+            CommandIdentifier = LockCommands.ReleaseLock;
         }
 
         /// <summary>
@@ -67,27 +67,11 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
-            if (!result.IsValid)
-            {
-                return result;
-            }
-
-            // 验证单据ID
-            if (BillId <= 0)
-            {
-                return CommandValidationResult.Failure("单据ID必须大于0", "INVALID_BILL_ID");
-            }
-
-            // 验证用户ID
-            if (UserId <= 0)
-            {
-                return CommandValidationResult.Failure("用户ID必须大于0", "INVALID_USER_ID");
-            }
-
-            return CommandValidationResult.Success();
+            // 调用基类验证方法，将使用独立的验证器类进行验证
+            var result = await base.ValidateAsync(cancellationToken);
+            return result;
         }
 
         /// <summary>

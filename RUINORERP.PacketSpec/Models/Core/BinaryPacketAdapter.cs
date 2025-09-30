@@ -56,8 +56,8 @@ namespace RUINORERP.PacketSpec.Models.Core
             // 检查响应类型是否为Memory<byte>
             if (typeof(TResp) == typeof(Memory<byte>))
             {
-                // 直接返回PacketModel的Body部分作为Memory<byte>
-                var memory = new Memory<byte>(packet.Body ?? Array.Empty<byte>());
+                // 直接返回PacketModel的Data部分作为Memory<byte>
+                var memory = new Memory<byte>(packet.Data ?? Array.Empty<byte>());
                 return (TResp)(object)memory;
             }
             

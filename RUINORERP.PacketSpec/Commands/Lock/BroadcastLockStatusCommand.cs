@@ -5,6 +5,7 @@ using RUINORERP.PacketSpec.Models.Responses;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentValidation.Results;
 
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
@@ -14,10 +15,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     [PacketCommand("BroadcastLockStatus", CommandCategory.Lock)]
     public class BroadcastLockStatusCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => LockCommands.BroadcastLockStatus;
+ 
 
         /// <summary>
         /// 锁定的单据信息列表
@@ -31,6 +29,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         {
             Direction = PacketDirection.ServerToClient;
             TimeoutMs = 30000; // 默认超时时间30秒
+            CommandIdentifier = LockCommands.BroadcastLockStatus;
         }
 
         /// <summary>
@@ -42,6 +41,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             LockedDocuments = lockedDocuments;
             Direction = PacketDirection.ServerToClient;
             TimeoutMs = 30000; // 默认超时时间30秒
+            CommandIdentifier = LockCommands.BroadcastLockStatus;
         }
 
         /// <summary>
@@ -57,9 +57,9 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
+            var result = await base.ValidateAsync(cancellationToken);
             if (!result.IsValid)
             {
                 return result;
@@ -71,7 +71,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
                 LockedDocuments = new List<LockedInfo>();
             }
 
-            return CommandValidationResult.Success();
+            return new ValidationResult();
         }
 
         /// <summary>

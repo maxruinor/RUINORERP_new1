@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Model;
+using RUINORERP.PacketSpec.Models;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
 using SuperSocket.Server.Abstractions.Session;
@@ -189,6 +191,31 @@ namespace RUINORERP.Server.Network.Services
                 _logger.LogError(ex, $"获取用户会话信息失败: {username}");
                 return Enumerable.Empty<SessionInfo>();
             }
+        }
+
+        /// <summary>
+        /// 创建已认证的会话
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <param name="userInfo">用户会话信息</param>
+        /// <param name="clientIp">客户端IP</param>
+        /// <returns>会话信息</returns>
+        public async Task<SessionInfo> CreateAuthenticatedSessionAsync(string sessionId, UserSessionInfo userInfo, string clientIp)
+        {
+            var session = CreateSession(sessionId, clientIp);
+            if (session != null)
+            {
+                session.UserId = userInfo.UserInfo.User_ID;
+                session.Username = userInfo.UserInfo.UserName;
+                session.IsAuthenticated = true;
+                session.LoginTime = DateTime.UtcNow;
+                session.UpdateActivity();
+                
+                // 使用现有同步方法但包装为异步任务返回
+                await Task.Run(() => UpdateSession(session));
+                return session;
+            }
+            return null;
         }
 
         /// <summary>

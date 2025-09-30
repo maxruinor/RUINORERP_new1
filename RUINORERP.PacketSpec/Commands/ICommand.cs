@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Protocol;
@@ -6,12 +6,10 @@ using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Enums.Core;
+using FluentValidation.Results;
 
 namespace RUINORERP.PacketSpec.Commands
 {
-
-    
-
     /// <summary>
     /// 命令状态
     /// </summary>
@@ -51,53 +49,35 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 统一命令接口 - 定义所有命令的基本契约
     /// </summary>
-    public interface ICommand
+    public interface ICommand 
     {
-        /// <summary>
-        /// 每个指令都存在于一个对应的socket（连接）会话
-        /// </summary>
-        string SessionId { get; set; }
-
-        /// <summary>
-        /// 命令唯一标识（字符串形式）
-        /// </summary>
-        string CommandId { get; }
-
         /// <summary>
         /// 命令标识符（类型安全命令系统）
         /// </summary>
         CommandId CommandIdentifier { get; }
 
         /// <summary>
-        /// 命令方向
+        /// 命令创建时间
         /// </summary>
-        PacketDirection Direction { get; set; }
+        DateTime CreatedTimeUtc { get; }
+
+        DateTime? LastUpdatedTime { get; set; }
+
+        /// <summary>
+        /// 时间戳（UTC时间）
+        /// </summary>
+        DateTime TimestampUtc { get; set; }
+
 
         /// <summary>
         /// 命令优先级
         /// </summary>
-        PacketPriority  Priority { get; set; }
-
-        /// <summary>
-        /// 命令状态
-        /// </summary>
-        CommandStatus Status { get; set; }
-
-        /// <summary>
-        /// 数据包模型 - 包含完整的数据包信息和业务数据
-        /// </summary>
-        PacketModel Packet { get; set; }
-
-        /// <summary>
-        /// 命令创建时间
-        /// </summary>
-        DateTime CreatedAtUtc { get; }
+        CommandPriority Priority { get; set; }
 
         /// <summary>
         /// 命令超时时间（毫秒）
         /// </summary>
         int TimeoutMs { get; set; }
-
 
         /// <summary>
         /// 执行命令
@@ -107,10 +87,18 @@ namespace RUINORERP.PacketSpec.Commands
         Task<ResponseBase> ExecuteAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// 验证命令是否可以执行
+        /// 业务数据
+        /// 当命令从网络层接收数据时，我们先将字节数组存储到BizData，然后当业务逻辑需要时，我们再反序列化为TRequest。
         /// </summary>
+        byte[] BizData { get; set; }
+      
+   
+        /// <summary>
+        /// 验证命令
+        /// </summary>
+        /// <param name="cancellationToken">取消令牌</param>
         /// <returns>验证结果</returns>
-        CommandValidationResult Validate();
+        Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 序列化命令数据
@@ -131,48 +119,4 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>可序列化的数据</returns>
         object GetSerializableData();
     }
-
-    /// <summary>
-    /// 命令验证结果
-    /// </summary>
-    public class CommandValidationResult
-    {
-        /// <summary>
-        /// 是否有效
-        /// </summary>
-        public bool IsValid { get; set; }
-
-        /// <summary>
-        /// 错误消息
-        /// </summary>
-        public string ErrorMessage { get; set; }
-
-        /// <summary>
-        /// 错误代码
-        /// </summary>
-        public string ErrorCode { get; set; }
-
-        /// <summary>
-        /// 创建成功结果
-        /// </summary>
-        public static CommandValidationResult Success()
-        {
-            return new CommandValidationResult { IsValid = true };
-        }
-
-        /// <summary>
-        /// 创建失败结果
-        /// </summary>
-        public static CommandValidationResult Failure(string message, string code = null)
-        {
-            return new CommandValidationResult
-            {
-                IsValid = false,
-                ErrorMessage = message,
-                ErrorCode = code
-            };
-        }
-    }
-
-   
 }

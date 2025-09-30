@@ -109,20 +109,15 @@ namespace RUINORERP.UI.Network
             {
                 lock (_lock)
                 {
-                    // 设置会话ID
-                    command.SessionId = packet.ClientId;
-
                     // 如果命令是BaseCommand类型，设置更多属性
                     if (command is BaseCommand baseCommand)
                     {
-                        baseCommand.Packet = packet;
                         baseCommand.TimestampUtc = packet.TimestampUtc;
                         baseCommand.CreatedTimeUtc = packet.CreatedTimeUtc;
                        // baseCommand.CommandId = packet.Command.FullCode;
                     }
                 }
                 
-                _logger?.LogTrace("已初始化命令属性，会话ID: {SessionId}", command.SessionId);
             }
             catch (Exception ex)
             {
@@ -153,7 +148,6 @@ namespace RUINORERP.UI.Network
                         IsEncrypted = false,
                         IsCompressed = false,
                         Extensions = new Dictionary<string, object>(),
-                        ClientId = string.Empty // 初始化为空字符串，稍后可能会设置
                     };
 
                     // 从OriginalData构建CommandId

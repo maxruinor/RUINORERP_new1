@@ -195,7 +195,10 @@ namespace RUINORERP.Server.Network.Core
                       // 注册核心服务 - 使用与全局相同的ISessionService实例
                       services.AddSingleton<ISessionService>(_sessionManager);
 
-                      services.AddPacketSpecServices();
+                      IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
+                      var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
+                      IConfiguration configuration = cfgBuilder.Build();
+                      services.AddPacketSpecServices(configuration);
                       // 从全局服务提供者获取并注册CommandDispatcher
                       // 这解决了SuperSocketCommandAdapter无法解析CommandDispatcher的问题
                       var commandDispatcher = Program.ServiceProvider.GetRequiredService<CommandDispatcher>();

@@ -753,5 +753,149 @@ namespace RUINORERP.Server.Network.Commands
                 return new Dictionary<string, object>();
             }
         }
+
+        private async Task<ResponseBase> HandleCacheGetAsync(ICommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 获取缓存获取命令数据
+                var cacheGetCommand = command as CacheGetCommand;
+                if (cacheGetCommand == null)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError("无效的缓存获取命令", 400)
+                        .WithMetadata("ErrorCode", "INVALID_CACHE_GET_COMMAND"));
+                }
+
+                // 验证命令数据
+                var validationResult = await cacheGetCommand.ValidateAsync(cancellationToken);
+                if (!validationResult.IsValid)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.Errors[0].ErrorMessage, 400)
+                        .WithMetadata("ErrorCode", "INVALID_CACHE_GET_REQUEST"));
+                }
+
+                // 获取会话信息
+                var session = _sessionService.GetSession(cacheGetCommand.SessionId);
+                if (session == null)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError("会话不存在", 404)
+                        .WithMetadata("ErrorCode", "SESSION_NOT_FOUND"));
+                }
+
+                // 获取缓存数据
+                var cacheData = await GetCacheDataAsync(cacheGetCommand.TableName, cancellationToken);
+                if (cacheData == null)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError("缓存数据不存在", 404)
+                        .WithMetadata("ErrorCode", "CACHE_DATA_NOT_FOUND"));
+                }
+
+                // 准备缓存响应
+                var cacheResponse = new CacheResponse
+                {
+                    RequestId = cacheGetCommand.RequestId,
+                    Message = "成功",
+                    CacheData = cacheData,
+                    TableName = cacheGetCommand.TableName,
+                    CacheTime = DateTime.Now,
+                    ExpirationTime = DateTime.Now.AddMinutes(30), // 默认30分钟过期
+                    HasMoreData = false, // 暂时不支持分批发送
+                    ServerVersion = Program.AppVersion
+                };
+
+                // 发送缓存数据到客户端
+                await SendCacheResponseAsync(cacheGetCommand.SessionId, cacheResponse);
+
+                return ConvertToApiResponse(ResponseBase.CreateSuccess("缓存获取成功"));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "处理缓存获取时发生异常");
+                return ConvertToApiResponse(ResponseBase.CreateError($"处理缓存获取失败: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "CACHE_GET_PROCESSING_ERROR"));
+            }
+        }
+
+        private async Task<ResponseBase> HandleCacheSetAsync(ICommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 获取缓存设置命令数据
+                var cacheSetCommand = command as CacheSetCommand;
+                if (cacheSetCommand == null)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError("无效的缓存设置命令", 400)
+                        .WithMetadata("ErrorCode", "INVALID_CACHE_SET_COMMAND"));
+                }
+
+                // 验证命令数据
+                var validationResult = await cacheSetCommand.ValidateAsync(cancellationToken);
+                if (!validationResult.IsValid)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.Errors[0].ErrorMessage, 400)
+                        .WithMetadata("ErrorCode", "INVALID_CACHE_SET_REQUEST"));
+                }
+
+                // 获取会话信息
+                var session = _sessionService.GetSession(cacheSetCommand.SessionId);
+                if (session == null)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError("会话不存在", 404)
+                        .WithMetadata("ErrorCode", "SESSION_NOT_FOUND"));
+                }
+
+                // 设置缓存数据
+                await SetCacheDataAsync(cacheSetCommand.TableName, cacheSetCommand.CacheData, cancellationToken);
+
+                return ConvertToApiResponse(ResponseBase.CreateSuccess("缓存设置成功"));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "处理缓存设置时发生异常");
+                return ConvertToApiResponse(ResponseBase.CreateError($"处理缓存设置失败: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "CACHE_SET_PROCESSING_ERROR"));
+            }
+        }
+
+        private async Task<ResponseBase> HandleCacheRemoveAsync(ICommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 获取缓存删除命令数据
+                var cacheRemoveCommand = command as CacheRemoveCommand;
+                if (cacheRemoveCommand == null)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError("无效的缓存删除命令", 400)
+                        .WithMetadata("ErrorCode", "INVALID_CACHE_REMOVE_COMMAND"));
+                }
+
+                // 验证命令数据
+                var validationResult = await cacheRemoveCommand.ValidateAsync(cancellationToken);
+                if (!validationResult.IsValid)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError(validationResult.Errors[0].ErrorMessage, 400)
+                        .WithMetadata("ErrorCode", "INVALID_CACHE_REMOVE_REQUEST"));
+                }
+
+                // 获取会话信息
+                var session = _sessionService.GetSession(cacheRemoveCommand.SessionId);
+                if (session == null)
+                {
+                    return ConvertToApiResponse(ResponseBase.CreateError("会话不存在", 404)
+                        .WithMetadata("ErrorCode", "SESSION_NOT_FOUND"));
+                }
+
+                // 删除缓存数据
+                await RemoveCacheDataAsync(cacheRemoveCommand.TableName, cancellationToken);
+
+                return ConvertToApiResponse(ResponseBase.CreateSuccess("缓存删除成功"));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "处理缓存删除时发生异常");
+                return ConvertToApiResponse(ResponseBase.CreateError($"处理缓存删除失败: {ex.Message}", 500)
+                    .WithMetadata("ErrorCode", "CACHE_REMOVE_PROCESSING_ERROR"));
+            }
+        }
     }
 }

@@ -1,49 +1,95 @@
-﻿using System;
+﻿﻿﻿﻿﻿﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
-using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Core;
-using System.Runtime.CompilerServices;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
+using RUINORERP.PacketSpec.Commands;
+using MessagePack;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {
     /// <summary>
     /// 统一数据包模型 - 核心通信协议实体
-    /// 替代原有的PacketInfo和PacketModel
-    /// 直接支持SuperSocket
+    /// 
+    /// 网络传输层 - 只关心网络协议格式
+    /// 职责：包头、加密、压缩、序列化等网络传输相关属性
+    /// 不包含任何业务逻辑或业务属性
     /// </summary>
     [Serializable]
-    public class PacketModel : ICoreEntity, IPacketData
+    public class PacketModel :  IPacketData
     {
-        #region 公共属性
+        // 传输数据
+        public byte[] Data { get; set; }
+
+
+        // 简单的命令标识（不包含业务逻辑）
+        //命令类型
+        public CommandId Command { get; set; }
+
+        /// <summary>
+        /// 数据包状态
+        /// </summary>
+        public PacketStatus Status { get; set; }
+
+        #region 网络传输属性
+
+        public string SessionId { get; set; } // 属性声明
+
+        public string RequestId { get; set; }
 
         /// <summary>
         /// 包标志位
         /// </summary>
         public string Flag { get; set; }
 
-        /// <summary>
-        /// 包体数据
-        /// </summary>
-        public byte[] Body { get; set; }
+        public string ClientId { get; set; }
 
         /// <summary>
-        /// 会话ID
+        /// 认证Token
         /// </summary>
-        public string SessionId { get; set; }
+        public string Token { get; set; }
+
+        /// <summary>
+        /// 数据包唯一标识符
+        /// </summary>
+        // 网络标识
+        public string PacketId { get; set; }
+
+
+        /// <summary>
+        /// 数据包大小（字节）
+        /// </summary>
+        public int Size { get; set; }
+
+        /// <summary>
+        /// 获取包大小
+        /// </summary>
+        public int GetPackageSize()
+        {
+            return Data?.Length ?? 0;
+        }
+
+        /// <summary>
+        /// 校验和
+        /// </summary>
+        public string Checksum { get; set; }
+
+        /// <summary>
+        /// 是否加密
+        /// </summary>
+        public bool IsEncrypted { get; set; }
+
+        /// <summary>
+        /// 是否压缩
+        /// </summary>
+        public bool IsCompressed { get; set; }
 
         /// <summary>
         /// 数据包方向
         /// </summary>
         public PacketDirection Direction { get; set; }
-
-        /// <summary>
-        /// 数据包优先级
-        /// </summary>
-        public PacketPriority Priority { get; set; } = PacketPriority.Normal;
 
         /// <summary>
         /// 模型版本
@@ -56,78 +102,28 @@ namespace RUINORERP.PacketSpec.Models.Core
         public MessageType MessageType { get; set; } = MessageType.Request;
 
         /// <summary>
-        /// 获取包大小
-        /// </summary>
-        public int GetPackageSize()
-        {
-            return Body?.Length ?? 0;
-        }
-
-        #endregion
-
-        #region 属性定义
-
-        /// <summary>
-        /// JSON序列化缓存，用于缓存高频序列化操作（如心跳包）
-        /// </summary>
-        private static readonly ConcurrentDictionary<string, byte[]> _jsonCache = new ConcurrentDictionary<string, byte[]>();
-
-        /// <summary>
-        /// 数据包唯一标识符
-        /// </summary>
-        public string PacketId { get; set; }
-
-        /// <summary>
-        /// 实体唯一标识（实现 ICoreEntity 接口）
-        /// </summary>
-        public string Id
-        {
-            get => PacketId;
-            set => PacketId = value;
-        }
-
-        /// <summary>
-        /// 命令类型
-        /// </summary>
-        public CommandId Command { get; set; }
-
-        /// <summary>
-        /// 数据包状态
-        /// </summary>
-        public PacketStatus Status { get; set; }
-
-        /// <summary>
-        /// 客户端标识
-        /// </summary>
-        public string ClientId { get; set; }
-
-        /// <summary>
-        /// 数据包大小（字节）
-        /// </summary>
-        public int Size { get; set; }
-
-        /// <summary>
-        /// 校验和
-        /// </summary>
-        public string Checksum { get; set; }
-
-        /// <summary>
-        /// 扩展属性字典
-        /// 包含：RequestId，
+        /// 扩展属性字典（用于存储非核心但需要传输的元数据）
         /// </summary>
         public System.Collections.Generic.Dictionary<string, object> Extensions { get; set; }
 
-        /// <summary>
-        /// 是否加密
-        /// </summary>
-        public bool IsEncrypted { get; set; }
-
-        /// <summary>
-        /// 是否压缩
-        /// </summary>
-        public bool IsCompressed { get; set; }
-
         #endregion
+
+        // 便捷创建方法
+        public static PacketModel Create<TCommand>(TCommand command)
+            where TCommand : ICommand
+        {
+            return new PacketModel
+            {
+                Command = command.CommandIdentifier,
+                //SessionId = command.SessionId,
+                //ClientId = command.ClientId,
+                Data = SerializeCommand(command)
+            };
+        }
+
+        private static byte[] SerializeCommand<T>(T command)
+    => MessagePackSerializer.Serialize(command);
+
 
         #region ICoreEntity 接口实现
 
@@ -143,7 +139,6 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         /// <summary>
         /// 时间戳（UTC时间）
-        /// 时间戳（用于验证请求有效性）
         /// </summary>
         public DateTime TimestampUtc { get; set; }
 
@@ -155,10 +150,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             return CreatedTimeUtc <= DateTime.UtcNow &&
                    CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1) &&
-                   !string.IsNullOrEmpty(PacketId) &&
-                   Body != null &&
-                   Body.Length > 0 &&
-                   Size == Body.Length;
+                   !string.IsNullOrEmpty(PacketId);
         }
 
         /// <summary>
@@ -179,89 +171,104 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// </summary>
         public PacketModel()
         {
-            PacketId = IdGenerator.GeneratePacketId("DEFAULT");
+            PacketId = Guid.NewGuid().ToString();
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = CreatedTimeUtc;
-            Status = PacketStatus.Created;
             Extensions = new System.Collections.Generic.Dictionary<string, object>();
+        }
+
+        /// <summary>
+        /// 获取JSON数据为指定类型
+        /// </summary>
+        /// <typeparam name="T">目标类型</typeparam>
+        /// <returns>反序列化后的对象</returns>
+        public T GetJsonData<T>()
+        {
+            if (Data == null || Data.Length == 0)
+                return default;
+
+            var json = Encoding.UTF8.GetString(Data);
+            return JsonConvert.DeserializeObject<T>(json);
         }
 
         /// <summary>
         /// 从原始数据创建数据包
         /// </summary>
         /// <param name="originalData">原始数据</param>
-        /// <param name="command">命令标识符</param>
-        public PacketModel(byte[] originalData, CommandId command = default(CommandId))
+        public PacketModel(byte[] originalData)
             : this()
         {
-            Body = originalData;
-            Command = command;
+            //Data = originalData;
             Size = originalData?.Length ?? 0;
-            // 重新生成PacketId，使用命令类别
-            PacketId = IdGenerator.GeneratePacketId(command.Category.ToString());
-        }
-
-        /// <summary>
-        /// 从原始数据创建指定类型的数据包
-        /// </summary>
-        /// <param name="originalData">原始数据字节数组</param>
-        /// <param name="messageType">消息类型</param>
-        /// <param name="command">命令标识符</param>
-        /// <returns>PacketModel实例</returns>
-        public static PacketModel FromOriginalData(byte[] originalData, RUINORERP.PacketSpec.Enums.Core.MessageType messageType, CommandId command = default(CommandId))
-        {
-            var packet = new PacketModel(originalData, command);
-            packet.MessageType = messageType;
-            return packet;
         }
 
         #endregion
 
-        #region 核心方法
 
         /// <summary>
-        /// 从原始数据创建数据包
+        /// 安全清理敏感数据
         /// </summary>
-        /// <param name="originalData">原始数据字节数组</param>
-        /// <param name="command">命令标识符</param>
-        /// <returns>PacketModel实例</returns>
-        public static PacketModel FromOriginalData(byte[] originalData, CommandId command = default(CommandId))
+        public void ClearSensitiveData()
         {
-            return new PacketModel(originalData, command);
+            SessionId = null;
+            ClientId = null;
+            Token = null; // 清理Token
+            Extensions?.Clear();
+            // 清理包体数据
+            if (Data != null)
+            {
+                Array.Clear(Data, 0, Data.Length);
+                Data = null;
+            }
         }
 
         /// <summary>
-        /// 设置会话信息
+        /// 设置Token
         /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <param name="clientId">客户端ID</param>
-        /// <returns>当前实例</returns>
-        public PacketModel SetSessionInfo(string sessionId, string clientId = null)
+        /// <param name="token">认证Token</param>
+        public void SetToken(string token)
         {
-            SessionId = sessionId;
-            ClientId = clientId;
-            return this;
+            Token = token;
         }
 
         /// <summary>
-        /// 设置数据内容
+        /// 获取Token
         /// </summary>
-        /// <param name="data">数据字节数组</param>
-        /// <returns>当前实例</returns>
-        public PacketModel SetData(byte[] data)
+        /// <returns>认证Token</returns>
+        public string GetToken()
         {
-            Body = data;
-            Size = data?.Length ?? 0;
-            LastUpdatedTime = DateTime.UtcNow;
-            return this;
+            return Token;
         }
 
         /// <summary>
-        /// 设置JSON数据
+        /// 检查是否包含有效Token
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="data">数据对象</param>
-        /// <returns>当前实例</returns>
+        /// <returns>是否包含Token</returns>
+        public bool HasToken()
+        {
+            return !string.IsNullOrEmpty(Token);
+        }
+
+        #region 重写方法
+
+        /// <summary>
+        /// 转换为字符串表示
+        /// </summary>
+        /// <returns>数据包信息字符串</returns>
+        public override string ToString()
+        {
+            return $"Packet[Id:{PacketId}, Size:{Size}, Encrypted:{IsEncrypted}, Compressed:{IsCompressed}]";
+        }
+
+        internal void SetData(byte[] data)
+        {
+            this.Data = data;
+        }
+
+        /// <summary>
+        /// JSON序列化缓存，用于缓存高频序列化操作（如心跳包）
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, byte[]> _jsonCache = new ConcurrentDictionary<string, byte[]>();
         public PacketModel SetJsonData<T>(T data)
         {
             // 生成缓存键：类型名 + 数据哈希
@@ -280,12 +287,14 @@ namespace RUINORERP.PacketSpec.Models.Core
             var cacheKey = $"{type.FullName}:{hash}";
 
             // 尝试从缓存获取或添加
-            Body = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
-            Size = Body.Length;
+            Data = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
+            Size = Data.Length;
             LastUpdatedTime = DateTime.UtcNow;
             return this;
+
         }
 
+        #endregion
         /// <summary>
         /// 获取数据为文本格式
         /// </summary>
@@ -293,49 +302,12 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>文本数据</returns>
         public string GetDataAsText(Encoding encoding = null)
         {
-            if (Body == null || Body.Length == 0)
+            if (Data == null || Data.Length == 0)
                 return string.Empty;
 
             encoding ??= Encoding.UTF8;
-            return encoding.GetString(Body);
+            return encoding.GetString(Data);
         }
-
-        /// <summary>
-        /// 获取JSON数据为指定类型
-        /// </summary>
-        /// <typeparam name="T">目标类型</typeparam>
-        /// <returns>反序列化后的对象</returns>
-        public T GetJsonData<T>()
-        {
-            if (Body == null || Body.Length == 0)
-                return default;
-
-            var json = Encoding.UTF8.GetString(Body);
-            return JsonConvert.DeserializeObject<T>(json);
-        }
-
-        /// <summary>
-        /// 安全清理敏感数据
-        /// </summary>
-        public void ClearSensitiveData()
-        {
-            SessionId = null;
-            ClientId = null;
-            Extensions?.Clear();
-            // 清理包体数据
-            if (Body != null)
-            {
-                Array.Clear(Body, 0, Body.Length);
-                Body = null;
-            }
-        }
-
-
-
-        /// <summary>
-        /// 创建数据包克隆
-        /// </summary>
-        /// <returns>克隆实例</returns>
         public PacketModel Clone()
         {
             return new PacketModel
@@ -345,7 +317,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 Status = Status,
                 SessionId = SessionId,
                 ClientId = ClientId,
-                Body = Body?.Clone() as byte[],
+                Data = Data?.Clone() as byte[],
                 Size = Size,
                 Checksum = Checksum,
                 CreatedTimeUtc = CreatedTimeUtc,
@@ -356,59 +328,5 @@ namespace RUINORERP.PacketSpec.Models.Core
             };
         }
 
-        /// <summary>
-        /// 从二进制数据创建PacketModel实例
-        /// </summary>
-        /// <param name="binaryData">二进制数据</param>
-        /// <returns>PacketModel实例</returns>
-        public static PacketModel FromBinary(byte[] binaryData)
-        {
-            if (binaryData == null || binaryData.Length == 0)
-                throw new ArgumentException("二进制数据不能为空", nameof(binaryData));
-
-            // 这里应该使用实际的反序列化逻辑
-            // 暂时返回一个基本实现
-            var packet = new PacketModel();
-            packet.Body = binaryData;
-            packet.Size = binaryData.Length;
-            return packet;
-        }
-
-        /// <summary>
-        /// 转换为二进制数据
-        /// </summary>
-        /// <returns>二进制数据</returns>
-        public byte[] ToBinary()
-        {
-            return Body?.Clone() as byte[] ?? new byte[0];
-        }
-
-        #endregion
-
-        #region 私有辅助方法
-
-        /// <summary>
-        /// 计算数据包大小
-        /// </summary>
-        /// <returns>数据包大小</returns>
-        private int CalculateSize()
-        {
-            return Body?.Length ?? 0;
-        }
-
-        #endregion
-
-        #region 重写方法
-
-        /// <summary>
-        /// 转换为字符串表示
-        /// </summary>
-        /// <returns>数据包信息字符串</returns>
-        public override string ToString()
-        {
-            return $"Packet[Id:{PacketId}, Command:{Command}, Size:{Size}, Status:{Status}]";
-        }
-
-        #endregion
     }
 }

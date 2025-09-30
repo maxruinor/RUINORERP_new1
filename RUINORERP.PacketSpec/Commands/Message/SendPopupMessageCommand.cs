@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +6,7 @@ using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Enums.Core;
+using FluentValidation.Results;
 
 namespace RUINORERP.PacketSpec.Commands.Message
 {
@@ -15,10 +16,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
     [PacketCommand("SendPopupMessage", CommandCategory.Message)]
     public class SendPopupMessageCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => MessageCommands.SendPopupMessage;
+ 
 
         /// <summary>
         /// 消息标题
@@ -48,6 +46,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
             TargetUserIds = new string[0];
             MessageType = "INFO"; // 默认信息类型
             Direction = PacketDirection.ServerToClient;
+            CommandIdentifier = MessageCommands.SendPopupMessage;
         }
 
         /// <summary>
@@ -64,15 +63,16 @@ namespace RUINORERP.PacketSpec.Commands.Message
             MessageType = messageType;
             TargetUserIds = targetUserIds ?? new string[0];
             Direction = PacketDirection.ServerToClient;
+            CommandIdentifier = MessageCommands.SendPopupMessage;
         }
 
         /// <summary>
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
+            var result = await base.ValidateAsync(cancellationToken);
             if (!result.IsValid)
             {
                 return result;
@@ -81,22 +81,22 @@ namespace RUINORERP.PacketSpec.Commands.Message
             // 验证消息标题
             if (string.IsNullOrWhiteSpace(Title))
             {
-                return CommandValidationResult.Failure("消息标题不能为空", "INVALID_MESSAGE_TITLE");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(Title), "消息标题不能为空") });
             }
 
             // 验证消息内容
             if (string.IsNullOrWhiteSpace(Content))
             {
-                return CommandValidationResult.Failure("消息内容不能为空", "INVALID_MESSAGE_CONTENT");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(Content), "消息内容不能为空") });
             }
 
             // 验证消息类型
             if (string.IsNullOrWhiteSpace(MessageType))
             {
-                return CommandValidationResult.Failure("消息类型不能为空", "INVALID_MESSAGE_TYPE");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(MessageType), "消息类型不能为空") });
             }
 
-            return CommandValidationResult.Success();
+            return new ValidationResult();
         }
 
         /// <summary>

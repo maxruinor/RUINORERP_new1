@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Models.Core;
+﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Generic;
@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Enums.Core;
+using FluentValidation.Results;
 
 
 namespace RUINORERP.PacketSpec.Commands
@@ -27,25 +28,22 @@ namespace RUINORERP.PacketSpec.Commands
         public EchoCommand()
         {
             // 设置命令标识符
-            _commandIdentifier = new CommandId(CommandCategory.Special, 0x01);
+            CommandIdentifier = new CommandId(CommandCategory.Special, 0x01);
             // 设置命令方向
             Direction = PacketDirection.ServerToClient;
         }
         
-        private readonly CommandId _commandIdentifier;
+ 
 
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => _commandIdentifier;
+ 
         
         /// <summary>
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
+            var result = await base.ValidateAsync(cancellationToken);
             if (!result.IsValid)
             {
                 return result;
@@ -54,10 +52,10 @@ namespace RUINORERP.PacketSpec.Commands
             // 验证Message参数
             if (string.IsNullOrWhiteSpace(Message))
             {
-                return CommandValidationResult.Failure("消息不能为空", "INVALID_MESSAGE");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(Message), "消息不能为空") });
             }
             
-            return CommandValidationResult.Success();
+            return new ValidationResult();
         }
         
         /// <summary>

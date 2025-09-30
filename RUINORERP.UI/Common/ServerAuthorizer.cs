@@ -211,7 +211,6 @@ namespace RUINORERP.UI.Common
                 // 创建自定义命令数据包
                 var customPacket = PacketBuilder.Create()
                     .WithCommand(MessageCommands.SendPopupMessage)  // 使用预定义的命令
-                    .WithPriority(PacketPriority.High)
                     .WithDirection(PacketDirection.ClientToServer)
                     .WithJsonData(new { Title = "通知", Content = "这是一条测试消息" })
                     .Build();

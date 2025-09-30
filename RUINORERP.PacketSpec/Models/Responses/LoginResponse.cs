@@ -49,5 +49,15 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// 令牌类型
         /// </summary>
         public string TokenType { get; set; }
+        
+        /// <summary>
+        /// 用户角色列表
+        /// </summary>
+        public List<string> Roles { get; set; } = new List<string>();
+        
+        /// <summary>
+        /// 用户权限列表
+        /// </summary>
+        public List<string> Permissions { get; set; } = new List<string>();
     }
 }

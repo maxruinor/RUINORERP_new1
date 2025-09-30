@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Enums.Core; // 引用BaseCommand
+using RUINORERP.PacketSpec.Enums.Core;
+using FluentValidation.Results; // 引用BaseCommand
 
 namespace RUINORERP.PacketSpec.Commands.Cache
 {
@@ -14,10 +15,6 @@ namespace RUINORERP.PacketSpec.Commands.Cache
     [PacketCommand("CacheSync", CommandCategory.Cache)]
     public class CacheCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => CacheCommands.CacheSync;
 
         /// <summary>
         /// 需要同步的缓存键列表
@@ -42,6 +39,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
             CacheKeys = new List<string>();
             SyncMode = "FULL"; // 默认全量同步
             Direction = PacketDirection.Request;
+            CommandIdentifier = CacheCommands.CacheSync;
         }
 
         /// <summary>
@@ -55,6 +53,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
             SyncMode = syncMode;
             Direction = PacketDirection.Request;
             TimeoutMs= 10000;
+            CommandIdentifier = CacheCommands.CacheSync;
         }
         
         /// <summary>
@@ -107,9 +106,9 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
+            var result = await base.ValidateAsync(cancellationToken);
             if (!result.IsValid)
             {
                 return result;
@@ -118,16 +117,16 @@ namespace RUINORERP.PacketSpec.Commands.Cache
             // 验证同步模式
             if (string.IsNullOrWhiteSpace(SyncMode))
             {
-                return CommandValidationResult.Failure("同步模式不能为空", "INVALID_SYNC_MODE");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(SyncMode), "同步模式不能为空") });
             }
 
             // 验证缓存键列表
             if (CacheKeys == null && CacheKeysEnumerator == null)
             {
-                return CommandValidationResult.Failure("缓存键列表不能为空", "INVALID_CACHE_KEYS");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(CacheKeys), "缓存键列表不能为空") });
             }
 
-            return CommandValidationResult.Success();
+            return new ValidationResult();
         }
 
         /// <summary>

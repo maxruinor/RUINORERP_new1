@@ -1,4 +1,5 @@
-﻿using RUINORERP.PacketSpec.Enums.Core;
+﻿using FluentValidation.Results;
+using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -13,10 +14,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     [PacketCommand("RefuseUnlock", CommandCategory.Lock)]
     public class RefuseUnlockCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => LockCommands.RefuseUnlock;
+ 
 
         /// <summary>
         /// 拒绝解锁信息
@@ -30,6 +28,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         {
             Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
+            CommandIdentifier = LockCommands.RefuseUnlock;
         }
 
         /// <summary>
@@ -41,6 +40,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             RefuseInfo = refuseInfo;
             Direction = PacketDirection.ClientToServer;
             TimeoutMs = 30000; // 默认超时时间30秒
+            CommandIdentifier = LockCommands.RefuseUnlock;
         }
 
         /// <summary>
@@ -56,9 +56,9 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
+            var result = await base.ValidateAsync(cancellationToken);
             if (!result.IsValid)
             {
                 return result;
@@ -67,34 +67,34 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             // 验证拒绝信息
             if (RefuseInfo == null)
             {
-                return CommandValidationResult.Failure("拒绝解锁信息不能为空", "INVALID_REFUSE_INFO");
+                return new ValidationResult(new[] { new ValidationFailure(nameof(RefuseInfo), "拒绝解锁信息不能为空") });
             }
 
             // 验证单据ID
             if (RefuseInfo.BillID <= 0)
             {
-                return CommandValidationResult.Failure("单据ID必须大于0", "INVALID_BILL_ID");
+                return new ValidationResult(new[] { new ValidationFailure("RefuseInfo.BillID", "单据ID必须大于0") });
             }
 
             // 验证请求用户ID
             if (RefuseInfo.RequestUserID <= 0)
             {
-                return CommandValidationResult.Failure("请求用户ID必须大于0", "INVALID_REQUEST_USER_ID");
+                return new ValidationResult(new[] { new ValidationFailure("RefuseInfo.RequestUserID", "请求用户ID必须大于0") });
             }
 
             // 验证拒绝用户ID
             if (RefuseInfo.RefuseUserID <= 0)
             {
-                return CommandValidationResult.Failure("拒绝用户ID必须大于0", "INVALID_REFUSE_USER_ID");
+                return new ValidationResult(new[] { new ValidationFailure("RefuseInfo.RefuseUserID", "拒绝用户ID必须大于0") });
             }
 
             // 验证单据信息
             if (RefuseInfo.BillData == null)
             {
-                return CommandValidationResult.Failure("单据信息不能为空", "INVALID_BILL_DATA");
+                return new ValidationResult(new[] { new ValidationFailure("RefuseInfo.BillData", "单据信息不能为空") });
             }
 
-            return CommandValidationResult.Success();
+            return new ValidationResult();
         }
 
         /// <summary>

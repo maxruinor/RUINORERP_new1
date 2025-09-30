@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RUINORERP.Model;
+using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Handlers;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.Server.Network.Models;

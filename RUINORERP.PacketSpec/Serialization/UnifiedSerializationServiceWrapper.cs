@@ -17,10 +17,7 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <typeparam name="T">对象类型</typeparam>
         /// <param name="obj">要序列化的对象</param>
         /// <returns>序列化后的字节数组</returns>
-        public byte[] SerializeWithMessagePack<T>(T obj)
-        {
-            return UnifiedSerializationService.SerializeWithMessagePack(obj);
-        }
+        public byte[] SerializeWithMessagePack<T>(T obj) => UnifiedSerializationService.SerializeWithMessagePack(obj);
 
         /// <summary>
         /// 异步序列化对象为字节数组（MessagePack）
@@ -28,10 +25,7 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <typeparam name="T">对象类型</typeparam>
         /// <param name="obj">要序列化的对象</param>
         /// <returns>序列化后的字节数组</returns>
-        public async Task<byte[]> SerializeWithMessagePackAsync<T>(T obj)
-        {
-            return await UnifiedSerializationService.SerializeWithMessagePackAsync(obj);
-        }
+        public async Task<byte[]> SerializeWithMessagePackAsync<T>(T obj) => await UnifiedSerializationService.SerializeWithMessagePackAsync(obj);
 
         /// <summary>
         /// 反序列化字节数组为对象（MessagePack）
@@ -39,10 +33,7 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <typeparam name="T">目标对象类型</typeparam>
         /// <param name="data">要反序列化的字节数组</param>
         /// <returns>反序列化后的对象</returns>
-        public T DeserializeWithMessagePack<T>(byte[] data)
-        {
-            return UnifiedSerializationService.DeserializeWithMessagePack<T>(data);
-        }
+        public T DeserializeWithMessagePack<T>(byte[] data) => UnifiedSerializationService.DeserializeWithMessagePack<T>(data);
 
         /// <summary>
         /// 异步反序列化字节数组为对象（MessagePack）
@@ -50,10 +41,7 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <typeparam name="T">目标对象类型</typeparam>
         /// <param name="data">要反序列化的字节数组</param>
         /// <returns>反序列化后的对象</returns>
-        public async Task<T> DeserializeWithMessagePackAsync<T>(byte[] data)
-        {
-            return await UnifiedSerializationService.DeserializeWithMessagePackAsync<T>(data);
-        }
+        public async Task<T> DeserializeWithMessagePackAsync<T>(byte[] data) => await UnifiedSerializationService.DeserializeWithMessagePackAsync<T>(data);
 
         /// <summary>
         /// 尝试反序列化字节数组为对象（MessagePack）
@@ -62,10 +50,7 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <param name="data">要反序列化的字节数组</param>
         /// <param name="result">反序列化后的对象</param>
         /// <returns>是否反序列化成功</returns>
-        public bool TryDeserializeWithMessagePack<T>(byte[] data, out T result)
-        {
-            return UnifiedSerializationService.TryDeserializeWithMessagePack(data, out result);
-        }
+        public bool TryDeserializeWithMessagePack<T>(byte[] data, out T result) => UnifiedSerializationService.TryDeserializeWithMessagePack(data, out result);
 
         /// <summary>
         /// 安全反序列化（MessagePack，捕获异常返回默认值）
@@ -73,10 +58,7 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <typeparam name="T">目标对象类型</typeparam>
         /// <param name="data">要反序列化的字节数组</param>
         /// <returns>反序列化后的对象</returns>
-        public T SafeDeserializeWithMessagePack<T>(byte[] data)
-        {
-            return UnifiedSerializationService.SafeDeserializeWithMessagePack<T>(data);
-        }
+        public T SafeDeserializeWithMessagePack<T>(byte[] data) => UnifiedSerializationService.SafeDeserializeWithMessagePack<T>(data);
 
         /// <summary>
         /// 获取序列化后的数据大小（MessagePack，不实际序列化）
@@ -84,10 +66,7 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <typeparam name="T">对象类型</typeparam>
         /// <param name="obj">要测量的对象</param>
         /// <returns>估计的序列化大小</returns>
-        public int GetSerializedSizeWithMessagePack<T>(T obj)
-        {
-            return UnifiedSerializationService.GetSerializedSizeWithMessagePack(obj);
-        }
+        public int GetSerializedSizeWithMessagePack<T>(T obj) => UnifiedSerializationService.GetSerializedSizeWithMessagePack(obj);
         
         #endregion
 
@@ -96,34 +75,22 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <summary>
         /// 序列化对象到字节数组（JSON）
         /// </summary>
-        public byte[] SerializeWithJson(object obj)
-        {
-            return UnifiedSerializationService.SerializeWithJson(obj);
-        }
+        public byte[] SerializeWithJson(object obj) => UnifiedSerializationService.SerializeWithJson(obj);
 
         /// <summary>
         /// 从字节数组反序列化对象（JSON）
         /// </summary>
-        public T DeserializeWithJson<T>(byte[] data) where T : class
-        {
-            return UnifiedSerializationService.DeserializeWithJson<T>(data);
-        }
+        public T DeserializeWithJson<T>(byte[] data) where T : class => UnifiedSerializationService.DeserializeWithJson<T>(data);
 
         /// <summary>
         /// 安全反序列化（JSON，捕获异常返回默认值）
         /// </summary>
-        public T SafeDeserializeWithJson<T>(byte[] data) where T : class
-        {
-            return UnifiedSerializationService.SafeDeserializeWithJson<T>(data);
-        }
+        public T SafeDeserializeWithJson<T>(byte[] data) where T : class => UnifiedSerializationService.SafeDeserializeWithJson<T>(data);
 
         /// <summary>
         /// 验证字节数组是否可以反序列化（JSON）
         /// </summary>
-        public bool CanDeserializeWithJson(byte[] data)
-        {
-            return UnifiedSerializationService.CanDeserializeWithJson(data);
-        }
+        public bool CanDeserializeWithJson(byte[] data) => UnifiedSerializationService.CanDeserializeWithJson(data);
         
         #endregion
 
@@ -134,30 +101,21 @@ namespace RUINORERP.PacketSpec.Serialization
         /// </summary>
         /// <param name="packet">统一数据包</param>
         /// <returns>二进制数据</returns>
-        public byte[] SerializeToBinary<T>(T packet) where T : class
-        {
-            return UnifiedSerializationService.SerializeToBinary(packet);
-        }
+        public byte[] SerializeToBinary<T>(T packet) where T : class => UnifiedSerializationService.SerializeToBinary(packet);
 
         /// <summary>
         /// 从二进制格式反序列化数据包
         /// </summary>
         /// <param name="data">二进制数据</param>
         /// <returns>反序列化后的对象</returns>
-        public T DeserializeFromBinary<T>(byte[] data) where T : class
-        {
-            return UnifiedSerializationService.DeserializeFromBinary<T>(data);
-        }
+        public T DeserializeFromBinary<T>(byte[] data) where T : class => UnifiedSerializationService.DeserializeFromBinary<T>(data);
 
         /// <summary>
         /// 安全反序列化（二进制，捕获异常返回默认值）
         /// </summary>
         /// <param name="data">二进制数据</param>
         /// <returns>反序列化后的对象或null</returns>
-        public T SafeDeserializeFromBinary<T>(byte[] data) where T : class
-        {
-            return UnifiedSerializationService.SafeDeserializeFromBinary<T>(data);
-        }
+        public T SafeDeserializeFromBinary<T>(byte[] data) where T : class => UnifiedSerializationService.SafeDeserializeFromBinary<T>(data);
         
         #endregion
 
@@ -169,10 +127,7 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <param name="obj">要序列化的对象</param>
         /// <param name="useMessagePack">是否使用MessagePack序列化，默认为true</param>
         /// <returns>压缩后的字节数组</returns>
-        public byte[] SerializeCompressed<T>(T obj, bool useMessagePack = true)
-        {
-            return UnifiedSerializationService.SerializeCompressed(obj, useMessagePack);
-        }
+        public byte[] SerializeCompressed<T>(T obj, bool useMessagePack = true) => UnifiedSerializationService.SerializeCompressed(obj, useMessagePack);
 
         /// <summary>
         /// 解压缩反序列化
@@ -180,10 +135,7 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <param name="compressedData">压缩的字节数组</param>
         /// <param name="useMessagePack">是否使用MessagePack反序列化，默认为true</param>
         /// <returns>反序列化后的对象</returns>
-        public T DeserializeCompressed<T>(byte[] compressedData, bool useMessagePack = true) where T : class
-        {
-            return UnifiedSerializationService.DeserializeCompressed<T>(compressedData, useMessagePack);
-        }
+        public T DeserializeCompressed<T>(byte[] compressedData, bool useMessagePack = true) where T : class => UnifiedSerializationService.DeserializeCompressed<T>(compressedData, useMessagePack);
 
         /// <summary>
         /// 安全解压缩反序列化（捕获异常返回默认值）
@@ -191,10 +143,7 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <param name="compressedData">压缩的字节数组</param>
         /// <param name="useMessagePack">是否使用MessagePack反序列化，默认为true</param>
         /// <returns>反序列化后的对象或null</returns>
-        public T SafeDeserializeCompressed<T>(byte[] compressedData, bool useMessagePack = true) where T : class
-        {
-            return UnifiedSerializationService.SafeDeserializeCompressed<T>(compressedData, useMessagePack);
-        }
+        public T SafeDeserializeCompressed<T>(byte[] compressedData, bool useMessagePack = true) where T : class => UnifiedSerializationService.SafeDeserializeCompressed<T>(compressedData, useMessagePack);
         
         #endregion
 
@@ -203,18 +152,12 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <summary>
         /// 压缩数据
         /// </summary>
-        public byte[] Compress(byte[] data)
-        {
-            return UnifiedSerializationService.Compress(data);
-        }
+        public byte[] Compress(byte[] data) => UnifiedSerializationService.Compress(data);
 
         /// <summary>
         /// 解压缩数据
         /// </summary>
-        public byte[] Decompress(byte[] compressedData)
-        {
-            return UnifiedSerializationService.Decompress(compressedData);
-        }
+        public byte[] Decompress(byte[] compressedData) => UnifiedSerializationService.Decompress(compressedData);
         
         #endregion
     }

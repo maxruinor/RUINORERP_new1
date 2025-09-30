@@ -20,7 +20,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 处理客户端发送的心跳命令，维持连接活跃状态
     /// </summary>
     [CommandHandler("HeartbeatCommandHandler", priority: 50)]
-    public class HeartbeatCommandHandler : CommandHandlerBase
+    public class HeartbeatCommandHandler : BaseCommandHandler
     {
          private readonly ISessionService _sessionService; 
 
@@ -58,7 +58,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 具体的命令处理逻辑
         /// </summary>
-        protected override async Task<ResponseBase> ProcessCommandAsync(ICommand command, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnHandleAsync(ICommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -91,11 +91,24 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                LogInfo($"处理心跳命令 [会话: {command.SessionId}]");
+                // 获取SessionId，通过反射方式访问
+                string sessionId = null;
+                try
+                {
+                    var commandWithSession = command as dynamic;
+                    sessionId = commandWithSession.SessionId;
+                }
+                catch
+                {
+                    // 如果无法获取SessionId，则设置为null
+                    sessionId = null;
+                }
 
-                 if (!string.IsNullOrEmpty(command.SessionId))
+                LogInfo($"处理心跳命令 [会话: {sessionId}]");
+
+                 if (!string.IsNullOrEmpty(sessionId))
                  {
-                     var session = _sessionService.GetSession(command.SessionId);
+                     var session = _sessionService.GetSession(sessionId);
                      if (session != null)
                      {
                          session.UpdateActivity();
@@ -110,7 +123,7 @@ namespace RUINORERP.Server.Network.Commands
                     message: "心跳响应成功"
                 ).WithMetadata("Data", new { 
                         Timestamp = DateTime.UtcNow,
-                        SessionId = command.SessionId,
+                        SessionId = sessionId,
                         Status = "Alive"
                     });
             }

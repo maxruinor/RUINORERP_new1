@@ -377,7 +377,7 @@ namespace RUINORERP.Server
 
             // 注册各项目的服务（使用各项目自己的DI配置）
             services.AddNetworkServices();      // 网络服务
-            services.AddPacketSpecServices();   // PacketSpec服务
+            services.AddPacketSpecServices(configuration);   // PacketSpec服务
         }
         #endregion
 

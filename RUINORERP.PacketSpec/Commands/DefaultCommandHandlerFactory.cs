@@ -6,17 +6,15 @@ using System.Text;
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
-    /// 默认命令处理器工厂
+    /// 默认命令处理器工厂,不作为DI容器中的服务，而是作为DI容器的扩展方法，用于创建命令处理器
     /// </summary>
     public class DefaultCommandHandlerFactory : ICommandHandlerFactory
     {
         private readonly ConcurrentDictionary<Type, Func<ICommandHandler>> _handlerFactories;
-        private readonly ICommandHandlerFactory _handlerFactory;
 
-        public DefaultCommandHandlerFactory(ICommandHandlerFactory handlerFactory = null)
+        public DefaultCommandHandlerFactory()
         {
             _handlerFactories = new ConcurrentDictionary<Type, Func<ICommandHandler>>();
-            _handlerFactory = handlerFactory;
         }
 
         /// <summary>
@@ -27,12 +25,6 @@ namespace RUINORERP.PacketSpec.Commands
             if (_handlerFactories.TryGetValue(handlerType, out var factory))
             {
                 return factory();
-            }
-
-            // 如果有注入的工厂，则使用它创建实例
-            if (_handlerFactory != null)
-            {
-                return _handlerFactory.CreateHandler(handlerType);
             }
 
             // 使用反射创建实例
@@ -62,15 +54,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             if (typeof(ICommandHandler).IsAssignableFrom(handlerType))
             {
-                // 如果有注入的工厂，则使用它创建实例
-                if (_handlerFactory != null)
-                {
-                    _handlerFactories.TryAdd(handlerType, () => _handlerFactory.CreateHandler(handlerType));
-                }
-                else
-                {
-                    _handlerFactories.TryAdd(handlerType, () => (ICommandHandler)Activator.CreateInstance(handlerType));
-                }
+                _handlerFactories.TryAdd(handlerType, () => (ICommandHandler)Activator.CreateInstance(handlerType));
             }
         }
     }

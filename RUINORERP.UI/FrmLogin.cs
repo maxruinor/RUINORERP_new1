@@ -32,7 +32,7 @@ namespace RUINORERP.UI
         public FrmLogin()
         {
             InitializeComponent();
-           
+
         }
         private bool m_showing = true;
         private void fadeTimer_Tick(object sender, EventArgs e)
@@ -149,7 +149,7 @@ namespace RUINORERP.UI
                         UserGlobalConfig.Instance.PassWord = this.txtPassWord.Text;
                         UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
                         UserGlobalConfig.Instance.ServerPort = txtPort.Text;
-                        
+
 
                         //远程授权 ，如果切换了服务器。前面的链接就要断开重新来。
                         //if (ecs != null && ecs.IsConnected)
@@ -179,7 +179,7 @@ namespace RUINORERP.UI
                                 // 通过依赖注入获取UserLoginService
                                 var userLogin = Startup.ServiceProvider.GetService<UserLoginService>();
 
-                              
+
 
                                 try
                                 {
@@ -221,9 +221,9 @@ namespace RUINORERP.UI
                                     var loginSuccess = await userLogin.LoginAsync(UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord);
 
                                     // 检查登录结果
-                                    if (!loginSuccess.IsSuccess)
+                                    if (loginSuccess == null || !loginSuccess.IsSuccess)
                                     {
-                                        MessageBox.Show($"登录失败: {loginSuccess.ErrorMessage}", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                        //MessageBox.Show($"登录失败: {loginSuccess.ErrorMessage}", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                         //base.Cursor = Cursors.Default;
                                         return;
                                     }

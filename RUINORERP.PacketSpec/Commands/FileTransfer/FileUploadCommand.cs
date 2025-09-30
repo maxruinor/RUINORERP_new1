@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+﻿﻿﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Threading;
@@ -7,6 +7,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.IO.Pipelines;
 using RUINORERP.PacketSpec.Enums.Core;
+using FluentValidation.Results;
 
 namespace RUINORERP.PacketSpec.Commands.FileTransfer
 {
@@ -16,10 +17,7 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
     [PacketCommand("FileUpload", CommandCategory.File)]
     public class FileUploadCommand : BaseCommand
     {
-        /// <summary>
-        /// 命令标识符
-        /// </summary>
-        public override CommandId CommandIdentifier => FileCommands.FileUpload;
+ 
 
         /// <summary>
         /// 文件名
@@ -47,6 +45,7 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
         public FileUploadCommand()
         {
             Direction = PacketDirection.ClientToServer;
+            CommandIdentifier = FileCommands.FileUpload;
         }
 
         /// <summary>
@@ -61,6 +60,7 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
             FileContentReader = fileContentReader;
             TargetPath = targetPath;
             Direction = PacketDirection.ClientToServer;
+            CommandIdentifier = FileCommands.FileUpload;
         }
 
         /// <summary>
@@ -101,33 +101,11 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
         /// 验证命令参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public override CommandValidationResult Validate()
+        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            var result = base.Validate();
-            if (!result.IsValid)
-            {
-                return result;
-            }
-
-            // 验证文件名
-            if (string.IsNullOrWhiteSpace(FileName))
-            {
-                return CommandValidationResult.Failure("文件名不能为空", "INVALID_FILE_NAME");
-            }
-
-            // 验证文件内容读取器
-            if (FileContentReader == null)
-            {
-                return CommandValidationResult.Failure("文件内容读取器不能为空", "INVALID_FILE_CONTENT");
-            }
-
-            // 验证文件大小
-            if (FileSize <= 0)
-            {
-                return CommandValidationResult.Failure("文件大小无效", "INVALID_FILE_SIZE");
-            }
-
-            return CommandValidationResult.Success();
+            // 调用基类验证方法，将使用独立的验证器类进行验证
+            var result = await base.ValidateAsync(cancellationToken);
+            return result;
         }
 
         /// <summary>

@@ -13,15 +13,91 @@ using RUINORERP.PacketSpec.Enums.Core;
 using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Linq;
+using RUINORERP.PacketSpec.Validation;
+using FluentValidation.Results;
+using RUINORERP.PacketSpec.Models.Requests;
+using System.Security.Cryptography;
+using System.Collections.Concurrent;
+using MessagePack;
 
 
 namespace RUINORERP.PacketSpec.Commands
 {
+    public abstract class BaseCommand<TRequest, TResponse> : BaseCommand where TRequest : RequestBase where TResponse : ResponseBase
+    {
+
+
+        private CommandDataContainer<TRequest> _requestContainer;
+        private CommandDataContainer<TResponse> _responseContainer;
+
+        public TRequest Request
+        {
+            get => _requestContainer?.ObjectData;
+            set
+            {
+                if (_requestContainer == null)
+                    _requestContainer = new CommandDataContainer<TRequest>();
+                _requestContainer.ObjectData = value;
+            }
+        }
+
+        public TResponse Response
+        {
+            get => _responseContainer?.ObjectData;
+            set
+            {
+                if (_responseContainer == null)
+                    _responseContainer = new CommandDataContainer<TResponse>();
+                _responseContainer.ObjectData = value;
+            }
+        }
+
+        // 重写基类方法，提供智能数据访问
+        protected override object GetSerializableDataCore()
+        {
+            // 根据命令方向返回请求或响应数据
+            return Direction == PacketDirection.ClientToServer ? Request : Response;
+        }
+
+        // 新增高效二进制访问方法
+        public byte[] GetRequestBinary() => _requestContainer?.BinaryData;
+        public byte[] GetResponseBinary() => _responseContainer?.BinaryData;
+
+        // 从二进制数据初始化请求,有被使用放射，用字符搜索
+        public void SetRequestFromBinary(byte[] data)
+        {
+            if (_requestContainer == null)
+                _requestContainer = new CommandDataContainer<TRequest>();
+            _requestContainer.BinaryData = data;
+        }
+
+    }
+
+
+
+
+
     /// <summary>
     /// 命令基类 - 提供命令的通用实现
     /// </summary>
-    public abstract class BaseCommand : ICoreEntity, ICommand
+    public abstract  class BaseCommand :  ICommand
     {
+        public CommandExecutionContext ExecutionContext { get; set; }
+
+        //public byte[] BizData { get; set; }  // 字节数组存储
+
+        protected virtual object GetSerializableDataCore() { return null; }
+        // 新增智能访问方法
+        public byte[] GetBinaryData()
+        {
+            var data = GetSerializableDataCore();
+            return data != null ? MessagePackSerializer.Serialize(data) : Array.Empty<byte>();
+        }
+        public T GetObjectData<T>() where T : class
+        {
+            var data = GetSerializableDataCore();
+            return data as T;
+        }
         /// <summary>
         /// 日志记录器
         /// </summary>
@@ -32,19 +108,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public string CommandId { get; private set; }
 
-        /// <summary>
-        /// 实体唯一标识（实现 ICoreEntity 接口）
-        /// </summary>
-        public string Id
-        {
-            get => CommandId;
-            set => CommandId = value;
-        }
 
         /// <summary>
         /// 命令标识符（类型安全命令系统）
         /// </summary>
-        public abstract CommandId CommandIdentifier { get; }
+        public CommandId CommandIdentifier { get; set; }
 
         /// <summary>
         /// 命令方向
@@ -54,24 +122,15 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 命令优先级
         /// </summary>
-        public PacketPriority Priority { get; set; }
+        public CommandPriority Priority { get; set; }
 
         /// <summary>
         /// 命令状态
         /// </summary>
         public CommandStatus Status { get; set; }
 
-        /// <summary>
-        /// 数据包模型 - 包含完整的数据包信息和业务数据
-        /// </summary>
-        public PacketModel Packet { get; set; }
 
-        /// <summary>
-        /// 命令创建时间（UTC时间）
-        /// </summary>
-        public DateTime CreatedAtUtc { get; private set; }
-
-        #region ICoreEntity 接口实现
+        #region  
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
@@ -108,9 +167,7 @@ namespace RUINORERP.PacketSpec.Commands
         #endregion
 
         public int TimeoutMs { get; set; }
-        public string SessionId { get; set; }
-        public string ClientId { get; set; }
-        public string RequestId { get; set; }
+
 
         /// <summary>
         /// 构造函数
@@ -119,11 +176,8 @@ namespace RUINORERP.PacketSpec.Commands
         {
             CommandId = IdGenerator.GenerateCommandId(GetType().Name);
             Direction = direction;
-            Priority = PacketPriority.Normal;
+            Priority = CommandPriority.Normal;
             Status = CommandStatus.Created;
-            CreatedAtUtc = DateTime.UtcNow;
-
-            // 初始化ICoreEntity属性
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = DateTime.UtcNow;
             Logger = logger ?? NullLogger<BaseCommand>.Instance;
@@ -139,11 +193,15 @@ namespace RUINORERP.PacketSpec.Commands
                 LogInfo($"开始执行命令: {GetType().Name} [ID: {CommandId}]");
 
                 // 验证命令
-                var validationResult = Validate();
+                var validationResult = await ValidateAsync(cancellationToken);
                 if (!validationResult.IsValid)
                 {
-                    LogWarning($"命令验证失败: {validationResult.ErrorMessage}");
-                    ResponseBase errorResponse = ResponseBase.CreateError(validationResult.ErrorMessage, 400).WithMetadata("ErrorCode", validationResult.ErrorCode ?? "VALIDATION_FAILED");
+                    var firstError = validationResult.Errors.FirstOrDefault();
+                    var errorMessage = firstError?.ErrorMessage ?? "命令验证失败";
+                    var errorCode = firstError?.ErrorCode ?? "VALIDATION_FAILED";
+
+                    LogWarning($"命令验证失败: {errorMessage}");
+                    ResponseBase errorResponse = ResponseBase.CreateError(errorMessage, 400).WithMetadata("ErrorCode", errorCode);
                     return errorResponse;
                 }
 
@@ -179,42 +237,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 验证命令
         /// </summary>
-        public virtual CommandValidationResult Validate()
+        public virtual async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
-            // 基本验证
-            if (string.IsNullOrEmpty(CommandId))
-            {
-                return CommandValidationResult.Failure("命令ID不能为空", ErrorCodes.InvalidCommandId);
-            }
-
-            if (CommandIdentifier.FullCode == 0)
-            {
-                return CommandValidationResult.Failure("命令标识符不能为0", ErrorCodes.InvalidCommandIdentifier);
-            }
-
-            // 超时验证
-            if (TimeoutMs <= 0)
-            {
-                return CommandValidationResult.Failure("超时时间必须大于0", ErrorCodes.InvalidTimeout);
-            }
-
-            // 会话验证（如果需要）
-            if (RequiresSession() && Packet == null)
-            {
-                return CommandValidationResult.Failure("该命令需要有效的会话信息", ErrorCodes.SessionRequired);
-            }
-
-            // 数据验证（如果需要）
-            if (RequiresData() && !Packet.IsValid())
-            {
-                return CommandValidationResult.Failure("该命令需要有效的数据包", ErrorCodes.DataRequired);
-            }
-            // 添加 SessionId 验证（如果需要）
-            if (RequiresSession() && string.IsNullOrEmpty(SessionId))
-            {
-                return CommandValidationResult.Failure("该命令需要有效的会话ID", ErrorCodes.SessionRequired);
-            }
-            return CommandValidationResult.Success();
+            // 使用验证服务进行验证
+            var validationService = ValidationService.Instance;
+            var result = await validationService.ValidateAsync(this);
+            return result;
         }
 
         /// <summary>
@@ -231,12 +259,8 @@ namespace RUINORERP.PacketSpec.Commands
                     Direction,
                     Priority,
                     Status,
-                    CreatedAtUtc,
+                    CreatedTimeUtc,
                     TimeoutMs,
-                    SessionId,
-                    ClientId,
-                    RequestId,
-                    Packet,
                     Data = GetSerializableData()
                 };
 
@@ -264,12 +288,8 @@ namespace RUINORERP.PacketSpec.Commands
                     Direction,
                     Priority,
                     Status,
-                    CreatedAtUtc,
+                    CreatedTimeUtc,
                     TimeoutMs,
-                    SessionId,
-                    ClientId,
-                    RequestId,
-                    Packet,
                     Data = GetSerializableData()
                 };
 
@@ -300,7 +320,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Direction = (PacketDirection)commandData.Direction;
 
                 if (commandData.Priority != null)
-                    Priority = (PacketPriority)commandData.Priority;
+                    Priority = (CommandPriority)commandData.Priority;
 
                 if (commandData.TimeoutMs != null)
                     TimeoutMs = commandData.TimeoutMs;
@@ -332,7 +352,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Direction = (PacketDirection)commandData.Direction;
 
                 if (commandData.Priority != null)
-                    Priority = (PacketPriority)commandData.Priority;
+                    Priority = (CommandPriority)commandData.Priority;
 
                 if (commandData.TimeoutMs != null)
                     TimeoutMs = commandData.TimeoutMs;
@@ -352,7 +372,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行核心逻辑
         /// </summary>
-        protected abstract Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken);
+        protected virtual Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult<ResponseBase>(null);
+        }
 
         #endregion
 
@@ -399,6 +422,11 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
+        /// 包体数据（业务数据序列化后的字节）
+        /// </summary>
+        public byte[] BizData { get; set; }
+
+        /// <summary>
         /// 获取强类型的数据载荷
         /// </summary>
         /// <typeparam name="T">数据载荷类型</typeparam>
@@ -406,6 +434,143 @@ namespace RUINORERP.PacketSpec.Commands
         public virtual T GetPayload<T>()
         {
             return (T)GetSerializableData();
+        }
+
+
+
+
+
+        /// <summary>
+        /// 设置JSON数据
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="data">数据对象</param>
+        public void SetJsonData<T>(T data)
+        {
+            var json = JsonConvert.SerializeObject(data);
+            SetData(Encoding.UTF8.GetBytes(json));
+        }
+
+        #region 核心方法
+
+        /// <summary>
+        /// 获取包大小
+        /// </summary>
+        public int GetPackageSize()
+        {
+            return BizData?.Length ?? 0;
+        }
+
+        /// <summary>
+        /// 设置数据内容
+        /// </summary>
+        /// <param name="data">数据字节数组</param>
+        /// <returns>当前实例</returns>
+        public void SetData(byte[] data)
+        {
+            BizData = data;
+            LastUpdatedTime = DateTime.UtcNow;
+
+        }
+        /// <summary>
+        /// JSON序列化缓存，用于缓存高频序列化操作（如心跳包）
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, byte[]> _jsonCache = new ConcurrentDictionary<string, byte[]>();
+
+
+        /// <summary>
+        /// 设置JSON数据
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="data">数据对象</param>
+        /// <returns>当前实例</returns>
+        public void SetJsonBizData<T>(T data)
+        {
+            // 生成缓存键：类型名 + 数据哈希
+            var type = typeof(T);
+            var json = JsonConvert.SerializeObject(data);
+            var jsonBytes = Encoding.UTF8.GetBytes(json);
+
+            // 计算JSON的哈希值作为缓存键的一部分
+            string hash;
+            using (var sha256 = SHA256.Create())
+            {
+                var hashBytes = sha256.ComputeHash(jsonBytes);
+                hash = Convert.ToBase64String(hashBytes);
+            }
+
+            var cacheKey = $"{type.FullName}:{hash}";
+            // 尝试从缓存获取或添加
+            BizData = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
+            LastUpdatedTime = DateTime.UtcNow;
+        }
+
+
+
+        /// <summary>
+        /// 安全清理敏感数据
+        /// </summary>
+        public void ClearSensitiveData()
+        {
+            // Extensions?.Clear();
+            // 清理包体数据
+            if (BizData != null)
+            {
+                Array.Clear(BizData, 0, BizData.Length);
+                BizData = null;
+            }
+        }
+
+        /// <summary>
+        /// 创建数据包克隆
+        /// </summary>
+        /// <returns>克隆实例</returns>
+        //public PacketModel Clone()
+        //{
+        //    return new PacketModel
+        //    {
+        //        PacketId = Guid.NewGuid().ToString(),
+        //        Data = BizData?.Clone() as byte[],
+        //        Size = Size,
+        //        Checksum = Checksum,
+        //        IsEncrypted = IsEncrypted,
+        //        IsCompressed = IsCompressed,
+        //        Direction = Direction,
+        //        Version = Version,
+        //        MessageType = MessageType,
+        //        CreatedTimeUtc = CreatedTimeUtc,
+        //        LastUpdatedTime = LastUpdatedTime,
+        //        Extensions = new System.Collections.Generic.Dictionary<string, object>(Extensions),
+        //        Flag = Flag,
+        //        TimestampUtc = TimestampUtc
+        //    };
+        //}
+
+        #endregion
+
+        /// <summary>
+        /// 获取JSON数据
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <returns>数据对象</returns>
+        public T GetJsonData<T>()
+        {
+            var json = GetDataAsText();
+            return string.IsNullOrEmpty(json) ? default(T) : JsonConvert.DeserializeObject<T>(json);
+        }
+
+        /// <summary>
+        /// 获取数据为文本格式
+        /// </summary>
+        /// <param name="encoding">编码格式，默认UTF-8</param>
+        /// <returns>文本数据</returns>
+        public string GetDataAsText(Encoding encoding = null)
+        {
+            if (BizData == null || BizData.Length == 0)
+                return string.Empty;
+
+            encoding ??= Encoding.UTF8;
+            return encoding.GetString(BizData);
         }
 
         /// <summary>
@@ -483,7 +648,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected bool IsTimeout()
         {
-            return (DateTime.UtcNow - CreatedAtUtc).TotalMilliseconds > TimeoutMs;
+            return (DateTime.UtcNow - CreatedTimeUtc).TotalMilliseconds > TimeoutMs;
         }
 
         #endregion

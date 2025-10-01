@@ -54,6 +54,9 @@ namespace RUINORERP.UI.Network.Services
                 new LoginPacketAdapter(),
                 ct);
                 
+
+           // 让AI检查，从登陆到发送。请求实体数据并没有加入到指令数据再加到数据包中发送出去。
+
             // 登录成功后设置token
             if (response != null && !string.IsNullOrEmpty(response.AccessToken))
             {

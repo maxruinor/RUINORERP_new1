@@ -88,7 +88,7 @@ namespace RUINORERP.PacketSpec.Validation
             var failures = new System.Collections.Generic.List<ValidationFailure>();
 
             // 基本验证
-            if (command.CommandIdentifier != 0)
+            if (command.CommandIdentifier == 0)
             {
                 failures.Add(new ValidationFailure(command.ToString(), "命令ID不能为空"));
             }

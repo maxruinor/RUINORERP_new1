@@ -166,10 +166,7 @@ namespace RUINORERP.Server.Network.Commands
                 // 检查并发用户数限制
                 if (SessionService.ActiveSessionCount >= MaxConcurrentUsers)
                 {
-                    return ConvertToApiResponse(ResponseFactory.Fail(
-                        UnifiedErrorCodes.System_InternalError,
-                        "服务器达到最大用户数限制")
-                        .WithMetadata("ErrorCode", "MAX_USERS_EXCEEDED"));
+                    return CreateErrorResponse("服务器达到最大用户数限制", UnifiedErrorCodes.System_InternalError, "MAX_USERS_EXCEEDED");
                 }
 
                 // 验证命令
@@ -177,61 +174,46 @@ namespace RUINORERP.Server.Network.Commands
                 if (!commandValidationResult.IsValid)
                 {
                     logger.LogWarning($"登录命令验证失败: {commandValidationResult.Errors[0].ErrorMessage}");
-                    return ResponseBase.CreateError($"登录命令验证失败: {commandValidationResult.Errors[0].ErrorMessage}", 400)
-                        .WithMetadata("ErrorCode", "LOGIN_VALIDATION_FAILED");
+                    return CreateErrorResponse($"登录命令验证失败: {commandValidationResult.Errors[0].ErrorMessage}", UnifiedErrorCodes.Command_ValidationFailed, "LOGIN_VALIDATION_FAILED");
                 }
 
-                // 检查登录请求数据
-                if (command.LoginRequest == null)
+                // 统一使用基类方法获取登录请求数据
+                var loginRequest = ParseBusinessData<LoginRequest>(command);
+                if (loginRequest == null)
                 {
-                    return ConvertToApiResponse(ResponseFactory.Fail(
-                        UnifiedErrorCodes.Command_ValidationFailed,
-                        "登录请求数据不能为空")
-                        .WithMetadata("ErrorCode", "EMPTY_LOGIN_REQUEST"));
+                    return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
                 }
 
-                if (!command.LoginRequest.IsValid())
+                if (!loginRequest.IsValid())
                 {
-                    return ConvertToApiResponse(ResponseFactory.Fail(
-                        UnifiedErrorCodes.Command_ValidationFailed,
-                        "登录请求数据无效")
-                        .WithMetadata("ErrorCode", "INVALID_LOGIN_REQUEST"));
+                    return CreateErrorResponse("登录请求数据无效", UnifiedErrorCodes.Command_ValidationFailed, "INVALID_LOGIN_REQUEST");
                 }
 
                 // 检查黑名单
-                if (IsUserBlacklisted(command.LoginRequest.Username, command.LoginRequest.ClientIp))
+                if (IsUserBlacklisted(loginRequest.Username, loginRequest.ClientIp))
                 {
-                    return ConvertToApiResponse(ResponseFactory.Fail(
-                        UnifiedErrorCodes.Auth_UserNotFound,
-                        "用户或IP在黑名单中")
-                        .WithMetadata("ErrorCode", "BLACKLISTED"));
+                    return CreateErrorResponse("用户或IP在黑名单中", UnifiedErrorCodes.Auth_UserNotFound, "BLACKLISTED");
                 }
 
                 // 检查登录尝试次数
-                if (GetLoginAttempts(command.LoginRequest.Username) >= MaxLoginAttempts)
+                if (GetLoginAttempts(loginRequest.Username) >= MaxLoginAttempts)
                 {
-                    return ConvertToApiResponse(ResponseFactory.Fail(
-                        UnifiedErrorCodes.Command_Timeout,
-                        "登录尝试次数过多，请稍后再试")
-                        .WithMetadata("ErrorCode", "TOO_MANY_ATTEMPTS"));
+                    return CreateErrorResponse("登录尝试次数过多，请稍后再试", UnifiedErrorCodes.Command_Timeout, "TOO_MANY_ATTEMPTS");
                 }
 
                 // 验证用户凭据
-                var userValidationResult = await ValidateUserCredentialsAsync(command.LoginRequest, cancellationToken);
+                var userValidationResult = await ValidateUserCredentialsAsync(loginRequest, cancellationToken);
                 if (!userValidationResult.IsValid)
                 {
-                    IncrementLoginAttempts(command.LoginRequest.Username);
-                    return ConvertToApiResponse(ResponseFactory.Fail(
-                        UnifiedErrorCodes.Auth_PasswordError,
-                        userValidationResult.ErrorMessage)
-                        .WithMetadata("ErrorCode", "INVALID_CREDENTIALS"));
+                    IncrementLoginAttempts(loginRequest.Username);
+                    return CreateErrorResponse(userValidationResult.ErrorMessage, UnifiedErrorCodes.Auth_PasswordError, "INVALID_CREDENTIALS");
                 }
 
                 // 重置登录尝试次数
-                ResetLoginAttempts(command.LoginRequest.Username);
+                ResetLoginAttempts(loginRequest.Username);
 
                 // 检查是否已经登录，如果是则发送重复登录确认请求
-                var (hasExistingSessions, authorizedSessions) = CheckUserLoginStatus(command.LoginRequest.Username, command.ExecutionContext.SessionId);
+                var (hasExistingSessions, authorizedSessions) = CheckUserLoginStatus(loginRequest.Username, command.ExecutionContext.SessionId);
                 if (hasExistingSessions && !IsDuplicateLoginConfirmed(command))
                 {
                     // 发送重复登录确认请求给客户端
@@ -242,35 +224,20 @@ namespace RUINORERP.Server.Network.Commands
                 if (IsDuplicateLoginConfirmed(command))
                 {
                     // 踢掉之前的登录
-                    KickExistingSessions(authorizedSessions, command.LoginRequest.Username);
+                    KickExistingSessions(authorizedSessions, loginRequest.Username);
                 }
 
                 // 获取或创建会话信息
                 var sessionInfo = SessionService.GetSession(command.ExecutionContext.SessionId);
                 if (sessionInfo == null)
                 {
-                    // 从命令或网络连接中获取客户端真实IP
-                    string clientIp = GetClientIpAddress(command);
-                    if (string.IsNullOrEmpty(clientIp))
-                    {
-                        try
-                        {
-                            var loginRequest = command.Request;
-                            clientIp = loginRequest?.ClientIp;
-                        }
-                        catch
-                        {
-                            // 如果无法从Packet获取LoginRequest，则跳过
-                        }
-                    }
-
+                    // 统一使用GetClientIp方法获取客户端IP
+                    string clientIp = GetClientIp(command, loginRequest);
+                    
                     sessionInfo = SessionService.CreateSession(GetSessionId(command), clientIp);
                     if (sessionInfo == null)
                     {
-                        return ConvertToApiResponse(ResponseFactory.Fail(
-                            UnifiedErrorCodes.System_InternalError,
-                            "创建会话失败")
-                            .WithMetadata("ErrorCode", "SESSION_CREATION_FAILED"));
+                        return CreateErrorResponse("创建会话失败", UnifiedErrorCodes.System_InternalError, "SESSION_CREATION_FAILED");
                     }
                 }
 
@@ -288,7 +255,7 @@ namespace RUINORERP.Server.Network.Commands
                 var responseData = CreateLoginResponse(tokenInfo, userValidationResult.UserSessionInfo);
 
                 // 返回成功结果
-                return ConvertToApiResponse(ResponseFactory.Ok(
+                return CreateSuccessResponse(
                     new
                     {
                         UserId = userValidationResult.UserSessionInfo.UserInfo.User_ID,
@@ -296,22 +263,12 @@ namespace RUINORERP.Server.Network.Commands
                         Token = tokenInfo,
                         ExpiresIn = tokenInfo.ExpiresIn
                     },
-                    "登录成功")
-                    .WithMetadata("Data", new
-                    {
-                        UserId = userValidationResult.UserSessionInfo.UserInfo.User_ID,
-                        Username = userValidationResult.UserSessionInfo.UserInfo.UserName,
-                        Token = tokenInfo,
-                        ExpiresIn = tokenInfo.ExpiresIn
-                    }));
+                    "登录成功");
             }
             catch (Exception ex)
             {
                 LogError($"处理登录命令异常: {ex.Message}", ex);
-                return ConvertToApiResponse(ResponseFactory.Except(ex, UnifiedErrorCodes.Auth_TokenInvalid)
-                    .WithMetadata("ErrorCode", "TOKEN_ERROR")
-                    .WithMetadata("Exception", ex.Message)
-                    .WithMetadata("StackTrace", ex.StackTrace));
+                return CreateExceptionResponse(ex, "TOKEN_ERROR");
             }
         }
 
@@ -373,34 +330,40 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
+                // 统一使用基类方法获取Token验证请求数据
+                var validationRequest = ParseBusinessData<TokenValidationRequest>(command);
+                string token = validationRequest?.Token;
+                
+                // 如果未从请求数据中获取到Token，则尝试从上下文中获取
+                if (string.IsNullOrEmpty(token))
+                {
+                    var context = GetCommandContext(command);
+                    token = context.Token;
+                }
 
-                var context = GetCommandContext(command);
+                if (string.IsNullOrEmpty(token))
+                {
+                    return CreateErrorResponse("Token不能为空", UnifiedErrorCodes.Auth_TokenInvalid, "TOKEN_EMPTY");
+                }
 
                 // 使用新的TokenValidationService验证Token
-                var validationResult = await TokenValidationService.ValidateTokenAsync(context.Token);
+                var validationResult = await TokenValidationService.ValidateTokenAsync(token);
 
                 if (!validationResult.IsValid)
                 {
-                    return ConvertToApiResponse(ResponseFactory.Fail(
-                        UnifiedErrorCodes.Auth_TokenInvalid,
-                    "Token验证失败")
-                        .WithMetadata("ErrorCode", "TOKEN_VALIDATION_FAILED"));
+                    return CreateErrorResponse("Token验证失败", UnifiedErrorCodes.Auth_TokenInvalid, "TOKEN_VALIDATION_FAILED");
                 }
 
                 var responseData = CreateTokenValidationResponse(validationResult);
 
-                return ConvertToApiResponse(ResponseFactory.Ok(
+                return CreateSuccessResponse(
                     new { UserId = validationResult.UserId, IsValid = true },
-                    "Token验证成功")
-                    .WithMetadata("Data", new { UserId = validationResult.UserId, IsValid = true }));
+                    "Token验证成功");
             }
             catch (Exception ex)
             {
                 LogError($"Token验证异常: {ex.Message}", ex);
-                return ConvertToApiResponse(ResponseBase.CreateError($"Token验证异常: {ex.Message}", 500)
-                    .WithMetadata("ErrorCode", "TOKEN_ERROR")
-                    .WithMetadata("Exception", ex.Message)
-                    .WithMetadata("StackTrace", ex.StackTrace));
+                return CreateExceptionResponse(ex, "TOKEN_ERROR");
             }
         }
 
@@ -411,19 +374,11 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // 确保命令是BaseCommand类型
-                if (command is not BaseCommand baseCommand)
-                {
-                    return ConvertToApiResponse(ResponseBase.CreateError("无效的命令类型", 400)
-                        .WithMetadata("ErrorCode", "INVALID_COMMAND_TYPE"));
-                }
-                
-                // 从命令中获取刷新数据
-                var refreshReq = baseCommand.GetObjectData<LoginRequest>();
+                // 统一使用基类方法获取Token刷新请求数据
+                var refreshReq = ParseBusinessData<TokenRefreshRequest>(command);
                 if (refreshReq == null || string.IsNullOrEmpty(refreshReq.RefreshToken) || string.IsNullOrEmpty(refreshReq.Token))
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError("刷新Token和当前Token都不能为空", 400)
-                        .WithMetadata("ErrorCode", "INVALID_REFRESH_DATA"));
+                    return CreateErrorResponse("刷新Token和当前Token都不能为空", UnifiedErrorCodes.Command_ValidationFailed, "INVALID_REFRESH_DATA");
                 }
 
                 // 使用新的TokenValidationService刷新Token
@@ -431,8 +386,7 @@ namespace RUINORERP.Server.Network.Commands
 
                 if (!refreshResult.IsSuccess)
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError(refreshResult.ErrorMessage, 401)
-                        .WithMetadata("ErrorCode", "REFRESH_FAILED"));
+                    return CreateErrorResponse(refreshResult.ErrorMessage, UnifiedErrorCodes.Auth_TokenInvalid, "REFRESH_FAILED");
                 }
 
                 // 创建登录响应
@@ -446,16 +400,12 @@ namespace RUINORERP.Server.Network.Commands
                     TokenType = "Bearer"
                 };
 
-                return ConvertToApiResponse(ResponseFactory.Ok(loginResponse, "Token刷新成功")
-                    .WithMetadata("Data", loginResponse));
+                return CreateSuccessResponse(loginResponse, "Token刷新成功");
             }
             catch (Exception ex)
             {
                 LogError($"Token刷新异常: {ex.Message}", ex);
-                return ConvertToApiResponse(ResponseBase.CreateError($"Token刷新异常: {ex.Message}", 500)
-                    .WithMetadata("ErrorCode", "REFRESH_ERROR")
-                    .WithMetadata("Exception", ex.Message)
-                    .WithMetadata("StackTrace", ex.StackTrace));
+                return CreateExceptionResponse(ex, "REFRESH_ERROR");
             }
         }
 
@@ -471,15 +421,13 @@ namespace RUINORERP.Server.Network.Commands
                 // 使用SessionService验证会话有效性
                 if (!SessionService.IsValidSession(GetSessionId(command)))
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError("会话信息无效", 401)
-                        .WithMetadata("ErrorCode", "INVALID_SESSION"));
+                    return CreateErrorResponse("会话信息无效", UnifiedErrorCodes.Auth_SessionExpired, "INVALID_SESSION");
                 }
 
                 var sessionInfo = SessionService.GetSession(GetSessionId(command));
                 if (sessionInfo == null)
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError("获取会话信息失败", 404)
-                        .WithMetadata("ErrorCode", "SESSION_NOT_FOUND"));
+                    return CreateErrorResponse("获取会话信息失败", UnifiedErrorCodes.Biz_DataNotFound, "SESSION_NOT_FOUND");
                 }
 
                 // 执行注销
@@ -490,23 +438,19 @@ namespace RUINORERP.Server.Network.Commands
 
                 if (!logoutResult)
                 {
-                    return ConvertToApiResponse(ResponseBase.CreateError("注销失败", 500)
-                        .WithMetadata("ErrorCode", "LOGOUT_FAILED"));
+                    return CreateErrorResponse("注销失败", UnifiedErrorCodes.System_InternalError, "LOGOUT_FAILED");
                 }
 
                 var responseData = CreateLogoutResponse();
 
-                return ConvertToApiResponse(ResponseBase.CreateSuccess(
-                    message: "注销成功"
-                ).WithMetadata("Data", new { LoggedOut = true, SessionId = GetSessionId(command) }));
+                return CreateSuccessResponse(
+                    new { LoggedOut = true, SessionId = GetSessionId(command) },
+                    "注销成功");
             }
             catch (Exception ex)
             {
                 LogError($"注销异常: {ex.Message}", ex);
-                return ConvertToApiResponse(ResponseBase.CreateError($"注销异常: {ex.Message}", 500)
-                    .WithMetadata("ErrorCode", "LOGOUT_ERROR")
-                    .WithMetadata("Exception", ex.Message)
-                    .WithMetadata("StackTrace", ex.StackTrace));
+                return CreateExceptionResponse(ex, "LOGOUT_ERROR");
             }
         }
 
@@ -522,17 +466,14 @@ namespace RUINORERP.Server.Network.Commands
                 // 创建准备登录响应
                 var responseData = CreatePrepareLoginResponse();
 
-                return ConvertToApiResponse(ResponseBase.CreateSuccess(
-                    message: "准备登录完成"
-                ).WithMetadata("Data", new { Status = "Ready", MaxConcurrentUsers = MaxConcurrentUsers }));
+                return CreateSuccessResponse(
+                    new { Status = "Ready", MaxConcurrentUsers = MaxConcurrentUsers },
+                    "准备登录完成");
             }
             catch (Exception ex)
             {
                 LogError($"处理准备登录命令异常: {ex.Message}", ex);
-                return ConvertToApiResponse(ResponseBase.CreateError($"准备登录异常: {ex.Message}", 500)
-                    .WithMetadata("ErrorCode", "PREPARE_LOGIN_ERROR")
-                    .WithMetadata("Exception", ex.Message)
-                    .WithMetadata("StackTrace", ex.StackTrace));
+                return CreateExceptionResponse(ex, "PREPARE_LOGIN_ERROR");
             }
         }
 
@@ -633,11 +574,12 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private bool IsDuplicateLoginConfirmed(LoginCommand command)
         {
-            // 检查登录请求中是否包含重复登录确认标志
-            if (command?.LoginRequest?.AdditionalData != null &&
-                command.LoginRequest.AdditionalData.ContainsKey("DuplicateLoginConfirmed"))
+            // 统一使用基类方法获取登录请求数据并检查确认标志
+            var loginRequest = command.Request as LoginRequest;
+            if (loginRequest?.AdditionalData != null &&
+                loginRequest.AdditionalData.ContainsKey("DuplicateLoginConfirmed"))
             {
-                return Convert.ToBoolean(command.LoginRequest.AdditionalData["DuplicateLoginConfirmed"]);
+                return Convert.ToBoolean(loginRequest.AdditionalData["DuplicateLoginConfirmed"]);
             }
             return false;
         }
@@ -694,37 +636,16 @@ namespace RUINORERP.Server.Network.Commands
                     DeviceInfo = s.DeviceInfo
                 }).ToList();
 
-                // 创建重复登录确认请求
-                //var confirmationRequest = new OriginalData(
-                //    (byte)CommandCategory.Authentication,
-                //    new byte[] { AuthenticationCommands.DuplicateLoginNotification.OperationCode }, // DuplicateLoginNotification命令码
-                //    System.Text.Encoding.UTF8.GetBytes(Newtonsoft.Json.JsonConvert.SerializeObject(new
-                //    {
-                //        Message = "您的账号已在其他地方登录",
-                //        ExistingSessions = sessionInfos,
-                //        ActionRequired = "ConfirmDuplicateLogin"
-                //    }))
-                //);
-
-                // 发送确认请求给客户端
-                //var appSession = SessionService.GetAppSession(GetSessionId(command));
-                //if (appSession != null)
-                //{
-
-                //    加密后发送 这里只在构建响应数据，发送已经框架处理好了。
-                //    await appSession.SendAsync(confirmationRequest.ToByteArray());
-                //}
-
                 // 返回需要确认的响应
-                return ConvertToApiResponse(ResponseBase.CreateSuccess("您的账号已在其他地方登录，确认强制对方下线，保持当前登陆吗？")
-                    .WithMetadata("ActionRequired", "DuplicateLoginConfirmation")
-                    .WithMetadata("ExistingSessions", sessionInfos));
+                return CreateSuccessResponse(
+                    new { ExistingSessions = sessionInfos },
+                    "您的账号已在其他地方登录，确认强制对方下线，保持当前登陆吗？")
+                    .WithMetadata("ActionRequired", "DuplicateLoginConfirmation");
             }
             catch (Exception ex)
             {
                 LogError($"请求重复登录确认失败: {ex.Message}", ex);
-                return ConvertToApiResponse(ResponseBase.CreateError("请求重复登录确认失败", 500)
-                    .WithMetadata("ErrorCode", "DUPLICATE_LOGIN_CONFIRMATION_FAILED"));
+                return CreateErrorResponse("请求重复登录确认失败", UnifiedErrorCodes.System_InternalError, "DUPLICATE_LOGIN_CONFIRMATION_FAILED");
             }
         }
 
@@ -987,7 +908,31 @@ namespace RUINORERP.Server.Network.Commands
         /// <returns>客户端IP地址</returns>
         private string GetClientIpAddress(ICommand command)
         {
-            // 首先尝试从命令的SessionInfo中获取IP
+            return GetClientIp(command, null);
+        }
+
+        /// <summary>
+        /// 统一的客户端IP获取方法，优先从请求数据中获取，其次从会话中获取
+        /// </summary>
+        /// <param name="command">命令对象</param>
+        /// <param name="loginRequest">登录请求对象</param>
+        /// <returns>客户端IP地址</returns>
+        private string GetClientIp(ICommand command, LoginRequest loginRequest = null)
+        {
+            // 1. 优先从请求数据中获取IP
+            if (loginRequest != null && !string.IsNullOrEmpty(loginRequest.ClientIp))
+            {
+                return loginRequest.ClientIp;
+            }
+
+            // 2. 如果没有请求数据，则尝试从命令中获取（如果是泛型BaseCommand）
+            var baseCommand = command as BaseCommand<LoginRequest, LoginResponse>;
+            if (baseCommand != null && baseCommand.Request != null && !string.IsNullOrEmpty(baseCommand.Request.ClientIp))
+            {
+                return baseCommand.Request.ClientIp;
+            }
+
+            // 3. 尝试从命令的SessionInfo中获取IP
             if (command != null && !string.IsNullOrEmpty(GetSessionId(command)))
             {
                 var session = SessionService.GetSession(GetSessionId(command));
@@ -996,7 +941,7 @@ namespace RUINORERP.Server.Network.Commands
                     return session.ClientIp;
                 }
 
-                // 如果SessionInfo中没有IP，尝试从RemoteEndPoint获取
+                // 4. 如果SessionInfo中没有IP，尝试从RemoteEndPoint获取
                 var appSession = SessionService.GetAppSession(GetSessionId(command));
                 if (appSession != null && appSession.RemoteEndPoint != null)
                 {
@@ -1008,8 +953,39 @@ namespace RUINORERP.Server.Network.Commands
                 }
             }
 
-            // 如果无法从Session获取，则返回默认值
+            // 如果无法获取IP，则返回默认值
             return "0.0.0.0"; // 使用0.0.0.0表示未知IP
+        }
+
+        #region 响应辅助方法
+
+        /// <summary>
+        /// 创建统一的错误响应
+        /// </summary>
+        private ResponseBase CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
+        {
+            return ConvertToApiResponse(ResponseFactory.Fail(errorCode, message)
+                .WithMetadata("ErrorCode", customErrorCode));
+        }
+
+        /// <summary>
+        /// 创建统一的异常响应
+        /// </summary>
+        private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
+        {
+            return ConvertToApiResponse(ResponseFactory.Except(ex, UnifiedErrorCodes.System_InternalError)
+                .WithMetadata("ErrorCode", errorCode)
+                .WithMetadata("Exception", ex.Message)
+                .WithMetadata("StackTrace", ex.StackTrace));
+        }
+
+        /// <summary>
+        /// 创建统一的成功响应
+        /// </summary>
+        private ResponseBase CreateSuccessResponse(object data, string message)
+        {
+            return ConvertToApiResponse(ResponseFactory.Ok(data, message)
+                .WithMetadata("Data", data));
         }
 
         #endregion
@@ -1117,6 +1093,8 @@ namespace RUINORERP.Server.Network.Commands
       
         #endregion
 
+        #region 响应转换方法
+
         /// <summary>
         /// 将ResponseBase转换为ApiResponse
         /// </summary>
@@ -1136,6 +1114,10 @@ namespace RUINORERP.Server.Network.Commands
             };
             return response;
         }
+
+        #endregion
+
+        #endregion
     }
 
 

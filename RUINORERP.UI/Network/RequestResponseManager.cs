@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Protocol;
+
 using RUINORERP.PacketSpec.Serialization;
 using System;
 using System.Threading;
@@ -16,6 +16,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
 using RUINORERP.UI.Network.Exceptions;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.UI.Network
 {
@@ -283,7 +284,8 @@ namespace RUINORERP.UI.Network
             RUINORERP.PacketSpec.Commands.CommandId commandId,
             TRequest requestData,
             CancellationToken ct = default,
-            int timeoutMs = 30000)
+            int timeoutMs = 30000,
+            string authToken = null)
         {
             
             var requestId = Guid.NewGuid().ToString("N");
@@ -305,7 +307,7 @@ namespace RUINORERP.UI.Network
 
 
 
-                await SendCoreAsync(socketClient, commandId, requestData, requestId, timeoutMs, ct);
+                await SendCoreAsync(socketClient, commandId, requestData, requestId, timeoutMs, ct, authToken);
 
                 // 等待响应或超时
                 var timeoutTask = Task.Delay(timeoutMs, cts.Token);
@@ -455,13 +457,14 @@ namespace RUINORERP.UI.Network
         /// <param name="requestId">请求ID</param>
         /// <param name="timeoutMs">超时时间（毫秒）</param>
         /// <param name="ct">取消令牌</param>
-        private async Task SendCoreAsync<TRequest>(
+        public async Task SendCoreAsync<TRequest>(
             ISocketClient client,
             RUINORERP.PacketSpec.Commands.CommandId cmd,
             TRequest body,
             string requestId,
             int timeoutMs,
-            CancellationToken ct)
+            CancellationToken ct,
+            string authToken = null)
         {
             ct.ThrowIfCancellationRequested();
 
@@ -474,6 +477,12 @@ namespace RUINORERP.UI.Network
                                           .WithRequestId(requestId)
                                           .WithTimeout(timeoutMs)
                                           .Build();
+
+                // 如果提供了authToken，则设置到数据包中
+                if (!string.IsNullOrEmpty(authToken))
+                {
+                    packet.SetToken(authToken);
+                }
 
                 packet.ClientId = client.ClientID;
 
@@ -506,7 +515,134 @@ namespace RUINORERP.UI.Network
             }
         }
 
-       
+
+
+        /// <summary>
+        /// 发送请求的核心方法
+        /// </summary>
+        /// <typeparam name="TRequest">请求类型</typeparam>
+        /// <param name="client">Socket客户端</param>
+        /// <param name="cmd">命令ID</param>
+        /// <param name="body">请求数据（可能已附加Token）</param>
+        /// <param name="requestId">请求ID</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="ct">取消令牌</param>
+        public async Task SendCommandAsync<TRequest>(
+            ISocketClient client,
+            RUINORERP.PacketSpec.Commands.BaseCommand cmd,
+            string requestId,
+            int timeoutMs,
+            CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                // 构建数据包，包含可能已附加Token的请求数据
+                var packet = PacketBuilder.Create()
+                                          .WithCommand(cmd.CommandIdentifier)
+                                          .WithJsonData(cmd)  // body可能已包含Token信息
+                                          .WithRequestId(requestId)
+                                          .WithTimeout(timeoutMs)
+                                          
+                                          .Build();
+
+                packet.ClientId = client.ClientID;
+
+                // 序列化和加密数据包
+                var payload = UnifiedSerializationService.SerializeWithMessagePack(packet);
+                var original = new OriginalData(
+                    (byte)cmd.CommandIdentifier.Category,
+                    new[] { cmd.CommandIdentifier.OperationCode },
+                    payload);
+
+                var encrypted = RUINORERP.PacketSpec.Security.EncryptedProtocol.EncryptClientPackToServer(original);
+                await client.SendAsync(encrypted, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "SendCoreAsync方法发送请求时发生错误: CommandId={CommandId}, RequestId={RequestId}",
+                    cmd.CommandIdentifier.FullCode, requestId);
+
+                // 如果是取消操作，则直接抛出
+                if (ex is OperationCanceledException)
+                {
+                    throw;
+                }
+
+                // 包装异常以便上层处理（包括可能的Token过期处理）
+                throw new NetworkCommunicationException(
+                    $"发送请求失败: {ex.Message}",
+                    ex,
+                    cmd.CommandIdentifier,
+                    requestId);
+            }
+        }
+
+
+
+        /// <summary>
+        /// 发送请求的核心方法
+        /// </summary>
+        /// <typeparam name="TRequest">请求类型</typeparam>
+        /// <param name="client">Socket客户端</param>
+        /// <param name="cmd">命令ID</param>
+        /// <param name="body">请求数据（可能已附加Token）</param>
+        /// <param name="requestId">请求ID</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="ct">取消令牌</param>
+        public async Task SendCommandAsync<TRequest, TResponse>(
+            ISocketClient client,
+            RUINORERP.PacketSpec.Commands.BaseCommand<TRequest, TResponse> cmd,
+            string requestId,
+            int timeoutMs,
+            CancellationToken ct)
+            where TRequest : class, IRequest
+            where TResponse : class, IResponse
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                // 构建数据包，包含可能已附加Token的请求数据
+                var packet = PacketBuilder.Create()
+                                          .WithCommand(cmd.CommandIdentifier)
+                                          .WithJsonData(cmd)  // body可能已包含Token信息
+                                          .WithRequestId(requestId)
+                                          .WithTimeout(timeoutMs)
+
+                                          .Build();
+
+                packet.ClientId = client.ClientID;
+
+                // 序列化和加密数据包
+                var payload = UnifiedSerializationService.SerializeWithMessagePack(packet);
+                var original = new OriginalData(
+                    (byte)cmd.CommandIdentifier.Category,
+                    new[] { cmd.CommandIdentifier.OperationCode },
+                    payload);
+
+                var encrypted = RUINORERP.PacketSpec.Security.EncryptedProtocol.EncryptClientPackToServer(original);
+                await client.SendAsync(encrypted, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "SendCoreAsync方法发送请求时发生错误: CommandId={CommandId}, RequestId={RequestId}",
+                    cmd.CommandIdentifier.FullCode, requestId);
+
+                // 如果是取消操作，则直接抛出
+                if (ex is OperationCanceledException)
+                {
+                    throw;
+                }
+
+                // 包装异常以便上层处理（包括可能的Token过期处理）
+                throw new NetworkCommunicationException(
+                    $"发送请求失败: {ex.Message}",
+                    ex,
+                    cmd.CommandIdentifier,
+                    requestId);
+            }
+        }
+
 
         /* -------------------- 内部类型 -------------------- */
 

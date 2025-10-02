@@ -1,10 +1,9 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Protocol;
 using Microsoft.Extensions.Logging;
 using System.Data;
 using System.ComponentModel;

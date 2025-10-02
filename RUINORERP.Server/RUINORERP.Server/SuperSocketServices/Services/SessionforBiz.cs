@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
@@ -9,11 +9,11 @@ using RUINORERP.Server.Commands;
 using SuperSocket;
 using SuperSocket.Server.Abstractions.Session;
 using SuperSocket.Server;
-using RUINORERP.PacketSpec.Protocol;
 using SuperSocket.Connection;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Models;
 using UserInfo = RUINORERP.Model.CommonModel.UserInfo;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.Server.ServerSession
 {

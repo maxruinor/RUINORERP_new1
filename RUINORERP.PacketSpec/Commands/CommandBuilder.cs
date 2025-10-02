@@ -5,8 +5,11 @@ using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Models.Requests;
+
 using Newtonsoft.Json;
+using RUINORERP.PacketSpec.Serialization;
+using RUINORERP.PacketSpec.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -204,6 +207,91 @@ namespace RUINORERP.PacketSpec.Commands
             where TCommand : BaseCommand, new()
         {
             return builder.WithDirection(PacketDirection.ServerToClient);
+        }
+    }
+
+    /// <summary>
+    /// 静态命令构建器 - 提供三种指令的统一创建入口
+    /// </summary>
+    public static class CommandBuilder
+    {
+        /// <summary>
+        /// 创建基础命令对象
+        /// </summary>
+        /// <param name="id">命令标识符</param>
+        /// <param name="payload">命令载荷</param>
+        /// <returns>基础命令对象</returns>
+        public static BaseCommand BuildBase(CommandId id, object payload)
+        {
+            var command = new GenericCommand<object>(id, payload);
+            InitializeCommand(command);
+            return command;
+        }
+
+        /// <summary>
+        /// 创建强类型命令对象
+        /// </summary>
+        /// <typeparam name="TReq">请求类型，必须实现IRequest接口</typeparam>
+        /// <typeparam name="TResp">响应类型，必须实现IResponse接口</typeparam>
+        /// <param name="id">命令标识符</param>
+        /// <param name="req">请求对象</param>
+        /// <returns>强类型命令对象</returns>
+        public static BaseCommand<TReq, TResp> BuildTyped<TReq, TResp>(CommandId id, TReq req) 
+            where TReq : class, IRequest 
+            where TResp : class, IResponse
+        {
+            var command = Activator.CreateInstance(typeof(BaseCommand<TReq, TResp>)) as BaseCommand<TReq, TResp>;
+            if (command == null)
+                throw new InvalidOperationException($"无法创建BaseCommand<{typeof(TReq).Name}, {typeof(TResp).Name}>实例");
+
+            command.CommandIdentifier = id;
+            command.Request = req;
+            command.Direction = PacketDirection.ClientToServer;
+            InitializeCommand(command);
+
+            return command;
+        }
+
+        /// <summary>
+        /// 创建泛型命令对象
+        /// </summary>
+        /// <typeparam name="TPayload">载荷类型</typeparam>
+        /// <param name="id">命令标识符</param>
+        /// <param name="payload">命令载荷</param>
+        /// <returns>泛型命令对象</returns>
+        public static GenericCommand<TPayload> BuildGeneric<TPayload>(CommandId id, TPayload payload)
+        {
+            var command = new GenericCommand<TPayload>(id, payload);
+            InitializeCommand(command);
+            return command;
+        }
+
+        /// <summary>
+        /// 初始化命令的通用属性
+        /// </summary>
+        /// <param name="command">要初始化的命令对象</param>
+        private static void InitializeCommand(BaseCommand command)
+        {
+            command.TimeoutMs = 30000; // 默认超时时间30秒
+            command.Direction = PacketDirection.ClientToServer;
+            command.Priority = CommandPriority.Normal;
+            command.Status = CommandStatus.Created;
+            command.UpdateTimestamp();
+
+            // 确保RequestId已设置
+            if (string.IsNullOrEmpty(command.RequestId))
+            {
+                command.RequestId = IdGenerator.GenerateRequestId(command.CommandIdentifier.Name);
+            }
+
+            // 统一走PacketBuilder，保证序列化、Token、Direction、RequestId一次成型
+            var packet = PacketBuilder.Create()
+                                     .WithCommand(command.CommandIdentifier)
+                                     .WithRequestId(command.RequestId)
+                                     .WithTimeout(command.TimeoutMs)
+                                     .WithDirection(command.Direction)
+                                     .Build();
+
         }
     }
 }

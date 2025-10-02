@@ -1,4 +1,4 @@
-namespace RUINORERP.PacketSpec.Protocol
+﻿namespace RUINORERP.PacketSpec.Models.Core
 {
     /// <summary>
     /// 协议版本控制

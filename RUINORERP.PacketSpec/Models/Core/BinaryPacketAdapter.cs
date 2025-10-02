@@ -57,7 +57,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             if (typeof(TResp) == typeof(Memory<byte>))
             {
                 // 直接返回PacketModel的Data部分作为Memory<byte>
-                var memory = new Memory<byte>(packet.Data ?? Array.Empty<byte>());
+                var memory = new Memory<byte>(packet.CommandData ?? Array.Empty<byte>());
                 return (TResp)(object)memory;
             }
             

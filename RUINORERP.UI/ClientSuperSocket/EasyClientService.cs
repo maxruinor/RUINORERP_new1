@@ -28,7 +28,8 @@ using FastReport.DevComponents.DotNetBar;
 using NPOI.POIFS.Crypt.Dsig;
 
 using RUINORERP.UI.ClientSuperSocket;
-using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Models.Core;
+
 
 namespace RUINORERP.UI.SuperSocketClient
 {

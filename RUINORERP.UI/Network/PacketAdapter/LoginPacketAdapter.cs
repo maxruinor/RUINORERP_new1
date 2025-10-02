@@ -15,6 +15,7 @@ namespace RUINORERP.UI.Network.PacketAdapter
     /// LoginRequest -> LoginResponse 的 PacketModel 适配器
     /// 无业务逻辑，只做 DTO 与 PacketModel 互转
     /// </summary>
+    [Obsolete]
     public sealed class LoginPacketAdapter : IPacketAdapter<LoginRequest, LoginResponse>
     {
         private static readonly CommandId CommandId = AuthenticationCommands.Login;

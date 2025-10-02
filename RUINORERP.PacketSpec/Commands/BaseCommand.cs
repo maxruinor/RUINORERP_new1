@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Protocol;
+
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Handlers;
 using Microsoft.Extensions.Logging;
@@ -19,13 +19,209 @@ using RUINORERP.PacketSpec.Models.Requests;
 using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using MessagePack;
+using RUINORERP.PacketSpec.Tokens;
 
+namespace RUINORERP.PacketSpec.Tokens
+{
+    /// <summary>
+    /// Token存储接口 - 定义Token的存储和获取抽象方法
+    /// </summary>
+    public interface ITokenStorage
+    {
+        /// <summary>
+        /// 获取当前存储的Token信息
+        /// </summary>
+        /// <returns>返回一个元组，包含是否成功、访问Token和刷新Token</returns>
+        (bool success, string atk, string rtk) GetTokens();
+        
+        /// <summary>
+        /// 设置Token信息
+        /// </summary>
+        /// <param name="atk">访问Token</param>
+        /// <param name="rtk">刷新Token</param>
+        /// <param name="expiresInSeconds">Token过期时间（秒）</param>
+        void SetTokens(string atk, string rtk, int expiresInSeconds);
+        
+        /// <summary>
+        /// 检查访问Token是否已过期或即将过期（5分钟内）
+        /// </summary>
+        /// <returns>如果访问Token已过期或即将过期则返回true，否则返回false</returns>
+        bool IsAccessTokenExpired();
+        
+        /// <summary>
+        /// 清除存储的Token信息
+        /// </summary>
+        void ClearTokens();
+    }
+    
+    /// <summary>
+    /// 默认内存Token存储实现
+    /// </summary>
+    public class MemoryTokenStorage : ITokenStorage
+    {
+        // 使用ConcurrentDictionary存储Token信息，确保线程安全
+        private static readonly ConcurrentDictionary<string, (string accessToken, string refreshToken, DateTime accessExpiryUtc, DateTime refreshExpiryUtc)> _store = 
+            new ConcurrentDictionary<string, (string, string, DateTime, DateTime)>();
+
+        private const string DEFAULT_KEY = "default_token";
+
+        /// <summary>
+        /// 获取当前存储的Token信息
+        /// </summary>
+        /// <returns>返回一个元组，包含是否成功、访问Token和刷新Token</returns>
+        public (bool success, string atk, string rtk) GetTokens()
+        {
+            if (_store.TryGetValue(DEFAULT_KEY, out var tokenData))
+            {
+                return (true, tokenData.accessToken, tokenData.refreshToken);
+            }
+            return (false, null, null);
+        }
+        
+        /// <summary>
+        /// 设置Token信息
+        /// </summary>
+        /// <param name="atk">访问Token</param>
+        /// <param name="rtk">刷新Token</param>
+        /// <param name="expiresInSeconds">Token过期时间（秒）</param>
+        public void SetTokens(string atk, string rtk, int expiresInSeconds)
+        {
+            if (string.IsNullOrEmpty(atk) || string.IsNullOrEmpty(rtk))
+                return;
+
+            var now = DateTime.UtcNow;
+            // 这里假设TokenInfo.CalcExpiry是一个公共方法，或者我们可以在这里直接计算
+            var accessExpiryUtc = now.AddSeconds(expiresInSeconds);
+            var refreshExpiryUtc = now.AddSeconds(expiresInSeconds * 2); // 刷新Token通常比访问Token有效期长
+
+            _store[DEFAULT_KEY] = (atk, rtk, accessExpiryUtc, refreshExpiryUtc);
+        }
+        
+        /// <summary>
+        /// 检查访问Token是否已过期或即将过期（5分钟内）
+        /// </summary>
+        /// <returns>如果访问Token已过期或即将过期则返回true，否则返回false</returns>
+        public bool IsAccessTokenExpired()
+        {
+            if (_store.TryGetValue(DEFAULT_KEY, out var tokenData))
+            {
+                // 检查Token是否已过期或将在5分钟内过期
+                return DateTime.UtcNow >= tokenData.accessExpiryUtc || 
+                       DateTime.UtcNow.AddMinutes(5) >= tokenData.accessExpiryUtc;
+            }
+            return true; // 如果没有存储Token，则视为已过期
+        }
+        
+        /// <summary>
+        /// 清除存储的Token信息
+        /// </summary>
+        public void ClearTokens()
+        {
+            _store.TryRemove(DEFAULT_KEY, out _);
+        }
+    }
+    
+    /// <summary>
+    /// Token管理器 - 提供全局访问点来管理认证Token
+    /// 采用单例模式设计，确保全局只有一个Token管理器实例
+    /// </summary>
+    public class TokenManager
+    {
+        // 单例实例
+        private static readonly Lazy<TokenManager> _instance = new Lazy<TokenManager>(() => new TokenManager());
+        
+        // 当前使用的Token存储实现
+        private ITokenStorage _tokenStorage = new MemoryTokenStorage();
+        
+        /// <summary>
+        /// 获取Token管理器的单例实例
+        /// </summary>
+        public static TokenManager Instance => _instance.Value;
+        
+        /// <summary>
+        /// 私有构造函数，防止外部实例化
+        /// </summary>
+        private TokenManager() { }
+        
+        /// <summary>
+        /// 设置Token存储实现
+        /// 允许在应用程序启动时自定义Token的存储方式
+        /// </summary>
+        /// <param name="storage">Token存储实现</param>
+        public void SetTokenStorage(ITokenStorage storage)
+        {
+            if (storage != null)
+            {
+                _tokenStorage = storage;
+            }
+        }
+        
+        /// <summary>
+        /// 获取当前存储的Token信息
+        /// </summary>
+        /// <returns>返回一个元组，包含是否成功、访问Token和刷新Token</returns>
+        public (bool success, string atk, string rtk) GetTokens()
+        {
+            return _tokenStorage.GetTokens();
+        }
+        
+        /// <summary>
+        /// 设置Token信息
+        /// </summary>
+        /// <param name="atk">访问Token</param>
+        /// <param name="rtk">刷新Token</param>
+        /// <param name="expiresInSeconds">Token过期时间（秒）</param>
+        public void SetTokens(string atk, string rtk, int expiresInSeconds)
+        {
+            _tokenStorage.SetTokens(atk, rtk, expiresInSeconds);
+        }
+        
+        /// <summary>
+        /// 检查访问Token是否已过期或即将过期（5分钟内）
+        /// </summary>
+        /// <returns>如果访问Token已过期或即将过期则返回true，否则返回false</returns>
+        public bool IsAccessTokenExpired()
+        {
+            return _tokenStorage.IsAccessTokenExpired();
+        }
+        
+        /// <summary>
+        /// 清除存储的Token信息
+        /// </summary>
+        public void ClearTokens()
+        {
+            _tokenStorage.ClearTokens();
+        }
+    }
+}
 
 namespace RUINORERP.PacketSpec.Commands
 {
-    public abstract class BaseCommand<TRequest, TResponse> : BaseCommand where TRequest : RequestBase where TResponse : ResponseBase
+    public abstract class BaseCommand<TRequest, TResponse> : BaseCommand where TRequest : class, IRequest where TResponse : class, IResponse
     {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        protected BaseCommand() : base()
+        {
+        }
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="direction">命令方向</param>
+        protected BaseCommand(PacketDirection direction) : base(direction)
+        {
+        }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="direction">命令方向</param>
+        /// <param name="logger">日志记录器</param>
+        protected BaseCommand(PacketDirection direction, ILogger<BaseCommand> logger) : base(direction, logger)
+        {
+        }
 
         private CommandDataContainer<TRequest> _requestContainer;
         private CommandDataContainer<TResponse> _responseContainer;
@@ -78,11 +274,11 @@ namespace RUINORERP.PacketSpec.Commands
 
 
     /// <summary>
-    /// 命令基类 - 提供命令的通用实现
-    /// </summary>
-    public abstract  class BaseCommand :  ICommand
-    {
-        public CommandExecutionContext ExecutionContext { get; set; }
+        /// 命令基类 - 提供命令的通用实现
+        /// </summary>
+        public abstract  class BaseCommand :  ICommand
+        {
+            public CommandExecutionContext ExecutionContext { get; set; }
 
         //public byte[] BizData { get; set; }  // 字节数组存储
 
@@ -108,11 +304,28 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public string CommandId { get; private set; }
 
+        /// <summary>
+        /// 认证令牌
+        /// </summary>
+        public string AuthToken { get; set; }
+
+        /// <summary>
+        /// 令牌类型
+        /// </summary>
+        public string TokenType { get; set; } = "Bearer";
+
 
         /// <summary>
         /// 命令标识符（类型安全命令系统）
         /// </summary>
         public CommandId CommandIdentifier { get; set; }
+
+        /// <summary>
+        /// 请求唯一标识
+        /// </summary>
+        public string RequestId { get; set; }
+
+
 
         /// <summary>
         /// 命令方向
@@ -207,6 +420,9 @@ namespace RUINORERP.PacketSpec.Commands
 
                 // 执行前处理
                 await OnBeforeExecuteAsync(cancellationToken);
+
+                // 自动附加Token
+                AutoAttachToken();
 
                 // 执行核心逻辑
                 var result = await OnExecuteAsync(cancellationToken);
@@ -380,6 +596,41 @@ namespace RUINORERP.PacketSpec.Commands
         #endregion
 
         #region 虚方法 - 子类可以重写
+
+        /// <summary>
+        /// 自动附加认证Token
+        /// 增强功能：确保Token的完整性、类型设置、ExecutionContext绑定和异常处理
+        /// </summary>
+        protected virtual void AutoAttachToken()
+        {
+            try
+            {
+                // 使用TokenManager单例获取Token
+                var (success, accessToken, refreshToken) = TokenManager.Instance.GetTokens();
+                if (success && !string.IsNullOrEmpty(accessToken))
+                {
+                    AuthToken = accessToken;
+                    TokenType = "Bearer";
+                    
+                    // 自动设置到ExecutionContext，确保服务器端也能获取
+                    if (ExecutionContext == null)
+                        ExecutionContext = new CommandExecutionContext();
+                    
+                    ExecutionContext.Token = accessToken;
+                    ExecutionContext.Extensions["RefreshToken"] = refreshToken;
+                    
+                    Logger?.LogDebug("自动附加Token成功: {TokenLength} 字符", accessToken?.Length ?? 0);
+                }
+                else
+                {
+                    Logger?.LogDebug("未找到有效Token，跳过自动附加");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogWarning(ex, "自动附加Token失败");
+            }
+        }
 
         /// <summary>
         /// 执行前处理

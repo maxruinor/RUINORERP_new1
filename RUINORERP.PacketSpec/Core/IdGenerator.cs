@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINORERP.Model;
+using System;
 
 
 namespace RUINORERP.PacketSpec.Core
@@ -36,6 +37,11 @@ namespace RUINORERP.PacketSpec.Core
         public static string GenerateRequestId(string commandName)
         {
             return $"{commandName}_{DateTime.Now:HHmmssfff}";
+        }
+
+        public static string GenerateRequestId(Type type )
+        {
+            return $"{type.Name}_{DateTime.Now:HHmmssfff}";
         }
 
         /// <summary>

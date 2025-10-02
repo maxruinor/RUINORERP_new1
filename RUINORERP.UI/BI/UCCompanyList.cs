@@ -18,7 +18,8 @@ using RUINORERP.Business;
 
 using System.Threading;
 using RUINORERP.Global;
-using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Models.Core;
+
 
 namespace RUINORERP.UI.BI
 {

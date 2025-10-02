@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Protocol;
+
 using RUINORERP.PacketSpec.Enums;
 using Timer = System.Windows.Forms.Timer;
 

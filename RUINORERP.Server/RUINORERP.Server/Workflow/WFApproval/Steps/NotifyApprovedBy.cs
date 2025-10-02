@@ -2,7 +2,7 @@
 using RUINORERP.Model.Context;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Models;
-using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;

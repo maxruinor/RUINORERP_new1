@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -43,7 +43,7 @@ namespace RUINORERP.PacketSpec.Commands
         // 网络包 -> 命令
         public  TCommand ToCommand<TCommand>(PacketModel packet)
             where TCommand : ICommand
-            => MessagePackSerializer.Deserialize<TCommand>(packet.Data);
+            => MessagePackSerializer.Deserialize<TCommand>(packet.CommandData);
 
         // 自动类型推断版本
         public ICommand ToCommand(PacketModel packet)
@@ -56,10 +56,10 @@ namespace RUINORERP.PacketSpec.Commands
             if (commandType == null)
                 throw new InvalidOperationException($"未找到命令类型: {packet.Command}");
             
-            var command = (ICommand)MessagePackSerializer.Deserialize(commandType, packet.Data);
+            var command = (ICommand)MessagePackSerializer.Deserialize(commandType, packet.CommandData);
 
             // 新增：如果命令有二进制数据，设置到容器中
-            if (command is BaseCommand baseCmd && packet.Data != null)
+            if (command is BaseCommand baseCmd && packet.CommandData != null)
             {
                 // 对于泛型命令，尝试设置请求数据
                 var genericBaseType = command.GetType().BaseType;
@@ -67,7 +67,7 @@ namespace RUINORERP.PacketSpec.Commands
                     genericBaseType.GetGenericTypeDefinition() == typeof(BaseCommand<,>))
                 {
                     var setMethod = command.GetType().GetMethod("SetRequestFromBinary");
-                    setMethod?.Invoke(command, new object[] { packet.Data });
+                    setMethod?.Invoke(command, new object[] { packet.CommandData });
                 }
             }
 
@@ -85,12 +85,12 @@ namespace RUINORERP.PacketSpec.Commands
             if (command == null)
                 throw new ArgumentNullException(nameof(command));
 
-            var packet = new PacketModel(command.Serialize())
-            {
-                Direction = PacketDirection.Unknown,
-                CreatedTimeUtc = command.CreatedTimeUtc,
-                TimestampUtc = command.CreatedTimeUtc
-            };
+            var packet = PacketBuilder.Create()
+                .WithBinaryData(command.Serialize())
+                .WithDirection(PacketDirection.Unknown)
+                .WithExtension("CreatedTimeUtc", command.CreatedTimeUtc)
+                .WithExtension("TimestampUtc", command.CreatedTimeUtc)
+                .Build();
 
             // 添加命令标识符到扩展属性中
             packet.Extensions["CommandIdentifier"] = command.CommandIdentifier;
@@ -134,8 +134,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 创建命令对象
         /// 根据命令ID和数据包内容创建适当类型的命令对象
         /// </summary>
-        /// <param name="package">数据包</param>
-        /// <param name="sessionContext">会话上下文</param>
+        /// <param name="packet">数据包</param>
         /// <returns>创建的命令对象</returns>
         public ICommand CreateCommand(PacketModel packet)
         {
@@ -144,63 +143,142 @@ namespace RUINORERP.PacketSpec.Commands
 
             try
             {
-                // 优先使用命令工厂创建命令
+                // 1. 首先尝试从命令工厂创建
                 if (_commandFactory != null)
                 {
                     var command = _commandFactory.CreateCommand(packet);
                     if (command != null)
                     {
-                        // 新增：设置执行上下文
-                        if (command is BaseCommand baseCommand)
-                        {
-                            baseCommand.ExecutionContext = CommandExecutionContext.CreateFromPacket(packet);
-                        }
-                        //command.BizData=packet.GetDataAsText
-                        // 尝试从数据包中获取业务数据 这里晚再再看
-                        // businessDataCommand.BusinessData = packetModel.GetJsonData<object>();
-
+                        InitializeCommandFromPacket(command, packet);
                         return command;
                     }
                 }
 
-                // 如果命令工厂无法创建命令，尝试根据命令ID查找对应的命令类型
-                // 直接使用CommandDispatcher中的方法获取命令类型
-                var commandType = _commandDispatcher?.GetCommandType(packet.Command);
+                // 2. 尝试根据命令ID创建具体命令类型
+                var commandType = _commandDispatcher?.GetCommandType(packet.Command.FullCode);
                 if (commandType != null)
                 {
-                    // 尝试使用构造函数创建命令实例
-                    var constructor = GetSuitableConstructor(commandType);
-                    if (constructor != null)
+                    var command = CreateCommandByType(commandType, packet);
+                    if (command != null)
                     {
-                        var parameters = PrepareConstructorParameters(constructor, packet);
-                        var command = Activator.CreateInstance(commandType, parameters) as ICommand;
-
-                        _logger?.LogDebug("根据命令ID创建命令实例: CommandId={CommandId}, Type={TypeName}",
-                            packet.Command, commandType.FullName);
+                        InitializeCommandFromPacket(command, packet);
                         return command;
                     }
                 }
 
-                // 如果没有找到对应的命令类型或无法创建实例
-                _logger?.LogWarning("无法创建命令对象: CommandId={CommandId}", packet.Command);
-                return null;
+                // 3. 最后使用泛型命令作为后备
+                return CreateGenericCommand(packet);
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "创建命令对象时出错: CommandId={CommandId}", packet.Command);
-                // 如果创建失败，返回一个默认的命令对象
-                var packetModelForError = new PacketModel(packet.Data)
+                return CreateFallbackCommand(packet, ex);
+            }
+        }
+
+        /// <summary>
+        /// 根据类型创建命令实例
+        /// </summary>
+        /// <param name="commandType">命令类型</param>
+        /// <param name="packet">数据包</param>
+        /// <returns>命令实例</returns>
+        private ICommand CreateCommandByType(Type commandType, PacketModel packet)
+        {
+            try
+            {
+                var constructor = GetSuitableConstructor(commandType);
+                if (constructor != null)
                 {
-                    SessionId = packet.SessionId,
-                    PacketId = packet.PacketId
-                };
+                    var parameters = PrepareConstructorParameters(constructor, packet);
+                    var command = Activator.CreateInstance(commandType, parameters) as ICommand;
+
+                    _logger?.LogDebug("根据命令ID创建命令实例: CommandId={CommandId}, Type={TypeName}",
+                        packet.Command, commandType.FullName);
+                    return command;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "根据类型创建命令实例失败: Type={TypeName}", commandType.FullName);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 创建泛型命令对象
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        /// <returns>泛型命令实例</returns>
+        private ICommand CreateGenericCommand(PacketModel packet)
+        {
+            // 根据数据内容自动判断使用哪种泛型命令
+            if (packet.CommandData != null && packet.CommandData.Length > 0)
+            {
+                try
+                {
+                    // 尝试反序列化为字典，判断是否是键值对数据
+                    var dict = MessagePack.MessagePackSerializer.Deserialize<Dictionary<string, object>>(packet.CommandData);
+                    return new GenericCommand<Dictionary<string, object>>(packet.Command, dict);
+                }
+                catch
+                {
+                    // 如果无法反序列化为字典，使用byte[]作为Payload
+                    return new GenericCommand<byte[]>(packet.Command, packet.CommandData);
+                }
+            }
+            
+            return new GenericCommand<object>(packet.Command, null);
+        }
+
+        /// <summary>
+        /// 初始化命令对象的属性
+        /// </summary>
+        /// <param name="command">命令实例</param>
+        /// <param name="packet">数据包</param>
+        private void InitializeCommandFromPacket(ICommand command, PacketModel packet)
+        {
+            if (command is BaseCommand baseCommand)
+            {
+                baseCommand.ExecutionContext = CommandExecutionContext.CreateFromPacket(packet);
+                baseCommand.TimestampUtc = packet.TimestampUtc;
+                baseCommand.CreatedTimeUtc = packet.CreatedTimeUtc;
+                
+                // 自动提取Token
+                if (!string.IsNullOrEmpty(packet.Token))
+                {
+                    baseCommand.AuthToken = packet.Token;
+                    baseCommand.TokenType = "Bearer";
+                }
+            }
+        }
+
+        /// <summary>
+        /// 创建备用命令对象（当创建主命令失败时使用）
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        /// <param name="ex">创建失败的异常</param>
+        /// <returns>备用命令实例</returns>
+        private ICommand CreateFallbackCommand(PacketModel packet, Exception ex)
+        {
+            try
+            {
+                var packetModelForError = PacketBuilder.Create()
+                    .WithBinaryData(packet.CommandData)
+                    .WithSession(packet.SessionId)
+                    .WithExtension("PacketId", packet.PacketId)
+                    .WithExtension("CreationError", ex.Message)
+                    .Build();
 
                 return new MessageCommand(
-                     packet.Command,
+                    packet.Command,
                     packetModelForError,
-                    packet.Data)
-                {
-                } as ICommand;
+                    packet.CommandData);
+            }
+            catch (Exception fallbackEx)
+            {
+                _logger?.LogCritical(fallbackEx, "创建备用命令对象也失败了");
+                // 最后的防线，确保至少返回一个基本命令对象
+                return new GenericCommand<object>(packet.Command, null);
             }
         }
 
@@ -256,18 +334,29 @@ namespace RUINORERP.PacketSpec.Commands
                     if (parameters[i].ParameterType == typeof(PacketModel))
                     {
                         // 创建PacketModel对象
-                        parameterValues[i] = new PacketModel()
+                        var builder = PacketBuilder.Create()
+                            .WithBinaryData(packet.CommandData)
+                            .WithSession(packet.SessionId)
+                            .WithExtension("PacketId", packet.PacketId);
+                        
+                        if (packet.Extensions != null)
                         {
-                            Data = packet.Data,
-                            SessionId = packet.SessionId,
-                            PacketId = packet.PacketId,
-                            Extensions = packet.Extensions ?? new Dictionary<string, object>()
-                        };
+                            foreach (var extension in packet.Extensions)
+                            {
+                                // 避免覆盖已经设置的扩展属性
+                                if (extension.Key != "PacketId")
+                                {
+                                    builder.WithExtension(extension.Key, extension.Value);
+                                }
+                            }
+                        }
+                        
+                        parameterValues[i] = builder.Build();
 
                     }
                     else if (parameters[i].ParameterType == typeof(byte[]))
                     {
-                        parameterValues[i] = packet.Data;
+                        parameterValues[i] = packet.CommandData;
                     }
                     else if (parameters[i].ParameterType == typeof(CommandId))
                     {
@@ -292,7 +381,5 @@ namespace RUINORERP.PacketSpec.Commands
                 return new object[0];
             }
         }
-
-
     }
 }

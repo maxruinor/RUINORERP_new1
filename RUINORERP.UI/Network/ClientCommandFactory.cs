@@ -1,6 +1,6 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Protocol;
+
 using RUINORERP.PacketSpec.Serialization;
 using System;
 using System.Collections.Generic;

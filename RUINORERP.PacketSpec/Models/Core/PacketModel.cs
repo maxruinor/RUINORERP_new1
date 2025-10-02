@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -6,6 +6,7 @@ using RUINORERP.PacketSpec.Core;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Requests;
 using MessagePack;
 
 namespace RUINORERP.PacketSpec.Models.Core
@@ -20,13 +21,23 @@ namespace RUINORERP.PacketSpec.Models.Core
     [Serializable]
     public class PacketModel :  IPacketData
     {
-        // 传输数据
-        public byte[] Data { get; set; }
+        // 传输的指令数据里面有请求数据或响应数据
+        public byte[] CommandData { get; set; }
 
 
         // 简单的命令标识（不包含业务逻辑）
         //命令类型
         public CommandId Command { get; set; }
+
+        /// <summary>
+        /// 指令标记 - 对应Command.OperationCode
+        /// 用于服务端Pipeline解码时快速识别命令类型
+        /// </summary>
+        public byte Mark
+        {
+            get { return Command.OperationCode; }
+            set { /* 只读属性，值从Command.OperationCode获取 */ }
+        }
 
         /// <summary>
         /// 数据包状态
@@ -68,7 +79,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// </summary>
         public int GetPackageSize()
         {
-            return Data?.Length ?? 0;
+            return CommandData?.Length ?? 0;
         }
 
         /// <summary>
@@ -117,7 +128,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 Command = command.CommandIdentifier,
                 //SessionId = command.SessionId,
                 //ClientId = command.ClientId,
-                Data = SerializeCommand(command)
+                CommandData = SerializeCommand(command)
             };
         }
 
@@ -184,10 +195,10 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>反序列化后的对象</returns>
         public T GetJsonData<T>()
         {
-            if (Data == null || Data.Length == 0)
+            if (CommandData == null || CommandData.Length == 0)
                 return default;
 
-            var json = Encoding.UTF8.GetString(Data);
+            var json = Encoding.UTF8.GetString(CommandData);
             return JsonConvert.DeserializeObject<T>(json);
         }
 
@@ -215,10 +226,10 @@ namespace RUINORERP.PacketSpec.Models.Core
             Token = null; // 清理Token
             Extensions?.Clear();
             // 清理包体数据
-            if (Data != null)
+            if (CommandData != null)
             {
-                Array.Clear(Data, 0, Data.Length);
-                Data = null;
+                Array.Clear(CommandData, 0, CommandData.Length);
+                CommandData = null;
             }
         }
 
@@ -262,7 +273,7 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         internal void SetData(byte[] data)
         {
-            this.Data = data;
+            this.CommandData = data;
         }
 
         /// <summary>
@@ -287,8 +298,8 @@ namespace RUINORERP.PacketSpec.Models.Core
             var cacheKey = $"{type.FullName}:{hash}";
 
             // 尝试从缓存获取或添加
-            Data = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
-            Size = Data.Length;
+            CommandData = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
+            Size = CommandData.Length;
             LastUpdatedTime = DateTime.UtcNow;
             return this;
 
@@ -302,11 +313,83 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>文本数据</returns>
         public string GetDataAsText(Encoding encoding = null)
         {
-            if (Data == null || Data.Length == 0)
+            if (CommandData == null || CommandData.Length == 0)
                 return string.Empty;
 
             encoding ??= Encoding.UTF8;
-            return encoding.GetString(Data);
+            return encoding.GetString(CommandData);
+        }
+
+        /// <summary>
+        /// 提取请求数据为指定的IRequest类型
+        /// </summary>
+        /// <typeparam name="T">目标IRequest类型</typeparam>
+        /// <returns>反序列化后的请求对象</returns>
+        /// <exception cref="InvalidOperationException">提取请求数据失败时抛出</exception>
+        public T ExtractRequest<T>() where T : class, IRequest
+        {
+            try
+            {
+                if (CommandData == null || CommandData.Length == 0)
+                    return default(T);
+                     
+                // 优先尝试MessagePack反序列化
+                try
+                {
+                    return MessagePack.MessagePackSerializer.Deserialize<T>(CommandData);
+                }
+                catch
+                {
+                    // 回退到JSON反序列化
+                    var json = Encoding.UTF8.GetString(CommandData);
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"提取请求数据失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 提取Payload数据为指定类型
+        /// </summary>
+        /// <typeparam name="T">目标类型</typeparam>
+        /// <returns>反序列化后的Payload对象</returns>
+        /// <exception cref="InvalidOperationException">提取Payload数据失败时抛出</exception>
+        public T ExtractPayload<T>()
+        {
+            try
+            {
+                if (CommandData == null || CommandData.Length == 0)
+                    return default(T);
+                     
+                return MessagePack.MessagePackSerializer.Deserialize<T>(CommandData);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"提取Payload数据失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 从数据包提取执行上下文
+        /// </summary>
+        /// <returns>命令执行上下文对象</returns>
+        public CommandExecutionContext ExtractExecutionContext()
+        {
+            var context = CommandExecutionContext.CreateFromPacket(this);
+             
+            // 从Extensions中提取额外上下文信息
+            if (Extensions != null)
+            {
+                foreach (var extension in Extensions)
+                {
+                    context.Extensions[extension.Key] = extension.Value;
+                }
+            }
+             
+            return context;
         }
         public PacketModel Clone()
         {
@@ -317,7 +400,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 Status = Status,
                 SessionId = SessionId,
                 ClientId = ClientId,
-                Data = Data?.Clone() as byte[],
+                CommandData = CommandData?.Clone() as byte[],
                 Size = Size,
                 Checksum = Checksum,
                 CreatedTimeUtc = CreatedTimeUtc,
@@ -328,5 +411,26 @@ namespace RUINORERP.PacketSpec.Models.Core
             };
         }
 
+    }
+
+    /// <summary>
+    /// PacketModel的扩展方法类
+    /// </summary>
+    public static class PacketModelExtensions
+    {
+        /// <summary>
+        /// 从数据包中提取命令ID
+        /// 供服务端Pipeline解码时直接拿到CommandId，无需再new CommandId(...)重复拼装
+        /// </summary>
+        /// <param name="packet">数据包模型实例</param>
+        /// <returns>命令ID对象</returns>
+        public static CommandId ExtractCommandId(this PacketModel packet)
+        {
+            if (packet == null)
+                throw new ArgumentNullException(nameof(packet), "数据包不能为空");
+
+            // 直接返回已有的Command属性，避免重新创建CommandId对象
+            return packet.Command;
+        }
     }
 }

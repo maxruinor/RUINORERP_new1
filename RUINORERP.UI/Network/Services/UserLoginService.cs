@@ -6,9 +6,11 @@ using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.UI.Network.Authentication;
 using RUINORERP.UI.Network.PacketAdapter;
+using SourceLibrary.Security;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -46,16 +48,7 @@ namespace RUINORERP.UI.Network.Services
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                 throw new ArgumentException("用户名或密码不能为空");
 
-            _log?.LogInformation("登录开始，用户={}", username);
-            
-            var response = await _comm.SendAsync<LoginRequest, LoginResponse>(
-                AuthenticationCommands.Login,
-                new LoginRequest { Username = username, Password = password },
-                new LoginPacketAdapter(),
-                ct);
-                
-
-           // 让AI检查，从登陆到发送。请求实体数据并没有加入到指令数据再加到数据包中发送出去。
+            var response = await _comm.SendCommandAsync<LoginRequest, LoginResponse>(new LoginCommand(username, password), ct);
 
             // 登录成功后设置token
             if (response != null && !string.IsNullOrEmpty(response.AccessToken))
@@ -64,7 +57,7 @@ namespace RUINORERP.UI.Network.Services
                 // 启动静默刷新服务
                 _silentTokenRefresher.Start();
             }
-            
+
             return response;
         }
 
@@ -127,7 +120,7 @@ namespace RUINORERP.UI.Network.Services
                 new LoginPacketAdapter(),
                 ct);
         }
-        
+
         /// <summary>
         /// 准备登录：用于初始化登录环境
         /// </summary>

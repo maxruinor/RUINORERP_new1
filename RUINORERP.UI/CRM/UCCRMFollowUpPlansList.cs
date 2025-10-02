@@ -34,7 +34,8 @@ using FastReport.DevComponents.DotNetBar;
 
 
 using System.Threading;
-using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Models.Core;
+
 
 
 namespace RUINORERP.UI.CRM

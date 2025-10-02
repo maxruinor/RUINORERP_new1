@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RUINORERP.PacketSpec.Core;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,8 +9,12 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// 登录响应模型
     /// </summary>
     [Serializable]
-    public class LoginResponse: ResponseBase
+    public class LoginResponse : ResponseBase
     {
+        public LoginResponse()
+        {
+            
+        }
         /// <summary>
         /// 用户ID
         /// </summary>
@@ -49,12 +54,12 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// 令牌类型
         /// </summary>
         public string TokenType { get; set; }
-        
+
         /// <summary>
         /// 用户角色列表
         /// </summary>
         public List<string> Roles { get; set; } = new List<string>();
-        
+
         /// <summary>
         /// 用户权限列表
         /// </summary>

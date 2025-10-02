@@ -53,8 +53,25 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         public bool IsAccessTokenExpired() => DateTime.UtcNow >= AccessTokenExpiryUtc;
 
         /// <summary>
-        /// 检查刷新令牌是否已过期
-        /// </summary>
-        public bool IsRefreshTokenExpired() => DateTime.UtcNow >= RefreshTokenExpiryUtc;
+    /// 检查刷新令牌是否已过期
+    /// </summary>
+    public bool IsRefreshTokenExpired() => DateTime.UtcNow >= RefreshTokenExpiryUtc;
+
+    /// <summary>
+    /// 计算令牌过期时间
+    /// </summary>
+    /// <param name="currentTime">当前时间（UTC）</param>
+    /// <param name="expiresInSeconds">过期时间（秒）</param>
+    /// <param name="isRefreshToken">是否为刷新令牌</param>
+    /// <returns>计算后的过期时间（UTC）</returns>
+    public static DateTime CalcExpiry(DateTime currentTime, int expiresInSeconds, bool isRefreshToken = false)
+    {
+        if (isRefreshToken)
+        {
+            // 刷新令牌通常有效期更长，设置为访问令牌的3倍
+            return currentTime.AddSeconds(expiresInSeconds * 3);
+        }
+        return currentTime.AddSeconds(expiresInSeconds);
     }
+}
 }

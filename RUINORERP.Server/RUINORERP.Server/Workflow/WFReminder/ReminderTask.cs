@@ -15,8 +15,8 @@ using RUINORERP.Model;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.BizService;
 using RUINORERP.PacketSpec.Enums;
-using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.Server.Workflow.WFReminder
 {

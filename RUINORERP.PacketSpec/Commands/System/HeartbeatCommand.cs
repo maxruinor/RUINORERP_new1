@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Protocol;
+
 using RUINORERP.PacketSpec.Enums.Core;
 using FluentValidation.Results;
 
@@ -23,15 +23,7 @@ namespace RUINORERP.PacketSpec.Commands.System
     {
  
 
-        /// <summary>
-        /// 会话令牌
-        /// </summary>
-        public string SessionToken { get; set; }
 
-        /// <summary>
-        /// 用户ID
-        /// </summary>
-        public long UserId { get; set; }
 
         /// <summary>
         /// 构造函数
@@ -71,8 +63,6 @@ namespace RUINORERP.PacketSpec.Commands.System
                 // 数据会自动被容器管理
             };
 
-            SessionToken = sessionToken;
-            UserId = userId;
             Priority = CommandPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
             TimestampUtc = DateTime.UtcNow;
@@ -109,10 +99,12 @@ namespace RUINORERP.PacketSpec.Commands.System
                     resourceUsage.ProcessUptime = this.ProcessUptime;
                 }
 
+                // 使用Request中的值
+                var request = this.Request ?? new HeartbeatRequest();
                 return new HeartbeatRequest
                 {
-                    SessionToken = this.SessionToken,
-                    UserId = this.UserId,
+                    SessionToken = request.SessionToken,
+                    UserId = request.UserId,
                     TimestampUtc = this.TimestampUtc,
                     ClientTime = DateTime.UtcNow,
                     NetworkLatency = this.NetworkLatency,

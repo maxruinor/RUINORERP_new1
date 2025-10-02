@@ -8,7 +8,6 @@ using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.Server.Network.Models;
-using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Handlers;
 using RUINORERP.PacketSpec.Models;
 using HLH.Lib.Security;
@@ -29,6 +28,7 @@ using SuperSocket.Channel;
 using SuperSocket.Connection;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Concurrent;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -106,6 +106,7 @@ namespace RUINORERP.Server.Network.Commands
 
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数
+        /// 支持多种命令类型：LoginCommand、BaseCommand<LoginRequest, LoginResponse>、GenericCommand<LoginRequest>
         /// </summary>
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -115,10 +116,32 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 var commandId = command.CommandIdentifier;
+                
+                // 使用统一的数据提取方式
+                var context = GetCommandContext(command);
+                var sessionId = context.SessionId;
+                
+                LogInfo($"处理命令: {commandId} [会话: {sessionId}]");
+
                 if (commandId == AuthenticationCommands.Login || commandId == AuthenticationCommands.LoginRequest)
                 {
-                    // LoginRequest和Login命令使用相同的处理逻辑
-                    return await HandleLoginAsync(command as LoginCommand, cancellationToken);
+                    // 支持多种命令类型
+                    if (command is LoginCommand loginCommand)
+                    {
+                        return await HandleLoginAsync(loginCommand, cancellationToken);
+                    }
+                    else if (command is BaseCommand<LoginRequest, LoginResponse> typedCommand)
+                    {
+                        return await HandleTypedLoginAsync(typedCommand, cancellationToken);
+                    }
+                    else if (command is GenericCommand<LoginRequest> genericCommand)
+                    {
+                        return await HandleGenericLoginAsync(genericCommand, cancellationToken);
+                    }
+                    else
+                    {
+                        return CreateErrorResponse("不支持的登录命令格式", UnifiedErrorCodes.Command_ValidationFailed, "UNSUPPORTED_LOGIN_FORMAT");
+                    }
                 }
                 else if (commandId == AuthenticationCommands.Logout)
                 {
@@ -145,21 +168,52 @@ namespace RUINORERP.Server.Network.Commands
             }
             catch (Exception ex)
             {
-                LogError($"处理登录命令异常: {ex.Message}", ex);
-                var errorResponse = ResponseBase.CreateError($"处理异常: {ex.Message}", 500)
-                    .WithMetadata("ErrorCode", "HANDLER_ERROR")
-                    .WithMetadata("Exception", ex.Message)
-                    .WithMetadata("StackTrace", ex.StackTrace);
-                return ConvertToApiResponse(errorResponse);
+                LogError($"处理命令 {command.CommandIdentifier} 异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "HANDLER_ERROR");
             }
         }
 
-
+        /// <summary>
+        /// 处理强类型登录命令
+        /// </summary>
+        private async Task<ResponseBase> HandleTypedLoginAsync(
+            BaseCommand<LoginRequest, LoginResponse> command,
+            CancellationToken cancellationToken)
+        {
+            var loginRequest = command.Request;
+            if (loginRequest == null)
+            {
+                return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
+            }
+            
+            // 使用统一的业务逻辑处理方法
+            return await ProcessLoginAsync(loginRequest, command.ExecutionContext, cancellationToken);
+        }
 
         /// <summary>
-        /// 处理登录命令
+        /// 处理泛型登录命令
         /// </summary>
-        private async Task<ResponseBase> HandleLoginAsync(LoginCommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleGenericLoginAsync(
+            GenericCommand<LoginRequest> command,
+            CancellationToken cancellationToken)
+        {
+            var loginRequest = command.Payload;
+            if (loginRequest == null)
+            {
+                return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
+            }
+            
+            return await ProcessLoginAsync(loginRequest, command.ExecutionContext, cancellationToken);
+        }
+
+        /// <summary>
+        /// 统一的登录业务逻辑处理方法
+        /// 整合了所有登录相关的业务逻辑，被不同类型的登录命令处理器调用
+        /// </summary>
+        private async Task<ResponseBase> ProcessLoginAsync(
+            LoginRequest loginRequest,
+            CommandExecutionContext executionContext,
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -167,21 +221,6 @@ namespace RUINORERP.Server.Network.Commands
                 if (SessionService.ActiveSessionCount >= MaxConcurrentUsers)
                 {
                     return CreateErrorResponse("服务器达到最大用户数限制", UnifiedErrorCodes.System_InternalError, "MAX_USERS_EXCEEDED");
-                }
-
-                // 验证命令
-                var commandValidationResult = await command.ValidateAsync(cancellationToken);
-                if (!commandValidationResult.IsValid)
-                {
-                    logger.LogWarning($"登录命令验证失败: {commandValidationResult.Errors[0].ErrorMessage}");
-                    return CreateErrorResponse($"登录命令验证失败: {commandValidationResult.Errors[0].ErrorMessage}", UnifiedErrorCodes.Command_ValidationFailed, "LOGIN_VALIDATION_FAILED");
-                }
-
-                // 统一使用基类方法获取登录请求数据
-                var loginRequest = ParseBusinessData<LoginRequest>(command);
-                if (loginRequest == null)
-                {
-                    return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
                 }
 
                 if (!loginRequest.IsValid())
@@ -213,28 +252,31 @@ namespace RUINORERP.Server.Network.Commands
                 ResetLoginAttempts(loginRequest.Username);
 
                 // 检查是否已经登录，如果是则发送重复登录确认请求
-                var (hasExistingSessions, authorizedSessions) = CheckUserLoginStatus(loginRequest.Username, command.ExecutionContext.SessionId);
-                if (hasExistingSessions && !IsDuplicateLoginConfirmed(command))
+                var (hasExistingSessions, authorizedSessions) = CheckUserLoginStatus(loginRequest.Username, executionContext.SessionId);
+                if (hasExistingSessions && !IsDuplicateLoginConfirmed(loginRequest))
                 {
-                    // 发送重复登录确认请求给客户端
-                    return RequestDuplicateLoginConfirmation(command, authorizedSessions, cancellationToken);
+                    // 返回需要确认的响应
+                    return CreateSuccessResponse(
+                        new { ExistingSessions = authorizedSessions.Select(s => new { SessionId = s.SessionID, LoginTime = s.LoginTime, ClientIp = s.ClientIp, DeviceInfo = s.DeviceInfo }).ToList() },
+                        "您的账号已在其他地方登录，确认强制对方下线，保持当前登陆吗？")
+                        .WithMetadata("ActionRequired", "DuplicateLoginConfirmation");
                 }
 
                 // 处理重复登录确认后的逻辑
-                if (IsDuplicateLoginConfirmed(command))
+                if (IsDuplicateLoginConfirmed(loginRequest))
                 {
                     // 踢掉之前的登录
                     KickExistingSessions(authorizedSessions, loginRequest.Username);
                 }
 
                 // 获取或创建会话信息
-                var sessionInfo = SessionService.GetSession(command.ExecutionContext.SessionId);
+                var sessionInfo = SessionService.GetSession(executionContext.SessionId);
                 if (sessionInfo == null)
                 {
                     // 统一使用GetClientIp方法获取客户端IP
-                    string clientIp = GetClientIp(command, loginRequest);
+                    string clientIp = GetClientIp(null, loginRequest);
                     
-                    sessionInfo = SessionService.CreateSession(GetSessionId(command), clientIp);
+                    sessionInfo = SessionService.CreateSession(executionContext.SessionId, clientIp);
                     if (sessionInfo == null)
                     {
                         return CreateErrorResponse("创建会话失败", UnifiedErrorCodes.System_InternalError, "SESSION_CREATION_FAILED");
@@ -246,13 +288,10 @@ namespace RUINORERP.Server.Network.Commands
                 SessionService.UpdateSession(sessionInfo);
 
                 // 记录活跃会话
-                AddActiveSession(GetSessionId(command));
+                AddActiveSession(executionContext.SessionId);
 
                 // 生成Token
                 var tokenInfo = GenerateTokenInfo(userValidationResult.UserSessionInfo);
-
-                // 创建响应数据
-                var responseData = CreateLoginResponse(tokenInfo, userValidationResult.UserSessionInfo);
 
                 // 返回成功结果
                 return CreateSuccessResponse(
@@ -264,6 +303,70 @@ namespace RUINORERP.Server.Network.Commands
                         ExpiresIn = tokenInfo.ExpiresIn
                     },
                     "登录成功");
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理登录逻辑异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "LOGIN_PROCESS_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 检查是否已确认重复登录（基于请求数据）
+        /// </summary>
+        private bool IsDuplicateLoginConfirmed(LoginRequest loginRequest)
+        {
+            if (loginRequest?.AdditionalData != null &&
+                loginRequest.AdditionalData.ContainsKey("DuplicateLoginConfirmed"))
+            {
+                return Convert.ToBoolean(loginRequest.AdditionalData["DuplicateLoginConfirmed"]);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 检查是否已确认重复登录（基于命令对象）
+        /// 为了保持向后兼容性而保留的重载版本
+        /// </summary>
+        private bool IsDuplicateLoginConfirmed(LoginCommand command)
+        {
+            if (command != null && command.Request != null)
+            {
+                return IsDuplicateLoginConfirmed(command.Request);
+            }
+            return false;
+        }
+
+
+        /// <summary>
+        /// 处理登录命令 - 现在调用统一的ProcessLoginAsync方法
+        /// </summary>
+        private async Task<ResponseBase> HandleLoginAsync(LoginCommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                if (command == null)
+                {
+                    return CreateErrorResponse("命令对象为空", UnifiedErrorCodes.Command_ValidationFailed, "NULL_COMMAND");
+                }
+
+                // 验证命令
+                var commandValidationResult = await command.ValidateAsync(cancellationToken);
+                if (!commandValidationResult.IsValid)
+                {
+                    logger.LogWarning($"登录命令验证失败: {commandValidationResult.Errors[0].ErrorMessage}");
+                    return CreateErrorResponse($"登录命令验证失败: {commandValidationResult.Errors[0].ErrorMessage}", UnifiedErrorCodes.Command_ValidationFailed, "LOGIN_VALIDATION_FAILED");
+                }
+
+                // 统一使用基类方法获取登录请求数据
+                var loginRequest = ParseBusinessData<LoginRequest>(command);
+                if (loginRequest == null)
+                {
+                    return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
+                }
+
+                // 调用统一的登录业务逻辑处理方法
+                return await ProcessLoginAsync(loginRequest, command.ExecutionContext, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -569,20 +672,7 @@ namespace RUINORERP.Server.Network.Commands
             }
         }
 
-        /// <summary>
-        /// 检查是否已确认重复登录
-        /// </summary>
-        private bool IsDuplicateLoginConfirmed(LoginCommand command)
-        {
-            // 统一使用基类方法获取登录请求数据并检查确认标志
-            var loginRequest = command.Request as LoginRequest;
-            if (loginRequest?.AdditionalData != null &&
-                loginRequest.AdditionalData.ContainsKey("DuplicateLoginConfirmed"))
-            {
-                return Convert.ToBoolean(loginRequest.AdditionalData["DuplicateLoginConfirmed"]);
-            }
-            return false;
-        }
+
 
         /// <summary>
         /// 检查是否为本地登录（同一台机器）

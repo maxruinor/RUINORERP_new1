@@ -9,7 +9,7 @@ namespace RUINORERP.PacketSpec.Models.Core
     public interface IPacketData
     {
         // 传输数据
-        byte[] Data { get; set; }
+        byte[] CommandData { get; set; }
 
         /// <summary>
         /// 包标志位

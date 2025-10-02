@@ -28,7 +28,7 @@ using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.CommService;
 
 using RUINORERP.Global;
-using RUINORERP.PacketSpec.Protocol;
+
 
 namespace RUINORERP.UI.CRM
 {

@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Protocol;
+﻿
 using SuperSocket.ProtoBase;
 
 
@@ -21,7 +21,7 @@ namespace RUINORERP.UI.SuperSocketClient
         /// </summary>
         public byte[] Body { get; set; }
        // public KxData kd { get; set; }
-        public OriginalData od { get; set; }
+     
 
       //  public SpecialOrder ecode { get; set; }
     }

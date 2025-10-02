@@ -1,7 +1,6 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.System;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,6 +10,7 @@ using Microsoft.Extensions.Logging;
 // using RUINORERP.Server.Network.Services; // 暂时注释，缺少ISessionService接口定义
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.PacketSpec.Models.Core;
 // using RUINORERP.Server.Network.Interfaces.Services; // 暂时注释，缺少ISessionService接口定义
 
 namespace RUINORERP.Server.Network.Commands

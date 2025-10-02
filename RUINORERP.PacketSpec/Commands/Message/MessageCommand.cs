@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Protocol;
+
 using System;
 using System.Text;
 using RUINORERP.PacketSpec.Enums.Core;

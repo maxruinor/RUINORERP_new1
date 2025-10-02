@@ -88,7 +88,7 @@ using RUINORERP.Business.BizMapperService;
 
 using RUINORERP.Business.CommService;
 using RUINORERP.UI.Network;
-using RUINORERP.PacketSpec.Protocol;
+
 using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.BaseForm

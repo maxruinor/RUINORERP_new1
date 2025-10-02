@@ -19,7 +19,7 @@ using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
-using RUINORERP.PacketSpec.Protocol;
+
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.SuperSocketClient;

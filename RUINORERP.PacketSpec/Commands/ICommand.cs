@@ -1,7 +1,7 @@
 ﻿﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Protocol;
+
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;

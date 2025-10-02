@@ -45,7 +45,8 @@ using RUINORERP.Global;
 using Netron.GraphLib;
 using Microsoft.Extensions.DependencyInjection;
 using System.Management;
-using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Models.Core;
+
 
 
 namespace RUINORERP.UI.SysConfig

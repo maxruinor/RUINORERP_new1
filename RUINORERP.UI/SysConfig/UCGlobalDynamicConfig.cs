@@ -34,7 +34,7 @@ using RUINORERP.PacketSpec.Commands;
 using System.Threading;
 using RUINORERP.Global;
 using RUINORERP.PacketSpec.Enums;
-using RUINORERP.PacketSpec.Protocol;
+
 
 namespace RUINORERP.UI.SysConfig
 {

@@ -11,8 +11,9 @@ using Newtonsoft.Json;
 using Netron.GraphLib;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Models;
-using RUINORERP.PacketSpec.Protocol;
+
 using RUINORERP.WF.Enums;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.UI.SuperSocketClient
 {

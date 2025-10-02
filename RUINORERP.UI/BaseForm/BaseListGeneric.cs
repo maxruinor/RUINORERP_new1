@@ -58,7 +58,8 @@ using Netron.Automatology;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.UI.Monitoring.Auditing;
-using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Models.Core;
+
 
 
 

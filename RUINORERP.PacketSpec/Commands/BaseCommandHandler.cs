@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Utilities;
 using RUINORERP.PacketSpec.Serialization;
-using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Text;
 using RUINORERP.Global.CustomAttribute;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Errors;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {

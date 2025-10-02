@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
@@ -64,7 +65,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 Username = username,
                 Password = password,
-                ClientVersion = Protocol.ProtocolVersion.Current,
+                ClientVersion = ProtocolVersion.Current,
                 DeviceId = deviceId ?? Guid.NewGuid().ToString(),
                 LoginTime = DateTime.UtcNow,
             };

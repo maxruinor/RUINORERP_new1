@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation.Results;
+using RUINORERP.PacketSpec.Models.Requests;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -14,23 +15,83 @@ namespace RUINORERP.PacketSpec.Commands
     public class GenericCommand<TPayload> : BaseCommand
     {
         public TPayload Payload { get; set; }
-
-        public GenericCommand(CommandId id, TPayload payload)
+        
+        public GenericCommand() : base()
+        {
+        }
+        
+        public GenericCommand(CommandId id, TPayload payload) : base()
         {
             CommandIdentifier = id;
             Payload = payload;
-            Direction = PacketDirection.ServerToClient;
+            Direction = PacketDirection.ClientToServer;
         }
-
+        
+        public GenericCommand<TRequest, TResponse> AsTypedCommand<TRequest, TResponse>()
+            where TRequest : class, IRequest
+            where TResponse : class, IResponse
+        {
+            if (Payload is TRequest request)
+            {
+                return new GenericCommand<TRequest, TResponse>(CommandIdentifier, request)
+                {
+                    TimeoutMs = this.TimeoutMs,
+                    Priority = this.Priority,
+                    Direction = this.Direction
+                };
+            }
+            throw new InvalidCastException($"Payload无法转换为{typeof(TRequest).Name}");
+        }
+        
         public override object GetSerializableData() => Payload;
-
-        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default) =>
-            Payload == null
-                ? new ValidationResult(new[] { new ValidationFailure(nameof(Payload), "Payload为空") })
-                : new ValidationResult();
-
-        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken _)
-            => Task.FromResult((ResponseBase)ResponseBase.CreateSuccess("执行成功").WithMetadata("Data", Payload));
-
+        
+        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = ResponseBase.CreateSuccess("Generic命令执行成功");
+                result.WithMetadata("PayloadType", typeof(TPayload).Name);
+                result.WithMetadata("Data", Payload);
+                return Task.FromResult(result);
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult(ResponseBase.CreateError($"Generic命令执行失败: {ex.Message}"));
+            }
+        }
+    }
+    
+    // 强类型泛型命令
+    [PacketCommand("GenericTypedCmd", CommandCategory.System)]
+    public class GenericCommand<TRequest, TResponse> : BaseCommand<TRequest, TResponse>
+        where TRequest : class, IRequest
+        where TResponse : class, IResponse
+    {
+        public GenericCommand() : base()
+        {
+        }
+        
+        public GenericCommand(CommandId id, TRequest request) : base()
+        {
+            CommandIdentifier = id;
+            Request = request;
+            Direction = PacketDirection.ClientToServer;
+        }
+        
+        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = ResponseBase.CreateSuccess("强类型Generic命令执行成功");
+                result.WithMetadata("RequestType", typeof(TRequest).Name);
+                result.WithMetadata("ResponseType", typeof(TResponse).Name);
+                result.WithMetadata("Data", Request);
+                return Task.FromResult(result);
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult(ResponseBase.CreateError($"强类型Generic命令执行失败: {ex.Message}"));
+            }
+        }
     }
 }

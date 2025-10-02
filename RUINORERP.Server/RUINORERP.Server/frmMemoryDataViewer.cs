@@ -15,7 +15,6 @@ using System.Windows.Forms;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Helper;
-using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Enums;
 
 namespace RUINORERP.Server

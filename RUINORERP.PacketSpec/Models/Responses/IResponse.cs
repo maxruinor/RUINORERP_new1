@@ -40,14 +40,15 @@ namespace RUINORERP.PacketSpec.Models.Responses
         int Code { get; set; }
 
         /// <summary>
-        /// 请求标识
-        /// </summary>
-        string RequestId { get; set; }
+    /// 请求标识
+    /// </summary>
+    string RequestId { get; set; }
 
-        /// <summary>
-        /// 执行时间（毫秒）
-        /// </summary>
-        long ExecutionTimeMs { get; set; }
+
+    /// <summary>
+    /// 执行时间（毫秒）
+    /// </summary>
+    long ExecutionTimeMs { get; set; }
 
         /// <summary>
         /// 扩展元数据（可选）

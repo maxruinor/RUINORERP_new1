@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -10,6 +10,11 @@ public interface IRequest
     /// 请求唯一标识
     /// </summary>
     string RequestId { get; set; }
+
+    /// <summary>
+    /// 命令唯一标识
+    /// </summary>
+    string CommandId { get; set; }
 
     /// <summary>
     /// 请求操作类型

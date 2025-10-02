@@ -40,6 +40,21 @@ namespace RUINORERP.UI.Network
             CancellationToken ct = default,
             int timeoutMs = 30000);
 
+
+        /// <summary>
+        /// 发送命令并等待响应
+        /// </summary>
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="requestData">请求数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <returns>带包装的API响应</returns>
+        Task<TResponse> SendCommandAsync<TRequest, TResponse>(
+            BaseCommand command,
+            CancellationToken ct = default,
+            int timeoutMs = 30000);
         /// <summary>
         /// 发送命令并等待响应（使用命令对象）
         /// </summary>

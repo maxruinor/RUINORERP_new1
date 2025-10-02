@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Security;
 
-namespace RUINORERP.PacketSpec.Protocol
+namespace RUINORERP.PacketSpec.Models.Core
 {
     /// <summary>
     /// 原始数据包结构 - 表示未加密的数据

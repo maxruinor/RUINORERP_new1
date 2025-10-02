@@ -279,14 +279,6 @@ namespace RUINORERP.PacketSpec.Handlers
         public TimeSpan Duration { get; set; }
     }
 
-    public class LogRequest
-    {
-        public string LogLevel { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public int MaxRecords { get; set; }
-        public string SearchTerm { get; set; }
-    }
 
     public class BackupOptions
     {

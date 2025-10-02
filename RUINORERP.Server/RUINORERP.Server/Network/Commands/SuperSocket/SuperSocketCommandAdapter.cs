@@ -146,6 +146,19 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     return;
                 }
 
+                // 如果是BaseCommand且包含AuthToken，则自动提取并设置到执行上下文
+                if (command is BaseCommand baseCommand && !string.IsNullOrEmpty(baseCommand.AuthToken))
+                {
+                    // 确保ExecutionContext已初始化
+                    if (baseCommand.ExecutionContext == null)
+                    {
+                        baseCommand.ExecutionContext = new CommandExecutionContext();
+                    }
+                    // 设置Token
+                    baseCommand.ExecutionContext.Token = baseCommand.AuthToken;
+                    _logger?.LogDebug("已从BaseCommand提取并设置Token: CommandId={CommandId}", package.Packet.Command);
+                }
+
                 // 记录命令执行开始的日志
                 _logger?.LogDebug("开始执行命令: CommandId={CommandId}, Type={TypeName}",
                     package.Packet.Command, command.GetType().FullName);
@@ -227,11 +240,12 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 }
 
                 // 如果没有找到对应的命令类型或无法创建实例，使用默认的MessageCommand
-                var packetModelForDefault = new PacketModel(package.Packet.Body, package.Packet.Command)
-                {
-                    SessionId = package.Packet.SessionId,
-                    PacketId = package.Packet.PacketId
-                };
+                var packetModelForDefault = PacketBuilder.Create()
+                    .WithCommand(package.Packet.Command)
+                    .WithBinaryData(package.Packet.Body)
+                    .WithSession(package.Packet.SessionId)
+                    .WithExtension("PacketId", package.Packet.PacketId)
+                    .Build();
 
                 var defaultCommand = new MessageCommand(
                     package.Packet.Command,
@@ -248,11 +262,12 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             {
                 _logger?.LogError(ex, "创建命令对象时出错: CommandId={CommandId}", package.Packet.Command);
                 // 如果创建失败，返回一个默认的命令对象
-                var packetModelForError = new PacketModel(package.Packet.Body, package.Packet.Command)
-                {
-                    SessionId = package.Packet.SessionId,
-                    PacketId = package.Packet.PacketId
-                };
+                var packetModelForError = PacketBuilder.Create()
+                    .WithCommand(package.Packet.Command)
+                    .WithBinaryData(package.Packet.Body)
+                    .WithSession(package.Packet.SessionId)
+                    .WithExtension("PacketId", package.Packet.PacketId)
+                    .Build();
 
                 return new MessageCommand(
                     package.Packet.Command,
@@ -313,12 +328,25 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     if (parameters[i].ParameterType == typeof(PacketModel))
                     {
                         // 创建PacketModel对象
-                        parameterValues[i] = new PacketModel(package.Packet.Body, package.Packet.Command)
+                        var builder = PacketBuilder.Create()
+                            .WithCommand(package.Packet.Command)
+                            .WithBinaryData(package.Packet.Body)
+                            .WithSession(package.Packet.SessionId)
+                            .WithExtension("PacketId", package.Packet.PacketId);
+                        
+                        if (package.Packet.Extensions != null)
                         {
-                            SessionId = package.Packet.SessionId,
-                            PacketId = package.Packet.PacketId,
-                            Extensions = package.Packet.Extensions ?? new Dictionary<string, object>()
-                        };
+                            foreach (var extension in package.Packet.Extensions)
+                            {
+                                // 避免覆盖已经设置的扩展属性
+                                if (extension.Key != "PacketId")
+                                {
+                                    builder.WithExtension(extension.Key, extension.Value);
+                                }
+                            }
+                        }
+                        
+                        parameterValues[i] = builder.Build();
                     }
                     else if (parameters[i].ParameterType == typeof(byte[]))
                     {
@@ -467,7 +495,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                 var serializedData = SerializePacket(package);
 
                 // 加密数据
-                var originalData = new RUINORERP.PacketSpec.Protocol.OriginalData(
+                var originalData = new OriginalData(
                     (byte)package.Command.Category,
                     new byte[] { package.Command.OperationCode },
                     serializedData

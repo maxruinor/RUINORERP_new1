@@ -35,7 +35,7 @@ using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
 using RUINORERP.UI.SuperSocketClient;
 using FastReport.DevComponents.DotNetBar;
-using RUINORERP.PacketSpec.Protocol;
+
 
 namespace RUINORERP.UI.CRM
 {

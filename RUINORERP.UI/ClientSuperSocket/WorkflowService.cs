@@ -1,7 +1,7 @@
 ﻿using RUINORERP.Business.CommService;
 using RUINORERP.PacketSpec.Core.DataProcessing;
 using RUINORERP.PacketSpec.Models;
-using RUINORERP.PacketSpec.Protocol;
+using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.WorkFlow;
 using System;

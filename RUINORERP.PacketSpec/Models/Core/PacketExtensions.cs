@@ -208,7 +208,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>当前数据包实例</returns>
         public static PacketModel WithDataDirect(this PacketModel packet, byte[] data)
         {
-            packet.Data = data;
+            packet.CommandData = data;
             packet.Size = data?.Length ?? 0;
             packet.LastUpdatedTime = DateTime.UtcNow;
             return packet;
@@ -223,11 +223,11 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>数据切片</returns>
         public static byte[] GetDataSlice(this PacketModel packet, int offset, int count)
         {
-            if (packet.Data == null || offset < 0 || count <= 0 || offset + count > packet.Data.Length)
+            if (packet.CommandData == null || offset < 0 || count <= 0 || offset + count > packet.CommandData.Length)
                 return Array.Empty<byte>();
 
             var slice = new byte[count];
-            Buffer.BlockCopy(packet.Data, offset, slice, 0, count);
+            Buffer.BlockCopy(packet.CommandData, offset, slice, 0, count);
             return slice;
         }
 
@@ -238,11 +238,11 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>哈希值</returns>
         public static string ComputeHash(this PacketModel packet)
         {
-            if (packet.Data == null || packet.Data.Length == 0)
+            if (packet.CommandData == null || packet.CommandData.Length == 0)
                 return string.Empty;
 
             using var sha256 = System.Security.Cryptography.SHA256.Create();
-            var hash = sha256.ComputeHash(packet.Data);
+            var hash = sha256.ComputeHash(packet.CommandData);
             return BitConverter.ToString(hash).Replace("-", "").ToLower();
         }
 

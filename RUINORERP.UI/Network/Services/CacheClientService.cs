@@ -56,13 +56,13 @@ namespace RUINORERP.UI.Network.Services
 
         private void RegisterCommandHandlers()
         {
-            _comm.CommandReceived += (commandId, data) =>
+            _comm.CommandReceived += (command, data) =>
             {
-                if (commandId == CacheCommands.CacheDataList)
+                if (command.CommandId == CacheCommands.CacheDataList)
                 {
                     HandleCacheResponse(data);
                 }
-                else if (commandId == CacheCommands.CacheDataSend)
+                else if (command.CommandId == CacheCommands.CacheDataSend)
                 {
                     HandleCacheResponse(data);
                 }

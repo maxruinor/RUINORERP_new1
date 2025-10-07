@@ -58,19 +58,19 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 具体的命令处理逻辑
         /// </summary>
-        protected override async Task<ResponseBase> OnHandleAsync(ICommand command, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                var commandId = command.CommandIdentifier;
+                var commandId = cmd.Command.CommandIdentifier;
 
                 if (commandId == SystemCommands.Heartbeat)
                 {
-                    return await HandleHeartbeatAsync(command, cancellationToken);
+                    return await HandleHeartbeatAsync(cmd.Command, cancellationToken);
                 }
                 else
                 {
-                    return ResponseBase.CreateError($"不支持的命令类型: {command.CommandIdentifier}", 400)
+                    return ResponseBase.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}", 400)
                         .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
                 }
             }

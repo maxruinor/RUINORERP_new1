@@ -5,25 +5,27 @@ using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     public sealed class QueuedCommand
     {
+        public PacketModel Packet { get; set; }
         public ICommand Command { get; set; }
         public TaskCompletionSource<ResponseBase> Tcs { get; set; }
     }
-    
+
     public sealed class PriorityCommandQueue
     {
         private readonly Channel<QueuedCommand>[] _channels = new Channel<QueuedCommand>[3]; // High Normal Low
-        
+
         public PriorityCommandQueue()
         {
             for (int i = 0; i < 3; i++)
                 _channels[i] = Channel.CreateUnbounded<QueuedCommand>();
         }
-        
+
         public ValueTask EnqueueAsync(ICommand cmd, CancellationToken ct = default)
         {
             var q = new QueuedCommand
@@ -31,23 +33,23 @@ namespace RUINORERP.PacketSpec.Commands
                 Command = cmd,
                 Tcs = new TaskCompletionSource<ResponseBase>(TaskCreationOptions.RunContinuationsAsynchronously)
             };
-            
+
             // 根据命令优先级确定应该使用的Channel队列
             int priorityChannel = GetPriorityChannel(cmd.Priority);
             return _channels[priorityChannel].Writer.WriteAsync(q, ct);
         }
-        
+
         public async Task<QueuedCommand> DequeueAsync(CancellationToken ct = default)
         {
             // 优先级轮询：High->Normal->Low
             for (int i = 0; i < 3; i++)
                 if (_channels[i].Reader.TryRead(out var item))
                     return item;
-                    
+
             // 若都无，异步等高优先级
             return await _channels[0].Reader.ReadAsync(ct);
         }
-        
+
         /// <summary>
         /// 根据命令优先级确定应该使用的Channel队列
         /// </summary>

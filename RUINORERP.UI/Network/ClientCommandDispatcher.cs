@@ -232,13 +232,8 @@ namespace RUINORERP.UI.Network
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>API响应结果，默认为成功</returns>
         /// <exception cref="ArgumentNullException">当命令为空时抛出</exception>
-        public Task<ResponseBase> DispatchAsync(ICommand command, CancellationToken cancellationToken = default)
+        public Task<ResponseBase> DispatchAsync(PacketModel packetModel, ICommand command, CancellationToken cancellationToken = default)
         {
-            if (command == null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-            
             // 客户端命令分发逻辑
             // 在实际应用中，这里应该将命令发送到服务器
             return Task.FromResult(ResponseBase.CreateSuccess("命令分发成功"));

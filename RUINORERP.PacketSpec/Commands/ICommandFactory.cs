@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,7 +44,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令对象</returns>
         Task<ICommand> CreateCommandAsync(PacketModel packet, CancellationToken cancellationToken = default);
-      
+
     }
 
     /// <summary>
@@ -84,6 +84,9 @@ namespace RUINORERP.PacketSpec.Commands
 
             try
             {
+
+                var comm = packet.GetJsonData<BaseCommand>();
+
                 // 获取命令ID
                 uint commandId = (uint)packet.CommandId;
 
@@ -151,7 +154,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-       
+
         /// <summary>
         /// 异步从统一数据包创建命令
         /// </summary>
@@ -164,7 +167,7 @@ namespace RUINORERP.PacketSpec.Commands
             return await Task.Run(() => CreateCommand(packet), cancellationToken);
         }
 
-     
+
         /// <summary>
         /// 注册命令创建器
         /// </summary>
@@ -193,6 +196,7 @@ namespace RUINORERP.PacketSpec.Commands
             // 如果命令是BaseCommand类型，设置更多属性
             if (command is BaseCommand baseCommand)
             {
+                packet.GetJsonData<BaseCommand>();
                 baseCommand.TimestampUtc = packet.TimestampUtc;
                 baseCommand.CreatedTimeUtc = packet.CreatedTimeUtc;
             }
@@ -223,13 +227,13 @@ namespace RUINORERP.PacketSpec.Commands
                 // Cmd表示CommandCategory，One表示OperationCode子指令
                 CommandCategory category = (CommandCategory)originalData.Cmd;
                 byte operationCode = 0; // 默认OperationCode
-                
+
                 // 如果One不为空，则使用第一个字节作为OperationCode
                 if (originalData.One != null && originalData.One.Length > 0)
                 {
                     operationCode = originalData.One[0];
                 }
-                
+
                 packet.CommandId = new CommandId(category, operationCode);
 
                 return packet;

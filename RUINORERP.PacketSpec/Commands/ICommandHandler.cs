@@ -48,14 +48,14 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        Task<ResponseBase> HandleAsync(ICommand command, CancellationToken cancellationToken = default);
+        Task<ResponseBase> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 判断是否可以处理该命令
         /// </summary>
         /// <param name="command">命令对象</param>
         /// <returns>是否可以处理</returns>
-        bool CanHandle(ICommand command);
+        bool CanHandle(QueuedCommand cmd);
 
         /// <summary>
         /// 处理器初始化

@@ -18,7 +18,7 @@ namespace RUINORERP.PacketSpec.Core
         /// </summary>
         /// <param name="cmd">命令ID</param>
         /// <returns>格式化的请求ID</returns>
-        public static string NewRequestId(CommandId cmd) => 
+        public static string GenerateRequestId(CommandId cmd) => 
             $"{cmd.Name}_{DateTime.UtcNow:HHmmssfff}_{Ulid.NewUlid()}";
 
         /// <summary>

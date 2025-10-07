@@ -23,7 +23,7 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 
 namespace RUINORERP.PacketSpec.Commands
 {
-    public abstract class BaseCommand<TRequest, TResponse> : BaseCommand where TRequest : class, IRequest where TResponse : class, IResponse
+    public class BaseCommand<TRequest, TResponse> : BaseCommand where TRequest : class, IRequest where TResponse : class, IResponse
     {
         /// <summary>
         /// 构造函数
@@ -54,11 +54,25 @@ namespace RUINORERP.PacketSpec.Commands
         /// 构造函数 - 支持依赖注入
         /// </summary>
         /// <param name="tokenManager">Token管理器</param>
+        /// <param name="request">请求数据</param>
         /// <param name="direction">命令方向</param>
         /// <param name="logger">日志记录器</param>
-        protected BaseCommand(TokenManager tokenManager, PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
+        protected BaseCommand(TokenManager tokenManager, IRequest request = null, PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
             : base(tokenManager, direction, logger)
         {
+        }
+
+        /// <summary>
+        /// 构造函数 - 用于快速创建命令
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="request">请求数据</param>
+        /// <param name="direction">命令方向</param>
+        public BaseCommand(CommandId commandId, TRequest request, PacketDirection direction = PacketDirection.ClientToServer)
+            : base(direction)
+        {
+            CommandIdentifier = commandId;
+            Request = request;
         }
 
         private CommandDataContainer<TRequest> _requestContainer;
@@ -114,11 +128,11 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 命令基类 - 提供命令的通用实现
     /// </summary>
-    public abstract class BaseCommand : ICommand
+    public class BaseCommand : ICommand
     {
         public CommandExecutionContext ExecutionContext { get; set; }
 
-        public IRequest Request { get; set; }
+        public RequestBase Request { get; set; }
         protected virtual object GetSerializableDataCore() { return null; }
         // 新增智能访问方法
         public byte[] GetBinaryData()

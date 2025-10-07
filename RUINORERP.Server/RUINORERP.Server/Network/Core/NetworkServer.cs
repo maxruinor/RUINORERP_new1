@@ -178,6 +178,9 @@ namespace RUINORERP.Server.Network.Core
                        // 会话连接
                        LogInfo($"客户端连接: {session.SessionID} from {session.RemoteEndPoint}");
                        await _sessionManager.AddSessionAsync(session);
+                       //回应客户端 发回SessionID放到包头？
+                     //  session.SendAsync()
+
                    }, async (session, reason) =>
                    {
                        // 会话断开
@@ -309,75 +312,9 @@ namespace RUINORERP.Server.Network.Core
             }
         }
 
-        /// <summary>
-        /// 广播消息到所有客户端
-        /// </summary>
-        public async Task<int> BroadcastAsync<T>(uint command, T data)
-        {
-            try
-            {
-                var packet = new PacketModel
-                {
-                    //Command = command,
-                    //SessionId = "SERVER_BROADCAST",
-                    //Direction = PacketDirection.Response,
-                    //Status = PacketStatus.Completed,
-                    PacketId = GeneratePacketId()
-                };
+     
 
-                // 设置数据包数据
-                if (data != null)
-                {
-                    packet.Extensions["Data"] = data;
-                }
-
-                return await _sessionManager.BroadcastMessageAsync(packet);
-            }
-            catch (Exception ex)
-            {
-                LogError($"广播消息失败: {ex.Message}", ex);
-                return 0;
-            }
-        }
-
-        /// <summary>
-        /// 发送消息到指定客户端
-        /// </summary>
-        //public async Task<bool> SendToClientAsync<T>(string sessionId, uint command, T data)
-        //{
-        //    try
-        //    {
-        //        var packet = new PacketModel
-        //        {
-        //            //Command = command,
-        //            //SessionId = sessionId,
-        //            //Direction = PacketDirection.Response,
-        //            //Status = PacketStatus.Completed,
-        //            PacketId = GeneratePacketId()
-        //        };
-
-        //        // 设置数据包数据
-        //        if (data != null)
-        //        {
-        //            packet.Extensions["Data"] = data;
-        //        }
-
-        //        return await _sessionManager.SendPacketAsync(sessionId, packet);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        LogError($"发送消息到客户端失败: SessionId={sessionId}, 错误: {ex.Message}", ex);
-        //        return false;
-        //    }
-        //}
-
-        /// <summary>
-        /// 生成唯一的数据包ID
-        /// </summary>
-        private string GeneratePacketId()
-        {
-            return $"PKT_{Guid.NewGuid().ToString().Substring(0, 10)}_{DateTime.Now.Ticks.ToString().Substring(8)}";
-        }
+ 
 
         private void LogInfo(string message)
         {

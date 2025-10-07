@@ -30,7 +30,7 @@ namespace RUINORERP.UI.Network
             _client = new EasyClient<BizPackageInfo>();
             _client.Initialize(new BizPipelineFilter());
             _logger = logger;
-            if (ClientIP==null)
+            if (ClientIP == null)
             {
                 ClientIP = GetClientIp();
             }
@@ -70,8 +70,9 @@ namespace RUINORERP.UI.Network
 
         public string ClientID { get; set; }
 
-        public string ClientIP { get; set; } 
+        public string ClientIP { get; set; }
 
+        public string SessionID { get; set; }
         /// <summary>
         /// 连接状态
         /// </summary>
@@ -206,6 +207,14 @@ namespace RUINORERP.UI.Network
         /// </summary>
         private void OnPackageReceived(object sender, PackageEventArgs<BizPackageInfo> e)
         {
+            if (string.IsNullOrEmpty(SessionID))
+            {
+                if (!string.IsNullOrEmpty(e.Package.Packet.SessionId))
+                {
+                    SessionID = e.Package.Packet.SessionId;
+                }
+            }
+
             if (e.Package?.Packet != null)
             {
                 Received?.Invoke(e.Package.Packet);

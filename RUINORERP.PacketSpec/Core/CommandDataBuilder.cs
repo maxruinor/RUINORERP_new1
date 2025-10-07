@@ -24,9 +24,9 @@ namespace RUINORERP.PacketSpec.Core
             where TRequest : class, IRequest
             where TResponse : class, IResponse
         {
-            var command = new GenericCommand<TRequest, TResponse>(commandId, request);
+            var command = new BaseCommand<TRequest, TResponse>(commandId, request);
             config?.Invoke(command);
-            
+            request.RequestId = IdGenerator.GenerateRequestId(commandId);
             // 自动设置常用属性
             command.TimeoutMs = command.TimeoutMs > 0 ? command.TimeoutMs : 30000;
             command.UpdateTimestamp();

@@ -205,6 +205,7 @@
     <Folder Include="Cache\" />
     <Folder Include="Network\CoreServices\" />
     <Folder Include="Network\Documentation\" />
+    <Folder Include="Network\Testing\" />
     <Folder Include="SuperSocketServices\Commands\Legacy\" />
     <Folder Include="SuperSocketServices\Commands\System\" />
     <Folder Include="SuperSocketServices\Documentation\" />

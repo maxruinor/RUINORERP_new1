@@ -19,7 +19,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net.Sockets;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.PacketSpec.Commands.Handlers;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands.Cache;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -30,6 +29,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Concurrent;
 using RUINORERP.PacketSpec.Models.Core;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO.Packaging;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -95,22 +95,6 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         public override int Priority => 100;
 
-        /// <summary>
-        /// 判断是否可以处理指定命令
-        /// </summary>
-        public override bool CanHandle(ICommand command)
-        {
-            return command is LoginCommand ||
-                   command.CommandIdentifier == AuthenticationCommands.Login ||
-                   command.CommandIdentifier == AuthenticationCommands.LoginRequest ||
-                   command.CommandIdentifier == AuthenticationCommands.Logout ||
-                   command.CommandIdentifier == AuthenticationCommands.ValidateToken ||
-                   command.CommandIdentifier == AuthenticationCommands.RefreshToken;
-        }
-
-
-
-
 
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数
@@ -119,30 +103,29 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<ResponseBase> OnHandleAsync(ICommand command, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                var commandId = command.CommandIdentifier;
+                var commandId = cmd.Command.CommandIdentifier;
 
                 // 使用统一的数据提取方式
-                var context = GetCommandContext(command);
+                var context = GetCommandContext (cmd.Command);
                 var sessionId = context.SessionId;
-
-                LogInfo($"处理命令: {commandId} [会话: {sessionId}]");
+              
 
                 if (commandId == AuthenticationCommands.Login || commandId == AuthenticationCommands.LoginRequest)
                 {
                     // 支持多种命令类型
-                    if (command is LoginCommand loginCommand)
+                    if (cmd.Command is LoginCommand loginCommand)
                     {
                         return await HandleLoginAsync(loginCommand, cancellationToken);
                     }
-                    else if (command is BaseCommand<LoginRequest, LoginResponse> typedCommand)
+                    else if (cmd.Command is BaseCommand<LoginRequest, LoginResponse> typedCommand)
                     {
                         return await HandleTypedLoginAsync(typedCommand, cancellationToken);
                     }
-                    else if (command is GenericCommand<LoginRequest> genericCommand)
+                    else if (cmd.Command is GenericCommand<LoginRequest> genericCommand)
                     {
                         return await HandleGenericLoginAsync(genericCommand, cancellationToken);
                     }
@@ -153,30 +136,30 @@ namespace RUINORERP.Server.Network.Commands
                 }
                 else if (commandId == AuthenticationCommands.Logout)
                 {
-                    return await HandleLogoutAsync(command, cancellationToken);
+                    return await HandleLogoutAsync(cmd.Command, cancellationToken);
                 }
                 else if (commandId == AuthenticationCommands.ValidateToken)
                 {
-                    return await HandleTokenValidationAsync(command, cancellationToken);
+                    return await HandleTokenValidationAsync(cmd.Command, cancellationToken);
                 }
                 else if (commandId == AuthenticationCommands.RefreshToken)
                 {
-                    return await HandleTokenRefreshAsync(command, cancellationToken);
+                    return await HandleTokenRefreshAsync(cmd.Command, cancellationToken);
                 }
                 else if (commandId == AuthenticationCommands.PrepareLogin)
                 {
-                    return await HandlePrepareLoginAsync(command, cancellationToken);
+                    return await HandlePrepareLoginAsync(cmd.Command, cancellationToken);
                 }
                 else
                 {
-                    var errorResponse = ResponseBase.CreateError($"不支持的命令类型: {command.CommandIdentifier}", 400)
+                    var errorResponse = ResponseBase.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}", 400)
                         .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
                     return ConvertToApiResponse(errorResponse);
                 }
             }
             catch (Exception ex)
             {
-                LogError($"处理命令 {command.CommandIdentifier} 异常: {ex.Message}", ex);
+                LogError($"处理命令 {cmd.Command.CommandIdentifier} 异常: {ex.Message}", ex);
                 return CreateExceptionResponse(ex, "HANDLER_ERROR");
             }
         }
@@ -826,11 +809,15 @@ namespace RUINORERP.Server.Network.Commands
                         var notificationMessage = new OriginalData(
                             (byte)CommandCategory.Authentication,
                             new byte[] { AuthenticationCommands.DuplicateLoginNotification.OperationCode },
-                            System.Text.Encoding.UTF8.GetBytes($"您的账号在其他地方登录，您已被强制下线。")
+                            System.Text.Encoding.UTF8.GetBytes($"您的账号【{username}】在其他地方登录，您已被强制下线。")
                         );
 
+             
+                        var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(notificationMessage);
+                         
+
                         // 发送通知消息
-                        appSession.SendAsync(notificationMessage.ToByteArray());
+                        appSession.SendAsync(encryptedData.ToByteArray());
                     }
                 }
             }

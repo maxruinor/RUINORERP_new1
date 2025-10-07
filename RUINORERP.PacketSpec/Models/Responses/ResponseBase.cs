@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Core;
+﻿using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -83,7 +83,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
 
         public virtual ResponseBase WithRequestId(Commands.CommandId commandId)
         {
-            RequestId = IdGenerator.NewRequestId(commandId);
+            RequestId = IdGenerator.GenerateRequestId(commandId);
             return this;
         }
 

@@ -7,6 +7,7 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Enums.Core;
 using FluentValidation.Results;
+using RUINORERP.PacketSpec.Models.Requests;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -80,7 +81,7 @@ namespace RUINORERP.PacketSpec.Commands
         int TimeoutMs { get; set; }
 
 
-        IRequest Request { get; set; }
+        RequestBase Request { get; set; }
 
 
         /// <summary>

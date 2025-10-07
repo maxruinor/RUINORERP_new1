@@ -141,7 +141,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 var command = packetAdapter.CreateCommand(package.Packet);
                 if (command == null)
                 {
-                    _logger?.LogWarning("无法创建命令对象: CommandId={CommandId}", package.Packet.Command);
+                    _logger?.LogWarning("无法创建命令对象: CommandId={CommandId}", package.Packet.CommandId);
                     await SendErrorResponseAsync(session, package, "CommandNotFound", cancellationToken);
                     return;
                 }
@@ -153,7 +153,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     var setRequest = commandType.GetMethod("SetRequestFromBinary");
                     setRequest?.Invoke(command, new object[] { package.Packet.CommandData });
-                    _logger?.LogDebug("已自动设置命令请求数据: CommandId={CommandId}", package.Packet.Command);
                 }
 
                 // 如果是BaseCommand且包含AuthToken，则自动提取并设置到执行上下文
@@ -166,15 +165,38 @@ namespace RUINORERP.Server.Network.SuperSocket
                     }
                     // 设置Token
                     baseCommand.ExecutionContext.Token = baseCommand.AuthToken;
-                    _logger?.LogDebug("已从BaseCommand提取并设置Token: CommandId={CommandId}", package.Packet.Command);
                 }
 
-                // 记录命令执行开始的日志
-                _logger?.LogDebug("开始执行命令: CommandId={CommandId}, Type={TypeName}",
-                    package.Packet.Command, command.GetType().FullName);
+            
 
-                // 通过现有的命令调度器处理命令
-                var result = await _commandDispatcher.DispatchAsync(command, cancellationToken);
+                // 通过现有的命令调度器处理命令，添加超时保护
+                ResponseBase result;
+                try
+                {
+                    // 使用链接的取消令牌，考虑命令超时设置
+                    var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                    // 如果命令有设置超时时间，则使用命令的超时时间，否则使用默认30秒
+                    var timeout = command.TimeoutMs > 0 ? TimeSpan.FromMilliseconds(command.TimeoutMs) : TimeSpan.FromSeconds(30);
+                    linkedCts.CancelAfter(timeout);
+
+                    result = await _commandDispatcher.DispatchAsync(package.Packet, command, linkedCts.Token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    _logger?.LogError(ex, "命令执行超时或被取消: CommandId={CommandId}", package.Packet.CommandId);
+                    result = ResponseBase.CreateError("命令执行超时，请稍后重试", 504);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "命令执行异常: CommandId={CommandId}", package.Packet.CommandId);
+                    result = ResponseBase.CreateError($"命令执行异常: {ex.Message}", 500);
+                }
+                if (result == null)
+                {
+                    result = ResponseBase.CreateError($"命令执行结果为空", 500);
+                }
+
                 if (!result.IsSuccess)
                 {
                     _logger?.LogDebug($"命令执行完成:{result.Message}, Success={result.IsSuccess}");
@@ -183,11 +205,11 @@ namespace RUINORERP.Server.Network.SuperSocket
 
                 // 记录命令执行完成的日志
                 _logger?.LogDebug("命令执行完成: CommandId={CommandId}, Success={Success}",
-                    package.Packet.Command, result?.IsSuccess ?? false);
+                    package.Packet.CommandId, result?.IsSuccess ?? false);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理SuperSocket命令时发生异常: CommandId={CommandId}", package.Packet.Command);
+                _logger?.LogError(ex, "处理SuperSocket命令时发生异常: CommandId={CommandId}", package.Packet.CommandId);
                 // 发送错误响应给客户端
                 await SendErrorResponseAsync(session, package, "UnhandledException", cancellationToken);
             }
@@ -431,7 +453,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             var response = new PacketModel
             {
                 PacketId = GenerateResponseId(requestPackage.Packet.PacketId),
-                Command = requestPackage.Packet.Command,
                 Direction = requestPackage.Packet.Direction == PacketDirection.Request ? PacketDirection.Response : requestPackage.Packet.Direction,
                 SessionId = requestPackage.Packet.SessionId,
                 Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error,
@@ -497,17 +518,17 @@ namespace RUINORERP.Server.Network.SuperSocket
                 if (session == null)
                 {
                     _logger?.LogWarning("尝试发送响应到空会话: PacketId={PacketId}, CommandId={CommandId}",
-                        package.PacketId, package.Command);
+                        package.PacketId, package.CommandId);
                     return;
                 }
-
+                package.SessionId = session.SessionID;
                 // 使用统一的序列化方法
                 var serializedData = SerializePacket(package);
 
                 // 加密数据
                 var originalData = new OriginalData(
-                    (byte)package.Command.CommandIdentifier.Category,
-                    new byte[] { package.Command.CommandIdentifier.OperationCode },
+                    (byte)package.CommandId.Category,
+                    new byte[] { package.CommandId.OperationCode },
                     serializedData
                 );
                 var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
@@ -558,7 +579,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             var errorResponse = new PacketModel
             {
                 PacketId = GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
-                Command = requestPackage.Packet?.Command ?? default(ICommand),
                 Direction = PacketDirection.Response,
                 SessionId = requestPackage.Packet?.SessionId,
                 Status = PacketStatus.Error,

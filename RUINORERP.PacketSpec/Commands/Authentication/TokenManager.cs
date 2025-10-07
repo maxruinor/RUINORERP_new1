@@ -92,6 +92,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// <summary>
         /// 刷新Token - 简化版Token刷新实现
         /// 验证当前Token并生成新的Token对
+        /// 服务器端使用
         /// </summary>
         /// <param name="refreshToken">刷新Token</param>
         /// <param name="currentAccessToken">当前访问Token</param>

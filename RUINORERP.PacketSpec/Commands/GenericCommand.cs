@@ -27,44 +27,11 @@ namespace RUINORERP.PacketSpec.Commands
             Direction = PacketDirection.ClientToServer;
         }
         
-        public GenericCommand<TRequest, TResponse> AsTypedCommand<TRequest, TResponse>()
-            where TRequest : class, IRequest
-            where TResponse : class, IResponse
-        {
-            if (Payload is TRequest request)
-            {
-                return new GenericCommand<TRequest, TResponse>(CommandIdentifier, request)
-                {
-                    TimeoutMs = this.TimeoutMs,
-                    Priority = this.Priority,
-                    Direction = this.Direction
-                };
-            }
-            throw new InvalidCastException($"Payload无法转换为{typeof(TRequest).Name}");
-        }
-        
+       
         public override object GetSerializableData() => Payload;
         
        
     }
     
-    // 强类型泛型命令
-    [PacketCommand("GenericTypedCmd", CommandCategory.System)]
-    public class GenericCommand<TRequest, TResponse> : BaseCommand<TRequest, TResponse>
-        where TRequest : class, IRequest
-        where TResponse : class, IResponse
-    {
-        public GenericCommand() : base()
-        {
-        }
-        
-        public GenericCommand(CommandId id, TRequest request) : base()
-        {
-            CommandIdentifier = id;
-            Request = request;
-            Direction = PacketDirection.ClientToServer;
-        }
-        
-      
-    }
+  
 }

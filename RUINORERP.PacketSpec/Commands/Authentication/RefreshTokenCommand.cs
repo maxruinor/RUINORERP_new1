@@ -16,7 +16,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     /// 服务端自动管理Token状态，客户端无需传递Token信息
     /// </summary>
     [PacketCommand("RefreshToken", CommandCategory.Authentication)]
-    public class RefreshTokenCommand : BaseCommand<TokenRefreshRequest, LoginResponse>
+    public class RefreshTokenCommand<SimpleRequest, LoginRequest> : BaseCommand<TokenRefreshRequest, LoginResponse>
     {
         /// <summary>
         /// 刷新请求数据（简化版，无需传递Token）

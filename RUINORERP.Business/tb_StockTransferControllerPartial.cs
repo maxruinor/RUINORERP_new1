@@ -90,6 +90,7 @@ namespace RUINORERP.Business
                     invUpdateListFrom.Add(invFrom);
 
                     #endregion
+#warning 将来要更新。增加单据调拨费用，如运费杂费 入仓费，调拨的额外成本，如运费、装卸费， 出仓不管成本。入库类似采购一样算成本
 
                     #region 库存表的更新  调入时不考虑成本价格,如果初次入库时则使用调出时的成本。
                     //标记是否有期初

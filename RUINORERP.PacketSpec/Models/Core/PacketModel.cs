@@ -21,14 +21,16 @@ namespace RUINORERP.PacketSpec.Models.Core
     [Serializable]
     public class PacketModel 
     {
-        // 传输的指令数据里面有请求数据或响应数据
+
+        /// <summary>
+        /// 保存指令实体数据
+        /// </summary>
         public byte[] CommandData { get; set; }
 
         // 简单的命令标识（不包含业务逻辑）
         //命令类型
         public CommandId CommandId { get; set; }
 
-        public ICommand Command { get; set; }
         /// <summary>
         /// 数据包状态
         /// </summary>

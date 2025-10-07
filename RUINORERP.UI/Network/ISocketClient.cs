@@ -16,6 +16,8 @@ namespace RUINORERP.UI.Network
 
         string ClientIP { get; set; }
 
+        string SessionID { get; set; }
+
         /// <summary>
         /// 连接状态
         /// </summary>

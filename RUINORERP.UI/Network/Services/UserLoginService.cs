@@ -10,7 +10,6 @@ using SourceLibrary.Security;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -40,7 +39,7 @@ namespace RUINORERP.UI.Network.Services
             _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
             _log = logger;
 
-            _silentTokenRefresher = new SilentTokenRefresher(new TokenRefreshService(communicationService));
+            _silentTokenRefresher = new SilentTokenRefresher(new TokenRefreshService(communicationService, _tokenManager));
 
             // 订阅静默刷新事件
             _silentTokenRefresher.RefreshSucceeded += OnRefreshSucceeded;
@@ -60,20 +59,21 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                var loginRequest = new LoginRequest
-                {
-                    Username = username,
-                    Password = password,
-                };
+                var loginRequest = LoginRequest.Create(username, password);
+
                 LoginCommand loginCommand = new LoginCommand(username, password);
                 loginCommand.Request = loginRequest;
+                loginCommand.Request.RequestId = IdGenerator.GenerateRequestId(loginCommand.CommandIdentifier);
+                loginCommand.ExecutionContext = new CommandExecutionContext();
+                loginCommand.ExecutionContext.RequestId = loginCommand.Request.RequestId;
+
                 var response = await _communicationService.SendCommandAsync<LoginRequest, LoginResponse>(
                     loginCommand, ct);
 
                 // 登录成功后设置token - 使用简化版TokenManager
                 if (response != null && !string.IsNullOrEmpty(response.AccessToken))
                 {
-            #warning 登陆成功后 得到token 返回
+#warning 登陆成功后 得到token 返回
                     //_tokenManager.TokenStorage.SetTokenAsync(response.AccessToken, response.RefreshToken, response.ExpiresIn);
                     // 不再手动 Start，由全局 HeartbeatManager 统一刷新
                 }
@@ -103,19 +103,27 @@ namespace RUINORERP.UI.Network.Services
                     return false;
                 }
 
-                BaseCommand baseCommand = CommandDataBuilder.BuildBaseCommand(AuthenticationCommands.Logout);
+                // 创建登出请求
+                var request = SimpleRequest.CreateBool(true);
 
-                var result = await _communicationService.SendCommandAsync<bool, bool>(
+              
+
+                var baseCommand = CommandDataBuilder.BuildCommand<SimpleRequest, SimpleResponse>(AuthenticationCommands.Logout, request);
+                baseCommand.Request = request;
+                var response = await _communicationService.SendCommandAsync<SimpleRequest, SimpleResponse>(
                     baseCommand, ct);
 
-                if (result)
+                // 检查响应是否成功
+                bool isSuccess = response != null && response.IsSuccess;
+
+                if (isSuccess)
                 {
                     // 登出成功后清除令牌并停止静默刷新 - 使用简化版TokenManager
                     await _tokenManager.TokenStorage.ClearTokenAsync();
                     _log?.LogInformation("用户登出成功");
                 }
 
-                return result;
+                return isSuccess;
             }
             catch (Exception ex)
             {
@@ -126,41 +134,7 @@ namespace RUINORERP.UI.Network.Services
 
 
 
-        /// <summary>
-        /// 刷新Token - 使用简化版TokenManager
-        /// </summary>
-        /// <param name="refreshToken">刷新令牌（已废弃，由服务端管理）</param>
-        /// <param name="currentToken">当前访问令牌（已废弃，由服务端管理）</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>刷新响应</returns>
-        public async Task<LoginResponse> RefreshTokenAsync(CancellationToken ct = default)
-        {
-            try
-            {
-                var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
-                if (tokenInfo == null || string.IsNullOrEmpty(tokenInfo.RefreshToken))
-                    throw new Exception("没有可用的刷新令牌");
-
-                var newToken = await _tokenManager.RefreshTokenAsync(tokenInfo.RefreshToken, tokenInfo.AccessToken);
-                if (newToken.Success)
-                {
-                    return new LoginResponse
-                    {
-                        AccessToken = newToken.AccessToken,
-                        TokenType = "Bearer",
-                        IsSuccess = true
-                    };
-                }
-
-                throw new Exception($"Token刷新失败: {newToken.ErrorMessage}");
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Token刷新失败: {ex.Message}", ex);
-            }
-        }
-
-
+  
 
         /// <summary>
         /// 获取当前访问令牌 - 使用简化版TokenManager

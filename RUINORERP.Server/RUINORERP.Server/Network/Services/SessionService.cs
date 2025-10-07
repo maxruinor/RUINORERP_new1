@@ -20,7 +20,6 @@ namespace RUINORERP.Server.Network.Services
 {
     /// <summary>
     /// ✅ [统一架构] 统一会话管理器 - 整合SuperSocket和Network会话管理功能
-    /// 合并了原有的SessionManager和SuperSocket SessionManager功能
     /// 提供完整的会话生命周期管理、事件机制、统计监控和SuperSocket集成
     /// 会话管理行为严格基于SuperSocket连接和断开事件实现
     /// </summary>
@@ -575,59 +574,7 @@ namespace RUINORERP.Server.Network.Services
             return appSession;
         }
 
-        /// <summary>
-        /// 广播消息到所有活动会话
-        /// </summary>
-        /// <param name="message">消息内容</param>
-        /// <returns>成功发送的会话数量</returns>
-        public async Task<int> BroadcastMessageAsync(object message)
-        {
-            try
-            {
-                var activeSessions = _sessions.Values
-                    .Where(s => s.IsConnected)
-                    .ToList();
-
-                if (activeSessions.Count == 0)
-                {
-                    _logger.LogInformation("没有活动会话，跳过广播");
-                    return 0;
-                }
-
-                var successCount = 0;
-                var tasks = new List<Task>();
-
-                foreach (var sessionInfo in activeSessions)
-                {
-                    var appSession = GetAppSession(sessionInfo.SessionID);
-                    if (appSession != null)
-                    {
-                        tasks.Add(Task.Run(async () =>
-                        {
-                            try
-                            {
-                                await SendMessageToSession(appSession, message);
-                                Interlocked.Increment(ref successCount);
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex, $"向会话 {sessionInfo.SessionID} 发送消息时出错");
-                            }
-                        }));
-                    }
-                }
-
-                await Task.WhenAll(tasks);
-                _logger.LogInformation($"消息广播完成: 目标会话={activeSessions.Count}, 成功发送={successCount}");
-
-                return successCount;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "广播消息时出错");
-                return 0;
-            }
-        }
+ 
 
         /// <summary>
         /// 更新会话活动时间
@@ -774,37 +721,7 @@ namespace RUINORERP.Server.Network.Services
         #endregion
 
         #region 私有方法
-
-        /// <summary>
-        /// 向指定会话发送消息
-        /// </summary>
-        /// <param name="session">会话</param>
-        /// <param name="message">消息</param>
-        /// <returns>发送任务</returns>
-        private async Task SendMessageToSession(IAppSession session, object message)
-        {
-            try
-            {
-                // 这里应该根据实际的消息格式和发送逻辑实现
-                // 暂时使用JSON序列化
-                var jsonMessage = Newtonsoft.Json.JsonConvert.SerializeObject(message);
-                var messageBytes = System.Text.Encoding.UTF8.GetBytes(jsonMessage);
-
-                await session.SendAsync(messageBytes);
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
-            {
-                // 处理管道写入器已完成的特定异常
-                _logger.LogWarning(ex, $"管道写入器已完成，无法发送消息到会话: SessionID={session.SessionID}");
-                // 忽略此异常，因为会话可能已经关闭
-                // 不向上抛出异常，避免级联错误
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"发送消息到会话时出错: SessionID={session.SessionID}");
-                throw;
-            }
-        }
+ 
 
         /// <summary>
         /// 清理回调

@@ -9,7 +9,7 @@ using RUINORERP.Server.Network.Models;
 
 namespace RUINORERP.Server.SuperSocketServices
 {
-
+    [Obsolete]
     public class SuperSocketServerSession
     {
         private readonly ILogger<SuperSocketServerSession> _logger;

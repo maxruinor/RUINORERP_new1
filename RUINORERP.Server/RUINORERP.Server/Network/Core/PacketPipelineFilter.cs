@@ -109,8 +109,9 @@ namespace RUINORERP.Server.Network.Core
 
                 if (packet.IsValid())
                 {
+                  
                     //为了方便调试把心跳判断一下
-                    if (packet.Command.CommandIdentifier.Category == PacketSpec.Commands.CommandCategory.System && packet.Command.CommandIdentifier.FullCode == SystemCommands.Heartbeat)
+                    if (packet.CommandId.Category == PacketSpec.Commands.CommandCategory.System && packet.CommandId.FullCode == SystemCommands.Heartbeat)
                     {
 
                     }

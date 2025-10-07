@@ -176,8 +176,17 @@ namespace RUINORERP.PacketSpec.Commands
                             {
                                 try
                                 {
-                                    var result = await ProcessAsync(queued.Command, cancellationToken);
-                                    queued.Tcs.TrySetResult(result);
+                                    // 使用独立的取消令牌处理每个命令，避免一个命令的超时影响其他命令
+                                    using (var commandCts = new CancellationTokenSource(TimeSpan.FromMinutes(5)))
+                                    {
+                                        var result = await ProcessAsync(queued, commandCts.Token);
+                                        queued.Tcs.TrySetResult(result);
+                                    }
+                                }
+                                catch (OperationCanceledException ex)
+                                {
+                                    LogWarning($"后台消费者线程处理命令超时或被取消: {queued.Command.CommandIdentifier}");
+                                    queued.Tcs.TrySetException(new TimeoutException($"命令处理超时: {ex.Message}"));
                                 }
                                 catch (Exception ex)
                                 {
@@ -205,34 +214,53 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        public async Task<ResponseBase> DispatchAsync(ICommand command, CancellationToken cancellationToken = default)
+        public async Task<ResponseBase> DispatchAsync(PacketModel packet,ICommand command, CancellationToken cancellationToken = default)
         {
-            if (command == null)
-            {
-                return ResponseBase.CreateError("命令对象不能为空", 400);
-            }
+ 
 
             if (!_isInitialized)
             {
-                return ResponseBase.CreateError("调度器未初始化", 500);
+                LogError("命令调度器未初始化");
+                return ResponseBase.CreateError("命令调度器未初始化", 500);
             }
-
+            
             // 确定命令优先级
-            int priorityChannel = GetPriorityChannel(command.Priority);
+            var channel = GetPriorityChannel(command.Priority);
 
-            // 创建一个TaskCompletionSource来等待处理结果
-            var tcs = new TaskCompletionSource<ResponseBase>();
+            // 创建任务完成源
+            var tcs = new TaskCompletionSource<ResponseBase>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            // 创建排队命令对象
-            var queuedCommand = new QueuedCommand
+            // 创建队列项
+            var queued = new QueuedCommand
             {
+                Packet=packet,
                 Command = command,
-                Tcs = tcs
+                Tcs = tcs,
             };
 
-            // 将命令加入对应优先级的Channel队列
-            await _commandChannels[priorityChannel].Writer.WriteAsync(queuedCommand, cancellationToken);
+            try
+            {
+                // 将命令加入队列，添加超时保护
+                using (var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                {
+                    // 设置队列写入超时，避免无限等待
+                    var queueTimeout = TimeSpan.FromSeconds(10);
+                    timeoutCts.CancelAfter(queueTimeout);
+                    await _commandChannels[channel].Writer.WriteAsync(queued, timeoutCts.Token);
+                }
+            }
+            catch (OperationCanceledException ex)
+            {
+                LogWarning($"命令加入队列超时或被取消: {command.CommandIdentifier}, 异常: {ex.Message}");
+                tcs.TrySetException(new TimeoutException($"命令排队超时，请稍后重试: {ex.Message}"));
+            }
+            catch (Exception ex)
+            {
+                LogError($"将命令加入队列时发生异常: {command.CommandIdentifier}", ex);
+                tcs.TrySetException(ex);
+            }
 
+            // 等待结果
             return await tcs.Task;
         }
 
@@ -258,133 +286,132 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cmd">命令对象</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<ResponseBase> ProcessAsync(ICommand cmd, CancellationToken ct)
+        private async Task<ResponseBase> ProcessAsync(QueuedCommand cmd, CancellationToken ct)
         {
-            // 检查幂等性
-
-            if (cmd.CommandIdentifier != 0)
+            if (cmd == null)
             {
-                if (_idempotent.TryGetCached(cmd.CommandIdentifier.ToString(), out var cached))
-                {
-                    return cached;
-                }
+                return ResponseBase.CreateError("命令对象不能为空", 400);
             }
 
-            var startTime = DateTime.Now;
-            var commandIdentifier = cmd.CommandIdentifier;
-
-            ResponseBase result = null;
-            try
+            if (!_isInitialized)
             {
-                // 记录命令历史
-                _commandHistory.TryAdd(commandIdentifier.FullCode, startTime);
+                return ResponseBase.CreateError("调度器未初始化", 500);
+            }
 
-                LogDebug($"开始分发命令: {cmd.CommandIdentifier} [ID: {commandIdentifier.FullCode}]");
-
-                // 查找合适的处理器和命令类型
-                var handlerCollection = FindHandlers(cmd);
-                var handlers = handlerCollection.Handlers;
-
-                if (handlers == null || !handlers.Any())
-                {
-                    // 没有找到专门的处理器，使用回退处理器
-                    LogDebug($"没有找到适合的处理器，使用回退处理器处理命令: {cmd.CommandIdentifier}");
-                    
-                    // 获取或初始化回退处理器
-                    var fallbackHandler = GetFallbackHandler();
-                    if (fallbackHandler != null)
-                    {
-                        try
-                        {
-                            // 使用熔断器执行回退处理器
-                            result = await _circuit.ExecuteAsync(() => fallbackHandler.HandleAsync(cmd, ct));
-                            
-                            // 设置执行时间
-                            if (result != null)
-                            {
-                                result.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                            }
-                            
-                            LogDebug($"回退处理器完成命令处理: {cmd.CommandIdentifier} - {result?.ExecutionTimeMs}ms");
-                            
-                            return result;
-                        }
-                        catch (Exception ex)
-                        {
-                            LogError($"回退处理器处理命令时发生异常: {cmd.CommandIdentifier}", ex);
-                            result = ResponseBase.CreateError($"回退处理器异常: {ex.Message}", 500);
-                            return result;
-                        }
-                    }
-                    
-                    // 如果回退处理器也不可用，返回原始的404错误
-                    result = ResponseBase.CreateError(
-                        $"没有找到适合的处理器处理命令: {cmd.CommandIdentifier}", 404);
-                    return result;
-                }
-
-                // 选择最佳处理器
-                var bestHandler = SelectBestHandler(handlers, cmd);
-                if (bestHandler == null)
-                {
-                    result = ResponseBase.CreateError(
-                        $"无法选择合适的处理器处理命令: {cmd.CommandIdentifier}", 500);
-                    return result;
-                }
-
-                LogDebug($"选择处理器: {bestHandler.Name} 处理命令: {cmd.CommandIdentifier}");
-
-                // 使用熔断器执行处理逻辑
+            // 创建链接的取消令牌，处理命令超时
+            using (var linkedCts = CreateLinkedCancellationToken(ct, cmd.Command))
+            {
+                ResponseBase response = null;
                 try
                 {
-                    result = await _circuit.ExecuteAsync(() => bestHandler.HandleAsync(cmd, ct));
-                }
-                catch (Polly.CircuitBreaker.BrokenCircuitException ex)
-                {
-                    // 熔断器已打开，记录详细信息并返回适当的错误
-                    LogWarning($"命令 {cmd.CommandIdentifier} [ID: {commandIdentifier.FullCode}] 的熔断器已打开，拒绝执行: {ex.Message}");
-                    result = ResponseBase.CreateError($"服务暂时不可用，熔断器已打开: {ex.Message}", 503);
+                    // 幂等性检查
+                    if (cmd.Command.CommandIdentifier != 0)
+                    {
+                        if (_idempotent.TryGetCached(cmd.Command.CommandIdentifier.ToString(), out var cached))
+                        {
+                            return cached;
+                        }
+                    }
+
+                    var startTime = DateTime.Now;
+                    var commandIdentifier = cmd.Command.CommandIdentifier;
+
+                    // 记录命令历史
+                    _commandHistory.TryAdd(commandIdentifier.FullCode, startTime);
+
+                    // 查找合适的处理器和命令类型
+                    var handlerCollection = FindHandlers(cmd);
+                    var handlers = handlerCollection.Handlers;
+
+                    if (handlers == null || !handlers.Any())
+                    {
+                        
+                        // 获取或初始化回退处理器
+                        var fallbackHandler = GetFallbackHandler();
+                        if (fallbackHandler != null)
+                        {
+                            try
+                            {
+                                // 使用熔断器执行回退处理器
+                                 response = await _circuit.ExecuteAsync(() => fallbackHandler.HandleAsync(cmd, linkedCts.Token));
+                                
+                                // 设置执行时间
+                                if (response != null)
+                                {
+                                    response.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+                                }
+                                
+                                return response;
+                            }
+                            catch (Exception ex)
+                            {
+                                LogError($"回退处理器处理命令时发生异常: {cmd.Command.CommandIdentifier}", ex);
+                                return ResponseBase.CreateError($"回退处理器异常: {ex.Message}", 500);
+                            }
+                        }
+                        
+                        // 如果回退处理器也不可用，返回原始的404错误
+                        return ResponseBase.CreateError(
+                            $"没有找到适合的处理器处理命令: {cmd.Command.CommandIdentifier}", 404);
+                    }
+
+                    // 选择最佳处理器
+                    var bestHandler = SelectBestHandler(handlers, cmd.Command);
+                    if (bestHandler == null)
+                    {
+                        return ResponseBase.CreateError(
+                            $"无法选择合适的处理器处理命令: {cmd.Command.CommandIdentifier}", 500);
+                    }
+
+                    LogDebug($"选择处理器: {bestHandler.Name} 处理命令: {cmd.Command.CommandIdentifier}");
+
+                    // 使用熔断器执行处理逻辑
+                    ResponseBase result;
+                    try
+                    {
+                        result = await _circuit.ExecuteAsync(() => bestHandler.HandleAsync(cmd, linkedCts.Token));
+                    }
+                    catch (Polly.CircuitBreaker.BrokenCircuitException ex)
+                    {
+                        // 熔断器已打开，记录详细信息并返回适当的错误
+                        LogWarning($"命令 {cmd.Command.CommandIdentifier} [ID: {commandIdentifier.FullCode}] 的熔断器已打开，拒绝执行: {ex.Message}");
+                        return ResponseBase.CreateError($"服务暂时不可用，熔断器已打开: {ex.Message}", 503);
+                    }
+
+                    // 设置执行时间
+                    if (result != null)
+                    {
+                        result.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+                    }
+
+
+                    if (result == null)
+                    {
+                        result = ResponseBase.CreateError("处理器返回空结果", 500);
+                    }
+
                     return result;
                 }
-
-                // 设置执行时间
-                if (result != null)
+                catch (OperationCanceledException ex)
                 {
-                    result.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+                    return ResponseBase.CreateError("命令处理超时或被取消", 504);
                 }
-
-                LogDebug($"命令分发完成: {cmd.CommandIdentifier} [ID: {commandIdentifier.FullCode}] - {result?.ExecutionTimeMs}ms");
-
-                if (result == null)
+                catch (Exception ex)
                 {
-                    result = ResponseBase.CreateError("处理器返回空结果", 500);
+                    LogError($"分发命令 {cmd.Command.CommandIdentifier} [ID: {cmd.Command.CommandIdentifier.FullCode}] 异常: {ex.Message}", ex);
+                    return ResponseBase.CreateError($"命令分发异常: {ex.Message}", 500);
                 }
-
-                return result;
-            }
-            catch (OperationCanceledException)
-            {
-                LogWarning($"命令分发被取消: {cmd.CommandIdentifier} [ID: {commandIdentifier.FullCode}]");
-                result = ResponseBase.CreateError("命令分发被取消", 503);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                var executionTime = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                LogError($"分发命令 {cmd.CommandIdentifier} [ID: {commandIdentifier.FullCode}] 异常: {ex.Message}", ex);
-                result = ResponseBase.CreateError($"命令分发异常: {ex.Message}", 500);
-                return result;
-            }
-            finally
-            {
-                // 缓存结果以实现幂等性
-                if (!string.IsNullOrEmpty(cmd.CommandIdentifier.ToString()) && result != null)
+                finally
                 {
-                    _idempotent.Cache(cmd.CommandIdentifier.ToString(), result);
-                }
+                    // 缓存结果以实现幂等性
+                    if (!string.IsNullOrEmpty(cmd.Command.CommandIdentifier.ToString()))
+                    {
+                        _idempotent.Cache(cmd.Command.CommandIdentifier.ToString(), response);
+                    }
 
-                // 清理历史记录
-                _ = Task.Run(() => CleanupCommandHistory());
+                    // 清理历史记录
+                    _ = Task.Run(() => CleanupCommandHistory());
+                }
             }
         }
 
@@ -708,9 +735,9 @@ namespace RUINORERP.PacketSpec.Commands
             return _fallbackHandler;
         }
         
-        private HandlerCollection FindHandlers(ICommand command)
+        private HandlerCollection FindHandlers(QueuedCommand cmd)
         {
-            var commandCode = command.CommandIdentifier.FullCode;
+            var commandCode = cmd.Command.CommandIdentifier.FullCode;
 
             // 同时从命令映射和命令类型辅助类中获取信息
             _commandHandlerMap.TryGetValue(commandCode, out var handlers);
@@ -720,7 +747,7 @@ namespace RUINORERP.PacketSpec.Commands
             List<ICommandHandler> availableHandlers = null;
             if (handlers != null)
             {
-                availableHandlers = handlers.Where(h => h.CanHandle(command)).ToList();
+                availableHandlers = handlers.Where(h => h.CanHandle(cmd)).ToList();
                 if (!availableHandlers.Any())
                 {
                     availableHandlers = null;
@@ -732,7 +759,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 availableHandlers = _commandHandlerMap.Values
                     .SelectMany(list => list)
-                    .Where(h => h.CanHandle(command))
+                    .Where(h => h.CanHandle(cmd))
                     .ToList();
 
                 if (!availableHandlers.Any())
@@ -762,6 +789,42 @@ namespace RUINORERP.PacketSpec.Commands
                 .ThenBy(h => h.GetStatistics().CurrentProcessingCount)
                 .ThenBy(h => h.GetStatistics().AverageProcessingTimeMs)
                 .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// 创建链接的取消令牌，考虑命令超时设置
+        /// </summary>
+        /// <param name="cancellationToken">外部取消令牌</param>
+        /// <param name="command">命令对象</param>
+        /// <returns>链接的取消令牌源</returns>
+        private CancellationTokenSource CreateLinkedCancellationToken(CancellationToken cancellationToken, ICommand command)
+        {
+            // 如果命令有设置超时时间，创建带超时的取消令牌
+            if (command.TimeoutMs > 0)
+            {
+                var timeoutCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(command.TimeoutMs));
+                
+                // 如果外部取消令牌不为空且未取消，创建链接的取消令牌
+                if (cancellationToken != CancellationToken.None && !cancellationToken.IsCancellationRequested)
+                {
+                    return CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+                }
+                
+                LogDebug($"创建链接取消令牌，超时时间: {TimeSpan.FromMilliseconds(command.TimeoutMs).TotalSeconds}秒, 命令: {command.CommandIdentifier}");
+                return timeoutCts;
+            }
+            
+            // 如果外部取消令牌不为空，返回链接的取消令牌
+            if (cancellationToken != CancellationToken.None)
+            {
+                var cts = new CancellationTokenSource();
+                return CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
+            }
+            
+            // 默认返回新的取消令牌源，设置30秒默认超时
+            var defaultCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            LogDebug($"创建默认链接取消令牌，超时时间: 30秒, 命令: {command.CommandIdentifier}");
+            return defaultCts;
         }
 
         /// <summary>

@@ -89,7 +89,7 @@ namespace RUINORERP.UI.Network.Services
                 request.ClientVersion = Application.ProductVersion;
                 request.LastRequestTime = GetLastRequestTime(tableName);
 
-                var baseCommand = CommandDataBuilder.BuildGenericCommand<CacheRequest>(CacheCommands.CacheRequest, request);
+                var baseCommand = CommandDataBuilder.BuildCommand<CacheRequest, CacheResponse>(CacheCommands.CacheRequest, request);
 
                 // 使用IClientCommunicationService发送请求
                 var response = await _comm.SendCommandAsync<CacheRequest, CacheResponse>(

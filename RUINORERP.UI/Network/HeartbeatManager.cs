@@ -38,8 +38,8 @@ namespace RUINORERP.UI.Network
         private int _successfulHeartbeats;
         private int _failedHeartbeats;
         private DateTime _lastHeartbeatTime;
-       
-  
+
+
         public HeartbeatStatistics Statistics
         {
             get
@@ -183,7 +183,7 @@ namespace RUINORERP.UI.Network
                 _logger?.LogDebug("手动心跳命令已创建: CommandId={CommandId}", heartbeatCommand.CommandIdentifier);
 
                 // 使用ClientCommunicationService发送心跳请求
-                var response = await _communicationService.SendCommandAsync<object, HeartbeatRequest>(
+                var response = await _communicationService.SendCommandAsync<HeartbeatRequest, ResponseBase>(
                     heartbeatCommand,
                     cancellationToken,
                     _heartbeatTimeoutMs // 使用配置的心跳超时时间
@@ -252,22 +252,22 @@ namespace RUINORERP.UI.Network
                 try
                 {
                     if (_socketClient.IsConnected)
-                {
-              
-                    // Token过期检查，只记录日志不刷新 - 使用依赖注入的TokenManager
-                    var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
-                    if (tokenInfo != null)
                     {
-                        var validationResult = await _tokenManager.ValidateStoredTokenAsync();
-                        if (!validationResult.IsValid)
-                        {
-                            _logger?.LogInformation("检测到AccessToken已过期或无效，心跳管理器不负责刷新Token，由专门的Token刷新机制处理");
-                            // 注意：HeartbeatManager不负责刷新Token，只负责检测和记录
-                            // 实际的Token刷新由SilentTokenRefresher或其他专门的Token管理组件处理
-                        }
-                    }
 
-                    // 步骤1: 创建心跳命令对象
+                        // Token过期检查，只记录日志不刷新 - 使用依赖注入的TokenManager
+                        var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
+                        if (tokenInfo != null)
+                        {
+                            var validationResult = await _tokenManager.ValidateStoredTokenAsync();
+                            if (!validationResult.IsValid)
+                            {
+                                _logger?.LogInformation("检测到AccessToken已过期或无效，心跳管理器不负责刷新Token，由专门的Token刷新机制处理");
+                                // 注意：HeartbeatManager不负责刷新Token，只负责检测和记录
+                                // 实际的Token刷新由SilentTokenRefresher或其他专门的Token管理组件处理
+                            }
+                        }
+
+                        // 步骤1: 创建心跳命令对象
                         var heartbeatCommand = CreateHeartbeatCommand();
                         _logger?.LogDebug("心跳命令已创建: CommandId={CommandId}",
                             heartbeatCommand.CommandIdentifier);
@@ -276,7 +276,7 @@ namespace RUINORERP.UI.Network
                         {
                             // 步骤2-8: 使用ClientCommunicationService发送命令并等待响应
                             _logger?.LogDebug("通过ClientCommunicationService发送心跳命令...");
-                            await _communicationService.SendCommandAsync<object, HeartbeatRequest>(
+                            await _communicationService.SendCommandAsync<HeartbeatRequest, ResponseBase>(
                                 heartbeatCommand,
                                 _cancellationTokenSource.Token,
                                 _heartbeatTimeoutMs // 使用配置的心跳超时时间

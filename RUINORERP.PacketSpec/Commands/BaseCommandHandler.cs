@@ -160,10 +160,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 异步处理命令
         /// </summary>
-        public async Task<ResponseBase> HandleAsync(ICommand command, CancellationToken cancellationToken = default)
+        public async Task<ResponseBase> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default)
         {
-            if (command == null)
-                throw new ArgumentNullException(nameof(command));
+            if (cmd == null)
+                throw new ArgumentNullException(nameof(cmd));
 
             var startTime = DateTime.UtcNow;
             bool success = true; // 默认认为成功
@@ -177,7 +177,7 @@ namespace RUINORERP.PacketSpec.Commands
                 string commandId = null;
                 try 
                 {
-                    var commandWithId = command as dynamic;
+                    var commandWithId = cmd.Command as dynamic;
                     commandId = commandWithId.CommandId ?? "N/A";
                 }
                 catch
@@ -185,10 +185,9 @@ namespace RUINORERP.PacketSpec.Commands
                     commandId = "N/A";
                 }
                 
-                Logger.LogInformation($"开始处理命令: {command.GetType().Name}, CommandId: {commandId}");
-
+             
                 // 验证命令
-                var validationResult = await command.ValidateAsync(cancellationToken);
+                var validationResult = await cmd.Command.ValidateAsync(cancellationToken);
                 if (!validationResult.IsValid)
                 {
                     Logger.LogWarning($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
@@ -198,7 +197,7 @@ namespace RUINORERP.PacketSpec.Commands
                 // 检查命令是否过期（如果命令有实现ExpirationTimeUtc属性）
                 try 
                 {
-                    var commandWithExpiration = command as dynamic;
+                    var commandWithExpiration = cmd.Command as dynamic;
                     if (commandWithExpiration.ExpirationTimeUtc != null && 
                         commandWithExpiration.ExpirationTimeUtc < DateTime.UtcNow)
                     {
@@ -212,22 +211,22 @@ namespace RUINORERP.PacketSpec.Commands
                 }
 
                 // 命令前置处理
-                var beforeResult = await OnBeforeHandleAsync(command, cancellationToken);
+                var beforeResult = await OnBeforeHandleAsync(cmd, cancellationToken);
                 if (beforeResult != null)
                     return beforeResult;
  
 
                 // 执行命令处理
-                var result = await OnHandleAsync(command, cancellationToken);
+                var result = await OnHandleAsync(cmd, cancellationToken);
 
                 // 命令后置处理
-                var afterResult = await OnAfterHandleAsync(command, result, cancellationToken);
+                var afterResult = await OnAfterHandleAsync(cmd, result, cancellationToken);
                 if (afterResult != null)
                     return afterResult;
 
                 // 记录处理完成时间
                 var endTime = DateTime.UtcNow;
-                Logger.LogInformation($"命令处理完成: {command.GetType().Name}, CommandId: {command.CommandIdentifier}, 结果: {result.IsSuccess}, 执行时间: {(endTime - logStartTime).TotalMilliseconds} ms");
+                Logger.LogInformation($"命令处理完成: {cmd.Command.GetType().Name}, CommandId: {cmd.Command.CommandIdentifier}, 结果: {result.IsSuccess}, 执行时间: {(endTime - logStartTime).TotalMilliseconds} ms");
 
                 return result;
             }
@@ -248,19 +247,19 @@ namespace RUINORERP.PacketSpec.Commands
                 var elapsed = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
                 
                 // 记录结构化日志
-                _logHandled(Logger, command.ToString(), elapsed, success, null);
+                _logHandled(Logger, cmd.Command.ToString(), elapsed, success, null);
             }
         }
 
         /// <summary>
         /// 判断是否可以处理该命令
         /// </summary>
-        public virtual bool CanHandle(ICommand command)
+        public virtual bool CanHandle(QueuedCommand cmd)
         {
-            if (command == null || _disposed || Status != HandlerStatus.Running)
+            if (cmd.Command == null || _disposed || Status != HandlerStatus.Running)
                 return false;
 
-            return SupportedCommands.Contains(command.CommandIdentifier.FullCode);
+            return SupportedCommands.Contains(cmd.Command.CommandIdentifier.FullCode);
         }
 
         /// <summary>
@@ -433,7 +432,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 执行核心处理逻辑
         /// </summary>
         [MustOverride]
-        protected abstract Task<ResponseBase> OnHandleAsync(ICommand command, CancellationToken cancellationToken);
+        protected abstract Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
 
         #endregion
 
@@ -466,7 +465,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行前置处理
         /// </summary>
-        protected virtual Task<ResponseBase> OnBeforeHandleAsync(ICommand command, CancellationToken cancellationToken)
+        protected virtual Task<ResponseBase> OnBeforeHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             return Task.FromResult<ResponseBase>(null);
         }
@@ -474,7 +473,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行后置处理
         /// </summary>
-        protected virtual Task<ResponseBase> OnAfterHandleAsync(ICommand command, ResponseBase result, CancellationToken cancellationToken)
+        protected virtual Task<ResponseBase> OnAfterHandleAsync(QueuedCommand cmd, ResponseBase result, CancellationToken cancellationToken)
         {
             return Task.FromResult<ResponseBase>(null);
         }

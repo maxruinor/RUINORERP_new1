@@ -2,6 +2,7 @@ using RUINORERP.PacketSpec.Commands;
 using System;
 using System.Threading;
 using Microsoft.Extensions.Logging;
+using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.UI.Network
 {
@@ -18,7 +19,7 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 当接收到服务器命令时触发的事件
         /// </summary>
-        public event Action<CommandId, object> CommandReceived;
+        public event Action<PacketModel, object> CommandReceived;
 
         /// <summary>
         /// 当连接状态改变时触发的事件
@@ -65,13 +66,10 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <param name="commandId">命令ID，标识接收到的命令类型</param>
         /// <param name="data">命令数据，包含命令的具体内容</param>
-        public void OnCommandReceived(CommandId commandId, object data)
+        public void OnCommandReceived(PacketModel packetModel, object data)
         {
-            if (commandId == null)
-                throw new ArgumentNullException(nameof(commandId), "命令ID不能为空");
-
             // 获取事件处理程序的快照，避免在多线程环境下触发时可能发生的问题
-            Action<CommandId, object> handler;
+            Action<PacketModel, object> handler;
             lock (_lock)
             {
                 handler = CommandReceived;
@@ -83,7 +81,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 触发事件
-                handler.Invoke(commandId, data);
+                handler.Invoke(packetModel, data);
             }
             catch (Exception ex)
             {

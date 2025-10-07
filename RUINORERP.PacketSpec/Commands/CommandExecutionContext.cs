@@ -26,7 +26,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 SessionId = packet.SessionId,
                 ClientId = packet.ClientId,
-                RequestId = packet.Command.Request.RequestId,
+                RequestId = packet.Extensions["RequestId"].ToString(),
                 Token = packet.Token, // 从数据包中获取Token
                 ReceivedTime = packet.CreatedTimeUtc,
                 Extensions = new Dictionary<string, object>(packet.Extensions)

@@ -8,15 +8,20 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.Network.Authentication
 {
+    /// <summary>
+    /// 客户端Token请求刷新服务
+    /// </summary>
     public class TokenRefreshService : ITokenRefreshService
     {
         private readonly ClientCommunicationService _communicationService;
-
-        public TokenRefreshService(ClientCommunicationService communicationService)
+        private readonly TokenManager _tokenManager;
+        public TokenRefreshService(ClientCommunicationService communicationService ,TokenManager tokenManager)
         {
+            _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
             _communicationService = communicationService;
         }
 
@@ -70,10 +75,10 @@ namespace RUINORERP.UI.Network.Authentication
         {
             try
             {
-                var request = new RefreshTokenCommand();
-                var response = await _communicationService.SendCommandAsync<RefreshTokenCommand, LoginResponse>(
-                    request, ct);
-                    
+                SimpleRequest request = SimpleRequest.CreateString("");
+                var baseCommand = CommandDataBuilder.BuildCommand<SimpleRequest, LoginResponse>(AuthenticationCommands.RefreshToken, request);
+                var response = await _communicationService.SendCommandAsync<SimpleRequest, LoginResponse>(
+                    baseCommand, ct);
                 return response;
             }
             catch (Exception ex)
@@ -84,11 +89,14 @@ namespace RUINORERP.UI.Network.Authentication
 
         public async Task<bool> ValidateTokenAsync(string token, CancellationToken ct = default)
         {
+
+            SimpleRequest request = SimpleRequest.CreateString(token);
+
             // 使用_communicationService发送验证Token的请求
-            var bc = CommandDataBuilder.BuildBaseCommand(AuthenticationCommands.ValidateToken);
+            var bc = CommandDataBuilder.BuildCommand<SimpleRequest,LoginResponse>(AuthenticationCommands.ValidateToken, request);
             bc.AuthToken = token;
 
-            var response = await _communicationService.SendCommandAsync<string, LoginResponse>(
+            var response = await _communicationService.SendCommandAsync<SimpleRequest, LoginResponse>(
                 bc,
                 ct, 15000);
                 

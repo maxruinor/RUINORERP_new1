@@ -134,12 +134,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <returns>SuperSocket会话</returns>
         IAppSession GetAppSession(string sessionId);
 
-        /// <summary>
-        /// 广播消息到所有活动会话
-        /// </summary>
-        /// <param name="message">消息内容</param>
-        /// <returns>成功发送的会话数量</returns>
-        Task<int> BroadcastMessageAsync(object message);
+ 
 
         /// <summary>
         /// 更新会话活动时间

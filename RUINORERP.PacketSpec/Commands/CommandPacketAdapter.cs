@@ -51,10 +51,10 @@ namespace RUINORERP.PacketSpec.Commands
             if (packet == null)
                 throw new ArgumentNullException(nameof(packet));
 
-            var commandType = _commandTypeHelper.GetCommandType(packet.Command.FullCode);
+            var commandType = _commandTypeHelper.GetCommandType(packet.CommandId.FullCode);
 
             if (commandType == null)
-                throw new InvalidOperationException($"未找到命令类型: {packet.Command}");
+                throw new InvalidOperationException($"未找到命令类型: {packet.CommandId}");
             
             var command = (ICommand)MessagePackSerializer.Deserialize(commandType, packet.CommandData);
 
@@ -155,7 +155,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
 
                 // 2. 尝试根据命令ID创建具体命令类型
-                var commandType = _commandDispatcher?.GetCommandType(packet.Command.FullCode);
+                var commandType = _commandDispatcher?.GetCommandType(packet.CommandId.FullCode);
                 if (commandType != null)
                 {
                     var command = CreateCommandByType(commandType, packet);
@@ -171,7 +171,7 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     try
                     {
-                        return new GenericCommand<Dictionary<string, object>>(packet.Command,
+                        return new GenericCommand<Dictionary<string, object>>(packet.CommandId,
                             MessagePackSerializer.Deserialize<Dictionary<string, object>>(packet.CommandData));
                     }
                     catch (Exception ex)
@@ -185,7 +185,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "创建命令对象时出错: CommandId={CommandId}", packet.Command);
+                _logger?.LogError(ex, "创建命令对象时出错: CommandId={CommandId}", packet.CommandId);
                 return CreateFallbackCommand(packet, ex);
             }
         }
@@ -207,7 +207,7 @@ namespace RUINORERP.PacketSpec.Commands
                     var command = Activator.CreateInstance(commandType, parameters) as ICommand;
 
                     _logger?.LogDebug("根据命令ID创建命令实例: CommandId={CommandId}, Type={TypeName}",
-                        packet.Command, commandType.FullName);
+                        packet.CommandId, commandType.FullName);
                     return command;
                 }
             }
@@ -232,16 +232,16 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     // 尝试反序列化为字典，判断是否是键值对数据
                     var dict = MessagePack.MessagePackSerializer.Deserialize<Dictionary<string, object>>(packet.CommandData);
-                    return new GenericCommand<Dictionary<string, object>>(packet.Command, dict);
+                    return new GenericCommand<Dictionary<string, object>>(packet.CommandId, dict);
                 }
                 catch
                 {
                     // 如果无法反序列化为字典，使用byte[]作为Payload
-                    return new GenericCommand<byte[]>(packet.Command, packet.CommandData);
+                    return new GenericCommand<byte[]>(packet.CommandId, packet.CommandData);
                 }
             }
             
-            return new GenericCommand<object>(packet.Command, null);
+            return new GenericCommand<object>(packet.CommandId, null);
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace RUINORERP.PacketSpec.Commands
                     .Build();
 
                 return new MessageCommand(
-                    packet.Command,
+                    packet.CommandId,
                     packetModelForError,
                     packet.CommandData);
             }
@@ -292,7 +292,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 _logger?.LogCritical(fallbackEx, "创建备用命令对象也失败了");
                 // 最后的防线，确保至少返回一个基本命令对象
-                return new GenericCommand<object>(packet.Command, null);
+                return new GenericCommand<object>(packet.CommandId, null);
             }
         }
 
@@ -374,7 +374,7 @@ namespace RUINORERP.PacketSpec.Commands
                     }
                     else if (parameters[i].ParameterType == typeof(CommandId))
                     {
-                        parameterValues[i] = packet.Command;
+                        parameterValues[i] = packet.CommandId;
                     }
                     else if (parameters[i].ParameterType == typeof(string))
                     {

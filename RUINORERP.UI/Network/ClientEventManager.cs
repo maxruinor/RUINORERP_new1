@@ -37,6 +37,13 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public event Action ConnectionClosed;
 
+         public event Action<string, TimeSpan> RequestCompleted; // 新增：请求完成事件
+        
+        public void OnRequestCompleted(string requestId, TimeSpan duration)
+        {
+            RequestCompleted?.Invoke(requestId, duration);
+        }
+
         /// <summary>
         /// 构造函数
         /// </summary>

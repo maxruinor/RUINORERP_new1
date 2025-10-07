@@ -106,34 +106,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
 
        
 
-        /// <summary>
-        /// 执行核心逻辑
-        /// </summary>
-        protected override async Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                LogInfo($"执行消息命令: CommandType={{CommandType}}, SessionId={{SessionInfo?.SessionId}}");
-
-                // 基本的消息命令执行逻辑
-                // 实际的命令处理应该在具体的命令处理器中完成
-                await Task.Delay(10, cancellationToken);
-
-                return ResponseBase.CreateSuccess(
-                    $"消息命令执行成功: {{CommandType}}"
-                );
-            }
-            catch (Exception ex)
-            {
-                LogError($"执行消息命令异常: {{ex.Message}}", ex);
-                return ResponseBase.CreateError(
-                    $"执行消息命令失败: {{ex.Message}}",
-                    500
-                ).WithMetadata("ErrorCode", "MESSAGE_COMMAND_EXECUTION_FAILED")
-                 .WithMetadata("Exception", ex.Message)
-                 .WithMetadata("StackTrace", ex.StackTrace);
-            }
-        }
+       
 
         /// <summary>
         /// 验证命令

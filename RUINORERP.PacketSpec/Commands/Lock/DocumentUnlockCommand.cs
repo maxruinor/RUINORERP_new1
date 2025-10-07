@@ -74,16 +74,6 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             return result;
         }
 
-        /// <summary>
-        /// 执行命令的核心逻辑
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>命令执行结果</returns>
-        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
-        {
-            // 解锁单据命令契约只定义数据结构，实际的业务逻辑在Handler中实现
-            // 创建并返回成功响应
-            return Task.FromResult(ResponseBase.CreateSuccess("解锁操作成功"));
-        }
+        
     }
 }

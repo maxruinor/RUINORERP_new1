@@ -1,22 +1,25 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
     /// <summary>
-    /// Token刷新请求数据模型
+    /// Token刷新请求数据模型 - 简化版
+    /// 服务端自动管理Token状态，客户端无需传递Token信息
     /// </summary>
     [Serializable]
     public class TokenRefreshRequest : RequestBase
     {
         /// <summary>
-        /// 当前Token
+        /// 当前Token（已废弃，服务端自动管理）
         /// </summary>
+        [Obsolete("服务端自动管理Token状态，此字段不再使用")]
         public string Token { get; set; }
 
         /// <summary>
-        /// 刷新Token
+        /// 刷新Token（已废弃，服务端自动管理）
         /// </summary>
+        [Obsolete("服务端自动管理Token状态，此字段不再使用")]
         public string RefreshToken { get; set; }
 
         /// <summary>
@@ -30,25 +33,24 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public string DeviceId { get; set; }
 
         /// <summary>
-        /// 创建Token刷新请求
+        /// 创建Token刷新请求 - 简化版
         /// </summary>
-        public static TokenRefreshRequest Create(string token, string refreshToken, string deviceId = null, string clientIp = null)
+        public static TokenRefreshRequest Create(string deviceId = null, string clientIp = null)
         {
             return new TokenRefreshRequest
             {
-                Token = token,
-                RefreshToken = refreshToken,
                 DeviceId = deviceId ?? Guid.NewGuid().ToString(),
                 ClientIp = clientIp
             };
         }
 
         /// <summary>
-        /// 验证请求有效性
+        /// 验证请求有效性 - 简化版
         /// </summary>
         public bool IsValid()
         {
-            return !string.IsNullOrEmpty(Token) && !string.IsNullOrEmpty(RefreshToken);
+            // 简化版：始终有效，服务端负责验证
+            return true;
         }
     }
 }

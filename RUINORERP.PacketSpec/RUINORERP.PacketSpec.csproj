@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Compile Remove="Commands\Authentication\AuthenticatingCommandDispatcher.cs" />
+    <Compile Remove="Commands\CommandBuilder.cs" />
     <Compile Remove="Enums\CommandHelper.cs" />
     <Compile Remove="Enums\CommandId.cs" />
     <Compile Remove="Enums\UsageExamples.cs" />

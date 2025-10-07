@@ -9,11 +9,12 @@ namespace RUINORERP.UI.Network
     /// </summary>
     public interface ISocketClient : IDisposable
     {
-
         /// <summary>
         /// 作为客户端要有唯一的ID
         /// </summary>
         string ClientID { get; set; }
+
+        string ClientIP { get; set; }
 
         /// <summary>
         /// 连接状态
@@ -51,5 +52,6 @@ namespace RUINORERP.UI.Network
         /// 连接关闭时触发的事件
         /// </summary>
         event Action<EventArgs> Closed;
+
     }
 }

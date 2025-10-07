@@ -25,7 +25,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>当前数据包实例</returns>
         public static PacketModel WithCommand(this PacketModel packet, CommandId command)
         {
-            packet.Command = command;
+            packet.CommandId = command;
             return packet;
         }
 
@@ -162,7 +162,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>是否包含</returns>
         public static bool HasCommand(this PacketModel packet, CommandId command)
         {
-            return packet?.Command == command;
+            return packet?.CommandId == command;
         }
 
         /// <summary>

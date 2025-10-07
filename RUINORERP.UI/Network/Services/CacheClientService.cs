@@ -23,6 +23,9 @@ using System.Reflection;
 using RUINORERP.Common.Helper;
 using RUINORERP.SecurityTool;
 using System.Collections;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Core;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -31,13 +34,13 @@ namespace RUINORERP.UI.Network.Services
     /// </summary>
     public class CacheClientService
     {
-        private readonly IClientCommunicationService _comm;
+        private readonly ClientCommunicationService _comm;
         private readonly ILogger<CacheClientService> _log;
         private readonly Dictionary<string, DateTime> _lastRequestTimes = new Dictionary<string, DateTime>();
         private readonly object _lockObj = new object();
         private IAuthorizeController authorizeController;
 
-        public CacheClientService(IClientCommunicationService comm, ILogger<CacheClientService> log = null)
+        public CacheClientService(ClientCommunicationService comm, ILogger<CacheClientService> log = null)
         {
             _comm = comm ?? throw new ArgumentNullException(nameof(comm));
             _log = log;
@@ -86,11 +89,11 @@ namespace RUINORERP.UI.Network.Services
                 request.ClientVersion = Application.ProductVersion;
                 request.LastRequestTime = GetLastRequestTime(tableName);
 
+                var baseCommand = CommandDataBuilder.BuildGenericCommand<CacheRequest>(CacheCommands.CacheRequest, request);
+
                 // 使用IClientCommunicationService发送请求
-                var response = await _comm.SendAsync<CacheRequest, CacheResponse>(
-                    CacheCommands.CacheRequest,
-                    request,
-                    null,  // 不需要适配器
+                var response = await _comm.SendCommandAsync<CacheRequest, CacheResponse>(
+                    baseCommand,
                     ct);
 
                 // 更新请求时间

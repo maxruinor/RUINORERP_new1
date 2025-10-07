@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Commands;
+﻿using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -125,38 +125,7 @@ namespace RUINORERP.PacketSpec.Commands.System
             }
         }
 
-        /// <summary>
-        /// 命令执行的具体逻辑
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>执行结果</returns>
-        protected override async Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 构建心跳数据
-                var heartbeatData = GetSerializableData();
-
-                // 返回成功结果，实际的网络请求由通信服务处理
-                var result = new ResponseBase
-                {
-                    IsSuccess = true,
-                    Message = "心跳命令构建成功",
-                    Code = 200,
-                    TimestampUtc = DateTime.UtcNow
-                };
-                result.WithMetadata("Data", heartbeatData);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                return ConvertToApiResponse(ResponseBase.CreateError($"心跳命令执行异常: {ex.Message}", 500)
-                    .WithMetadata("ErrorCode", "HEARTBEAT_EXCEPTION")
-                    .WithMetadata("Exception", ex.Message)
-                    .WithMetadata("StackTrace", ex.StackTrace));
-            }
-        }
-
+ 
         /// <summary>
         /// 将ResponseBase转换为ApiResponse
         /// </summary>

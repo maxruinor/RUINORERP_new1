@@ -18,9 +18,8 @@ using FluentValidation.Results;
 using RUINORERP.PacketSpec.Models.Requests;
 using System.Security.Cryptography;
 using MessagePack;
-using RUINORERP.PacketSpec.Tokens;
 using System.Collections.Concurrent;
-using static RUINORERP.PacketSpec.Tokens.TokenManager;
+using RUINORERP.PacketSpec.Commands.Authentication;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -39,6 +38,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="direction">命令方向</param>
         protected BaseCommand(PacketDirection direction) : base(direction)
         {
+
         }
 
         /// <summary>
@@ -47,6 +47,17 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="direction">命令方向</param>
         /// <param name="logger">日志记录器</param>
         protected BaseCommand(PacketDirection direction, ILogger<BaseCommand> logger) : base(direction, logger)
+        {
+        }
+
+        /// <summary>
+        /// 构造函数 - 支持依赖注入
+        /// </summary>
+        /// <param name="tokenManager">Token管理器</param>
+        /// <param name="direction">命令方向</param>
+        /// <param name="logger">日志记录器</param>
+        protected BaseCommand(TokenManager tokenManager, PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
+            : base(tokenManager, direction, logger)
         {
         }
 
@@ -101,14 +112,13 @@ namespace RUINORERP.PacketSpec.Commands
 
 
     /// <summary>
-        /// 命令基类 - 提供命令的通用实现
-        /// </summary>
-        public abstract  class BaseCommand :  ICommand
-        {
-            public CommandExecutionContext ExecutionContext { get; set; }
+    /// 命令基类 - 提供命令的通用实现
+    /// </summary>
+    public abstract class BaseCommand : ICommand
+    {
+        public CommandExecutionContext ExecutionContext { get; set; }
 
-        //public byte[] BizData { get; set; }  // 字节数组存储
-
+        public IRequest Request { get; set; }
         protected virtual object GetSerializableDataCore() { return null; }
         // 新增智能访问方法
         public byte[] GetBinaryData()
@@ -127,6 +137,11 @@ namespace RUINORERP.PacketSpec.Commands
         protected ILogger<BaseCommand> Logger { get; set; }
 
         /// <summary>
+        /// Token管理器 - 通过依赖注入获取
+        /// </summary>
+        protected TokenManager TokenManager { get; set; }
+
+        /// <summary>
         /// 认证令牌
         /// </summary>
         public string AuthToken { get; set; }
@@ -141,13 +156,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// 命令标识符（类型安全命令系统）
         /// </summary>
         public CommandId CommandIdentifier { get; set; }
-
-        /// <summary>
-        /// 请求唯一标识
-        /// </summary>
-        public string RequestId { get; set; }
-
-
 
         /// <summary>
         /// 命令方向
@@ -218,58 +226,17 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 执行命令 - 模板方法模式
+        /// 构造函数 - 支持依赖注入
         /// </summary>
-        public async Task<ResponseBase> ExecuteAsync(CancellationToken cancellationToken = default)
+        /// <param name="tokenManager">Token管理器</param>
+        /// <param name="direction">命令方向</param>
+        /// <param name="logger">日志记录器</param>
+        protected BaseCommand(TokenManager tokenManager, PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
+            : this(direction, logger)
         {
-            try
-            {
-                LogInfo($"开始执行命令: {GetType().Name} [ID: {RequestId ?? "未设置"}]");
-
-                // 验证命令
-                var validationResult = await ValidateAsync(cancellationToken);
-                if (!validationResult.IsValid)
-                {
-                    var firstError = validationResult.Errors.FirstOrDefault();
-                    var errorMessage = firstError?.ErrorMessage ?? "命令验证失败";
-                    var errorCode = firstError?.ErrorCode ?? "VALIDATION_FAILED";
-
-                    LogWarning($"命令验证失败: {errorMessage}");
-                    ResponseBase errorResponse = ResponseBase.CreateError(errorMessage, 400).WithMetadata("ErrorCode", errorCode);
-                    return errorResponse;
-                }
-
-                // 执行前处理
-                await OnBeforeExecuteAsync(cancellationToken);
-
-                // 自动附加Token
-                AutoAttachToken();
-
-                // 执行核心逻辑
-                var result = await OnExecuteAsync(cancellationToken);
-
-                // 执行后处理
-                await OnAfterExecuteAsync(cancellationToken);
-
-                LogInfo($"命令执行完成: {GetType().Name} [ID: {RequestId ?? "未设置"}]");
-                return result;
-            }
-            catch (OperationCanceledException)
-            {
-                LogWarning($"命令执行被取消: {GetType().Name} [ID: {RequestId ?? "未设置"}]");
-                ResponseBase errorResponse = ResponseBase.CreateError("命令执行被取消", 503).WithMetadata("ErrorCode", "PROCESS_CANCELLED");
-                return errorResponse;
-            }
-            catch (Exception ex)
-            {
-                LogError($"执行命令 {GetType().Name} [ID: {RequestId ?? "未设置"}] 异常: {ex.Message}", ex);
-                ResponseBase errorResponse = ResponseBase.CreateError($"执行异常: {ex.Message}", 500)
-                        .WithMetadata("ErrorCode", "PROCESS_ERROR")
-                        .WithMetadata("Exception", ex.Message)
-                        .WithMetadata("StackTrace", ex.StackTrace);
-                return errorResponse;
-            }
+            TokenManager = tokenManager;
         }
+
 
         /// <summary>
         /// 验证命令
@@ -291,7 +258,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 var commandData = new
                 {
-                    RequestId,
+                    Request.RequestId,
                     CommandIdentifier,
                     Direction,
                     Priority,
@@ -320,7 +287,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 var commandData = new
                 {
-                    RequestId,
+                    Request.RequestId,
                     CommandIdentifier,
                     Direction,
                     Priority,
@@ -404,43 +371,40 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        #region 抽象方法 - 子类必须实现
-
-        /// <summary>
-        /// 执行核心逻辑
-        /// </summary>
-        protected virtual Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
-        {
-            return Task.FromResult<ResponseBase>(null);
-        }
-
-        #endregion
+        private MemoryTokenStorage memoryTokenStorage;
 
         #region 虚方法 - 子类可以重写
 
         /// <summary>
-        /// 自动附加认证Token
+        /// 自动附加认证Token - 优化版
         /// 增强功能：确保Token的完整性、类型设置、ExecutionContext绑定和异常处理
         /// </summary>
-        protected virtual void AutoAttachToken()
+        protected virtual async void AutoAttachToken()
         {
             try
             {
-                // 使用TokenManager单例获取Token
-                var (success, accessToken, refreshToken) = TokenManager.Instance.GetTokens();
-                if (success && !string.IsNullOrEmpty(accessToken))
+                // 检查TokenManager是否可用
+                if (TokenManager == null)
                 {
-                    AuthToken = accessToken;
+                    Logger?.LogDebug("TokenManager未初始化，跳过自动附加");
+                    return;
+                }
+
+                // 简化版：使用依赖注入的TokenManager
+                var tokenInfo = await TokenManager.TokenStorage.GetTokenAsync();
+                if (tokenInfo != null && !string.IsNullOrEmpty(tokenInfo.AccessToken))
+                {
+                    AuthToken = tokenInfo.AccessToken;
                     TokenType = "Bearer";
-                    
+
                     // 自动设置到ExecutionContext，确保服务器端也能获取
                     if (ExecutionContext == null)
                         ExecutionContext = new CommandExecutionContext();
-                    
-                    ExecutionContext.Token = accessToken;
-                    ExecutionContext.Extensions["RefreshToken"] = refreshToken;
-                    
-                    Logger?.LogDebug("自动附加Token成功: {TokenLength} 字符", accessToken?.Length ?? 0);
+
+                    ExecutionContext.Token = tokenInfo.AccessToken;
+                    ExecutionContext.Extensions["RefreshToken"] = tokenInfo.RefreshToken;
+
+                    Logger?.LogDebug("自动附加Token成功: {TokenLength} 字符", tokenInfo.AccessToken?.Length ?? 0);
                 }
                 else
                 {
@@ -453,21 +417,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        /// <summary>
-        /// 执行前处理
-        /// </summary>
-        protected virtual Task OnBeforeExecuteAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
 
-        /// <summary>
-        /// 执行后处理
-        /// </summary>
-        protected virtual Task OnAfterExecuteAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
 
         /// <summary>
         /// 是否需要会话信息
@@ -494,7 +444,7 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 包体数据（业务数据序列化后的字节）
+        /// 包体数据（业务请求响应数据序列化后的字节）
         /// </summary>
         public byte[] BizData { get; set; }
 

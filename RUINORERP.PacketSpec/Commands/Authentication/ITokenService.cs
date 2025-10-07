@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,40 +24,36 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         TokenValidationResult ValidateToken(string token);
 
         /// <summary>
-        /// 刷新Token
+        /// 刷新Token - 增强版支持可选的当前Token验证
         /// </summary>
         /// <param name="refreshToken">刷新Token</param>
+        /// <param name="currentToken">当前访问Token（可选，用于验证用户身份）</param>
         /// <returns>新的访问Token</returns>
-        string RefreshToken(string refreshToken);
+        string RefreshToken(string refreshToken, string currentToken = null);
 
         /// <summary>
         /// 撤销Token
         /// </summary>
         /// <param name="token">要撤销的Token</param>
         void RevokeToken(string token);
+
+        /// <summary>
+        /// 异步验证Token - 合并自TokenValidationService
+        /// </summary>
+        /// <param name="token">要验证的Token</param>
+        /// <returns>验证结果</returns>
+        Task<TokenValidationResult> ValidateTokenAsync(string token);
+
+        /// <summary>
+        /// 检查Token是否即将过期 - 合并自TokenValidationService
+        /// </summary>
+        /// <param name="token">要检查的Token</param>
+        /// <param name="thresholdMinutes">过期阈值（分钟）</param>
+        /// <returns>检查结果</returns>
+        Task<(bool isExpiringSoon, int expiresInSeconds)> CheckTokenExpiryAsync(string token, int thresholdMinutes = 5);
     }
 
 
 
-    /// <summary>
-    /// Token服务选项
-    /// </summary>
-    [Serializable()]
-    public class TokenServiceOptions
-    {
-        /// <summary>
-        /// 密钥
-        /// </summary>
-        public string SecretKey { get; set; }
 
-        /// <summary>
-        /// 默认过期小时数
-        /// </summary>
-        public int DefaultExpiryHours { get; set; } = 8;
-
-        /// <summary>
-        /// 刷新Token过期小时数
-        /// </summary>
-        public int RefreshTokenExpiryHours { get; set; } = 24;
-    }
 }

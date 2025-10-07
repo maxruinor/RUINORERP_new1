@@ -7,6 +7,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Krypton.Toolkit;
+using MySqlX.XDevAPI;
 
 namespace RUINORERP.UI.Network
 {/// <summary>
@@ -28,7 +30,10 @@ namespace RUINORERP.UI.Network
             _client = new EasyClient<BizPackageInfo>();
             _client.Initialize(new BizPipelineFilter());
             _logger = logger;
-
+            if (ClientIP==null)
+            {
+                ClientIP = GetClientIp();
+            }
             // 注册事件处理
             _client.Connected += OnClientConnected;
             _client.NewPackageReceived += OnPackageReceived;
@@ -37,7 +42,35 @@ namespace RUINORERP.UI.Network
         }
 
 
+        /// <summary>
+        /// 获取客户端IP地址
+        /// 优先返回本机IPv4地址
+        /// </summary>
+        /// <returns>客户端IP地址字符串</returns>
+        private string GetClientIp()
+        {
+            try
+            {
+                // 获取本机IPv4地址
+                foreach (var ip in Dns.GetHostAddresses(Dns.GetHostName()))
+                {
+                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        return ip.ToString();
+                    }
+                }
+                return "127.0.0.1";
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "获取客户端IP地址失败，使用默认值");
+                return "127.0.0.1";
+            }
+        }
+
         public string ClientID { get; set; }
+
+        public string ClientIP { get; set; } 
 
         /// <summary>
         /// 连接状态

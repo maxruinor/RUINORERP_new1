@@ -73,17 +73,6 @@ namespace RUINORERP.PacketSpec.Commands.Workflow
             return result;
         }
 
-        /// <summary>
-        /// 执行命令的核心逻辑
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>命令执行结果</returns>
-        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
-        {
-            // 工作流审批命令契约只定义数据结构，实际的业务逻辑在Handler中实现
-            var result = ResponseBase.CreateSuccess("工作流审批命令构建成功")
-                .WithMetadata("Data", new { WorkflowInstanceId = WorkflowInstanceId, TaskId = TaskId, Approved = Approved, ApprovalComment = ApprovalComment });
-            return Task.FromResult((ResponseBase)result);
-        }
+       
     }
 }

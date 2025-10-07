@@ -85,7 +85,7 @@ namespace RUINORERP.PacketSpec.Commands
             try
             {
                 // 获取命令ID
-                uint commandId = (uint)packet.Command;
+                uint commandId = (uint)packet.CommandId;
 
                 // 首先检查是否有注册的自定义创建器
                 if (_commandCreators.TryGetValue(commandId, out var creator))
@@ -124,7 +124,7 @@ namespace RUINORERP.PacketSpec.Commands
                 //新的简化版本测试 
                 // 如果无法创建命令，返回null 
                 // 2. 使用CommandTypeHelper获取有效载荷类型
-                var payloadType = _commandTypeHelper.GetPayloadType(packet.Command);
+                var payloadType = _commandTypeHelper.GetPayloadType(packet.CommandId);
                 if (payloadType != null)
                 {
                     //var closedType = typeof(GenericCommand<>).MakeGenericType(payloadType);
@@ -136,7 +136,7 @@ namespace RUINORERP.PacketSpec.Commands
 
                     // 2.2 MakeGenericType 产生封闭类型
                     var closedType = openGeneric.MakeGenericType(payloadType);
-                    return (ICommand)Activator.CreateInstance(closedType, packet.Command, null);
+                    return (ICommand)Activator.CreateInstance(closedType, packet.CommandId, null);
 
                 }
 
@@ -230,7 +230,7 @@ namespace RUINORERP.PacketSpec.Commands
                     operationCode = originalData.One[0];
                 }
                 
-                packet.Command = new CommandId(category, operationCode);
+                packet.CommandId = new CommandId(category, operationCode);
 
                 return packet;
             }

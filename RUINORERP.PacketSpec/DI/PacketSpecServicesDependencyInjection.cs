@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
@@ -7,6 +7,7 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using Microsoft.Extensions.Configuration;
 using RUINORERP.Model.ConfigModel;
 using System.IO;
+using RUINORERP.PacketSpec.Commands.Authentication;
 
 namespace RUINORERP.PacketSpec.DI
 {
@@ -43,8 +44,9 @@ namespace RUINORERP.PacketSpec.DI
                 }
             });
 
-            // 注册Token验证服务
-            services.AddSingleton<TokenValidationService>();
+
+            // 注册TokenManager服务 - 第二阶段优化：使用兼容层逐步迁移
+            services.AddTokenManager();
 
             // 注册命令调度器
             services.AddSingleton<CommandDispatcher>();
@@ -92,11 +94,7 @@ namespace RUINORERP.PacketSpec.DI
             builder.RegisterType<JwtTokenService>()
                 .As<ITokenService>()
                 .SingleInstance();
-
-            // 注册Token验证服务
-            builder.RegisterType<TokenValidationService>()
-                .AsSelf()
-                .SingleInstance();
+ 
             
             // 注册命令工厂
             builder.RegisterType<DefaultCommandFactory>()
@@ -112,9 +110,12 @@ namespace RUINORERP.PacketSpec.DI
             // 注册适配器
             builder.RegisterType<CommandPacketAdapter>().SingleInstance();
                 
-            
-            // 注册Token验证服务
-            builder.RegisterType<TokenValidationService>().SingleInstance();
+     
+
+            // 注册TokenManager服务 - 简化的Token管理器
+            builder.RegisterType<TokenManager>()
+                .As<TokenManager>()
+                .SingleInstance();
                 
             // 注意：不注册抽象的RequestHandlerBase<TRequest, TResponse>类
             // 具体的请求处理器应该在各自的服务项目中注册

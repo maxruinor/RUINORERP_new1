@@ -26,6 +26,7 @@ namespace RUINORERP.UI.Common
     /// <summary>
     /// 服务器登陆授权相关类
     /// </summary>
+    [Obsolete]
     internal class ServerAuthorizer
     {
 

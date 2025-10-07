@@ -33,6 +33,8 @@ using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
+
+    [Obsolete]
     public class EasyClientService
     {
         public delegate void ConnectClosed(bool isconect);
@@ -106,7 +108,7 @@ namespace RUINORERP.UI.SuperSocketClient
         private int _port;
 
         static System.Timers.Timer timer = null;
-        HeartbeatManager heartbeat = null;
+        HeartbeatManagerOld heartbeat = null;
         public EasyClientService()
         {
 
@@ -121,7 +123,7 @@ namespace RUINORERP.UI.SuperSocketClient
             client.Error += OnClientError;
             client.Closed += OnClientClosed;
 
-            heartbeat = new HeartbeatManager();
+            heartbeat = new HeartbeatManagerOld();
             heartbeat.Start();
 
           
@@ -228,12 +230,12 @@ namespace RUINORERP.UI.SuperSocketClient
             {
                 try
                 {
-                    ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
-                    bool result = await serverAuthorizer.loginRunningOperationAsync(this, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
-                    if (result)
-                    {
-                        MainForm.Instance.logger.LogInformation("成功恢复与服务器的连接。");
-                    }
+                    //ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
+                    //bool result = await serverAuthorizer.loginRunningOperationAsync(this, UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord, 3);
+                    //if (result)
+                    //{
+                    //    MainForm.Instance.logger.LogInformation("成功恢复与服务器的连接。");
+                    //}
                 }
                 catch (Exception)
                 {

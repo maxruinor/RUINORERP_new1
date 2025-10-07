@@ -316,6 +316,18 @@
     <Reference Include="Microsoft.NET.StringTools, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.NET.StringTools.17.11.4\lib\net472\Microsoft.NET.StringTools.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.IdentityModel.Abstractions, Version=6.32.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Abstractions.6.32.1\lib\net472\Microsoft.IdentityModel.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.IdentityModel.Logging, Version=6.32.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Logging.6.32.1\lib\net472\Microsoft.IdentityModel.Logging.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.IdentityModel.Tokens, Version=6.32.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Tokens.6.32.1\lib\net472\Microsoft.IdentityModel.Tokens.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IdentityModel.Tokens.Jwt, Version=6.32.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IdentityModel.Tokens.Jwt.6.32.1\lib\net472\System.IdentityModel.Tokens.Jwt.dll</HintPath>
+    </Reference>
     <Reference Include="MySql.Data, Version=8.4.0.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\packages\MySql.Data.8.4.0\lib\net48\MySql.Data.dll</HintPath>
     </Reference>
@@ -877,7 +889,7 @@
     <Compile Include="ClientSuperSocket\BizPipelineFilter.cs" />
     <Compile Include="ClientSuperSocket\ClientDataBuilder.cs" />
     <Compile Include="ClientSuperSocket\EasyClientService.cs" />
-    <Compile Include="ClientSuperSocket\HeartbeatManager.cs" />
+    <Compile Include="ClientSuperSocket\HeartbeatManagerold.cs" />
     <Compile Include="ClientSuperSocket\SocketClientHelper.cs" />
     <Compile Include="ClientSuperSocket\SystemOptimizerService.cs" />
     <Compile Include="ClientSuperSocket\WorkflowService.cs" />
@@ -2237,8 +2249,10 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Network\Authentication\ITokenRefreshService.cs" />
     <!-- ClientTokenStorage.cs已移除，统一使用PacketSpec中的TokenManager -->
     <Compile Include="Network\Authentication\SilentTokenRefresher.cs" />
+    <Compile Include="Network\Authentication\TokenRefreshService.cs" />
     <Compile Include="Network\BizPackageInfo.cs" />
     <Compile Include="Network\BizPipelineFilter.cs" />
     <Compile Include="Network\ClientCommandDispatcher.cs" />
@@ -2256,10 +2270,9 @@
     <Compile Include="Network\ErrorHandling\TimeoutErrorHandlingStrategy.cs" />
     <Compile Include="Network\Exceptions\NetworkCommunicationException.cs" />
     <Compile Include="Network\HeartbeatManager.cs" />
-    <Compile Include="Network\IClientCommunicationService.cs" />
     <Compile Include="Network\ISocketClient.cs" />
     <Compile Include="Network\ClientCommunicationService.cs" />
-    <Compile Include="Network\RequestResponseManager.cs" />
+    <Compile Include="Network\NetworkConfig.cs" />
     <Compile Include="Network\RetryStrategy\EnhancedRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\ExponentialBackoffRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\FixedIntervalRetryStrategy.cs" />

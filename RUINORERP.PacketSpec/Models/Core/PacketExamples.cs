@@ -64,7 +64,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 .Build();
 
             Console.WriteLine($"登录包: {loginPacket}");
-            Console.WriteLine($"命令类型: {loginPacket.Command}");
+            Console.WriteLine($"命令类型: {loginPacket.CommandId}");
             Console.WriteLine($"数据大小: {loginPacket.Size} bytes");
       
 

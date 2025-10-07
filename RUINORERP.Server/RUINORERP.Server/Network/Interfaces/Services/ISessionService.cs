@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RUINORERP.Server.Network.Models;
+using SuperSocket.Server.Abstractions.Session;
 
 namespace RUINORERP.Server.Network.Interfaces.Services
 {
@@ -117,7 +118,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// </summary>
         /// <param name="session">SuperSocket会话</param>
         /// <returns>添加结果</returns>
-        Task<bool> AddSessionAsync(SuperSocket.Server.Abstractions.Session.IAppSession session);
+        Task<bool> AddSessionAsync(IAppSession session);
 
         /// <summary>
         /// 移除SuperSocket会话
@@ -131,7 +132,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// </summary>
         /// <param name="sessionId">会话ID</param>
         /// <returns>SuperSocket会话</returns>
-        SuperSocket.Server.Abstractions.Session.IAppSession GetAppSession(string sessionId);
+        IAppSession GetAppSession(string sessionId);
 
         /// <summary>
         /// 广播消息到所有活动会话

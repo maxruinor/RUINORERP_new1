@@ -57,24 +57,6 @@ namespace RUINORERP.PacketSpec.Commands
             
             return new ValidationResult();
         }
-        
-        /// <summary>
-        /// 执行命令的核心逻辑
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>命令执行结果</returns>
-        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
-        {
-            // 创建成功结果，返回原始消息
-            var result = new ResponseBase
-            {
-                IsSuccess = true,
-                Message = "Echo command executed successfully",
-                Code = 200,
-                TimestampUtc = DateTime.UtcNow
-            };
-            result.WithMetadata("Data", Message);
-            return Task.FromResult((ResponseBase)result);
-        }
+
     }
 }

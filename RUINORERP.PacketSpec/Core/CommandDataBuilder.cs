@@ -68,29 +68,7 @@ namespace RUINORERP.PacketSpec.Core
             return command;
         }
         
-        // ========== 常用命令快捷方法 ==========
-        
-        /// <summary>
-        /// 构建登录命令
-        /// </summary>
-        public static LoginCommand BuildLoginCommand(string username, string password, string clientInfo = null)
-        {
-            var command = new LoginCommand(username, password, clientInfo);
-            command.TimeoutMs = 30000;
-            command.Priority = CommandPriority.High;
-            return command;
-        }
-        
-        /// <summary>
-        /// 构建心跳命令
-        /// </summary>
-        public static HeartbeatCommand BuildHeartbeatCommand(string clientId, string sessionToken, long userId)
-        {
-            var command = new HeartbeatCommand(clientId, sessionToken, userId);
-            command.TimeoutMs = 10000;
-            command.Priority = CommandPriority.Normal;
-            return command;
-        }
+
         
         /// <summary>
         /// 构建Token验证命令
@@ -123,18 +101,5 @@ namespace RUINORERP.PacketSpec.Core
         }
     }
 
-    /// <summary>
-    /// CommandBuilder扩展方法 - 用于保持对旧代码的兼容性
-    /// </summary>
-    public static class CommandBuilderExtensions
-    {
-        /// <summary>
-        /// 创建命令构建器实例（已过时，请使用CommandDataBuilder）
-        /// </summary>
-        /// <typeparam name="TCommand">命令类型</typeparam>
-        /// <returns>不支持的操作异常</returns>
-        [Obsolete("use CommandDataBuilder")]
-        public static CommandBuilder<TCommand> Create<TCommand>() where TCommand : BaseCommand, new()
-            => throw new NotSupportedException("use CommandDataBuilder");
-    }
+
 }

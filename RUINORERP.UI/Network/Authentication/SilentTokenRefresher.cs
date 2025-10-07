@@ -1,6 +1,5 @@
+using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Tokens;
-using RUINORERP.UI.Network.Services;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,11 +9,10 @@ namespace RUINORERP.UI.Network.Authentication
     /// <summary>
     /// 静默Token刷新管理器
     /// 只负责触发Token刷新操作，不自行维护定时器
-    /// 定时器统一由UserLoginService管理
     /// </summary>
     public sealed class SilentTokenRefresher : IDisposable
     {
-        private readonly UserLoginService _loginService;
+        private readonly ITokenRefreshService _tokenRefreshService;
         private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
         private const int MAX_RETRY_COUNT = 3; // 最大重试次数
         private const int RETRY_DELAY_MS = 2000; // 重试延迟（毫秒）
@@ -32,10 +30,10 @@ namespace RUINORERP.UI.Network.Authentication
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="loginService">用户登录服务实例</param>
-        public SilentTokenRefresher(UserLoginService loginService)
+        /// <param name="tokenRefreshService">Token刷新服务实例</param>
+        public SilentTokenRefresher(ITokenRefreshService tokenRefreshService)
         {
-            _loginService = loginService ?? throw new ArgumentNullException(nameof(loginService));
+            _tokenRefreshService = tokenRefreshService ?? throw new ArgumentNullException(nameof(tokenRefreshService));
         }
 
         /// <summary>
@@ -60,51 +58,26 @@ namespace RUINORERP.UI.Network.Authentication
 
 
         /// <summary>
-        /// 内部Token刷新方法
+        /// 内部Token刷新方法 - 简化版
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>刷新是否成功</returns>
         private async Task<bool> RefreshTokenInternalAsync(CancellationToken cancellationToken)
         {
-            // 使用信号量确保同一时间只有一个刷新操作在执行
             await _refreshLock.WaitAsync(cancellationToken);
             try
             {
-                // 双重检查，避免多个线程同时进入刷新逻辑
-                    if (!TokenManager.Instance.IsAccessTokenExpired())
-                    {
-                        return true;
-                    }
-
-                    // 获取当前的Token信息
-                    var (success, currentToken, refreshToken) = TokenManager.Instance.GetTokens();
-                    if (!success || string.IsNullOrEmpty(refreshToken) || string.IsNullOrEmpty(currentToken))
-                    {
-                        return false;
-                    }
-
-                    // MemoryTokenStorage没有IsRefreshTokenExpired方法，直接返回false
-                    if (false)
-                {
-                    // 刷新Token已过期，触发刷新失败事件
-                    OnRefreshFailed(new Exception("刷新Token已过期，需要重新登录"));
-                    return false;
-                }
-
-                // 执行Token刷新（带重试机制）
                 LoginResponse response = null;
                 int retryCount = 0;
                 Exception lastException = null;
-
+                
                 while (retryCount < MAX_RETRY_COUNT)
                 {
                     try
                     {
-                        response = await _loginService.RefreshTokenAsync(refreshToken, currentToken, cancellationToken);
+                        response = await _tokenRefreshService.RefreshTokenAsync(cancellationToken);
                         if (response != null && !string.IsNullOrEmpty(response.AccessToken))
                         {
-                            // 刷新成功，更新Token存储
-                            TokenManager.Instance.SetTokens(response.AccessToken, response.RefreshToken, response.ExpiresIn);
                             OnRefreshSucceeded(response);
                             return true;
                         }
@@ -113,16 +86,13 @@ namespace RUINORERP.UI.Network.Authentication
                     {
                         lastException = ex;
                         retryCount++;
-
-                        // 如果是最后一次重试，则不等待直接抛出
                         if (retryCount < MAX_RETRY_COUNT)
                         {
                             await Task.Delay(RETRY_DELAY_MS, cancellationToken);
                         }
                     }
                 }
-
-                // 重试失败
+                
                 if (lastException != null)
                 {
                     OnRefreshFailed(lastException);

@@ -45,20 +45,7 @@ namespace RUINORERP.PacketSpec.Commands
         
         public override object GetSerializableData() => Payload;
         
-        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                var result = ResponseBase.CreateSuccess("Generic命令执行成功");
-                result.WithMetadata("PayloadType", typeof(TPayload).Name);
-                result.WithMetadata("Data", Payload);
-                return Task.FromResult(result);
-            }
-            catch (Exception ex)
-            {
-                return Task.FromResult(ResponseBase.CreateError($"Generic命令执行失败: {ex.Message}"));
-            }
-        }
+       
     }
     
     // 强类型泛型命令
@@ -78,20 +65,6 @@ namespace RUINORERP.PacketSpec.Commands
             Direction = PacketDirection.ClientToServer;
         }
         
-        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                var result = ResponseBase.CreateSuccess("强类型Generic命令执行成功");
-                result.WithMetadata("RequestType", typeof(TRequest).Name);
-                result.WithMetadata("ResponseType", typeof(TResponse).Name);
-                result.WithMetadata("Data", Request);
-                return Task.FromResult(result);
-            }
-            catch (Exception ex)
-            {
-                return Task.FromResult(ResponseBase.CreateError($"强类型Generic命令执行失败: {ex.Message}"));
-            }
-        }
+      
     }
 }

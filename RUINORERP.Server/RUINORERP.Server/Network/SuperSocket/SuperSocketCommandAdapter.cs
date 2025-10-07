@@ -5,13 +5,13 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using global::RUINORERP.PacketSpec.Commands;
-using global::RUINORERP.PacketSpec.Commands.Message;
-using global::RUINORERP.PacketSpec.Models.Responses;
-using global::RUINORERP.PacketSpec.Serialization;
-using global::RUINORERP.Server.Network.Models;
-using global::RUINORERP.Server.Network.Interfaces.Services;
-using global::SuperSocket.Server.Abstractions.Session;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands.Message;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Serialization;
+using RUINORERP.Server.Network.Models;
+using RUINORERP.Server.Network.Interfaces.Services;
+using SuperSocket.Server.Abstractions.Session;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.PacketSpec;
@@ -21,7 +21,7 @@ using SuperSocket.Command;
 using Azure;
 using RUINORERP.PacketSpec.Models.Core;
 
-namespace RUINORERP.Server.Network.Commands.SuperSocket
+namespace RUINORERP.Server.Network.SuperSocket
 {
     /// <summary>
     /// 统一的SuperSocket命令适配器
@@ -152,7 +152,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     commandType.GetGenericTypeDefinition() == typeof(BaseCommand<,>))
                 {
                     var setRequest = commandType.GetMethod("SetRequestFromBinary");
-                    setRequest?.Invoke(command, new object[]{package.Packet.CommandData});
+                    setRequest?.Invoke(command, new object[] { package.Packet.CommandData });
                     _logger?.LogDebug("已自动设置命令请求数据: CommandId={CommandId}", package.Packet.Command);
                 }
 
@@ -506,11 +506,11 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
 
                 // 加密数据
                 var originalData = new OriginalData(
-                    (byte)package.Command.Category,
-                    new byte[] { package.Command.OperationCode },
+                    (byte)package.Command.CommandIdentifier.Category,
+                    new byte[] { package.Command.CommandIdentifier.OperationCode },
                     serializedData
                 );
-                var encryptedData = RUINORERP.PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
+                var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
 
                 // 发送数据并捕获可能的异常
                 try
@@ -558,7 +558,7 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
             var errorResponse = new PacketModel
             {
                 PacketId = GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
-                Command = requestPackage.Packet?.Command ?? default(CommandId),
+                Command = requestPackage.Packet?.Command ?? default(ICommand),
                 Direction = PacketDirection.Response,
                 SessionId = requestPackage.Packet?.SessionId,
                 Status = PacketStatus.Error,

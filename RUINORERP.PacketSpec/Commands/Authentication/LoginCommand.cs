@@ -59,40 +59,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             // 仅用于兼容性，在内部处理会话相关逻辑
         }
 
-        /// <summary>
-        /// 命令执行的具体逻辑
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>执行结果</returns>
-        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                if (Request == null)
-                {
-                    return Task.FromResult(ResponseBase.CreateError("登录请求数据不能为空", 400)
-                        .WithMetadata("ErrorCode", "INVALID_REQUEST"));
-                }
-
-                if (!Request.IsValid())
-                {
-                    return Task.FromResult(ResponseBase.CreateError("登录请求数据无效", 400)
-                        .WithMetadata("ErrorCode", "INVALID_LOGIN_REQUEST"));
-                }
-
-                // 自动处理Token（通过基类的AutoAttachToken）
-                var result = ResponseBase.CreateSuccess("登录命令构建成功");
-                result.WithMetadata("Username", Request.Username);
-                result.WithMetadata("ClientInfo", Request.ClientInfo);
-                
-                return Task.FromResult(result);
-            }
-            catch (Exception ex)
-            {
-                return Task.FromResult(ResponseBase.CreateError($"登录命令执行异常: {ex.Message}", 500)
-                    .WithMetadata("ErrorCode", "LOGIN_EXCEPTION"));
-            }
-        }
+        
 
         /// <summary>
         /// 自动附加认证Token

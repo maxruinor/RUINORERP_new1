@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Core;
+﻿using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
 
@@ -13,12 +13,8 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 请求唯一标识
         /// </summary>
-        public string RequestId { get; set; }//=IdGenerator.GenerateRequestId();
+        public string RequestId { get; set; }
 
-        /// <summary>
-        /// 命令唯一标识
-        /// </summary>
-        public string CommandId { get; set; }
 
         /// <summary>
         /// 请求操作类型

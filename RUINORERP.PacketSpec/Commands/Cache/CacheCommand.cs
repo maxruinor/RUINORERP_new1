@@ -129,18 +129,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
             return new ValidationResult();
         }
 
-        /// <summary>
-        /// 执行命令的核心逻辑
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>命令执行结果</returns>
-        protected override Task<ResponseBase> OnExecuteAsync(CancellationToken cancellationToken)
-        {
-            // 缓存同步命令契约只定义数据结构，实际的业务逻辑在Handler中实现
-            var result = ResponseBase.CreateSuccess("缓存同步命令构建成功")
-                .WithMetadata("Data", new { SyncMode = SyncMode });
-            return Task.FromResult((ResponseBase)result);
-        }
+       
     }
     
     /// <summary>

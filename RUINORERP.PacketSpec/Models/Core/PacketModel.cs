@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -19,16 +19,16 @@ namespace RUINORERP.PacketSpec.Models.Core
     /// 不包含任何业务逻辑或业务属性
     /// </summary>
     [Serializable]
-    public class PacketModel :  IPacketData
+    public class PacketModel 
     {
         // 传输的指令数据里面有请求数据或响应数据
         public byte[] CommandData { get; set; }
 
-
         // 简单的命令标识（不包含业务逻辑）
         //命令类型
-        public CommandId Command { get; set; }
+        public CommandId CommandId { get; set; }
 
+        public ICommand Command { get; set; }
         /// <summary>
         /// 数据包状态
         /// </summary>
@@ -38,7 +38,6 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         public string SessionId { get; set; } // 属性声明
 
-        public string RequestId { get; set; }
 
         /// <summary>
         /// 包标志位
@@ -116,7 +115,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             return new PacketModel
             {
                 PacketId = IdGenerator.GeneratePacketId(command.CommandIdentifier.Name),
-                Command = command.CommandIdentifier,
+                CommandId = command.CommandIdentifier,
                 CommandData = MessagePackSerializer.Serialize(command),
                 CreatedTimeUtc = command.CreatedTimeUtc
             };
@@ -319,7 +318,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             {
                 if (CommandData == null || CommandData.Length == 0)
                     return default(T);
-                     
+
                 // 优先尝试MessagePack反序列化
                 try
                 {
@@ -350,7 +349,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             {
                 if (CommandData == null || CommandData.Length == 0)
                     return default(T);
-                     
+
                 return MessagePack.MessagePackSerializer.Deserialize<T>(CommandData);
             }
             catch (Exception ex)
@@ -366,7 +365,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         public CommandExecutionContext ExtractExecutionContext()
         {
             var context = CommandExecutionContext.CreateFromPacket(this);
-             
+
             // 从Extensions中提取额外上下文信息
             if (Extensions != null)
             {
@@ -375,15 +374,15 @@ namespace RUINORERP.PacketSpec.Models.Core
                     context.Extensions[extension.Key] = extension.Value;
                 }
             }
-             
+
             return context;
         }
         public PacketModel Clone()
         {
             return new PacketModel
             {
-                PacketId = IdGenerator.GeneratePacketId(Command.Category.ToString()),
-                Command = Command,
+                PacketId = IdGenerator.GeneratePacketId(CommandId.Category.ToString()),
+                CommandId = CommandId,
                 Status = Status,
                 SessionId = SessionId,
                 ClientId = ClientId,
@@ -417,7 +416,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 throw new ArgumentNullException(nameof(packet), "数据包不能为空");
 
             // 直接返回已有的Command属性，避免重新创建CommandId对象
-            return packet.Command;
+            return packet.CommandId;
         }
     }
 }

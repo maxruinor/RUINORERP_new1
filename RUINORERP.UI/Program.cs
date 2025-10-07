@@ -459,7 +459,7 @@ namespace RUINORERP.UI
                     //先定义上下文
                     Startup starter = new Startup();
                     IHost myhost = starter.SartUpDIPort();
-                   
+
 
                     IServiceProvider services = myhost.Services;
                     //获取配置对象并初始化AppSettings
@@ -544,7 +544,7 @@ namespace RUINORERP.UI
                 catch (Exception ex)
                 {
                     var s = ex.Message;
-                    MessageBox.Show(s);
+                    MessageBox.Show(s + "\r\n" + ex.StackTrace);
                     MessageBox.Show(ex.StackTrace);
                     Console.Write(ex.StackTrace);
                 }

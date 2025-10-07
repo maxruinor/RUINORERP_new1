@@ -41,7 +41,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>当前构建器实例</returns>
         public PacketBuilder WithCommand(CommandId command)
         {
-            _packet.Command = command;
+            _packet.CommandId = command;
             return this;
         }
 

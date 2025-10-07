@@ -53,7 +53,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 获取命令ID
-                uint commandId = packet.Command.FullCode;
+                uint commandId = packet.CommandId.FullCode;
                 _logger?.LogDebug("创建命令，命令ID: {CommandId}", commandId);
 
                 // 通过调度器创建命令
@@ -74,7 +74,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "创建命令时发生异常，命令ID: {CommandId}", packet?.Command.OperationCode);
+                _logger?.LogError(ex, "创建命令时发生异常，命令ID: {CommandId}", packet?.CommandId.OperationCode);
                 throw new InvalidOperationException($"创建命令时发生异常: {ex.Message}", ex);
             }
         }
@@ -161,7 +161,7 @@ namespace RUINORERP.UI.Network
                         operationCode = originalData.One[0];
                     }
                     
-                    packet.Command = new CommandId(category, operationCode);
+                    packet.CommandId = new CommandId(category, operationCode);
                     
                     // 添加原始数据到扩展字段中，以便后续处理
                     packet.Extensions["OriginalData"] = originalData;

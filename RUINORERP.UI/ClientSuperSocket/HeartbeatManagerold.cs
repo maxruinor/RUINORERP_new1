@@ -13,7 +13,7 @@ using System.Web.UI.WebControls;
 
 namespace RUINORERP.UI.ClientSuperSocket
 {
-    public class HeartbeatManager : IDisposable
+    public class HeartbeatManagerOld : IDisposable
     {
         private readonly object _lock = new object();
         private volatile bool _isRunning;

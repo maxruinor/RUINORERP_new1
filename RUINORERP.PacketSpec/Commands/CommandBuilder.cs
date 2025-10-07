@@ -78,16 +78,7 @@ namespace RUINORERP.PacketSpec.Commands
             return _command;
         }
 
-        /// <summary>
-        /// 构建并执行命令
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>命令执行结果</returns>
-        public async Task<ResponseBase> BuildAndExecuteAsync(CancellationToken cancellationToken = default)
-        {
-            var command = Build();
-            return await command.ExecuteAsync(cancellationToken);
-        }
+
     }
 
     /// <summary>
@@ -102,7 +93,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <typeparam name="TCommand">命令类型</typeparam>
         /// <param name="builder">构建器实例</param>
         /// <returns>构建器实例</returns>
-        public static CommandBuilder<TCommand> WithHighPriority<TCommand>(this CommandBuilder<TCommand> builder) 
+        public static CommandBuilder<TCommand> WithHighPriority<TCommand>(this CommandBuilder<TCommand> builder)
             where TCommand : BaseCommand, new()
         {
             return builder.WithPriority(CommandPriority.High);
@@ -114,7 +105,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <typeparam name="TCommand">命令类型</typeparam>
         /// <param name="builder">构建器实例</param>
         /// <returns>构建器实例</returns>
-        public static CommandBuilder<TCommand> WithNormalPriority<TCommand>(this CommandBuilder<TCommand> builder) 
+        public static CommandBuilder<TCommand> WithNormalPriority<TCommand>(this CommandBuilder<TCommand> builder)
             where TCommand : BaseCommand, new()
         {
             return builder.WithPriority(CommandPriority.Normal);
@@ -126,7 +117,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <typeparam name="TCommand">命令类型</typeparam>
         /// <param name="builder">构建器实例</param>
         /// <returns>构建器实例</returns>
-        public static CommandBuilder<TCommand> WithLowPriority<TCommand>(this CommandBuilder<TCommand> builder) 
+        public static CommandBuilder<TCommand> WithLowPriority<TCommand>(this CommandBuilder<TCommand> builder)
             where TCommand : BaseCommand, new()
         {
             return builder.WithPriority(CommandPriority.Low);
@@ -138,7 +129,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <typeparam name="TCommand">命令类型</typeparam>
         /// <param name="builder">构建器实例</param>
         /// <returns>构建器实例</returns>
-        public static CommandBuilder<TCommand> FromClientToServer<TCommand>(this CommandBuilder<TCommand> builder) 
+        public static CommandBuilder<TCommand> FromClientToServer<TCommand>(this CommandBuilder<TCommand> builder)
             where TCommand : BaseCommand, new()
         {
             return builder.WithDirection(PacketDirection.ClientToServer);
@@ -150,7 +141,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <typeparam name="TCommand">命令类型</typeparam>
         /// <param name="builder">构建器实例</param>
         /// <returns>构建器实例</returns>
-        public static CommandBuilder<TCommand> FromServerToClient<TCommand>(this CommandBuilder<TCommand> builder) 
+        public static CommandBuilder<TCommand> FromServerToClient<TCommand>(this CommandBuilder<TCommand> builder)
             where TCommand : BaseCommand, new()
         {
             return builder.WithDirection(PacketDirection.ServerToClient);
@@ -169,7 +160,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="id">命令标识符</param>
         /// <param name="payload">命令载荷</param>
         /// <returns>基础命令对象</returns>
-        public static BaseCommand BuildBase(CommandId id, object payload)
+        public static BaseCommand BuildBase(CommandId id, object payload = null)
         {
             return CommandDataBuilder.BuildBaseCommand(id, payload);
         }
@@ -182,8 +173,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="id">命令标识符</param>
         /// <param name="req">请求对象</param>
         /// <returns>强类型命令对象</returns>
-        public static BaseCommand<TReq, TResp> BuildTyped<TReq, TResp>(CommandId id, TReq req) 
-            where TReq : class, IRequest 
+        public static BaseCommand<TReq, TResp> BuildTyped<TReq, TResp>(CommandId id, TReq req)
+            where TReq : class, IRequest
             where TResp : class, IResponse
         {
             return CommandDataBuilder.BuildCommand<TReq, TResp>(id, req);

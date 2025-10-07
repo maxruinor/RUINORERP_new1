@@ -173,8 +173,7 @@ namespace RUINORERP.UI
                         {
                             if (!Program.AppContextData.IsSuperUser || txtUserName.Text != "admin")
                             {
-                                ServerAuthorizer serverAuthorizer = new ServerAuthorizer();
-
+                            
                                 // 通过依赖注入获取UserLoginService
                                 var userLogin = Startup.ServiceProvider.GetService<UserLoginService>();
 

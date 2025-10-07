@@ -29,6 +29,7 @@ using SuperSocket.Connection;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Concurrent;
 using RUINORERP.PacketSpec.Models.Core;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -66,8 +67,15 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
 
-        // 添加TokenValidationService依赖
-        private TokenValidationService TokenValidationService => Program.ServiceProvider.GetRequiredService<TokenValidationService>();
+        /// <summary>
+        /// Token服务（新的统一Token服务）
+        /// </summary>
+        private ITokenService TokenService => Program.ServiceProvider.GetRequiredService<ITokenService>();
+
+        /// <summary>
+        /// Token管理器（简化版Token管理）
+        /// </summary>
+        private TokenManager TokenManager => Program.ServiceProvider.GetRequiredService<TokenManager>();
 
         /// <summary>
         /// 支持的命令类型
@@ -116,11 +124,11 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 var commandId = command.CommandIdentifier;
-                
+
                 // 使用统一的数据提取方式
                 var context = GetCommandContext(command);
                 var sessionId = context.SessionId;
-                
+
                 LogInfo($"处理命令: {commandId} [会话: {sessionId}]");
 
                 if (commandId == AuthenticationCommands.Login || commandId == AuthenticationCommands.LoginRequest)
@@ -185,7 +193,7 @@ namespace RUINORERP.Server.Network.Commands
             {
                 return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
             }
-            
+
             // 使用统一的业务逻辑处理方法
             return await ProcessLoginAsync(loginRequest, command.ExecutionContext, cancellationToken);
         }
@@ -202,7 +210,7 @@ namespace RUINORERP.Server.Network.Commands
             {
                 return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
             }
-            
+
             return await ProcessLoginAsync(loginRequest, command.ExecutionContext, cancellationToken);
         }
 
@@ -227,9 +235,22 @@ namespace RUINORERP.Server.Network.Commands
                 {
                     return CreateErrorResponse("登录请求数据无效", UnifiedErrorCodes.Command_ValidationFailed, "INVALID_LOGIN_REQUEST");
                 }
+                // 获取或创建会话信息
+                var sessionInfo = SessionService.GetSession(executionContext.SessionId);
+                if (sessionInfo == null)
+                {
+                    // 统一使用GetClientIp方法获取客户端IP
+                    string clientIp = GetClientIp(null, loginRequest);
+
+                    sessionInfo = SessionService.CreateSession(executionContext.SessionId, clientIp);
+                    if (sessionInfo == null)
+                    {
+                        return CreateErrorResponse("创建会话失败", UnifiedErrorCodes.System_InternalError, "SESSION_CREATION_FAILED");
+                    }
+                }
 
                 // 检查黑名单
-                if (IsUserBlacklisted(loginRequest.Username, loginRequest.ClientIp))
+                if (IsUserBlacklisted(loginRequest.Username, sessionInfo.ClientIp))
                 {
                     return CreateErrorResponse("用户或IP在黑名单中", UnifiedErrorCodes.Auth_UserNotFound, "BLACKLISTED");
                 }
@@ -269,19 +290,7 @@ namespace RUINORERP.Server.Network.Commands
                     KickExistingSessions(authorizedSessions, loginRequest.Username);
                 }
 
-                // 获取或创建会话信息
-                var sessionInfo = SessionService.GetSession(executionContext.SessionId);
-                if (sessionInfo == null)
-                {
-                    // 统一使用GetClientIp方法获取客户端IP
-                    string clientIp = GetClientIp(null, loginRequest);
-                    
-                    sessionInfo = SessionService.CreateSession(executionContext.SessionId, clientIp);
-                    if (sessionInfo == null)
-                    {
-                        return CreateErrorResponse("创建会话失败", UnifiedErrorCodes.System_InternalError, "SESSION_CREATION_FAILED");
-                    }
-                }
+  
 
                 // 更新会话信息
                 UpdateSessionInfo(sessionInfo, userValidationResult.UserSessionInfo);
@@ -291,7 +300,7 @@ namespace RUINORERP.Server.Network.Commands
                 AddActiveSession(executionContext.SessionId);
 
                 // 生成Token
-                var tokenInfo = GenerateTokenInfo(userValidationResult.UserSessionInfo);
+                var (accessToken, refreshToken) = await GenerateTokenInfoAsync(userValidationResult.UserSessionInfo);
 
                 // 返回成功结果
                 return CreateSuccessResponse(
@@ -299,8 +308,10 @@ namespace RUINORERP.Server.Network.Commands
                     {
                         UserId = userValidationResult.UserSessionInfo.UserInfo.User_ID,
                         Username = userValidationResult.UserSessionInfo.UserInfo.UserName,
-                        Token = tokenInfo,
-                        ExpiresIn = tokenInfo.ExpiresIn
+                        AccessToken = accessToken,
+                        RefreshToken = refreshToken,
+                        ExpiresIn = 28800,
+                        TokenType = "Bearer"
                     },
                     "登录成功");
             }
@@ -425,7 +436,7 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 处理Token验证命令 - 整合了Token验证机制
+        /// 处理Token验证命令 - 使用TokenManager进行Token验证
         /// </summary>
         private async Task<ResponseBase> HandleTokenValidationAsync(ICommand command, CancellationToken cancellationToken)
         {
@@ -434,7 +445,7 @@ namespace RUINORERP.Server.Network.Commands
                 // 统一使用基类方法获取Token验证请求数据
                 var validationRequest = ParseBusinessData<TokenValidationRequest>(command);
                 string token = validationRequest?.Token;
-                
+
                 // 如果未从请求数据中获取到Token，则尝试从上下文中获取
                 if (string.IsNullOrEmpty(token))
                 {
@@ -447,8 +458,8 @@ namespace RUINORERP.Server.Network.Commands
                     return CreateErrorResponse("Token不能为空", UnifiedErrorCodes.Auth_TokenInvalid, "TOKEN_EMPTY");
                 }
 
-                // 使用新的TokenValidationService验证Token
-                var validationResult = await TokenValidationService.ValidateTokenAsync(token);
+                // 使用TokenManager验证Token
+                var validationResult = await TokenManager.ValidateStoredTokenAsync();
 
                 if (!validationResult.IsValid)
                 {
@@ -469,7 +480,10 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 处理Token刷新命令 - 整合了Token刷新机制
+        /// 处理Token刷新命令 - 使用TokenManager提供智能刷新机制
+        /// </summary>
+        /// <summary>
+        /// 处理Token刷新命令 - 使用最新的Token体系
         /// </summary>
         private async Task<ResponseBase> HandleTokenRefreshAsync(ICommand command, CancellationToken cancellationToken)
         {
@@ -477,31 +491,43 @@ namespace RUINORERP.Server.Network.Commands
             {
                 // 统一使用基类方法获取Token刷新请求数据
                 var refreshReq = ParseBusinessData<TokenRefreshRequest>(command);
-                if (refreshReq == null || string.IsNullOrEmpty(refreshReq.RefreshToken) || string.IsNullOrEmpty(refreshReq.Token))
+                if (refreshReq == null || !refreshReq.IsValid())
                 {
-                    return CreateErrorResponse("刷新Token和当前Token都不能为空", UnifiedErrorCodes.Command_ValidationFailed, "INVALID_REFRESH_DATA");
+                    return CreateErrorResponse("Token刷新请求数据无效", UnifiedErrorCodes.Command_ValidationFailed, "INVALID_REFRESH_DATA");
                 }
 
-                // 使用新的TokenValidationService刷新Token
-                var refreshResult = await TokenValidationService.RefreshTokenAsync(refreshReq.RefreshToken, refreshReq.Token);
-
-                if (!refreshResult.IsSuccess)
+                // 使用TokenManager进行Token刷新
+                try
                 {
-                    return CreateErrorResponse(refreshResult.ErrorMessage, UnifiedErrorCodes.Auth_TokenInvalid, "REFRESH_FAILED");
+                    // 使用TokenManager的Token刷新功能
+                    var refreshResult = await TokenManager.RefreshTokenAsync(refreshReq.RefreshToken, refreshReq.Token);
+
+                    if (!refreshResult.Success)
+                    {
+                        return CreateErrorResponse($"Token刷新失败: {refreshResult.ErrorMessage}", UnifiedErrorCodes.Auth_TokenInvalid, "REFRESH_FAILED");
+                    }
+#warning  要处理的逻辑
+                    // 创建登录响应（使用TokenManager返回的用户信息）
+                    var loginResponse = new LoginResponse
+                    {
+                       // UserId = refreshResult.UserId,
+                       // Username = refreshResult.UserName ?? refreshResult.UserId.ToString(), // 优先使用用户名，如果没有则使用用户ID
+                        AccessToken = refreshResult.AccessToken,
+                        RefreshToken = refreshResult.AccessToken ?? refreshReq.RefreshToken, // 使用新的刷新Token（如果提供）
+                       // ExpiresIn = refreshResult.ex, // 从TokenManager获取实际的过期时间
+                        TokenType = "Bearer"
+                    };
+
+                    return CreateSuccessResponse(loginResponse, "Token刷新成功");
                 }
-
-                // 创建登录响应
-                var loginResponse = new LoginResponse
+                catch (Microsoft.IdentityModel.Tokens.SecurityTokenException ex)
                 {
-                    UserId = long.Parse(refreshResult.UserId),
-                    Username = refreshResult.UserId, // 实际项目中应该从用户信息中获取
-                    AccessToken = refreshResult.AccessToken,
-                    RefreshToken = refreshResult.RefreshToken,
-                    ExpiresIn = refreshResult.ExpiresIn,
-                    TokenType = "Bearer"
-                };
-
-                return CreateSuccessResponse(loginResponse, "Token刷新成功");
+                    return CreateErrorResponse(ex.Message, UnifiedErrorCodes.Auth_TokenInvalid, "SECURITY_TOKEN_ERROR");
+                }
+                catch (Exception ex)
+                {
+                    return CreateErrorResponse($"Token刷新失败: {ex.Message}", UnifiedErrorCodes.Auth_TokenInvalid, "REFRESH_FAILED");
+                }
             }
             catch (Exception ex)
             {
@@ -580,7 +606,7 @@ namespace RUINORERP.Server.Network.Commands
 
         #region 核心业务逻辑方法
 
-                /// <summary>
+        /// <summary>
         /// 验证用户凭据
         /// </summary>
         private async Task<UserValidationResult> ValidateUserCredentialsAsync(LoginRequest loginRequest, CancellationToken cancellationToken)
@@ -874,63 +900,40 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 生成Token信息
+        /// 生成Token信息 - 使用简化版TokenManager生成Token
+        /// 生成Token：当用户登录时，服务器验证用户凭证（如用户名和密码）后，生成一个Token（通常是JWT，即JSON Web Token）并返回给客户端
         /// </summary>
-        private TokenInfo GenerateTokenInfo(UserSessionInfo userSessionInfo)
+        private async Task<(string accessToken, string refreshToken)> GenerateTokenInfoAsync(UserSessionInfo userSessionInfo)
         {
-            // 使用JwtTokenService生成真实的Token
-            var tokenService = Program.ServiceProvider.GetRequiredService<ITokenService>();
-
+            var tokenManager = Program.ServiceProvider.GetRequiredService<TokenManager>();
+            
             var additionalClaims = new Dictionary<string, object>
             {
                 { "sessionId", userSessionInfo.SessionId },
-                { "clientIp", userSessionInfo.ClientIp }
+                { "clientIp", userSessionInfo.ClientIp },
+                { "userId", userSessionInfo.UserInfo.User_ID }
             };
-
-            var accessToken = tokenService.GenerateToken(
+            
+            var tokenInfo = await tokenManager.GenerateAndStoreTokenAsync(
                 userSessionInfo.UserInfo.User_ID.ToString(),
                 userSessionInfo.UserInfo.UserName,
                 additionalClaims
             );
-
-            // 生成刷新Token
-            var refreshToken = Guid.NewGuid().ToString(); // 实际项目中应该生成安全的刷新Token
-
-            return new TokenInfo
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                ExpiresIn = 3600, // 1小时
-                TokenType = "Bearer"
-            };
+            
+            return (tokenInfo.AccessToken, tokenInfo.RefreshToken ?? "");
         }
 
-        /// <summary>
-        /// 创建登录响应 - 使用ResponseBase.CreateSuccess让Handler只关心业务对象
-        /// </summary>
-        private ResponseBase CreateLoginResponse(TokenInfo tokenInfo, UserSessionInfo userSessionInfo)
-        {
-            LoginResponse loginResponse = new LoginResponse();
-            loginResponse.Username = userSessionInfo.UserInfo.UserName;
-            loginResponse.UserId = userSessionInfo.UserInfo.User_ID;
-            loginResponse.DisplayName = userSessionInfo.UserInfo.tb_employee?.Employee_Name;
-            loginResponse.AccessToken = tokenInfo.AccessToken;
-            loginResponse.RefreshToken = tokenInfo.RefreshToken;
-            loginResponse.ExpiresIn = tokenInfo.ExpiresIn;
-            loginResponse.TokenType = tokenInfo.TokenType;
-
-            return loginResponse;
-        }
 
         /// <summary>
         /// 验证Token
+        /// 验证Token：客户端在后续的请求中携带此Token，服务器验证Token的合法性（如签名、有效期等）以确定用户身份
         /// </summary>
         private async Task<TokenValidationResult> ValidateTokenAsync(string token, string sessionId)
         {
             await Task.Delay(20);
 
-            // 使用新的TokenValidationService验证Token
-            var validationResult = await TokenValidationService.ValidateTokenAsync(token);
+            // 使用新的ITokenService验证Token（TokenValidationService已合并到JwtTokenService）
+            var validationResult = await TokenService.ValidateTokenAsync(token);
 
             // 检查Token是否在活跃会话中
             if (validationResult.IsValid)
@@ -952,15 +955,33 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 刷新Token
+        /// 刷新Token - 使用TokenManager提供Token刷新机制
+        /// 刷新Token：由于安全考虑，Token通常有有效期。当Token即将过期时，客户端可以使用刷新Token来获取新的访问Token，而无需用户重新登录
         /// </summary>
-        private async Task<TokenRefreshResult> RefreshTokenAsync(string refreshToken, string currentToken)
+        private async Task<(bool Success, string AccessToken, string ErrorMessage)> RefreshTokenAsync(string refreshToken, string currentToken)
         {
             await Task.Delay(30);
 
-            // 使用新的TokenValidationService刷新Token
-            var refreshResult = await TokenValidationService.RefreshTokenAsync(refreshToken, currentToken);
-            return refreshResult;
+            try
+            {
+                // 使用TokenManager进行Token刷新
+                var refreshResult = await TokenManager.RefreshTokenAsync(refreshToken, currentToken);
+
+                if (!refreshResult.Success)
+                {
+                    return (false, null, refreshResult.ErrorMessage);
+                }
+
+                return (true, refreshResult.AccessToken, null);
+            }
+            catch (Microsoft.IdentityModel.Tokens.SecurityTokenException ex)
+            {
+                return (false, null, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return (false, null, $"Token刷新失败: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -996,17 +1017,17 @@ namespace RUINORERP.Server.Network.Commands
         private string GetClientIp(ICommand command, LoginRequest loginRequest = null)
         {
             // 1. 优先从请求数据中获取IP
-            if (loginRequest != null && !string.IsNullOrEmpty(loginRequest.ClientIp))
-            {
-                return loginRequest.ClientIp;
-            }
+            //if (loginRequest != null && !string.IsNullOrEmpty(loginRequest.ClientIp))
+            //{
+            //    return loginRequest.ClientIp;
+            //}
 
             // 2. 如果没有请求数据，则尝试从命令中获取（如果是泛型BaseCommand）
-            var baseCommand = command as BaseCommand<LoginRequest, LoginResponse>;
-            if (baseCommand != null && baseCommand.Request != null && !string.IsNullOrEmpty(baseCommand.Request.ClientIp))
-            {
-                return baseCommand.Request.ClientIp;
-            }
+            //var baseCommand = command as BaseCommand<LoginRequest, LoginResponse>;
+            //if (baseCommand != null && baseCommand.Request != null && !string.IsNullOrEmpty(baseCommand.Request.ClientIp))
+            //{
+            //    return baseCommand.Request.ClientIp;
+            //}
 
             // 3. 尝试从命令的SessionInfo中获取IP
             if (command != null && !string.IsNullOrEmpty(GetSessionId(command)))
@@ -1061,7 +1082,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private ResponseBase CreateSuccessResponse(object data, string message)
         {
-            return ConvertToApiResponse(ResponseBase.CreateSuccess( message)
+            return ConvertToApiResponse(ResponseBase.CreateSuccess(message)
                 .WithMetadata("Data", data));
         }
 
@@ -1149,9 +1170,9 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 创建Token刷新响应
         /// </summary>
-        private OriginalData CreateTokenRefreshResponse(TokenRefreshResult refreshResult)
+        private OriginalData CreateTokenRefreshResponse(LoginResponse refreshResponse)
         {
-            var responseData = $"TOKEN_REFRESHED|{refreshResult.AccessToken}|{refreshResult.RefreshToken}|{refreshResult.ExpiresIn}";
+            var responseData = $"TOKEN_REFRESHED|{refreshResponse.AccessToken}|{refreshResponse.RefreshToken}|{refreshResponse.ExpiresIn}";
             var data = System.Text.Encoding.UTF8.GetBytes(responseData);
 
             // 将完整的CommandId正确分解为Category和OperationCode
@@ -1166,8 +1187,8 @@ namespace RUINORERP.Server.Network.Commands
             );
         }
 
-       
-      
+
+
         #endregion
 
         #region 响应转换方法

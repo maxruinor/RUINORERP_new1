@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.PacketSpec.Models.Requests
@@ -36,11 +37,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public DateTime LoginTime { get; set; }
 
         /// <summary>
-        /// 客户端IP地址
-        /// </summary>
-        public string ClientIp { get; set; }
-
-        /// <summary>
         /// 附加数据，用于传递额外信息，如重复登录确认等
         /// </summary>
         public Dictionary<string, object> AdditionalData { get; set; }
@@ -48,7 +44,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 客户端Token（用于Token刷新场景）
         /// </summary>
-        public string Token { get; set; }
+        public TokenInfo Token { get; set; }
 
         /// <summary>
         /// 刷新Token（用于Token刷新场景）
@@ -66,7 +62,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
                 Username = username,
                 Password = password,
                 ClientVersion = ProtocolVersion.Current,
-                DeviceId = deviceId ?? Guid.NewGuid().ToString(),
                 LoginTime = DateTime.UtcNow,
             };
         }

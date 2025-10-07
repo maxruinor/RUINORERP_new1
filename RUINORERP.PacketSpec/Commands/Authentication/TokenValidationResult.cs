@@ -8,8 +8,6 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     /// </summary>
     public class TokenValidationResult
     {
-
-
         /// <summary>
         /// 验证是否成功
         /// </summary>
@@ -23,27 +21,17 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// <summary>
         /// 用户名
         /// </summary>
-        public string Username { get; set; }
+        public string UserName { get; set; }
 
         /// <summary>
-        /// 过期时间
+        /// 过期时间（可空，验证失败时为null）
         /// </summary>
-        public DateTime ExpiresAt { get; set; }
+        public DateTime? ExpiryTime { get; set; }
 
         /// <summary>
         /// 验证失败消息
         /// </summary>
         public string ErrorMessage { get; set; }
-
-        /// 用户名
-        /// </summary>
-        public string UserName { get; set; }
-
-        /// <summary>
-        /// 过期时间
-        /// </summary>
-        public DateTime? ExpiryTime { get; set; }
-
 
         /// <summary>
         /// 附加声明

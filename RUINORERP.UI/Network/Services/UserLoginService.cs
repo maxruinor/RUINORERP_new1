@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Tokens;
 using RUINORERP.UI.Network.Authentication;
 using SourceLibrary.Security;
 using System;
@@ -17,27 +17,40 @@ namespace RUINORERP.UI.Network.Services
     /// <summary>
     /// 用户登录服务类
     /// 提供用户认证、Token管理等功能
+    /// 使用简化版TokenManager体系，提供核心的Token管理功能
     /// </summary>
     public sealed class UserLoginService : IDisposable
     {
-        private readonly IClientCommunicationService _comm;
+        private readonly ClientCommunicationService _communicationService;
         private readonly ILogger<UserLoginService> _log;
         private readonly SilentTokenRefresher _silentTokenRefresher;
-
+        private readonly TokenManager _tokenManager;
+        /// <summary>
+        /// 构造函数 - 使用依赖注入的TokenManager
+        /// </summary>
+        /// <param name="communicationService">通信服务</param>
+        /// <param name="tokenManager">Token管理器（依赖注入）</param>
+        /// <param name="logger">日志记录器</param>
         public UserLoginService(
-            IClientCommunicationService comm,
-            ILogger<UserLoginService> log = null)
+            ClientCommunicationService communicationService,
+            TokenManager tokenManager,
+            ILogger<UserLoginService> logger = null)
         {
-            _comm = comm ?? throw new ArgumentNullException(nameof(comm));
-            _log = log;
-            _silentTokenRefresher = new SilentTokenRefresher(this);
+            _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
+            _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
+            _log = logger;
+
+            _silentTokenRefresher = new SilentTokenRefresher(new TokenRefreshService(communicationService));
+
+            // 订阅静默刷新事件
+            _silentTokenRefresher.RefreshSucceeded += OnRefreshSucceeded;
             _silentTokenRefresher.RefreshFailed += OnTokenRefreshFailed;
         }
 
         /* -------------------- 唯一对外入口 -------------------- */
 
         /// <summary>
-        /// 登录：成功返回 LoginResponse，失败抛 RpcException
+        /// 用户登录 - 使用简化版TokenManager
         /// </summary>
         /// <param name="username">用户名</param>
         /// <param name="password">密码</param>
@@ -45,92 +58,118 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>登录响应</returns>
         public async Task<LoginResponse> LoginAsync(string username, string password, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-                throw new ArgumentException("用户名或密码不能为空");
-
-            var response = await _comm.SendCommandAsync<LoginRequest, LoginResponse>(new LoginCommand(username, password), ct);
-
-            // 登录成功后设置token
-            if (response != null && !string.IsNullOrEmpty(response.AccessToken))
+            try
             {
-                TokenManager.Instance.SetTokens(response.AccessToken, response.RefreshToken, response.ExpiresIn);
-                // 不再手动 Start，由全局 HeartbeatManager 统一刷新
+                var loginRequest = new LoginRequest
+                {
+                    Username = username,
+                    Password = password,
+                };
+                LoginCommand loginCommand = new LoginCommand(username, password);
+                loginCommand.Request = loginRequest;
+                var response = await _communicationService.SendCommandAsync<LoginRequest, LoginResponse>(
+                    loginCommand, ct);
+
+                // 登录成功后设置token - 使用简化版TokenManager
+                if (response != null && !string.IsNullOrEmpty(response.AccessToken))
+                {
+            #warning 登陆成功后 得到token 返回
+                    //_tokenManager.TokenStorage.SetTokenAsync(response.AccessToken, response.RefreshToken, response.ExpiresIn);
+                    // 不再手动 Start，由全局 HeartbeatManager 统一刷新
+                }
+
+                return response;
             }
-
-            return response;
-        }
-
-        /// <summary>
-        /// 登出：成功返回 true，失败抛 RpcException
-        /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>登出是否成功</returns>
-        public async Task<bool> LogoutAsync(string sessionId, CancellationToken ct = default)
-        {
-            if (string.IsNullOrWhiteSpace(sessionId))
-                throw new ArgumentException("sessionId 不能为空");
-
-            var result = await _comm.SendAsync<object, bool>(
-                AuthenticationCommands.Logout,
-                new { SessionId = sessionId, TimestampUtc = DateTime.UtcNow },
-                null,   // 用默认 JsonPacketAdapter
-                ct);
-
-            if (result)
+            catch (Exception ex)
             {
-                // 登出成功后清除令牌并停止静默刷新
-                TokenManager.Instance.ClearTokens();
+                throw new Exception($"登录失败: {ex.Message}", ex);
             }
-
-            return result;
         }
 
         /// <summary>
-        /// 验证 Token：成功返回 true，失败抛 RpcException
-        /// </summary>
-        public Task<bool> ValidateTokenAsync(string token, CancellationToken ct = default)
-        {
-            if (string.IsNullOrWhiteSpace(token))
-                throw new ArgumentException("token 不能为空");
-
-            return _comm.SendAsync<object, bool>(
-                AuthenticationCommands.ValidateToken,
-                new { Token = token, TimestampUtc = DateTime.UtcNow },
-                null,
-                ct);
-        }
-
-        /// <summary>
-        /// 刷新 Token：成功返回 LoginResponse，失败抛 RpcException
-        /// </summary>
-        public Task<LoginResponse> RefreshTokenAsync(string refreshToken, string currentToken, CancellationToken ct = default)
-        {
-            if (string.IsNullOrWhiteSpace(refreshToken))
-                throw new ArgumentException("refreshToken 不能为空");
-
-            if (string.IsNullOrWhiteSpace(currentToken))
-                throw new ArgumentException("currentToken 不能为空");
-
-            return _comm.SendAsync<LoginRequest, LoginResponse>(
-                AuthenticationCommands.RefreshToken,
-                new LoginRequest { RefreshToken = refreshToken, Token = currentToken },
-                null,  // 不需要适配器
-                ct);
-        }
-
-        /// <summary>
-        /// 准备登录：用于初始化登录环境
+        /// 用户登出 - 使用简化版TokenManager
         /// </summary>
         /// <param name="ct">取消令牌</param>
-        /// <returns>准备是否成功</returns>
-        public Task<bool> PrepareLoginAsync(CancellationToken ct = default)
+        /// <returns>登出结果</returns>
+        public async Task<bool> LogoutAsync(CancellationToken ct = default)
         {
-            return _comm.SendAsync<object, bool>(
-                AuthenticationCommands.PrepareLogin,
-                new { TimestampUtc = DateTime.UtcNow },
-                null,
-                ct);
+            try
+            {
+                // 获取当前令牌信息
+                var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
+                if (tokenInfo == null)
+                {
+                    _log?.LogWarning("登出失败：未找到有效的令牌信息");
+                    return false;
+                }
+
+                BaseCommand baseCommand = CommandDataBuilder.BuildBaseCommand(AuthenticationCommands.Logout);
+
+                var result = await _communicationService.SendCommandAsync<bool, bool>(
+                    baseCommand, ct);
+
+                if (result)
+                {
+                    // 登出成功后清除令牌并停止静默刷新 - 使用简化版TokenManager
+                    await _tokenManager.TokenStorage.ClearTokenAsync();
+                    _log?.LogInformation("用户登出成功");
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "登出过程中发生异常");
+                throw new Exception($"登出失败: {ex.Message}", ex);
+            }
+        }
+
+
+
+        /// <summary>
+        /// 刷新Token - 使用简化版TokenManager
+        /// </summary>
+        /// <param name="refreshToken">刷新令牌（已废弃，由服务端管理）</param>
+        /// <param name="currentToken">当前访问令牌（已废弃，由服务端管理）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>刷新响应</returns>
+        public async Task<LoginResponse> RefreshTokenAsync(CancellationToken ct = default)
+        {
+            try
+            {
+                var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
+                if (tokenInfo == null || string.IsNullOrEmpty(tokenInfo.RefreshToken))
+                    throw new Exception("没有可用的刷新令牌");
+
+                var newToken = await _tokenManager.RefreshTokenAsync(tokenInfo.RefreshToken, tokenInfo.AccessToken);
+                if (newToken.Success)
+                {
+                    return new LoginResponse
+                    {
+                        AccessToken = newToken.AccessToken,
+                        TokenType = "Bearer",
+                        IsSuccess = true
+                    };
+                }
+
+                throw new Exception($"Token刷新失败: {newToken.ErrorMessage}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Token刷新失败: {ex.Message}", ex);
+            }
+        }
+
+
+
+        /// <summary>
+        /// 获取当前访问令牌 - 使用简化版TokenManager
+        /// </summary>
+        /// <returns>访问令牌</returns>
+        public async Task<string> GetCurrentAccessToken()
+        {
+            var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
+            return tokenInfo?.AccessToken;
         }
 
         /// <summary>
@@ -140,6 +179,16 @@ namespace RUINORERP.UI.Network.Services
         public Task<bool> TrySilentRefreshAsync()
         {
             return _silentTokenRefresher.TriggerRefreshAsync();
+        }
+
+        /// <summary>
+        /// 处理Token刷新成功事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void OnRefreshSucceeded(object sender, SilentTokenRefresher.RefreshSucceededEventArgs e)
+        {
+            _log?.LogInformation("静默刷新Token成功");
         }
 
         /// <summary>
@@ -159,6 +208,7 @@ namespace RUINORERP.UI.Network.Services
         public void Dispose()
         {
             _silentTokenRefresher.RefreshFailed -= OnTokenRefreshFailed;
+            _silentTokenRefresher.RefreshSucceeded -= OnRefreshSucceeded;
             _silentTokenRefresher.Dispose();
         }
     }

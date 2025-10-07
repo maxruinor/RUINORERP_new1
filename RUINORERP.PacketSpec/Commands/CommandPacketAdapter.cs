@@ -165,6 +165,20 @@ namespace RUINORERP.PacketSpec.Commands
                         return command;
                     }
                 }
+                
+                // 增加泛型命令回退：即便客户端发了个未注册命令，也能用泛型命令接住，服务器不崩溃
+                if (commandType == null && packet.CommandData != null && packet.CommandData.Length > 0)
+                {
+                    try
+                    {
+                        return new GenericCommand<Dictionary<string, object>>(packet.Command,
+                            MessagePackSerializer.Deserialize<Dictionary<string, object>>(packet.CommandData));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "尝试反序列化为字典类型的泛型命令失败");
+                    }
+                }
 
                 // 3. 最后使用泛型命令作为后备
                 return CreateGenericCommand(packet);
@@ -381,5 +395,22 @@ namespace RUINORERP.PacketSpec.Commands
                 return new object[0];
             }
         }
+    }
+
+    /// <summary>
+    /// CommandPacketAdapter的扩展方法类
+    /// 提供便捷的JSON数据打包功能
+    /// </summary>
+    public static class CommandPacketAdapterExtensions
+    {
+        /// <summary>
+        /// 将DTO对象打包为JSON格式的PacketModel
+        /// </summary>
+        /// <typeparam name="T">DTO类型</typeparam>
+        /// <param name="dto">DTO对象</param>
+        /// <param name="cmd">命令ID</param>
+        /// <returns>包含JSON数据的PacketModel</returns>
+        public static PacketModel PackJson<T>(T dto, CommandId cmd)
+            => PacketBuilder.Create().WithJsonData(dto).WithCommand(cmd).Build();
     }
 }

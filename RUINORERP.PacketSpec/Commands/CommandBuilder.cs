@@ -1,22 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Enums.Core;
-using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Models.Requests;
-
-using Newtonsoft.Json;
-using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Serialization;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
-    /// 命令构建器 - 提供流畅的API构建命令对象
-    /// 使用建造者模式简化命令创建过程
+    /// 命令构建器 - 此类型已过时，请使用 <see cref="CommandDataBuilder" /> 替代
     /// </summary>
+    [Obsolete("This type is obsolete. Use CommandDataBuilder instead.")]
     public class CommandBuilder<TCommand> where TCommand : BaseCommand, new()
     {
         private readonly TCommand _command;
@@ -60,39 +59,6 @@ namespace RUINORERP.PacketSpec.Commands
             return this;
         }
 
-  
-
-        /// <summary>
-        /// 设置超时时间
-        /// </summary>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
-        /// <returns>当前构建器实例</returns>
-        public CommandBuilder<TCommand> WithTimeout(int timeoutMs)
-        {
-            _command.TimeoutMs = timeoutMs;
-            return this;
-        }
-
- 
- 
-
-        ///// <summary>
-        ///// 设置JSON数据
-        ///// </summary>
-        ///// <typeparam name="T">数据类型</typeparam>
-        ///// <param name="data">数据对象</param>
-        ///// <returns>当前构建器实例</returns>
-        //public CommandBuilder<TCommand> WithJsonData<T>(T data)
-        //{
-        //    if (_command.Packet == null)
-        //    {
-        //        _command.Packet = new PacketModel();
-        //    }
-            
-        //    _command.Packet.SetJsonData(data);
-        //    return this;
-        //}
-
         /// <summary>
         /// 从数据包构建命令
         /// </summary>
@@ -100,26 +66,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>当前构建器实例</returns>
         public CommandBuilder<TCommand> FromPacket(PacketModel packet)
         {
-            //_command.Packet = packet;
-            
-            //// 从数据包中提取通用属性
-            //if (packet.Extensions.TryGetValue("RequestId", out var requestId))
-            //{
-            //    _command.RequestId = requestId?.ToString();
-            //}
-            
-            //if (packet.Extensions.TryGetValue("Timeout", out var timeout))
-            //{
-            //    _command.TimeoutMs = Convert.ToInt32(timeout);
-            //}
-            
-            //_command.SessionId = packet.SessionId;
-            
-            //if (packet.Extensions.TryGetValue("ClientId", out var clientId))
-            //{
-            //    _command.ClientId = clientId?.ToString();
-            //}
-            
             return this;
         }
 
@@ -145,8 +91,9 @@ namespace RUINORERP.PacketSpec.Commands
     }
 
     /// <summary>
-    /// 命令构建器扩展方法
+    /// 命令构建器扩展方法 - 此类型已过时，请使用 <see cref="CommandDataBuilder" /> 替代
     /// </summary>
+    [Obsolete("This type is obsolete. Use CommandDataBuilder instead.")]
     public static class CommandBuilderExtensions
     {
         /// <summary>
@@ -211,8 +158,9 @@ namespace RUINORERP.PacketSpec.Commands
     }
 
     /// <summary>
-    /// 静态命令构建器 - 提供三种指令的统一创建入口
+    /// 静态命令构建器 - 此类型已过时，请使用 <see cref="CommandDataBuilder" /> 替代
     /// </summary>
+    [Obsolete("This type is obsolete. Use CommandDataBuilder instead.")]
     public static class CommandBuilder
     {
         /// <summary>
@@ -223,9 +171,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>基础命令对象</returns>
         public static BaseCommand BuildBase(CommandId id, object payload)
         {
-            var command = new GenericCommand<object>(id, payload);
-            InitializeCommand(command);
-            return command;
+            return CommandDataBuilder.BuildBaseCommand(id, payload);
         }
 
         /// <summary>
@@ -240,16 +186,7 @@ namespace RUINORERP.PacketSpec.Commands
             where TReq : class, IRequest 
             where TResp : class, IResponse
         {
-            var command = Activator.CreateInstance(typeof(BaseCommand<TReq, TResp>)) as BaseCommand<TReq, TResp>;
-            if (command == null)
-                throw new InvalidOperationException($"无法创建BaseCommand<{typeof(TReq).Name}, {typeof(TResp).Name}>实例");
-
-            command.CommandIdentifier = id;
-            command.Request = req;
-            command.Direction = PacketDirection.ClientToServer;
-            InitializeCommand(command);
-
-            return command;
+            return CommandDataBuilder.BuildCommand<TReq, TResp>(id, req);
         }
 
         /// <summary>
@@ -261,37 +198,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>泛型命令对象</returns>
         public static GenericCommand<TPayload> BuildGeneric<TPayload>(CommandId id, TPayload payload)
         {
-            var command = new GenericCommand<TPayload>(id, payload);
-            InitializeCommand(command);
-            return command;
-        }
-
-        /// <summary>
-        /// 初始化命令的通用属性
-        /// </summary>
-        /// <param name="command">要初始化的命令对象</param>
-        private static void InitializeCommand(BaseCommand command)
-        {
-            command.TimeoutMs = 30000; // 默认超时时间30秒
-            command.Direction = PacketDirection.ClientToServer;
-            command.Priority = CommandPriority.Normal;
-            command.Status = CommandStatus.Created;
-            command.UpdateTimestamp();
-
-            // 确保RequestId已设置
-            if (string.IsNullOrEmpty(command.RequestId))
-            {
-                command.RequestId = IdGenerator.GenerateRequestId(command.CommandIdentifier.Name);
-            }
-
-            // 统一走PacketBuilder，保证序列化、Token、Direction、RequestId一次成型
-            var packet = PacketBuilder.Create()
-                                     .WithCommand(command.CommandIdentifier)
-                                     .WithRequestId(command.RequestId)
-                                     .WithTimeout(command.TimeoutMs)
-                                     .WithDirection(command.Direction)
-                                     .Build();
-
+            return CommandDataBuilder.BuildGenericCommand(id, payload);
         }
     }
 }

@@ -14,14 +14,11 @@ namespace RUINORERP.Examples
     {
         /// <summary>
         /// 在应用程序启动时初始化Token管理系统
-        /// 此方法应该在应用程序启动时只调用一次
+        /// 现在只需要使用TokenManager单例即可
         /// </summary>
         public static void InitializeTokenSystem()
         {
-            // 初始化ClientTokenStorage并注册到TokenManager
-            // 这是整个应用程序中唯一需要执行的注册操作
-            ClientTokenStorage.Initialize();
-            
+            // TokenManager已经使用单例模式，无需额外初始化
             Console.WriteLine("Token管理系统初始化成功");
         }
         
@@ -34,11 +31,8 @@ namespace RUINORERP.Examples
         /// <param name="expiresInSeconds">Token过期时间（秒）</param>
         public static void SetAuthenticationTokens(string accessToken, string refreshToken, int expiresInSeconds)
         {
-            // 方式1：直接通过TokenManager设置Token
+            // 通过TokenManager设置Token
             TokenManager.Instance.SetTokens(accessToken, refreshToken, expiresInSeconds);
-            
-            // 方式2：或者通过ClientTokenStorage设置Token（两种方式等价）
-            // ClientTokenStorage.SetTokens(accessToken, refreshToken, expiresInSeconds);
             
             Console.WriteLine($"Token设置成功，过期时间: {DateTime.UtcNow.AddSeconds(expiresInSeconds).ToString("yyyy-MM-dd HH:mm:ss")} UTC");
         }
@@ -87,11 +81,8 @@ namespace RUINORERP.Examples
         /// </summary>
         public static void ClearAuthenticationTokens()
         {
-            // 方式1：直接通过TokenManager清除Token
+            // 通过TokenManager清除Token
             TokenManager.Instance.ClearTokens();
-            
-            // 方式2：或者通过ClientTokenStorage清除Token（两种方式等价）
-            // ClientTokenStorage.ClearTokens();
             
             Console.WriteLine("Token已清除");
         }

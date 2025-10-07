@@ -288,7 +288,7 @@ namespace RUINORERP.UI.Network
             string authToken = null)
         {
             
-            var requestId = Guid.NewGuid().ToString("N");
+            var requestId = RUINORERP.PacketSpec.Core.IdGenerator.NewRequestId(commandId);
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(timeoutMs);
 

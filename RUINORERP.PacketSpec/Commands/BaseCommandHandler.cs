@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -192,7 +192,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (!validationResult.IsValid)
                 {
                     Logger.LogWarning($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
-                    return ResponseFactory.Fail(UnifiedErrorCodes.Command_ValidationFailed, $"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
+                    return ResponseBase.CreateError($"{UnifiedErrorCodes.Command_ValidationFailed.Message}: 命令验证失败: {validationResult.Errors[0].ErrorMessage}", UnifiedErrorCodes.Command_ValidationFailed.Code);
                 }
 
                 // 检查命令是否过期（如果命令有实现ExpirationTimeUtc属性）
@@ -203,7 +203,7 @@ namespace RUINORERP.PacketSpec.Commands
                         commandWithExpiration.ExpirationTimeUtc < DateTime.UtcNow)
                     {
                         Logger.LogWarning($"命令已过期: {commandWithExpiration.ExpirationTimeUtc}");
-                        return ResponseFactory.Fail(UnifiedErrorCodes.Command_Timeout, "命令已过期");
+                        return ResponseBase.CreateError($"{UnifiedErrorCodes.Command_Timeout.Message}: 命令已过期", UnifiedErrorCodes.Command_Timeout.Code);
                     }
                 }
                 catch
@@ -233,12 +233,14 @@ namespace RUINORERP.PacketSpec.Commands
             catch (OperationCanceledException)
             {
                 success = false;
-                return ResponseFactory.Fail(UnifiedErrorCodes.Command_ProcessCancelled);
+                return ResponseBase.CreateError(UnifiedErrorCodes.Command_ProcessCancelled.Message, UnifiedErrorCodes.Command_ProcessCancelled.Code);
             }
             catch (Exception ex)
             {
                 success = false;
-                return ResponseFactory.Except(ex, UnifiedErrorCodes.Command_ExecuteFailed);
+                var errorCode = UnifiedErrorCodes.Command_ExecuteFailed.Code == 0 ? UnifiedErrorCodes.System_InternalError : UnifiedErrorCodes.Command_ExecuteFailed;
+                return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
+                    .WithMetadata("StackTrace", ex.StackTrace);
             }
             finally
             {

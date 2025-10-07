@@ -28,7 +28,7 @@ namespace RUINORERP.UI.Network.DI
             services.AddSingleton<RequestResponseManager>();
             services.AddSingleton<ClientEventManager>();
             services.AddSingleton<HeartbeatManager>();
-            services.AddSingleton<ClientTokenStorage>();
+            // 不再需要ClientTokenStorage，使用TokenManager代替
 
 
             // 注册业务服务 使用瞬态
@@ -49,7 +49,7 @@ namespace RUINORERP.UI.Network.DI
             // 注册核心网络组件
             builder.RegisterType<SuperSocketClient>().As<ISocketClient>().SingleInstance();
             builder.RegisterType<ClientCommandDispatcher>().AsSelf().SingleInstance();
-            builder.RegisterType<ClientTokenStorage>().SingleInstance();
+            // 不再需要ClientTokenStorage，使用TokenManager代替
             
             // 注册ClientCommunicationService
             builder.RegisterType<ClientCommunicationService>().As<IClientCommunicationService>().SingleInstance();

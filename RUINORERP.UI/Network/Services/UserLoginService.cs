@@ -4,8 +4,8 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Tokens;
 using RUINORERP.UI.Network.Authentication;
-using RUINORERP.UI.Network.PacketAdapter;
 using SourceLibrary.Security;
 using System;
 using System.Threading;
@@ -53,9 +53,8 @@ namespace RUINORERP.UI.Network.Services
             // 登录成功后设置token
             if (response != null && !string.IsNullOrEmpty(response.AccessToken))
             {
-                ClientTokenStorage.SetTokens(response.AccessToken, response.RefreshToken, response.ExpiresIn);
-                // 启动静默刷新服务
-                _silentTokenRefresher.Start();
+                TokenManager.Instance.SetTokens(response.AccessToken, response.RefreshToken, response.ExpiresIn);
+                // 不再手动 Start，由全局 HeartbeatManager 统一刷新
             }
 
             return response;
@@ -81,8 +80,7 @@ namespace RUINORERP.UI.Network.Services
             if (result)
             {
                 // 登出成功后清除令牌并停止静默刷新
-                ClientTokenStorage.ClearTokens();
-                _silentTokenRefresher.Stop();
+                TokenManager.Instance.ClearTokens();
             }
 
             return result;
@@ -117,7 +115,7 @@ namespace RUINORERP.UI.Network.Services
             return _comm.SendAsync<LoginRequest, LoginResponse>(
                 AuthenticationCommands.RefreshToken,
                 new LoginRequest { RefreshToken = refreshToken, Token = currentToken },
-                new LoginPacketAdapter(),
+                null,  // 不需要适配器
                 ct);
         }
 
@@ -160,7 +158,6 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         public void Dispose()
         {
-            _silentTokenRefresher.Stop();
             _silentTokenRefresher.RefreshFailed -= OnTokenRefreshFailed;
             _silentTokenRefresher.Dispose();
         }

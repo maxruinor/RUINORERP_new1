@@ -23,7 +23,6 @@ using AutoUpdateTools;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.UI.Network.PacketAdapter;
 
 namespace RUINORERP.UI
 {

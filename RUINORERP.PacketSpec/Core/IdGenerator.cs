@@ -1,4 +1,5 @@
 ﻿using RUINORERP.Model;
+using RUINORERP.PacketSpec.Commands;
 using System;
 
 
@@ -9,15 +10,16 @@ namespace RUINORERP.PacketSpec.Core
     /// </summary>
     public static class IdGenerator
     {
+
         /// <summary>
-        /// 生成命令ID
+        /// 生成新的请求ID
+        /// 格式: {命令名称}_{时间戳}_{ULID}
+        /// 确保请求ID全局唯一、可追踪、可读
         /// </summary>
-        /// <param name="commandTypeName">命令类型名称</param>
-        /// <returns>命令ID</returns>
-        public static string GenerateCommandId(string commandTypeName)
-        {
-            return $"{commandTypeName}_{Ulid.NewUlid()}";
-        }
+        /// <param name="cmd">命令ID</param>
+        /// <returns>格式化的请求ID</returns>
+        public static string NewRequestId(CommandId cmd) => 
+            $"{cmd.Name}_{DateTime.UtcNow:HHmmssfff}_{Ulid.NewUlid()}";
 
         /// <summary>
         /// 生成处理器ID

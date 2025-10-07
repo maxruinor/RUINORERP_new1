@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models.Requests.Cache;
 using RUINORERP.PacketSpec.Models.Responses.Cache;
 using RUINORERP.PacketSpec.Commands.Cache;
-using RUINORERP.UI.Network.PacketAdapter;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RUINORERP.Common;
@@ -91,7 +90,7 @@ namespace RUINORERP.UI.Network.Services
                 var response = await _comm.SendAsync<CacheRequest, CacheResponse>(
                     CacheCommands.CacheRequest,
                     request,
-                    new CachePacketAdapter(),
+                    null,  // 不需要适配器
                     ct);
 
                 // 更新请求时间

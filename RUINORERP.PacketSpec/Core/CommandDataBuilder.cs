@@ -5,6 +5,7 @@ using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
+using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Core
 {
@@ -120,5 +121,20 @@ namespace RUINORERP.PacketSpec.Core
                 cmd => cmd.TimeoutMs = 20000
             );
         }
+    }
+
+    /// <summary>
+    /// CommandBuilder扩展方法 - 用于保持对旧代码的兼容性
+    /// </summary>
+    public static class CommandBuilderExtensions
+    {
+        /// <summary>
+        /// 创建命令构建器实例（已过时，请使用CommandDataBuilder）
+        /// </summary>
+        /// <typeparam name="TCommand">命令类型</typeparam>
+        /// <returns>不支持的操作异常</returns>
+        [Obsolete("use CommandDataBuilder")]
+        public static CommandBuilder<TCommand> Create<TCommand>() where TCommand : BaseCommand, new()
+            => throw new NotSupportedException("use CommandDataBuilder");
     }
 }

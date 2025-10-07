@@ -30,16 +30,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         public CommandId Command { get; set; }
 
         /// <summary>
-        /// 指令标记 - 对应Command.OperationCode
-        /// 用于服务端Pipeline解码时快速识别命令类型
-        /// </summary>
-        public byte Mark
-        {
-            get { return Command.OperationCode; }
-            set { /* 只读属性，值从Command.OperationCode获取 */ }
-        }
-
-        /// <summary>
         /// 数据包状态
         /// </summary>
         public PacketStatus Status { get; set; }
@@ -125,15 +115,12 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             return new PacketModel
             {
+                PacketId = IdGenerator.GeneratePacketId(command.CommandIdentifier.Name),
                 Command = command.CommandIdentifier,
-                //SessionId = command.SessionId,
-                //ClientId = command.ClientId,
-                CommandData = SerializeCommand(command)
+                CommandData = MessagePackSerializer.Serialize(command),
+                CreatedTimeUtc = command.CreatedTimeUtc
             };
         }
-
-        private static byte[] SerializeCommand<T>(T command)
-    => MessagePackSerializer.Serialize(command);
 
 
         #region ICoreEntity 接口实现

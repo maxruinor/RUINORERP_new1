@@ -1099,7 +1099,7 @@ namespace RUINORERP.UI
         /// <param name="services"></param>
         public static void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton<ClientTokenStorage>();
+            // 不再需要ClientTokenStorage，使用TokenManager代替
             services.AddSingleton<SmtpClient>(new SmtpClient("your.smtp.server"));
             services.AddTransient<INotificationSender, EmailNotificationSender>();
             #region 创建配置文件-开始

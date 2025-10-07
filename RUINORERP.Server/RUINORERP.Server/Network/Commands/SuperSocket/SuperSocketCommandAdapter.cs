@@ -146,6 +146,16 @@ namespace RUINORERP.Server.Network.Commands.SuperSocket
                     return;
                 }
 
+                // 检查是否为泛型BaseCommand<,>类型，如果是则自动设置请求二进制数据
+                var commandType = command.GetType();
+                if (commandType.IsGenericType &&
+                    commandType.GetGenericTypeDefinition() == typeof(BaseCommand<,>))
+                {
+                    var setRequest = commandType.GetMethod("SetRequestFromBinary");
+                    setRequest?.Invoke(command, new object[]{package.Packet.CommandData});
+                    _logger?.LogDebug("已自动设置命令请求数据: CommandId={CommandId}", package.Packet.Command);
+                }
+
                 // 如果是BaseCommand且包含AuthToken，则自动提取并设置到执行上下文
                 if (command is BaseCommand baseCommand && !string.IsNullOrEmpty(baseCommand.AuthToken))
                 {

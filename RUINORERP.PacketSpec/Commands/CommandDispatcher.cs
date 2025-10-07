@@ -13,6 +13,7 @@ using RUINORERP.PacketSpec.Models.Responses;
 using Polly;
 using System.Threading.Channels;
 using RUINORERP.PacketSpec.Enums.Core;
+// 已经通过RUINORERP.PacketSpec.Commands命名空间引用了FallbackGenericCommandHandler
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -62,6 +63,10 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly IAsyncPolicy<ResponseBase> _circuit;
         // 幂等过滤器
         private readonly IdempotencyFilter _idempotent = new IdempotencyFilter();
+        // 回退处理器 - 用于处理没有专门处理器的命令
+        private FallbackGenericCommandHandler _fallbackHandler;
+        // 回退处理器初始化锁
+        private readonly object _fallbackHandlerLock = new object();
 
         /// <summary>
         /// 每个命令的最大并发数
@@ -282,6 +287,37 @@ namespace RUINORERP.PacketSpec.Commands
 
                 if (handlers == null || !handlers.Any())
                 {
+                    // 没有找到专门的处理器，使用回退处理器
+                    LogDebug($"没有找到适合的处理器，使用回退处理器处理命令: {cmd.CommandIdentifier}");
+                    
+                    // 获取或初始化回退处理器
+                    var fallbackHandler = GetFallbackHandler();
+                    if (fallbackHandler != null)
+                    {
+                        try
+                        {
+                            // 使用熔断器执行回退处理器
+                            result = await _circuit.ExecuteAsync(() => fallbackHandler.HandleAsync(cmd, ct));
+                            
+                            // 设置执行时间
+                            if (result != null)
+                            {
+                                result.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+                            }
+                            
+                            LogDebug($"回退处理器完成命令处理: {cmd.CommandIdentifier} - {result?.ExecutionTimeMs}ms");
+                            
+                            return result;
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError($"回退处理器处理命令时发生异常: {cmd.CommandIdentifier}", ex);
+                            result = ResponseBase.CreateError($"回退处理器异常: {ex.Message}", 500);
+                            return result;
+                        }
+                    }
+                    
+                    // 如果回退处理器也不可用，返回原始的404错误
                     result = ResponseBase.CreateError(
                         $"没有找到适合的处理器处理命令: {cmd.CommandIdentifier}", 404);
                     return result;
@@ -618,6 +654,60 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="command">命令对象</param>
         /// <returns>包含处理器列表和命令类型的HandlerCollection</returns>
+        /// <summary>
+        /// 获取或初始化回退处理器
+        /// </summary>
+        /// <returns>回退处理器实例</returns>
+        private FallbackGenericCommandHandler GetFallbackHandler()
+        {
+            // 使用双重检查锁定模式确保线程安全
+            if (_fallbackHandler == null)
+            {
+                lock (_fallbackHandlerLock)
+                {
+                    if (_fallbackHandler == null)
+                    {
+                        try
+                        {
+                            // 创建并初始化回退处理器
+                            _fallbackHandler = new FallbackGenericCommandHandler();
+                            
+                            // 初始化处理器
+                            var initTask = _fallbackHandler.InitializeAsync(CancellationToken.None);
+                            initTask.Wait(); // 同步等待初始化完成
+                            
+                            if (!initTask.Result)
+                            {
+                                LogError("回退处理器初始化失败");
+                                _fallbackHandler = null;
+                                return null;
+                            }
+                            
+                            // 启动处理器
+                            var startTask = _fallbackHandler.StartAsync(CancellationToken.None);
+                            startTask.Wait(); // 同步等待启动完成
+                            
+                            if (!startTask.Result)
+                            {
+                                LogError("回退处理器启动失败");
+                                _fallbackHandler = null;
+                                return null;
+                            }
+                            
+                            LogInfo("回退处理器初始化并启动成功");
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError("创建回退处理器时发生异常", ex);
+                            _fallbackHandler = null;
+                        }
+                    }
+                }
+            }
+            
+            return _fallbackHandler;
+        }
+        
         private HandlerCollection FindHandlers(ICommand command)
         {
             var commandCode = command.CommandIdentifier.FullCode;

@@ -22,8 +22,9 @@ using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.Network.Authentication;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.UI.Network.PacketAdapter;
 using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Tokens;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.Network
 {
@@ -64,6 +65,8 @@ namespace RUINORERP.UI.Network
         // 心跳管理器
         private readonly HeartbeatManager _heartbeatManager;        // 日志记录器
         private readonly ILogger<ClientCommunicationService> _logger;
+        // 命令类型助手
+        private readonly CommandTypeHelper _commandTypeHelper;
         // 连接状态标志
         private bool _isConnected;
         // 用于线程同步的锁
@@ -96,28 +99,37 @@ namespace RUINORERP.UI.Network
         /// <param name="socketClient">Socket客户端接口，提供底层网络通信能力</param>
         /// <param name="commandDispatcher">命令调度器，用于分发命令到对应的处理类</param>
         /// <param name="logger">日志记录器</param>
+        /// <param name="commandTypeHelper">命令类型助手，用于管理命令类型映射关系</param>
         /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
         public ClientCommunicationService(
             ISocketClient socketClient,
             CommandPacketAdapter _commandPacketAdapter,
         ICommandDispatcher commandDispatcher,
-            ILogger<ClientCommunicationService> logger)
+            ILogger<ClientCommunicationService> logger,
+            CommandTypeHelper commandTypeHelper = null)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
             commandPacketAdapter = _commandPacketAdapter;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
             _rrManager = new RequestResponseManager();
             _eventManager = new ClientEventManager();
             NetworkConfig config = new NetworkConfig();
             UI.Common.HardwareInfo hardwareInfo = Startup.GetFromFac<HardwareInfo>();
             // 生成客户端ID
-            string clientId = hardwareInfo.GenerateClientId();
-            _socketClient.ClientID = clientId;
+            if (string.IsNullOrEmpty(_socketClient.ClientID))
+            {
+                _socketClient.ClientID = hardwareInfo.GenerateClientId(); 
+            }
+     
             // 直接创建心跳管理器，传递ISocketClient和RequestResponseManager
+            // 获取UserLoginService实例并创建心跳管理器
+            var userLoginService = Startup.GetFromFac<RUINORERP.UI.Network.Services.UserLoginService>();
             _heartbeatManager = new HeartbeatManager(
                 _socketClient,
                 _rrManager,
+                userLoginService,
                 30000 // 默认30秒心跳间隔
             );
 
@@ -365,7 +377,7 @@ namespace RUINORERP.UI.Network
                     var command = InitializeCommandAsync(commandId, requestData);
 
                     // 生成请求ID但不等待响应
-                    string requestId = RUINORERP.PacketSpec.Core.IdGenerator.GenerateRequestId(this.GetType());
+                    string requestId = RUINORERP.PacketSpec.Core.IdGenerator.NewRequestId(commandId);
 
                     // 通过RequestResponseManager发送请求，确保Token正确附加
                     await _rrManager.SendCoreAsync(
@@ -519,7 +531,7 @@ namespace RUINORERP.UI.Network
             command.UpdateTimestamp();
 
             // 附加认证令牌
-            var (success, accessToken, _) = ClientTokenStorage.GetTokens();
+            var (success, accessToken, _) = TokenManager.Instance.GetTokens();
             if (success && !string.IsNullOrEmpty(accessToken))
             {
                 command.AuthToken = accessToken;
@@ -1146,7 +1158,7 @@ namespace RUINORERP.UI.Network
             CancellationToken ct = default)
         {
             // 1. 默认适配器（90% 场景够用）
-            adapter ??= new JsonPacketAdapter<TReq, TResp>(CommandRegistry.GetCommandId<TReq>());
+            //adapter ??= new GenericCommandPacketAdapter<TReq, TResp>(_commandTypeHelper.GetCommandId<TReq>());
 
             // 2. 打包 -> 发送 -> 解包
             var packet = adapter.Pack(request, _socketClient.ClientID, null);
@@ -1218,8 +1230,8 @@ namespace RUINORERP.UI.Network
                 throw new ArgumentNullException(nameof(command));
 
             // 创建默认适配器如果未提供
-            if (adapter == null)
-                adapter = new JsonPacketAdapter<object, TResp>(command.CommandIdentifier);
+            //if (adapter == null)
+            //    adapter = new GenericCommandPacketAdapter<object, TResp>(command.CommandIdentifier);
 
             // 构建数据包
             PacketModel packet = commandPacketAdapter.ToPacket(command);

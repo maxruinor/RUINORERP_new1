@@ -13,6 +13,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.UI.Network.Authentication;
+using RUINORERP.UI.Network.Services;
+using RUINORERP.PacketSpec.Tokens;
 
 namespace RUINORERP.UI.Network
 {
@@ -32,6 +35,7 @@ namespace RUINORERP.UI.Network
         private int _successfulHeartbeats;
         private int _failedHeartbeats;
         private DateTime _lastHeartbeatTime;
+        private readonly UserLoginService _loginService;
 
         /// <summary>
         /// 获取心跳统计信息 - 新架构监控指标
@@ -84,16 +88,19 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <param name="socketClient">Socket客户端接口，用于直接发送心跳数据</param>
         /// <param name="requestResponseManager">请求响应管理器，用于处理心跳请求和响应</param>
+        /// <param name="loginService">登录服务，用于刷新Token</param>
         /// <param name="heartbeatIntervalMs">心跳间隔（毫秒），默认30秒</param>
         /// <param name="logger">日志记录器，可选参数，用于记录心跳过程中的信息和异常</param>
         public HeartbeatManager(
             ISocketClient socketClient,
             RequestResponseManager requestResponseManager,
+            UserLoginService loginService,
             int heartbeatIntervalMs = 30000,
             ILogger<HeartbeatManager> logger = null)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _requestResponseManager = requestResponseManager ?? throw new ArgumentNullException(nameof(requestResponseManager));
+            _loginService = loginService ?? throw new ArgumentNullException(nameof(loginService));
 
             // 参数验证
             if (heartbeatIntervalMs <= 0)
@@ -183,7 +190,7 @@ namespace RUINORERP.UI.Network
 
                 // 创建心跳命令
                 var heartbeatCommand = CreateHeartbeatCommand();
-                _logger?.LogDebug("手动心跳命令已创建: CommandId={CommandId}", heartbeatCommand.CommandId);
+                _logger?.LogDebug("手动心跳命令已创建: CommandId={CommandId}", heartbeatCommand.CommandIdentifier);
 
                 // 直接使用RequestResponseManager发送心跳请求
                 var response = await _requestResponseManager.SendRequestAsync<object, HeartbeatRequest>(
@@ -257,14 +264,21 @@ namespace RUINORERP.UI.Network
                 try
                 {
                     if (_socketClient.IsConnected)
-                    {
-                        // 🔄 新架构心跳发送流程 - 直接使用RequestResponseManager
-                        _logger?.LogDebug("开始构建心跳命令...");
+                {
+                    // 🔄 新架构心跳发送流程 - 直接使用RequestResponseManager
+                    _logger?.LogDebug("开始构建心跳命令...");
 
-                        // 步骤1: 创建心跳命令对象
+                    // Token过期检查，自动刷新
+                    if (TokenManager.Instance.IsAccessTokenExpired())
+                    {
+                        _logger?.LogInformation("检测到AccessToken已过期，尝试静默刷新...");
+                        await _loginService.TrySilentRefreshAsync(); // 内部已做重试
+                    }
+
+                    // 步骤1: 创建心跳命令对象
                         var heartbeatCommand = CreateHeartbeatCommand();
                         _logger?.LogDebug("心跳命令已创建: CommandId={CommandId}",
-                            heartbeatCommand.CommandId);
+                            heartbeatCommand.CommandIdentifier);
 
                         try
                         {

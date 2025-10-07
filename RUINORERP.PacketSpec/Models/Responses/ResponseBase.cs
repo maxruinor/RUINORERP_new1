@@ -77,13 +77,13 @@ namespace RUINORERP.PacketSpec.Models.Responses
 
         public virtual ResponseBase WithRequestId()
         {
-            RequestId = IdGenerator.GenerateHandlerId(this.GetType().Name); ;
+            RequestId = IdGenerator.GenerateHandlerId(this.GetType().Name);
             return this;
         }
 
         public virtual ResponseBase WithRequestId(Commands.CommandId commandId)
         {
-            RequestId = IdGenerator.GenerateHandlerId(commandId.Name); 
+            RequestId = IdGenerator.NewRequestId(commandId);
             return this;
         }
 

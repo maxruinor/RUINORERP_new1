@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -18,6 +18,7 @@ namespace RUINORERP.PacketSpec.Commands
     public class CommandTypeHelper
     {
         private readonly Dictionary<uint, Type> _commandTypes;
+        private readonly Dictionary<CommandId, Type> _payloadMap;
         private readonly object _lock = new object();
         // 新增命令构造函数缓存
         private static readonly ConcurrentDictionary<uint, Func<ICommand>> _ctorCache = new();
@@ -25,6 +26,7 @@ namespace RUINORERP.PacketSpec.Commands
         public CommandTypeHelper()
         {
             _commandTypes = new Dictionary<uint, Type>();
+            _payloadMap = new Dictionary<CommandId, Type>();
         }
 
         /// <summary>
@@ -79,6 +81,19 @@ namespace RUINORERP.PacketSpec.Commands
    
 
         /// <summary>
+        /// 注册有效载荷类型
+        /// </summary>
+        /// <typeparam name="TPayload">有效载荷类型</typeparam>
+        /// <param name="id">命令ID</param>
+        public void RegisterPayloadType<TPayload>(CommandId id)
+        {
+            lock (_lock)
+            {
+                _payloadMap[id] = typeof(TPayload);
+            }
+        }
+
+        /// <summary>
         /// 清理注册的命令类型
         /// </summary>
         public void Clear()
@@ -86,6 +101,7 @@ namespace RUINORERP.PacketSpec.Commands
             lock (_lock)
             {
                 _commandTypes.Clear();
+                _payloadMap.Clear();
             }
         }
 
@@ -98,6 +114,41 @@ namespace RUINORERP.PacketSpec.Commands
             lock (_lock)
             {
                 return new Dictionary<uint, Type>(_commandTypes);
+            }
+        }
+
+        /// <summary>
+        /// 获取有效载荷类型
+        /// </summary>
+        /// <param name="id">命令ID</param>
+        /// <returns>有效载荷类型，如果找不到则返回null</returns>
+        public Type GetPayloadType(CommandId id)
+        {
+            lock (_lock)
+            {
+                _payloadMap.TryGetValue(id, out var payloadType);
+                return payloadType;
+            }
+        }
+
+        /// <summary>
+        /// 根据请求类型获取命令ID
+        /// </summary>
+        /// <typeparam name="TReq">请求类型</typeparam>
+        /// <returns>对应的命令ID</returns>
+        public CommandId GetCommandId<TReq>()
+        {
+            lock (_lock)
+            {
+                foreach (var kvp in _payloadMap)
+                {
+                    if (kvp.Value == typeof(TReq))
+                    {
+                        return kvp.Key;
+                    }
+                }
+
+                throw new ArgumentException($"No command ID registered for type {typeof(TReq).FullName}");
             }
         }
 

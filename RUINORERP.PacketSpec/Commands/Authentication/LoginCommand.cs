@@ -47,7 +47,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             : this()
         {
             Request = LoginRequest.Create(username, password, clientInfo);
-            Request.RequestId = IdGenerator.GenerateRequestId(CommandIdentifier.Name);
+            // RequestId 由 BaseCommand 基类统一赋值，不再重复 
         }
         
         /// <summary>

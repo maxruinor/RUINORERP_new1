@@ -386,43 +386,41 @@ namespace RUINORERP.Server.Network.Commands
             // 使用SessionService验证会话有效性
             if (!SessionService.IsValidSession(GetSessionId(command)))
             {
-                return ConvertToApiResponse(ResponseFactory.Fail(
-                    UnifiedErrorCodes.Auth_TokenInvalid,
-                    "会话无效或已过期")
+                return ConvertToApiResponse(ResponseBase.CreateError(
+                    $"{UnifiedErrorCodes.Auth_TokenInvalid.Message}: 会话无效或已过期",
+                    UnifiedErrorCodes.Auth_TokenInvalid.Code)
                     .WithMetadata("ErrorCode", "INVALID_SESSION"));
             }
 
             var sessionInfo = SessionService.GetSession(GetSessionId(command));
             if (sessionInfo == null)
             {
-                return ConvertToApiResponse(ResponseFactory.Fail(
-                            UnifiedErrorCodes.Auth_ValidationFailed,
-                            "获取会话信息失败")
+                return ConvertToApiResponse(ResponseBase.CreateError(
+                            $"{UnifiedErrorCodes.Auth_ValidationFailed.Message}: 获取会话信息失败",
+                            UnifiedErrorCodes.Auth_ValidationFailed.Code)
                             .WithMetadata("ErrorCode", "GET_SESSION_FAILED"));
             }
 
             if (!sessionInfo.IsAuthenticated)
             {
-                return ConvertToApiResponse(ResponseFactory.Fail(
-                            UnifiedErrorCodes.Auth_ValidationFailed,
-                            "会话未认证")
+                return ConvertToApiResponse(ResponseBase.CreateError(
+                            $"{UnifiedErrorCodes.Auth_ValidationFailed.Message}: 会话未认证",
+                            UnifiedErrorCodes.Auth_ValidationFailed.Code)
                             .WithMetadata("ErrorCode", "SESSION_UNAUTHENTICATED"));
             }
 
             // 检查会话是否仍然活跃
             if (!_activeSessions.Contains(GetSessionId(command)))
             {
-                return ConvertToApiResponse(ResponseFactory.Fail(
-                            UnifiedErrorCodes.Auth_SessionExpired,
-                            "会话已过期")
+                return ConvertToApiResponse(ResponseBase.CreateError(
+                            $"{UnifiedErrorCodes.Auth_SessionExpired.Message}: 会话已过期",
+                            UnifiedErrorCodes.Auth_SessionExpired.Code)
                             .WithMetadata("ErrorCode", "SESSION_EXPIRED"));
             }
 
             var responseData = CreateValidationResponse(sessionInfo);
 
-            return ConvertToApiResponse(ResponseFactory.Ok(
-                new { SessionId = GetSessionId(command), UserId = sessionInfo.UserId },
-                "验证成功")
+            return ConvertToApiResponse(ResponseBase.CreateSuccess("验证成功")
                 .WithMetadata("Data", new { SessionId = GetSessionId(command), UserId = sessionInfo.UserId }));
         }
 
@@ -908,11 +906,10 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 创建登录响应
+        /// 创建登录响应 - 使用ResponseBase.CreateSuccess让Handler只关心业务对象
         /// </summary>
-        private OriginalData CreateLoginResponse(TokenInfo tokenInfo, UserSessionInfo userSessionInfo)
+        private ResponseBase CreateLoginResponse(TokenInfo tokenInfo, UserSessionInfo userSessionInfo)
         {
-
             LoginResponse loginResponse = new LoginResponse();
             loginResponse.Username = userSessionInfo.UserInfo.UserName;
             loginResponse.UserId = userSessionInfo.UserInfo.User_ID;
@@ -922,18 +919,7 @@ namespace RUINORERP.Server.Network.Commands
             loginResponse.ExpiresIn = tokenInfo.ExpiresIn;
             loginResponse.TokenType = tokenInfo.TokenType;
 
-            var data = RUINORERP.PacketSpec.Serialization.UnifiedSerializationService.SerializeToBinary<LoginResponse>(loginResponse);
-
-            // 将完整的CommandId正确分解为Category和OperationCode
-            uint commandId = (uint)AuthenticationCommands.LoginResponse;
-            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
-            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
-
-            return new OriginalData(
-                category,
-                new byte[] { operationCode },
-                data
-            );
+            return loginResponse;
         }
 
         /// <summary>
@@ -1054,7 +1040,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private ResponseBase CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
         {
-            return ConvertToApiResponse(ResponseFactory.Fail(errorCode, message)
+            return ConvertToApiResponse(ResponseBase.CreateError($"{errorCode.Message}: {message}", errorCode.Code)
                 .WithMetadata("ErrorCode", customErrorCode));
         }
 
@@ -1063,10 +1049,11 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
         {
-            return ConvertToApiResponse(ResponseFactory.Except(ex, UnifiedErrorCodes.System_InternalError)
+            var baseResponse = ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
                 .WithMetadata("ErrorCode", errorCode)
                 .WithMetadata("Exception", ex.Message)
-                .WithMetadata("StackTrace", ex.StackTrace));
+                .WithMetadata("StackTrace", ex.StackTrace);
+            return ConvertToApiResponse(baseResponse);
         }
 
         /// <summary>
@@ -1074,7 +1061,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private ResponseBase CreateSuccessResponse(object data, string message)
         {
-            return ConvertToApiResponse(ResponseFactory.Ok(data, message)
+            return ConvertToApiResponse(ResponseBase.CreateSuccess( message)
                 .WithMetadata("Data", data));
         }
 

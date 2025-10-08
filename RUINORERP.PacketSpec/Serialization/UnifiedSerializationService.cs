@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +10,7 @@ namespace RUINORERP.PacketSpec.Serialization
 {
     /// <summary>
     /// 统一序列化服务 - 整合所有序列化功能
-    /// 支持JSON、MessagePack、二进制和压缩序列化
+    /// 支持JSON、MessagePack、二进制和压缩序列化1
     /// </summary>
     public static class UnifiedSerializationService
     {
@@ -29,9 +29,14 @@ namespace RUINORERP.PacketSpec.Serialization
         {
             try
             {
-                // 使用无契约标准解析器，避免源生成器问题
+                // 使用复合解析器，优先使用StandardResolver支持[Key]特性，回退到ContractlessStandardResolver
+                var compositeResolver = CompositeResolver.Create(
+                    StandardResolver.Instance,
+                    ContractlessStandardResolver.Instance
+                );
+                
                 _messagePackOptions = MessagePackSerializerOptions.Standard
-                    .WithResolver(ContractlessStandardResolver.Instance)
+                    .WithResolver(compositeResolver)
                     .WithCompression(MessagePackCompression.Lz4Block);
             }
             catch (Exception ex)

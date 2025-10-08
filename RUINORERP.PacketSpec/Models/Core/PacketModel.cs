@@ -21,25 +21,24 @@ namespace RUINORERP.PacketSpec.Models.Core
     /// 职责：包头、加密、压缩、序列化等网络传输相关属性
     /// 不包含任何业务逻辑或业务属性
     /// </summary>
-    [Serializable]
     [MessagePackObject]
     public class PacketModel : ITimestamped
     {
         /// <summary>
         /// 保存指令实体数据
         /// </summary>
-        [Key(100)]
+        [Key(0)]
         public byte[] CommandData { get; set; }
 
         // 简单的命令标识（不包含业务逻辑）
         //命令类型
-        [Key(101)]
+        [Key(1)]
         public CommandId CommandId { get; set; }
 
         /// <summary>
         /// 数据包状态
         /// </summary>
-        [Key(102)]
+        [Key(2)]
         public PacketStatus Status { get; set; }
 
         #region 网络传输属性
@@ -47,20 +46,20 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 包标志位
         /// </summary>
-        [Key(104)]
+        [Key(3)]
         public string Flag { get; set; }
 
         /// <summary>
         /// 数据包唯一标识符
         /// </summary>
         // 网络标识
-        [Key(107)]
+        [Key(4)]
         public string PacketId { get; set; }
 
         /// <summary>
         /// 数据包大小（字节）
         /// </summary>
-        [Key(108)]
+        [Key(5)]
         public int Size { get; set; }
 
         /// <summary>
@@ -74,51 +73,50 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 校验和
         /// </summary>
-        [Key(109)]
+        [Key(6)]
         public string Checksum { get; set; }
 
         /// <summary>
         /// 是否加密
         /// </summary>
-        [Key(110)]
+        [Key(7)]
         public bool IsEncrypted { get; set; }
 
         /// <summary>
         /// 是否压缩
         /// </summary>
-        [Key(111)]
+        [Key(8)]
         public bool IsCompressed { get; set; }
 
         /// <summary>
         /// 数据包方向
         /// </summary>
-        [Key(112)]
+        [Key(9)]
         public PacketDirection Direction { get; set; }
 
         /// <summary>
         /// 模型版本
         /// </summary>
-        [Key(113)]
+        [Key(10)]
         public string Version { get; set; } = "2.0";
 
         /// <summary>
         /// 消息类型
         /// </summary>
-        [Key(114)]
+        [Key(11)]
         public MessageType MessageType { get; set; } = MessageType.Request;
 
         /// <summary>
         /// 扩展属性字典（用于存储非核心但需要传输的元数据）
         /// </summary>
-        [Key(115)]
-        [MessagePack.IgnoreMember]
+        [MessagePack.IgnoreMember]  // 忽略此属性，不序列化
         public System.Collections.Generic.Dictionary<string, object> Extensions { get; set; }
 
         /// <summary>
         /// 命令执行上下文 - 网络传输层使用
         /// 包含会话、认证、追踪等基础设施信息
         /// </summary>
-        [Key(116)]
+        [Key(12)]
         public CommandExecutionContext ExecutionContext { get; set; }
 
         /// <summary>
@@ -188,19 +186,19 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
-        [Key(117)]
+        [Key(13)]
         public DateTime CreatedTimeUtc { get; set; }
 
         /// <summary>
         /// 最后更新时间（UTC时间）
         /// </summary>
-        [Key(118)]
+        [Key(14)]
         public DateTime? LastUpdatedTime { get; set; }
 
         /// <summary>
         /// 时间戳（UTC时间）
         /// </summary>
-        [Key(119)]
+        [Key(15)]
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
@@ -236,6 +234,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = CreatedTimeUtc;
             Extensions = new System.Collections.Generic.Dictionary<string, object>();
+            CommandData = Array.Empty<byte>();
         }
 
         /// <summary>
@@ -270,24 +269,25 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// </summary>
         public void ClearSensitiveData()
         {
-            // 清理ExecutionContext中的敏感数据
-            if (ExecutionContext != null)
-            {
-                ExecutionContext.SessionId = null;
-                ExecutionContext.ClientId = null;
-                if (ExecutionContext.Token != null)
-                {
-                    ExecutionContext.Token.AccessToken = null;
-                }
-            }
+
+            //// 清理ExecutionContext中的敏感数据
+            //if (ExecutionContext != null)
+            //{
+            //    ExecutionContext.SessionId = null;
+            //    ExecutionContext.ClientId = null;
+            //    if (ExecutionContext.Token != null)
+            //    {
+            //        ExecutionContext.Token.AccessToken = null;
+            //    }
+            //}
             
-            Extensions?.Clear();
-            // 清理包体数据
-            if (CommandData != null)
-            {
-                Array.Clear(CommandData, 0, CommandData.Length);
-                CommandData = null;
-            }
+            //Extensions?.Clear();
+            //// 清理包体数据
+            //if (CommandData != null)
+            //{
+            //   // Array.Clear(CommandData, 0, CommandData.Length);
+            //    //CommandData = null;
+            //}
         }
 
         /// <summary>
@@ -321,7 +321,7 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         internal void SetData(byte[] data)
         {
-            this.CommandData = data;
+           // this.CommandData = data;
         }
 
         /// <summary>
@@ -345,7 +345,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             var cacheKey = $"{type.FullName}:{hash}";
 
             // 尝试从缓存获取或添加
-            CommandData = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
+           // CommandData = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
             Size = CommandData.Length;
             LastUpdatedTime = DateTime.UtcNow;
             return this;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using MessagePack;
 
 namespace RUINORERP.PacketSpec.Commands.Authentication
@@ -14,31 +14,31 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// <summary>
         /// 访问令牌
         /// </summary>
-        [Key(0)]
+        [Key(29)]
         public string AccessToken { get; set; }
 
         /// <summary>
         /// 刷新令牌
         /// </summary>
-        [Key(1)]
+        [Key(30)]
         public string RefreshToken { get; set; }
 
         /// <summary>
         /// 访问令牌有效期（秒）- 默认8小时
         /// </summary>
-        [Key(2)]
+        [Key(31)]
         public int ExpiresIn { get; set; } = 28800;
 
         /// <summary>
         /// 令牌类型 - 默认Bearer
         /// </summary>
-        [Key(3)]
+        [Key(32)]
         public string TokenType { get; set; } = "Bearer";
 
         /// <summary>
         /// 生成时间（UTC）
         /// </summary>
-        [Key(4)]
+        [Key(33)]
         public DateTime GeneratedTime { get; set; } = DateTime.UtcNow;
         
         /// <summary>

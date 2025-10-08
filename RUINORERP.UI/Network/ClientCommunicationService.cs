@@ -1046,7 +1046,21 @@ namespace RUINORERP.UI.Network
                     new[] { command.CommandIdentifier.OperationCode },
                     payload);
                 var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
+
+                //============
+              
+                // 反序列化数据包
+                PacketModel packetnew;
+
+                packetnew = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(payload);
+
+
+
                 await client.SendAsync(encrypted, ct);
+
+
+
+
             }
             catch (Exception ex)
             {

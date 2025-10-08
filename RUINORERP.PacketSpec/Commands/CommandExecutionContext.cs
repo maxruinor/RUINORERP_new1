@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Commands.Authentication;
+﻿using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
@@ -12,37 +12,61 @@ namespace RUINORERP.PacketSpec.Commands
     [MessagePackObject]
     public class CommandExecutionContext
     {
-        [Key(0)]
+        [Key(16)]
         public string SessionId { get; set; }
-        [Key(1)]
+        [Key(17)]
         public string ClientId { get; set; }
-        [Key(2)]
+        [Key(18)]
         public string RequestId { get; set; }
-        [Key(3)]
+        [Key(19)]
         public string ClientIp { get; set; }
-        [Key(4)]
+        [Key(20)]
         public TokenInfo Token { get; set; }
-        [Key(5)]
+        [Key(21)]
         public DateTime ReceivedTime { get; set; }
-        [Key(6)]
+
+
+
         [MessagePack.IgnoreMember]
         public IDictionary<string, object> Extensions { get; set; } = new Dictionary<string, object>();
 
         // 添加用户认证信息
-        [Key(7)]
+        [Key(23)]
         public string UserId { get; set; }
-        [Key(8)]
+        [Key(24)]
         public string UserName { get; set; }
-        [Key(9)]
+        [Key(25)]
         public bool IsAuthenticated { get; set; }
 
-        [Key(10)]
-        public Type RequestType { get; set; }
-        [Key(11)]
-        public Type ResponseType { get; set; }
+        [Key(26)]
+        public string RequestTypeName { get; set; }
+        [Key(27)]
+        public string ResponseTypeName { get; set; }
 
-        [Key(12)]
-        public Type CommandType { get; set; }
+        [Key(28)]
+        public string CommandTypeName { get; set; }
+
+        // 类型属性的访问器
+        [IgnoreMember]
+        public Type RequestType 
+        { 
+            get => !string.IsNullOrEmpty(RequestTypeName) ? Type.GetType(RequestTypeName) : null;
+            set => RequestTypeName = value?.FullName;
+        }
+        
+        [IgnoreMember]
+        public Type ResponseType 
+        { 
+            get => !string.IsNullOrEmpty(ResponseTypeName) ? Type.GetType(ResponseTypeName) : null;
+            set => ResponseTypeName = value?.FullName;
+        }
+        
+        [IgnoreMember]
+        public Type CommandType 
+        { 
+            get => !string.IsNullOrEmpty(CommandTypeName) ? Type.GetType(CommandTypeName) : null;
+            set => CommandTypeName = value?.FullName;
+        }
 
         /// <summary>
         /// 克隆当前ExecutionContext实例
@@ -62,9 +86,9 @@ namespace RUINORERP.PacketSpec.Commands
                 UserId = this.UserId,
                 UserName = this.UserName,
                 IsAuthenticated = this.IsAuthenticated,
-                RequestType = this.RequestType,
-                ResponseType = this.ResponseType,
-                CommandType=this.CommandType,
+                RequestTypeName = this.RequestTypeName,
+                ResponseTypeName = this.ResponseTypeName,
+                CommandTypeName = this.CommandTypeName,
             };
         }
 

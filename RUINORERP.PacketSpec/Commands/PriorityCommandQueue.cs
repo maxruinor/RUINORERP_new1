@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -59,10 +59,10 @@ namespace RUINORERP.PacketSpec.Commands
         {
             return priority switch
             {
-                CommandPriority.High => 0,
-                CommandPriority.Normal => 1,
-                CommandPriority.Low => 2,
-                _ => 1 // 默认使用普通优先级
+                CommandPriority.High => (int)CommandPriority.High,
+                CommandPriority.Normal => (int)CommandPriority.Normal,
+                CommandPriority.Low => (int)CommandPriority.Low,
+                _ => (int)CommandPriority.Normal // 默认使用普通优先级
             };
         }
     }

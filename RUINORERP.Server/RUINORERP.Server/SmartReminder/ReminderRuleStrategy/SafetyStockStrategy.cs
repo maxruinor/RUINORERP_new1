@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.CommService;
@@ -6,6 +6,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model.ReminderModel.ReminderRules;
+using RUINORERP.PacketSpec.Enums.Core;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
     // 3. 基础策略实现
     public class SafetyStockStrategy : IReminderStrategy
     {
-        public int Priority => 1;
+        public int Priority => 0;
         private readonly INotificationService _notification;
         //private readonly RuleEngineCenter _ruleCenter;
         private readonly StockCacheService _stockCache;

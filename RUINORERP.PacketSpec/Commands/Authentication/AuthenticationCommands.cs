@@ -87,6 +87,9 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// 在线用户 - 获取在线用户信息
         /// </summary>
         public static readonly CommandId OnlineUsers = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_OnlineUsers & 0xFF));
+
+        public static readonly CommandId Connected = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_Connected & 0xFF));
+
         #endregion
     }
 }

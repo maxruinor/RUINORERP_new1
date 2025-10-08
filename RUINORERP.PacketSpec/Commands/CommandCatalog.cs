@@ -114,6 +114,9 @@ namespace RUINORERP.PacketSpec.Commands
         /// 在线用户 - 获取在线用户信息
         /// </summary>
         public const ushort Authentication_OnlineUsers = 0x010F;
+
+        public const ushort Authentication_Connected = 0x0110;
+
         #endregion
 
         #region 缓存命令 (0x02xx)

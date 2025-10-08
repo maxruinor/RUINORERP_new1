@@ -66,10 +66,10 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>当前构建器实例</returns>
         public PacketBuilder WithSession(string sessionId, string clientId = null)
         {
-            _packet.SessionId = sessionId;
-            if (!string.IsNullOrEmpty(clientId))
+            if (!string.IsNullOrEmpty(sessionId))
             {
-                _packet.Extensions["ClientId"] = clientId;
+                _packet.SessionId = sessionId;
+                _packet.Extensions["SessionId"] = sessionId;
             }
             return this;
         }

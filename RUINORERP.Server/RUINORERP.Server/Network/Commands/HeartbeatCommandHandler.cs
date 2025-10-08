@@ -19,7 +19,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 心跳命令处理器
     /// 处理客户端发送的心跳命令，维持连接活跃状态
     /// </summary>
-    [CommandHandler("HeartbeatCommandHandler", priority: 50)]
+    [CommandHandler("HeartbeatCommandHandler", priority: 0)]
     public class HeartbeatCommandHandler : BaseCommandHandler
     {
          private readonly ISessionService _sessionService; 
@@ -49,11 +49,6 @@ namespace RUINORERP.Server.Network.Commands
         {
             (uint)SystemCommands.Heartbeat
         };
-
-        /// <summary>
-        /// 处理器优先级
-        /// </summary>
-        public override int Priority => 50;
 
         /// <summary>
         /// 具体的命令处理逻辑

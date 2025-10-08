@@ -207,16 +207,16 @@ namespace RUINORERP.UI.Network
         /// </summary>
         private void OnPackageReceived(object sender, PackageEventArgs<BizPackageInfo> e)
         {
-            if (string.IsNullOrEmpty(SessionID))
-            {
-                if (!string.IsNullOrEmpty(e.Package.Packet.SessionId))
-                {
-                    SessionID = e.Package.Packet.SessionId;
-                }
-            }
-
             if (e.Package?.Packet != null)
             {
+                if (string.IsNullOrEmpty(SessionID))
+                {
+                    if (!string.IsNullOrEmpty(e.Package.Packet.SessionId))
+                    {
+                        SessionID = e.Package.Packet.SessionId;
+                    }
+                }
+
                 Received?.Invoke(e.Package.Packet);
             }
         }

@@ -202,7 +202,6 @@ namespace RUINORERP.UI
                                         }
                                     }
 
-
                                     //////CancellationToken ct = default;
                                     //////LoginResponse loginResp = await MainForm.Instance.communicationService
                                     //////    .CallAsync<LoginRequest, LoginResponse>(

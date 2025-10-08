@@ -57,6 +57,9 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         CommandId CommandIdentifier { get; }
 
+
+        CommandExecutionContext ExecutionContext { get; set; }
+
         /// <summary>
         /// 命令创建时间
         /// </summary>
@@ -68,7 +71,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// 时间戳（UTC时间）
         /// </summary>
         DateTime TimestampUtc { get; set; }
-
 
         /// <summary>
         /// 命令优先级

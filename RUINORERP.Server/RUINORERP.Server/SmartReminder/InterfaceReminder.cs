@@ -2,6 +2,7 @@
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model.ReminderModel.ReminderRules;
+using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.Server.SmartReminder.InvReminder;
 using System;
 using System.Collections.Generic;

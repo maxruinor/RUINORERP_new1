@@ -20,20 +20,23 @@ using ICommand = RUINORERP.PacketSpec.Commands.ICommand;
 using SuperSocket.Command;
 using Azure;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Errors;
+using RUINORERP.PacketSpec.Core;
 
 namespace RUINORERP.Server.Network.SuperSocket
 {
     /// <summary>
-    /// ç»Ÿä¸€çš„SuperSocketå‘½ä»¤é€‚é…å™¨
-    /// æ•´åˆäº†åŸæœ‰çš„SimplifiedSuperSocketAdapterã€SocketCommandå’ŒSuperSocketCommandAdapterçš„åŠŸèƒ½
+    /// Í³Ò»µÄSuperSocketÃüÁîÊÊÅäÆ÷
+    /// ÕûºÏÁËÔ­ÓĞµÄSimplifiedSuperSocketAdapter¡¢SocketCommandºÍSuperSocketCommandAdapterµÄ¹¦ÄÜ
     /// 
-    /// å·¥ä½œæµç¨‹ï¼š
-    /// 1. SuperSocketæ¥æ”¶åˆ°æ¥è‡ªå®¢æˆ·ç«¯çš„æ•°æ®åŒ…
-    /// 2. SuperSocketCommandAdapter.ExecuteAsyncæ–¹æ³•è¢«è°ƒç”¨
-    /// 3. ä»CommandDispatcherè·å–å·²æ³¨å†Œçš„å‘½ä»¤ç±»å‹æ˜ å°„
-    /// 4. æ ¹æ®æ•°æ®åŒ…ä¸­çš„å‘½ä»¤IDåˆ›å»ºå¯¹åº”çš„å‘½ä»¤å®ä¾‹
-    /// 5. é€šè¿‡CommandDispatcher.DispatchAsyncæ–¹æ³•åˆ†å‘å‘½ä»¤ç»™ç›¸åº”çš„å¤„ç†å™¨
-    /// 6. å¤„ç†ç»“æœé€šè¿‡ç½‘ç»œè¿”å›ç»™å®¢æˆ·ç«¯
+    /// ¹¤×÷Á÷³Ì£º
+    /// 1. SuperSocket½ÓÊÕµ½À´×Ô¿Í»§¶ËµÄÊı¾İ°ü
+    /// 2. SuperSocketCommandAdapter.ExecuteAsync·½·¨±»µ÷ÓÃ
+    /// 3. ´ÓCommandDispatcher»ñÈ¡ÒÑ×¢²áµÄÃüÁîÀàĞÍÓ³Éä
+    /// 4. ¸ù¾İÊı¾İ°üÖĞµÄÃüÁîID´´½¨¶ÔÓ¦µÄÃüÁîÊµÀı
+    /// 5. Í¨¹ıCommandDispatcher.DispatchAsync·½·¨·Ö·¢ÃüÁî¸øÏàÓ¦µÄ´¦ÀíÆ÷
+    /// 6. ´¦Àí½á¹ûÍ¨¹ıÍøÂç·µ»Ø¸ø¿Í»§¶Ë
     /// </summary>
     [Command(Key = "SuperSocketCommandAdapter")]
     public class SuperSocketCommandAdapter<TAppSession> : IAsyncCommand<TAppSession, ServerPackageInfo>
@@ -44,45 +47,14 @@ namespace RUINORERP.Server.Network.SuperSocket
         private readonly ICommandFactory _commandFactory;
         private readonly CommandPacketAdapter packetAdapter;
         private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
-
-        #region é”™è¯¯ä»£ç å­—å…¸åŒ–å¤„ç†
+     
+  
         /// <summary>
-        /// é”™è¯¯ä»£ç æ˜ å°„å­—å…¸
+        /// ¹¹Ôìº¯Êı
         /// </summary>
-        private static readonly Dictionary<string, (int code, string message)> ErrorCodeMap = new Dictionary<string, (int code, string message)>
-        {
-            { "CommandNotFound", (404, "å‘½ä»¤æœªæ‰¾åˆ°") },
-            { "UnhandledException", (500, "å¤„ç†å‘½ä»¤æ—¶å‘ç”Ÿæœªé¢„æœŸçš„å¼‚å¸¸") },
-            { "UnknownError", (999, "å‘ç”ŸæœªçŸ¥é”™è¯¯") },
-            { "SessionNotFound", (401, "ä¼šè¯ä¸å­˜åœ¨æˆ–å·²è¿‡æœŸ") } // æ·»åŠ ä¼šè¯ä¸å­˜åœ¨çš„é”™è¯¯ç 
-        };
-
-        /// <summary>
-        /// æ ¹æ®é”™è¯¯ä»£ç è·å–å¯¹åº”çš„é”™è¯¯æ¶ˆæ¯å’Œæ•°å­—ä»£ç 
-        /// </summary>
-        /// <param name="errorCode">é”™è¯¯ä»£ç </param>
-        /// <returns>é”™è¯¯ä»£ç æ•°å­—å€¼å’Œæ¶ˆæ¯</returns>
-        protected virtual (int code, string message) GetErrorInfoByCode(string errorCode)
-        {
-            if (ErrorCodeMap.TryGetValue(errorCode, out var errorInfo))
-            {
-                return errorInfo;
-            }
-
-            // é»˜è®¤è¿”å›é”™è¯¯ä»£ç æœ¬èº«
-            return (1, errorCode);
-        }
-
-
-
-        #endregion
-
-        /// <summary>
-        /// æ„é€ å‡½æ•°
-        /// </summary>
-        /// <param name="commandDispatcher">å‘½ä»¤è°ƒåº¦å™¨</param>
-        /// <param name="commandFactory">å‘½ä»¤å·¥å‚</param>
-        /// <param name="logger">æ—¥å¿—è®°å½•å™¨</param>
+        /// <param name="commandDispatcher">ÃüÁîµ÷¶ÈÆ÷</param>
+        /// <param name="commandFactory">ÃüÁî¹¤³§</param>
+        /// <param name="logger">ÈÕÖ¾¼ÇÂ¼Æ÷</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             CommandPacketAdapter _packetAdapter,
@@ -98,55 +70,73 @@ namespace RUINORERP.Server.Network.SuperSocket
 
 
         /// <summary>
-        /// æ‰§è¡Œå‘½ä»¤
-        /// å°†SuperSocketçš„å‘½ä»¤è°ƒç”¨è½¬æ¢ä¸ºç°æœ‰çš„å‘½ä»¤å¤„ç†ç³»ç»Ÿ
+        /// Ö´ĞĞÃüÁî
+        /// ½«SuperSocketµÄÃüÁîµ÷ÓÃ×ª»»ÎªÏÖÓĞµÄÃüÁî´¦ÀíÏµÍ³
         /// </summary>
-        /// <param name="session">SuperSocketä¼šè¯</param>
-        /// <param name="package">æ•°æ®åŒ…</param>
-        /// <param name="cancellationToken">å–æ¶ˆä»¤ç‰Œ</param>
-        /// <returns>æ‰§è¡Œç»“æœä»»åŠ¡</returns>
+        /// <param name="session">SuperSocket»á»°</param>
+        /// <param name="package">Êı¾İ°ü</param>
+        /// <param name="cancellationToken">È¡ÏûÁîÅÆ</param>
+        /// <returns>Ö´ĞĞ½á¹ûÈÎÎñ</returns>
         public async ValueTask ExecuteAsync(TAppSession session, ServerPackageInfo package, CancellationToken cancellationToken)
         {
             if (package == null)
             {
-                _logger?.LogWarning("æ¥æ”¶åˆ°ç©ºçš„æ•°æ®åŒ…");
-                await SendErrorResponseAsync(session, package, "NullCommand", cancellationToken);
+                _logger?.LogWarning("½ÓÊÕµ½¿ÕµÄÊı¾İ°ü");
+                await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, cancellationToken);
                 return;
             }
 
             try
             {
-                // ç¡®ä¿å‘½ä»¤è°ƒåº¦å™¨å·²åˆå§‹åŒ–
+                if (string.IsNullOrEmpty(package.Packet.SessionId))
+                {
+                    package.Packet.SessionId = session.SessionID;
+                }
+
+                // È·±£ÃüÁîµ÷¶ÈÆ÷ÒÑ³õÊ¼»¯
                 if (!_commandDispatcher.IsInitialized)
                 {
                     await _commandDispatcher.InitializeAsync(cancellationToken);
                 }
 
-                // è·å–ç°æœ‰ä¼šè¯ä¿¡æ¯
+                // »ñÈ¡ÏÖÓĞ»á»°ĞÅÏ¢
                 var sessionInfo = SessionService.GetSession(session.SessionID);
                 if (sessionInfo == null)
                 {
-                    // å¦‚æœä¼šè¯ä¸å­˜åœ¨ï¼Œå¯èƒ½æ˜¯è¿æ¥å·²æ–­å¼€æˆ–ä¼šè¯å·²è¿‡æœŸ
-                    await SendErrorResponseAsync(session, package, "SessionNotFound", cancellationToken);
+                    // Èç¹û»á»°²»´æÔÚ£¬¿ÉÄÜÊÇÁ¬½ÓÒÑ¶Ï¿ª»ò»á»°ÒÑ¹ıÆÚ
+                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_SessionExpired, cancellationToken);
                     return;
                 }
 
-                // æ›´æ–°ä¼šè¯çš„æœ€åæ´»åŠ¨æ—¶é—´
-                sessionInfo.UpdateActivity(); // ä½¿ç”¨ä¸“é—¨çš„UpdateActivityæ–¹æ³•æ›´æ–°æ´»åŠ¨æ—¶é—´
+                // ¸üĞÂ»á»°µÄ×îºó»î¶¯Ê±¼ä
+                sessionInfo.UpdateActivity(); // Ê¹ÓÃ×¨ÃÅµÄUpdateActivity·½·¨¸üĞÂ»î¶¯Ê±¼ä
                 SessionService.UpdateSession(sessionInfo);
-                // åŒæ—¶è°ƒç”¨ä¸“é—¨çš„UpdateSessionActivityæ–¹æ³•ç¡®ä¿æ´»åŠ¨æ—¶é—´è¢«æ­£ç¡®æ›´æ–°
+                // Í¬Ê±µ÷ÓÃ×¨ÃÅµÄUpdateSessionActivity·½·¨È·±£»î¶¯Ê±¼ä±»ÕıÈ·¸üĞÂ
                 SessionService.UpdateSessionActivity(session.SessionID);
 
-                // åˆ›å»ºå‘½ä»¤å¯¹è±¡
+                // ´´½¨ÃüÁî¶ÔÏó£¨µÚÒ»²ã½âÎö£º»ù´¡ÃüÁî´´½¨£©
                 var command = packetAdapter.CreateCommand(package.Packet);
                 if (command == null)
                 {
-                    _logger?.LogWarning("æ— æ³•åˆ›å»ºå‘½ä»¤å¯¹è±¡: CommandId={CommandId}", package.Packet.CommandId);
-                    await SendErrorResponseAsync(session, package, "CommandNotFound", cancellationToken);
+                    _logger?.LogWarning("ÎŞ·¨´´½¨ÃüÁî¶ÔÏó: CommandId={CommandId}", package.Packet.CommandId);
+                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Command_NotFound, cancellationToken);
                     return;
                 }
 
-                // æ£€æŸ¥æ˜¯å¦ä¸ºæ³›å‹BaseCommand<,>ç±»å‹ï¼Œå¦‚æœæ˜¯åˆ™è‡ªåŠ¨è®¾ç½®è¯·æ±‚äºŒè¿›åˆ¶æ•°æ®
+                // µÚ¶ş²ã½âÎö£ºÃüÁîÔ¤½âÎö£¨»ñÈ¡Ö¸ÁîĞÅÏ¢£¬²»½âÎö¾ßÌåÒµÎñÊı¾İ£©
+                var commandInfo = PreParseCommand(command, package.Packet);
+                if (commandInfo == null)
+                {
+                    _logger?.LogWarning("ÃüÁîÔ¤½âÎöÊ§°Ü: CommandId={CommandId}", package.Packet.CommandId);
+                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Command_InvalidFormat, cancellationToken);
+                    return;
+                }
+
+                // ÉèÖÃÃüÁîÓÅÏÈ¼¶£¨»ùÓÚÔ¤½âÎö½á¹û£¬Ê¹ÓÃCommandPriorityÃ¶¾Ù£©
+                command.Priority = commandInfo.PriorityLevel;
+
+                // µÚÈı²ã½âÎö£ºÉèÖÃ»ù´¡Êı¾İ£¨²»½âÎö¾ßÌåÒµÎñÄÚÈİ£©
+                // ¼ì²éÊÇ·ñÎª·ºĞÍBaseCommand<,>ÀàĞÍ£¬Èç¹ûÊÇÔò×Ô¶¯ÉèÖÃÇëÇó¶ş½øÖÆÊı¾İ
                 var commandType = command.GetType();
                 if (commandType.IsGenericType &&
                     commandType.GetGenericTypeDefinition() == typeof(BaseCommand<,>))
@@ -155,28 +145,28 @@ namespace RUINORERP.Server.Network.SuperSocket
                     setRequest?.Invoke(command, new object[] { package.Packet.CommandData });
                 }
 
-                // å¦‚æœæ˜¯BaseCommandä¸”åŒ…å«AuthTokenï¼Œåˆ™è‡ªåŠ¨æå–å¹¶è®¾ç½®åˆ°æ‰§è¡Œä¸Šä¸‹æ–‡
+                // Èç¹ûÊÇBaseCommandÇÒ°üº¬AuthToken£¬Ôò×Ô¶¯ÌáÈ¡²¢ÉèÖÃµ½Ö´ĞĞÉÏÏÂÎÄ
                 if (command is BaseCommand baseCommand && !string.IsNullOrEmpty(baseCommand.AuthToken))
                 {
-                    // ç¡®ä¿ExecutionContextå·²åˆå§‹åŒ–
+                    // È·±£ExecutionContextÒÑ³õÊ¼»¯
                     if (baseCommand.ExecutionContext == null)
                     {
                         baseCommand.ExecutionContext = new CommandExecutionContext();
                     }
-                    // è®¾ç½®Token
+                    // ÉèÖÃToken
                     baseCommand.ExecutionContext.Token = baseCommand.AuthToken;
                 }
 
-            
 
-                // é€šè¿‡ç°æœ‰çš„å‘½ä»¤è°ƒåº¦å™¨å¤„ç†å‘½ä»¤ï¼Œæ·»åŠ è¶…æ—¶ä¿æŠ¤
+
+                // Í¨¹ıÏÖÓĞµÄÃüÁîµ÷¶ÈÆ÷´¦ÀíÃüÁî£¬Ìí¼Ó³¬Ê±±£»¤
                 ResponseBase result;
                 try
                 {
-                    // ä½¿ç”¨é“¾æ¥çš„å–æ¶ˆä»¤ç‰Œï¼Œè€ƒè™‘å‘½ä»¤è¶…æ—¶è®¾ç½®
+                    // Ê¹ÓÃÁ´½ÓµÄÈ¡ÏûÁîÅÆ£¬¿¼ÂÇÃüÁî³¬Ê±ÉèÖÃ
                     var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-                    // å¦‚æœå‘½ä»¤æœ‰è®¾ç½®è¶…æ—¶æ—¶é—´ï¼Œåˆ™ä½¿ç”¨å‘½ä»¤çš„è¶…æ—¶æ—¶é—´ï¼Œå¦åˆ™ä½¿ç”¨é»˜è®¤30ç§’
+                    // Èç¹ûÃüÁîÓĞÉèÖÃ³¬Ê±Ê±¼ä£¬ÔòÊ¹ÓÃÃüÁîµÄ³¬Ê±Ê±¼ä£¬·ñÔòÊ¹ÓÃÄ¬ÈÏ30Ãë
                     var timeout = command.TimeoutMs > 0 ? TimeSpan.FromMilliseconds(command.TimeoutMs) : TimeSpan.FromSeconds(30);
                     linkedCts.CancelAfter(timeout);
 
@@ -184,61 +174,128 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
                 catch (OperationCanceledException ex)
                 {
-                    _logger?.LogError(ex, "å‘½ä»¤æ‰§è¡Œè¶…æ—¶æˆ–è¢«å–æ¶ˆ: CommandId={CommandId}", package.Packet.CommandId);
-                    result = ResponseBase.CreateError("å‘½ä»¤æ‰§è¡Œè¶…æ—¶ï¼Œè¯·ç¨åé‡è¯•", 504);
+                    _logger?.LogError(ex, "ÃüÁîÖ´ĞĞ³¬Ê±»ò±»È¡Ïû: CommandId={CommandId}", package.Packet.CommandId);
+                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_Timeout.Message, UnifiedErrorCodes.System_Timeout.Code);
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "å‘½ä»¤æ‰§è¡Œå¼‚å¸¸: CommandId={CommandId}", package.Packet.CommandId);
-                    result = ResponseBase.CreateError($"å‘½ä»¤æ‰§è¡Œå¼‚å¸¸: {ex.Message}", 500);
+                    _logger?.LogError(ex, "ÃüÁîÖ´ĞĞÒì³£: CommandId={CommandId}", package.Packet.CommandId);
+                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
                 }
                 if (result == null)
                 {
-                    result = ResponseBase.CreateError($"å‘½ä»¤æ‰§è¡Œç»“æœä¸ºç©º", 500);
+                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
                 }
 
                 if (!result.IsSuccess)
                 {
-                    _logger?.LogDebug($"å‘½ä»¤æ‰§è¡Œå®Œæˆ:{result.Message}, Success={result.IsSuccess}");
+                    _logger?.LogDebug($"ÃüÁîÖ´ĞĞÍê³É:{result.Message}, Success={result.IsSuccess}");
                 }
                 await HandleCommandResultAsync(session, package, result, cancellationToken);
 
-                // è®°å½•å‘½ä»¤æ‰§è¡Œå®Œæˆçš„æ—¥å¿—
-                _logger?.LogDebug("å‘½ä»¤æ‰§è¡Œå®Œæˆ: CommandId={CommandId}, Success={Success}",
+                // ¼ÇÂ¼ÃüÁîÖ´ĞĞÍê³ÉµÄÈÕÖ¾
+                _logger?.LogDebug("ÃüÁîÖ´ĞĞÍê³É: CommandId={CommandId}, Success={Success}",
                     package.Packet.CommandId, result?.IsSuccess ?? false);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "å¤„ç†SuperSocketå‘½ä»¤æ—¶å‘ç”Ÿå¼‚å¸¸: CommandId={CommandId}", package.Packet.CommandId);
-                // å‘é€é”™è¯¯å“åº”ç»™å®¢æˆ·ç«¯
-                await SendErrorResponseAsync(session, package, "UnhandledException", cancellationToken);
+                _logger?.LogError(ex, "´¦ÀíSuperSocketÃüÁîÊ±·¢ÉúÒì³£: CommandId={CommandId}", package.Packet.CommandId);
+                // ·¢ËÍ´íÎóÏìÓ¦¸ø¿Í»§¶Ë
+                await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, cancellationToken);
             }
         }
 
 
+        /// <summary>
+        /// ÃüÁîÔ¤½âÎöĞÅÏ¢
+        /// </summary>
+        private class CommandPreParseInfo
+        {
+            public uint CommandId { get; set; }
+            public string CommandName { get; set; }
+            public bool RequiresAuthentication { get; set; }
+            public CommandPriority PriorityLevel { get; set; }
+            public Type TargetCommandType { get; set; }
+        }
+
+        /// <summary>
+        /// Ô¤½âÎöÃüÁî£¨µÚ¶ş²ã½âÎö£º»ñÈ¡Ö¸ÁîĞÅÏ¢£¬²»½âÎö¾ßÌåÒµÎñÊı¾İ£©
+        /// </summary>
+        /// <param name="command">ÃüÁî¶ÔÏó</param>
+        /// <param name="packet">Êı¾İ°ü</param>
+        /// <returns>Ô¤½âÎöĞÅÏ¢</returns>
+        private CommandPreParseInfo PreParseCommand(ICommand command, PacketModel packet)
+        {
+            try
+            {
+                var commandId = packet.CommandId;
+
+                // ¸ù¾İÃüÁîIDÈ·¶¨ÃüÁîÌØĞÔ
+                var requiresAuth = IsAuthenticationRequired(commandId);
+                var priorityLevel = command.Priority;
+                var targetType = command?.GetType();
+
+                return new CommandPreParseInfo
+                {
+                    CommandId = commandId,
+                    RequiresAuthentication = requiresAuth,
+                    PriorityLevel = priorityLevel,
+                    TargetCommandType = targetType
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "ÃüÁîÔ¤½âÎöÊ§°Ü: CommandId={CommandId}", packet.CommandId);
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// ÅĞ¶ÏÊÇ·ñĞèÒªÈÏÖ¤
+        /// </summary>
+        private bool IsAuthenticationRequired(uint commandId)
+        {
+            // µÇÂ¼Ïà¹ØÃüÁî²»ĞèÒªÈÏÖ¤
+            var authCommands = new uint[]
+            {
+                AuthenticationCommands.Login.FullCode,
+                AuthenticationCommands.LoginRequest.FullCode,
+                AuthenticationCommands.PrepareLogin.FullCode,
+                AuthenticationCommands.ValidateToken.FullCode,
+                AuthenticationCommands.RefreshToken.FullCode
+            };
+
+            return !authCommands.Contains(commandId);
+        }
+
+
+
+
+
         /*
         /// <summary>
-        /// åˆ›å»ºå‘½ä»¤å¯¹è±¡
-        /// æ ¹æ®å‘½ä»¤IDå’Œæ•°æ®åŒ…å†…å®¹åˆ›å»ºé€‚å½“ç±»å‹çš„å‘½ä»¤å¯¹è±¡
+        /// ´´½¨ÃüÁî¶ÔÏó
+        /// ¸ù¾İÃüÁîIDºÍÊı¾İ°üÄÚÈİ´´½¨ÊÊµ±ÀàĞÍµÄÃüÁî¶ÔÏó
         /// </summary>
-        /// <param name="package">æ•°æ®åŒ…</param>
-        /// <param name="sessionContext">ä¼šè¯ä¸Šä¸‹æ–‡</param>
-        /// <returns>åˆ›å»ºçš„å‘½ä»¤å¯¹è±¡</returns>
+        /// <param name="package">Êı¾İ°ü</param>
+        /// <param name="sessionContext">»á»°ÉÏÏÂÎÄ</param>
+        /// <returns>´´½¨µÄÃüÁî¶ÔÏó</returns>
         protected virtual ICommand CreateCommand(ServerPackageInfo package, SessionInfo sessionContext)
         {
             try
             {
-                // ä¼˜å…ˆä½¿ç”¨å‘½ä»¤å·¥å‚åˆ›å»ºå‘½ä»¤
+                // ÓÅÏÈÊ¹ÓÃÃüÁî¹¤³§´´½¨ÃüÁî
                 if (_commandFactory != null)
                 {
                     var command = _commandFactory.CreateCommand(package.Packet as PacketModel);
                     if (command != null)
                     {
-                        // è®¾ç½®å‘½ä»¤çš„ä¼šè¯IDå’Œæ•°æ®åŒ…æ¨¡å‹
+                        // ÉèÖÃÃüÁîµÄ»á»°IDºÍÊı¾İ°üÄ£ĞÍ
                         command.SessionId = sessionContext.SessionID;
                         command.Packet = package.Packet;
 
-                        // å°è¯•ä»æ•°æ®åŒ…ä¸­è·å–ä¸šåŠ¡æ•°æ® è¿™é‡Œæ™šå†å†çœ‹
+                        // ³¢ÊÔ´ÓÊı¾İ°üÖĞ»ñÈ¡ÒµÎñÊı¾İ ÕâÀïÍíÔÙÔÙ¿´
                         // businessDataCommand.BusinessData = packetModel.GetJsonData<object>();
 
 
@@ -246,32 +303,32 @@ namespace RUINORERP.Server.Network.SuperSocket
                     }
                 }
 
-                // å¦‚æœå‘½ä»¤å·¥å‚æ— æ³•åˆ›å»ºå‘½ä»¤ï¼Œå°è¯•æ ¹æ®å‘½ä»¤IDæŸ¥æ‰¾å¯¹åº”çš„å‘½ä»¤ç±»å‹
-                // ç›´æ¥ä½¿ç”¨CommandDispatcherä¸­çš„æ–¹æ³•è·å–å‘½ä»¤ç±»å‹
+                // Èç¹ûÃüÁî¹¤³§ÎŞ·¨´´½¨ÃüÁî£¬³¢ÊÔ¸ù¾İÃüÁîID²éÕÒ¶ÔÓ¦µÄÃüÁîÀàĞÍ
+                // Ö±½ÓÊ¹ÓÃCommandDispatcherÖĞµÄ·½·¨»ñÈ¡ÃüÁîÀàĞÍ
                 var commandType = _commandDispatcher.GetCommandType(package.Packet.Command.FullCode);
                 if (commandType != null)
                 {
-                    // å°è¯•ä½¿ç”¨æ„é€ å‡½æ•°åˆ›å»ºå‘½ä»¤å®ä¾‹
+                    // ³¢ÊÔÊ¹ÓÃ¹¹Ôìº¯Êı´´½¨ÃüÁîÊµÀı
                     var constructor = GetSuitableConstructor(commandType);
                     if (constructor != null)
                     {
                         var parameters = PrepareConstructorParameters(constructor, package, sessionContext);
                         var command = Activator.CreateInstance(commandType, parameters) as ICommand;
 
-                        // è®¾ç½®å‘½ä»¤çš„ä¼šè¯IDå’Œæ•°æ®åŒ…æ¨¡å‹
+                        // ÉèÖÃÃüÁîµÄ»á»°IDºÍÊı¾İ°üÄ£ĞÍ
                             if (command != null)
                             {
                                 command.SessionId = sessionContext.SessionID;
                                 command.Packet = package.Packet;
                             }
 
-                        _logger?.LogDebug("æ ¹æ®å‘½ä»¤IDåˆ›å»ºå‘½ä»¤å®ä¾‹: CommandId={CommandId}, Type={TypeName}",
+                        _logger?.LogDebug("¸ù¾İÃüÁîID´´½¨ÃüÁîÊµÀı: CommandId={CommandId}, Type={TypeName}",
                             package.Packet.Command, commandType.FullName);
                         return command;
                     }
                 }
 
-                // å¦‚æœæ²¡æœ‰æ‰¾åˆ°å¯¹åº”çš„å‘½ä»¤ç±»å‹æˆ–æ— æ³•åˆ›å»ºå®ä¾‹ï¼Œä½¿ç”¨é»˜è®¤çš„MessageCommand
+                // Èç¹ûÃ»ÓĞÕÒµ½¶ÔÓ¦µÄÃüÁîÀàĞÍ»òÎŞ·¨´´½¨ÊµÀı£¬Ê¹ÓÃÄ¬ÈÏµÄMessageCommand
                 var packetModelForDefault = PacketBuilder.Create()
                     .WithCommand(package.Packet.Command)
                     .WithBinaryData(package.Packet.Body)
@@ -284,7 +341,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                     packetModelForDefault,
                     package.Packet.Body);
 
-                // å°è¯•ä»æ•°æ®åŒ…ä¸­è·å–ä¸šåŠ¡æ•°æ®
+                // ³¢ÊÔ´ÓÊı¾İ°üÖĞ»ñÈ¡ÒµÎñÊı¾İ
                 //  defaultBusinessDataCommand.BusinessData = packetModelForDefault.GetJsonData<object>();
 
 
@@ -292,8 +349,8 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "åˆ›å»ºå‘½ä»¤å¯¹è±¡æ—¶å‡ºé”™: CommandId={CommandId}", package.Packet.Command);
-                // å¦‚æœåˆ›å»ºå¤±è´¥ï¼Œè¿”å›ä¸€ä¸ªé»˜è®¤çš„å‘½ä»¤å¯¹è±¡
+                _logger?.LogError(ex, "´´½¨ÃüÁî¶ÔÏóÊ±³ö´í: CommandId={CommandId}", package.Packet.Command);
+                // Èç¹û´´½¨Ê§°Ü£¬·µ»ØÒ»¸öÄ¬ÈÏµÄÃüÁî¶ÔÏó
                 var packetModelForError = PacketBuilder.Create()
                     .WithCommand(package.Packet.Command)
                     .WithBinaryData(package.Packet.Body)
@@ -312,15 +369,15 @@ namespace RUINORERP.Server.Network.SuperSocket
         }
 
         /// <summary>
-        /// è·å–é€‚åˆçš„æ„é€ å‡½æ•°
+        /// »ñÈ¡ÊÊºÏµÄ¹¹Ôìº¯Êı
         /// </summary>
-        /// <param name="commandType">å‘½ä»¤ç±»å‹</param>
-        /// <returns>æ„é€ å‡½æ•°ä¿¡æ¯</returns>
+        /// <param name="commandType">ÃüÁîÀàĞÍ</param>
+        /// <returns>¹¹Ôìº¯ÊıĞÅÏ¢</returns>
         protected virtual ConstructorInfo GetSuitableConstructor(Type commandType)
         {
             try
             {
-                // æŸ¥æ‰¾åŒ…å«CommandIdã€SessionInfoå’ŒDataå‚æ•°çš„æ„é€ å‡½æ•°
+                // ²éÕÒ°üº¬CommandId¡¢SessionInfoºÍData²ÎÊıµÄ¹¹Ôìº¯Êı
                 var constructors = commandType.GetConstructors();
                 foreach (var constructor in constructors)
                 {
@@ -331,23 +388,23 @@ namespace RUINORERP.Server.Network.SuperSocket
                     }
                 }
 
-                // å¦‚æœæ²¡æœ‰æ‰¾åˆ°ç†æƒ³çš„æ„é€ å‡½æ•°ï¼Œè¿”å›ç¬¬ä¸€ä¸ªå¯ç”¨çš„æ„é€ å‡½æ•°
+                // Èç¹ûÃ»ÓĞÕÒµ½ÀíÏëµÄ¹¹Ôìº¯Êı£¬·µ»ØµÚÒ»¸ö¿ÉÓÃµÄ¹¹Ôìº¯Êı
                 return constructors.FirstOrDefault();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "è·å–å‘½ä»¤ç±»å‹ {CommandType} çš„æ„é€ å‡½æ•°æ—¶å‡ºé”™", commandType?.FullName ?? "null");
+                _logger?.LogError(ex, "»ñÈ¡ÃüÁîÀàĞÍ {CommandType} µÄ¹¹Ôìº¯ÊıÊ±³ö´í", commandType?.FullName ?? "null");
                 return null;
             }
         }
 
         /// <summary>
-        /// å‡†å¤‡æ„é€ å‡½æ•°å‚æ•°
+        /// ×¼±¸¹¹Ôìº¯Êı²ÎÊı
         /// </summary>
-        /// <param name="constructor">æ„é€ å‡½æ•°ä¿¡æ¯</param>
-        /// <param name="package">æ•°æ®åŒ…</param>
-        /// <param name="sessionContext">ä¼šè¯ä¸Šä¸‹æ–‡</param>
-        /// <returns>å‚æ•°æ•°ç»„</returns>
+        /// <param name="constructor">¹¹Ôìº¯ÊıĞÅÏ¢</param>
+        /// <param name="package">Êı¾İ°ü</param>
+        /// <param name="sessionContext">»á»°ÉÏÏÂÎÄ</param>
+        /// <returns>²ÎÊıÊı×é</returns>
         protected virtual object[] PrepareConstructorParameters(ConstructorInfo constructor, ServerPackageInfo package, SessionInfo sessionContext)
         {
             try
@@ -359,7 +416,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     if (parameters[i].ParameterType == typeof(PacketModel))
                     {
-                        // åˆ›å»ºPacketModelå¯¹è±¡
+                        // ´´½¨PacketModel¶ÔÏó
                         var builder = PacketBuilder.Create()
                             .WithCommand(package.Packet.Command)
                             .WithBinaryData(package.Packet.Body)
@@ -370,7 +427,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                         {
                             foreach (var extension in package.Packet.Extensions)
                             {
-                                // é¿å…è¦†ç›–å·²ç»è®¾ç½®çš„æ‰©å±•å±æ€§
+                                // ±ÜÃâ¸²¸ÇÒÑ¾­ÉèÖÃµÄÀ©Õ¹ÊôĞÔ
                                 if (extension.Key != "PacketId")
                                 {
                                     builder.WithExtension(extension.Key, extension.Value);
@@ -394,7 +451,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                     }
                     else
                     {
-                        // å¯¹äºå…¶ä»–ç±»å‹çš„å‚æ•°ï¼Œå°è¯•ä½¿ç”¨é»˜è®¤å€¼æˆ–null
+                        // ¶ÔÓÚÆäËûÀàĞÍµÄ²ÎÊı£¬³¢ÊÔÊ¹ÓÃÄ¬ÈÏÖµ»ònull
                         parameterValues[i] = parameters[i].HasDefaultValue ? parameters[i].DefaultValue : null;
                     }
                 }
@@ -403,7 +460,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "å‡†å¤‡æ„é€ å‡½æ•°å‚æ•°æ—¶å‡ºé”™");
+                _logger?.LogError(ex, "×¼±¸¹¹Ôìº¯Êı²ÎÊıÊ±³ö´í");
                 return new object[0];
             }
         }
@@ -412,47 +469,52 @@ namespace RUINORERP.Server.Network.SuperSocket
 
 
         /// <summary>
-        /// å¤„ç†å‘½ä»¤æ‰§è¡Œç»“æœ
+        /// ´¦ÀíÃüÁîÖ´ĞĞ½á¹û
         /// </summary>
-        /// <param name="session">SuperSocketä¼šè¯</param>
-        /// <param name="requestPackage">è¯·æ±‚æ•°æ®åŒ…</param>
-        /// <param name="result">å‘½ä»¤æ‰§è¡Œç»“æœ</param>
-        /// <param name="cancellationToken">å–æ¶ˆä»¤ç‰Œ</param>
-        /// <returns>å¤„ç†ç»“æœä»»åŠ¡</returns>
+        /// <param name="session">SuperSocket»á»°</param>
+        /// <param name="requestPackage">ÇëÇóÊı¾İ°ü</param>
+        /// <param name="result">ÃüÁîÖ´ĞĞ½á¹û</param>
+        /// <param name="cancellationToken">È¡ÏûÁîÅÆ</param>
+        /// <returns>´¦Àí½á¹ûÈÎÎñ</returns>
         protected virtual async ValueTask HandleCommandResultAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
             ResponseBase result,
             CancellationToken cancellationToken)
         {
+            if (result == null)
+            {
+                _logger?.LogWarning("ÃüÁîÖ´ĞĞ½á¹ûÎª¿Õ£¬·¢ËÍÄ¬ÈÏ´íÎóÏìÓ¦");
+                await SendErrorResponseAsync(session, requestPackage, UnifiedErrorCodes.System_InternalError, cancellationToken);
+                return;
+            }
+
             if (result.IsSuccess)
             {
-                // å‘½ä»¤æ‰§è¡ŒæˆåŠŸï¼Œå‘é€æˆåŠŸå“åº”
+                // ÃüÁîÖ´ĞĞ³É¹¦£¬·¢ËÍ³É¹¦ÏìÓ¦
                 var responsePackage = CreateResponsePackage(requestPackage, result);
                 await SendResponseAsync(session, responsePackage, cancellationToken);
             }
             else
             {
-                // å‘½ä»¤æ‰§è¡Œå¤±è´¥ï¼Œå‘é€é”™è¯¯å“åº”
-                await SendErrorResponseAsync(
-                    session,
-                    requestPackage,
-                    result.Code.ToString(),
-                    cancellationToken);
+                // ÃüÁîÖ´ĞĞÊ§°Ü£¬·¢ËÍÔöÇ¿µÄ´íÎóÏìÓ¦
+                // ´Ó½á¹ûÖĞÌáÈ¡ËùÓĞ´íÎóĞÅÏ¢£¬°üÀ¨ÔªÊı¾İÖĞµÄÏêÏ¸ĞÅÏ¢
+                var errorCode = ExtractErrorCodeFromResponse(result);
+                await SendEnhancedErrorResponseAsync(session, requestPackage, result, errorCode, cancellationToken);
             }
         }
 
         /// <summary>
-        /// åˆ›å»ºå“åº”æ•°æ®åŒ…
+        /// ´´½¨ÏìÓ¦Êı¾İ°ü
         /// </summary>
-        /// <param name="requestPackage">è¯·æ±‚æ•°æ®åŒ…</param>
-        /// <param name="result">å‘½ä»¤æ‰§è¡Œç»“æœ</param>
-        /// <returns>å“åº”æ•°æ®åŒ…</returns>
+        /// <param name="requestPackage">ÇëÇóÊı¾İ°ü</param>
+        /// <param name="result">ÃüÁîÖ´ĞĞ½á¹û</param>
+        /// <returns>ÏìÓ¦Êı¾İ°ü</returns>
         protected virtual PacketModel CreateResponsePackage(ServerPackageInfo requestPackage, ResponseBase result)
         {
             var response = new PacketModel
             {
-                PacketId = GenerateResponseId(requestPackage.Packet.PacketId),
+                PacketId =IdGenerator. GenerateResponseId(requestPackage.Packet.PacketId),
                 Direction = requestPackage.Packet.Direction == PacketDirection.Request ? PacketDirection.Response : requestPackage.Packet.Direction,
                 SessionId = requestPackage.Packet.SessionId,
                 Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error,
@@ -460,25 +522,24 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     ["Data"] = result,
                     ["Message"] = result.Message,
-                    ["Success"] = result.IsSuccess,
                     ["Code"] = result.Code,
                     ["TimestampUtc"] = result.TimestampUtc
                 }
             };
 
-            // å¦‚æœè¯·æ±‚åŒ…ä¸­åŒ…å«RequestIdï¼Œåˆ™åœ¨å“åº”åŒ…ä¸­ä¿ç•™å®ƒï¼Œä»¥ä¾¿å®¢æˆ·ç«¯åŒ¹é…è¯·æ±‚å’Œå“åº”
+            // Èç¹ûÇëÇó°üÖĞ°üº¬RequestId£¬ÔòÔÚÏìÓ¦°üÖĞ±£ÁôËü£¬ÒÔ±ã¿Í»§¶ËÆ¥ÅäÇëÇóºÍÏìÓ¦
             if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
             {
                 response.Extensions["RequestId"] = requestId;
             }
 
-            // è®¾ç½®è¯·æ±‚æ ‡è¯†
+            // ÉèÖÃÇëÇó±êÊ¶
             if (!string.IsNullOrEmpty(result.RequestId))
             {
                 response.Extensions["RequestId"] = result.RequestId;
             }
 
-            // æ·»åŠ å…ƒæ•°æ®
+            // Ìí¼ÓÔªÊı¾İ
             if (result.Metadata != null && result.Metadata.Count > 0)
             {
                 foreach (var metadata in result.Metadata)
@@ -487,7 +548,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
             }
 
-            // ä¼˜å…ˆä½¿ç”¨WithJsonDataè®¾ç½®ä¸šåŠ¡å“åº”æ•°æ®
+            // ÓÅÏÈÊ¹ÓÃWithJsonDataÉèÖÃÒµÎñÏìÓ¦Êı¾İ
             if (result != null)
             {
                 try
@@ -504,28 +565,28 @@ namespace RUINORERP.Server.Network.SuperSocket
         }
 
         /// <summary>
-        /// å‘é€å“åº”
+        /// ·¢ËÍÏìÓ¦
         /// </summary>
-        /// <param name="session">SuperSocketä¼šè¯</param>
-        /// <param name="package">æ•°æ®åŒ…</param>
-        /// <param name="cancellationToken">å–æ¶ˆä»¤ç‰Œ</param>
-        /// <returns>å‘é€ç»“æœä»»åŠ¡</returns>
+        /// <param name="session">SuperSocket»á»°</param>
+        /// <param name="package">Êı¾İ°ü</param>
+        /// <param name="cancellationToken">È¡ÏûÁîÅÆ</param>
+        /// <returns>·¢ËÍ½á¹ûÈÎÎñ</returns>
         protected virtual async ValueTask SendResponseAsync(TAppSession session, PacketModel package, CancellationToken cancellationToken)
         {
             try
             {
-                // æ£€æŸ¥ä¼šè¯æ˜¯å¦æœ‰æ•ˆ
+                // ¼ì²é»á»°ÊÇ·ñÓĞĞ§
                 if (session == null)
                 {
-                    _logger?.LogWarning("å°è¯•å‘é€å“åº”åˆ°ç©ºä¼šè¯: PacketId={PacketId}, CommandId={CommandId}",
+                    _logger?.LogWarning("³¢ÊÔ·¢ËÍÏìÓ¦µ½¿Õ»á»°: PacketId={PacketId}, CommandId={CommandId}",
                         package.PacketId, package.CommandId);
                     return;
                 }
                 package.SessionId = session.SessionID;
-                // ä½¿ç”¨ç»Ÿä¸€çš„åºåˆ—åŒ–æ–¹æ³•
+                // Ê¹ÓÃÍ³Ò»µÄĞòÁĞ»¯·½·¨
                 var serializedData = SerializePacket(package);
 
-                // åŠ å¯†æ•°æ®
+                // ¼ÓÃÜÊı¾İ
                 var originalData = new OriginalData(
                     (byte)package.CommandId.Category,
                     new byte[] { package.CommandId.OperationCode },
@@ -533,64 +594,63 @@ namespace RUINORERP.Server.Network.SuperSocket
                 );
                 var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
 
-                // å‘é€æ•°æ®å¹¶æ•è·å¯èƒ½çš„å¼‚å¸¸
+                // ·¢ËÍÊı¾İ²¢²¶»ñ¿ÉÄÜµÄÒì³£
                 try
                 {
                     await session.SendAsync(encryptedData.ToByteArray(), cancellationToken);
                 }
                 catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
                 {
-                    // å¤„ç†ç®¡é“å†™å…¥å™¨å·²å®Œæˆçš„ç‰¹å®šå¼‚å¸¸
-                    _logger?.LogWarning(ex, "ç®¡é“å†™å…¥å™¨å·²å®Œæˆï¼Œæ— æ³•å‘é€å“åº”: SessionId={SessionId}, PacketId={PacketId}",
+                    // ´¦Àí¹ÜµÀĞ´ÈëÆ÷ÒÑÍê³ÉµÄÌØ¶¨Òì³£
+                    _logger?.LogWarning(ex, "¹ÜµÀĞ´ÈëÆ÷ÒÑÍê³É£¬ÎŞ·¨·¢ËÍÏìÓ¦: SessionId={SessionId}, PacketId={PacketId}",
                         package.SessionId, package.PacketId);
-                    // å¿½ç•¥æ­¤å¼‚å¸¸ï¼Œå› ä¸ºä¼šè¯å¯èƒ½å·²ç»å…³é—­
+                    // ºöÂÔ´ËÒì³££¬ÒòÎª»á»°¿ÉÄÜÒÑ¾­¹Ø±Õ
                 }
                 catch (Exception ex)
                 {
-                    // è®°å½•å…¶ä»–å‘é€å¼‚å¸¸
-                    _logger?.LogError(ex, "å‘é€å“åº”æ—¶å‘ç”Ÿå¼‚å¸¸: SessionId={SessionId}, PacketId={PacketId}",
+                    // ¼ÇÂ¼ÆäËû·¢ËÍÒì³£
+                    _logger?.LogError(ex, "·¢ËÍÏìÓ¦Ê±·¢ÉúÒì³£: SessionId={SessionId}, PacketId={PacketId}",
                         package.SessionId, package.PacketId);
-                    // å¯ä»¥é€‰æ‹©æ˜¯å¦å‘ä¸Šä¼ æ’­å¼‚å¸¸
+                    // ¿ÉÒÔÑ¡ÔñÊÇ·ñÏòÉÏ´«²¥Òì³£
                     // throw;
                 }
             }
             catch (Exception ex)
             {
-                // æ•è·æ‰€æœ‰å…¶ä»–å¼‚å¸¸ä»¥ç¡®ä¿æ–¹æ³•ä¸ä¼šå¤±è´¥
-                _logger?.LogError(ex, "å¤„ç†å“åº”å‘é€æ—¶å‘ç”Ÿæœªé¢„æœŸçš„å¼‚å¸¸");
+                // ²¶»ñËùÓĞÆäËûÒì³£ÒÔÈ·±£·½·¨²»»áÊ§°Ü
+                _logger?.LogError(ex, "´¦ÀíÏìÓ¦·¢ËÍÊ±·¢ÉúÎ´Ô¤ÆÚµÄÒì³£");
             }
         }
 
         /// <summary>
-        /// å‘é€é”™è¯¯å“åº”
+        /// ·¢ËÍ´íÎóÏìÓ¦
         /// </summary>
-        /// <param name="session">SuperSocketä¼šè¯</param>
-        /// <param name="requestPackage">è¯·æ±‚æ•°æ®åŒ…</param>
-        /// <param name="errorCode">é”™è¯¯ä»£ç </param>
-        /// <param name="cancellationToken">å–æ¶ˆä»¤ç‰Œ</param>
-        /// <returns>å‘é€ç»“æœä»»åŠ¡</returns>
+        /// <param name="session">SuperSocket»á»°</param>
+        /// <param name="requestPackage">ÇëÇóÊı¾İ°ü</param>
+        /// <param name="errorCode">´íÎó´úÂë</param>
+        /// <param name="cancellationToken">È¡ÏûÁîÅÆ</param>
+        /// <returns>·¢ËÍ½á¹ûÈÎÎñ</returns>
         protected virtual async ValueTask SendErrorResponseAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
-            string errorCode,
+            ErrorCode errorCode,
             CancellationToken cancellationToken)
-        {
-            var errorInfo = GetErrorInfoByCode(errorCode);
+        { 
             var errorResponse = new PacketModel
             {
-                PacketId = GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
+                PacketId =IdGenerator.GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
                 Direction = PacketDirection.Response,
                 SessionId = requestPackage.Packet?.SessionId,
                 Status = PacketStatus.Error,
                 Extensions = new Dictionary<string, object>
                 {
-                    ["ErrorCode"] = errorInfo.code,
-                    ["ErrorMessage"] = errorInfo.message,
+                    ["ErrorCode"] = errorCode.Code,
+                    ["ErrorMessage"] = errorCode.Message,
                     ["Success"] = false
                 }
             };
 
-            // å¦‚æœè¯·æ±‚åŒ…ä¸­åŒ…å«RequestIdï¼Œåˆ™åœ¨å“åº”åŒ…ä¸­ä¿ç•™å®ƒï¼Œä»¥ä¾¿å®¢æˆ·ç«¯åŒ¹é…è¯·æ±‚å’Œå“åº”
+            // Èç¹ûÇëÇó°üÖĞ°üº¬RequestId£¬ÔòÔÚÏìÓ¦°üÖĞ±£ÁôËü£¬ÒÔ±ã¿Í»§¶ËÆ¥ÅäÇëÇóºÍÏìÓ¦
             if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
             {
                 errorResponse.Extensions["RequestId"] = requestId;
@@ -600,29 +660,115 @@ namespace RUINORERP.Server.Network.SuperSocket
         }
 
         /// <summary>
-        /// åºåˆ—åŒ–æ•°æ®åŒ…
+        /// ĞòÁĞ»¯Êı¾İ°ü
         /// </summary>
-        /// <param name="package">æ•°æ®åŒ…</param>
-        /// <returns>åºåˆ—åŒ–åçš„å­—èŠ‚æ•°ç»„</returns>
+        /// <param name="package">Êı¾İ°ü</param>
+        /// <returns>ĞòÁĞ»¯ºóµÄ×Ö½ÚÊı×é</returns>
         protected virtual byte[] SerializePacket(PacketModel package)
         {
-            // ä½¿ç”¨ç»Ÿä¸€çš„åºåˆ—åŒ–æ–¹æ³•
+            // Ê¹ÓÃÍ³Ò»µÄĞòÁĞ»¯·½·¨
             return UnifiedSerializationService.SerializeWithMessagePack(package);
         }
 
         /// <summary>
-        /// ç”Ÿæˆå“åº”ID
+        /// ´ÓÏìÓ¦½á¹ûÖĞÌáÈ¡´íÎó´úÂëĞÅÏ¢
         /// </summary>
-        /// <param name="requestId">è¯·æ±‚ID</param>
-        /// <returns>å“åº”ID</returns>
-        protected virtual string GenerateResponseId(string requestId)
+        /// <param name="result">ÏìÓ¦½á¹û</param>
+        /// <returns>´íÎó´úÂë¶ÔÏó</returns>
+        protected virtual ErrorCode ExtractErrorCodeFromResponse(ResponseBase result)
         {
-            return $"RESP_{requestId}_{Guid.NewGuid().ToString().Substring(0, 8)}";
+            if (result == null)
+            {
+                return UnifiedErrorCodes.System_InternalError;
+            }
+
+            // ÓÅÏÈÊ¹ÓÃÏìÓ¦ÖĞµÄÔªÊı¾İÌáÈ¡¸üÏêÏ¸µÄ´íÎóĞÅÏ¢
+            string detailedMessage = result.Message;
+
+            if (result.Metadata != null)
+            {
+                // ³¢ÊÔ»ñÈ¡¸üÏêÏ¸µÄ´íÎóĞÅÏ¢
+                if (result.Metadata.TryGetValue("Exception", out var exceptionObj))
+                {
+                    detailedMessage = $"{result.Message} | Exception: {exceptionObj}";
+                }
+            }
+
+            // Ö±½ÓÊ¹ÓÃÏìÓ¦ÖĞµÄ´íÎó´úÂë´´½¨´íÎó´úÂë¶ÔÏó
+            return new ErrorCode(result.Code, detailedMessage);
         }
+
+        /// <summary>
+        /// ·¢ËÍÔöÇ¿µÄ´íÎóÏìÓ¦£¬°üº¬ÃüÁî´¦Àí½á¹ûÖĞµÄËùÓĞ´íÎóĞÅÏ¢
+        /// </summary>
+        /// <param name="session">SuperSocket»á»°</param>
+        /// <param name="requestPackage">ÇëÇóÊı¾İ°ü</param>
+        /// <param name="result">ÃüÁî´¦Àí½á¹û</param>
+        /// <param name="errorCode">´íÎó´úÂë</param>
+        /// <param name="cancellationToken">È¡ÏûÁîÅÆ</param>
+        /// <returns>·¢ËÍ½á¹ûÈÎÎñ</returns>
+        protected virtual async ValueTask SendEnhancedErrorResponseAsync(
+            TAppSession session,
+            ServerPackageInfo requestPackage,
+            ResponseBase result,
+            ErrorCode errorCode,
+            CancellationToken cancellationToken)
+        {
+            var errorResponse = new PacketModel
+            {
+                PacketId = IdGenerator.GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
+                Direction = PacketDirection.Response,
+                SessionId = requestPackage.Packet?.SessionId,
+                Status = PacketStatus.Error,
+                Extensions = new Dictionary<string, object>
+                {
+                    ["ErrorCode"] = errorCode.Code,
+                    ["ErrorMessage"] = errorCode.Message,
+                    ["Success"] = false,
+                    ["TimestampUtc"] = result.TimestampUtc,
+                    ["OriginalMessage"] = result.Message,
+                    ["OriginalCode"] = result.Code
+                }
+            };
+
+            // Ìí¼ÓÇëÇó±êÊ¶
+            if (!string.IsNullOrEmpty(result.RequestId))
+            {
+                errorResponse.Extensions["RequestId"] = result.RequestId;
+            }
+
+            // Ìí¼ÓÔªÊı¾İÖĞµÄËùÓĞ´íÎóĞÅÏ¢
+            if (result.Metadata != null && result.Metadata.Count > 0)
+            {
+                foreach (var metadata in result.Metadata)
+                {
+                    // ±ÜÃâÖØ¸´Ìí¼ÓÒÑ¾­´æÔÚµÄ¼ü
+                    if (!errorResponse.Extensions.ContainsKey(metadata.Key))
+                    {
+                        errorResponse.Extensions[metadata.Key] = metadata.Value;
+                    }
+                }
+            }
+
+            // Èç¹ûÇëÇó°üÖĞ°üº¬RequestId£¬ÔòÔÚÏìÓ¦°üÖĞ±£ÁôËü£¬ÒÔ±ã¿Í»§¶ËÆ¥ÅäÇëÇóºÍÏìÓ¦
+            if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
+            {
+                errorResponse.Extensions["RequestId"] = requestId;
+            }
+
+            // ¼ÇÂ¼ÏêÏ¸µÄ´íÎóĞÅÏ¢ÓÃÓÚµ÷ÊÔ
+            _logger?.LogWarning("·¢ËÍÔöÇ¿´íÎóÏìÓ¦: ErrorCode={ErrorCode}, ErrorMessage={ErrorMessage}, OriginalCode={OriginalCode}, MetadataKeys=[{MetadataKeys}]",
+                errorCode.Code, errorCode.Message, result.Code, 
+                result.Metadata != null ? string.Join(", ", result.Metadata.Keys) : "none");
+
+            await SendResponseAsync(session, errorResponse, cancellationToken);
+        }
+
+
     }
 
     /// <summary>
-    /// éæ³›å‹ç‰ˆæœ¬çš„ç»Ÿä¸€SuperSocketå‘½ä»¤é€‚é…å™¨ï¼Œä¾¿äºåœ¨ä¸éœ€è¦æŒ‡å®šä¼šè¯ç±»å‹çš„åœºæ™¯ä¸­ä½¿ç”¨
+    /// ·Ç·ºĞÍ°æ±¾µÄÍ³Ò»SuperSocketÃüÁîÊÊÅäÆ÷£¬±ãÓÚÔÚ²»ĞèÒªÖ¸¶¨»á»°ÀàĞÍµÄ³¡¾°ÖĞÊ¹ÓÃ
     /// </summary>
     [Command(Key = "SuperSocketCommandAdapter")]
     public class SuperSocketCommandAdapter : SuperSocketCommandAdapter<IAppSession>

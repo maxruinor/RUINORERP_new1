@@ -19,11 +19,11 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 命令处理器基类 - 提供命令处理器的通用实现
     /// </summary>
-    public abstract class BaseCommandHandler :  ICommandHandler
+    public abstract class BaseCommandHandler : ICommandHandler
     {
         // 定义结构化日志消息
-        private static readonly Action<ILogger, string, long, bool, Exception> _logHandled = 
-            LoggerMessage.Define<string, long, bool>(LogLevel.Information, new EventId(1001, "Handled"), 
+        private static readonly Action<ILogger, string, long, bool, Exception> _logHandled =
+            LoggerMessage.Define<string, long, bool>(LogLevel.Information, new EventId(1001, "Handled"),
                 "Command {CommandId} handled in {Elapsed}ms, Success: {Success}");
 
         private readonly object _lockObject = new object();
@@ -34,6 +34,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// 处理器唯一标识
         /// </summary>
         public string HandlerId { get; private set; }
+
+        public int Priority { get; set; }
 
         #region 上下文的支持
 
@@ -113,11 +115,6 @@ namespace RUINORERP.PacketSpec.Commands
         public virtual string Name => this.GetType().Name;
 
         /// <summary>
-        /// 处理器优先级
-        /// </summary>
-        public virtual int Priority => 0;
-
-        /// <summary>
         /// 是否已初始化
         /// </summary>
         public bool IsInitialized { get; private set; }
@@ -167,15 +164,15 @@ namespace RUINORERP.PacketSpec.Commands
 
             var startTime = DateTime.UtcNow;
             bool success = true; // 默认认为成功
-            
+
             try
             {
                 // 记录开始处理时间
                 var logStartTime = DateTime.UtcNow;
-                
+
                 // 安全获取命令ID（通过反射）
                 string commandId = null;
-                try 
+                try
                 {
                     var commandWithId = cmd.Command as dynamic;
                     commandId = commandWithId.CommandId ?? "N/A";
@@ -184,8 +181,8 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     commandId = "N/A";
                 }
-                
-             
+
+
                 // 验证命令
                 var validationResult = await cmd.Command.ValidateAsync(cancellationToken);
                 if (!validationResult.IsValid)
@@ -195,10 +192,10 @@ namespace RUINORERP.PacketSpec.Commands
                 }
 
                 // 检查命令是否过期（如果命令有实现ExpirationTimeUtc属性）
-                try 
+                try
                 {
                     var commandWithExpiration = cmd.Command as dynamic;
-                    if (commandWithExpiration.ExpirationTimeUtc != null && 
+                    if (commandWithExpiration.ExpirationTimeUtc != null &&
                         commandWithExpiration.ExpirationTimeUtc < DateTime.UtcNow)
                     {
                         Logger.LogWarning($"命令已过期: {commandWithExpiration.ExpirationTimeUtc}");
@@ -214,7 +211,7 @@ namespace RUINORERP.PacketSpec.Commands
                 var beforeResult = await OnBeforeHandleAsync(cmd, cancellationToken);
                 if (beforeResult != null)
                     return beforeResult;
- 
+
 
                 // 执行命令处理
                 var result = await OnHandleAsync(cmd, cancellationToken);
@@ -245,7 +242,7 @@ namespace RUINORERP.PacketSpec.Commands
             finally
             {
                 var elapsed = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                
+
                 // 记录结构化日志
                 _logHandled(Logger, cmd.Command.ToString(), elapsed, success, null);
             }
@@ -272,7 +269,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (IsInitialized)
                     return true;
 
-               
+
                 LogInfo($"初始化处理器: {Name}");
 
                 var result = await OnInitializeAsync(cancellationToken);
@@ -280,13 +277,13 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     IsInitialized = true;
                     Status = HandlerStatus.Initialized;
-                   
+
                     LogInfo($"处理器初始化成功: {Name}");
                 }
                 else
                 {
                     Status = HandlerStatus.Error;
-                   
+
                     LogError($"处理器初始化失败: {Name}");
                 }
 
@@ -295,7 +292,7 @@ namespace RUINORERP.PacketSpec.Commands
             catch (Exception ex)
             {
                 Status = HandlerStatus.Error;
-               
+
                 LogError($"处理器初始化异常: {Name}", ex);
                 return false;
             }
@@ -318,7 +315,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (Status == HandlerStatus.Running)
                     return true;
 
-               
+
                 LogInfo($"启动处理器: {Name}");
 
                 var result = await OnStartAsync(cancellationToken);
@@ -326,13 +323,13 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     Status = HandlerStatus.Running;
                     _statistics.StartTime = DateTime.UtcNow;
-                   
+
                     LogInfo($"处理器启动成功: {Name}");
                 }
                 else
                 {
                     Status = HandlerStatus.Error;
-                   
+
                     LogError($"处理器启动失败: {Name}");
                 }
 
@@ -341,7 +338,7 @@ namespace RUINORERP.PacketSpec.Commands
             catch (Exception ex)
             {
                 Status = HandlerStatus.Error;
-               
+
                 LogError($"处理器启动异常: {Name}", ex);
                 return false;
             }
@@ -357,19 +354,19 @@ namespace RUINORERP.PacketSpec.Commands
                 if (Status == HandlerStatus.Stopped || Status == HandlerStatus.Disposed)
                     return true;
 
-               
+
                 LogInfo($"停止处理器: {Name}");
 
                 var result = await OnStopAsync(cancellationToken);
                 if (result)
                 {
                     Status = HandlerStatus.Stopped;
-                   
+
                     LogInfo($"处理器停止成功: {Name}");
                 }
                 else
                 {
-                   
+
                     LogError($"处理器停止失败: {Name}");
                 }
 
@@ -377,14 +374,14 @@ namespace RUINORERP.PacketSpec.Commands
             }
             catch (Exception ex)
             {
-               
+
                 LogError($"处理器停止异常: {Name}", ex);
                 return false;
             }
         }
 
 
- 
+
 
         /// <summary>
         /// 获取处理器统计信息
@@ -493,7 +490,7 @@ namespace RUINORERP.PacketSpec.Commands
         protected ResponseBase Success<T>(uint command, T data, string msg = null)
         {
             var responseData = CreateMessageResponse(command, data);
-            
+
             // 创建非泛型ResponseBase实例
             var result = new ResponseBase
             {
@@ -502,10 +499,10 @@ namespace RUINORERP.PacketSpec.Commands
                 Code = 200,
                 TimestampUtc = DateTime.UtcNow
             };
-            
+
             // 添加元数据 - 修复WithMetadata返回ResponseBase的问题
             result = (ResponseBase)result.WithMetadata("ResponseData", responseData);
-            
+
             // 确保数据可以正确序列化和存储
             if (data != null)
             {
@@ -522,7 +519,7 @@ namespace RUINORERP.PacketSpec.Commands
                     result = (ResponseBase)result.WithMetadata("Data", data);
                 }
             }
-            
+
             return result;
         }
 
@@ -541,7 +538,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 // 将命令ID转换为字节数组
                 byte[] commandBytes = BitConverter.GetBytes(command);
-                
+
                 // 序列化数据部分
                 byte[] dataBytes = Array.Empty<byte>();
                 if (data != null)
@@ -549,11 +546,11 @@ namespace RUINORERP.PacketSpec.Commands
                     string json = Newtonsoft.Json.JsonConvert.SerializeObject(data);
                     dataBytes = Encoding.UTF8.GetBytes(json);
                 }
-                
+
                 // 构造OriginalData: Cmd使用命令ID的低8位，One使用命令ID的高8位，Two使用序列化后的数据
                 byte cmd = commandBytes[0]; // 命令类别
                 byte[] one = commandBytes.Length > 1 ? new byte[] { commandBytes[1] } : Array.Empty<byte>(); // 操作码
-                
+
                 return new OriginalData(cmd, one, dataBytes);
             }
             catch (Exception ex)
@@ -586,8 +583,8 @@ namespace RUINORERP.PacketSpec.Commands
                     _statistics.MaxProcessingTimeMs = processingTimeMs;
 
                 // 计算平均处理时间
-                _statistics.AverageProcessingTimeMs = 
-                    (_statistics.AverageProcessingTimeMs * (_statistics.TotalCommandsProcessed - 1) + processingTimeMs) 
+                _statistics.AverageProcessingTimeMs =
+                    (_statistics.AverageProcessingTimeMs * (_statistics.TotalCommandsProcessed - 1) + processingTimeMs)
                     / _statistics.TotalCommandsProcessed;
             }
         }
@@ -597,7 +594,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogDebug(string message)
         {
-           
+
             Logger.LogDebug(message);
         }
 
@@ -606,7 +603,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogInfo(string message)
         {
-           
+
             Logger.LogInformation(message);
         }
 
@@ -615,7 +612,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogWarning(string message)
         {
-           
+
             Logger.LogWarning(message);
         }
 
@@ -624,7 +621,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogError(string message, Exception ex = null)
         {
-           
+
             if (ex != null)
             {
                 Logger.LogError(ex, message);
@@ -671,7 +668,7 @@ namespace RUINORERP.PacketSpec.Commands
             return null;
         }
 
-  
+
 
         /// <summary>
         /// 创建响应数据
@@ -682,21 +679,21 @@ namespace RUINORERP.PacketSpec.Commands
         //    {
         //        var json = System.Text.Json.JsonSerializer.Serialize(data);
         //        var dataBytes = System.Text.Encoding.UTF8.GetBytes(json);
-                
+
         //        // 将完整的CommandId正确分解为Category和OperationCode
         //        byte category = (byte)(command & 0xFF); // 取低8位作为Category
         //        byte operationCode = (byte)((command >> 8) & 0xFF); // 取次低8位作为OperationCode
-                
+
         //        return new OriginalData(category, new byte[] { operationCode }, dataBytes);
         //    }
         //    catch (Exception ex)
         //    {
         //        LogError($"创建响应数据失败: {ex.Message}", ex);
-                
+
         //        // 将完整的CommandId正确分解为Category和OperationCode
         //        byte category = (byte)(command & 0xFF); // 取低8位作为Category
         //        byte operationCode = (byte)((command >> 8) & 0xFF); // 取次低8位作为OperationCode
-                
+
         //        return new OriginalData(category, new byte[] { operationCode }, null);
         //    }
         //}
@@ -738,7 +735,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
                 catch (Exception ex)
                 {
-                   
+
                     LogError($"释放处理器时停止失败: {Name}", ex);
                 }
 

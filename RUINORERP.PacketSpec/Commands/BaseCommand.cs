@@ -272,7 +272,6 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 var commandData = new
                 {
-                    Request.RequestId,
                     CommandIdentifier,
                     Direction,
                     Priority,

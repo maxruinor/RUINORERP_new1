@@ -18,7 +18,7 @@ namespace RUINORERP.Server.Network.Commands
     /// <summary>
     /// 锁命令处理器 - 处理锁相关的命令
     /// </summary>
-    [CommandHandler("LockCommandHandler", priority: 90)]
+    [CommandHandler("LockCommandHandler", priority: CommandPriority.High)]
     public class LockCommandHandler : CommandHandlerBase
     {
         private readonly ILogger<LockCommandHandler> _logger;
@@ -59,7 +59,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理器优先级
         /// </summary>
-        public override int Priority => 90;
+        public override CommandPriority Priority => CommandPriority.High;
 
         /// <summary>
         /// 判断是否可以处理指定命令

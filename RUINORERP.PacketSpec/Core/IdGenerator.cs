@@ -40,7 +40,15 @@ namespace RUINORERP.PacketSpec.Core
         {
             return $"{commandName}_{DateTime.Now:HHmmssfff}";
         }
-
+        /// <summary>
+        /// 生成响应ID
+        /// </summary>
+        /// <param name="requestId">请求ID</param>
+        /// <returns>响应ID</returns>
+        public static string GenerateResponseId(string requestId)
+        {
+            return $"RESP_{requestId}_{Guid.NewGuid().ToString().Substring(0, 8)}";
+        }
         public static string GenerateRequestId(Type type )
         {
             return $"{type.Name}_{DateTime.Now:HHmmssfff}";

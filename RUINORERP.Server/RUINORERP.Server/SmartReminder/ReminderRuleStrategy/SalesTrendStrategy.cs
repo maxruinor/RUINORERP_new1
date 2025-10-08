@@ -1,7 +1,8 @@
-﻿using RUINORERP.Global.EnumExt;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model.ReminderModel.ReminderRules;
+using RUINORERP.PacketSpec.Enums.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
     /// </summary>
     public class SalesTrendStrategy : IReminderStrategy
     {
-        public int Priority => 2;
+        public int Priority => 0;
 
         public bool CanHandle(ReminderBizType reminderType)
         {

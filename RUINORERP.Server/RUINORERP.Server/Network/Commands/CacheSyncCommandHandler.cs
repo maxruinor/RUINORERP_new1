@@ -18,7 +18,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 缓存同步命令处理器
     /// 处理客户端与服务器之间的缓存同步命令
     /// </summary>
-    [CommandHandler("CacheSyncCommandHandler", priority: 85)]
+    [CommandHandler("CacheSyncCommandHandler", priority: CommandPriority.High)]
     public class CacheSyncCommandHandler : CommandHandlerBase
     {
         private readonly ILogger<CacheSyncCommandHandler> _logger;
@@ -54,7 +54,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理器优先级
         /// </summary>
-        public override int Priority => 85;
+        public override CommandPriority Priority => CommandPriority.High;
 
         /// <summary>
         /// 判断是否可以处理指定命令

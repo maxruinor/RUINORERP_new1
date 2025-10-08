@@ -317,6 +317,7 @@ namespace RUINORERP.UI.Network
 
 
             var requestId = command.ExecutionContext.RequestId;
+            command.ExecutionContext.SessionId = _socketClient.SessionID;
 
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(timeoutMs);
@@ -1177,6 +1178,7 @@ namespace RUINORERP.UI.Network
                     .WithCommand(command.CommandIdentifier)
                     .WithJsonData(command)
                     .WithRequestId(requestId)
+                    .WithSession(command.ExecutionContext.SessionId)
                     .WithTimeout(timeoutMs)
                     .Build();
 
@@ -1185,8 +1187,8 @@ namespace RUINORERP.UI.Network
                 {
                     packet.SetToken(authToken);
                 }
-
                 packet.ClientId = client.ClientID;
+                packet.SessionId = client.SessionID;
 
                 // 序列化和加密数据包
                 var payload = UnifiedSerializationService.SerializeWithMessagePack(packet);

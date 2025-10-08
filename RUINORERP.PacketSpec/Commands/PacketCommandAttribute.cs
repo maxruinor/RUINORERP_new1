@@ -62,10 +62,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public bool IsDefault { get; }
 
-        public CommandHandlerAttribute(string name = null, int priority = 0, bool isDefault = false, params uint[] supportedCommands)
+        public CommandHandlerAttribute(string name = null, int priority = 1, bool isDefault = false, params uint[] supportedCommands)
         {
-            Name = name;
             Priority = priority;
+            Name = name;
             IsDefault = isDefault;
             SupportedCommands = supportedCommands ?? Array.Empty<uint>();
         }

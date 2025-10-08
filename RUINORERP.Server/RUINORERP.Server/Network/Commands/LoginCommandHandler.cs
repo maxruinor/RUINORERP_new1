@@ -90,15 +90,11 @@ namespace RUINORERP.Server.Network.Commands
             AuthenticationCommands.PrepareLogin.FullCode
         };
 
-        /// <summary>
-        /// 处理器优先级
-        /// </summary>
-        public override int Priority => 100;
-
 
         /// <summary>
-        /// 核心处理方法，根据命令类型分发到对应的处理函数
+        /// 核心处理方法，根据命令类型分发到对应的处理函数（优化版：分层解析）
         /// 支持多种命令类型：LoginCommand、BaseCommand<LoginRequest, LoginResponse>、GenericCommand<LoginRequest>
+        /// 采用延迟解析策略，具体业务数据解析在对应处理方法中完成
         /// </summary>
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -116,23 +112,8 @@ namespace RUINORERP.Server.Network.Commands
 
                 if (commandId == AuthenticationCommands.Login || commandId == AuthenticationCommands.LoginRequest)
                 {
-                    // 支持多种命令类型
-                    if (cmd.Command is LoginCommand loginCommand)
-                    {
-                        return await HandleLoginAsync(loginCommand, cancellationToken);
-                    }
-                    else if (cmd.Command is BaseCommand<LoginRequest, LoginResponse> typedCommand)
-                    {
-                        return await HandleTypedLoginAsync(typedCommand, cancellationToken);
-                    }
-                    else if (cmd.Command is GenericCommand<LoginRequest> genericCommand)
-                    {
-                        return await HandleGenericLoginAsync(genericCommand, cancellationToken);
-                    }
-                    else
-                    {
-                        return CreateErrorResponse("不支持的登录命令格式", UnifiedErrorCodes.Command_ValidationFailed, "UNSUPPORTED_LOGIN_FORMAT");
-                    }
+                    // 分层解析策略：先确定命令类型，具体数据解析延迟到处理方法中
+                    return await HandleLoginCommandAsync(cmd, cancellationToken);
                 }
                 else if (commandId == AuthenticationCommands.Logout)
                 {
@@ -165,7 +146,45 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 处理强类型登录命令
+        /// 分层处理登录命令（优化版：延迟解析策略）
+        /// </summary>
+        private async Task<ResponseBase> HandleLoginCommandAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 第一层：命令类型识别（不解析具体数据）
+                var commandType = cmd.Command.GetType();
+                
+                // 第二层：根据命令类型选择对应的处理方法，具体数据解析延迟到对应方法中
+                if (cmd.Command is LoginCommand loginCommand)
+                {
+                    // 延迟解析：在HandleLoginAsync中解析具体数据
+                    return await HandleLoginAsync(loginCommand, cancellationToken);
+                }
+                else if (cmd.Command is BaseCommand<LoginRequest, LoginResponse> typedCommand)
+                {
+                    // 延迟解析：在HandleTypedLoginAsync中解析具体数据
+                    return await HandleTypedLoginAsync(typedCommand, cancellationToken);
+                }
+                else if (cmd.Command is GenericCommand<LoginRequest> genericCommand)
+                {
+                    // 延迟解析：在HandleGenericLoginAsync中解析具体数据
+                    return await HandleGenericLoginAsync(genericCommand, cancellationToken);
+                }
+                else
+                {
+                    return CreateErrorResponse("不支持的登录命令格式", UnifiedErrorCodes.Command_ValidationFailed, "UNSUPPORTED_LOGIN_FORMAT");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"登录命令分层处理异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "LAYERED_LOGIN_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理强类型登录命令（延迟解析策略）
         /// </summary>
         private async Task<ResponseBase> HandleTypedLoginAsync(
             BaseCommand<LoginRequest, LoginResponse> command,
@@ -352,15 +371,17 @@ namespace RUINORERP.Server.Network.Commands
                     return CreateErrorResponse($"登录命令验证失败: {commandValidationResult.Errors[0].ErrorMessage}", UnifiedErrorCodes.Command_ValidationFailed, "LOGIN_VALIDATION_FAILED");
                 }
 
+               
+
                 // 统一使用基类方法获取登录请求数据
-                var loginRequest = ParseBusinessData<LoginRequest>(command);
-                if (loginRequest == null)
+                
+                if (command.Request == null)
                 {
                     return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
                 }
 
                 // 调用统一的登录业务逻辑处理方法
-                return await ProcessLoginAsync(loginRequest, command.ExecutionContext, cancellationToken);
+                return await ProcessLoginAsync(command.Request, command.ExecutionContext, cancellationToken);
             }
             catch (Exception ex)
             {

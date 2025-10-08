@@ -35,7 +35,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 缓存命令处理器 - 处理客户端的缓存请求
     /// 包括缓存数据的获取、发送和管理
     /// </summary>
-    [CommandHandler("CacheCommandHandler", priority: 80)]
+    [CommandHandler("CacheCommandHandler", priority: CommandPriority.High)]
     public class CacheCommandHandler : CommandHandlerBase
     {
         private readonly ISessionService _sessionService;
@@ -174,7 +174,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理器优先级
         /// </summary>
-        public override int Priority => 80;
+        public override CommandPriority Priority => CommandPriority.High;
 
         /// <summary>
         /// 判断是否可以处理指定命令

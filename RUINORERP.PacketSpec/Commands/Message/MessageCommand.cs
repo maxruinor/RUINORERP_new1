@@ -23,14 +23,22 @@ namespace RUINORERP.PacketSpec.Commands.Message
         /// <summary>
         /// 命令类型
         /// </summary>
-        [Key(0)]
+        [Key(60)]
         public uint CommandType { get; }
 
         /// <summary>
         /// 命令数据
         /// </summary>
-        [Key(1)]
+        [Key(61)]
         public object Data { get; set; }
+
+        /// <summary>
+        /// 无参构造函数 - 用于MessagePack反序列化
+        /// </summary>
+        public MessageCommand() : base(PacketDirection.Response)
+        {
+            TimeoutMs = 30000; // 默认超时时间30秒
+        }
 
         /// <summary>
         /// 构造函数

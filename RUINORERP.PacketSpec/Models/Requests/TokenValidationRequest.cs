@@ -34,6 +34,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 附加验证数据
         /// </summary>
         [Key(13)]
+        [MessagePack.IgnoreMember]
         public Dictionary<string, object> ValidationData { get; set; }
 
         /// <summary>
@@ -55,7 +56,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// </summary>
         public bool IsValid()
         {
-            return !string.IsNullOrEmpty(Token.AccessToken) && Token.AccessTokenExpiryUtc < System.DateTime.UtcNow;
+            return !string.IsNullOrEmpty(Token.AccessToken) && Token.AccessTokenExpiryUtc < DateTime.UtcNow;
         }
     }
 }

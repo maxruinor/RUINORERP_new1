@@ -25,6 +25,7 @@ namespace RUINORERP.PacketSpec.Commands
         [Key(5)]
         public DateTime ReceivedTime { get; set; }
         [Key(6)]
+        [MessagePack.IgnoreMember]
         public IDictionary<string, object> Extensions { get; set; } = new Dictionary<string, object>();
 
         // 添加用户认证信息

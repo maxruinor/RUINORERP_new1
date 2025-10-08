@@ -19,7 +19,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 命令处理器基类 - 提供命令处理器的通用实现
     /// </summary>
-    public abstract class BaseCommandHandler : ICommandHandler
+    public abstract class BaseCommandHandler : ICommandHandler, ITimestamped
     {
         // 定义结构化日志消息
         private static readonly Action<ILogger, string, long, bool, Exception> _logHandled =
@@ -37,9 +37,7 @@ namespace RUINORERP.PacketSpec.Commands
 
         public int Priority { get; set; }
 
-  
-
-        #region ICoreEntity 接口实现
+        #region ITimestamped 接口实现
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
@@ -56,6 +54,16 @@ namespace RUINORERP.PacketSpec.Commands
         public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
+        /// 更新时间戳（实现 ITimestamped 接口）
+        /// </summary>
+        public void UpdateTimestamp()
+        {
+            TimestampUtc = DateTime.UtcNow;
+            LastUpdatedTime = TimestampUtc;
+        }
+        #endregion
+
+        /// <summary>
         /// 验证模型有效性（实现 ICoreEntity 接口）
         /// </summary>
         /// <returns>是否有效</returns>
@@ -64,16 +72,6 @@ namespace RUINORERP.PacketSpec.Commands
             return CreatedTimeUtc <= DateTime.UtcNow &&
                    CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
         }
-
-        /// <summary>
-        /// 更新时间戳（实现 ICoreEntity 接口）
-        /// </summary>
-        public void UpdateTimestamp()
-        {
-            TimestampUtc = DateTime.UtcNow;
-            LastUpdatedTime = TimestampUtc;
-        }
-        #endregion
 
         /// <summary>
         /// 处理器名称
@@ -115,7 +113,7 @@ namespace RUINORERP.PacketSpec.Commands
             HandlerId = IdGenerator.GenerateHandlerId(this.GetType().Name);
             _statistics = new HandlerStatistics();
             Logger = _logger;
-            // 初始化ICoreEntity属性
+            // 初始化ITimestamped属性
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = DateTime.UtcNow;
         }
@@ -598,25 +596,6 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        ///// <summary>
-        ///// 从原始数据解析对象 - 使用系统默认的JSON序列化器
-        ///// </summary>
-        //protected T ParseData<T>(OriginalData originalData) where T : class
-        //{
-        //    if (originalData.One == null || originalData.One.Length == 0)
-        //        return null;
-
-        //    try
-        //    {
-        //        var json = Encoding.UTF8.GetString(originalData.One);
-        //        return JsonSerializer.Deserialize<T>(json);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        LogError($"解析数据失败: {ex.Message}", ex);
-        //        return null;
-        //    }
-        //}
 
         /// <summary>
         /// 使用GetJsonData方法从PacketModel中解析业务数据
@@ -635,34 +614,6 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
 
-
-        /// <summary>
-        /// 创建响应数据
-        /// </summary>
-        //protected OriginalData CreateResponseData(uint command, object data)
-        //{
-        //    try
-        //    {
-        //        var json = System.Text.Json.JsonSerializer.Serialize(data);
-        //        var dataBytes = System.Text.Encoding.UTF8.GetBytes(json);
-
-        //        // 将完整的CommandId正确分解为Category和OperationCode
-        //        byte category = (byte)(command & 0xFF); // 取低8位作为Category
-        //        byte operationCode = (byte)((command >> 8) & 0xFF); // 取次低8位作为OperationCode
-
-        //        return new OriginalData(category, new byte[] { operationCode }, dataBytes);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        LogError($"创建响应数据失败: {ex.Message}", ex);
-
-        //        // 将完整的CommandId正确分解为Category和OperationCode
-        //        byte category = (byte)(command & 0xFF); // 取低8位作为Category
-        //        byte operationCode = (byte)((command >> 8) & 0xFF); // 取次低8位作为OperationCode
-
-        //        return new OriginalData(category, new byte[] { operationCode }, null);
-        //    }
-        //}
 
         /// <summary>
         /// 将ResponseBase转换为ResponseBase

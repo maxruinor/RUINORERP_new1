@@ -69,7 +69,9 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         {
             var tokenInfo = await GetTokenAsync();
             // 使用TokenInfo的过期检查方法 - 这是统一的标准实现
+#pragma warning disable CS0618 // 类型或成员已过时
             var result = tokenInfo != null && !tokenInfo.IsAccessTokenExpired();
+#pragma warning restore CS0618 // 类型或成员已过时
      
             // 模拟异步操作
             await Task.CompletedTask;

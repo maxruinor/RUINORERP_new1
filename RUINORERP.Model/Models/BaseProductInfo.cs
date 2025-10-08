@@ -21,8 +21,7 @@ namespace RUINORERP.Model.Dto
         {
 
         }
-
-        private long? _ProdDetailID;
+ 
 
         /// <summary>
         /// 产品

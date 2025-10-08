@@ -99,7 +99,9 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// <typeparam name="T">元素类型</typeparam>
         /// <param name="list">列表</param>
         /// <returns>异步可枚举集合</returns>
+#pragma warning disable CS1998 // 异步方法缺少 "await" 运算符，将以同步方式运行
         private async IAsyncEnumerable<T> EnumerateList<T>(List<T> list)
+#pragma warning restore CS1998 // 异步方法缺少 "await" 运算符，将以同步方式运行
         {
             foreach (var item in list)
             {
@@ -150,7 +152,9 @@ namespace RUINORERP.PacketSpec.Commands.Cache
             return new EmptyAsyncEnumerator<T>();
         }
         
+#pragma warning disable CS0693 // 类型参数与外部类型中的类型参数同名
         private class EmptyAsyncEnumerator<T> : IAsyncEnumerator<T>
+#pragma warning restore CS0693 // 类型参数与外部类型中的类型参数同名
         {
             public T Current => default;
             

@@ -50,25 +50,12 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 统一命令接口 - 定义所有命令的基本契约
     /// </summary>
-
-    public interface ICommand
+    public interface ICommand : ITimestamped
     {
         /// <summary>
         /// 命令标识符（类型安全命令系统）
         /// </summary>
         CommandId CommandIdentifier { get; }
-
-        /// <summary>
-        /// 命令创建时间
-        /// </summary>
-        DateTime CreatedTimeUtc { get; }
-
-        DateTime? LastUpdatedTime { get; set; }
-
-        /// <summary>
-        /// 时间戳（UTC时间）
-        /// </summary>
-        DateTime TimestampUtc { get; set; }
 
         /// <summary>
         /// 命令优先级
@@ -80,7 +67,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         int TimeoutMs { get; set; }
 
-
         /// <summary>
         /// 业务数据
         /// </summary>
@@ -90,7 +76,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// 响应数据
         /// </summary>
         byte[] JsonResponseData { get; set; }
-
 
         /// <summary>
         /// 验证命令

@@ -1,4 +1,4 @@
-﻿using MessagePack;
+using MessagePack;
 using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// <summary>
     /// 请求基类 - 提供所有请求的公共属性和方法
     /// </summary>
-    [MessagePackObject]
+    [MessagePackObject(AllowPrivate = true)]
     [Serializable]
 
     public partial class RequestBase : IRequest
@@ -42,12 +42,13 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 扩展元数据（可选）
         /// </summary>
         [Key(4)]
+        [MessagePack.IgnoreMember]
         public Dictionary<string, object> Metadata { get; set; }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        protected RequestBase()
+        public RequestBase()
         {
             RequestId = Guid.NewGuid().ToString();
             TimestampUtc = DateTime.UtcNow;

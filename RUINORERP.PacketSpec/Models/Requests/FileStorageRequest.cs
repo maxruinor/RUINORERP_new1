@@ -124,7 +124,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 创建成功结果
         /// </summary>
+#pragma warning disable CS0108 // 成员隐藏继承的成员；缺少关键字 new
         public static FileDeleteResponse CreateSuccess(string message = "文件删除成功")
+#pragma warning restore CS0108 // 成员隐藏继承的成员；缺少关键字 new
         {
             return new FileDeleteResponse(true, message, 200);
         }
@@ -168,7 +170,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 创建成功结果
         /// </summary>
+#pragma warning disable CS0108 // 成员隐藏继承的成员；缺少关键字 new
         public static FileInfoResponse CreateSuccess(FileInfo fileInfo, string message = "获取文件信息成功")
+#pragma warning restore CS0108 // 成员隐藏继承的成员；缺少关键字 new
         {
             return new FileInfoResponse(true, message, fileInfo, 200);
         }

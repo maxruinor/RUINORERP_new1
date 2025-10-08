@@ -1,11 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <ProjectGuid>{E183B2C1-BA58-4B8C-B778-791DA2A60051}</ProjectGuid>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
-    <!-- 编码设置 -->
     <FileEncoding>utf-8</FileEncoding>
     <Utf8Output>true</Utf8Output>
   </PropertyGroup>
@@ -32,6 +31,11 @@
     <PackageReference Include="CacheManager.Core" Version="2.0.0" />
     <PackageReference Include="CircularBuffer" Version="1.4.0" />
     <PackageReference Include="MessagePack" Version="3.1.4" />
+    <PackageReference Include="MessagePack.Annotations" Version="3.1.4" />
+    <PackageReference Include="MessagePackAnalyzer" Version="3.1.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
@@ -53,7 +57,6 @@
     <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
   </ItemGroup>
 
-  <!-- .NET Standard 2.0项目不需要显式引用System.Configuration -->
   <ItemGroup>
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
   </ItemGroup>

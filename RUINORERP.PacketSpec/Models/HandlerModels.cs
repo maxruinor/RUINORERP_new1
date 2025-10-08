@@ -258,7 +258,9 @@ namespace RUINORERP.PacketSpec.Handlers
         /// <summary>
         /// 创建成功结果
         /// </summary>
+#pragma warning disable CS0108 // 成员隐藏继承的成员；缺少关键字 new
         public static OperationResult CreateSuccess(object data = null, string message = "操作成功")
+#pragma warning restore CS0108 // 成员隐藏继承的成员；缺少关键字 new
         {
             return new OperationResult(true, message, data, 200);
         }

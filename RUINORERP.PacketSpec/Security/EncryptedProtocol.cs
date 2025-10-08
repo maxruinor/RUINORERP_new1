@@ -243,7 +243,9 @@ namespace RUINORERP.PacketSpec.Security
             #region  解包体 包括包头重新解一次
 
             OriginalData ret = new OriginalData();
+#pragma warning disable CS0219 // 变量已被赋值，但从未使用过它的值
             int rxi = 0;
+#pragma warning restore CS0219 // 变量已被赋值，但从未使用过它的值
             //先把头解密了，后面的就好说了
             byte[] KEY = null;
             uint 掩码 = 0;
@@ -401,13 +403,16 @@ namespace RUINORERP.PacketSpec.Security
 
             OriginalData ret = new OriginalData();
 
+#pragma warning disable CS0168 // 声明了变量，但从未使用过
             try
             {
                 #region  解包体 包括包头重新解一次
                 byte[] Head = new byte[18];
                 Array.Copy(PackData, Head, 18);
 
+#pragma warning disable CS0219 // 变量已被赋值，但从未使用过它的值
                 int rxi = 0;
+#pragma warning restore CS0219 // 变量已被赋值，但从未使用过它的值
                 //先把头解密了，后面的就好说了
                 byte[] KEY = null;
                 uint 掩码 = 0;
@@ -495,6 +500,7 @@ namespace RUINORERP.PacketSpec.Security
             {
                 //throw new Exception(string.Format("需要长度{0},提供的数据不够，不是完整的业务逻辑包。", len) + exxx.Message + exxx.StackTrace);
             }
+#pragma warning restore CS0168 // 声明了变量，但从未使用过
             return ret;
         }
 

@@ -64,6 +64,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// 扩展元数据（可选）
         /// </summary>
         [Key(8)]
+        [MessagePack.IgnoreMember]
         public Dictionary<string, object> Metadata { get; set; }
 
         /// <summary>

@@ -122,7 +122,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 创建成功结果
         /// </summary>
+#pragma warning disable CS0108 // 成员隐藏继承的成员；缺少关键字 new
         public static FileDownloadResponse CreateSuccess(FileDownloadResponseData data, string message = "文件下载成功")
+#pragma warning restore CS0108 // 成员隐藏继承的成员；缺少关键字 new
         {
             return new FileDownloadResponse(true, message, data, 200);
         }
@@ -262,11 +264,15 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 文件总大小
         /// </summary>
+#pragma warning disable CS0109 // 成员不会隐藏继承的成员；不需要关键字 new
         public new long FileSize { get; set; }
+#pragma warning restore CS0109 // 成员不会隐藏继承的成员；不需要关键字 new
 
         /// <summary>
         /// 下载令牌（用于后续分块请求）
         /// </summary>
+#pragma warning disable CS0109 // 成员不会隐藏继承的成员；不需要关键字 new
         public new string DownloadToken { get; set; }
+#pragma warning restore CS0109 // 成员不会隐藏继承的成员；不需要关键字 new
     }
 }

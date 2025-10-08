@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
@@ -7,7 +7,9 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using Microsoft.Extensions.Configuration;
 using RUINORERP.Model.ConfigModel;
 using System.IO;
+#pragma warning disable CS0105 // using 指令以前在此命名空间中出现过
 using RUINORERP.PacketSpec.Commands.Authentication;
+#pragma warning restore CS0105 // using 指令以前在此命名空间中出现过
 
 namespace RUINORERP.PacketSpec.DI
 {

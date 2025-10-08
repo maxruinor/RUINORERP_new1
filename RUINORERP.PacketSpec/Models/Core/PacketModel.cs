@@ -10,6 +10,7 @@ using RUINORERP.PacketSpec.Models.Requests;
 using MessagePack;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using System.Net.Sockets;
+using RUINORERP.PacketSpec.Serialization;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {
@@ -22,58 +23,44 @@ namespace RUINORERP.PacketSpec.Models.Core
     /// </summary>
     [Serializable]
     [MessagePackObject]
-    public class PacketModel 
+    public class PacketModel : ITimestamped
     {
-
         /// <summary>
         /// 保存指令实体数据
         /// </summary>
-        [Key(0)]
+        [Key(100)]
         public byte[] CommandData { get; set; }
 
         // 简单的命令标识（不包含业务逻辑）
         //命令类型
-        [Key(1)]
+        [Key(101)]
         public CommandId CommandId { get; set; }
 
         /// <summary>
         /// 数据包状态
         /// </summary>
-        [Key(2)]
+        [Key(102)]
         public PacketStatus Status { get; set; }
 
         #region 网络传输属性
 
-        [Key(3)]
-        public string SessionId { get; set; } // 属性声明
-
         /// <summary>
         /// 包标志位
         /// </summary>
-        [Key(4)]
+        [Key(104)]
         public string Flag { get; set; }
-
-        [Key(5)]
-        public string ClientId { get; set; }
-
-        /// <summary>
-        /// 认证Token
-        /// </summary>
-        [Key(6)]
-        public string Token { get; set; }
 
         /// <summary>
         /// 数据包唯一标识符
         /// </summary>
         // 网络标识
-        [Key(7)]
+        [Key(107)]
         public string PacketId { get; set; }
-
 
         /// <summary>
         /// 数据包大小（字节）
         /// </summary>
-        [Key(8)]
+        [Key(108)]
         public int Size { get; set; }
 
         /// <summary>
@@ -87,55 +74,99 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 校验和
         /// </summary>
-        [Key(9)]
+        [Key(109)]
         public string Checksum { get; set; }
 
         /// <summary>
         /// 是否加密
         /// </summary>
-        [Key(10)]
+        [Key(110)]
         public bool IsEncrypted { get; set; }
 
         /// <summary>
         /// 是否压缩
         /// </summary>
-        [Key(11)]
+        [Key(111)]
         public bool IsCompressed { get; set; }
 
         /// <summary>
         /// 数据包方向
         /// </summary>
-        [Key(12)]
+        [Key(112)]
         public PacketDirection Direction { get; set; }
 
         /// <summary>
         /// 模型版本
         /// </summary>
-        [Key(13)]
+        [Key(113)]
         public string Version { get; set; } = "2.0";
 
         /// <summary>
         /// 消息类型
         /// </summary>
-        [Key(14)]
+        [Key(114)]
         public MessageType MessageType { get; set; } = MessageType.Request;
 
         /// <summary>
         /// 扩展属性字典（用于存储非核心但需要传输的元数据）
         /// </summary>
-        [Key(15)]
+        [Key(115)]
+        [MessagePack.IgnoreMember]
         public System.Collections.Generic.Dictionary<string, object> Extensions { get; set; }
 
         /// <summary>
         /// 命令执行上下文 - 网络传输层使用
         /// 包含会话、认证、追踪等基础设施信息
         /// </summary>
-        [Key(16)]
+        [Key(116)]
         public CommandExecutionContext ExecutionContext { get; set; }
 
+        /// <summary>
+        /// 会话ID（通过ExecutionContext获取）
+        /// </summary>
+        [IgnoreMember]
+        public string SessionId 
+        { 
+            get => ExecutionContext?.SessionId; 
+            set 
+            { 
+                if (ExecutionContext == null) 
+                    ExecutionContext = new CommandExecutionContext();
+                ExecutionContext.SessionId = value; 
+            } 
+        }
 
+        /// <summary>
+        /// 客户端ID（通过ExecutionContext获取）
+        /// </summary>
+        [IgnoreMember]
+        public string ClientId 
+        { 
+            get => ExecutionContext?.ClientId; 
+            set 
+            { 
+                if (ExecutionContext == null) 
+                    ExecutionContext = new CommandExecutionContext();
+                ExecutionContext.ClientId = value; 
+            } 
+        }
 
-
+        /// <summary>
+        /// 认证Token（通过ExecutionContext获取）
+        /// </summary>
+        [IgnoreMember]
+        public string Token 
+        { 
+            get => ExecutionContext?.Token?.AccessToken; 
+            set 
+            { 
+                if (ExecutionContext == null) 
+                    ExecutionContext = new CommandExecutionContext();
+                if (ExecutionContext.Token == null)
+                    ExecutionContext.Token = new Commands.Authentication.TokenInfo();
+                ExecutionContext.Token.AccessToken = value; 
+            } 
+        }
 
         #endregion
 
@@ -147,30 +178,29 @@ namespace RUINORERP.PacketSpec.Models.Core
             {
                 PacketId = IdGenerator.GeneratePacketId(command.CommandIdentifier.Name),
                 CommandId = command.CommandIdentifier,
-                CommandData = MessagePackSerializer.Serialize(command),
+                CommandData = UnifiedSerializationService.SerializeWithMessagePack(command),
                 CreatedTimeUtc = command.CreatedTimeUtc
             };
         }
 
-
-        #region ICoreEntity 接口实现
+        #region ITimestamped 接口实现
 
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
-        [Key(17)]
+        [Key(117)]
         public DateTime CreatedTimeUtc { get; set; }
 
         /// <summary>
         /// 最后更新时间（UTC时间）
         /// </summary>
-        [Key(18)]
+        [Key(118)]
         public DateTime? LastUpdatedTime { get; set; }
 
         /// <summary>
         /// 时间戳（UTC时间）
         /// </summary>
-        [Key(19)]
+        [Key(119)]
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
@@ -185,7 +215,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         }
 
         /// <summary>
-        /// 更新时间戳（实现 ICoreEntity 接口）
+        /// 更新时间戳（实现 ITimestamped 接口）
         /// </summary>
         public void UpdateTimestamp()
         {
@@ -235,15 +265,22 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         #endregion
 
-
         /// <summary>
         /// 安全清理敏感数据
         /// </summary>
         public void ClearSensitiveData()
         {
-            SessionId = null;
-            ClientId = null;
-            Token = null; // 清理Token
+            // 清理ExecutionContext中的敏感数据
+            if (ExecutionContext != null)
+            {
+                ExecutionContext.SessionId = null;
+                ExecutionContext.ClientId = null;
+                if (ExecutionContext.Token != null)
+                {
+                    ExecutionContext.Token.AccessToken = null;
+                }
+            }
+            
             Extensions?.Clear();
             // 清理包体数据
             if (CommandData != null)
@@ -271,8 +308,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             return Token;
         }
 
-
-
         #region 重写方法
 
         /// <summary>
@@ -297,9 +332,8 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             // 生成缓存键：类型名 + 数据哈希
             var type = typeof(T);
-            var json = JsonConvert.SerializeObject(data);
-            var jsonBytes = Encoding.UTF8.GetBytes(json);
-
+            var jsonBytes = UnifiedSerializationService.SerializeWithJson(data);
+            
             // 计算JSON的哈希值作为缓存键的一部分
             string hash;
             using (var sha256 = SHA256.Create())
@@ -347,10 +381,10 @@ namespace RUINORERP.PacketSpec.Models.Core
                 if (CommandData == null || CommandData.Length == 0)
                     return default(T);
 
-                // 优先尝试MessagePack反序列化
+                // 优先尝试使用UnifiedSerializationService进行MessagePack反序列化
                 try
                 {
-                    return MessagePack.MessagePackSerializer.Deserialize<T>(CommandData);
+                    return UnifiedSerializationService.DeserializeWithMessagePack<T>(CommandData);
                 }
                 catch
                 {
@@ -378,7 +412,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 if (CommandData == null || CommandData.Length == 0)
                     return default(T);
 
-                return MessagePack.MessagePackSerializer.Deserialize<T>(CommandData);
+                return UnifiedSerializationService.DeserializeWithMessagePack<T>(CommandData);
             }
             catch (Exception ex)
             {
@@ -386,7 +420,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             }
         }
 
-     
         public PacketModel Clone()
         {
             return new PacketModel
@@ -406,7 +439,6 @@ namespace RUINORERP.PacketSpec.Models.Core
                 TimestampUtc = TimestampUtc
             };
         }
-
     }
 
     /// <summary>

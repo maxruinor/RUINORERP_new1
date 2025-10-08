@@ -94,8 +94,11 @@ namespace RUINORERP.PacketSpec.Commands.System
         /// </summary>
         /// <returns>可序列化的心跳数据</returns>
         [Obsolete("用新的数据容器，不再需要重写GetSerializableData")]
+#pragma warning disable CS0809 // 过时成员重写未过时成员
         public override object GetSerializableData()
+#pragma warning restore CS0809 // 过时成员重写未过时成员
         {
+#pragma warning disable CS0168 // 声明了变量，但从未使用过
             try
             {
                 // 确保ResourceUsage不为空
@@ -131,6 +134,7 @@ namespace RUINORERP.PacketSpec.Commands.System
                     ErrorMessage = "Failed to collect full heartbeat data"
                 };
             }
+#pragma warning restore CS0168 // 声明了变量，但从未使用过
         }
 
  

@@ -1,4 +1,4 @@
-using MessagePack;
+﻿using MessagePack;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -20,7 +20,6 @@ namespace RUINORERP.PacketSpec.Commands
 
         private T _objectData;
         private byte[] _binaryData;
-        private string _hash;
         private bool _isObjectDirty = true;
         private bool _isBinaryDirty = true;
 

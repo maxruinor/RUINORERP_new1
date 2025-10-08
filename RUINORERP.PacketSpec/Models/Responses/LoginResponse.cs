@@ -1,4 +1,5 @@
-﻿using RUINORERP.PacketSpec.Core;
+﻿using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -41,39 +42,45 @@ namespace RUINORERP.PacketSpec.Models.Responses
         public string SessionId { get; set; }
 
         /// <summary>
-        /// 访问令牌
+        /// Token信息
         /// </summary>
         [Key(14)]
-        public string AccessToken { get; set; }
+        public TokenInfo Token { get; set; }
 
         /// <summary>
-        /// 刷新令牌
+        /// 获取访问令牌（通过TokenInfo实例获取）
         /// </summary>
-        [Key(15)]
-        public string RefreshToken { get; set; }
+        [IgnoreMember]
+        public string AccessToken => Token?.AccessToken;
 
         /// <summary>
-        /// 过期时间（秒）
+        /// 获取刷新令牌（通过TokenInfo实例获取）
         /// </summary>
-        [Key(16)]
-        public int ExpiresIn { get; set; }
+        [IgnoreMember]
+        public string RefreshToken => Token?.RefreshToken;
 
         /// <summary>
-        /// 令牌类型
+        /// 获取过期时间（秒，通过TokenInfo实例获取）
         /// </summary>
-        [Key(17)]
-        public string TokenType { get; set; }
+        [IgnoreMember]
+        public int ExpiresIn => Token?.ExpiresIn ?? 0;
+
+        /// <summary>
+        /// 获取令牌类型（通过TokenInfo实例获取）
+        /// </summary>
+        [IgnoreMember]
+        public string TokenType => Token?.TokenType;
 
         /// <summary>
         /// 用户角色列表
         /// </summary>
-        [Key(18)]
+        [Key(15)]
         public List<string> Roles { get; set; } = new List<string>();
 
         /// <summary>
         /// 用户权限列表
         /// </summary>
-        [Key(19)]
+        [Key(16)]
         public List<string> Permissions { get; set; } = new List<string>();
     }
 }

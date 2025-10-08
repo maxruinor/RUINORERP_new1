@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +29,7 @@ namespace RUINORERP.PacketSpec.Serialization
         {
             try
             {
+                // 使用无契约标准解析器，避免源生成器问题
                 _messagePackOptions = MessagePackSerializerOptions.Standard
                     .WithResolver(ContractlessStandardResolver.Instance)
                     .WithCompression(MessagePackCompression.Lz4Block);

@@ -288,6 +288,7 @@ namespace RUINORERP.PacketSpec.Commands
             using (var linkedCts = CreateLinkedCancellationToken(ct, cmd.Command))
             {
                 ResponseBase response = null;
+#pragma warning disable CS0168 // 声明了变量，但从未使用过
                 try
                 {
                     // 验证命令对象
@@ -421,6 +422,7 @@ namespace RUINORERP.PacketSpec.Commands
                     // 清理历史记录
                     _ = Task.Run(() => CleanupCommandHistory());
                 }
+#pragma warning restore CS0168 // 声明了变量，但从未使用过
             }
         }
 

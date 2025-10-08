@@ -233,8 +233,6 @@ namespace RUINORERP.Model
         public IStatusEvaluator StatusEvaluator { get => _statusEvaluator; set => _statusEvaluator = value; }
 
         private string _statusPropertyName;
-        private Type _statusEnumType;
-
 
         private IStatusEvaluator _statusEvaluator;
 

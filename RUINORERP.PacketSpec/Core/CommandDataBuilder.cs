@@ -88,11 +88,13 @@ namespace RUINORERP.PacketSpec.Core
         /// </summary>
         public static GenericCommand<TokenRefreshRequest> BuildTokenRefreshCommand(string token, string refreshToken)
         {
+#pragma warning disable CS0618 // 类型或成员已过时
             var request = new TokenRefreshRequest
             {
                 Token = token,
                 RefreshToken = refreshToken
             };
+#pragma warning restore CS0618 // 类型或成员已过时
             return BuildGenericCommand(
                 AuthenticationCommands.RefreshToken,
                 request,

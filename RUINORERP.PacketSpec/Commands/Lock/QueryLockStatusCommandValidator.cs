@@ -12,7 +12,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         {
             // 查询锁状态命令的验证规则
             RuleFor(command => command.BillId)
-                .GreaterThan(0l)
+                .GreaterThan(0L)
                 .WithMessage("单据ID必须大于0");
         }
     }

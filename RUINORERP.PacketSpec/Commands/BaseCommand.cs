@@ -128,6 +128,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 命令基类 - 提供命令的通用实现
     /// </summary>
+    [Serializable]
     public class BaseCommand : ICommand
     {
         public CommandExecutionContext ExecutionContext { get; set; }

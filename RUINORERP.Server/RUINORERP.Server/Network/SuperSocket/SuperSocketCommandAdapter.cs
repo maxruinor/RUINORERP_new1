@@ -731,6 +731,8 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
             };
 
+           
+
             // 添加请求标识
             if (!string.IsNullOrEmpty(result.RequestId))
             {

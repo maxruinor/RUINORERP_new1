@@ -5,6 +5,7 @@ using System.Text;
 
 namespace RUINORERP.PacketSpec.Commands
 {
+    [Serializable]
     public class CommandExecutionContext
     {
         public string SessionId { get; set; }
@@ -19,6 +20,10 @@ namespace RUINORERP.PacketSpec.Commands
         public string UserId { get; set; }
         public string UserName { get; set; }
         public bool IsAuthenticated { get; set; }
+
+        public Type RequestType { get; set; }
+        public Type ResponseType { get; set; }
+
 
         public static CommandExecutionContext CreateFromPacket(PacketModel packet)
         {

@@ -40,7 +40,6 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         public string SessionId { get; set; } // 属性声明
 
-
         /// <summary>
         /// 包标志位
         /// </summary>

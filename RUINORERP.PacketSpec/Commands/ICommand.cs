@@ -50,6 +50,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 统一命令接口 - 定义所有命令的基本契约
     /// </summary>
+
     public interface ICommand
     {
         /// <summary>

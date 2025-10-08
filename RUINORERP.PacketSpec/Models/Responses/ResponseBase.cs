@@ -64,39 +64,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
             Metadata = new Dictionary<string, object>();
         }
 
-        /// <summary>
-        /// 设置请求标识
-        /// </summary>
-        /// <param name="requestId">请求ID</param>
-        /// <returns>当前实例</returns>
-        public virtual ResponseBase WithRequestId(string requestId)
-        {
-            RequestId = requestId;
-            return this;
-        }
-
-        public virtual ResponseBase WithRequestId()
-        {
-            RequestId = IdGenerator.GenerateHandlerId(this.GetType().Name);
-            return this;
-        }
-
-        public virtual ResponseBase WithRequestId(Commands.CommandId commandId)
-        {
-            RequestId = IdGenerator.GenerateRequestId(commandId);
-            return this;
-        }
-
-        /// <summary>
-        /// 设置响应代码
-        /// </summary>
-        /// <param name="code">响应代码</param>
-        /// <returns>当前实例</returns>
-        public virtual ResponseBase WithCode(int code)
-        {
-            Code = code;
-            return this;
-        }
 
         /// <summary>
         /// 添加元数据

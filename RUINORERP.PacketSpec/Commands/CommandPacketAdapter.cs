@@ -35,98 +35,6 @@ namespace RUINORERP.PacketSpec.Commands
             _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
         }
 
-        // 命令 -> 网络包
-        public static PacketModel ToPacket<TCommand>(TCommand command)
-            where TCommand : ICommand
-            => PacketModel.Create(command);
-
-        // 网络包 -> 命令
-        public  TCommand ToCommand<TCommand>(PacketModel packet)
-            where TCommand : ICommand
-            => MessagePackSerializer.Deserialize<TCommand>(packet.CommandData);
-
-        // 自动类型推断版本
-        public ICommand ToCommand(PacketModel packet)
-        {
-            if (packet == null)
-                throw new ArgumentNullException(nameof(packet));
-
-            var commandType = _commandTypeHelper.GetCommandType(packet.CommandId.FullCode);
-
-            if (commandType == null)
-                throw new InvalidOperationException($"未找到命令类型: {packet.CommandId}");
-            
-            var command = (ICommand)MessagePackSerializer.Deserialize(commandType, packet.CommandData);
-
-            // 新增：如果命令有二进制数据，设置到容器中
-            if (command is BaseCommand baseCmd && packet.CommandData != null)
-            {
-                // 对于泛型命令，尝试设置请求数据
-                var genericBaseType = command.GetType().BaseType;
-                if (genericBaseType != null && genericBaseType.IsGenericType &&
-                    genericBaseType.GetGenericTypeDefinition() == typeof(BaseCommand<,>))
-                {
-                    var setMethod = command.GetType().GetMethod("SetRequestFromBinary");
-                    setMethod?.Invoke(command, new object[] { packet.CommandData });
-                }
-            }
-
-            return command;
-        }
-
-
-        /// <summary>
-        /// 将命令转换为数据包
-        /// </summary>
-        /// <param name="command">命令实例</param>
-        /// <returns>数据包实例</returns>
-        public PacketModel ToPacket(ICommand command)
-        {
-            if (command == null)
-                throw new ArgumentNullException(nameof(command));
-
-            var packet = PacketBuilder.Create()
-                .WithBinaryData(command.Serialize())
-                .WithDirection(PacketDirection.Unknown)
-                .WithExtension("CreatedTimeUtc", command.CreatedTimeUtc)
-                .WithExtension("TimestampUtc", command.CreatedTimeUtc)
-                .Build();
-
-            // 添加命令标识符到扩展属性中
-            packet.Extensions["CommandIdentifier"] = command.CommandIdentifier;
-
-            return packet;
-        }
-
-        /// <summary>
-        /// 从数据包创建命令
-        /// </summary>
-        /// <param name="packet">数据包实例</param>
-        /// <returns>命令实例</returns>
-        public ICommand FromPacket(PacketModel packet)
-        {
-            if (packet == null)
-                throw new ArgumentNullException(nameof(packet));
-
-            if (!packet.Extensions.TryGetValue("CommandIdentifier", out var commandIdObj) || !(commandIdObj is CommandId))
-                throw new ArgumentException("数据包中缺少有效的命令标识符", nameof(packet));
-
-            var commandId = (CommandId)commandIdObj;
-
-            // 使用命令类型助手创建命令实例
-            var command = CreateCommand(packet);
-            if (command == null)
-                throw new InvalidOperationException($"无法创建命令类型: {commandId}");
-
-            // 反序列化命令数据
-            //if (packet.Data != null && packet.Data.Length > 0)
-            //{
-            //    command.Deserialize(packet.Data);
-            //}
-
-            return command;
-        }
-
 
 
 
@@ -263,6 +171,47 @@ namespace RUINORERP.PacketSpec.Commands
                     baseCommand.AuthToken = packet.Token;
                     baseCommand.TokenType = "Bearer";
                 }
+                
+                // 关键：将CommandData中的请求实体数据反序列化到命令的Request属性中
+                if (packet.CommandData != null && packet.CommandData.Length > 0)
+                {
+                    DeserializeRequestData(command, packet.CommandData);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将CommandData中的请求实体数据反序列化到命令的Request属性中
+        /// </summary>
+        /// <param name="command">命令实例</param>
+        /// <param name="commandData">包含请求数据的字节数组</param>
+        private void DeserializeRequestData(ICommand command, byte[] commandData)
+        {
+            try
+            {
+                // 获取命令的Request属性类型
+                var commandType = command.GetType();
+                var requestProperty = commandType.GetProperty("Request");
+                
+                if (requestProperty != null && requestProperty.CanWrite)
+                {
+                    var requestType = requestProperty.PropertyType;
+                    
+                    // 使用MessagePack反序列化请求数据
+                    var requestObject = MessagePackSerializer.Deserialize(requestType, commandData);
+                    requestProperty.SetValue(command, requestObject);
+                    
+                    _logger?.LogDebug("成功反序列化请求数据到命令的Request属性: CommandType={CommandType}, RequestType={RequestType}", 
+                        commandType.Name, requestType.Name);
+                }
+                else
+                {
+                    _logger?.LogWarning("命令类型 {CommandType} 没有可写的Request属性，无法反序列化请求数据", commandType.Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "反序列化请求数据失败: CommandType={CommandType}", command.GetType().Name);
             }
         }
 

@@ -306,7 +306,7 @@ namespace RUINORERP.UI.Network
         private async Task<TResponse> SendRequestAsync<TRequest, TResponse>(
             BaseCommand<TRequest, TResponse> command,
             CancellationToken ct = default,
-            int timeoutMs = 30000) 
+            int timeoutMs = 30000)
             where TRequest : class, IRequest
             where TResponse : class, IResponse
         {
@@ -315,6 +315,8 @@ namespace RUINORERP.UI.Network
             if (command.ExecutionContext == null)
                 command.ExecutionContext = new CommandExecutionContext();
 
+            command.ExecutionContext.RequestType = typeof(TRequest);
+            command.ExecutionContext.ResponseType = typeof(TResponse);
 
             var requestId = command.ExecutionContext.RequestId;
             command.ExecutionContext.SessionId = _socketClient.SessionID;
@@ -339,7 +341,7 @@ namespace RUINORERP.UI.Network
             {
 
                 // 使用现有的SendPacketCoreAsync发送请求
-                await SendPacketCoreAsync(_socketClient, command, command.Request, command.Request.RequestId, _networkConfig.DefaultRequestTimeoutMs, ct);
+                await SendPacketCoreAsync(_socketClient, command, command.Request.RequestId, _networkConfig.DefaultRequestTimeoutMs, ct);
 
                 // 等待响应或超时
                 var timeoutTask = Task.Delay(timeoutMs, cts.Token);
@@ -355,6 +357,15 @@ namespace RUINORERP.UI.Network
                 ct.ThrowIfCancellationRequested();
 
                 var responsePacket = await tcs.Task;
+
+                if (responsePacket != null)
+                {
+
+                }
+                if (responsePacket is PacketModel)
+                {
+
+                }
                 var response = responsePacket.GetJsonData<TResponse>();
 
                 _logger?.LogDebug("成功接收响应，请求ID: {RequestId}", requestId);
@@ -575,7 +586,7 @@ namespace RUINORERP.UI.Network
                     string requestId = IdGenerator.GenerateRequestId(command.CommandIdentifier);
 
                     // 使用内部的SendPacketCoreAsync发送单向命令，确保Token正确附加
-                    await SendPacketCoreAsync(_socketClient, command, command.Request, command.Request.RequestId, _networkConfig.DefaultRequestTimeoutMs, ct);
+                    await SendPacketCoreAsync(_socketClient, command, command.Request.RequestId, _networkConfig.DefaultRequestTimeoutMs, ct);
 
                     return true;
                 }
@@ -696,7 +707,7 @@ namespace RUINORERP.UI.Network
                 try
                 {
                     // 直接使用SendPacketCoreAsync发送请求
-                    await SendPacketCoreAsync(_socketClient, command, requestData, requestId, _networkConfig.DefaultRequestTimeoutMs, cancellationToken);
+                    await SendPacketCoreAsync(_socketClient, command, requestId, _networkConfig.DefaultRequestTimeoutMs, cancellationToken);
 
                     // 等待响应或超时
                     var timeoutTask = Task.Delay(timeoutMs, cts.Token);
@@ -1071,7 +1082,7 @@ namespace RUINORERP.UI.Network
             {
                 if (packet != null)
                 {
-              
+
 
                     // 先尝试作为响应处理
                     if (HandleResponse(packet))
@@ -1137,7 +1148,7 @@ namespace RUINORERP.UI.Network
                 }
 
                 // 调度命令到命令处理器
-                await _commandDispatcher.DispatchAsync(Packet,command, CancellationToken.None).ConfigureAwait(false);
+                await _commandDispatcher.DispatchAsync(Packet, command, CancellationToken.None).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -1163,7 +1174,6 @@ namespace RUINORERP.UI.Network
         private async Task SendPacketCoreAsync(
             ISocketClient client,
             BaseCommand command,
-            object data,
             string requestId,
             int timeoutMs,
             CancellationToken ct,
@@ -1418,7 +1428,7 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <param name="commandId">命令ID</param>
         /// <param name="data">命令数据</param>
-        private async void OnCommandReceived(PacketModel packetModel , object data)
+        private async void OnCommandReceived(PacketModel packetModel, object data)
         {
             try
             {

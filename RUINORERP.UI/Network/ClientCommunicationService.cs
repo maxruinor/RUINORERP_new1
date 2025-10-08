@@ -1040,12 +1040,11 @@ namespace RUINORERP.UI.Network
                 packet.ClientId = client.ClientID;
 
                 // 序列化和加密数据包
-                var payload = UnifiedSerializationService.SerializeWithMessagePack(packet);
+                var payload = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(packet);
                 var original = new OriginalData(
                     (byte)command.CommandIdentifier.Category,
                     new[] { command.CommandIdentifier.OperationCode },
                     payload);
-
                 var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
                 await client.SendAsync(encrypted, ct);
             }

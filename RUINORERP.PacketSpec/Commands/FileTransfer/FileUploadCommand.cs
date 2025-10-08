@@ -1,4 +1,4 @@
-﻿﻿using RUINORERP.PacketSpec.Models.Core;
+﻿﻿﻿﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Threading;
@@ -16,7 +16,6 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
     /// 文件上传命令 - 客户端向服务器上传文件
     /// </summary>
     [PacketCommand("FileUpload", CommandCategory.File)]
-    [MessagePackObject]
     public class FileUploadCommand : BaseCommand
     {
  
@@ -24,25 +23,21 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
         /// <summary>
         /// 文件名
         /// </summary>
-        [Key(0)]
         public string FileName { get; set; }
 
         /// <summary>
         /// 文件大小（字节）
         /// </summary>
-        [Key(1)]
         public long FileSize { get; set; }
 
         /// <summary>
         /// 文件内容管道读取器
         /// </summary>
-        [Key(2)]
         public PipeReader FileContentReader { get; set; }
 
         /// <summary>
         /// 目标路径
         /// </summary>
-        [Key(3)]
         public string TargetPath { get; set; }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿﻿using RUINORERP.Model.CommonModel;
+﻿﻿﻿﻿using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -15,7 +15,6 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     /// 申请锁定单据命令 - 客户端向服务器申请锁定业务单据
     /// </summary>
     [PacketCommand("DocumentLockApply", CommandCategory.Lock)]
-    [MessagePackObject]
     public class DocumentLockApplyCommand : BaseCommand
     {
  
@@ -23,19 +22,16 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// <summary>
         /// 单据ID
         /// </summary>
-        [Key(0)]
         public long BillId { get; set; }
 
         /// <summary>
         /// 单据信息
         /// </summary>
-        [Key(1)]
         public CommBillData BillData { get; set; }
 
         /// <summary>
         /// 菜单ID
         /// </summary>
-        [Key(2)]
         public long MenuId { get; set; }
         
         /// <summary>

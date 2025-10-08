@@ -20,7 +20,7 @@ namespace RUINORERP.PacketSpec.Commands.System
     /// 用于客户端向服务器发送心跳包，维持连接活跃状态
     /// </summary>
     [PacketCommandAttribute("Heartbeat", CommandCategory.System, Description = "心跳命令")]
-    [MessagePackObject]
+   
     public class HeartbeatCommand :  BaseCommand<HeartbeatRequest, ResponseBase>
     {
  
@@ -72,21 +72,21 @@ namespace RUINORERP.PacketSpec.Commands.System
         }
 
         // 客户端信息属性，由客户端设置
-        [Key(10)]
+   
         public string ClientVersion { get; set; }
-        [Key(11)]
+       
         public string ClientIp { get; set; }
-        [Key(12)]
+       
         public string ClientStatus { get; set; }
-        [Key(13)]
+   
         public int ProcessUptime { get; set; }
 
         // 网络延迟信息，由客户端设置
-        [Key(14)]
+
         public int NetworkLatency { get; set; }
 
         // 客户端资源使用情况，由客户端设置
-        [Key(15)]
+  
         public ClientResourceUsage ResourceUsage { get; set; }
 
         /// <summary>

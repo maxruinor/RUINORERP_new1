@@ -1,4 +1,4 @@
-﻿using MessagePack;
+﻿﻿using MessagePack;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -12,7 +12,6 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 创建智能数据容器
     /// </summary>
-    [MessagePackObject]
     public sealed class CommandDataContainer<T> where T : class
     {
 
@@ -23,7 +22,6 @@ namespace RUINORERP.PacketSpec.Commands
         private bool _isObjectDirty = true;
         private bool _isBinaryDirty = true;
 
-        [Key(0)]
         public T ObjectData
         {
             get
@@ -43,7 +41,6 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        [Key(1)]
         public byte[] BinaryData
         {
             get

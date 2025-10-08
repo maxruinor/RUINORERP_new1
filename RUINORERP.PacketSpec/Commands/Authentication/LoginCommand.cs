@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Models;
+﻿﻿﻿﻿using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -17,13 +17,14 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     /// 提供用户身份验证功能，是获取访问令牌的入口点
     /// </summary>
     [PacketCommand("Login", CommandCategory.Authentication)]
-    [MessagePackObject]
+    [MessagePackObject(AllowPrivate = true)]
     public class LoginCommand : BaseCommand<LoginRequest, LoginResponse>
     {
+     
         /// <summary>
         /// 登录请求数据
         /// </summary>
-        [Key(0)]
+        [Key(1000)]
         public LoginRequest LoginRequest
         {
             get => Request;

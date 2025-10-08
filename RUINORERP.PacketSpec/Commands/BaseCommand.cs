@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,6 +23,7 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 
 namespace RUINORERP.PacketSpec.Commands
 {
+    [MessagePackObject(AllowPrivate = true)]
     public class BaseCommand<TRequest, TResponse> : BaseCommand where TRequest : class, IRequest where TResponse : class, IResponse
     {
 
@@ -79,10 +80,13 @@ namespace RUINORERP.PacketSpec.Commands
             Request = request;
         }
 
+        [IgnoreMember]
         private CommandDataContainer<TRequest> _requestContainer;
 
+        [IgnoreMember]
         private CommandDataContainer<TResponse> _responseContainer;
 
+        [Key(50)]
         public TRequest Request
         {
             get => _requestContainer?.ObjectData;
@@ -94,6 +98,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
+        [Key(51)]
         public TResponse Response
         {
             get => _responseContainer?.ObjectData;
@@ -130,6 +135,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// 命令基类 - 提供命令的通用实现
     /// </summary>
     [Serializable]
+    [MessagePackObject(AllowPrivate = true)]
     public class BaseCommand : ICommand
     {
         public BaseCommand()
@@ -159,36 +165,43 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 命令标识符（类型安全命令系统）
         /// </summary>
+        [Key(0)]
         public CommandId CommandIdentifier { get; set; }
 
         /// <summary>
         /// 命令方向
         /// </summary>
+        [Key(1)]
         public PacketDirection Direction { get; set; }
 
         /// <summary>
         /// 命令优先级
         /// </summary>
+        [Key(2)]
         public CommandPriority Priority { get; set; }
 
         /// <summary>
         /// 命令状态
         /// </summary>
+        [Key(3)]
         public CommandStatus Status { get; set; }
 
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
+        [Key(4)]
         public DateTime CreatedTimeUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// 最后更新时间（UTC时间）
         /// </summary>
+        [Key(5)]
         public DateTime? LastUpdatedTime { get; set; }
 
         /// <summary>
         /// 时间戳（UTC时间）
         /// </summary>
+        [Key(6)]
         public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
@@ -210,6 +223,7 @@ namespace RUINORERP.PacketSpec.Commands
             LastUpdatedTime = TimestampUtc;
         }
 
+        [Key(7)]
         public int TimeoutMs { get; set; }
 
         /// <summary>
@@ -355,11 +369,13 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 包体数据（业务请求响应数据序列化后的字节）
         /// </summary>
+        [Key(8)]
         public byte[] JsonRequestData { get; set; }
 
         /// <summary>
         /// 响应数据（业务响应数据序列化后的字节）
         /// </summary>
+        [Key(9)]
         public byte[] JsonResponseData { get; set; }
 
         /// <summary>

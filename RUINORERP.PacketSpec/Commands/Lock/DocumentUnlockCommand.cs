@@ -1,4 +1,4 @@
-﻿﻿using RUINORERP.PacketSpec.Enums.Core;
+﻿﻿﻿﻿using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -13,7 +13,6 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     /// 解锁单据命令 - 客户端向服务器请求解锁业务单据
     /// </summary>
     [PacketCommand("DocumentUnlock", CommandCategory.Lock)]
-    [MessagePackObject]
     public class DocumentUnlockCommand : BaseCommand
     {
  
@@ -21,13 +20,11 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// <summary>
         /// 单据ID
         /// </summary>
-        [Key(0)]
         public long BillId { get; set; }
 
         /// <summary>
         /// 用户ID
         /// </summary>
-        [Key(1)]
         public long UserId { get; set; }
 
         /// <summary>

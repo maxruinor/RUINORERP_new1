@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Enums.Core;
+﻿﻿using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -14,7 +14,6 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     /// 广播锁状态命令 - 服务器向所有客户端广播锁状态变化
     /// </summary>
     [PacketCommand("BroadcastLockStatus", CommandCategory.Lock)]
-    [MessagePackObject]
     public class BroadcastLockStatusCommand : BaseCommand
     {
  
@@ -22,7 +21,6 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// <summary>
         /// 锁定的单据信息列表
         /// </summary>
-        [Key(0)]
         public List<LockedInfo> LockedDocuments { get; set; }
 
         /// <summary>

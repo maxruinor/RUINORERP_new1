@@ -514,10 +514,7 @@ namespace RUINORERP.Server.Network.Commands
                     {
                         // UserId = refreshResult.UserId,
                         // Username = refreshResult.UserName ?? refreshResult.UserId.ToString(), // 优先使用用户名，如果没有则使用用户ID
-                        AccessToken = refreshResult.AccessToken,
-                        RefreshToken = refreshResult.AccessToken ?? refreshReq.RefreshToken, // 使用新的刷新Token（如果提供）
                                                                                              // ExpiresIn = refreshResult.ex, // 从TokenManager获取实际的过期时间
-                        TokenType = "Bearer"
                     };
 
                     return CreateSuccessResponse(loginResponse, "Token刷新成功");

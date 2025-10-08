@@ -1,4 +1,4 @@
-﻿using FluentValidation.Results;
+﻿﻿using FluentValidation.Results;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
@@ -12,7 +12,6 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     /// 拒绝解锁命令 - 锁定用户拒绝其他用户的解锁请求
     /// </summary>
     [PacketCommand("RefuseUnlock", CommandCategory.Lock)]
-    [MessagePackObject]
     public class RefuseUnlockCommand : BaseCommand
     {
  
@@ -20,7 +19,6 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// <summary>
         /// 拒绝解锁信息
         /// </summary>
-        [Key(0)]
         public RefuseUnLockInfo RefuseInfo { get; set; }
 
         /// <summary>

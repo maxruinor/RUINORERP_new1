@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+﻿﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Enums.Core;
 using System.Threading;
@@ -11,7 +11,6 @@ namespace RUINORERP.PacketSpec.Commands.Workflow
     /// 工作流审批命令 - 用于处理工作流审批任务
     /// </summary>
     [PacketCommand("WorkflowApprove", CommandCategory.Workflow)]
-    [MessagePackObject]
     public class WorkflowApproveCommand : BaseCommand
     {
 
@@ -19,25 +18,21 @@ namespace RUINORERP.PacketSpec.Commands.Workflow
         /// <summary>
         /// 工作流实例ID
         /// </summary>
-        [Key(0)]
         public string WorkflowInstanceId { get; set; }
 
         /// <summary>
         /// 任务ID
         /// </summary>
-        [Key(1)]
         public string TaskId { get; set; }
 
         /// <summary>
         /// 审批意见
         /// </summary>
-        [Key(2)]
         public string ApprovalComment { get; set; }
 
         /// <summary>
         /// 审批结果
         /// </summary>
-        [Key(3)]
         public bool Approved { get; set; }
 
         /// <summary>

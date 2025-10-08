@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Enums.Core;
+﻿﻿using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
@@ -11,7 +11,6 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     /// 查询锁状态命令 - 客户端向服务器查询业务单据锁定状态
     /// </summary>
     [PacketCommand("QueryLockStatus", CommandCategory.Lock)]
-    [MessagePackObject]
     public class QueryLockStatusCommand : BaseCommand
     {
  
@@ -19,7 +18,6 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// <summary>
         /// 单据ID
         /// </summary>
-        [Key(0)]
         public long BillId { get; set; }
 
         /// <summary>

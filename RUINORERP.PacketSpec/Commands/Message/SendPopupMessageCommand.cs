@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +14,6 @@ namespace RUINORERP.PacketSpec.Commands.Message
     /// 发送弹窗消息命令 - 用于向客户端发送弹窗消息
     /// </summary>
     [PacketCommand("SendPopupMessage", CommandCategory.Message)]
-    [MessagePackObject]
     public class SendPopupMessageCommand : BaseCommand
     {
  
@@ -22,25 +21,21 @@ namespace RUINORERP.PacketSpec.Commands.Message
         /// <summary>
         /// 消息标题
         /// </summary>
-        [Key(0)]
         public string Title { get; set; }
 
         /// <summary>
         /// 消息内容
         /// </summary>
-        [Key(1)]
         public string Content { get; set; }
 
         /// <summary>
         /// 消息类型
         /// </summary>
-        [Key(2)]
         public string MessageType { get; set; }
 
         /// <summary>
         /// 目标用户ID列表
         /// </summary>
-        [Key(3)]
         public string[] TargetUserIds { get; set; }
 
         /// <summary>

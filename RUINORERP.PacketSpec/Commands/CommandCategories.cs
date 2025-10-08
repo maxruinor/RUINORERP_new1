@@ -9,25 +9,25 @@ namespace RUINORERP.PacketSpec.Commands
     /// 命令ID结构体，提供类型安全的命令标识
     /// </summary>
     [MessagePackObject]
-    public readonly struct CommandId : IEquatable<CommandId>
+    public struct CommandId : IEquatable<CommandId>
     {
         /// <summary>
         /// 命令类别
         /// </summary>
         [Key(0)]
-        public CommandCategory Category { get; }
+        public CommandCategory Category { get; set; }
 
 
         // 添加命令名称属性
         [Key(1)]
-        public string Name { get; }
+        public string Name { get; set; }
 
 
         /// <summary>
         /// 操作码
         /// </summary>
         [Key(2)]
-        public byte OperationCode { get; }
+        public byte OperationCode { get; set; }
 
         /// <summary>
         /// 完整的命令码
@@ -36,24 +36,18 @@ namespace RUINORERP.PacketSpec.Commands
         public ushort FullCode => (ushort)(((byte)Category << 8) | OperationCode);
 
         /// <summary>
-        /// 构造函数
+        /// MessagePack序列化所需的默认构造函数
         /// </summary>
-        /// <param name="category">命令类别</param>
-        /// <param name="operationCode">操作码</param>
-        /// <summary>
-        /// 构造函数 - 核心构造函数，在命令定义类中被广泛使用
-        /// </summary>
-        /// <param name="category">命令类别</param>
-        /// <param name="operationCode">操作码</param>
         /// <remarks>
-        /// 此构造函数用于在AuthenticationCommands、CacheCommands等命令定义类中创建命令常量
-        /// 虽然没有直接设置Name属性，但Name会在第一次访问时通过属性getter自动解析
+        /// MessagePack反序列化需要无参构造函数，所有属性必须有setter
         /// </remarks>
-        //public CommandId(CommandCategory category, byte operationCode)
-        //{
-        //    Category = category;
-        //    OperationCode = operationCode;
-        //}
+        [SerializationConstructor]
+        public CommandId()
+        {
+            Category = CommandCategory.System;
+            OperationCode = 0;
+            Name = string.Empty;
+        }
 
         /// <summary>
         /// 构造函数 - 允许显式指定命令名称

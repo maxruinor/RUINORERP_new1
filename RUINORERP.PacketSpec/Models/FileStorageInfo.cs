@@ -82,9 +82,12 @@ namespace RUINORERP.PacketSpec.Models
         }
     }
 
+    [MessagePackObject]
     public class CategoryUsage
     {
+        [Key(0)]
         public int FileCount { get; set; }
+        [Key(1)]
         public long TotalSize { get; set; }
     }
 

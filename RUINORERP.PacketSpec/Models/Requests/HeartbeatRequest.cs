@@ -12,55 +12,55 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 客户端会话令牌
         /// </summary>
-        [Key(0)]
+        [Key(10)]
         public string SessionToken { get; set; }
 
         /// <summary>
         /// 用户ID
         /// </summary>
-        [Key(1)]
+        [Key(11)]
         public long UserId { get; set; }
 
         /// <summary>
         /// 客户端时间戳
         /// </summary>
-        [Key(2)]
+        [Key(12)]
         public DateTime ClientTime { get; set; }
 
         /// <summary>
         /// 客户端状态信息
         /// </summary>
-        [Key(3)]
+        [Key(13)]
         public string ClientStatus { get; set; }
 
         /// <summary>
         /// 网络延迟（毫秒）
         /// </summary>
-        [Key(4)]
+        [Key(14)]
         public int? NetworkLatency { get; set; }
 
         /// <summary>
         /// 客户端资源使用情况
         /// </summary>
-        [Key(5)]
+        [Key(15)]
         public ClientResourceUsage ResourceUsage { get; set; }
 
         /// <summary>
         /// 客户端ID
         /// </summary>
-        [Key(6)]
+        [Key(16)]
         public string ClientId { get; set; }
 
         /// <summary>
         /// 客户端版本
         /// </summary>
-        [Key(7)]
+        [Key(17)]
         public string ClientVersion { get; set; }
 
         /// <summary>
         /// 客户端IP地址
         /// </summary>
-        [Key(8)]
+        [Key(18)]
         public string ClientIp { get; set; }
 
 
@@ -109,31 +109,31 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// CPU使用率（百分比）
         /// </summary>
-        [Key(0)]
+        [Key(20)]
         public float CpuUsage { get; set; }
 
         /// <summary>
         /// 内存使用量（MB）
         /// </summary>
-        [Key(1)]
+        [Key(21)]
         public long MemoryUsage { get; set; }
 
         /// <summary>
         /// 网络带宽使用（KB/s）
         /// </summary>
-        [Key(2)]
+        [Key(22)]
         public float NetworkUsage { get; set; }
 
         /// <summary>
         /// 磁盘可用空间（GB）
         /// </summary>
-        [Key(3)]
+        [Key(23)]
         public float DiskFreeSpace { get; set; }
 
         /// <summary>
         /// 客户端进程运行时间（秒）
         /// </summary>
-        [Key(4)]
+        [Key(24)]
         public long ProcessUptime { get; set; }
 
         /// <summary>

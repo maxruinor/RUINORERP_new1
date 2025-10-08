@@ -14,13 +14,13 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <summary>
         /// 响应数据对象
         /// </summary>
-        [Key(0)]
+        [Key(10)]
         public object Data { get; set; }
 
         /// <summary>
         /// 数据类型标识
         /// </summary>
-        [Key(1)]
+        [Key(11)]
         public string DataType { get; set; }
 
         /// <summary>

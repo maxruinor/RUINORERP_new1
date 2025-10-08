@@ -15,25 +15,25 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 待验证的Token
         /// </summary>
-        [Key(0)]
+        [Key(10)]
         public TokenInfo Token { get; set; }
 
         /// <summary>
         /// 客户端IP地址
         /// </summary>
-        [Key(1)]
+        [Key(11)]
         public string ClientIp { get; set; }
 
         /// <summary>
         /// 设备标识
         /// </summary>
-        [Key(2)]
+        [Key(12)]
         public string DeviceId { get; set; }
 
         /// <summary>
         /// 附加验证数据
         /// </summary>
-        [Key(3)]
+        [Key(13)]
         public Dictionary<string, object> ValidationData { get; set; }
 
         /// <summary>

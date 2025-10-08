@@ -15,26 +15,25 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 当前Token（已废弃，服务端自动管理）
         /// </summary>
         [Obsolete("服务端自动管理Token状态，此字段不再使用")]
-        [Key(0)]
+        [Key(10)]
         public string Token { get; set; }
 
         /// <summary>
-        /// 刷新Token（已废弃，服务端自动管理）
+        /// 刷新令牌
         /// </summary>
-        [Obsolete("服务端自动管理Token状态，此字段不再使用")]
-        [Key(1)]
+        [Key(11)]
         public string RefreshToken { get; set; }
 
         /// <summary>
         /// 客户端IP地址
         /// </summary>
-        [Key(2)]
+        [Key(12)]
         public string ClientIp { get; set; }
 
         /// <summary>
         /// 设备标识
         /// </summary>
-        [Key(3)]
+        [Key(13)]
         public string DeviceId { get; set; }
 
         /// <summary>

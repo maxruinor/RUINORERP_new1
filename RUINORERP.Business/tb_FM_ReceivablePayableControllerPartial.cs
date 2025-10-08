@@ -350,6 +350,8 @@ namespace RUINORERP.Business
                     it.ApprovalResults,
                     it.ApprovalOpinions,
                     it.PayeeInfoID,
+                    it.Approver_at,
+                    it.Approver_by
                 }).ExecuteCommandAsync();
                 if (result <= 0)
                 {

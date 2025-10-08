@@ -1,32 +1,38 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Reflection;
+using MessagePack;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 命令ID结构体，提供类型安全的命令标识
     /// </summary>
+    [MessagePackObject]
     public readonly struct CommandId : IEquatable<CommandId>
     {
         /// <summary>
         /// 命令类别
         /// </summary>
+        [Key(0)]
         public CommandCategory Category { get; }
 
 
         // 添加命令名称属性
+        [Key(1)]
         public string Name { get; }
 
 
         /// <summary>
         /// 操作码
         /// </summary>
+        [Key(2)]
         public byte OperationCode { get; }
 
         /// <summary>
         /// 完整的命令码
         /// </summary>
+        [Key(3)]
         public ushort FullCode => (ushort)(((byte)Category << 8) | OperationCode);
 
         /// <summary>

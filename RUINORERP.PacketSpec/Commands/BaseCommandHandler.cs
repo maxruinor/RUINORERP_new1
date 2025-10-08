@@ -37,41 +37,7 @@ namespace RUINORERP.PacketSpec.Commands
 
         public int Priority { get; set; }
 
-        #region 上下文的支持
-
-        protected CommandExecutionContext GetCommandContext(ICommand command)
-        {
-            if (command is BaseCommand baseCommand)
-            {
-                return baseCommand.ExecutionContext;
-            }
-            return new CommandExecutionContext();
-        }
-
-        protected string GetSessionId(ICommand command)
-            => GetCommandContext(command)?.SessionId;
-
-        protected string GetClientId(ICommand command)
-            => GetCommandContext(command)?.ClientId;
-
-        protected T GetExtension<T>(ICommand command, string key)
-        {
-            var context = GetCommandContext(command);
-            if (context?.Extensions != null && context.Extensions.ContainsKey(key))
-            {
-                try
-                {
-                    return (T)context.Extensions[key];
-                }
-                catch
-                {
-                    return default(T);
-                }
-            }
-            return default(T);
-        }
-
-        #endregion
+  
 
         #region ICoreEntity 接口实现
         /// <summary>

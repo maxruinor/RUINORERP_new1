@@ -19,6 +19,11 @@ namespace RUINORERP.PacketSpec.Serialization
         // 配置MessagePack序列化选项
         private static readonly MessagePackSerializerOptions _messagePackOptions;
         
+        /// <summary>
+        /// 获取MessagePack序列化选项（供外部使用）
+        /// </summary>
+        public static MessagePackSerializerOptions MessagePackOptions => _messagePackOptions;
+        
         // 静态构造函数，用于初始化MessagePack选项
         static UnifiedSerializationService()
         {

@@ -4,13 +4,14 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
 using System.Threading.Tasks;
-
+using MessagePack;
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
     /// <summary>
     /// 申请锁命令 - 客户端向服务器申请获取资源锁
     /// </summary>
     [PacketCommand("LockApply", CommandCategory.Lock)]
+    [MessagePackObject]
     public class LockApplyCommand : BaseCommand
     {
    
@@ -18,11 +19,13 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// <summary>
         /// 资源标识符
         /// </summary>
+        [Key(0)]
         public string ResourceId { get; set; }
 
         /// <summary>
         /// 锁类型
         /// </summary>
+        [Key(1)]
         public string LockType { get; set; }
 
  

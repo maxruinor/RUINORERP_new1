@@ -1,5 +1,5 @@
-using System;
-
+﻿using System;
+using MessagePack;
 namespace RUINORERP.PacketSpec.Models.Responses
 {
     /// <summary>
@@ -8,16 +8,19 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// 与SimpleRequest配套使用
     /// </summary>
     [Serializable]
+    [MessagePackObject]
     public class SimpleResponse : ResponseBase
     {
         /// <summary>
         /// 响应数据对象
         /// </summary>
+        [Key(0)]
         public object Data { get; set; }
 
         /// <summary>
         /// 数据类型标识
         /// </summary>
+        [Key(1)]
         public string DataType { get; set; }
 
         /// <summary>

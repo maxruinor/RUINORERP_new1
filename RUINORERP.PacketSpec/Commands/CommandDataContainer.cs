@@ -1,16 +1,18 @@
-﻿using MessagePack;
+using MessagePack;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using RUINORERP.PacketSpec.Serialization;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 创建智能数据容器
     /// </summary>
+    [MessagePackObject]
     public sealed class CommandDataContainer<T> where T : class
     {
 
@@ -22,6 +24,7 @@ namespace RUINORERP.PacketSpec.Commands
         private bool _isObjectDirty = true;
         private bool _isBinaryDirty = true;
 
+        [Key(0)]
         public T ObjectData
         {
             get
@@ -41,6 +44,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
+        [Key(1)]
         public byte[] BinaryData
         {
             get
@@ -70,16 +74,16 @@ namespace RUINORERP.PacketSpec.Commands
             var hash = Convert.ToBase64String(sha256.ComputeHash(Encoding.UTF8.GetBytes(json)));
             var cacheKey = $"{typeof(T).FullName}:{hash}";
 
-            // 使用缓存或创建新条目
+            // 使用缓存或创建新条目，使用配置的MessagePack选项
             return _serializationCache.GetOrAdd(cacheKey, _ =>
             {
-                return MessagePackSerializer.Serialize(obj);
+                return MessagePackSerializer.Serialize(obj, UnifiedSerializationService.MessagePackOptions);
             });
         }
 
         private T DeserializeFromBinary(byte[] data)
         {
-            return MessagePackSerializer.Deserialize<T>(data);
+            return MessagePackSerializer.Deserialize<T>(data, UnifiedSerializationService.MessagePackOptions);
         }
     }
 }

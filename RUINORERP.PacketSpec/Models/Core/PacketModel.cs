@@ -8,6 +8,8 @@ using System.Security.Cryptography;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Requests;
 using MessagePack;
+using RUINORERP.PacketSpec.Commands.Authentication;
+using System.Net.Sockets;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {
@@ -19,49 +21,59 @@ namespace RUINORERP.PacketSpec.Models.Core
     /// 不包含任何业务逻辑或业务属性
     /// </summary>
     [Serializable]
+    [MessagePackObject]
     public class PacketModel 
     {
 
         /// <summary>
         /// 保存指令实体数据
         /// </summary>
+        [Key(0)]
         public byte[] CommandData { get; set; }
 
         // 简单的命令标识（不包含业务逻辑）
         //命令类型
+        [Key(1)]
         public CommandId CommandId { get; set; }
 
         /// <summary>
         /// 数据包状态
         /// </summary>
+        [Key(2)]
         public PacketStatus Status { get; set; }
 
         #region 网络传输属性
 
+        [Key(3)]
         public string SessionId { get; set; } // 属性声明
 
         /// <summary>
         /// 包标志位
         /// </summary>
+        [Key(4)]
         public string Flag { get; set; }
 
+        [Key(5)]
         public string ClientId { get; set; }
 
         /// <summary>
         /// 认证Token
         /// </summary>
+        [Key(6)]
         public string Token { get; set; }
 
         /// <summary>
         /// 数据包唯一标识符
         /// </summary>
         // 网络标识
+        [Key(7)]
         public string PacketId { get; set; }
 
 
         /// <summary>
         /// 数据包大小（字节）
         /// </summary>
+        [Key(8)]
         public int Size { get; set; }
 
         /// <summary>
@@ -75,37 +87,55 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 校验和
         /// </summary>
+        [Key(9)]
         public string Checksum { get; set; }
 
         /// <summary>
         /// 是否加密
         /// </summary>
+        [Key(10)]
         public bool IsEncrypted { get; set; }
 
         /// <summary>
         /// 是否压缩
         /// </summary>
+        [Key(11)]
         public bool IsCompressed { get; set; }
 
         /// <summary>
         /// 数据包方向
         /// </summary>
+        [Key(12)]
         public PacketDirection Direction { get; set; }
 
         /// <summary>
         /// 模型版本
         /// </summary>
+        [Key(13)]
         public string Version { get; set; } = "2.0";
 
         /// <summary>
         /// 消息类型
         /// </summary>
+        [Key(14)]
         public MessageType MessageType { get; set; } = MessageType.Request;
 
         /// <summary>
         /// 扩展属性字典（用于存储非核心但需要传输的元数据）
         /// </summary>
+        [Key(15)]
         public System.Collections.Generic.Dictionary<string, object> Extensions { get; set; }
+
+        /// <summary>
+        /// 命令执行上下文 - 网络传输层使用
+        /// 包含会话、认证、追踪等基础设施信息
+        /// </summary>
+        [Key(16)]
+        public CommandExecutionContext ExecutionContext { get; set; }
+
+
+
+
 
         #endregion
 
@@ -128,16 +158,19 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
+        [Key(17)]
         public DateTime CreatedTimeUtc { get; set; }
 
         /// <summary>
         /// 最后更新时间（UTC时间）
         /// </summary>
+        [Key(18)]
         public DateTime? LastUpdatedTime { get; set; }
 
         /// <summary>
         /// 时间戳（UTC时间）
         /// </summary>
+        [Key(19)]
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
@@ -238,14 +271,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             return Token;
         }
 
-        /// <summary>
-        /// 检查是否包含有效Token
-        /// </summary>
-        /// <returns>是否包含Token</returns>
-        public bool HasToken()
-        {
-            return !string.IsNullOrEmpty(Token);
-        }
+
 
         #region 重写方法
 
@@ -293,6 +319,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         }
 
         #endregion
+
         /// <summary>
         /// 获取数据为文本格式
         /// </summary>
@@ -359,25 +386,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             }
         }
 
-        /// <summary>
-        /// 从数据包提取执行上下文
-        /// </summary>
-        /// <returns>命令执行上下文对象</returns>
-        public CommandExecutionContext ExtractExecutionContext()
-        {
-            var context = CommandExecutionContext.CreateFromPacket(this);
-
-            // 从Extensions中提取额外上下文信息
-            if (Extensions != null)
-            {
-                foreach (var extension in Extensions)
-                {
-                    context.Extensions[extension.Key] = extension.Value;
-                }
-            }
-
-            return context;
-        }
+     
         public PacketModel Clone()
         {
             return new PacketModel

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
-
+using MessagePack;
 using System;
 using System.Text;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -15,6 +15,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
     /// 消息命令基类 - 提供通用消息命令的实现
     /// </summary>
     [PacketCommand("MessageCommand", CommandCategory.Message, Description = "通用消息命令基类")]
+    [MessagePackObject]
     public class MessageCommand : BaseCommand
     {
  
@@ -22,11 +23,13 @@ namespace RUINORERP.PacketSpec.Commands.Message
         /// <summary>
         /// 命令类型
         /// </summary>
+        [Key(0)]
         public uint CommandType { get; }
 
         /// <summary>
         /// 命令数据
         /// </summary>
+        [Key(1)]
         public object Data { get; set; }
 
         /// <summary>

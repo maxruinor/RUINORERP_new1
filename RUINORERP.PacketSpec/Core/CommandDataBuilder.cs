@@ -73,7 +73,7 @@ namespace RUINORERP.PacketSpec.Core
         /// <summary>
         /// 构建Token验证命令
         /// </summary>
-        public static GenericCommand<TokenValidationRequest> BuildTokenValidationCommand(string token)
+        public static GenericCommand<TokenValidationRequest> BuildTokenValidationCommand(TokenInfo token)
         {
             var request = new TokenValidationRequest { Token = token };
             return BuildGenericCommand(

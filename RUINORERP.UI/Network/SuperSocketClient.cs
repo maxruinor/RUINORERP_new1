@@ -209,14 +209,6 @@ namespace RUINORERP.UI.Network
         {
             if (e.Package?.Packet != null)
             {
-                if (string.IsNullOrEmpty(SessionID))
-                {
-                    if (!string.IsNullOrEmpty(e.Package.Packet.SessionId))
-                    {
-                        SessionID = e.Package.Packet.SessionId;
-                    }
-                }
-
                 Received?.Invoke(e.Package.Packet);
             }
         }

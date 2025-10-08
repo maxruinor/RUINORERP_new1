@@ -1,4 +1,5 @@
 using System;
+using MessagePack;
 
 namespace RUINORERP.PacketSpec.Commands.Authentication
 {
@@ -6,41 +7,50 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     /// Token信息类 - 最终简化版
     /// 简化过期时间计算，移除冗余方法
     /// </summary>
+    [Serializable]
+    [MessagePackObject]
     public class TokenInfo
     {
         /// <summary>
         /// 访问令牌
         /// </summary>
+        [Key(0)]
         public string AccessToken { get; set; }
 
         /// <summary>
         /// 刷新令牌
         /// </summary>
+        [Key(1)]
         public string RefreshToken { get; set; }
 
         /// <summary>
         /// 访问令牌有效期（秒）- 默认8小时
         /// </summary>
+        [Key(2)]
         public int ExpiresIn { get; set; } = 28800;
 
         /// <summary>
         /// 令牌类型 - 默认Bearer
         /// </summary>
+        [Key(3)]
         public string TokenType { get; set; } = "Bearer";
 
         /// <summary>
         /// 生成时间（UTC）
         /// </summary>
+        [Key(4)]
         public DateTime GeneratedTime { get; set; } = DateTime.UtcNow;
         
         /// <summary>
         /// 访问令牌过期时间（UTC）- 计算属性
         /// </summary>
+        [IgnoreMember]
         public DateTime AccessTokenExpiryUtc => GeneratedTime.AddSeconds(ExpiresIn);
         
         /// <summary>
         /// 刷新令牌过期时间（UTC）- 计算属性（默认24倍，8天）
         /// </summary>
+        [IgnoreMember]
         public DateTime RefreshTokenExpiryUtc => GeneratedTime.AddSeconds(ExpiresIn * 24);
 
         /// <summary>

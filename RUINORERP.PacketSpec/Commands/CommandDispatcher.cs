@@ -849,10 +849,10 @@ namespace RUINORERP.PacketSpec.Commands
                 }
 
                 // 基础验证：会话ID存在性
-                if (string.IsNullOrEmpty(command.ExecutionContext.SessionId))
-                {
-                    return new CommandValidationResult { IsValid = false, ErrorMessage = "会话ID不能为空" };
-                }
+                //if (string.IsNullOrEmpty(command.ExecutionContext.SessionId))
+                //{
+                //    return new CommandValidationResult { IsValid = false, ErrorMessage = "会话ID不能为空" };
+                //}
 
                 // 基础验证：命令类型存在性
                 var commandType = command.GetType();
@@ -1147,14 +1147,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        /// <summary>
-        /// 获取所有注册的命令类型
-        /// </summary>
-        /// <returns>命令代码和类型的映射</returns>
-        public Dictionary<uint, Type> GetAllCommandTypes()
-        {
-            return _commandTypeHelper.GetAllCommandTypes();
-        }
+ 
 
         /// <summary>
         /// 清理注册的命令类型

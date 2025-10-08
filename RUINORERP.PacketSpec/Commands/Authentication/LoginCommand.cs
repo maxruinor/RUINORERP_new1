@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation.Results;
 using RUINORERP.PacketSpec.Core;
+using MessagePack;
 
 namespace RUINORERP.PacketSpec.Commands.Authentication
 {
@@ -16,11 +17,13 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     /// 提供用户身份验证功能，是获取访问令牌的入口点
     /// </summary>
     [PacketCommand("Login", CommandCategory.Authentication)]
+    [MessagePackObject]
     public class LoginCommand : BaseCommand<LoginRequest, LoginResponse>
     {
         /// <summary>
         /// 登录请求数据
         /// </summary>
+        [Key(0)]
         public LoginRequest LoginRequest
         {
             get => Request;
@@ -60,16 +63,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         }
 
         
-
-        /// <summary>
-        /// 自动附加认证Token
-        /// 登录命令不需要自动附加Token，因为这是获取Token的过程
-        /// </summary>
-        protected override void AutoAttachToken()
-        {
-            // 登录命令不需要自动附加Token，因为这是获取Token的过程
-            // 重写基类方法，空实现
-        }
+ 
 
         /// <summary>
         /// 验证命令数据

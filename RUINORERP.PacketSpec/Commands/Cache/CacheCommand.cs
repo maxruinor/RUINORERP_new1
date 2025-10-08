@@ -5,7 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums.Core;
-using FluentValidation.Results; // 引用BaseCommand
+using FluentValidation.Results;
+using MessagePack; // 引用BaseCommand
 
 namespace RUINORERP.PacketSpec.Commands.Cache
 {
@@ -13,22 +14,26 @@ namespace RUINORERP.PacketSpec.Commands.Cache
     /// 缓存同步命令 - 用于同步客户端与服务器之间的缓存数据
     /// </summary>
     [PacketCommand("CacheSync", CommandCategory.Cache)]
+    [MessagePackObject]
     public class CacheCommand : BaseCommand
     {
 
         /// <summary>
         /// 需要同步的缓存键列表
         /// </summary>
+        [Key(0)]
         public List<string> CacheKeys { get; set; }
         
         /// <summary>
         /// 缓存键枚举器
         /// </summary>
+        [Key(1)]
         public IAsyncEnumerable<string> CacheKeysEnumerator { get; set; }
 
         /// <summary>
         /// 同步模式
         /// </summary>
+        [Key(2)]
         public string SyncMode { get; set; }
 
         /// <summary>

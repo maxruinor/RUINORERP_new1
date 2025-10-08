@@ -30,6 +30,7 @@ using System.Collections.Concurrent;
 using RUINORERP.PacketSpec.Models.Core;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO.Packaging;
+using Azure.Core;
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -105,11 +106,6 @@ namespace RUINORERP.Server.Network.Commands
             {
                 var commandId = cmd.Command.CommandIdentifier;
 
-                // 使用统一的数据提取方式
-                var context = GetCommandContext (cmd.Command);
-                var sessionId = context.SessionId;
-              
-
                 if (commandId == AuthenticationCommands.Login || commandId == AuthenticationCommands.LoginRequest)
                 {
                     // 分层解析策略：先确定命令类型，具体数据解析延迟到处理方法中
@@ -117,19 +113,19 @@ namespace RUINORERP.Server.Network.Commands
                 }
                 else if (commandId == AuthenticationCommands.Logout)
                 {
-                    return await HandleLogoutAsync(cmd.Command, cancellationToken);
+                    return await HandleLogoutAsync(cmd, cancellationToken);
                 }
                 else if (commandId == AuthenticationCommands.ValidateToken)
                 {
-                    return await HandleTokenValidationAsync(cmd.Command, cancellationToken);
+                    return await HandleTokenValidationAsync(cmd, cancellationToken);
                 }
                 else if (commandId == AuthenticationCommands.RefreshToken)
                 {
-                    return await HandleTokenRefreshAsync(cmd.Command, cancellationToken);
+                    return await HandleTokenRefreshAsync(cmd.Packet, cmd.Command, cancellationToken);
                 }
                 else if (commandId == AuthenticationCommands.PrepareLogin)
                 {
-                    return await HandlePrepareLoginAsync(cmd.Command, cancellationToken);
+                    return await HandlePrepareLoginAsync(cmd, cancellationToken);
                 }
                 else
                 {
@@ -154,22 +150,22 @@ namespace RUINORERP.Server.Network.Commands
             {
                 // 第一层：命令类型识别（不解析具体数据）
                 var commandType = cmd.Command.GetType();
-                
+
                 // 第二层：根据命令类型选择对应的处理方法，具体数据解析延迟到对应方法中
                 if (cmd.Command is LoginCommand loginCommand)
                 {
                     // 延迟解析：在HandleLoginAsync中解析具体数据
-                    return await HandleLoginAsync(loginCommand, cancellationToken);
+                    return await HandleLoginAsync(cmd.Packet, loginCommand, cancellationToken);
                 }
                 else if (cmd.Command is BaseCommand<LoginRequest, LoginResponse> typedCommand)
                 {
                     // 延迟解析：在HandleTypedLoginAsync中解析具体数据
-                    return await HandleTypedLoginAsync(typedCommand, cancellationToken);
+                    return await HandleTypedLoginAsync(typedCommand, cmd.Packet, cancellationToken);
                 }
                 else if (cmd.Command is GenericCommand<LoginRequest> genericCommand)
                 {
                     // 延迟解析：在HandleGenericLoginAsync中解析具体数据
-                    return await HandleGenericLoginAsync(genericCommand, cancellationToken);
+                    return await HandleGenericLoginAsync(cmd.Packet, genericCommand, cancellationToken);
                 }
                 else
                 {
@@ -187,7 +183,7 @@ namespace RUINORERP.Server.Network.Commands
         /// 处理强类型登录命令（延迟解析策略）
         /// </summary>
         private async Task<ResponseBase> HandleTypedLoginAsync(
-            BaseCommand<LoginRequest, LoginResponse> command,
+            BaseCommand<LoginRequest, LoginResponse> command, PacketModel Packet,
             CancellationToken cancellationToken)
         {
             var loginRequest = command.Request;
@@ -197,13 +193,13 @@ namespace RUINORERP.Server.Network.Commands
             }
 
             // 使用统一的业务逻辑处理方法
-            return await ProcessLoginAsync(loginRequest, command.ExecutionContext, cancellationToken);
+            return await ProcessLoginAsync(loginRequest, Packet.ExecutionContext, cancellationToken);
         }
 
         /// <summary>
         /// 处理泛型登录命令
         /// </summary>
-        private async Task<ResponseBase> HandleGenericLoginAsync(
+        private async Task<ResponseBase> HandleGenericLoginAsync(PacketModel Packet,
             GenericCommand<LoginRequest> command,
             CancellationToken cancellationToken)
         {
@@ -213,7 +209,7 @@ namespace RUINORERP.Server.Network.Commands
                 return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
             }
 
-            return await ProcessLoginAsync(loginRequest, command.ExecutionContext, cancellationToken);
+            return await ProcessLoginAsync(loginRequest, Packet.ExecutionContext, cancellationToken);
         }
 
         /// <summary>
@@ -242,9 +238,9 @@ namespace RUINORERP.Server.Network.Commands
                 if (sessionInfo == null)
                 {
                     // 统一使用GetClientIp方法获取客户端IP
-                    string clientIp = GetClientIp(null, loginRequest);
 
-                    sessionInfo = SessionService.CreateSession(executionContext.SessionId, clientIp);
+
+                    sessionInfo = SessionService.CreateSession(executionContext.SessionId, executionContext.ClientIp);
                     if (sessionInfo == null)
                     {
                         return CreateErrorResponse("创建会话失败", UnifiedErrorCodes.System_InternalError, "SESSION_CREATION_FAILED");
@@ -292,7 +288,7 @@ namespace RUINORERP.Server.Network.Commands
                     KickExistingSessions(authorizedSessions, loginRequest.Username);
                 }
 
-  
+
 
                 // 更新会话信息
                 UpdateSessionInfo(sessionInfo, userValidationResult.UserSessionInfo);
@@ -354,7 +350,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理登录命令 - 现在调用统一的ProcessLoginAsync方法
         /// </summary>
-        private async Task<ResponseBase> HandleLoginAsync(LoginCommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleLoginAsync(PacketModel packet, ICommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -370,18 +366,20 @@ namespace RUINORERP.Server.Network.Commands
                     logger.LogWarning($"登录命令验证失败: {commandValidationResult.Errors[0].ErrorMessage}");
                     return CreateErrorResponse($"登录命令验证失败: {commandValidationResult.Errors[0].ErrorMessage}", UnifiedErrorCodes.Command_ValidationFailed, "LOGIN_VALIDATION_FAILED");
                 }
-
-               
-
+                LoginCommand loginCommand = new LoginCommand();
                 // 统一使用基类方法获取登录请求数据
-                
-                if (command.Request == null)
+                if (command is LoginCommand login)
                 {
-                    return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
+                    loginCommand = login;
+                    if (login.Request == null)
+                    {
+                        return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
+                    }
+
                 }
 
                 // 调用统一的登录业务逻辑处理方法
-                return await ProcessLoginAsync(command.Request, command.ExecutionContext, cancellationToken);
+                return await ProcessLoginAsync(loginCommand.Request, packet.ExecutionContext, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -393,13 +391,13 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理登录验证命令
         /// </summary>
-        private async Task<ResponseBase> HandleLoginValidationAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleLoginValidationAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
 
             await Task.Delay(5, cancellationToken);
 
             // 使用SessionService验证会话有效性
-            if (!SessionService.IsValidSession(GetSessionId(command)))
+            if (!SessionService.IsValidSession(cmd.Packet.ExecutionContext.SessionId))
             {
                 return ConvertToApiResponse(ResponseBase.CreateError(
                     $"{UnifiedErrorCodes.Auth_TokenInvalid.Message}: 会话无效或已过期",
@@ -407,7 +405,7 @@ namespace RUINORERP.Server.Network.Commands
                     .WithMetadata("ErrorCode", "INVALID_SESSION"));
             }
 
-            var sessionInfo = SessionService.GetSession(GetSessionId(command));
+            var sessionInfo = SessionService.GetSession(cmd.Packet.ExecutionContext.SessionId);
             if (sessionInfo == null)
             {
                 return ConvertToApiResponse(ResponseBase.CreateError(
@@ -425,7 +423,7 @@ namespace RUINORERP.Server.Network.Commands
             }
 
             // 检查会话是否仍然活跃
-            if (!_activeSessions.Contains(GetSessionId(command)))
+            if (!_activeSessions.Contains(cmd.Packet.ExecutionContext.SessionId))
             {
                 return ConvertToApiResponse(ResponseBase.CreateError(
                             $"{UnifiedErrorCodes.Auth_SessionExpired.Message}: 会话已过期",
@@ -436,28 +434,28 @@ namespace RUINORERP.Server.Network.Commands
             var responseData = CreateValidationResponse(sessionInfo);
 
             return ConvertToApiResponse(ResponseBase.CreateSuccess("验证成功")
-                .WithMetadata("Data", new { SessionId = GetSessionId(command), UserId = sessionInfo.UserId }));
+                .WithMetadata("Data", new { SessionId = cmd.Packet.ExecutionContext.SessionId, UserId = sessionInfo.UserId }));
         }
 
         /// <summary>
         /// 处理Token验证命令 - 使用TokenManager进行Token验证
         /// </summary>
-        private async Task<ResponseBase> HandleTokenValidationAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleTokenValidationAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
                 // 统一使用基类方法获取Token验证请求数据
-                var validationRequest = ParseBusinessData<TokenValidationRequest>(command);
-                string token = validationRequest?.Token;
+                var validationRequest = ParseBusinessData<TokenValidationRequest>(cmd.Command);
+                TokenInfo token = validationRequest?.Token;
 
                 // 如果未从请求数据中获取到Token，则尝试从上下文中获取
-                if (string.IsNullOrEmpty(token))
+                if (string.IsNullOrEmpty(token.AccessToken))
                 {
-                    var context = GetCommandContext(command);
+                    var context = cmd.Packet.ExecutionContext;
                     token = context.Token;
                 }
 
-                if (string.IsNullOrEmpty(token))
+                if (string.IsNullOrEmpty(token.AccessToken))
                 {
                     return CreateErrorResponse("Token不能为空", UnifiedErrorCodes.Auth_TokenInvalid, "TOKEN_EMPTY");
                 }
@@ -489,7 +487,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理Token刷新命令 - 使用最新的Token体系
         /// </summary>
-        private async Task<ResponseBase> HandleTokenRefreshAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleTokenRefreshAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -514,11 +512,11 @@ namespace RUINORERP.Server.Network.Commands
                     // 创建登录响应（使用TokenManager返回的用户信息）
                     var loginResponse = new LoginResponse
                     {
-                       // UserId = refreshResult.UserId,
-                       // Username = refreshResult.UserName ?? refreshResult.UserId.ToString(), // 优先使用用户名，如果没有则使用用户ID
+                        // UserId = refreshResult.UserId,
+                        // Username = refreshResult.UserName ?? refreshResult.UserId.ToString(), // 优先使用用户名，如果没有则使用用户ID
                         AccessToken = refreshResult.AccessToken,
                         RefreshToken = refreshResult.AccessToken ?? refreshReq.RefreshToken, // 使用新的刷新Token（如果提供）
-                       // ExpiresIn = refreshResult.ex, // 从TokenManager获取实际的过期时间
+                                                                                             // ExpiresIn = refreshResult.ex, // 从TokenManager获取实际的过期时间
                         TokenType = "Bearer"
                     };
 
@@ -543,19 +541,19 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理注销命令
         /// </summary>
-        private async Task<ResponseBase> HandleLogoutAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleLogoutAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
-            LogInfo($"处理注销请求 [会话: {GetSessionId(command)}]");
+            LogInfo($"处理注销请求 [会话: {cmd.Packet.ExecutionContext.SessionId}]");
 
             try
             {
                 // 使用SessionService验证会话有效性
-                if (!SessionService.IsValidSession(GetSessionId(command)))
+                if (!SessionService.IsValidSession(cmd.Packet.ExecutionContext.SessionId))
                 {
                     return CreateErrorResponse("会话信息无效", UnifiedErrorCodes.Auth_SessionExpired, "INVALID_SESSION");
                 }
 
-                var sessionInfo = SessionService.GetSession(GetSessionId(command));
+                var sessionInfo = SessionService.GetSession(cmd.Packet.ExecutionContext.SessionId);
                 if (sessionInfo == null)
                 {
                     return CreateErrorResponse("获取会话信息失败", UnifiedErrorCodes.Biz_DataNotFound, "SESSION_NOT_FOUND");
@@ -563,7 +561,7 @@ namespace RUINORERP.Server.Network.Commands
 
                 // 执行注销
                 var logoutResult = await LogoutAsync(
-                    GetSessionId(command),
+                    cmd.Packet.ExecutionContext.SessionId,
                     sessionInfo.UserId.ToString()
                 );
 
@@ -575,7 +573,7 @@ namespace RUINORERP.Server.Network.Commands
                 var responseData = CreateLogoutResponse();
 
                 return CreateSuccessResponse(
-                    new { LoggedOut = true, SessionId = GetSessionId(command) },
+                    new { LoggedOut = true, SessionId = cmd.Packet.ExecutionContext.SessionId },
                     "注销成功");
             }
             catch (Exception ex)
@@ -588,9 +586,9 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理准备登录命令
         /// </summary>
-        private async Task<ResponseBase> HandlePrepareLoginAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandlePrepareLoginAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
-            LogInfo($"处理准备登录命令 [会话: {GetSessionId(command)}]");
+            LogInfo($"处理准备登录命令 [会话: {cmd.Packet.ExecutionContext.SessionId}");
 
             try
             {
@@ -833,9 +831,9 @@ namespace RUINORERP.Server.Network.Commands
                             System.Text.Encoding.UTF8.GetBytes($"您的账号【{username}】在其他地方登录，您已被强制下线。")
                         );
 
-             
+
                         var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(notificationMessage);
-                         
+
 
                         // 发送通知消息
                         appSession.SendAsync(encryptedData.ToByteArray());
@@ -914,20 +912,20 @@ namespace RUINORERP.Server.Network.Commands
         private async Task<(string accessToken, string refreshToken)> GenerateTokenInfoAsync(UserSessionInfo userSessionInfo)
         {
             var tokenManager = Program.ServiceProvider.GetRequiredService<TokenManager>();
-            
+
             var additionalClaims = new Dictionary<string, object>
             {
                 { "sessionId", userSessionInfo.SessionId },
                 { "clientIp", userSessionInfo.ClientIp },
                 { "userId", userSessionInfo.UserInfo.User_ID }
             };
-            
+
             var tokenInfo = await tokenManager.GenerateAndStoreTokenAsync(
                 userSessionInfo.UserInfo.User_ID.ToString(),
                 userSessionInfo.UserInfo.UserName,
                 additionalClaims
             );
-            
+
             return (tokenInfo.AccessToken, tokenInfo.RefreshToken ?? "");
         }
 
@@ -1006,15 +1004,7 @@ namespace RUINORERP.Server.Network.Commands
             return SessionService.RemoveSession(sessionId);
         }
 
-        /// <summary>
-        /// 获取客户端IP地址
-        /// </summary>
-        /// <param name="command">命令对象</param>
-        /// <returns>客户端IP地址</returns>
-        private string GetClientIpAddress(ICommand command)
-        {
-            return GetClientIp(command, null);
-        }
+
 
         /// <summary>
         /// 统一的客户端IP获取方法，优先从请求数据中获取，其次从会话中获取
@@ -1022,39 +1012,16 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="command">命令对象</param>
         /// <param name="loginRequest">登录请求对象</param>
         /// <returns>客户端IP地址</returns>
-        private string GetClientIp(ICommand command, LoginRequest loginRequest = null)
+        private string GetClientIp(string SessionID)
         {
-            // 1. 优先从请求数据中获取IP
-            //if (loginRequest != null && !string.IsNullOrEmpty(loginRequest.ClientIp))
-            //{
-            //    return loginRequest.ClientIp;
-            //}
-
-            // 2. 如果没有请求数据，则尝试从命令中获取（如果是泛型BaseCommand）
-            //var baseCommand = command as BaseCommand<LoginRequest, LoginResponse>;
-            //if (baseCommand != null && baseCommand.Request != null && !string.IsNullOrEmpty(baseCommand.Request.ClientIp))
-            //{
-            //    return baseCommand.Request.ClientIp;
-            //}
-
-            // 3. 尝试从命令的SessionInfo中获取IP
-            if (command != null && !string.IsNullOrEmpty(GetSessionId(command)))
+            // 4. 如果SessionInfo中没有IP，尝试从RemoteEndPoint获取
+            var appSession = SessionService.GetAppSession(SessionID);
+            if (appSession != null && appSession.RemoteEndPoint != null)
             {
-                var session = SessionService.GetSession(GetSessionId(command));
-                if (session != null && !string.IsNullOrEmpty(session.ClientIp))
+                var ipEndpoint = appSession.RemoteEndPoint as System.Net.IPEndPoint;
+                if (ipEndpoint != null)
                 {
-                    return session.ClientIp;
-                }
-
-                // 4. 如果SessionInfo中没有IP，尝试从RemoteEndPoint获取
-                var appSession = SessionService.GetAppSession(GetSessionId(command));
-                if (appSession != null && appSession.RemoteEndPoint != null)
-                {
-                    var ipEndpoint = appSession.RemoteEndPoint as System.Net.IPEndPoint;
-                    if (ipEndpoint != null)
-                    {
-                        return ipEndpoint.Address.ToString();
-                    }
+                    return ipEndpoint.Address.ToString();
                 }
             }
 

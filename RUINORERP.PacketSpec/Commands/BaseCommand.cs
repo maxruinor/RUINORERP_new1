@@ -57,9 +57,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="request">请求数据</param>
         /// <param name="direction">命令方向</param>
         /// <param name="logger">日志记录器</param>
-        protected BaseCommand(TokenManager tokenManager, IRequest request = null, PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
-            : base(tokenManager, direction, logger)
+        protected BaseCommand(IRequest request = null, PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
+            : base(direction, logger)
         {
+            if (request != null)
+                Request = request as TRequest;
         }
 
         /// <summary>
@@ -78,6 +80,7 @@ namespace RUINORERP.PacketSpec.Commands
         private CommandDataContainer<TRequest> _requestContainer;
         private CommandDataContainer<TResponse> _responseContainer;
 
+        [Key(20)]
         public TRequest Request
         {
             get => _requestContainer?.ObjectData;
@@ -89,6 +92,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
+        [Key(21)]
         public TResponse Response
         {
             get => _responseContainer?.ObjectData;
@@ -129,17 +133,21 @@ namespace RUINORERP.PacketSpec.Commands
     /// 命令基类 - 提供命令的通用实现
     /// </summary>
     [Serializable]
+    [MessagePackObject]
     public class BaseCommand : ICommand
     {
-        public CommandExecutionContext ExecutionContext { get; set; }
+        public BaseCommand()
+        {
+            
+        }
 
-        public RequestBase Request { get; set; }
+        //public RequestBase Request { get; set; }
         protected virtual object GetSerializableDataCore() { return null; }
         // 新增智能访问方法
         public byte[] GetBinaryData()
         {
             var data = GetSerializableDataCore();
-            return data != null ? MessagePackSerializer.Serialize(data) : Array.Empty<byte>();
+            return data != null ? MessagePackSerializer.Serialize(data, UnifiedSerializationService.MessagePackOptions) : Array.Empty<byte>();
         }
         public T GetObjectData<T>() where T : class
         {
@@ -150,41 +158,30 @@ namespace RUINORERP.PacketSpec.Commands
         /// 日志记录器
         /// </summary>
         protected ILogger<BaseCommand> Logger { get; set; }
-
-        /// <summary>
-        /// Token管理器 - 通过依赖注入获取
-        /// </summary>
-        protected TokenManager TokenManager { get; set; }
-
-        /// <summary>
-        /// 认证令牌
-        /// </summary>
-        public string AuthToken { get; set; }
-
-        /// <summary>
-        /// 令牌类型
-        /// </summary>
-        public string TokenType { get; set; } = "Bearer";
-
+ 
 
         /// <summary>
         /// 命令标识符（类型安全命令系统）
         /// </summary>
+        [Key(0)]
         public CommandId CommandIdentifier { get; set; }
 
         /// <summary>
         /// 命令方向
         /// </summary>
+        [Key(1)]
         public PacketDirection Direction { get; set; }
 
         /// <summary>
         /// 命令优先级
         /// </summary>
+        [Key(2)]
         public CommandPriority Priority { get; set; }
 
         /// <summary>
         /// 命令状态
         /// </summary>
+        [Key(3)]
         public CommandStatus Status { get; set; }
 
 
@@ -192,16 +189,19 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
+        [Key(4)]
         public DateTime CreatedTimeUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// 最后更新时间（UTC时间）
         /// </summary>
+        [Key(5)]
         public DateTime? LastUpdatedTime { get; set; }
 
         /// <summary>
         /// 时间戳（UTC时间）
         /// </summary>
+        [Key(6)]
         public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
@@ -224,6 +224,7 @@ namespace RUINORERP.PacketSpec.Commands
         }
         #endregion
 
+        [Key(7)]
         public int TimeoutMs { get; set; }
 
 
@@ -240,17 +241,7 @@ namespace RUINORERP.PacketSpec.Commands
             Logger = logger ?? NullLogger<BaseCommand>.Instance;
         }
 
-        /// <summary>
-        /// 构造函数 - 支持依赖注入
-        /// </summary>
-        /// <param name="tokenManager">Token管理器</param>
-        /// <param name="direction">命令方向</param>
-        /// <param name="logger">日志记录器</param>
-        protected BaseCommand(TokenManager tokenManager, PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
-            : this(direction, logger)
-        {
-            TokenManager = tokenManager;
-        }
+ 
 
 
         /// <summary>
@@ -292,33 +283,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        /// <summary>
-        /// 使用MessagePack序列化命令数据
-        /// </summary>
-        public virtual byte[] SerializeWithMessagePack()
-        {
-            try
-            {
-                var commandData = new
-                {
-                    Request.RequestId,
-                    CommandIdentifier,
-                    Direction,
-                    Priority,
-                    Status,
-                    CreatedTimeUtc,
-                    TimeoutMs,
-                    Data = GetSerializableData()
-                };
-
-                return MessagePackService.Serialize(commandData);
-            }
-            catch (Exception ex)
-            {
-                LogError($"MessagePack序列化命令失败: {ex.Message}", ex);
-                return null;
-            }
-        }
+        
 
         /// <summary>
         /// 反序列化命令数据
@@ -363,7 +328,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (data == null || data.Length == 0)
                     return false;
 
-                var commandData = MessagePackService.Deserialize<dynamic>(data);
+                var commandData = MessagePackService.Deserialize<dynamic>(data, UnifiedSerializationService.MessagePackOptions);
 
                 // 恢复基本属性
                 if (commandData.Direction != null)
@@ -388,48 +353,6 @@ namespace RUINORERP.PacketSpec.Commands
         private MemoryTokenStorage memoryTokenStorage;
 
         #region 虚方法 - 子类可以重写
-
-        /// <summary>
-        /// 自动附加认证Token - 优化版
-        /// 增强功能：确保Token的完整性、类型设置、ExecutionContext绑定和异常处理
-        /// </summary>
-        protected virtual async void AutoAttachToken()
-        {
-            try
-            {
-                // 检查TokenManager是否可用
-                if (TokenManager == null)
-                {
-                    Logger?.LogDebug("TokenManager未初始化，跳过自动附加");
-                    return;
-                }
-
-                // 简化版：使用依赖注入的TokenManager
-                var tokenInfo = await TokenManager.TokenStorage.GetTokenAsync();
-                if (tokenInfo != null && !string.IsNullOrEmpty(tokenInfo.AccessToken))
-                {
-                    AuthToken = tokenInfo.AccessToken;
-                    TokenType = "Bearer";
-
-                    // 自动设置到ExecutionContext，确保服务器端也能获取
-                    if (ExecutionContext == null)
-                        ExecutionContext = new CommandExecutionContext();
-
-                    ExecutionContext.Token = tokenInfo.AccessToken;
-                    ExecutionContext.Extensions["RefreshToken"] = tokenInfo.RefreshToken;
-
-                    Logger?.LogDebug("自动附加Token成功: {TokenLength} 字符", tokenInfo.AccessToken?.Length ?? 0);
-                }
-                else
-                {
-                    Logger?.LogDebug("未找到有效Token，跳过自动附加");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger?.LogWarning(ex, "自动附加Token失败");
-            }
-        }
 
 
 
@@ -460,7 +383,16 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 包体数据（业务请求响应数据序列化后的字节）
         /// </summary>
-        public byte[] BizData { get; set; }
+        [Key(8)]
+        public byte[] JsonRequestData { get; set; }
+
+        /// <summary>
+        /// 响应数据（业务响应数据序列化后的字节）
+        /// </summary>
+        [Key(9)]
+        public byte[] JsonResponseData { get; set; }
+
+
 
         /// <summary>
         /// 获取强类型的数据载荷
@@ -489,13 +421,7 @@ namespace RUINORERP.PacketSpec.Commands
 
         #region 核心方法
 
-        /// <summary>
-        /// 获取包大小
-        /// </summary>
-        public int GetPackageSize()
-        {
-            return BizData?.Length ?? 0;
-        }
+
 
         /// <summary>
         /// 设置数据内容
@@ -504,7 +430,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>当前实例</returns>
         public void SetData(byte[] data)
         {
-            BizData = data;
+            JsonRequestData = data;
             LastUpdatedTime = DateTime.UtcNow;
 
         }
@@ -537,7 +463,7 @@ namespace RUINORERP.PacketSpec.Commands
 
             var cacheKey = $"{type.FullName}:{hash}";
             // 尝试从缓存获取或添加
-            BizData = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
+            JsonRequestData = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
             LastUpdatedTime = DateTime.UtcNow;
         }
 
@@ -550,10 +476,17 @@ namespace RUINORERP.PacketSpec.Commands
         {
             // Extensions?.Clear();
             // 清理包体数据
-            if (BizData != null)
+            if (JsonRequestData != null)
             {
-                Array.Clear(BizData, 0, BizData.Length);
-                BizData = null;
+                Array.Clear(JsonRequestData, 0, JsonRequestData.Length);
+                JsonRequestData = null;
+            }
+            
+            // 清理响应数据
+            if (JsonResponseData != null)
+            {
+                Array.Clear(JsonResponseData, 0, JsonResponseData.Length);
+                JsonResponseData = null;
             }
         }
 
@@ -602,11 +535,51 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>文本数据</returns>
         public string GetDataAsText(Encoding encoding = null)
         {
-            if (BizData == null || BizData.Length == 0)
+            if (JsonRequestData == null || JsonRequestData.Length == 0)
                 return string.Empty;
 
             encoding ??= Encoding.UTF8;
-            return encoding.GetString(BizData);
+            return encoding.GetString(JsonRequestData);
+        }
+
+        /// <summary>
+        /// 设置响应JSON数据
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="data">响应数据对象</param>
+        public void SetJsonResponseData<T>(T data)
+        {
+            var json = JsonConvert.SerializeObject(data);
+            JsonResponseData = Encoding.UTF8.GetBytes(json);
+            LastUpdatedTime = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// 获取响应JSON数据
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <returns>响应数据对象</returns>
+        public T GetJsonResponseData<T>()
+        {
+            if (JsonResponseData == null || JsonResponseData.Length == 0)
+                return default(T);
+
+            var json = Encoding.UTF8.GetString(JsonResponseData);
+            return string.IsNullOrEmpty(json) ? default(T) : JsonConvert.DeserializeObject<T>(json);
+        }
+
+        /// <summary>
+        /// 获取响应数据为文本格式
+        /// </summary>
+        /// <param name="encoding">编码格式，默认UTF-8</param>
+        /// <returns>响应文本数据</returns>
+        public string GetResponseDataAsText(Encoding encoding = null)
+        {
+            if (JsonResponseData == null || JsonResponseData.Length == 0)
+                return string.Empty;
+
+            encoding ??= Encoding.UTF8;
+            return encoding.GetString(JsonResponseData);
         }
 
         /// <summary>

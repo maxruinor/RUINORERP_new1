@@ -1,0 +1,304 @@
+using Microsoft.Extensions.Logging;
+using RUINORERP.PacketSpec.Models.Core;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
+using Newtonsoft.Json;
+
+namespace RUINORERP.PacketSpec.Commands
+{
+    /// <summary>
+    /// 默认命令工厂实现
+    /// 负责根据命令ID创建对应的命令对象
+    /// </summary>
+    public class DefaultCommandFactory : ICommandFactoryAsync
+    {
+        private readonly ILogger<DefaultCommandFactory> _logger;
+        private readonly Dictionary<uint, Func<PacketModel, ICommand>> _commandCreators;
+        private readonly CommandTypeHelper _commandTypeHelper;
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="logger">日志记录器</param>
+        /// <param name="commandTypeHelper">命令类型助手</param>
+        public DefaultCommandFactory(ILogger<DefaultCommandFactory> logger = null, CommandTypeHelper commandTypeHelper = null)
+        {
+            _logger = logger;
+            _commandCreators = new Dictionary<uint, Func<PacketModel, ICommand>>();
+            _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
+        }
+
+
+
+
+        /// <summary>
+        /// 从统一数据包创建命令
+        /// </summary>
+        /// <param name="packet">统一数据包</param>
+        /// <returns>命令对象，如果无法创建则返回null</returns>
+        public ICommand CreateCommand(PacketModel packet)
+        {
+            if (packet == null)
+            {
+                _logger?.LogWarning("尝试从空的PacketModel创建命令");
+                return null;
+            }
+
+            try
+            {
+
+                // 首先尝试从数据包中提取类型化命令
+                var typedCommand = CommandPacketAdapterExtensions.ExtractCommand(packet, _commandTypeHelper);
+                if (typedCommand != null)
+                {
+                    _logger?.LogDebug("成功从数据包提取类型化命令: {CommandType}", typedCommand.GetType().Name);
+                    return typedCommand;
+                }
+
+                var comm = packet.GetJsonData<BaseCommand>();
+
+                // 获取命令ID
+                uint commandId = (uint)packet.CommandId;
+
+                // 首先检查是否有注册的自定义创建器
+                if (_commandCreators.TryGetValue(commandId, out var creator))
+                {
+                    var command = creator(packet);
+                    if (command != null)
+                    {
+                        InitializeCommand(command, packet);
+                        return command;
+                    }
+                }
+
+                // 然后尝试从命令类型助手中获取命令类型并创建实例
+                var commandType = _commandTypeHelper.GetCommandType(commandId);
+                if (commandType != null)
+                {
+                    try
+                    {
+                        var command = Activator.CreateInstance(commandType) as ICommand;
+                        if (command != null)
+                        {
+                            InitializeCommand(command, packet);
+                            return command;
+                        }
+                        else
+                        {
+                            _logger?.LogWarning("无法将类型 {CommandType} 转换为 ICommand", commandType.FullName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "创建命令实例失败: {CommandType}", commandType.FullName);
+                    }
+                }
+
+                //新的简化版本测试 
+                // 如果无法创建命令，返回null 
+                // 2. 使用CommandTypeHelper获取有效载荷类型
+                var payloadType = _commandTypeHelper.GetPayloadType(packet.CommandId);
+                if (payloadType != null)
+                {
+                    //var closedType = typeof(GenericCommand<>).MakeGenericType(payloadType);
+                    //return (ICommand)Activator.CreateInstance(closedType, commandId, null);
+
+                    // 2.1 先从缓存里拿“开放泛型定义”
+                    if (!_commandTypeHelper.GetAllCommandTypes().TryGetValue(0xFFFFEEEE, out var openGeneric))
+                        throw new InvalidOperationException("GenericCommand<> 模板未注册");
+
+                    // 2.2 MakeGenericType 产生封闭类型
+                    var closedType = openGeneric.MakeGenericType(payloadType);
+                    return (ICommand)Activator.CreateInstance(closedType, packet.CommandId, null);
+
+                }
+
+
+                _logger?.LogWarning("未找到命令ID: {CommandId} 对应的命令类型", commandId);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "创建命令时发生异常");
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// 异步从统一数据包创建命令
+        /// </summary>
+        /// <param name="packet">统一数据包</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>命令对象</returns>
+        public async Task<ICommand> CreateCommandAsync(PacketModel packet, CancellationToken cancellationToken = default)
+        {
+            // 异步包装同步方法
+            return await Task.Run(() => CreateCommand(packet), cancellationToken);
+        }
+
+        /// <summary>
+        /// 从JSON和类型名称创建命令实例
+        /// </summary>
+        /// <param name="json">JSON字符串</param>
+        /// <param name="typeName">类型名称</param>
+        /// <returns>命令实例</returns>
+        public ICommand CreateCommandFromJson(string json, string typeName)
+        {
+            if (string.IsNullOrEmpty(json))
+                throw new ArgumentException("JSON字符串不能为空", nameof(json));
+            
+            if (string.IsNullOrEmpty(typeName))
+                throw new ArgumentException("类型名称不能为空", nameof(typeName));
+
+            try
+            {
+                var commandType = _commandTypeHelper.GetCommandTypeByName(typeName);
+                if (commandType == null)
+                {
+                    // 尝试从已注册的类型中查找
+                    var allTypes = _commandTypeHelper.GetAllCommandTypes();
+                    foreach (var kvp in allTypes)
+                    {
+                        if (kvp.Value.FullName == typeName || kvp.Value.Name == typeName)
+                        {
+                            commandType = kvp.Value;
+                            break;
+                        }
+                    }
+                }
+
+                if (commandType == null)
+                    throw new ArgumentException($"未知的命令类型: {typeName}", nameof(typeName));
+
+                return JsonConvert.DeserializeObject(json, commandType) as ICommand;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "从JSON创建命令失败: TypeName={TypeName}", typeName);
+                throw new InvalidOperationException($"从JSON创建命令失败: {typeName}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 从byte[]和类型名称创建命令实例
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="typeName">类型名称</param>
+        /// <returns>命令实例</returns>
+        public ICommand CreateCommandFromBytes(byte[] data, string typeName)
+        {
+            if (data == null || data.Length == 0)
+                throw new ArgumentException("数据不能为空", nameof(data));
+            
+            if (string.IsNullOrEmpty(typeName))
+                throw new ArgumentException("类型名称不能为空", nameof(typeName));
+
+            try
+            {
+                var json = Encoding.UTF8.GetString(data);
+                return CreateCommandFromJson(json, typeName);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "从字节数组创建命令失败: TypeName={TypeName}", typeName);
+                throw new InvalidOperationException($"从字节数组创建命令失败: {typeName}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 从CommandId创建空命令实例
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <returns>空命令实例</returns>
+        public ICommand CreateEmptyCommand(CommandId commandId)
+        {
+            var commandType = _commandTypeHelper.GetCommandType((uint)commandId);
+            if (commandType == null)
+                throw new ArgumentException($"未知的命令ID: {commandId}", nameof(commandId));
+
+            return Activator.CreateInstance(commandType) as ICommand;
+        }
+
+
+        /// <summary>
+        /// 注册命令创建器
+        /// </summary>
+        /// <param name="commandCode">命令代码</param>
+        /// <param name="creator">创建器函数</param>
+        public void RegisterCommandCreator(uint commandCode, Func<PacketModel, ICommand> creator)
+        {
+            if (creator == null)
+            {
+                throw new ArgumentNullException(nameof(creator), "命令创建器不能为null");
+            }
+
+            _commandCreators[commandCode] = creator;
+            _logger?.LogDebug("已注册命令创建器: {CommandCode}", commandCode);
+        }
+
+        /// <summary>
+        /// 初始化命令对象
+        /// </summary>
+        /// <param name="command">命令对象</param>
+        /// <param name="packet">数据包</param>
+        private void InitializeCommand(ICommand command, PacketModel packet)
+        {
+            if (command == null || packet == null)
+                return;
+            // 如果命令是BaseCommand类型，设置更多属性
+            if (command is BaseCommand baseCommand)
+            {
+                packet.GetJsonData<BaseCommand>();
+                baseCommand.TimestampUtc = packet.TimestampUtc;
+                baseCommand.CreatedTimeUtc = packet.CreatedTimeUtc;
+            }
+        }
+
+        /// <summary>
+        /// 从OriginalData创建PacketModel
+        /// </summary>
+        /// <param name="originalData">原始数据</param>
+        /// <returns>创建的PacketModel对象</returns>
+        [Obsolete("暂时作废")]
+        private PacketModel CreatePacketModelFromOriginalData(OriginalData originalData)
+        {
+            try
+            {
+                var packet = new PacketModel
+                {
+                    PacketId = Guid.NewGuid().ToString(),
+                    CreatedTimeUtc = DateTime.UtcNow,
+                    TimestampUtc = DateTime.UtcNow,
+                    Size = originalData.Length,
+                    IsEncrypted = false,
+                    IsCompressed = false,
+                    Extensions = new Dictionary<string, object>()
+                };
+
+                // 从OriginalData构建CommandId
+                // Cmd表示CommandCategory，One表示OperationCode子指令
+                CommandCategory category = (CommandCategory)originalData.Cmd;
+                byte operationCode = 0; // 默认OperationCode
+
+                // 如果One不为空，则使用第一个字节作为OperationCode
+                if (originalData.One != null && originalData.One.Length > 0)
+                {
+                    operationCode = originalData.One[0];
+                }
+
+                packet.CommandId = new CommandId(category, operationCode);
+
+                return packet;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "从OriginalData创建PacketModel时发生异常");
+                return null;
+            }
+        }
+    }
+}

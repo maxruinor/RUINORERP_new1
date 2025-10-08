@@ -1,4 +1,5 @@
-﻿using RUINORERP.PacketSpec.Core;
+using MessagePack;
+using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,51 +9,61 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// <summary>
     /// 响应基类 - 提供所有响应的公共属性和方法
     /// </summary>
+    [MessagePackObject]
     public class ResponseBase : IResponse
     {
         /// <summary>
         /// 业务级错误码；0 表示成功
         /// </summary>
+        [Key(0)]
         public int ErrorCode { get; set; }
 
         /// <summary>
         /// 人类可读错误消息；Success 时可为空
         /// </summary>
+        [Key(1)]
         public string ErrorMessage { get; set; }
 
         /// <summary>
         /// 操作是否成功
         /// </summary>
+        [Key(2)]
         public bool IsSuccess { get; set; }
 
         /// <summary>
         /// 响应消息
         /// </summary>
+        [Key(3)]
         public string Message { get; set; }
 
         /// <summary>
         /// 响应时间戳（UTC时间）
         /// </summary>
+        [Key(4)]
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
         /// 响应代码
         /// </summary>
+        [Key(5)]
         public int Code { get; set; }
 
         /// <summary>
         /// 请求标识
         /// </summary>
+        [Key(6)]
         public string RequestId { get; set; }
 
         /// <summary>
         /// 执行时间（毫秒）
         /// </summary>
+        [Key(7)]
         public long ExecutionTimeMs { get; set; }
 
         /// <summary>
         /// 扩展元数据（可选）
         /// </summary>
+        [Key(8)]
         public Dictionary<string, object> Metadata { get; set; }
 
         /// <summary>
@@ -131,11 +142,13 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// 泛型响应基类 - 提供所有响应的公共属性和方法，包含数据部分
     /// </summary>
     /// <typeparam name="T">数据类型</typeparam>
+    [MessagePackObject]
     public class ResponseBase<T> : ResponseBase
     {
         /// <summary>
         /// 响应数据
         /// </summary>
+        [Key(9)]
         public T Data { get; set; }
 
         /// <summary>

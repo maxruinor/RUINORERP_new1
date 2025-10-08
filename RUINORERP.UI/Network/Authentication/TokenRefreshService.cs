@@ -94,7 +94,6 @@ namespace RUINORERP.UI.Network.Authentication
 
             // 使用_communicationService发送验证Token的请求
             var bc = CommandDataBuilder.BuildCommand<SimpleRequest,LoginResponse>(AuthenticationCommands.ValidateToken, request);
-            bc.AuthToken = token;
 
             var response = await _communicationService.SendCommandAsync<SimpleRequest, LoginResponse>(
                 bc,

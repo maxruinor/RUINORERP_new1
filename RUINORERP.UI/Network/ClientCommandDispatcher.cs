@@ -195,14 +195,7 @@ namespace RUINORERP.UI.Network
             }
         }
 
-        /// <summary>
-        /// 获取所有注册的命令类型（实现ICommandDispatcher接口）
-        /// </summary>
-        /// <returns>命令类型字典</returns>
-        public Dictionary<uint, Type> GetAllCommandTypes()
-        {
-            return _commandTypeHelper.GetAllCommandTypes();
-        }
+  
 
         /// <summary>
         /// 清理注册的命令类型

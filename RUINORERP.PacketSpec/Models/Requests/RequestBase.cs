@@ -1,4 +1,5 @@
-﻿using RUINORERP.PacketSpec.Core;
+﻿using MessagePack;
+using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
 
@@ -7,33 +8,40 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// <summary>
     /// 请求基类 - 提供所有请求的公共属性和方法
     /// </summary>
+    [MessagePackObject]
     [Serializable]
-    public abstract class RequestBase : IRequest
+
+    public partial class RequestBase : IRequest
     {
         /// <summary>
         /// 请求唯一标识
         /// </summary>
+        [Key(0)]
         public string RequestId { get; set; }
 
 
         /// <summary>
         /// 请求操作类型
         /// </summary>
+        [Key(1)]
         public string OperationType { get; set; }
 
         /// <summary>
         /// 请求时间戳（UTC时间）
         /// </summary>
+        [Key(2)]
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
         /// 客户端信息
         /// </summary>
+        [Key(3)]
         public string ClientInfo { get; set; }
 
         /// <summary>
         /// 扩展元数据（可选）
         /// </summary>
+        [Key(4)]
         public Dictionary<string, object> Metadata { get; set; }
 
         /// <summary>

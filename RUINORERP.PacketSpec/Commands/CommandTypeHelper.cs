@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -78,7 +78,57 @@ namespace RUINORERP.PacketSpec.Commands
             });
         }
 
-   
+        /// <summary>
+        /// 根据类型名称获取命令类型
+        /// </summary>
+        /// <param name="typeName">类型名称（完整名称或短名称）</param>
+        /// <returns>命令类型，如果找不到则返回null</returns>
+        public Type GetCommandTypeByName(string typeName)
+        {
+            if (string.IsNullOrEmpty(typeName))
+                return null;
+
+            lock (_lock)
+            {
+                // 首先尝试完整名称匹配
+                foreach (var kvp in _commandTypes)
+                {
+                    var registeredType = kvp.Value;
+                    if (registeredType.FullName == typeName || registeredType.Name == typeName)
+                    {
+                        return registeredType;
+                    }
+                }
+
+                // 尝试从当前应用程序域中查找类型
+                try
+                {
+                    var foundType = Type.GetType(typeName);
+                    if (foundType != null && typeof(ICommand).IsAssignableFrom(foundType))
+                    {
+                        return foundType;
+                    }
+                }
+                catch
+                {
+                    // 忽略类型查找异常
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取所有已注册的命令类型
+        /// </summary>
+        /// <returns>命令类型字典（命令代码 -> 类型）</returns>
+        public IReadOnlyDictionary<uint, Type> GetAllCommandTypes()
+        {
+            lock (_lock)
+            {
+                return new Dictionary<uint, Type>(_commandTypes);
+            }
+        }
 
         /// <summary>
         /// 注册有效载荷类型
@@ -102,18 +152,6 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 _commandTypes.Clear();
                 _payloadMap.Clear();
-            }
-        }
-
-        /// <summary>
-        /// 获取所有注册的命令类型
-        /// </summary>
-        /// <returns>命令代码和类型的映射</returns>
-        public Dictionary<uint, Type> GetAllCommandTypes()
-        {
-            lock (_lock)
-            {
-                return new Dictionary<uint, Type>(_commandTypes);
             }
         }
 

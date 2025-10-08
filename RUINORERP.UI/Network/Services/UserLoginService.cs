@@ -64,8 +64,7 @@ namespace RUINORERP.UI.Network.Services
                 LoginCommand loginCommand = new LoginCommand(username, password);
                 loginCommand.Request = loginRequest;
                 loginCommand.Request.RequestId = IdGenerator.GenerateRequestId(loginCommand.CommandIdentifier);
-                loginCommand.ExecutionContext = new CommandExecutionContext();
-                loginCommand.ExecutionContext.RequestId = loginCommand.Request.RequestId;
+             
 
                 var response = await _communicationService.SendCommandAsync<LoginRequest, LoginResponse>(
                     loginCommand, ct);
@@ -86,6 +85,7 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
+       
         /// <summary>
         /// 用户登出 - 使用简化版TokenManager
         /// </summary>

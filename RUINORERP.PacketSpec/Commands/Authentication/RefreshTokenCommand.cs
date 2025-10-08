@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation.Results;
 using RUINORERP.PacketSpec.Core;
+using MessagePack;
 
 namespace RUINORERP.PacketSpec.Commands.Authentication
 {
@@ -16,11 +17,13 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     /// 服务端自动管理Token状态，客户端无需传递Token信息
     /// </summary>
     [PacketCommand("RefreshToken", CommandCategory.Authentication)]
+    [MessagePackObject]
     public class RefreshTokenCommand<SimpleRequest, LoginRequest> : BaseCommand<TokenRefreshRequest, LoginResponse>
     {
         /// <summary>
         /// 刷新请求数据（简化版，无需传递Token）
         /// </summary>
+        [Key(0)]
         public TokenRefreshRequest RefreshRequest
         {
             get => Request;
@@ -38,16 +41,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             // 简化版：创建空的刷新请求
             Request = new TokenRefreshRequest();
         }
-
-        /// <summary>
-        /// 自动附加认证Token
-        /// 刷新命令不需要自动附加Token，因为服务端会自动管理
-        /// </summary>
-        protected override void AutoAttachToken()
-        {
-            // 刷新命令不需要自动附加Token，因为服务端会自动管理
-            // 重写基类方法，空实现
-        }
+ 
 
         /// <summary>
         /// 验证命令数据

@@ -4,13 +4,14 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
 using System.Threading.Tasks;
-
+using MessagePack;
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
     /// <summary>
     /// 强制解锁命令 - 管理员强制解锁业务单据
     /// </summary>
     [PacketCommand("ForceUnlock", CommandCategory.Lock)]
+    [MessagePackObject]
     public class ForceUnlockCommand : BaseCommand
     {
  
@@ -18,6 +19,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// <summary>
         /// 单据ID
         /// </summary>
+        [Key(0)]
         public long BillId { get; set; }
 
         /// <summary>

@@ -4,13 +4,14 @@ using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation.Results;
-
+using MessagePack;
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
     /// <summary>
     /// 查询锁状态命令 - 客户端向服务器查询业务单据锁定状态
     /// </summary>
     [PacketCommand("QueryLockStatus", CommandCategory.Lock)]
+    [MessagePackObject]
     public class QueryLockStatusCommand : BaseCommand
     {
  
@@ -18,6 +19,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// <summary>
         /// 单据ID
         /// </summary>
+        [Key(0)]
         public long BillId { get; set; }
 
         /// <summary>

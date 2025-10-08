@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -58,9 +58,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         CommandId CommandIdentifier { get; }
 
-
-        CommandExecutionContext ExecutionContext { get; set; }
-
         /// <summary>
         /// 命令创建时间
         /// </summary>
@@ -84,15 +81,15 @@ namespace RUINORERP.PacketSpec.Commands
         int TimeoutMs { get; set; }
 
 
-        RequestBase Request { get; set; }
-
-
         /// <summary>
         /// 业务数据
-        /// 当命令从网络层接收数据时，我们先将字节数组存储到BizData，
-        /// 然后当业务逻辑需要时，我们再反序列化为TRequest。
         /// </summary>
-        byte[] BizData { get; set; }
+        byte[] JsonRequestData { get; set; }
+
+        /// <summary>
+        /// 响应数据
+        /// </summary>
+        byte[] JsonResponseData { get; set; }
 
 
         /// <summary>

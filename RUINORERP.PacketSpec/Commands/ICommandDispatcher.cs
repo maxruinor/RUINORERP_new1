@@ -50,12 +50,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="commandCode">命令代码</param>
         /// <returns>命令实例，如果找不到类型或创建失败则返回null</returns>
         ICommand CreateCommand(uint commandCode);
-
-        /// <summary>
-        /// 获取所有注册的命令类型
-        /// </summary>
-        /// <returns>命令代码和类型的映射</returns>
-        Dictionary<uint, Type> GetAllCommandTypes();
+ 
 
         /// <summary>
         /// 清理注册的命令类型

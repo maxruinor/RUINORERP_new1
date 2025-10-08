@@ -5,13 +5,14 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
 using System.Threading.Tasks;
-
+using MessagePack;
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
     /// <summary>
     /// 拒绝解锁命令 - 锁定用户拒绝其他用户的解锁请求
     /// </summary>
     [PacketCommand("RefuseUnlock", CommandCategory.Lock)]
+    [MessagePackObject]
     public class RefuseUnlockCommand : BaseCommand
     {
  
@@ -19,6 +20,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// <summary>
         /// 拒绝解锁信息
         /// </summary>
+        [Key(0)]
         public RefuseUnLockInfo RefuseInfo { get; set; }
 
         /// <summary>

@@ -1,10 +1,11 @@
-﻿﻿﻿using RUINORERP.PacketSpec.Enums.Core;
+﻿﻿using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation.Results;
+using MessagePack;
 
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
@@ -12,6 +13,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
     /// 请求解锁命令 - 用户请求解锁被其他用户锁定的单据
     /// </summary>
     [PacketCommand("RequestUnlock", CommandCategory.Lock)]
+    [MessagePackObject]
     public class RequestUnlockCommand : BaseCommand
     {
  
@@ -19,6 +21,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// <summary>
         /// 请求解锁信息
         /// </summary>
+        [Key(0)]
         public RequestUnLockInfo RequestInfo { get; set; }
 
         /// <summary>

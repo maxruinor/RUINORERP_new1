@@ -1,3 +1,4 @@
+﻿using MessagePack;
 using System;
 using System.Threading.Tasks;
 
@@ -32,6 +33,15 @@ namespace RUINORERP.PacketSpec.Serialization
         /// <param name="data">要反序列化的字节数组</param>
         /// <returns>反序列化后的对象</returns>
         public static T Deserialize<T>(byte[] data) => UnifiedSerializationService.DeserializeWithMessagePack<T>(data);
+
+        /// <summary>
+        /// 反序列化字节数组为对象（带配置选项）
+        /// </summary>
+        /// <typeparam name="T">目标对象类型</typeparam>
+        /// <param name="data">要反序列化的字节数组</param>
+        /// <param name="options">MessagePack序列化选项</param>
+        /// <returns>反序列化后的对象</returns>
+        public static T Deserialize<T>(byte[] data, MessagePackSerializerOptions options) => UnifiedSerializationService.DeserializeWithMessagePack<T>(data);
 
         /// <summary>
         /// 异步反序列化字节数组为对象

@@ -60,7 +60,7 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="password">密码</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>登录响应</returns>
-        public async Task<LoginResponse> LoginAsync(string username, string password, CancellationToken ct = default)
+        public async Task<ResponseBase<LoginResponse>> LoginAsync(string username, string password, CancellationToken ct = default)
         {
             try
             {
@@ -71,7 +71,7 @@ namespace RUINORERP.UI.Network.Services
                 loginCommand.Request.RequestId = IdGenerator.GenerateRequestId(loginCommand.CommandIdentifier);
 
 
-                var packet = await _communicationService.SendCommandAsync<LoginRequest, ResponseBase>(loginCommand, ct);
+                var packet = await _communicationService.SendCommandAsync<LoginRequest, ResponseBase<LoginResponse>>(loginCommand, ct);
 
                 LoginResponse loginResponse = null;
 
@@ -81,7 +81,7 @@ namespace RUINORERP.UI.Network.Services
 #warning 登陆成功后 得到token 返回
                     //_tokenManager.TokenStorage.SetTokenAsync(response.AccessToken, response.RefreshToken, response.ExpiresIn);
                     ICommand baseCommand = commandPacketAdapter.CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext.CommandType.Name);
-                    if (baseCommand is LoginCommand  responseCommand)
+                    if (baseCommand is LoginCommand responseCommand)
                     {
                         if (responseCommand.Response == null)
                         {

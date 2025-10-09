@@ -81,7 +81,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 支持的命令类型
         /// </summary>
-        public override IReadOnlyList<uint> SupportedCommands => new uint[]
+        public new IReadOnlyList<uint> SupportedCommands => new uint[]
         {
             AuthenticationCommands.Login.FullCode,
             AuthenticationCommands.LoginRequest.FullCode,

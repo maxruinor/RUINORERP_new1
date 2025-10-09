@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
@@ -34,7 +34,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 此处理器不特定支持任何命令码
         /// 它将作为CommandDispatcher中的默认回退处理器
         /// </summary>
-        public override IReadOnlyList<uint> SupportedCommands => Array.Empty<uint>();
+        public new IReadOnlyList<uint> SupportedCommands => Array.Empty<uint>();
 
         /// <summary>
         /// 处理命令的核心逻辑

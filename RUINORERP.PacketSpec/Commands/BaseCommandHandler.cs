@@ -85,8 +85,9 @@ namespace RUINORERP.PacketSpec.Commands
 
         /// <summary>
         /// 支持的命令类型
+        /// 本来是抽象，子类要实现。但是有几个公共类型的命令，所以这里默认实现。
         /// </summary>
-        public abstract IReadOnlyList<uint> SupportedCommands { get; }
+        public IReadOnlyList<uint> SupportedCommands { get; }
 
         /// <summary>
         /// 处理器状态
@@ -139,7 +140,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (!validationResult.IsValid)
                 {
                     Logger.LogWarning($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
-                    return ResponseBase.CreateError($"{UnifiedErrorCodes.Command_ValidationFailed.Message}: 命令验证失败: {validationResult.Errors[0].ErrorMessage}", UnifiedErrorCodes.Command_ValidationFailed.Code);
+                    return ResponseBase.CreateValidationError(validationResult, UnifiedErrorCodes.Command_ValidationFailed.Code);
                 }
 
                 // 检查命令是否超时（基于TimeoutMs和创建时间计算）

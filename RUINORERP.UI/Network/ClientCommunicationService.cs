@@ -575,9 +575,6 @@ namespace RUINORERP.UI.Network
 
             return await EnsureConnectedAsync<PacketModel>(async () =>
             {
-                // var command = InitializeCommandAsync(command, requestData);
-
-
                 try
                 {
                     // BaseCommand会自动处理Token管理，包括获取和刷新Token

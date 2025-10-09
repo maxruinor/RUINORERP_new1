@@ -45,11 +45,11 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 支持的命令类型
         /// </summary>
-        public override IReadOnlyList<uint> SupportedCommands => new uint[]
+        public new IReadOnlyList<uint> SupportedCommands => new uint[]
         {
             (uint)SystemCommands.Heartbeat
         };
-
+   
         /// <summary>
         /// 具体的命令处理逻辑
         /// </summary>

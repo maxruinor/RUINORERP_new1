@@ -1,7 +1,8 @@
-using MessagePack;
+﻿using MessagePack;
 using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace RUINORERP.PacketSpec.Models.Responses
@@ -112,7 +113,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <returns>响应实例</returns>
         public static ResponseBase CreateSuccess(string message = "操作成功")
         {
-            return new ConcreteResponse
+            return new ResponseBase
             {
                 IsSuccess = true,
                 Message = message,
@@ -129,7 +130,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <returns>响应实例</returns>
         public static ResponseBase CreateError(string message, int code = 500)
         {
-            return new ConcreteResponse
+            return new ResponseBase
             {
                 IsSuccess = false,
                 Message = message,
@@ -137,55 +138,113 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 TimestampUtc = DateTime.UtcNow
             };
         }
+
+        /// <summary>
+        /// 从FluentValidation验证结果创建失败响应
+        /// </summary>
+        /// <param name="validationResult">FluentValidation验证结果</param>
+        /// <param name="code">错误代码</param>
+        /// <returns>响应实例</returns>
+        public static ResponseBase CreateValidationError(FluentValidation.Results.ValidationResult validationResult, int code = 400)
+        {
+            if (validationResult == null || validationResult.IsValid)
+                return CreateError("验证失败", code);
+
+            var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+            var message = string.Join("; ", errorMessages);
+            
+            var response = new ResponseBase
+            {
+                IsSuccess = false,
+                Message = message,
+                Code = code,
+                TimestampUtc = DateTime.UtcNow
+            };
+
+            // 添加详细的验证错误信息到元数据
+            response.WithMetadata("ValidationErrors", validationResult.Errors.Select(e => new 
+            {
+                Field = e.PropertyName,
+                Message = e.ErrorMessage,
+                AttemptedValue = e.AttemptedValue
+            }).ToList());
+
+            return response;
+        }
     }
 
     /// <summary>
     /// 泛型响应基类 - 提供所有响应的公共属性和方法，包含数据部分
+    /// 专门用于承载业务实体数据，支持复杂查询和CRUD操作结果
     /// </summary>
-    /// <typeparam name="T">数据类型</typeparam>
+    /// <typeparam name="TEntity">业务实体数据类型</typeparam>
     [MessagePackObject]
-    public class ResponseBase<T> : ResponseBase
+    public class ResponseBase<TEntity> : ResponseBase
     {
         /// <summary>
-        /// 响应数据
+        /// 业务实体数据
         /// </summary>
         [Key(9)]
-        public T Data { get; set; }
+        public TEntity Data { get; set; }
+
+        /// <summary>
+        /// 数据总数（主要用于分页查询）
+        /// </summary>
+        [Key(10)]
+        public int TotalCount { get; set; }
+
+        /// <summary>
+        /// 扩展数据字典（用于存放额外的业务数据）
+        /// </summary>
+        [Key(11)]
+        public Dictionary<string, object> ExtraData { get; set; }
+
+        /// <summary>
+        /// 数据版本号（用于乐观锁和缓存控制）
+        /// </summary>
+        [Key(12)]
+        public string DataVersion { get; set; }
 
         /// <summary>
         /// 默认构造函数
         /// </summary>
         public ResponseBase() : base()
         {
+            ExtraData = new Dictionary<string, object>();
         }
 
         /// <summary>
         /// 带参数的构造函数
         /// </summary>
-        public ResponseBase(bool success, string message, T data = default(T), int code = 200)
+        public ResponseBase(bool success, string message, TEntity data = default(TEntity), int code = 200)
         {
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
             this.Code = code;
             this.TimestampUtc = DateTime.UtcNow;
+            this.ExtraData = new Dictionary<string, object>();
         }
 
         /// <summary>
         /// 创建成功响应
         /// </summary>
-        /// <param name="data">响应数据</param>
+        /// <param name="data">业务实体数据</param>
         /// <param name="message">成功消息</param>
+        /// <param name="totalCount">数据总数（用于分页）</param>
+        /// <param name="dataVersion">数据版本号</param>
         /// <returns>响应实例</returns>
-        public static ResponseBase<T> CreateSuccess(T data, string message = "操作成功")
+        public static ResponseBase<TEntity> CreateSuccess(TEntity data, string message = "操作成功", int totalCount = 0, string dataVersion = null)
         {
-            return new ResponseBase<T>
+            return new ResponseBase<TEntity>
             {
                 Data = data,
                 IsSuccess = true,
                 Message = message,
                 Code = 200,
-                TimestampUtc = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow,
+                TotalCount = totalCount,
+                DataVersion = dataVersion ?? DateTime.UtcNow.Ticks.ToString()
             };
         }
 
@@ -194,15 +253,17 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// </summary>
         /// <param name="message">失败消息</param>
         /// <param name="code">错误代码</param>
+        /// <param name="extraData">扩展错误信息</param>
         /// <returns>响应实例</returns>
-        public new static ResponseBase<T> CreateError(string message, int code = 500)
+        public new static ResponseBase<TEntity> CreateError(string message, int code = 500, Dictionary<string, object> extraData = null)
         {
-            return new ResponseBase<T>
+            return new ResponseBase<TEntity>
             {
                 IsSuccess = false,
                 Message = message,
                 Code = code,
-                TimestampUtc = DateTime.UtcNow
+                TimestampUtc = DateTime.UtcNow,
+                ExtraData = extraData ?? new Dictionary<string, object>()
             };
         }
 
@@ -212,9 +273,9 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <param name="message">失败消息</param>
         /// <param name="code">错误代码</param>
         /// <returns>响应实例</returns>
-        public static ResponseBase<T> Failure(string message, int code = 500)
+        public static ResponseBase<TEntity> Failure(string message, int code = 500)
         {
-            return new ResponseBase<T>
+            return new ResponseBase<TEntity>
             {
                 IsSuccess = false,
                 Message = message,
@@ -222,13 +283,102 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 TimestampUtc = DateTime.UtcNow
             };
         }
+
+        /// <summary>
+        /// 从FluentValidation验证结果创建失败响应
+        /// </summary>
+        /// <param name="validationResult">FluentValidation验证结果</param>
+        /// <param name="code">错误代码</param>
+        /// <returns>响应实例</returns>
+        public static ResponseBase<TEntity> CreateValidationError(FluentValidation.Results.ValidationResult validationResult, int code = 400)
+        {
+            if (validationResult == null || validationResult.IsValid)
+                return Failure("验证失败", code);
+
+            var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+            var message = string.Join("; ", errorMessages);
+            
+            var extraData = new Dictionary<string, object>
+            {
+                ["ValidationErrors"] = validationResult.Errors.Select(e => new 
+                {
+                    Field = e.PropertyName,
+                    Message = e.ErrorMessage,
+                    AttemptedValue = e.AttemptedValue
+                }).ToList()
+            };
+
+            return new ResponseBase<TEntity>
+            {
+                IsSuccess = false,
+                Message = message,
+                Code = code,
+                TimestampUtc = DateTime.UtcNow,
+                ExtraData = extraData
+            };
+        }
+
+        /// <summary>
+        /// 创建分页查询成功响应
+        /// </summary>
+        /// <param name="data">实体数据列表</param>
+        /// <param name="totalCount">总记录数</param>
+        /// <param name="pageIndex">当前页索引</param>
+        /// <param name="pageSize">每页大小</param>
+        /// <param name="message">成功消息</param>
+        /// <returns>响应实例</returns>
+        public static ResponseBase<TEntity> CreatePagedSuccess(TEntity data, int totalCount, int pageIndex, int pageSize, string message = "查询成功")
+        {
+            var extraData = new Dictionary<string, object>
+            {
+                ["PageIndex"] = pageIndex,
+                ["PageSize"] = pageSize,
+                ["HasNextPage"] = (pageIndex + 1) * pageSize < totalCount,
+                ["HasPreviousPage"] = pageIndex > 0
+            };
+
+            return new ResponseBase<TEntity>
+            {
+                Data = data,
+                IsSuccess = true,
+                Message = message,
+                Code = 200,
+                TimestampUtc = DateTime.UtcNow,
+                TotalCount = totalCount,
+                ExtraData = extraData
+            };
+        }
+
+        /// <summary>
+        /// 添加扩展数据
+        /// </summary>
+        /// <param name="key">数据键</param>
+        /// <param name="value">数据值</param>
+        /// <returns>当前实例</returns>
+        public new ResponseBase<TEntity> WithMetadata(string key, object value)
+        {
+            ExtraData ??= new Dictionary<string, object>();
+            ExtraData[key] = value;
+            return this;
+        }
+
+        /// <summary>
+        /// 批量添加扩展数据
+        /// </summary>
+        /// <param name="metadata">元数据字典</param>
+        /// <returns>当前实例</returns>
+        public new ResponseBase<TEntity> WithMetadata(Dictionary<string, object> metadata)
+        {
+            if (metadata == null) return this;
+            
+            ExtraData ??= new Dictionary<string, object>();
+            foreach (var item in metadata)
+            {
+                ExtraData[item.Key] = item.Value;
+            }
+            return this;
+        }
     }
 
-    /// <summary>
-    /// 具体响应实现类
-    /// </summary>
-    internal class ConcreteResponse : ResponseBase
-    {
-        // 继承所有基类属性和方法
-    }
+ 
 }

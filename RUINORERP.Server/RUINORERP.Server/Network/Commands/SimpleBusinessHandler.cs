@@ -31,12 +31,12 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 实现抽象方法 - 处理队列命令（重构版：提取业务处理流程）
         /// </summary>
-        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             if (cmd?.Command == null)
             {
                 _logger.LogError("命令或命令数据为空");
-                return ResponseBase.CreateError("命令数据无效", 400);
+                return BaseCommand<IResponse>.CreateError("命令数据无效", 400);
             }
 
             try
@@ -47,19 +47,19 @@ namespace RUINORERP.Server.Network.Commands
             catch (OperationCanceledException)
             {
                 _logger.LogWarning("简单业务处理被取消");
-                return ResponseBase.CreateError("操作被取消", 499);
+                return BaseCommand<IResponse>.CreateError("操作被取消", 499);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "简单业务处理时发生异常");
-                return ResponseBase.CreateError($"处理失败: {ex.Message}", 500);
+                return BaseCommand<IResponse>.CreateError($"处理失败: {ex.Message}", 500);
             }
         }
 
         /// <summary>
         /// 执行简单业务处理流程 - 提取为独立方法
         /// </summary>
-        private async Task<ResponseBase> ExecuteSimpleBusinessProcessAsync(object request, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> ExecuteSimpleBusinessProcessAsync(object request, CancellationToken cancellationToken)
         {
             _logger.LogDebug($"开始处理简单业务: {request.GetType().Name}");
 
@@ -69,7 +69,7 @@ namespace RUINORERP.Server.Network.Commands
                 SimpleRequest simpleRequest => await HandleSimpleOperation(simpleRequest, cancellationToken),
                 BooleanRequest booleanRequest => await HandleBooleanOperation(booleanRequest),
                 NumericRequest numericRequest => await HandleNumericOperation(numericRequest),
-                _ => ResponseBase.CreateError($"不支持的请求类型: {request.GetType().Name}")
+                _ => BaseCommand<IResponse>.CreateError($"不支持的请求类型: {request.GetType().Name}")
             };
 
             _logger.LogDebug($"简单业务处理完成: {request.GetType().Name}");
@@ -79,7 +79,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理简单字符串操作
         /// </summary>
-        private async Task<ResponseBase> HandleSimpleOperation(SimpleRequest request, CancellationToken cancellationToken = default)
+        private async Task<BaseCommand<IResponse>> HandleSimpleOperation(SimpleRequest request, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -94,32 +94,43 @@ namespace RUINORERP.Server.Network.Commands
                     var errorMessage = validationResult.GetValidationErrors();
                     var errorCode = validationResult.GetValidationErrorCode();
                     _logger.LogWarning($"请求验证失败: {errorMessage}");
-                    return ResponseBase.CreateError(errorMessage, errorCode);
+                    return BaseCommand<IResponse>.CreateError(errorMessage, errorCode);
                 }
 
                 // 获取字符串值并转换为大写
                 var inputValue = request.GetStringValue();
                 if (string.IsNullOrEmpty(inputValue))
                 {
-                    return ResponseBase.CreateError("输入值不能为空", UnifiedErrorCodes.Biz_DataInvalid.Code);
+                    return BaseCommand<IResponse>.CreateError("输入值不能为空", UnifiedErrorCodes.Biz_DataInvalid.Code);
                 }
 
                 var result = inputValue.ToUpper();
                 _logger.LogInformation($"字符串转换完成：{inputValue} -> {result}");
 
-                return SimpleResponse.CreateSuccessString(result, "处理成功");
+                var response = new ResponseBase
+                {
+                    Message = "处理成功",
+                    IsSuccess = true
+                };
+                response.WithMetadata("Result", result);
+                return BaseCommand<IResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "简单字符串操作处理失败");
-                return ResponseBase.CreateError($"处理失败: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code);
+                var errorResponse = new ResponseBase
+                {
+                    Message = $"处理失败: {ex.Message}",
+                    IsSuccess = false
+                };
+                return BaseCommand<IResponse>.CreateError(errorResponse.Message, UnifiedErrorCodes.System_InternalError.Code);
             }
         }
 
         /// <summary>
         /// 处理简单布尔操作
         /// </summary>
-        public async Task<ResponseBase> HandleBooleanOperation(BooleanRequest request)
+        public async Task<BaseCommand<IResponse>> HandleBooleanOperation(BooleanRequest request)
         {
             try
             {
@@ -134,7 +145,7 @@ namespace RUINORERP.Server.Network.Commands
                     var errorMessage = validationResult.GetValidationErrors();
                     var errorCode = validationResult.GetValidationErrorCode();
                     _logger.LogWarning($"请求验证失败: {errorMessage}");
-                    return ResponseBase.CreateError(errorMessage, errorCode);
+                    return BaseCommand<IResponse>.CreateError(errorMessage, errorCode);
                 }
 
                 // 获取布尔值并取反
@@ -143,19 +154,25 @@ namespace RUINORERP.Server.Network.Commands
 
                 _logger.LogInformation($"布尔值转换完成：{inputValue} -> {result}");
 
-                return SimpleResponse.CreateSuccessBool(result, "布尔操作成功");
+                var response = new ResponseBase
+                {
+                    Message = "布尔操作成功",
+                    IsSuccess = true
+                };
+                response.WithMetadata("Result", result);
+                return BaseCommand<IResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "简单布尔操作处理失败");
-                return ResponseBase.CreateError($"处理失败: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code);
+                return BaseCommand<IResponse>.CreateError($"处理失败: {ex.Message}", UnifiedErrorCodes.System_InternalError.Code);
             }
         }
 
         /// <summary>
         /// 处理简单数值操作
         /// </summary>
-        public async Task<ResponseBase> HandleNumericOperation(NumericRequest request)
+        public async Task<BaseCommand<IResponse>> HandleNumericOperation(NumericRequest request)
         {
             try
             {
@@ -163,7 +180,7 @@ namespace RUINORERP.Server.Network.Commands
 
                 if (request == null)
                 {
-                    return SimpleResponse.CreateFailure("请求对象不能为空");
+                    return BaseCommand<IResponse>.CreateError("请求对象不能为空");
                 }
 
                 // 获取整数值并加1
@@ -172,12 +189,23 @@ namespace RUINORERP.Server.Network.Commands
 
                 _logger.LogInformation($"数值计算完成：{inputValue} + 1 = {result}");
 
-                return SimpleResponse.CreateSuccessInt(result, "数值操作成功");
+                var response = new ResponseBase
+                {
+                    Message = "数值操作成功",
+                    IsSuccess = true
+                };
+                response.WithMetadata("Result", result);
+                return BaseCommand<IResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "简单数值操作处理失败");
-                return SimpleResponse.CreateFailure($"处理失败: {ex.Message}");
+                var errorResponse = new ResponseBase
+                {
+                    Message = $"处理失败: {ex.Message}",
+                    IsSuccess = false
+                };
+                return BaseCommand<IResponse>.CreateError(errorResponse.Message, UnifiedErrorCodes.System_InternalError.Code);
             }
         }
 

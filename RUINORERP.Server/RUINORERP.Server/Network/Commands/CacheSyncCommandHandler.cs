@@ -36,20 +36,22 @@ namespace RUINORERP.Server.Network.Commands
             _cacheManager = cacheManager;
             _cacheSyncService = cacheSyncService;
             _sessionService = sessionService;
+            
+            // 使用安全方法设置支持的命令
+            SetSupportedCommands(
+                CacheSyncProtocol.CacheCommands.CacheUpdate.FullCode,
+                CacheSyncProtocol.CacheCommands.CacheSync.FullCode,
+                CacheSyncProtocol.CacheCommands.CacheSubscribe.FullCode,
+                CacheSyncProtocol.CacheCommands.CacheUnsubscribe.FullCode,
+                CacheSyncProtocol.CacheCommands.CacheRequest.FullCode,
+                CacheSyncProtocol.CacheCommands.CacheResponse.FullCode
+            );
         }
 
         /// <summary>
         /// 支持的命令类型
         /// </summary>
-        public override IReadOnlyList<uint> SupportedCommands => new uint[]
-        {
-            CacheSyncProtocol.CacheCommands.CacheUpdate.FullCode,
-            CacheSyncProtocol.CacheCommands.CacheSync.FullCode,
-            CacheSyncProtocol.CacheCommands.CacheSubscribe.FullCode,
-            CacheSyncProtocol.CacheCommands.CacheUnsubscribe.FullCode,
-            CacheSyncProtocol.CacheCommands.CacheRequest.FullCode,
-            CacheSyncProtocol.CacheCommands.CacheResponse.FullCode
-        };
+        public override IReadOnlyList<uint> SupportedCommands { get; protected set; }
 
         /// <summary>
         /// 处理器优先级

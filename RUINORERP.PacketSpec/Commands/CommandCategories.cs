@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Reflection;
 using MessagePack;
 
@@ -11,6 +12,11 @@ namespace RUINORERP.PacketSpec.Commands
     [MessagePackObject]
     public struct CommandId : IEquatable<CommandId>
     {
+        /// <summary>
+        /// 空命令ID（用于表示无效或未设置的命令）
+        /// </summary>
+        public static readonly CommandId Empty = new CommandId(CommandCategory.System, 0x00, "Empty");
+
         /// <summary>
         /// 命令类别
         /// </summary>
@@ -129,6 +135,44 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="id">CommandId实例</param>
         public static implicit operator uint(CommandId id) => id.FullCode;
+
+        /// <summary>
+        /// 尝试从字符串解析CommandId
+        /// </summary>
+        /// <param name="value">字符串值</param>
+        /// <param name="result">解析结果</param>
+        /// <returns>是否解析成功</returns>
+        public static bool TryParse(string value, out CommandId result)
+        {
+            result = default;
+            if (string.IsNullOrEmpty(value))
+                return false;
+
+            try
+            {
+                // 尝试解析十六进制字符串
+                if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (ushort.TryParse(value.Substring(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out ushort ushortValue))
+                    {
+                        result = FromUInt16(ushortValue);
+                        return true;
+                    }
+                }
+                // 尝试解析十进制字符串
+                else if (ushort.TryParse(value, out ushort ushortValue))
+                {
+                    result = FromUInt16(ushortValue);
+                    return true;
+                }
+            }
+            catch
+            {
+                // 忽略解析异常
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// 重写ToString方法

@@ -26,7 +26,7 @@ namespace RUINORERP.UI.Network.DI
             // 注册核心网络组件
             services.AddSingleton<ClientCommandDispatcher>();
             services.AddSingleton<ISocketClient, SuperSocketClient>();
-            services.AddSingleton<ICommandDispatcher, ClientCommandDispatcher>();
+            services.AddSingleton<ClientCommandDispatcher>();
             services.AddSingleton<ClientCommunicationService>();
             // RequestResponseManager已合并到ClientCommunicationService中，不再需要单独注册
             services.AddSingleton<ClientEventManager>();

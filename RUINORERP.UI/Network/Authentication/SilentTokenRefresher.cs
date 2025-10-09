@@ -67,7 +67,7 @@ namespace RUINORERP.UI.Network.Authentication
             await _refreshLock.WaitAsync(cancellationToken);
             try
             {
-                LoginResponse response = null;
+                TokenInfo tokenInfo = null;
                 int retryCount = 0;
                 Exception lastException = null;
                 
@@ -75,10 +75,10 @@ namespace RUINORERP.UI.Network.Authentication
                 {
                     try
                     {
-                        response = await _tokenRefreshService.RefreshTokenAsync(cancellationToken);
-                        if (response != null && !string.IsNullOrEmpty(response.AccessToken))
+                        tokenInfo = await _tokenRefreshService.RefreshTokenAsync(cancellationToken);
+                        if (tokenInfo != null && !string.IsNullOrEmpty(tokenInfo.AccessToken))
                         {
-                            OnRefreshSucceeded(response);
+                            OnRefreshSucceeded(tokenInfo);
                             return true;
                         }
                     }
@@ -118,9 +118,9 @@ namespace RUINORERP.UI.Network.Authentication
         /// 触发刷新成功事件
         /// </summary>
         /// <param name="response">刷新响应</param>
-        private void OnRefreshSucceeded(LoginResponse response)
+        private void OnRefreshSucceeded(TokenInfo tokenInfo)
         {
-            RefreshSucceeded?.Invoke(this, new RefreshSucceededEventArgs(response));
+            RefreshSucceeded?.Invoke(this, new RefreshSucceededEventArgs(tokenInfo));
         }
 
         /// <summary>
@@ -159,15 +159,15 @@ namespace RUINORERP.UI.Network.Authentication
             /// <summary>
             /// 获取刷新响应
             /// </summary>
-            public LoginResponse Response { get; }
+            public TokenInfo tokenInfo { get; }
 
             /// <summary>
             /// 构造函数
             /// </summary>
             /// <param name="response">刷新响应</param>
-            public RefreshSucceededEventArgs(LoginResponse response)
+            public RefreshSucceededEventArgs(TokenInfo _tokenInfo)
             {
-                Response = response;
+                tokenInfo = _tokenInfo;
             }
         }
     }

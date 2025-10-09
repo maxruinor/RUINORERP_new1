@@ -40,20 +40,20 @@ namespace RUINORERP.Server.Network.Commands
             ILogger<HeartbeatCommandHandler> logger = null) : base(logger)
         {
             _sessionService = sessionService; // 暂时注释，缺少ISessionService接口定义
+            
+            // 使用安全方法设置支持的命令
+            SetSupportedCommands(SystemCommands.Heartbeat.FullCode);
         }
 
         /// <summary>
         /// 支持的命令类型
         /// </summary>
-        public new IReadOnlyList<uint> SupportedCommands => new uint[]
-        {
-            (uint)SystemCommands.Heartbeat
-        };
+        public override IReadOnlyList<CommandId> SupportedCommands { get; protected set; }
    
         /// <summary>
         /// 具体的命令处理逻辑
         /// </summary>
-        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -65,14 +65,14 @@ namespace RUINORERP.Server.Network.Commands
                 }
                 else
                 {
-                    return ResponseBase.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}", 400)
+                    return BaseCommand<IResponse>.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}", 400)
                         .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
                 }
             }
             catch (Exception ex)
             {
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
-                return ResponseBase.CreateError($"处理异常: {ex.Message}", 500)
+                return BaseCommand<IResponse>.CreateError($"处理异常: {ex.Message}", 500)
                     .WithMetadata("ErrorCode", "HANDLER_ERROR")
                     .WithMetadata("Exception", ex.Message)
                     .WithMetadata("StackTrace", ex.StackTrace);
@@ -82,7 +82,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理心跳命令
         /// </summary>
-        private async Task<ResponseBase> HandleHeartbeatAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleHeartbeatAsync(ICommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -114,18 +114,22 @@ namespace RUINORERP.Server.Network.Commands
                 // 创建心跳响应数据
                 var responseData = CreateHeartbeatResponse();
 
-                return ResponseBase.CreateSuccess(
-                    message: "心跳响应成功"
-                ).WithMetadata("Data", new { 
+                var response = new ResponseBase
+                {
+                    Message = "心跳响应成功",
+                    IsSuccess = true
+                };
+                response.WithMetadata("Data", new { 
                         Timestamp = DateTime.UtcNow,
                         SessionId = sessionId,
                         Status = "Alive"
                     });
+                return BaseCommand<IResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
-                return ResponseBase.CreateError($"心跳处理异常: {ex.Message}", 500)
+                return BaseCommand<IResponse>.CreateError($"心跳处理异常: {ex.Message}", 500)
                     .WithMetadata("ErrorCode", "HEARTBEAT_ERROR")
                     .WithMetadata("Exception", ex.Message)
                     .WithMetadata("StackTrace", ex.StackTrace);

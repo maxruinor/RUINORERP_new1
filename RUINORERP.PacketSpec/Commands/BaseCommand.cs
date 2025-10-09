@@ -748,6 +748,17 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
+        /// 静态方法 - 创建成功响应（兼容ResponseBase.CreateSuccess）
+        /// </summary>
+        /// <param name="responseData">响应数据</param>
+        /// <param name="message">成功消息</param>
+        /// <returns>成功响应</returns>
+        public static BaseCommand<TResponse> CreateSuccess(TResponse responseData, string message = "操作成功")
+        {
+            return Success(responseData, message);
+        }
+
+        /// <summary>
         /// 静态方法 - 创建错误响应
         /// </summary>
         /// <param name="errorMessage">错误消息</param>
@@ -756,6 +767,44 @@ namespace RUINORERP.PacketSpec.Commands
         public static BaseCommand<TResponse> Error(string errorMessage, int errorCode = 500)
         {
             return new BaseCommand<TResponse>(errorMessage, errorCode);
+        }
+
+        /// <summary>
+        /// 静态方法 - 创建错误响应（兼容ResponseBase.CreateError）
+        /// </summary>
+        /// <param name="errorMessage">错误消息</param>
+        /// <param name="errorCode">错误代码</param>
+        /// <returns>错误响应</returns>
+        public static BaseCommand<TResponse> CreateError(string errorMessage, int errorCode = 500)
+        {
+            return Error(errorMessage, errorCode);
+        }
+
+        /// <summary>
+        /// 从FluentValidation验证结果创建失败响应
+        /// </summary>
+        /// <param name="validationResult">FluentValidation验证结果</param>
+        /// <param name="code">错误代码</param>
+        /// <returns>验证错误响应</returns>
+        public static BaseCommand<TResponse> CreateValidationError(FluentValidation.Results.ValidationResult validationResult, int code = 400)
+        {
+            if (validationResult == null || validationResult.IsValid)
+                return CreateError("验证失败", code);
+
+            var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+            var message = string.Join("; ", errorMessages);
+            
+            var errorResponse = CreateError(message, code);
+            
+            // 添加详细的验证错误信息到元数据
+            errorResponse.WithMetadata("ValidationErrors", validationResult.Errors.Select(e => new 
+            {
+                Field = e.PropertyName,
+                Message = e.ErrorMessage,
+                AttemptedValue = e.AttemptedValue
+            }).ToList());
+
+            return errorResponse;
         }
 
         /// <summary>
@@ -781,6 +830,32 @@ namespace RUINORERP.PacketSpec.Commands
                 return typedValue;
             }
             return default(T);
+        }
+
+        /// <summary>
+        /// 添加元数据（链式调用）
+        /// </summary>
+        /// <param name="key">元数据键</param>
+        /// <param name="value">元数据值</param>
+        /// <returns>当前实例</returns>
+        public BaseCommand<TResponse> WithMetadata(string key, object value)
+        {
+            Metadata[key] = value;
+            return this;
+        }
+
+        /// <summary>
+        /// 批量添加元数据（链式调用）
+        /// </summary>
+        /// <param name="metadata">元数据字典</param>
+        /// <returns>当前实例</returns>
+        public BaseCommand<TResponse> WithMetadata(Dictionary<string, object> metadata)
+        {
+            foreach (var item in metadata)
+            {
+                Metadata[item.Key] = item.Value;
+            }
+            return this;
         }
 
  

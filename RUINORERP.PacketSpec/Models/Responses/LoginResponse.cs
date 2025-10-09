@@ -11,7 +11,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// </summary>
     [Serializable]
     [MessagePackObject]
-    public class LoginResponse : ResponseBase
+    public class LoginResponse : ResponseBase, IResponse
     {
         public LoginResponse()
         {
@@ -46,30 +46,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// </summary>
         [Key(14)]
         public TokenInfo Token { get; set; }
-
-        /// <summary>
-        /// 获取访问令牌（通过TokenInfo实例获取）
-        /// </summary>
-        [IgnoreMember]
-        public string AccessToken => Token?.AccessToken;
-
-        /// <summary>
-        /// 获取刷新令牌（通过TokenInfo实例获取）
-        /// </summary>
-        [IgnoreMember]
-        public string RefreshToken => Token?.RefreshToken;
-
-        /// <summary>
-        /// 获取过期时间（秒，通过TokenInfo实例获取）
-        /// </summary>
-        [IgnoreMember]
-        public int ExpiresIn => Token?.ExpiresIn ?? 0;
-
-        /// <summary>
-        /// 获取令牌类型（通过TokenInfo实例获取）
-        /// </summary>
-        [IgnoreMember]
-        public string TokenType => Token?.TokenType;
 
         /// <summary>
         /// 用户角色列表

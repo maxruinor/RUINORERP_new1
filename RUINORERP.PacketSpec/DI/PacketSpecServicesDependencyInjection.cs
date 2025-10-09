@@ -114,7 +114,7 @@ namespace RUINORERP.PacketSpec.DI
             services.AddSingleton<CommandTypeHelper>();
 
             // 注册命令处理器工厂
-            services.AddSingleton<ICommandHandlerFactory, DefaultCommandHandlerFactory>();
+            services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();
 
             // 注册适配器
             services.AddSingleton<CommandPacketAdapter>();
@@ -197,7 +197,7 @@ namespace RUINORERP.PacketSpec.DI
                 .SingleInstance();
 
             // 注册命令处理器工厂
-            builder.RegisterType<DefaultCommandHandlerFactory>()
+            builder.RegisterType<CommandHandlerFactory>()
                 .As<ICommandHandlerFactory>()
                 .SingleInstance();
 

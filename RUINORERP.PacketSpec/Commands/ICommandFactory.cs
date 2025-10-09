@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,7 +29,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <param name="creator">创建器函数</param>
-        void RegisterCommandCreator(uint commandCode, Func<PacketModel, ICommand> creator);
+        void RegisterCommandCreator(CommandId commandCode, Func<PacketModel, ICommand> creator);
         
     }
 

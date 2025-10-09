@@ -88,7 +88,7 @@ namespace RUINORERP.UI.Network
         /// <param name="commandCode">命令代码</param>
         /// <param name="creator">创建器函数</param>
         /// <exception cref="NotSupportedException">总是抛出，表示不支持此功能</exception>
-        public void RegisterCommandCreator(uint commandCode, Func<PacketModel, ICommand> creator)
+        public void RegisterCommandCreator(CommandId commandCode, Func<PacketModel, ICommand> creator)
         {
             _logger?.LogWarning("尝试调用不支持的方法RegisterCommandCreator");
             throw new NotSupportedException("客户端命令工厂不支持自定义命令创建器，请使用调度器注册命令类型");

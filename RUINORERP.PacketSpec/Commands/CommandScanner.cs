@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
@@ -42,9 +42,9 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="assemblies">要扫描的程序集，可选参数</param>
         /// <param name="namespaceFilter">命名空间过滤器，可选参数，只扫描指定命名空间下的命令</param>
         /// <returns>命令类型和命令ID的映射字典</returns>
-        public Dictionary<uint, Type> ScanCommands(string namespaceFilter = null, params Assembly[] assemblies)
+        public Dictionary<CommandId, Type> ScanCommands(string namespaceFilter = null, params Assembly[] assemblies)
         {
-            var commandTypeMap = new Dictionary<uint, Type>();
+            var commandTypeMap = new Dictionary<CommandId, Type>();
             int totalCommandsFound = 0;
 
             if (assemblies == null || assemblies.Length == 0)
@@ -104,7 +104,7 @@ namespace RUINORERP.PacketSpec.Commands
 
                             // 获取命令特性
                             var commandAttribute = commandType.GetCustomAttribute<PacketCommandAttribute>();
-                            uint commandId = 0;
+                            CommandId commandId = default(CommandId);
                             string commandName = commandType.Name;
 
                             if (commandAttribute != null)
@@ -119,7 +119,7 @@ namespace RUINORERP.PacketSpec.Commands
                                         var commandInstance = Activator.CreateInstance(commandType) as ICommand;
                                         if (commandInstance != null)
                                         {
-                                            commandId = commandInstance.CommandIdentifier.FullCode;
+                                            commandId = commandInstance.CommandIdentifier;
                                           
                                         }
                                     }
@@ -130,21 +130,27 @@ namespace RUINORERP.PacketSpec.Commands
                                 }
                             }
 
-                            // 如果命令ID为0，则使用类型的哈希码作为后备方案
-                            if (commandId == 0)
+                            // 如果命令ID为默认值，则使用类型的哈希码作为后备方案
+                            CommandId finalCommandId;
+                            if (commandId.Equals(default(CommandId)))
                             {
-                                commandId = (uint)(commandType.FullName?.GetHashCode() ?? 0);
-                                if (commandId == 0 || commandId == uint.MaxValue)
+                                uint tempCommandId = (uint)(commandType.FullName?.GetHashCode() ?? 0);
+                                if (tempCommandId == 0 || tempCommandId == uint.MaxValue)
                                 {
-                                    commandId = (uint)commandType.Name.GetHashCode();
+                                    tempCommandId = (uint)commandType.Name.GetHashCode();
                                 }
+                                finalCommandId = CommandId.FromUInt16((ushort)tempCommandId);
+                            }
+                            else
+                            {
+                                finalCommandId = commandId;
                             }
 
-                            if (!commandTypeMap.ContainsKey(commandId))
+                            if (!commandTypeMap.ContainsKey(finalCommandId))
                             {
-                                commandTypeMap[commandId] = commandType;
+                                commandTypeMap[finalCommandId] = commandType;
                                 totalCommandsFound++;
-                                _logger?.LogDebug("扫描到命令: {CommandName} (ID: {CommandId})", commandName, commandId);
+                                _logger?.LogDebug("扫描到命令: {CommandName} (ID: {CommandId})", commandName, finalCommandId);
                             }
                         }
                         catch (Exception ex)
@@ -216,8 +222,8 @@ namespace RUINORERP.PacketSpec.Commands
             }
 
 
-            // 2. 再把泛型定义当作“模板”塞进去（只塞一次） 新旧兼容，这里是用泛型定义来模拟泛型命令，而不是用泛型命令类
-            commandDispatcher.RegisterCommandType(0xFFFFEEEE, typeof(GenericCommand<>));   // 用一个不可能冲突的伪码
+            // 2. 再把泛型定义当作"模板"塞进去（只塞一次） 新旧兼容，这里是用泛型定义来模拟泛型命令，而不是用泛型命令类
+            commandDispatcher.RegisterCommandType(CommandId.FromUInt16(0xEEEE), typeof(GenericCommand<>));   // 用一个不可能冲突的伪码
         }
 
         /// <summary>
@@ -242,7 +248,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="assemblies">要扫描的程序集列表</param>
         /// <returns>命令类型映射</returns>
-        public Dictionary<uint, Type> ScanAssemblies(params Assembly[] assemblies)
+        public Dictionary<CommandId, Type> ScanAssemblies(params Assembly[] assemblies)
         {
             return ScanCommands(null, assemblies);
         }
@@ -253,7 +259,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="namespaceFilter">命名空间过滤器</param>
         /// <param name="assemblies">要扫描的程序集列表</param>
         /// <returns>命令类型映射</returns>
-        public Dictionary<uint, Type> ScanAssemblies(string namespaceFilter, params Assembly[] assemblies)
+        public Dictionary<CommandId, Type> ScanAssemblies(string namespaceFilter, params Assembly[] assemblies)
         {
             return ScanCommands(namespaceFilter, assemblies);
         }

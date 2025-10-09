@@ -148,6 +148,14 @@ namespace RUINORERP.Server.Network.Commands
         {
             logger = _Logger;
             _sessionService = Startup.GetFromFac<ISessionService>();
+            
+            // 使用安全方法设置支持的命令
+            SetSupportedCommands(
+                CacheCommands.CacheDataList.FullCode,
+                CacheCommands.CacheSync.FullCode,
+                CacheCommands.CacheUpdate.FullCode,
+                CacheCommands.CacheDelete.FullCode
+            );
         }
 
         public CacheCommandHandler(
@@ -158,18 +166,37 @@ namespace RUINORERP.Server.Network.Commands
         {
             logger = _Logger;
             _sessionService = sessionService;
+            
+            // 使用安全方法设置支持的命令
+            SetSupportedCommands(
+                CacheCommands.CacheDataList.FullCode,
+                CacheCommands.CacheSync.FullCode,
+                CacheCommands.CacheUpdate.FullCode,
+                CacheCommands.CacheDelete.FullCode
+            );
         }
 
         /// <summary>
         /// 支持的命令类型
         /// </summary>
-        public override IReadOnlyList<uint> SupportedCommands => new uint[]
+        public override IReadOnlyList<uint> SupportedCommands { get; protected set; }
+
+        /// <summary>
+        /// 构造函数 - 初始化支持的命令类型
+        /// </summary>
+        public CacheCommandHandler() : base(new LoggerFactory().CreateLogger<CommandHandlerBase>())
         {
-            CacheCommands.CacheDataList.FullCode,
-            CacheCommands.CacheSync.FullCode,
-            CacheCommands.CacheUpdate.FullCode,
-            CacheCommands.CacheDelete.FullCode
-        };
+            logger = new LoggerFactory().CreateLogger<CacheCommandHandler>();
+            _sessionService = Startup.GetFromFac<ISessionService>();
+            
+            // 使用安全方法设置支持的命令
+            SetSupportedCommands(
+                CacheCommands.CacheDataList.FullCode,
+                CacheCommands.CacheSync.FullCode,
+                CacheCommands.CacheUpdate.FullCode,
+                CacheCommands.CacheDelete.FullCode
+            );
+        }
 
         /// <summary>
         /// 处理器优先级

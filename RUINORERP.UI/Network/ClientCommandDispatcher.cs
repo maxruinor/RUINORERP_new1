@@ -17,7 +17,7 @@ namespace RUINORERP.UI.Network
 /// <summary>
     
     /// </summary>
-    public class ClientCommandDispatcher : ICommandDispatcher
+    public class ClientCommandDispatcher  
     {
         private readonly CommandTypeHelper _commandTypeHelper;
         private readonly ConcurrentDictionary<ushort, ICommand> _commandInstances;
@@ -42,7 +42,7 @@ namespace RUINORERP.UI.Network
         /// <param name="commandCode">命令代码，唯一标识命令的数值</param>
         /// <param name="commandType">命令类型，命令类的Type对象</param>
         /// <exception cref="ArgumentNullException">当命令类型为空时抛出</exception>
-        public void RegisterCommand(uint commandCode, Type commandType)
+        public void RegisterCommand(CommandId commandCode, Type commandType)
         {
             if (commandType == null)
             {
@@ -83,7 +83,7 @@ namespace RUINORERP.UI.Network
         /// <param name="commandCode">命令代码</param>
         /// <returns>命令实例</returns>
         /// <exception cref="InvalidOperationException">当创建命令实例失败时抛出</exception>
-        ICommand ICommandDispatcher.CreateCommand(uint commandCode)
+        ICommand CreateCommand(uint commandCode)
         {
             try
             {
@@ -176,7 +176,7 @@ namespace RUINORERP.UI.Network
                                 var commandInstance = Activator.CreateInstance(commandType) as ICommand;
                                 if (commandInstance != null)
                                 {
-                                    var commandId = commandInstance.CommandIdentifier.FullCode;
+                                    var commandId = commandInstance.CommandIdentifier;
                                     RegisterCommand(commandId, commandType);
                                 }
                             }
@@ -195,8 +195,6 @@ namespace RUINORERP.UI.Network
             }
         }
 
-  
-
         /// <summary>
         /// 清理注册的命令类型
         /// </summary>
@@ -207,37 +205,14 @@ namespace RUINORERP.UI.Network
 
         #region ICommandDispatcher 接口实现
 
-        /// <summary>
-        /// 初始化命令调度器
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>初始化结果，始终返回true</returns>
-        public Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
-        {
-            // 客户端命令调度器的初始化逻辑
-            return Task.FromResult(true);
-        }
-
-        /// <summary>
-        /// 分发命令（客户端实现）
-        /// </summary>
-        /// <param name="command">命令对象</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>API响应结果，默认为成功</returns>
-        /// <exception cref="ArgumentNullException">当命令为空时抛出</exception>
-        public Task<ResponseBase> DispatchAsync(PacketModel packetModel, ICommand command, CancellationToken cancellationToken = default)
-        {
-            // 客户端命令分发逻辑
-            // 在实际应用中，这里应该将命令发送到服务器
-            return Task.FromResult(ResponseBase.CreateSuccess("命令分发成功"));
-        }
+ 
 
         /// <summary>
         /// 注册命令类型
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <param name="commandType">命令类型</param>
-        public void RegisterCommandType(uint commandCode, Type commandType)
+        public void RegisterCommandType(CommandId commandCode, Type commandType)
         {
             RegisterCommand(commandCode, commandType);
         }
@@ -247,7 +222,7 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <returns>命令类型，如果找不到则返回null</returns>
-        public Type GetCommandType(uint commandCode)
+        public Type GetCommandType(CommandId commandCode)
         {
             return _commandTypeHelper.GetCommandType(commandCode);
         }

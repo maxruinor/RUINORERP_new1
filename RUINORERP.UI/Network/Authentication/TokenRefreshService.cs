@@ -71,7 +71,7 @@ namespace RUINORERP.UI.Network.Authentication
         /// </summary>
         /// <param name="ct">取消令牌</param>
         /// <returns>登录响应</returns>
-        public async Task<LoginResponse> RefreshTokenAsync(CancellationToken ct = default)
+        public async Task<TokenInfo> RefreshTokenAsync(CancellationToken ct = default)
         {
             try
             {
@@ -80,11 +80,11 @@ namespace RUINORERP.UI.Network.Authentication
                 var response = await _communicationService.SendCommandAsync<SimpleRequest, LoginResponse>(
                     baseCommand, ct);
 
-                LoginResponse loginResponse = null;
+                TokenInfo tokenInfo = null;
 
                 //像登陆一样 取值
 
-                return loginResponse;
+                return tokenInfo;
             }
             catch (Exception ex)
             {

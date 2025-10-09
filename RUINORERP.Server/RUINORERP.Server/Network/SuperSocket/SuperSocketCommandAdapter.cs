@@ -152,7 +152,7 @@ namespace RUINORERP.Server.Network.SuperSocket
 
 
                 // 通过现有的命令调度器处理命令，添加超时保护
-                ResponseBase result;
+                BaseCommand<IResponse> result;
                 try
                 {
                     // 使用链接的取消令牌，考虑命令超时设置
@@ -167,16 +167,16 @@ namespace RUINORERP.Server.Network.SuperSocket
                 catch (OperationCanceledException ex)
                 {
                     _logger?.LogError(ex, "命令执行超时或被取消: CommandId={CommandId}", package.Packet.CommandId);
-                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_Timeout.Message, UnifiedErrorCodes.System_Timeout.Code);
+                    result = BaseCommand<IResponse>.CreateError(UnifiedErrorCodes.System_Timeout.Message, UnifiedErrorCodes.System_Timeout.Code);
                 }
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "命令执行异常: CommandId={CommandId}", package.Packet.CommandId);
-                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
+                    result = BaseCommand<IResponse>.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
                 }
                 if (result == null)
                 {
-                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
+                    result = BaseCommand<IResponse>.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
                 }
                 if (!result.IsSuccess)
                 {
@@ -207,7 +207,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             TAppSession session,
             ServerPackageInfo requestPackage,
             ICommand command,
-            ResponseBase result,
+            BaseCommand<IResponse> result,
             CancellationToken cancellationToken)
         {
             if (result == null)
@@ -239,7 +239,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <param name="command"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, ICommand command, ResponseBase result)
+        protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, ICommand command, BaseCommand<IResponse> result)
         {
             package.ExecutionContext.ResponseType = result.GetType();
             package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
@@ -250,7 +250,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             {
                 ["Data"] = result,
                 ["Message"] = result.Message,
-                ["Code"] = result.Code,
                 ["TimestampUtc"] = result.TimestampUtc
             };
 
@@ -275,8 +274,8 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
             }
 
-            var ResponsePackBytes = MessagePackSerializer.Serialize<ResponseBase>(result, UnifiedSerializationService.MessagePackOptions);
-            if (command is BaseCommand baseCommand)
+            var ResponsePackBytes = MessagePackSerializer.Serialize<BaseCommand<IResponse>>(result, UnifiedSerializationService.MessagePackOptions);
+            if (command is BaseCommand<IResponse> baseCommand)
             {
                 baseCommand.SetResponseData(ResponsePackBytes);
                 package.SetCommandDataByMessagePack(baseCommand);
@@ -475,7 +474,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// </summary>
         /// <param name="result">响应结果</param>
         /// <returns>错误代码对象</returns>
-        protected virtual ErrorCode ExtractErrorCodeFromResponse(ResponseBase result)
+        protected virtual ErrorCode ExtractErrorCodeFromResponse(BaseCommand<IResponse> result)
         {
             if (result == null)
             {
@@ -495,7 +494,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
 
             // 直接使用响应中的错误代码创建错误代码对象
-            return new ErrorCode(result.Code, detailedMessage);
+            return new ErrorCode(0, detailedMessage);
         }
 
         /// <summary>
@@ -510,7 +509,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         protected virtual async ValueTask SendEnhancedErrorResponseAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
-            ResponseBase result,
+            BaseCommand<IResponse> result,
             ErrorCode errorCode,
             CancellationToken cancellationToken)
         {
@@ -527,7 +526,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                     ["Success"] = false,
                     ["TimestampUtc"] = result.TimestampUtc,
                     ["OriginalMessage"] = result.Message,
-                    ["OriginalCode"] = result.Code
                 }
             };
 
@@ -558,7 +556,7 @@ namespace RUINORERP.Server.Network.SuperSocket
 
             // 记录详细的错误信息用于调试
             _logger?.LogWarning("发送增强错误响应: ErrorCode={ErrorCode}, ErrorMessage={ErrorMessage}, OriginalCode={OriginalCode}, MetadataKeys=[{MetadataKeys}]",
-                errorCode.Code, errorCode.Message, result.Code,
+                errorCode.Code, errorCode.Message, 
                 result.Metadata != null ? string.Join(", ", result.Metadata.Keys) : "none");
 
             await SendResponseAsync(session, errorResponse, cancellationToken);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -17,15 +17,15 @@ namespace RUINORERP.PacketSpec.Commands
     /// </summary>
     public class CommandTypeHelper
     {
-        private readonly Dictionary<uint, Type> _commandTypes;
+        private readonly Dictionary<CommandId, Type> _commandTypes;
         private readonly Dictionary<CommandId, Type> _payloadMap;
         private readonly object _lock = new object();
         // 新增命令构造函数缓存
-        private static readonly ConcurrentDictionary<uint, Func<ICommand>> _ctorCache = new();
+        private static readonly ConcurrentDictionary<CommandId, Func<ICommand>> _ctorCache = new();
 
         public CommandTypeHelper()
         {
-            _commandTypes = new Dictionary<uint, Type>();
+            _commandTypes = new Dictionary<CommandId, Type>();
             _payloadMap = new Dictionary<CommandId, Type>();
         }
 
@@ -34,7 +34,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <param name="commandType">命令类型</param>
-        public void RegisterCommandType(uint commandCode, Type commandType)
+        public void RegisterCommandType(CommandId commandCode, Type commandType)
         {
             if (commandType == null)
                 throw new ArgumentNullException(nameof(commandType));
@@ -53,7 +53,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <returns>命令类型，如果找不到则返回null</returns>
-        public Type GetCommandType(uint commandCode)
+        public Type GetCommandType(CommandId commandCode)
         {
             lock (_lock)
             {
@@ -67,7 +67,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <returns>命令构造函数，如果找不到类型则返回null</returns>
-        public Func<ICommand> GetCommandCtor(uint commandCode)
+        public Func<ICommand> GetCommandCtor(CommandId commandCode)
         {
             return _ctorCache.GetOrAdd(commandCode, code =>
             {
@@ -122,11 +122,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// 获取所有已注册的命令类型
         /// </summary>
         /// <returns>命令类型字典（命令代码 -> 类型）</returns>
-        public IReadOnlyDictionary<uint, Type> GetAllCommandTypes()
+        public IReadOnlyDictionary<CommandId, Type> GetAllCommandTypes()
         {
             lock (_lock)
             {
-                return new Dictionary<uint, Type>(_commandTypes);
+                return new Dictionary<CommandId, Type>(_commandTypes);
             }
         }
 

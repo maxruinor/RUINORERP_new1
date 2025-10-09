@@ -8,69 +8,128 @@ using System.Reflection;
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
-    /// 1. 有参构造 → 走 DI 容器（委托表），
+    /// 统一命令处理器工厂 - 支持DI容器和手动创建
+    /// 1. 有参构造 → 走 DI 容器（委托表）
     /// 2. 无参构造 → 回退 Activator
     /// </summary>
     public sealed class CommandHandlerFactory : ICommandHandlerFactory
     {
-        private readonly IServiceProvider _sp;
-        private readonly ConcurrentDictionary<Type, Func<ICommandHandler>> _ctorCache = new();
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ConcurrentDictionary<Type, Func<ICommandHandler>> _factoryCache = new();
 
-        public CommandHandlerFactory(IServiceProvider sp) => _sp = sp;
+        /// <summary>
+        /// 构造函数 - 支持DI容器
+        /// </summary>
+        /// <param name="serviceProvider">服务提供器</param>
+        public CommandHandlerFactory(IServiceProvider serviceProvider = null)
+        {
+            _serviceProvider = serviceProvider;
+        }
 
+        /// <summary>
+        /// 创建处理器实例
+        /// </summary>
+        /// <param name="handlerType">处理器类型</param>
+        /// <returns>处理器实例</returns>
         public ICommandHandler CreateHandler(Type handlerType)
         {
-            // 1. 优先用委托（性能高，支持任意参数）
-            if (_ctorCache.TryGetValue(handlerType, out var factory))
+            if (handlerType == null)
+                throw new ArgumentNullException(nameof(handlerType));
+
+            // 优先使用缓存的工厂方法
+            if (_factoryCache.TryGetValue(handlerType, out var factory))
                 return factory();
 
-            // 2. 委托没配，就现场"反射 + 表达式"编译一个，并缓存
-            factory = CompileFactory(handlerType);
-            _ctorCache.TryAdd(handlerType, factory);
+            // 创建并缓存新的工厂方法
+            factory = CreateFactoryMethod(handlerType);
+            _factoryCache.TryAdd(handlerType, factory);
             return factory();
         }
 
+        /// <summary>
+        /// 创建处理器实例 - 泛型版本
+        /// </summary>
+        /// <typeparam name="T">处理器类型</typeparam>
+        /// <returns>处理器实例</returns>
         public T CreateHandler<T>() where T : class, ICommandHandler
         {
-            return (T)CreateHandler(typeof(T));
+            return CreateHandler(typeof(T)) as T;
         }
 
+        /// <summary>
+        /// 注册处理器类型
+        /// </summary>
+        /// <param name="handlerType">处理器类型</param>
         public void RegisterHandler(Type handlerType)
         {
-            // 注册处理器类型到缓存中
-            if (!_ctorCache.ContainsKey(handlerType))
+            if (handlerType == null)
+                throw new ArgumentNullException(nameof(handlerType));
+
+            if (!_factoryCache.ContainsKey(handlerType))
             {
-                var factory = CompileFactory(handlerType);
-                _ctorCache.TryAdd(handlerType, factory);
+                var factory = CreateFactoryMethod(handlerType);
+                _factoryCache.TryAdd(handlerType, factory);
             }
         }
 
-        private Func<ICommandHandler> CompileFactory(Type type)
+        /// <summary>
+        /// 创建工厂方法 - 支持DI容器和反射创建
+        /// </summary>
+        /// <param name="type">处理器类型</param>
+        /// <returns>工厂方法</returns>
+        private Func<ICommandHandler> CreateFactoryMethod(Type type)
         {
-            var ctors = type.GetConstructors();
-            // 选一个参数最多的构造器
-            var ctor = ctors.OrderByDescending(c => c.GetParameters().Length).First();
+            var constructors = type.GetConstructors();
+            if (!constructors.Any())
+                throw new InvalidOperationException($"类型 {type.FullName} 没有公共构造函数");
 
-            // 如果 0 参，直接 Activator
-            if (!ctor.GetParameters().Any())
-                return Expression.Lambda<Func<ICommandHandler>>(
-                    Expression.New(ctor)).Compile();
+            // 选择参数最多的构造函数
+            var constructor = constructors.OrderByDescending(c => c.GetParameters().Length).First();
+            var parameters = constructor.GetParameters();
 
-            // 有参 → 从 IServiceProvider 解析
-            var parameters = ctor.GetParameters();
-            var paramExprs = new Expression[parameters.Length];
+            // 无参构造函数 - 使用Activator
+            if (!parameters.Any())
+            {
+                return Expression.Lambda<Func<ICommandHandler>>(Expression.New(constructor)).Compile();
+            }
+
+            // 有参构造函数 - 优先使用DI容器，回退到反射
+            if (_serviceProvider != null)
+            {
+                return CreateDiFactoryMethod(constructor, parameters);
+            }
+            else
+            {
+                return CreateReflectionFactoryMethod(constructor);
+            }
+        }
+
+        /// <summary>
+        /// 创建DI容器工厂方法
+        /// </summary>
+        private Func<ICommandHandler> CreateDiFactoryMethod(ConstructorInfo constructor, ParameterInfo[] parameters)
+        {
+            var paramExpressions = new Expression[parameters.Length];
 
             for (int i = 0; i < parameters.Length; i++)
             {
-                var pType = parameters[i].ParameterType;
-                var resolveMi = typeof(ServiceProviderServiceExtensions)
-                                .GetMethod("GetRequiredService", new[] { typeof(IServiceProvider) })
-                                .MakeGenericMethod(pType);
-                paramExprs[i] = Expression.Call(null, resolveMi, Expression.Constant(_sp));
+                var paramType = parameters[i].ParameterType;
+                var resolveMethod = typeof(ServiceProviderServiceExtensions)
+                    .GetMethod("GetRequiredService", new[] { typeof(IServiceProvider) })
+                    .MakeGenericMethod(paramType);
+                paramExpressions[i] = Expression.Call(null, resolveMethod, Expression.Constant(_serviceProvider));
             }
 
-            var newExpr = Expression.New(ctor, paramExprs);
-            return Expression.Lambda<Func<ICommandHandler>>(newExpr).Compile();
+            var newExpression = Expression.New(constructor, paramExpressions);
+            return Expression.Lambda<Func<ICommandHandler>>(newExpression).Compile();
+        }
+
+        /// <summary>
+        /// 创建反射工厂方法（无DI容器时）
+        /// </summary>
+        private Func<ICommandHandler> CreateReflectionFactoryMethod(ConstructorInfo constructor)
+        {
+            return () => (ICommandHandler)Activator.CreateInstance(constructor.DeclaringType);
         }
     }
 }

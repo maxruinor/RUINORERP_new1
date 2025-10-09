@@ -162,15 +162,7 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public bool IsConnected => _isConnected;
 
-        ///// <summary>
-        ///// 获取服务器地址
-        ///// </summary>
-        //public string ServerAddress => _serverAddress;
 
-        ///// <summary>
-        ///// 获取服务器端口
-        ///// </summary>
-        //public int ServerPort => _serverPort;
 
 
 

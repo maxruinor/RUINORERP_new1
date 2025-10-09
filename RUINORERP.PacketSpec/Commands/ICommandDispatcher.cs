@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Generic;
@@ -28,28 +28,28 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        Task<ResponseBase> DispatchAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken = default);
+        Task<BaseCommand<IResponse>> DispatchAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 注册命令类型
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <param name="commandType">命令类型</param>
-        void RegisterCommandType(uint commandCode, Type commandType);
+        void RegisterCommandType(CommandId commandCode, Type commandType);
 
         /// <summary>
         /// 获取命令类型
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <returns>命令类型，如果找不到则返回null</returns>
-        Type GetCommandType(uint commandCode);
+        Type GetCommandType(CommandId commandCode);
 
         /// <summary>
         /// 创建命令实例
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <returns>命令实例，如果找不到类型或创建失败则返回null</returns>
-        ICommand CreateCommand(uint commandCode);
+        ICommand CreateCommand(CommandId commandCode);
  
 
         /// <summary>

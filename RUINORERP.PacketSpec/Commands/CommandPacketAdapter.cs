@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -78,7 +78,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
 
                 // 2. 预获取命令类型信息（避免重复查找）
-                Type commandType = executionContext?.CommandType ?? _commandDispatcher?.GetCommandType(packet.CommandId.FullCode);
+                Type commandType = executionContext?.CommandType ?? _commandDispatcher?.GetCommandType(packet.CommandId);
                 if (commandType != null)
                 {
                     _logger?.LogDebug("获取命令类型: CommandId={CommandId}, TypeName={TypeName}", 

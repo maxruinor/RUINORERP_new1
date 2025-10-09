@@ -84,10 +84,98 @@ namespace RUINORERP.PacketSpec.Commands
         public bool IsInitialized { get; private set; }
 
         /// <summary>
-        /// 支持的命令类型
-        /// 本来是抽象，子类要实现。但是有几个公共类型的命令，所以这里默认实现。
+        /// 支持的命令类型 - 使用CommandId类型提供更好的类型安全性和可读性
+        /// 提供默认实现，避免空引用异常
         /// </summary>
-        public IReadOnlyList<uint> SupportedCommands { get; }
+        public virtual IReadOnlyList<CommandId> SupportedCommands { get; protected set; } = Array.Empty<CommandId>();
+
+        /// <summary>
+        /// 安全设置支持的命令列表 - uint版本（向后兼容）
+        /// </summary>
+        /// <param name="commands">命令代码列表（uint格式）</param>
+        protected void SetSupportedCommands(params uint[] commands)
+        {
+            if (commands == null || commands.Length == 0)
+            {
+                SupportedCommands = Array.Empty<CommandId>();
+                Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
+                return;
+            }
+            
+            // 将uint转换为CommandId
+            var commandIds = commands.Select(cmd => CommandId.FromUInt16((ushort)cmd)).ToList();
+            SupportedCommands = commandIds;
+            Logger?.LogDebug($"处理器 {Name} 设置支持 {commands.Length} 个命令: {string.Join(", ", commands.Select(c => $"0x{c:X4}"))}");
+        }
+
+        /// <summary>
+        /// 安全设置支持的命令列表 - CommandId版本
+        /// </summary>
+        /// <param name="commands">CommandId命令对象数组</param>
+        protected void SetSupportedCommands(params CommandId[] commands)
+        {
+            if (commands == null || commands.Length == 0)
+            {
+                SupportedCommands = Array.Empty<CommandId>();
+                Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
+                return;
+            }
+            
+            SupportedCommands = commands.ToList();
+            Logger?.LogDebug($"处理器 {Name} 设置支持 {commands.Length} 个命令: {string.Join(", ", commands.Select(c => $"{c.Name}(0x{c.FullCode:X4})"))}");
+        }
+
+        /// <summary>
+        /// 安全设置支持的命令列表 - CommandId集合版本
+        /// </summary>
+        /// <param name="commands">CommandId命令对象集合</param>
+        protected void SetSupportedCommands(IEnumerable<CommandId> commands)
+        {
+            if (commands == null)
+            {
+                SupportedCommands = Array.Empty<CommandId>();
+                Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
+                return;
+            }
+            
+            var commandList = commands.ToList();
+            if (commandList.Count == 0)
+            {
+                SupportedCommands = Array.Empty<CommandId>();
+                Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
+                return;
+            }
+            
+            SupportedCommands = commandList;
+            Logger?.LogDebug($"处理器 {Name} 设置支持 {commandList.Count} 个命令: {string.Join(", ", commandList.Select(c => $"{c.Name}(0x{c.FullCode:X4})"))}");
+        }
+
+        /// <summary>
+        /// 安全设置支持的命令列表 - uint集合版本（向后兼容）
+        /// </summary>
+        /// <param name="commands">命令代码列表（uint格式集合）</param>
+        protected void SetSupportedCommands(IEnumerable<uint> commands)
+        {
+            if (commands == null)
+            {
+                SupportedCommands = Array.Empty<CommandId>();
+                Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
+                return;
+            }
+            
+            var commandList = commands.ToList();
+            if (commandList.Count == 0)
+            {
+                SupportedCommands = Array.Empty<CommandId>();
+                Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
+                return;
+            }
+            
+            // 将uint转换为CommandId
+            var commandIds = commandList.Select(cmd => CommandId.FromUInt16((ushort)cmd)).ToList();
+            SupportedCommands = commandIds;
+            Logger?.LogDebug($"处理器 {Name} 设置支持 {commandList.Count} 个命令: {string.Join(", ", commandList.Select(c => $"0x{c:X4}"))}");
+        }
 
         /// <summary>
         /// 处理器状态
@@ -122,7 +210,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 异步处理命令 - 统一命令处理流程
         /// </summary>
-        public async Task<ResponseBase> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default)
+        public async Task<BaseCommand<IResponse>> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default)
         {
             if (cmd == null)
                 throw new ArgumentNullException(nameof(cmd));
@@ -150,6 +238,9 @@ namespace RUINORERP.PacketSpec.Commands
                 if (afterResult != null)
                     return afterResult;
 
+                // 更新统计信息
+                UpdateStatistics(result?.IsSuccess ?? false, (long)(DateTime.UtcNow - startTime).TotalMilliseconds);
+
                 // 记录处理完成信息
                 LogCommandCompletion(cmd, result, startTime);
 
@@ -158,7 +249,7 @@ namespace RUINORERP.PacketSpec.Commands
             catch (OperationCanceledException)
             {
                 success = false;
-                return ResponseBase.CreateError(UnifiedErrorCodes.Command_ProcessCancelled.Message, UnifiedErrorCodes.Command_ProcessCancelled.Code);
+                return BaseCommand<IResponse>.CreateError(UnifiedErrorCodes.Command_ProcessCancelled.Message, UnifiedErrorCodes.Command_ProcessCancelled.Code);
             }
             catch (Exception ex)
             {
@@ -175,14 +266,14 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 统一的命令预处理流程 - 提取为独立方法以便复用
         /// </summary>
-        protected async Task<ResponseBase> ExecuteCommandPreprocessingAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected async Task<BaseCommand<IResponse>> ExecuteCommandPreprocessingAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             // 验证命令
             var validationResult = await cmd.Command.ValidateAsync(cancellationToken);
             if (!validationResult.IsValid)
             {
                 Logger.LogWarning($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
-                return ResponseBase.CreateValidationError(validationResult, UnifiedErrorCodes.Command_ValidationFailed.Code);
+                return BaseCommand<IResponse>.CreateValidationError(validationResult, UnifiedErrorCodes.Command_ValidationFailed.Code);
             }
 
             // 检查命令是否超时
@@ -198,7 +289,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 记录命令处理完成信息
         /// </summary>
-        protected void LogCommandCompletion(QueuedCommand cmd, ResponseBase result, DateTime startTime)
+        protected void LogCommandCompletion(QueuedCommand cmd,BaseCommand<IResponse> result, DateTime startTime)
         {
             var elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds;
             Logger.LogInformation($"命令处理完成: {cmd.Command.GetType().Name}, CommandId: {cmd.Command.CommandIdentifier}, 结果: {result.IsSuccess}, 执行时间: {elapsed:F2} ms");
@@ -207,23 +298,40 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 统一的异常处理
         /// </summary>
-        protected ResponseBase HandleCommandException(Exception ex)
+        protected BaseCommand<IResponse> HandleCommandException(Exception ex)
         {
             var errorCode = UnifiedErrorCodes.Command_ExecuteFailed.Code == 0 ? UnifiedErrorCodes.System_InternalError : UnifiedErrorCodes.Command_ExecuteFailed;
             Logger.LogError(ex, $"命令处理异常: {ex.Message}");
-            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
+            return BaseCommand<IResponse>.CreateError($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
                 .WithMetadata("StackTrace", ex.StackTrace);
         }
 
         /// <summary>
-        /// 判断是否可以处理该命令
+        /// 判断是否可以处理该命令 - 使用CommandId进行判断
         /// </summary>
         public virtual bool CanHandle(QueuedCommand cmd)
         {
             if (cmd.Command == null || _disposed || Status != HandlerStatus.Running)
                 return false;
 
-            return SupportedCommands.Contains(cmd.Command.CommandIdentifier.FullCode);
+            // 安全处理SupportedCommands为null或空的情况
+            var supportedCommands = SupportedCommands ?? Array.Empty<CommandId>();
+            return supportedCommands.Contains(cmd.Command.CommandIdentifier);
+        }
+
+        /// <summary>
+        /// 判断是否可以处理该命令 - uint版本（向后兼容）
+        /// </summary>
+        /// <param name="commandCode">命令代码（uint格式）</param>
+        /// <returns>是否可以处理</returns>
+        public virtual bool CanHandle(uint commandCode)
+        {
+            if (_disposed || Status != HandlerStatus.Running)
+                return false;
+
+            // 安全处理SupportedCommands为null或空的情况
+            var supportedCommands = SupportedCommands ?? Array.Empty<CommandId>();
+            return supportedCommands.Any(cmd => cmd.FullCode == commandCode);
         }
 
         /// <summary>
@@ -396,7 +504,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 执行核心处理逻辑
         /// </summary>
         [MustOverride]
-        protected abstract Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
+        protected abstract Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
 
         #endregion
 
@@ -429,17 +537,17 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行前置处理
         /// </summary>
-        protected virtual Task<ResponseBase> OnBeforeHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected virtual Task<BaseCommand<IResponse>> OnBeforeHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
-            return Task.FromResult<ResponseBase>(null);
+            return Task.FromResult<BaseCommand<IResponse>>(null);
         }
 
         /// <summary>
         /// 执行后置处理
         /// </summary>
-        protected virtual Task<ResponseBase> OnAfterHandleAsync(QueuedCommand cmd, ResponseBase result, CancellationToken cancellationToken)
+        protected virtual Task<BaseCommand<IResponse>> OnAfterHandleAsync(QueuedCommand cmd, BaseCommand<IResponse> result, CancellationToken cancellationToken)
         {
-            return Task.FromResult<ResponseBase>(null);
+            return Task.FromResult<BaseCommand<IResponse>>(null);
         }
 
         #endregion
@@ -451,7 +559,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="command">要检查的命令</param>
         /// <returns>如果命令已超时返回错误响应，否则返回null</returns>
-        protected virtual ResponseBase CheckCommandTimeout(ICommand command)
+        protected virtual BaseCommand<IResponse> CheckCommandTimeout(ICommand command)
         {
             if (command is BaseCommand baseCommand && baseCommand.TimeoutMs > 0)
             {
@@ -459,8 +567,8 @@ namespace RUINORERP.PacketSpec.Commands
                 if (elapsedTime > baseCommand.TimeoutMs)
                 {
                     Logger.LogWarning($"命令已超时: 创建时间={baseCommand.CreatedTimeUtc}, 超时时间={baseCommand.TimeoutMs}ms, 已耗时={elapsedTime}ms, 命令ID: {baseCommand.CommandIdentifier}");
-                    return ResponseBase.CreateError(
-                        $"{UnifiedErrorCodes.Command_Timeout.Message}: 命令已超时", 
+                    return BaseCommand<IResponse>.CreateError(
+                        $"{UnifiedErrorCodes.Command_Timeout.Message}: 命令已超时",
                         UnifiedErrorCodes.Command_Timeout.Code)
                         .WithMetadata("CreatedTime", baseCommand.CreatedTimeUtc)
                         .WithMetadata("TimeoutMs", baseCommand.TimeoutMs)
@@ -471,88 +579,10 @@ namespace RUINORERP.PacketSpec.Commands
             return null;
         }
 
-        /// <summary>
-        /// 创建成功响应结果
-        /// </summary>
-        /// <typeparam name="T">响应数据类型</typeparam>
-        /// <param name="command">命令ID</param>
-        /// <param name="data">响应数据</param>
-        /// <param name="msg">响应消息</param>
-        /// <returns>API响应结果</returns>
-        protected ResponseBase Success<T>(uint command, T data, string msg = null)
-        {
-            var responseData = CreateMessageResponse(command, data);
-
-            // 创建非泛型ResponseBase实例
-            var result = new ResponseBase
-            {
-                IsSuccess = true,
-                Message = msg ?? "操作成功",
-                Code = 200,
-                TimestampUtc = DateTime.UtcNow
-            };
-
-            // 添加元数据 - 修复WithMetadata返回ResponseBase的问题
-            result = (ResponseBase)result.WithMetadata("ResponseData", responseData);
-
-            // 确保数据可以正确序列化和存储
-            if (data != null)
-            {
-                try
-                {
-                    // 序列化数据为JSON字符串以避免类型转换问题
-                    string serializedData = Newtonsoft.Json.JsonConvert.SerializeObject(data);
-                    result = (ResponseBase)result.WithMetadata("Data", serializedData);
-                }
-                catch (Exception ex)
-                {
-                    LogWarning($"无法序列化响应数据: {ex.Message}");
-                    // 如果序列化失败，仍然添加原始数据，但记录警告
-                    result = (ResponseBase)result.WithMetadata("Data", data);
-                }
-            }
-
-            return result;
-        }
 
 
 
-        /// <summary>
-        /// 创建消息响应数据包
-        /// </summary>
-        /// <typeparam name="T">响应数据类型</typeparam>
-        /// <param name="command">命令ID</param>
-        /// <param name="data">响应数据</param>
-        /// <returns>原始数据包</returns>
-        protected virtual OriginalData CreateMessageResponse<T>(uint command, T data)
-        {
-            try
-            {
-                // 将命令ID转换为字节数组
-                byte[] commandBytes = BitConverter.GetBytes(command);
-
-                // 序列化数据部分
-                byte[] dataBytes = Array.Empty<byte>();
-                if (data != null)
-                {
-                    string json = Newtonsoft.Json.JsonConvert.SerializeObject(data);
-                    dataBytes = Encoding.UTF8.GetBytes(json);
-                }
-
-                // 构造OriginalData: Cmd使用命令ID的低8位，One使用命令ID的高8位，Two使用序列化后的数据
-                byte cmd = commandBytes[0]; // 命令类别
-                byte[] one = commandBytes.Length > 1 ? new byte[] { commandBytes[1] } : Array.Empty<byte>(); // 操作码
-
-                return new OriginalData(cmd, one, dataBytes);
-            }
-            catch (Exception ex)
-            {
-                LogError("创建消息响应失败: " + ex.Message, ex);
-                // 返回空的响应数据包
-                return OriginalData.Empty;
-            }
-        }
-
+  
         /// <summary>
         /// 更新统计信息
         /// </summary>

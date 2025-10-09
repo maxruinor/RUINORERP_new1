@@ -13,7 +13,7 @@ namespace RUINORERP.PacketSpec.Commands
     {
         public PacketModel Packet { get; set; }
         public ICommand Command { get; set; }
-        public TaskCompletionSource<ResponseBase> Tcs { get; set; }
+        public TaskCompletionSource<BaseCommand<IResponse>> Tcs { get; set; }
     }
 
     public sealed class PriorityCommandQueue
@@ -31,7 +31,7 @@ namespace RUINORERP.PacketSpec.Commands
             var q = new QueuedCommand
             {
                 Command = cmd,
-                Tcs = new TaskCompletionSource<ResponseBase>(TaskCreationOptions.RunContinuationsAsynchronously)
+                Tcs = new TaskCompletionSource<BaseCommand<IResponse>>(TaskCreationOptions.RunContinuationsAsynchronously)
             };
 
             // 根据命令优先级确定应该使用的Channel队列

@@ -398,19 +398,19 @@ namespace RUINORERP.Server.Network.Core
             try
             {
                 // 检查登录命令
-                var loginCommandCode = AuthenticationCommands.Login.FullCode;
+                var loginCommandCode = AuthenticationCommands.Login;
                 var isLoginMapped = _commandDispatcher.IsCommandMapped(loginCommandCode);
                 var loginHandlerCount = _commandDispatcher.GetMappedHandlerCount(loginCommandCode);
                 _logger.LogInformation($"登录命令 (代码: {loginCommandCode}) 是否已映射: {isLoginMapped}, 处理器数量: {loginHandlerCount}");
 
                 // 检查登出命令
-                var logoutCommandCode = AuthenticationCommands.Logout.FullCode;
+                var logoutCommandCode = AuthenticationCommands.Logout;
                 var isLogoutMapped = _commandDispatcher.IsCommandMapped(logoutCommandCode);
                 var logoutHandlerCount = _commandDispatcher.GetMappedHandlerCount(logoutCommandCode);
                 _logger.LogInformation($"登出命令 (代码: {logoutCommandCode}) 是否已映射: {isLogoutMapped}, 处理器数量: {logoutHandlerCount}");
 
                 // 检查广播消息命令
-                var broadcastCommandCode = MessageCommands.BroadcastMessage.FullCode;
+                var broadcastCommandCode = MessageCommands.BroadcastMessage;
                 var isBroadcastMapped = _commandDispatcher.IsCommandMapped(broadcastCommandCode);
                 var broadcastHandlerCount = _commandDispatcher.GetMappedHandlerCount(broadcastCommandCode);
                 _logger.LogInformation($"广播消息命令 (代码: {broadcastCommandCode}) 是否已映射: {isBroadcastMapped}, 处理器数量: {broadcastHandlerCount}");

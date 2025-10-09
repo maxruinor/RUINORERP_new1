@@ -22,7 +22,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 支持的命令列表
         /// </summary>
-        public new IReadOnlyList<uint> SupportedCommands { get; } = new List<uint>();
+        public new IReadOnlyList<CommandId> SupportedCommands { get; } = new List<CommandId>();
     
         /// <summary>
         /// 日志记录器

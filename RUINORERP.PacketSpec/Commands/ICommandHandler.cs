@@ -33,9 +33,9 @@ namespace RUINORERP.PacketSpec.Commands
         bool IsInitialized { get; }
 
         /// <summary>
-        /// 支持的命令类型
+        /// 支持的命令类型 - 使用CommandId类型提供更好的类型安全性和可读性
         /// </summary>
-        IReadOnlyList<uint> SupportedCommands { get; }
+        IReadOnlyList<CommandId> SupportedCommands { get; }
 
         /// <summary>
         /// 处理器状态
@@ -48,7 +48,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        Task<ResponseBase> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default);
+        Task<BaseCommand<IResponse>> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 判断是否可以处理该命令
@@ -56,6 +56,13 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <returns>是否可以处理</returns>
         bool CanHandle(QueuedCommand cmd);
+
+        /// <summary>
+        /// 判断是否可以处理该命令 - uint版本（向后兼容）
+        /// </summary>
+        /// <param name="commandCode">命令代码（uint格式）</param>
+        /// <returns>是否可以处理</returns>
+        bool CanHandle(uint commandCode);
 
         /// <summary>
         /// 处理器初始化
@@ -99,27 +106,27 @@ namespace RUINORERP.PacketSpec.Commands
         /// 未初始化
         /// </summary>
         Uninitialized = 0,
-        
+
         /// <summary>
         /// 已初始化
         /// </summary>
         Initialized = 1,
-        
+
         /// <summary>
         /// 运行中
         /// </summary>
         Running = 2,
-        
+
         /// <summary>
         /// 已停止
         /// </summary>
         Stopped = 3,
-        
+
         /// <summary>
         /// 错误状态
         /// </summary>
         Error = 4,
-        
+
         /// <summary>
         /// 已释放
         /// </summary>
@@ -204,17 +211,17 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 成功率
         /// </summary>
-        public double SuccessRate => TotalCommandsProcessed > 0 
-            ? (double)SuccessfulCommands / TotalCommandsProcessed * 100 
+        public double SuccessRate => TotalCommandsProcessed > 0
+            ? (double)SuccessfulCommands / TotalCommandsProcessed * 100
             : 0;
 
         /// <summary>
         /// 平均处理速度（命令/秒）
         /// </summary>
-        public double AverageProcessingRate => Uptime.TotalSeconds > 0 
-            ? TotalCommandsProcessed / Uptime.TotalSeconds 
+        public double AverageProcessingRate => Uptime.TotalSeconds > 0
+            ? TotalCommandsProcessed / Uptime.TotalSeconds
             : 0;
-            
+
         /// <summary>
         /// 获取详细的统计信息报告
         /// </summary>

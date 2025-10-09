@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ namespace RUINORERP.PacketSpec.Commands
     public class DefaultCommandFactory : ICommandFactoryAsync
     {
         private readonly ILogger<DefaultCommandFactory> _logger;
-        private readonly Dictionary<uint, Func<PacketModel, ICommand>> _commandCreators;
+        private readonly Dictionary<CommandId, Func<PacketModel, ICommand>> _commandCreators;
         private readonly CommandTypeHelper _commandTypeHelper;
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace RUINORERP.PacketSpec.Commands
         public DefaultCommandFactory(ILogger<DefaultCommandFactory> logger = null, CommandTypeHelper commandTypeHelper = null)
         {
             _logger = logger;
-            _commandCreators = new Dictionary<uint, Func<PacketModel, ICommand>>();
+            _commandCreators = new Dictionary<CommandId, Func<PacketModel, ICommand>>();
             _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
         }
 
@@ -62,7 +62,7 @@ namespace RUINORERP.PacketSpec.Commands
                 var comm = packet.GetJsonData<BaseCommand>();
 
                 // 获取命令ID
-                uint commandId = (uint)packet.CommandId;
+                CommandId commandId = packet.CommandId;
 
                 // 首先检查是否有注册的自定义创建器
                 if (_commandCreators.TryGetValue(commandId, out var creator))
@@ -101,24 +101,24 @@ namespace RUINORERP.PacketSpec.Commands
                 //新的简化版本测试 
                 // 如果无法创建命令，返回null 
                 // 2. 使用CommandTypeHelper获取有效载荷类型
-                var payloadType = _commandTypeHelper.GetPayloadType(packet.CommandId);
+                var payloadType = _commandTypeHelper.GetPayloadType(commandId);
                 if (payloadType != null)
                 {
                     //var closedType = typeof(GenericCommand<>).MakeGenericType(payloadType);
                     //return (ICommand)Activator.CreateInstance(closedType, commandId, null);
 
-                    // 2.1 先从缓存里拿“开放泛型定义”
-                    if (!_commandTypeHelper.GetAllCommandTypes().TryGetValue(0xFFFFEEEE, out var openGeneric))
+                    // 2.1 先从缓存里拿"开放泛型定义"
+                    if (!_commandTypeHelper.GetAllCommandTypes().TryGetValue(new CommandId(CommandCategory.System, 0xEE, "GenericCommandTemplate"), out var openGeneric))
                         throw new InvalidOperationException("GenericCommand<> 模板未注册");
 
                     // 2.2 MakeGenericType 产生封闭类型
                     var closedType = openGeneric.MakeGenericType(payloadType);
-                    return (ICommand)Activator.CreateInstance(closedType, packet.CommandId, null);
+                    return (ICommand)Activator.CreateInstance(closedType, commandId, null);
 
                 }
 
 
-                _logger?.LogWarning("未找到命令ID: {CommandId} 对应的命令类型", commandId);
+                _logger?.LogWarning("未找到命令ID: {CommandId} 对应的命令类型", commandId.ToString());
                 return null;
             }
             catch (Exception ex)
@@ -173,7 +173,7 @@ namespace RUINORERP.PacketSpec.Commands
         private async Task<ICommand> CreateCommandInstanceAsync(string commandId)
         {
             // 尝试从缓存中获取命令类型
-            if (!_commandTypeHelper.GetAllCommandTypes().TryGetValue(uint.Parse(commandId), out var commandType))
+            if (!CommandId.TryParse(commandId, out var cmdId) || !_commandTypeHelper.GetAllCommandTypes().TryGetValue(cmdId, out var commandType))
             {
                 _logger?.LogWarning($"未找到命令类型: {commandId}");
                 return null;
@@ -362,7 +362,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>空命令实例</returns>
         public ICommand CreateEmptyCommand(CommandId commandId)
         {
-            var commandType = _commandTypeHelper.GetCommandType((uint)commandId);
+            var commandType = _commandTypeHelper.GetCommandType(commandId);
             if (commandType == null)
                 throw new ArgumentException($"未知的命令ID: {commandId}", nameof(commandId));
 
@@ -375,7 +375,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <param name="creator">创建器函数</param>
-        public void RegisterCommandCreator(uint commandCode, Func<PacketModel, ICommand> creator)
+        public void RegisterCommandCreator(CommandId commandCode, Func<PacketModel, ICommand> creator)
         {
             if (creator == null)
             {

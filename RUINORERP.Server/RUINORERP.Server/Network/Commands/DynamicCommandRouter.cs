@@ -153,7 +153,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="cmd">队列命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>响应结果</returns>
-        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             var request = cmd?.Command;
             var commandType = request?.GetType().Name ?? "Unknown";
@@ -168,7 +168,7 @@ namespace RUINORERP.Server.Network.Commands
             if (!_commandRoutes.TryGetValue(commandType, out var routeInfo))
             {
                 _logger.LogWarning($"未找到命令类型 {commandType} 的路由配置");
-                return ResponseBase.CreateError($"不支持的命令类型: {commandType}");
+                return BaseCommand<IResponse>.CreateError($"不支持的命令类型: {commandType}");
             }
 
             try
@@ -181,19 +181,19 @@ namespace RUINORERP.Server.Network.Commands
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"动态路由处理失败：{commandType} -> {routeInfo.HandlerType.Name}");
-                return ResponseBase.CreateError($"处理命令时发生错误: {ex.Message}");
+                return BaseCommand<IResponse>.CreateError($"处理命令时发生错误: {ex.Message}");
             }
         }
 
         /// <summary>
         /// 验证命令参数 - 提取为独立方法
         /// </summary>
-        private ResponseBase ValidateCommandParameters(QueuedCommand cmd)
+        private BaseCommand<IResponse> ValidateCommandParameters(QueuedCommand cmd)
         {
             if (cmd == null)
             {
                 _logger.LogError("命令对象为null");
-                return ResponseBase.CreateError("命令对象不能为空", 400);
+                return BaseCommand<IResponse>.CreateError("命令对象不能为空", 400);
             }
 
             //if (cmd.Session == null)
@@ -208,13 +208,13 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 执行命令路由 - 提取为独立方法
         /// </summary>
-        private async Task<ResponseBase> ExecuteCommandRoutingAsync(QueuedCommand cmd, CommandRouteInfo routeInfo, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> ExecuteCommandRoutingAsync(QueuedCommand cmd, CommandRouteInfo routeInfo, CancellationToken cancellationToken)
         {
             // 创建处理器实例
             var handler = ActivatorUtilities.CreateInstance(_serviceProvider, routeInfo.HandlerType) as ICommandHandler;
             if (handler == null)
             {
-                return ResponseBase.CreateError($"无法创建处理器实例: {routeInfo.HandlerType.Name}");
+                return BaseCommand<IResponse>.CreateError($"无法创建处理器实例: {routeInfo.HandlerType.Name}");
             }
 
             // 执行命令处理

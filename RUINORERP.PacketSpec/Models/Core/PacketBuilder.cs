@@ -1,4 +1,4 @@
-﻿﻿﻿using System;
+﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -15,7 +15,7 @@ namespace RUINORERP.PacketSpec.Models.Core
     /// </summary>
     public class PacketBuilder
     {
-        private readonly PacketModel _packet;
+        private PacketModel _packet;
 
         /// <summary>
         /// 私有构造函数
@@ -24,6 +24,19 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             _packet = new PacketModel();
         }
+
+
+        /// <summary>
+        /// 创建新的构建器实例
+        /// </summary>
+        /// <returns>构建器实例</returns>
+        public static PacketBuilder Create(PacketModel packet)
+        {
+            PacketBuilder packetBuilder = new PacketBuilder();
+            packetBuilder._packet = packet;
+            return packetBuilder;
+        }
+
 
         /// <summary>
         /// 创建新的构建器实例
@@ -45,7 +58,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             return this;
         }
 
- 
 
         /// <summary>
         /// 设置方向
@@ -111,6 +123,14 @@ namespace RUINORERP.PacketSpec.Models.Core
             return this;
         }
 
+        public PacketBuilder WithMessagePackData<T>(T data)
+        {
+            _packet.SetCommandDataByMessagePack(data);
+            return this;
+        }
+
+
+
         /// <summary>
         /// 设置扩展属性
         /// </summary>
@@ -165,7 +185,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketBuilder AsLoginRequest(string username, string password, string clientVersion = null)
         {
             return WithCommand(AuthenticationCommands.LoginRequest)
-             
+
                 .WithDirection(PacketDirection.ClientToServer)
                 .WithJsonData(new { Username = username, Password = password, ClientVersion = clientVersion })
                 .WithExtension("AuthType", "Basic");
@@ -324,8 +344,8 @@ namespace RUINORERP.PacketSpec.Models.Core
             return builder.AsQueryRequest(query);
         }
 
-      
- 
+
+
 
         /// <summary>
         /// 设置客户端到服务器方向
@@ -346,7 +366,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             return builder.WithDirection(PacketDirection.ServerToClient);
         }
-        
+
         /// <summary>
         /// 为请求创建数据包
         /// </summary>

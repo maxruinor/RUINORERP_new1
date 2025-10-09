@@ -514,7 +514,7 @@ namespace RUINORERP.Server.Network.Commands
                     {
                         // UserId = refreshResult.UserId,
                         // Username = refreshResult.UserName ?? refreshResult.UserId.ToString(), // 优先使用用户名，如果没有则使用用户ID
-                                                                                             // ExpiresIn = refreshResult.ex, // 从TokenManager获取实际的过期时间
+                        // ExpiresIn = refreshResult.ex, // 从TokenManager获取实际的过期时间
                     };
 
                     return CreateSuccessResponse(loginResponse, "Token刷新成功");
@@ -812,6 +812,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 发送重复登录通知
         /// </summary>
+        [Obsolete("后面要优化通过消息模块发送")]
         private void SendDuplicateLoginNotification(string sessionId, string username)
         {
             try
@@ -828,9 +829,7 @@ namespace RUINORERP.Server.Network.Commands
                             System.Text.Encoding.UTF8.GetBytes($"您的账号【{username}】在其他地方登录，您已被强制下线。")
                         );
 
-
                         var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(notificationMessage);
-
 
                         // 发送通知消息
                         appSession.SendAsync(encryptedData.ToByteArray());

@@ -134,19 +134,6 @@ namespace RUINORERP.PacketSpec.Commands
                 // 记录开始处理时间
                 var logStartTime = DateTime.UtcNow;
 
-                // 安全获取命令ID（通过反射）
-                string commandId = null;
-                try
-                {
-                    var commandWithId = cmd.Command as dynamic;
-                    commandId = commandWithId.CommandId ?? "N/A";
-                }
-                catch
-                {
-                    commandId = "N/A";
-                }
-
-
                 // 验证命令
                 var validationResult = await cmd.Command.ValidateAsync(cancellationToken);
                 if (!validationResult.IsValid)
@@ -155,20 +142,11 @@ namespace RUINORERP.PacketSpec.Commands
                     return ResponseBase.CreateError($"{UnifiedErrorCodes.Command_ValidationFailed.Message}: 命令验证失败: {validationResult.Errors[0].ErrorMessage}", UnifiedErrorCodes.Command_ValidationFailed.Code);
                 }
 
-                // 检查命令是否过期（如果命令有实现ExpirationTimeUtc属性）
-                try
+                // 检查命令是否超时（基于TimeoutMs和创建时间计算）
+                var timeoutCheckResult = CheckCommandTimeout(cmd.Command);
+                if (timeoutCheckResult != null)
                 {
-                    var commandWithExpiration = cmd.Command as dynamic;
-                    if (commandWithExpiration.ExpirationTimeUtc != null &&
-                        commandWithExpiration.ExpirationTimeUtc < DateTime.UtcNow)
-                    {
-                        Logger.LogWarning($"命令已过期: {commandWithExpiration.ExpirationTimeUtc}");
-                        return ResponseBase.CreateError($"{UnifiedErrorCodes.Command_Timeout.Message}: 命令已过期", UnifiedErrorCodes.Command_Timeout.Code);
-                    }
-                }
-                catch
-                {
-                    // 如果命令没有ExpirationTimeUtc属性，则跳过检查
+                    return timeoutCheckResult;
                 }
 
                 // 命令前置处理
@@ -442,6 +420,31 @@ namespace RUINORERP.PacketSpec.Commands
         #endregion
 
         #region 辅助方法
+
+        /// <summary>
+        /// 检查命令是否超时（基于TimeoutMs和创建时间计算）
+        /// </summary>
+        /// <param name="command">要检查的命令</param>
+        /// <returns>如果命令已超时返回错误响应，否则返回null</returns>
+        protected virtual ResponseBase CheckCommandTimeout(ICommand command)
+        {
+            if (command is BaseCommand baseCommand && baseCommand.TimeoutMs > 0)
+            {
+                var elapsedTime = (DateTime.UtcNow - baseCommand.CreatedTimeUtc).TotalMilliseconds;
+                if (elapsedTime > baseCommand.TimeoutMs)
+                {
+                    Logger.LogWarning($"命令已超时: 创建时间={baseCommand.CreatedTimeUtc}, 超时时间={baseCommand.TimeoutMs}ms, 已耗时={elapsedTime}ms, 命令ID: {baseCommand.CommandIdentifier}");
+                    return ResponseBase.CreateError(
+                        $"{UnifiedErrorCodes.Command_Timeout.Message}: 命令已超时", 
+                        UnifiedErrorCodes.Command_Timeout.Code)
+                        .WithMetadata("CreatedTime", baseCommand.CreatedTimeUtc)
+                        .WithMetadata("TimeoutMs", baseCommand.TimeoutMs)
+                        .WithMetadata("ElapsedTimeMs", elapsedTime)
+                        .WithMetadata("CurrentTime", DateTime.UtcNow);
+                }
+            }
+            return null;
+        }
 
         /// <summary>
         /// 创建成功响应结果

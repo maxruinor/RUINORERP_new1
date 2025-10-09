@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using RUINORERP.PacketSpec.Models;
+﻿﻿using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -38,7 +38,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         {
             CommandIdentifier = AuthenticationCommands.Login;
             Priority = CommandPriority.High;
-            TimeoutMs = 30000;
+            TimeoutMs = 30000; // 设置默认超时时间为30秒
         }
 
         /// <summary>

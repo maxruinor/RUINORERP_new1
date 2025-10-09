@@ -140,7 +140,7 @@ namespace RUINORERP.PacketSpec.Commands
     {
         public BaseCommand()
         {
-            
+
         }
 
         //public RequestBase Request { get; set; }
@@ -161,47 +161,47 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         [IgnoreMember]
         protected ILogger<BaseCommand> Logger { get; set; }
- 
+
         /// <summary>
         /// 命令标识符（类型安全命令系统）
         /// </summary>
-        [Key(0)]
+        [Key(30)]
         public CommandId CommandIdentifier { get; set; }
 
         /// <summary>
         /// 命令方向
         /// </summary>
-        [Key(1)]
+        [Key(31)]
         public PacketDirection Direction { get; set; }
 
         /// <summary>
         /// 命令优先级
         /// </summary>
-        [Key(2)]
+        [Key(32)]
         public CommandPriority Priority { get; set; }
 
         /// <summary>
         /// 命令状态
         /// </summary>
-        [Key(3)]
+        [Key(33)]
         public CommandStatus Status { get; set; }
 
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
-        [Key(4)]
+        [Key(34)]
         public DateTime CreatedTimeUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// 最后更新时间（UTC时间）
         /// </summary>
-        [Key(5)]
+        [Key(35)]
         public DateTime? LastUpdatedTime { get; set; }
 
         /// <summary>
         /// 时间戳（UTC时间）
         /// </summary>
-        [Key(6)]
+        [Key(36)]
         public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
@@ -223,7 +223,7 @@ namespace RUINORERP.PacketSpec.Commands
             LastUpdatedTime = TimestampUtc;
         }
 
-        [Key(7)]
+        [Key(37)]
         public int TimeoutMs { get; set; }
 
         /// <summary>
@@ -279,7 +279,7 @@ namespace RUINORERP.PacketSpec.Commands
 
                 // 使用UnifiedSerializationService进行反序列化
                 var deserializedCommand = UnifiedSerializationService.DeserializeWithMessagePack<BaseCommand>(data);
-                
+
                 // 恢复基本属性
                 if (deserializedCommand != null)
                 {
@@ -289,11 +289,11 @@ namespace RUINORERP.PacketSpec.Commands
                     Status = deserializedCommand.Status;
                     CreatedTimeUtc = deserializedCommand.CreatedTimeUtc;
                     TimeoutMs = deserializedCommand.TimeoutMs;
-                    
+
                     // 恢复自定义数据
                     return DeserializeCustomData(deserializedCommand.GetSerializableData());
                 }
-                
+
                 return false;
             }
             catch (Exception ex)
@@ -315,7 +315,7 @@ namespace RUINORERP.PacketSpec.Commands
 
                 // 使用UnifiedSerializationService进行MessagePack反序列化
                 var deserializedCommand = UnifiedSerializationService.DeserializeWithMessagePack<BaseCommand>(data);
-                
+
                 // 恢复基本属性
                 if (deserializedCommand != null)
                 {
@@ -325,11 +325,11 @@ namespace RUINORERP.PacketSpec.Commands
                     Status = deserializedCommand.Status;
                     CreatedTimeUtc = deserializedCommand.CreatedTimeUtc;
                     TimeoutMs = deserializedCommand.TimeoutMs;
-                    
+
                     // 恢复自定义数据
                     return DeserializeCustomData(deserializedCommand.GetSerializableData());
                 }
-                
+
                 return false;
             }
             catch (Exception ex)
@@ -369,13 +369,13 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 包体数据（业务请求响应数据序列化后的字节）
         /// </summary>
-        [Key(8)]
+        [Key(40)]
         public byte[] JsonRequestData { get; set; }
 
         /// <summary>
         /// 响应数据（业务响应数据序列化后的字节）
         /// </summary>
-        [Key(9)]
+        [Key(41)]
         public byte[] JsonResponseData { get; set; }
 
         /// <summary>
@@ -393,10 +393,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <typeparam name="T">数据类型</typeparam>
         /// <param name="data">数据对象</param>
-        public void SetJsonData<T>(T data)
+        public void SetRequestData<T>(T data)
         {
             var jsonBytes = UnifiedSerializationService.SerializeWithJson(data);
-            SetData(jsonBytes);
+            SetRequestData(jsonBytes);
         }
 
         #region 核心方法
@@ -406,9 +406,20 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="data">数据字节数组</param>
         /// <returns>当前实例</returns>
-        public void SetData(byte[] data)
+        public void SetRequestData(byte[] data)
         {
             JsonRequestData = data;
+            LastUpdatedTime = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// 设置数据内容
+        /// </summary>
+        /// <param name="data">数据字节数组</param>
+        /// <returns>当前实例</returns>
+        public void SetResponseData(byte[] data)
+        {
+            JsonResponseData = data;
             LastUpdatedTime = DateTime.UtcNow;
         }
         /// <summary>
@@ -454,7 +465,7 @@ namespace RUINORERP.PacketSpec.Commands
                 Array.Clear(JsonRequestData, 0, JsonRequestData.Length);
                 JsonRequestData = null;
             }
-            
+
             // 清理响应数据
             if (JsonResponseData != null)
             {
@@ -600,12 +611,13 @@ namespace RUINORERP.PacketSpec.Commands
             return new OriginalData(cmd, one, data2);
         }
 
+
         /// <summary>
-        /// 检查是否超时
+        /// 检查是否超时（基于TimeoutMs和创建时间）
         /// </summary>
-        protected bool IsTimeout()
+        public bool IsTimeout()
         {
-            return (DateTime.UtcNow - CreatedTimeUtc).TotalMilliseconds > TimeoutMs;
+            return TimeoutMs > 0 && (DateTime.UtcNow - CreatedTimeUtc).TotalMilliseconds > TimeoutMs;
         }
 
         #endregion

@@ -376,10 +376,10 @@ namespace RUINORERP.PacketSpec.Commands
                     LogDebug($"选择处理器: {bestHandler.Name} 处理命令: {cmd.Command.CommandIdentifier}");
 
                     // 使用熔断器执行处理逻辑
-                    ResponseBase result;
+            
                     try
                     {
-                        result = await _circuit.ExecuteAsync(() => bestHandler.HandleAsync(cmd, linkedCts.Token));
+                        response = await _circuit.ExecuteAsync(() => bestHandler.HandleAsync(cmd, linkedCts.Token));
                     }
                     catch (Polly.CircuitBreaker.BrokenCircuitException ex)
                     {
@@ -389,18 +389,18 @@ namespace RUINORERP.PacketSpec.Commands
                     }
 
                     // 设置执行时间
-                    if (result != null)
+                    if (response != null)
                     {
-                        result.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+                        response.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
                     }
 
 
-                    if (result == null)
+                    if (response == null)
                     {
-                        result = ResponseBase.CreateError("处理器返回空结果", 500);
+                        response = ResponseBase.CreateError("处理器返回空结果", 500);
                     }
 
-                    return result;
+                    return response;
                 }
                 catch (OperationCanceledException ex)
                 {

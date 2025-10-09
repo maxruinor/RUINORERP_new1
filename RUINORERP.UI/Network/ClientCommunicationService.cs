@@ -430,9 +430,9 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                if (packet?.Extensions?.TryGetValue("RequestId", out var requestIdObj) == true)
+                if (!string.IsNullOrEmpty(packet?.ExecutionContext.RequestId))
                 {
-                    var requestId = requestIdObj?.ToString();
+                    var requestId = packet?.ExecutionContext.RequestId;
                     if (!string.IsNullOrEmpty(requestId) &&
                         _pendingRequests.TryRemove(requestId, out var pendingRequest))
                     {
@@ -1009,7 +1009,7 @@ namespace RUINORERP.UI.Network
         /// <exception cref="NetworkCommunicationException">当网络通信失败时抛出</exception>
         private async Task SendPacketCoreAsync<TRequest, TResponse>(
             ISocketClient client,
-              BaseCommand<TRequest, TResponse> command,
+            BaseCommand<TRequest, TResponse> command,
             string requestId,
             int timeoutMs,
             CancellationToken ct,
@@ -1023,7 +1023,7 @@ namespace RUINORERP.UI.Network
                 // 构建数据包
                 var packet = PacketBuilder.Create()
                     .WithCommand(command.CommandIdentifier)
-                    .WithJsonData(command)
+                    .WithMessagePackData(command)
                     .WithRequestId(command.Request.RequestId)
                     .WithTimeout(timeoutMs)
                     .Build();

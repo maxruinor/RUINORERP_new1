@@ -181,31 +181,7 @@ namespace RUINORERP.Server.Network.Core
                        // 会话连接
                        LogInfo($"客户端连接: {session.SessionID} from {session.RemoteEndPoint}");
                        await _sessionManager.AddSessionAsync(session);
-                       //回应客户端 发回SessionID放到包头？
-
-                       PacketModel packetModel = new PacketModel();
-                       packetModel.SessionId = session.SessionID;
-
-                       // 序列化和加密数据包
-                       var payload = UnifiedSerializationService.SerializeWithMessagePack(packetModel);
-                       // 加密数据
-                       var originalData = new OriginalData(
-                           (byte)CommandCategory.Authentication,
-                           new byte[] { AuthenticationCommands.Connected.OperationCode },
-                           payload
-                       );
-                       var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
-
-                       // 发送数据并捕获可能的异常
-                       try
-                       {
-                           await session.SendAsync(encryptedData.ToByteArray(), cancellationToken);
-                       }
-                       catch
-                       { }
-
-
-
+ 
                    }, async (session, reason) =>
                    {
                        // 会话断开

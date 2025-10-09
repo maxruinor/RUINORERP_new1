@@ -23,6 +23,9 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Core;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using MessagePack;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace RUINORERP.Server.Network.SuperSocket
 {
@@ -126,9 +129,7 @@ namespace RUINORERP.Server.Network.SuperSocket
 
                 // 优化：如果命令已经通过ExecutionContext中的类型信息成功创建，则跳过冗余处理
                 var executionContext = package.Packet.ExecutionContext;
-                var isFromExecutionContext = executionContext?.CommandType != null && 
-                                           command.GetType() == executionContext.CommandType;
-
+                var isFromExecutionContext = executionContext?.CommandType != null && command.GetType() == executionContext.CommandType;
                 if (!isFromExecutionContext)
                 {
                     // 只有当初始化不是来自ExecutionContext时，才进行这些处理
@@ -147,35 +148,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                         setRequest?.Invoke(command, new object[] { package.Packet.CommandData });
                     }
                 }
-                else
-                {
-                    _logger?.LogDebug("命令已通过ExecutionContext类型信息创建，跳过冗余初始化步骤");
-                }
-
-                // 第二层解析：命令预解析（获取指令信息，不解析具体业务数据）
-                var commandInfo = PreParseCommand(command, package.Packet);
-                if (commandInfo == null)
-                {
-                    _logger?.LogWarning("命令预解析失败: CommandId={CommandId}", package.Packet.CommandId);
-                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Command_InvalidFormat, cancellationToken);
-                    return;
-                }
-
-                // 设置命令优先级（基于预解析结果，使用CommandPriority枚举）
-                command.Priority = commandInfo.PriorityLevel;
-
-                //// 如果是BaseCommand且包含AuthToken，则自动提取并设置到执行上下文
-                //if (command is BaseCommand baseCommand && !string.IsNullOrEmpty(baseCommand.AuthToken))
-                //{
-                //    // 确保ExecutionContext已初始化
-                //    if (baseCommand.ExecutionContext == null)
-                //    {
-                //        baseCommand.ExecutionContext = new CommandExecutionContext();
-                //    }
-                //    // 设置Token
-                //    baseCommand.ExecutionContext.Token = baseCommand.AuthToken;
-                //}
-
 
 
                 // 通过现有的命令调度器处理命令，添加超时保护
@@ -205,16 +177,12 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     result = ResponseBase.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
                 }
-
                 if (!result.IsSuccess)
                 {
                     _logger?.LogDebug($"命令执行完成:{result.Message}, Success={result.IsSuccess}");
                 }
-                await HandleCommandResultAsync(session, package, result, cancellationToken);
+                await HandleCommandResultAsync(session, package, command, result, cancellationToken);
 
-                // 记录命令执行完成的日志
-                _logger?.LogDebug("命令执行完成: CommandId={CommandId}, Success={Success}",
-                    package.Packet.CommandId, result?.IsSuccess ?? false);
             }
             catch (Exception ex)
             {
@@ -224,75 +192,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
         }
 
-
-        /// <summary>
-        /// 命令预解析信息
-        /// </summary>
-        private class CommandPreParseInfo
-        {
-            public uint CommandId { get; set; }
-            public string CommandName { get; set; }
-            public bool RequiresAuthentication { get; set; }
-            public CommandPriority PriorityLevel { get; set; }
-            public Type TargetCommandType { get; set; }
-        }
-
-        /// <summary>
-        /// 预解析命令（第二层解析：获取指令信息，不解析具体业务数据）
-        /// </summary>
-        /// <param name="command">命令对象</param>
-        /// <param name="packet">数据包</param>
-        /// <returns>预解析信息</returns>
-        private CommandPreParseInfo PreParseCommand(ICommand command, PacketModel packet)
-        {
-            try
-            {
-                var commandId = packet.CommandId;
-
-                // 根据命令ID确定命令特性
-                var requiresAuth = IsAuthenticationRequired(commandId);
-                var priorityLevel = command.Priority;
-                var targetType = command?.GetType();
-
-                return new CommandPreParseInfo
-                {
-                    CommandId = commandId,
-                    RequiresAuthentication = requiresAuth,
-                    PriorityLevel = priorityLevel,
-                    TargetCommandType = targetType
-                };
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "命令预解析失败: CommandId={CommandId}", packet.CommandId);
-                return null;
-            }
-        }
-
-
-        /// <summary>
-        /// 判断是否需要认证
-        /// </summary>
-        private bool IsAuthenticationRequired(uint commandId)
-        {
-            // 登录相关命令不需要认证
-            var authCommands = new uint[]
-            {
-                AuthenticationCommands.Login.FullCode,
-                AuthenticationCommands.LoginRequest.FullCode,
-                AuthenticationCommands.PrepareLogin.FullCode,
-                AuthenticationCommands.ValidateToken.FullCode,
-                AuthenticationCommands.RefreshToken.FullCode
-            };
-
-            return !authCommands.Contains(commandId);
-        }
-
-
-
-
-
-       
 
 
         /// <summary>
@@ -306,6 +205,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         protected virtual async ValueTask HandleCommandResultAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
+            ICommand command,
             ResponseBase result,
             CancellationToken cancellationToken)
         {
@@ -319,7 +219,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             if (result.IsSuccess)
             {
                 // 命令执行成功，发送成功响应
-                var responsePackage = CreateResponsePackage(requestPackage, result);
+                var responsePackage = UpdatePacketWithResponse(requestPackage.Packet, command, result);
                 await SendResponseAsync(session, responsePackage, cancellationToken);
             }
             else
@@ -332,6 +232,64 @@ namespace RUINORERP.Server.Network.SuperSocket
         }
 
         /// <summary>
+        /// 附加响应数据到数据包发回客户端
+        /// </summary>
+        /// <param name="package"></param>
+        /// <param name="command"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, ICommand command, ResponseBase result)
+        {
+
+
+
+            package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
+            package.Direction = package.Direction == PacketDirection.Request ? PacketDirection.Response : package.Direction;
+            package.SessionId = package.SessionId;
+            package.Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error;
+            package.Extensions = new Dictionary<string, object>
+            {
+                ["Data"] = result,
+                ["Message"] = result.Message,
+                ["Code"] = result.Code,
+                ["TimestampUtc"] = result.TimestampUtc
+            };
+
+            // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
+            if (package?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
+            {
+                package.Extensions["RequestId"] = requestId;
+            }
+
+            // 设置请求标识
+            if (!string.IsNullOrEmpty(result.RequestId))
+            {
+                package.Extensions["RequestId"] = result.RequestId;
+            }
+
+            // 添加元数据
+            if (result.Metadata != null && result.Metadata.Count > 0)
+            {
+                foreach (var metadata in result.Metadata)
+                {
+                    package.Extensions[metadata.Key] = metadata.Value;
+                }
+            }
+
+            var ResponsePackBytes = MessagePackSerializer.Serialize<ResponseBase>(result, UnifiedSerializationService.MessagePackOptions);
+            if (command is BaseCommand baseCommand)
+            {
+                baseCommand.SetResponseData(ResponsePackBytes);
+            }
+            package.SetCommandDataByMessagePack(result);
+
+
+            return package;
+        }
+
+
+
+        /// <summary>
         /// 创建响应数据包
         /// </summary>
         /// <param name="requestPackage">请求数据包</param>
@@ -341,7 +299,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         {
             var response = new PacketModel
             {
-                PacketId =IdGenerator. GenerateResponseId(requestPackage.Packet.PacketId),
+                PacketId = IdGenerator.GenerateResponseId(requestPackage.Packet.PacketId),
                 Direction = requestPackage.Packet.Direction == PacketDirection.Request ? PacketDirection.Response : requestPackage.Packet.Direction,
                 SessionId = requestPackage.Packet.SessionId,
                 Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error,
@@ -376,7 +334,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
 
             // 优先使用WithJsonData设置业务响应数据
-                if (result != null)
+            if (result != null)
             {
                 try
                 {
@@ -410,13 +368,10 @@ namespace RUINORERP.Server.Network.SuperSocket
                     return;
                 }
                 package.SessionId = session.SessionID;
-                // 使用统一的序列化方法
-                var serializedData = SerializePacket(package);
+                var serializedData = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(package);
 
                 // 加密数据
-                var originalData = new OriginalData(
-                    (byte)package.CommandId.Category,
-                    new byte[] { package.CommandId.OperationCode },
+                var originalData = new OriginalData((byte)package.CommandId.Category, new byte[] { package.CommandId.OperationCode },
                     serializedData
                 );
                 var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
@@ -448,6 +403,33 @@ namespace RUINORERP.Server.Network.SuperSocket
                 _logger?.LogError(ex, "处理响应发送时发生未预期的异常");
             }
         }
+
+
+
+        protected virtual async ValueTask SendResponseToClientAsync(TAppSession session, PacketModel packetModel)
+        {
+            packetModel.SessionId = session.SessionID;
+            // 序列化和加密数据包
+            var payload = UnifiedSerializationService.SerializeWithMessagePack(packetModel);
+
+            // 加密数据
+            var originalData = new OriginalData(
+                (byte)CommandCategory.Authentication,
+                new byte[] { AuthenticationCommands.Connected.OperationCode },
+                payload
+            );
+            var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
+
+            // 发送数据并捕获可能的异常
+            try
+            {
+                await session.SendAsync(encryptedData.ToByteArray());
+            }
+            catch
+            { }
+        }
+
+
 
         /// <summary>
         /// 发送错误响应
@@ -486,16 +468,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             await SendResponseAsync(session, errorResponse, cancellationToken);
         }
 
-        /// <summary>
-        /// 序列化数据包
-        /// </summary>
-        /// <param name="package">数据包</param>
-        /// <returns>序列化后的字节数组</returns>
-        protected virtual byte[] SerializePacket(PacketModel package)
-        {
-            // 使用统一的序列化方法
-            return UnifiedSerializationService.SerializeWithMessagePack(package);
-        }
+
 
         /// <summary>
         /// 从响应结果中提取错误代码信息
@@ -558,8 +531,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
             };
 
-
-
             // 添加请求标识
             if (!string.IsNullOrEmpty(result.RequestId))
             {
@@ -610,5 +581,5 @@ namespace RUINORERP.Server.Network.SuperSocket
             : base(commandDispatcher, _packetAdapter, commandFactory, logger)
         { }
     }
- 
+
 }

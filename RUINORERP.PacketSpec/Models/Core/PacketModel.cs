@@ -123,47 +123,47 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 会话ID（通过ExecutionContext获取）
         /// </summary>
         [IgnoreMember]
-        public string SessionId 
-        { 
-            get => ExecutionContext?.SessionId; 
-            set 
-            { 
-                if (ExecutionContext == null) 
+        public string SessionId
+        {
+            get => ExecutionContext?.SessionId;
+            set
+            {
+                if (ExecutionContext == null)
                     ExecutionContext = new CommandExecutionContext();
-                ExecutionContext.SessionId = value; 
-            } 
+                ExecutionContext.SessionId = value;
+            }
         }
 
         /// <summary>
         /// 客户端ID（通过ExecutionContext获取）
         /// </summary>
         [IgnoreMember]
-        public string ClientId 
-        { 
-            get => ExecutionContext?.ClientId; 
-            set 
-            { 
-                if (ExecutionContext == null) 
+        public string ClientId
+        {
+            get => ExecutionContext?.ClientId;
+            set
+            {
+                if (ExecutionContext == null)
                     ExecutionContext = new CommandExecutionContext();
-                ExecutionContext.ClientId = value; 
-            } 
+                ExecutionContext.ClientId = value;
+            }
         }
 
         /// <summary>
         /// 认证Token（通过ExecutionContext获取）
         /// </summary>
         [IgnoreMember]
-        public string Token 
-        { 
-            get => ExecutionContext?.Token?.AccessToken; 
-            set 
-            { 
-                if (ExecutionContext == null) 
+        public string Token
+        {
+            get => ExecutionContext?.Token?.AccessToken;
+            set
+            {
+                if (ExecutionContext == null)
                     ExecutionContext = new CommandExecutionContext();
                 if (ExecutionContext.Token == null)
                     ExecutionContext.Token = new Commands.Authentication.TokenInfo();
-                ExecutionContext.Token.AccessToken = value; 
-            } 
+                ExecutionContext.Token.AccessToken = value;
+            }
         }
 
         #endregion
@@ -251,7 +251,23 @@ namespace RUINORERP.PacketSpec.Models.Core
             var json = Encoding.UTF8.GetString(CommandData);
             return JsonConvert.DeserializeObject<T>(json);
         }
-   
+
+
+        /// <summary>
+        /// 获取MessagePack数据为指定类型
+        /// </summary>
+        /// <typeparam name="T">目标类型</typeparam>
+        /// <returns>反序列化后的对象</returns>
+        public T GetMessagePackData<T>()
+        {
+            if (CommandData == null || CommandData.Length == 0)
+                return default;
+
+            // 为了利用缓存，我们需要重新计算缓存键
+            // 但由于我们不知道原始数据，只能从CommandData反序列化
+            // 这里保持简单实现，直接反序列化
+            return UnifiedSerializationService.DeserializeWithMessagePack<T>(CommandData);
+        }
 
         #endregion
 
@@ -276,7 +292,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             // 清理包体数据
             if (CommandData != null)
             {
-                  Array.Clear(CommandData, 0, CommandData.Length);
+                Array.Clear(CommandData, 0, CommandData.Length);
                 CommandData = null;
             }
         }
@@ -324,7 +340,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             // 生成缓存键：类型名 + 数据哈希
             var type = typeof(T);
             var jsonBytes = UnifiedSerializationService.SerializeWithJson(data);
-            
+
             // 计算JSON的哈希值作为缓存键的一部分
             string hash;
             using (var sha256 = SHA256.Create())
@@ -342,6 +358,57 @@ namespace RUINORERP.PacketSpec.Models.Core
             return this;
 
         }
+
+
+        public PacketModel SetCommandDataByMessagePack<T>(T data)
+        {
+            // 生成缓存键：类型名 + 数据哈希
+            var type = typeof(T);
+            var messagePackBytes = MessagePackSerializer.Serialize<T>(data, UnifiedSerializationService.MessagePackOptions);
+
+            // 计算JSON的哈希值作为缓存键的一部分
+            string hash;
+            using (var sha256 = SHA256.Create())
+            {
+                var hashBytes = sha256.ComputeHash(messagePackBytes);
+                hash = Convert.ToBase64String(hashBytes);
+            }
+
+            var cacheKey = $"{type.FullName}:{hash}";
+
+            // 尝试从缓存获取或添加
+            CommandData = _jsonCache.GetOrAdd(cacheKey, messagePackBytes);
+            Size = CommandData.Length;
+            LastUpdatedTime = DateTime.UtcNow;
+            return this;
+
+        }
+
+
+        public PacketModel SetCommandDataByMessagePack(Type type, object data)
+        {
+            // 生成缓存键：类型名 + 数据哈希
+            
+            var messagePackBytes = MessagePackSerializer.Serialize(data, UnifiedSerializationService.MessagePackOptions);
+
+            // 计算JSON的哈希值作为缓存键的一部分
+            string hash;
+            using (var sha256 = SHA256.Create())
+            {
+                var hashBytes = sha256.ComputeHash(messagePackBytes);
+                hash = Convert.ToBase64String(hashBytes);
+            }
+
+            var cacheKey = $"{type.FullName}:{hash}";
+
+            // 尝试从缓存获取或添加
+            CommandData = _jsonCache.GetOrAdd(cacheKey, messagePackBytes);
+            Size = CommandData.Length;
+            LastUpdatedTime = DateTime.UtcNow;
+            return this;
+
+        }
+
 
         #endregion
 

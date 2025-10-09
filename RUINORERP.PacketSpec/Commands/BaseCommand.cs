@@ -143,7 +143,7 @@ namespace RUINORERP.PacketSpec.Commands
 
         }
 
-        //public RequestBase Request { get; set; }
+
         protected virtual object GetSerializableDataCore() { return null; }
         // 新增智能访问方法
         public byte[] GetBinaryData()

@@ -19,7 +19,7 @@ namespace RUINORERP.UI.Network.Authentication
     {
         private readonly ClientCommunicationService _communicationService;
         private readonly TokenManager _tokenManager;
-        public TokenRefreshService(ClientCommunicationService communicationService ,TokenManager tokenManager)
+        public TokenRefreshService(ClientCommunicationService communicationService, TokenManager tokenManager)
         {
             _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
             _communicationService = communicationService;
@@ -79,7 +79,12 @@ namespace RUINORERP.UI.Network.Authentication
                 var baseCommand = CommandDataBuilder.BuildCommand<SimpleRequest, LoginResponse>(AuthenticationCommands.RefreshToken, request);
                 var response = await _communicationService.SendCommandAsync<SimpleRequest, LoginResponse>(
                     baseCommand, ct);
-                return response;
+
+                LoginResponse loginResponse = null;
+
+                //像登陆一样 取值
+
+                return loginResponse;
             }
             catch (Exception ex)
             {
@@ -93,14 +98,13 @@ namespace RUINORERP.UI.Network.Authentication
             SimpleRequest request = SimpleRequest.CreateString(token);
 
             // 使用_communicationService发送验证Token的请求
-            var bc = CommandDataBuilder.BuildCommand<SimpleRequest,LoginResponse>(AuthenticationCommands.ValidateToken, request);
+            var bc = CommandDataBuilder.BuildCommand<SimpleRequest, LoginResponse>(AuthenticationCommands.ValidateToken, request);
 
-            var response = await _communicationService.SendCommandAsync<SimpleRequest, LoginResponse>(
-                bc,
+            var response = await _communicationService.SendCommandAsync<SimpleRequest, LoginResponse>(bc,
                 ct, 15000);
-                
+
             // 验证响应是否成功
-            return response != null && !string.IsNullOrEmpty(response.AccessToken);
+            return response != null && !string.IsNullOrEmpty(response.ExecutionContext.Token.AccessToken);
         }
     }
 }

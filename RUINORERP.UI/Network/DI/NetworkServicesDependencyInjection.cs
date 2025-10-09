@@ -72,7 +72,7 @@ namespace RUINORERP.UI.Network.DI
             
             // 注册业务服务 使用瞬态
             services.AddTransient<UserLoginService>();
-            services.AddTransient<CacheClientService>();
+           // services.AddTransient<CacheClientService>();
             //services.AddTransient<CacheSyncService>();
             //services.AddTransient<MessageNotificationService>();
             
@@ -119,7 +119,7 @@ namespace RUINORERP.UI.Network.DI
             
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
-            builder.RegisterType<CacheClientService>().AsSelf().SingleInstance();
+            //builder.RegisterType<CacheClientService>().AsSelf().SingleInstance();
             //builder.RegisterType<CacheSyncService>().AsSelf().InstancePerDependency();
             //builder.RegisterType<MessageNotificationService>().AsSelf().InstancePerDependency();
             

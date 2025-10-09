@@ -18,7 +18,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     /// </summary>
     [PacketCommand("Login", CommandCategory.Authentication)]
     [MessagePackObject(AllowPrivate = true)]
-    public class LoginCommand : BaseCommand<LoginRequest, LoginResponse>
+    public class LoginCommand : BaseCommand<LoginRequest, ResponseBase>
     {
      
         /// <summary>

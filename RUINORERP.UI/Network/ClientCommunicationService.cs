@@ -34,6 +34,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using ICommand = RUINORERP.PacketSpec.Commands.ICommand;
+using MessagePack;
 
 namespace RUINORERP.UI.Network
 {
@@ -306,16 +307,13 @@ namespace RUINORERP.UI.Network
         /// <param name="ct">取消令牌</param>
         /// <param name="timeoutMs">超时时间（毫秒）</param>
         /// <returns>响应数据对象</returns>
-        private async Task<TResponse> SendRequestAsync<TRequest, TResponse>(
+        private async Task<PacketModel> SendRequestAsync<TRequest, TResponse>(
             BaseCommand<TRequest, TResponse> command,
             CancellationToken ct = default,
             int timeoutMs = 30000)
             where TRequest : class, IRequest
             where TResponse : class, IResponse
         {
-
-
-
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(timeoutMs);
 
@@ -362,16 +360,16 @@ namespace RUINORERP.UI.Network
                 {
 
                 }
+                PacketModel packet = null;
 
-                TResponse myresponse = null;
-                if (responsePacket is PacketModel packet)
+
+                if (responsePacket is PacketModel )
                 {
-                    ICommand baseCommand = commandPacketAdapter.CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext.CommandType.Name);
+                    packet = responsePacket;
+                   
                 }
-                var response = responsePacket.GetJsonData<TResponse>();
-
                 _logger?.LogDebug("成功接收响应，请求ID: {RequestId}", command.Request.RequestId);
-                return response;
+                return packet;
             }
             catch (Exception ex) when (!(ex is TimeoutException) && !(ex is OperationCanceledException))
             {
@@ -486,7 +484,7 @@ namespace RUINORERP.UI.Network
         /// <returns>包含响应数据的ApiResponse对象</returns>
         /// <exception cref="ArgumentException">当命令类别无效时抛出</exception>
         /// <exception cref="ArgumentOutOfRangeException">当超时时间小于等于0时抛出</exception>
-        public async Task<TResponse> SendRequestWithRetryAsync<TRequest, TResponse>(
+        public async Task<PacketModel> SendRequestWithRetryAsync<TRequest, TResponse>(
             BaseCommand<TRequest, TResponse> command,
             IRetryStrategy retryStrategy = null,
             CancellationToken ct = default,
@@ -565,17 +563,17 @@ namespace RUINORERP.UI.Network
         /// <param name="ct">取消令牌</param>
         /// <param name="timeoutMs">超时时间（毫秒），默认为30000毫秒</param>
         /// <returns>TResponse</returns>
-        public async Task<TResponse> SendCommandAsync<TRequest, TResponse>(
-            BaseCommand<TRequest, TResponse> command,
+        public async Task<PacketModel> SendCommandAsync<TRequest, ResponseBase>(
+            BaseCommand<TRequest, ResponseBase> command,
             CancellationToken ct = default,
             int timeoutMs = 30000)
             where TRequest : class, IRequest
-            where TResponse : class, IResponse
+            where ResponseBase : class, IResponse
         {
             if (!Enum.IsDefined(typeof(CommandCategory), command.CommandIdentifier.Category))
                 throw new ArgumentException($"无效的命令类别: {command.CommandIdentifier.Category}", nameof(command.CommandIdentifier));
 
-            return await EnsureConnectedAsync<TResponse>(async () =>
+            return await EnsureConnectedAsync<PacketModel>(async () =>
             {
                 // var command = InitializeCommandAsync(command, requestData);
 
@@ -583,7 +581,7 @@ namespace RUINORERP.UI.Network
                 try
                 {
                     // BaseCommand会自动处理Token管理，包括获取和刷新Token
-                    return await SendRequestAsync<TRequest, TResponse>(command, ct, timeoutMs);
+                    return await SendRequestAsync<TRequest, ResponseBase>(command, ct, timeoutMs);
                 }
                 catch (Exception ex) when (ex.Message.IndexOf("token expired", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    ex.Message.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -1034,9 +1032,7 @@ namespace RUINORERP.UI.Network
 
                 packet.ExecutionContext.RequestId = command.Request.RequestId;
                 packet.ExecutionContext.RequestType = command.Request.GetType();
-                packet.ExecutionContext.ResponseType = command.Request.GetType();
                 packet.ExecutionContext.CommandType = command.GetType();
-
                 packet.ClientId = client.ClientID;
 
                 // 序列化和加密数据包

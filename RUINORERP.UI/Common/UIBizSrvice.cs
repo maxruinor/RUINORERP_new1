@@ -1485,8 +1485,8 @@ namespace RUINORERP.UI.Common
                 if (NeedRequesCache(rslist, tableName) && BizCacheHelper.Instance.typeNames.Contains(tableName))
                 {// 临时代码：标记需要完善的部分
 
-                    CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
-                    await cacheClient.RequestCacheAsync(tableName);
+                    //CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
+                    //await cacheClient.RequestCacheAsync(tableName);
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
                     //ClientService.请求缓存(tableName);
                 }

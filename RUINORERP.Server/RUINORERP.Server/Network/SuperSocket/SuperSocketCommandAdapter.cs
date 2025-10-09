@@ -26,6 +26,7 @@ using RUINORERP.PacketSpec.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using MessagePack;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Net.Sockets;
 
 namespace RUINORERP.Server.Network.SuperSocket
 {
@@ -240,9 +241,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <returns></returns>
         protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, ICommand command, ResponseBase result)
         {
-
-
-
+            package.ExecutionContext.ResponseType = result.GetType();
             package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
             package.Direction = package.Direction == PacketDirection.Request ? PacketDirection.Response : package.Direction;
             package.SessionId = package.SessionId;
@@ -280,8 +279,9 @@ namespace RUINORERP.Server.Network.SuperSocket
             if (command is BaseCommand baseCommand)
             {
                 baseCommand.SetResponseData(ResponsePackBytes);
+                package.SetCommandDataByMessagePack(baseCommand);
             }
-            package.SetCommandDataByMessagePack(result);
+            
 
 
             return package;

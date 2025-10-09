@@ -1,8 +1,10 @@
+using MessagePack;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.UI.Network.Authentication;
@@ -21,6 +23,7 @@ namespace RUINORERP.UI.Network.Services
     public sealed class UserLoginService : IDisposable
     {
         private readonly ClientCommunicationService _communicationService;
+        private readonly CommandPacketAdapter commandPacketAdapter;
         private readonly ILogger<UserLoginService> _log;
         private readonly SilentTokenRefresher _silentTokenRefresher;
         private readonly TokenManager _tokenManager;
@@ -32,10 +35,12 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="logger">日志记录器</param>
         public UserLoginService(
             ClientCommunicationService communicationService,
+              CommandPacketAdapter _commandPacketAdapter,
             TokenManager tokenManager,
             ILogger<UserLoginService> logger = null)
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
+            commandPacketAdapter = _commandPacketAdapter;
             _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
             _log = logger;
 
@@ -64,20 +69,34 @@ namespace RUINORERP.UI.Network.Services
                 LoginCommand loginCommand = new LoginCommand(username, password);
                 loginCommand.Request = loginRequest;
                 loginCommand.Request.RequestId = IdGenerator.GenerateRequestId(loginCommand.CommandIdentifier);
-             
 
-                var response = await _communicationService.SendCommandAsync<LoginRequest, LoginResponse>(
-                    loginCommand, ct);
+
+                var packet = await _communicationService.SendCommandAsync<LoginRequest, ResponseBase>(loginCommand, ct);
+
+                LoginResponse loginResponse = null;
 
                 // 登录成功后设置token - 使用简化版TokenManager
-                if (response != null && !string.IsNullOrEmpty(response.AccessToken))
+                if (packet != null)
                 {
 #warning 登陆成功后 得到token 返回
                     //_tokenManager.TokenStorage.SetTokenAsync(response.AccessToken, response.RefreshToken, response.ExpiresIn);
-                    // 不再手动 Start，由全局 HeartbeatManager 统一刷新
+                    ICommand baseCommand = commandPacketAdapter.CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext.CommandType.Name);
+                    if (baseCommand is LoginCommand  responseCommand)
+                    {
+                        if (responseCommand.Response == null)
+                        {
+                            var lastresponse = MessagePackSerializer.Deserialize(packet.ExecutionContext.ResponseType, responseCommand.JsonResponseData);
+                            loginResponse = lastresponse as LoginResponse;
+                        }
+                    }
+
+                    if (packet.ExecutionContext.Token != null && !string.IsNullOrEmpty(packet.ExecutionContext.Token.AccessToken))
+                    {
+
+                    }
                 }
 
-                return response;
+                return loginResponse;
             }
             catch (Exception ex)
             {
@@ -85,7 +104,7 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-       
+
         /// <summary>
         /// 用户登出 - 使用简化版TokenManager
         /// </summary>
@@ -106,15 +125,13 @@ namespace RUINORERP.UI.Network.Services
                 // 创建登出请求
                 var request = SimpleRequest.CreateBool(true);
 
-              
-
                 var baseCommand = CommandDataBuilder.BuildCommand<SimpleRequest, SimpleResponse>(AuthenticationCommands.Logout, request);
                 baseCommand.Request = request;
                 var response = await _communicationService.SendCommandAsync<SimpleRequest, SimpleResponse>(
                     baseCommand, ct);
 
                 // 检查响应是否成功
-                bool isSuccess = response != null && response.IsSuccess;
+                bool isSuccess = response != null;// && response.IsSuccess;
 
                 if (isSuccess)
                 {
@@ -134,7 +151,7 @@ namespace RUINORERP.UI.Network.Services
 
 
 
-  
+
 
         /// <summary>
         /// 获取当前访问令牌 - 使用简化版TokenManager

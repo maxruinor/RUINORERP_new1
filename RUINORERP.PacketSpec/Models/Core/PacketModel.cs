@@ -234,7 +234,8 @@ namespace RUINORERP.PacketSpec.Models.Core
             CreatedTimeUtc = DateTime.UtcNow;
             TimestampUtc = CreatedTimeUtc;
             Extensions = new System.Collections.Generic.Dictionary<string, object>();
-            CommandData = Array.Empty<byte>();
+            // 移除CommandData的强制初始化，允许外部设置数据
+            // CommandData = Array.Empty<byte>();
         }
 
         /// <summary>
@@ -250,17 +251,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             var json = Encoding.UTF8.GetString(CommandData);
             return JsonConvert.DeserializeObject<T>(json);
         }
-
-        /// <summary>
-        /// 从原始数据创建数据包
-        /// </summary>
-        /// <param name="originalData">原始数据</param>
-        public PacketModel(byte[] originalData)
-            : this()
-        {
-            //Data = originalData;
-            Size = originalData?.Length ?? 0;
-        }
+   
 
         #endregion
 
@@ -270,24 +261,24 @@ namespace RUINORERP.PacketSpec.Models.Core
         public void ClearSensitiveData()
         {
 
-            //// 清理ExecutionContext中的敏感数据
-            //if (ExecutionContext != null)
-            //{
-            //    ExecutionContext.SessionId = null;
-            //    ExecutionContext.ClientId = null;
-            //    if (ExecutionContext.Token != null)
-            //    {
-            //        ExecutionContext.Token.AccessToken = null;
-            //    }
-            //}
-            
-            //Extensions?.Clear();
-            //// 清理包体数据
-            //if (CommandData != null)
-            //{
-            //   // Array.Clear(CommandData, 0, CommandData.Length);
-            //    //CommandData = null;
-            //}
+            // 清理ExecutionContext中的敏感数据
+            if (ExecutionContext != null)
+            {
+                ExecutionContext.SessionId = null;
+                ExecutionContext.ClientId = null;
+                if (ExecutionContext.Token != null)
+                {
+                    ExecutionContext.Token.AccessToken = null;
+                }
+            }
+
+            Extensions?.Clear();
+            // 清理包体数据
+            if (CommandData != null)
+            {
+                  Array.Clear(CommandData, 0, CommandData.Length);
+                CommandData = null;
+            }
         }
 
         /// <summary>
@@ -321,7 +312,7 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         internal void SetData(byte[] data)
         {
-           // this.CommandData = data;
+            this.CommandData = data;
         }
 
         /// <summary>
@@ -345,7 +336,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             var cacheKey = $"{type.FullName}:{hash}";
 
             // 尝试从缓存获取或添加
-           // CommandData = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
+            CommandData = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
             Size = CommandData.Length;
             LastUpdatedTime = DateTime.UtcNow;
             return this;

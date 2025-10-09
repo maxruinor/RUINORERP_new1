@@ -1,4 +1,4 @@
-using MessagePack;
+﻿using MessagePack;
 using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
@@ -122,7 +122,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// </summary>
     /// <typeparam name="TEntity">业务实体类型</typeparam>
     [MessagePackObject]
-    public class EntityRequest<TEntity> : RequestBase
+    public class RequestBase<TEntity> : RequestBase
         where TEntity : class
     {
         /// <summary>
@@ -164,7 +164,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 默认构造函数
         /// </summary>
-        public EntityRequest()
+        public RequestBase()
         {
             QueryParameters = new Dictionary<string, object>();
         }
@@ -175,9 +175,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <param name="entity">实体数据</param>
         /// <param name="includeRelatedData">是否包含关联数据</param>
         /// <returns>实体请求实例</returns>
-        public static EntityRequest<TEntity> CreateCreateRequest(TEntity entity, bool includeRelatedData = false)
+        public static RequestBase<TEntity> CreateCreateRequest(TEntity entity, bool includeRelatedData = false)
         {
-            return new EntityRequest<TEntity>
+            return new RequestBase<TEntity>
             {
                 Entity = entity,
                 OperationType = EntityOperationType.Create,
@@ -192,9 +192,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <param name="entityId">实体ID</param>
         /// <param name="dataVersion">数据版本号</param>
         /// <returns>实体请求实例</returns>
-        public static EntityRequest<TEntity> CreateUpdateRequest(TEntity entity, string entityId, string dataVersion = null)
+        public static RequestBase<TEntity> CreateUpdateRequest(TEntity entity, string entityId, string dataVersion = null)
         {
-            return new EntityRequest<TEntity>
+            return new RequestBase<TEntity>
             {
                 Entity = entity,
                 EntityId = entityId,
@@ -209,9 +209,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <param name="entityId">实体ID</param>
         /// <param name="dataVersion">数据版本号</param>
         /// <returns>实体请求实例</returns>
-        public static EntityRequest<TEntity> CreateDeleteRequest(string entityId, string dataVersion = null)
+        public static RequestBase<TEntity> CreateDeleteRequest(string entityId, string dataVersion = null)
         {
-            return new EntityRequest<TEntity>
+            return new RequestBase<TEntity>
             {
                 EntityId = entityId,
                 OperationType = EntityOperationType.Delete,
@@ -225,9 +225,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <param name="entityId">实体ID</param>
         /// <param name="includeRelatedData">是否包含关联数据</param>
         /// <returns>实体请求实例</returns>
-        public static EntityRequest<TEntity> CreateGetRequest(string entityId, bool includeRelatedData = true)
+        public static RequestBase<TEntity> CreateGetRequest(string entityId, bool includeRelatedData = true)
         {
-            return new EntityRequest<TEntity>
+            return new RequestBase<TEntity>
             {
                 EntityId = entityId,
                 OperationType = EntityOperationType.Get,
@@ -241,9 +241,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <param name="queryParameters">查询参数</param>
         /// <param name="includeRelatedData">是否包含关联数据</param>
         /// <returns>实体请求实例</returns>
-        public static EntityRequest<TEntity> CreateListRequest(Dictionary<string, object> queryParameters = null, bool includeRelatedData = false)
+        public static RequestBase<TEntity> CreateListRequest(Dictionary<string, object> queryParameters = null, bool includeRelatedData = false)
         {
-            return new EntityRequest<TEntity>
+            return new RequestBase<TEntity>
             {
                 QueryParameters = queryParameters ?? new Dictionary<string, object>(),
                 OperationType = EntityOperationType.List,
@@ -257,9 +257,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <param name="queryParameters">查询参数</param>
         /// <param name="includeRelatedData">是否包含关联数据</param>
         /// <returns>实体请求实例</returns>
-        public static EntityRequest<TEntity> CreateCustomRequest(Dictionary<string, object> queryParameters = null, bool includeRelatedData = false)
+        public static RequestBase<TEntity> CreateCustomRequest(Dictionary<string, object> queryParameters = null, bool includeRelatedData = false)
         {
-            return new EntityRequest<TEntity>
+            return new RequestBase<TEntity>
             {
                 QueryParameters = queryParameters ?? new Dictionary<string, object>(),
                 OperationType = EntityOperationType.Custom,

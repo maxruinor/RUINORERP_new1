@@ -363,10 +363,10 @@ namespace RUINORERP.UI.Network
                 PacketModel packet = null;
 
 
-                if (responsePacket is PacketModel )
+                if (responsePacket is PacketModel)
                 {
                     packet = responsePacket;
-                   
+
                 }
                 _logger?.LogDebug("成功接收响应，请求ID: {RequestId}", command.Request.RequestId);
                 return packet;
@@ -1257,8 +1257,91 @@ namespace RUINORERP.UI.Network
             Dispose(false);
         }
 
+        /// <summary>
+        /// 处理命令响应并提取业务数据
+        /// 将重复的响应处理逻辑提取到通信服务层
+        /// </summary>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="packet">接收到的数据包</param>
+        /// <param name="commandPacketAdapter">命令包适配器</param>
+        /// <returns>处理后的响应数据</returns>
+        public async Task<TResponse> ProcessCommandResponseAsync<TResponse>(PacketModel packet, CommandPacketAdapter commandPacketAdapter)
+            where TResponse : class, IResponse
+        {
+            if (packet == null)
+            {
+                _logger.LogWarning("接收到的数据包为空");
+                return null;
+            }
 
+            try
+            {
+                // 创建命令对象
+                ICommand baseCommand = commandPacketAdapter.CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext.CommandType.Name);
 
+                // 处理登录命令的特殊情况
+                if (baseCommand is LoginCommand loginCommand)
+                {
+                    if (loginCommand.Response == null && packet.ExecutionContext.ResponseType != null)
+                    {
+                        // 反序列化响应数据
+                        //var responseData = MessagePackSerializer.Deserialize(packet.ExecutionContext.ResponseType, loginCommand.Response);
+                        var responseData = loginCommand.Response;
+                        return responseData as TResponse;
+                    }
+                    return loginCommand.Response as TResponse;
+                }
+
+                //// 处理其他类型的命令响应
+                //if (baseCommand is BaseCommand<TRequest, TResponse> typedCommand)
+                //{
+                //    return typedCommand.Response;
+                //}
+
+                _logger.LogWarning($"无法处理的命令类型: {baseCommand?.GetType().Name}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理命令响应时发生错误");
+                throw new InvalidOperationException($"处理命令响应失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 发送命令并处理响应，返回指令类型的响应数据
+        /// </summary>
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="command">命令对象</param>
+        /// <param name="commandPacketAdapter">命令包适配器</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <returns>包含指令信息的响应数据</returns>
+        public async Task<BaseCommand<TResponse>> SendCommandWithResponseAsync<TRequest, TResponse>(
+            BaseCommand<TRequest, TResponse> command,
+            CommandPacketAdapter commandPacketAdapter,
+            CancellationToken ct = default,
+            int timeoutMs = 30000)
+            where TRequest : class, IRequest
+            where TResponse : class, IResponse
+        {
+            var packet = await SendCommandAsync<TRequest, TResponse>(command, ct, timeoutMs);
+
+            if (packet == null)
+            {
+                return BaseCommand<TResponse>.Error("未收到服务器响应", 408);
+            }
+
+            var responseData = await ProcessCommandResponseAsync<TResponse>(packet, commandPacketAdapter);
+
+            var commandResponse = BaseCommand<TResponse>.Success(responseData, (responseData as ResponseBase)?.Message ?? "操作成功");
+            commandResponse.CommandId = command.CommandIdentifier;
+            commandResponse.RequestId = command.Request?.RequestId;
+            commandResponse.ExecutionContext = packet.ExecutionContext;
+
+            return commandResponse;
+        }
 
     }
 

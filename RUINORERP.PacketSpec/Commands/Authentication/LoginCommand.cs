@@ -18,9 +18,8 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     /// </summary>
     [PacketCommand("Login", CommandCategory.Authentication)]
     [MessagePackObject(AllowPrivate = true)]
-    public class LoginCommand : BaseCommand<LoginRequest, ResponseBase>
+    public class LoginCommand : BaseCommand<LoginRequest, LoginResponse>
     {
-     
         /// <summary>
         /// 登录请求数据
         /// </summary>
@@ -29,6 +28,12 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         {
             get => Request;
             set => Request = value;
+        }
+        [Key(1001)]
+        public LoginResponse LoginResponse
+        {
+            get => Response;
+            set => Response = value;
         }
 
         /// <summary>

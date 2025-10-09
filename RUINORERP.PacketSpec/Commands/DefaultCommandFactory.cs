@@ -1,17 +1,18 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Reflection;
+using System.ComponentModel;
 using Newtonsoft.Json;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
-    /// 默认命令工厂实现
-    /// 负责根据命令ID创建对应的命令对象
+    /// 默认命令工厂实现 - 负责根据命令ID创建对应的命令对象（重构版：提取类型扫描逻辑）
     /// </summary>
     public class DefaultCommandFactory : ICommandFactoryAsync
     {
@@ -127,6 +128,151 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
+
+        /// <summary>
+        /// 创建命令实例（重构版：提取参数设置逻辑）
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="parameters">命令参数</param>
+        /// <returns>命令实例</returns>
+        public async Task<ICommand> CreateCommandAsync(string commandId, Dictionary<string, object> parameters = null)
+        {
+            if (string.IsNullOrEmpty(commandId))
+            {
+                _logger?.LogError("命令ID为空");
+                return null;
+            }
+
+            try
+            {
+                var command = await CreateCommandInstanceAsync(commandId);
+                if (command == null)
+                {
+                    return null;
+                }
+
+                // 设置命令参数
+                if (parameters != null && parameters.Count > 0)
+                {
+                    await SetCommandParametersAsync(command, parameters);
+                }
+
+                _logger?.LogDebug($"成功创建命令实例: {commandId}");
+                return command;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"创建命令 {commandId} 时发生异常");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 创建命令实例 - 提取为独立方法
+        /// </summary>
+        private async Task<ICommand> CreateCommandInstanceAsync(string commandId)
+        {
+            // 尝试从缓存中获取命令类型
+            if (!_commandTypeHelper.GetAllCommandTypes().TryGetValue(uint.Parse(commandId), out var commandType))
+            {
+                _logger?.LogWarning($"未找到命令类型: {commandId}");
+                return null;
+            }
+
+            // 创建命令实例
+            var command = Activator.CreateInstance(commandType) as ICommand;
+            if (command == null)
+            {
+                _logger?.LogError($"创建命令实例失败: {commandId}");
+                return null;
+            }
+
+            return command;
+        }
+
+        /// <summary>
+        /// 设置命令参数（重构版：提取参数转换逻辑）
+        /// </summary>
+        private async Task SetCommandParametersAsync(ICommand command, Dictionary<string, object> parameters)
+        {
+            var commandType = command.GetType();
+            
+            foreach (var param in parameters)
+            {
+                try
+                {
+                    await SetCommandPropertyAsync(command, commandType, param.Key, param.Value);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, $"设置命令参数 {param.Key} 时发生异常");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 设置命令属性 - 提取为独立方法
+        /// </summary>
+        private async Task SetCommandPropertyAsync(ICommand command, Type commandType, string propertyName, object value)
+        {
+            var property = commandType.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+            if (property == null || !property.CanWrite)
+            {
+                _logger?.LogWarning($"命令 {commandType.Name} 不存在属性 {propertyName} 或属性不可写");
+                return;
+            }
+
+            var convertedValue = ConvertParameterValue(value, property.PropertyType);
+            property.SetValue(command, convertedValue);
+        }
+
+        /// <summary>
+        /// 转换参数值类型
+        /// </summary>
+        private object ConvertParameterValue(object value, Type targetType)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            var valueType = value.GetType();
+            if (targetType.IsAssignableFrom(valueType))
+            {
+                return value;
+            }
+
+            try
+            {
+                // 处理可空类型
+                var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+                
+                // 特殊处理枚举类型
+                if (underlyingType.IsEnum)
+                {
+                    if (value is string stringValue)
+                    {
+                        return Enum.Parse(underlyingType, stringValue, true);
+                    }
+                    return Enum.ToObject(underlyingType, value);
+                }
+
+                // 使用类型转换器
+                var converter = TypeDescriptor.GetConverter(underlyingType);
+                if (converter.CanConvertFrom(valueType))
+                {
+                    return converter.ConvertFrom(value);
+                }
+
+                // 尝试强制转换
+                return Convert.ChangeType(value, underlyingType);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, $"参数值类型转换失败: {valueType.Name} -> {targetType.Name}");
+                throw;
+            }
+        }
 
         /// <summary>
         /// 异步从统一数据包创建命令

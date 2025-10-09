@@ -44,7 +44,7 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 核心处理方法 - 统一处理泛型命令
+        /// 核心处理方法 - 统一处理泛型命令（重构版：使用基础类的预处理流程）
         /// </summary>
         /// <param name="cmd">队列命令</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -66,7 +66,7 @@ namespace RUINORERP.PacketSpec.Commands
                     return ResponseBase.CreateError($"不支持的命令类型: {cmd.Command.GetType().Name}", 400);
                 }
 
-                // 请求验证
+                // 请求验证（调用基础验证方法）
                 var validationResult = await ValidateRequestAsync(request, cancellationToken);
                 if (!validationResult.IsValid)
                 {
@@ -78,21 +78,8 @@ namespace RUINORERP.PacketSpec.Commands
                 // 执行业务逻辑
                 var response = await HandleRequestAsync(request, cancellationToken);
                 
-                // 响应验证
-                if (response == null)
-                {
-                    Logger?.LogError("业务处理返回空响应");
-                    return ResponseBase.CreateError("处理结果为空", 500);
-                }
-
-                // 需要将TResponse转换为ResponseBase
-                if (response is ResponseBase responseBase)
-                {
-                    return responseBase;
-                }
-                
-                // 如果TResponse不是ResponseBase，需要转换或包装
-                throw new InvalidCastException($"响应类型 {typeof(TResponse).Name} 无法转换为 ResponseBase");
+                // 响应验证和转换
+                return ValidateAndConvertResponse(response);
             }
             catch (OperationCanceledException)
             {
@@ -104,6 +91,28 @@ namespace RUINORERP.PacketSpec.Commands
                 Logger?.LogError(ex, $"处理 {typeof(TRequest).Name} 时发生异常");
                 return ResponseBase.CreateError($"处理失败: {ex.Message}", 500);
             }
+        }
+
+        /// <summary>
+        /// 验证和转换响应数据 - 提取为独立方法提高可读性
+        /// </summary>
+        private ResponseBase ValidateAndConvertResponse(TResponse response)
+        {
+            // 响应验证
+            if (response == null)
+            {
+                Logger?.LogError("业务处理返回空响应");
+                return ResponseBase.CreateError("处理结果为空", 500);
+            }
+
+            // 类型转换验证
+            if (response is ResponseBase responseBase)
+            {
+                return responseBase;
+            }
+
+            // 如果TResponse不是ResponseBase，需要转换或包装
+            throw new InvalidCastException($"响应类型 {typeof(TResponse).Name} 无法转换为 ResponseBase");
         }
 
         /// <summary>

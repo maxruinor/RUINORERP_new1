@@ -7,6 +7,7 @@ using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.UI.Network;
 using RUINORERP.UI.Network.Authentication;
 using SourceLibrary.Security;
 using System;
@@ -55,12 +56,13 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 用户登录 - 使用简化版TokenManager
+        /// 返回包含指令信息的响应数据
         /// </summary>
         /// <param name="username">用户名</param>
         /// <param name="password">密码</param>
         /// <param name="ct">取消令牌</param>
-        /// <returns>登录响应</returns>
-        public async Task<ResponseBase<LoginResponse>> LoginAsync(string username, string password, CancellationToken ct = default)
+        /// <returns>包含指令信息的登录响应</returns>
+        public async Task<BaseCommand<LoginResponse>> LoginAsync(string username, string password, CancellationToken ct = default)
         {
             try
             {
@@ -70,38 +72,72 @@ namespace RUINORERP.UI.Network.Services
                 loginCommand.Request = loginRequest;
                 loginCommand.Request.RequestId = IdGenerator.GenerateRequestId(loginCommand.CommandIdentifier);
 
+                // 使用新的方法发送命令并获取包含指令信息的响应
+                var commandResponse = await _communicationService.SendCommandWithResponseAsync<LoginRequest, LoginResponse>(
+                    loginCommand, commandPacketAdapter, ct);
 
-                var packet = await _communicationService.SendCommandAsync<LoginRequest, ResponseBase<LoginResponse>>(loginCommand, ct);
-
-                LoginResponse loginResponse = null;
-
-                // 登录成功后设置token - 使用简化版TokenManager
-                if (packet != null)
+                // 检查响应是否成功
+                if (!commandResponse.IsSuccess)
                 {
-#warning 登陆成功后 得到token 返回
-                    //_tokenManager.TokenStorage.SetTokenAsync(response.AccessToken, response.RefreshToken, response.ExpiresIn);
-                    ICommand baseCommand = commandPacketAdapter.CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext.CommandType.Name);
-                    if (baseCommand is LoginCommand responseCommand)
+                    return new BaseCommand<LoginResponse>
                     {
-                        if (responseCommand.Response == null)
-                        {
-                            var lastresponse = MessagePackSerializer.Deserialize(packet.ExecutionContext.ResponseType, responseCommand.JsonResponseData);
-                            loginResponse = lastresponse as LoginResponse;
-                        }
-                    }
-
-                    if (packet.ExecutionContext.Token != null && !string.IsNullOrEmpty(packet.ExecutionContext.Token.AccessToken))
-                    {
-
-                    }
+                        Message = commandResponse.Message,
+                        RequestId = commandResponse.RequestId
+                    };
                 }
 
-                return loginResponse;
+                // 登录成功后处理Token - 使用简化版TokenManager
+                if (commandResponse.IsSuccess && commandResponse.ResponseData != null)
+                {
+                    var loginResponse = commandResponse.ResponseData;
+
+                    // 保存Token信息
+                    if (loginResponse.Token != null && !string.IsNullOrEmpty(loginResponse.Token.AccessToken))
+                    {
+                        await _tokenManager.TokenStorage.SetTokenAsync(loginResponse.Token);
+
+                        _log?.LogInformation("登录成功，Token已保存 - 用户: {Username}, 请求ID: {RequestId}",
+                            username, commandResponse.RequestId);
+                    }
+                    else
+                    {
+                        _log?.LogWarning("登录响应中未包含有效的Token信息 - 用户: {Username}, 请求ID: {RequestId}",
+                            username, commandResponse.RequestId);
+                    }
+                }
+                else
+                {
+                    _log?.LogWarning("登录失败 - 用户: {Username}, 错误: {ErrorMessage}",
+                        username, commandResponse.ErrorMessage);
+                }
+
+                return commandResponse;
             }
             catch (Exception ex)
             {
+                _log?.LogError(ex, "登录过程中发生异常 - 用户: {Username}", username);
                 throw new Exception($"登录失败: {ex.Message}", ex);
             }
+        }
+
+        /// <summary>
+        /// 用户登录（传统方式）- 使用简化版TokenManager
+        /// 返回传统的ResponseBase包装响应，保持向后兼容性
+        /// </summary>
+        /// <param name="username">用户名</param>
+        /// <param name="password">密码</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>登录响应</returns>
+        public async Task<ResponseBase<LoginResponse>> LoginTraditionalAsync(string username, string password, CancellationToken ct = default)
+        {
+            var commandResponse = await LoginAsync(username, password, ct);
+
+            return new ResponseBase<LoginResponse>
+            {
+                Message = commandResponse.Message,
+                Data = commandResponse.ResponseData,
+                RequestId = commandResponse.RequestId
+            };
         }
 
 

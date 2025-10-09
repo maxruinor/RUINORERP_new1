@@ -148,7 +148,7 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 执行核心处理逻辑
+        /// 路由命令到对应的处理器（重构版：提取命令预处理逻辑）
         /// </summary>
         /// <param name="cmd">队列命令</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -158,6 +158,13 @@ namespace RUINORERP.Server.Network.Commands
             var request = cmd?.Command;
             var commandType = request?.GetType().Name ?? "Unknown";
             
+            var validationResult = ValidateCommandParameters(cmd);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
+
+            // 获取路由信息
             if (!_commandRoutes.TryGetValue(commandType, out var routeInfo))
             {
                 _logger.LogWarning($"未找到命令类型 {commandType} 的路由配置");
@@ -168,22 +175,50 @@ namespace RUINORERP.Server.Network.Commands
             {
                 _logger.LogInformation($"动态路由：{commandType} -> {routeInfo.HandlerType.Name}");
 
-                // 创建处理器实例
-                var handler = ActivatorUtilities.CreateInstance(_serviceProvider, routeInfo.HandlerType) as ICommandHandler;
-                if (handler == null)
-                {
-                    return ResponseBase.CreateError($"无法创建处理器实例: {routeInfo.HandlerType.Name}");
-                }
-
-                // 执行命令处理
-                var result = await handler.HandleAsync(cmd, cancellationToken);
-                return result;
+                // 获取命令处理器并执行
+                return await ExecuteCommandRoutingAsync(cmd, routeInfo, cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"动态路由处理失败：{commandType} -> {routeInfo.HandlerType.Name}");
                 return ResponseBase.CreateError($"处理命令时发生错误: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 验证命令参数 - 提取为独立方法
+        /// </summary>
+        private ResponseBase ValidateCommandParameters(QueuedCommand cmd)
+        {
+            if (cmd == null)
+            {
+                _logger.LogError("命令对象为null");
+                return ResponseBase.CreateError("命令对象不能为空", 400);
+            }
+
+            //if (cmd.Session == null)
+            //{
+            //    _logger.LogError("会话对象为null");
+            //    return ResponseBase.CreateError("会话对象不能为空", 400);
+            //}
+
+            return null;
+        }
+
+        /// <summary>
+        /// 执行命令路由 - 提取为独立方法
+        /// </summary>
+        private async Task<ResponseBase> ExecuteCommandRoutingAsync(QueuedCommand cmd, CommandRouteInfo routeInfo, CancellationToken cancellationToken)
+        {
+            // 创建处理器实例
+            var handler = ActivatorUtilities.CreateInstance(_serviceProvider, routeInfo.HandlerType) as ICommandHandler;
+            if (handler == null)
+            {
+                return ResponseBase.CreateError($"无法创建处理器实例: {routeInfo.HandlerType.Name}");
+            }
+
+            // 执行命令处理
+            return await handler.HandleAsync(cmd, cancellationToken);
         }
     }
 

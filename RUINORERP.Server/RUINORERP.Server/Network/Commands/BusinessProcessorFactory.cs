@@ -74,7 +74,7 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 创建处理器
+        /// 创建处理器（重构版：提取复杂度处理逻辑）
         /// </summary>
         /// <param name="requestType">请求类型</param>
         /// <returns>处理器实例</returns>

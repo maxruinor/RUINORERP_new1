@@ -29,35 +29,51 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 实现抽象方法 - 处理队列命令
+        /// 实现抽象方法 - 处理队列命令（重构版：提取业务处理流程）
         /// </summary>
         protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
+            if (cmd?.Command == null)
+            {
+                _logger.LogError("命令或命令数据为空");
+                return ResponseBase.CreateError("命令数据无效", 400);
+            }
+
             try
             {
-                _logger.LogInformation($"开始处理简单业务请求: {cmd?.Command?.GetType().Name}");
-
-                // 获取请求对象
-                var request = cmd?.Command;
-                if (request == null)
-                {
-                    return ResponseBase.CreateError("请求对象为空");
-                }
-
-                // 根据请求类型分发处理
-                return request switch
-                {
-                    SimpleRequest simpleRequest => await HandleSimpleOperation(simpleRequest),
-                    BooleanRequest booleanRequest => await HandleBooleanOperation(booleanRequest),
-                    NumericRequest numericRequest => await HandleNumericOperation(numericRequest),
-                    _ => ResponseBase.CreateError($"不支持的请求类型: {request.GetType().Name}")
-                };
+                var request = cmd.Command;
+                return await ExecuteSimpleBusinessProcessAsync(request, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("简单业务处理被取消");
+                return ResponseBase.CreateError("操作被取消", 499);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "处理简单业务请求时发生异常");
-                return ResponseBase.CreateError($"处理请求失败: {ex.Message}");
+                _logger.LogError(ex, "简单业务处理时发生异常");
+                return ResponseBase.CreateError($"处理失败: {ex.Message}", 500);
             }
+        }
+
+        /// <summary>
+        /// 执行简单业务处理流程 - 提取为独立方法
+        /// </summary>
+        private async Task<ResponseBase> ExecuteSimpleBusinessProcessAsync(object request, CancellationToken cancellationToken)
+        {
+            _logger.LogDebug($"开始处理简单业务: {request.GetType().Name}");
+
+            // 根据请求类型分发处理
+            var response = request switch
+            {
+                SimpleRequest simpleRequest => await HandleSimpleOperation(simpleRequest, cancellationToken),
+                BooleanRequest booleanRequest => await HandleBooleanOperation(booleanRequest),
+                NumericRequest numericRequest => await HandleNumericOperation(numericRequest),
+                _ => ResponseBase.CreateError($"不支持的请求类型: {request.GetType().Name}")
+            };
+
+            _logger.LogDebug($"简单业务处理完成: {request.GetType().Name}");
+            return response;
         }
 
         /// <summary>

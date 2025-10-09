@@ -55,7 +55,7 @@ namespace RUINORERP.PacketSpec.Validation
     /// 实体请求验证器
     /// </summary>
     /// <typeparam name="TEntity">实体类型</typeparam>
-    public class EntityRequestValidator<TEntity> : AbstractValidator<EntityRequest<TEntity>>
+    public class EntityRequestValidator<TEntity> : AbstractValidator<RequestBase<TEntity>>
         where TEntity : class
     {
         public EntityRequestValidator()

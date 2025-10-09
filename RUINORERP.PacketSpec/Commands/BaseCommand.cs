@@ -20,13 +20,13 @@ using System.Security.Cryptography;
 using MessagePack;
 using System.Collections.Concurrent;
 using RUINORERP.PacketSpec.Commands.Authentication;
+using System.Collections.Generic;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     [MessagePackObject(AllowPrivate = true)]
     public class BaseCommand<TRequest, TResponse> : BaseCommand where TRequest : class, IRequest where TResponse : class, IResponse
     {
-
 
         /// <summary>
         /// 构造函数
@@ -128,7 +128,6 @@ namespace RUINORERP.PacketSpec.Commands
                 _requestContainer = new CommandDataContainer<TRequest>();
             _requestContainer.BinaryData = data;
         }
-
     }
 
     /// <summary>
@@ -621,5 +620,179 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// 统一的命令响应包装类 - 服务器端响应构建器
+    /// 提供标准化的响应格式，包含指令信息和业务响应数据
+    /// </summary>
+    /// <typeparam name="TResponse">响应数据类型</typeparam>
+    [Serializable]
+    [MessagePackObject(AllowPrivate = true)]
+    public class BaseCommand<TResponse> :  BaseCommand where TResponse : class, IResponse
+    {
+        /// <summary>
+        /// 操作是否成功
+        /// </summary>
+        [Key(1)]
+        public bool IsSuccess { get; set; }
+
+        /// <summary>
+        /// 响应消息
+        /// </summary>
+        [Key(2)]
+        public string Message { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 业务响应数据
+        /// </summary>
+        [Key(3)]
+        public TResponse ResponseData { get; set; }
+
+        /// <summary>
+        /// 命令标识符
+        /// </summary>
+        [Key(4)]
+        public CommandId CommandId { get; set; }
+
+        /// <summary>
+        /// 请求标识
+        /// </summary>
+        [Key(5)]
+        public string RequestId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 执行上下文（包含Token等信息）
+        /// </summary>
+        [Key(6)]
+        public CommandExecutionContext ExecutionContext { get; set; }
+
+        /// <summary>
+        /// 错误消息 - 从响应数据中提取
+        /// </summary>
+        [IgnoreMember]
+        public string ErrorMessage => ResponseData is ResponseBase baseResponse ? baseResponse.ErrorMessage : null;
+
+        /// <summary>
+        /// 时间戳（UTC时间）
+        /// </summary>
+        [Key(7)]
+        public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// 执行时间（毫秒）
+        /// </summary>
+        [Key(8)]
+        public long ExecutionTimeMs { get; set; }
+
+        /// <summary>
+        /// 元数据字典 - 用于存储额外的响应信息
+        /// </summary>
+        [Key(9)]
+        public Dictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
+
+        /// <summary>
+        /// 无参构造函数
+        /// </summary>
+        public BaseCommand()
+        {
+        }
+
+        /// <summary>
+        /// 构造函数 - 创建成功响应
+        /// </summary>
+        /// <param name="responseData">响应数据</param>
+        /// <param name="message">成功消息</param>
+        public BaseCommand(TResponse responseData, string message = "操作成功")
+        {
+            IsSuccess = true;
+            Message = message;
+            ResponseData = responseData;
+            TimestampUtc = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// 构造函数 - 创建错误响应
+        /// </summary>
+        /// <param name="errorMessage">错误消息</param>
+        /// <param name="errorCode">错误代码</param>
+        public BaseCommand(string errorMessage, int errorCode = 500)
+        {
+            IsSuccess = false;
+            Message = errorMessage;
+            TimestampUtc = DateTime.UtcNow;
+            
+            // 如果TResponse是ResponseBase类型，创建错误响应
+            if (typeof(TResponse) == typeof(ResponseBase) || typeof(TResponse).IsSubclassOf(typeof(ResponseBase)))
+            {
+                var errorResponse = Activator.CreateInstance(typeof(TResponse)) as ResponseBase;
+                if (errorResponse != null)
+                {
+                    errorResponse.Code = errorCode;
+                    errorResponse.Message = errorMessage;
+                    errorResponse.IsSuccess = false;
+                    ResponseData = errorResponse as TResponse;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 静态方法 - 创建成功响应
+        /// </summary>
+        /// <param name="responseData">响应数据</param>
+        /// <param name="message">成功消息</param>
+        /// <returns>成功响应</returns>
+        public static BaseCommand<TResponse> Success(TResponse responseData, string message = "操作成功")
+        {
+            return new BaseCommand<TResponse>(responseData, message);
+        }
+
+        /// <summary>
+        /// 静态方法 - 创建错误响应
+        /// </summary>
+        /// <param name="errorMessage">错误消息</param>
+        /// <param name="errorCode">错误代码</param>
+        /// <returns>错误响应</returns>
+        public static BaseCommand<TResponse> Error(string errorMessage, int errorCode = 500)
+        {
+            return new BaseCommand<TResponse>(errorMessage, errorCode);
+        }
+
+        /// <summary>
+        /// 添加元数据
+        /// </summary>
+        /// <param name="key">键</param>
+        /// <param name="value">值</param>
+        public void AddMetadata(string key, object value)
+        {
+            Metadata[key] = value;
+        }
+
+        /// <summary>
+        /// 获取元数据
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="key">键</param>
+        /// <returns>元数据值</returns>
+        public T GetMetadata<T>(string key)
+        {
+            if (Metadata.TryGetValue(key, out var value) && value is T typedValue)
+            {
+                return typedValue;
+            }
+            return default(T);
+        }
+
+ 
+
+ 
+        /// <summary>
+        /// 重写ToString方法
+        /// </summary>
+        /// <returns>字符串表示</returns>
+        public override string ToString()
+        {
+            return $"BaseCommand<TResponse>: Success={IsSuccess}, Message={Message}, CommandId={CommandId}, RequestId={RequestId}, TimestampUtc={TimestampUtc:yyyy-MM-dd HH:mm:ss}";
+        }
     }
 }

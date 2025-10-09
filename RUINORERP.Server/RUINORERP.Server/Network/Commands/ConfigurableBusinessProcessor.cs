@@ -53,47 +53,84 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 实现抽象方法 - 处理队列命令
+        /// 核心处理方法 - 根据配置执行业务逻辑（重构版：提取配置处理流程）
         /// </summary>
+        /// <param name="cmd">队列命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
         protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
-            var request = cmd?.Command;
-            var requestType = request?.GetType().Name ?? "Unknown";
-            var businessConfig = _config.GetBusinessConfig(requestType);
-
-            if (businessConfig == null)
+            if (cmd?.Command == null)
             {
-                _logger.LogWarning($"未找到业务配置：{requestType}");
-                return ResponseBase.CreateError($"未配置的业务类型: {requestType}");
+                _logger.LogError("命令或命令数据为空");
+                return ResponseBase.CreateError("命令数据无效", 400);
             }
 
             try
             {
-                _logger.LogInformation($"执行配置式业务处理：{requestType}");
-
-                // 1. 执行验证规则
-                var validationResult = await ExecuteValidationRules(request, businessConfig);
-                if (!validationResult.IsValid)
+                var request = cmd.Command;
+                var requestType = request.GetType();
+                
+                // 获取业务配置
+                var config = await GetBusinessConfigurationAsync(requestType);
+                if (config == null)
                 {
-                    return ResponseBase.CreateError($"验证失败: {string.Join(", ", validationResult.Errors)}");
+                    return ResponseBase.CreateError($"未找到业务配置: {requestType.Name}", 404);
                 }
 
-                // 2. 执行前置处理
-                await ExecutePreProcessing(request, businessConfig.PreProcessingRules);
-
-                // 3. 执行主要业务逻辑
-                var result = await ExecuteBusinessLogic(request, businessConfig, cancellationToken);
-
-                // 4. 执行后置处理
-                await ExecutePostProcessing(request, result, businessConfig.PostProcessingRules);
-
-                return result;
+                // 执行业务处理流程
+                return await ExecuteBusinessProcessAsync(request, config, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("命令处理被取消");
+                return ResponseBase.CreateError("操作被取消", 499);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"配置式业务处理失败：{requestType}");
-                return ResponseBase.CreateError($"业务处理失败: {ex.Message}");
+                _logger.LogError(ex, "可配置业务处理时发生异常");
+                return ResponseBase.CreateError($"处理失败: {ex.Message}", 500);
             }
+        }
+
+        /// <summary>
+        /// 获取业务配置 - 提取为独立方法
+        /// </summary>
+        private async Task<BusinessConfigInfo> GetBusinessConfigurationAsync(Type requestType)
+        {
+            var requestTypeName = requestType.Name;
+            var config = _config.GetBusinessConfig(requestTypeName);
+            if (config == null)
+            {
+                _logger.LogWarning($"未找到业务配置: {requestTypeName}");
+            }
+            return config;
+        }
+
+        /// <summary>
+        /// 执行业务处理流程 - 提取为独立方法
+        /// </summary>
+        private async Task<ResponseBase> ExecuteBusinessProcessAsync(object request, BusinessConfigInfo config, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation($"执行配置式业务处理：{request.GetType().Name}");
+
+            // 1. 执行验证规则
+            var validationResult = await ExecuteValidationRules(request, config);
+            if (!validationResult.IsValid)
+            {
+                return ResponseBase.CreateError($"验证失败: {string.Join(", ", validationResult.Errors)}");
+            }
+
+            // 2. 执行前置处理
+            await ExecutePreProcessing(request, config.PreProcessingRules);
+
+            // 3. 执行主要业务逻辑
+            var result = await ExecuteBusinessLogic(request, config, cancellationToken);
+
+            // 4. 执行后置处理
+            await ExecutePostProcessing(request, result, config.PostProcessingRules);
+
+            return result;
         }
 
         /// <summary>

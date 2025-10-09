@@ -120,7 +120,7 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 异步处理命令
+        /// 异步处理命令 - 统一命令处理流程
         /// </summary>
         public async Task<ResponseBase> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default)
         {
@@ -128,45 +128,30 @@ namespace RUINORERP.PacketSpec.Commands
                 throw new ArgumentNullException(nameof(cmd));
 
             var startTime = DateTime.UtcNow;
-            bool success = true; // 默认认为成功
+            bool success = true;
 
             try
             {
-                // 记录开始处理时间
-                var logStartTime = DateTime.UtcNow;
+                // 执行统一的命令预处理流程
+                var preprocessResult = await ExecuteCommandPreprocessingAsync(cmd, cancellationToken);
+                if (preprocessResult != null)
+                    return preprocessResult;
 
-                // 验证命令
-                var validationResult = await cmd.Command.ValidateAsync(cancellationToken);
-                if (!validationResult.IsValid)
-                {
-                    Logger.LogWarning($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
-                    return ResponseBase.CreateValidationError(validationResult, UnifiedErrorCodes.Command_ValidationFailed.Code);
-                }
-
-                // 检查命令是否超时（基于TimeoutMs和创建时间计算）
-                var timeoutCheckResult = CheckCommandTimeout(cmd.Command);
-                if (timeoutCheckResult != null)
-                {
-                    return timeoutCheckResult;
-                }
-
-                // 命令前置处理
+                // 执行命令前置处理
                 var beforeResult = await OnBeforeHandleAsync(cmd, cancellationToken);
                 if (beforeResult != null)
                     return beforeResult;
 
-
-                // 执行命令处理
+                // 执行核心命令处理
                 var result = await OnHandleAsync(cmd, cancellationToken);
 
-                // 命令后置处理
+                // 执行命令后置处理
                 var afterResult = await OnAfterHandleAsync(cmd, result, cancellationToken);
                 if (afterResult != null)
                     return afterResult;
 
-                // 记录处理完成时间
-                var endTime = DateTime.UtcNow;
-                Logger.LogInformation($"命令处理完成: {cmd.Command.GetType().Name}, CommandId: {cmd.Command.CommandIdentifier}, 结果: {result.IsSuccess}, 执行时间: {(endTime - logStartTime).TotalMilliseconds} ms");
+                // 记录处理完成信息
+                LogCommandCompletion(cmd, result, startTime);
 
                 return result;
             }
@@ -178,17 +163,56 @@ namespace RUINORERP.PacketSpec.Commands
             catch (Exception ex)
             {
                 success = false;
-                var errorCode = UnifiedErrorCodes.Command_ExecuteFailed.Code == 0 ? UnifiedErrorCodes.System_InternalError : UnifiedErrorCodes.Command_ExecuteFailed;
-                return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
-                    .WithMetadata("StackTrace", ex.StackTrace);
+                return HandleCommandException(ex);
             }
             finally
             {
                 var elapsed = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-
-                // 记录结构化日志
                 _logHandled(Logger, cmd.Command.ToString(), elapsed, success, null);
             }
+        }
+
+        /// <summary>
+        /// 统一的命令预处理流程 - 提取为独立方法以便复用
+        /// </summary>
+        protected async Task<ResponseBase> ExecuteCommandPreprocessingAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        {
+            // 验证命令
+            var validationResult = await cmd.Command.ValidateAsync(cancellationToken);
+            if (!validationResult.IsValid)
+            {
+                Logger.LogWarning($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
+                return ResponseBase.CreateValidationError(validationResult, UnifiedErrorCodes.Command_ValidationFailed.Code);
+            }
+
+            // 检查命令是否超时
+            var timeoutCheckResult = CheckCommandTimeout(cmd.Command);
+            if (timeoutCheckResult != null)
+            {
+                return timeoutCheckResult;
+            }
+
+            return null; // 预处理通过
+        }
+
+        /// <summary>
+        /// 记录命令处理完成信息
+        /// </summary>
+        protected void LogCommandCompletion(QueuedCommand cmd, ResponseBase result, DateTime startTime)
+        {
+            var elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds;
+            Logger.LogInformation($"命令处理完成: {cmd.Command.GetType().Name}, CommandId: {cmd.Command.CommandIdentifier}, 结果: {result.IsSuccess}, 执行时间: {elapsed:F2} ms");
+        }
+
+        /// <summary>
+        /// 统一的异常处理
+        /// </summary>
+        protected ResponseBase HandleCommandException(Exception ex)
+        {
+            var errorCode = UnifiedErrorCodes.Command_ExecuteFailed.Code == 0 ? UnifiedErrorCodes.System_InternalError : UnifiedErrorCodes.Command_ExecuteFailed;
+            Logger.LogError(ex, $"命令处理异常: {ex.Message}");
+            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
+                .WithMetadata("StackTrace", ex.StackTrace);
         }
 
         /// <summary>

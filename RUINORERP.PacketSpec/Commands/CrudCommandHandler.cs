@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,7 +45,7 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 请求验证 - 验证CRUD请求的合法性
+        /// 请求验证 - 验证CRUD操作参数（重构版：提取操作类型验证逻辑）
         /// </summary>
         protected override async Task<FluentValidation.Results.ValidationResult> ValidateRequestAsync(CrudRequest<TEntity> request, CancellationToken cancellationToken)
         {
@@ -60,11 +60,19 @@ namespace RUINORERP.PacketSpec.Commands
                 });
             }
 
+            var validationResult = new FluentValidation.Results.ValidationResult();
+
+            // 验证操作类型
+            ValidateOperationType(request, validationResult);
+
+            // 验证操作参数
+            ValidateOperationParameters(request, validationResult);
+
             // 使用FluentValidation进行验证
             if (request is CrudRequest<TEntity> crudRequest)
             {
                 // 创建EntityRequest<TEntity>来适配验证器
-                var entityRequest = new EntityRequest<TEntity>
+                var entityRequest = new RequestBase<TEntity>
                 {
                     Entity = crudRequest.Data,
                     EntityId = crudRequest.Id,
@@ -72,15 +80,59 @@ namespace RUINORERP.PacketSpec.Commands
                 };
                 
                 var validator = new EntityRequestValidator<TEntity>();
-                var validationResult = await validator.ValidateAsync(entityRequest, cancellationToken);
+                var fluentValidationResult = await validator.ValidateAsync(entityRequest, cancellationToken);
                 
-                if (!validationResult.IsValid)
+                if (!fluentValidationResult.IsValid)
                 {
-                    return validationResult;
+                    return fluentValidationResult;
                 }
             }
 
-            return new FluentValidation.Results.ValidationResult();
+            return validationResult;
+        }
+
+        /// <summary>
+        /// 验证操作类型 - 提取为独立方法
+        /// </summary>
+        private void ValidateOperationType(CrudRequest<TEntity> request, FluentValidation.Results.ValidationResult validationResult)
+        {
+            if (!Enum.IsDefined(typeof(OperationType), request.OperationType))
+            {
+                validationResult.Errors.Add(new FluentValidation.Results.ValidationFailure(nameof(request.OperationType), $"无效的操作类型: {request.OperationType}"));
+            }
+        }
+
+        /// <summary>
+        /// 验证操作参数 - 提取为独立方法
+        /// </summary>
+        private void ValidateOperationParameters(CrudRequest<TEntity> request, FluentValidation.Results.ValidationResult validationResult)
+        {
+            switch (request.OperationType)
+            {
+                case OperationType.Create:
+                    if (request.Data == null)
+                    {
+                        validationResult.Errors.Add(new FluentValidation.Results.ValidationFailure(nameof(request.Data), "创建操作需要数据"));
+                    }
+                    break;
+
+                case OperationType.Update:
+                case OperationType.Delete:
+                case OperationType.Get:
+                    if (string.IsNullOrWhiteSpace(request.Id))
+                    {
+                        validationResult.Errors.Add(new FluentValidation.Results.ValidationFailure(nameof(request.Id), $"{request.OperationType}操作需要有效的实体ID"));
+                    }
+                    break;
+
+                case OperationType.GetList:
+                    // 列表查询操作可选参数验证
+                    break;
+
+                default:
+                    validationResult.Errors.Add(new FluentValidation.Results.ValidationFailure(nameof(request.OperationType), $"不支持的操作类型: {request.OperationType}"));
+                    break;
+            }
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
@@ -108,10 +108,7 @@ namespace RUINORERP.PacketSpec.DI
             // 注册命令创建服务（新增）
             services.AddSingleton<CommandCreationService>();
             services.AddSingleton<ICommandCreationService, CommandCreationService>();
-
-            // 注册命令工厂
-            services.AddSingleton<ICommandFactory, DefaultCommandFactory>();
-            services.AddSingleton<ICommandFactoryAsync, DefaultCommandFactory>();
+ 
 
             // 注册命令扫描和类型辅助服务
             services.AddSingleton<CommandScanner>();
@@ -199,11 +196,7 @@ namespace RUINORERP.PacketSpec.DI
                 .As<ICommandCreationService>()
                 .SingleInstance();
 
-            // 注册命令工厂
-            builder.RegisterType<DefaultCommandFactory>()
-                .As<ICommandFactory>()
-                .As<ICommandFactoryAsync>()
-                .SingleInstance();
+           
 
             // 注册命令处理器工厂
             builder.RegisterType<CommandHandlerFactory>()

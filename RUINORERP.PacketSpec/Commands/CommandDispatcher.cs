@@ -218,6 +218,9 @@ namespace RUINORERP.PacketSpec.Commands
                                     using (var commandCts = new CancellationTokenSource(TimeSpan.FromMinutes(5)))
                                     {
                                         var result = await ProcessAsync(queued, commandCts.Token);
+
+                                        //这里之后会到具体的指令处理类OnHandleAsync去处理
+
                                         queued.Tcs.TrySetResult(result);
                                     }
                                 }

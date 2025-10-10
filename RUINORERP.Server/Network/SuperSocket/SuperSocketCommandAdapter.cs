@@ -48,7 +48,6 @@ namespace RUINORERP.Server.Network.SuperSocket
     {
         private readonly CommandDispatcher _commandDispatcher;
         private readonly ILogger<SuperSocketCommandAdapter> _logger;
-        private readonly ICommandFactory _commandFactory;
         private readonly CommandPacketAdapter packetAdapter;
         private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
 
@@ -62,12 +61,10 @@ namespace RUINORERP.Server.Network.SuperSocket
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             CommandPacketAdapter _packetAdapter,
-            ICommandFactory commandFactory,
             ILogger<SuperSocketCommandAdapter> logger = null)
         {
             packetAdapter = _packetAdapter;
             _commandDispatcher = commandDispatcher;
-            _commandFactory = commandFactory;
             _logger = logger;
         }
 
@@ -253,7 +250,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 ["TimestampUtc"] = result.TimestampUtc
             };
 
- 
+
 
             // 添加元数据
             if (result.Metadata != null && result.Metadata.Count > 0)
@@ -545,8 +542,8 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
 
             // 记录详细的错误信息用于调试
-            _logger?.LogWarning("发送增强错误响应: ErrorCode={ErrorCode}, ErrorMessage={ErrorMessage}, OriginalCode={OriginalCode}, MetadataKeys=[{MetadataKeys}]",
-                errorCode.Code, errorCode.Message, 
+            _logger?.LogWarning("发送增强错误响应: ErrorCode={ErrorCode}, ErrorMessage={ErrorMessage}, MetadataKeys=[{MetadataKeys}]",
+                errorCode.Code, errorCode.Message,
                 result.Metadata != null ? string.Join(", ", result.Metadata.Keys) : "none");
 
             await SendResponseAsync(session, errorResponse, cancellationToken);
@@ -564,9 +561,8 @@ namespace RUINORERP.Server.Network.SuperSocket
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             CommandPacketAdapter _packetAdapter,
-            ICommandFactory commandFactory,
             ILogger<SuperSocketCommandAdapter> logger = null)
-            : base(commandDispatcher, _packetAdapter, commandFactory, logger)
+            : base(commandDispatcher, _packetAdapter, logger)
         { }
     }
 

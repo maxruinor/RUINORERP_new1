@@ -606,17 +606,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        /// <summary>
-        /// 异步从数据包创建命令 - 来自 DefaultCommandFactory
-        /// </summary>
-        /// <param name="packet">数据包</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>创建的命令对象</returns>
-        public async Task<ICommand> CreateCommandAsync(PacketModel packet, CancellationToken cancellationToken = default)
-        {
-            // 异步包装同步方法
-            return await Task.Run(() => CreateCommand(packet), cancellationToken);
-        }
+      
 
         /// <summary>
         /// 创建命令实例 - 提取为独立方法（来自 DefaultCommandFactory）
@@ -769,16 +759,6 @@ namespace RUINORERP.PacketSpec.Commands
             _cacheManager.ClearAllCaches();
             _logger?.LogInformation("命令创建服务缓存已清理");
         }
-
-        /// <summary>
-        /// 清理过期缓存
-        /// </summary>
-        public void ClearExpiredCache()
-        {
-            // CommandCacheManager 当前没有专门的过期缓存清理方法
-            // 使用清理所有缓存作为后备方案
-            _cacheManager.ClearAllCaches();
-            _logger?.LogInformation("命令创建服务过期缓存已清理");
-        }
+     
     }
 }

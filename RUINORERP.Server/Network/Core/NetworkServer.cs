@@ -201,8 +201,8 @@ namespace RUINORERP.Server.Network.Core
 
 
                       // 注册ICommandFactory服务，SuperSocketCommandAdapter也依赖它
-                      var commandFactory = Program.ServiceProvider.GetRequiredService<ICommandFactory>();
-                      services.AddSingleton<ICommandFactory>(commandFactory);
+                      var commandFactory = Program.ServiceProvider.GetRequiredService<ICommandCreationService>();
+                      services.AddSingleton<ICommandCreationService>(commandFactory);
 
                       // 注册命令调度器和适配器
                       services.AddLogging(builder =>

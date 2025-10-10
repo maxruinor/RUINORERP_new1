@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -23,20 +23,17 @@ namespace RUINORERP.PacketSpec.Commands
     public class CommandPacketAdapter
     {
         private readonly CommandDispatcher _commandDispatcher;
-        private readonly ICommandFactory _commandFactory;
         private readonly ICommandCreationService _commandCreationService;
         private static readonly ConcurrentDictionary<uint, Func<ICommand>> _ctorCache = new();
         private readonly ILogger<CommandPacketAdapter> _logger;
         private readonly CommandScanner _commandScanner;
         
         public CommandPacketAdapter(CommandDispatcher commandDispatcher,
-            ICommandFactory commandFactory,
             ILogger<CommandPacketAdapter> logger = null, 
             CommandScanner commandScanner = null,
             ICommandCreationService commandCreationService = null)
         {
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
-            _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
             _logger = logger;
             _commandScanner = commandScanner ?? new CommandScanner();
             _commandCreationService = commandCreationService ?? new CommandCreationService(null, _commandScanner);

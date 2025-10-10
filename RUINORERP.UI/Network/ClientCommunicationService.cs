@@ -920,14 +920,21 @@ namespace RUINORERP.UI.Network
                     // 先尝试作为响应处理
                     if (HandleResponse(packet))
                     {
+                        //这里直接返回，实际会到具体的服务中响应处理了
                         return; // 如果是响应，处理完成，不再作为命令处理
                     }
 
                     // 如果不是响应，再作为命令处理
                     if (packet.IsValid() && packet.CommandId.FullCode > 0)
                     {
+                        // 优先使用事件机制处理命令，避免重复处理
                         _eventManager.OnCommandReceived(packet, packet.CommandData);
-                        await ProcessCommandAsync(packet);
+                        
+                        // 如果事件机制没有处理该命令（没有订阅者），则直接处理
+                        if (!_eventManager.HasCommandSubscribers(packet))
+                        {
+                            await ProcessCommandAsync(packet);
+                        }
                     }
 
                     //// 处理请求响应
@@ -1163,6 +1170,7 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 当接收到服务器命令时触发
+        /// 这个处理命令的过程，类型服务器处理。后面处理逻辑也是一样。只是在客户端而已。对于复杂的情况有用。
         /// </summary>
         /// <param name="commandId">命令ID</param>
         /// <param name="data">命令数据</param>

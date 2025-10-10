@@ -200,6 +200,19 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 检查是否有命令订阅者
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <returns>是否有订阅者</returns>
+        public bool HasCommandSubscribers(PacketModel packetModel)
+        {
+            lock (_lock)
+            {
+                return CommandReceived != null;
+            }
+        }
+
+        /// <summary>
         /// 记录异常信息
         /// </summary>
         /// <param name="ex">异常对象</param>

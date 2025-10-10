@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,8 +12,17 @@ namespace RUINORERP.PacketSpec.Commands
     /// 集中处理所有命令创建逻辑，避免代码重复
     /// 合并了 ICommandFactory 和 ICommandFactoryAsync 的功能
     /// </summary>
-    public interface ICommandCreationService : ICommandFactoryAsync
+    public interface ICommandCreationService 
     {
+
+
+        /// <summary>
+        /// 注册命令创建器
+        /// </summary>
+        /// <param name="commandCode">命令代码</param>
+        /// <param name="creator">创建器函数</param>
+        void RegisterCommandCreator(CommandId commandCode, Func<PacketModel, ICommand> creator);
+
         /// <summary>
         /// 从数据包创建命令 - 主入口方法
         /// </summary>
@@ -81,12 +90,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>创建的命令对象</returns>
         Task<ICommand> CreateCommandAsync(string commandId, Dictionary<string, object> parameters = null);
 
-        /// <summary>
-        /// 异步从数据包创建命令
-        /// </summary>
-        /// <param name="packet">数据包</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>创建的命令对象</returns>
-        Task<ICommand> CreateCommandAsync(PacketModel packet, CancellationToken cancellationToken = default);
+       
     }
 }

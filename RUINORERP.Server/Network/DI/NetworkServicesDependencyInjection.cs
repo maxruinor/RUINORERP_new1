@@ -98,20 +98,8 @@ namespace RUINORERP.Server.Network.DI
             // 注册服务器端登录请求处理器
             // builder.RegisterType<ServerLoginRequestHandler>().AsSelf().InstancePerDependency();
 
-            builder.RegisterType<CommandDispatcher>().AsSelf().SingleInstance();
-            // 注册命令处理器工厂
-            builder.RegisterType<CommandHandlerFactory>().As<ICommandHandlerFactory>().SingleInstance();
-
-            // 注册命令工厂
-            builder.RegisterType<RUINORERP.PacketSpec.Commands.DefaultCommandFactory>()
-                .As<RUINORERP.PacketSpec.Commands.ICommandFactory>()
-                .As<RUINORERP.PacketSpec.Commands.ICommandFactoryAsync>()
-                .SingleInstance();
-            //  builder.RegisterType<WorkflowServiceReceiver>().AsSelf().SingleInstance();
-
             // 注册锁管理服务
             builder.RegisterType<LockManagerService>().As<ILockManagerService>().SingleInstance();
-
 
 
             // 注册网络命令处理器

@@ -19,17 +19,20 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly ILogger<DefaultCommandFactory> _logger;
         private readonly Dictionary<CommandId, Func<PacketModel, ICommand>> _commandCreators;
         private readonly CommandScanner _commandScanner;
+        private readonly ICommandCreationService _commandCreationService;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="commandScanner">命令扫描器</param>
-        public DefaultCommandFactory(ILogger<DefaultCommandFactory> logger = null, CommandScanner commandScanner = null)
+        /// <param name="commandCreationService">命令创建服务</param>
+        public DefaultCommandFactory(ILogger<DefaultCommandFactory> logger = null, CommandScanner commandScanner = null, ICommandCreationService commandCreationService = null)
         {
             _logger = logger;
             _commandCreators = new Dictionary<CommandId, Func<PacketModel, ICommand>>();
             _commandScanner = commandScanner ?? new CommandScanner();
+            _commandCreationService = commandCreationService ?? new CommandCreationService(null, _commandScanner);
         }
 
 
@@ -52,7 +55,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
 
                 // 首先尝试从数据包中提取类型化命令
-                var typedCommand = CommandPacketAdapterExtensions.ExtractCommand(packet, _commandScanner);
+                var typedCommand = CommandPacketAdapterExtensions.ExtractCommand(packet, _commandCreationService);
                 if (typedCommand != null)
                 {
                     _logger?.LogDebug("成功从数据包提取类型化命令: {CommandType}", typedCommand.GetType().Name);
@@ -294,39 +297,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>命令实例</returns>
         public ICommand CreateCommandFromJson(string json, string typeName)
         {
-            if (string.IsNullOrEmpty(json))
-                throw new ArgumentException("JSON字符串不能为空", nameof(json));
-            
-            if (string.IsNullOrEmpty(typeName))
-                throw new ArgumentException("类型名称不能为空", nameof(typeName));
-
-            try
-            {
-                var commandType = _commandScanner.GetCommandTypeByName(typeName);
-                if (commandType == null)
-                {
-                    // 尝试从已注册的类型中查找
-                    var allTypes = _commandScanner.GetAllCommandTypes();
-                    foreach (var kvp in allTypes)
-                    {
-                        if (kvp.Value.FullName == typeName || kvp.Value.Name == typeName)
-                        {
-                            commandType = kvp.Value;
-                            break;
-                        }
-                    }
-                }
-
-                if (commandType == null)
-                    throw new ArgumentException($"未知的命令类型: {typeName}", nameof(typeName));
-
-                return JsonConvert.DeserializeObject(json, commandType) as ICommand;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "从JSON创建命令失败: TypeName={TypeName}", typeName);
-                throw new InvalidOperationException($"从JSON创建命令失败: {typeName}", ex);
-            }
+            return _commandCreationService.CreateCommandFromJson(json, typeName);
         }
 
         /// <summary>
@@ -337,22 +308,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>命令实例</returns>
         public ICommand CreateCommandFromBytes(byte[] data, string typeName)
         {
-            if (data == null || data.Length == 0)
-                throw new ArgumentException("数据不能为空", nameof(data));
-            
-            if (string.IsNullOrEmpty(typeName))
-                throw new ArgumentException("类型名称不能为空", nameof(typeName));
-
-            try
-            {
-                var json = Encoding.UTF8.GetString(data);
-                return CreateCommandFromJson(json, typeName);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "从字节数组创建命令失败: TypeName={TypeName}", typeName);
-                throw new InvalidOperationException($"从字节数组创建命令失败: {typeName}", ex);
-            }
+            return _commandCreationService.CreateCommandFromBytes(data, typeName);
         }
 
         /// <summary>
@@ -362,11 +318,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>空命令实例</returns>
         public ICommand CreateEmptyCommand(CommandId commandId)
         {
-            var commandType = _commandScanner.GetCommandType(commandId);
-            if (commandType == null)
-                throw new ArgumentException($"未知的命令ID: {commandId}", nameof(commandId));
-
-            return Activator.CreateInstance(commandType) as ICommand;
+            return _commandCreationService.CreateEmptyCommand(commandId);
         }
 
 

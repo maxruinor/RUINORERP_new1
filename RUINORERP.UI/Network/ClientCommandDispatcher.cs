@@ -10,6 +10,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -39,21 +40,7 @@ namespace RUINORERP.UI.Network
             RegisterClientCommands();
         }
 
-        /// <summary>
-        /// 注册客户端命令类型
-        /// </summary>
-        /// <param name="commandCode">命令代码，唯一标识命令的数值</param>
-        /// <param name="commandType">命令类型，命令类的Type对象</param>
-        /// <exception cref="ArgumentNullException">当命令类型为空时抛出</exception>
-        public void RegisterCommand(CommandId commandCode, Type commandType)
-        {
-            if (commandType == null)
-            {
-                throw new ArgumentNullException(nameof(commandType));
-            }
 
-            _commandScanner.RegisterCommandType(commandCode, commandType);
-        }
 
         /// <summary>
         /// 创建命令实例
@@ -156,41 +143,7 @@ namespace RUINORERP.UI.Network
                     Assembly.GetExecutingAssembly(), // 客户端程序集
                     Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommand)) // PacketSpec程序集
                 };
-
-                foreach (var assembly in assembliesToScan)
-                {
-                    if (assembly == null) continue;
-
-                    var commandTypes = assembly
-                        .GetTypes()
-                        .Where(t => typeof(ICommand).IsAssignableFrom(t) &&
-                                   !t.IsInterface &&
-                                   !t.IsAbstract);
-
-                    foreach (var commandType in commandTypes)
-                    {
-                        try
-                        {
-                            // 检查命令是否使用了PacketCommandAttribute特性
-                            var commandAttribute = commandType.GetCustomAttribute<PacketCommandAttribute>();
-                            if (commandAttribute != null)
-                            {
-                                // 尝试通过CommandIdentifier属性获取命令ID
-                                var commandInstance = Activator.CreateInstance(commandType) as ICommand;
-                                if (commandInstance != null)
-                                {
-                                    var commandId = commandInstance.CommandIdentifier;
-                                    RegisterCommand(commandId, commandType);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            // 在实际应用中应添加日志记录
-                            Console.WriteLine($"注册命令类型 {commandType.Name} 失败: {ex.Message}");
-                        }
-                    }
-                }
+                _commandScanner.ScanCommands(null, true, assembliesToScan.ToArray());
             }
             catch (Exception ex)
             {
@@ -198,53 +151,7 @@ namespace RUINORERP.UI.Network
             }
         }
 
-        /// <summary>
-        /// 清理注册的命令类型
-        /// </summary>
-        public void ClearCommandTypes()
-        {
-            _commandScanner.Clear();
-        }
-
-        #region ICommandDispatcher 接口实现
-
-
-
-         /// <summary>
-        /// 获取命令类型
-        /// </summary>
-        /// <param name="commandCode">命令代码</param>
-        /// <returns>命令类型，如果找不到则返回null</returns>
-        public Type GetCommandType(CommandId commandCode)
-        {
-            return _commandScanner.GetCommandType(commandCode);
-        }
-     
-
-        public ICommand CreateCommand(CommandId commandCode)
-        {
-            try
-            {
-                // 使用预编译的构造函数创建命令实例
-                var ctor = _commandScanner.GetCommandCtor(commandCode);
-                var command = ctor();
-                if (command != null)
-                {
-                    _logger.Debug($"创建命令实例成功: {commandCode}");
-                }
-                else
-                {
-                    _logger.Warn($"创建命令实例失败: {commandCode}");
-                }
-                return command;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"创建命令实例异常: {commandCode}", ex);
-                return null;
-            }
-        }
-
-        #endregion
+ 
+ 
     }
 }

@@ -238,7 +238,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <returns></returns>
         protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, ICommand command, BaseCommand<IResponse> result)
         {
-            package.ExecutionContext.ResponseType = typeof(IResponse);
+            package.ExecutionContext.ResponseType = result.ResponseData?.GetType() ?? typeof(IResponse);
             package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
             package.Direction = package.Direction == PacketDirection.Request ? PacketDirection.Response : package.Direction;
             package.SessionId = package.SessionId;
@@ -261,13 +261,15 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
             }
 
-            var ResponsePackBytes = MessagePackSerializer.Serialize<IResponse>(result.ResponseData, UnifiedSerializationService.MessagePackOptions);
+
             if (command is BaseCommand baseCommand)
             {
+                // 序列化响应数据 - 使用具体类型而不是接口类型，确保客户端能正确反序列化
+                var ResponsePackBytes = MessagePackSerializer.Serialize(package.ExecutionContext.ResponseType, result.ResponseData, UnifiedSerializationService.MessagePackOptions);
                 baseCommand.SetResponseData(ResponsePackBytes);
-                package.SetCommandDataByMessagePack(command);
+                package.CommandData = MessagePackSerializer.Serialize(package.ExecutionContext.CommandType, command, UnifiedSerializationService.MessagePackOptions);
+                //package.SetCommandDataByMessagePack(command);
             }
-
 
 
             return package;

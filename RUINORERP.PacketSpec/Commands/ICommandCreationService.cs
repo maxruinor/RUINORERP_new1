@@ -39,6 +39,14 @@ namespace RUINORERP.PacketSpec.Commands
         ICommand CreateCommandFromBytes(byte[] data, string typeName);
 
         /// <summary>
+        /// 从字节数组和类型对象创建命令
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="type">类型对象</param>
+        /// <returns>创建的命令对象</returns>
+        ICommand CreateCommandFromBytes(byte[] data, Type type);
+
+        /// <summary>
         /// 从数据包中提取类型化命令
         /// </summary>
         /// <param name="packet">数据包</param>

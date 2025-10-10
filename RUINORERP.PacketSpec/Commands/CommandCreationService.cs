@@ -251,10 +251,8 @@ namespace RUINORERP.PacketSpec.Commands
                 if (commandType == null)
                     throw new ArgumentException($"未知的命令类型: {typeName}", nameof(typeName));
 
-                var ss = MessagePackSerializer.Deserialize(commandType, data, UnifiedSerializationService.MessagePackOptions);
-
                 // 4. 使用配置的MessagePack选项进行反序列化
-                var command = MessagePackSerializer.Deserialize(commandType, data, UnifiedSerializationService.MessagePackOptions) as ICommand;
+                var command = CreateCommandFromBytes(data, commandType);
                 if (command != null)
                 {
                     // 注意：这里无法获取commandId，只能缓存构造函数
@@ -266,6 +264,44 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 _logger?.LogError(ex, "从字节数组创建命令失败: TypeName={TypeName}", typeName);
                 throw new InvalidOperationException($"从字节数组创建命令失败: {typeName}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 从字节数组和类型对象创建命令
+        /// </summary>
+        /// <param name="data">字节数组</param>
+        /// <param name="type">类型对象</param>
+        /// <returns>创建的命令对象</returns>
+        public ICommand CreateCommandFromBytes(byte[] data, Type type)
+        {
+            if (data == null || data.Length == 0)
+                throw new ArgumentException("数据不能为空", nameof(data));
+
+            if (type == null)
+                throw new ArgumentException("类型对象不能为空", nameof(type));
+
+            try
+            {
+                // 验证类型是否实现了ICommand接口
+                if (!typeof(ICommand).IsAssignableFrom(type))
+                {
+                    throw new ArgumentException($"类型 {type.FullName} 未实现 ICommand 接口", nameof(type));
+                }
+
+                // 使用配置的MessagePack选项进行反序列化
+                var command = MessagePackSerializer.Deserialize(type, data, UnifiedSerializationService.MessagePackOptions) as ICommand;
+                if (command != null)
+                {
+                    // 缓存构造函数以供后续使用
+                    _cacheManager.CacheConstructor(type, () => command);
+                }
+                return command;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "从字节数组创建命令失败: Type={TypeName}", type?.Name);
+                throw new InvalidOperationException($"从字节数组创建命令失败: {type?.FullName}", ex);
             }
         }
 
@@ -408,7 +444,7 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     try
                     {
-                        var requestObject = MessagePackSerializer.Deserialize(executionContext.RequestType, packet.CommandData);
+                        var requestObject = MessagePackSerializer.Deserialize(executionContext.RequestType, packet.CommandData, UnifiedSerializationService.MessagePackOptions);
                         var genericCommandType = typeof(GenericCommand<>).MakeGenericType(executionContext.RequestType);
                         var command = Activator.CreateInstance(genericCommandType, packet.CommandId, requestObject) as ICommand;
                         InitializeCommandProperties(command, packet);

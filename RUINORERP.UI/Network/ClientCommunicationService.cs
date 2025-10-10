@@ -929,7 +929,7 @@ namespace RUINORERP.UI.Network
                     {
                         // 优先使用事件机制处理命令，避免重复处理
                         _eventManager.OnCommandReceived(packet, packet.CommandData);
-                        
+
                         // 如果事件机制没有处理该命令（没有订阅者），则直接处理
                         if (!_eventManager.HasCommandSubscribers(packet))
                         {
@@ -1275,7 +1275,7 @@ namespace RUINORERP.UI.Network
         /// <param name="packet">接收到的数据包</param>
         /// <param name="commandPacketAdapter">命令包适配器</param>
         /// <returns>处理后的响应数据</returns>
-        public async Task<TResponse> ProcessCommandResponseAsync<TResponse>(PacketModel packet, CommandPacketAdapter commandPacketAdapter)
+        public TResponse ProcessCommandResponseAsync<TResponse>(PacketModel packet, CommandPacketAdapter commandPacketAdapter)
             where TResponse : class, IResponse
         {
             if (packet == null)
@@ -1286,30 +1286,19 @@ namespace RUINORERP.UI.Network
 
             try
             {
-                // 创建命令对象
-                ICommand baseCommand = commandPacketAdapter.CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext.CommandType.Name);
+                // 创建命令对象 - 使用ExecutionContext中的响应类型进行反序列化
+                ICommand baseCommand = commandPacketAdapter.CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext?.CommandTypeName);
 
                 // 处理登录命令的特殊情况
-                if (baseCommand is LoginCommand loginCommand)
+                TResponse response = default(TResponse);
+                if (packet.ExecutionContext.ResponseType != null)
                 {
-                    if (loginCommand.Response == null && packet.ExecutionContext.ResponseType != null)
-                    {
-                        // 反序列化响应数据
-                        //var responseData = MessagePackSerializer.Deserialize(packet.ExecutionContext.ResponseType, loginCommand.Response);
-                        var responseData = loginCommand.Response;
-                        return responseData as TResponse;
-                    }
-                    return loginCommand.Response as TResponse;
+                    // 反序列化响应数据
+                    var responseData = MessagePackSerializer.Deserialize(packet.ExecutionContext.ResponseType, baseCommand.ResponseDataByMessagePack, UnifiedSerializationService.MessagePackOptions);
+                    response = responseData as TResponse;
                 }
-
-                //// 处理其他类型的命令响应
-                //if (baseCommand is BaseCommand<TRequest, TResponse> typedCommand)
-                //{
-                //    return typedCommand.Response;
-                //}
-
-                _logger.LogWarning($"无法处理的命令类型: {baseCommand?.GetType().Name}");
-                return null;
+                return response;
+               
             }
             catch (Exception ex)
             {
@@ -1343,7 +1332,7 @@ namespace RUINORERP.UI.Network
                 return BaseCommand<TResponse>.Error("未收到服务器响应", 408);
             }
 
-            var responseData = await ProcessCommandResponseAsync<TResponse>(packet, commandPacketAdapter);
+            var responseData = ProcessCommandResponseAsync<TResponse>(packet, commandPacketAdapter);
 
             var commandResponse = BaseCommand<TResponse>.Success(responseData, (responseData as ResponseBase)?.Message ?? "操作成功");
             commandResponse.CommandId = command.CommandIdentifier;

@@ -130,7 +130,7 @@ namespace RUINORERP.PacketSpec.Commands
                     var requestType = requestProperty.PropertyType;
 
                     // 优先使用命令自身的Request类型进行反序列化
-                    var requestObject = MessagePackSerializer.Deserialize(requestType, commandData);
+                    var requestObject = MessagePackSerializer.Deserialize(requestType, commandData, UnifiedSerializationService.MessagePackOptions);
                     requestProperty.SetValue(command, requestObject);
 
                     _logger?.LogDebug("成功反序列化请求数据: CommandType={CommandType}, RequestType={RequestType}",
@@ -151,7 +151,7 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     try
                     {
-                        var requestObject = MessagePackSerializer.Deserialize(executionContext.RequestType, commandData);
+                        var requestObject = MessagePackSerializer.Deserialize(executionContext.RequestType, commandData, UnifiedSerializationService.MessagePackOptions);
                         // 设置到动态属性或备用存储
                         SetRequestDataToCommand(command, requestObject);
                         _logger?.LogInformation("使用ExecutionContext类型信息成功反序列化请求数据");

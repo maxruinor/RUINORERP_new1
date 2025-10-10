@@ -232,6 +232,39 @@ namespace RUINORERP.PacketSpec.Commands
             return null;
         }
 
+        /// <summary>
+        /// 获取所有缓存的处理器类型
+        /// </summary>
+        public List<Type> GetAllCachedHandlerTypes()
+        {
+            var handlerTypes = new List<Type>();
+            foreach (var kvp in _handlerTypeCache)
+            {
+                var handlerEntry = kvp.Value;
+                if (handlerEntry.HandlerType != null)
+                {
+                    handlerTypes.Add(handlerEntry.HandlerType);
+                }
+            }
+            return handlerTypes;
+        }
+
+        /// <summary>
+        /// 获取所有缓存的命令类型
+        /// </summary>
+        public List<Type> GetAllCachedCommandTypes()
+        {
+            var commandTypes = new List<Type>();
+            foreach (var kvp in _commandTypeCache)
+            {
+                if (kvp.Value != null)
+                {
+                    commandTypes.Add(kvp.Value);
+                }
+            }
+            return commandTypes;
+        }
+
         #endregion
 
         #region 增强扫描缓存

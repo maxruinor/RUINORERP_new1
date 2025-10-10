@@ -72,26 +72,16 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
-                // 初始化命令调度器
-                await _commandDispatcher.InitializeAsync();
 
-                // 扫描并注册所有命令类型到命令调度器
+               
                 // 这会确保所有实现了ICommand接口并使用PacketCommandAttribute特性的命令都被正确注册
                 var commandScanner = Startup.GetFromFac<CommandScanner>();
                 // 扫描RUINORERP.PacketSpec程序集以及其他相关程序集
                 var packetSpecAssembly = Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommand));
                 var serverAssembly = Assembly.GetExecutingAssembly();
 
-                _logger.LogInformation($"正在扫描命令类型，PacketSpec程序集: {packetSpecAssembly?.GetName().Name}, 服务器程序集: {serverAssembly?.GetName().Name}");
-                commandScanner.ScanAndRegisterCommands(null, packetSpecAssembly, serverAssembly);
-
-                // 扫描并注册服务器端的命令处理器
-                // 命令处理器与业务逻辑紧密相关，通常位于服务器项目中
-                _logger.LogInformation($"正在扫描命令处理器，开始调用ScanCommandHandlers方法");
-                _logger.LogInformation($"PacketSpec程序集位置: {packetSpecAssembly?.Location}");
-                _logger.LogInformation($"服务器程序集位置: {serverAssembly?.Location}");
-                // 使用CommandScanner进行自动发现和注册
-               commandScanner.ScanCommandHandlers(null, serverAssembly, packetSpecAssembly);
+                // 初始化命令调度器,里面会扫描并注册所有命令类型到命令调度器
+                await _commandDispatcher.InitializeAsync(CancellationToken.None, packetSpecAssembly, serverAssembly);
 
                 // 添加日志记录，检查注册的处理器数量
                 var handlerCount = _commandDispatcher.HandlerCount;  // 直接使用具体类型属性
@@ -182,7 +172,7 @@ namespace RUINORERP.Server.Network.Core
                        // 会话连接
                        LogInfo($"客户端连接: {session.SessionID} from {session.RemoteEndPoint}");
                        await _sessionManager.AddSessionAsync(session);
- 
+
                    }, async (session, reason) =>
                    {
                        // 会话断开

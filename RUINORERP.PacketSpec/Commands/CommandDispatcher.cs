@@ -65,6 +65,7 @@ namespace RUINORERP.PacketSpec.Commands
         // 命令扫描器 - 用于扫描和注册命令处理器
         private readonly CommandScanner _commandScanner;
 
+
         /// <summary>
         /// 每个命令的最大并发数
         /// </summary>
@@ -171,8 +172,8 @@ namespace RUINORERP.PacketSpec.Commands
                     
                     // 扫描并真正注册处理器类型
                     await _commandScanner.ScanAndRegisterHandlersAsync(commandRegistry, null, assemblies);
-                    
-                    // 创建处理器实例并注册到映射
+
+                    // 创建处理器实例并注册到映射 （实例级别）
                     var handlerTypes = _commandScanner.ScanCommandHandlers(null, assemblies);
                     foreach (var handlerType in handlerTypes)
                     {
@@ -600,67 +601,243 @@ namespace RUINORERP.PacketSpec.Commands
         {
             var commandCode = cmd.Command.CommandIdentifier;
 
-            // 从CommandScanner获取处理器映射信息
+            // 从CommandScanner获取处理器映射信息（内存映射，最快路径）
             var handlers = _commandScanner?.GetHandlers(commandCode);
             var commandType = _commandScanner?.GetCommandType(commandCode);
 
             // 过滤可用的处理器
             List<ICommandHandler> availableHandlers = null;
-            if (handlers != null)
+            if (handlers != null && handlers.Any())
             {
                 availableHandlers = handlers.Where(h => h.CanHandle(cmd)).ToList();
-                if (!availableHandlers.Any())
+                if (availableHandlers.Any())
                 {
-                    availableHandlers = null;
+                    // 内存映射中找到合适的处理器，直接返回
+                    return new HandlerCollection(availableHandlers, commandType);
                 }
             }
 
-            // 如果映射中没有找到合适的处理器
-            if (availableHandlers == null)
+            // 内存映射中没有找到，尝试使用缓存管理器进行更全面的搜索
+            if (_commandScanner?.GetCacheManager() != null)
             {
-                var handlerMappings = _commandScanner?.GetAllHandlerMappings();
-                if (handlerMappings != null)
+                var cacheManager = _commandScanner.GetCacheManager();
+                
+                // 如果命令类型未知，尝试从缓存中获取
+                if (commandType == null)
                 {
-                    // 策略1：如果知道命令类型，尝试查找兼容处理器
-                    if (commandType != null)
+                    // 获取当前命令所在程序集
+                    var commandAssembly = cmd.Command.GetType().Assembly;
+                    
+                    try
                     {
-                        var compatibleHandlers = handlerMappings
-                            .SelectMany(kvp => kvp.Value)
-                            .Where(h => CanHandleCommandType(h, commandType) && h.CanHandle(cmd))
+                        // 异步获取扫描缓存，但使用同步方式等待（避免在请求处理路径中引入异步）
+                        var scanCache = cacheManager.GetOrCreateScanCacheAsync(commandAssembly, null, false).GetAwaiter().GetResult();
+                        
+                        if (scanCache?.ScanResults != null && scanCache.ScanResults.TryGetValue(commandCode, out var cachedCommandType))
+                        {
+                            commandType = cachedCommandType;
+                            LogDebug($"从缓存中获取命令类型: {commandType?.Name} for command {commandCode.FullCode}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogWarning($"从缓存获取命令类型失败: {ex.Message}");
+                    }
+                }
+
+                // 如果找到了命令类型，尝试从缓存中查找兼容的处理器类型
+                if (commandType != null && _handlerFactory != null)
+                {
+                    try
+                    {
+                        // 获取所有已扫描程序集的处理器类型
+                        var allHandlerTypes = GetAllCachedHandlerTypes(cacheManager);
+                        
+                        // 筛选兼容的处理器类型
+                        var compatibleHandlerTypes = allHandlerTypes
+                            .Where(ht => CanHandleCommandTypeByType(ht, commandType))
                             .ToList();
+
+                        // 创建处理器实例并验证处理能力
+                        var compatibleHandlers = new List<ICommandHandler>();
+                        foreach (var handlerType in compatibleHandlerTypes)
+                        {
+                            try
+                            {
+                                var handler = _handlerFactory.CreateHandler(handlerType);
+                                if (handler != null && handler.CanHandle(cmd))
+                                {
+                                    compatibleHandlers.Add(handler);
+                                    LogDebug($"找到兼容处理器: {handler.Name} for command type: {commandType.Name}");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                LogWarning($"创建处理器实例 {handlerType.Name} 失败: {ex.Message}");
+                            }
+                        }
 
                         if (compatibleHandlers.Any())
                         {
-                            availableHandlers = compatibleHandlers;
-                        }
-                        else
-                        {
-                            // 策略2：尝试创建动态处理器（如果支持）
-                            var dynamicHandler = TryCreateDynamicHandler(commandType, cmd.Command.CommandIdentifier);
-                            if (dynamicHandler != null)
-                            {
-                                availableHandlers = new List<ICommandHandler> { dynamicHandler };
-                            }
+                            return new HandlerCollection(compatibleHandlers, commandType);
                         }
                     }
-
-                    // 策略3：如果没有命令类型信息，遍历所有处理器
-                    if (availableHandlers == null)
+                    catch (Exception ex)
                     {
-                        availableHandlers = handlerMappings
-                            .SelectMany(kvp => kvp.Value)
-                            .Where(h => h.CanHandle(cmd))
-                            .ToList();
-
-                        if (!availableHandlers.Any())
-                        {
-                            availableHandlers = null;
-                        }
+                        LogWarning($"从缓存搜索处理器失败: {ex.Message}");
                     }
                 }
             }
 
-            return new HandlerCollection(availableHandlers, commandType);
+            // 缓存搜索失败，回退到传统的内存映射搜索
+            return FindHandlersFromMemoryMapping(cmd, commandCode, commandType);
+        }
+
+        /// <summary>
+        /// 从内存映射中查找处理器（传统方式）
+        /// </summary>
+        private HandlerCollection FindHandlersFromMemoryMapping(QueuedCommand cmd, CommandId commandCode, Type commandType)
+        {
+            var handlerMappings = _commandScanner?.GetAllHandlerMappings();
+            if (handlerMappings == null)
+            {
+                return new HandlerCollection(null, commandType);
+            }
+
+            // 策略1：如果知道命令类型，尝试查找兼容处理器
+            if (commandType != null)
+            {
+                var compatibleHandlers = handlerMappings
+                    .SelectMany(kvp => kvp.Value)
+                    .Where(h => CanHandleCommandType(h, commandType) && h.CanHandle(cmd))
+                    .ToList();
+
+                if (compatibleHandlers.Any())
+                {
+                    return new HandlerCollection(compatibleHandlers, commandType);
+                }
+
+                // 策略2：尝试创建动态处理器（如果支持）
+                var dynamicHandler = TryCreateDynamicHandler(commandType, commandCode);
+                if (dynamicHandler != null)
+                {
+                    return new HandlerCollection(new List<ICommandHandler> { dynamicHandler }, commandType);
+                }
+            }
+
+            // 策略3：如果没有命令类型信息，遍历所有处理器
+            var fallbackHandlers = handlerMappings
+                .SelectMany(kvp => kvp.Value)
+                .Where(h => h.CanHandle(cmd))
+                .ToList();
+
+            return new HandlerCollection(fallbackHandlers.Any() ? fallbackHandlers : null, commandType);
+        }
+
+        /// <summary>
+        /// 获取所有缓存的处理器类型
+        /// </summary>
+        private List<Type> GetAllCachedHandlerTypes(CommandCacheManager cacheManager)
+        {
+            var handlerTypes = new List<Type>();
+            
+            try
+            {
+                // 获取当前应用程序域中的所有程序集（排除系统程序集）
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(a => !a.IsDynamic && !a.FullName.StartsWith("System."))
+                    .ToArray();
+
+                foreach (var assembly in assemblies)
+                {
+                    try
+                    {
+                        // 从缓存获取扫描结果
+                        var scanCache = cacheManager.GetOrCreateScanCacheAsync(assembly, null, false).GetAwaiter().GetResult();
+                        
+                        // 从处理器类型缓存中获取处理器类型
+                        var handlerTypeEntries = cacheManager.GetAllCachedHandlerTypes();
+                        if (handlerTypeEntries != null && handlerTypeEntries.Count > 0)
+                        {
+                            handlerTypes.AddRange(handlerTypeEntries.Where(t => t != null));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        LogDebug($"获取程序集 {assembly.GetName().Name} 的处理器缓存失败: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogWarning($"获取所有缓存处理器类型失败: {ex.Message}");
+            }
+
+            return handlerTypes.Distinct().ToList();
+        }
+
+        /// <summary>
+        /// 通过类型检查处理器是否兼容命令类型（高性能版本）
+        /// </summary>
+        private bool CanHandleCommandTypeByType(Type handlerType, Type commandType)
+        {
+            if (handlerType == null || commandType == null)
+                return false;
+
+            try
+            {
+                // 检查处理器是否实现了泛型接口
+                var interfaces = handlerType.GetInterfaces();
+                foreach (var iface in interfaces)
+                {
+                    if (iface.IsGenericType)
+                    {
+                        var genericType = iface.GetGenericTypeDefinition();
+                        // 检查是否实现了泛型命令处理器接口
+                        if (genericType.Name.StartsWith("ICommandHandler"))
+                        {
+                            var genericArgs = iface.GetGenericArguments();
+                            if (genericArgs.Length > 0)
+                            {
+                                // 检查第一个泛型参数是否与命令类型兼容
+                                var supportedCommandType = genericArgs[0];
+                                if (supportedCommandType.IsAssignableFrom(commandType) ||
+                                    commandType.IsAssignableFrom(supportedCommandType))
+                                {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 检查基类是否支持
+                var baseType = handlerType.BaseType;
+                while (baseType != null && baseType != typeof(object))
+                {
+                    if (baseType.IsGenericType)
+                    {
+                        var genericArgs = baseType.GetGenericArguments();
+                        if (genericArgs.Length > 0)
+                        {
+                            var supportedCommandType = genericArgs[0];
+                            if (supportedCommandType.IsAssignableFrom(commandType) ||
+                                commandType.IsAssignableFrom(supportedCommandType))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    baseType = baseType.BaseType;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                LogError($"检查处理器类型 {handlerType.Name} 兼容性时发生异常: {ex.Message}", ex);
+                return false;
+            }
         }
 
         /// <summary>

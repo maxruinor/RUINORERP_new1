@@ -43,8 +43,7 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly ILogger<CommandScanner> _logger;
         private readonly CommandCacheManager _cacheManager;
 
-        // 扫描结果缓存 - 键为程序集名称，值为发现的类型信息
-        private readonly ConcurrentDictionary<string, ScanResult> _scanResults;
+        // 最后扫描时间记录
         private readonly ConcurrentDictionary<string, DateTime> _lastScanTime;
         
         // 扫描统计
@@ -63,8 +62,7 @@ namespace RUINORERP.PacketSpec.Commands
             _logger = logger;
             _cacheManager = cacheManager ?? new CommandCacheManager();
 
-            // 初始化扫描结果缓存
-            _scanResults = new ConcurrentDictionary<string, ScanResult>();
+            // 初始化扫描时间和统计缓存
             _lastScanTime = new ConcurrentDictionary<string, DateTime>();
             _scanStatistics = new ConcurrentDictionary<string, ScanStatistics>();
             
@@ -345,12 +343,12 @@ namespace RUINORERP.PacketSpec.Commands
         {
             var assemblyName = assembly.GetName().Name;
             
-            // 如果没有扫描记录，需要扫描
-            if (!_scanResults.ContainsKey(assemblyName))
+            // 检查缓存管理器中是否有该程序集的扫描记录
+            var cacheEntry = await _cacheManager.GetOrCreateScanCacheAsync(assembly, null, false);
+            if (cacheEntry == null)
                 return true;
             
             // 如果缓存管理器认为需要重新扫描，则返回true
-            var cacheEntry = await _cacheManager.GetOrCreateScanCacheAsync(assembly, null, false);
             return cacheEntry?.IsIncremental == false;
         }
 
@@ -452,16 +450,13 @@ namespace RUINORERP.PacketSpec.Commands
             if (string.IsNullOrEmpty(typeName))
                 return null;
 
-            // 从所有扫描结果中查找类型
-            foreach (var scanResult in _scanResults.Values)
+            // 从缓存管理器中获取所有缓存的命令类型
+            var cachedCommandTypes = _cacheManager.GetAllCachedCommandTypes();
+            foreach (var commandType in cachedCommandTypes)
             {
-                foreach (var kvp in scanResult.CommandTypes)
+                if (commandType.FullName == typeName || commandType.Name == typeName)
                 {
-                    var commandType = kvp.Value;
-                    if (commandType.FullName == typeName || commandType.Name == typeName)
-                    {
-                        return commandType;
-                    }
+                    return commandType;
                 }
             }
 
@@ -490,11 +485,15 @@ namespace RUINORERP.PacketSpec.Commands
         {
             var allTypes = new Dictionary<CommandId, Type>();
             
-            foreach (var scanResult in _scanResults.Values)
+            // 从缓存管理器中获取所有缓存的命令类型
+            var cachedCommandTypes = _cacheManager.GetAllCachedCommandTypes();
+            foreach (var commandType in cachedCommandTypes)
             {
-                foreach (var kvp in scanResult.CommandTypes)
+                // 从类型中提取命令ID
+                var commandId = ExtractCommandIdFromType(commandType);
+                if (commandId != CommandId.Empty)
                 {
-                    allTypes[kvp.Key] = kvp.Value;
+                    allTypes[commandId] = commandType;
                 }
             }
             
@@ -507,14 +506,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>处理器类型列表</returns>
         public List<Type> GetAllHandlerTypes()
         {
-            var allHandlers = new List<Type>();
-            
-            foreach (var scanResult in _scanResults.Values)
-            {
-                allHandlers.AddRange(scanResult.HandlerTypes);
-            }
-            
-            return allHandlers.Distinct().ToList();
+            // 从缓存管理器中获取所有缓存的处理器类型
+            return _cacheManager.GetAllCachedHandlerTypes();
         }
  
         /// <summary>
@@ -522,10 +515,9 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public void Clear()
         {
-            var commandCount = _scanResults.Values.Sum(r => r.CommandTypes.Count);
-            var handlerCount = _scanResults.Values.Sum(r => r.HandlerTypes.Count);
+            var commandCount = _cacheManager.GetAllCachedCommandTypes().Count;
+            var handlerCount = _cacheManager.GetAllCachedHandlerTypes().Count;
             
-            _scanResults.Clear();
             _lastScanTime.Clear();
             _scanStatistics.Clear();
 
@@ -594,14 +586,14 @@ namespace RUINORERP.PacketSpec.Commands
         {
             var requestType = typeof(TReq);
             
-            foreach (var scanResult in _scanResults.Values)
+            // 从缓存管理器中获取所有缓存的命令类型
+            var cachedCommandTypes = _cacheManager.GetAllCachedCommandTypes();
+            foreach (var commandType in cachedCommandTypes)
             {
-                foreach (var kvp in scanResult.CommandTypes)
+                if (commandType == requestType)
                 {
-                    if (kvp.Value == requestType)
-                    {
-                        return kvp.Key;
-                    }
+                    // 从类型中提取命令ID
+                    return ExtractCommandIdFromType(commandType);
                 }
             }
 
@@ -620,12 +612,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 获取命令类型数量
         /// </summary>
-        public int CommandTypesCount => _scanResults.Values.Sum(r => r.CommandTypes.Count);
+        public int CommandTypesCount => _cacheManager.GetAllCachedCommandTypes().Count;
 
         /// <summary>
         /// 获取处理器类型数量
         /// </summary>
-        public int HandlerTypesCount => _scanResults.Values.Sum(r => r.HandlerTypes.Count);
+        public int HandlerTypesCount => _cacheManager.GetAllCachedHandlerTypes().Count;
 
         /// <summary>
         /// 获取最后扫描时间
@@ -639,9 +631,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>命令类型，如果找不到则返回null</returns>
         public Type GetCommandType(CommandId commandId)
         {
-            foreach (var scanResult in _scanResults.Values)
+            // 从缓存管理器中获取所有缓存的命令类型
+            var cachedCommandTypes = _cacheManager.GetAllCachedCommandTypes();
+            foreach (var commandType in cachedCommandTypes)
             {
-                if (scanResult.CommandTypes.TryGetValue(commandId, out var commandType))
+                var currentCommandId = ExtractCommandIdFromType(commandType);
+                if (currentCommandId == commandId)
                 {
                     return commandType;
                 }
@@ -1279,35 +1274,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        /// <summary>
-        /// 扫描并注册命令（简化接口）- 已废弃，使用异步版本
-        /// </summary>
-        /// <param name="namespaceFilter">命名空间过滤器</param>
-        /// <param name="assemblies">程序集数组</param>
-        [Obsolete("请使用 ScanAndRegisterCommandsAsync 方法，此方法只扫描不注册")]
-        public void ScanAndRegisterCommands(string namespaceFilter, params Assembly[] assemblies)
-        {
-            if (assemblies == null || assemblies.Length == 0)
-            {
-                _logger?.LogWarning("没有提供程序集进行扫描");
-                return;
-            }
-
-            try
-            {
-                // 使用异步方法同步执行扫描 - 但只扫描，不注册！
-                var scanResults = Task.Run(async () => 
-                    await ScanAssembliesAsync(assemblies, namespaceFilter)).GetAwaiter().GetResult();
-                
-                _logger?.LogWarning("ScanAndRegisterCommands 方法只扫描不注册，请使用 ScanAndRegisterCommandsAsync 方法");
-                _logger?.LogInformation("扫描完成，共扫描 {Count} 个程序集，但未注册到系统", assemblies.Length);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "扫描命令时发生异常");
-                throw;
-            }
-        }
+  
 
         #endregion
         #endregion

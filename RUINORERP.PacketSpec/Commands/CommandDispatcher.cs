@@ -64,6 +64,12 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly object _fallbackHandlerLock = new object();
         // 命令扫描器 - 用于扫描和注册命令处理器
         private readonly CommandScanner _commandScanner;
+        
+        // 缓存管理器 - 用于访问缓存的命令类型和构造函数
+        private readonly CommandCacheManager _cacheManager;
+        
+        // 本地处理器映射缓存 - 避免重复从扫描器获取
+        private readonly ConcurrentDictionary<CommandId, List<ICommandHandler>> _commandHandlerMap;
 
 
         /// <summary>
@@ -107,6 +113,10 @@ namespace RUINORERP.PacketSpec.Commands
             _handlerFactory = handlerFactory;
             _commandHistory = new ConcurrentDictionary<CommandId, DateTime>();
             _dispatchSemaphore = new SemaphoreSlim(1, 1); // 添加缺失的信号量
+            
+            // 初始化缓存管理器和本地处理器映射缓存
+            _cacheManager = commandScanner.GetCacheManager();
+            _commandHandlerMap = new ConcurrentDictionary<CommandId, List<ICommandHandler>>();
 
             MaxConcurrencyPerCommand = maxConcurrencyPerCommand > 0 ? maxConcurrencyPerCommand : Environment.ProcessorCount;
 
@@ -133,7 +143,6 @@ namespace RUINORERP.PacketSpec.Commands
             // 创建处理任务
             _channelProcessors = new Task[3];
 
-            // 不再初始化默认的日志记录器，而是延迟初始化
         }
 
         /// <summary>
@@ -451,61 +460,29 @@ namespace RUINORERP.PacketSpec.Commands
 #pragma warning restore CS0168 // 声明了变量，但从未使用过
             }
         }
-
-        /// <summary>
-        /// 注册处理器
-        /// </summary>
-        /// <param name="handlerType">处理器类型</param>
-        public async Task<bool> RegisterHandlerAsync(Type handlerType, CancellationToken cancellationToken = default)
-        {
-            if (_commandScanner == null)
-            {
-                LogError("命令扫描器未初始化");
-                return false;
-            }
-
-            if (handlerType == null)
-            {
-                LogError("处理器类型不能为空");
-                return false;
-            }
-
-            try
-            {
-                // 创建处理器实例
-                if (Activator.CreateInstance(handlerType) is ICommandHandler handler)
-                {
-                    // 使用CommandScanner注册处理器实例
-                    var registered = await _commandScanner.RegisterHandlerAsync(handler, cancellationToken);
-
-                    if (registered)
-                    {
-                        LogInfo($"注册处理器成功: {handlerType.Name}");
-                    }
-
-                    return registered;
-                }
-                else
-                {
-                    LogError($"无法创建处理器实例或类型转换失败: {handlerType.Name}");
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError($"注册处理器 {handlerType.Name} 异常", ex);
-                return false;
-            }
-        }
-
-
+ 
 
         /// <summary>
         /// 获取所有处理器
         /// </summary>
         /// <returns>处理器列表</returns>
+        /// <summary>
+        /// 获取所有处理器（优化：使用本地缓存）
+        /// </summary>
+        /// <returns>所有处理器的只读列表</returns>
         public IReadOnlyList<ICommandHandler> GetAllHandlers()
         {
+            // 优先使用本地缓存的处理器映射
+            if (_commandHandlerMap != null && _commandHandlerMap.Count > 0)
+            {
+                return _commandHandlerMap
+                    .SelectMany(kvp => kvp.Value)
+                    .Distinct()
+                    .ToList()
+                    .AsReadOnly();
+            }
+
+            // 回退到从CommandScanner获取
             var handlerMappings = _commandScanner?.GetAllHandlerMappings();
             if (handlerMappings == null)
             {
@@ -520,11 +497,24 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 获取处理器统计信息
+        /// 获取处理器统计信息（优化：使用本地缓存）
         /// </summary>
         /// <returns>统计信息字典</returns>
         public Dictionary<string, HandlerStatistics> GetHandlerStatistics()
         {
+            // 优先使用本地缓存的处理器映射
+            if (_commandHandlerMap != null && _commandHandlerMap.Count > 0)
+            {
+                return _commandHandlerMap
+                    .SelectMany(kvp => kvp.Value)
+                    .Distinct()
+                    .ToDictionary(
+                        handler => handler.HandlerId,
+                        handler => handler.GetStatistics()
+                    );
+            }
+
+            // 回退到从CommandScanner获取
             var handlerMappings = _commandScanner?.GetAllHandlerMappings();
             if (handlerMappings == null)
             {
@@ -1204,54 +1194,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-
-        /// <summary>
-        /// 获取命令类型
-        /// </summary>
-        /// <param name="commandCode">命令代码</param>
-        /// <returns>命令类型，如果找不到则返回null</returns>
-        public Type GetCommandType(CommandId commandCode)
-        {
-            try
-            {
-                return _commandScanner?.GetCommandType(commandCode);
-            }
-            catch (Exception ex)
-            {
-                LogError($"获取命令类型异常: {commandCode}", ex);
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 创建命令实例
-        /// </summary>
-        /// <param name="commandCode">命令代码</param>
-        /// <returns>命令实例，如果找不到类型或创建失败则返回null</returns>
-        public ICommand CreateCommand(CommandId commandCode)
-        {
-            try
-            {
-                // 使用预编译的构造函数创建命令实例
-                var ctor = _commandScanner?.GetCommandCtor(commandCode);
-                var command = ctor?.Invoke();
-                if (command != null)
-                {
-                    LogDebug($"创建命令实例成功: {commandCode}");
-                }
-                else
-                {
-                    LogWarning($"创建命令实例失败: {commandCode}");
-                }
-                return command;
-            }
-            catch (Exception ex)
-            {
-                LogError($"创建命令实例异常: {commandCode}", ex);
-                return null;
-            }
-        }
-
+ 
 
 
         /// <summary>
@@ -1269,49 +1212,7 @@ namespace RUINORERP.PacketSpec.Commands
                 LogError("清理命令类型异常", ex);
             }
         }
-
-        /// <summary>
-        /// 获取命令处理器映射信息（用于调试）
-        /// </summary>
-        /// <returns>命令代码到处理器列表的映射</returns>
-        public Dictionary<CommandId, List<string>> GetCommandHandlerMappingInfo()
-        {
-            var mappingInfo = new Dictionary<CommandId, List<string>>();
-            var handlerMappings = _commandScanner?.GetAllHandlerMappings();
-
-            if (handlerMappings != null)
-            {
-                foreach (var kvp in handlerMappings)
-                {
-                    var handlerNames = kvp.Value.Select(h => h.Name).ToList();
-                    mappingInfo[kvp.Key] = handlerNames;
-                }
-            }
-
-            return mappingInfo;
-        }
-
-        /// <summary>
-        /// 检查特定命令代码是否已映射到处理器
-        /// </summary>
-        /// <param name="commandCode">命令代码</param>
-        /// <returns>是否已映射</returns>
-        public bool IsCommandMapped(CommandId commandCode)
-        {
-            var handlers = _commandScanner?.GetHandlers(commandCode);
-            return handlers != null && handlers.Any();
-        }
-
-        /// <summary>
-        /// 获取映射到特定命令代码的处理器数量
-        /// </summary>
-        /// <param name="commandCode">命令代码</param>
-        /// <returns>处理器数量</returns>
-        public int GetMappedHandlerCount(CommandId commandCode)
-        {
-            var handlers = _commandScanner?.GetHandlers(commandCode);
-            return handlers?.Count ?? 0;
-        }
+          
 
         /// <summary>
         /// 释放资源
@@ -1331,11 +1232,24 @@ namespace RUINORERP.PacketSpec.Commands
                     // 等待所有处理任务完成
                     Task.WhenAll(_channelProcessors).GetAwaiter().GetResult();
 
-                    // 获取所有处理器并停止和释放
-                    var allHandlers = _commandScanner?.GetAllHandlerMappings()
-                        ?.SelectMany(kvp => kvp.Value)
-                        .Distinct()
-                        .ToList() ?? new List<ICommandHandler>();
+                    // 获取所有处理器并停止和释放（优化：优先使用本地缓存）
+                    List<ICommandHandler> allHandlers;
+                    if (_commandHandlerMap != null && _commandHandlerMap.Count > 0)
+                    {
+                        // 优先使用本地缓存的处理器映射
+                        allHandlers = _commandHandlerMap.Values
+                            .SelectMany(list => list)
+                            .Distinct()
+                            .ToList();
+                    }
+                    else
+                    {
+                        // 回退到从CommandScanner获取
+                        allHandlers = _commandScanner?.GetAllHandlerMappings()
+                            ?.SelectMany(kvp => kvp.Value)
+                            .Distinct()
+                            .ToList() ?? new List<ICommandHandler>();
+                    }
 
                     // 停止所有处理器
                     var stopTasks = allHandlers.Select(h => h.StopAsync(CancellationToken.None));

@@ -20,7 +20,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// 职责（优化后）：
     /// 1. 专注于类型发现 - 扫描程序集中的命令类型（ICommand）和命令处理器（ICommandHandler）
     /// 2. 提供高效的扫描结果缓存和查询功能
-    /// 3. 支持增量扫描和智能缓存失效
+    /// 3. 支持扫描和智能缓存失效
     /// 4. 提供扫描统计和性能监控
     /// 
     /// 设计目标（第二阶段）：
@@ -28,14 +28,12 @@ namespace RUINORERP.PacketSpec.Commands
     /// - 创建独立的CommandRegistry管理注册和生命周期
     /// - 实现延迟注册机制，按需注册类型
     /// - 增强缓存策略，避免重复扫描
-    /// - 支持增量扫描，只扫描变更的程序集
     /// - 提供缓存预热机制，提升启动性能
     /// 
     /// 工作流程（优化后）：
     /// 1. CommandScanner负责扫描和发现类型，建立扫描结果缓存
     /// 2. CommandRegistry负责注册和管理类型生命周期
     /// 3. 支持按需注册和延迟注册机制
-    /// 4. 提供增量扫描支持，只处理变更的程序集
     /// 5. 缓存预热机制提升系统响应速度
     /// </summary>
     public class CommandScanner
@@ -143,11 +141,6 @@ namespace RUINORERP.PacketSpec.Commands
             public DateTime ScanTime { get; set; }
             
             /// <summary>
-            /// 是否为增量扫描
-            /// </summary>
-            public bool IsIncremental { get; set; }
-            
-            /// <summary>
             /// 扫描耗时（毫秒）
             /// </summary>
             public long ScanDurationMs { get; set; }
@@ -163,7 +156,7 @@ namespace RUINORERP.PacketSpec.Commands
         #region 增强扫描方法（第二阶段优化）
 
         /// <summary>
-        /// 智能扫描程序集 - 支持增量扫描和缓存
+        /// 智能扫描程序集 - 扫描和缓存
         /// </summary>
         /// <param name="assembly">要扫描的程序集</param>
         /// <param name="namespaceFilter">命名空间过滤器</param>
@@ -193,7 +186,6 @@ namespace RUINORERP.PacketSpec.Commands
                         CommandTypes = new Dictionary<CommandId, Type>(cacheEntry.ScanResults),
                         HandlerTypes = new List<Type>(), // 处理器类型需要单独扫描
                         ScanTime = DateTime.UtcNow,
-                        IsIncremental = cacheEntry.IsIncremental,
                         ScanDurationMs = stopwatch.ElapsedMilliseconds,
                         AssemblyMetadata = cacheEntry.AssemblyInfo
                     };
@@ -245,7 +237,7 @@ namespace RUINORERP.PacketSpec.Commands
                 CommandTypes = new Dictionary<CommandId, Type>(),
                 HandlerTypes = new List<Type>(),
                 ScanTime = DateTime.UtcNow,
-                IsIncremental = !forceFullScan
+        
             };
             
             try
@@ -299,40 +291,7 @@ namespace RUINORERP.PacketSpec.Commands
             return await Task.WhenAll(tasks);
         }
 
-        /// <summary>
-        /// 增量扫描 - 只扫描变更的程序集
-        /// </summary>
-        /// <param name="assemblies">程序集数组</param>
-        /// <param name="namespaceFilter">命名空间过滤器</param>
-        /// <returns>变更的扫描结果</returns>
-        public async Task<ScanResult[]> IncrementalScanAsync(Assembly[] assemblies, string namespaceFilter = null)
-        {
-            if (assemblies == null || assemblies.Length == 0)
-                return Array.Empty<ScanResult>();
-            
-            var changedAssemblies = new List<Assembly>();
-            
-            foreach (var assembly in assemblies)
-            {
-                var assemblyName = assembly.GetName().Name;
-                
-                // 检查是否需要重新扫描
-                if (await ShouldRescanAssemblyAsync(assembly))
-                {
-                    changedAssemblies.Add(assembly);
-                }
-            }
-            
-            if (changedAssemblies.Count == 0)
-            {
-                _logger?.LogInformation("增量扫描：所有程序集均未变更，跳过扫描");
-                return Array.Empty<ScanResult>();
-            }
-            
-            _logger?.LogInformation("增量扫描：发现 {Count} 个程序集需要重新扫描", changedAssemblies.Count);
-            
-            return await ScanAssembliesAsync(changedAssemblies.ToArray(), namespaceFilter, false);
-        }
+         
 
         /// <summary>
         /// 检查是否需要重新扫描程序集
@@ -500,15 +459,7 @@ namespace RUINORERP.PacketSpec.Commands
             return allTypes;
         }
 
-        /// <summary>
-        /// 获取所有已发现的处理器类型
-        /// </summary>
-        /// <returns>处理器类型列表</returns>
-        public List<Type> GetAllHandlerTypes()
-        {
-            // 从缓存管理器中获取所有缓存的处理器类型
-            return _cacheManager.GetAllCachedHandlerTypes();
-        }
+ 
  
         /// <summary>
         /// 清理扫描结果和统计
@@ -577,71 +528,16 @@ namespace RUINORERP.PacketSpec.Commands
             return DateTime.UtcNow - lastScan.Value >= minInterval;
         }
 
+    
         /// <summary>
-        /// 根据请求类型获取命令ID
-        /// </summary>
-        /// <typeparam name="TReq">请求类型</typeparam>
-        /// <returns>对应的命令ID</returns>
-        public CommandId GetCommandId<TReq>()
-        {
-            var requestType = typeof(TReq);
-            
-            // 从缓存管理器中获取所有缓存的命令类型
-            var cachedCommandTypes = _cacheManager.GetAllCachedCommandTypes();
-            foreach (var commandType in cachedCommandTypes)
-            {
-                if (commandType == requestType)
-                {
-                    // 从类型中提取命令ID
-                    return ExtractCommandIdFromType(commandType);
-                }
-            }
-
-            throw new ArgumentException($"No command ID found for type {requestType.FullName}");
-        }
-
-        /// <summary>
-        /// 获取扫描统计信息
-        /// </summary>
-        /// <returns>扫描统计信息字典</returns>
-        public IReadOnlyDictionary<string, ScanStatistics> GetScanStatistics()
-        {
-            return new Dictionary<string, ScanStatistics>(_scanStatistics);
-        }
-
-        /// <summary>
-        /// 获取命令类型数量
-        /// </summary>
-        public int CommandTypesCount => _cacheManager.GetAllCachedCommandTypes().Count;
-
-        /// <summary>
-        /// 获取处理器类型数量
-        /// </summary>
-        public int HandlerTypesCount => _cacheManager.GetAllCachedHandlerTypes().Count;
-
-        /// <summary>
-        /// 获取最后扫描时间
-        /// </summary>
-        public DateTime? LastScanTime => _lastScanTime.Values.Any() ? _lastScanTime.Values.Max() : (DateTime?)null;
-
-        /// <summary>
-        /// 根据命令ID获取命令类型
+        /// 根据命令ID获取命令类型（优化：直接使用缓存）
         /// </summary>
         /// <param name="commandId">命令ID</param>
         /// <returns>命令类型，如果找不到则返回null</returns>
         public Type GetCommandType(CommandId commandId)
         {
-            // 从缓存管理器中获取所有缓存的命令类型
-            var cachedCommandTypes = _cacheManager.GetAllCachedCommandTypes();
-            foreach (var commandType in cachedCommandTypes)
-            {
-                var currentCommandId = ExtractCommandIdFromType(commandType);
-                if (currentCommandId == commandId)
-                {
-                    return commandType;
-                }
-            }
-            return null;
+            // 直接使用缓存管理器的GetCachedCommandType方法，避免遍历所有类型
+            return _cacheManager.GetCachedCommandType(commandId);
         }
 
         /// <summary>
@@ -652,7 +548,6 @@ namespace RUINORERP.PacketSpec.Commands
         {
             return _cacheManager;
         }
-
 
 
         /// <summary>
@@ -1138,7 +1033,7 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 获取命令类型的构造函数（用于CommandDispatcher.CreateCommand）
+        /// 获取命令类型的构造函数（优化：使用缓存构造函数）
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <returns>构造函数委托，如果找不到则返回null</returns>
@@ -1154,16 +1049,8 @@ namespace RUINORERP.PacketSpec.Commands
                     return null;
                 }
 
-                // 获取无参构造函数
-                var ctor = commandType.GetConstructor(Type.EmptyTypes);
-                if (ctor == null)
-                {
-                    _logger?.LogWarning("命令类型 {TypeName} 没有无参构造函数", commandType.FullName);
-                    return null;
-                }
-
-                // 创建并缓存构造函数委托
-                return Expression.Lambda<Func<ICommand>>(Expression.New(ctor)).Compile();
+                // 使用缓存管理器的GetOrCreateConstructor方法，避免重复创建构造函数
+                return _cacheManager.GetOrCreateConstructor(commandType);
             }
             catch (Exception ex)
             {

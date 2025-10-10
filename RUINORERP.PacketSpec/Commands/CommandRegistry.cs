@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -875,44 +875,6 @@ namespace RUINORERP.PacketSpec.Commands
         #endregion
 
         #region 查询和统计
-
-        /// <summary>
-        /// 获取注册状态
-        /// </summary>
-        /// <param name="commandId">命令ID</param>
-        /// <returns>注册信息</returns>
-        public RegistrationInfo GetCommandRegistrationStatus(CommandId commandId)
-        {
-            return _registrationStatus.TryGetValue(commandId, out var info) ? info : null;
-        }
-
-        /// <summary>
-        /// 获取处理器注册状态
-        /// </summary>
-        /// <param name="handlerName">处理器名称</param>
-        /// <returns>注册信息</returns>
-        public RegistrationInfo GetHandlerRegistrationStatus(string handlerName)
-        {
-            return _handlerRegistrationStatus.TryGetValue(handlerName, out var info) ? info : null;
-        }
-
-        /// <summary>
-        /// 获取所有已注册的命令
-        /// </summary>
-        /// <returns>命令注册信息字典</returns>
-        public IReadOnlyDictionary<CommandId, RegistrationInfo> GetRegisteredCommands()
-        {
-            return new Dictionary<CommandId, RegistrationInfo>(_registrationStatus);
-        }
-
-        /// <summary>
-        /// 获取所有已注册的处理器
-        /// </summary>
-        /// <returns>处理器注册信息字典</returns>
-        public IReadOnlyDictionary<string, RegistrationInfo> GetRegisteredHandlers()
-        {
-            return new Dictionary<string, RegistrationInfo>(_handlerRegistrationStatus);
-        }
 
         /// <summary>
         /// 获取注册统计信息

@@ -32,22 +32,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>处理结果</returns>
         Task<BaseCommand<IResponse>> DispatchAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken = default);
 
-
-
-        /// <summary>
-        /// 获取命令类型
-        /// </summary>
-        /// <param name="commandCode">命令代码</param>
-        /// <returns>命令类型，如果找不到则返回null</returns>
-        Type GetCommandType(CommandId commandCode);
-
-        /// <summary>
-        /// 创建命令实例
-        /// </summary>
-        /// <param name="commandCode">命令代码</param>
-        /// <returns>命令实例，如果找不到类型或创建失败则返回null</returns>
-        ICommand CreateCommand(CommandId commandCode);
-
+ 
 
         /// <summary>
         /// 清理注册的命令类型

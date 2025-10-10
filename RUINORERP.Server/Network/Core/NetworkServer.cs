@@ -345,71 +345,14 @@ namespace RUINORERP.Server.Network.Core
                         _logger.LogInformation($"  支持的命令类型: [{commandCodes}]");
                     }
                 }
-
-                // 记录命令处理器映射信息
-                LogCommandHandlerMapping();
+ 
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "记录已注册命令处理器信息时出错");
             }
         }
-
-        /// <summary>
-        /// 记录命令处理器映射信息
-        /// </summary>
-        private void LogCommandHandlerMapping()
-        {
-            try
-            {
-                // 直接使用具体类型，无需类型转换
-                var mappingInfo = _commandDispatcher.GetCommandHandlerMappingInfo();
-                _logger.LogInformation($"命令处理器映射数量: {mappingInfo.Count}");
-
-                foreach (var kvp in mappingInfo)
-                {
-                    var handlerNames = string.Join(", ", kvp.Value);
-                    _logger.LogInformation($"命令代码 {kvp.Key} 映射到处理器: [{handlerNames}]");
-                }
-
-                // 检查一些关键命令是否已映射
-                CheckKeyCommandsMapping();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "记录命令处理器映射信息时出错");
-            }
-        }
-
-        /// <summary>
-        /// 检查关键命令是否已映射
-        /// </summary>
-        private void CheckKeyCommandsMapping()
-        {
-            try
-            {
-                // 检查登录命令
-                var loginCommandCode = AuthenticationCommands.Login;
-                var isLoginMapped = _commandDispatcher.IsCommandMapped(loginCommandCode);
-                var loginHandlerCount = _commandDispatcher.GetMappedHandlerCount(loginCommandCode);
-                _logger.LogInformation($"登录命令 (代码: {loginCommandCode}) 是否已映射: {isLoginMapped}, 处理器数量: {loginHandlerCount}");
-
-                // 检查登出命令
-                var logoutCommandCode = AuthenticationCommands.Logout;
-                var isLogoutMapped = _commandDispatcher.IsCommandMapped(logoutCommandCode);
-                var logoutHandlerCount = _commandDispatcher.GetMappedHandlerCount(logoutCommandCode);
-                _logger.LogInformation($"登出命令 (代码: {logoutCommandCode}) 是否已映射: {isLogoutMapped}, 处理器数量: {logoutHandlerCount}");
-
-                // 检查广播消息命令
-                var broadcastCommandCode = MessageCommands.BroadcastMessage;
-                var isBroadcastMapped = _commandDispatcher.IsCommandMapped(broadcastCommandCode);
-                var broadcastHandlerCount = _commandDispatcher.GetMappedHandlerCount(broadcastCommandCode);
-                _logger.LogInformation($"广播消息命令 (代码: {broadcastCommandCode}) 是否已映射: {isBroadcastMapped}, 处理器数量: {broadcastHandlerCount}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "检查关键命令映射时出错");
-            }
-        }
+ 
+       
     }
 }

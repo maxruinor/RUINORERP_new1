@@ -3,8 +3,6 @@ using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Core;
-using System.Collections.Concurrent;
-using System.Security.Cryptography;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Requests;
 using MessagePack;
@@ -332,81 +330,47 @@ namespace RUINORERP.PacketSpec.Models.Core
         }
 
         /// <summary>
-        /// JSON序列化缓存，用于缓存高频序列化操作（如心跳包）
+        /// 设置JSON格式数据
         /// </summary>
-        private static readonly ConcurrentDictionary<string, byte[]> _jsonCache = new ConcurrentDictionary<string, byte[]>();
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="data">要序列化的数据</param>
+        /// <returns>当前数据包实例</returns>
         public PacketModel SetJsonData<T>(T data)
         {
-            // 生成缓存键：类型名 + 数据哈希
-            var type = typeof(T);
-            var jsonBytes = UnifiedSerializationService.SerializeWithJson(data);
-
-            // 计算JSON的哈希值作为缓存键的一部分
-            string hash;
-            using (var sha256 = SHA256.Create())
-            {
-                var hashBytes = sha256.ComputeHash(jsonBytes);
-                hash = Convert.ToBase64String(hashBytes);
-            }
-
-            var cacheKey = $"{type.FullName}:{hash}";
-
-            // 尝试从缓存获取或添加
-            CommandData = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
+            CommandData = UnifiedSerializationService.SerializeWithJson(data);
             Size = CommandData.Length;
             LastUpdatedTime = DateTime.UtcNow;
             return this;
-
         }
 
 
+        /// <summary>
+        /// 设置MessagePack格式数据
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="data">要序列化的数据</param>
+        /// <returns>当前数据包实例</returns>
         public PacketModel SetCommandDataByMessagePack<T>(T data)
         {
-            // 生成缓存键：类型名 + 数据哈希
-            var type = typeof(T);
-            var messagePackBytes = MessagePackSerializer.Serialize<T>(data, UnifiedSerializationService.MessagePackOptions);
-
-            // 计算JSON的哈希值作为缓存键的一部分
-            string hash;
-            using (var sha256 = SHA256.Create())
-            {
-                var hashBytes = sha256.ComputeHash(messagePackBytes);
-                hash = Convert.ToBase64String(hashBytes);
-            }
-
-            var cacheKey = $"{type.FullName}:{hash}";
-
-            // 尝试从缓存获取或添加
-            CommandData = _jsonCache.GetOrAdd(cacheKey, messagePackBytes);
+            CommandData = MessagePackSerializer.Serialize<T>(data, UnifiedSerializationService.MessagePackOptions);
             Size = CommandData.Length;
             LastUpdatedTime = DateTime.UtcNow;
             return this;
-
         }
 
 
+        /// <summary>
+        /// 设置MessagePack格式数据（非泛型版本）
+        /// </summary>
+        /// <param name="type">数据类型</param>
+        /// <param name="data">要序列化的数据</param>
+        /// <returns>当前数据包实例</returns>
         public PacketModel SetCommandDataByMessagePack(Type type, object data)
         {
-            // 生成缓存键：类型名 + 数据哈希
-            
-            var messagePackBytes = MessagePackSerializer.Serialize(data, UnifiedSerializationService.MessagePackOptions);
-
-            // 计算JSON的哈希值作为缓存键的一部分
-            string hash;
-            using (var sha256 = SHA256.Create())
-            {
-                var hashBytes = sha256.ComputeHash(messagePackBytes);
-                hash = Convert.ToBase64String(hashBytes);
-            }
-
-            var cacheKey = $"{type.FullName}:{hash}";
-
-            // 尝试从缓存获取或添加
-            CommandData = _jsonCache.GetOrAdd(cacheKey, messagePackBytes);
+            CommandData = MessagePackSerializer.Serialize(data, UnifiedSerializationService.MessagePackOptions);
             Size = CommandData.Length;
             LastUpdatedTime = DateTime.UtcNow;
             return this;
-
         }
 
 

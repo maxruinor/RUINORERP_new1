@@ -103,11 +103,11 @@ namespace RUINORERP.PacketSpec.Commands
                         if (command != null)
                         {
                             InitializeCommandProperties(command, packet);
-                        // 缓存命令创建器以供后续使用
-                        _cacheManager.CacheCommandCreator(commandId, packet => command);
-                        _logger?.LogDebug("使用ExecutionContext.CommandType创建命令: {CommandType}, BytesLength={BytesLength}",
-                            executionContext.CommandType.Name, packet.CommandData.Length);
-                        return command;
+                            // 缓存命令创建器以供后续使用
+                            _cacheManager.CacheCommandCreator(commandId, packet => command);
+                            _logger?.LogDebug("使用ExecutionContext.CommandType创建命令: {CommandType}, BytesLength={BytesLength}",
+                                executionContext.CommandType.Name, packet.CommandData.Length);
+                            return command;
                         }
                     }
                     catch (Exception ex)
@@ -250,6 +250,8 @@ namespace RUINORERP.PacketSpec.Commands
 
                 if (commandType == null)
                     throw new ArgumentException($"未知的命令类型: {typeName}", nameof(typeName));
+
+                var ss = MessagePackSerializer.Deserialize(commandType, data, UnifiedSerializationService.MessagePackOptions);
 
                 // 4. 使用配置的MessagePack选项进行反序列化
                 var command = MessagePackSerializer.Deserialize(commandType, data, UnifiedSerializationService.MessagePackOptions) as ICommand;
@@ -575,7 +577,7 @@ namespace RUINORERP.PacketSpec.Commands
                     _logger?.LogError($"命令ID解析失败: {commandId}");
                     return null;
                 }
-                
+
                 // 1. 首先尝试从缓存获取命令实例
                 // 注意：CommandCacheManager 没有 GetCommand 方法，跳过缓存检查步骤
 
@@ -606,7 +608,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-      
+
 
         /// <summary>
         /// 创建命令实例 - 提取为独立方法（来自 DefaultCommandFactory）
@@ -632,14 +634,14 @@ namespace RUINORERP.PacketSpec.Commands
                     _logger?.LogWarning($"未找到命令类型: {commandId}");
                     return null;
                 }
-                
+
                 // 4. 缓存命令类型
                 _cacheManager.CacheCommandType(cmdId, commandType);
             }
 
             // 5. 优先使用缓存管理器创建命令实例
-                var constructor = _cacheManager.GetOrCreateConstructor(commandType);
-                var command = constructor?.Invoke();
+            var constructor = _cacheManager.GetOrCreateConstructor(commandType);
+            var command = constructor?.Invoke();
             if (command == null)
             {
                 // 6. 缓存创建失败，使用传统方式创建
@@ -650,7 +652,7 @@ namespace RUINORERP.PacketSpec.Commands
                     _cacheManager.CacheConstructor(commandType, () => command);
                 }
             }
-            
+
             if (command == null)
             {
                 _logger?.LogError($"创建命令实例失败: {commandId}");
@@ -675,7 +677,7 @@ namespace RUINORERP.PacketSpec.Commands
 
             foreach (var param in parameters)
             {
-                var property = properties.FirstOrDefault(p => 
+                var property = properties.FirstOrDefault(p =>
                     string.Equals(p.Name, param.Key, StringComparison.OrdinalIgnoreCase));
 
                 if (property != null && property.CanWrite)
@@ -744,9 +746,9 @@ namespace RUINORERP.PacketSpec.Commands
                 ["CommandCreatorCacheCount"] = stats.CommandCreatorCacheCount,
                 ["ScanResultCacheCount"] = stats.ScanResultCacheCount,
                 ["HandlerTypeCacheCount"] = stats.HandlerTypeCacheCount,
-                ["TotalCacheEntries"] = stats.CommandTypeCacheCount + stats.CommandTypeByNameCacheCount + 
-                                     stats.ConstructorCacheCount + stats.CommandCreatorCacheCount + 
-                                     stats.HandlerTypeCacheCount + stats.ScanResultCacheCount + 
+                ["TotalCacheEntries"] = stats.CommandTypeCacheCount + stats.CommandTypeByNameCacheCount +
+                                     stats.ConstructorCacheCount + stats.CommandCreatorCacheCount +
+                                     stats.HandlerTypeCacheCount + stats.ScanResultCacheCount +
                                      stats.AssemblyMetadataCacheCount
             };
         }
@@ -759,6 +761,6 @@ namespace RUINORERP.PacketSpec.Commands
             _cacheManager.ClearAllCaches();
             _logger?.LogInformation("命令创建服务缓存已清理");
         }
-     
+
     }
 }

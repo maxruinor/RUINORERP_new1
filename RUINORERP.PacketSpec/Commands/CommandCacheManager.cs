@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -54,8 +53,7 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly ConcurrentDictionary<string, HandlerCacheEntry> _handlerTypeCache;
         private readonly ConcurrentDictionary<string, List<HandlerCacheEntry>> _assemblyHandlerCache;
         
-        // 缓存持久化和统计
-        private readonly string _cachePersistencePath;
+        // 缓存统计
         private readonly Timer _cacheWarmupTimer;
         private readonly Timer _cacheCleanupTimer;
         private long _cacheHits;
@@ -66,10 +64,9 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="cachePersistencePath">缓存持久化路径</param>
         /// <param name="enableAutoWarmup">是否启用自动预热</param>
         /// <param name="logger">日志记录器</param>
-        public CommandCacheManager(string cachePersistencePath = null, bool enableAutoWarmup = true, ILogger<CommandCacheManager> logger = null)
+        public CommandCacheManager(bool enableAutoWarmup = true, ILogger<CommandCacheManager> logger = null)
         {
             _logger = logger;
             
@@ -88,19 +85,6 @@ namespace RUINORERP.PacketSpec.Commands
             _handlerTypeCache = new ConcurrentDictionary<string, HandlerCacheEntry>();
             _assemblyHandlerCache = new ConcurrentDictionary<string, List<HandlerCacheEntry>>();
             
-            // 设置缓存持久化路径
-            _cachePersistencePath = cachePersistencePath ?? Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "RUINORERP",
-                "CommandCache"
-            );
-            
-            // 确保缓存目录存在
-            if (!string.IsNullOrEmpty(_cachePersistencePath))
-            {
-                Directory.CreateDirectory(_cachePersistencePath);
-            }
-            
             // 启动自动预热和清理定时器
             if (enableAutoWarmup)
             {
@@ -108,10 +92,7 @@ namespace RUINORERP.PacketSpec.Commands
                 _cacheCleanupTimer = new Timer(CleanupExpiredCache, null, TimeSpan.FromHours(1), TimeSpan.FromHours(6));
             }
             
-            // 加载持久化缓存
-            LoadPersistedCache().ConfigureAwait(false).GetAwaiter().GetResult();
-            
-            _logger?.LogInformation("统一缓存管理器初始化完成，缓存路径: {CachePath}", _cachePersistencePath);
+            _logger?.LogInformation("统一缓存管理器初始化完成");
         }
 
         #region 基础缓存操作
@@ -318,9 +299,6 @@ namespace RUINORERP.PacketSpec.Commands
             _scanResultCache.AddOrUpdate(cacheKey, newEntry, (key, old) => newEntry);
             _assemblyMetadataCache.AddOrUpdate(assembly.GetName().Name, assemblyMetadata, (key, old) => assemblyMetadata);
             
-            // 异步持久化缓存
-            await PersistCacheAsync(cacheKey, newEntry);
-            
             return newEntry;
         }
 
@@ -374,156 +352,35 @@ namespace RUINORERP.PacketSpec.Commands
         #region 缓存持久化和清理
 
         /// <summary>
-        /// 检查缓存是否有效
+        /// 检查缓存是否有效（简化版本）
         /// </summary>
-        private async Task<bool> IsCacheValidAsync(ScanCacheEntry cacheEntry)
+        private Task<bool> IsCacheValidAsync(ScanCacheEntry cacheEntry)
         {
             if (cacheEntry?.AssemblyInfo == null)
-                return false;
+                return Task.FromResult(false);
             
-            try
-            {
-                var assemblyPath = cacheEntry.AssemblyInfo.FilePath;
-                if (!File.Exists(assemblyPath))
-                    return false;
-                
-                var fileInfo = new FileInfo(assemblyPath);
-                
-                // 检查文件大小和修改时间
-                if (fileInfo.Length != cacheEntry.AssemblyInfo.FileSize ||
-                    fileInfo.LastWriteTimeUtc != cacheEntry.AssemblyInfo.LastModifiedTime)
-                {
-                    return false;
-                }
-                
-                // 检查校验和
-                var currentChecksum = await CalculateFileChecksumAsync(assemblyPath);
-                if (currentChecksum != cacheEntry.AssemblyInfo.Checksum)
-                    return false;
-                
-                // 检查依赖项
-                if (cacheEntry.Dependencies != null)
-                {
-                    foreach (var dependency in cacheEntry.Dependencies)
-                    {
-                        if (!await IsDependencyValidAsync(dependency))
-                            return false;
-                    }
-                }
-                
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "检查缓存有效性失败: {CacheKey}", cacheEntry?.CacheKey);
-                return false;
-            }
+            // 简化缓存有效性检查，仅检查基本属性
+            return Task.FromResult(true);
         }
 
+ 
+
         /// <summary>
-        /// 加载持久化缓存
+        /// 异步加载缓存文件（已禁用）
         /// </summary>
-        private Task LoadPersistedCache()
+        private Task LoadCacheFileAsync(string cacheFile)
         {
-            if (string.IsNullOrEmpty(_cachePersistencePath) || !Directory.Exists(_cachePersistencePath))
-                return Task.CompletedTask;
-            
-            try
-            {
-                var cacheFiles = Directory.GetFiles(_cachePersistencePath, "*.cache");
-                var loadTasks = cacheFiles.Select(LoadCacheFileAsync).ToArray();
-                Task.WaitAll(loadTasks);
-                
-                _logger?.LogInformation("加载持久化缓存完成，共加载 {Count} 个缓存文件", cacheFiles.Length);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "加载持久化缓存失败");
-            }
-            
+            // 持久化功能已禁用，直接返回
             return Task.CompletedTask;
         }
 
         /// <summary>
-        /// 异步加载缓存文件
+        /// 异步持久化缓存（已禁用）
         /// </summary>
-        private async Task LoadCacheFileAsync(string cacheFile)
+        private Task PersistCacheAsync(string cacheKey, ScanCacheEntry cacheEntry)
         {
-            try
-            {
-                // 使用Task.Run包装同步方法
-                var json = await Task.Run(() => File.ReadAllText(cacheFile));
-                var cacheData = JsonConvert.DeserializeObject<dynamic>(json);
-                
-                var cacheKey = cacheData.CacheKey.ToString();
-                var createdTime = DateTime.Parse(cacheData.CreatedTime.ToString());
-                var assemblyInfo = JsonConvert.DeserializeObject<AssemblyMetadata>(cacheData.AssemblyInfo.ToString());
-                var dependencies = JsonConvert.DeserializeObject<List<AssemblyDependency>>(cacheData.Dependencies.ToString());
-                
-                var scanResults = new Dictionary<CommandId, Type>();
-                if (cacheData.ScanResults != null)
-                {
-                    foreach (var kvp in cacheData.ScanResults)
-                    {
-                        var commandId = CommandId.FromUInt16(ushort.Parse(kvp.Name));
-                        var typeName = kvp.Value.ToString();
-                        var type = Type.GetType(typeName);
-                        if (type != null)
-                        {
-                            scanResults[commandId] = type;
-                        }
-                    }
-                }
-                
-                var cacheEntry = new ScanCacheEntry
-                {
-                    CacheKey = cacheKey,
-                    CreatedTime = createdTime,
-                    LastAccessTime = DateTime.UtcNow,
-                    AccessCount = 0,
-                    IsIncremental = bool.Parse(cacheData.IsIncremental.ToString()),
-                    AssemblyInfo = assemblyInfo,
-                    Dependencies = dependencies,
-                    ScanResults = scanResults
-                };
-                
-                _scanResultCache.TryAdd(cacheKey, cacheEntry);
-                _assemblyMetadataCache.TryAdd(assemblyInfo.Name, assemblyInfo);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "加载缓存文件失败: {CacheFile}", cacheFile);
-            }
-        }
-
-        /// <summary>
-        /// 异步持久化缓存
-        /// </summary>
-        private async Task PersistCacheAsync(string cacheKey, ScanCacheEntry cacheEntry)
-        {
-            if (string.IsNullOrEmpty(_cachePersistencePath)) return;
-            
-            try
-            {
-                var cacheFile = Path.Combine(_cachePersistencePath, $"{cacheKey}.cache");
-                var cacheData = new
-                {
-                    CacheKey = cacheEntry.CacheKey,
-                    CreatedTime = cacheEntry.CreatedTime,
-                    AssemblyInfo = cacheEntry.AssemblyInfo,
-                    Dependencies = cacheEntry.Dependencies,
-                    IsIncremental = cacheEntry.IsIncremental,
-                    ScanResults = cacheEntry.ScanResults.ToDictionary(kvp => kvp.Key.ToString(), kvp => kvp.Value.AssemblyQualifiedName)
-                };
-                
-                var json = JsonConvert.SerializeObject(cacheData, Formatting.Indented);
-                // 使用Task.Run包装同步方法
-                await Task.Run(() => File.WriteAllText(cacheFile, json));
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "持久化缓存失败: {CacheKey}", cacheKey);
-            }
+            // 持久化功能已禁用，直接返回
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -548,13 +405,6 @@ namespace RUINORERP.PacketSpec.Commands
                 foreach (var key in expiredKeys)
                 {
                     _scanResultCache.TryRemove(key, out _);
-                    
-                    // 删除持久化文件
-                    var cacheFile = Path.Combine(_cachePersistencePath, $"{key}.cache");
-                    if (File.Exists(cacheFile))
-                    {
-                        File.Delete(cacheFile);
-                    }
                 }
                 
                 if (expiredKeys.Count > 0)
@@ -717,73 +567,46 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 获取程序集元数据
+        /// 获取程序集元数据（简化版本）
         /// </summary>
         private async Task<AssemblyMetadata> GetAssemblyMetadataAsync(Assembly assembly)
         {
             var name = assembly.GetName();
-            var location = assembly.Location;
-            
-            var fileInfo = new FileInfo(location);
-            var checksum = await CalculateFileChecksumAsync(location);
             
             return new AssemblyMetadata
             {
                 Name = name.Name,
                 Version = name.Version?.ToString(),
-                FilePath = location,
-                FileSize = fileInfo.Length,
-                LastModifiedTime = fileInfo.LastWriteTimeUtc,
-                Checksum = checksum,
+                FilePath = assembly.Location,
+                FileSize = 0,
+                LastModifiedTime = DateTime.UtcNow,
+                Checksum = string.Empty,
                 Timestamp = DateTime.UtcNow
             };
         }
 
         /// <summary>
-        /// 计算文件校验和
+        /// 计算文件校验和（已禁用）
         /// </summary>
-        private async Task<string> CalculateFileChecksumAsync(string filePath)
+        private Task<string> CalculateFileChecksumAsync(string filePath)
         {
-            try
-            {
-                using (var sha256 = SHA256.Create())
-                using (var stream = File.OpenRead(filePath))
-                {
-                    // 使用同步方法计算哈希，因为SHA256没有ComputeHashAsync
-                    var hash = await Task.Run(() => sha256.ComputeHash(stream));
-                    return Convert.ToBase64String(hash);
-                }
-            }
-            catch
-            {
-                return string.Empty;
-            }
+            // 持久化功能已禁用，返回空校验和
+            return Task.FromResult(string.Empty);
         }
 
         /// <summary>
-        /// 检查是否可以使用增量扫描
+        /// 检查是否可以使用增量扫描（简化版本）
         /// </summary>
-        private async Task<bool> CanUseIncrementalScanAsync(AssemblyMetadata metadata)
+        private Task<bool> CanUseIncrementalScanAsync(AssemblyMetadata metadata)
         {
-            if (metadata == null) return false;
+            if (metadata == null) return Task.FromResult(false);
             
             // 检查是否有之前的扫描记录
             if (!_lastScanTime.TryGetValue(metadata.Name, out var lastScanTime))
-                return false;
+                return Task.FromResult(false);
             
-            // 检查程序集是否被修改
-            var assemblyFile = new FileInfo(metadata.FilePath);
-            if (assemblyFile.LastWriteTimeUtc > lastScanTime)
-                return false;
-            
-            // 检查依赖项是否被修改
-            if (_assemblyMetadataCache.TryGetValue(metadata.Name, out var cachedMetadata))
-            {
-                if (cachedMetadata.LastModifiedTime != metadata.LastModifiedTime)
-                    return false;
-            }
-            
-            return true;
+            // 简化增量扫描检查，不再检查文件修改时间
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -827,31 +650,14 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 检查依赖项是否有效
+        /// 检查依赖项是否有效（简化版本）
         /// </summary>
-        private async Task<bool> IsDependencyValidAsync(AssemblyDependency dependency)
+        private Task<bool> IsDependencyValidAsync(AssemblyDependency dependency)
         {
-            if (dependency == null) return false;
+            if (dependency == null) return Task.FromResult(false);
             
-            try
-            {
-                if (!File.Exists(dependency.FilePath))
-                    return false;
-                
-                var fileInfo = new FileInfo(dependency.FilePath);
-                if (fileInfo.LastWriteTimeUtc != dependency.LastModifiedTime)
-                    return false;
-                
-                var currentChecksum = await CalculateFileChecksumAsync(dependency.FilePath);
-                if (currentChecksum != dependency.Checksum)
-                    return false;
-                
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            // 简化检查逻辑，仅检查基本属性
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -919,7 +725,6 @@ namespace RUINORERP.PacketSpec.Commands
                 IncrementalScans = _incrementalScans,
                 FullScans = _fullScans,
                 LastScanTime = _lastScanTime.Values.Any() ? _lastScanTime.Values.Max() : DateTime.MinValue,
-                CachePersistencePath = _cachePersistencePath,
                 TotalCacheSize = CalculateTotalCacheSize(),
                 LastUpdateTime = DateTime.UtcNow
             };
@@ -1005,7 +810,6 @@ namespace RUINORERP.PacketSpec.Commands
             public long IncrementalScans { get; set; }
             public long FullScans { get; set; }
             public DateTime LastScanTime { get; set; }
-            public string CachePersistencePath { get; set; }
             public long TotalCacheSize { get; set; }
             public DateTime LastUpdateTime { get; set; }
         }

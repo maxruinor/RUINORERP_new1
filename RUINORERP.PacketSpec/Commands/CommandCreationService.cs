@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -35,7 +35,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             _logger = logger;
             _commandScanner = commandScanner ?? new CommandScanner();
-            _cacheManager = cacheManager ?? new CommandCacheManager(null);
+            _cacheManager = cacheManager ?? new CommandCacheManager(true);
             _commandCreators = new Dictionary<CommandId, Func<PacketModel, ICommand>>();
         }
 

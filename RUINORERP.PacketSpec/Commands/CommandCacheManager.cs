@@ -39,7 +39,6 @@ namespace RUINORERP.PacketSpec.Commands
         
         // 基础缓存 - 命令ID到类型的映射
         private readonly ConcurrentDictionary<CommandId, Type> _commandTypeCache;
-        private readonly ConcurrentDictionary<string, Type> _commandTypeByNameCache;
         
         // 构造函数和创建器缓存
         private readonly ConcurrentDictionary<Type, Func<ICommand>> _constructorCache;
@@ -76,7 +75,6 @@ namespace RUINORERP.PacketSpec.Commands
             
             // 初始化基础缓存
             _commandTypeCache = new ConcurrentDictionary<CommandId, Type>();
-            _commandTypeByNameCache = new ConcurrentDictionary<string, Type>();
             _constructorCache = new ConcurrentDictionary<Type, Func<ICommand>>();
             _commandCreatorCache = new ConcurrentDictionary<CommandId, Func<PacketModel, ICommand>>();
             
@@ -126,8 +124,6 @@ namespace RUINORERP.PacketSpec.Commands
             if (commandId == null || commandType == null) return;
             
             _commandTypeCache.TryAdd(commandId, commandType);
-            _commandTypeByNameCache.TryAdd(commandType.FullName, commandType);
-            _commandTypeByNameCache.TryAdd(commandType.Name, commandType);
             
             _logger?.LogDebug($"缓存命令类型: {commandId} -> {commandType.Name}");
         }
@@ -138,14 +134,6 @@ namespace RUINORERP.PacketSpec.Commands
         public Type GetCachedCommandType(CommandId commandId)
         {
             return _commandTypeCache.TryGetValue(commandId, out var type) ? type : null;
-        }
-
-        /// <summary>
-        /// 根据类型名称获取缓存的命令类型
-        /// </summary>
-        public Type GetCachedCommandTypeByName(string typeName)
-        {
-            return _commandTypeByNameCache.TryGetValue(typeName, out var type) ? type : null;
         }
 
         /// <summary>
@@ -871,7 +859,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private long CalculateTotalCacheSize()
         {
-            return _commandTypeCache.Count + _commandTypeByNameCache.Count + 
+            return _commandTypeCache.Count + 
                    _constructorCache.Count + _commandCreatorCache.Count + 
                    _handlerTypeCache.Count + _scanResultCache.Count + 
                    _assemblyMetadataCache.Count;
@@ -888,7 +876,6 @@ namespace RUINORERP.PacketSpec.Commands
         {
             // 清空基础缓存
             _commandTypeCache.Clear();
-            _commandTypeByNameCache.Clear();
             _constructorCache.Clear();
             _commandCreatorCache.Clear();
             _handlerTypeCache.Clear();
@@ -919,7 +906,6 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 // 基础统计
                 CommandTypeCacheCount = _commandTypeCache.Count,
-                CommandTypeByNameCacheCount = _commandTypeByNameCache.Count,
                 ConstructorCacheCount = _constructorCache.Count,
                 CommandCreatorCacheCount = _commandCreatorCache.Count,
                 HandlerTypeCacheCount = _handlerTypeCache.Count,

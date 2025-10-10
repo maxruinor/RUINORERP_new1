@@ -83,7 +83,7 @@ namespace RUINORERP.Server.Network.Core
                 var serverAssembly = Assembly.GetExecutingAssembly();
 
                 _logger.LogInformation($"正在扫描命令类型，PacketSpec程序集: {packetSpecAssembly?.GetName().Name}, 服务器程序集: {serverAssembly?.GetName().Name}");
-                commandScanner.ScanAndRegisterCommands(_commandDispatcher, null, packetSpecAssembly, serverAssembly);
+                commandScanner.ScanAndRegisterCommands(null, packetSpecAssembly, serverAssembly);
 
                 // 扫描并注册服务器端的命令处理器
                 // 命令处理器与业务逻辑紧密相关，通常位于服务器项目中

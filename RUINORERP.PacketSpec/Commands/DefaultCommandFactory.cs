@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
@@ -101,7 +101,7 @@ namespace RUINORERP.PacketSpec.Commands
                 //新的简化版本测试 
                 // 如果无法创建命令，返回null 
                 // 2. 使用CommandScanner获取有效载荷类型
-                var payloadType = _commandScanner.GetPayloadType(commandId);
+                var payloadType = _commandScanner.GetCommandType(commandId);
                 if (payloadType != null)
                 {
                     //var closedType = typeof(GenericCommand<>).MakeGenericType(payloadType);

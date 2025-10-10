@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Models.Core;
+﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Generic;
@@ -30,12 +30,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>处理结果</returns>
         Task<BaseCommand<IResponse>> DispatchAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken = default);
 
-        /// <summary>
-        /// 注册命令类型
-        /// </summary>
-        /// <param name="commandCode">命令代码</param>
-        /// <param name="commandType">命令类型</param>
-        void RegisterCommandType(CommandId commandCode, Type commandType);
+ 
 
         /// <summary>
         /// 获取命令类型

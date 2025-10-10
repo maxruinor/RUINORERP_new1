@@ -20,19 +20,19 @@ namespace RUINORERP.UI.Network
     /// <summary>
 
     /// </summary>
-    public class ClientCommandDispatcher : ICommandDispatcher
+    public class ClientCommandDispatcher
     {
-        private readonly CommandTypeHelper _commandTypeHelper;
+        private readonly CommandScanner _commandScanner;
         private readonly ConcurrentDictionary<ushort, ICommand> _commandInstances;
         private readonly object _lockObject = new object();
         public readonly ILogger<ClientCommandDispatcher> _logger;
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="commandTypeHelper">命令类型助手，可选参数，用于管理命令类型映射关系</param>
-        public ClientCommandDispatcher(ILogger<ClientCommandDispatcher> logger, CommandTypeHelper commandTypeHelper = null)
+        /// <param name="_commandScanner">命令类型助手，可选参数，用于管理命令类型映射关系</param>
+        public ClientCommandDispatcher(ILogger<ClientCommandDispatcher> logger, CommandScanner _commandScanner = null)
         {
-            _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
+            this._commandScanner = _commandScanner ?? new CommandScanner();
             _commandInstances = new ConcurrentDictionary<ushort, ICommand>();
             _logger = logger;
             // 自动注册客户端命令
@@ -52,7 +52,7 @@ namespace RUINORERP.UI.Network
                 throw new ArgumentNullException(nameof(commandType));
             }
 
-            _commandTypeHelper.RegisterCommandType(commandCode, commandType);
+            _commandScanner.RegisterCommandType(commandCode, commandType);
         }
 
         /// <summary>
@@ -203,49 +203,30 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public void ClearCommandTypes()
         {
-            _commandTypeHelper.Clear();
+            _commandScanner.Clear();
         }
 
         #region ICommandDispatcher 接口实现
 
 
 
-        /// <summary>
-        /// 注册命令类型
-        /// </summary>
-        /// <param name="commandCode">命令代码</param>
-        /// <param name="commandType">命令类型</param>
-        public void RegisterCommandType(CommandId commandCode, Type commandType)
-        {
-            RegisterCommand(commandCode, commandType);
-        }
-
-        /// <summary>
+         /// <summary>
         /// 获取命令类型
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <returns>命令类型，如果找不到则返回null</returns>
         public Type GetCommandType(CommandId commandCode)
         {
-            return _commandTypeHelper.GetCommandType(commandCode);
+            return _commandScanner.GetCommandType(commandCode);
         }
-
-        Task<bool> ICommandDispatcher.InitializeAsync(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<BaseCommand<IResponse>> ICommandDispatcher.DispatchAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
+     
 
         public ICommand CreateCommand(CommandId commandCode)
         {
             try
             {
                 // 使用预编译的构造函数创建命令实例
-                var ctor = _commandTypeHelper.GetCommandCtor(commandCode);
+                var ctor = _commandScanner.GetCommandCtor(commandCode);
                 var command = ctor();
                 if (command != null)
                 {

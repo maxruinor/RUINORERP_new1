@@ -105,6 +105,10 @@ namespace RUINORERP.PacketSpec.DI
      
 
 
+            // 注册命令创建服务（新增）
+            services.AddSingleton<CommandCreationService>();
+            services.AddSingleton<ICommandCreationService, CommandCreationService>();
+
             // 注册命令工厂
             services.AddSingleton<ICommandFactory, DefaultCommandFactory>();
             services.AddSingleton<ICommandFactoryAsync, DefaultCommandFactory>();
@@ -188,6 +192,12 @@ namespace RUINORERP.PacketSpec.DI
                 .As<ITokenService>()
                 .SingleInstance();
 
+
+            // 注册命令创建服务（新增）
+            builder.RegisterType<CommandCreationService>()
+                .AsSelf()
+                .As<ICommandCreationService>()
+                .SingleInstance();
 
             // 注册命令工厂
             builder.RegisterType<DefaultCommandFactory>()

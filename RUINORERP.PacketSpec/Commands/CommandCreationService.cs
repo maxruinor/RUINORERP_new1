@@ -1,5 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using MessagePack;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Core;
@@ -11,25 +16,31 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 统一命令创建服务实现 - 集中处理所有命令创建逻辑
     /// 避免 CommandPacketAdapter 和 DefaultCommandFactory 之间的代码重复
+    /// 合并了 DefaultCommandFactory 的功能，提供统一的命令创建入口
     /// </summary>
     public class CommandCreationService : ICommandCreationService
     {
         private readonly ILogger<CommandCreationService> _logger;
         private readonly CommandScanner _commandScanner;
+        private readonly CommandCacheManager _cacheManager;
+        private readonly Dictionary<CommandId, Func<PacketModel, ICommand>> _commandCreators;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="commandScanner">命令扫描器</param>
-        public CommandCreationService(ILogger<CommandCreationService> logger = null, CommandScanner commandScanner = null)
+        /// <param name="cacheManager">缓存管理器</param>
+        public CommandCreationService(ILogger<CommandCreationService> logger = null, CommandScanner commandScanner = null, CommandCacheManager cacheManager = null)
         {
             _logger = logger;
             _commandScanner = commandScanner ?? new CommandScanner();
+            _cacheManager = cacheManager ?? new CommandCacheManager(null);
+            _commandCreators = new Dictionary<CommandId, Func<PacketModel, ICommand>>();
         }
 
         /// <summary>
-        /// 从数据包创建命令 - 主入口方法
+        /// 从数据包创建命令 - 主入口方法（合并了 DefaultCommandFactory 的功能）
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <returns>创建的命令对象，失败时返回null</returns>
@@ -43,9 +54,47 @@ namespace RUINORERP.PacketSpec.Commands
 
             try
             {
+                var commandId = packet.CommandId;
+
+                // 1. 首先尝试从缓存获取命令创建器
+                var cachedCreator = _cacheManager.GetCachedCommandCreator(commandId);
+                if (cachedCreator != null)
+                {
+                    var command = cachedCreator(packet);
+                    if (command != null)
+                    {
+                        InitializeCommandProperties(command, packet);
+                        _logger?.LogDebug("从缓存创建器获取命令: {CommandId}", commandId);
+                        return command;
+                    }
+                }
+
+                // 2. 从数据包提取类型化命令（来自 DefaultCommandFactory 的优化）
+                var typedCommand = ExtractTypedCommand(packet);
+                if (typedCommand != null)
+                {
+                    _logger?.LogDebug("成功从数据包提取类型化命令: {CommandType}", typedCommand.GetType().Name);
+                    // 缓存命令创建器以供后续使用
+                    _cacheManager.CacheCommandCreator(commandId, packet => typedCommand);
+                    return typedCommand;
+                }
+
                 var executionContext = packet.ExecutionContext;
 
-                // 1. 优先使用ExecutionContext中的类型信息
+                // 3. 检查是否有注册的自定义创建器（来自 DefaultCommandFactory）
+                if (_commandCreators.TryGetValue(commandId, out var creator))
+                {
+                    var command = creator(packet);
+                    if (command != null)
+                    {
+                        InitializeCommandProperties(command, packet);
+                        // 缓存命令创建器以供后续使用
+                        _cacheManager.CacheCommandCreator(commandId, packet => command);
+                        return command;
+                    }
+                }
+
+                // 4. 优先使用ExecutionContext中的类型信息
                 if (executionContext?.CommandType != null && packet.CommandData != null && packet.CommandData.Length > 0)
                 {
                     try
@@ -54,9 +103,11 @@ namespace RUINORERP.PacketSpec.Commands
                         if (command != null)
                         {
                             InitializeCommandProperties(command, packet);
-                            _logger?.LogDebug("使用ExecutionContext.CommandType创建命令: {CommandType}, BytesLength={BytesLength}",
-                                executionContext.CommandType.Name, packet.CommandData.Length);
-                            return command;
+                        // 缓存命令创建器以供后续使用
+                        _cacheManager.CacheCommandCreator(commandId, packet => command);
+                        _logger?.LogDebug("使用ExecutionContext.CommandType创建命令: {CommandType}, BytesLength={BytesLength}",
+                            executionContext.CommandType.Name, packet.CommandData.Length);
+                        return command;
                         }
                     }
                     catch (Exception ex)
@@ -66,10 +117,18 @@ namespace RUINORERP.PacketSpec.Commands
                     }
                 }
 
-                // 2. 获取命令类型
-                Type commandType = executionContext?.CommandType ?? _commandScanner.GetCommandType(packet.CommandId);
+                // 5. 获取命令类型（优先缓存）
+                Type commandType = executionContext?.CommandType ?? null; // CommandCacheManager没有GetCommandType方法
+                if (commandType == null)
+                {
+                    commandType = _commandScanner.GetCommandType(commandId);
+                    if (commandType != null)
+                    {
+                        _cacheManager.CacheCommandType(commandId, commandType);
+                    }
+                }
 
-                // 3. 处理字节数组命令数据
+                // 6. 处理字节数组命令数据
                 if (packet.CommandData != null && packet.CommandData.Length > 0)
                 {
                     if (commandType != null)
@@ -80,6 +139,8 @@ namespace RUINORERP.PacketSpec.Commands
                             if (command != null)
                             {
                                 InitializeCommandProperties(command, packet);
+                                // 缓存命令创建器以供后续使用
+                                _cacheManager.CacheCommandCreator(commandId, packet => command);
                                 _logger?.LogDebug("从命令字节数据创建命令: CommandType={CommandType}, BytesLength={BytesLength}",
                                     commandType.Name, packet.CommandData.Length);
                                 return command;
@@ -102,6 +163,8 @@ namespace RUINORERP.PacketSpec.Commands
                             if (command != null)
                             {
                                 InitializeCommandProperties(command, packet);
+                                // 缓存命令创建器以供后续使用
+                                _cacheManager.CacheCommandCreator(commandId, packet => command);
                                 _logger?.LogDebug("从扩展属性创建命令: TypeName={TypeName}, BytesLength={BytesLength}",
                                     typeName, packet.CommandData.Length);
                                 return command;
@@ -114,19 +177,27 @@ namespace RUINORERP.PacketSpec.Commands
                     }
                 }
 
-                // 4. 使用命令类型创建具体命令
+                // 7. 使用命令类型创建具体命令
                 if (commandType != null)
                 {
                     var command = CreateEmptyCommand(commandType);
                     if (command != null)
                     {
                         InitializeCommandProperties(command, packet);
+                        // 缓存命令创建器以供后续使用
+                        _cacheManager.CacheCommandCreator(commandId, packet => command);
                         return command;
                     }
                 }
 
-                // 5. 最后使用泛型命令作为后备
-                return CreateGenericCommand(packet);
+                // 8. 最后使用泛型命令作为后备
+                var fallbackCommand = CreateGenericCommand(packet);
+                if (fallbackCommand != null)
+                {
+                    // 缓存泛型命令创建器
+                    _cacheManager.CacheCommandCreator(commandId, packet => fallbackCommand);
+                }
+                return fallbackCommand;
             }
             catch (Exception ex)
             {
@@ -151,26 +222,43 @@ namespace RUINORERP.PacketSpec.Commands
 
             try
             {
-                var commandType = _commandScanner.GetCommandTypeByName(typeName);
+                // 1. 优先从缓存获取类型 - 注意：GetCachedCommandType需要CommandId参数，这里使用字符串作为后备方案
+                var commandType = (Type)null; // 暂时设置为null，后续从扫描器获取
                 if (commandType == null)
                 {
-                    // 尝试从已注册的类型中查找
-                    var allTypes = _commandScanner.GetAllCommandTypes();
-                    foreach (var kvp in allTypes)
+                    // 2. 缓存未命中，从扫描器获取
+                    commandType = _commandScanner.GetCommandTypeByName(typeName);
+                    if (commandType == null)
                     {
-                        if (kvp.Value.FullName == typeName || kvp.Value.Name == typeName)
+                        // 3. 尝试从已注册的类型中查找
+                        var allTypes = _commandScanner.GetAllCommandTypes();
+                        foreach (var kvp in allTypes)
                         {
-                            commandType = kvp.Value;
-                            break;
+                            if (kvp.Value.FullName == typeName || kvp.Value.Name == typeName)
+                            {
+                                commandType = kvp.Value;
+                                break;
+                            }
                         }
+                    }
+
+                    if (commandType != null)
+                    {
+                        // 缓存类型 - 注意：CacheCommandType需要CommandId参数，这里无法提供，跳过缓存
                     }
                 }
 
                 if (commandType == null)
                     throw new ArgumentException($"未知的命令类型: {typeName}", nameof(typeName));
 
-                // 使用配置的MessagePack选项进行反序列化
-                return MessagePackSerializer.Deserialize(commandType, data, UnifiedSerializationService.MessagePackOptions) as ICommand;
+                // 4. 使用配置的MessagePack选项进行反序列化
+                var command = MessagePackSerializer.Deserialize(commandType, data, UnifiedSerializationService.MessagePackOptions) as ICommand;
+                if (command != null)
+                {
+                    // 注意：这里无法获取commandId，只能缓存构造函数
+                    _cacheManager.CacheConstructor(commandType, () => command);
+                }
+                return command;
             }
             catch (Exception ex)
             {
@@ -252,14 +340,54 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 根据类型创建空命令实例
+        /// 创建空命令实例
         /// </summary>
         /// <param name="commandType">命令类型</param>
         /// <returns>空命令实例</returns>
-        private ICommand CreateEmptyCommand(Type commandType)
+        public ICommand CreateEmptyCommand(Type commandType)
         {
-            if (commandType == null) return null;
-            return Activator.CreateInstance(commandType) as ICommand;
+            try
+            {
+                if (commandType == null)
+                {
+                    _logger?.LogWarning("命令类型为空");
+                    return CreateFallbackCommand(null, new ArgumentNullException(nameof(commandType)));
+                }
+
+                // 1. 优先使用缓存管理器获取构造函数
+                var constructor = _cacheManager.GetOrCreateConstructor(commandType);
+                var command = constructor?.Invoke();
+                if (command != null)
+                {
+                    _logger?.LogDebug($"使用缓存管理器创建空命令实例: {commandType.Name}");
+                    return command;
+                }
+
+                // 2. 如果没有无参构造函数，尝试使用Activator
+                try
+                {
+                    command = Activator.CreateInstance(commandType) as ICommand;
+                    if (command != null)
+                    {
+                        // 缓存到缓存管理器
+                        _cacheManager.CacheConstructor(commandType, () => command);
+                        _logger?.LogDebug($"使用Activator创建空命令实例: {commandType.Name}");
+                        return command;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, $"使用Activator创建实例失败: {commandType.Name}");
+                }
+
+                _logger?.LogWarning($"无法创建命令实例: {commandType.Name}");
+                return CreateFallbackCommand(null, new InvalidOperationException($"无法创建命令实例: {commandType.Name}"));
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"创建空命令实例时发生异常: {commandType?.Name}");
+                return CreateFallbackCommand(null, ex);
+            }
         }
 
         /// <summary>
@@ -424,6 +552,230 @@ namespace RUINORERP.PacketSpec.Commands
             };
 
             return new GenericCommand<Dictionary<string, object>>(packet.CommandId, fallbackData);
+        }
+
+        /// <summary>
+        /// 异步创建命令实例（从命令ID和参数字典）- 来自 DefaultCommandFactory
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="parameters">命令参数</param>
+        /// <returns>创建的命令对象</returns>
+        public async Task<ICommand> CreateCommandAsync(string commandId, Dictionary<string, object> parameters = null)
+        {
+            if (string.IsNullOrEmpty(commandId))
+            {
+                _logger?.LogError("命令ID为空");
+                return null;
+            }
+
+            try
+            {
+                if (!CommandId.TryParse(commandId, out var cmdId))
+                {
+                    _logger?.LogError($"命令ID解析失败: {commandId}");
+                    return null;
+                }
+                
+                // 1. 首先尝试从缓存获取命令实例
+                // 注意：CommandCacheManager 没有 GetCommand 方法，跳过缓存检查步骤
+
+                // 2. 创建命令实例
+                var command = await CreateCommandInstanceAsync(commandId);
+                if (command == null)
+                {
+                    return null;
+                }
+
+                // 3. 设置命令参数
+                if (parameters != null && parameters.Count > 0)
+                {
+                    await SetCommandParametersAsync(command, parameters);
+                }
+
+                // 4. 缓存最终命令实例
+                // 注意：CommandCacheManager 没有 CacheCommand 方法，使用命令创建器缓存代替
+                _cacheManager.CacheCommandCreator(cmdId, packet => command);
+
+                _logger?.LogDebug($"成功创建命令实例: {commandId}");
+                return command;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"创建命令 {commandId} 时发生异常");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 异步从数据包创建命令 - 来自 DefaultCommandFactory
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>创建的命令对象</returns>
+        public async Task<ICommand> CreateCommandAsync(PacketModel packet, CancellationToken cancellationToken = default)
+        {
+            // 异步包装同步方法
+            return await Task.Run(() => CreateCommand(packet), cancellationToken);
+        }
+
+        /// <summary>
+        /// 创建命令实例 - 提取为独立方法（来自 DefaultCommandFactory）
+        /// </summary>
+        private async Task<ICommand> CreateCommandInstanceAsync(string commandId)
+        {
+            // 1. 解析命令ID
+            CommandId cmdId;
+            if (!CommandId.TryParse(commandId, out cmdId))
+            {
+                _logger?.LogWarning($"命令ID解析失败: {commandId}");
+                return null;
+            }
+
+            // 2. 优先从缓存获取命令类型
+            var commandType = _cacheManager.GetCachedCommandType(cmdId);
+            if (commandType == null)
+            {
+                // 3. 缓存未命中，从扫描器获取
+                var allTypes = _commandScanner.GetAllCommandTypes();
+                if (!allTypes.TryGetValue(cmdId, out commandType))
+                {
+                    _logger?.LogWarning($"未找到命令类型: {commandId}");
+                    return null;
+                }
+                
+                // 4. 缓存命令类型
+                _cacheManager.CacheCommandType(cmdId, commandType);
+            }
+
+            // 5. 优先使用缓存管理器创建命令实例
+                var constructor = _cacheManager.GetOrCreateConstructor(commandType);
+                var command = constructor?.Invoke();
+            if (command == null)
+            {
+                // 6. 缓存创建失败，使用传统方式创建
+                command = Activator.CreateInstance(commandType) as ICommand;
+                if (command != null)
+                {
+                    // 缓存构造函数以供后续使用
+                    _cacheManager.CacheConstructor(commandType, () => command);
+                }
+            }
+            
+            if (command == null)
+            {
+                _logger?.LogError($"创建命令实例失败: {commandId}");
+                return null;
+            }
+
+            return command;
+        }
+
+        /// <summary>
+        /// 设置命令参数 - 来自 DefaultCommandFactory
+        /// </summary>
+        /// <param name="command">命令对象</param>
+        /// <param name="parameters">参数字典</param>
+        private async Task SetCommandParametersAsync(ICommand command, Dictionary<string, object> parameters)
+        {
+            if (command == null || parameters == null || parameters.Count == 0)
+                return;
+
+            var commandType = command.GetType();
+            var properties = commandType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var param in parameters)
+            {
+                var property = properties.FirstOrDefault(p => 
+                    string.Equals(p.Name, param.Key, StringComparison.OrdinalIgnoreCase));
+
+                if (property != null && property.CanWrite)
+                {
+                    try
+                    {
+                        var value = param.Value;
+                        if (value != null && !property.PropertyType.IsAssignableFrom(value.GetType()))
+                        {
+                            // 尝试类型转换
+                            var converter = TypeDescriptor.GetConverter(property.PropertyType);
+                            if (converter != null && converter.CanConvertFrom(value.GetType()))
+                            {
+                                value = converter.ConvertFrom(value);
+                            }
+                            else
+                            {
+                                _logger?.LogWarning($"参数 {param.Key} 类型不匹配: 期望 {property.PropertyType.Name}, 实际 {value.GetType().Name}");
+                                continue;
+                            }
+                        }
+
+                        property.SetValue(command, value);
+                        _logger?.LogDebug($"设置命令参数: {param.Key} = {value}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, $"设置命令参数失败: {param.Key}");
+                    }
+                }
+                else
+                {
+                    _logger?.LogWarning($"命令类型 {commandType.Name} 不包含属性: {param.Key}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 注册命令创建器 - 来自 DefaultCommandFactory
+        /// </summary>
+        /// <param name="commandCode">命令代码</param>
+        /// <param name="creator">创建器函数</param>
+        public void RegisterCommandCreator(CommandId commandCode, Func<PacketModel, ICommand> creator)
+        {
+            if (creator == null)
+            {
+                throw new ArgumentNullException(nameof(creator), "命令创建器不能为null");
+            }
+
+            _commandCreators[commandCode] = creator;
+            _logger?.LogDebug("已注册命令创建器: {CommandCode}", commandCode);
+        }
+
+        /// <summary>
+        /// 获取缓存统计信息
+        /// </summary>
+        /// <returns>缓存统计信息</returns>
+        public Dictionary<string, object> GetCacheStatistics()
+        {
+            var stats = _cacheManager.GetCacheStatistics();
+            return new Dictionary<string, object>
+            {
+                ["CommandTypeCacheCount"] = stats.CommandTypeCacheCount,
+                ["CommandTypeByNameCacheCount"] = stats.CommandTypeByNameCacheCount,
+                ["ConstructorCacheCount"] = stats.ConstructorCacheCount,
+                ["CommandCreatorCacheCount"] = stats.CommandCreatorCacheCount,
+                ["ScanResultCacheCount"] = stats.ScanResultCacheCount,
+                ["HandlerTypeCacheCount"] = stats.HandlerTypeCacheCount,
+                ["TotalCacheEntries"] = stats.TotalCacheEntries
+            };
+        }
+
+        /// <summary>
+        /// 清理缓存
+        /// </summary>
+        public void ClearCache()
+        {
+            _cacheManager.ClearAllCaches();
+            _logger?.LogInformation("命令创建服务缓存已清理");
+        }
+
+        /// <summary>
+        /// 清理过期缓存
+        /// </summary>
+        public void ClearExpiredCache()
+        {
+            // CommandCacheManager 当前没有专门的过期缓存清理方法
+            // 使用清理所有缓存作为后备方案
+            _cacheManager.ClearAllCaches();
+            _logger?.LogInformation("命令创建服务过期缓存已清理");
         }
     }
 }

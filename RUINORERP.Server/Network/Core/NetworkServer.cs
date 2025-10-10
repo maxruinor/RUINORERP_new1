@@ -91,7 +91,7 @@ namespace RUINORERP.Server.Network.Core
                 _logger.LogInformation($"PacketSpec程序集位置: {packetSpecAssembly?.Location}");
                 _logger.LogInformation($"服务器程序集位置: {serverAssembly?.Location}");
                 // 使用CommandScanner进行自动发现和注册
-               commandScanner.ScanCommandHandlers(null, true, serverAssembly, packetSpecAssembly);
+               commandScanner.ScanCommandHandlers(null, serverAssembly, packetSpecAssembly);
 
                 // 添加日志记录，检查注册的处理器数量
                 var handlerCount = _commandDispatcher.HandlerCount;  // 直接使用具体类型属性

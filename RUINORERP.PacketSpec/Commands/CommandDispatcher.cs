@@ -155,18 +155,37 @@ namespace RUINORERP.PacketSpec.Commands
 
                 LogInfo("初始化命令调度器...");
 
-                // 自动发现并注册处理器
+                // 创建命令注册表 - 修复注册流程
+                var commandRegistry = new CommandRegistry(_commandScanner.GetCacheManager());
+
+                // 自动发现并注册处理器 - 真正注册到系统
                 if (_commandScanner != null)
                 {
-                    if (assemblies.Count() == 0)
+                    if (assemblies.Length == 0)
                     {
-                        _commandScanner.ScanAndRegisterCommands(null, Assembly.GetExecutingAssembly());
-                        _commandScanner.ScanAndRegisterCommandHandlers(null, Assembly.GetExecutingAssembly());
+                        assemblies = new[] { Assembly.GetExecutingAssembly() };
                     }
-                    else
+
+                    // 扫描并真正注册命令类型
+                    await _commandScanner.ScanAndRegisterCommandsAsync(commandRegistry, null, assemblies);
+                    
+                    // 扫描并真正注册处理器类型
+                    await _commandScanner.ScanAndRegisterHandlersAsync(commandRegistry, null, assemblies);
+                    
+                    // 创建处理器实例并注册到映射
+                    var handlerTypes = _commandScanner.ScanCommandHandlers(null, assemblies);
+                    foreach (var handlerType in handlerTypes)
                     {
-                        _commandScanner.ScanAndRegisterCommands(null, assemblies);
-                        _commandScanner.ScanAndRegisterCommandHandlers(null, assemblies);
+                        try
+                        {
+                            var handler = _handlerFactory.CreateHandler(handlerType);
+                            await _commandScanner.RegisterHandlerAsync(handler, cancellationToken);
+                            LogInfo($"处理器 {handler.Name} [ID: {handler.HandlerId}] 注册成功");
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError($"创建处理器实例 {handlerType.Name} 失败", ex);
+                        }
                     }
                 }
 
@@ -444,17 +463,32 @@ namespace RUINORERP.PacketSpec.Commands
                 return false;
             }
 
+            if (handlerType == null)
+            {
+                LogError("处理器类型不能为空");
+                return false;
+            }
+
             try
             {
-                // 使用CommandScanner注册处理器
-                var registered = await _commandScanner.RegisterHandlerAsync(handlerType, cancellationToken);
-
-                if (registered)
+                // 创建处理器实例
+                if (Activator.CreateInstance(handlerType) is ICommandHandler handler)
                 {
-                    LogInfo($"注册处理器成功: {handlerType.Name}");
-                }
+                    // 使用CommandScanner注册处理器实例
+                    var registered = await _commandScanner.RegisterHandlerAsync(handler, cancellationToken);
 
-                return registered;
+                    if (registered)
+                    {
+                        LogInfo($"注册处理器成功: {handlerType.Name}");
+                    }
+
+                    return registered;
+                }
+                else
+                {
+                    LogError($"无法创建处理器实例或类型转换失败: {handlerType.Name}");
+                    return false;
+                }
             }
             catch (Exception ex)
             {

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34701.34
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RUINORERP.Server", "RUINORERP.Server\RUINORERP.Server.csproj", "{1362649B-EEDB-4212-9E0B-1BDECCD3E8D4}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RUINORERP.Model", "..\RUINORERP.Model\RUINORERP.Model.csproj", "{775C01A3-D64C-4A72-B87B-73007633281D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RUINORERP.Global", "..\RUINORERP.Global\RUINORERP.Global.csproj", "{059E2C38-245C-425C-9D9C-A4D7AFD457F7}"
@@ -29,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HLH.Lib", "..\HLH.Lib\HLH.L
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RUINORERP.PacketSpec", "..\RUINORERP.PacketSpec\RUINORERP.PacketSpec.csproj", "{E183B2C1-BA58-4B8C-B778-791DA2A60051}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RUINORERP.Server", "RUINORERP.Server.csproj", "{C8893E46-8133-4F4E-8751-352C34E8BE86}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,14 +37,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1362649B-EEDB-4212-9E0B-1BDECCD3E8D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1362649B-EEDB-4212-9E0B-1BDECCD3E8D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1362649B-EEDB-4212-9E0B-1BDECCD3E8D4}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{1362649B-EEDB-4212-9E0B-1BDECCD3E8D4}.Debug|x86.Build.0 = Debug|Any CPU
-		{1362649B-EEDB-4212-9E0B-1BDECCD3E8D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1362649B-EEDB-4212-9E0B-1BDECCD3E8D4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1362649B-EEDB-4212-9E0B-1BDECCD3E8D4}.Release|x86.ActiveCfg = Release|Any CPU
-		{1362649B-EEDB-4212-9E0B-1BDECCD3E8D4}.Release|x86.Build.0 = Release|Any CPU
 		{775C01A3-D64C-4A72-B87B-73007633281D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{775C01A3-D64C-4A72-B87B-73007633281D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{775C01A3-D64C-4A72-B87B-73007633281D}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -141,6 +133,14 @@ Global
 		{E183B2C1-BA58-4B8C-B778-791DA2A60051}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E183B2C1-BA58-4B8C-B778-791DA2A60051}.Release|x86.ActiveCfg = Release|Any CPU
 		{E183B2C1-BA58-4B8C-B778-791DA2A60051}.Release|x86.Build.0 = Release|Any CPU
+		{C8893E46-8133-4F4E-8751-352C34E8BE86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8893E46-8133-4F4E-8751-352C34E8BE86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8893E46-8133-4F4E-8751-352C34E8BE86}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C8893E46-8133-4F4E-8751-352C34E8BE86}.Debug|x86.Build.0 = Debug|Any CPU
+		{C8893E46-8133-4F4E-8751-352C34E8BE86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8893E46-8133-4F4E-8751-352C34E8BE86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8893E46-8133-4F4E-8751-352C34E8BE86}.Release|x86.ActiveCfg = Release|Any CPU
+		{C8893E46-8133-4F4E-8751-352C34E8BE86}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using Microsoft.Extensions.Logging;
 using SuperSocket.ProtoBase;
@@ -109,7 +109,7 @@ namespace RUINORERP.Server.Network.Core
 
                 if (packet.IsValid())
                 {
-                  
+
                     //为了方便调试把心跳判断一下
                     if (packet.CommandId.Category == PacketSpec.Commands.CommandCategory.System && packet.CommandId.FullCode == SystemCommands.Heartbeat)
                     {

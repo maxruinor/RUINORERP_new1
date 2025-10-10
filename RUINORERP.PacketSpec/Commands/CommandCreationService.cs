@@ -118,7 +118,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
 
                 // 5. 获取命令类型（优先缓存）
-                Type commandType = executionContext?.CommandType ?? null; // CommandCacheManager没有GetCommandType方法
+                Type commandType = executionContext?.CommandType ?? null;
                 if (commandType == null)
                 {
                     commandType = _commandScanner.GetCommandType(commandId);
@@ -754,7 +754,10 @@ namespace RUINORERP.PacketSpec.Commands
                 ["CommandCreatorCacheCount"] = stats.CommandCreatorCacheCount,
                 ["ScanResultCacheCount"] = stats.ScanResultCacheCount,
                 ["HandlerTypeCacheCount"] = stats.HandlerTypeCacheCount,
-                ["TotalCacheEntries"] = stats.TotalCacheEntries
+                ["TotalCacheEntries"] = stats.CommandTypeCacheCount + stats.CommandTypeByNameCacheCount + 
+                                     stats.ConstructorCacheCount + stats.CommandCreatorCacheCount + 
+                                     stats.HandlerTypeCacheCount + stats.ScanResultCacheCount + 
+                                     stats.AssemblyMetadataCacheCount
             };
         }
 

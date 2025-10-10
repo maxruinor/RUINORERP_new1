@@ -241,7 +241,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <returns></returns>
         protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, ICommand command, BaseCommand<IResponse> result)
         {
-            package.ExecutionContext.ResponseType = result.GetType();
+            package.ExecutionContext.ResponseType = typeof(IResponse);
             package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
             package.Direction = package.Direction == PacketDirection.Request ? PacketDirection.Response : package.Direction;
             package.SessionId = package.SessionId;
@@ -253,17 +253,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 ["TimestampUtc"] = result.TimestampUtc
             };
 
-            // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
-            if (package?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
-            {
-                package.Extensions["RequestId"] = requestId;
-            }
-
-            // 设置请求标识
-            if (!string.IsNullOrEmpty(result.RequestId))
-            {
-                package.Extensions["RequestId"] = result.RequestId;
-            }
+ 
 
             // 添加元数据
             if (result.Metadata != null && result.Metadata.Count > 0)
@@ -274,13 +264,13 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
             }
 
-            var ResponsePackBytes = MessagePackSerializer.Serialize<BaseCommand<IResponse>>(result, UnifiedSerializationService.MessagePackOptions);
-            if (command is BaseCommand<IResponse> baseCommand)
+            var ResponsePackBytes = MessagePackSerializer.Serialize<IResponse>(result.ResponseData, UnifiedSerializationService.MessagePackOptions);
+            if (command is BaseCommand baseCommand)
             {
                 baseCommand.SetResponseData(ResponsePackBytes);
-                package.SetCommandDataByMessagePack(baseCommand);
+                package.SetCommandDataByMessagePack(command);
             }
-            
+
 
 
             return package;

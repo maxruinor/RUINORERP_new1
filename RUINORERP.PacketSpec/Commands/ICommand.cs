@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -70,12 +70,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 业务数据
         /// </summary>
-        byte[] JsonRequestData { get; set; }
+        byte[] RequestDataByMessagePack { get; set; }
 
         /// <summary>
         /// 响应数据
         /// </summary>
-        byte[] JsonResponseData { get; set; }
+        byte[] ResponseDataByMessagePack { get; set; }
 
         /// <summary>
         /// 验证命令

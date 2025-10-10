@@ -26,15 +26,15 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly ICommandFactory _commandFactory;
         private static readonly ConcurrentDictionary<uint, Func<ICommand>> _ctorCache = new();
         private readonly ILogger<CommandPacketAdapter> _logger;
-        private readonly CommandTypeHelper _commandTypeHelper;
+        private readonly CommandScanner _commandScanner;
         public CommandPacketAdapter(CommandDispatcher commandDispatcher,
             ICommandFactory commandFactory,
-            ILogger<CommandPacketAdapter> logger = null, CommandTypeHelper commandTypeHelper = null)
+            ILogger<CommandPacketAdapter> logger = null, CommandScanner commandScanner = null)
         {
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
             _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
             _logger = logger;
-            _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
+            _commandScanner = commandScanner ?? new CommandScanner();
         }
 
 
@@ -572,11 +572,11 @@ namespace RUINORERP.PacketSpec.Commands
 
             try
             {
-                var commandType = _commandTypeHelper.GetCommandTypeByName(typeName);
+                var commandType = _commandScanner.GetCommandTypeByName(typeName);
                 if (commandType == null)
                 {
                     // 尝试从已注册的类型中查找
-                    var allTypes = _commandTypeHelper.GetAllCommandTypes();
+                    var allTypes = _commandScanner.GetAllCommandTypes();
                     foreach (var kvp in allTypes)
                     {
                         if (kvp.Value.FullName == typeName || kvp.Value.Name == typeName)
@@ -615,11 +615,11 @@ namespace RUINORERP.PacketSpec.Commands
 
             try
             {
-                var commandType = _commandTypeHelper.GetCommandTypeByName(typeName);
+                var commandType = _commandScanner.GetCommandTypeByName(typeName);
                 if (commandType == null)
                 {
                     // 尝试从已注册的类型中查找
-                    var allTypes = _commandTypeHelper.GetAllCommandTypes();
+                    var allTypes = _commandScanner.GetAllCommandTypes();
                     foreach (var kvp in allTypes)
                     {
                         if (kvp.Value.FullName == typeName || kvp.Value.Name == typeName)
@@ -764,12 +764,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// 从数据包中提取并反序列化具体指令实例
         /// </summary>
         /// <param name="packet">包含指令数据的数据包</param>
-        /// <param name="commandTypeHelper">命令类型助手</param>
+        /// <param name="commandScanner">命令扫描器</param>
         /// <returns>反序列化后的具体指令实例</returns>
-        public static ICommand ExtractCommand(PacketModel packet, CommandTypeHelper commandTypeHelper)
+        public static ICommand ExtractCommand(PacketModel packet, CommandScanner commandScanner)
         {
             if (packet == null) throw new ArgumentNullException(nameof(packet));
-            if (commandTypeHelper == null) throw new ArgumentNullException(nameof(commandTypeHelper));
+            if (commandScanner == null) throw new ArgumentNullException(nameof(commandScanner));
 
             try
             {
@@ -783,12 +783,12 @@ namespace RUINORERP.PacketSpec.Commands
                     if (string.IsNullOrEmpty(typeName) || commandData == null || commandData.Length == 0)
                         return null;
 
-                    // 使用CommandTypeHelper获取类型
+                    // 使用CommandScanner获取类型
                     var commandType = Type.GetType(typeName);
                     if (commandType == null)
                     {
                         // 尝试从已注册的类型中查找
-                        var allTypes = commandTypeHelper.GetAllCommandTypes();
+                        var allTypes = commandScanner.GetAllCommandTypes();
                         foreach (var kvp in allTypes)
                         {
                             if (kvp.Value.FullName == typeName)

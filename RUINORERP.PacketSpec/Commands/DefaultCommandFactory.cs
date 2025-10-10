@@ -18,18 +18,18 @@ namespace RUINORERP.PacketSpec.Commands
     {
         private readonly ILogger<DefaultCommandFactory> _logger;
         private readonly Dictionary<CommandId, Func<PacketModel, ICommand>> _commandCreators;
-        private readonly CommandTypeHelper _commandTypeHelper;
+        private readonly CommandScanner _commandScanner;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
-        /// <param name="commandTypeHelper">命令类型助手</param>
-        public DefaultCommandFactory(ILogger<DefaultCommandFactory> logger = null, CommandTypeHelper commandTypeHelper = null)
+        /// <param name="commandScanner">命令扫描器</param>
+        public DefaultCommandFactory(ILogger<DefaultCommandFactory> logger = null, CommandScanner commandScanner = null)
         {
             _logger = logger;
             _commandCreators = new Dictionary<CommandId, Func<PacketModel, ICommand>>();
-            _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
+            _commandScanner = commandScanner ?? new CommandScanner();
         }
 
 
@@ -52,7 +52,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
 
                 // 首先尝试从数据包中提取类型化命令
-                var typedCommand = CommandPacketAdapterExtensions.ExtractCommand(packet, _commandTypeHelper);
+                var typedCommand = CommandPacketAdapterExtensions.ExtractCommand(packet, _commandScanner);
                 if (typedCommand != null)
                 {
                     _logger?.LogDebug("成功从数据包提取类型化命令: {CommandType}", typedCommand.GetType().Name);
@@ -75,8 +75,8 @@ namespace RUINORERP.PacketSpec.Commands
                     }
                 }
 
-                // 然后尝试从命令类型助手中获取命令类型并创建实例
-                var commandType = _commandTypeHelper.GetCommandType(commandId);
+                // 然后尝试从命令扫描器中获取命令类型并创建实例
+                var commandType = _commandScanner.GetCommandType(commandId);
                 if (commandType != null)
                 {
                     try
@@ -100,15 +100,15 @@ namespace RUINORERP.PacketSpec.Commands
 
                 //新的简化版本测试 
                 // 如果无法创建命令，返回null 
-                // 2. 使用CommandTypeHelper获取有效载荷类型
-                var payloadType = _commandTypeHelper.GetPayloadType(commandId);
+                // 2. 使用CommandScanner获取有效载荷类型
+                var payloadType = _commandScanner.GetPayloadType(commandId);
                 if (payloadType != null)
                 {
                     //var closedType = typeof(GenericCommand<>).MakeGenericType(payloadType);
                     //return (ICommand)Activator.CreateInstance(closedType, commandId, null);
 
                     // 2.1 先从缓存里拿"开放泛型定义"
-                    if (!_commandTypeHelper.GetAllCommandTypes().TryGetValue(new CommandId(CommandCategory.System, 0xEE, "GenericCommandTemplate"), out var openGeneric))
+                    if (!_commandScanner.GetAllCommandTypes().TryGetValue(new CommandId(CommandCategory.System, 0xEE, "GenericCommandTemplate"), out var openGeneric))
                         throw new InvalidOperationException("GenericCommand<> 模板未注册");
 
                     // 2.2 MakeGenericType 产生封闭类型
@@ -173,7 +173,7 @@ namespace RUINORERP.PacketSpec.Commands
         private async Task<ICommand> CreateCommandInstanceAsync(string commandId)
         {
             // 尝试从缓存中获取命令类型
-            if (!CommandId.TryParse(commandId, out var cmdId) || !_commandTypeHelper.GetAllCommandTypes().TryGetValue(cmdId, out var commandType))
+            if (!CommandId.TryParse(commandId, out var cmdId) || !_commandScanner.GetAllCommandTypes().TryGetValue(cmdId, out var commandType))
             {
                 _logger?.LogWarning($"未找到命令类型: {commandId}");
                 return null;
@@ -302,11 +302,11 @@ namespace RUINORERP.PacketSpec.Commands
 
             try
             {
-                var commandType = _commandTypeHelper.GetCommandTypeByName(typeName);
+                var commandType = _commandScanner.GetCommandTypeByName(typeName);
                 if (commandType == null)
                 {
                     // 尝试从已注册的类型中查找
-                    var allTypes = _commandTypeHelper.GetAllCommandTypes();
+                    var allTypes = _commandScanner.GetAllCommandTypes();
                     foreach (var kvp in allTypes)
                     {
                         if (kvp.Value.FullName == typeName || kvp.Value.Name == typeName)
@@ -362,7 +362,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>空命令实例</returns>
         public ICommand CreateEmptyCommand(CommandId commandId)
         {
-            var commandType = _commandTypeHelper.GetCommandType(commandId);
+            var commandType = _commandScanner.GetCommandType(commandId);
             if (commandType == null)
                 throw new ArgumentException($"未知的命令ID: {commandId}", nameof(commandId));
 

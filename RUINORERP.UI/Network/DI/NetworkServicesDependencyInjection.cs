@@ -8,6 +8,8 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using SourceLibrary.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Reflection;
+using System;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -26,7 +28,7 @@ namespace RUINORERP.UI.Network.DI
             // 注册核心网络组件
             services.AddSingleton<ClientCommandDispatcher>();
             services.AddSingleton<ISocketClient, SuperSocketClient>();
-            services.AddSingleton<ClientCommandDispatcher>();
+            services.AddSingleton<ICommandDispatcher, ClientCommandDispatcher>();
             services.AddSingleton<ClientCommunicationService>();
             // RequestResponseManager已合并到ClientCommunicationService中，不再需要单独注册
             services.AddSingleton<ClientEventManager>();
@@ -77,6 +79,48 @@ namespace RUINORERP.UI.Network.DI
             //services.AddTransient<MessageNotificationService>();
             
             
+        }
+
+        /// <summary>
+        /// 扫描并注册客户端命令类型和处理器
+        /// 在客户端启动时调用此方法进行命令类型注册
+        /// </summary>
+        /// <param name="serviceProvider">服务提供程序</param>
+        public static void ScanAndRegisterClientCommands(IServiceProvider serviceProvider)
+        {
+            try
+            {
+               
+                var commandScanner = serviceProvider.GetRequiredService<CommandScanner>();
+                var commandDispatcher = serviceProvider.GetRequiredService<ICommandDispatcher>();
+                
+
+                // 获取PacketSpec程序集
+                var packetSpecAssembly = Assembly.GetAssembly(typeof(RUINORERP.PacketSpec.Commands.ICommand));
+                if (packetSpecAssembly == null)
+                {
+                    return;
+                }
+
+                // 获取UI程序集
+                var uiAssembly = Assembly.GetExecutingAssembly();
+                
+                
+                // 扫描并注册命令到命令调度器
+                commandScanner.ScanAndRegisterCommands(commandDispatcher, null, packetSpecAssembly, uiAssembly);
+                
+                // 自动发现并注册命令处理器
+                commandDispatcher.AutoDiscoverAndRegisterHandlersAsync(packetSpecAssembly).Wait();
+                commandDispatcher.AutoDiscoverAndRegisterHandlersAsync(uiAssembly).Wait();
+                
+                var registeredHandlers = commandDispatcher.GetRegisteredHandlers();
+                
+                
+            }
+            catch (Exception ex)
+            {
+                
+            }
         }
 
         /// <summary>

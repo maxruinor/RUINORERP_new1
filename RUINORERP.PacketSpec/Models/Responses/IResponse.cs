@@ -1,12 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using MessagePack;
 
 namespace RUINORERP.PacketSpec.Models.Responses
 {
     /// <summary>
     /// 所有响应 DTO 可选实现此接口，由框架自动填充公共错误信息
     /// </summary>
+    [Union(0, typeof(ResponseBase))]
+    [Union(1, typeof(LoginResponse))]
+    [Union(2, typeof(SimpleResponse))]
+    //[Union(3, typeof(LogoutResponse))]
+    //[Union(4, typeof(TokenRefreshResponse))]
+    //[Union(5, typeof(ValidationResponse))]
+    //[Union(6, typeof(PrepareLoginResponse))]
     public interface IResponse
     {
         /// <summary>
@@ -40,15 +48,14 @@ namespace RUINORERP.PacketSpec.Models.Responses
         int Code { get; set; }
 
         /// <summary>
-    /// 请求标识
-    /// </summary>
-    string RequestId { get; set; }
+        /// 请求标识
+        /// </summary>
+        string RequestId { get; set; }
 
-
-    /// <summary>
-    /// 执行时间（毫秒）
-    /// </summary>
-    long ExecutionTimeMs { get; set; }
+        /// <summary>
+        /// 执行时间（毫秒）
+        /// </summary>
+        long ExecutionTimeMs { get; set; }
 
         /// <summary>
         /// 扩展元数据（可选）

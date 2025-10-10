@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Business;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -14,24 +17,24 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.UI.Network
 {
-/// <summary>
-    
+    /// <summary>
+
     /// </summary>
-    public class ClientCommandDispatcher  
+    public class ClientCommandDispatcher : ICommandDispatcher
     {
         private readonly CommandTypeHelper _commandTypeHelper;
         private readonly ConcurrentDictionary<ushort, ICommand> _commandInstances;
         private readonly object _lockObject = new object();
-
+        public readonly ILogger<ClientCommandDispatcher> _logger;
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="commandTypeHelper">命令类型助手，可选参数，用于管理命令类型映射关系</param>
-        public ClientCommandDispatcher(CommandTypeHelper commandTypeHelper = null)
+        public ClientCommandDispatcher(ILogger<ClientCommandDispatcher> logger, CommandTypeHelper commandTypeHelper = null)
         {
             _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
             _commandInstances = new ConcurrentDictionary<ushort, ICommand>();
-            
+            _logger = logger;
             // 自动注册客户端命令
             RegisterClientCommands();
         }
@@ -48,7 +51,7 @@ namespace RUINORERP.UI.Network
             {
                 throw new ArgumentNullException(nameof(commandType));
             }
-            
+
             _commandTypeHelper.RegisterCommandType(commandCode, commandType);
         }
 
@@ -99,9 +102,9 @@ namespace RUINORERP.UI.Network
                 throw new InvalidOperationException($"创建命令实例失败: {ex.Message}", ex);
             }
         }
- 
 
-        
+
+
 
         /// <summary>
         /// 清理过期的命令实例
@@ -114,7 +117,7 @@ namespace RUINORERP.UI.Network
             {
                 expirationMinutes = 30; // 确保最小值为30分钟
             }
-            
+
             var cutoffTime = DateTime.UtcNow.AddMinutes(-expirationMinutes);
             var expiredCommands = _commandInstances
                 .Where(kvp => kvp.Value.CreatedTimeUtc < cutoffTime)
@@ -127,7 +130,7 @@ namespace RUINORERP.UI.Network
             }
         }
 
-    
+
 
 
         /// <summary>
@@ -205,7 +208,7 @@ namespace RUINORERP.UI.Network
 
         #region ICommandDispatcher 接口实现
 
- 
+
 
         /// <summary>
         /// 注册命令类型
@@ -225,6 +228,40 @@ namespace RUINORERP.UI.Network
         public Type GetCommandType(CommandId commandCode)
         {
             return _commandTypeHelper.GetCommandType(commandCode);
+        }
+
+        Task<bool> ICommandDispatcher.InitializeAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<BaseCommand<IResponse>> ICommandDispatcher.DispatchAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ICommand CreateCommand(CommandId commandCode)
+        {
+            try
+            {
+                // 使用预编译的构造函数创建命令实例
+                var ctor = _commandTypeHelper.GetCommandCtor(commandCode);
+                var command = ctor();
+                if (command != null)
+                {
+                    _logger.Debug($"创建命令实例成功: {commandCode}");
+                }
+                else
+                {
+                    _logger.Warn($"创建命令实例失败: {commandCode}");
+                }
+                return command;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"创建命令实例异常: {commandCode}", ex);
+                return null;
+            }
         }
 
         #endregion

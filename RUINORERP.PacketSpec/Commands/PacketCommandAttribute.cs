@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using RUINORERP.PacketSpec.Commands;  // 添加对命令系统的引用以使用CommandCategory
 
 namespace RUINORERP.PacketSpec.Commands
@@ -62,12 +62,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public bool IsDefault { get; }
 
-        public CommandHandlerAttribute(string name = null, int priority = 1, bool isDefault = false, params CommandId[] supportedCommands)
+        public CommandHandlerAttribute(string name = null, int priority = 1, bool isDefault = false)
         {
             Priority = priority;
             Name = name;
             IsDefault = isDefault;
-            SupportedCommands = supportedCommands ?? Array.Empty<CommandId>();
+           
         }
     }
 }

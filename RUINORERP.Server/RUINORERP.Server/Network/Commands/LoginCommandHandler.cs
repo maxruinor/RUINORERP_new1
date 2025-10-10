@@ -320,7 +320,9 @@ namespace RUINORERP.Server.Network.Commands
                 {
                     UserId = userValidationResult.UserSessionInfo.UserInfo.User_ID,
                     Username = userValidationResult.UserSessionInfo.UserInfo.UserName,
-                    Token = tokenInfo
+                    Token = tokenInfo,
+                    IsSuccess = true
+                    
                 };
                 return BaseCommand<IResponse>.CreateSuccess(loginResponse, "登录成功");
             }

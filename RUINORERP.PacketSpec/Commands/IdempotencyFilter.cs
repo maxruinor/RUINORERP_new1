@@ -195,9 +195,9 @@ namespace RUINORERP.PacketSpec.Commands
                 }
                 
                 // 使用JsonRequestData
-                if (command.JsonRequestData != null && command.JsonRequestData.Length > 0)
+                if (command.RequestDataByMessagePack != null && command.RequestDataByMessagePack.Length > 0)
                 {
-                    return command.JsonRequestData;
+                    return command.RequestDataByMessagePack;
                 }
             }
             

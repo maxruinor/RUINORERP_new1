@@ -369,13 +369,13 @@ namespace RUINORERP.PacketSpec.Commands
         /// 包体数据（业务请求响应数据序列化后的字节）
         /// </summary>
         [Key(40)]
-        public byte[] JsonRequestData { get; set; }
+        public byte[] RequestDataByMessagePack { get; set; }
 
         /// <summary>
         /// 响应数据（业务响应数据序列化后的字节）
         /// </summary>
         [Key(41)]
-        public byte[] JsonResponseData { get; set; }
+        public byte[] ResponseDataByMessagePack { get; set; }
 
         /// <summary>
         /// 获取强类型的数据载荷
@@ -407,7 +407,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>当前实例</returns>
         public void SetRequestData(byte[] data)
         {
-            JsonRequestData = data;
+            RequestDataByMessagePack = data;
             LastUpdatedTime = DateTime.UtcNow;
         }
 
@@ -418,7 +418,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>当前实例</returns>
         public void SetResponseData(byte[] data)
         {
-            JsonResponseData = data;
+            ResponseDataByMessagePack = data;
             LastUpdatedTime = DateTime.UtcNow;
         }
         /// <summary>
@@ -448,7 +448,7 @@ namespace RUINORERP.PacketSpec.Commands
 
             var cacheKey = $"{type.FullName}:{hash}";
             // 尝试从缓存获取或添加
-            JsonRequestData = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
+            RequestDataByMessagePack = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
             LastUpdatedTime = DateTime.UtcNow;
         }
 
@@ -459,17 +459,17 @@ namespace RUINORERP.PacketSpec.Commands
         {
             // Extensions?.Clear();
             // 清理包体数据
-            if (JsonRequestData != null)
+            if (RequestDataByMessagePack != null)
             {
-                Array.Clear(JsonRequestData, 0, JsonRequestData.Length);
-                JsonRequestData = null;
+                Array.Clear(RequestDataByMessagePack, 0, RequestDataByMessagePack.Length);
+                RequestDataByMessagePack = null;
             }
 
             // 清理响应数据
-            if (JsonResponseData != null)
+            if (ResponseDataByMessagePack != null)
             {
-                Array.Clear(JsonResponseData, 0, JsonResponseData.Length);
-                JsonResponseData = null;
+                Array.Clear(ResponseDataByMessagePack, 0, ResponseDataByMessagePack.Length);
+                ResponseDataByMessagePack = null;
             }
         }
 
@@ -493,11 +493,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>文本数据</returns>
         public string GetDataAsText(Encoding encoding = null)
         {
-            if (JsonRequestData == null || JsonRequestData.Length == 0)
+            if (RequestDataByMessagePack == null || RequestDataByMessagePack.Length == 0)
                 return string.Empty;
 
             encoding ??= Encoding.UTF8;
-            return encoding.GetString(JsonRequestData);
+            return encoding.GetString(RequestDataByMessagePack);
         }
 
         /// <summary>
@@ -508,7 +508,7 @@ namespace RUINORERP.PacketSpec.Commands
         public void SetJsonResponseData<T>(T data)
         {
             var jsonBytes = UnifiedSerializationService.SerializeWithJson(data);
-            JsonResponseData = jsonBytes;
+            ResponseDataByMessagePack = jsonBytes;
             LastUpdatedTime = DateTime.UtcNow;
         }
 
@@ -519,10 +519,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>响应数据对象</returns>
         public T GetJsonResponseData<T>()
         {
-            if (JsonResponseData == null || JsonResponseData.Length == 0)
+            if (ResponseDataByMessagePack == null || ResponseDataByMessagePack.Length == 0)
                 return default(T);
 
-            var json = Encoding.UTF8.GetString(JsonResponseData);
+            var json = Encoding.UTF8.GetString(ResponseDataByMessagePack);
             return string.IsNullOrEmpty(json) ? default(T) : JsonConvert.DeserializeObject<T>(json);
         }
 
@@ -533,11 +533,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>响应文本数据</returns>
         public string GetResponseDataAsText(Encoding encoding = null)
         {
-            if (JsonResponseData == null || JsonResponseData.Length == 0)
+            if (ResponseDataByMessagePack == null || ResponseDataByMessagePack.Length == 0)
                 return string.Empty;
 
             encoding ??= Encoding.UTF8;
-            return encoding.GetString(JsonResponseData);
+            return encoding.GetString(ResponseDataByMessagePack);
         }
 
         /// <summary>

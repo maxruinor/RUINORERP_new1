@@ -29,15 +29,23 @@ namespace RUINORERP.PacketSpec.Serialization
         {
             try
             {
-                // 使用复合解析器，优先使用StandardResolver支持[Key]特性，回退到ContractlessStandardResolver
-                var compositeResolver = CompositeResolver.Create(
+                // 创建自定义格式化器来支持接口序列化
+                var resolver = CompositeResolver.Create(
+                    // 原生解析器，支持[Key]特性
+                    NativeDateTimeResolver.Instance,
                     StandardResolver.Instance,
-                    ContractlessStandardResolver.Instance
+                    // 契约无关解析器，支持无契约类型
+                    ContractlessStandardResolver.Instance,
+                    // 动态泛型解析器，支持接口和抽象类
+                    DynamicGenericResolver.Instance,
+                    // 类型less解析器，支持动态类型
+                    TypelessObjectResolver.Instance
                 );
                 
                 _messagePackOptions = MessagePackSerializerOptions.Standard
-                    .WithResolver(compositeResolver)
-                    .WithCompression(MessagePackCompression.Lz4Block);
+                    .WithResolver(resolver)
+                    .WithCompression(MessagePackCompression.Lz4Block)
+                    .WithSecurity(MessagePackSecurity.UntrustedData);
             }
             catch (Exception ex)
             {

@@ -44,7 +44,6 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        private readonly ConcurrentDictionary<CommandId, List<ICommandHandler>> _commandHandlerMap;
         private readonly ConcurrentDictionary<CommandId, DateTime> _commandHistory;
         private ICommandHandlerFactory _handlerFactory;
         // 移除每个命令类型的信号量，改为使用Channel队列
@@ -53,8 +52,7 @@ namespace RUINORERP.PacketSpec.Commands
         private bool _disposed = false;
         private bool _isInitialized = false;
         private readonly SemaphoreSlim _dispatchSemaphore;
-        // 命令类型辅助类，用于管理命令类型
-        private readonly CommandTypeHelper _commandTypeHelper;
+        // 命令类型管理功能已迁移到CommandScanner中
         // 使用Channel队列替代信号量
         private readonly Channel<QueuedCommand>[] _commandChannels;
         private readonly Task[] _channelProcessors;
@@ -66,6 +64,8 @@ namespace RUINORERP.PacketSpec.Commands
         private FallbackGenericCommandHandler _fallbackHandler;
         // 回退处理器初始化锁
         private readonly object _fallbackHandlerLock = new object();
+        // 命令扫描器 - 用于扫描和注册命令处理器
+        private readonly CommandScanner _commandScanner;
 
         /// <summary>
         /// 每个命令的最大并发数
@@ -79,7 +79,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 处理器数量
         /// </summary>
-        public int HandlerCount => _commandHandlerMap.Values.Sum(list => list.Count);
+        public int HandlerCount => _commandScanner?.GetHandlerMappingCount() ?? 0;
 
         /// <summary>
         /// 是否已初始化
@@ -94,18 +94,18 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 构造函数
         /// </summary>
+        /// <param name="logger">日志记录器</param>
+        /// <param name="commandScanner">命令扫描器（包含处理器映射管理功能）</param>
         /// <param name="handlerFactory">处理器工厂</param>
-        /// <param name="commandTypeHelper">命令类型辅助类</param>
         /// <param name="maxConcurrencyPerCommand">每个命令的最大并发数</param>
         /// <param name="circuitBreakerPolicy">熔断器策略，默认为6次失败后熔断，30秒后恢复</param>
-        public CommandDispatcher(ILogger<CommandDispatcher> logger, ICommandHandlerFactory handlerFactory = null,
-            CommandTypeHelper commandTypeHelper = null, int maxConcurrencyPerCommand = 0,
+        public CommandDispatcher(ILogger<CommandDispatcher> logger, CommandScanner commandScanner, ICommandHandlerFactory handlerFactory = null,
+            int maxConcurrencyPerCommand = 0,
             IAsyncPolicy<BaseCommand<IResponse>> circuitBreakerPolicy = null)
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _commandScanner = commandScanner ?? throw new ArgumentNullException(nameof(commandScanner));
             _handlerFactory = handlerFactory;
-            _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
-            _commandHandlerMap = new ConcurrentDictionary<CommandId, List<ICommandHandler>>();
             _commandHistory = new ConcurrentDictionary<CommandId, DateTime>();
             _dispatchSemaphore = new SemaphoreSlim(1, 1); // 添加缺失的信号量
 
@@ -158,7 +158,10 @@ namespace RUINORERP.PacketSpec.Commands
                 LogInfo("初始化命令调度器...");
 
                 // 自动发现并注册处理器
-                await AutoDiscoverAndRegisterHandlersAsync(cancellationToken);
+                if (_commandScanner != null)
+                {
+                    await _commandScanner.AutoDiscoverAndRegisterHandlersAsync(null, cancellationToken, Assembly.GetExecutingAssembly());
+                }
 
                 _isInitialized = true;
 
@@ -371,7 +374,7 @@ namespace RUINORERP.PacketSpec.Commands
                             $"无法选择合适的处理器处理命令: {cmd.Command.CommandIdentifier.FullCode}", 500);
                     }
 
-                
+
                     // 使用熔断器执行处理逻辑
                     try
                     {
@@ -428,47 +431,23 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="handlerType">处理器类型</param>
         public async Task<bool> RegisterHandlerAsync(Type handlerType, CancellationToken cancellationToken = default)
         {
-            if (_handlerFactory == null)
+            if (_commandScanner == null)
             {
-                LogError("处理器工厂未初始化");
+                LogError("命令扫描器未初始化");
                 return false;
             }
 
             try
             {
-                if (!typeof(ICommandHandler).IsAssignableFrom(handlerType))
+                // 使用CommandScanner注册处理器
+                var registered = await _commandScanner.RegisterHandlerAsync(handlerType, cancellationToken);
+
+                if (registered)
                 {
-                    LogError($"类型 {handlerType.Name} 不是有效的命令处理器");
-                    return false;
+                    LogInfo($"注册处理器成功: {handlerType.Name}");
                 }
 
-                var handler = _handlerFactory.CreateHandler(handlerType);
-                if (handler == null)
-                {
-                    LogError($"无法创建处理器实例: {handlerType.Name}");
-                    return false;
-                }
-
-                // 初始化并启动处理器
-                if (!await handler.InitializeAsync(cancellationToken))
-                {
-                    LogError($"处理器初始化失败: {handler.Name}");
-                    handler.Dispose();
-                    return false;
-                }
-
-                if (!await handler.StartAsync(cancellationToken))
-                {
-                    LogError($"处理器启动失败: {handler.Name}");
-                    handler.Dispose();
-                    return false;
-                }
-
-                // 更新命令映射
-                UpdateCommandHandlerMapping(handler);
-
-                LogInfo($"注册处理器成功: {handler.Name} [ID: {handler.HandlerId}]");
-                return true;
+                return registered;
             }
             catch (Exception ex)
             {
@@ -484,7 +463,13 @@ namespace RUINORERP.PacketSpec.Commands
         public async Task<bool> RegisterHandlerAsync<T>(CancellationToken cancellationToken = default)
             where T : class, ICommandHandler
         {
-            return await RegisterHandlerAsync(typeof(T), cancellationToken);
+            if (_commandScanner == null)
+            {
+                LogError("命令扫描器未初始化");
+                return false;
+            }
+
+            return await _commandScanner.RegisterHandlerAsync(typeof(T), cancellationToken);
         }
 
         /// <summary>
@@ -493,27 +478,27 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="handlerId">处理器ID</param>
         public async Task<bool> UnregisterHandlerAsync(string handlerId, CancellationToken cancellationToken = default)
         {
+            if (_commandScanner == null)
+            {
+                LogError("命令扫描器未初始化");
+                return false;
+            }
+
             try
             {
-                // 从_commandHandlerMap中查找处理器
-                var handler = _commandHandlerMap.Values
-                    .SelectMany(list => list)
-                    .FirstOrDefault(h => h.HandlerId == handlerId);
+                // 使用CommandScanner移除处理器
+                var removed = await _commandScanner.RemoveHandlerAsync(handlerId, cancellationToken);
 
-                if (handler == null)
+                if (removed)
                 {
-                    return false;
+                    LogInfo($"取消注册处理器成功: [ID: {handlerId}]");
+                }
+                else
+                {
+                    LogWarning($"未找到处理器: [ID: {handlerId}]");
                 }
 
-                // 停止处理器
-                await handler.StopAsync(cancellationToken);
-                handler.Dispose();
-
-                // 更新命令映射
-                RemoveHandlerFromMapping(handler);
-
-                LogInfo($"取消注册处理器成功: {handler.Name} [ID: {handlerId}]");
-                return true;
+                return removed;
             }
             catch (Exception ex)
             {
@@ -528,7 +513,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>处理器列表</returns>
         public IReadOnlyList<ICommandHandler> GetAllHandlers()
         {
-            return _commandHandlerMap.Values.SelectMany(list => list).Distinct().ToList().AsReadOnly();
+            return _commandScanner?.GetAllHandlerMappings()
+                .SelectMany(kvp => kvp.Value)
+                .Distinct()
+                .ToList()
+                .AsReadOnly() ?? new List<ICommandHandler>().AsReadOnly();
         }
 
         /// <summary>
@@ -537,150 +526,16 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>统计信息字典</returns>
         public Dictionary<string, HandlerStatistics> GetHandlerStatistics()
         {
-            return _commandHandlerMap.Values
-                .SelectMany(list => list)
+            return _commandScanner?.GetAllHandlerMappings()
+                .SelectMany(kvp => kvp.Value)
                 .Distinct()
                 .ToDictionary(
                     handler => handler.HandlerId,
                     handler => handler.GetStatistics()
-                );
+                ) ?? new Dictionary<string, HandlerStatistics>();
         }
 
-        /// <summary>
-        /// 自动发现并注册处理器
-        /// </summary>
-        private async Task AutoDiscoverAndRegisterHandlersAsync(CancellationToken cancellationToken)
-        {
-            // 默认只扫描当前程序集
-            await AutoDiscoverAndRegisterHandlersAsync(cancellationToken, Assembly.GetExecutingAssembly());
-        }
 
-        /// <summary>
-        /// 自动发现并注册处理器（支持多程序集）
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <param name="assemblies">要扫描的程序集</param>
-        public async Task AutoDiscoverAndRegisterHandlersAsync(CancellationToken cancellationToken, params Assembly[] assemblies)
-        {
-            try
-            {
-                if (assemblies == null || assemblies.Length == 0)
-                {
-                    assemblies = new[] { Assembly.GetExecutingAssembly() };
-                }
-
-                LogInfo($"开始自动发现并注册命令处理器，扫描程序集数量: {assemblies.Length}");
-                var handlerTypes = new List<Type>();
-
-                foreach (var assembly in assemblies)
-                {
-                    try
-                    {
-                        LogInfo($"正在扫描程序集: {assembly.GetName().Name}");
-
-                        // 处理 ReflectionTypeLoadException 异常
-                        Type[] types;
-                        try
-                        {
-                            types = assembly.GetTypes();
-                        }
-                        catch (ReflectionTypeLoadException ex)
-                        {
-                            // 记录加载失败的类型信息
-                            LogWarning($"加载程序集 {assembly.GetName().Name} 的类型时出错，将跳过无法加载的类型: {ex.Message}");
-
-                            // 只使用成功加载的类型
-                            types = ex.Types.Where(t => t != null).ToArray();
-
-                            // 记录无法加载的类型
-                            foreach (var loaderException in ex.LoaderExceptions)
-                            {
-                                LogWarning($"类型加载异常: {loaderException?.Message}");
-                            }
-                        }
-
-                        var typesQuery = types
-                            .Where(t => typeof(ICommandHandler).IsAssignableFrom(t) &&
-                                      !t.IsInterface &&
-                                      !t.IsAbstract &&
-                                      t.GetCustomAttribute<CommandHandlerAttribute>() != null)
-                            .ToList();
-
-                        LogInfo($"在程序集 {assembly.GetName().Name} 中发现 {typesQuery.Count} 个命令处理器");
-                        handlerTypes.AddRange(typesQuery);
-
-                        // 记录发现的处理器类型
-                        foreach (var type in typesQuery)
-                        {
-                            LogInfo($"发现命令处理器: {type.FullName}");
-
-                            // 记录处理器支持的命令类型
-                            var attr = type.GetCustomAttribute<CommandHandlerAttribute>();
-                            if (attr != null)
-                            {
-                                LogInfo($"  处理器 {type.Name} 支持的命令类型: [{string.Join(", ", attr.SupportedCommands.Select(c => c.ToString()))}]");
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        LogError($"扫描程序集 {assembly.GetName().Name} 中的命令处理器时出错", ex);
-                    }
-                }
-
-                // 按优先级排序处理器
-                var sortedHandlers = handlerTypes
-                    .Select(t => new
-                    {
-                        Type = t,
-                        Attribute = t.GetCustomAttribute<CommandHandlerAttribute>()
-                    })
-                    .OrderByDescending(h => h.Attribute?.Priority ?? 0)
-                    .ToList();
-
-                LogInfo($"总共发现 {sortedHandlers.Count} 个命令处理器，开始注册...");
-
-                // 注册处理器
-                var registrationTasks = sortedHandlers.Select(handlerInfo =>
-                {
-                    LogInfo($"正在注册处理器: {handlerInfo.Type.FullName}");
-                    return RegisterHandlerAsync(handlerInfo.Type, cancellationToken);
-                });
-
-                var results = await Task.WhenAll(registrationTasks);
-                var successCount = results.Count(r => r);
-
-                LogInfo($"命令处理器自动注册完成，共注册 {successCount}/{results.Length} 个处理器");
-
-                // 记录注册后的处理器映射信息
-                LogCommandHandlerMapping();
-            }
-            catch (Exception ex)
-            {
-                LogError("自动发现处理器异常", ex);
-            }
-        }
-
-        /// <summary>
-        /// 记录命令处理器映射信息（用于调试）
-        /// </summary>
-        private void LogCommandHandlerMapping()
-        {
-            try
-            {
-                LogInfo($"当前命令处理器映射数量: {_commandHandlerMap.Count}");
-
-                foreach (var kvp in _commandHandlerMap)
-                {
-                    var handlerNames = string.Join(", ", kvp.Value.Select(h => h.Name));
-                    LogInfo($"命令代码 {kvp.Key.FullCode} 映射到处理器: [{handlerNames}]");
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError("记录命令处理器映射信息时出错", ex);
-            }
-        }
 
         /// <summary>
         /// 查找处理器和命令类型
@@ -745,9 +600,9 @@ namespace RUINORERP.PacketSpec.Commands
         {
             var commandCode = cmd.Command.CommandIdentifier;
 
-            // 同时从命令映射和命令类型辅助类中获取信息
-            _commandHandlerMap.TryGetValue(commandCode, out var handlers);
-  
+            // 从CommandScanner获取处理器映射信息
+            var handlers = _commandScanner?.GetHandlers(commandCode);
+
 
             // 过滤可用的处理器
             List<ICommandHandler> availableHandlers = null;
@@ -759,7 +614,7 @@ namespace RUINORERP.PacketSpec.Commands
                     availableHandlers = null;
                 }
             }
-            var commandType = _commandTypeHelper.GetCommandType(commandCode);
+            var commandType = _commandScanner?.GetCommandType(commandCode);
             // 如果映射中没有找到合适的处理器
             if (availableHandlers == null)
             {
@@ -767,12 +622,12 @@ namespace RUINORERP.PacketSpec.Commands
                 if (commandType != null)
                 {
                     // 首先尝试查找能够处理该命令类型的处理器
-                    var compatibleHandlers = _commandHandlerMap.Values
-                        .SelectMany(list => list)
+                    var compatibleHandlers = _commandScanner?.GetAllHandlerMappings()
+                        .SelectMany(kvp => kvp.Value)
                         .Where(h => CanHandleCommandType(h, commandType) && h.CanHandle(cmd))
                         .ToList();
 
-                    if (compatibleHandlers.Any())
+                    if (compatibleHandlers?.Any() == true)
                     {
                         availableHandlers = compatibleHandlers;
                     }
@@ -790,12 +645,12 @@ namespace RUINORERP.PacketSpec.Commands
                 // 策略3：如果没有命令类型信息，遍历所有处理器
                 if (availableHandlers == null)
                 {
-                    availableHandlers = _commandHandlerMap.Values
-                        .SelectMany(list => list)
+                    availableHandlers = _commandScanner?.GetAllHandlerMappings()
+                        .SelectMany(kvp => kvp.Value)
                         .Where(h => h.CanHandle(cmd))
                         .ToList();
 
-                    if (!availableHandlers.Any())
+                    if (availableHandlers?.Any() != true)
                     {
                         availableHandlers = null;
                     }
@@ -969,7 +824,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 // 获取处理器的类型
                 var handlerType = handler.GetType();
-                
+
                 // 检查处理器是否实现了泛型接口
                 var interfaces = handlerType.GetInterfaces();
                 foreach (var iface in interfaces)
@@ -978,7 +833,7 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         var genericType = iface.GetGenericTypeDefinition();
                         // 检查是否实现了泛型命令处理器接口
-                        if (genericType == typeof(ICommandHandler) || 
+                        if (genericType == typeof(ICommandHandler) ||
                             genericType.Name.StartsWith("ICommandHandler"))
                         {
                             var genericArgs = iface.GetGenericArguments();
@@ -986,7 +841,7 @@ namespace RUINORERP.PacketSpec.Commands
                             {
                                 // 检查第一个泛型参数是否与命令类型兼容
                                 var supportedCommandType = genericArgs[0];
-                                if (supportedCommandType.IsAssignableFrom(commandType) || 
+                                if (supportedCommandType.IsAssignableFrom(commandType) ||
                                     commandType.IsAssignableFrom(supportedCommandType))
                                 {
                                     return true;
@@ -1006,7 +861,7 @@ namespace RUINORERP.PacketSpec.Commands
                         if (genericArgs.Length > 0)
                         {
                             var supportedCommandType = genericArgs[0];
-                            if (supportedCommandType.IsAssignableFrom(commandType) || 
+                            if (supportedCommandType.IsAssignableFrom(commandType) ||
                                 commandType.IsAssignableFrom(supportedCommandType))
                             {
                                 return true;
@@ -1038,7 +893,7 @@ namespace RUINORERP.PacketSpec.Commands
                 // 这里可以实现动态处理器创建逻辑
                 // 目前使用回退处理器作为动态处理器
                 var fallbackHandler = GetFallbackHandler();
-                
+
                 if (fallbackHandler != null)
                 {
                     LogInfo($"使用回退处理器作为动态处理器处理命令类型: {commandType?.Name}, 命令代码: {commandCode}");
@@ -1059,7 +914,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private Type[] GetHandlerTypesForCommand(CommandId commandId)
         {
-            if (_commandHandlerMap.TryGetValue(commandId, out var handlers))
+            var handlers = _commandScanner?.GetHandlers(commandId);
+            if (handlers != null)
             {
                 return handlers.Select(h => h.GetType()).Distinct().ToArray();
             }
@@ -1102,115 +958,7 @@ namespace RUINORERP.PacketSpec.Commands
             return defaultCts;
         }
 
-        /// <summary>
-        /// 更新命令处理器映射
-        /// </summary>
-        /// <param name="handler">处理器</param>
-        private void UpdateCommandHandlerMapping(ICommandHandler handler)
-        {
-            if (handler == null)
-            {
-                LogError("尝试为null处理器更新命令映射");
-                return;
-            }
 
-            try
-            {
-                // 安全获取支持的命令列表，避免空引用
-                var supportedCommands = handler.SupportedCommands ?? Array.Empty<CommandId>();
-                
-                if (!supportedCommands.Any())
-                {
-                    LogWarning($"处理器 {handler.Name} [ID: {handler.HandlerId}] 未定义支持的命令类型");
-                    return;
-                }
-
-                LogInfo($"正在更新处理器 {handler.Name} [ID: {handler.HandlerId}] 的命令映射，支持 {supportedCommands.Count} 个命令");
-
-                foreach (var commandCode in supportedCommands)
-                {
-                    _commandHandlerMap.AddOrUpdate(
-                        commandCode,
-                        new List<ICommandHandler> { handler },
-                        (key, existingHandlers) =>
-                        {
-                            if (!existingHandlers.Contains(handler))
-                            {
-                                existingHandlers.Add(handler);
-                                LogInfo($"将处理器 {handler.Name} 添加到命令 {commandCode} 的处理列表中");
-                            }
-                            else
-                            {
-                                LogWarning($"处理器 {handler.Name} 已存在于命令 {commandCode} 的处理列表中");
-                            }
-                            return existingHandlers;
-                        });
-                }
-
-                LogInfo($"处理器 {handler.Name} 命令映射更新完成");
-            }
-            catch (Exception ex)
-            {
-                LogError($"更新处理器 {handler.Name} 命令映射时发生异常", ex);
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// 从映射中移除处理器
-        /// </summary>
-        /// <param name="handler">处理器</param>
-        private void RemoveHandlerFromMapping(ICommandHandler handler)
-        {
-            if (handler == null)
-            {
-                LogError("尝试从映射中移除null处理器");
-                return;
-            }
-
-            try
-            {
-                // 安全获取支持的命令列表，避免空引用
-                var supportedCommands = handler.SupportedCommands ?? Array.Empty<CommandId>();
-                
-                if (!supportedCommands.Any())
-                {
-                    LogWarning($"处理器 {handler.Name} [ID: {handler.HandlerId}] 未定义支持的命令类型，无法从映射中移除");
-                    return;
-                }
-
-                LogInfo($"正在从映射中移除处理器 {handler.Name} [ID: {handler.HandlerId}]，涉及 {supportedCommands.Count} 个命令");
-
-                foreach (var commandCode in supportedCommands)
-                {
-                    if (_commandHandlerMap.TryGetValue(commandCode, out var handlers))
-                    {
-                        var removed = handlers.Remove(handler);
-                        if (removed)
-                        {
-                            LogInfo($"成功从命令 {commandCode} 的处理列表中移除处理器 {handler.Name}");
-                        }
-                        
-                        if (!handlers.Any())
-                        {
-                            _commandHandlerMap.TryRemove(commandCode, out _);
-                            LogInfo($"命令 {commandCode} 的处理列表为空，已从映射中移除");
-                        }
-                    }
-                    else
-                    {
-                        LogWarning($"命令 {commandCode} 在映射中不存在");
-                    }
-                }
-
-                LogInfo($"处理器 {handler.Name} 从映射中移除完成");
-            }
-            catch (Exception ex)
-            {
-                LogError($"从映射中移除处理器 {handler.Name} 时发生异常", ex);
-                throw;
-            }
-        }
 
         /// <summary>
         /// 清理命令历史
@@ -1285,7 +1033,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             try
             {
-                _commandTypeHelper.RegisterCommandType(commandCode, commandType);
+                _commandScanner?.RegisterCommandType(commandCode, commandType);
                 LogDebug($"注册命令类型成功: {commandCode} -> {commandType.Name}");
             }
             catch (Exception ex)
@@ -1303,7 +1051,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             try
             {
-                return _commandTypeHelper.GetCommandType(commandCode);
+                return _commandScanner?.GetCommandType(commandCode);
             }
             catch (Exception ex)
             {
@@ -1322,8 +1070,8 @@ namespace RUINORERP.PacketSpec.Commands
             try
             {
                 // 使用预编译的构造函数创建命令实例
-                var ctor = _commandTypeHelper.GetCommandCtor(commandCode);
-                var command = ctor();
+                var ctor = _commandScanner?.GetCommandCtor(commandCode);
+                var command = ctor?.Invoke();
                 if (command != null)
                 {
                     LogDebug($"创建命令实例成功: {commandCode}");
@@ -1341,7 +1089,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
- 
+
 
         /// <summary>
         /// 清理注册的命令类型
@@ -1350,7 +1098,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             try
             {
-                _commandTypeHelper.Clear();
+                _commandScanner?.Clear();
                 LogInfo("已清理所有注册的命令类型");
             }
             catch (Exception ex)
@@ -1366,11 +1114,15 @@ namespace RUINORERP.PacketSpec.Commands
         public Dictionary<CommandId, List<string>> GetCommandHandlerMappingInfo()
         {
             var mappingInfo = new Dictionary<CommandId, List<string>>();
+            var handlerMappings = _commandScanner?.GetAllHandlerMappings();
 
-            foreach (var kvp in _commandHandlerMap)
+            if (handlerMappings != null)
             {
-                var handlerNames = kvp.Value.Select(h => h.Name).ToList();
-                mappingInfo[kvp.Key] = handlerNames;
+                foreach (var kvp in handlerMappings)
+                {
+                    var handlerNames = kvp.Value.Select(h => h.Name).ToList();
+                    mappingInfo[kvp.Key] = handlerNames;
+                }
             }
 
             return mappingInfo;
@@ -1383,7 +1135,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>是否已映射</returns>
         public bool IsCommandMapped(CommandId commandCode)
         {
-            return _commandHandlerMap.ContainsKey(commandCode);
+            var handlers = _commandScanner?.GetHandlers(commandCode);
+            return handlers != null && handlers.Any();
         }
 
         /// <summary>
@@ -1393,11 +1146,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>处理器数量</returns>
         public int GetMappedHandlerCount(CommandId commandCode)
         {
-            if (_commandHandlerMap.TryGetValue(commandCode, out var handlers))
-            {
-                return handlers.Count;
-            }
-            return 0;
+            var handlers = _commandScanner?.GetHandlers(commandCode);
+            return handlers?.Count ?? 0;
         }
 
         /// <summary>
@@ -1418,15 +1168,18 @@ namespace RUINORERP.PacketSpec.Commands
                     // 等待所有处理任务完成
                     Task.WhenAll(_channelProcessors).GetAwaiter().GetResult();
 
-                    // 停止所有处理器
-                    var stopTasks = _commandHandlerMap.Values
-                        .SelectMany(list => list)
+                    // 获取所有处理器并停止和释放
+                    var allHandlers = _commandScanner?.GetAllHandlerMappings()
+                        ?.SelectMany(kvp => kvp.Value)
                         .Distinct()
-                        .Select(h => h.StopAsync(CancellationToken.None));
+                        .ToList() ?? new List<ICommandHandler>();
+
+                    // 停止所有处理器
+                    var stopTasks = allHandlers.Select(h => h.StopAsync(CancellationToken.None));
                     Task.WhenAll(stopTasks).GetAwaiter().GetResult();
 
                     // 释放所有处理器
-                    foreach (var handler in _commandHandlerMap.Values.SelectMany(list => list).Distinct())
+                    foreach (var handler in allHandlers)
                     {
                         try
                         {
@@ -1438,7 +1191,6 @@ namespace RUINORERP.PacketSpec.Commands
                         }
                     }
 
-                    _commandHandlerMap.Clear();
                     _commandHistory.Clear();
                     _dispatchSemaphore?.Dispose();
                 }
@@ -1453,7 +1205,7 @@ namespace RUINORERP.PacketSpec.Commands
             GC.SuppressFinalize(this);
         }
 
-       
+
     }
 
 

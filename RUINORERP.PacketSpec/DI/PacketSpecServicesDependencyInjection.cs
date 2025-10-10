@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
@@ -102,7 +102,7 @@ namespace RUINORERP.PacketSpec.DI
             // 注册命令调度器
             services.AddSingleton<CommandDispatcher>();
             services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
-
+     
 
 
             // 注册命令工厂
@@ -111,7 +111,6 @@ namespace RUINORERP.PacketSpec.DI
 
             // 注册命令扫描和类型辅助服务
             services.AddSingleton<CommandScanner>();
-            services.AddSingleton<CommandTypeHelper>();
 
             // 注册命令处理器工厂
             services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();

@@ -2255,8 +2255,7 @@
     <Compile Include="Network\Authentication\TokenRefreshService.cs" />
     <Compile Include="Network\BizPackageInfo.cs" />
     <Compile Include="Network\BizPipelineFilter.cs" />
-    <Compile Include="Network\ClientCommandDispatcher.cs" />
-    <Compile Include="Network\ClientCommandFactory.cs" />
+    
     <!-- ClientCommandProcessor.cs 已整合到ClientCommunicationService.cs，不再单独编译 -->
     <!-- <Compile Include="Network\ClientCommandProcessor.cs" /> -->
     <Compile Include="Network\ClientEventManager.cs" />

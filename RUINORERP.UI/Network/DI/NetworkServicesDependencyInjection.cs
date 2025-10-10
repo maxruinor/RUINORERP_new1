@@ -26,9 +26,9 @@ namespace RUINORERP.UI.Network.DI
         public static void AddNetworkServices(this IServiceCollection services)
         {
             // 注册核心网络组件
-            services.AddSingleton<ClientCommandDispatcher>();
             services.AddSingleton<ISocketClient, SuperSocketClient>();
-            services.AddSingleton<ICommandDispatcher, ClientCommandDispatcher>();
+            // 注意：使用PacketSpec项目中的CommandDispatcher，而不是客户端自定义的
+            services.AddSingleton<ICommandDispatcher, RUINORERP.PacketSpec.Commands.CommandDispatcher>();
             services.AddSingleton<ClientCommunicationService>();
             // RequestResponseManager已合并到ClientCommunicationService中，不再需要单独注册
             services.AddSingleton<ClientEventManager>();
@@ -81,48 +81,7 @@ namespace RUINORERP.UI.Network.DI
             
         }
 
-        /// <summary>
-        /// 扫描并注册客户端命令类型和处理器
-        /// 在客户端启动时调用此方法进行命令类型注册
-        /// </summary>
-        /// <param name="serviceProvider">服务提供程序</param>
-        public static void ScanAndRegisterClientCommands(IServiceProvider serviceProvider)
-        {
-            try
-            {
-               
-                var commandScanner = serviceProvider.GetRequiredService<CommandScanner>();
-                var commandDispatcher = serviceProvider.GetRequiredService<ICommandDispatcher>();
-                
-
-                // 获取PacketSpec程序集
-                var packetSpecAssembly = Assembly.GetAssembly(typeof(RUINORERP.PacketSpec.Commands.ICommand));
-                if (packetSpecAssembly == null)
-                {
-                    return;
-                }
-
-                // 获取UI程序集
-                var uiAssembly = Assembly.GetExecutingAssembly();
-                
-                
-                // 扫描并注册命令到命令调度器
-                commandScanner.ScanAndRegisterCommands(commandDispatcher, null, packetSpecAssembly, uiAssembly);
-                
-                // 自动发现并注册命令处理器
-                commandDispatcher.AutoDiscoverAndRegisterHandlersAsync(packetSpecAssembly).Wait();
-                commandDispatcher.AutoDiscoverAndRegisterHandlersAsync(uiAssembly).Wait();
-                
-                var registeredHandlers = commandDispatcher.GetRegisteredHandlers();
-                
-                
-            }
-            catch (Exception ex)
-            {
-                
-            }
-        }
-
+ 
         /// <summary>
         /// 配置Network服务Autofac容器
         /// </summary>
@@ -131,7 +90,6 @@ namespace RUINORERP.UI.Network.DI
         {
             // 注册核心网络组件
             builder.RegisterType<SuperSocketClient>().As<ISocketClient>().SingleInstance();
-            builder.RegisterType<ClientCommandDispatcher>().AsSelf().SingleInstance();
             // 不再需要ClientTokenStorage，使用TokenManager代替
             
             // 注册ClientCommunicationService

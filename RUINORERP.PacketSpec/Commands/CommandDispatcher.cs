@@ -140,7 +140,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>初始化结果</returns>
-        public async Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
+        public async Task<bool> InitializeAsync(CancellationToken cancellationToken = default, params Assembly[] assemblies)
         {
             try
             {
@@ -158,7 +158,16 @@ namespace RUINORERP.PacketSpec.Commands
                 // 自动发现并注册处理器
                 if (_commandScanner != null)
                 {
-                    await _commandScanner.AutoDiscoverAndRegisterHandlersAsync(null, cancellationToken, Assembly.GetExecutingAssembly());
+                    if (assemblies.Count() == 0)
+                    {
+                        _commandScanner.ScanAndRegisterCommands(null, Assembly.GetExecutingAssembly());
+                        _commandScanner.ScanAndRegisterCommandHandlers(null, Assembly.GetExecutingAssembly());
+                    }
+                    else
+                    {
+                        _commandScanner.ScanAndRegisterCommands(null, assemblies);
+                        _commandScanner.ScanAndRegisterCommandHandlers(null, assemblies);
+                    }
                 }
 
                 _isInitialized = true;
@@ -455,7 +464,7 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
 
- 
+
         /// <summary>
         /// 获取所有处理器
         /// </summary>
@@ -571,7 +580,7 @@ namespace RUINORERP.PacketSpec.Commands
                     availableHandlers = null;
                 }
             }
-            
+
             // 如果映射中没有找到合适的处理器
             if (availableHandlers == null)
             {
@@ -984,7 +993,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
- 
+
         /// <summary>
         /// 获取命令类型
         /// </summary>

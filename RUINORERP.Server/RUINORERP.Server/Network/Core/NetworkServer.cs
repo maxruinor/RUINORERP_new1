@@ -87,11 +87,11 @@ namespace RUINORERP.Server.Network.Core
 
                 // 扫描并注册服务器端的命令处理器
                 // 命令处理器与业务逻辑紧密相关，通常位于服务器项目中
-                _logger.LogInformation($"正在扫描命令处理器，开始调用AutoDiscoverAndRegisterHandlersAsync方法");
+                _logger.LogInformation($"正在扫描命令处理器，开始调用ScanCommandHandlers方法");
                 _logger.LogInformation($"PacketSpec程序集位置: {packetSpecAssembly?.Location}");
                 _logger.LogInformation($"服务器程序集位置: {serverAssembly?.Location}");
                 // 使用CommandScanner进行自动发现和注册
-               await commandScanner.AutoDiscoverAndRegisterHandlersAsync(null,  cancellationToken, serverAssembly, packetSpecAssembly);
+               commandScanner.ScanCommandHandlers(null, true, serverAssembly, packetSpecAssembly);
 
                 // 添加日志记录，检查注册的处理器数量
                 var handlerCount = _commandDispatcher.HandlerCount;  // 直接使用具体类型属性

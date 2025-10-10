@@ -48,8 +48,8 @@ namespace RUINORERP.PacketSpec.Commands
 
         // 扫描统计和缓存
         private readonly Dictionary<string, ScanStatistics> _scanStatistics;
-        private readonly HashSet<Assembly> _scannedAssemblies;
-        private DateTime _lastScanTime;
+
+
 
         // 处理器映射管理（从CommandDispatcher迁移）
         private readonly ConcurrentDictionary<CommandId, List<ICommandHandler>> _commandHandlerMap;
@@ -67,8 +67,8 @@ namespace RUINORERP.PacketSpec.Commands
             // 初始化命令类型管理数据结构
             _commandTypes = new Dictionary<CommandId, Type>();
             _scanStatistics = new Dictionary<string, ScanStatistics>();
-            _scannedAssemblies = new HashSet<Assembly>();
-            _lastScanTime = DateTime.MinValue;
+
+
 
             // 初始化处理器映射管理
             _commandHandlerMap = new ConcurrentDictionary<CommandId, List<ICommandHandler>>();
@@ -128,7 +128,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="commandCode">命令代码</param>
         /// <param name="commandType">命令类型</param>
-        public void RegisterCommandType(CommandId commandCode, Type commandType)
+        /// <returns>是否为新注册（true表示新注册，false表示已存在被覆盖）</returns>
+        public bool RegisterCommandType(CommandId commandCode, Type commandType)
         {
             if (commandType == null)
                 throw new ArgumentNullException(nameof(commandType));
@@ -138,8 +139,10 @@ namespace RUINORERP.PacketSpec.Commands
 
             lock (_lock)
             {
+                bool isNewRegistration = !_commandTypes.ContainsKey(commandCode);
                 _commandTypes[commandCode] = commandType;
-                _logger?.LogDebug("注册命令类型: {CommandCode} -> {TypeName}", commandCode, commandType.Name);
+                _logger?.LogDebug("注册命令类型: {CommandCode} -> {TypeName} (新注册: {IsNew})", commandCode, commandType.Name, isNewRegistration);
+                return isNewRegistration;
             }
         }
 
@@ -241,8 +244,8 @@ namespace RUINORERP.PacketSpec.Commands
                 _commandTypes.Clear();
                 _ctorCache.Clear();
                 _scanStatistics.Clear();
-                _scannedAssemblies.Clear();
-                _lastScanTime = DateTime.MinValue;
+
+
                 _logger?.LogInformation("清理所有注册的命令类型，共清理 {Count} 个", count);
             }
         }
@@ -282,57 +285,116 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
-        /// <summary>
-        /// 获取最后扫描时间
-        /// </summary>
-        /// <returns>最后扫描时间</returns>
-        public DateTime GetLastScanTime()
-        {
-            return _lastScanTime;
-        }
 
-        /// <summary>
-        /// 是否已扫描过指定程序集
-        /// </summary>
-        /// <param name="assembly">程序集</param>
-        /// <returns>是否已扫描过</returns>
-        public bool HasAssemblyBeenScanned(Assembly assembly)
-        {
-            if (assembly == null) return false;
-            lock (_lock)
-            {
-                return _scannedAssemblies.Contains(assembly);
-            }
-        }
 
         #endregion
 
         /// <summary>
-        /// 从类型中提取命令ID
+        /// 从类型中提取命令ID - 高性能版本（避免重复创建实例）
         /// </summary>
         private CommandId ExtractCommandIdFromType(Type commandType)
         {
+            if (commandType == null)
+                throw new ArgumentNullException(nameof(commandType));
+
             try
             {
-                // 尝试创建实例获取命令ID
-                var commandInstance = Activator.CreateInstance(commandType) as ICommand;
-                if (commandInstance != null)
+                // 优先使用静态字段或属性获取命令ID，避免创建实例
+                
+                // 1. 查找静态的 CommandId 常量字段
+                var constFields = commandType.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                    .Where(f => f.FieldType == typeof(CommandId) && f.IsLiteral);
+                
+                foreach (var field in constFields)
                 {
-                    return commandInstance.CommandIdentifier;
+                    var value = field.GetValue(null);
+                    if (value is CommandId commandId)
+                    {
+                        return commandId;
+                    }
                 }
+
+                // 2. 查找静态属性
+                var staticProps = commandType.GetProperties(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                    .Where(p => p.PropertyType == typeof(CommandId) && p.CanRead);
+                
+                foreach (var prop in staticProps)
+                {
+                    try
+                    {
+                        var value = prop.GetValue(null);
+                        if (value is CommandId commandId)
+                        {
+                            return commandId;
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略属性访问异常
+                    }
+                }
+
+                // 3. 查找静态的 DefaultInstance 或 Instance 属性
+                var instanceProp = commandType.GetProperty("DefaultInstance", BindingFlags.Public | BindingFlags.Static) ??
+                                   commandType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static);
+                
+                if (instanceProp?.CanRead == true)
+                {
+                    try
+                    {
+                        var instance = instanceProp.GetValue(null);
+                        if (instance is ICommand commandInstance)
+                        {
+                            return commandInstance.CommandIdentifier;
+                        }
+                    }
+                    catch
+                    {
+                        // 忽略实例访问异常
+                    }
+                }
+
+                // 4. 最后才尝试创建实例（带缓存）
+                return CreateInstanceAndGetCommandId(commandType);
             }
-            catch
+            catch (Exception ex)
             {
-                // 忽略创建异常，使用备用方案
+                _logger?.LogWarning(ex, "从类型 {TypeName} 提取命令ID失败，使用类型名称哈希", commandType.Name);
+                
+                // 备用方案：使用类型名称哈希
+                uint tempId = (uint)(commandType.FullName?.GetHashCode() ?? commandType.Name.GetHashCode());
+                if (tempId == 0 || tempId == uint.MaxValue)
+                {
+                    tempId = (uint)commandType.Name.GetHashCode();
+                }
+                return CommandId.FromUInt16((ushort)tempId);
+            }
+        }
+
+        /// <summary>
+        /// 创建实例获取命令ID（带异常处理和缓存）
+        /// </summary>
+        private CommandId CreateInstanceAndGetCommandId(Type commandType)
+        {
+            // 检查是否有无参构造函数
+            var ctor = commandType.GetConstructor(Type.EmptyTypes);
+            if (ctor == null)
+            {
+                throw new InvalidOperationException($"类型 {commandType.Name} 没有无参构造函数");
             }
 
-            // 备用方案：使用类型名称哈希
-            uint tempId = (uint)(commandType.FullName?.GetHashCode() ?? commandType.Name.GetHashCode());
-            if (tempId == 0 || tempId == uint.MaxValue)
+            try
             {
-                tempId = (uint)commandType.Name.GetHashCode();
+                // 使用表达式树编译创建实例，比Activator.CreateInstance更快
+                var lambda = Expression.Lambda<Func<ICommand>>(Expression.New(ctor)).Compile();
+                var instance = lambda();
+                return instance.CommandIdentifier;
             }
-            return CommandId.FromUInt16((ushort)tempId);
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "创建 {TypeName} 实例获取命令ID失败", commandType.Name);
+                throw;
+            }
         }
 
         /// <summary>
@@ -409,39 +471,52 @@ namespace RUINORERP.PacketSpec.Commands
 
             foreach (var assembly in assemblies)
             {
-                var (commandTypes, _) = ScanAssemblyInternal(assembly, namespaceFilter);
-                
-                foreach (var commandType in commandTypes)
+                try
                 {
-                    try
+                    var (commandTypes, _) = ScanAssemblyInternal(assembly, namespaceFilter);
+                    
+                    foreach (var commandType in commandTypes)
                     {
-                        // 获取命令ID
-                        var commandId = ExtractCommandIdFromType(commandType);
-                        var commandName = commandType.Name;
-                        
-                        // 获取命令特性中的名称
-                        var commandAttribute = commandType.GetCustomAttribute<PacketCommandAttribute>();
-                        if (commandAttribute != null && !string.IsNullOrEmpty(commandAttribute.Name))
+                        try
                         {
-                            commandName = commandAttribute.Name;
-                        }
+                            // 获取命令ID
+                            var commandId = ExtractCommandIdFromType(commandType);
+                            var commandName = commandType.Name;
+                            
+                            // 获取命令特性中的名称
+                            var commandAttribute = commandType.GetCustomAttribute<PacketCommandAttribute>();
+                            if (commandAttribute != null && !string.IsNullOrEmpty(commandAttribute.Name))
+                            {
+                                commandName = commandAttribute.Name;
+                            }
 
-                        if (!commandTypeMap.ContainsKey(commandId))
-                        {
-                            commandTypeMap[commandId] = commandType;
-                            totalCommandsFound++;
-
-                            // 注册到缓存
+                            // 注册到缓存，RegisterCommandType会处理重复检查
                             if (registerTypes)
                             {
-                                RegisterCommandType(commandId, commandType);
+                                if (RegisterCommandType(commandId, commandType))
+                                {
+                                    totalCommandsFound++;
+                                }
+                            }
+                            else
+                            {
+                                // 仅扫描模式，只在临时map中记录
+                                if (!commandTypeMap.ContainsKey(commandId))
+                                {
+                                    commandTypeMap[commandId] = commandType;
+                                    totalCommandsFound++;
+                                }
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, "处理命令类型 {TypeName} 失败", commandType.FullName);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "处理命令类型 {TypeName} 失败", commandType.FullName);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "扫描程序集 {AssemblyName} 失败", assembly.FullName);
                 }
             }
 
@@ -456,49 +531,15 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="assemblies">要扫描的程序集，可选参数</param>
         public void ScanAndRegisterCommands(string namespaceFilter = null, params Assembly[] assemblies)
         {
-            var commandTypes = ScanCommands(namespaceFilter, true, assemblies);
-            foreach (var kvp in commandTypes)
-            {
-                try
-                {
-                    // 注册命令类型到缓存
-                    RegisterCommandType(kvp.Key, kvp.Value);
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, "注册命令 {CommandId} 到类型缓存时出错", kvp.Key);
-                }
-            }
+            ScanCommands(namespaceFilter, true, assemblies);
         }
 
-         /// <summary>
+        /// <summary>
         /// 扫描当前程序集中的所有命令类型并注册
         /// </summary>
         public void ScanCurrentAssembly()
         {
-            ScanAndRegisterCommands(null, new[] { Assembly.GetExecutingAssembly() });
-        }
-
-
-        /// <summary>
-        /// 扫描多个程序集中的所有命令类型
-        /// </summary>
-        /// <param name="assemblies">要扫描的程序集列表</param>
-        /// <returns>命令类型映射</returns>
-        public Dictionary<CommandId, Type> ScanAssemblies(params Assembly[] assemblies)
-        {
-            return ScanCommands(null, true, assemblies);
-        }
-
-        /// <summary>
-        /// 扫描多个程序集中指定命名空间的命令类型
-        /// </summary>
-        /// <param name="namespaceFilter">命名空间过滤器</param>
-        /// <param name="assemblies">要扫描的程序集列表</param>
-        /// <returns>命令类型映射</returns>
-        public Dictionary<CommandId, Type> ScanAssemblies(string namespaceFilter, params Assembly[] assemblies)
-        {
-            return ScanCommands(namespaceFilter, true, assemblies);
+            ScanCommands(null, true, new[] { Assembly.GetExecutingAssembly() });
         }
 
         /// <summary>
@@ -510,7 +551,7 @@ namespace RUINORERP.PacketSpec.Commands
             if (assembly == null)
                 throw new ArgumentNullException(nameof(assembly));
 
-            ScanAndRegisterCommands(null, assembly);
+            ScanCommands(null, true, new[] { assembly });
         }
 
         /// <summary>
@@ -526,7 +567,7 @@ namespace RUINORERP.PacketSpec.Commands
             if (string.IsNullOrEmpty(namespacePrefix))
                 throw new ArgumentNullException(nameof(namespacePrefix));
 
-            ScanAndRegisterCommands(namespacePrefix, new[] { assembly });
+            ScanCommands(namespacePrefix, true, new[] { assembly });
         }
 
         #region 命令处理器扫描和注册功能
@@ -536,8 +577,9 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="assemblies">要扫描的程序集，可选参数</param>
         /// <param name="namespaceFilter">命名空间过滤器，可选参数</param>
+        /// <param name="registerToMapping">是否注册到处理器映射表</param>
         /// <returns>命令处理器类型列表</returns>
-        public List<Type> ScanCommandHandlers(string namespaceFilter = null, params Assembly[] assemblies)
+        public List<Type> ScanCommandHandlers(string namespaceFilter = null, bool registerToMapping = false, params Assembly[] assemblies)
         {
             var handlerTypes = new List<Type>();
 
@@ -548,12 +590,68 @@ namespace RUINORERP.PacketSpec.Commands
 
             foreach (var assembly in assemblies)
             {
-                var (_, handlers) = ScanAssemblyInternal(assembly, namespaceFilter);
-                handlerTypes.AddRange(handlers);
+                try
+                {
+                    var (_, handlers) = ScanAssemblyInternal(assembly, namespaceFilter);
+                    handlerTypes.AddRange(handlers);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "扫描程序集 {AssemblyName} 中的处理器失败", assembly.FullName);
+                }
             }
 
             _logger?.LogInformation("扫描完成，发现 {Count} 个处理器类型", handlerTypes.Count);
+            
+            // 如果要求注册到映射表，执行注册
+            if (registerToMapping && handlerTypes.Count > 0)
+            {
+                try
+                {
+                    var sortedHandlers = SortHandlersByPriority(handlerTypes);
+                    var registeredCount = 0;
+                    
+                    foreach (var handlerType in sortedHandlers)
+                    {
+                        try
+                        {
+                            // 创建处理器实例
+                            if (Activator.CreateInstance(handlerType) is ICommandHandler handlerInstance)
+                            {
+                                RegisterHandlerToMapping(handlerInstance);
+                                registeredCount++;
+                            }
+                            else
+                            {
+                                _logger?.LogError("无法创建处理器实例或类型转换失败: {TypeName}", handlerType.FullName);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "注册处理器 {TypeName} 到映射表失败", handlerType.FullName);
+                        }
+                    }
+                    
+                    _logger?.LogInformation("已注册 {Count} 个处理器到映射表", registeredCount);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "处理器排序或注册过程中发生异常");
+                }
+            }
+            
             return handlerTypes;
+        }
+
+        /// <summary>
+        /// 扫描并注册指定程序集中的所有命令处理器类型
+        /// </summary>
+        /// <param name="namespaceFilter">命名空间过滤器，可选参数</param>
+        /// <param name="assemblies">要扫描的程序集，可选参数</param>
+        /// <returns>注册的处理器类型列表</returns>
+        public List<Type> ScanAndRegisterCommandHandlers(string namespaceFilter = null, params Assembly[] assemblies)
+        {
+            return ScanCommandHandlers(namespaceFilter, true, assemblies);
         }
 
         /// <summary>
@@ -577,68 +675,9 @@ namespace RUINORERP.PacketSpec.Commands
                 .ToList();
         }
 
-        /// <summary>
-        /// 自动发现并注册处理器到命令扫描器
-        /// </summary>
-        /// <param name="namespaceFilter">命名空间过滤器，可选参数</param>
-        /// <param name="assemblies">要扫描的程序集，可选参数</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>注册结果</returns>
-        public async Task<bool> AutoDiscoverAndRegisterHandlersAsync(string namespaceFilter = null,
-           CancellationToken cancellationToken = default, params Assembly[] assemblies)
-        {
-            try
-            {
-                _logger?.LogInformation("开始自动注册处理器");
+ 
 
-                // 扫描处理器类型
-                var handlerTypes = ScanCommandHandlers(namespaceFilter, assemblies);
-                if (!handlerTypes.Any())
-                {
-                    _logger?.LogWarning("未发现处理器类型");
-                    return false;
-                }
-
-                // 按优先级排序
-                var sortedHandlers = SortHandlersByPriority(handlerTypes);
-                _logger?.LogInformation("发现 {Count} 个处理器，开始注册...", sortedHandlers.Count);
-
-                // 注册处理器
-                var successCount = 0;
-                foreach (var handlerType in sortedHandlers)
-                {
-                    try
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        var registered = await RegisterHandlerAsync(handlerType, cancellationToken);
-                        if (registered)
-                        {
-                            successCount++;
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        _logger?.LogWarning("注册被取消");
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogError(ex, "注册 {TypeName} 失败", handlerType.FullName);
-                    }
-                }
-
-                _logger?.LogInformation("注册完成: {SuccessCount}/{TotalCount}",
-                    successCount, sortedHandlers.Count);
-
-                return successCount > 0;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "自动注册失败");
-                return false;
-            }
-        }
+ 
 
         /// <summary>
         /// 注册单个处理器并管理处理器映射

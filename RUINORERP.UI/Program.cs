@@ -42,6 +42,7 @@ using log4net.Repository.Hierarchy;
 using System.Text.RegularExpressions;
 using RUINORERP.UI.Common;
 using SqlSugar;
+using RUINORERP.UI.Network.DI;
 
 
 namespace RUINORERP.UI
@@ -535,20 +536,7 @@ namespace RUINORERP.UI
 
 
                     #endregion
-
-                    #region 注册客户端命令类型
-                    try
-                    {
-                        // 扫描并注册客户端命令类型
-                        NetworkServicesDependencyInjection.ScanAndRegisterClientCommands(Startup.ServiceProvider);
-                        Console.WriteLine("客户端命令类型注册完成");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"注册客户端命令类型失败: {ex.Message}");
-                        RUINORERP.Common.Log4Net.Logger.Error("注册客户端命令类型失败", ex);
-                    }
-                    #endregion
+                   
 
                     var form1 = Startup.ServiceProvider.GetService<MainForm>();
                     Application.Run(form1);

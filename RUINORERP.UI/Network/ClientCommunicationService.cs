@@ -53,8 +53,6 @@ namespace RUINORERP.UI.Network
         // 心跳管理器
         private readonly HeartbeatManager _heartbeatManager;        // 日志记录器
         private readonly ILogger<ClientCommunicationService> _logger;
-        // 命令类型助手
-        private readonly CommandTypeHelper _commandTypeHelper;
 
         // 连接状态标志
         private bool _isConnected;
@@ -112,20 +110,32 @@ namespace RUINORERP.UI.Network
         ICommandDispatcher commandDispatcher,
             ILogger<ClientCommunicationService> logger,
             TokenManager _tokenManager,
-            CommandTypeHelper commandTypeHelper = null,
             NetworkConfig networkConfig = null)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
             commandPacketAdapter = _commandPacketAdapter;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _commandTypeHelper = commandTypeHelper ?? new CommandTypeHelper();
             _networkConfig = networkConfig ?? NetworkConfig.Default;
             _eventManager = new ClientEventManager();
             tokenManager = _tokenManager;
             // 初始化请求响应管理相关组件
             _timeoutStatistics = new TimeoutStatisticsManager();
             _errorHandlingStrategyFactory = new ErrorHandlingStrategyFactory();
+
+            #region  扫描注册
+            // 获取PacketSpec程序集
+            var packetSpecAssembly = Assembly.GetAssembly(typeof(RUINORERP.PacketSpec.Commands.ICommand));
+            if (packetSpecAssembly == null)
+            {
+                return;
+            }
+            // 获取UI程序集
+            var uiAssembly = Assembly.GetExecutingAssembly();
+
+            // 扫描并注册命令到命令调度器
+            _commandDispatcher.InitializeAsync(CancellationToken.None, packetSpecAssembly, uiAssembly);
+            #endregion
 
             // 初始化定时清理任务
             _cleanupTimer = new Timer(CleanupTimeoutRequests, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));

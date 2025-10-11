@@ -38,6 +38,11 @@ namespace RUINORERP.Plugin.OfficeAssistant
             dataGridViewDeleted.DataSource = deletedRecordsTable;
             dataGridViewModified.DataSource = modifiedRecordsTable;
             
+            // 设置行号显示
+            dataGridViewAdded.RowPostPaint += DataGridView_RowPostPaint;
+            dataGridViewDeleted.RowPostPaint += DataGridView_RowPostPaint;
+            dataGridViewModified.RowPostPaint += DataGridView_RowPostPaint;
+            
             // 应用颜色标识
             ApplyColorCoding();
         }
@@ -57,15 +62,23 @@ namespace RUINORERP.Plugin.OfficeAssistant
                 }
                 
                 // 添加数据列
+                var columnNames = new List<string>();
                 if (firstRecord.Data != null)
                 {
                     foreach (var key in firstRecord.Data.Keys)
                     {
+                        columnNames.Add(key);
                         addedRecordsTable.Columns.Add(key);
                     }
                 }
                 
+                // 显示进度条
+                progressBar.Visible = true;
+                progressBar.Maximum = comparisonResult.AddedRecords.Count;
+                progressBar.Value = 0;
+                
                 // 添加数据行
+                int rowIndex = 0;
                 foreach (var record in comparisonResult.AddedRecords)
                 {
                     var row = addedRecordsTable.NewRow();
@@ -76,18 +89,31 @@ namespace RUINORERP.Plugin.OfficeAssistant
                         row[i] = record.KeyValues[i];
                     }
                     
-                    // 填充数据值
+                    // 填充数据值 - 按列名正确填充
                     if (record.Data != null)
                     {
-                        var dataValues = record.Data.Values.ToList();
-                        for (int i = 0; i < dataValues.Count; i++)
+                        for (int i = 0; i < columnNames.Count; i++)
                         {
-                            row[firstRecord.KeyValues.Length + i] = dataValues[i]?.ToString() ?? "";
+                            var columnName = columnNames[i];
+                            if (record.Data.ContainsKey(columnName))
+                            {
+                                row[firstRecord.KeyValues.Length + i] = record.Data[columnName]?.ToString() ?? "";
+                            }
                         }
                     }
                     
                     addedRecordsTable.Rows.Add(row);
+                    
+                    // 更新进度条
+                    rowIndex++;
+                    if (rowIndex % 100 == 0 || rowIndex == comparisonResult.AddedRecords.Count) // 每100行或最后一条记录时更新进度条
+                    {
+                        progressBar.Value = Math.Min(rowIndex, progressBar.Maximum);
+                        Application.DoEvents(); // 允许UI更新
+                    }
                 }
+                
+                progressBar.Visible = false;
             }
             else
             {
@@ -114,15 +140,23 @@ namespace RUINORERP.Plugin.OfficeAssistant
                 }
                 
                 // 添加数据列
+                var columnNames = new List<string>();
                 if (firstRecord.Data != null)
                 {
                     foreach (var key in firstRecord.Data.Keys)
                     {
+                        columnNames.Add(key);
                         deletedRecordsTable.Columns.Add(key);
                     }
                 }
                 
+                // 显示进度条
+                progressBar.Visible = true;
+                progressBar.Maximum = comparisonResult.DeletedRecords.Count;
+                progressBar.Value = 0;
+                
                 // 添加数据行
+                int rowIndex = 0;
                 foreach (var record in comparisonResult.DeletedRecords)
                 {
                     var row = deletedRecordsTable.NewRow();
@@ -133,18 +167,31 @@ namespace RUINORERP.Plugin.OfficeAssistant
                         row[i] = record.KeyValues[i];
                     }
                     
-                    // 填充数据值
+                    // 填充数据值 - 按列名正确填充
                     if (record.Data != null)
                     {
-                        var dataValues = record.Data.Values.ToList();
-                        for (int i = 0; i < dataValues.Count; i++)
+                        for (int i = 0; i < columnNames.Count; i++)
                         {
-                            row[firstRecord.KeyValues.Length + i] = dataValues[i]?.ToString() ?? "";
+                            var columnName = columnNames[i];
+                            if (record.Data.ContainsKey(columnName))
+                            {
+                                row[firstRecord.KeyValues.Length + i] = record.Data[columnName]?.ToString() ?? "";
+                            }
                         }
                     }
                     
                     deletedRecordsTable.Rows.Add(row);
+                    
+                    // 更新进度条
+                    rowIndex++;
+                    if (rowIndex % 100 == 0 || rowIndex == comparisonResult.DeletedRecords.Count) // 每100行或最后一条记录时更新进度条
+                    {
+                        progressBar.Value = Math.Min(rowIndex, progressBar.Maximum);
+                        Application.DoEvents(); // 允许UI更新
+                    }
                 }
+                
+                progressBar.Visible = false;
             }
             else
             {
@@ -171,16 +218,24 @@ namespace RUINORERP.Plugin.OfficeAssistant
                 }
                 
                 // 添加差异列
+                var columnNames = new List<string>();
                 if (firstRecord.Differences != null)
                 {
                     foreach (var key in firstRecord.Differences.Keys)
                     {
+                        columnNames.Add(key);
                         modifiedRecordsTable.Columns.Add($"{key}_旧值");
                         modifiedRecordsTable.Columns.Add($"{key}_新值");
                     }
                 }
                 
+                // 显示进度条
+                progressBar.Visible = true;
+                progressBar.Maximum = comparisonResult.ModifiedRecords.Count;
+                progressBar.Value = 0;
+                
                 // 添加数据行
+                int rowIndex = 0;
                 foreach (var record in comparisonResult.ModifiedRecords)
                 {
                     var row = modifiedRecordsTable.NewRow();
@@ -191,20 +246,33 @@ namespace RUINORERP.Plugin.OfficeAssistant
                         row[i] = record.KeyValues[i];
                     }
                     
-                    // 填充差异值
+                    // 填充差异值 - 按列名正确填充
                     if (record.Differences != null)
                     {
-                        var differences = record.Differences.ToList();
-                        for (int i = 0; i < differences.Count; i++)
+                        for (int i = 0; i < columnNames.Count; i++)
                         {
-                            var columnIndex = firstRecord.KeyValues.Length + i * 2;
-                            row[columnIndex] = differences[i].Value.OldValue ?? "";
-                            row[columnIndex + 1] = differences[i].Value.NewValue ?? "";
+                            var columnName = columnNames[i];
+                            if (record.Differences.ContainsKey(columnName))
+                            {
+                                var columnIndex = firstRecord.KeyValues.Length + i * 2;
+                                row[columnIndex] = record.Differences[columnName].OldValue ?? "";
+                                row[columnIndex + 1] = record.Differences[columnName].NewValue ?? "";
+                            }
                         }
                     }
                     
                     modifiedRecordsTable.Rows.Add(row);
+                    
+                    // 更新进度条
+                    rowIndex++;
+                    if (rowIndex % 100 == 0 || rowIndex == comparisonResult.ModifiedRecords.Count) // 每100行或最后一条记录时更新进度条
+                    {
+                        progressBar.Value = Math.Min(rowIndex, progressBar.Maximum);
+                        Application.DoEvents(); // 允许UI更新
+                    }
                 }
+                
+                progressBar.Visible = false;
             }
             else
             {
@@ -244,6 +312,24 @@ namespace RUINORERP.Plugin.OfficeAssistant
                     cell.Style.BackColor = Color.LightYellow;
                 }
             }
+        }
+        
+        /// <summary>
+        /// DataGridView行号绘制事件处理
+        /// </summary>
+        private void DataGridView_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
+        {
+            var grid = sender as DataGridView;
+            var rowIdx = (e.RowIndex + 1).ToString();
+
+            var centerFormat = new StringFormat()
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+
+            var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, grid.RowHeadersWidth, e.RowBounds.Height);
+            e.Graphics.DrawString(rowIdx, this.Font, SystemBrushes.ControlText, headerBounds, centerFormat);
         }
     }
 }

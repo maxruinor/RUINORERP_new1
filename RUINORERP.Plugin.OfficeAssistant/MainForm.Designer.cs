@@ -1,4 +1,4 @@
-﻿﻿namespace RUINORERP.Plugin.OfficeAssistant
+﻿namespace RUINORERP.Plugin.OfficeAssistant
 {
     partial class MainForm
     {
@@ -328,8 +328,8 @@
             // resultDisplayPanel
             // 
             this.resultDisplayPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.resultDisplayPanel.Controls.Add(this.progressBar);
             this.resultDisplayPanel.Controls.Add(this.dgvComparisonResults);
+            this.resultDisplayPanel.Controls.Add(this.progressBar);
             this.resultDisplayPanel.Controls.Add(this.label4);
             this.resultDisplayPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.resultDisplayPanel.Location = new System.Drawing.Point(0, 433);
@@ -339,26 +339,21 @@
             // 
             // progressBar
             // 
-            this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar.Location = new System.Drawing.Point(12, 150);
+            this.progressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.progressBar.Location = new System.Drawing.Point(0, 154);
             this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(984, 21);
+            this.progressBar.Size = new System.Drawing.Size(1006, 21);
             this.progressBar.TabIndex = 2;
             // 
             // dgvComparisonResults
             // 
             this.dgvComparisonResults.AllowUserToAddRows = false;
             this.dgvComparisonResults.AllowUserToDeleteRows = false;
-            this.dgvComparisonResults.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.dgvComparisonResults.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvComparisonResults.Location = new System.Drawing.Point(12, 24);
+            this.dgvComparisonResults.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvComparisonResults.Location = new System.Drawing.Point(0, 21);
             this.dgvComparisonResults.Name = "dgvComparisonResults";
-            this.dgvComparisonResults.ReadOnly = true;
-            this.dgvComparisonResults.RowHeadersVisible = false;
-            this.dgvComparisonResults.Size = new System.Drawing.Size(984, 120);
+            this.dgvComparisonResults.Size = new System.Drawing.Size(1006, 133);
             this.dgvComparisonResults.TabIndex = 1;
             // 
             // label4

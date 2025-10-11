@@ -101,6 +101,11 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
         public List<ModifiedRecord> ModifiedRecords { get; set; } = new List<ModifiedRecord>();
         
         /// <summary>
+        /// 相同记录（键值相同且数据相同）
+        /// </summary>
+        public List<DiffRecord> SameRecords { get; set; } = new List<DiffRecord>();
+        
+        /// <summary>
         /// 对比摘要
         /// </summary>
         public ComparisonSummary Summary { get; set; }
@@ -117,7 +122,7 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
         public string[] KeyValues { get; set; }
         
         /// <summary>
-        /// 数据
+        /// 数据，键为列名，值为对应的数据值
         /// </summary>
         public Dictionary<string, object> Data { get; set; }
     }
@@ -133,7 +138,7 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
         public string[] KeyValues { get; set; }
         
         /// <summary>
-        /// 差异
+        /// 差异，键为列名，值为新旧值的对比
         /// </summary>
         public Dictionary<string, ValueDifference> Differences { get; set; }
     }

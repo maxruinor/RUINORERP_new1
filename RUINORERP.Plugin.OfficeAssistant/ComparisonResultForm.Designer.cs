@@ -35,6 +35,7 @@ namespace RUINORERP.Plugin.OfficeAssistant
             this.dataGridViewDeleted = new System.Windows.Forms.DataGridView();
             this.tabPageModified = new System.Windows.Forms.TabPage();
             this.dataGridViewModified = new System.Windows.Forms.DataGridView();
+            this.progressBar = new System.Windows.Forms.ProgressBar();
             this.tabControl.SuspendLayout();
             this.tabPageAdded.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewAdded)).BeginInit();
@@ -73,6 +74,7 @@ namespace RUINORERP.Plugin.OfficeAssistant
             this.dataGridViewAdded.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewAdded.Location = new System.Drawing.Point(3, 3);
             this.dataGridViewAdded.Name = "dataGridViewAdded";
+            this.dataGridViewAdded.RowHeadersVisible = true;
             this.dataGridViewAdded.Size = new System.Drawing.Size(786, 418);
             this.dataGridViewAdded.TabIndex = 0;
             // 
@@ -93,6 +95,7 @@ namespace RUINORERP.Plugin.OfficeAssistant
             this.dataGridViewDeleted.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewDeleted.Location = new System.Drawing.Point(3, 3);
             this.dataGridViewDeleted.Name = "dataGridViewDeleted";
+            this.dataGridViewDeleted.RowHeadersVisible = true;
             this.dataGridViewDeleted.Size = new System.Drawing.Size(786, 418);
             this.dataGridViewDeleted.TabIndex = 0;
             // 
@@ -113,14 +116,25 @@ namespace RUINORERP.Plugin.OfficeAssistant
             this.dataGridViewModified.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewModified.Location = new System.Drawing.Point(3, 3);
             this.dataGridViewModified.Name = "dataGridViewModified";
+            this.dataGridViewModified.RowHeadersVisible = true;
             this.dataGridViewModified.Size = new System.Drawing.Size(786, 418);
             this.dataGridViewModified.TabIndex = 0;
+            // 
+            // progressBar
+            // 
+            this.progressBar.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.progressBar.Location = new System.Drawing.Point(0, 420);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(800, 30);
+            this.progressBar.TabIndex = 1;
+            this.progressBar.Visible = false;
             // 
             // ComparisonResultForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.progressBar);
             this.Controls.Add(this.tabControl);
             this.Name = "ComparisonResultForm";
             this.Text = "数据对比详细结果";
@@ -144,5 +158,6 @@ namespace RUINORERP.Plugin.OfficeAssistant
         private System.Windows.Forms.DataGridView dataGridViewDeleted;
         private System.Windows.Forms.TabPage tabPageModified;
         private System.Windows.Forms.DataGridView dataGridViewModified;
+        private System.Windows.Forms.ProgressBar progressBar;
     }
 }

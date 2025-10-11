@@ -42,7 +42,7 @@ namespace RUINORERP.Server.Network.Commands
             _sessionService = sessionService; // 暂时注释，缺少ISessionService接口定义
             
             // 使用安全方法设置支持的命令
-            SetSupportedCommands(SystemCommands.Heartbeat.FullCode);
+            SetSupportedCommands(SystemCommands.Heartbeat);
         }
 
         /// <summary>

@@ -33,7 +33,7 @@ namespace RUINORERP.Server.Network.Commands
             _logger = logger;
             _sessionService = sessionService;
             _cachePaginationService = cachePaginationService;
-            SetSupportedCommands(CacheCommands.CacheDataList.FullCode);
+            SetSupportedCommands(CacheCommands.CacheDataList);
         }
 
         protected override async Task<BaseCommand<IResponse>> OnHandleAsync(

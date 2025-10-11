@@ -63,12 +63,12 @@ namespace RUINORERP.Server.Network.Commands
             
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
-                AuthenticationCommands.Login.FullCode,
-                AuthenticationCommands.LoginRequest.FullCode,
-                AuthenticationCommands.Logout.FullCode,
-                AuthenticationCommands.ValidateToken.FullCode,
-                AuthenticationCommands.RefreshToken.FullCode,
-                AuthenticationCommands.PrepareLogin.FullCode
+                AuthenticationCommands.Login,
+                AuthenticationCommands.LoginRequest,
+                AuthenticationCommands.Logout,
+                AuthenticationCommands.ValidateToken,
+                AuthenticationCommands.RefreshToken,
+                AuthenticationCommands.PrepareLogin
             );
         }
 

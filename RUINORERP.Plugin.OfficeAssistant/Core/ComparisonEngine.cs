@@ -8,10 +8,21 @@ using RUINORERP.Plugin.OfficeAssistant.Shared;
 namespace RUINORERP.Plugin.OfficeAssistant.Core
 {
     /// <summary>
+    /// 进度报告委托
+    /// </summary>
+    /// <param name="percentage">进度百分比</param>
+    public delegate void ProgressReportHandler(int percentage);
+
+    /// <summary>
     /// Excel对比引擎
     /// </summary>
     public class ComparisonEngine
     {
+        /// <summary>
+        /// 进度报告事件
+        /// </summary>
+        public event ProgressReportHandler ProgressReport;
+
         /// <summary>
         /// 执行Excel文件对比
         /// </summary>
@@ -23,14 +34,23 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
         {
             try
             {
+                // 报告进度20%
+                OnProgressReport(20);
+
                 // 读取文件数据
                 var oldData = ExcelHelper.ReadExcelData(oldFile, config.OldWorksheetName);
                 var newData = ExcelHelper.ReadExcelData(newFile, config.NewWorksheetName);
                 
+                // 报告进度30%
+                OnProgressReport(30);
+
                 // 构建索引
                 var oldIndex = BuildIndex(oldData, config.OldKeyColumns);
                 var newIndex = BuildIndex(newData, config.NewKeyColumns);
                 
+                // 报告进度40%
+                OnProgressReport(40);
+
                 // 执行对比
                 var result = new ComparisonResult();
                 
@@ -41,6 +61,8 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
                         result.AddedRecords = FindAddedRecords(oldIndex, newIndex, config);  // 新增：新文件中有但旧文件中没有
                         result.DeletedRecords = FindDeletedRecords(oldIndex, newIndex, config);  // 删除：旧文件中有但新文件中没有
                         result.ModifiedRecords = new List<ModifiedRecord>(); // 存在性检查不检查数据修改
+                        // 查找相同键值的记录
+                        result.SameRecords = FindSameRecords(oldIndex, newIndex, config);
                         break;
                         
                     case ComparisonMode.DataDifference:
@@ -48,6 +70,7 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
                         result.AddedRecords = FindAddedRecords(oldIndex, newIndex, config);
                         result.DeletedRecords = FindDeletedRecords(oldIndex, newIndex, config);
                         result.ModifiedRecords = FindModifiedRecords(oldIndex, newIndex, config);
+                        result.SameRecords = new List<DiffRecord>(); // 数据差异模式下不返回相同记录
                         break;
                         
                     case ComparisonMode.CustomColumns:
@@ -55,6 +78,7 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
                         result.AddedRecords = FindAddedRecords(oldIndex, newIndex, config);
                         result.DeletedRecords = FindDeletedRecords(oldIndex, newIndex, config);
                         result.ModifiedRecords = FindModifiedRecords(oldIndex, newIndex, config);
+                        result.SameRecords = new List<DiffRecord>(); // 自定义列对比模式下不返回相同记录
                         break;
                         
                     default:
@@ -62,9 +86,13 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
                         result.AddedRecords = FindAddedRecords(oldIndex, newIndex, config);
                         result.DeletedRecords = FindDeletedRecords(oldIndex, newIndex, config);
                         result.ModifiedRecords = FindModifiedRecords(oldIndex, newIndex, config);
+                        result.SameRecords = new List<DiffRecord>(); // 默认模式下不返回相同记录
                         break;
                 }
                 
+                // 报告进度90%
+                OnProgressReport(90);
+
                 // 生成摘要
                 result.Summary = new ComparisonSummary
                 {
@@ -75,12 +103,24 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
                     ModifiedCount = result.ModifiedRecords.Count
                 };
                 
+                // 报告进度100%
+                OnProgressReport(100);
+                
                 return result;
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException($"对比过程中发生错误: {ex.Message}", ex);
             }
+        }
+        
+        /// <summary>
+        /// 触发进度报告事件
+        /// </summary>
+        /// <param name="percentage">进度百分比</param>
+        private void OnProgressReport(int percentage)
+        {
+            ProgressReport?.Invoke(percentage);
         }
         
         /// <summary>
@@ -92,13 +132,24 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
         private Dictionary<string, DataRow> BuildIndex(DataTable data, List<int> keyColumns)
         {
             var index = new Dictionary<string, DataRow>();
+            int totalRows = data.Rows.Count;
             
-            foreach (DataRow row in data.Rows)
+            for (int i = 0; i < totalRows; i++)
             {
+                DataRow row = data.Rows[i];
                 var key = GenerateKey(row, keyColumns);
-                if (!index.ContainsKey(key))
+                // 注意：如果有重复的键值，后面的行会覆盖前面的行
+                // 这是预期的行为，因为键值应该唯一标识一条记录
+                index[key] = row;
+                
+                // 每处理10行报告一次进度，使进度更新更频繁
+                if (i % 10 == 0 && totalRows > 0)
                 {
-                    index[key] = row;
+                    // 进度范围：30-40%
+                    int progress = 30 + (i * 10 / totalRows);
+                    // 确保进度在合理范围内
+                    progress = Math.Min(40, Math.Max(30, progress));
+                    OnProgressReport(progress);
                 }
             }
             
@@ -137,6 +188,8 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
             ComparisonConfig config)
         {
             var addedRecords = new List<DiffRecord>();
+            int totalRecords = newIndex.Count;
+            int processedCount = 0;
             
             foreach (var kvp in newIndex)
             {
@@ -148,6 +201,17 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
                         Data = ConvertRowToDictionary(kvp.Value)
                     };
                     addedRecords.Add(record);
+                }
+                
+                processedCount++;
+                // 每处理5条记录报告一次进度，使进度更新更频繁
+                if (processedCount % 5 == 0 && totalRecords > 0)
+                {
+                    // 进度范围：40-50%
+                    int progress = 40 + (processedCount * 10 / totalRecords);
+                    // 确保进度在合理范围内
+                    progress = Math.Min(50, Math.Max(40, progress));
+                    OnProgressReport(progress);
                 }
             }
             
@@ -167,6 +231,8 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
             ComparisonConfig config)
         {
             var deletedRecords = new List<DiffRecord>();
+            int totalRecords = oldIndex.Count;
+            int processedCount = 0;
             
             foreach (var kvp in oldIndex)
             {
@@ -178,6 +244,17 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
                         Data = ConvertRowToDictionary(kvp.Value)
                     };
                     deletedRecords.Add(record);
+                }
+                
+                processedCount++;
+                // 每处理5条记录报告一次进度，使进度更新更频繁
+                if (processedCount % 5 == 0 && totalRecords > 0)
+                {
+                    // 进度范围：50-60%
+                    int progress = 50 + (processedCount * 10 / totalRecords);
+                    // 确保进度在合理范围内
+                    progress = Math.Min(60, Math.Max(50, progress));
+                    OnProgressReport(progress);
                 }
             }
             
@@ -197,6 +274,8 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
             ComparisonConfig config)
         {
             var modifiedRecords = new List<ModifiedRecord>();
+            int totalRecords = newIndex.Count;
+            int processedCount = 0;
             
             foreach (var kvp in newIndex)
             {
@@ -215,6 +294,17 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
                         };
                         modifiedRecords.Add(record);
                     }
+                }
+                
+                processedCount++;
+                // 每处理5条记录报告一次进度，使进度更新更频繁
+                if (processedCount % 5 == 0 && totalRecords > 0)
+                {
+                    // 进度范围：60-75%
+                    int progress = 60 + (processedCount * 15 / totalRecords);
+                    // 确保进度在合理范围内
+                    progress = Math.Min(75, Math.Max(60, progress));
+                    OnProgressReport(progress);
                 }
             }
             
@@ -306,9 +396,55 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
             var dict = new Dictionary<string, object>();
             for (int i = 0; i < row.ItemArray.Length; i++)
             {
-                dict[$"列{i}"] = row[i];
+                // 使用列名作为键，而不是"列{i}"格式
+                var columnName = row.Table.Columns[i].ColumnName;
+                dict[columnName] = row[i];
             }
             return dict;
+        }
+        
+        /// <summary>
+        /// 查找相同记录（键值相同）
+        /// </summary>
+        /// <param name="oldIndex">旧数据索引</param>
+        /// <param name="newIndex">新数据索引</param>
+        /// <param name="config">对比配置</param>
+        /// <returns>相同记录列表</returns>
+        private List<DiffRecord> FindSameRecords(
+            Dictionary<string, DataRow> oldIndex, 
+            Dictionary<string, DataRow> newIndex, 
+            ComparisonConfig config)
+        {
+            var sameRecords = new List<DiffRecord>();
+            int totalRecords = newIndex.Count;
+            int processedCount = 0;
+            
+            foreach (var kvp in newIndex)
+            {
+                if (oldIndex.ContainsKey(kvp.Key))
+                {
+                    // 键值相同，添加到相同记录列表
+                    var record = new DiffRecord
+                    {
+                        KeyValues = kvp.Key.Split('|'),
+                        Data = ConvertRowToDictionary(kvp.Value)
+                    };
+                    sameRecords.Add(record);
+                }
+                
+                processedCount++;
+                // 每处理5条记录报告一次进度，使进度更新更频繁
+                if (processedCount % 5 == 0 && totalRecords > 0)
+                {
+                    // 进度范围：75-85%
+                    int progress = 75 + (processedCount * 10 / totalRecords);
+                    // 确保进度在合理范围内
+                    progress = Math.Min(85, Math.Max(75, progress));
+                    OnProgressReport(progress);
+                }
+            }
+            
+            return sameRecords;
         }
     }
 }

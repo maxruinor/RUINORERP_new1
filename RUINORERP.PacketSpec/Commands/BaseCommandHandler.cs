@@ -89,24 +89,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public virtual IReadOnlyList<CommandId> SupportedCommands { get; protected set; } = Array.Empty<CommandId>();
 
-        /// <summary>
-        /// 安全设置支持的命令列表 - uint版本（向后兼容）
-        /// </summary>
-        /// <param name="commands">命令代码列表（uint格式）</param>
-        protected void SetSupportedCommands(params uint[] commands)
-        {
-            if (commands == null || commands.Length == 0)
-            {
-                SupportedCommands = Array.Empty<CommandId>();
-                Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
-                return;
-            }
-            
-            // 将uint转换为CommandId
-            var commandIds = commands.Select(cmd => CommandId.FromUInt16((ushort)cmd)).ToList();
-            SupportedCommands = commandIds;
-            Logger?.LogDebug($"处理器 {Name} 设置支持 {commands.Length} 个命令: {string.Join(", ", commands.Select(c => $"0x{c:X4}"))}");
-        }
+        
 
         /// <summary>
         /// 安全设置支持的命令列表 - CommandId版本
@@ -150,33 +133,7 @@ namespace RUINORERP.PacketSpec.Commands
             Logger?.LogDebug($"处理器 {Name} 设置支持 {commandList.Count} 个命令: {string.Join(", ", commandList.Select(c => $"{c.Name}(0x{c.FullCode:X4})"))}");
         }
 
-        /// <summary>
-        /// 安全设置支持的命令列表 - uint集合版本（向后兼容）
-        /// </summary>
-        /// <param name="commands">命令代码列表（uint格式集合）</param>
-        protected void SetSupportedCommands(IEnumerable<uint> commands)
-        {
-            if (commands == null)
-            {
-                SupportedCommands = Array.Empty<CommandId>();
-                Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
-                return;
-            }
-            
-            var commandList = commands.ToList();
-            if (commandList.Count == 0)
-            {
-                SupportedCommands = Array.Empty<CommandId>();
-                Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
-                return;
-            }
-            
-            // 将uint转换为CommandId
-            var commandIds = commandList.Select(cmd => CommandId.FromUInt16((ushort)cmd)).ToList();
-            SupportedCommands = commandIds;
-            Logger?.LogDebug($"处理器 {Name} 设置支持 {commandList.Count} 个命令: {string.Join(", ", commandList.Select(c => $"0x{c:X4}"))}");
-        }
-
+       
         /// <summary>
         /// 处理器状态
         /// </summary>

@@ -127,16 +127,10 @@ namespace RUINORERP.Plugin.OfficeAssistant.Shared
                     // 读取数据行
                     var rows = worksheet.RowsUsed().Skip(1); // 跳过标题行
                     
-                    // 检查每列是否有数据，过滤掉完全为空的列（只检查前几行以提高性能）
-                    var emptyColumns = CheckEmptyColumns(rows, columnHeaders, maxRows);
-                    
-                    // 添加列到DataTable（跳过空列）
+                    // 不再过滤空列，保留所有列以确保数据完整性
+                    // 添加所有列到DataTable
                     for (int i = 0; i < columnHeaders.Count; i++)
                     {
-                        // 跳过空列
-                        if (emptyColumns.Contains(i))
-                            continue;
-                            
                         var columnName = columnHeaders[i];
                         // 确保列名唯一
                         if (dataTable.Columns.Contains(columnName))
@@ -157,27 +151,21 @@ namespace RUINORERP.Plugin.OfficeAssistant.Shared
                         var dataRow = dataTable.NewRow();
                         var cells = row.Cells().ToList();
                         
-                        // 重新计算非空列的索引
-                        int actualColIndex = 0;
+                        // 为每一列填充数据
                         for (int colIndex = 0; colIndex < columnHeaders.Count; colIndex++)
                         {
-                            // 跳过空列
-                            if (emptyColumns.Contains(colIndex))
-                                continue;
-                            
                             // 正确地从cells中获取数据
                             // 需要找到对应列号的单元格
                             var cell = cells.FirstOrDefault(c => c.Address.ColumnNumber == (colIndex + 1));
                             if (cell != null)
                             {
-                                dataRow[actualColIndex] = cell.Value;
+                                dataRow[colIndex] = cell.Value;
                             }
                             else
                             {
                                 // 如果单元格不存在或为空，设置为空值
-                                dataRow[actualColIndex] = DBNull.Value;
+                                dataRow[colIndex] = DBNull.Value;
                             }
-                            actualColIndex++;
                         }
                         dataTable.Rows.Add(dataRow);
                         rowCount++;
@@ -215,58 +203,6 @@ namespace RUINORERP.Plugin.OfficeAssistant.Shared
         {
             // 在线程池中执行耗时操作
             return await Task.Run(() => ReadExcelData(filePath, maxRows, worksheetName));
-        }
-
-        /// <summary>
-        /// 检查空列
-        /// </summary>
-        /// <param name="rows">行集合</param>
-        /// <param name="columnHeaders">列头</param>
-        /// <param name="maxRows">最大检查行数</param>
-        /// <returns>空列索引集合</returns>
-        private static HashSet<int> CheckEmptyColumns(IEnumerable<IXLRow> rows, List<string> columnHeaders, int maxRows)
-        {
-            var emptyColumns = new HashSet<int>();
-            
-            // 检查每一列是否为空列
-            for (int i = 0; i < columnHeaders.Count; i++)
-            {
-                // 如果标题为空，则检查数据行是否也全部为空
-                if (string.IsNullOrEmpty(columnHeaders[i]))
-                {
-                    // 标题为空，检查数据行是否也全部为空
-                    bool hasData = false;
-                    int checkRowCount = 0;
-                    int maxCheckRows = maxRows > 0 ? Math.Min(maxRows, 100) : 100; // 最多检查100行
-                    
-                    foreach (var row in rows)
-                    {
-                        if (checkRowCount >= maxCheckRows)
-                            break;
-                            
-                        var cells = row.Cells().ToList();
-                        if (i < cells.Count)
-                        {
-                            var cellValue = cells[i].Value;
-                            if (cellValue.ToString() != string.Empty)
-                            {
-                                hasData = true;
-                                break;
-                            }
-                        }
-                        checkRowCount++;
-                    }
-                    
-                    // 如果标题和数据行都为空，则认为是空列
-                    if (!hasData)
-                    {
-                        emptyColumns.Add(i);
-                    }
-                }
-                // 如果标题不为空，则不管数据行是否为空，都不认为是空列
-            }
-            
-            return emptyColumns;
         }
 
         /// <summary>

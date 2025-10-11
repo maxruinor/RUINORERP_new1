@@ -74,14 +74,15 @@ namespace RUINORERP.UI.Network.DI
             
             // 注册业务服务 使用瞬态
             services.AddTransient<UserLoginService>();
-           // services.AddTransient<CacheClientService>();
+           services.AddTransient<TypedCacheClientService>();
+            // services.AddTransient<CacheClientService>();
             //services.AddTransient<CacheSyncService>();
             //services.AddTransient<MessageNotificationService>();
-            
-            
+
+
         }
 
- 
+
         /// <summary>
         /// 配置Network服务Autofac容器
         /// </summary>
@@ -121,12 +122,13 @@ namespace RUINORERP.UI.Network.DI
             
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
+            builder.RegisterType<TypedCacheClientService>().AsSelf().SingleInstance();
             //builder.RegisterType<CacheClientService>().AsSelf().SingleInstance();
             //builder.RegisterType<CacheSyncService>().AsSelf().InstancePerDependency();
             //builder.RegisterType<MessageNotificationService>().AsSelf().InstancePerDependency();
-            
-              
-            
+
+
+
             // 移除RegisterBuildCallback回调，因为我们已经通过构造函数注入解决了循环依赖问题
         }
 

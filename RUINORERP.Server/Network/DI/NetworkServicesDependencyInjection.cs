@@ -29,8 +29,10 @@ namespace RUINORERP.Server.Network.DI
             // services.AddSingleton<IUnifiedPacketSpecService, UnifiedPacketSpecService>();
             //   services.AddSingleton<UnifiedCommunicationProcessor>();
             // 注册缓存服务
-            //services.AddSingleton<CacheService>();
 
+            // TypedCacheCommandHandler是泛型类，不能直接注册
+            // 它将在需要时通过依赖注入容器创建
+            services.AddSingleton<CachePaginationService>();
             // 注册会话管理服务
             services.AddSingleton<SessionService>();
             services.AddSingleton<ISessionService, SessionService>();

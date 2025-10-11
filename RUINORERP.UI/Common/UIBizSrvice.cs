@@ -1466,9 +1466,11 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static void RequestCache<T>()
+        public static async void RequestCache<T>()
         {
             RequestCache(typeof(T).Name, typeof(T));
+            TypedCacheClientService cacheClient = Startup.GetFromFac<TypedCacheClientService>();
+            await cacheClient.GetTypedCacheAsync<T>(typeof(T).Name);
         }
 
         public static void RequestCache(Type type)
@@ -1485,8 +1487,7 @@ namespace RUINORERP.UI.Common
                 if (NeedRequesCache(rslist, tableName) && BizCacheHelper.Instance.typeNames.Contains(tableName))
                 {// 临时代码：标记需要完善的部分
 
-                    //CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
-                   // await cacheClient.RequestCacheAsync(tableName);
+        
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
                     //ClientService.请求缓存(tableName);
                 }

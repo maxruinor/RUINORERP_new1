@@ -40,6 +40,27 @@ namespace RUINORERP.Plugin.OfficeAssistant
             
             // 注册窗体关闭事件
             this.FormClosing += MainForm_FormClosing;
+            
+            // 注册dgvComparisonResults的行号绘制事件
+            dgvComparisonResults.RowPostPaint += DataGridView_RowPostPaint;
+        }
+        
+        /// <summary>
+        /// DataGridView行号绘制事件处理
+        /// </summary>
+        private void DataGridView_RowPostPaint(object sender, DataGridViewRowPostPaintEventArgs e)
+        {
+            var grid = sender as DataGridView;
+            var rowIdx = (e.RowIndex + 1).ToString();
+
+            var centerFormat = new StringFormat()
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+
+            var headerBounds = new Rectangle(e.RowBounds.Left, e.RowBounds.Top, grid.RowHeadersWidth, e.RowBounds.Height);
+            e.Graphics.DrawString(rowIdx, this.Font, SystemBrushes.ControlText, headerBounds, centerFormat);
         }
         
         /// <summary>
@@ -533,11 +554,9 @@ namespace RUINORERP.Plugin.OfficeAssistant
         /// </summary>
         private void PopulateColumnLists()
         {
-            // 清空现有列表
+            // 只清空和填充列名列表，保留键列和比较列映射
             lstOldColumns.Items.Clear();
             lstNewColumns.Items.Clear();
-            lstKeyColumns.Items.Clear();
-            lstCompareColumns.Items.Clear();
             
             // 填充旧文件列名
             if (oldFileData != null)
@@ -1099,11 +1118,25 @@ namespace RUINORERP.Plugin.OfficeAssistant
                         var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
                         if (parts.Length != 2)
                         {
-                            MessageBox.Show($"比较列映射 '{mapping}' 格式不正确，请重新设置比较列映射。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show($"比较列映射 '{mapping}' 格式不正确，请重新设置比较列映射。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return;
                         }
                     }
                 }
+
+                // 显示进度条并初始化为0
+                progressBar.Visible = true;
+                progressBar.Style = ProgressBarStyle.Continuous;
+                progressBar.Value = 0;
+                progressBar.Maximum = 100;
+                Application.DoEvents();
+
+                // 短暂延迟以确保UI更新
+                System.Threading.Thread.Sleep(50);
+
+                // 更新进度到10%
+                progressBar.Value = 10;
+                Application.DoEvents();
 
                 // 构建对比配置
                 var config = new Core.ComparisonConfig
@@ -1120,13 +1153,36 @@ namespace RUINORERP.Plugin.OfficeAssistant
                     Mode = GetComparisonMode()
                 };
 
-                // 解析键列映射
+                // 更新进度到20%
+                progressBar.Value = 20;
+                Application.DoEvents();
+
+                // 检查并解析键列映射
                 foreach (var item in lstKeyColumns.Items)
                 {
                     var mapping = item.ToString();
                     var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
                     if (parts.Length == 2)
                     {
+                        // 检查列是否存在于数据表中
+                        if (!oldFileData.Columns.Contains(parts[0]))
+                        {
+                            // 隐藏进度条
+                            progressBar.Visible = false;
+                            MessageBox.Show($"键列映射 '{mapping}' 中的旧数据列 '{parts[0]}' 在旧数据文件中未找到，请检查列名是否正确", 
+                                "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                        
+                        if (!newFileData.Columns.Contains(parts[1]))
+                        {
+                            // 隐藏进度条
+                            progressBar.Visible = false;
+                            MessageBox.Show($"键列映射 '{mapping}' 中的新数据列 '{parts[1]}' 在新数据文件中未找到，请检查列名是否正确", 
+                                "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                        
                         var oldColumnIndex = oldFileData.Columns.IndexOf(parts[0]);
                         var newColumnIndex = newFileData.Columns.IndexOf(parts[1]);
                         
@@ -1137,6 +1193,8 @@ namespace RUINORERP.Plugin.OfficeAssistant
                         }
                         else
                         {
+                            // 隐藏进度条
+                            progressBar.Visible = false;
                             MessageBox.Show($"键列映射 '{mapping}' 中的列在数据中未找到，请检查列名是否正确", 
                                 "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return;
@@ -1144,13 +1202,36 @@ namespace RUINORERP.Plugin.OfficeAssistant
                     }
                 }
 
-                // 解析比较列映射
+                // 更新进度到60%
+                progressBar.Value = 60;
+                Application.DoEvents();
+
+                // 检查并解析比较列映射
                 foreach (var item in lstCompareColumns.Items)
                 {
                     var mapping = item.ToString();
                     var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
                     if (parts.Length == 2)
                     {
+                        // 检查列是否存在于数据表中
+                        if (!oldFileData.Columns.Contains(parts[0]))
+                        {
+                            // 隐藏进度条
+                            progressBar.Visible = false;
+                            MessageBox.Show($"比较列映射 '{mapping}' 中的旧数据列 '{parts[0]}' 在旧数据文件中未找到，请检查列名是否正确", 
+                                "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                        
+                        if (!newFileData.Columns.Contains(parts[1]))
+                        {
+                            // 隐藏进度条
+                            progressBar.Visible = false;
+                            MessageBox.Show($"比较列映射 '{mapping}' 中的新数据列 '{parts[1]}' 在新数据文件中未找到，请检查列名是否正确", 
+                                "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                        
                         var oldColumnIndex = oldFileData.Columns.IndexOf(parts[0]);
                         var newColumnIndex = newFileData.Columns.IndexOf(parts[1]);
                         
@@ -1162,12 +1243,18 @@ namespace RUINORERP.Plugin.OfficeAssistant
                         }
                         else
                         {
+                            // 隐藏进度条
+                            progressBar.Visible = false;
                             MessageBox.Show($"比较列映射 '{mapping}' 中的列在数据中未找到，请检查列名是否正确", 
                                 "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return;
                         }
                     }
                 }
+
+                // 更新进度到70%
+                progressBar.Value = 70;
+                Application.DoEvents();
 
                 // 如果没有指定比较列，则比较所有列（除了键列）
                 if (config.OldCompareColumns.Count == 0)
@@ -1195,12 +1282,47 @@ namespace RUINORERP.Plugin.OfficeAssistant
                     }
                 }
 
+                // 更新进度到80%
+                progressBar.Value = 80;
+                Application.DoEvents();
+
                 // 执行对比
                 var engine = new Core.ComparisonEngine();
+                // 记录开始时间，用于计算预计剩余时间
+                var startTime = DateTime.Now;
+                
+                // 订阅进度报告事件
+                engine.ProgressReport += (percentage) =>
+                {
+                    // 确保进度值在合理范围内
+                    if (percentage >= 20 && percentage <= 100)
+                    {
+                        // 计算预计剩余时间
+                        var elapsed = DateTime.Now - startTime;
+                        var progressRatio = (percentage - 20) / 80.0;
+                        if (progressRatio > 0)
+                        {
+                            var estimatedTotalTime = TimeSpan.FromMilliseconds(elapsed.TotalMilliseconds / progressRatio);
+                            var remainingTime = estimatedTotalTime - elapsed;
+                            
+                            // 更新进度条值
+                            progressBar.Value = Math.Min(100, Math.Max(20, percentage));
+                            Application.DoEvents();
+                        }
+                    }
+                };
                 var result = engine.Compare(txtOldFilePath.Text, txtNewFilePath.Text, config);
 
                 // 在主界面显示结果摘要
                 DisplayResultSummary(result);
+
+                // 更新进度到100%
+                progressBar.Value = 100;
+                Application.DoEvents();
+
+                // 短暂延迟后隐藏进度条
+                System.Threading.Thread.Sleep(100);
+                progressBar.Visible = false;
 
                 // 显示结果摘要
                 var summaryMessage = $"对比完成:\n" +
@@ -1222,6 +1344,8 @@ namespace RUINORERP.Plugin.OfficeAssistant
             }
             catch (Exception ex)
             {
+                // 隐藏进度条
+                progressBar.Visible = false;
                 MessageBox.Show($"对比过程中发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -1398,11 +1522,17 @@ namespace RUINORERP.Plugin.OfficeAssistant
             // 创建详细对比数据表
             var comparisonTable = new DataTable();
             
-            // 添加键列
-            int keyColumnCount = result.AddedRecords.FirstOrDefault()?.KeyValues?.Length ?? 0;
-            for (int i = 0; i < keyColumnCount; i++)
+            // 添加键列 - 使用实际的键列名称
+            var keyColumnNames = new List<string>();
+            foreach (var item in lstKeyColumns.Items)
             {
-                comparisonTable.Columns.Add($"键{i + 1}");
+                var mapping = item.ToString();
+                var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
+                if (parts.Length == 2)
+                {
+                    keyColumnNames.Add(parts[0]); // 使用旧数据文件中的列名
+                    comparisonTable.Columns.Add($"[键]{parts[0]}");
+                }
             }
             
             // 如果有比较列配置，添加新旧数据列
@@ -1420,27 +1550,46 @@ namespace RUINORERP.Plugin.OfficeAssistant
                 }
             }
             
+            // 获取当前对比模式
+            var currentMode = GetComparisonMode();
+            
             // 添加新增记录（新有旧没有）
             foreach (var record in result.AddedRecords)
             {
                 var row = comparisonTable.NewRow();
                 
                 // 填充键值
-                for (int i = 0; i < record.KeyValues?.Length; i++)
+                for (int i = 0; i < record.KeyValues?.Length && i < keyColumnNames.Count; i++)
                 {
                     row[i] = record.KeyValues[i];
                 }
                 
                 // 填充新数据值（旧数据列留空）
-                int columnIndex = record.KeyValues?.Length ?? 0;
-                if (record.Data != null)
+                int columnIndex = keyColumnNames.Count;
+                if (record.Data != null && lstCompareColumns.Items.Count > 0)
                 {
-                    var dataValues = record.Data.Values.ToList();
-                    for (int i = 0; i < dataValues.Count; i++)
+                    // 按列名正确填充数据
+                    int dataColumnIndex = 0;
+                    foreach (var item in lstCompareColumns.Items)
                     {
-                        // 旧数据列留空，新数据列填值
-                        row[columnIndex + i * 2] = ""; // 旧数据列
-                        row[columnIndex + i * 2 + 1] = dataValues[i]?.ToString() ?? ""; // 新数据列
+                        var mapping = item.ToString();
+                        var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
+                        if (parts.Length == 2)
+                        {
+                            // 旧数据列留空，新数据列填值
+                            row[columnIndex + dataColumnIndex * 2] = ""; // 旧数据列
+                            
+                            // 使用新数据文件中的列名查找数据
+                            if (record.Data.ContainsKey(parts[1]))
+                            {
+                                row[columnIndex + dataColumnIndex * 2 + 1] = record.Data[parts[1]]?.ToString() ?? ""; // 新数据列
+                            }
+                            else
+                            {
+                                row[columnIndex + dataColumnIndex * 2 + 1] = ""; // 新数据列
+                            }
+                            dataColumnIndex++;
+                        }
                     }
                 }
                 
@@ -1453,51 +1602,128 @@ namespace RUINORERP.Plugin.OfficeAssistant
                 var row = comparisonTable.NewRow();
                 
                 // 填充键值
-                for (int i = 0; i < record.KeyValues?.Length; i++)
+                for (int i = 0; i < record.KeyValues?.Length && i < keyColumnNames.Count; i++)
                 {
                     row[i] = record.KeyValues[i];
                 }
                 
                 // 填充旧数据值（新数据列留空）
-                int columnIndex = record.KeyValues?.Length ?? 0;
-                if (record.Data != null)
+                int columnIndex = keyColumnNames.Count;
+                if (record.Data != null && lstCompareColumns.Items.Count > 0)
                 {
-                    var dataValues = record.Data.Values.ToList();
-                    for (int i = 0; i < dataValues.Count; i++)
+                    // 按列名正确填充数据
+                    int dataColumnIndex = 0;
+                    foreach (var item in lstCompareColumns.Items)
                     {
-                        // 旧数据列填值，新数据列留空
-                        row[columnIndex + i * 2] = dataValues[i]?.ToString() ?? ""; // 旧数据列
-                        row[columnIndex + i * 2 + 1] = ""; // 新数据列
+                        var mapping = item.ToString();
+                        var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
+                        if (parts.Length == 2)
+                        {
+                            // 旧数据列填值，新数据列留空
+                            // 使用旧数据文件中的列名查找数据
+                            if (record.Data.ContainsKey(parts[0]))
+                            {
+                                row[columnIndex + dataColumnIndex * 2] = record.Data[parts[0]]?.ToString() ?? ""; // 旧数据列
+                            }
+                            else
+                            {
+                                row[columnIndex + dataColumnIndex * 2] = ""; // 旧数据列
+                            }
+                            row[columnIndex + dataColumnIndex * 2 + 1] = ""; // 新数据列
+                            dataColumnIndex++;
+                        }
                     }
                 }
                 
                 comparisonTable.Rows.Add(row);
             }
             
-            // 添加修改记录（两边都有但值不同）
-            foreach (var record in result.ModifiedRecords)
+            // 添加修改记录（两边都有但值不同）- 仅在数据差异模式下显示
+            if (currentMode != Core.ComparisonMode.ExistenceCheck)
             {
-                var row = comparisonTable.NewRow();
-                
-                // 填充键值
-                for (int i = 0; i < record.KeyValues?.Length; i++)
+                foreach (var record in result.ModifiedRecords)
                 {
-                    row[i] = record.KeyValues[i];
-                }
-                
-                // 填充差异值
-                int columnIndex = record.KeyValues?.Length ?? 0;
-                if (record.Differences != null)
-                {
-                    var differences = record.Differences.ToList();
-                    for (int i = 0; i < differences.Count; i++)
+                    var row = comparisonTable.NewRow();
+                    
+                    // 填充键值
+                    for (int i = 0; i < record.KeyValues?.Length && i < keyColumnNames.Count; i++)
                     {
-                        row[columnIndex + i * 2] = differences[i].Value.OldValue ?? ""; // 旧数据列
-                        row[columnIndex + i * 2 + 1] = differences[i].Value.NewValue ?? ""; // 新数据列
+                        row[i] = record.KeyValues[i];
                     }
+                    
+                    // 填充差异值
+                    int columnIndex = keyColumnNames.Count;
+                    if (record.Differences != null && lstCompareColumns.Items.Count > 0)
+                    {
+                        // 按列名正确填充数据
+                        int dataColumnIndex = 0;
+                        foreach (var item in lstCompareColumns.Items)
+                        {
+                            var mapping = item.ToString();
+                            var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
+                            if (parts.Length == 2)
+                            {
+                                var columnKey = parts[0];
+                                if (record.Differences.ContainsKey(columnKey))
+                                {
+                                    row[columnIndex + dataColumnIndex * 2] = record.Differences[columnKey].OldValue ?? ""; // 旧数据列
+                                    row[columnIndex + dataColumnIndex * 2 + 1] = record.Differences[columnKey].NewValue ?? ""; // 新数据列
+                                }
+                                else
+                                {
+                                    row[columnIndex + dataColumnIndex * 2] = ""; // 旧数据列
+                                    row[columnIndex + dataColumnIndex * 2 + 1] = ""; // 新数据列
+                                }
+                                dataColumnIndex++;
+                            }
+                        }
+                    }
+                    
+                    comparisonTable.Rows.Add(row);
                 }
-                
-                comparisonTable.Rows.Add(row);
+            }
+            
+            // 如果是存在性检查模式，则根据showSameData标志决定是否添加相同键值的记录
+            if (currentMode == Core.ComparisonMode.ExistenceCheck && showSameData && result.SameRecords != null)
+            {
+                foreach (var record in result.SameRecords)
+                {
+                    var row = comparisonTable.NewRow();
+                    
+                    // 填充键值
+                    for (int i = 0; i < record.KeyValues?.Length && i < keyColumnNames.Count; i++)
+                    {
+                        row[i] = record.KeyValues[i];
+                    }
+                    
+                    // 填充数据值（新旧数据列填相同值）
+                    int columnIndex = keyColumnNames.Count;
+                    if (record.Data != null && lstCompareColumns.Items.Count > 0)
+                    {
+                        // 按列名正确填充数据
+                        int dataColumnIndex = 0;
+                        foreach (var item in lstCompareColumns.Items)
+                        {
+                            var mapping = item.ToString();
+                            var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
+                            if (parts.Length == 2)
+                            {
+                                // 新旧数据列填相同值
+                                string value = "";
+                                if (record.Data.ContainsKey(parts[0]))
+                                {
+                                    value = record.Data[parts[0]]?.ToString() ?? "";
+                                }
+                                
+                                row[columnIndex + dataColumnIndex * 2] = value; // 旧数据列
+                                row[columnIndex + dataColumnIndex * 2 + 1] = value; // 新数据列
+                                dataColumnIndex++;
+                            }
+                        }
+                    }
+                    
+                    comparisonTable.Rows.Add(row);
+                }
             }
             
             // 绑定到DataGridView
@@ -1522,7 +1748,7 @@ namespace RUINORERP.Plugin.OfficeAssistant
                     // 计算键列数量
                     foreach (DataColumn column in dt.Columns)
                     {
-                        if (column.ColumnName.StartsWith("键"))
+                        if (column.ColumnName.StartsWith("[键]"))
                         {
                             keyColumnCount++;
                         }
@@ -1601,9 +1827,334 @@ namespace RUINORERP.Plugin.OfficeAssistant
         /// <summary>
         /// 显示相同数据复选框状态改变事件
         /// </summary>
-        private void chkShowSameData_CheckedChanged(object sender, EventArgs e)
+        private async void chkShowSameData_CheckedChanged(object sender, EventArgs e)
         {
             showSameData = chkShowSameData.Checked;
+            // 如果已经有数据显示，则重新执行对比并显示结果
+            if (oldFileData != null && newFileData != null && lstKeyColumns.Items.Count > 0)
+            {
+                // 重新执行对比并显示结果
+                await ReExecuteComparisonAndDisplayResultsAsync();
+            }
+        }
+        
+        /// <summary>
+        /// 重新执行对比并显示结果（异步版本）
+        /// </summary>
+        private async Task ReExecuteComparisonAndDisplayResultsAsync()
+        {
+            try
+            {
+                // 显示进度条
+                progressBar.Visible = true;
+                progressBar.Style = ProgressBarStyle.Continuous;
+                progressBar.Value = 0;
+                progressBar.Maximum = 100;
+                Application.DoEvents();
+
+                // 构建对比配置
+                var config = new Core.ComparisonConfig
+                {
+                    CaseSensitive = chkCaseSensitive.Checked,
+                    IgnoreSpaces = chkIgnoreSpaces.Checked,
+                    OldKeyColumns = new List<int>(),
+                    NewKeyColumns = new List<int>(),
+                    OldCompareColumns = new List<int>(),
+                    NewCompareColumns = new List<int>(),
+                    CompareColumns = new List<int>(),
+                    OldWorksheetName = cmbOldWorksheet.SelectedItem?.ToString(),
+                    NewWorksheetName = cmbNewWorksheet.SelectedItem?.ToString(),
+                    Mode = GetComparisonMode()
+                };
+
+                // 解析键列映射
+                foreach (var item in lstKeyColumns.Items)
+                {
+                    var mapping = item.ToString();
+                    var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
+                    if (parts.Length == 2)
+                    {
+                        var oldColumnIndex = oldFileData.Columns.IndexOf(parts[0]);
+                        var newColumnIndex = newFileData.Columns.IndexOf(parts[1]);
+                        
+                        if (oldColumnIndex >= 0 && newColumnIndex >= 0)
+                        {
+                            config.OldKeyColumns.Add(oldColumnIndex);
+                            config.NewKeyColumns.Add(newColumnIndex);
+                        }
+                    }
+                }
+
+                // 解析比较列映射
+                foreach (var item in lstCompareColumns.Items)
+                {
+                    var mapping = item.ToString();
+                    var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
+                    if (parts.Length == 2)
+                    {
+                        var oldColumnIndex = oldFileData.Columns.IndexOf(parts[0]);
+                        var newColumnIndex = newFileData.Columns.IndexOf(parts[1]);
+                        
+                        if (oldColumnIndex >= 0 && newColumnIndex >= 0)
+                        {
+                            config.OldCompareColumns.Add(oldColumnIndex);
+                            config.NewCompareColumns.Add(newColumnIndex);
+                            config.CompareColumns.Add(oldColumnIndex);
+                        }
+                    }
+                }
+
+                // 如果没有指定比较列，则比较所有列（除了键列）
+                if (config.OldCompareColumns.Count == 0)
+                {
+                    for (int i = 0; i < oldFileData.Columns.Count; i++)
+                    {
+                        // 跳过键列
+                        if (!config.OldKeyColumns.Contains(i))
+                        {
+                            config.OldCompareColumns.Add(i);
+                            // 尝试在新数据中找到同名列
+                            var columnName = oldFileData.Columns[i].ColumnName;
+                            var newIndex = newFileData.Columns.IndexOf(columnName);
+                            if (newIndex >= 0)
+                            {
+                                config.NewCompareColumns.Add(newIndex);
+                            }
+                            else
+                            {
+                                // 如果找不到同名列，则使用相同索引（如果存在）
+                                config.NewCompareColumns.Add(Math.Min(i, newFileData.Columns.Count - 1));
+                            }
+                            config.CompareColumns.Add(i);
+                        }
+                    }
+                }
+
+                // 异步执行对比
+                var result = await Task.Run(() =>
+                {
+                    var engine = new Core.ComparisonEngine();
+                    // 订阅进度报告事件
+                    engine.ProgressReport += (percentage) =>
+                    {
+                        // 确保进度值在合理范围内
+                        if (percentage >= 0 && percentage <= 100)
+                        {
+                            if (progressBar.InvokeRequired)
+                            {
+                                progressBar.Invoke(new Action(() =>
+                                {
+                                    progressBar.Value = Math.Min(100, Math.Max(0, percentage));
+                                    Application.DoEvents();
+                                }));
+                            }
+                            else
+                            {
+                                progressBar.Value = Math.Min(100, Math.Max(0, percentage));
+                                Application.DoEvents();
+                            }
+                        }
+                    };
+                    
+                    return engine.Compare(txtOldFilePath.Text, txtNewFilePath.Text, config);
+                });
+
+                // 在主界面显示结果摘要
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        DisplayResultSummary(result);
+                    }));
+                }
+                else
+                {
+                    DisplayResultSummary(result);
+                }
+
+                // 更新进度到100%
+                if (progressBar.InvokeRequired)
+                {
+                    progressBar.Invoke(new Action(() =>
+                    {
+                        progressBar.Value = 100;
+                        Application.DoEvents();
+                    }));
+                }
+                else
+                {
+                    progressBar.Value = 100;
+                    Application.DoEvents();
+                }
+
+                // 短暂延迟后隐藏进度条
+                await Task.Delay(100);
+                if (progressBar.InvokeRequired)
+                {
+                    progressBar.Invoke(new Action(() =>
+                    {
+                        progressBar.Visible = false;
+                    }));
+                }
+                else
+                {
+                    progressBar.Visible = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 隐藏进度条
+                if (progressBar.InvokeRequired)
+                {
+                    progressBar.Invoke(new Action(() =>
+                    {
+                        progressBar.Visible = false;
+                    }));
+                }
+                else
+                {
+                    progressBar.Visible = false;
+                }
+                
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        MessageBox.Show($"对比过程中发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }));
+                }
+                else
+                {
+                    MessageBox.Show($"对比过程中发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 重新执行对比并显示结果
+        /// </summary>
+        [Obsolete("请使用异步版本 ReExecuteComparisonAndDisplayResultsAsync")]
+        private void ReExecuteComparisonAndDisplayResults()
+        {
+            try
+            {
+                // 显示进度条
+                progressBar.Visible = true;
+                progressBar.Style = ProgressBarStyle.Continuous;
+                progressBar.Value = 0;
+                progressBar.Maximum = 100;
+                Application.DoEvents();
+
+                // 构建对比配置
+                var config = new Core.ComparisonConfig
+                {
+                    CaseSensitive = chkCaseSensitive.Checked,
+                    IgnoreSpaces = chkIgnoreSpaces.Checked,
+                    OldKeyColumns = new List<int>(),
+                    NewKeyColumns = new List<int>(),
+                    OldCompareColumns = new List<int>(),
+                    NewCompareColumns = new List<int>(),
+                    CompareColumns = new List<int>(),
+                    OldWorksheetName = cmbOldWorksheet.SelectedItem?.ToString(),
+                    NewWorksheetName = cmbNewWorksheet.SelectedItem?.ToString(),
+                    Mode = GetComparisonMode()
+                };
+
+                // 解析键列映射
+                foreach (var item in lstKeyColumns.Items)
+                {
+                    var mapping = item.ToString();
+                    var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
+                    if (parts.Length == 2)
+                    {
+                        var oldColumnIndex = oldFileData.Columns.IndexOf(parts[0]);
+                        var newColumnIndex = newFileData.Columns.IndexOf(parts[1]);
+                        
+                        if (oldColumnIndex >= 0 && newColumnIndex >= 0)
+                        {
+                            config.OldKeyColumns.Add(oldColumnIndex);
+                            config.NewKeyColumns.Add(newColumnIndex);
+                        }
+                    }
+                }
+
+                // 解析比较列映射
+                foreach (var item in lstCompareColumns.Items)
+                {
+                    var mapping = item.ToString();
+                    var parts = mapping.Split(new string[] { " -> " }, StringSplitOptions.None);
+                    if (parts.Length == 2)
+                    {
+                        var oldColumnIndex = oldFileData.Columns.IndexOf(parts[0]);
+                        var newColumnIndex = newFileData.Columns.IndexOf(parts[1]);
+                        
+                        if (oldColumnIndex >= 0 && newColumnIndex >= 0)
+                        {
+                            config.OldCompareColumns.Add(oldColumnIndex);
+                            config.NewCompareColumns.Add(newColumnIndex);
+                            config.CompareColumns.Add(oldColumnIndex);
+                        }
+                    }
+                }
+
+                // 如果没有指定比较列，则比较所有列（除了键列）
+                if (config.OldCompareColumns.Count == 0)
+                {
+                    for (int i = 0; i < oldFileData.Columns.Count; i++)
+                    {
+                        // 跳过键列
+                        if (!config.OldKeyColumns.Contains(i))
+                        {
+                            config.OldCompareColumns.Add(i);
+                            // 尝试在新数据中找到同名列
+                            var columnName = oldFileData.Columns[i].ColumnName;
+                            var newIndex = newFileData.Columns.IndexOf(columnName);
+                            if (newIndex >= 0)
+                            {
+                                config.NewCompareColumns.Add(newIndex);
+                            }
+                            else
+                            {
+                                // 如果找不到同名列，则使用相同索引（如果存在）
+                                config.NewCompareColumns.Add(Math.Min(i, newFileData.Columns.Count - 1));
+                            }
+                            config.CompareColumns.Add(i);
+                        }
+                    }
+                }
+
+                // 执行对比
+                var engine = new Core.ComparisonEngine();
+                // 订阅进度报告事件
+                engine.ProgressReport += (percentage) =>
+                {
+                    // 确保进度值在合理范围内
+                    if (percentage >= 0 && percentage <= 100)
+                    {
+                        progressBar.Value = Math.Min(100, Math.Max(0, percentage));
+                        Application.DoEvents();
+                    }
+                };
+                
+                var result = engine.Compare(txtOldFilePath.Text, txtNewFilePath.Text, config);
+
+                // 在主界面显示结果摘要
+                DisplayResultSummary(result);
+
+                // 更新进度到100%
+                progressBar.Value = 100;
+                Application.DoEvents();
+
+                // 短暂延迟后隐藏进度条
+                System.Threading.Thread.Sleep(100);
+                progressBar.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                // 隐藏进度条
+                progressBar.Visible = false;
+                MessageBox.Show($"对比过程中发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         
         private void MainForm_Load(object sender, EventArgs e)

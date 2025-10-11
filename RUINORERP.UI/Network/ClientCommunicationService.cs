@@ -35,6 +35,8 @@ using System.Reflection;
 using System.Text;
 using ICommand = RUINORERP.PacketSpec.Commands.ICommand;
 using MessagePack;
+using System.Windows.Forms;
+using Timer = System.Threading.Timer;
 
 namespace RUINORERP.UI.Network
 {
@@ -1039,6 +1041,7 @@ namespace RUINORERP.UI.Network
                 packet.ExecutionContext.RequestId = command.Request.RequestId;
                 packet.ExecutionContext.RequestType = command.Request.GetType();
                 packet.ExecutionContext.CommandType = command.GetType();
+                packet.ExecutionContext.ClientVersion =Application.ProductVersion;
                 packet.ClientId = client.ClientID;
 
                 // 序列化和加密数据包

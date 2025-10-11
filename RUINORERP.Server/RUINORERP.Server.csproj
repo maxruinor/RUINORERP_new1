@@ -38,7 +38,6 @@
     <Compile Remove="frmUserOnline.cs" />
     <Compile Remove="frmUserOnline.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
-    <Compile Remove="Network\Commands\CacheCommandHandler.cs" />
     <Compile Remove="Network\Commands\CacheSyncCommandHandler.cs" />
     <Compile Remove="Network\Commands\CommandHandlerBase.cs" />
     <Compile Remove="Network\Commands\DataSyncCommandHandler.cs" />

@@ -1,4 +1,4 @@
-﻿using System;using System.Collections.Generic;
+using System;using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Requests;
 
 namespace RUINORERP.PacketSpec.Models.Requests.Cache
@@ -29,10 +29,7 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
         /// </summary>
         public DateTime LastRequestTime { get; set; } = DateTime.MinValue;
 
-        /// <summary>
-        /// 客户端版本号
-        /// </summary>
-        public string ClientVersion { get; set; } = string.Empty;
+  
 
         /// <summary>
         /// 额外参数
@@ -64,5 +61,121 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
                 OperationType = "Cache.Refresh"
             };
         }
+    }
+
+    /// <summary>
+    /// 缓存删除请求
+    /// </summary>
+    public class CacheDeleteRequest
+    {
+        /// <summary>
+        /// 表名
+        /// </summary>
+        public string TableName { get; set; }
+
+        /// <summary>
+        /// 主键列名（可选，用于删除特定记录）
+        /// </summary>
+        public string PrimaryKeyName { get; set; }
+
+        /// <summary>
+        /// 主键值（可选，用于删除特定记录）
+        /// </summary>
+        public object PrimaryKeyValue { get; set; }
+    }
+
+    /// <summary>
+    /// 缓存获取请求
+    /// </summary>
+    public class CacheGetRequest
+    {
+        /// <summary>
+        /// 表名
+        /// </summary>
+        public string TableName { get; set; }
+
+        /// <summary>
+        /// 主键列名（可选，用于获取特定记录）
+        /// </summary>
+        public string PrimaryKeyName { get; set; }
+
+        /// <summary>
+        /// 主键值（可选，用于获取特定记录）
+        /// </summary>
+        public object PrimaryKeyValue { get; set; }
+    }
+
+    /// <summary>
+    /// 缓存设置请求
+    /// </summary>
+    public class CacheSetRequest
+    {
+        /// <summary>
+        /// 表名
+        /// </summary>
+        public string TableName { get; set; }
+
+        /// <summary>
+        /// 缓存数据
+        /// </summary>
+        public object Data { get; set; }
+    }
+
+    /// <summary>
+    /// 缓存删除请求（单条记录）
+    /// </summary>
+    public class CacheRemoveRequest
+    {
+        /// <summary>
+        /// 表名
+        /// </summary>
+        public string TableName { get; set; }
+
+        /// <summary>
+        /// 删除键
+        /// </summary>
+        public string Key { get; set; }
+    }
+
+    /// <summary>
+    /// 缓存同步请求
+    /// </summary>
+    public class CacheSyncRequest
+    {
+        /// <summary>
+        /// 同步模式（FULL: 全量同步，INCREMENTAL: 增量同步）
+        /// </summary>
+        public string SyncMode { get; set; } = "FULL";
+
+        /// <summary>
+        /// 需要同步的缓存键列表（可选，为空时同步所有缓存）
+        /// </summary>
+        public List<string> CacheKeys { get; set; } = new List<string>();
+
+        /// <summary>
+        /// 上次同步时间（用于增量同步）
+        /// </summary>
+        public DateTime LastSyncTime { get; set; } = DateTime.MinValue;
+    }
+
+    /// <summary>
+    /// 缓存更新请求
+    /// </summary>
+    public class CacheUpdateRequest
+    {
+        /// <summary>
+        /// 表名
+        /// </summary>
+        public string TableName { get; set; }
+
+        /// <summary>
+        /// 更新的数据
+        /// </summary>
+        public object Data { get; set; }
+
+        /// <summary>
+        /// 更新时间
+        /// </summary>
+        public DateTime UpdateTime { get; set; } = DateTime.Now;
     }
 }

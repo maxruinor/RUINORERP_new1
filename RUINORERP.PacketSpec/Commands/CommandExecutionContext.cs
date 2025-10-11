@@ -46,6 +46,13 @@ namespace RUINORERP.PacketSpec.Commands
         [Key(28)]
         public string CommandTypeName { get; set; }
 
+        /// <summary>
+        /// 客户端版本号
+        /// </summary>
+        [Key(29)]
+        public string ClientVersion { get; set; } = string.Empty;
+
+
         // 类型属性的访问器
         [IgnoreMember]
         public Type RequestType 

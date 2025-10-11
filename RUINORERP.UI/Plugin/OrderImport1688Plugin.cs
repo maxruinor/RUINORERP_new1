@@ -56,6 +56,24 @@ namespace RUINORERP.Plugin.OrderImport
             // 创建子菜单
             CreateSubMenuItems();
         }
+        
+        /// <summary>
+        /// 启动插件
+        /// </summary>
+        protected override void OnStart()
+        {
+            base.OnStart();
+            // 插件启动时的逻辑
+        }
+        
+        /// <summary>
+        /// 停止插件
+        /// </summary>
+        protected override void OnStop()
+        {
+            base.OnStop();
+            // 插件停止时的逻辑
+        }
 
         /// <summary>
         /// 创建子菜单项
@@ -411,9 +429,13 @@ namespace RUINORERP.Plugin.OrderImport
                     if (settingsForm.ShowDialog() == DialogResult.OK)
                     {
                         // 保存设置
-                        SaveSetting("AppKey", textBoxAppKey.Text);
-                        SaveSetting("AppSecret", textBoxAppSecret.Text);
-                        SaveSetting("AccessToken", textBoxAccessToken.Text);
+                        var settings = new Dictionary<string, string>
+                        {
+                            ["AppKey"] = textBoxAppKey.Text,
+                            ["AppSecret"] = textBoxAppSecret.Text,
+                            ["AccessToken"] = textBoxAccessToken.Text
+                        };
+                        SaveSettings(settings);
 
                         ShowInfo("设置保存成功！");
                     }
@@ -433,66 +455,8 @@ namespace RUINORERP.Plugin.OrderImport
         /// <returns>设置值</returns>
         private string GetSetting(string key, string defaultValue)
         {
-            try
-            {
-                string settingsFile = GetSettingsFilePath();
-                if (File.Exists(settingsFile))
-                {
-                    var settings = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(settingsFile));
-                    if (settings.ContainsKey(key))
-                    {
-                        return settings[key];
-                    }
-                }
-            }
-            catch { }
-
-            return defaultValue;
-        }
-
-        /// <summary>
-        /// 保存插件设置
-        /// </summary>
-        /// <param name="key">设置键</param>
-        /// <param name="value">设置值</param>
-        private void SaveSetting(string key, string value)
-        {
-            try
-            {
-                string settingsFile = GetSettingsFilePath();
-                Dictionary<string, string> settings = new Dictionary<string, string>();
-
-                if (File.Exists(settingsFile))
-                {
-                    try
-                    {
-                        settings = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(settingsFile));
-                    }
-                    catch { }
-                }
-
-                settings[key] = value;
-
-                // 确保目录存在
-                string directory = Path.GetDirectoryName(settingsFile);
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-                File.WriteAllText(settingsFile, JsonConvert.SerializeObject(settings, Formatting.Indented));
-            }
-            catch { }
-        }
-
-        /// <summary>
-        /// 获取设置文件路径
-        /// </summary>
-        /// <returns>设置文件路径</returns>
-        private string GetSettingsFilePath()
-        {
-            string pluginDataDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PluginData", "OrderImport1688");
-            return Path.Combine(pluginDataDir, "settings.json");
+            var settings = LoadSettings();
+            return settings.ContainsKey(key) ? settings[key] : defaultValue;
         }
 
         /// <summary>

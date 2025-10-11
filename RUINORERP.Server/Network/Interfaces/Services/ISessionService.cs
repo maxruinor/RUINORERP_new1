@@ -48,6 +48,13 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         IEnumerable<SessionInfo> GetUserSessions(string username);
 
         /// <summary>
+        /// 获取所有已认证的用户会话
+        /// </summary>
+        /// <param name="excludeSessionIds">可选：要排除的会话ID数组</param>
+        /// <returns>已认证的用户会话列表</returns>
+        IEnumerable<SessionInfo> GetAllUserSessions(params string[] excludeSessionIds);
+
+        /// <summary>
         /// 更新会话信息
         /// </summary>
         /// <param name="sessionInfo">会话信息</param>

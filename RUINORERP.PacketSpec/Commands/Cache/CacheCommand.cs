@@ -1,5 +1,6 @@
 ﻿﻿using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Models.Requests.Cache;
+using RUINORERP.PacketSpec.Models.Responses.Cache;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,34 +14,62 @@ namespace RUINORERP.PacketSpec.Commands.Cache
     /// <summary>
     /// 缓存同步命令 - 用于同步客户端与服务器之间的缓存数据
     /// </summary>
-    [PacketCommand("CacheSync", CommandCategory.Cache)]
-    public class CacheCommand : BaseCommand
+    [PacketCommand("CacheCommand", CommandCategory.Cache)]
+    [MessagePackObject(AllowPrivate = true)]
+    public class CacheCommand : BaseCommand<CacheRequest, CacheResponse>
     {
+        /// <summary>
+        /// 缓存请求数据
+        /// </summary>
+        [Key(1000)]
+        public CacheRequest CacheRequest
+        {
+            get => Request;
+            set => Request = value;
+        }
 
         /// <summary>
-        /// 需要同步的缓存键列表
+        /// 缓存响应数据
         /// </summary>
+        [Key(1001)]
+        public CacheResponse CacheResponse
+        {
+            get => Response;
+            set => Response = value;
+        }
+
+        /// <summary>
+        /// 需要同步的缓存键列表（向后兼容）
+        /// </summary>
+        [Key(1002)]
+        [MessagePack.IgnoreMember]
         public List<string> CacheKeys { get; set; }
         
         /// <summary>
-        /// 缓存键枚举器
+        /// 缓存键枚举器（向后兼容）
         /// </summary>
+        [Key(1003)]
+        [MessagePack.IgnoreMember]
         public IAsyncEnumerable<string> CacheKeysEnumerator { get; set; }
 
         /// <summary>
-        /// 同步模式
+        /// 同步模式（向后兼容）
         /// </summary>
+        [Key(1004)]
+        [MessagePack.IgnoreMember]
         public string SyncMode { get; set; }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public CacheCommand()
+        public CacheCommand() : base(PacketDirection.ClientToServer)
         {
             CacheKeys = new List<string>();
             SyncMode = "FULL"; // 默认全量同步
             Direction = PacketDirection.Request;
-            CommandIdentifier = CacheCommands.CacheSync;
+            CommandIdentifier = CacheCommands.CacheRequest;
+            Priority = CommandPriority.Normal;
+            TimeoutMs = 30000; // 设置默认超时时间为30秒
         }
 
         /// <summary>

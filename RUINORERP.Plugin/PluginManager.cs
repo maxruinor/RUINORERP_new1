@@ -1,11 +1,11 @@
-using Autofac;
-using RUINORERP.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+// 添加System.Drawing引用以解决CS7069错误
+using System.Drawing;
 
 namespace RUINORERP.Plugin
 {

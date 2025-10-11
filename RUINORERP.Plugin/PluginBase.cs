@@ -1,11 +1,10 @@
-using Autofac;
-using RUINORERP.UI;
 using System;
 using System.Reflection;
 using System.Windows.Forms;
 using System.IO;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace RUINORERP.Plugin
 {
@@ -228,22 +227,22 @@ namespace RUINORERP.Plugin
             MessageBox.Show(message, "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
         
-        /// <summary>
-        /// 获取Autofac容器中的服务
-        /// </summary>
-        /// <typeparam name="T">服务类型</typeparam>
-        /// <returns>服务实例</returns>
-        protected T GetService<T>()
-        {
-            try
-            {
-                return Startup.AutoFacContainer.Resolve<T>();
-            }
-            catch
-            {
-                return default(T);
-            }
-        }
+        ///// <summary>
+        ///// 获取Autofac容器中的服务
+        ///// </summary>
+        ///// <typeparam name="T">服务类型</typeparam>
+        ///// <returns>服务实例</returns>
+        //protected T GetService<T>()
+        //{
+        //    try
+        //    {
+        //        return Startup.AutoFacContainer.Resolve<T>();
+        //    }
+        //    catch
+        //    {
+        //        return default(T);
+        //    }
+        //}
         
         /// <summary>
         /// 保存插件数据

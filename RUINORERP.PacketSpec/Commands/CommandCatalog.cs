@@ -199,6 +199,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// 缓存取消订阅 - 取消订阅缓存变更
         /// </summary>
         public const ushort Cache_CacheUnsubscribe = 0x020B;
+
+        public const ushort Cache_CacheRefresh = 0x020B;
         #endregion
 
         #region 消息命令 (0x03xx)

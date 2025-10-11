@@ -27,6 +27,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using MessagePack;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Net.Sockets;
+using RUINORERP.Server.Network.Services;
 
 namespace RUINORERP.Server.Network.SuperSocket
 {
@@ -89,10 +90,6 @@ namespace RUINORERP.Server.Network.SuperSocket
 
             try
             {
-                if (string.IsNullOrEmpty(package.Packet.SessionId))
-                {
-                    package.Packet.SessionId = session.SessionID;
-                }
 
                 // 确保命令调度器已初始化
                 if (!_commandDispatcher.IsInitialized)
@@ -145,6 +142,18 @@ namespace RUINORERP.Server.Network.SuperSocket
                         var setRequest = commandType.GetMethod("SetRequestFromBinary");
                         setRequest?.Invoke(command, new object[] { package.Packet.CommandData });
                     }
+                }
+                else
+                {
+                    //统一验证基本的命令信息
+
+                    // 验证会话有效性
+                    if (!SessionService.IsValidSession(executionContext.SessionId))
+                    {
+                        await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_SessionExpired, cancellationToken);
+                        return;
+                    }
+
                 }
 
 

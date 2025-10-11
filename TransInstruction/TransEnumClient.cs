@@ -1,4 +1,4 @@
-﻿namespace TransInstruction
+namespace TransInstruction
 {
     #region 新的指令集合系统
 

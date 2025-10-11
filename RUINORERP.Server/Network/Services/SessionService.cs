@@ -193,6 +193,37 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
+        /// 获取所有已认证的用户会话
+        /// </summary>
+        /// <param name="excludeSessionIds">可选：要排除的会话ID数组</param>
+        /// <returns>已认证的用户会话列表</returns>
+        public IEnumerable<SessionInfo> GetAllUserSessions(params string[] excludeSessionIds)
+        {
+            try
+            {
+                var query = _sessions.Values.Where(s => s.IsAuthenticated);
+
+                // 如果指定了要排除的会话ID数组，则从结果中排除这些会话
+                if (excludeSessionIds != null && excludeSessionIds.Length > 0)
+                {
+                    var excludeSet = new HashSet<string>(excludeSessionIds.Where(id => !string.IsNullOrEmpty(id)));
+                    if (excludeSet.Count > 0)
+                    {
+                        query = query.Where(s => !excludeSet.Contains(s.SessionID));
+                    }
+                }
+
+                return query.ToList();
+            }
+            catch (Exception ex)
+            {
+                var excludeIds = excludeSessionIds != null ? string.Join(", ", excludeSessionIds) : "无";
+                _logger.LogError(ex, $"获取所有用户会话失败，排除会话ID: [{excludeIds}]");
+                return Enumerable.Empty<SessionInfo>();
+            }
+        }
+
+        /// <summary>
         /// 创建已认证的会话
         /// </summary>
         /// <param name="sessionId">会话ID</param>

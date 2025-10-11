@@ -27,7 +27,6 @@ using RUINORERP.Model.TransModel;
 using FastReport.DevComponents.DotNetBar;
 using NPOI.POIFS.Crypt.Dsig;
 
-using RUINORERP.UI.ClientSuperSocket;
 using RUINORERP.PacketSpec.Models.Core;
 
 
@@ -108,7 +107,6 @@ namespace RUINORERP.UI.SuperSocketClient
         private int _port;
 
         static System.Timers.Timer timer = null;
-        HeartbeatManagerOld heartbeat = null;
         public EasyClientService()
         {
 
@@ -123,8 +121,7 @@ namespace RUINORERP.UI.SuperSocketClient
             client.Error += OnClientError;
             client.Closed += OnClientClosed;
 
-            heartbeat = new HeartbeatManagerOld();
-            heartbeat.Start();
+
 
           
 

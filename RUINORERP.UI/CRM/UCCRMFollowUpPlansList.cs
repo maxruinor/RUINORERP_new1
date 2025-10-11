@@ -227,7 +227,7 @@ namespace RUINORERP.UI.CRM
                         //request.SenderEmployeeName = MainForm.Instance.AppContext.CurUserInfo.Name;
 
                         OriginalData beatDataDel = ClientDataBuilder.工作流提醒请求(request);
-                        MainForm.Instance.ecs.AddSendData(beatDataDel);
+                        //MainForm.Instance.ecs.AddSendData(beatDataDel);
                     }
                 }
 

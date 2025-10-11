@@ -86,7 +86,7 @@ namespace RUINORERP.UI.ClientSuperSocket
             //Console.WriteLine($"发送心跳包，线程ID: {Thread.CurrentThread.ManagedThreadId}");
 
             //心跳包
-            if (MainForm.Instance != null && MainForm.Instance.ecs.client.IsConnected && MainForm.Instance.ecs.LoginStatus)
+            if (MainForm.Instance != null && MainForm.Instance.communicationService.IsConnected && MainForm.communicationService.LoginStatus)
             {
                 try
                 {

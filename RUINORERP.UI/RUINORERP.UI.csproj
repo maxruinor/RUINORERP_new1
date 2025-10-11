@@ -889,8 +889,6 @@
     <Compile Include="ClientSuperSocket\BizPipelineFilter.cs" />
     <Compile Include="ClientSuperSocket\ClientDataBuilder.cs" />
     <Compile Include="ClientSuperSocket\EasyClientService.cs" />
-    <Compile Include="ClientSuperSocket\HeartbeatManagerold.cs" />
-    <Compile Include="ClientSuperSocket\SocketClientHelper.cs" />
     <Compile Include="ClientSuperSocket\SystemOptimizerService.cs" />
     <Compile Include="ClientSuperSocket\WorkflowService.cs" />
     <Compile Include="CommonUI\frmOpinion.cs">

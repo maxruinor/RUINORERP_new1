@@ -151,11 +151,11 @@ namespace RUINORERP.Server.Network.SuperSocket
                         executionContext.SessionId = session.SessionID;
                     }
                     // 验证会话有效性,登陆不需要验证
-                    if (!SessionService.IsValidSession(executionContext.SessionId))
-                    {
-                        await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_SessionExpired, cancellationToken);
-                        return;
-                    }
+                    //if (!SessionService.IsValidSession(executionContext.SessionId))
+                    //{
+                    //    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_SessionExpired, cancellationToken);
+                    //    return;
+                    //}
 
                 }
 

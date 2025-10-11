@@ -188,6 +188,13 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         try
                         {
+                            // 跳过泛型类型定义，因为它们无法直接实例化
+                            if (handlerType.IsGenericTypeDefinition)
+                            {
+                                LogInfo($"跳过泛型类型定义: {handlerType.FullName}");
+                                continue;
+                            }
+                            
                             var handler = _handlerFactory.CreateHandler(handlerType);
                             await _commandScanner.RegisterHandlerAsync(handler, cancellationToken);
                             LogInfo($"处理器 {handler.Name} [ID: {handler.HandlerId}] 注册成功");
@@ -359,7 +366,7 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         if (_idempotent.TryGetCached(cmd.Command, out var cached))
                         {
-                            return cached;
+                            //return cached;
                         }
                     }
 
@@ -657,6 +664,34 @@ namespace RUINORERP.PacketSpec.Commands
                         {
                             try
                             {
+                                // 跳过泛型类型定义，因为它们无法直接实例化
+                                if (handlerType.IsGenericTypeDefinition)
+                                {
+                                    // 尝试根据命令类型动态创建泛型处理器的具体实例
+                                    if (commandType != null && commandType.IsGenericType)
+                                    {
+                                        var genericArgs = commandType.GetGenericArguments();
+                                        if (genericArgs.Length > 0)
+                                        {
+                                            try
+                                            {
+                                                // 使用新的CreateGenericHandler方法创建泛型处理器实例
+                                                var genericHandler = _handlerFactory.CreateGenericHandler(handlerType, genericArgs);
+                                                if (genericHandler != null && genericHandler.CanHandle(cmd))
+                                                {
+                                                    compatibleHandlers.Add(genericHandler);
+                                                    LogDebug($"找到兼容处理器: {genericHandler.Name} for command type: {commandType.Name}");
+                                                }
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                LogWarning($"创建泛型处理器实例失败: {handlerType.Name}<{string.Join(", ", genericArgs.Select(t => t.Name))}>: {ex.Message}");
+                                            }
+                                        }
+                                    }
+                                    continue;
+                                }
+                                
                                 var handler = _handlerFactory.CreateHandler(handlerType);
                                 if (handler != null && handler.CanHandle(cmd))
                                 {

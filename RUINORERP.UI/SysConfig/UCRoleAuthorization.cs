@@ -2715,7 +2715,7 @@ namespace RUINORERP.UI.SysConfig
 
                     //提示服务器开启推送工作流
                     OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
-                    MainForm.Instance.ecs.AddSendData(beatDataDel);
+                    //MainForm.Instance.ecs.AddSendData(beatDataDel);
 
                     //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                     KeyValuePair<string, string> pair = new KeyValuePair<string, string>();

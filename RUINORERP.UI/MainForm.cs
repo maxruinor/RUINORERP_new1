@@ -139,6 +139,31 @@ namespace RUINORERP.UI
         public List<UserInfo> UserInfos { get => userInfos; set => userInfos = value; }
 
 
+        /// <summary>
+        /// 处理重连失败事件，自动进入注销锁定状态
+        /// </summary>
+        private void OnReconnectFailed()
+        {
+            try
+            {
+                logger?.LogWarning("客户端重连失败，自动进入注销锁定状态");
+                
+                // 在UI线程上执行注销操作
+                if (InvokeRequired)
+                {
+                    Invoke(new Action(LogLock));
+                }
+                else
+                {
+                    LogLock();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "处理重连失败事件时发生异常");
+            }
+        }
+
         #endregion
 
  
@@ -203,6 +228,12 @@ namespace RUINORERP.UI
             #region 新的客户端通讯模块的调用
             // 通过依赖注入获取核心组件
             communicationService = Startup.ServiceProvider.GetService<ClientCommunicationService>();
+            
+            // 订阅重连失败事件，当重连失败时自动进入注销锁定状态
+            if (communicationService != null)
+            {
+                communicationService.ReconnectFailed += OnReconnectFailed;
+            }
             #endregion
 
     
@@ -216,7 +247,7 @@ namespace RUINORERP.UI
             kryptonDockableWorkspace1.PageCloseClicked += KryptonDockableWorkspace1_PageCloseClicked;
 
 
-            ecs.OnConnectClosed += Ecs_OnConnectClosed;
+     
 
             if (config != null)
             {
@@ -397,21 +428,7 @@ namespace RUINORERP.UI
 
 
 
-        public EasyClientService ecs = new EasyClientService();
-
-
-        private void Ecs_OnConnectClosed(bool isconect)
-        {
-            // 确保在UI线程上执行
-            if (InvokeRequired)
-            {
-                Invoke(new Action<bool>(Ecs_OnConnectClosed), isconect);
-                return;
-            }
-
-            // ecs.LoginStatus = false;
-            ecs.IsConnected = isconect;
-        }
+       
 
         private byte[] _byteArray;
 
@@ -1141,14 +1158,7 @@ namespace RUINORERP.UI
                 //{
                 //    lblServerInfo.Text = $"Server:{UserGlobalConfig.Instance.ServerIP},Connected:{ecs.IsConnected}，sessionID:{ecs.client.Socket.LocalEndPoint}";
                 //}
-                if (ecs.client.Socket == null)
-                {
-                    lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort},Connected:{ecs.IsConnected},FreeTime:{GetLastInputTime()}";
-                }
-                else
-                {
-                    lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort}，Connected:{ecs.IsConnected}，LocIP:{ecs.client.Socket.LocalEndPoint},FreeTime:{GetLastInputTime()}";
-                }
+                lblServerStatus.ToolTipText = $"Server:{UserGlobalConfig.Instance.ServerIP},Port:{UserGlobalConfig.Instance.ServerPort},Connected:{communicationService.IsConnected},FreeTime:{GetLastInputTime()}";
 
                 lblServerInfo.Text = lblServerStatus.ToolTipText;
                 if (MessageList.Count > 0)
@@ -1724,7 +1734,7 @@ namespace RUINORERP.UI
                 this.SystemOperatorState.Text = "注销";
                 Program.AppContextData.IsOnline = false;
                 MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
-                MainForm.Instance.AppContext.CurrentUser.在线状态 = ecs.IsConnected;
+                MainForm.Instance.AppContext.CurrentUser.在线状态 = communicationService.IsConnected;
                 ClearUI();
                 ClearRoles();
                 System.GC.Collect();
@@ -2535,14 +2545,9 @@ namespace RUINORERP.UI
 
                 e.Cancel = false;
                 System.GC.Collect();
-                Logout();
-                //}
-                //else
-                //{
-                //    e.Cancel = true;
-                //    return;
-                //}
-                await ecs.client.Close();
+               await Logout();
+          
+                communicationService.Disconnect();
 
                 logManager.Dispose();
             }
@@ -2660,12 +2665,11 @@ namespace RUINORERP.UI
         private async Task ClearData()
         {
             Program.AppContextData.IsOnline = false;
-            ecs.LoginStatus = false;
+           
             AppContext.CurUserInfo = null;
             AppContext.IsSuperUser = false;
             RUINORERP.Extensions.SqlsugarSetup.CheckEvent -= SqlsugarSetup_CheckEvent;
             RUINORERP.Extensions.SqlsugarSetup.RemindEvent -= SqlsugarSetup_RemindEvent;
-            await ecs.Stop();
         }
 
         /// <summary>

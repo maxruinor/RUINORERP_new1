@@ -38,7 +38,12 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public event Action ConnectionClosed;
 
-         public event Action<string, TimeSpan> RequestCompleted; // 新增：请求完成事件
+        /// <summary>
+        /// 当重连失败时触发的事件
+        /// </summary>
+        public event Action ReconnectFailed;
+
+        public event Action<string, TimeSpan> RequestCompleted; // 新增：请求完成事件
         
         public void OnRequestCompleted(string requestId, TimeSpan duration)
         {
@@ -185,6 +190,34 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 触发重连失败事件
+        /// </summary>
+        public void OnReconnectFailed()
+        {
+            // 获取事件处理程序的快照
+            Action handler;
+            lock (_lock)
+            {
+                handler = ReconnectFailed;
+            }
+
+            if (handler == null)
+                return;
+
+            try
+            {
+                // 触发事件
+                handler.Invoke();
+            }
+            catch (Exception ex)
+            {
+                // 记录异常并触发错误事件
+                LogException(ex, "处理重连失败事件时出错");
+                OnErrorOccurred(new Exception($"处理重连失败事件时出错: {ex.Message}", ex));
+            }
+        }
+
+        /// <summary>
         /// 移除所有已注册的事件处理程序
         /// 重置事件管理器到初始状态
         /// </summary>
@@ -196,6 +229,7 @@ namespace RUINORERP.UI.Network
                 ConnectionStatusChanged = null;
                 ErrorOccurred = null;
                 ConnectionClosed = null;
+                ReconnectFailed = null;
             }
         }
 

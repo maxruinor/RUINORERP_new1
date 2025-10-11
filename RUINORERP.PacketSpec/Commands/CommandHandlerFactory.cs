@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -36,6 +37,14 @@ namespace RUINORERP.PacketSpec.Commands
             if (handlerType == null)
                 throw new ArgumentNullException(nameof(handlerType));
 
+            // 检查是否是泛型类型定义
+            if (handlerType.IsGenericTypeDefinition)
+            {
+                // 对于泛型类型定义，我们无法直接创建实例
+                // 这种情况应该由调用方在运行时根据具体类型参数来创建
+                throw new InvalidOperationException($"无法直接创建泛型类型定义的实例: {handlerType.FullName}。请使用具体的泛型类型。");
+            }
+
             // 优先使用缓存的工厂方法
             if (_factoryCache.TryGetValue(handlerType, out var factory))
                 return factory();
@@ -44,6 +53,30 @@ namespace RUINORERP.PacketSpec.Commands
             factory = CreateFactoryMethod(handlerType);
             _factoryCache.TryAdd(handlerType, factory);
             return factory();
+        }
+
+        /// <summary>
+        /// 创建泛型处理器实例
+        /// </summary>
+        /// <param name="genericHandlerType">泛型处理器类型定义</param>
+        /// <param name="typeArguments">类型参数</param>
+        /// <returns>处理器实例</returns>
+        public ICommandHandler CreateGenericHandler(Type genericHandlerType, params Type[] typeArguments)
+        {
+            if (genericHandlerType == null)
+                throw new ArgumentNullException(nameof(genericHandlerType));
+            
+            if (!genericHandlerType.IsGenericTypeDefinition)
+                throw new ArgumentException($"类型 {genericHandlerType.FullName} 不是泛型类型定义", nameof(genericHandlerType));
+            
+            if (typeArguments == null || typeArguments.Length == 0)
+                throw new ArgumentException("必须提供类型参数", nameof(typeArguments));
+
+            // 构造具体的泛型类型
+            var concreteType = genericHandlerType.MakeGenericType(typeArguments);
+            
+            // 创建并返回实例
+            return CreateHandler(concreteType);
         }
 
         /// <summary>
@@ -109,19 +142,74 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private Func<ICommandHandler> CreateDiFactoryMethod(ConstructorInfo constructor, ParameterInfo[] parameters)
         {
-            var paramExpressions = new Expression[parameters.Length];
-
-            for (int i = 0; i < parameters.Length; i++)
+            return () =>
             {
-                var paramType = parameters[i].ParameterType;
-                var resolveMethod = typeof(ServiceProviderServiceExtensions)
-                    .GetMethod("GetRequiredService", new[] { typeof(IServiceProvider) })
-                    .MakeGenericMethod(paramType);
-                paramExpressions[i] = Expression.Call(null, resolveMethod, Expression.Constant(_serviceProvider));
-            }
-
-            var newExpression = Expression.New(constructor, paramExpressions);
-            return Expression.Lambda<Func<ICommandHandler>>(newExpression).Compile();
+                try
+                {
+                    var args = new object[parameters.Length];
+                    
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        var paramType = parameters[i].ParameterType;
+                        
+                        // 处理泛型类型参数
+                        if (paramType.IsGenericType && !paramType.IsConstructedGenericType)
+                        {
+                            // 尝试构造具体的泛型类型
+                            var genericDefinition = paramType.GetGenericTypeDefinition();
+                            var typeArgs = constructor.DeclaringType.GetGenericArguments();
+                            
+                            if (typeArgs.Length > 0)
+                            {
+                                // 使用处理器类型的泛型参数构造具体的泛型类型
+                                var concreteType = genericDefinition.MakeGenericType(typeArgs);
+                                
+                                // 确保所有泛型参数都已替换
+                                if (concreteType.IsGenericType && concreteType.ContainsGenericParameters)
+                                {
+                                    // 如果仍然包含泛型参数，回退到反射创建
+                                    return CreateReflectionFactoryMethod(constructor)();
+                                }
+                                
+                                // 使用DI容器获取具体类型的实例
+                                var getRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
+                                    .GetMethod("GetRequiredService", new[] { typeof(IServiceProvider) })
+                                    .MakeGenericMethod(concreteType);
+                                
+                                args[i] = getRequiredServiceMethod.Invoke(null, new object[] { _serviceProvider });
+                            }
+                            else
+                            {
+                                // 如果无法构造具体类型，使用默认值
+                                args[i] = paramType.IsValueType ? Activator.CreateInstance(paramType) : null;
+                            }
+                        }
+                        else
+                        {
+                            // 确保非泛型类型也不包含泛型参数
+                            if (paramType.ContainsGenericParameters)
+                            {
+                                // 如果包含泛型参数，回退到反射创建
+                                return CreateReflectionFactoryMethod(constructor)();
+                            }
+                            
+                            // 非泛型类型，直接使用DI容器获取
+                            var getRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
+                                .GetMethod("GetRequiredService", new[] { typeof(IServiceProvider) })
+                                .MakeGenericMethod(paramType);
+                            
+                            args[i] = getRequiredServiceMethod.Invoke(null, new object[] { _serviceProvider });
+                        }
+                    }
+                    
+                    return (ICommandHandler)Activator.CreateInstance(constructor.DeclaringType, args);
+                }
+                catch (Exception)
+                {
+                    // 如果DI创建失败，回退到反射创建
+                    return CreateReflectionFactoryMethod(constructor)();
+                }
+            };
         }
 
         /// <summary>
@@ -129,7 +217,74 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private Func<ICommandHandler> CreateReflectionFactoryMethod(ConstructorInfo constructor)
         {
-            return () => (ICommandHandler)Activator.CreateInstance(constructor.DeclaringType);
+            return () =>
+            {
+                try
+                {
+                    var parameters = constructor.GetParameters();
+                    var args = new object[parameters.Length];
+                    
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        var paramType = parameters[i].ParameterType;
+                        
+                        // 处理泛型类型参数
+                        if (paramType.IsGenericType && !paramType.IsConstructedGenericType)
+                        {
+                            // 尝试构造具体的泛型类型
+                            var genericDefinition = paramType.GetGenericTypeDefinition();
+                            var typeArgs = constructor.DeclaringType.GetGenericArguments();
+                            
+                            if (typeArgs.Length > 0)
+                            {
+                                // 使用处理器类型的泛型参数构造具体的泛型类型
+                                var concreteType = genericDefinition.MakeGenericType(typeArgs);
+                                
+                                // 尝试创建默认实例
+                                if (concreteType.IsValueType)
+                                {
+                                    args[i] = Activator.CreateInstance(concreteType);
+                                }
+                                else if (paramType == typeof(ILogger<>).MakeGenericType(typeArgs))
+                                {
+                                    // 为ILogger创建默认实例
+                                    var loggerFactory = new LoggerFactory();
+                                    args[i] = loggerFactory.CreateLogger(constructor.DeclaringType);
+                                }
+                                else
+                                {
+                                    // 尝试使用无参构造函数
+                                    args[i] = Activator.CreateInstance(concreteType);
+                                }
+                            }
+                            else
+                            {
+                                // 如果无法构造具体类型，使用默认值
+                                args[i] = paramType.IsValueType ? Activator.CreateInstance(paramType) : null;
+                            }
+                        }
+                        else
+                        {
+                            // 非泛型类型，使用默认值
+                            args[i] = paramType.IsValueType ? Activator.CreateInstance(paramType) : null;
+                        }
+                    }
+                    
+                    return (ICommandHandler)Activator.CreateInstance(constructor.DeclaringType, args);
+                }
+                catch (Exception)
+                {
+                    // 如果带参数创建失败，尝试无参创建
+                    try
+                    {
+                        return (ICommandHandler)Activator.CreateInstance(constructor.DeclaringType);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException($"无法创建命令处理器实例: {constructor.DeclaringType.FullName}", ex);
+                    }
+                }
+            };
         }
     }
 }

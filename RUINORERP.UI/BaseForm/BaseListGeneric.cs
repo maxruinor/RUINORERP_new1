@@ -1026,8 +1026,8 @@ namespace RUINORERP.UI.BaseForm
                     }
                     MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", loc);
                     //提示服务器开启推送工作流
-                    OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
-                    MainForm.Instance.ecs.AddSendData(beatDataDel);
+                    //OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
+                    //MainForm.Instance.ecs.AddSendData(beatDataDel);
 
                     //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                     KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
@@ -1124,7 +1124,7 @@ namespace RUINORERP.UI.BaseForm
 
                     //提示服务器开启推送工作流
                     OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
-                    MainForm.Instance.ecs.AddSendData(beatDataDel);
+                    //MainForm.Instance.ecs.AddSendData(beatDataDel);
 
                     //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                     KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
@@ -1842,8 +1842,8 @@ namespace RUINORERP.UI.BaseForm
 
                             ToolBarEnabledControl(MenuItemEnums.保存);
                             //提示服务器开启推送工作流
-                            OriginalData beatData = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
-                            MainForm.Instance.ecs.AddSendData(beatData);
+                            //OriginalData beatData = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
+                            //MainForm.Instance.ecs.AddSendData(beatData);
                             //审计日志
                             //MainForm.Instance.AuditLogHelper.CreateAuditLog("保存", CurMenuInfo.CaptionCN);
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rr.ReturnObject);

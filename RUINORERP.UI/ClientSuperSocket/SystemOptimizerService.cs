@@ -51,7 +51,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 //如果自己是超级管理员就不发送
                 if (!MainForm.Instance.AppContext.IsSuperUser)
                 {
-                    MainForm.Instance.ecs.AddSendData(gd);
+                    //MainForm.Instance.ecs.AddSendData(gd);
                 }
 
             }
@@ -81,7 +81,7 @@ namespace RUINORERP.UI.SuperSocketClient
                 //如果自己是超级管理员就不发送
                 //if (!MainForm.Instance.AppContext.IsSuperUser)
                 //{
-                MainForm.Instance.ecs.AddSendData(gd);
+                //MainForm.Instance.ecs.AddSendData(gd);
                 //}
 
             }

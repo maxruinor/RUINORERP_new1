@@ -20,6 +20,14 @@ namespace RUINORERP.UI
         {
             if (disposing && (components != null))
             {
+                // 取消事件订阅，避免内存泄漏
+                if (communicationService != null)
+                {
+                    communicationService.ReconnectFailed -= OnReconnectFailed;
+                }
+                
+   
+                
                 components.Dispose();
             }
             base.Dispose(disposing);

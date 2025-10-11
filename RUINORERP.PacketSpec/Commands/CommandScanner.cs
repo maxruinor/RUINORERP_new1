@@ -326,7 +326,9 @@ namespace RUINORERP.PacketSpec.Commands
             try
             {
                 var types = assembly.GetTypes()
-                    .Where(t => !t.IsAbstract && !t.IsInterface && !t.IsGenericTypeDefinition);
+                    .Where(t => !t.IsAbstract && !t.IsInterface && 
+                               // 允许带有CommandHandler特性的泛型类型定义被扫描到
+                               (!t.IsGenericTypeDefinition || t.GetCustomAttributes(typeof(CommandHandlerAttribute), false).Any()));
                 
                 if (!string.IsNullOrEmpty(namespaceFilter))
                 {
@@ -560,6 +562,18 @@ namespace RUINORERP.PacketSpec.Commands
 
             try
             {
+                // 如果是泛型类型定义，直接使用类型名称哈希作为备用方案
+                if (commandType.IsGenericTypeDefinition)
+                {
+                    _logger?.LogDebug("泛型类型定义 {TypeName} 使用类型名称哈希作为命令ID", commandType.Name);
+                    uint tempId = (uint)(commandType.FullName?.GetHashCode() ?? commandType.Name.GetHashCode());
+                    if (tempId == 0 || tempId == uint.MaxValue)
+                    {
+                        tempId = (uint)commandType.Name.GetHashCode();
+                    }
+                    return CommandId.FromUInt16((ushort)tempId);
+                }
+
                 // 优先使用静态字段或属性获取命令ID，避免创建实例
                 
                 // 1. 查找静态的 CommandId 常量字段
@@ -637,6 +651,18 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private CommandId CreateInstanceAndGetCommandId(Type commandType)
         {
+            // 检查是否是泛型类型定义
+            if (commandType.IsGenericTypeDefinition)
+            {
+                _logger?.LogDebug("泛型类型定义 {TypeName} 使用类型名称哈希作为命令ID", commandType.Name);
+                uint tempId = (uint)(commandType.FullName?.GetHashCode() ?? commandType.Name.GetHashCode());
+                if (tempId == 0 || tempId == uint.MaxValue)
+                {
+                    tempId = (uint)commandType.Name.GetHashCode();
+                }
+                return CommandId.FromUInt16((ushort)tempId);
+            }
+
             // 检查是否有无参构造函数
             var ctor = commandType.GetConstructor(Type.EmptyTypes);
             if (ctor == null)
@@ -682,8 +708,8 @@ namespace RUINORERP.PacketSpec.Commands
 
                 foreach (var type in types)
                 {
-                    // 跳过无效类型
-                    if (type == null || type.IsAbstract || type.IsInterface || type.IsGenericTypeDefinition)
+                    // 跳过无效类型，但允许带有CommandHandlerAttribute的泛型类型定义
+                    if (type == null || type.IsAbstract || type.IsInterface)
                         continue;
 
                     // 命名空间过滤
@@ -692,7 +718,7 @@ namespace RUINORERP.PacketSpec.Commands
                         continue;
 
                     // 扫描指令类型
-                    if (typeof(ICommand).IsAssignableFrom(type))
+                    if (typeof(ICommand).IsAssignableFrom(type) && !type.IsGenericTypeDefinition)
                     {
                         commandTypes.Add(type);
                     }
@@ -844,6 +870,97 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
+        /// 内部统一扫描方法 - 仅扫描处理器类型
+        /// </summary>
+        private List<Type> ScanAssemblyForHandlersOnly(Assembly assembly, string namespaceFilter)
+        {
+            var handlerTypes = new List<Type>();
+
+            try
+            {
+                // 获取程序集类型（处理加载异常）
+                Type[] types;
+                try
+                {
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    types = ex.Types.Where(t => t != null).ToArray();
+                    _logger?.LogWarning("程序集 {Assembly} 部分类型加载失败", assembly.GetName().Name);
+                }
+
+                foreach (var type in types)
+                {
+                    // 跳过无效类型，但允许带有CommandHandlerAttribute的泛型类型定义
+                    if (type == null || type.IsAbstract || type.IsInterface)
+                        continue;
+
+                    // 命名空间过滤
+                    if (!string.IsNullOrEmpty(namespaceFilter) && 
+                        (type.Namespace == null || !type.Namespace.StartsWith(namespaceFilter)))
+                        continue;
+
+                    // 扫描处理器类型
+                    if (typeof(ICommandHandler).IsAssignableFrom(type) && 
+                        type.GetCustomAttribute<CommandHandlerAttribute>() != null)
+                    {
+                        handlerTypes.Add(type);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "扫描程序集 {Assembly} 中的处理器失败", assembly.GetName().Name);
+            }
+
+            return handlerTypes;
+        }
+
+        /// <summary>
+        /// 扫描并获取指定程序集中的所有处理器类型（仅扫描，不注册）
+        /// </summary>
+        /// <param name="namespaceFilter">命名空间过滤器，可选参数</param>
+        /// <param name="assemblies">要扫描的程序集，可选参数</param>
+        /// <returns>扫描结果</returns>
+        public ScanResult ScanHandlersOnly(string namespaceFilter = null, params Assembly[] assemblies)
+        {
+            var result = new ScanResult
+            {
+                AssemblyName = assemblies?.FirstOrDefault()?.GetName().Name ?? "Unknown",
+                ScanTime = DateTime.UtcNow,
+                CommandTypes = new Dictionary<CommandId, Type>(),
+                HandlerTypes = new List<Type>()
+            };
+
+            if (assemblies == null || assemblies.Length == 0)
+            {
+                assemblies = new[] { Assembly.GetCallingAssembly() };
+            }
+
+            foreach (var assembly in assemblies)
+            {
+                try
+                {
+                    var handlerTypes = ScanAssemblyForHandlersOnly(assembly, namespaceFilter);
+                    result.HandlerTypes.AddRange(handlerTypes);
+                    
+                    // 更新统计信息
+                    UpdateScanStatistics(assembly.GetName().Name, 0, handlerTypes.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "扫描程序集 {AssemblyName} 中的处理器失败", assembly.FullName);
+                }
+            }
+
+            _logger?.LogInformation("扫描完成，发现 {HandlerCount} 个处理器类型", 
+                result.HandlerTypes.Count);
+            
+            return result;
+        }
+
+        /// <summary>
         /// 扫描并注册处理器到命令注册表
         /// </summary>
         /// <param name="registry">命令注册表</param>
@@ -854,7 +971,7 @@ namespace RUINORERP.PacketSpec.Commands
             if (registry == null)
                 throw new ArgumentNullException(nameof(registry));
 
-            var scanResult = ScanCommandsOnly(namespaceFilter, assemblies);
+            var scanResult = ScanHandlersOnly(namespaceFilter, assemblies);
             
             // 注册处理器
             await registry.RegisterHandlersAsync(scanResult.HandlerTypes);

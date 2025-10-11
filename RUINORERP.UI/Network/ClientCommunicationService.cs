@@ -170,9 +170,71 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 更新连接状态
+        /// </summary>
+        /// <param name="connected">是否已连接</param>
+        private void UpdateConnectionState(bool connected)
+        {
+            var previousState = _isConnected;
+            _isConnected = connected;
+            
+            // 如果连接状态发生变化，触发事件
+            if (previousState != connected)
+            {
+                _eventManager.OnConnectionStatusChanged(connected);
+                
+                if (connected)
+                {
+                    _logger.LogInformation("客户端已连接到服务器");
+                    
+                    // 启动心跳
+                    if (!_heartbeatIsRunning)
+                    {
+                        _heartbeatManager.Start();
+                        _heartbeatIsRunning = true;
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("客户端与服务器断开连接");
+                    
+                    // 停止心跳
+                    if (_heartbeatIsRunning)
+                    {
+                        _heartbeatManager.Stop();
+                        _heartbeatIsRunning = false;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 获取当前连接状态
         /// </summary>
-        public bool IsConnected => _isConnected;
+        public bool IsConnected
+        {
+            get
+            {
+                // 检查SocketClient的实际连接状态，确保与_isConnected字段同步
+                lock (_syncLock)
+                {
+                    if (_socketClient == null || _disposed)
+                        return false;
+
+                    // 检查SocketClient的实际连接状态
+                    var socketConnected = _socketClient.IsConnected;
+                    
+                    // 如果Socket实际已断开但_isConnected仍为true，则更新状态
+                    if (!socketConnected && _isConnected)
+                    {
+                        _logger.LogWarning("检测到Socket连接已断开，但连接状态未同步更新，正在修复...");
+                        UpdateConnectionState(false);
+                    }
+                    
+                    return _isConnected && socketConnected;
+                }
+            }
+        }
 
 
 
@@ -191,6 +253,15 @@ namespace RUINORERP.UI.Network
         {
             add => _eventManager.CommandReceived += value;
             remove => _eventManager.CommandReceived -= value;
+        }
+
+        /// <summary>
+        /// 重连失败事件，当客户端重连服务器失败时触发
+        /// </summary>
+        public event Action ReconnectFailed
+        {
+            add => _eventManager.ReconnectFailed += value;
+            remove => _eventManager.ReconnectFailed -= value;
         }
 
         /// <summary>
@@ -231,13 +302,6 @@ namespace RUINORERP.UI.Network
                 {
                     try
                     {
-                        // 停止心跳
-                        if (_heartbeatIsRunning)
-                        {
-                            _heartbeatManager.Stop();
-                            _heartbeatIsRunning = false;
-                        }
-
                         _socketClient.Disconnect();
                     }
                     catch (Exception ex)
@@ -246,8 +310,8 @@ namespace RUINORERP.UI.Network
                     }
                     finally
                     {
-                        _isConnected = false;
-                        _eventManager.OnConnectionStatusChanged(false);
+                        // 使用统一的连接状态更新方法
+                        UpdateConnectionState(false);
                     }
                 }
             }
@@ -776,15 +840,10 @@ namespace RUINORERP.UI.Network
                 {
                     lock (_syncLock)
                     {
-                        _isConnected = true;
                         _heartbeatFailureCount = 0;
+                        // 使用统一的连接状态更新方法
+                        UpdateConnectionState(true);
                     }
-
-                    // 启动心跳
-                    _heartbeatManager.Start();
-
-                    _heartbeatIsRunning = true;
-                    _eventManager.OnConnectionStatusChanged(true);
                 }
 
                 return connected;
@@ -823,18 +882,11 @@ namespace RUINORERP.UI.Network
                     {
                         lock (_syncLock)
                         {
-                            _isConnected = true;
                             _heartbeatFailureCount = 0;
+                            // 使用统一的连接状态更新方法
+                            UpdateConnectionState(true);
                         }
 
-                        // 重启心跳
-                        if (!_heartbeatIsRunning)
-                        {
-                            _heartbeatManager.Start();
-                            _heartbeatIsRunning = true;
-                        }
-
-                        _eventManager.OnConnectionStatusChanged(true);
                         _logger.LogInformation("服务器重连成功");
                         return true;
                     }
@@ -855,6 +907,10 @@ namespace RUINORERP.UI.Network
 
             _logger.LogError("达到最大重连尝试次数，重连失败");
             _eventManager.OnErrorOccurred(new Exception("重连服务器失败: 达到最大尝试次数"));
+            
+            // 触发重连失败事件，通知UI层进行注销锁定处理
+            _eventManager.OnReconnectFailed();
+            
             return false;
         }
 
@@ -878,8 +934,8 @@ namespace RUINORERP.UI.Network
                     if (_isConnected)
                     {
                         _socketClient.Disconnect();
-                        _isConnected = false;
-                        _eventManager.OnConnectionStatusChanged(false);
+                        // 使用统一的连接状态更新方法
+                        UpdateConnectionState(false);
                     }
 
                     // 尝试重连
@@ -1138,17 +1194,8 @@ namespace RUINORERP.UI.Network
             {
                 if (_isConnected)
                 {
-                    _isConnected = false;
-
-                    // 停止心跳
-                    if (_heartbeatIsRunning)
-                    {
-                        _heartbeatManager.Stop();
-                        _heartbeatIsRunning = false;
-                    }
-
-                    _eventManager.OnConnectionStatusChanged(false);
-                    _logger.LogInformation("连接已关闭");
+                    // 使用统一的连接状态更新方法
+                    UpdateConnectionState(false);
 
                     // 尝试重连
                     if (_networkConfig.AutoReconnect && !_disposed)

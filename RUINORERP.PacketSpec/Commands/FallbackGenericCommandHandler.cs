@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Commands;
+﻿using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
@@ -46,7 +46,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             try
             {
-                LogInfo($"处理未注册命令: {cmd.Command.CommandIdentifier} [ID: {cmd.Command.CommandIdentifier.ToString()}]");
+                LogInfo($"处理未注册命令: {cmd.Command.CommandIdentifier} [ID: {cmd.Command.CommandIdentifier.Name.ToString()}]");
                 
                 // 尝试获取命令的可序列化数据
                 var payload = cmd.Command.GetSerializableData();

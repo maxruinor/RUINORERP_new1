@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Server.Network.Commands
 {
+    [CommandHandler("TypedCacheCommandHandler", priority: 100)]
     public class TypedCacheCommandHandler<T> : BaseCommandHandler where T : class, new()
     {
         private readonly ILogger<TypedCacheCommandHandler<T>> _logger;

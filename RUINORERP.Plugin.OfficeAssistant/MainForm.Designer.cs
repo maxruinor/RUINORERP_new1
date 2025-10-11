@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.Plugin.OfficeAssistant
+﻿﻿namespace RUINORERP.Plugin.OfficeAssistant
 {
     partial class MainForm
     {
@@ -39,6 +39,11 @@
             this.btnSelectOldFile = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.comparisonSettingsPanel = new System.Windows.Forms.Panel();
+            this.chkShowSameData = new System.Windows.Forms.CheckBox();
+            this.lblNewWorksheet = new System.Windows.Forms.Label();
+            this.lblOldWorksheet = new System.Windows.Forms.Label();
+            this.cmbNewWorksheet = new System.Windows.Forms.ComboBox();
+            this.cmbOldWorksheet = new System.Windows.Forms.ComboBox();
             this.lblComparisonMode = new System.Windows.Forms.Label();
             this.cmbComparisonMode = new System.Windows.Forms.ComboBox();
             this.chkIgnoreSpaces = new System.Windows.Forms.CheckBox();
@@ -49,9 +54,9 @@
             this.dgvComparisonResults = new System.Windows.Forms.DataGridView();
             this.label4 = new System.Windows.Forms.Label();
             this.actionPanel = new System.Windows.Forms.Panel();
-            this.btnClearResults = new System.Windows.Forms.Button();
-            this.btnExportResults = new System.Windows.Forms.Button();
             this.btnStartComparison = new System.Windows.Forms.Button();
+            this.btnExportResults = new System.Windows.Forms.Button();
+            this.btnClearResults = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.columnMappingPanel = new System.Windows.Forms.Panel();
             this.splitContainerColumnMapping = new System.Windows.Forms.SplitContainer();
@@ -117,7 +122,7 @@
             // chkAutoLoadFiles
             // 
             this.chkAutoLoadFiles.AutoSize = true;
-            this.chkAutoLoadFiles.Location = new System.Drawing.Point(731, 28);
+            this.chkAutoLoadFiles.Location = new System.Drawing.Point(839, 28);
             this.chkAutoLoadFiles.Name = "chkAutoLoadFiles";
             this.chkAutoLoadFiles.Size = new System.Drawing.Size(108, 16);
             this.chkAutoLoadFiles.TabIndex = 8;
@@ -127,7 +132,7 @@
             // 
             // btnLoadFiles
             // 
-            this.btnLoadFiles.Location = new System.Drawing.Point(650, 24);
+            this.btnLoadFiles.Location = new System.Drawing.Point(735, 25);
             this.btnLoadFiles.Name = "btnLoadFiles";
             this.btnLoadFiles.Size = new System.Drawing.Size(75, 54);
             this.btnLoadFiles.TabIndex = 7;
@@ -140,25 +145,25 @@
             this.lblNewFile.AutoSize = true;
             this.lblNewFile.Location = new System.Drawing.Point(13, 61);
             this.lblNewFile.Name = "lblNewFile";
-            this.lblNewFile.Size = new System.Drawing.Size(47, 12);
+            this.lblNewFile.Size = new System.Drawing.Size(65, 12);
             this.lblNewFile.TabIndex = 6;
-            this.lblNewFile.Text = "新文件:";
+            this.lblNewFile.Text = "新数据文件";
             // 
             // lblOldFile
             // 
             this.lblOldFile.AutoSize = true;
             this.lblOldFile.Location = new System.Drawing.Point(13, 29);
             this.lblOldFile.Name = "lblOldFile";
-            this.lblOldFile.Size = new System.Drawing.Size(47, 12);
+            this.lblOldFile.Size = new System.Drawing.Size(65, 12);
             this.lblOldFile.TabIndex = 5;
-            this.lblOldFile.Text = "旧文件:";
+            this.lblOldFile.Text = "旧数据文件";
             // 
             // txtNewFilePath
             // 
             this.txtNewFilePath.AllowDrop = true;
-            this.txtNewFilePath.Location = new System.Drawing.Point(74, 58);
+            this.txtNewFilePath.Location = new System.Drawing.Point(84, 58);
             this.txtNewFilePath.Name = "txtNewFilePath";
-            this.txtNewFilePath.Size = new System.Drawing.Size(489, 21);
+            this.txtNewFilePath.Size = new System.Drawing.Size(564, 21);
             this.txtNewFilePath.TabIndex = 4;
             this.txtNewFilePath.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtNewFilePath_DragDrop);
             this.txtNewFilePath.DragEnter += new System.Windows.Forms.DragEventHandler(this.txtNewFilePath_DragEnter);
@@ -166,16 +171,16 @@
             // txtOldFilePath
             // 
             this.txtOldFilePath.AllowDrop = true;
-            this.txtOldFilePath.Location = new System.Drawing.Point(74, 26);
+            this.txtOldFilePath.Location = new System.Drawing.Point(84, 26);
             this.txtOldFilePath.Name = "txtOldFilePath";
-            this.txtOldFilePath.Size = new System.Drawing.Size(489, 21);
+            this.txtOldFilePath.Size = new System.Drawing.Size(564, 21);
             this.txtOldFilePath.TabIndex = 3;
             this.txtOldFilePath.DragDrop += new System.Windows.Forms.DragEventHandler(this.txtOldFilePath_DragDrop);
             this.txtOldFilePath.DragEnter += new System.Windows.Forms.DragEventHandler(this.txtOldFilePath_DragEnter);
             // 
             // btnSelectNewFile
             // 
-            this.btnSelectNewFile.Location = new System.Drawing.Point(569, 56);
+            this.btnSelectNewFile.Location = new System.Drawing.Point(654, 58);
             this.btnSelectNewFile.Name = "btnSelectNewFile";
             this.btnSelectNewFile.Size = new System.Drawing.Size(75, 21);
             this.btnSelectNewFile.TabIndex = 2;
@@ -185,7 +190,7 @@
             // 
             // btnSelectOldFile
             // 
-            this.btnSelectOldFile.Location = new System.Drawing.Point(569, 24);
+            this.btnSelectOldFile.Location = new System.Drawing.Point(654, 26);
             this.btnSelectOldFile.Name = "btnSelectOldFile";
             this.btnSelectOldFile.Size = new System.Drawing.Size(75, 21);
             this.btnSelectOldFile.TabIndex = 1;
@@ -201,11 +206,16 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(1006, 21);
             this.label1.TabIndex = 0;
-            this.label1.Text = "文件选择";
+            this.label1.Text = "数据文件选择";
             // 
             // comparisonSettingsPanel
             // 
             this.comparisonSettingsPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.comparisonSettingsPanel.Controls.Add(this.chkShowSameData);
+            this.comparisonSettingsPanel.Controls.Add(this.lblNewWorksheet);
+            this.comparisonSettingsPanel.Controls.Add(this.lblOldWorksheet);
+            this.comparisonSettingsPanel.Controls.Add(this.cmbNewWorksheet);
+            this.comparisonSettingsPanel.Controls.Add(this.cmbOldWorksheet);
             this.comparisonSettingsPanel.Controls.Add(this.lblComparisonMode);
             this.comparisonSettingsPanel.Controls.Add(this.cmbComparisonMode);
             this.comparisonSettingsPanel.Controls.Add(this.chkIgnoreSpaces);
@@ -214,8 +224,55 @@
             this.comparisonSettingsPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.comparisonSettingsPanel.Location = new System.Drawing.Point(0, 323);
             this.comparisonSettingsPanel.Name = "comparisonSettingsPanel";
-            this.comparisonSettingsPanel.Size = new System.Drawing.Size(1008, 92);
+            this.comparisonSettingsPanel.Size = new System.Drawing.Size(1008, 110);
             this.comparisonSettingsPanel.TabIndex = 2;
+            // 
+            // chkShowSameData
+            // 
+            this.chkShowSameData.AutoSize = true;
+            this.chkShowSameData.Location = new System.Drawing.Point(16, 80);
+            this.chkShowSameData.Name = "chkShowSameData";
+            this.chkShowSameData.Size = new System.Drawing.Size(96, 16);
+            this.chkShowSameData.TabIndex = 5;
+            this.chkShowSameData.Text = "显示相同数据";
+            this.chkShowSameData.UseVisualStyleBackColor = true;
+            this.chkShowSameData.CheckedChanged += new System.EventHandler(this.chkShowSameData_CheckedChanged);
+            // 
+            // lblNewWorksheet
+            // 
+            this.lblNewWorksheet.AutoSize = true;
+            this.lblNewWorksheet.Location = new System.Drawing.Point(340, 60);
+            this.lblNewWorksheet.Name = "lblNewWorksheet";
+            this.lblNewWorksheet.Size = new System.Drawing.Size(77, 12);
+            this.lblNewWorksheet.TabIndex = 8;
+            this.lblNewWorksheet.Text = "新数据工作表";
+            // 
+            // lblOldWorksheet
+            // 
+            this.lblOldWorksheet.AutoSize = true;
+            this.lblOldWorksheet.Location = new System.Drawing.Point(340, 35);
+            this.lblOldWorksheet.Name = "lblOldWorksheet";
+            this.lblOldWorksheet.Size = new System.Drawing.Size(77, 12);
+            this.lblOldWorksheet.TabIndex = 7;
+            this.lblOldWorksheet.Text = "旧数据工作表";
+            // 
+            // cmbNewWorksheet
+            // 
+            this.cmbNewWorksheet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbNewWorksheet.FormattingEnabled = true;
+            this.cmbNewWorksheet.Location = new System.Drawing.Point(421, 57);
+            this.cmbNewWorksheet.Name = "cmbNewWorksheet";
+            this.cmbNewWorksheet.Size = new System.Drawing.Size(162, 20);
+            this.cmbNewWorksheet.TabIndex = 6;
+            // 
+            // cmbOldWorksheet
+            // 
+            this.cmbOldWorksheet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbOldWorksheet.FormattingEnabled = true;
+            this.cmbOldWorksheet.Location = new System.Drawing.Point(421, 32);
+            this.cmbOldWorksheet.Name = "cmbOldWorksheet";
+            this.cmbOldWorksheet.Size = new System.Drawing.Size(162, 20);
+            this.cmbOldWorksheet.TabIndex = 5;
             // 
             // lblComparisonMode
             // 
@@ -275,16 +332,16 @@
             this.resultDisplayPanel.Controls.Add(this.dgvComparisonResults);
             this.resultDisplayPanel.Controls.Add(this.label4);
             this.resultDisplayPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.resultDisplayPanel.Location = new System.Drawing.Point(0, 415);
+            this.resultDisplayPanel.Location = new System.Drawing.Point(0, 433);
             this.resultDisplayPanel.Name = "resultDisplayPanel";
-            this.resultDisplayPanel.Size = new System.Drawing.Size(1008, 195);
+            this.resultDisplayPanel.Size = new System.Drawing.Size(1008, 177);
             this.resultDisplayPanel.TabIndex = 3;
             // 
             // progressBar
             // 
             this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar.Location = new System.Drawing.Point(12, 168);
+            this.progressBar.Location = new System.Drawing.Point(12, 150);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(984, 21);
             this.progressBar.TabIndex = 2;
@@ -301,7 +358,7 @@
             this.dgvComparisonResults.Name = "dgvComparisonResults";
             this.dgvComparisonResults.ReadOnly = true;
             this.dgvComparisonResults.RowHeadersVisible = false;
-            this.dgvComparisonResults.Size = new System.Drawing.Size(984, 138);
+            this.dgvComparisonResults.Size = new System.Drawing.Size(984, 120);
             this.dgvComparisonResults.TabIndex = 1;
             // 
             // label4
@@ -312,40 +369,20 @@
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(1006, 21);
             this.label4.TabIndex = 0;
-            this.label4.Text = "结果展示";
+            this.label4.Text = "对比结果";
             // 
             // actionPanel
             // 
             this.actionPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.actionPanel.Controls.Add(this.btnClearResults);
-            this.actionPanel.Controls.Add(this.btnExportResults);
             this.actionPanel.Controls.Add(this.btnStartComparison);
+            this.actionPanel.Controls.Add(this.btnExportResults);
+            this.actionPanel.Controls.Add(this.btnClearResults);
             this.actionPanel.Controls.Add(this.label5);
             this.actionPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.actionPanel.Location = new System.Drawing.Point(0, 610);
             this.actionPanel.Name = "actionPanel";
             this.actionPanel.Size = new System.Drawing.Size(1008, 46);
             this.actionPanel.TabIndex = 4;
-            // 
-            // btnClearResults
-            // 
-            this.btnClearResults.Location = new System.Drawing.Point(174, 24);
-            this.btnClearResults.Name = "btnClearResults";
-            this.btnClearResults.Size = new System.Drawing.Size(75, 21);
-            this.btnClearResults.TabIndex = 3;
-            this.btnClearResults.Text = "清除结果";
-            this.btnClearResults.UseVisualStyleBackColor = true;
-            this.btnClearResults.Click += new System.EventHandler(this.btnClearResults_Click);
-            // 
-            // btnExportResults
-            // 
-            this.btnExportResults.Location = new System.Drawing.Point(93, 24);
-            this.btnExportResults.Name = "btnExportResults";
-            this.btnExportResults.Size = new System.Drawing.Size(75, 21);
-            this.btnExportResults.TabIndex = 2;
-            this.btnExportResults.Text = "导出结果";
-            this.btnExportResults.UseVisualStyleBackColor = true;
-            this.btnExportResults.Click += new System.EventHandler(this.btnExportResults_Click);
             // 
             // btnStartComparison
             // 
@@ -357,6 +394,26 @@
             this.btnStartComparison.UseVisualStyleBackColor = true;
             this.btnStartComparison.Click += new System.EventHandler(this.btnStartComparison_Click);
             // 
+            // btnExportResults
+            // 
+            this.btnExportResults.Location = new System.Drawing.Point(93, 24);
+            this.btnExportResults.Name = "btnExportResults";
+            this.btnExportResults.Size = new System.Drawing.Size(75, 21);
+            this.btnExportResults.TabIndex = 2;
+            this.btnExportResults.Text = "导出结果";
+            this.btnExportResults.UseVisualStyleBackColor = true;
+            this.btnExportResults.Click += new System.EventHandler(this.btnExportResults_Click);
+            // 
+            // btnClearResults
+            // 
+            this.btnClearResults.Location = new System.Drawing.Point(174, 24);
+            this.btnClearResults.Name = "btnClearResults";
+            this.btnClearResults.Size = new System.Drawing.Size(75, 21);
+            this.btnClearResults.TabIndex = 3;
+            this.btnClearResults.Text = "清除结果";
+            this.btnClearResults.UseVisualStyleBackColor = true;
+            this.btnClearResults.Click += new System.EventHandler(this.btnClearResults_Click);
+            // 
             // label5
             // 
             this.label5.Dock = System.Windows.Forms.DockStyle.Top;
@@ -365,7 +422,7 @@
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(1006, 21);
             this.label5.TabIndex = 0;
-            this.label5.Text = "操作区域";
+            this.label5.Text = "操作按钮";
             // 
             // columnMappingPanel
             // 
@@ -444,9 +501,9 @@
             this.lblOldFilePreview.Dock = System.Windows.Forms.DockStyle.Top;
             this.lblOldFilePreview.Location = new System.Drawing.Point(0, 0);
             this.lblOldFilePreview.Name = "lblOldFilePreview";
-            this.lblOldFilePreview.Size = new System.Drawing.Size(65, 12);
+            this.lblOldFilePreview.Size = new System.Drawing.Size(89, 12);
             this.lblOldFilePreview.TabIndex = 4;
-            this.lblOldFilePreview.Text = "旧文件预览";
+            this.lblOldFilePreview.Text = "旧数据文件预览";
             // 
             // dgvNewFilePreview
             // 
@@ -476,9 +533,9 @@
             this.lblNewFilePreview.Dock = System.Windows.Forms.DockStyle.Top;
             this.lblNewFilePreview.Location = new System.Drawing.Point(0, 0);
             this.lblNewFilePreview.Name = "lblNewFilePreview";
-            this.lblNewFilePreview.Size = new System.Drawing.Size(65, 12);
+            this.lblNewFilePreview.Size = new System.Drawing.Size(89, 12);
             this.lblNewFilePreview.TabIndex = 5;
-            this.lblNewFilePreview.Text = "新文件预览";
+            this.lblNewFilePreview.Text = "新数据文件预览";
             // 
             // panelMappingSettings
             // 
@@ -556,36 +613,36 @@
             this.lblCompareColumns.AutoSize = true;
             this.lblCompareColumns.Location = new System.Drawing.Point(286, 103);
             this.lblCompareColumns.Name = "lblCompareColumns";
-            this.lblCompareColumns.Size = new System.Drawing.Size(53, 12);
+            this.lblCompareColumns.Size = new System.Drawing.Size(65, 12);
             this.lblCompareColumns.TabIndex = 16;
-            this.lblCompareColumns.Text = "比较列名";
+            this.lblCompareColumns.Text = "比较列映射";
             // 
             // lblKeyColumns
             // 
             this.lblKeyColumns.AutoSize = true;
             this.lblKeyColumns.Location = new System.Drawing.Point(286, 11);
             this.lblKeyColumns.Name = "lblKeyColumns";
-            this.lblKeyColumns.Size = new System.Drawing.Size(41, 12);
+            this.lblKeyColumns.Size = new System.Drawing.Size(53, 12);
             this.lblKeyColumns.TabIndex = 15;
-            this.lblKeyColumns.Text = "键列名";
+            this.lblKeyColumns.Text = "键列映射";
             // 
             // lblNewColumns
             // 
             this.lblNewColumns.AutoSize = true;
             this.lblNewColumns.Location = new System.Drawing.Point(142, 11);
             this.lblNewColumns.Name = "lblNewColumns";
-            this.lblNewColumns.Size = new System.Drawing.Size(65, 12);
+            this.lblNewColumns.Size = new System.Drawing.Size(77, 12);
             this.lblNewColumns.TabIndex = 14;
-            this.lblNewColumns.Text = "新文件列名";
+            this.lblNewColumns.Text = "新数据列名称";
             // 
             // lblOldColumns
             // 
             this.lblOldColumns.AutoSize = true;
             this.lblOldColumns.Location = new System.Drawing.Point(11, 11);
             this.lblOldColumns.Name = "lblOldColumns";
-            this.lblOldColumns.Size = new System.Drawing.Size(65, 12);
+            this.lblOldColumns.Size = new System.Drawing.Size(77, 12);
             this.lblOldColumns.TabIndex = 13;
-            this.lblOldColumns.Text = "旧文件列名";
+            this.lblOldColumns.Text = "旧数据列名称";
             // 
             // lstCompareColumns
             // 
@@ -595,6 +652,7 @@
             this.lstCompareColumns.Name = "lstCompareColumns";
             this.lstCompareColumns.Size = new System.Drawing.Size(250, 64);
             this.lstCompareColumns.TabIndex = 12;
+            this.lstCompareColumns.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstCompareColumns_MouseDoubleClick);
             // 
             // lstKeyColumns
             // 
@@ -604,6 +662,7 @@
             this.lstKeyColumns.Name = "lstKeyColumns";
             this.lstKeyColumns.Size = new System.Drawing.Size(250, 64);
             this.lstKeyColumns.TabIndex = 11;
+            this.lstKeyColumns.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstKeyColumns_MouseDoubleClick);
             // 
             // lstNewColumns
             // 
@@ -648,6 +707,7 @@
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "办公助手 - Excel对比工具";
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.fileSelectionPanel.ResumeLayout(false);
             this.fileSelectionPanel.PerformLayout();
             this.comparisonSettingsPanel.ResumeLayout(false);
@@ -716,6 +776,10 @@
         private System.Windows.Forms.ComboBox cmbComparisonMode;
         private System.Windows.Forms.CheckBox chkIgnoreSpaces;
         private System.Windows.Forms.CheckBox chkCaseSensitive;
+        private System.Windows.Forms.ComboBox cmbOldWorksheet;
+        private System.Windows.Forms.ComboBox cmbNewWorksheet;
+        private System.Windows.Forms.Label lblOldWorksheet;
+        private System.Windows.Forms.Label lblNewWorksheet;
         private System.Windows.Forms.ProgressBar progressBar;
         private System.Windows.Forms.DataGridView dgvComparisonResults;
         private System.Windows.Forms.Button btnClearResults;
@@ -725,5 +789,6 @@
         private System.Windows.Forms.SplitContainer splitContainerFilePreviews;
         private System.Windows.Forms.Panel panelMappingSettings;
         private System.Windows.Forms.CheckBox chkAutoLoadFiles;
+        private System.Windows.Forms.CheckBox chkShowSameData;
     }
 }

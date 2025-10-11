@@ -15,6 +15,7 @@ namespace RUINORERP.Plugin
     {
         private PluginState _state = PluginState.Uninitialized;
         private readonly Dictionary<string, object> _pluginData = new Dictionary<string, object>();
+        private Func<string, bool> _permissionChecker;
         
         /// <summary>
         /// 插件名称
@@ -35,6 +36,11 @@ namespace RUINORERP.Plugin
         /// 插件状态
         /// </summary>
         public PluginState State => _state;
+        
+        /// <summary>
+        /// 插件权限标识
+        /// </summary>
+        public virtual string PermissionKey => $"PLUGIN_{this.Name.ToUpper()}";
         
         /// <summary>
         /// 插件目录
@@ -151,6 +157,29 @@ namespace RUINORERP.Plugin
         public virtual ToolStripMenuItem GetMenuItem()
         {
             return PluginMenuItem;
+        }
+        
+        /// <summary>
+        /// 检查当前用户是否有权限使用此插件
+        /// </summary>
+        /// <returns>是否有权限</returns>
+        public virtual bool HasPermission()
+        {
+            // 如果没有设置权限检查器，默认允许访问
+            if (_permissionChecker == null)
+                return true;
+            
+            // 使用权限检查器检查权限
+            return _permissionChecker(this.PermissionKey);
+        }
+        
+        /// <summary>
+        /// 设置权限检查委托
+        /// </summary>
+        /// <param name="permissionChecker">权限检查委托</param>
+        public virtual void SetPermissionChecker(Func<string, bool> permissionChecker)
+        {
+            _permissionChecker = permissionChecker;
         }
         
         /// <summary>

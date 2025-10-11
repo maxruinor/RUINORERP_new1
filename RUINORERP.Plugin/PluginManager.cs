@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Windows.Forms;
 // 添加System.Drawing引用以解决CS7069错误
 using System.Drawing;
+using System.Security.Principal;
 
 namespace RUINORERP.Plugin
 {
@@ -17,6 +18,7 @@ namespace RUINORERP.Plugin
         private readonly string _pluginDirectory;
         private readonly List<IPlugin> _plugins = new List<IPlugin>();
         private readonly Dictionary<string, Assembly> _loadedAssemblies = new Dictionary<string, Assembly>();
+        private Func<string, bool> _permissionChecker;
         
         /// <summary>
         /// 获取已加载的所有插件
@@ -44,6 +46,15 @@ namespace RUINORERP.Plugin
         public PluginManager(string pluginDirectory)
         {
             _pluginDirectory = pluginDirectory;
+        }
+        
+        /// <summary>
+        /// 设置权限检查委托
+        /// </summary>
+        /// <param name="permissionChecker">权限检查委托</param>
+        public void SetPermissionChecker(Func<string, bool> permissionChecker)
+        {
+            _permissionChecker = permissionChecker;
         }
         
         /// <summary>
@@ -96,6 +107,9 @@ namespace RUINORERP.Plugin
                             {
                                 // 创建插件实例
                                 var plugin = (IPlugin)Activator.CreateInstance(pluginType);
+                                
+                                // 设置权限检查器
+                                plugin.SetPermissionChecker(_permissionChecker);
                                 
                                 // 初始化插件
                                 if (plugin.Initialize())
@@ -182,6 +196,13 @@ namespace RUINORERP.Plugin
             {
                 try
                 {
+                    // 检查用户是否有权限访问此插件
+                    if (!plugin.HasPermission())
+                    {
+                        // 用户没有权限，跳过此插件
+                        continue;
+                    }
+                    
                     var pluginMenuItem = plugin.GetMenuItem();
                     if (pluginMenuItem != null)
                     {

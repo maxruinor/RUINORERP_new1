@@ -1,5 +1,4 @@
 using System;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,6 +23,26 @@ namespace RUINORERP.Model.CommonModel
         /// 缓存对象的名称
         /// </summary>
         public string CacheName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 表名
+        /// </summary>
+        public string TableName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 数据数量
+        /// </summary>
+        public int DataCount { get; set; }
+
+        /// <summary>
+        /// 内存大小
+        /// </summary>
+        public long MemorySize { get; set; }
+
+        /// <summary>
+        /// 最后更新时间
+        /// </summary>
+        public DateTime LastUpdateTime { get; set; } = DateTime.Now;
 
         /// <summary>
         /// 是否有缓存过期的设置

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using RUINORERP.Plugin.OfficeAssistant.Shared;
 
 namespace RUINORERP.Plugin.OfficeAssistant.Core
 {
@@ -23,8 +24,8 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
             try
             {
                 // 读取文件数据
-                var oldData = ReadExcelData(oldFile, config.OldWorksheetName);
-                var newData = ReadExcelData(newFile, config.NewWorksheetName);
+                var oldData = ExcelHelper.ReadExcelData(oldFile, config.OldWorksheetName);
+                var newData = ExcelHelper.ReadExcelData(newFile, config.NewWorksheetName);
                 
                 // 构建索引
                 var oldIndex = BuildIndex(oldData, config.OldKeyColumns);
@@ -32,9 +33,37 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
                 
                 // 执行对比
                 var result = new ComparisonResult();
-                result.AddedRecords = FindAddedRecords(oldIndex, newIndex, config);
-                result.DeletedRecords = FindDeletedRecords(oldIndex, newIndex, config);
-                result.ModifiedRecords = FindModifiedRecords(oldIndex, newIndex, config);
+                
+                switch (config.Mode)
+                {
+                    case ComparisonMode.ExistenceCheck:
+                        // 存在性检查：明确标识"旧文件中有但新文件中没有"（删除）和"新文件中有但旧文件中没有"（新增）
+                        result.AddedRecords = FindAddedRecords(oldIndex, newIndex, config);  // 新增：新文件中有但旧文件中没有
+                        result.DeletedRecords = FindDeletedRecords(oldIndex, newIndex, config);  // 删除：旧文件中有但新文件中没有
+                        result.ModifiedRecords = new List<ModifiedRecord>(); // 存在性检查不检查数据修改
+                        break;
+                        
+                    case ComparisonMode.DataDifference:
+                        // 数据差异：检查记录的存在性和数据差异
+                        result.AddedRecords = FindAddedRecords(oldIndex, newIndex, config);
+                        result.DeletedRecords = FindDeletedRecords(oldIndex, newIndex, config);
+                        result.ModifiedRecords = FindModifiedRecords(oldIndex, newIndex, config);
+                        break;
+                        
+                    case ComparisonMode.CustomColumns:
+                        // 自定义列对比：只对比指定的列
+                        result.AddedRecords = FindAddedRecords(oldIndex, newIndex, config);
+                        result.DeletedRecords = FindDeletedRecords(oldIndex, newIndex, config);
+                        result.ModifiedRecords = FindModifiedRecords(oldIndex, newIndex, config);
+                        break;
+                        
+                    default:
+                        // 默认使用数据差异模式
+                        result.AddedRecords = FindAddedRecords(oldIndex, newIndex, config);
+                        result.DeletedRecords = FindDeletedRecords(oldIndex, newIndex, config);
+                        result.ModifiedRecords = FindModifiedRecords(oldIndex, newIndex, config);
+                        break;
+                }
                 
                 // 生成摘要
                 result.Summary = new ComparisonSummary
@@ -52,53 +81,6 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
             {
                 throw new InvalidOperationException($"对比过程中发生错误: {ex.Message}", ex);
             }
-        }
-        
-        /// <summary>
-        /// 读取Excel数据
-        /// </summary>
-        /// <param name="filePath">文件路径</param>
-        /// <param name="worksheetName">工作表名称</param>
-        /// <returns>数据表</returns>
-        private DataTable ReadExcelData(string filePath, string worksheetName)
-        {
-            var dataTable = new DataTable();
-            
-            using (var workbook = new XLWorkbook(filePath))
-            {
-                var worksheet = string.IsNullOrEmpty(worksheetName) 
-                    ? workbook.Worksheet(1) 
-                    : workbook.Worksheet(worksheetName);
-                
-                // 添加列
-                var firstRow = worksheet.FirstRowUsed();
-                if (firstRow != null)
-                {
-                    foreach (var cell in firstRow.Cells())
-                    {
-                        dataTable.Columns.Add(cell.Value.ToString());
-                    }
-                    
-                    // 添加数据行
-                    var rows = worksheet.RowsUsed().Skip(1); // 跳过标题行
-                    foreach (var row in rows)
-                    {
-                        var dataRow = dataTable.NewRow();
-                        var cellIndex = 0;
-                        foreach (var cell in row.Cells())
-                        {
-                            if (cellIndex < dataTable.Columns.Count)
-                            {
-                                dataRow[cellIndex] = cell.Value;
-                                cellIndex++;
-                            }
-                        }
-                        dataTable.Rows.Add(dataRow);
-                    }
-                }
-            }
-            
-            return dataTable;
         }
         
         /// <summary>
@@ -301,6 +283,17 @@ namespace RUINORERP.Plugin.OfficeAssistant.Core
             {
                 return oldValue.Equals(newValue, StringComparison.OrdinalIgnoreCase);
             }
+        }
+        
+        /// <summary>
+        /// 读取Excel数据
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <param name="worksheetName">工作表名称</param>
+        /// <returns>数据表</returns>
+        private DataTable ReadExcelData(string filePath, string worksheetName)
+        {
+            return ExcelHelper.ReadExcelData(filePath, worksheetName);
         }
         
         /// <summary>

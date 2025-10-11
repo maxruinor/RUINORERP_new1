@@ -33,6 +33,11 @@ namespace RUINORERP.Plugin
         PluginState State { get; }
         
         /// <summary>
+        /// 插件权限标识
+        /// </summary>
+        string PermissionKey { get; }
+        
+        /// <summary>
         /// 初始化插件
         /// </summary>
         /// <returns>是否初始化成功</returns>
@@ -59,6 +64,18 @@ namespace RUINORERP.Plugin
         /// </summary>
         /// <returns>插件菜单项</returns>
         ToolStripMenuItem GetMenuItem();
+        
+        /// <summary>
+        /// 检查当前用户是否有权限使用此插件
+        /// </summary>
+        /// <returns>是否有权限</returns>
+        bool HasPermission();
+        
+        /// <summary>
+        /// 设置权限检查委托
+        /// </summary>
+        /// <param name="permissionChecker">权限检查委托</param>
+        void SetPermissionChecker(Func<string, bool> permissionChecker);
     }
     
     /// <summary>

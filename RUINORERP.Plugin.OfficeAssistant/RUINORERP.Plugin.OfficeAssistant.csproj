@@ -15,4 +15,19 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="ComparisonResultForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="ComparisonResultForm.Designer.cs">
+      <DependentUpon>ComparisonResultForm.cs</DependentUpon>
+    </Compile>
+    <Compile Update="AboutBox.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="AboutBox.Designer.cs">
+      <DependentUpon>AboutBox.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>

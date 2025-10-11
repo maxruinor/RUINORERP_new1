@@ -2275,6 +2275,7 @@
     <Compile Include="Network\RetryStrategy\ExponentialBackoffRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\FixedIntervalRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\IRetryStrategy.cs" />
+    <Compile Include="Network\Services\TypedCacheClientService.cs" />
     <Compile Include="Network\Services\UserLoginService.cs" />
     <Compile Include="Network\SuperSocketClient.cs" />
     <Compile Include="Network\TimeoutStatistics\CommandTimeoutStats.cs" />
@@ -5169,7 +5170,6 @@
     <Folder Include="Monitoring\Alerts\" />
     <Folder Include="MRP\RR\" />
     <Folder Include="Network\Cache\" />
-    <Folder Include="Network\Examples\" />
     <Folder Include="Network\Models\" />
     <Folder Include="Other\" />
     <Folder Include="PM\" />

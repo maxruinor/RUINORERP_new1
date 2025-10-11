@@ -75,28 +75,22 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="cacheKeys">缓存键列表</param>
-        /// <param name="syncMode">同步模式</param>
-        public CacheCommand(List<string> cacheKeys, string syncMode = "FULL")
+        /// <param name="tableName">表名</param>
+        /// <param name="forceRefresh">是否强制刷新</param>
+        /// <param name="clientInfo">客户端信息</param>
+        public CacheCommand(string tableName, bool forceRefresh = false, string clientInfo = null)
+            : this()
         {
-            CacheKeys = cacheKeys ?? new List<string>();
-            SyncMode = syncMode;
-            Direction = PacketDirection.Request;
-            TimeoutMs= 10000;
-            CommandIdentifier = CacheCommands.CacheSync;
+            Request = CacheRequest.Create(tableName, forceRefresh, clientInfo);
         }
         
         /// <summary>
-        /// 构造函数
+        /// 构造函数（用于内部会话处理）
         /// </summary>
-        /// <param name="cacheKeysEnumerator">缓存键枚举器</param>
-        /// <param name="syncMode">同步模式</param>
-        public CacheCommand(IAsyncEnumerable<string> cacheKeysEnumerator, string syncMode = "FULL")
+        /// <param name="session">会话对象</param>
+        public CacheCommand(object session) : this()
         {
-            CacheKeysEnumerator = cacheKeysEnumerator;
-            SyncMode = syncMode;
-            Direction = PacketDirection.Request;
-            TimeoutMs = 10000;
+            // 仅用于兼容性，在内部处理会话相关逻辑
         }
 
         /// <summary>
@@ -135,30 +129,23 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         }
 
         /// <summary>
-        /// 验证命令参数
+        /// 验证命令数据
+        /// 包含缓存请求特定的验证逻辑
         /// </summary>
+        /// <param name="cancellationToken">取消令牌</param>
         /// <returns>验证结果</returns>
         public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
         {
             var result = await base.ValidateAsync(cancellationToken);
-            if (!result.IsValid)
+            
+            // 添加缓存特定的验证
+            if (Request != null)
             {
-                return result;
+                if (string.IsNullOrWhiteSpace(Request.TableName))
+                    result.Errors.Add(new ValidationFailure(nameof(Request.TableName), "表名不能为空"));
             }
-
-            // 验证同步模式
-            if (string.IsNullOrWhiteSpace(SyncMode))
-            {
-                return new ValidationResult(new[] { new ValidationFailure(nameof(SyncMode), "同步模式不能为空") });
-            }
-
-            // 验证缓存键列表
-            if (CacheKeys == null && CacheKeysEnumerator == null)
-            {
-                return new ValidationResult(new[] { new ValidationFailure(nameof(CacheKeys), "缓存键列表不能为空") });
-            }
-
-            return new ValidationResult();
+            
+            return result;
         }
 
        

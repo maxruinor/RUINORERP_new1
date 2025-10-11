@@ -393,7 +393,7 @@ namespace RUINORERP.UI.Network
         /// 自动附加认证Token - 优化版
         /// 增强功能：确保Token的完整性、类型设置、ExecutionContext绑定和异常处理
         /// </summary>
-        protected virtual async void AutoAttachToken(CommandExecutionContext ExecutionContext)
+        protected virtual async void AutoAttachToken(CmdContext ExecutionContext)
         {
             try
             {
@@ -409,7 +409,7 @@ namespace RUINORERP.UI.Network
 
                     // 自动设置到ExecutionContext，确保服务器端也能获取
                     if (ExecutionContext == null)
-                        ExecutionContext = new CommandExecutionContext();
+                        ExecutionContext = new CmdContext();
                     ExecutionContext.Token = tokenInfo;
                 }
 
@@ -1036,7 +1036,7 @@ namespace RUINORERP.UI.Network
 
                 // 自动设置到ExecutionContext，确保服务器端也能获取
                 if (packet.ExecutionContext == null)
-                    packet.ExecutionContext = new CommandExecutionContext();
+                    packet.ExecutionContext = new CmdContext();
 
                 packet.ExecutionContext.RequestId = command.Request.RequestId;
                 packet.ExecutionContext.RequestType = command.Request.GetType();

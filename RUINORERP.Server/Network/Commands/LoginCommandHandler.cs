@@ -220,7 +220,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<BaseCommand<IResponse>> ProcessLoginAsync(
             LoginRequest loginRequest,
-            CommandExecutionContext executionContext,
+            CmdContext  executionContext,
             CancellationToken cancellationToken)
         {
             try

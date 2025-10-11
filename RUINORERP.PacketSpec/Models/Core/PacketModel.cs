@@ -115,7 +115,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 包含会话、认证、追踪等基础设施信息
         /// </summary>
         [Key(12)]
-        public CommandExecutionContext ExecutionContext { get; set; }
+        public CmdContext  ExecutionContext { get; set; }
 
         /// <summary>
         /// 会话ID（通过ExecutionContext获取）
@@ -127,7 +127,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             set
             {
                 if (ExecutionContext == null)
-                    ExecutionContext = new CommandExecutionContext();
+                    ExecutionContext = new CmdContext ();
                 ExecutionContext.SessionId = value;
             }
         }
@@ -142,7 +142,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             set
             {
                 if (ExecutionContext == null)
-                    ExecutionContext = new CommandExecutionContext();
+                    ExecutionContext = new CmdContext ();
                 ExecutionContext.ClientId = value;
             }
         }
@@ -157,7 +157,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             set
             {
                 if (ExecutionContext == null)
-                    ExecutionContext = new CommandExecutionContext();
+                    ExecutionContext = new CmdContext ();
                 if (ExecutionContext.Token == null)
                     ExecutionContext.Token = new Commands.Authentication.TokenInfo();
                 ExecutionContext.Token.AccessToken = value;

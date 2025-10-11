@@ -8,9 +8,12 @@ using MessagePack;
 
 namespace RUINORERP.PacketSpec.Commands
 {
+    /// <summary>
+    /// 指令系统的上下文信息
+    /// </summary>
     [Serializable]
     [MessagePackObject]
-    public class CommandExecutionContext
+    public class CmdContext 
     {
         [Key(16)]
         public string SessionId { get; set; }
@@ -79,9 +82,9 @@ namespace RUINORERP.PacketSpec.Commands
         /// 克隆当前ExecutionContext实例
         /// </summary>
         /// <returns>新的ExecutionContext副本</returns>
-        public CommandExecutionContext Clone()
+        public CmdContext  Clone()
         {
-            return new CommandExecutionContext
+            return new CmdContext 
             {
                 SessionId = this.SessionId,
                 ClientId = this.ClientId,

@@ -38,6 +38,7 @@
     <Compile Remove="frmUserOnline.cs" />
     <Compile Remove="frmUserOnline.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
+    <Compile Remove="Network\Commands\CacheCommandHandler.cs" />
     <Compile Remove="Network\Commands\CacheSyncCommandHandler.cs" />
     <Compile Remove="Network\Commands\CommandHandlerBase.cs" />
     <Compile Remove="Network\Commands\DataSyncCommandHandler.cs" />
@@ -61,6 +62,8 @@
     <Compile Remove="Network\Interfaces\Services\IFileStorageService.cs" />
     <Compile Remove="Network\Services\FileStorageManager.cs" />
     <Compile Remove="Network\Services\UnifiedUserService.cs" />
+    <Compile Remove="Services\Cache\CacheService.cs" />
+    <Compile Remove="Services\Cache\ICacheService.cs" />
     <Compile Remove="SmartReminder\CachedRuleEngineCenter.cs" />
     <Compile Remove="SmartReminder\InvReminder\InventoryAlertWorkflow.cs" />
     <Compile Remove="Startup - 复制.cs" />
@@ -208,6 +211,7 @@
     <Folder Include="Network\CoreServices\" />
     <Folder Include="Network\Documentation\" />
     <Folder Include="Network\Testing\" />
+    <Folder Include="Services\Cache\" />
     <Folder Include="SuperSocketServices\Commands\Legacy\" />
     <Folder Include="SuperSocketServices\Commands\System\" />
     <Folder Include="SuperSocketServices\Documentation\" />

@@ -30,7 +30,6 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Errors;
 
 
-
 namespace RUINORERP.Server.Network.Commands
 {
     /// <summary>
@@ -250,7 +249,7 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 处理缓存请求
+        /// 处理缓存请求 - 统一使用泛型命令处理模式
         /// </summary>
         /// <param name="command">缓存请求命令</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -259,108 +258,15 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // 获取请求数据
-
-                if (command.Command == null || command.Command.RequestDataByMessagePack == null)
-                {
-                    LogError("缓存请求数据为空");
-                    return BaseCommand<IResponse>.CreateError("缓存请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_CACHE_REQUEST");
-                }
-
+                // 使用统一的业务逻辑处理方法
                 if (command.Command is CacheCommand cacheCommand)
                 {
-
-                    // 解析请求数据
-              
-                    if (cacheCommand.RequestDataByMessagePack  == null)
-                    {
-                        LogError("解析缓存请求数据失败");
-                        return BaseCommand<IResponse>.CreateError("解析缓存请求数据失败", UnifiedErrorCodes.Command_ValidationFailed)
-                            .WithMetadata("ErrorCode", "INVALID_CACHE_REQUEST");
-                    }
-
-                    // 验证请求数据有效性
-                    if (string.IsNullOrEmpty(cacheRequest.TableName))
-                    {
-                        LogError("缓存请求表名为空");
-                        return BaseCommand<IResponse>.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                            .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
-                    }
-
-                    // 记录请求信息
-                    LogInfo($"处理缓存请求: 会话={packet.ExecutionContext.SessionId}, 表名={cacheRequest.TableName}, 强制刷新={cacheRequest.ForceRefresh}");
-
-                    // 检查是否需要刷新缓存
-                    if (cacheRequest.ForceRefresh || !IsCacheValid(cacheRequest.TableName, cacheRequest.LastRequestTime))
-                    {
-                        LogInfo($"需要刷新缓存数据: {cacheRequest.TableName}");
-                        await RefreshCache
-                    }
-
-
-
-                    // 解析请求数据
-                    string json = Encoding.UTF8.GetString(packet.Body);
-                    var cacheRequest = JsonConvert.DeserializeObject<CacheRequest>(json);
-                    if (cacheRequest == null)
-                    {
-                        LogError("解析缓存请求数据失败");
-                        return BaseCommand<IResponse>.CreateError("解析缓存请求数据失败", UnifiedErrorCodes.Command_ValidationFailed)
-                            .WithMetadata("ErrorCode", "INVALID_CACHE_REQUEST");
-                    }
-
-                    // 验证请求数据有效性
-                    if (string.IsNullOrEmpty(cacheRequest.TableName))
-                    {
-                        LogError("缓存请求表名为空");
-                        return BaseCommand<IResponse>.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                            .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
-                    }
-
-                    // 记录请求信息
-                    LogInfo($"处理缓存请求: 会话={packet.ExecutionContext.SessionId}, 表名={cacheRequest.TableName}, 强制刷新={cacheRequest.ForceRefresh}");
-
-                    // 检查是否需要刷新缓存
-                    if (cacheRequest.ForceRefresh || !IsCacheValid(cacheRequest.TableName, cacheRequest.LastRequestTime))
-                    {
-                        LogInfo($"需要刷新缓存数据: {cacheRequest.TableName}");
-                        await RefreshCacheDataAsync(cacheRequest.TableName, cancellationToken);
-                    }
-
-                    // 获取缓存数据
-                    var cacheData = MyCacheManager.Instance.GetCache(cacheRequest.TableName);
-                    if (cacheData == null)
-                    {
-                        LogWarning($"缓存数据不存在: {cacheRequest.TableName}");
-                        return BaseCommand<IResponse>.CreateError($"缓存数据不存在: {cacheRequest.TableName}", UnifiedErrorCodes.Biz_DataNotFound)
-                            .WithMetadata("ErrorCode", "CACHE_DATA_NOT_FOUND");
-                    }
-
-                    // 准备缓存响应
-                    var cacheResponse = new CacheResponse
-                    {
-                        RequestId = cacheRequest.RequestId,
-                        Message = "缓存数据获取成功",
-                        CacheData = cacheData,
-                        TableName = cacheRequest.TableName,
-                        CacheTime = DateTime.Now,
-                        ExpirationTime = DateTime.Now.AddMinutes(30),
-                        HasMoreData = false,
-                        ServerVersion = Program.AppVersion,
-                        IsSuccess = true
-                    };
-
-                    // 发送缓存数据到客户端
-                    await SendCacheResponseAsync(packet.ExecutionContext.SessionId, cacheResponse);
-
-                    LogInfo($"缓存请求处理成功: {cacheRequest.TableName}, 数据量: {cacheData.Count}");
-
-                    // 返回成功响应
-                    return BaseCommand<IResponse>.CreateSuccess("缓存数据获取成功")
-                        .WithMetadata("TableName", cacheRequest.TableName)
-                        .WithMetadata("DataCount", cacheData.Count.ToString())
-                        .WithMetadata("CacheTime", cacheResponse.CacheTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                    return await ProcessCacheRequestAsync(cacheCommand, command.Packet.ExecutionContext, cancellationToken);
+                }
+                else
+                {
+                    return BaseCommand<IResponse>.CreateError("不支持的缓存命令格式", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_FORMAT");
                 }
             }
             catch (Exception ex)
@@ -372,7 +278,79 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 处理缓存同步
+        /// 统一的缓存请求业务逻辑处理方法（模仿登录业务的ProcessLoginAsync）
+        /// </summary>
+        /// <param name="cacheCommand">缓存命令</param>
+        /// <param name="executionContext">执行上下文</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> ProcessCacheRequestAsync(CacheCommand cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 获取缓存请求数据
+                var cacheRequest = cacheCommand.Request;
+                if (cacheRequest == null)
+                {
+                    return BaseCommand<IResponse>.CreateError("缓存请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_CACHE_REQUEST");
+                }
+
+                // 验证请求数据有效性
+                if (string.IsNullOrEmpty(cacheRequest.TableName))
+                {
+                    return BaseCommand<IResponse>.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
+                }
+
+                // 检查是否需要刷新缓存
+                if (cacheRequest.ForceRefresh || !IsCacheValid(cacheRequest.TableName, cacheRequest.LastRequestTime))
+                {
+                    await RefreshCacheDataAsync(cacheRequest.TableName, cancellationToken);
+                }
+
+                // 获取缓存数据
+                var cacheData = MyCacheManager.Instance.GetCache(cacheRequest.TableName);
+                if (cacheData == null)
+                {
+                    return BaseCommand<IResponse>.CreateError($"缓存数据不存在: {cacheRequest.TableName}", UnifiedErrorCodes.Biz_DataNotFound)
+                        .WithMetadata("ErrorCode", "CACHE_DATA_NOT_FOUND");
+                }
+
+                // 创建缓存响应
+                var cacheResponse = new CacheResponse
+                {
+                    RequestId = cacheRequest.RequestId,
+                    Message = "缓存数据获取成功",
+                    CacheData = cacheData,
+                    TableName = cacheRequest.TableName,
+                    CacheTime = DateTime.Now,
+                    ExpirationTime = DateTime.Now.AddMinutes(30),
+                    HasMoreData = false,
+                    ServerVersion = Program.AppVersion,
+                    IsSuccess = true
+                };
+
+                // 发送缓存数据到客户端
+                await SendCacheResponseAsync(executionContext.SessionId, cacheResponse);
+
+
+                // 返回成功响应
+                return BaseCommand<IResponse>.CreateSuccess(cacheResponse, "缓存数据获取成功")
+                    .WithMetadata("TableName", cacheRequest.TableName)
+                    .WithMetadata("DataCount", cacheData.Count.ToString())
+                    .WithMetadata("CacheTime", cacheResponse.CacheTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存请求业务逻辑异常: {ex.Message}", ex);
+                return BaseCommand<IResponse>.CreateError($"处理缓存请求业务逻辑异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                    .WithMetadata("ErrorCode", "CACHE_BUSINESS_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存同步 - 统一使用泛型命令处理模式
         /// </summary>
         /// <param name="command">缓存同步命令</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -381,55 +359,16 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                var packet = command.Packet;
-                if (packet == null || packet.Body == null || packet.Body.Length == 0)
+                // 使用统一的业务逻辑处理方法
+                if (command.Command is CacheCommand cacheCommand)
                 {
-                    LogError("缓存同步请求数据为空");
-                    return BaseCommand<IResponse>.CreateError("缓存同步请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_CACHE_SYNC_REQUEST");
-                }
-
-
-
-                // 解析同步请求数据
-                string json = Encoding.UTF8.GetString(packet.Body);
-                var syncRequest = JsonConvert.DeserializeObject<CacheSyncRequest>(json);
-                if (syncRequest == null)
-                {
-                    LogError("解析缓存同步请求数据失败");
-                    return BaseCommand<IResponse>.CreateError("解析缓存同步请求数据失败", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "INVALID_CACHE_SYNC_REQUEST");
-                }
-
-                // 验证请求数据
-                if (string.IsNullOrEmpty(syncRequest.SyncMode))
-                {
-                    LogError("缓存同步模式为空");
-                    return BaseCommand<IResponse>.CreateError("同步模式不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_SYNC_MODE");
-                }
-
-                LogInfo($"处理缓存同步: 会话={packet.ExecutionContext.SessionId}, 模式={syncRequest.SyncMode}, 表数量={syncRequest.CacheKeys?.Count ?? 0}");
-
-                // 根据同步模式处理
-                int syncedCount = 0;
-                if (syncRequest.SyncMode == "FULL" || syncRequest.CacheKeys == null || syncRequest.CacheKeys.Count == 0)
-                {
-                    // 全量同步
-                    syncedCount = await SyncAllCacheAsync(syncRequest, packet.ExecutionContext.SessionId, cancellationToken);
+                    return await ProcessCacheSyncAsync(cacheCommand, command.Packet.CmdContext, cancellationToken);
                 }
                 else
                 {
-                    // 增量同步指定的缓存键
-                    syncedCount = await SyncSpecificCacheAsync(syncRequest.CacheKeys, packet.ExecutionContext.SessionId, cancellationToken);
+                    return BaseCommand<IResponse>.CreateError("不支持的缓存同步命令格式", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_SYNC_FORMAT");
                 }
-
-                LogInfo($"缓存同步成功: 同步了 {syncedCount} 个表的数据");
-
-                return BaseCommand<IResponse>.CreateSuccess("缓存同步成功")
-                    .WithMetadata("SyncMode", syncRequest.SyncMode)
-                    .WithMetadata("SyncedCount", syncedCount.ToString())
-                    .WithMetadata("SyncTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             }
             catch (Exception ex)
             {
@@ -440,7 +379,64 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 处理缓存更新
+        /// 统一的缓存同步业务逻辑处理方法
+        /// </summary>
+        /// <param name="cacheCommand">缓存命令</param>
+        /// <param name="executionContext">执行上下文</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> ProcessCacheSyncAsync(CacheCommand cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 获取缓存同步请求数据
+                var syncRequest = cacheCommand.Request;
+                if (syncRequest == null)
+                {
+                    return BaseCommand<IResponse>.CreateError("缓存同步请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_CACHE_SYNC_REQUEST");
+                }
+
+                // 验证请求数据
+                if (string.IsNullOrEmpty(syncRequest.SyncMode))
+                {
+                    LogError("缓存同步模式为空");
+                    return BaseCommand<IResponse>.CreateError("同步模式不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_SYNC_MODE");
+                }
+
+                LogInfo($"处理缓存同步: 会话={executionContext.SessionId}, 模式={syncRequest.SyncMode}, 表数量={syncRequest.CacheKeys?.Count ?? 0}");
+
+                // 根据同步模式处理
+                int syncedCount = 0;
+                if (syncRequest.SyncMode == "FULL" || syncRequest.CacheKeys == null || syncRequest.CacheKeys.Count == 0)
+                {
+                    // 全量同步
+                    syncedCount = await SyncAllCacheAsync(syncRequest, executionContext.SessionId, cancellationToken);
+                }
+                else
+                {
+                    // 增量同步指定的缓存键
+                    syncedCount = await SyncSpecificCacheAsync(syncRequest.CacheKeys, executionContext.SessionId, cancellationToken);
+                }
+
+                LogInfo($"缓存同步成功: 同步了 {syncedCount} 个表的数据");
+
+                return BaseCommand<IResponse>.CreateSuccess(syncRequest, "缓存同步成功")
+                    .WithMetadata("SyncMode", syncRequest.SyncMode)
+                    .WithMetadata("SyncedCount", syncedCount.ToString())
+                    .WithMetadata("SyncTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存同步业务逻辑异常: {ex.Message}", ex);
+                return BaseCommand<IResponse>.CreateError($"处理缓存同步业务逻辑异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                    .WithMetadata("ErrorCode", "CACHE_SYNC_BUSINESS_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存更新 - 统一使用泛型命令处理模式
         /// </summary>
         /// <param name="command">缓存更新命令</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -449,25 +445,42 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // 解析更新数据
-                var packet = command.Packet;
-                if (packet == null || packet.Body == null || packet.Body.Length == 0)
+                // 使用统一的业务逻辑处理方法
+                if (command.Command is CacheCommand cacheCommand)
                 {
-                    LogError("缓存更新请求数据为空");
-                    return BaseCommand<IResponse>.CreateError("缓存更新请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_CACHE_UPDATE_REQUEST");
+                    return await ProcessCacheUpdateAsync(cacheCommand, command.Packet.CmdContext, cancellationToken);
                 }
+                else
+                {
+                    return BaseCommand<IResponse>.CreateError("不支持的缓存更新命令格式", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_UPDATE_FORMAT");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存更新异常: {ex.Message}", ex);
+                return BaseCommand<IResponse>.CreateError($"处理缓存更新异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                    .WithMetadata("ErrorCode", "CACHE_UPDATE_ERROR");
+            }
+        }
 
-
-
-                // 处理更新逻辑
-                string json = Encoding.UTF8.GetString(packet.Body);
-                var updateRequest = JsonConvert.DeserializeObject<CacheUpdateRequest>(json);
+        /// <summary>
+        /// 统一的缓存更新业务逻辑处理方法
+        /// </summary>
+        /// <param name="cacheCommand">缓存命令</param>
+        /// <param name="executionContext">执行上下文</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> ProcessCacheUpdateAsync(CacheCommand cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 获取缓存更新请求数据
+                var updateRequest = cacheCommand.Request;
                 if (updateRequest == null)
                 {
-                    LogError("解析缓存更新请求数据失败");
-                    return BaseCommand<IResponse>.CreateError("解析缓存更新请求数据失败", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "INVALID_CACHE_UPDATE_REQUEST");
+                    return BaseCommand<IResponse>.CreateError("缓存更新请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_CACHE_UPDATE_REQUEST");
                 }
 
                 // 验证请求数据
@@ -485,7 +498,7 @@ namespace RUINORERP.Server.Network.Commands
                         .WithMetadata("ErrorCode", "EMPTY_UPDATE_DATA");
                 }
 
-                LogInfo($"处理缓存更新: 会话={packet.ExecutionContext.SessionId}, 表名={updateRequest.TableName}");
+                LogInfo($"处理缓存更新: 会话={executionContext.SessionId}, 表名={updateRequest.TableName}");
 
                 // 更新缓存
                 try
@@ -515,21 +528,21 @@ namespace RUINORERP.Server.Network.Commands
 
                 LogInfo($"缓存更新成功: {updateRequest.TableName}");
 
-                return BaseCommand<IResponse>.CreateSuccess("缓存更新成功")
+                return BaseCommand<IResponse>.CreateSuccess(updateRequest, "缓存更新成功")
                     .WithMetadata("TableName", updateRequest.TableName)
                     .WithMetadata("UpdateTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
                     .WithMetadata("Broadcasted", "true");
             }
             catch (Exception ex)
             {
-                LogError($"处理缓存更新异常: {ex.Message}", ex);
-                return BaseCommand<IResponse>.CreateError($"处理缓存更新异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
-                    .WithMetadata("ErrorCode", "CACHE_UPDATE_ERROR");
+                LogError($"处理缓存更新业务逻辑异常: {ex.Message}", ex);
+                return BaseCommand<IResponse>.CreateError($"处理缓存更新业务逻辑异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                    .WithMetadata("ErrorCode", "CACHE_UPDATE_BUSINESS_ERROR");
             }
         }
 
         /// <summary>
-        /// 处理缓存删除
+        /// 处理缓存删除 - 统一使用泛型命令处理模式
         /// </summary>
         /// <param name="command">缓存删除命令</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -538,25 +551,44 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // 解析删除数据
-                var packet = command.Packet;
-                if (packet == null || packet.Body == null || packet.Body.Length == 0)
+                // 使用统一的业务逻辑处理方法
+                if (command.Command is CacheCommand cacheCommand)
                 {
-                    LogError("缓存删除请求数据为空");
-                    return BaseCommand<IResponse>.CreateError("缓存删除请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed.Code)
-                        .WithMetadata("ErrorCode", "EMPTY_CACHE_DELETE_REQUEST");
+                    return await ProcessCacheDeleteAsync(cacheCommand, command.Packet.CmdContext, cancellationToken);
                 }
+                else
+                {
+                    return BaseCommand<IResponse>.CreateError("不支持的缓存删除命令格式", UnifiedErrorCodes.Command_ValidationFailed.Code)
+                        .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_DELETE_FORMAT");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存删除异常: {ex.Message}", ex);
+                return BaseCommand<IResponse>.CreateError($"处理缓存删除异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                    .WithMetadata("ErrorCode", "CACHE_DELETE_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 统一的缓存删除业务逻辑处理方法
+        /// </summary>
+        /// <param name="cacheCommand">缓存命令</param>
+        /// <param name="executionContext">执行上下文</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> ProcessCacheDeleteAsync(CacheCommand cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
+        {
+            try
+            {
 
 
-
-                // 处理删除逻辑
-                string json = Encoding.UTF8.GetString(packet.Body);
-                var deleteRequest = JsonConvert.DeserializeObject<CacheDeleteRequest>(json);
+                // 获取缓存删除请求数据
+                var deleteRequest = cacheCommand.Request;
                 if (deleteRequest == null)
                 {
-                    LogError("解析缓存删除请求数据失败");
-                    return BaseCommand<IResponse>.CreateError("解析缓存删除请求数据失败", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "INVALID_CACHE_DELETE_REQUEST");
+                    return BaseCommand<IResponse>.CreateError("缓存删除请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed.Code)
+                        .WithMetadata("ErrorCode", "EMPTY_CACHE_DELETE_REQUEST");
                 }
 
                 // 验证请求数据
@@ -566,8 +598,6 @@ namespace RUINORERP.Server.Network.Commands
                     return BaseCommand<IResponse>.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
                 }
-
-                LogInfo($"处理缓存删除: 会话={packet.ExecutionContext.SessionId}, 表名={deleteRequest.TableName}");
 
                 // 删除缓存 - 还要看传过来要删除的具体值，还要通知其它用户
                 try
@@ -597,16 +627,16 @@ namespace RUINORERP.Server.Network.Commands
 
                 LogInfo($"缓存删除成功: {deleteRequest.TableName}");
 
-                return BaseCommand<IResponse>.CreateSuccess("缓存删除成功")
+                return BaseCommand<IResponse>.CreateSuccess(deleteRequest, "缓存删除成功")
                     .WithMetadata("TableName", deleteRequest.TableName)
                     .WithMetadata("DeleteTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
                     .WithMetadata("Broadcasted", "true");
             }
             catch (Exception ex)
             {
-                LogError($"处理缓存删除异常: {ex.Message}", ex);
-                return BaseCommand<IResponse>.CreateError($"处理缓存删除异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
-                    .WithMetadata("ErrorCode", "CACHE_DELETE_ERROR");
+                LogError($"处理缓存删除业务逻辑异常: {ex.Message}", ex);
+                return BaseCommand<IResponse>.CreateError($"处理缓存删除业务逻辑异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                    .WithMetadata("ErrorCode", "CACHE_DELETE_BUSINESS_ERROR");
             }
         }
 
@@ -646,12 +676,18 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>任务</returns>
-        private void RefreshCacheDataAsync(string tableName)
+        private async Task RefreshCacheDataAsync(string tableName, CancellationToken cancellationToken = default)
         {
             try
             {
                 // 从数据库加载数据并更新缓存
+                // 注意：这是一个假的异步方法，实际的SetDictDataSource不是异步操作
+                // 未来如果有真正的异步数据库操作，可以在这里实现
                 BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+                
+                // 添加一个await Task.CompletedTask来使方法真正成为异步方法
+                // 这样可以避免警告，同时保持向后兼容性
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {
@@ -941,7 +977,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="command">缓存获取命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<ResponseBase> HandleCacheGetAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleCacheGetAsync(ICommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -1013,7 +1049,7 @@ namespace RUINORERP.Server.Network.Commands
 
                 LogInfo($"缓存获取成功: {getRequest.TableName}");
 
-                return ResponseBase.CreateSuccess("缓存获取成功", responseData)
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存获取成功")
                     .WithMetadata("TableName", getRequest.TableName)
                     .WithMetadata("HasData", "true")
                     .WithMetadata("GetTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
@@ -1032,7 +1068,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="command">缓存设置命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<ResponseBase> HandleCacheSetAsync(QueuedCommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleCacheSetAsync(QueuedCommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -1095,7 +1131,7 @@ namespace RUINORERP.Server.Network.Commands
 
                 LogInfo($"缓存设置完成: {setRequest.TableName}");
 
-                return ResponseBase.CreateSuccess("缓存设置成功", responseData)
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存设置成功")
                     .WithMetadata("TableName", setRequest.TableName)
                     .WithMetadata("SetTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))
                     .WithMetadata("Broadcasted", "true")
@@ -1109,6 +1145,26 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         #region 辅助方法
+
+        /// <summary>
+        /// 创建统一的错误响应
+        /// </summary>
+        private BaseCommand<IResponse> CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
+        {
+            return BaseCommand<IResponse>.CreateError($"{errorCode.Message}: {message}", errorCode.Code)
+                .WithMetadata("ErrorCode", customErrorCode);
+        }
+
+        /// <summary>
+        /// 创建统一的异常响应
+        /// </summary>
+        private BaseCommand<IResponse> CreateExceptionResponse(Exception ex, string errorCode)
+        {
+            return BaseCommand<IResponse>.CreateError($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
+                .WithMetadata("ErrorCode", errorCode)
+                .WithMetadata("Exception", ex.Message)
+                .WithMetadata("StackTrace", ex.StackTrace);
+        }
 
         /// <summary>
         /// 记录信息日志
@@ -1156,7 +1212,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="command">缓存删除命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<ResponseBase> HandleCacheRemoveAsync(QueuedCommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleCacheRemoveAsync(QueuedCommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -1219,7 +1275,7 @@ namespace RUINORERP.Server.Network.Commands
 
                 LogInfo($"缓存删除完成: {removeRequest.TableName}, 键={removeRequest.Key}");
 
-                return ResponseBase.CreateSuccess("缓存删除成功", responseData)
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存删除成功")
                     .WithMetadata("TableName", removeRequest.TableName)
                     .WithMetadata("RemoveKey", removeRequest.Key)
                     .WithMetadata("RemoveTime", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"))

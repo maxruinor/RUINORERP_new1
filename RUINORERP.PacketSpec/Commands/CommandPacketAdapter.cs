@@ -118,7 +118,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="command">命令实例</param>
         /// <param name="commandData">包含请求数据的字节数组</param>
-        private void DeserializeRequestData(ICommand command, byte[] commandData, CommandExecutionContext executionContext)
+        private void DeserializeRequestData(ICommand command, byte[] commandData, CmdContext  executionContext)
         {
             try
             {

@@ -146,8 +146,11 @@ namespace RUINORERP.Server.Network.SuperSocket
                 else
                 {
                     //统一验证基本的命令信息
-
-                    // 验证会话有效性
+                    if (command is LoginCommand)
+                    {
+                        executionContext.SessionId = session.SessionID;
+                    }
+                    // 验证会话有效性,登陆不需要验证
                     if (!SessionService.IsValidSession(executionContext.SessionId))
                     {
                         await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_SessionExpired, cancellationToken);

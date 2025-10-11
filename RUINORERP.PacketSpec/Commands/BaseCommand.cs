@@ -665,7 +665,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 执行上下文（包含Token等信息）
         /// </summary>
         [Key(6)]
-        public CommandExecutionContext ExecutionContext { get; set; }
+        public CmdContext  ExecutionContext { get; set; }
 
         /// <summary>
         /// 错误消息 - 从响应数据中提取

@@ -1469,8 +1469,8 @@ namespace RUINORERP.UI.Common
         public static async void RequestCache<T>()
         {
             RequestCache(typeof(T).Name, typeof(T));
-            TypedCacheClientService cacheClient = Startup.GetFromFac<TypedCacheClientService>();
-            await cacheClient.GetTypedCacheAsync<T>(typeof(T).Name);
+            //TypedCacheClientService cacheClient = Startup.GetFromFac<TypedCacheClientService>();
+            //await cacheClient.GetTypedCacheAsync<T>(typeof(T).Name);
         }
 
         public static void RequestCache(Type type)

@@ -4,6 +4,7 @@ using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Commands.Authentication;
+
 using Microsoft.Extensions.Configuration;
 using RUINORERP.Model.ConfigModel;
 using System;
@@ -206,6 +207,7 @@ namespace RUINORERP.PacketSpec.DI
             // 注册适配器
             builder.RegisterType<CommandPacketAdapter>().SingleInstance();
 
+          
 
 
             // 注册TokenManager服务 - 简化的Token管理器

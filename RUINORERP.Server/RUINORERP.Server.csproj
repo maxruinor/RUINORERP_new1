@@ -13,14 +13,17 @@
     <Compile Remove="Cache\**" />
     <Compile Remove="DataPortal\**" />
     <Compile Remove="Network\Tests\**" />
+    <Compile Remove="packages\**" />
     <Compile Remove="SuperSocketServices\Commands\Business\**" />
     <EmbeddedResource Remove="Cache\**" />
     <EmbeddedResource Remove="DataPortal\**" />
     <EmbeddedResource Remove="Network\Tests\**" />
+    <EmbeddedResource Remove="packages\**" />
     <EmbeddedResource Remove="SuperSocketServices\Commands\Business\**" />
     <None Remove="Cache\**" />
     <None Remove="DataPortal\**" />
     <None Remove="Network\Tests\**" />
+    <None Remove="packages\**" />
     <None Remove="SuperSocketServices\Commands\Business\**" />
   </ItemGroup>
 
@@ -38,8 +41,6 @@
     <Compile Remove="frmUserOnline.cs" />
     <Compile Remove="frmUserOnline.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
-    <Compile Remove="Network\Commands\CacheCommandHandler.cs" />
-    <Compile Remove="Network\Commands\CacheSyncCommandHandler.cs" />
     <Compile Remove="Network\Commands\CommandHandlerBase.cs" />
     <Compile Remove="Network\Commands\DataSyncCommandHandler.cs" />
     <Compile Remove="Network\Commands\EchoCommandHandler.cs" />
@@ -210,6 +211,7 @@
 
   <ItemGroup>
     <Folder Include="Network\CoreServices\" />
+    <Folder Include="Network\Core\Cache\" />
     <Folder Include="Network\Documentation\" />
     <Folder Include="Network\Testing\" />
     <Folder Include="Services\Cache\" />

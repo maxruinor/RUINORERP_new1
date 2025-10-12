@@ -386,7 +386,7 @@ namespace RUINORERP.Server
         /// 配置外部DLL依赖注入
         /// </summary>
         /// <param name="builder">容器构建器</param>
-        public static void ConfigureContainerForDll(ContainerBuilder builder)
+        public static void ConfigureContainerForDll_new(ContainerBuilder builder)
         {
 
             #region Extensions程序集依赖注入
@@ -445,6 +445,312 @@ namespace RUINORERP.Server
             builder.RegisterModule<SmartReminderModule>();
             #endregion
         }
+
+
+        public static void ConfigureContainerForDll(ContainerBuilder builder)
+        {
+
+            var dalAssemble_Extensions = System.Reflection.Assembly.LoadFrom("RUINORERP.Extensions.dll");
+            builder.RegisterAssemblyTypes(dalAssemble_Extensions)
+                  .AsImplementedInterfaces().AsSelf()
+                  .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
+                  .PropertiesAutowired();//允许属性注入
+
+
+            var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+            builder.RegisterAssemblyTypes(dalAssemble)
+             .AsImplementedInterfaces().AsSelf()
+             .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
+             .PropertiesAutowired();//允许属性注入
+
+
+            Type[] tempModelTypes = dalAssemble.GetTypes();
+            List<Type> ModelTypes = new List<Type>();
+            List<Type> OtherModelTypes = new List<Type>();
+            var suagrAttr = typeof(SugarTable);
+            for (int i = 0; i < tempModelTypes.Length; i++)
+            {
+
+                if (!tempModelTypes[i].IsDefined(suagrAttr, false))
+                {
+                    //OtherModelTypes.Add(tempModelTypes[i]);
+                }
+                else
+                {
+                    if (tempModelTypes[i].BaseType == typeof(BaseEntity))
+                    {
+                        Type type = Assembly.LoadFrom("RUINORERP.Model.dll").GetType(tempModelTypes[i].FullName);
+                        builder.Register(c => Activator.CreateInstance(type)).Named<BaseEntity>(tempModelTypes[i].Name);
+                    }
+                    if (tempModelTypes[i].BaseType == typeof(BaseConfig))
+                    {
+                        Type type = Assembly.LoadFrom("RUINORERP.Model.dll").GetType(tempModelTypes[i].FullName);
+                        builder.Register(c => Activator.CreateInstance(type)).Named<BaseConfig>(tempModelTypes[i].Name);
+                    }
+                }
+                // ModelTypes.Add(tempModelTypes[i]);
+            }
+            
+            // 获取所有待注入服务类
+            //var dependencyService = typeof(IDependencyService);
+            // var dependencyServiceArray = GetAllTypes(alldlls).ToArray();//  GlobalData.FxAllTypes
+            //    .Where(x => dependencyService.IsAssignableFrom(x) && x != dependencyService).ToArray();
+            var dalAssemble_Iservice = System.Reflection.Assembly.LoadFrom("RUINORERP.IServices.dll");
+            builder.RegisterAssemblyTypes(dalAssemble_Iservice)
+          .AsClosedTypesOf(typeof(IServices.BASE.IBaseServices<>));
+
+
+            // builder.RegisterGeneric(typeof(Service<>)).As(typeof(IService<>)).InstancePerRequest();
+            var dalAssemble_service = System.Reflection.Assembly.LoadFrom("RUINORERP.Services.dll");
+            builder.RegisterTypes(dalAssemble_service.GetTypes())
+                .AsImplementedInterfaces().AsSelf()
+                .PropertiesAutowired()
+                .InstancePerDependency();
+            // .EnableInterfaceInterceptors();//打开AOP接口注入
+
+            var dalAssemble_Business = System.Reflection.Assembly.LoadFrom("RUINORERP.Business.dll");
+
+
+            Type[] tempTypes = dalAssemble_Business.GetTypes();
+
+            List<KeyValuePair<string, Type>> ProcessorList = new List<KeyValuePair<string, Type>>();
+            List<KeyValuePair<string, Type>> BaseControllerlist = new List<KeyValuePair<string, Type>>();
+            List<KeyValuePair<string, Type>> BaseControllerGenericlist = new List<KeyValuePair<string, Type>>();
+            //2023-12-22用名称注册验证器
+            List<KeyValuePair<string, Type>> ValidatorGenericlist = new List<KeyValuePair<string, Type>>();
+
+            //2024-9-04用名称注册验证器  新加了一个基类
+            List<KeyValuePair<string, Type>> NewBaseValidatorGenericlist = new List<KeyValuePair<string, Type>>();
+
+
+            List<Type> IOCTypes = new List<Type>();
+
+
+            List<Type> IOCCslaTypes = new List<Type>();
+
+            var NoWantIOCAttr = typeof(NoWantIOCAttribute);
+            for (int i = 0; i < tempTypes.Length; i++)
+            {
+                // 是否为自定义特性，否则跳过，进入下一个循环
+                //if (!tempTypes[i].IsDefined(NoWantIOCAttr, false))
+                if (tempTypes[i].IsDefined(NoWantIOCAttr, false))
+                    continue;
+                if (tempTypes[i].Name == "Roles")
+                {
+
+                }
+                if (tempTypes[i].Name == "IWorkflowNotificationService")
+                {
+                    builder.RegisterType<WorkflowNotificationService>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+                if (tempTypes[i].Name == "IStatusMachine")
+                {
+                    builder.RegisterType<BusinessStatusMachine>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+                if (tempTypes[i].Name == "IStatusHandler")
+                {
+                    builder.RegisterType<ProductionStatusHandler>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+                if (tempTypes[i].Name == "IAuditLogService")
+                {
+                    builder.RegisterType<AuditLogService>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+                if (tempTypes[i].Name == "IFMAuditLogService")
+                {
+                    builder.RegisterType<FMAuditLogService>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+                if (tempTypes[i].Name == "IAuthorizeController")
+                {
+                    builder.RegisterType<AuthorizeController>()
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                    ;
+                    continue;
+                }
+
+                if (tempTypes[i].Name == "SqlSugarRowLevelAuthFilter")
+                {
+                    builder.RegisterType<SqlSugarRowLevelAuthFilter>()
+                    .AsSelf()
+                    .SingleInstance() // 注册为单例
+                    .PropertiesAutowired();
+                    continue;
+                }
+
+                if (tempTypes[i].Name.Contains("UseCsla"))
+                {
+                    IOCCslaTypes.Add(tempTypes[i]);
+                }
+                else
+                {
+                    IOCTypes.Add(tempTypes[i]);
+                }
+                if (tempTypes[i].BaseType == null)
+                {
+                    continue;
+                }
+                if (tempTypes[i].BaseType == typeof(BaseProcessor))
+                {
+                    ProcessorList.Add(new KeyValuePair<string, Type>(tempTypes[i].Name, tempTypes[i]));
+                }
+
+
+                //BaseController  继承这个的子类 用名称注册，为了baselist<T>中save统计处理
+                if (tempTypes[i].BaseType == typeof(BaseController) && tempTypes[i].Name == "BaseController")
+                {
+                    BaseControllerlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name, tempTypes[i]));
+                }
+
+                if (tempTypes[i].BaseType.Name.Contains("BaseController") && tempTypes[i].BaseType.IsGenericType)
+                {
+                    //泛型名称有一个尾巴，这里处理掉，但是总体要保持不能同时拥有同名的 泛型 和非泛型控制类
+                    //否则就是调用解析时用加小尾巴
+                    BaseControllerGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
+
+                }
+
+                if (tempTypes[i].BaseType.Name.Contains("AbstractValidator")
+                 && !tempTypes[i].Name.Contains("BaseValidatorGeneric")
+                 && !tempTypes[i].BaseType.Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
+                {
+
+                    //泛型名称有一个尾巴，这里处理掉，但是总体要保持不能同时拥有同名的 泛型 和非泛型控制类
+                    //否则就是调用解析时用加小尾巴
+                    ValidatorGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
+
+                }
+
+                //基类本身
+                if (tempTypes[i].Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
+                {
+                    builder.RegisterGeneric(typeof(BaseValidatorGeneric<>));
+                    builder.RegisterGeneric(typeof(AbstractValidator<>));
+                }
+
+                //子类
+                if (tempTypes[i].BaseType.Name.Contains("BaseValidatorGeneric") && tempTypes[i].BaseType.IsGenericType)
+                {
+                    NewBaseValidatorGenericlist.Add(new KeyValuePair<string, Type>(tempTypes[i].Name.Replace("`1", ""), tempTypes[i]));
+                }
+
+                /*
+                // 强制为自定义特性
+                MenuAttribute? attribute = tempTypes[i].GetCustomAttribute(NoWantIOCAttr, false) as MenuAttribute;
+                // 如果强制失败就进入下一个循环
+                if (attribute == null)
+                    continue;
+                */
+
+
+
+            }
+            var ExType = typeof(SearchType);
+            builder.RegisterTypes(IOCTypes.ToArray())
+            .Where(x => x.GetConstructors().Length > 0) //没有构造函数的排除
+            .Where(x => x != ExType)//排除
+            .Where(x => x != typeof(BizType))
+             .AsImplementedInterfaces().AsSelf()
+            .PropertiesAutowired()
+            .InstancePerDependency();
+            //==接口
+
+            builder.RegisterTypes(IOCCslaTypes.ToArray())
+                .Where(x => x.GetConstructors().Length > 0)
+            //.AsClosedTypesOf(typeof(IServices.BASE.IBaseServices<>))
+            .AsImplementedInterfaces().AsSelf()
+            .PropertiesAutowired()
+            .EnableClassInterceptors()//打开AOP类的虚方法注入
+            .InstancePerDependency()//默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
+            .EnableInterfaceInterceptors();
+
+
+            //用名称注册
+            foreach (var item in ProcessorList)
+            {
+                builder.RegisterType(item.Value).Named(item.Key, typeof(BaseProcessor))
+                .AsImplementedInterfaces().AsSelf()
+                  .SingleInstance()
+                .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                .InstancePerDependency();
+                //.EnableInterfaceInterceptors();//不能启用， 是因为没有接口？
+                //  .InterceptedBy(registerType.ToArray()); //以什么类型拦截
+            }
+
+            //用名称注册
+            foreach (var item in BaseControllerlist)
+            {
+                builder.RegisterType(item.Value).Named(item.Key, typeof(BaseController))
+                .AsImplementedInterfaces().AsSelf()
+                .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                .InstancePerDependency()
+
+                .EnableInterfaceInterceptors();
+                //  .InterceptedBy(registerType.ToArray()); //以什么类型拦截
+            }
+
+            //用名称注册泛型
+            foreach (var item in BaseControllerGenericlist)
+            {
+                //builder.RegisterGeneric(typeof(BaseController<>));
+                builder.RegisterGeneric(item.Value).Named(item.Key, typeof(BaseController<>))
+                  .AsImplementedInterfaces().AsSelf()
+                  .SingleInstance()
+                  .PropertiesAutowired()
+                 .InstancePerDependency();
+
+                // .AsImplementedInterfaces().AsSelf()
+                // .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
+                // .InstancePerDependency();
+            }
+
+
+            //用名称注册泛型
+            foreach (var item in ValidatorGenericlist)
+            {
+                //builder.RegisterGeneric(typeof(BaseController<>));
+                builder.RegisterType(item.Value)
+               .AsImplementedInterfaces().AsSelf()
+                  .SingleInstance()
+                  .PropertiesAutowired()
+                 .InstancePerDependency();
+            }
+            //用名称注册泛型
+            foreach (var item in NewBaseValidatorGenericlist)
+            {
+                builder.RegisterType(item.Value)
+               .AsImplementedInterfaces().AsSelf()
+                  .SingleInstance()
+                  .PropertiesAutowired()
+                 .InstancePerDependency();
+            }
+
+            //如果多次注册以后最后准
+            //https://blog.csdn.net/weixin_30778805/article/details/97148925
+
+
+            builder.RegisterModule(new AutofacRegister());
+        }
+
         #endregion
 
         /// <summary>

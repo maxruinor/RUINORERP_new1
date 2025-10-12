@@ -168,6 +168,8 @@ namespace RUINORERP.UI
 
                         bool isInitPwd = false;
                         //传入账号密码返回结果
+                        
+                        
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData, ref isInitPwd);
                         if (ok)
                         {

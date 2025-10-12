@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using RUINORERP.PacketSpec.Enums;
 
 namespace RUINORERP.PacketSpec.Commands.Cache
@@ -83,6 +83,11 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// 缓存订阅 - 订阅缓存变更
         /// </summary>
         public static readonly CommandId CacheSubscribe = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheSubscribe & 0xFF));
+
+        /// <summary>
+        /// 缓存取消订阅 - 取消订阅缓存变更
+        /// </summary>
+        public static readonly CommandId CacheUnsubscribe = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheUnsubscribe & 0xFF));
 
         /// <summary>
         /// 缓存刷新

@@ -440,7 +440,7 @@ namespace RUINORERP.Server
 
                 IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
                 cache.Set("test1", "test123");
-                await InitConfig(false);
+                await InitConfig(true);
 
                 MyCacheManager.Instance.CacheInfoList.OnAdd += CacheInfoList_OnAdd;
                 MyCacheManager.Instance.CacheInfoList.OnClear += CacheInfoList_OnClear;

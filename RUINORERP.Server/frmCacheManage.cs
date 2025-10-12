@@ -1,4 +1,4 @@
-﻿﻿using HLH.Lib.Helper;
+﻿using HLH.Lib.Helper;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Server.Comm;
@@ -20,6 +20,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.Business.CommService;
+using Newtonsoft.Json.Linq;
+using System.Collections;
 
 namespace RUINORERP.Server
 {
@@ -42,129 +44,295 @@ namespace RUINORERP.Server
         //Assembly assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
         private void listBoxTableList_SelectedIndexChanged(object sender, EventArgs e)
         {
-
-            if (listBoxTableList.SelectedItem is SuperValue kv)
+            try
             {
-                string tableName = kv.superDataTypeName;
-                if (tableName == "锁定信息列表")
+                if (listBoxTableList.SelectedItem != null && listBoxTableList.SelectedItem is SuperValue kv)
                 {
-                    dataGridView1.DataSource = frmMain.Instance.lockManager.GetLockItems();
-                }
-                else
-                {
-                    var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                    if (CacheList == null)
+                    string tableName = kv.superDataTypeName;
+                    if (tableName == "锁定信息列表")
                     {
+                        // 显示锁定信息
                         dataGridView1.DataSource = null;
+                        var lockItems = frmMain.Instance.lockManager.GetLockItems();
+                        dataGridView1.DataSource = lockItems;
                         return;
                     }
-                    // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
 
-                    // 使用 GetType 方法获取 PrintHelper<T> 的类型
-                    //Type type = assembly.GetType("RUINORERP.Model." + tableName);
-                    //dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(type);
-                    dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                    //dataGridView1.XmlFileName = "UCCacheManage" + tableName;
-                    dataGridView1.DataSource = null;
-                    dataGridView1.DataSource = CacheList;
+                    var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    if (CacheList != null)
+                    {
+                        // 根据不同的缓存类型处理数据
+                        if (CacheList is IList list)
+                        {
+                            // 直接使用IList
+                            dataGridView1.DataSource = null;
+                            dataGridView1.DataSource = list;
+                        }
+                        else if (CacheList is JArray jArray)
+                        {
+                            // 将JArray转换为DataTable
+                            DataTable dt = new DataTable();
+                            if (jArray.Count > 0)
+                            {
+                                JObject firstItem = jArray.First as JObject;
+                                foreach (JProperty prop in firstItem.Properties())
+                                {
+                                    Type columnType = typeof(string); // 默认为字符串类型
+
+                                    // 尝试确定更精确的类型
+                                    if (prop.Value.Type == JTokenType.Integer)
+                                    {
+                                        columnType = typeof(long);
+                                    }
+                                    else if (prop.Value.Type == JTokenType.Float)
+                                    {
+                                        columnType = typeof(decimal);
+                                    }
+                                    else if (prop.Value.Type == JTokenType.Date)
+                                    {
+                                        columnType = typeof(DateTime);
+                                    }
+                                    else if (prop.Value.Type == JTokenType.Boolean)
+                                    {
+                                        columnType = typeof(bool);
+                                    }
+
+                                    dt.Columns.Add(prop.Name, columnType);
+                                }
+
+                                foreach (JObject item in jArray)
+                                {
+                                    DataRow dr = dt.NewRow();
+                                    foreach (JProperty prop in item.Properties())
+                                    {
+                                        Type targetType = typeof(string); // 默认为字符串类型
+
+                                        // 根据JTokenType确定目标类型
+                                        switch (prop.Value.Type)
+                                        {
+                                            case JTokenType.Integer:
+                                                targetType = typeof(long);
+                                                break;
+                                            case JTokenType.Float:
+                                                targetType = typeof(decimal);
+                                                break;
+                                            case JTokenType.Date:
+                                                targetType = typeof(DateTime);
+                                                break;
+                                            case JTokenType.Boolean:
+                                                targetType = typeof(bool);
+                                                break;
+                                        }
+
+                                        object value = prop.Value.ToObject(targetType);
+                                        dr[prop.Name] = value ?? DBNull.Value;
+                                    }
+                                    dt.Rows.Add(dr);
+                                }
+                            }
+
+                            dataGridView1.DataSource = null;
+                            dataGridView1.DataSource = dt;
+                        }
+                        else
+                        {
+                            // 尝试转换为IEnumerable
+                            try
+                            {
+                                var enumerable = CacheList as IEnumerable;
+                                if (enumerable != null)
+                                {
+                                    var dataList = enumerable.Cast<object>().ToList();
+                                    dataGridView1.DataSource = null;
+                                    dataGridView1.DataSource = dataList;
+                                }
+                            }
+                            catch
+                            {
+                                // 如果无法转换，创建一个简单的显示
+                                DataTable dt = new DataTable();
+                                dt.Columns.Add("Value", typeof(object));
+                                dt.Rows.Add(CacheList.ToString());
+                                dataGridView1.DataSource = null;
+                                dataGridView1.DataSource = dt;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 没有缓存数据
+                        dataGridView1.DataSource = null;
+                    }
                 }
-               
             }
-            else
+            catch (Exception ex)
             {
-                dataGridView1.DataSource = null;
-                return;
+                MessageBox.Show($"显示缓存数据时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            //var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(listBoxTableList.SelectedItem.ToString());
-            //dataGridView1.DataSource = CacheList;
-
         }
 
         private void toolStripButton刷新缓存_Click(object sender, EventArgs e)
         {
             //这里添加所有缓存
-            LoadCacheToUI();
+            try
+            {
+                // 先确保缓存已初始化
+                if (BizCacheHelper.Manager.CacheEntityList == null)
+                {
+                    // 如果缓存为空，尝试重新初始化
+                    Task.Run(async () => await frmMain.Instance.InitConfig(true)).Wait();
+                }
+
+                // 刷新UI显示
+                LoadCacheToUI();
+
+                // 如果有选中的表，刷新该表的数据
+                if (listBoxTableList.SelectedItem != null && listBoxTableList.SelectedItem is SuperValue kv)
+                {
+                    listBoxTableList_SelectedIndexChanged(null, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"刷新缓存时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
 
         private void LoadCacheToUI()
         {
-            //加载所有用户
-            cmbUser.Items.Clear();
-            foreach (var user in frmMain.Instance.sessionListBiz.ToArray())
+            try
             {
-                SessionforBiz sessionforBiz = user.Value as SessionforBiz;
-                SuperValue skv = new SuperValue(sessionforBiz.User.姓名, user.Key);
-                cmbUser.Items.Add(skv);
-            }
-
-            //加载所有缓存的表
-            listBoxTableList.Items.Clear();
-
-            List<string> tableList = new List<string>();
-            foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
-            {
-                tableList.Add(tableName);
-            }
-            tableList.Sort();
-            //frmMain.Instance.CacheInfoList.Clear();
-            //不能清掉。不然无效
-            //MyCacheManager.Instance.Cache.Clear();
-            foreach (var tableName in tableList)
-            {
-                SuperValue kv = null;
-                string cacheInfoView = string.Empty;
-                CacheInfo cacheInfo = MyCacheManager.Instance.CacheInfoList.Get(tableName) as CacheInfo;
-                if (cacheInfo != null)
+                //加载所有用户
+                cmbUser.Items.Clear();
+                foreach (var user in frmMain.Instance.sessionListBiz.ToArray())
                 {
-                    if (cacheInfo.HasExpire)
+                    SessionforBiz sessionforBiz = user.Value as SessionforBiz;
+                    SuperValue skv = new SuperValue(sessionforBiz.User.姓名, user.Key);
+                    cmbUser.Items.Add(skv);
+                }
+
+                //加载所有缓存的表
+                listBoxTableList.Items.Clear();
+
+                List<string> tableNameList = new List<string>();
+
+                // 确保缓存管理器已初始化
+                if (BizCacheHelper.Manager == null)
+                {
+                    MessageBox.Show("缓存管理器未初始化", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 确保有缓存表
+                if (BizCacheHelper.Manager.NewTableList == null || BizCacheHelper.Manager.NewTableList.Count == 0)
+                {
+                    MessageBox.Show("没有找到缓存表配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+                {
+                    tableNameList.Add(tableName);
+                }
+                tableNameList.Sort();
+
+                foreach (var tableName in tableNameList)
+                {
+                    SuperValue kv = null;
+                    string cacheInfoView = string.Empty;
+                    CacheInfo cacheInfo = MyCacheManager.Instance.CacheInfoList.Get(tableName) as CacheInfo;
+                    if (cacheInfo != null)
                     {
-                        cacheInfoView = $"  {cacheInfo.CacheCount}-{cacheInfo.ExpirationTime}";
+                        if (cacheInfo.HasExpire)
+                        {
+                            cacheInfoView = $"  {cacheInfo.CacheCount}-{cacheInfo.ExpirationTime}";
+                        }
+                        else
+                        {
+                            cacheInfoView = $"  {cacheInfo.CacheCount}";
+                        }
+                    }
+
+                    var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    if (CacheList == null)
+                    {
+                        kv = new SuperValue(tableName + "[0]" + cacheInfoView, tableName);
                     }
                     else
                     {
-                        cacheInfoView = $"  {cacheInfo.CacheCount}";
+                        int count = 0;
+                        // 处理不同类型的缓存数据
+                        if (CacheList is IList list)
+                        {
+                            count = list.Count;
+                        }
+                        else if (CacheList is JArray jArray)
+                        {
+                            count = jArray.Count;
+                        }
+                        else
+                        {
+                            // 尝试转换为IEnumerable
+                            try
+                            {
+                                var enumerable = CacheList as IEnumerable<dynamic>;
+                                if (enumerable != null)
+                                {
+                                    count = enumerable.Count();
+                                }
+                            }
+                            catch
+                            {
+                                // 如果无法转换，显示为1（表示有数据但无法计数）
+                                count = 1;
+                            }
+                        }
+
+                        kv = new SuperValue(tableName + $"[{count}]" + cacheInfoView, tableName);
                     }
+
+                    listBoxTableList.Items.Add(kv);
                 }
 
-                var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                if (CacheList == null)
+                //添加锁定信息
+                if (frmMain.Instance.lockManager != null)
                 {
-                    kv = new SuperValue(tableName + "[" + 0 + "]" + cacheInfoView, tableName);
-
-                    //frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, 0));
-                    //MyCacheManager.Instance.Cache.Add(tableName, new CacheInfo(tableName, 0));
-                    //var lastCacheInfo = new CacheInfo(tableName, 0);
-                    //MyCacheManager.Instance.Cache.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
+                    SuperValue kv = new SuperValue($"锁定信息列表{frmMain.Instance.lockManager.GetLockItemCount()}", "锁定信息列表");
+                    listBoxTableList.Items.Add(kv);
                 }
-                else
-                {
-                    var lastlist = ((IEnumerable<dynamic>)CacheList).ToList();
-                    if (lastlist != null)
-                    {
-                        kv = new SuperValue(tableName + "[" + lastlist.Count + "]" + cacheInfoView, tableName);
-                        // frmMain.Instance.CacheInfoList.TryAdd(tableName, new CacheInfo(tableName, lastlist.Count));
-                        //var lastCacheInfo = new CacheInfo(tableName, lastlist.Count);
-                        //MyCacheManager.Instance.Cache.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
-                    }
-                }
-
-                listBoxTableList.Items.Add(kv);
             }
-
-            //添加锁定信息
-            if (frmMain.Instance.lockManager != null)
+            catch (Exception ex)
             {
-                SuperValue kv = new SuperValue($"锁定信息列表{frmMain.Instance.lockManager.GetLockItemCount()}", "锁定信息列表");
-                listBoxTableList.Items.Add(kv);
+                MessageBox.Show($"加载缓存到UI时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
         }
 
         private async void toolStripButton加载缓存_Click(object sender, EventArgs e)
         {
-            await frmMain.Instance.InitConfig(true);
+            try
+            {
+                // 显示加载中状态
+                this.Cursor = Cursors.WaitCursor;
+                toolStripButton加载缓存.Enabled = false;
+
+                await frmMain.Instance.InitConfig(true);
+
+                // 加载完成后刷新UI
+                LoadCacheToUI();
+
+                MessageBox.Show("缓存加载完成", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载缓存时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                // 恢复UI状态
+                this.Cursor = Cursors.Default;
+                toolStripButton加载缓存.Enabled = true;
+            }
         }
 
         private void 推送缓存数据ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -199,21 +367,54 @@ namespace RUINORERP.Server
 
         private void 加载缓存数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
-            if (listBoxTableList.SelectedItem != null)
+            try
             {
-                if (listBoxTableList.SelectedItem is SuperValue kv)
+                if (listBoxTableList.SelectedItem != null && listBoxTableList.SelectedItem is SuperValue kv)
                 {
                     string tableName = kv.superDataTypeName;
+
+                    // 显示加载中状态
+                    this.Cursor = Cursors.WaitCursor;
+
                     Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
-                    BizCacheHelper.Instance.SetDictDataSource(tableName, true);
-                    stopwatchLoadUI.Stop();
-                    if (frmMain.Instance.IsDebug)
+
+                    // 确保BizCacheHelper实例存在
+                    if (BizCacheHelper.Instance == null)
                     {
-                        frmMain.Instance.PrintInfoLog($"LoadUIPages 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
+                        MessageBox.Show("缓存帮助类未初始化", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
                     }
 
+                    BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+                    stopwatchLoadUI.Stop();
+
+                    // 刷新UI显示
+                    LoadCacheToUI();
+
+                    // 重新选中当前项以刷新数据显示
+                    listBoxTableList.SelectedItem = kv;
+                    listBoxTableList_SelectedIndexChanged(null, null);
+
+                    if (frmMain.Instance.IsDebug)
+                    {
+                        frmMain.Instance.PrintInfoLog($"加载缓存数据 {tableName} 执行时间：{stopwatchLoadUI.ElapsedMilliseconds} 毫秒");
+                    }
+
+                    MessageBox.Show($"表 {tableName} 的缓存数据已加载", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
+                else
+                {
+                    MessageBox.Show("请先选择要加载的缓存表", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载缓存数据时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                // 恢复UI状态
+                this.Cursor = Cursors.Default;
             }
         }
 

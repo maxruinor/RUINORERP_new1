@@ -129,7 +129,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 // 使用CommandDataBuilder构建命令
                 var cacheCommand = CommandDataBuilder.BuildCommand<CacheRequest, CacheResponse>(
-                    CacheCommands.CacheRequest, 
+                    CacheCommands.CacheRequest,
                     request,
                     cmd => cmd.TimeoutMs = 30000
                 );
@@ -150,22 +150,20 @@ namespace RUINORERP.UI.Network.Services
                     var cacheResponse = commandResponse.ResponseData;
 
                     // 处理缓存数据
-                    ProcessCacheData(request.TableName, cacheResponse.CacheData);
+                    //ProcessCacheData(request.TableName, cacheResponse.CacheData);
 
                     // 更新请求时间
                     UpdateLastRequestTime(request.TableName);
 
                     if (authorizeController != null && authorizeController.GetShowDebugInfoAuthorization())
                     {
-                        MainForm.Instance.PrintInfoLog($"接收缓存成功: {request.TableName}, 数据量: {cacheResponse.CacheData?.Count ?? 0}");
+                        //MainForm.Instance.PrintInfoLog($"接收缓存成功: {request.TableName}, 数据量: {cacheResponse.CacheData?.Count ?? 0}");
                     }
 
-                    _log?.LogInformation("缓存请求成功，表名={0}，数据量={1}，请求ID={2}", 
-                        request.TableName, cacheResponse.CacheData?.Count ?? 0, commandResponse.RequestId);
                 }
                 else
                 {
-                    _log?.LogWarning("缓存请求失败，表名={0}，错误: {1}", 
+                    _log?.LogWarning("缓存请求失败，表名={0}，错误: {1}",
                         request.TableName, commandResponse.Message);
                     MainForm.Instance.PrintInfoLog($"接收缓存失败: {commandResponse.Message ?? "未知错误"}");
                 }
@@ -220,7 +218,7 @@ namespace RUINORERP.UI.Network.Services
 
                         if (authorizeController != null && authorizeController.GetShowDebugInfoAuthorization())
                         {
-                            MainForm.Instance.PrintInfoLog($"接收缓存: {response.TableName}, 数据量: {response.CacheData?.Count ?? 0}");
+                        //    MainForm.Instance.PrintInfoLog($"接收缓存: {response.TableName}, 数据量: {response.CacheData?.Count ?? 0}");
                         }
 
                         // 如果有更多数据，继续请求
@@ -255,21 +253,15 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="cacheData">缓存数据</param>
-        private void ProcessCacheData(string tableName, Dictionary<string, object> cacheData)
+        private void ProcessCacheData(string tableName, CacheData cacheData)
         {
             try
             {
-                if (string.IsNullOrEmpty(tableName) || cacheData == null || cacheData.Count == 0)
-                {
-                    _log?.LogWarning("缓存数据处理失败: 表名或数据为空");
-                    return;
-                }
+              /*
 
                 // 根据表名获取缓存类型
                 if (BizCacheHelper.Manager.NewTableTypeList.TryGetValue(tableName, out Type type))
                 {
-                    _log?.LogInformation("开始处理缓存数据，表名={0}，数据量={1}", tableName, cacheData.Count);
-
                     // 处理JArray类型的缓存数据
                     if (cacheData.Values.FirstOrDefault() is JArray jArrayData)
                     {
@@ -296,6 +288,9 @@ namespace RUINORERP.UI.Network.Services
                 {
                     _log?.LogWarning("未找到缓存类型配置，表名={0}", tableName);
                 }
+
+                */
+
             }
             catch (Exception ex)
             {
@@ -423,31 +418,7 @@ namespace RUINORERP.UI.Network.Services
             };
         }
 
-        /// <summary>
-        /// 从缓存中获取外键对应的名称 - 统一使用泛型命令处理模式
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <param name="id">外键ID</param>
-        /// <returns>对应的名称</returns>
-        public string GetNameFromCache(string tableName, long id)
-        {
-            try
-            {
-                // 检查表是否启用了缓存
-                if (!IsTableCacheEnabled(tableName))
-                {
-                    return string.Empty;
-                }
 
-                // 使用统一命令处理模式获取缓存数据
-                return ProcessGetNameFromCacheAsync(tableName, id).GetAwaiter().GetResult();
-            }
-            catch (Exception ex)
-            {
-                _log?.LogError(ex, "从缓存获取名称失败，表名={0}，ID={1}", tableName, id);
-                return string.Empty;
-            }
-        }
 
         /// <summary>
         /// 统一处理从缓存获取名称 - 模仿登录业务流程
@@ -527,7 +498,7 @@ namespace RUINORERP.UI.Network.Services
         private async Task ProcessClearCacheAsync(string tableName)
         {
             _log?.LogInformation("开始清理缓存，表名={0}", tableName);
-            MyCacheManager.Instance.RemoveEntitys(tableName);
+            //MyCacheManager.Instance.DeleteEntity(tableName);
             _log?.LogInformation("清理缓存完成，表名={0}", tableName);
         }
 
@@ -571,8 +542,8 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>批量缓存响应结果</returns>
         public async Task<Dictionary<string, BaseCommand<CacheResponse>>> RequestMultipleCachesAsync(
-            List<string> tableNames, 
-            bool forceRefresh = false, 
+            List<string> tableNames,
+            bool forceRefresh = false,
             CancellationToken ct = default)
         {
             if (tableNames == null || tableNames.Count == 0)
@@ -581,7 +552,7 @@ namespace RUINORERP.UI.Network.Services
             }
 
             var results = new Dictionary<string, BaseCommand<CacheResponse>>();
-            
+
             try
             {
                 _log?.LogInformation("开始批量请求缓存数据，表数量={0}", tableNames.Count);
@@ -598,9 +569,9 @@ namespace RUINORERP.UI.Network.Services
                 {
                     errorResponse.WithMetadata("InnerException", ex.InnerException.Message);
                 }
-                return new Dictionary<string, BaseCommand<CacheResponse>> 
-                { 
-                    { "Error", errorResponse } 
+                return new Dictionary<string, BaseCommand<CacheResponse>>
+                {
+                    { "Error", errorResponse }
                 };
             }
         }
@@ -613,8 +584,8 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>批量缓存响应结果</returns>
         private async Task<Dictionary<string, BaseCommand<CacheResponse>>> ProcessMultipleCacheRequestsAsync(
-            List<string> tableNames, 
-            bool forceRefresh, 
+            List<string> tableNames,
+            bool forceRefresh,
             CancellationToken ct)
         {
             // 并行请求多个表的缓存数据
@@ -646,7 +617,7 @@ namespace RUINORERP.UI.Network.Services
                 results[result.TableName] = result.Response;
             }
 
-            _log?.LogInformation("批量请求缓存数据完成，成功={0}，失败={1}", 
+            _log?.LogInformation("批量请求缓存数据完成，成功={0}，失败={1}",
                 results.Values.Count(r => r != null && r.IsSuccess),
                 results.Values.Count(r => r == null || !r.IsSuccess));
 
@@ -697,7 +668,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 // 使用CommandDataBuilder构建命令
                 var cacheCommand = CommandDataBuilder.BuildCommand<CacheRequest, CacheResponse>(
-                    CacheCommands.CacheRequest, 
+                    CacheCommands.CacheRequest,
                     request,
                     cmd => cmd.TimeoutMs = 30000
                 );
@@ -708,7 +679,7 @@ namespace RUINORERP.UI.Network.Services
                 // 处理响应
                 if (response.IsSuccess && response.ResponseData != null)
                 {
-                    ProcessCacheData(request.TableName, response.ResponseData.CacheData);
+                  //  ProcessCacheData(request.TableName, response.ResponseData.CacheData);
                     UpdateLastRequestTime(request.TableName);
                     _log?.LogInformation("刷新缓存数据成功，表名={0}", request.TableName);
                 }
@@ -768,7 +739,7 @@ namespace RUINORERP.UI.Network.Services
 
             // 使用CommandDataBuilder构建命令
             var cacheCommand = CommandDataBuilder.BuildCommand<CacheRequest, CacheResponse>(
-                CacheCommands.CacheClear, 
+                CacheCommands.CacheClear,
                 request,
                 cmd => cmd.TimeoutMs = 30000
             );
@@ -780,10 +751,10 @@ namespace RUINORERP.UI.Network.Services
             if (response != null && response.IsSuccess)
             {
                 _log?.LogInformation("缓存清理成功，表名={0}", tableName);
-                
+
                 // 清理本地缓存
                 BizCacheHelper.Manager.CacheEntityList.Remove(tableName);
-                
+
                 // 清理最后请求时间记录
                 lock (_lockObj)
                 {
@@ -851,8 +822,8 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>预热结果统计</returns>
         public async Task<CacheWarmupResult> WarmupCacheAsync(
-            List<string> tableNames, 
-            int maxParallel = 5, 
+            List<string> tableNames,
+            int maxParallel = 5,
             CancellationToken ct = default)
         {
             var result = new CacheWarmupResult
@@ -869,7 +840,7 @@ namespace RUINORERP.UI.Network.Services
                     return result;
                 }
 
-                _log?.LogInformation("开始缓存预热，表数量={0}，最大并行数={1}", 
+                _log?.LogInformation("开始缓存预热，表数量={0}，最大并行数={1}",
                     tableNames.Count, maxParallel);
 
                 // 使用统一命令处理模式预热缓存
@@ -879,9 +850,10 @@ namespace RUINORERP.UI.Network.Services
             {
                 result.EndTime = DateTime.Now;
                 result.Duration = result.EndTime - result.StartTime;
-                
+
                 _log?.LogError(ex, "缓存预热过程异常");
-                return new CacheWarmupResult { 
+                return new CacheWarmupResult
+                {
                     FailedCount = tableNames?.Count ?? 0,
                     TotalTables = tableNames?.Count ?? 0,
                     EndTime = DateTime.Now,
@@ -898,8 +870,8 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>预热结果统计</returns>
         private async Task<CacheWarmupResult> ProcessWarmupCacheAsync(
-            List<string> tableNames, 
-            int maxParallel, 
+            List<string> tableNames,
+            int maxParallel,
             CancellationToken ct)
         {
             var result = new CacheWarmupResult
@@ -910,14 +882,14 @@ namespace RUINORERP.UI.Network.Services
 
             // 使用SemaphoreSlim控制并发数
             using var semaphore = new SemaphoreSlim(maxParallel, maxParallel);
-            
+
             var tasks = tableNames.Select(async tableName =>
             {
                 await semaphore.WaitAsync(ct);
                 try
                 {
                     var response = await RequestCacheAsync(tableName, false, ct);
-                    
+
                     if (response != null && response.IsSuccess)
                     {
                         Interlocked.Increment(ref result.SuccessCount);
@@ -926,10 +898,10 @@ namespace RUINORERP.UI.Network.Services
                     else
                     {
                         Interlocked.Increment(ref result.FailedCount);
-                        _log?.LogWarning("缓存预热失败：{0}，错误={1}", 
+                        _log?.LogWarning("缓存预热失败：{0}，错误={1}",
                             tableName, response?.Message ?? "未知错误");
                     }
-                    
+
                     return new { TableName = tableName, Success = response?.IsSuccess ?? false };
                 }
                 catch (Exception ex)
@@ -947,7 +919,7 @@ namespace RUINORERP.UI.Network.Services
             var warmupResults = await Task.WhenAll(tasks);
             result.EndTime = DateTime.Now;
             result.Duration = result.EndTime - result.StartTime;
-            
+
             // 记录失败的表
             result.FailedTables = warmupResults
                 .Where(r => !r.Success)
@@ -955,7 +927,7 @@ namespace RUINORERP.UI.Network.Services
                 .ToList();
 
             _log?.LogInformation("缓存预热完成，总计={0}，成功={1}，失败={2}，耗时={3}ms",
-                result.TotalTables, result.SuccessCount, result.FailedCount, 
+                result.TotalTables, result.SuccessCount, result.FailedCount,
                 result.Duration.TotalMilliseconds);
 
             return result;
@@ -1125,7 +1097,7 @@ namespace RUINORERP.UI.Network.Services
         public static readonly List<string> BasicDataTables = new List<string>
         {
             "tb_ProductType",
-            "tb_Unit", 
+            "tb_Unit",
             "tb_Currency",
             "tb_Department",
             "tb_Location",
@@ -1139,7 +1111,7 @@ namespace RUINORERP.UI.Network.Services
         public static readonly List<string> UserAuthTables = new List<string>
         {
             "tb_UserInfo",
-            "tb_RoleInfo", 
+            "tb_RoleInfo",
             "tb_MenuInfo",
             "tb_ButtonInfo",
             "tb_RoleMenu",
@@ -1237,7 +1209,7 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 预热基础数据缓存
         /// </summary>
-        public static Task<CacheWarmupResult> WarmupBasicDataAsync(this CacheClientService service, 
+        public static Task<CacheWarmupResult> WarmupBasicDataAsync(this CacheClientService service,
             CancellationToken ct = default)
         {
             return service.WarmupCacheAsync(CommonCacheTables.BasicDataTables, 3, ct);
@@ -1246,7 +1218,7 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 预热用户权限缓存
         /// </summary>
-        public static Task<CacheWarmupResult> WarmupUserAuthAsync(this CacheClientService service, 
+        public static Task<CacheWarmupResult> WarmupUserAuthAsync(this CacheClientService service,
             CancellationToken ct = default)
         {
             return service.WarmupCacheAsync(CommonCacheTables.UserAuthTables, 2, ct);
@@ -1255,7 +1227,7 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 预热业务配置缓存
         /// </summary>
-        public static Task<CacheWarmupResult> WarmupBusinessConfigAsync(this CacheClientService service, 
+        public static Task<CacheWarmupResult> WarmupBusinessConfigAsync(this CacheClientService service,
             CancellationToken ct = default)
         {
             return service.WarmupCacheAsync(CommonCacheTables.BusinessConfigTables, 2, ct);
@@ -1264,7 +1236,7 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 预热系统配置缓存
         /// </summary>
-        public static Task<CacheWarmupResult> WarmupSystemConfigAsync(this CacheClientService service, 
+        public static Task<CacheWarmupResult> WarmupSystemConfigAsync(this CacheClientService service,
             CancellationToken ct = default)
         {
             return service.WarmupCacheAsync(CommonCacheTables.SystemConfigTables, 2, ct);
@@ -1273,7 +1245,7 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 预热所有常用缓存
         /// </summary>
-        public static Task<CacheWarmupResult> WarmupAllCommonAsync(this CacheClientService service, 
+        public static Task<CacheWarmupResult> WarmupAllCommonAsync(this CacheClientService service,
             int maxParallel = 5, CancellationToken ct = default)
         {
             return service.WarmupCacheAsync(CommonCacheTables.GetAllCommonTables(), maxParallel, ct);
@@ -1286,7 +1258,7 @@ namespace RUINORERP.UI.Network.Services
             List<string> tableNames, int maxAge = 60, CancellationToken ct = default)
         {
             var results = new Dictionary<string, bool>();
-            
+
             foreach (var tableName in tableNames)
             {
                 try
@@ -1306,7 +1278,7 @@ namespace RUINORERP.UI.Network.Services
                     results[tableName] = false;
                 }
             }
-            
+
             return results;
         }
     }

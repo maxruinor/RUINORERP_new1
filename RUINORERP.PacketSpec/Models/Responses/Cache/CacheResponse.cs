@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Responses;
 using MessagePack;
+using RUINORERP.PacketSpec.Models.Requests.Cache;
 
 namespace RUINORERP.PacketSpec.Models.Responses.Cache
 {
@@ -17,7 +18,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// </summary>
         [Key(10)]
         [MessagePack.IgnoreMember]
-        public Dictionary<string, object> CacheData { get; set; } = new Dictionary<string, object>();
+        public CacheData CacheData { get; set; }
 
         /// <summary>
         /// 缓存表名
@@ -49,22 +50,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         [Key(15)]
         public string ServerVersion { get; set; } = string.Empty;
 
-        /// <summary>
-        /// 创建成功的缓存响应
-        /// </summary>
-        public static CacheResponse CreateSuccess(string tableName, Dictionary<string, object> cacheData)
-        {
-            return new CacheResponse
-            {
-                IsSuccess = true,
-                Message = "缓存数据获取成功",
-                Code = 200,
-                TableName = tableName,
-                CacheData = cacheData,
-                CacheTime = DateTime.Now,
-                ExpirationTime = DateTime.Now.AddDays(1)
-            };
-        }
+
 
         /// <summary>
         /// 创建失败的缓存响应
@@ -79,24 +65,6 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
                 Message = message,
                 Code = code,
                 CacheTime = DateTime.Now
-            };
-        }
-
-        /// <summary>
-        /// 创建部分缓存响应（表示还有更多数据）
-        /// </summary>
-        public static CacheResponse CreatePartial(string tableName, Dictionary<string, object> cacheData)
-        {
-            return new CacheResponse
-            {
-                IsSuccess = true,
-                Message = "获取部分缓存数据",
-                Code = 206,
-                TableName = tableName,
-                CacheData = cacheData,
-                HasMoreData = true,
-                CacheTime = DateTime.Now,
-                ExpirationTime = DateTime.Now.AddDays(1)
             };
         }
     }

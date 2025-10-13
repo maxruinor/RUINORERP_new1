@@ -78,6 +78,38 @@ namespace RUINORERP.UI.Network.Services
                 {
                     HandleCacheResponse(data);
                 }
+                else if (command.CommandId == CacheCommands.CacheClear)
+                {
+                    HandleCacheClearResponse(data);
+                }
+                else if (command.CommandId == CacheCommands.CacheStatistics)
+                {
+                    HandleCacheStatisticsResponse(data);
+                }
+                else if (command.CommandId == CacheCommands.CacheStatus)
+                {
+                    HandleCacheStatusResponse(data);
+                }
+                else if (command.CommandId == CacheCommands.CacheBatchOperation)
+                {
+                    HandleCacheBatchOperationResponse(data);
+                }
+                else if (command.CommandId == CacheCommands.CacheWarmup)
+                {
+                    HandleCacheWarmupResponse(data);
+                }
+                else if (command.CommandId == CacheCommands.CacheInvalidate)
+                {
+                    HandleCacheInvalidateResponse(data);
+                }
+                else if (command.CommandId == CacheCommands.CacheSubscribe)
+                {
+                    HandleCacheSubscribeResponse(data);
+                }
+                else if (command.CommandId == CacheCommands.CacheUnsubscribe)
+                {
+                    HandleCacheUnsubscribeResponse(data);
+                }
             };
         }
 
@@ -326,6 +358,241 @@ namespace RUINORERP.UI.Network.Services
                 return null;
             }
         }
+
+        #region
+        /// <summary>
+        /// 处理缓存清空响应
+        /// </summary>
+        /// <param name="data">响应数据</param>
+        public void HandleCacheClearResponse(object data)
+        {
+            try
+            {
+                if (data is CacheResponse response)
+                {
+                    if (response.IsSuccess)
+                    {
+                        _log?.LogInformation("缓存清空成功");
+                        MainForm.Instance.PrintInfoLog("缓存清空成功");
+                    }
+                    else
+                    {
+                        _log?.LogWarning("缓存清空失败: {Message}", response.Message);
+                        MainForm.Instance.PrintInfoLog($"缓存清空失败: {response.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理缓存清空响应失败");
+                MainForm.Instance.PrintInfoLog($"处理缓存清空响应失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存统计响应
+        /// </summary>
+        /// <param name="data">响应数据</param>
+        public void HandleCacheStatisticsResponse(object data)
+        {
+            try
+            {
+                if (data is CacheResponse response)
+                {
+                    if (response.IsSuccess)
+                    {
+                        _log?.LogInformation("缓存统计获取成功");
+                        MainForm.Instance.PrintInfoLog("缓存统计获取成功");
+                    }
+                    else
+                    {
+                        _log?.LogWarning("缓存统计获取失败: {Message}", response.Message);
+                        MainForm.Instance.PrintInfoLog($"缓存统计获取失败: {response.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理缓存统计响应失败");
+                MainForm.Instance.PrintInfoLog($"处理缓存统计响应失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存状态响应
+        /// </summary>
+        /// <param name="data">响应数据</param>
+        public void HandleCacheStatusResponse(object data)
+        {
+            try
+            {
+                if (data is CacheResponse response)
+                {
+                    if (response.IsSuccess)
+                    {
+                        _log?.LogInformation("缓存状态获取成功");
+                        MainForm.Instance.PrintInfoLog("缓存状态获取成功");
+                    }
+                    else
+                    {
+                        _log?.LogWarning("缓存状态获取失败: {Message}", response.Message);
+                        MainForm.Instance.PrintInfoLog($"缓存状态获取失败: {response.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理缓存状态响应失败");
+                MainForm.Instance.PrintInfoLog($"处理缓存状态响应失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存批量操作响应
+        /// </summary>
+        /// <param name="data">响应数据</param>
+        public void HandleCacheBatchOperationResponse(object data)
+        {
+            try
+            {
+                if (data is CacheResponse response)
+                {
+                    if (response.IsSuccess)
+                    {
+                        _log?.LogInformation("缓存批量操作成功");
+                        MainForm.Instance.PrintInfoLog("缓存批量操作成功");
+                    }
+                    else
+                    {
+                        _log?.LogWarning("缓存批量操作失败: {Message}", response.Message);
+                        MainForm.Instance.PrintInfoLog($"缓存批量操作失败: {response.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理缓存批量操作响应失败");
+                MainForm.Instance.PrintInfoLog($"处理缓存批量操作响应失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存预热响应
+        /// </summary>
+        /// <param name="data">响应数据</param>
+        public void HandleCacheWarmupResponse(object data)
+        {
+            try
+            {
+                if (data is CacheResponse response)
+                {
+                    if (response.IsSuccess)
+                    {
+                        _log?.LogInformation("缓存预热成功");
+                        MainForm.Instance.PrintInfoLog("缓存预热成功");
+                    }
+                    else
+                    {
+                        _log?.LogWarning("缓存预热失败: {Message}", response.Message);
+                        MainForm.Instance.PrintInfoLog($"缓存预热失败: {response.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理缓存预热响应失败");
+                MainForm.Instance.PrintInfoLog($"处理缓存预热响应失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存失效响应
+        /// </summary>
+        /// <param name="data">响应数据</param>
+        public void HandleCacheInvalidateResponse(object data)
+        {
+            try
+            {
+                if (data is CacheResponse response)
+                {
+                    if (response.IsSuccess)
+                    {
+                        _log?.LogInformation("缓存失效成功");
+                        MainForm.Instance.PrintInfoLog("缓存失效成功");
+                    }
+                    else
+                    {
+                        _log?.LogWarning("缓存失效失败: {Message}", response.Message);
+                        MainForm.Instance.PrintInfoLog($"缓存失效失败: {response.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理缓存失效响应失败");
+                MainForm.Instance.PrintInfoLog($"处理缓存失效响应失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存订阅响应
+        /// </summary>
+        /// <param name="data">响应数据</param>
+        public void HandleCacheSubscribeResponse(object data)
+        {
+            try
+            {
+                if (data is CacheResponse response)
+                {
+                    if (response.IsSuccess)
+                    {
+                        _log?.LogInformation("缓存订阅成功");
+                        MainForm.Instance.PrintInfoLog("缓存订阅成功");
+                    }
+                    else
+                    {
+                        _log?.LogWarning("缓存订阅失败: {Message}", response.Message);
+                        MainForm.Instance.PrintInfoLog($"缓存订阅失败: {response.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理缓存订阅响应失败");
+                MainForm.Instance.PrintInfoLog($"处理缓存订阅响应失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存取消订阅响应
+        /// </summary>
+        /// <param name="data">响应数据</param>
+        public void HandleCacheUnsubscribeResponse(object data)
+        {
+            try
+            {
+                if (data is CacheResponse response)
+                {
+                    if (response.IsSuccess)
+                    {
+                        _log?.LogInformation("缓存取消订阅成功");
+                        MainForm.Instance.PrintInfoLog("缓存取消订阅成功");
+                    }
+                    else
+                    {
+                        _log?.LogWarning("缓存取消订阅失败: {Message}", response.Message);
+                        MainForm.Instance.PrintInfoLog($"缓存取消订阅失败: {response.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理缓存取消订阅响应失败");
+                MainForm.Instance.PrintInfoLog($"处理缓存取消订阅响应失败: {ex.Message}");
+            }
+        }
+
+        #endregion
 
         #region 缓存辅助方法
         /// <summary>
@@ -1200,7 +1467,6 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         All
     }
-
     /// <summary>
     /// 缓存服务扩展方法
     /// </summary>
@@ -1282,4 +1548,6 @@ namespace RUINORERP.UI.Network.Services
             return results;
         }
     }
+
+ 
 }

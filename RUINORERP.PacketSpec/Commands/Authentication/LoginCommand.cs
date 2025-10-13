@@ -68,9 +68,6 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             // 仅用于兼容性，在内部处理会话相关逻辑
         }
 
-        
- 
-
         /// <summary>
         /// 验证命令数据
         /// 包含用户名和密码的特定验证逻辑

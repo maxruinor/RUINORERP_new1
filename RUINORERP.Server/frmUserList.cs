@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic.ApplicationServices;
+﻿﻿﻿﻿﻿﻿using Microsoft.VisualBasic.ApplicationServices;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
@@ -359,13 +359,10 @@ namespace RUINORERP.Server
 
                         break;
                     case System.Collections.Specialized.NotifyCollectionChangedAction.Remove:
-                        if (e.OldItems.Count == 1)
+                        foreach (UserInfo oldUser in e.OldItems)
                         {
-                            UserInfo old = e.OldItems[0] as UserInfo;
-                            if (UserInfos.Contains(old))
-                            {
-                                UserInfos.Remove(old);                 // 处理删除元素的逻辑
-                            }
+                            RemoveUser(oldUser);
+                            oldUser.PropertyChanged -= UserInfo_PropertyChanged;
                         }
                         listView1.VirtualListSize = UserInfos.Count;
                         break;
@@ -442,7 +439,8 @@ namespace RUINORERP.Server
                 var userInfo = UserInfos.FirstOrDefault(u => u.SessionId == sessionInfo.SessionID);
                 if (userInfo != null)
                 {
-                    RemoveUser(userInfo);
+                    // 从UserInfos集合中移除用户，这会触发CollectionChanged事件，进而调用RemoveUser
+                    UserInfos.Remove(userInfo);
                 }
             }
         }
@@ -542,32 +540,9 @@ namespace RUINORERP.Server
                 return;
             }
 
-            // 从集合中移除用户
-            if (UserInfos.Contains(user))
-            {
-                UserInfos.Remove(user);
-                // 更新 ListView 的虚拟列表大小
-                listView1.VirtualListSize = UserInfos.Count;
-                if (listView1.IsHandleCreated)
-                {
-                    listView1.Invoke(new Action(() =>
-                    {
-                        // 可选：取消订阅 PropertyChanged 事件
-                        user.PropertyChanged -= UserInfo_PropertyChanged;
-                    }));
-                }
-
-            }
-
-            int index = UserInfos.IndexOf(user);
-            if (index != -1)
-            {
-                UserInfos.RemoveAt(index);
-                listView1.VirtualListSize = UserInfos.Count;
-                listView1.Invalidate(); // 强制重绘
-
-            }
-
+            // 只从UI中移除用户，不从UserInfos集合中移除
+            // 因为这个方法是在UserInfos集合变更后调用的
+            RemoveUser(user);
         }
 
 

@@ -647,11 +647,11 @@ namespace RUINORERP.UI.PSI.SAL
 
             //不允许编辑的字段  单价成交价不能修改不然会乱。实在要调整。就是价格调整单
             //可能导致订单与出库记录脱节，引发财务对账混乱、库存成本核算偏差，甚至产生合规风险（如税务审计时数据不一致）
-            //if (!AppContext.CurUserInfo.UserInfo.IsSuperUser)
-            //{
-            listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.UnitPrice);
-            listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.TransactionPrice);
-            //}
+            if (!AppContext.CurUserInfo.UserInfo.IsSuperUser)
+            {
+                listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.UnitPrice);
+                listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.TransactionPrice);
+            }
             listCols.SetCol_ReadOnly<tb_SaleOutDetail>(c => c.SubtotalTransAmount);
             if (!AppContext.CurUserInfo.UserInfo.IsSuperUser)
             {

@@ -42,38 +42,6 @@ namespace RUINORERP.PacketSpec.Commands
 
 
 
-        /// <summary>
-        /// 创建命令对象
-        /// 根据命令ID和数据包内容创建适当类型的命令对象
-        /// 优化点：充分利用ExecutionContext中的类型信息，减少重复的类型查找
-        /// </summary>
-        /// <param name="packet">数据包</param>
-        /// <returns>创建的命令对象</returns>
-        public ICommand CreateCommand(PacketModel packet)
-        {
-            return _commandCreationService.CreateCommand(packet);
-        }
-
-        /// <summary>
-        /// 根据类型创建命令实例
-        /// </summary>
-        /// <param name="commandType">命令类型</param>
-        /// <param name="packet">数据包</param>
-        /// <returns>命令实例</returns>
-        public ICommand CreateCommandByType(Type commandType, PacketModel packet)
-        {
-            return _commandCreationService.CreateCommandByType(commandType, packet);
-        }
-
-        /// <summary>
-        /// 创建泛型命令对象
-        /// </summary>
-        /// <param name="packet">数据包</param>
-        /// <returns>泛型命令实例</returns>
-        public ICommand CreateGenericCommand(PacketModel packet)
-        {
-            return _commandCreationService.CreateGenericCommand(packet);
-        }
 
         /// <summary>
         /// 初始化命令属性（轻量级初始化，不处理反序列化）

@@ -54,9 +54,17 @@ namespace RUINORERP.Server.Network.Commands
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
                 CacheCommands.CacheDataList,
-                CacheCommands.CacheSync,
+                CacheCommands.CacheRequest,
                 CacheCommands.CacheUpdate,
-                CacheCommands.CacheDelete
+                CacheCommands.CacheDelete,
+                CacheCommands.CacheClear,
+                CacheCommands.CacheStatistics,
+                CacheCommands.CacheStatus,
+                CacheCommands.CacheBatchOperation,
+                CacheCommands.CacheWarmup,
+                CacheCommands.CacheInvalidate,
+                CacheCommands.CacheSubscribe,
+                CacheCommands.CacheUnsubscribe
             );
         }
 
@@ -139,9 +147,17 @@ namespace RUINORERP.Server.Network.Commands
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
                 CacheCommands.CacheDataList,
-                CacheCommands.CacheSync,
+                CacheCommands.CacheRequest,
                 CacheCommands.CacheUpdate,
-                CacheCommands.CacheDelete
+                CacheCommands.CacheDelete,
+                CacheCommands.CacheClear,
+                CacheCommands.CacheStatistics,
+                CacheCommands.CacheStatus,
+                CacheCommands.CacheBatchOperation,
+                CacheCommands.CacheWarmup,
+                CacheCommands.CacheInvalidate,
+                CacheCommands.CacheSubscribe,
+                CacheCommands.CacheUnsubscribe
             );
         }
 
@@ -157,9 +173,17 @@ namespace RUINORERP.Server.Network.Commands
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
                 CacheCommands.CacheDataList,
-                CacheCommands.CacheSync,
+                CacheCommands.CacheRequest,
                 CacheCommands.CacheUpdate,
-                CacheCommands.CacheDelete
+                CacheCommands.CacheDelete,
+                CacheCommands.CacheClear,
+                CacheCommands.CacheStatistics,
+                CacheCommands.CacheStatus,
+                CacheCommands.CacheBatchOperation,
+                CacheCommands.CacheWarmup,
+                CacheCommands.CacheInvalidate,
+                CacheCommands.CacheSubscribe,
+                CacheCommands.CacheUnsubscribe
             );
         }
 
@@ -180,9 +204,17 @@ namespace RUINORERP.Server.Network.Commands
 
             return cmd.Command is CacheCommand ||
                    cmd.Command.CommandIdentifier == CacheCommands.CacheDataList ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheSync ||
+                   cmd.Command.CommandIdentifier == CacheCommands.CacheRequest ||
                    cmd.Command.CommandIdentifier == CacheCommands.CacheUpdate ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheDelete;
+                   cmd.Command.CommandIdentifier == CacheCommands.CacheDelete ||
+                   cmd.Command.CommandIdentifier == CacheCommands.CacheClear ||
+                   cmd.Command.CommandIdentifier == CacheCommands.CacheStatistics ||
+                   cmd.Command.CommandIdentifier == CacheCommands.CacheStatus ||
+                   cmd.Command.CommandIdentifier == CacheCommands.CacheBatchOperation ||
+                   cmd.Command.CommandIdentifier == CacheCommands.CacheWarmup ||
+                   cmd.Command.CommandIdentifier == CacheCommands.CacheInvalidate ||
+                   cmd.Command.CommandIdentifier == CacheCommands.CacheSubscribe ||
+                   cmd.Command.CommandIdentifier == CacheCommands.CacheUnsubscribe;
         }
 
         /// <summary>
@@ -196,7 +228,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 var commandId = cmd.Command.CommandIdentifier;
-                if (commandId == CacheCommands.CacheDataList)
+                if (commandId == CacheCommands.CacheDataList || commandId == CacheCommands.CacheRequest)
                 {
                     return await HandleCacheRequestAsync(cmd, cancellationToken);
                 }
@@ -207,6 +239,38 @@ namespace RUINORERP.Server.Network.Commands
                 else if (commandId == CacheCommands.CacheDelete)
                 {
                     return await HandleCacheDeleteAsync(cmd, cancellationToken);
+                }
+                else if (commandId == CacheCommands.CacheClear)
+                {
+                    return await HandleCacheClearAsync(cmd, cancellationToken);
+                }
+                else if (commandId == CacheCommands.CacheStatistics)
+                {
+                    return await HandleCacheStatisticsAsync(cmd, cancellationToken);
+                }
+                else if (commandId == CacheCommands.CacheStatus)
+                {
+                    return await HandleCacheStatusAsync(cmd, cancellationToken);
+                }
+                else if (commandId == CacheCommands.CacheBatchOperation)
+                {
+                    return await HandleCacheBatchOperationAsync(cmd, cancellationToken);
+                }
+                else if (commandId == CacheCommands.CacheWarmup)
+                {
+                    return await HandleCacheWarmupAsync(cmd, cancellationToken);
+                }
+                else if (commandId == CacheCommands.CacheInvalidate)
+                {
+                    return await HandleCacheInvalidateAsync(cmd, cancellationToken);
+                }
+                else if (commandId == CacheCommands.CacheSubscribe)
+                {
+                    return await HandleCacheSubscribeAsync(cmd, cancellationToken);
+                }
+                else if (commandId == CacheCommands.CacheUnsubscribe)
+                {
+                    return await HandleCacheUnsubscribeAsync(cmd, cancellationToken);
                 }
                 else
                 {
@@ -233,7 +297,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 使用统一的业务逻辑处理方法
-                if (command.Command is CacheCommand cacheCommand)
+                if (command.Command is BaseCommand<CacheRequest, CacheResponse> cacheCommand)
                 {
                     return await ProcessCacheRequestAsync(cacheCommand, command.Packet.ExecutionContext, cancellationToken);
                 }
@@ -258,7 +322,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="executionContext">执行上下文</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<BaseCommand<IResponse>> ProcessCacheRequestAsync(CacheCommand cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> ProcessCacheRequestAsync(BaseCommand<CacheRequest, CacheResponse> cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -906,6 +970,230 @@ namespace RUINORERP.Server.Network.Commands
             {
                 LogError($"处理缓存删除异常: {ex.Message}", ex);
                 return CreateExceptionResponse(ex, "CACHE_REMOVE_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存清空命令
+        /// </summary>
+        /// <param name="command">缓存清空命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> HandleCacheClearAsync(QueuedCommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // TODO: 实现缓存清空逻辑
+                LogInfo("处理缓存清空命令");
+
+                var responseData = new CacheResponse
+                {
+                    TableName = "All",
+                    IsSuccess = true
+                };
+
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存清空成功");
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存清空异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "CACHE_CLEAR_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存统计命令
+        /// </summary>
+        /// <param name="command">缓存统计命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> HandleCacheStatisticsAsync(QueuedCommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // TODO: 实现缓存统计逻辑
+                LogInfo("处理缓存统计命令");
+
+                var responseData = new CacheResponse
+                {
+                    TableName = "Statistics",
+                    IsSuccess = true
+                };
+
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存统计获取成功");
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存统计异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "CACHE_STATISTICS_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存状态命令
+        /// </summary>
+        /// <param name="command">缓存状态命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> HandleCacheStatusAsync(QueuedCommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // TODO: 实现缓存状态逻辑
+                LogInfo("处理缓存状态命令");
+
+                var responseData = new CacheResponse
+                {
+                    TableName = "Status",
+                    IsSuccess = true
+                };
+
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存状态获取成功");
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存状态异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "CACHE_STATUS_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存批量操作命令
+        /// </summary>
+        /// <param name="command">缓存批量操作命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> HandleCacheBatchOperationAsync(QueuedCommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // TODO: 实现缓存批量操作逻辑
+                LogInfo("处理缓存批量操作命令");
+
+                var responseData = new CacheResponse
+                {
+                    TableName = "BatchOperation",
+                    IsSuccess = true
+                };
+
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存批量操作成功");
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存批量操作异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "CACHE_BATCH_OPERATION_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存预热命令
+        /// </summary>
+        /// <param name="command">缓存预热命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> HandleCacheWarmupAsync(QueuedCommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // TODO: 实现缓存预热逻辑
+                LogInfo("处理缓存预热命令");
+
+                var responseData = new CacheResponse
+                {
+                    TableName = "Warmup",
+                    IsSuccess = true
+                };
+
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存预热成功");
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存预热异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "CACHE_WARMUP_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存失效命令
+        /// </summary>
+        /// <param name="command">缓存失效命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> HandleCacheInvalidateAsync(QueuedCommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // TODO: 实现缓存失效逻辑
+                LogInfo("处理缓存失效命令");
+
+                var responseData = new CacheResponse
+                {
+                    TableName = "Invalidate",
+                    IsSuccess = true
+                };
+
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存失效成功");
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存失效异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "CACHE_INVALIDATE_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存订阅命令
+        /// </summary>
+        /// <param name="command">缓存订阅命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> HandleCacheSubscribeAsync(QueuedCommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // TODO: 实现缓存订阅逻辑
+                LogInfo("处理缓存订阅命令");
+
+                var responseData = new CacheResponse
+                {
+                    TableName = "Subscribe",
+                    IsSuccess = true
+                };
+
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存订阅成功");
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存订阅异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "CACHE_SUBSCRIBE_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存取消订阅命令
+        /// </summary>
+        /// <param name="command">缓存取消订阅命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        private async Task<BaseCommand<IResponse>> HandleCacheUnsubscribeAsync(QueuedCommand command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                // TODO: 实现缓存取消订阅逻辑
+                LogInfo("处理缓存取消订阅命令");
+
+                var responseData = new CacheResponse
+                {
+                    TableName = "Unsubscribe",
+                    IsSuccess = true
+                };
+
+                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存取消订阅成功");
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理缓存取消订阅异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "CACHE_UNSUBSCRIBE_ERROR");
             }
         }
     }

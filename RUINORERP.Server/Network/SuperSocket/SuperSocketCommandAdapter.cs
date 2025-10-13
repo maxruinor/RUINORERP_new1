@@ -380,6 +380,13 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     await session.SendAsync(encryptedData.ToByteArray(), cancellationToken);
                 }
+                catch (TaskCanceledException ex) when (ex.InnerException is OperationCanceledException && cancellationToken.IsCancellationRequested)
+                {
+                    // 处理任务被取消的特定异常
+                    _logger?.LogWarning(ex, "发送响应被取消: SessionId={SessionId}, PacketId={PacketId}",
+                        package.SessionId, package.PacketId);
+                    // 忽略此异常，因为可能是正常的超时或取消操作
+                }
                 catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
                 {
                     // 处理管道写入器已完成的特定异常
@@ -424,8 +431,28 @@ namespace RUINORERP.Server.Network.SuperSocket
             {
                 await session.SendAsync(encryptedData.ToByteArray());
             }
-            catch
-            { }
+            catch (TaskCanceledException ex)
+            {
+                // 处理任务被取消的特定异常
+                _logger?.LogWarning(ex, "发送响应到客户端被取消: SessionId={SessionId}, PacketId={PacketId}",
+                    packetModel.SessionId, packetModel.PacketId);
+                // 忽略此异常，因为可能是正常的超时或取消操作
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
+            {
+                // 处理管道写入器已完成的特定异常
+                _logger?.LogWarning(ex, "管道写入器已完成，无法发送响应到客户端: SessionId={SessionId}, PacketId={PacketId}",
+                    packetModel.SessionId, packetModel.PacketId);
+                // 忽略此异常，因为会话可能已经关闭
+            }
+            catch (Exception ex)
+            {
+                // 记录其他发送异常
+                _logger?.LogError(ex, "发送响应到客户端时发生异常: SessionId={SessionId}, PacketId={PacketId}",
+                    packetModel.SessionId, packetModel.PacketId);
+                // 可以选择是否向上传播异常
+                // throw;
+            }
         }
 
 

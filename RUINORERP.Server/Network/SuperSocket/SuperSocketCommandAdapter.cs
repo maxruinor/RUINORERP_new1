@@ -49,7 +49,7 @@ namespace RUINORERP.Server.Network.SuperSocket
     {
         private readonly CommandDispatcher _commandDispatcher;
         private readonly ILogger<SuperSocketCommandAdapter> _logger;
-        private readonly CommandPacketAdapter packetAdapter;
+        private readonly ICommandCreationService commandCreationService;
         private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
 
 
@@ -57,14 +57,14 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// 构造函数
         /// </summary>
         /// <param name="commandDispatcher">命令调度器</param>
-        /// <param name="commandFactory">命令工厂</param>
+        /// <param name="commandCreationService">命令创建服务</param>
         /// <param name="logger">日志记录器</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
-            CommandPacketAdapter _packetAdapter,
+            ICommandCreationService commandCreationService,
             ILogger<SuperSocketCommandAdapter> logger = null)
         {
-            packetAdapter = _packetAdapter;
+            this.commandCreationService = commandCreationService;
             _commandDispatcher = commandDispatcher;
             _logger = logger;
         }
@@ -114,7 +114,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 SessionService.UpdateSessionActivity(session.SessionID);
 
                 // 创建命令对象（第一层解析：基础命令创建）
-                var command = packetAdapter.CreateCommand(package.Packet);
+                var command = commandCreationService.CreateCommand(package.Packet);
                 if (command == null)
                 {
                     _logger?.LogWarning("无法创建命令对象: CommandId={CommandId}", package.Packet.CommandId);
@@ -600,9 +600,9 @@ namespace RUINORERP.Server.Network.SuperSocket
     {
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
-            CommandPacketAdapter _packetAdapter,
+            ICommandCreationService commandCreationService,
             ILogger<SuperSocketCommandAdapter> logger = null)
-            : base(commandDispatcher, _packetAdapter, logger)
+            : base(commandDispatcher, commandCreationService, logger)
         { }
     }
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
@@ -117,8 +117,7 @@ namespace RUINORERP.PacketSpec.DI
             // 注册命令处理器工厂
             services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();
 
-            // 注册适配器
-            services.AddSingleton<CommandPacketAdapter>();
+            // 注意：CommandPacketAdapter已由ICommandCreationService替代，不再需要注册
 
 
 
@@ -204,8 +203,7 @@ namespace RUINORERP.PacketSpec.DI
                 .As<ICommandHandlerFactory>()
                 .SingleInstance();
 
-            // 注册适配器
-            builder.RegisterType<CommandPacketAdapter>().SingleInstance();
+            // 注意：CommandPacketAdapter已由ICommandCreationService替代，不再需要注册
 
           
 

@@ -27,10 +27,9 @@ namespace RUINORERP.Server.Network.Services
     {
         #region 字段和属性
 
+        // 只保留一个会话字典，SessionInfo继承自AppSession，本身就是IAppSession
         private readonly ConcurrentDictionary<string, SessionInfo> _sessions;
-        private readonly ConcurrentDictionary<string, IAppSession> _appSessions;
         private readonly Timer _cleanupTimer;
-        private readonly Timer _heartbeatTimer;
         private readonly SessionStatistics _statistics;
         private readonly object _lockObject = new object();
         private bool _disposed = false;
@@ -75,14 +74,10 @@ namespace RUINORERP.Server.Network.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             MaxSessionCount = maxSessionCount;
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
-            _appSessions = new ConcurrentDictionary<string, IAppSession>();
             _statistics = SessionStatistics.Create(maxSessionCount);
 
-            // 启动清理定时器，每5分钟清理一次超时会话
-            _cleanupTimer = new Timer(CleanupCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
-
-            // 启动心跳检查定时器，每分钟检查一次
-            _heartbeatTimer = new Timer(HeartbeatCallback, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+            // 启动清理定时器，每5分钟清理一次超时会话并检查心跳
+            _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
             _logger.LogInformation("统一会话管理器已启动 - 整合SuperSocket和Network会话管理功能");
         }
@@ -276,9 +271,6 @@ namespace RUINORERP.Server.Network.Services
 
                 if (_sessions.TryRemove(sessionId, out var sessionInfo))
                 {
-                    // 同时移除SuperSocket会话
-                    _appSessions.TryRemove(sessionId, out _);
-
                     lock (_lockObject)
                     {
                         _statistics.TotalDisconnections++;
@@ -353,6 +345,7 @@ namespace RUINORERP.Server.Network.Services
                     return;
                 }
 
+                // SessionInfo继承自AppSession，可以直接转换
                 SessionInfo sessionInfo = session as SessionInfo;
 
                 // 创建会话信息
@@ -361,13 +354,10 @@ namespace RUINORERP.Server.Network.Services
                 sessionInfo.IsConnected = true;
                 sessionInfo.Properties = new Dictionary<string, object>();
 
-
                 // 存储会话
                 var added = _sessions.TryAdd(session.SessionID, sessionInfo);
                 if (added)
                 {
-                    _appSessions.TryAdd(session.SessionID, session);
-
                     lock (_lockObject)
                     {
                         _statistics.TotalConnections++;
@@ -423,7 +413,6 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-
                 // 获取会话信息
                 _sessions.TryGetValue(session.SessionID, out var sessionInfo);
 
@@ -576,8 +565,9 @@ namespace RUINORERP.Server.Network.Services
                 return null;
             }
             
-            _appSessions.TryGetValue(sessionId, out var appSession);
-            return appSession;
+            // SessionInfo继承自AppSession，本身就是IAppSession
+            _sessions.TryGetValue(sessionId, out var sessionInfo);
+            return sessionInfo;
         }
 
  
@@ -657,19 +647,15 @@ namespace RUINORERP.Server.Network.Services
                     return false;
                 }
 
-                // 获取SuperSocket会话
-                if (_appSessions.TryGetValue(sessionId, out var appSession))
+                try
                 {
-                    try
-                    {
-                        // 主动关闭SuperSocket连接
-                        await appSession.CloseAsync(CloseReason.ServerShutdown);
-                        _logger.LogInformation($"已主动断开会话连接: SessionID={sessionId}, 用户={sessionInfo.UserName}, 原因={reason}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"关闭SuperSocket会话连接失败: SessionID={sessionId}");
-                    }
+                    // 主动关闭SuperSocket连接
+                    await sessionInfo.CloseAsync(CloseReason.ServerShutdown);
+                    _logger.LogInformation($"已主动断开会话连接: SessionID={sessionId}, 用户={sessionInfo.UserName}, 原因={reason}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"关闭SuperSocket会话连接失败: SessionID={sessionId}");
                 }
 
                 // 移除会话记录
@@ -771,17 +757,10 @@ namespace RUINORERP.Server.Network.Services
                     return false;
                 }
 
-                // 获取SuperSocket会话
-                if (!_appSessions.TryGetValue(sessionID, out var appSession))
-                {
-                    _logger.LogWarning($"发送命令失败：会话不存在，SessionID={sessionID}");
-                    return false;
-                }
-
                 // 获取会话信息
                 if (!_sessions.TryGetValue(sessionID, out var sessionInfo))
                 {
-                    _logger.LogWarning($"发送命令失败：会话信息不存在，SessionID={sessionID}");
+                    _logger.LogWarning($"发送命令失败：会话不存在，SessionID={sessionID}");
                     return false;
                 }
 
@@ -803,18 +782,19 @@ namespace RUINORERP.Server.Network.Services
                     var commandJson = System.Text.Json.JsonSerializer.Serialize(commandPackage);
                     
                     // 通过SuperSocket发送命令
-                    var result = appSession.SendAsync(System.Text.Encoding.UTF8.GetBytes(commandJson));
+                  //////////  var result = sessionInfo.AddSendData(System.Text.Encoding.UTF8.GetBytes(commandJson));
                     
-                    if (result.IsCompletedSuccessfully)
-                    {
-                        _logger.LogInformation($"命令发送成功: SessionID={sessionID}, 用户={sessionInfo.UserName}, 命令={command}");
-                        return true;
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"命令发送失败: SessionID={sessionID}, 用户={sessionInfo.UserName}, 命令={command}");
-                        return false;
-                    }
+                    //if (result.IsCompletedSuccessfully)
+                    //{
+                    //    _logger.LogInformation($"命令发送成功: SessionID={sessionID}, 用户={sessionInfo.UserName}, 命令={command}");
+                    //    return true;
+                    //}
+                    //else
+                    //{
+                    //    _logger.LogWarning($"命令发送失败: SessionID={sessionID}, 用户={sessionInfo.UserName}, 命令={command}");
+                    //    return false;
+                    //}
+                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -864,7 +844,7 @@ namespace RUINORERP.Server.Network.Services
             try
             {
                 var timeoutSessions = _sessions.Values
-                    .Where(s => s.LastActiveTime.AddMinutes(30) < DateTime.Now)
+                    .Where(s => s.LastActivityTime.AddMinutes(30) < DateTime.Now)
                     .ToList();
 
                 var removedCount = 0;
@@ -925,42 +905,30 @@ namespace RUINORERP.Server.Network.Services
  
 
         /// <summary>
-        /// 清理回调
+        /// 清理和心跳检查回调
+        /// 合并清理超时会话和心跳检查到一个定时器中，减少系统开销
         /// </summary>
-        private void CleanupCallback(object state)
+        private void CleanupAndHeartbeatCallback(object state)
         {
             try
             {
+                // 清理超时会话
                 var removedCount = CleanupTimeoutSessions();
+                
+                // 检查心跳异常
+                var abnormalCount = HeartbeatCheck();
+                
                 lock (_lockObject)
                 {
                     _statistics.TimeoutSessions += removedCount;
-                    _statistics.LastCleanupTime = DateTime.Now;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "清理回调执行失败");
-            }
-        }
-
-        /// <summary>
-        /// 心跳回调
-        /// </summary>
-        private void HeartbeatCallback(object state)
-        {
-            try
-            {
-                var abnormalCount = HeartbeatCheck();
-                lock (_lockObject)
-                {
                     _statistics.HeartbeatFailures += abnormalCount;
+                    _statistics.LastCleanupTime = DateTime.Now;
                     _statistics.LastHeartbeatCheck = DateTime.Now;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "心跳回调执行失败");
+                _logger.LogError(ex, "清理和心跳检查回调执行失败");
             }
         }
 
@@ -976,12 +944,11 @@ namespace RUINORERP.Server.Network.Services
             if (!_disposed)
             {
                 _cleanupTimer?.Dispose();
-                _heartbeatTimer?.Dispose();
 
                 // 关闭并清理所有活动会话
-                foreach (var sessionId in _appSessions.Keys.ToList())
+                foreach (var sessionId in _sessions.Keys.ToList())
                 {
-                    if (_appSessions.TryGetValue(sessionId, out var session))
+                    if (_sessions.TryGetValue(sessionId, out var session))
                     {
                         try
                         {
@@ -995,7 +962,6 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 _sessions?.Clear();
-                _appSessions?.Clear();
                 _disposed = true;
                 _logger.LogInformation("统一会话管理器资源已释放");
             }
@@ -1006,8 +972,3 @@ namespace RUINORERP.Server.Network.Services
         #endregion
     }
 }
-
-
-
-
-

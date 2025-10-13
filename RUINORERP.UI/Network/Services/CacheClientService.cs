@@ -40,7 +40,7 @@ namespace RUINORERP.UI.Network.Services
     {
         private readonly ClientCommunicationService _comm;
         private readonly ILogger<CacheClientService> _log;
-        private readonly CommandPacketAdapter commandPacketAdapter;
+        private readonly ICommandCreationService _commandCreationService;
         private readonly Dictionary<string, DateTime> _lastRequestTimes = new Dictionary<string, DateTime>();
         private readonly object _lockObj = new object();
         private IAuthorizeController authorizeController;
@@ -50,13 +50,13 @@ namespace RUINORERP.UI.Network.Services
         /// 构造函数 - 初始化缓存客户端服务
         /// </summary>
         /// <param name="comm">通信服务</param>
-        /// <param name="commandPacketAdapter">命令包适配器</param>
+        /// <param name="commandCreationService">命令创建服务</param>
         /// <param name="log">日志记录器</param>
-        public CacheClientService(ClientCommunicationService comm, CommandPacketAdapter _commandPacketAdapter, ILogger<CacheClientService> log = null)
+        public CacheClientService(ClientCommunicationService comm, ICommandCreationService commandCreationService, ILogger<CacheClientService> log = null)
         {
             _comm = comm ?? throw new ArgumentNullException(nameof(comm));
             _log = log;
-            commandPacketAdapter = _commandPacketAdapter ?? throw new ArgumentNullException(nameof(_commandPacketAdapter));
+            _commandCreationService = commandCreationService ?? throw new ArgumentNullException(nameof(commandCreationService));
             // 注册缓存响应处理
             RegisterCommandHandlers();
             try
@@ -167,7 +167,7 @@ namespace RUINORERP.UI.Network.Services
                 );
 
                 // 使用新的方法发送命令并获取包含指令信息的响应
-                var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, commandPacketAdapter, ct, 30000);
+                var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, ct, 30000);
 
                 // 检查响应是否成功
                 if (!commandResponse.IsSuccess)
@@ -941,7 +941,7 @@ namespace RUINORERP.UI.Network.Services
                 );
 
                 // 发送命令并等待响应
-                var response = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, commandPacketAdapter, ct, 30000);
+                var response = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, ct, 30000);
 
                 // 处理响应
                 if (response.IsSuccess && response.ResponseData != null)
@@ -1013,7 +1013,7 @@ namespace RUINORERP.UI.Network.Services
 
             // 发送请求并等待响应
             var response = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(
-                cacheCommand, commandPacketAdapter, ct);
+                cacheCommand, ct);
 
             if (response != null && response.IsSuccess)
             {

@@ -14,6 +14,7 @@ namespace RUINORERP.Server.Network.Models
 {
     /// <summary>
     /// 会话信息 - 用于会话管理和状态跟踪
+    /// 继承自AppSession，既是会话信息也是SuperSocket会话
     /// </summary>
     public class SessionInfo : AppSession
     {
@@ -164,10 +165,7 @@ namespace RUINORERP.Server.Network.Models
                 Console.WriteLine("发送数据时出错：AddSendData" + ex.Message);
             }
         }
-        public ValueTask SendAsync(byte[] data)
-        {
-            return (this as IAppSession).SendAsync(data);
-        }
+        
         protected override async ValueTask OnSessionClosedAsync(CloseEventArgs e)
         {
             //Console.WriteLine($@"{DateTime.Now} {SessionName} Session {RemoteEndPoint} closed: {e.Reason}.");

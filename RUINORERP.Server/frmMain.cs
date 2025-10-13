@@ -1,48 +1,4 @@
-﻿using Autofac;
-using Autofac.Core;
-using Autofac.Extensions.DependencyInjection;
-using Dm.Config;
-using HLH.Lib.Helper;
-using HLH.Lib.Security;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.EventLog;
-using Microsoft.Extensions.Options;
-using Microsoft.VisualBasic.ApplicationServices;
-using Newtonsoft.Json;
-using RUINORERP.Business;
-using RUINORERP.Server.Comm;
-using RUINORERP.Common.Helper;
-using RUINORERP.Common.Log4Net;
-using RUINORERP.Extensions;
-using RUINORERP.Extensions.Middlewares;
-using RUINORERP.Global;
-using RUINORERP.Model;
-using RUINORERP.Model.Base;
-using RUINORERP.Model.CommonModel;
-using RUINORERP.Model.ConfigModel;
-using RUINORERP.Model.TransModel;
-using RUINORERP.Server.BizService;
-using RUINORERP.Server.Commands;
-using RUINORERP.Server.ServerSession;
-using RUINORERP.Server.SmartReminder;
-using RUINORERP.Server.Workflow.WFReminder;
-using RUINORERP.Server.Workflow.WFScheduled;
-using SharpYaml.Tokens;
-using SuperSocket;
-using SuperSocket.Command;
-using SuperSocket.ProtoBase;
-using SuperSocket.Server;
-using SuperSocket.Server.Abstractions;
-using SuperSocket.Server.Abstractions.Session;
-using SuperSocket.Server.Host;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -61,19 +17,60 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
-
-
-using WorkflowCore.Interface;
-using WorkflowCore.Primitives;
-using WorkflowCore.Services;
+using Autofac;
+using Autofac.Core;
+using Autofac.Extensions.DependencyInjection;
+using Dm.Config;
+using HLH.Lib.Helper;
+using HLH.Lib.Security;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.EventLog;
+using Microsoft.Extensions.Options;
+using Microsoft.VisualBasic.ApplicationServices;
+using Newtonsoft.Json;
+using RUINORERP.Business;
+using RUINORERP.Business.CommService;
+using RUINORERP.Common.Helper;
+using RUINORERP.Common.Log4Net;
+using RUINORERP.Extensions;
+using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Global;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.ConfigModel;
+using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.Server.BizService;
+using RUINORERP.Server.Commands;
+using RUINORERP.Server.Network.Core;
+using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.ServerSession;
+using RUINORERP.Server.SmartReminder;
+using RUINORERP.Server.Workflow.WFReminder;
+using RUINORERP.Server.Workflow.WFScheduled;
+using SharpYaml.Tokens;
+using SuperSocket;
+using SuperSocket.Command;
+using SuperSocket.ProtoBase;
+using SuperSocket.Server;
+using SuperSocket.Server.Abstractions;
+using SuperSocket.Server.Abstractions.Session;
+using SuperSocket.Server.Host;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
-using RUINORERP.Business.CommService;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models;
-using RUINORERP.Server.Network.Core;
-using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Monitoring;
+using RUINORERP.Server.Comm;
+using WorkflowCore.Interface;
 
 namespace RUINORERP.Server
 {
@@ -1324,6 +1321,9 @@ namespace RUINORERP.Server
 
         public frmWFManage frmWF = Startup.GetFromFac<frmWFManage>();
 
+        // 添加服务器监控窗体实例
+        private frmServerMonitor _serverMonitorForm;
+
         private void toolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             if (e.ClickedItem.Text == "工作流管理")
@@ -1367,6 +1367,16 @@ namespace RUINORERP.Server
                 frmCahe.Activate();
             }
 
+            if (e.ClickedItem.Text == "服务器监控")
+            {
+                if (_serverMonitorForm == null || _serverMonitorForm.IsDisposed)
+                {
+                    _serverMonitorForm = new frmServerMonitor();
+                }
+                _serverMonitorForm.MdiParent = this;
+                _serverMonitorForm.Show();
+                _serverMonitorForm.Activate();
+            }
         }
 
         private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)

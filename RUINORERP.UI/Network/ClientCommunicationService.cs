@@ -73,8 +73,8 @@ namespace RUINORERP.UI.Network
 
         // 网络配置
         private readonly NetworkConfig _networkConfig;
-        private readonly CommandPacketAdapter commandPacketAdapter;
-
+        private readonly ICommandCreationService _CommandCreationService;
+ 
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
 
         // 用于Token刷新的内部实现
@@ -101,14 +101,14 @@ namespace RUINORERP.UI.Network
         /// 构造函数
         /// </summary>
         /// <param name="socketClient">Socket客户端接口，提供底层网络通信能力</param>
+        /// <param name="commandCreationService">命令创建服务</param>
         /// <param name="commandDispatcher">命令调度器，用于分发命令到对应的处理类</param>
         /// <param name="logger">日志记录器</param>
-        /// <param name="commandTypeHelper">命令类型助手，用于管理命令类型映射关系</param>
         /// <param name="networkConfig">网络配置</param>
         /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
         public ClientCommunicationService(
             ISocketClient socketClient,
-            CommandPacketAdapter _commandPacketAdapter,
+            ICommandCreationService commandCreationService,
         ICommandDispatcher commandDispatcher,
             ILogger<ClientCommunicationService> logger,
             TokenManager _tokenManager,
@@ -116,7 +116,7 @@ namespace RUINORERP.UI.Network
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
-            commandPacketAdapter = _commandPacketAdapter;
+            this._CommandCreationService = commandCreationService ?? throw new ArgumentNullException(nameof(commandCreationService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _networkConfig = networkConfig ?? NetworkConfig.Default;
             _eventManager = new ClientEventManager();
@@ -1355,9 +1355,8 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <typeparam name="TResponse">响应数据类型</typeparam>
         /// <param name="packet">接收到的数据包</param>
-        /// <param name="commandPacketAdapter">命令包适配器</param>
         /// <returns>处理后的响应数据</returns>
-        public TResponse ProcessCommandResponseAsync<TResponse>(PacketModel packet, CommandPacketAdapter commandPacketAdapter)
+        public TResponse ProcessCommandResponseAsync<TResponse>(PacketModel packet)
             where TResponse : class, IResponse
         {
             if (packet == null)
@@ -1369,7 +1368,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 创建命令对象 - 使用ExecutionContext中的响应类型进行反序列化
-                ICommand baseCommand = commandPacketAdapter.CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext?.CommandTypeName);
+                ICommand baseCommand = _CommandCreationService.CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext?.CommandTypeName);
 
                 // 处理登录命令的特殊情况
                 TResponse response = default(TResponse);
@@ -1395,13 +1394,11 @@ namespace RUINORERP.UI.Network
         /// <typeparam name="TRequest">请求数据类型</typeparam>
         /// <typeparam name="TResponse">响应数据类型</typeparam>
         /// <param name="command">命令对象</param>
-        /// <param name="commandPacketAdapter">命令包适配器</param>
         /// <param name="ct">取消令牌</param>
         /// <param name="timeoutMs">超时时间（毫秒）</param>
         /// <returns>包含指令信息的响应数据</returns>
         public async Task<BaseCommand<TResponse>> SendCommandWithResponseAsync<TRequest, TResponse>(
             BaseCommand<TRequest, TResponse> command,
-            CommandPacketAdapter commandPacketAdapter,
             CancellationToken ct = default,
             int timeoutMs = 30000)
             where TRequest : class, IRequest
@@ -1414,7 +1411,7 @@ namespace RUINORERP.UI.Network
                 return BaseCommand<TResponse>.Error("未收到服务器响应");
             }
 
-            var responseData = ProcessCommandResponseAsync<TResponse>(packet, commandPacketAdapter);
+            var responseData = ProcessCommandResponseAsync<TResponse>(packet);
 
             var commandResponse = BaseCommand<TResponse>.Success(responseData, (responseData as ResponseBase)?.Message ?? "操作成功");
             commandResponse.CommandId = command.CommandIdentifier;

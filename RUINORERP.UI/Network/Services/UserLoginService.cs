@@ -24,7 +24,7 @@ namespace RUINORERP.UI.Network.Services
     public sealed class UserLoginService : IDisposable
     {
         private readonly ClientCommunicationService _communicationService;
-        private readonly CommandPacketAdapter commandPacketAdapter;
+        private readonly ICommandCreationService _commandCreationService;
         private readonly ILogger<UserLoginService> _log;
         private readonly SilentTokenRefresher _silentTokenRefresher;
         private readonly TokenManager _tokenManager;
@@ -32,16 +32,17 @@ namespace RUINORERP.UI.Network.Services
         /// 构造函数 - 使用依赖注入的TokenManager
         /// </summary>
         /// <param name="communicationService">通信服务</param>
+        /// <param name="commandCreationService">命令创建服务</param>
         /// <param name="tokenManager">Token管理器（依赖注入）</param>
         /// <param name="logger">日志记录器</param>
         public UserLoginService(
             ClientCommunicationService communicationService,
-              CommandPacketAdapter _commandPacketAdapter,
+            ICommandCreationService commandCreationService,
             TokenManager tokenManager,
             ILogger<UserLoginService> logger = null)
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
-            commandPacketAdapter = _commandPacketAdapter;
+            _commandCreationService = commandCreationService ?? throw new ArgumentNullException(nameof(commandCreationService));
             _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
             _log = logger;
 
@@ -74,7 +75,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 使用新的方法发送命令并获取包含指令信息的响应
                 var commandResponse = await _communicationService.SendCommandWithResponseAsync<LoginRequest, LoginResponse>(
-                    loginCommand, commandPacketAdapter, ct);
+                    loginCommand, ct);
 
                 // 检查响应是否成功
                 if (!commandResponse.IsSuccess)

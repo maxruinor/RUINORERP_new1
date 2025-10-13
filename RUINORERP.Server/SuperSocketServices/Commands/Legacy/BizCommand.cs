@@ -333,7 +333,7 @@ namespace RUINORERP.Server.Commands
                             Stopwatch stopwatchSender = Stopwatch.StartNew();
                             stopwatchSender.Start();
                             //如果指定了表名，则只发送指定表的数据，否则全部发送
-                            if (!string.IsNullOrEmpty(RequestTableName) && BizCacheHelper.Manager.NewTableList.Keys.Contains(RequestTableName))
+                            if (!string.IsNullOrEmpty(RequestTableName) && MyCacheManager.Instance.NewTableList.Keys.Contains(RequestTableName))
                             {
                                 UserService.发送缓存数据列表(fromPlayer, RequestTableName);
                                 if (frmMain.Instance.IsDebug)

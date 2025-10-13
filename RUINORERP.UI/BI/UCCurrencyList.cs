@@ -24,6 +24,7 @@ using System.Web.UI;
 using System.Windows.Documents;
 using SourceGrid2.Win32;
 using RUINORERP.Global;
+using RUINORERP.Extensions.Middlewares;
 
 
 namespace RUINORERP.UI.BI
@@ -113,7 +114,7 @@ namespace RUINORERP.UI.BI
                             //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                             //只处理需要缓存的表
-                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_Currency).Name, out pair))
+                            if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_Currency).Name, out pair))
                             {
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
                                 //如果有更新变动就上传到服务器再分发到所有客户端

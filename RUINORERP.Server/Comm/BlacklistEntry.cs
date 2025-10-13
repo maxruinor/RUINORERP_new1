@@ -15,6 +15,9 @@ namespace RUINORERP.Server.Comm
         private string _ip地址;
         private DateTime _解封时间;
         private string _剩余时间;
+        private string _reason;
+        private DateTime _banTime;
+        
         public string IP地址
         {
             get => _ip地址;
@@ -27,7 +30,7 @@ namespace RUINORERP.Server.Comm
                 }
             }
         }
-
+        
         public DateTime 解封时间
         {
             get => _解封时间;
@@ -37,6 +40,47 @@ namespace RUINORERP.Server.Comm
                 {
                     _解封时间 = value;
                     OnPropertyChanged(nameof(解封时间));
+                }
+            }
+        }
+        
+        // 添加缺失的属性
+        public string IPAddress
+        {
+            get => _ip地址;
+            set
+            {
+                if (_ip地址 != value)
+                {
+                    _ip地址 = value;
+                    OnPropertyChanged(nameof(IPAddress));
+                    OnPropertyChanged(nameof(IP地址));
+                }
+            }
+        }
+        
+        public string Reason
+        {
+            get => _reason;
+            set
+            {
+                if (_reason != value)
+                {
+                    _reason = value;
+                    OnPropertyChanged(nameof(Reason));
+                }
+            }
+        }
+        
+        public DateTime BanTime
+        {
+            get => _banTime;
+            set
+            {
+                if (_banTime != value)
+                {
+                    _banTime = value;
+                    OnPropertyChanged(nameof(BanTime));
                 }
             }
         }

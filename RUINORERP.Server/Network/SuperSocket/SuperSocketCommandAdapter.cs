@@ -412,48 +412,6 @@ namespace RUINORERP.Server.Network.SuperSocket
 
 
 
-        protected virtual async ValueTask SendResponseToClientAsync(TAppSession session, PacketModel packetModel)
-        {
-            packetModel.SessionId = session.SessionID;
-            // 序列化和加密数据包
-            var payload = UnifiedSerializationService.SerializeWithMessagePack(packetModel);
-
-            // 加密数据
-            var originalData = new OriginalData(
-                (byte)CommandCategory.Authentication,
-                new byte[] { AuthenticationCommands.Connected.OperationCode },
-                payload
-            );
-            var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
-
-            // 发送数据并捕获可能的异常
-            try
-            {
-                await session.SendAsync(encryptedData.ToByteArray());
-            }
-            catch (TaskCanceledException ex)
-            {
-                // 处理任务被取消的特定异常
-                _logger?.LogWarning(ex, "发送响应到客户端被取消: SessionId={SessionId}, PacketId={PacketId}",
-                    packetModel.SessionId, packetModel.PacketId);
-                // 忽略此异常，因为可能是正常的超时或取消操作
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
-            {
-                // 处理管道写入器已完成的特定异常
-                _logger?.LogWarning(ex, "管道写入器已完成，无法发送响应到客户端: SessionId={SessionId}, PacketId={PacketId}",
-                    packetModel.SessionId, packetModel.PacketId);
-                // 忽略此异常，因为会话可能已经关闭
-            }
-            catch (Exception ex)
-            {
-                // 记录其他发送异常
-                _logger?.LogError(ex, "发送响应到客户端时发生异常: SessionId={SessionId}, PacketId={PacketId}",
-                    packetModel.SessionId, packetModel.PacketId);
-                // 可以选择是否向上传播异常
-                // throw;
-            }
-        }
 
 
 

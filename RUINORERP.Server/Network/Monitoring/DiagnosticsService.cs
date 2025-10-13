@@ -8,10 +8,40 @@ using System.Threading.Tasks;
 namespace RUINORERP.Server.Network.Monitoring
 {
     /// <summary>
+    /// 诊断服务基础接口
+    /// 定义诊断服务的基本功能
+    /// </summary>
+    public interface IDiagnosticsService
+    {
+        /// <summary>
+        /// 获取系统诊断报告
+        /// </summary>
+        /// <returns>诊断报告</returns>
+        string GetDiagnosticsReport();
+
+        /// <summary>
+        /// 获取系统健康状态
+        /// </summary>
+        /// <returns>健康状态</returns>
+        SystemHealthStatus GetSystemHealth();
+
+        /// <summary>
+        /// 获取处理器统计信息
+        /// </summary>
+        /// <returns>处理器统计信息字典</returns>
+        Dictionary<string, HandlerStatistics> GetHandlerStatistics();
+
+        /// <summary>
+        /// 重置所有处理器统计信息
+        /// </summary>
+        void ResetAllStatistics();
+    }
+
+    /// <summary>
     /// 诊断服务
     /// 用于收集和报告系统状态信息
     /// </summary>
-    public class DiagnosticsService
+    public class DiagnosticsService : IDiagnosticsService
     {
         private readonly CommandDispatcher _commandDispatcher;
 

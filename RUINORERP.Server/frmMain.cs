@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -139,7 +139,7 @@ namespace RUINORERP.Server
         /// <summary>
         /// 定时器用于定期更新服务器信息
         /// </summary>
-        private System.Windows.Forms.Timer UpdateServerInfoTimer = new System.Windows.Forms.Timer();
+        public System.Windows.Forms.Timer UpdateServerInfoTimer = new System.Windows.Forms.Timer();
 
         /// <summary>
         /// 初始化服务器信息更新定时器
@@ -306,8 +306,8 @@ namespace RUINORERP.Server
 
         }
 
-        bool ServerStart = false;
-        static System.Timers.Timer timer = null;
+        public bool ServerStart = false;
+        public  System.Timers.Timer timer = null;
 
         static System.Timers.Timer ReminderTimer = null;
 
@@ -501,7 +501,7 @@ namespace RUINORERP.Server
 
         }
 
-        private bool CheckRegistered(tb_sys_RegistrationInfo regInfo)
+        public bool CheckRegistered(tb_sys_RegistrationInfo regInfo)
         {
             string key = "ruinor1234567890"; // 这应该是一个保密的密钥
             string machineCode = regInfo.MachineCode; // 这可以是机器的硬件信息或其他唯一标识
@@ -671,7 +671,7 @@ namespace RUINORERP.Server
             try
             {
 
-                foreach (var item in BizCacheHelper.Manager.NewTableList)
+                foreach (var item in MyCacheManager.Instance.NewTableList)
                 {
                     CacheInfo cacheInfo = MyCacheManager.Instance.CacheInfoList.Get(item.Key) as CacheInfo;
                     if (cacheInfo != null)
@@ -766,7 +766,7 @@ namespace RUINORERP.Server
             await Task.Delay(0);
         }
 
-        private async void InitAll()
+        public async void InitAll()
         {
             if (!ServerStart)
             {
@@ -1434,7 +1434,7 @@ namespace RUINORERP.Server
         private void tsmNo_Click(object sender, EventArgs e)
         {
             tsmY.Checked = false;
-            tsmNo.Checked = !tsmY.Checked;
+            tsmNo.Checked = !tsmNo.Checked;
             IsDebug = !tsmNo.Checked;
             PrintMsg($"当前调式模式:{IsDebug}");
         }
@@ -1455,7 +1455,8 @@ namespace RUINORERP.Server
             frm.Activate();
         }
 
-        private void tsBtnStartServer_Click(object sender, EventArgs e)
+        // 将受保护的成员改为公共成员
+        public void tsBtnStartServer_Click(object sender, EventArgs e)
         {
             if (frmuserList == null)
             {
@@ -1467,7 +1468,7 @@ namespace RUINORERP.Server
             UpdateServerInfoTimer.Start();
             tsBtnStartServer.Enabled = false;
 
-            if (BizCacheHelper.Manager.CacheEntityList == null)
+            if (MyCacheManager.Instance.CacheEntityList == null)
             {
                 // 如果缓存为空，尝试重新初始化
                 Task.Run(async () => await frmMain.Instance.InitConfig(true)).Wait();

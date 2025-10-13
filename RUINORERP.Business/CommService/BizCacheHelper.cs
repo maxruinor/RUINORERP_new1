@@ -29,7 +29,9 @@ namespace RUINORERP.Business.CommService
     /// <summary>
     /// 缓存帮助类
     /// 主要思路：以表名为key:值是两种情况：1）IsGenericList ，2）Jarrry  jsonList
+    /// 注意：此类已弃用，请使用MyCacheManager.Instance代替
     /// </summary>
+    [Obsolete("此类已弃用，请使用MyCacheManager.Instance代替", false)]
     public class BizCacheHelper
     {
         private readonly ApplicationContext _context;
@@ -58,39 +60,46 @@ namespace RUINORERP.Business.CommService
 
         private static MyCacheManager _manager;
 
-
-
-
         // 修正后的InitManager方法
         public static void InitManager()
         {
-            if (_manager == null)
+            // 初始化MyCacheManager单例，使用服务器端特定的缓存配置
+            // 1. 创建日志工厂（如果需要自定义日志）
+            var loggerFactory = LoggerFactory.Create(logBuilder =>
             {
-                // 1. 创建日志工厂（如果需要自定义日志）
-                var loggerFactory = LoggerFactory.Create(logBuilder =>
-                {
-                    // 添加Log4NetProvider（你的日志配置）
-                    Common.Log4Net.Log4NetProvider log4NetProvider = new Common.Log4Net.Log4NetProvider("Log4net_file.config");
-                    logBuilder.AddProvider(log4NetProvider);
-                });
+                // 添加Log4NetProvider（你的日志配置）
+                Common.Log4Net.Log4NetProvider log4NetProvider = new Common.Log4Net.Log4NetProvider("Log4net_file.config");
+                logBuilder.AddProvider(log4NetProvider);
+            });
 
-                // 2. 构建缓存管理器（使用正确的Build重载）
-                var cache = CacheFactory.Build<object>(
-                    builder => builder
-                        .WithSystemRuntimeCacheHandle() // 使用系统运行时缓存
-                        .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120)), // 过期配置
-                    loggerFactory // 传入日志工厂
-                );
-
-                _manager = new MyCacheManager(cache);
-            }
+            // 2. 构建缓存管理器（使用正确的Build重载）
+            var cache = CacheFactory.Build<object>(
+                builder => builder
+                    .WithSystemRuntimeCacheHandle() // 使用系统运行时缓存
+                    .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120)), // 过期配置
+                loggerFactory // 传入日志工厂
+            );
+            
+            MyCacheManager.Initialize(cache);
+            _manager = MyCacheManager.Instance;
         }
 
         //private ConcurrentDictionary<string, object> _Dict = new ConcurrentDictionary<string, object>();
 
         //public ConcurrentDictionary<string, object> Dict { get => _Dict; set => _Dict = value; }
-        public static MyCacheManager Manager { get => _manager; set => _manager = value; }
+        
+        /// <summary>
+        /// 获取缓存管理器实例
+        /// 注意：已弃用，请直接使用MyCacheManager.Instance
+        /// </summary>
+        [Obsolete("已弃用，请直接使用MyCacheManager.Instance", false)]
+        public static MyCacheManager Manager { get => _manager; private set => _manager = value; }
 
+        /// <summary>
+        /// 根据类型和ID获取实体
+        /// 注意：已弃用，请使用MyCacheManager.Instance.GetEntity方法
+        /// </summary>
+        [Obsolete("已弃用，请使用MyCacheManager.Instance.GetEntity方法", false)]
         public T GetEntity<T>(object IdValue)
         {
             object entity = new object();
@@ -170,11 +179,10 @@ namespace RUINORERP.Business.CommService
         }
 
         /// <summary>
-        /// 
+        /// 根据表名和主键值获取实体
+        /// 注意：已弃用，请使用MyCacheManager.Instance.GetEntity方法
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        [Obsolete("已弃用，请使用MyCacheManager.Instance.GetEntity方法", false)]
         public object GetEntity(string tableName, object PrimaryKeyValue)
         {
             object entity = new object();
@@ -388,6 +396,31 @@ namespace RUINORERP.Business.CommService
             stopwatch.Stop();
             //_logger.LogInformation($"初始化SetDictDataSource: {tableName} 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
             return lastList;
+        }
+
+        // 添加GetDictDataSource方法
+        public ConcurrentDictionary<object, object> GetDictDataSource(string tableName)
+        {
+            if (Manager.CacheEntityList.Exists(tableName))
+            {
+                var cacheData = Manager.CacheEntityList.Get(tableName);
+                if (cacheData != null)
+                {
+                    // 创建一个字典来存储数据
+                    var result = new ConcurrentDictionary<object, object>();
+                    // 这里简化处理，实际可能需要根据具体数据结构进行转换
+                    if (cacheData is IEnumerable enumerable)
+                    {
+                        int index = 0;
+                        foreach (var item in enumerable)
+                        {
+                            result.TryAdd(index++, item);
+                        }
+                    }
+                    return result;
+                }
+            }
+            return new ConcurrentDictionary<object, object>();
         }
 
         public void SetDictDataSource(List<string> typeNames, bool LoadData = true)

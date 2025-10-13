@@ -43,6 +43,7 @@ namespace RUINORERP.PacketSpec.Commands
 
         /// <summary>
         /// 从数据包创建命令 - 主入口方法
+        /// 优化版本：仅从缓存获取命令类型，通过二进制数据创建命令实例，减少网络传输数据量
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <returns>创建的命令对象，失败时返回null</returns>
@@ -69,7 +70,7 @@ namespace RUINORERP.PacketSpec.Commands
                     }
                 }
 
-                // 2. 获取命令类型（优先从缓存）
+                // 2. 仅从缓存获取命令类型，不获取完整的命令对象
                 var commandType = GetCommandType(commandId);
                 if (commandType == null)
                 {
@@ -77,7 +78,7 @@ namespace RUINORERP.PacketSpec.Commands
                     return CreateFallbackCommand(packet);
                 }
 
-                // 3. 处理字节数组命令数据
+                // 3. 优先处理字节数组命令数据，通过二进制数据创建命令实例
                 if (packet.CommandData != null && packet.CommandData.Length > 0)
                 {
                     var command = CreateCommandFromBytes(packet.CommandData, commandType);
@@ -88,8 +89,8 @@ namespace RUINORERP.PacketSpec.Commands
                     }
                 }
 
-                // 4. 创建空命令实例
-                var emptyCommand = new BaseCommand();
+                // 4. 如果没有二进制数据，创建空命令实例
+                var emptyCommand = CreateEmptyCommand(commandType);
                 if (emptyCommand != null)
                 {
                     InitializeCommandProperties(emptyCommand, packet);

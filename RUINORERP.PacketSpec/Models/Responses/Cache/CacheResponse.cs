@@ -17,7 +17,6 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// 缓存数据
         /// </summary>
         [Key(10)]
-        [MessagePack.IgnoreMember]
         public CacheData CacheData { get; set; }
 
         /// <summary>

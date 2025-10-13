@@ -7,6 +7,7 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Server.Network.Commands;
 using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Network.Services;
 
 namespace RUINORERP.Server.Network.DI
@@ -32,6 +33,11 @@ namespace RUINORERP.Server.Network.DI
             // 注册会话管理服务
             services.AddSingleton<SessionService>();
             services.AddSingleton<ISessionService, SessionService>();
+
+            // 注册诊断相关服务
+            services.AddSingleton<DiagnosticsService>();
+            services.AddSingleton<PerformanceMonitoringService>();
+            services.AddSingleton<ErrorAnalysisService>();
 
             // 注册用户服务
             //    services.AddSingleton<IUserService, UserService>();
@@ -93,12 +99,16 @@ namespace RUINORERP.Server.Network.DI
             //builder.RegisterType<SuperSocketAdapter>().AsSelf().SingleInstance();
             //  builder.RegisterType<FileStorageManager>().AsSelf().SingleInstance();
 
-            // 注册服务器端登录请求处理器
-            // builder.RegisterType<ServerLoginRequestHandler>().AsSelf().InstancePerDependency();
+            // 注册诊断相关服务
+            builder.RegisterType<DiagnosticsService>().AsSelf().SingleInstance();
+            builder.RegisterType<PerformanceMonitoringService>().AsSelf().SingleInstance();
+            builder.RegisterType<ErrorAnalysisService>().AsSelf().SingleInstance();
 
             // 注册锁管理服务
             builder.RegisterType<LockManagerService>().As<ILockManagerService>().SingleInstance();
 
+            // 注册服务器端登录请求处理器
+            // builder.RegisterType<ServerLoginRequestHandler>().AsSelf().InstancePerDependency();
 
             // 注册网络命令处理器
             RegisterNetworkCommandHandlers(builder);
@@ -148,7 +158,7 @@ namespace RUINORERP.Server.Network.DI
         public static string GetNetworkServicesStatistics()
         {
             return $"网络服务依赖注入配置完成。\n" +
-                   $"已注册服务: 11个核心服务\n" +
+                   $"已注册服务: 14个核心服务\n" +
                    $"已注册接口: 3个服务接口\n" +
                    $"生命周期: 单例模式\n" +
                    $"AOP支持: 已启用接口拦截器";

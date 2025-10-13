@@ -492,7 +492,7 @@ namespace RUINORERP.Business
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup =MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)

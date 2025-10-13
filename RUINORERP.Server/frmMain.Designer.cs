@@ -303,7 +303,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolStripButton2;
         private System.Windows.Forms.ToolStripButton toolStripButton3;
-        private System.Windows.Forms.ToolStripButton tsBtnStartServer;
         private System.Windows.Forms.ToolStripMenuItem 窗口ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 层叠排列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 水平平铺ToolStripMenuItem;
@@ -321,6 +320,7 @@
         private System.Windows.Forms.ToolStripStatusLabel tslblStatus;
         private System.Windows.Forms.ToolStripMenuItem 黑名单ToolStripMenuItem;
         private System.Windows.Forms.ToolStripButton toolStripButton1;
+        public System.Windows.Forms.ToolStripButton tsBtnStartServer;
     }
 }
 

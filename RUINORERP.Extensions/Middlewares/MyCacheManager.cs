@@ -4,10 +4,12 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheManager.Core;
+using Fireasy.Common.Extensions;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.CustomAttribute;
@@ -33,6 +35,10 @@ namespace RUINORERP.Extensions.Middlewares
         #region ====== 单例 ======
         private static MyCacheManager _instance;
         private static readonly object _globalLock = new object();
+
+        /// <summary>
+        /// 获取MyCacheManager的单例实例
+        /// </summary>
         public static MyCacheManager Instance
         {
             get
@@ -41,11 +47,40 @@ namespace RUINORERP.Extensions.Middlewares
                 {
                     if (_instance == null)
                     {
-                        var cache = CacheFactory.Build<object>(b => b.WithSystemRuntimeCacheHandle());
+                        // 创建默认缓存配置
+                        var cache = CacheFactory.Build<object>(settings =>
+                            settings
+                                .WithSystemRuntimeCacheHandle()
+                                .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120)));
                         _instance = new MyCacheManager(cache);
                     }
+                    return _instance;
                 }
-                return _instance;
+            }
+        }
+
+        /// <summary>
+        /// 初始化单例实例，支持自定义缓存配置
+        /// 此方法应在应用程序启动时调用，确保使用正确的缓存配置
+        /// </summary>
+        /// <param name="cache">自定义的缓存管理器实例</param>
+        public static void Initialize(ICacheManager<object> cache = null)
+        {
+            lock (_globalLock)
+            {
+                if (_instance != null)
+                {
+                    // 如果实例已存在，不重复初始化
+                    return;
+                }
+
+                // 使用提供的缓存配置或默认配置
+                cache = cache ?? CacheFactory.Build<object>(settings =>
+                    settings
+                        .WithSystemRuntimeCacheHandle()
+                        .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120)));
+
+                _instance = new MyCacheManager(cache);
             }
         }
         #endregion
@@ -57,7 +92,7 @@ namespace RUINORERP.Extensions.Middlewares
         public ICacheManager<object> CacheInfoList { get; }
         #endregion
 
-        #region ====== 旧字典全部保留 ======
+        #region ====== 新字典全部保留 ======
         public ConcurrentDictionary<string, KeyValuePair<string, string>> NewTableList { get; } =
             new ConcurrentDictionary<string, KeyValuePair<string, string>>();
         public ConcurrentDictionary<string, Type> NewTableTypeList { get; } =
@@ -138,7 +173,7 @@ namespace RUINORERP.Extensions.Middlewares
         {
             var l = new List<T>();
             if (!NewTableList.ContainsKey(tableName)) return l;
-            
+
             var raw = CacheEntityList.Get(tableName);
             if (raw == null) return l;
             if (raw is List<object> ol) return ol.OfType<T>().ToList();
@@ -163,7 +198,7 @@ namespace RUINORERP.Extensions.Middlewares
         public void UpdateEntityList(string tableName, JArray jArray, bool hasExpire = false)
         {
             if (!NewTableList.ContainsKey(tableName)) return;
-            
+
             var old = CacheEntityList.Get(tableName);
             var merged = old == null ? jArray : CombineJArrays(old as JArray ?? new JArray(), jArray, NewTableList[tableName].Key);
             CacheEntityList.Put(tableName, merged);
@@ -191,6 +226,23 @@ namespace RUINORERP.Extensions.Middlewares
         public void UpdateEntityList(string tableName, object list, bool hasExpire = false)
         {
             if (!NewTableList.ContainsKey(tableName)) return;
+
+            // 处理字符串格式的数据
+            if (list is string jsonString)
+            {
+                try
+                {
+                    var jArray = JArray.Parse(jsonString);
+                    list = jArray;
+                }
+                catch (Exception ex)
+                {
+                    // 如果解析失败，记录错误并返回
+                    System.Diagnostics.Debug.WriteLine($"解析JSON字符串失败: {ex.Message}");
+                    return;
+                }
+            }
+
             var old = CacheEntityList.Get(tableName);
             var merged = old == null ? list : CombineLists(old, list, tableName);
             CacheEntityList.Put(tableName, merged);
@@ -238,11 +290,11 @@ namespace RUINORERP.Extensions.Middlewares
             if (!NewTableList.ContainsKey(tableName) || !CacheEntityList.Exists(tableName)) return;
             var raw = CacheEntityList.Get(tableName);
             bool changed = false;
-            
+
             if (raw is IList list)
             {
                 var item = list.Cast<object>().FirstOrDefault(o => o.GetPropertyValue(pkCol)?.ToString() == id.ToString());
-                if (item != null) 
+                if (item != null)
                 {
                     list.Remove(item);
                     changed = true;
@@ -251,13 +303,13 @@ namespace RUINORERP.Extensions.Middlewares
             else if (raw is JArray ja)
             {
                 var tok = ja.FirstOrDefault(t => t[pkCol]?.ToString() == id.ToString());
-                if (tok != null) 
+                if (tok != null)
                 {
                     ja.Remove(tok);
                     changed = true;
                 }
             }
-            
+
             if (changed)
             {
                 CacheEntityList.Put(tableName, raw);
@@ -283,14 +335,14 @@ namespace RUINORERP.Extensions.Middlewares
                 if (!string.IsNullOrEmpty(key))
                     dict[key] = item;
             }
-            
+
             foreach (var item in @new)
             {
                 var key = item[pk]?.ToString();
                 if (!string.IsNullOrEmpty(key))
                     dict[key] = item;
             }
-            
+
             return new JArray(dict.Values);
         }
         private object CombineLists(object old, object @new, string tableName)
@@ -301,18 +353,18 @@ namespace RUINORERP.Extensions.Middlewares
             var listType = typeof(List<>).MakeGenericType(type);
             IList res = (IList)Activator.CreateInstance(listType);
             var dict = new Dictionary<string, object>();
-            
-            void AddAll(IEnumerable src) 
-            { 
+
+            void AddAll(IEnumerable src)
+            {
                 if (src == null) return;
-                foreach (var i in src) 
+                foreach (var i in src)
                 {
                     var key = i?.GetPropertyValue(pk)?.ToString();
                     if (!string.IsNullOrEmpty(key))
                         dict[key] = i;
                 }
             }
-            
+
             AddAll((IEnumerable)old);
             AddAll((IEnumerable)@new);
             foreach (var v in dict.Values) res.Add(v);
@@ -331,7 +383,7 @@ namespace RUINORERP.Extensions.Middlewares
                 {
                     callbacks = list.ToArray();
                 }
-                
+
                 foreach (var cb in callbacks)
                 {
                     try
@@ -362,6 +414,478 @@ namespace RUINORERP.Extensions.Middlewares
         }
 
         private void IncrementVersion(string tableName) => _versions.AddOrUpdate(tableName, 1, (k, v) => v + 1);
+        #endregion
+
+        #region ====== 从BizCacheHelper移植的方法 ======
+
+        /// <summary>
+        /// 通过表和主键名获取值
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="IdValue">主键值</param>
+        /// <returns>返回指定字段的值</returns>
+        public object GetValue(string tableName, object IdValue)
+        {
+            object entity = null;
+
+            // 只处理需要缓存的表
+            if (NewTableList.TryGetValue(tableName, out var pair))
+            {
+                string key = pair.Key;
+                string valueField = pair.Value;
+
+                if (CacheEntityList.Exists(tableName))
+                {
+                    var rslist = CacheEntityList.Get(tableName);
+
+                    if (CacheBizTypeHelper.IsGenericList(rslist.GetType()))
+                    {
+                        var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+                        if (lastlist != null)
+                        {
+                            foreach (var item in lastlist)
+                            {
+                                var id = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(item, key);
+                                if (id != null && id.ToString() == IdValue.ToString())
+                                {
+                                    entity = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(item, valueField);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else if (rslist != null && CacheBizTypeHelper.IsJArrayList(rslist.GetType()))
+                    {
+                        var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
+                        if (lastlist != null)
+                        {
+                            foreach (var item in lastlist)
+                            {
+                                // 将item转换为JObject
+                                var obj = JObject.Parse(item.ToString());
+
+                                // 获取ID属性的值
+                                var id = obj[key]?.ToString();
+
+                                if (id != null && id == IdValue.ToString())
+                                {
+                                    // 获取显示字段的值
+                                    var displayValue = obj[valueField]?.ToString();
+                                    if (displayValue != null)
+                                    {
+                                        entity = displayValue;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return entity;
+        }
+
+
+        /// <summary>
+        /// 获取指定表名的单个实体
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="tableName">表名</param>
+        /// <returns>实体对象，如果不存在则返回null</returns>
+        public T GetEntity<T>(string tableName) where T : class
+        {
+            var list = GetEntityList_AI<T>(tableName);
+            return list?.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// 根据ID获取实体
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="IdValue">ID值</param>
+        /// <returns>实体对象，如果不存在则返回null</returns>
+        public T GetEntity<T>(object IdValue) where T : class
+        {
+            if (IdValue == null)
+            {
+                return default(T);
+            }
+
+            string tableName = typeof(T).Name;
+
+            // 只处理需要缓存的表
+            if (NewTableList.TryGetValue(tableName, out var pair))
+            {
+                string key = pair.Key;
+                string keyValue = IdValue.ToString();
+
+                // 设置属性的值
+                if (CacheEntityList.Exists(tableName))
+                {
+                    var cachelist = CacheEntityList.Get(tableName);
+
+                    // 获取原始 List<T> 的类型参数
+                    Type listType = cachelist.GetType();
+
+                    if (CacheBizTypeHelper.IsGenericList(listType))
+                    {
+                        List<object> list = cachelist as List<object>;
+                        if (list == null)
+                        {
+                            list = new List<object>();
+                        }
+
+                        var entity = list.Find(t => t.GetPropertyValue(key)?.ToString() == IdValue.ToString());
+                        if (entity != null)
+                        {
+                            return (T)entity;
+                        }
+                    }
+                    else if (CacheBizTypeHelper.IsJArrayList(listType))
+                    {
+                        JArray varJarray = (JArray)cachelist;
+                        JToken olditem = varJarray.FirstOrDefault(n => n[pair.Key]?.ToString() == IdValue.ToString());
+                        if (olditem != null)
+                        {
+                            return olditem.ToObject<T>();
+                        }
+                    }
+                }
+            }
+
+            return default(T);
+        }
+
+        /// <summary>
+        /// 根据表名和主键值获取实体
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="PrimaryKeyValue">主键值</param>
+        /// <returns>实体对象，如果不存在则返回null</returns>
+        public object GetEntity(string tableName, object PrimaryKeyValue)
+        {
+            object entity = null;
+
+            // 只处理需要缓存的表
+            if (NewTableList.TryGetValue(tableName, out var pair))
+            {
+                string key = pair.Key;
+
+                if (CacheEntityList.Exists(tableName))
+                {
+                    var cachelist = CacheEntityList.Get(tableName);
+
+                    // 获取原始 List<T> 的类型参数
+                    Type listType = cachelist.GetType();
+
+                    if (CacheBizTypeHelper.IsGenericList(listType))
+                    {
+                        Type elementType = listType.GetGenericArguments()[0];
+                        // 创建一个新的 List<object>
+                        List<object> convertedList = new List<object>();
+
+                        // 遍历原始列表并转换元素
+                        foreach (var item in (IEnumerable)cachelist)
+                        {
+                            convertedList.Add(item);
+                        }
+
+                        entity = convertedList.FirstOrDefault(t => t.GetPropertyValue(key)?.ToString() == PrimaryKeyValue.ToString());
+                    }
+                    else if (CacheBizTypeHelper.IsJArrayList(listType))
+                    {
+                        JArray varJarray = (JArray)cachelist;
+                        // 如果旧列表中有这个值，则直接获取
+                        var olditem = varJarray.FirstOrDefault(n => n[pair.Key]?.ToString() == PrimaryKeyValue.ToString());
+                        Type type = NewTableTypeList.GetValue(tableName);
+                        if (olditem != null)
+                        {
+                            return olditem.ToObject(type);
+                        }
+                    }
+                }
+            }
+
+            return entity;
+        }
+
+        /// <summary>
+        /// 获取指定表名的实体列表
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="tableName">表名</param>
+        /// <returns>实体列表，如果不存在则返回空列表</returns>
+        public List<T> GetEntityList<T>(string tableName) where T : class
+        {
+            return GetEntityList_AI<T>(tableName) ?? new List<T>();
+        }
+        /// <summary>
+        /// 检查值
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="expkey">主键表达式</param>
+        /// <param name="value">值</param>
+        public void CheckValue<T>(Expression<Func<T, int>> expkey, object value)
+        {
+            var mb = expkey.GetMemberInfo();
+            string key = mb.Name;
+            string tableName = expkey.Parameters[0].Type.Name;
+            key = tableName + ":" + key + ":" + value.ToString();
+
+            // 这里可以根据需要实现具体的检查逻辑
+        }
+
+        /// <summary>
+        /// 获取字典数据源（非泛型版本）
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>字典数据</returns>
+        public ConcurrentDictionary<object, object> GetDictDataSource(string tableName)
+        {
+            if (CacheEntityList.Exists(tableName))
+            {
+                var cacheData = CacheEntityList.Get(tableName);
+                if (cacheData != null)
+                {
+                    // 创建一个字典来存储数据
+                    var result = new ConcurrentDictionary<object, object>();
+
+                    // 这里简化处理，实际可能需要根据具体数据结构进行转换
+                    if (cacheData is IEnumerable enumerable)
+                    {
+                        int index = 0;
+                        foreach (var item in enumerable)
+                        {
+                            result.TryAdd(index++, item);
+                        }
+                    }
+
+                    return result;
+                }
+            }
+
+            return new ConcurrentDictionary<object, object>();
+        }
+
+        /// <summary>
+        /// 设置多个表的数据源
+        /// </summary>
+        /// <param name="typeNames">表名列表</param>
+        /// <param name="LoadData">是否加载数据</param>
+        public void SetDictDataSource(List<string> typeNames, bool LoadData = true)
+        {
+            // 遍历类型名称数组
+            foreach (string typeName in typeNames)
+            {
+                if (string.IsNullOrEmpty(typeName))
+                {
+                    continue;
+                }
+
+                SetDictDataSource(typeName, LoadData);
+            }
+        }
+
+        /// <summary>
+        /// 设置指定表的数据源
+        /// </summary>
+        /// <param name="typeName">表名</param>
+        /// <param name="LoadData">是否加载数据</param>
+        public void SetDictDataSource(string typeName, bool LoadData = true)
+        {
+            try
+            {
+                // 根据表名确定实体类型
+                Type entityType = GetEntityTypeByTableName(typeName);
+                if (entityType != null)
+                {
+                    // 使用反射调用SetDictDataSource方法
+                    var method = typeof(MyCacheManager).GetMethod("SetDictDataSource", new Type[] { typeof(string), typeof(bool) });
+                    var genericMethod = method.MakeGenericMethod(entityType);
+                    genericMethod.Invoke(this, new object[] { typeName, LoadData });
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"SetDictDataSource 未知类型: {typeName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误日志
+                System.Diagnostics.Debug.WriteLine($"设置表 {typeName} 的数据源失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取字典数据源
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="tableName">表名</param>
+        /// <returns>实体列表</returns>
+        public List<T> GetDictDataSource<T>(string tableName) where T : class
+        {
+            return GetEntityList_AI<T>(tableName);
+        }
+
+        /// <summary>
+        /// 初始化管理器
+        /// </summary>
+        public void InitManager()
+        {
+            try
+            {
+                // 清除现有缓存
+                CacheEntityList.Clear();
+                NewTableList.Clear();
+                NewTableTypeList.Clear();
+                FkPairTableList.Clear();
+                TableSchema.Clear();
+                TableTypes.Clear();
+                ForeignKeyMappings.Clear();
+
+                // 初始化数据字典
+                InitDict();
+            }
+            catch (Exception ex)
+            {
+                // 记录错误日志
+                System.Diagnostics.Debug.WriteLine($"初始化管理器失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 初始化数据字典
+        /// </summary>
+        public void InitDict()
+        {
+            try
+            {
+                // 清除现有缓存列表
+                CacheEntityList.Clear();
+
+                // 初始化缓存字典
+                InitCacheDict();
+            }
+            catch (Exception ex)
+            {
+                // 记录错误日志
+                System.Diagnostics.Debug.WriteLine($"初始化数据字典失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 初始化指定表的数据字典
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        public void InitDict(string tableName)
+        {
+            try
+            {
+                // 清除现有缓存
+                CacheInfoList.Clear();
+                CacheEntityList.Clear();
+                NewTableList.Clear();
+
+                // 设置指定表的数据源
+                Type entityType = GetEntityTypeByTableName(tableName);
+                if (entityType != null)
+                {
+                    var method = typeof(MyCacheManager).GetMethod("SetDictDataSource", new Type[] { typeof(string), typeof(bool) });
+                    var genericMethod = method.MakeGenericMethod(entityType);
+                    genericMethod.Invoke(this, new object[] { tableName, true });
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误日志
+                System.Diagnostics.Debug.WriteLine($"初始化表 {tableName} 的数据字典失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 初始化缓存字典
+        /// </summary>
+        public void InitCacheDict(bool LoadData = true)
+        {
+            try
+            {
+                // 清除现有缓存
+                CacheInfoList.Clear();
+                CacheEntityList.Clear();
+                NewTableList.Clear();
+
+                // 定义需要缓存的表名数组
+                string[] typeNames = new string[]
+                {
+                    "tb_ProdBundle", "tb_Packing", "tb_CRM_Customer", "tb_CRM_Leads", "tb_CRM_Region",
+                    "tb_CRM_Contact", "tb_Provinces", "tb_Cities", "tb_Company", "tb_Currency",
+                    "tb_CurrencyExchangeRate", "tb_BOM_S", "tb_ProductType", "tb_PaymentMethod",
+                    "tb_Unit", "tb_Department", "tb_LocationType", "tb_Location", "tb_CustomerVendor",
+                    "tb_CustomerVendorType", "tb_ProdCategories", "tb_Prod", "View_ProdDetail",
+                    "View_ProdInfo", "tb_ProdPropertyType", "tb_ProdProperty", "tb_Employee",
+                    "tb_UserInfo", "tb_RoleInfo", "tb_MenuInfo", "tb_FieldInfo", "tb_ModuleDefinition",
+                    "tb_BizType", "tb_StorageRack", "tb_OutInStockType", "tb_OnlineStoreInfo",
+                    "tb_ProjectGroup", "tb_FM_Account", "tb_FM_ExpenseType", "tb_FM_Subject",
+                    "tb_RolePropertyConfig", "tb_CartoonBox", "tb_Files", "tb_BOMConfigHistory",
+                    "tb_BoxRules", "tb_FM_PayeeInfo", "tb_Unit_Conversion", "tb_ProdPropertyValue"
+                };
+
+                // 为每个表名初始化缓存
+                foreach (string tableName in typeNames)
+                {
+                    try
+                    {
+                        // 根据表名确定实体类型
+                        Type entityType = GetEntityTypeByTableName(tableName);
+                        if (entityType != null)
+                        {
+                            // 使用反射调用SetDictDataSource方法
+                            var method = typeof(MyCacheManager).GetMethod("SetDictDataSource", new Type[] { typeof(string), typeof(bool) });
+                            var genericMethod = method.MakeGenericMethod(entityType);
+                            genericMethod.Invoke(this, new object[] { tableName, LoadData });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 记录错误日志，但继续处理其他表
+                        System.Diagnostics.Debug.WriteLine($"初始化表 {tableName} 的缓存失败: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误日志
+                System.Diagnostics.Debug.WriteLine($"初始化缓存字典失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 根据表名获取实体类型
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>实体类型</returns>
+        private Type GetEntityTypeByTableName(string tableName)
+        {
+            // 这里可以根据实际项目中的命名规则来映射表名到实体类型
+            // 假设实体类名与表名相同（去掉tb_前缀）
+            string entityName = tableName.StartsWith("tb_") ? tableName.Substring(3) : tableName;
+
+            // 尝试在当前程序集中查找实体类型
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type type = assembly.GetTypes()
+                    .FirstOrDefault(t => t.Name.Equals(entityName, StringComparison.OrdinalIgnoreCase));
+
+                if (type != null)
+                {
+                    return type;
+                }
+            }
+
+            return null;
+        }
+
         #endregion
 
         #region ====== 统计/LRU（保留新能力） ======
@@ -401,4 +925,5 @@ namespace RUINORERP.Extensions.Middlewares
         }
     }
     #endregion
+
 }

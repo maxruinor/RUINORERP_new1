@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -128,6 +128,53 @@ namespace RUINORERP.PacketSpec.Commands
             if (_requestContainer == null)
                 _requestContainer = new CommandDataContainer<TRequest>();
             _requestContainer.BinaryData = data;
+        }
+
+        /// <summary>
+        /// 清空请求数据并设置响应数据 - 用于服务器处理完请求后返回响应
+        /// 这样可以减少网络传输的数据量
+        /// </summary>
+        /// <param name="responseData">响应数据对象</param>
+        public void ClearRequestAndSetResponse(TResponse responseData)
+        {
+            // 清空请求数据
+            if (_requestContainer != null)
+            {
+                _requestContainer.ObjectData = null;
+                // 如果有二进制数据，也清空
+                if (_requestContainer.BinaryData != null)
+                {
+                    Array.Clear(_requestContainer.BinaryData, 0, _requestContainer.BinaryData.Length);
+                    _requestContainer.BinaryData = null;
+                }
+            }
+            
+            // 设置响应数据
+            Response = responseData;
+        }
+
+        /// <summary>
+        /// 清空请求数据并设置响应数据 - 二进制版本
+        /// </summary>
+        /// <param name="responseData">响应数据字节数组</param>
+        public void ClearRequestAndSetResponseFromBinary(byte[] responseData)
+        {
+            // 清空请求数据
+            if (_requestContainer != null)
+            {
+                _requestContainer.ObjectData = null;
+                // 如果有二进制数据，也清空
+                if (_requestContainer.BinaryData != null)
+                {
+                    Array.Clear(_requestContainer.BinaryData, 0, _requestContainer.BinaryData.Length);
+                    _requestContainer.BinaryData = null;
+                }
+            }
+            
+            // 设置响应数据
+            if (_responseContainer == null)
+                _responseContainer = new CommandDataContainer<TResponse>();
+            _responseContainer.BinaryData = responseData;
         }
     }
 
@@ -413,7 +460,7 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 设置数据内容
+        /// 设置响应数据
         /// </summary>
         /// <param name="data">数据字节数组</param>
         /// <returns>当前实例</returns>
@@ -421,6 +468,39 @@ namespace RUINORERP.PacketSpec.Commands
         {
             ResponseDataByMessagePack = data;
             LastUpdatedTime = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// 清空请求数据并设置响应数据 - 用于服务器处理完请求后返回响应
+        /// 这样可以减少网络传输的数据量
+        /// </summary>
+        /// <param name="responseData">响应数据字节数组</param>
+        public void ClearRequestAndSetResponse(byte[] responseData)
+        {
+            // 清空请求数据
+            if (RequestDataByMessagePack != null)
+            {
+                Array.Clear(RequestDataByMessagePack, 0, RequestDataByMessagePack.Length);
+                RequestDataByMessagePack = null;
+            }
+            
+            // 设置响应数据
+            ResponseDataByMessagePack = responseData;
+            LastUpdatedTime = DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// 清空请求数据并设置响应数据 - 强类型版本
+        /// </summary>
+        /// <typeparam name="T">响应数据类型</typeparam>
+        /// <param name="responseData">响应数据对象</param>
+        public void ClearRequestAndSetResponse<T>(T responseData) where T : class
+        {
+            // 序列化响应数据
+            var responseBytes = UnifiedSerializationService.SerializeWithMessagePack(responseData);
+            
+            // 调用字节数组版本
+            ClearRequestAndSetResponse(responseBytes);
         }
         /// <summary>
         /// JSON序列化缓存，用于缓存高频序列化操作（如心跳包）

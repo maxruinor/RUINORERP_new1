@@ -120,4 +120,30 @@ public class BlacklistManager : INotifyCollectionChanged
             }
         }
     }
+    
+    // 添加缺失的方法
+    public static List<BlacklistEntry> GetBlacklistEntries()
+    {
+        return _bannedList.ToList();
+    }
+    
+    public static void AddIpToBlacklist(string ipAddress, string reason)
+    {
+        // 添加IP到黑名单，这里简单实现，实际可能需要保存原因
+        BanIp(ipAddress, TimeSpan.FromDays(30)); // 默认封禁30天
+    }
+    
+    public static void RemoveFromBlacklist(string ipAddress)
+    {
+        UnbanIp(ipAddress);
+    }
+    
+    public static void ClearBlacklist()
+    {
+        var ips = _bannedList.Select(x => x.IP地址).ToList();
+        foreach (var ip in ips)
+        {
+            UnbanIp(ip);
+        }
+    }
 }

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace RUINORERP.PacketSpec.Models.Requests.Cache
+namespace RUINORERP.PacketSpec.Models.Responses.Cache
 {
     /// <summary>
     /// 共享的缓存数据类型定义（客户端和服务器共用）- 非泛型版本
@@ -31,10 +31,10 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
         public DateTime ExpirationTime { get; set; }
 
         /// <summary>
-        /// 数据（使用JArray存储，支持动态类型）
+        /// 数据（使用object存储，支持动态类型）
         /// </summary>
         [Key(3)]
-        public JArray Data { get; set; }
+        public object Data { get; set; }
 
         /// <summary>
         /// 版本

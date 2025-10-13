@@ -13,9 +13,9 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.Server.Network.Monitoring;
 using System.Threading;
 
-namespace RUINORERP.Server
+namespace RUINORERP.Server.Controls
 {
-    public partial class frmServerMonitor : Form
+    public partial class ServerMonitorControl : UserControl
     {
         private readonly NetworkServer _networkServer;
         private readonly ISessionService _sessionService;
@@ -31,7 +31,7 @@ namespace RUINORERP.Server
         private const int SLOW_REFRESH_INTERVAL = 5000; // 慢速刷新间隔(5秒)
         private const int FAST_REFRESH_INTERVAL = 1000; // 快速刷新间隔(1秒)
 
-        public frmServerMonitor()
+        public ServerMonitorControl()
         {
             InitializeComponent();
             
@@ -54,18 +54,11 @@ namespace RUINORERP.Server
 
         private void InitializeUI()
         {
-            this.Text = "服务器监控";
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.WindowState = FormWindowState.Normal;
-            this.MaximizeBox = true;
-            this.MinimizeBox = true;
-            this.FormBorderStyle = FormBorderStyle.Sizable;
-            
             // 刷新一次数据
             RefreshData();
         }
 
-        private void frmServerMonitor_Load(object sender, EventArgs e)
+        private void ServerMonitorControl_Load(object sender, EventArgs e)
         {
             // 启动定时器
             _refreshTimer.Start();
@@ -219,7 +212,7 @@ namespace RUINORERP.Server
             }
         }
 
-        private void frmServerMonitor_FormClosing(object sender, FormClosingEventArgs e)
+        private void ServerMonitorControl_Disposed(object sender, EventArgs e)
         {
             // 停止定时器
             _refreshTimer.Stop();

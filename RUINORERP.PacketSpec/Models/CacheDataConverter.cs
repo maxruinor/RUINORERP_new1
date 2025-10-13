@@ -7,14 +7,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace RUINORERP.PacketSpec.Models.Requests.Cache
+namespace RUINORERP.PacketSpec.Models
 {
     public static class CacheDataConverter
     {
         // 动态类型转换
         public static T ConvertToType<T>(object source)
         {
-            if (source == null) return default(T);
+            if (source == null) return default;
 
             if (source is T typedSource)
                 return typedSource;

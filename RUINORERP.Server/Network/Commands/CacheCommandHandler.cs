@@ -28,6 +28,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using NetTaste;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Errors;
+using SuperSocket.Server.Abstractions.Session;
 
 
 namespace RUINORERP.Server.Network.Commands
@@ -69,71 +70,88 @@ namespace RUINORERP.Server.Network.Commands
         }
 
 
-        public async Task<object> GetTableDataList(string tableName)
+        public async Task<CacheData> GetTableDataList(string tableName)
         {
-            object CacheData = null;
+            CacheData cacheData = null;
             try
             {
-                if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+                if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
                 {
                     //发送缓存数据
-                    var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    var CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                     if (CacheList == null)
                     {
                         //启动时服务器都没有加载缓存，则不发送
-                        BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+                        MyCacheManager.Instance.SetDictDataSource(tableName, true);
                         await Task.Delay(100);
-                        CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                        CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                     }
 
                     //上面查询可能还是没有立即加载成功
                     if (CacheList == null)
                     {
-                        return CacheData;
+                        return cacheData;
                     }
 
-                    if (CacheList is JArray)
+                    // 创建CacheData对象
+                    cacheData = new CacheData
                     {
-                        //暂时认为服务器的都是泛型形式保存的
-                    }
+                        TableName = tableName,
+                        CacheTime = DateTime.Now,
+                        ExpirationTime = DateTime.Now.AddMinutes(30),
+                        Version = "1.0"
+                    };
 
-                    if (TypeHelper.IsGenericList(CacheList.GetType()))
+                    // 处理不同类型的缓存数据
+                    if (CacheList is JArray jArray)
+                    {
+                        cacheData.Data = jArray.ToString(); // 将JArray转换为字符串
+                        cacheData.HasMoreData = false;
+                    }
+                    else if (TypeHelper.IsGenericList(CacheList.GetType()))
                     {
                         var lastlist = ((IEnumerable<dynamic>)CacheList).ToList();
                         if (lastlist != null)
                         {
                             int pageSize = 100; // 每页100行
-                            for (int i = 0; i < lastlist.Count; i += pageSize)
+                            int totalCount = lastlist.Count;
+                            
+                            // 只返回第一页数据
+                            var firstPageData = lastlist.Take(pageSize).ToList();
+                            
+                            // 转换为JSON字符串
+                            string json = JsonConvert.SerializeObject(firstPageData);
+                            cacheData.Data = json; // 直接存储JSON字符串
+                            cacheData.HasMoreData = totalCount > pageSize;
+                            
+                            if (frmMain.Instance.IsDebug)
                             {
-                                // 计算当前页的结束索引，确保不会超出数组界限
-                                int endIndex = Math.Min(i + pageSize, lastlist.Count);
-
-                                // 获取当前页的JArray片段
-                                CacheData = lastlist.Skip(i).Take(endIndex - i).ToArray();
-
-                                // 如果当前页是最后一页，可能不足200行，需要特殊处理
-                                if (endIndex == lastlist.Count)
-                                {
-                                    //处理最后一页的逻辑，如果需要的话
-                                    if (frmMain.Instance.IsDebug)
-                                    {
-                                        frmMain.Instance.PrintInfoLog($"{tableName}最后一页发送完成,总行数:{endIndex}");
-                                    }
-                                }
-                                return CacheData;
-
+                                frmMain.Instance.PrintInfoLog($"{tableName}发送第一页数据，总行数:{totalCount}，当前页:{Math.Min(pageSize, totalCount)}");
                             }
                         }
                     }
-
+                    else
+                    {
+                        // 尝试将其他类型转换为JSON字符串
+                        try
+                        {
+                            string json = JsonConvert.SerializeObject(CacheList);
+                            cacheData.Data = json; // 直接存储JSON字符串
+                            cacheData.HasMoreData = false;
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError($"转换缓存数据失败: {tableName}", ex);
+                            return null;
+                        }
+                    }
                 }
-
             }
             catch (Exception ex)
             {
                 Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
             }
-            return CacheData;
+            return cacheData;
         }
 
 
@@ -348,7 +366,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 获取缓存数据
-                var cacheData = GetTableDataList(cacheRequest.TableName);
+                var cacheData =await GetTableDataList(cacheRequest.TableName);
                 if (cacheData == null)
                 {
                     return BaseCommand<IResponse>.CreateError($"缓存数据不存在: {cacheRequest.TableName}", UnifiedErrorCodes.Biz_DataNotFound)
@@ -360,7 +378,7 @@ namespace RUINORERP.Server.Network.Commands
                 {
                     RequestId = cacheRequest.RequestId,
                     Message = "缓存数据获取成功",
-                    //CacheData = cacheData,
+                    CacheData = cacheData,
                     TableName = cacheRequest.TableName,
                     CacheTime = DateTime.Now,
                     ExpirationTime = DateTime.Now.AddMinutes(30),
@@ -368,10 +386,7 @@ namespace RUINORERP.Server.Network.Commands
                     ServerVersion = Program.AppVersion,
                     IsSuccess = true
                 };
-
-                // 发送缓存数据到客户端
-                await SendCacheResponseAsync(executionContext.SessionId, cacheResponse);
-
+              
                 // 返回成功响应
                 return BaseCommand<IResponse>.CreateSuccess(cacheResponse, "缓存数据获取成功");
             }
@@ -624,7 +639,7 @@ namespace RUINORERP.Server.Network.Commands
                 // 从数据库加载数据并更新缓存
                 // 注意：这是一个假的异步方法，实际的SetDictDataSource不是异步操作
                 // 未来如果有真正的异步数据库操作，可以在这里实现
-                BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+                MyCacheManager.Instance.SetDictDataSource(tableName, true);
 
                 // 添加一个await Task.CompletedTask来使方法真正成为异步方法
                 // 这样可以避免警告，同时保持向后兼容性
@@ -639,89 +654,7 @@ namespace RUINORERP.Server.Network.Commands
 
 
 
-        /// <summary>
-        /// 发送缓存响应到客户端
-        /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <param name="response">缓存响应</param>
-        /// <returns>任务</returns>
-        private async Task SendCacheResponseAsync(string sessionId, CacheResponse response)
-        {
-            try
-            {
-                // 获取会话
-                var session = _sessionService.GetSession(sessionId);
-                if (session == null)
-                {
-                    logger.LogWarning($"找不到会话: {sessionId}");
-                    return;
-                }
-
-                // 序列化响应
-                string json = JsonConvert.SerializeObject(response);
-                byte[] dataBytes = Encoding.UTF8.GetBytes(json);
-
-                //todo 
-                // await session.SendAsync(buffer);
-
-
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"发送缓存响应到客户端失败: {sessionId}");
-            }
-        }
-
-        /// <summary>
-        /// 同步所有缓存到客户端
-        /// </summary>
-        /// <param name="syncCommand">同步命令</param>
-        /// <returns>任务</returns>
-        private async Task SyncAllCacheAsync(CacheCommand syncCommand)
-        {
-            try
-            {
-                // 获取所有缓存表名
-                var allTableNames = BizCacheHelper.Manager.NewTableTypeList.Keys;
-                if (allTableNames == null || allTableNames.Count == 0)
-                {
-                    return;
-                }
-
-                // 分批发送缓存数据
-                foreach (var tableName in allTableNames)
-                {
-                    // 避免发送过多数据导致网络阻塞，间隔一段时间
-                    await Task.Delay(100);
-
-                    // 获取并发送缓存数据
-                    var cacheData = BizCacheHelper.Instance.GetEntity(tableName, true);
-                    Dictionary<string, object> cacheDataDic = new Dictionary<string, object>();
-                    cacheDataDic.Add(tableName, cacheData);
-                    if (cacheData != null)
-                    {
-                        var syncResponse = new CacheResponse
-                        {
-                            Message = "同步成功",
-                            //CacheData = cacheDataDic,
-                            TableName = tableName,
-                            CacheTime = DateTime.Now,
-                            ExpirationTime = DateTime.Now.AddMinutes(30),
-                            HasMoreData = false,
-                            ServerVersion = Program.AppVersion
-                        };
-
-                        //await SendCacheResponseAsync(syncCommand.Packet.SessionId, syncResponse);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "全量同步缓存失败");
-                throw;
-            }
-        }
-
+    
 
         /// <summary>
         /// 广播缓存更新通知
@@ -744,13 +677,29 @@ namespace RUINORERP.Server.Network.Commands
 
                 // 序列化通知
                 string json = JsonConvert.SerializeObject(updateNotification);
+                byte[] dataBytes = Encoding.UTF8.GetBytes(json);
 
                 // 广播给所有客户端
                 var allSessions = _sessionService.GetAllUserSessions();
                 int successCount = 0;
                 int failCount = 0;
 
-
+                foreach (var session in allSessions)
+                {
+                    try
+                    {
+                        if (session != null && !string.IsNullOrEmpty(session.SessionID))
+                        {
+                            await ((IAppSession)session).SendAsync(dataBytes);
+                            successCount++;
+                        }
+                    }
+                    catch (Exception sessionEx)
+                    {
+                        failCount++;
+                        logger.LogWarning(sessionEx, $"广播缓存更新到会话失败: {session?.SessionID ?? "Unknown"}");
+                    }
+                }
 
                 LogInfo($"广播缓存更新完成: {tableName}, 成功: {successCount}, 失败: {failCount}");
             }
@@ -779,6 +728,7 @@ namespace RUINORERP.Server.Network.Commands
 
                 // 序列化通知
                 string json = JsonConvert.SerializeObject(deleteNotification);
+                byte[] dataBytes = Encoding.UTF8.GetBytes(json);
 
                 // 广播给所有客户端
                 var allSessions = _sessionService.GetAllUserSessions();
@@ -791,8 +741,7 @@ namespace RUINORERP.Server.Network.Commands
                     {
                         if (session != null && !string.IsNullOrEmpty(session.SessionID))
                         {
-
-                            //await session.SendAsync(buffer);
+                            await ((IAppSession)session).SendAsync(dataBytes);
                             successCount++;
                         }
                     }

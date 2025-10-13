@@ -26,21 +26,20 @@ using Newtonsoft.Json;
 using System.Collections;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace RUINORERP.Server
+namespace RUINORERP.Server.Controls
 {
-    public partial class frmCacheManage : frmBase
+    public partial class CacheManagementControl : UserControl
     {
         private readonly ISessionService _sessionService;
 
-        public frmCacheManage()
+        public CacheManagementControl()
         {
             InitializeComponent();
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
         }
 
-        private void frmCacheManagement_Load(object sender, EventArgs e)
+        private void CacheManagementControl_Load(object sender, EventArgs e)
         {
-
             LoadCacheToUI();
         }
 
@@ -171,7 +170,7 @@ namespace RUINORERP.Server
                             columnType = typeof(long);
                             break;
                         case JTokenType.Float:
-                            columnType = typeof(decimal);
+                            columnType = typeof(double);
                             break;
                         case JTokenType.Date:
                             columnType = typeof(DateTime);
@@ -245,7 +244,6 @@ namespace RUINORERP.Server
             }
         }
 
-
         private void LoadCacheToUI()
         {
             try
@@ -309,46 +307,46 @@ namespace RUINORERP.Server
                     else
                     {
                         int count = 0;
-                        // 处理不同类型的缓存数据
-                        if (CacheList is IList list)
+                    // 处理不同类型的缓存数据
+                    if (CacheList is IList list)
+                    {
+                        count = list.Count;
+                    }
+                    else if (CacheList is JArray jArray)
+                    {
+                        count = jArray.Count;
+                    }
+                    else if (CacheList is string jsonString)
+                    {
+                        try
                         {
-                            count = list.Count;
+                            // 尝试解析为JArray
+                            var parsedArray = JsonConvert.DeserializeObject<JArray>(jsonString);
+                            count = parsedArray.Count();
                         }
-                        else if (CacheList is JArray jArray)
+                        catch
                         {
-                            count = jArray.Count;
+                            // 如果不是有效的JSON，计为1
+                            count = 1;
                         }
-                        else if (CacheList is string jsonString)
+                    }
+                    else
+                    {
+                        // 尝试转换为IEnumerable
+                        try
                         {
-                            try
+                            var enumerable = CacheList as IEnumerable<dynamic>;
+                            if (enumerable != null)
                             {
-                                // 尝试解析为JArray
-                                var parsedArray = JsonConvert.DeserializeObject<JArray>(jsonString);
-                                count = parsedArray.Count();
-                            }
-                            catch
-                            {
-                                // 如果不是有效的JSON，计为1
-                                count = 1;
-                            }
-                        }
-                        else
-                        {
-                            // 尝试转换为IEnumerable
-                            try
-                            {
-                                var enumerable = CacheList as IEnumerable<dynamic>;
-                                if (enumerable != null)
-                                {
-                                    count = enumerable.Count();
-                                }
-                            }
-                            catch
-                            {
-                                // 如果无法转换，显示为1（表示有数据但无法计数）
-                                count = 1;
+                                count = enumerable.Count();
                             }
                         }
+                        catch
+                        {
+                            // 如果无法转换，显示为1（表示有数据但无法计数）
+                            count = 1;
+                        }
+                    }
 
                         kv = new SuperValue(tableName + $"[{count}]" + cacheInfoView, tableName);
                     }
@@ -500,7 +498,6 @@ namespace RUINORERP.Server
 
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-
             #region 画行号
 
             if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
@@ -547,4 +544,3 @@ namespace RUINORERP.Server
         }
     }
 }
-

@@ -50,5 +50,17 @@ namespace RUINORERP.Model.ConfigModel
 
         [JsonProperty("SomeSetting")]
         public string SomeSetting { get; set; }
+
+        // 添加缺失的属性
+        public string ServerName { get; set; }
+        public int ServerPort { get; set; }
+        public int MaxConnections { get; set; }
+        public int HeartbeatInterval { get; set; }
+        public string DbConnectionString { get; set; }
+        public string DbType { get; set; }
+        public string CacheType { get; set; }
+        public string CacheConnectionString { get; set; }
+        public bool EnableLogging { get; set; }
+        public string LogLevel { get; set; }
     }
 }

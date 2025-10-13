@@ -44,7 +44,6 @@ namespace RUINORERP.Server.Network.Commands
         private const int MaxLoginAttempts = 5;
         private const int MaxConcurrentUsers = 1000;
         private static readonly ConcurrentDictionary<string, int> _loginAttempts = new ConcurrentDictionary<string, int>();
-        private static readonly HashSet<string> _activeSessions = new HashSet<string>();
         private static readonly object _lock = new object();
         /// <summary>
         /// 日志记录器
@@ -60,7 +59,7 @@ namespace RUINORERP.Server.Network.Commands
         public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
         {
             logger = _Logger;
-            
+
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
                 AuthenticationCommands.Login,
@@ -131,7 +130,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
                 else
                 {
-                    var errorResponse = BaseCommand<IResponse>.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}", 400)
+                    var errorResponse = BaseCommand<IResponse>.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}")
                         .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
                     return errorResponse;
                 }
@@ -220,7 +219,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private async Task<BaseCommand<IResponse>> ProcessLoginAsync(
             LoginRequest loginRequest,
-            CmdContext  executionContext,
+            CmdContext executionContext,
             CancellationToken cancellationToken)
         {
             try
@@ -242,7 +241,8 @@ namespace RUINORERP.Server.Network.Commands
                     // 统一使用GetClientIp方法获取客户端IP
 
 
-                    sessionInfo = SessionService.CreateSession(executionContext.SessionId, executionContext.ClientIp);
+                    sessionInfo = SessionService.CreateSession(executionContext.SessionId);
+              
                     if (sessionInfo == null)
                     {
                         return CreateErrorResponse("创建会话失败", UnifiedErrorCodes.System_InternalError, "SESSION_CREATION_FAILED");
@@ -277,7 +277,7 @@ namespace RUINORERP.Server.Network.Commands
                 if (hasExistingSessions && !IsDuplicateLoginConfirmed(loginRequest))
                 {
                     // 收集现有会话信息
-                var sessionInfos = authorizedSessions.Select(s => new Dictionary<string, object>
+                    var sessionInfos = authorizedSessions.Select(s => new Dictionary<string, object>
                 {
                     { "SessionId", s.SessionID },
                     { "LoginTime", s.LoginTime },
@@ -285,22 +285,22 @@ namespace RUINORERP.Server.Network.Commands
                     { "DeviceInfo", s.DeviceInfo }
                 }).ToList();
 
-                var duplicateLoginResponse = new ResponseBase
-                {
-                    Message = "您的账号已在其他地方登录，确认强制对方下线，保持当前登陆吗？",
-                    IsSuccess = true
-                };
-                duplicateLoginResponse.WithMetadata("ExistingSessions", sessionInfos);
-                
-                return BaseCommand<IResponse>.CreateSuccess(duplicateLoginResponse)
-                    .WithMetadata("ActionRequired", "DuplicateLoginConfirmation");
+                    var duplicateLoginResponse = new ResponseBase
+                    {
+                        Message = "您的账号已在其他地方登录，确认强制对方下线，保持当前登陆吗？",
+                        IsSuccess = true
+                    };
+                    duplicateLoginResponse.WithMetadata("ExistingSessions", sessionInfos);
+
+                    return BaseCommand<IResponse>.CreateSuccess(duplicateLoginResponse)
+                        .WithMetadata("ActionRequired", "DuplicateLoginConfirmation");
                 }
 
                 // 处理重复登录确认后的逻辑
                 if (IsDuplicateLoginConfirmed(loginRequest))
                 {
                     // 踢掉之前的登录
-                    KickExistingSessions(authorizedSessions, loginRequest.Username);
+                    await KickExistingSessions(authorizedSessions, loginRequest.Username);
                 }
 
 
@@ -308,9 +308,6 @@ namespace RUINORERP.Server.Network.Commands
                 // 更新会话信息
                 UpdateSessionInfo(sessionInfo, userValidationResult.UserSessionInfo);
                 SessionService.UpdateSession(sessionInfo);
-
-                // 记录活跃会话
-                AddActiveSession(executionContext.SessionId);
 
                 // 生成Token
                 var tokenInfo = await GenerateTokenInfoAsync(userValidationResult.UserSessionInfo);
@@ -320,11 +317,22 @@ namespace RUINORERP.Server.Network.Commands
                 {
                     UserId = userValidationResult.UserSessionInfo.UserInfo.User_ID,
                     Username = userValidationResult.UserSessionInfo.UserInfo.UserName,
+                    SessionId = sessionInfo.SessionID,
                     Token = tokenInfo,
                     IsSuccess = true
-                    
+
                 };
-                return BaseCommand<IResponse>.CreateSuccess(loginResponse, "登录成功");
+
+                // 添加心跳间隔信息到元数据
+                return BaseCommand<IResponse>.CreateSuccess(loginResponse, "登录成功")
+                    .WithMetadata("HeartbeatIntervalMs", "30000") // 默认30秒心跳间隔
+                    .WithMetadata("ServerInfo", new Dictionary<string, object>
+                    {
+                        ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                        ["ServerVersion"] = "1.0.0",
+                        ["MaxConcurrentUsers"] = MaxConcurrentUsers.ToString(),
+                        ["CurrentActiveUsers"] = SessionService.ActiveSessionCount.ToString()
+                    });
             }
             catch (Exception ex)
             {
@@ -433,7 +441,7 @@ namespace RUINORERP.Server.Network.Commands
             }
 
             // 检查会话是否仍然活跃
-            if (!_activeSessions.Contains(cmd.Packet.ExecutionContext.SessionId))
+            if (!SessionService.IsValidSession(cmd.Packet.ExecutionContext.SessionId))
             {
                 return BaseCommand<IResponse>.CreateError(
                             $"{UnifiedErrorCodes.Auth_SessionExpired.Message}: 会话已过期",
@@ -684,7 +692,7 @@ namespace RUINORERP.Server.Network.Commands
             if (sessionInfo != null && userSessionInfo != null)
             {
                 sessionInfo.UserId = userSessionInfo.UserInfo.User_ID;
-                sessionInfo.Username = userSessionInfo.UserInfo.UserName;
+                sessionInfo.UserName = userSessionInfo.UserInfo.UserName;
                 sessionInfo.IsAuthenticated = true;
                 sessionInfo.UpdateActivity();
                 // sessionInfo.AdditionalInfo["UserInfo"] = userInfo;
@@ -709,7 +717,7 @@ namespace RUINORERP.Server.Network.Commands
                     if (session.IsAuthenticated && !string.IsNullOrEmpty(session.SessionID))
                     {
                         // 检查会话是否仍在活跃状态
-                        if (_activeSessions.Contains(session.SessionID))
+                        if (SessionService.IsValidSession(session.SessionID))
                         {
                             validSessions.Add(session);
                         }
@@ -799,7 +807,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 踢掉现有会话
         /// </summary>
-        private void KickExistingSessions(IEnumerable<SessionInfo> existingSessions, string username)
+        private async Task KickExistingSessions(IEnumerable<SessionInfo> existingSessions, string username)
         {
             // 主动踢掉之前的登录
             foreach (var session in existingSessions)
@@ -809,18 +817,8 @@ namespace RUINORERP.Server.Network.Commands
                 {
                     SendDuplicateLoginNotification(session.SessionID, username);
 
-                    // 断开之前的会话
-                    var appSession = SessionService.GetAppSession(session.SessionID);
-                    if (appSession != null)
-                    {
-                        appSession.CloseAsync(CloseReason.ProtocolError);
-                    }
-
-                    // 从活跃会话列表中移除
-                    RemoveActiveSession(session.SessionID);
-
-                    // 从会话服务中移除
-                    SessionService.RemoveSession(session.SessionID);
+                    // 使用SessionService的断开连接方法
+                    await SessionService.DisconnectSessionAsync(session.SessionID, "重复登录，强制下线");
                 }
             }
         }
@@ -911,31 +909,6 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
-        /// 添加活跃会话
-        /// </summary>
-        private void AddActiveSession(string sessionId)
-        {
-            lock (_lock)
-            {
-                if (_activeSessions.Count < MaxConcurrentUsers)
-                {
-                    _activeSessions.Add(sessionId);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 移除活跃会话
-        /// </summary>
-        private void RemoveActiveSession(string sessionId)
-        {
-            lock (_lock)
-            {
-                _activeSessions.Remove(sessionId);
-            }
-        }
-
-        /// <summary>
         /// 生成Token信息 - 使用简化版TokenManager生成Token
         /// 生成Token：当用户登录时，服务器验证用户凭证（如用户名和密码）后，生成一个Token（通常是JWT，即JSON Web Token）并返回给客户端
         /// </summary>
@@ -971,19 +944,16 @@ namespace RUINORERP.Server.Network.Commands
             // 使用新的ITokenService验证Token（TokenValidationService已合并到JwtTokenService）
             var validationResult = await TokenService.ValidateTokenAsync(token);
 
-            // 检查Token是否在活跃会话中
-            if (validationResult.IsValid)
+            // 检查Token对应的会话是否仍然有效
+            if (validationResult.IsValid && !string.IsNullOrEmpty(sessionId))
             {
-                lock (_lock)
+                if (!SessionService.IsValidSession(sessionId))
                 {
-                    if (!string.IsNullOrEmpty(sessionId) && !_activeSessions.Contains(sessionId))
+                    return new TokenValidationResult
                     {
-                        return new TokenValidationResult
-                        {
-                            IsValid = false,
-                            ErrorMessage = "会话已过期"
-                        };
-                    }
+                        IsValid = false,
+                        ErrorMessage = "会话已过期"
+                    };
                 }
             }
 
@@ -1027,7 +997,6 @@ namespace RUINORERP.Server.Network.Commands
         {
             await Task.Delay(10);
 
-            RemoveActiveSession(sessionId);
             ResetLoginAttempts(userId);
 
             // 通过SessionService移除会话

@@ -21,10 +21,6 @@ public interface IRequest
     /// </summary>
     DateTime TimestampUtc { get; set; }
 
-    /// <summary>
-    /// 客户端信息
-    /// </summary>
-    string ClientInfo { get; set; }
 
     /// <summary>
     /// 扩展元数据（可选）

@@ -41,8 +41,8 @@ namespace RUINORERP.Extensions.Middlewares
                 {
                     if (_instance == null)
                     {
-                        var c = CacheFactory.Build<object>(b => b.WithSystemRuntimeCacheHandle());
-                        _instance = new MyCacheManager(c, c, c);
+                        var cache = CacheFactory.Build<object>(b => b.WithSystemRuntimeCacheHandle());
+                        _instance = new MyCacheManager(cache);
                     }
                 }
                 return _instance;
@@ -73,8 +73,6 @@ namespace RUINORERP.Extensions.Middlewares
         #endregion
 
         #region ====== 新能力字段 ======
-        private readonly ConcurrentDictionary<string, ReaderWriterLockSlim> _locks =
-            new ConcurrentDictionary<string, ReaderWriterLockSlim>();
         private readonly ConcurrentDictionary<string, long> _versions =
             new ConcurrentDictionary<string, long>();
         private readonly ConcurrentDictionary<string, CacheStatistics> _stats =
@@ -84,11 +82,11 @@ namespace RUINORERP.Extensions.Middlewares
         #endregion
 
         #region ====== 构造 ======
-        public MyCacheManager(ICacheManager<object> cache, ICacheManager<object> cacheEntity, ICacheManager<object> cacheEntityList)
+        public MyCacheManager(ICacheManager<object> cache)
         {
-            Cache = cache;
-            CacheEntity = cacheEntity;
-            CacheEntityList = cacheEntityList;
+            Cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            CacheEntity = cache;
+            CacheEntityList = cache;
             CacheInfoList = CacheFactory.Build<object>(b => b.WithSystemRuntimeCacheHandle());
         }
         #endregion
@@ -140,30 +138,19 @@ namespace RUINORERP.Extensions.Middlewares
         {
             var l = new List<T>();
             if (!NewTableList.ContainsKey(tableName)) return l;
-            var rw = _locks.GetOrAdd(tableName, _ => new ReaderWriterLockSlim());
-            rw.EnterReadLock();
-            try
-            {
-                var raw = CacheEntityList.Get(tableName);
-                if (raw == null) return l;
-                if (raw is List<object> ol) return ol.OfType<T>().ToList();
-                if (raw is JArray ja) return ja.ToObject<List<T>>() ?? l;
-                if (CacheBizTypeHelper.IsGenericList(raw.GetType()))
-                    return ((IEnumerable)raw).Cast<T>().ToList();
-                return l;
-            }
-            finally { rw.ExitReadLock(); }
+            
+            var raw = CacheEntityList.Get(tableName);
+            if (raw == null) return l;
+            if (raw is List<object> ol) return ol.OfType<T>().ToList();
+            if (raw is JArray ja) return ja.ToObject<List<T>>() ?? l;
+            if (CacheBizTypeHelper.IsGenericList(raw.GetType()))
+                return ((IEnumerable)raw).Cast<T>().ToList();
+            return l;
         }
         public List<object> GetEntityList_AII(string tableName)
         {
-            var rw = _locks.GetOrAdd(tableName, _ => new ReaderWriterLockSlim());
-            rw.EnterReadLock();
-            try
-            {
-                var raw = CacheEntityList.Get(tableName);
-                return raw is IList ls ? ls.Cast<object>().ToList() : new List<object>();
-            }
-            finally { rw.ExitReadLock(); }
+            var raw = CacheEntityList.Get(tableName);
+            return raw is IList ls ? ls.Cast<object>().ToList() : new List<object>();
         }
         #endregion
 
@@ -175,58 +162,41 @@ namespace RUINORERP.Extensions.Middlewares
 
         public void UpdateEntityList(string tableName, JArray jArray, bool hasExpire = false)
         {
-            var rw = _locks.GetOrAdd(tableName, _ => new ReaderWriterLockSlim());
-            rw.EnterWriteLock();
-            try
-            {
-                if (!NewTableList.ContainsKey(tableName)) return;
-                var old = CacheEntityList.Get(tableName);
-                var merged = old == null ? jArray : CombineJArrays(old as JArray ?? new JArray(), jArray, NewTableList[tableName].Key);
-                CacheEntityList.AddOrUpdate(tableName, merged, k => merged);
-                if (hasExpire) SetExpire(tableName);
-                PublishCacheChange(tableName, merged);
-                IncrementVersion(tableName);
-            }
-            finally { rw.ExitWriteLock(); }
+            if (!NewTableList.ContainsKey(tableName)) return;
+            
+            var old = CacheEntityList.Get(tableName);
+            var merged = old == null ? jArray : CombineJArrays(old as JArray ?? new JArray(), jArray, NewTableList[tableName].Key);
+            CacheEntityList.Put(tableName, merged);
+            if (hasExpire) SetExpire(tableName);
+            PublishCacheChange(tableName, merged);
+            IncrementVersion(tableName);
         }
 
         public void UpdateEntityList(string tableName, JObject entity)
         {
-            var rw = _locks.GetOrAdd(tableName, _ => new ReaderWriterLockSlim());
-            rw.EnterWriteLock();
-            try
-            {
-                if (!NewTableList.ContainsKey(tableName)) return;
-                var pk = NewTableList[tableName].Key;
-                var id = entity[pk]?.ToString();
-                if (string.IsNullOrEmpty(id)) return;
-                var old = CacheEntityList.Get(tableName);
-                JArray arr = old as JArray ?? new JArray();
-                var exist = arr.FirstOrDefault(t => t[pk]?.ToString() == id);
-                if (exist != null) arr.Remove(exist);
-                arr.Add(entity);
-                CacheEntityList.AddOrUpdate(tableName, arr, k => arr);
-                PublishCacheChange(tableName, arr);
-                IncrementVersion(tableName);
-            }
-            finally { rw.ExitWriteLock(); }
+            if (!NewTableList.ContainsKey(tableName)) return;
+            var pk = NewTableList[tableName].Key;
+            var id = entity[pk]?.ToString();
+            if (string.IsNullOrEmpty(id)) return;
+            var old = CacheEntityList.Get(tableName);
+            JArray arr = old as JArray ?? new JArray();
+            var exist = arr.FirstOrDefault(t => t[pk]?.ToString() == id);
+            if (exist != null) arr.Remove(exist);
+            arr.Add(entity);
+            CacheEntityList.Put(tableName, arr);
+            PublishCacheChange(tableName, arr);
+            IncrementVersion(tableName);
         }
 
         public void UpdateEntityList(string tableName, object list, bool hasExpire = false)
         {
-            var rw = _locks.GetOrAdd(tableName, _ => new ReaderWriterLockSlim());
-            rw.EnterWriteLock();
-            try
-            {
-                if (!NewTableList.ContainsKey(tableName)) return;
-                var old = CacheEntityList.Get(tableName);
-                var merged = old == null ? list : CombineLists(old, list, tableName);
-                CacheEntityList.AddOrUpdate(tableName, merged, k => merged);
-                if (hasExpire) SetExpire(tableName);
-                PublishCacheChange(tableName, merged);
-                IncrementVersion(tableName);
-            }
-            finally { rw.ExitWriteLock(); }
+            if (!NewTableList.ContainsKey(tableName)) return;
+            var old = CacheEntityList.Get(tableName);
+            var merged = old == null ? list : CombineLists(old, list, tableName);
+            CacheEntityList.Put(tableName, merged);
+            if (hasExpire) SetExpire(tableName);
+            PublishCacheChange(tableName, merged);
+            IncrementVersion(tableName);
         }
 
         public void UpdateEntityList(Type type, List<object> newlist) =>
@@ -243,41 +213,57 @@ namespace RUINORERP.Extensions.Middlewares
         public void DeleteEntityList<T>(T entity)
         {
             var tn = typeof(T).Name;
+            if (!NewTableList.ContainsKey(tn)) return;
             var pk = NewTableList[tn].Key;
-            long id = entity.GetPropertyValue(pk).ToLong();
-            DeleteEntityList(tn, pk, id);
+            var idValue = entity.GetPropertyValue(pk);
+            if (idValue != null && long.TryParse(idValue.ToString(), out long id))
+            {
+                DeleteEntityList(tn, pk, id);
+            }
         }
 
         public void DeleteEntityList<T>(long id)
         {
             var tn = typeof(T).Name;
-            var pk = NewTableList[tn].Key;
-            DeleteEntityList(tn, pk, id);
+            if (NewTableList.ContainsKey(tn))
+            {
+                var pk = NewTableList[tn].Key;
+                DeleteEntityList(tn, pk, id);
+            }
         }
 
         public void DeleteEntityList<T>(long[] ids) { foreach (var id in ids) DeleteEntity<T>(id); }
         public void DeleteEntityList(string tableName, string pkCol, long id)
         {
-            var rw = _locks.GetOrAdd(tableName, _ => new ReaderWriterLockSlim());
-            rw.EnterWriteLock();
-            try
+            if (!NewTableList.ContainsKey(tableName) || !CacheEntityList.Exists(tableName)) return;
+            var raw = CacheEntityList.Get(tableName);
+            bool changed = false;
+            
+            if (raw is IList list)
             {
-                if (!NewTableList.ContainsKey(tableName) || !CacheEntityList.Exists(tableName)) return;
-                var raw = CacheEntityList.Get(tableName);
-                if (raw is IList list)
+                var item = list.Cast<object>().FirstOrDefault(o => o.GetPropertyValue(pkCol)?.ToString() == id.ToString());
+                if (item != null) 
                 {
-                    var item = list.Cast<object>().FirstOrDefault(o => o.GetPropertyValue(pkCol)?.ToString() == id.ToString());
-                    if (item != null) list.Remove(item);
+                    list.Remove(item);
+                    changed = true;
                 }
-                if (raw is JArray ja)
+            }
+            else if (raw is JArray ja)
+            {
+                var tok = ja.FirstOrDefault(t => t[pkCol]?.ToString() == id.ToString());
+                if (tok != null) 
                 {
-                    var tok = ja.FirstOrDefault(t => t[pkCol]?.ToString() == id.ToString());
-                    if (tok != null) ja.Remove(tok);
+                    ja.Remove(tok);
+                    changed = true;
                 }
+            }
+            
+            if (changed)
+            {
+                CacheEntityList.Put(tableName, raw);
                 PublishCacheChange(tableName, raw);
                 IncrementVersion(tableName);
             }
-            finally { rw.ExitWriteLock(); }
         }
         #endregion
 
@@ -289,8 +275,22 @@ namespace RUINORERP.Extensions.Middlewares
         }
         private JArray CombineJArrays(JArray old, JArray @new, string pk)
         {
-            var dict = old.ToDictionary(t => t[pk]?.ToString(), t => t);
-            foreach (var n in @new) dict[n[pk]?.ToString()] = n;
+            // 使用字典提高查找效率
+            var dict = new Dictionary<string, JToken>();
+            foreach (var item in old)
+            {
+                var key = item[pk]?.ToString();
+                if (!string.IsNullOrEmpty(key))
+                    dict[key] = item;
+            }
+            
+            foreach (var item in @new)
+            {
+                var key = item[pk]?.ToString();
+                if (!string.IsNullOrEmpty(key))
+                    dict[key] = item;
+            }
+            
             return new JArray(dict.Values);
         }
         private object CombineLists(object old, object @new, string tableName)
@@ -301,7 +301,18 @@ namespace RUINORERP.Extensions.Middlewares
             var listType = typeof(List<>).MakeGenericType(type);
             IList res = (IList)Activator.CreateInstance(listType);
             var dict = new Dictionary<string, object>();
-            void AddAll(IEnumerable src) { foreach (var i in src) dict[i.GetPropertyValue(pk)?.ToString()] = i; }
+            
+            void AddAll(IEnumerable src) 
+            { 
+                if (src == null) return;
+                foreach (var i in src) 
+                {
+                    var key = i?.GetPropertyValue(pk)?.ToString();
+                    if (!string.IsNullOrEmpty(key))
+                        dict[key] = i;
+                }
+            }
+            
             AddAll((IEnumerable)old);
             AddAll((IEnumerable)@new);
             foreach (var v in dict.Values) res.Add(v);
@@ -313,8 +324,26 @@ namespace RUINORERP.Extensions.Middlewares
         private void PublishCacheChange(string tableName, object data)
         {
             if (_subscribers.TryGetValue(tableName, out var list))
-                foreach (var cb in list.ToList())
-                    Task.Run(() => cb(tableName, data));   // 异步回调
+            {
+                // 创建快照以避免在回调执行期间集合被修改
+                Action<string, object>[] callbacks;
+                lock (list)
+                {
+                    callbacks = list.ToArray();
+                }
+                
+                foreach (var cb in callbacks)
+                {
+                    try
+                    {
+                        cb(tableName, data);
+                    }
+                    catch
+                    {
+                        // 忽略回调中的异常，避免影响其他订阅者
+                    }
+                }
+            }
         }
 
         // 2. 订阅

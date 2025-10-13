@@ -212,7 +212,38 @@ namespace RUINORERP.UI
         public FMAuditLogHelper FMAuditLogHelper => fmauditLogHelper;
 
         private System.Threading.Timer _autoSaveTimer;
-
+        
+        /// <summary>
+        /// 注销状态标记，用于防止注销操作被重复执行
+        /// </summary>
+        private bool _isLoggingOut = false;
+        
+        /// <summary>
+        /// 用于注销状态同步的锁对象
+        /// </summary>
+        private readonly object _logoutLock = new object();
+        
+        /// <summary>
+        /// 获取或设置注销状态，确保线程安全
+        /// </summary>
+        public bool IsLoggingOut
+        {
+            get
+            {
+                lock (_logoutLock)
+                {
+                    return _isLoggingOut;
+                }
+            }
+            set
+            {
+                lock (_logoutLock)
+                {
+                    _isLoggingOut = value;
+                }
+            }
+        }
+        
         public ClientCommunicationService communicationService;
  
 
@@ -464,7 +495,9 @@ namespace RUINORERP.UI
                 {
                     MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     Process.Start(Update.currentexeName);
-                    rs = true;
+                    // 登录成功，重置注销状态
+                IsLoggingOut = false;
+                rs = true;
 
                     // 等待2秒，确保更新程序启动
                     await Task.Delay(1500);
@@ -1196,7 +1229,7 @@ namespace RUINORERP.UI
                     MessagePrompt messager = new MessagePrompt();
                     messager.Bizmapper = Bizmapper;
 
-                    if (MessageInfo.ReceiverEmployeeIDs == null)
+                    if (MessageInfo.ReceiverUserIDs == null)
                     {
                         if (!string.IsNullOrEmpty(MessageInfo.SenderEmployeeName))
                         {
@@ -1210,7 +1243,7 @@ namespace RUINORERP.UI
                     }
                     else
                     {
-                        var Employee_ID = MessageInfo.ReceiverEmployeeIDs.FirstOrDefault(c => c == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID);
+                        var Employee_ID = MessageInfo.ReceiverUserIDs.FirstOrDefault(c => c == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID);
                         var userinfo = MainForm.Instance.UserInfos.FirstOrDefault(c => c.Employee_ID == Employee_ID);
                         if (userinfo == null)
                         {
@@ -1279,11 +1312,6 @@ namespace RUINORERP.UI
             }
         }
 
-
-        #region 心跳包
-        public static int HeartbeatCounter = 0;
-
-        #endregion
 
 
 
@@ -1610,6 +1638,8 @@ namespace RUINORERP.UI
                 List<tb_sys_BillNoRule> BillNoRules = ctrBillNoRule.Query();
                 AppContext.BillNoRules = BillNoRules;
 
+                // 登录成功，重置注销状态
+                IsLoggingOut = false;
                 rs = true;
                 if (AppContext.CurUserInfo != null)
                 {
@@ -1729,24 +1759,48 @@ namespace RUINORERP.UI
         /// </summary>
         public void LogLock()
         {
+            // 检查是否已经在注销过程中，防止重复执行
+            if (IsLoggingOut)
+            {
+                logger?.LogWarning("注销操作已在进行中，忽略重复调用");
+                return;
+            }
+
+            // 设置注销状态标记
+            IsLoggingOut = true;
+            
             MainForm.Instance.Invoke(new Action(async () =>
             {
-                this.SystemOperatorState.Text = "注销";
-                Program.AppContextData.IsOnline = false;
-                MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
-                MainForm.Instance.AppContext.CurrentUser.在线状态 = communicationService.IsConnected;
-                ClearUI();
-                ClearRoles();
-                System.GC.Collect();
-                //标记一下状态为注销，可以保存到上下文传到心跳包中
-                bool islogin = await Login();
-                if (!islogin)
+                try
                 {
-                    return;
+                    this.SystemOperatorState.Text = "注销";
+                    Program.AppContextData.IsOnline = false;
+                    MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
+                    MainForm.Instance.AppContext.CurrentUser.在线状态 = communicationService.IsConnected;
+                    ClearUI();
+                    ClearRoles();
+                    System.GC.Collect();
+                    //标记一下状态为注销，可以保存到上下文传到心跳包中
+                    bool islogin = await Login();
+                    if (!islogin)
+                    {
+                        // 登录失败时重置注销状态
+                        IsLoggingOut = false;
+                        return;
+                    }
+                    // await InitConfig();
+                    LoadUIMenus();
+                    LoadUIForIM_LogPages();
+                    
+                    // 登录成功后重置注销状态
+                    IsLoggingOut = false;
                 }
-                // await InitConfig();
-                LoadUIMenus();
-                LoadUIForIM_LogPages();
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "注销过程中发生异常");
+                    // 异常情况下重置注销状态
+                    IsLoggingOut = false;
+                }
             }));
         }
 

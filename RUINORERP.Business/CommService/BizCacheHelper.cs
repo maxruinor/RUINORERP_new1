@@ -82,22 +82,7 @@ namespace RUINORERP.Business.CommService
                     loggerFactory // 传入日志工厂
                 );
 
-                // 同理构建其他缓存管理器（cacheEntity、cacheEntityList）
-                var cacheEntity = CacheFactory.Build<object>(
-                    builder => builder
-                        .WithSystemRuntimeCacheHandle()
-                        .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120)),
-                    loggerFactory
-                );
-
-                var cacheEntityList = CacheFactory.Build<object>(
-                    builder => builder
-                        .WithSystemRuntimeCacheHandle()
-                        .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120)),
-                    loggerFactory
-                );
-
-                _manager = new MyCacheManager(cache, cacheEntity, cacheEntityList);
+                _manager = new MyCacheManager(cache);
             }
         }
 

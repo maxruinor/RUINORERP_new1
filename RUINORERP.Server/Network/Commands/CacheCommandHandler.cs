@@ -638,7 +638,6 @@ namespace RUINORERP.Server.Network.Commands
                     {
                         var syncResponse = new CacheResponse
                         {
-                            Code = 200,
                             Message = "同步成功",
                             //CacheData = cacheDataDic,
                             TableName = tableName,

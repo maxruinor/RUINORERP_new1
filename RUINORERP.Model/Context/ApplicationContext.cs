@@ -69,7 +69,7 @@ namespace RUINORERP.Model.Context
         public List<GlobalFunctionModule> CanUsefunctionModules { get; set; } = new List<GlobalFunctionModule>();
 
         /// <summary>
-        /// web服务器身份验证
+        /// 服务器身份验证,在这时全局保存。后面还要保存TokenInfo
         /// </summary>
         public string SessionId { get; set; }
 

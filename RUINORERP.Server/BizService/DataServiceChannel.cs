@@ -53,7 +53,7 @@ namespace RUINORERP.Server.BizService
                 reminderBizData.BizType = Global.BizType.CRM跟进计划;
                 List<long> receiverIDs = new List<long>();
                 receiverIDs.Add(item.Employee_ID);
-                reminderBizData.ReceiverEmployeeIDs = receiverIDs;
+                reminderBizData.ReceiverUserIDs = receiverIDs;
                 //reminderBizData.SenderName = item.;
                 reminderBizData.RemindSubject = item.PlanSubject;
                 reminderBizData.ReminderContent = item.PlanContent;

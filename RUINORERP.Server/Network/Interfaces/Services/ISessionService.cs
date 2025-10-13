@@ -31,7 +31,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <param name="clientIp">客户端IP</param>
         /// <param name="clientPort">客户端端口</param>
         /// <returns>会话信息</returns>
-        SessionInfo CreateSession(string sessionId, string clientIp, int clientPort = 0);
+        SessionInfo CreateSession(string sessionId);
 
         /// <summary>
         /// 获取会话信息
@@ -158,6 +158,24 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <param name="value">属性值</param>
         /// <returns>设置结果</returns>
         bool SetSessionProperty(string sessionId, string key, object value);
+
+        /// <summary>
+        /// 主动断开指定会话连接（T人功能）
+        /// </summary>
+        /// <param name="sessionId">要断开的会话ID</param>
+        /// <param name="reason">断开原因，默认为"服务器强制断开"</param>
+        /// <returns>断开是否成功</returns>
+        Task<bool> DisconnectSessionAsync(string sessionId, string reason = "服务器强制断开");
+
+        /// <summary>
+        /// 主动断开指定用户的所有会话连接（T人功能）
+        /// </summary>
+        /// <param name="username">要断开的用户名</param>
+        /// <param name="reason">断开原因，默认为"服务器强制断开"</param>
+        /// <returns>成功断开的会话数量</returns>
+        Task<int> DisconnectUserSessionsAsync(string username, string reason = "服务器强制断开");
+
+        bool SendCommandToSession(string sessionID, string v, object value);
 
         #endregion
     }

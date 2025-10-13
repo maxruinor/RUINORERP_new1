@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Enums.Core;
 using FluentValidation.Results;
 using MessagePack;
+using RUINORERP.Model.CommonModel;
 
 namespace RUINORERP.PacketSpec.Commands.System
 {
@@ -20,9 +21,28 @@ namespace RUINORERP.PacketSpec.Commands.System
     /// 用于客户端向服务器发送心跳包，维持连接活跃状态
     /// </summary>
     [PacketCommandAttribute("Heartbeat", CommandCategory.System, Description = "心跳命令")]
-   
-    public class HeartbeatCommand :  BaseCommand<HeartbeatRequest, ResponseBase>
+    [MessagePackObject(AllowPrivate = true)]
+    public class HeartbeatCommand :  BaseCommand<HeartbeatRequest, HeartbeatResponse>
     {
+        /// <summary>
+        /// 心跳请求数据
+        /// </summary>
+        [Key(1000)]
+        public HeartbeatRequest HeartbeatRequest
+        {
+            get => Request;
+            set => Request = value;
+        }
+
+        /// <summary>
+        /// 心跳响应数据
+        /// </summary>
+        [Key(1001)]
+        public HeartbeatResponse HeartbeatResponse
+        {
+            get => Response;
+            set => Response = value;
+        }
  
 
 
@@ -37,17 +57,7 @@ namespace RUINORERP.PacketSpec.Commands.System
             TimestampUtc = DateTime.UtcNow;
         }
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="clientId">客户端ID</param>
-        public HeartbeatCommand(string clientId)
-        {
-            Priority = CommandPriority.Normal;
-            TimeoutMs = 10000; // 心跳命令超时时间10秒
-            TimestampUtc = DateTime.UtcNow;
-            CommandIdentifier = SystemCommands.Heartbeat;
-        }
+ 
 
         /// <summary>
         /// 构造函数
@@ -55,15 +65,13 @@ namespace RUINORERP.PacketSpec.Commands.System
         /// <param name="clientId">客户端ID</param>
         /// <param name="sessionToken">会话令牌</param>
         /// <param name="userId">用户ID</param>
-        public HeartbeatCommand(string clientId, string sessionToken, long userId)
+        public HeartbeatCommand(string clientId)
         {
             Request = new HeartbeatRequest
             {
                 ClientId = clientId,
-                SessionToken = sessionToken,
-                UserId = userId
-                // 数据会自动被容器管理
-            };
+              
+        };
 
             Priority = CommandPriority.Normal;
             TimeoutMs = 10000; // 心跳命令超时时间10秒
@@ -72,21 +80,20 @@ namespace RUINORERP.PacketSpec.Commands.System
         }
 
         // 客户端信息属性，由客户端设置
-   
+        [Key(1002)]
         public string ClientVersion { get; set; }
-       
-        public string ClientIp { get; set; }
-       
+    
+        [Key(1005)]
         public string ClientStatus { get; set; }
-   
+        [Key(1006)]
         public int ProcessUptime { get; set; }
 
         // 网络延迟信息，由客户端设置
-
+        [Key(1007)]
         public int NetworkLatency { get; set; }
 
         // 客户端资源使用情况，由客户端设置
-  
+        [Key(1008)]
         public ClientResourceUsage ResourceUsage { get; set; }
 
         /// <summary>
@@ -120,7 +127,6 @@ namespace RUINORERP.PacketSpec.Commands.System
                     ClientTime = DateTime.UtcNow,
                     NetworkLatency = this.NetworkLatency,
                     ClientVersion = this.ClientVersion,
-                    ClientIp = this.ClientIp,
                     ResourceUsage = resourceUsage,
                     ClientStatus = this.ClientStatus
                 };
@@ -149,7 +155,6 @@ namespace RUINORERP.PacketSpec.Commands.System
             {
                 IsSuccess = baseResponse.IsSuccess,
                 Message = baseResponse.Message,
-                Code = baseResponse.Code,
                 TimestampUtc = baseResponse.TimestampUtc,
                 RequestId = baseResponse.RequestId,
                 Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),

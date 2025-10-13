@@ -230,7 +230,7 @@ namespace RUINORERP.PacketSpec.Commands
             if (!validationResult.IsValid)
             {
                 Logger.LogWarning($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
-                return BaseCommand<IResponse>.CreateValidationError(validationResult, UnifiedErrorCodes.Command_ValidationFailed.Code);
+                return BaseCommand<IResponse>.CreateValidationError(validationResult);
             }
 
             // 检查命令是否超时
@@ -641,7 +641,6 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 IsSuccess = baseResponse.IsSuccess,
                 Message = baseResponse.Message,
-                Code = baseResponse.Code,
                 TimestampUtc = baseResponse.TimestampUtc,
                 RequestId = baseResponse.RequestId,
                 Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),

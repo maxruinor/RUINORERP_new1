@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Errors;
 using System;
@@ -30,12 +30,7 @@ namespace RUINORERP.PacketSpec.Validation
                 .WithMessage("操作类型长度必须在1-100个字符之间")
                 .WithErrorCode(UnifiedErrorCodes.Command_InvalidFormat.Code.ToString());
 
-            // 客户端信息验证
-            RuleFor(request => request.ClientInfo)
-                .MaximumLength(500)
-                .WithMessage("客户端信息长度不能超过500个字符")
-                .WithErrorCode(UnifiedErrorCodes.Biz_DataInvalid.Code.ToString())
-                .When(request => !string.IsNullOrEmpty(request.ClientInfo));
+           
 
             // 时间戳验证
             RuleFor(request => request.TimestampUtc)

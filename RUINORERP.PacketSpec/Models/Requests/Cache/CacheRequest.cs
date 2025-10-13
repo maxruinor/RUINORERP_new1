@@ -1,4 +1,4 @@
-using System;using System.Collections.Generic;
+﻿using System;using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Requests;
 using MessagePack;
 
@@ -11,12 +11,6 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
     [MessagePackObject]
     public class CacheRequest : RequestBase
     {
-        /// <summary>
-        /// 会话ID
-        /// </summary>
-        [Key(10)]
-        public string SessionId { get; set; }
-
         /// <summary>
         /// 请求的表名，如果为空则请求所有缓存数据
         /// </summary>
@@ -57,7 +51,6 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
                 TableName = tableName,
                 ForceRefresh = forceRefresh,
                 OperationType = "Cache.Request",
-                ClientInfo = clientInfo
             };
         }
 

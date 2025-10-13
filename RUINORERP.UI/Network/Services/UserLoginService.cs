@@ -98,6 +98,20 @@ namespace RUINORERP.UI.Network.Services
 
                         _log?.LogInformation("登录成功，Token已保存 - 用户: {Username}, 请求ID: {RequestId}",
                             username, commandResponse.RequestId);
+
+                        MainForm.Instance.AppContext.SessionId = loginResponse.SessionId;
+
+                        // 登录成功后启动心跳
+                        try
+                        {
+                            await _communicationService.StartHeartbeatAfterLoginAsync(ct);
+                            _log?.LogInformation("登录成功后心跳启动完成 - 用户: {Username}", username);
+                        }
+                        catch (Exception heartbeatEx)
+                        {
+                            _log?.LogWarning(heartbeatEx, "登录成功后启动心跳失败 - 用户: {Username}", username);
+                            // 心跳启动失败不影响登录流程，只记录警告
+                        }
                     }
                     else
                     {

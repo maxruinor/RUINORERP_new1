@@ -186,13 +186,7 @@ namespace RUINORERP.UI.Network
                 if (connected)
                 {
                     _logger.LogInformation("客户端已连接到服务器");
-                    
-                    // 启动心跳
-                    if (!_heartbeatIsRunning)
-                    {
-                        _heartbeatManager.Start();
-                        _heartbeatIsRunning = true;
-                    }
+                    // 注意：心跳将在用户登录成功后启动，而不是在连接建立时
                 }
                 else
                 {
@@ -314,6 +308,43 @@ namespace RUINORERP.UI.Network
                         UpdateConnectionState(false);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 在用户登录成功后启动心跳
+        /// </summary>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>启动心跳的任务</returns>
+        public async Task StartHeartbeatAfterLoginAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                // 确保连接已建立
+                if (!_isConnected)
+                {
+                    _logger?.LogWarning("尝试启动心跳，但连接未建立");
+                    return;
+                }
+
+                // 确保心跳未运行
+                if (_heartbeatIsRunning)
+                {
+                    _logger?.LogDebug("心跳已在运行，无需重复启动");
+                    return;
+                }
+
+                // 启动心跳
+                _logger?.LogInformation("用户登录成功，开始启动心跳");
+                _heartbeatManager.Start();
+                _heartbeatIsRunning = true;
+                _logger?.LogInformation("心跳启动成功");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "启动心跳时发生错误");
+                _eventManager.OnErrorOccurred(new Exception($"启动心跳失败: {ex.Message}", ex));
+                throw;
             }
         }
 
@@ -1094,11 +1125,12 @@ namespace RUINORERP.UI.Network
                 if (packet.ExecutionContext == null)
                     packet.ExecutionContext = new CmdContext();
 
+                packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;
+                //packet.ExecutionContext.UserId=MainForm.Instance.AppContext.CurrentUser.
                 packet.ExecutionContext.RequestId = command.Request.RequestId;
                 packet.ExecutionContext.RequestType = command.Request.GetType();
                 packet.ExecutionContext.CommandType = command.GetType();
                 packet.ExecutionContext.ClientVersion =Application.ProductVersion;
-                packet.ClientId = client.ClientID;
 
                 // 序列化和加密数据包
                 var payload = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(packet);
@@ -1379,7 +1411,7 @@ namespace RUINORERP.UI.Network
 
             if (packet == null)
             {
-                return BaseCommand<TResponse>.Error("未收到服务器响应", 408);
+                return BaseCommand<TResponse>.Error("未收到服务器响应");
             }
 
             var responseData = ProcessCommandResponseAsync<TResponse>(packet, commandPacketAdapter);

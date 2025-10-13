@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Server.ServerSession;
+using RUINORERP.Server.Network.Interfaces.Services;
  
 using System.Linq;
 using RUINORERP.PacketSpec.Models;
@@ -19,6 +20,8 @@ namespace RUINORERP.Server.Commands
     /// </summary>
     public class ExceptionReportCommand : BaseServerCommand
     {
+        private readonly ISessionService _sessionService;
+        
         public ExceptionLevel Level { get; set; } = ExceptionLevel.Info;
         public string ExceptionType { get; set; } = string.Empty;
         public string ExceptionMessage { get; set; } = string.Empty;
@@ -44,10 +47,12 @@ namespace RUINORERP.Server.Commands
 
         public ExceptionReportCommand() : base(CmdOperation.Receive)
         {
+            _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
         }
 
         public ExceptionReportCommand(OriginalData data, SessionforBiz fromSession) : base(CmdOperation.Receive)
         {
+            _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
             DataPacket = data;
             FromSession = fromSession;
             if (fromSession?.User != null)
@@ -222,9 +227,9 @@ namespace RUINORERP.Server.Commands
         {
             try
             {
-                var adminSessions = frmMain.Instance.sessionListBiz.Values
-                    .Where(s => s?.User?.超级用户 == true)
-                    .ToArray();
+                var adminSessions = _sessionService.GetAllUserSessions()
+                    .Where(s => s.IsSuperUser) // 假设SessionInfo有IsSuperUser属性
+                    .ToList();
 
                 // 构建转发消息
                 var forwardMessage = BuildForwardMessage();
@@ -234,15 +239,20 @@ namespace RUINORERP.Server.Commands
                     try
                     {
                         // 发送异常报告给管理员
-                        adminSession.AddSendData(
-                            (byte)ServerCommand.复合型消息处理,
-                            new byte[] { (byte)MessageType.System }, // 修复MessageType值
-                            forwardMessage
+                        var success = _sessionService.SendCommandToSession(
+                            adminSession.SessionID, 
+                            "EXCEPTION_REPORT", 
+                            Convert.ToBase64String(forwardMessage)
                         );
+                        
+                        if (!success)
+                        {
+                            Console.WriteLine($"转发异常报告给管理员 {adminSession.UserName} 失败");
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"转发异常报告给管理员 {adminSession.User?.用户名} 时出错: {ex.Message}");
+                        Console.WriteLine($"转发异常报告给管理员 {adminSession.UserName} 时出错: {ex.Message}");
                     }
                 }
 
@@ -320,24 +330,33 @@ namespace RUINORERP.Server.Commands
         /// </summary>
         private async Task NotifyAllAdminsImmediately()
         {
-            var adminSessions = frmMain.Instance.sessionListBiz.Values
-                .Where(s => s?.User?.超级用户 == true)
-                .ToArray();
+            var adminSessions = _sessionService.GetAllUserSessions()
+                .Where(s => s.IsSuperUser) // 假设SessionInfo有IsSuperUser属性
+                .ToList();
 
             foreach (var session in adminSessions)
             {
                 try
                 {
                     // 发送紧急通知
-                    var message = new MessageHandlerCommand(null, null, null) // 修复构造函数参数
+                    var messageJson = System.Text.Json.JsonSerializer.Serialize(new
                     {
-                        MessageType = MessageType.SystemMessage, // 修复MessageType值
+                        MessageType = "SystemMessage",
                         MessageContent = $"严重异常警报：{ExceptionMessage}",
-                        PromptType = PromptType.确认窗口,
-                        ReceiverSessionId = session.SessionID
-                    };
+                        PromptType = "确认窗口",
+                        Timestamp = DateTime.Now
+                    });
                     
-                    await message.ExecuteAsync(CancellationToken.None);
+                    var success = _sessionService.SendCommandToSession(
+                        session.SessionID, 
+                        "URGENT_NOTIFICATION", 
+                        messageJson
+                    );
+                    
+                    if (!success)
+                    {
+                        Console.WriteLine($"发送紧急通知给管理员 {session.UserName} 失败");
+                    }
                 }
                 catch (Exception ex)
                 {

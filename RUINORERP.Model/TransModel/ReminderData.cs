@@ -74,15 +74,15 @@ namespace RUINORERP.Model.TransModel
         /// </summary>
         public double RemindInterval { get; set; } = 20;
         /// <summary>
-        /// 可以提醒多个人 注意是员工ID
+        /// 可以提醒多个人,一定是能使用系统的用户
         /// </summary>
-        public List<long> ReceiverEmployeeIDs { get; set; } = new List<long>();
+        public List<long> ReceiverUserIDs { get; set; } = new List<long>();
 
-        public string ReceiverEmployee
+        public string ReceiverUser
         {
             get
             {
-                return string.Join(",", ReceiverEmployeeIDs);
+                return string.Join(",", ReceiverUserIDs);
             }
         }
 

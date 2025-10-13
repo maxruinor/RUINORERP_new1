@@ -33,12 +33,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
-        /// 客户端信息
-        /// </summary>
-        [Key(3)]
-        public string ClientInfo { get; set; }
-
-        /// <summary>
         /// 扩展元数据（可选）
         /// </summary>
         [Key(4)]
@@ -77,16 +71,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             return this;
         }
 
-        /// <summary>
-        /// 设置客户端信息
-        /// </summary>
-        /// <param name="clientInfo">客户端信息</param>
-        /// <returns>当前实例</returns>
-        public virtual RequestBase WithClientInfo(string clientInfo)
-        {
-            ClientInfo = clientInfo;
-            return this;
-        }
+  
 
         /// <summary>
         /// 添加元数据

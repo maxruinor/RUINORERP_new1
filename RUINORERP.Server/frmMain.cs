@@ -73,6 +73,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.Server.Network.Core;
+using RUINORERP.Server.Network.Interfaces.Services;
 
 namespace RUINORERP.Server
 {
@@ -181,12 +182,14 @@ namespace RUINORERP.Server
                 Instance.PrintInfoLog("更新服务器信息时出错: " + ex.Message);
             }
         }
+        private readonly ISessionService _sessionService;
 
         public IWorkflowHost host;
         public frmMain(ILogger<frmMain> logger, IWorkflowHost workflowHost, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
             _main = this;
+            _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
             _logger = logger;
             _services = Startup.services;
             host = workflowHost;
@@ -215,7 +218,6 @@ namespace RUINORERP.Server
         }
 
         internal ConcurrentDictionary<string, SessionforBiz> sessionListBiz = new ConcurrentDictionary<string, SessionforBiz>();
-
         async private void StartServerUI()
         {
             Application.DoEvents();
@@ -440,7 +442,9 @@ namespace RUINORERP.Server
 
                 IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
                 cache.Set("test1", "test123");
-                await InitConfig(true);
+
+                //第一次启动时不加载，服务器启动时再加载
+                await InitConfig(false);
 
                 MyCacheManager.Instance.CacheInfoList.OnAdd += CacheInfoList_OnAdd;
                 MyCacheManager.Instance.CacheInfoList.OnClear += CacheInfoList_OnClear;
@@ -1024,7 +1028,7 @@ namespace RUINORERP.Server
                 frmMain.Instance.PrintInfoLog("NetworkServer启动异常: " + hostex.Message);
                 tslblStatus.Text = "服务启动异常";
             }
-            
+
 
         }
 
@@ -1260,6 +1264,44 @@ namespace RUINORERP.Server
 
         }
 
+        /// <summary>
+        /// 打印错误日志到主窗体的RichTextBox控件，使用红色文本显示
+        /// </summary>
+        /// <param name="msg">错误消息内容</param>
+        public void PrintErrorLog(string msg)
+        {
+            if (!System.Diagnostics.Process.GetCurrentProcess().MainModule.ToString().ToLower().Contains("iis"))
+            {
+                try
+                {
+                    if (IsDisposed || !frmMain.Instance.IsHandleCreated) return;
+
+                    // 确保最多只有1000行
+                    EnsureMaxLines(frmMain.Instance.richTextBox1, 1000);
+
+                    // 将消息格式化为带时间戳和行号的字符串
+                    string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] [错误] {msg}\r\n";
+                    if (frmMain.Instance.InvokeRequired)
+                    {
+
+                    }
+                    frmMain.Instance.Invoke(new EventHandler(delegate
+                    {
+                        frmMain.Instance.richTextBox1.SelectionColor = Color.Red;
+                        frmMain.Instance.richTextBox1.AppendText(formattedMsg);
+                        frmMain.Instance.richTextBox1.SelectionColor = Color.Black;
+                        frmMain.Instance.richTextBox1.ScrollToCaret(); // 滚动到最新的消息
+
+                    }
+                    ));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("PrintErrorLog时出错" + ex.Message);
+                }
+            }
+        }
+
         private void EnsureMaxLines(RichTextBox rtb, int maxLines)
         {
             // 计算当前的行数
@@ -1414,6 +1456,14 @@ namespace RUINORERP.Server
             // 添加定时器用于刷新服务器信息
             UpdateServerInfoTimer.Start();
             tsBtnStartServer.Enabled = false;
+
+            if (BizCacheHelper.Manager.CacheEntityList == null)
+            {
+                // 如果缓存为空，尝试重新初始化
+                Task.Run(async () => await frmMain.Instance.InitConfig(true)).Wait();
+            }
+
+
         }
 
         private void 系统注册ToolStripMenuItem_Click(object sender, EventArgs e)

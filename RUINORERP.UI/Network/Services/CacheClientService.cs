@@ -108,7 +108,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 _log?.LogError(ex, "请求缓存过程中发生异常，表名={0}", tableName);
                 // 创建一个包含异常信息的错误响应
-                var errorResponse = BaseCommand<CacheResponse>.CreateError($"请求缓存过程中发生异常: {ex.Message}", 500);
+                var errorResponse = BaseCommand<CacheResponse>.CreateError($"请求缓存过程中发生异常: {ex.Message}");
                 if (ex.InnerException != null)
                 {
                     errorResponse.WithMetadata("InnerException", ex.InnerException.Message);
@@ -140,7 +140,7 @@ namespace RUINORERP.UI.Network.Services
                 // 检查响应是否成功
                 if (!commandResponse.IsSuccess)
                 {
-                    return BaseCommand<CacheResponse>.CreateError(commandResponse.Message, commandResponse.ResponseData?.Code ?? 500)
+                    return BaseCommand<CacheResponse>.CreateError(commandResponse.Message)
                         .WithMetadata("RequestId", commandResponse.RequestId ?? string.Empty);
                 }
 
@@ -564,7 +564,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 _log?.LogError(ex, "批量请求缓存数据失败");
                 // 创建一个包含异常信息的错误响应
-                var errorResponse = BaseCommand<CacheResponse>.CreateError($"批量请求缓存数据失败: {ex.Message}", 500);
+                var errorResponse = BaseCommand<CacheResponse>.CreateError($"批量请求缓存数据失败: {ex.Message}");
                 if (ex.InnerException != null)
                 {
                     errorResponse.WithMetadata("InnerException", ex.InnerException.Message);
@@ -600,7 +600,7 @@ namespace RUINORERP.UI.Network.Services
                 {
                     _log?.LogError(ex, "请求表 {0} 的缓存失败", tableName);
                     // 创建一个包含异常信息的错误响应
-                    var errorResponse = BaseCommand<CacheResponse>.CreateError($"请求表 {tableName} 的缓存失败: {ex.Message}", 500);
+                    var errorResponse = BaseCommand<CacheResponse>.CreateError($"请求表 {tableName} 的缓存失败: {ex.Message}");
                     if (ex.InnerException != null)
                     {
                         errorResponse.WithMetadata("InnerException", ex.InnerException.Message);
@@ -647,7 +647,7 @@ namespace RUINORERP.UI.Network.Services
                 _log?.LogError(ex, "刷新缓存数据失败: {Message}", ex.Message);
                 MainForm.Instance.PrintInfoLog($"刷新缓存数据失败: {ex.Message}");
                 // 创建一个包含异常信息的错误响应
-                var errorResponse = BaseCommand<CacheResponse>.CreateError($"刷新缓存数据失败: {ex.Message}", 500);
+                var errorResponse = BaseCommand<CacheResponse>.CreateError($"刷新缓存数据失败: {ex.Message}");
                 if (ex.InnerException != null)
                 {
                     errorResponse.WithMetadata("InnerException", ex.InnerException.Message);
@@ -716,7 +716,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 _log?.LogError(ex, "清理缓存失败，表名={0}", tableName);
                 // 创建一个包含异常信息的错误响应
-                var errorResponse = BaseCommand<CacheResponse>.CreateError($"清理缓存失败: {ex.Message}", 500);
+                var errorResponse = BaseCommand<CacheResponse>.CreateError($"清理缓存失败: {ex.Message}");
                 if (ex.InnerException != null)
                 {
                     errorResponse.WithMetadata("InnerException", ex.InnerException.Message);
@@ -766,7 +766,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 var errorMsg = response?.Message ?? "未知错误";
                 _log?.LogWarning("缓存清理失败，表名={0}，错误={1}", tableName, errorMsg);
-                return BaseCommand<CacheResponse>.CreateError(errorMsg, response?.ResponseData?.Code ?? 500)
+                return BaseCommand<CacheResponse>.CreateError(errorMsg)
                     .WithMetadata("RequestId", response?.RequestId ?? string.Empty);
             }
         }

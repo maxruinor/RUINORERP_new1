@@ -37,7 +37,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.Code = code;
             this.TimestampUtc = DateTime.UtcNow;
         }
 
@@ -118,7 +117,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             IsSuccess = success;
             Message = message;
-            Code = code;
         }
 
         /// <summary>
@@ -163,7 +161,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.Code = code;
             this.TimestampUtc = DateTime.UtcNow;
         }
 
@@ -238,7 +235,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.Code = code;
             this.TimestampUtc = DateTime.UtcNow;
         }
 

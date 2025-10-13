@@ -132,20 +132,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             }
         }
 
-        /// <summary>
-        /// 客户端ID（通过ExecutionContext获取）
-        /// </summary>
-        [IgnoreMember]
-        public string ClientId
-        {
-            get => ExecutionContext?.ClientId;
-            set
-            {
-                if (ExecutionContext == null)
-                    ExecutionContext = new CmdContext ();
-                ExecutionContext.ClientId = value;
-            }
-        }
+
 
         /// <summary>
         /// 认证Token（通过ExecutionContext获取）
@@ -279,7 +266,6 @@ namespace RUINORERP.PacketSpec.Models.Core
             if (ExecutionContext != null)
             {
                 ExecutionContext.SessionId = null;
-                ExecutionContext.ClientId = null;
                 if (ExecutionContext.Token != null)
                 {
                     ExecutionContext.Token.AccessToken = null;
@@ -450,7 +436,6 @@ namespace RUINORERP.PacketSpec.Models.Core
                 CommandId = CommandId,
                 Status = Status,
                 SessionId = SessionId,
-                ClientId = ClientId,
                 CommandData = CommandData?.Clone() as byte[],
                 Size = Size,
                 Checksum = Checksum,

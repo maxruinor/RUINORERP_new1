@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using RUINORERP.Server.BizService;
+using RUINORERP.Server.Network.Interfaces.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -21,9 +22,12 @@ namespace RUINORERP.Server
 {
     public partial class frmMemoryDataViewer : frmBase
     {
+        private readonly ISessionService _sessionService;
+
         public frmMemoryDataViewer()
         {
             InitializeComponent();
+            _sessionService = Startup.GetFromFac<ISessionService>();
         }
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
@@ -133,63 +137,45 @@ namespace RUINORERP.Server
                 if (dataGridView1.CurrentRow.DataBoundItem is ReminderData exData)
                 {
                    // ServerReminderData olddata = exData.DeepCloneObject<ServerReminderData>();
-                    foreach (var item in frmMain.Instance.sessionListBiz)
+                    var sessions = _sessionService.GetAllUserSessions();
+                    foreach (var session in sessions)
                     {
-                        if (exData.ReceiverEmployeeIDs.Contains(item.Value.User.Employee_ID))
+                        // 检查用户是否在接收者列表中
+                        // 注意：这里需要根据实际的SessionInfo结构来获取Employee_ID
+                        if (exData.ReceiverUserIDs.Contains(session.UserInfo.UserID)) // 假设SessionInfo有UserID属性对应Employee_ID
                         {
                             try
                             {
-                        //        exData.RemindTimes++;
-                        //        //  WorkflowServiceReceiver.发送工作流提醒();
-                        //        OriginalData exMsg = new OriginalData();
-                        //        exMsg.Cmd = (byte)ServerCommand.工作流提醒推送;
-                        //        exMsg.One = null;
-
-                        //        //这种可以写一个扩展方法
-                        //        ByteBufferer tx = new ByteBufferer(100);
-                        //        string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                        //        tx.PushString(sendtime);
-                        //        string json = JsonConvert.SerializeObject(exData,
-                        //new JsonSerializerSettings
-                        //{
-                        //    ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                        //});
-
-                          //      tx.PushString(json);
-                                //tx.PushString("【系统提醒】" + System.DateTime.Now.ToString());//发送者
-                                //tx.PushString(item.Value.SessionID);
-                                //tx.PushString(exData.RemindSubject);
-                                //tx.PushString(exData.ReminderContent);
-                             //   tx.PushBool(true);//是否强制弹窗
-                             //   exMsg.Two = tx.toByte();
-                              //  item.Value.AddSendData(exMsg);
-
-                                if(frmMain.Instance.ReminderBizDataList.TryUpdate(exData.BizPrimaryKey, exData, exData))
+                                // 发送提醒命令
+                                var reminderJson = JsonConvert.SerializeObject(exData, new JsonSerializerSettings
                                 {
-                                    //更新成功
+                                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                                });
+                                
+                                var success = _sessionService.SendCommandToSession(session.SessionID, "SEND_REMINDER", reminderJson);
+                                if (success)
+                                {
+                                    exData.RemindTimes++;
+                                    if(frmMain.Instance.ReminderBizDataList.TryUpdate(exData.BizPrimaryKey, exData, exData))
+                                    {
+                                        //更新成功
+                                    }
+                                    
+                                    if (frmMain.Instance.IsDebug)
+                                    {
+                                        frmMain.Instance.PrintInfoLog($"工作流提醒推送到{session.UserName}");
+                                    }
                                 }
                                 else
                                 {
-
+                                    frmMain.Instance.PrintErrorLog($"工作流提醒推送到{session.UserName}失败");
                                 }
-                                if (frmMain.Instance.IsDebug)
-                                {
-                                    frmMain.Instance.PrintInfoLog($"工作流提醒推送到{item.Value.User.用户名}");
-                                }
-
                             }
                             catch (Exception ex)
                             {
-                                frmMain.Instance.PrintInfoLog("服务器工作流提醒推送分布失败:" + item.Value.User.用户名 + ex.Message);
+                                frmMain.Instance.PrintInfoLog("服务器工作流提醒推送分布失败:" + session.UserName + ex.Message);
                             }
                         }
-                        //如果不注释，相同的员工有多个帐号时。员工只会提醒一个。
-                        //else
-                        //{
-                        //    continue;
-                        //}
-
-
                     }
                 }
             }

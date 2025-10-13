@@ -217,10 +217,10 @@ namespace RUINORERP.UI.CRM
                         request.EndTime = item.PlanEndDate;
                         request.RemindSubject = item.PlanSubject;
                         request.ReminderContent = item.PlanContent;
-                        request.ReceiverEmployeeIDs = new List<long>();
+                        request.ReceiverUserIDs = new List<long>();
                         if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.HasValue)
                         {
-                            request.ReceiverEmployeeIDs.Add(MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value);
+                            request.ReceiverUserIDs.Add(MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID);
 
                         }
 

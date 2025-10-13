@@ -21,6 +21,7 @@ using MessagePack;
 using System.Collections.Concurrent;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using System.Collections.Generic;
+using RUINORERP.PacketSpec.Errors;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -629,7 +630,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// <typeparam name="TResponse">响应数据类型</typeparam>
     [Serializable]
     [MessagePackObject(AllowPrivate = true)]
-    public class BaseCommand<TResponse> :  BaseCommand where TResponse : class, IResponse
+    public class BaseCommand<TResponse> : BaseCommand where TResponse : class, IResponse
     {
         /// <summary>
         /// 操作是否成功
@@ -665,7 +666,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 执行上下文（包含Token等信息）
         /// </summary>
         [Key(6)]
-        public CmdContext  ExecutionContext { get; set; }
+        public CmdContext ExecutionContext { get; set; }
 
         /// <summary>
         /// 错误消息 - 从响应数据中提取
@@ -716,20 +717,40 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="errorMessage">错误消息</param>
         /// <param name="errorCode">错误代码</param>
-        public BaseCommand(string errorMessage, int errorCode = 500)
+        public BaseCommand(string errorMessage, int Code = 400)
         {
             IsSuccess = false;
             Message = errorMessage;
             TimestampUtc = DateTime.UtcNow;
-            
+
             // 如果TResponse是ResponseBase类型，创建错误响应
             if (typeof(TResponse) == typeof(ResponseBase) || typeof(TResponse).IsSubclassOf(typeof(ResponseBase)))
             {
                 var errorResponse = Activator.CreateInstance(typeof(TResponse)) as ResponseBase;
                 if (errorResponse != null)
                 {
-                    errorResponse.Code = errorCode;
                     errorResponse.Message = errorMessage;
+                    errorResponse.IsSuccess = false;
+                    errorResponse.ErrorCode = Code;
+                    ResponseData = errorResponse as TResponse;
+                }
+            }
+        }
+
+        public BaseCommand(ErrorCode errorCode)
+        {
+            IsSuccess = false;
+            Message = errorCode.Message;
+            TimestampUtc = DateTime.UtcNow;
+
+            // 如果TResponse是ResponseBase类型，创建错误响应
+            if (typeof(TResponse) == typeof(ResponseBase) || typeof(TResponse).IsSubclassOf(typeof(ResponseBase)))
+            {
+                var errorResponse = Activator.CreateInstance(typeof(TResponse)) as ResponseBase;
+                if (errorResponse != null)
+                {
+                    errorResponse.Message = errorCode.Message;
+                    errorResponse.ErrorCode = errorCode.Code;
                     errorResponse.IsSuccess = false;
                     ResponseData = errorResponse as TResponse;
                 }
@@ -764,20 +785,33 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="errorMessage">错误消息</param>
         /// <param name="errorCode">错误代码</param>
         /// <returns>错误响应</returns>
-        public static BaseCommand<TResponse> Error(string errorMessage, int errorCode = 500)
+        public static BaseCommand<TResponse> Error(string errorMessage)
+        {
+            return new BaseCommand<TResponse>(errorMessage);
+        }
+        public static BaseCommand<TResponse> Error(string errorMessage, int errorCode)
         {
             return new BaseCommand<TResponse>(errorMessage, errorCode);
         }
-
         /// <summary>
         /// 静态方法 - 创建错误响应（兼容ResponseBase.CreateError）
         /// </summary>
         /// <param name="errorMessage">错误消息</param>
         /// <param name="errorCode">错误代码</param>
         /// <returns>错误响应</returns>
-        public static BaseCommand<TResponse> CreateError(string errorMessage, int errorCode = 500)
+        public static BaseCommand<TResponse> CreateError(string errorMessage)
         {
-            return Error(errorMessage, errorCode);
+            return Error(errorMessage);
+        }
+
+        public static BaseCommand<TResponse> CreateError(string errorMessage, int ErrorCode)
+        {
+            return Error(errorMessage, ErrorCode);
+        }
+
+        public static BaseCommand<TResponse> CreateError(ErrorCode error)
+        {
+            return Error(error);
         }
 
         /// <summary>
@@ -786,18 +820,18 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="validationResult">FluentValidation验证结果</param>
         /// <param name="code">错误代码</param>
         /// <returns>验证错误响应</returns>
-        public static BaseCommand<TResponse> CreateValidationError(FluentValidation.Results.ValidationResult validationResult, int code = 400)
+        public static BaseCommand<TResponse> CreateValidationError(FluentValidation.Results.ValidationResult validationResult)
         {
             if (validationResult == null || validationResult.IsValid)
-                return CreateError("验证失败", code);
+                return CreateError("验证失败");
 
             var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
             var message = string.Join("; ", errorMessages);
-            
-            var errorResponse = CreateError(message, code);
-            
+
+            var errorResponse = CreateError(message);
+
             // 添加详细的验证错误信息到元数据
-            errorResponse.WithMetadata("ValidationErrors", validationResult.Errors.Select(e => new 
+            errorResponse.WithMetadata("ValidationErrors", validationResult.Errors.Select(e => new
             {
                 Field = e.PropertyName,
                 Message = e.ErrorMessage,
@@ -858,9 +892,9 @@ namespace RUINORERP.PacketSpec.Commands
             return this;
         }
 
- 
 
- 
+
+
         /// <summary>
         /// 重写ToString方法
         /// </summary>

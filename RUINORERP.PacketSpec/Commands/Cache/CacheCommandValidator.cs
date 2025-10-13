@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Validation;
+﻿using RUINORERP.PacketSpec.Validation;
 using FluentValidation;
 using RUINORERP.PacketSpec.Models.Requests.Cache;
 
@@ -21,12 +21,6 @@ namespace RUINORERP.PacketSpec.Commands.Cache
                 .NotEmpty()
                 .WithMessage("表名不能为空")
                 .When(command => command.Request != null);
-
-            // 验证会话ID - 当请求存在时
-            RuleFor(command => command.Request.SessionId)
-                .NotEmpty()
-                .WithMessage("会话ID不能为空")
-                .When(command => command.Request != null && string.IsNullOrEmpty(command.Request.SessionId));
 
             // 验证操作类型
             RuleFor(command => command.Request.OperationType)

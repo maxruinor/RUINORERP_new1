@@ -251,7 +251,6 @@ namespace RUINORERP.PacketSpec.Handlers
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.Code = code;
             this.TimestampUtc = DateTime.UtcNow;
         }
 

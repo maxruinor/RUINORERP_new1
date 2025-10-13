@@ -307,7 +307,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     ["Data"] = result,
                     ["Message"] = result.Message,
-                    ["Code"] = result.Code,
                     ["TimestampUtc"] = result.TimestampUtc
                 }
             };

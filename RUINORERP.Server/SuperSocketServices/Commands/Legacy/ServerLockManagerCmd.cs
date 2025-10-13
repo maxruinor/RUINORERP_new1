@@ -1,4 +1,4 @@
-﻿﻿﻿using Azure;
+﻿﻿using Azure;
 using Azure.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -7,6 +7,7 @@ using Microsoft.VisualBasic.ApplicationServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Server.Comm;
+using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
@@ -34,6 +35,8 @@ namespace RUINORERP.Server.CommandService
     /// </summary>
     public class ServerLockManagerCmd 
     {
+        private readonly ISessionService _sessionService;
+        
         public event LockChangedHandler LockChanged;
         public LockCmd lockCmd { get; set; }
 
@@ -48,6 +51,7 @@ namespace RUINORERP.Server.CommandService
             this.OperationType = operation;
             this.FromSession = FromSession;
             this.ToSession = ToSession;
+            _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
         }
 
         public async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -155,35 +159,62 @@ namespace RUINORERP.Server.CommandService
                         //转发请求
                         //OnLockChanged(lockCmd,requestUnLockInfo.BillID, true);
 
-                        tx = new ByteBuff(100);
-                        string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                        tx.PushString(sendtime);
-                        tx.PushInt((int)lockCmd);
-                        tx.PushString(json);
-                        //将来再加上提醒配置规则,或加在请求实体中
-                        gd.Cmd = (byte)ServerCommand.锁管理;
-                        gd.One = new byte[] { (byte)lockCmd };
-                        gd.Two = tx.toByte();
-                        //通知拥有锁的人
-                        foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
+                        // 构建请求数据
+                        var requestData = new
                         {
-                            //跳过自己
-                            if (FromSession != null && item.Value.SessionID == FromSession.SessionID)
+                            Command = "REQUEST_UNLOCK",
+                            BillID = requestUnLockInfo.BillID,
+                            BillNo = requestUnLockInfo.BillNo,
+                            RequestUserID = requestUnLockInfo.RequestUserID,
+                            RequestUserName = requestUnLockInfo.RequestUserName,
+                            LockedUserID = requestUnLockInfo.LockedUserID,
+                            RequestTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                            RequestReason = requestUnLockInfo.RequestReason
+                        };
+
+                        // 获取所有会话
+                        var sessions = _sessionService.GetAllUserSessions();
+                        bool sentSuccessfully = false;
+
+                        foreach (var session in sessions)
+                        {
+                            // 跳过自己
+                            if (FromSession != null && session.SessionID == FromSession.SessionID)
                             {
                                 continue;
                             }
-                            //有指定目标时  其它人就不发了。
-                            if (ToSession != null && item.Value.SessionID == ToSession.SessionID)
+
+                            // 有指定目标时，其它人就不发了
+                            if (ToSession != null && session.SessionID == ToSession.SessionID)
                             {
-                                item.Value.AddSendData(gd);
+                                var result = _sessionService.SendCommandToSession(session.SessionID, "LOCK_MANAGEMENT", requestData);
+                                if (result.IsSuccess)
+                                {
+                                    sentSuccessfully = true;
+                                }
                                 break;
                             }
-                            //向锁定的人发送消息 请求解锁
-                            if (item.Value.User.UserID == requestUnLockInfo.LockedUserID)
+
+                            // 向锁定的人发送消息 请求解锁
+                            if (session.UserID == requestUnLockInfo.LockedUserID)
                             {
-                                item.Value.AddSendData(gd);
+                                var result = _sessionService.SendCommandToSession(session.SessionID, "LOCK_MANAGEMENT", requestData);
+                                if (result.IsSuccess)
+                                {
+                                    sentSuccessfully = true;
+                                    frmMain.Instance.PrintInfoLog($"已向用户 {session.UserName} 发送解锁请求");
+                                }
+                                else
+                                {
+                                    frmMain.Instance.PrintInfoLog($"向用户 {session.UserName} 发送解锁请求失败: {result.ErrorMessage}");
+                                }
                                 break;
                             }
+                        }
+
+                        if (!sentSuccessfully)
+                        {
+                            frmMain.Instance.PrintInfoLog($"未能找到锁定用户 {requestUnLockInfo.LockedUserID} 的在线会话");
                         }
                         break;
                     case LockCmd.RefuseUnLock:
@@ -191,35 +222,62 @@ namespace RUINORERP.Server.CommandService
                         obj = JObject.Parse(json);
                         RefuseUnLockInfo refuseUnLockInfo = obj.ToObject<RefuseUnLockInfo>();
 
-                        tx = new ByteBuff(100);
-                        sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                        tx.PushString(sendtime);
-                        tx.PushInt((int)lockCmd);
-                        tx.PushString(json);
-                        //将来再加上提醒配置规则,或加在请求实体中
-                        gd.Cmd = (byte)ServerCommand.锁管理;
-                        gd.One = new byte[] { (byte)lockCmd };
-                        gd.Two = tx.toByte();
-
-                        //通知请求的人
-                        foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
+                        // 构建拒绝解锁数据
+                        var refuseData = new
                         {
-                            //跳过自己
-                            if (FromSession != null && item.Value.SessionID == FromSession.SessionID)
+                            Command = "REFUSE_UNLOCK",
+                            BillID = refuseUnLockInfo.BillID,
+                            BillNo = refuseUnLockInfo.BillNo,
+                            RequestUserID = refuseUnLockInfo.RequestUserID,
+                            RefuseUserID = refuseUnLockInfo.RefuseUserID,
+                            RefuseUserName = refuseUnLockInfo.RefuseUserName,
+                            RefuseTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                            RefuseReason = refuseUnLockInfo.RefuseReason
+                        };
+
+                        // 获取所有会话
+                        var sessionsRefuse = _sessionService.GetAllUserSessions();
+                        bool refuseSentSuccessfully = false;
+
+                        foreach (var session in sessionsRefuse)
+                        {
+                            // 跳过自己
+                            if (FromSession != null && session.SessionID == FromSession.SessionID)
                             {
                                 continue;
                             }
-                            //有指定目标时  其它人就不发了。
-                            if (ToSession != null && item.Value.SessionID == ToSession.SessionID)
+
+                            // 有指定目标时，其它人就不发了
+                            if (ToSession != null && session.SessionID == ToSession.SessionID)
                             {
-                                item.Value.AddSendData(gd);
+                                var result = _sessionService.SendCommandToSession(session.SessionID, "LOCK_MANAGEMENT", refuseData);
+                                if (result.IsSuccess)
+                                {
+                                    refuseSentSuccessfully = true;
+                                }
                                 break;
                             }
-                            if (item.Value.User.UserID == refuseUnLockInfo.RequestUserID)
+
+                            // 向请求的人发送拒绝消息
+                            if (session.UserID == refuseUnLockInfo.RequestUserID)
                             {
-                                item.Value.AddSendData(gd);
+                                var result = _sessionService.SendCommandToSession(session.SessionID, "LOCK_MANAGEMENT", refuseData);
+                                if (result.IsSuccess)
+                                {
+                                    refuseSentSuccessfully = true;
+                                    frmMain.Instance.PrintInfoLog($"已向用户 {session.UserName} 发送拒绝解锁通知");
+                                }
+                                else
+                                {
+                                    frmMain.Instance.PrintInfoLog($"向用户 {session.UserName} 发送拒绝解锁通知失败: {result.ErrorMessage}");
+                                }
                                 break;
                             }
+                        }
+
+                        if (!refuseSentSuccessfully)
+                        {
+                            frmMain.Instance.PrintInfoLog($"未能找到请求用户 {refuseUnLockInfo.RequestUserID} 的在线会话");
                         }
                         break;
                     case LockCmd.Broadcast:

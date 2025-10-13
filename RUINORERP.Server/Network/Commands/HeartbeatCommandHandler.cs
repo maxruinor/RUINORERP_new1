@@ -1,6 +1,7 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.System;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Models.Requests;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,6 +12,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Errors;
+using RUINORERP.Server.Network.Services;
 // using RUINORERP.Server.Network.Interfaces.Services; // 暂时注释，缺少ISessionService接口定义
 
 namespace RUINORERP.Server.Network.Commands
@@ -22,14 +25,14 @@ namespace RUINORERP.Server.Network.Commands
     [CommandHandler("HeartbeatCommandHandler", priority: 0)]
     public class HeartbeatCommandHandler : BaseCommandHandler
     {
-         private readonly ISessionService _sessionService; 
+        private readonly ISessionService _sessionService;
 
         /// <summary>
         /// 无参构造函数，以支持Activator.CreateInstance创建实例
         /// </summary>
         public HeartbeatCommandHandler() : base()
         {
-             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>(); 
+            _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
         }
 
         /// <summary>
@@ -40,7 +43,7 @@ namespace RUINORERP.Server.Network.Commands
             ILogger<HeartbeatCommandHandler> logger = null) : base(logger)
         {
             _sessionService = sessionService; // 暂时注释，缺少ISessionService接口定义
-            
+
             // 使用安全方法设置支持的命令
             SetSupportedCommands(SystemCommands.Heartbeat);
         }
@@ -49,7 +52,7 @@ namespace RUINORERP.Server.Network.Commands
         /// 支持的命令类型
         /// </summary>
         public override IReadOnlyList<CommandId> SupportedCommands { get; protected set; }
-   
+
         /// <summary>
         /// 具体的命令处理逻辑
         /// </summary>
@@ -61,18 +64,18 @@ namespace RUINORERP.Server.Network.Commands
 
                 if (commandId == SystemCommands.Heartbeat)
                 {
-                    return await HandleHeartbeatAsync(cmd.Command, cancellationToken);
+                    return  HandleHeartbeatAsync(cmd, cancellationToken);
                 }
                 else
                 {
-                    return BaseCommand<IResponse>.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}", 400)
+                    return BaseCommand<IResponse>.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}")
                         .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
                 }
             }
             catch (Exception ex)
             {
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
-                return BaseCommand<IResponse>.CreateError($"处理异常: {ex.Message}", 500)
+                return BaseCommand<IResponse>.CreateError($"处理异常: {ex.Message}")
                     .WithMetadata("ErrorCode", "HANDLER_ERROR")
                     .WithMetadata("Exception", ex.Message)
                     .WithMetadata("StackTrace", ex.StackTrace);
@@ -80,56 +83,60 @@ namespace RUINORERP.Server.Network.Commands
         }
 
         /// <summary>
+        /// 会话管理服务
+        /// </summary>
+        private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
+
+        /// <summary>
         /// 处理心跳命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleHeartbeatAsync(ICommand command, CancellationToken cancellationToken)
+        private BaseCommand<IResponse> HandleHeartbeatAsync(QueuedCommand queuedCommand, CancellationToken cancellationToken)
         {
             try
             {
-                // 获取SessionId，通过反射方式访问
-                string sessionId = null;
-                try
+                // 获取或创建会话信息
+                var sessionInfo = SessionService.GetSession(queuedCommand.Packet.ExecutionContext.SessionId);
+                if (queuedCommand.Command is HeartbeatCommand heartbeatCommand)
                 {
-                    var commandWithSession = command as dynamic;
-                    sessionId = commandWithSession.SessionId;
+                    heartbeatCommand.Request.UserInfo.SessionId = sessionInfo.SessionID;
+                    sessionInfo.UserInfo = heartbeatCommand.Request.UserInfo;
                 }
-                catch
-                {
-                    // 如果无法获取SessionId，则设置为null
-                    sessionId = null;
-                }
-
-                LogInfo($"处理心跳命令 [会话: {sessionId}]");
-
-                 if (!string.IsNullOrEmpty(sessionId))
-                 {
-                     var session = _sessionService.GetSession(sessionId);
-                     if (session != null)
-                     {
-                         session.UpdateActivity();
-                         _sessionService.UpdateSession(session);
-                     }
-                 }
-
+             
                 // 创建心跳响应数据
-                var responseData = CreateHeartbeatResponse();
-
-                var response = new ResponseBase
+                var heartbeatResponse = CreateHeartbeatResponse();
+                var response = new HeartbeatResponse
                 {
-                    Message = "心跳响应成功",
-                    IsSuccess = true
+                    IsSuccess = true,
+                    Status = "OK",
+                    ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    NextIntervalMs = 30000, // 默认30秒间隔
+                    ServerInfo = new Dictionary<string, object>
+                    {
+                        ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                        ["ServerVersion"] = "1.0.0",
+                        ["SessionId"] = sessionInfo.SessionID
+                    }
                 };
-                response.WithMetadata("Data", new { 
-                        Timestamp = DateTime.UtcNow,
-                        SessionId = sessionId,
-                        Status = "Alive"
-                    });
+                
                 return BaseCommand<IResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
-                return BaseCommand<IResponse>.CreateError($"心跳处理异常: {ex.Message}", 500)
+                var errorResponse = new HeartbeatResponse
+                {
+                    IsSuccess = false,
+                    Status = "ERROR",
+                    ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    NextIntervalMs = 5000, // 错误情况下缩短间隔
+                    ServerInfo = new Dictionary<string, object>
+                    {
+                        ["Error"] = ex.Message,
+                        ["ErrorCode"] = "HEARTBEAT_ERROR"
+                    }
+                };
+                
+                return BaseCommand<IResponse>.CreateError("处理心跳命令异常")
                     .WithMetadata("ErrorCode", "HEARTBEAT_ERROR")
                     .WithMetadata("Exception", ex.Message)
                     .WithMetadata("StackTrace", ex.StackTrace);

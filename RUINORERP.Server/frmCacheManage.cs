@@ -1,4 +1,4 @@
-﻿using HLH.Lib.Helper;
+using HLH.Lib.Helper;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Server.Comm;
@@ -8,6 +8,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.ServerSession;
+using RUINORERP.Server.Network.Interfaces.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -22,14 +23,18 @@ using System.Windows.Forms;
 using RUINORERP.Business.CommService;
 using Newtonsoft.Json.Linq;
 using System.Collections;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace RUINORERP.Server
 {
     public partial class frmCacheManage : frmBase
     {
+        private readonly ISessionService _sessionService;
+
         public frmCacheManage()
         {
             InitializeComponent();
+            _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
         }
 
         private void frmCacheManagement_Load(object sender, EventArgs e)
@@ -205,10 +210,10 @@ namespace RUINORERP.Server
             {
                 //加载所有用户
                 cmbUser.Items.Clear();
-                foreach (var user in frmMain.Instance.sessionListBiz.ToArray())
+                var sessions = _sessionService.GetAllUserSessions();
+                foreach (var session in sessions)
                 {
-                    SessionforBiz sessionforBiz = user.Value as SessionforBiz;
-                    SuperValue skv = new SuperValue(sessionforBiz.User.姓名, user.Key);
+                    SuperValue skv = new SuperValue(session.UserName, session.SessionID);
                     cmbUser.Items.Add(skv);
                 }
 
@@ -343,10 +348,21 @@ namespace RUINORERP.Server
                 {
                     string tableName = kv.superDataTypeName;
                     SuperValue skv = cmbUser.SelectedItem as SuperValue;
-                    SessionforBiz PlayerSession = frmMain.Instance.sessionListBiz[skv.superDataTypeName];
-                    //UserService.发送缓存数据列表(PlayerSession, tableName);
+                    var session = _sessionService.GetSession(skv.superDataTypeName);
+                    if (session != null)
+                    {
+                        // 发送推送缓存命令
+                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_CACHE_DATA", tableName);
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {session.UserName} 推送缓存数据: {tableName}");
+                        }
+                        else
+                        {
+                            frmMain.Instance.PrintErrorLog($"向用户 {session.UserName} 推送缓存数据失败: {tableName}");
+                        }
+                    }
                 }
-
             }
             else
             {
@@ -354,12 +370,20 @@ namespace RUINORERP.Server
                 if (listBoxTableList.SelectedItem is SuperValue kv)
                 {
                     string tableName = kv.superDataTypeName;
-                    SuperValue skv = cmbUser.SelectedItem as SuperValue;
-
-                    foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
+                    var sessions = _sessionService.GetAllUserSessions();
+                    
+                    foreach (var session in sessions)
                     {
-                        SessionforBiz sessionforBiz = item.Value as SessionforBiz;
-                        //UserService.发送缓存数据列表(sessionforBiz, tableName);
+                        // 发送推送缓存命令
+                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_CACHE_DATA", tableName);
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {session.UserName} 推送缓存数据: {tableName}");
+                        }
+                        else
+                        {
+                            frmMain.Instance.PrintErrorLog($"向用户 {session.UserName} 推送缓存数据失败: {tableName}");
+                        }
                     }
                 }
             }

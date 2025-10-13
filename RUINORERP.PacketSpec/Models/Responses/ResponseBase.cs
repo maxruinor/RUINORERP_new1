@@ -44,12 +44,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
-        /// 响应代码
-        /// </summary>
-        [Key(5)]
-        public int Code { get; set; }
-
-        /// <summary>
         /// 请求标识
         /// </summary>
         [Key(6)]
@@ -117,7 +111,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = true,
                 Message = message,
-                Code = 200,
                 TimestampUtc = DateTime.UtcNow
             };
         }
@@ -134,7 +127,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                Code = code,
                 TimestampUtc = DateTime.UtcNow
             };
         }
@@ -157,7 +149,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                Code = code,
                 TimestampUtc = DateTime.UtcNow
             };
 
@@ -221,7 +212,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.Code = code;
             this.TimestampUtc = DateTime.UtcNow;
             this.ExtraData = new Dictionary<string, object>();
         }
@@ -241,7 +231,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 Data = data,
                 IsSuccess = true,
                 Message = message,
-                Code = 200,
                 TimestampUtc = DateTime.UtcNow,
                 TotalCount = totalCount,
                 DataVersion = dataVersion ?? DateTime.UtcNow.Ticks.ToString()
@@ -261,7 +250,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                Code = code,
                 TimestampUtc = DateTime.UtcNow,
                 ExtraData = extraData ?? new Dictionary<string, object>()
             };
@@ -279,7 +267,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                Code = code,
                 TimestampUtc = DateTime.UtcNow
             };
         }
@@ -312,7 +299,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                Code = code,
                 TimestampUtc = DateTime.UtcNow,
                 ExtraData = extraData
             };
@@ -342,7 +328,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 Data = data,
                 IsSuccess = true,
                 Message = message,
-                Code = 200,
                 TimestampUtc = DateTime.UtcNow,
                 TotalCount = totalCount,
                 ExtraData = extraData

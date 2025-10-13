@@ -56,23 +56,7 @@ namespace RUINORERP.Server.Network.ErrorHandling
             _errorRecords[record.Id] = record;
         }
 
-        /// <summary>
-        /// 记录API响应错误
-        /// </summary>
-        /// <param name="handlerId">处理器ID</param>
-        /// <param name="handlerName">处理器名称</param>
-        /// <param name="commandId">命令ID</param>
-        /// <param name="response">API响应</param>
-        /// <param name="context">上下文信息</param>
-        public void RecordApiResponseError(string handlerId, string handlerName, uint commandId, ResponseBase response, ErrorContext context = null)
-        {
-            var exception = new ApiResponseException(response.Message, response.Code)
-            {
-                ApiResponse = response
-            };
 
-            RecordError(handlerId, handlerName, commandId, exception, context);
-        }
 
         /// <summary>
         /// 获取错误记录
@@ -286,7 +270,6 @@ namespace RUINORERP.Server.Network.ErrorHandling
             if (record.Exception is ApiResponseException apiEx && apiEx.ApiResponse != null)
             {
                 info.AppendLine("API响应信息:");
-                info.AppendLine($"  状态码: {apiEx.ApiResponse.Code}");
                 info.AppendLine($"  消息: {apiEx.ApiResponse.Message}");
                 info.AppendLine($"  是否成功: {apiEx.ApiResponse.IsSuccess}");
                 info.AppendLine();

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic.ApplicationServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,6 +11,7 @@ using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model.ReminderModel.ReminderRules;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Server.BizService;
+using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.ServerSession;
 using SqlSugar;
 using SuperSocket.Server.Abstractions;
@@ -31,6 +32,7 @@ namespace RUINORERP.Server.SmartReminder
         public readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly ApplicationContext _appContext;
         private readonly ILogger<NotificationService> _logger;
+        private readonly ISessionService _sessionService;
         //private readonly IRealtimeNotifier _realtimeNotifier;
         // 添加邮件和短信服务依赖
         //private readonly IEmailService _emailService;
@@ -54,6 +56,7 @@ namespace RUINORERP.Server.SmartReminder
             _logger = logger;
             _appContext = _AppContextData;
             _unitOfWorkManage = unitOfWorkManage;
+            _sessionService = Startup.GetFromFac<ISessionService>();
             //_realtimeNotifier = realtimeNotifier;
         }
 
@@ -90,47 +93,35 @@ namespace RUINORERP.Server.SmartReminder
                     {
                         foreach (var item in Recipients)
                         {
-                            List<SessionforBiz> sessions = frmMain.Instance.sessionListBiz.Values.ToList().OrderBy(c => c.StartTime).ToList();
-                            var session = sessions.FirstOrDefault(c => c.User.UserID == item);
+                            var sessions = _sessionService.GetAllUserSessions();
+                            
+                            var session = sessions.FirstOrDefault(c => c.UserInfo.UserID == item);
                             if (session != null)
                             {
-                                if (session.State == SessionState.Connected)
+                                // 构建通知消息
+                                var notificationData = new
                                 {
-                                    //  "库存预警通知";
-                                    //MessageModel msb = new MessageModel
-                                    //{
-                                    //    msg = message,
-                                    //};
-                                    //UserService.给客户端发消息实体(session, msb, true);
-
-                                    #region
-                                    // 处理不同通知通道
-                                    //foreach (var channel in policy.NotificationTypes)
-                                    //{
-                                    //    switch (channel)
-                                    //    {
-                                    //        case NotificationChannel.Realtime:
-                                    //            await SendRealtimeNotification(policy, message);
-                                    //            break;
-                                    //        case NotificationChannel.Email:
-                                    //            await SendEmailNotification(policy, message);
-                                    //            break;
-                                    //        case NotificationChannel.SMS:
-                                    //            await SendSmsNotification(policy, message);
-                                    //            break;
-                                    //        case NotificationChannel.Workflow:
-                                    //            await SendWorkflowNotification(policy, message);
-                                    //            break;
-                                    //    }
-                                    //}
-                                    #endregion
-
-
+                                    Message = message,
+                                    RuleId = rule.RuleId,
+                                    Timestamp = DateTime.Now,
+                                    ContextData = contextData
+                                };
+                                
+                                var messageJson = System.Text.Json.JsonSerializer.Serialize(notificationData);
+                                
+                                // 发送实时通知命令
+                                var success = _sessionService.SendCommandToSession(
+                                    session.SessionID, 
+                                    "REALTIME_NOTIFICATION", 
+                                    messageJson
+                                );
+                                
+                                if (!success)
+                                {
+                                    _logger.LogWarning($"发送实时通知到用户 {session.UserName} 失败");
                                 }
                             }
                         }
-
-
                     }
                 }
 

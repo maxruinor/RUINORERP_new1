@@ -98,7 +98,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="clientIp">客户端IP</param>
         /// <param name="clientPort">客户端端口</param>
         /// <returns>会话信息</returns>
-        public SessionInfo CreateSession(string sessionId, string clientIp, int clientPort = 0)
+        public SessionInfo CreateSession(string sessionId)
         {
             try
             {
@@ -113,7 +113,7 @@ namespace RUINORERP.Server.Network.Services
                     return null;
                 }
 
-                var sessionInfo = SessionInfo.Create(sessionId, clientIp, clientPort);
+                var sessionInfo = SessionInfo.Create();
 
                 if (_sessions.TryAdd(sessionId, sessionInfo))
                 {
@@ -127,7 +127,6 @@ namespace RUINORERP.Server.Network.Services
                     // 触发会话连接事件
                     SessionConnected?.Invoke(sessionInfo);
 
-                    _logger.LogInformation($"创建新会话: {sessionId}, 客户端: {clientIp}:{clientPort}");
                     return sessionInfo;
                 }
 
@@ -182,7 +181,7 @@ namespace RUINORERP.Server.Network.Services
                     return Enumerable.Empty<SessionInfo>();
 
                 return _sessions.Values
-                    .Where(s => s.IsAuthenticated && s.Username == username)
+                    .Where(s => s.IsAuthenticated && s.UserName == username)
                     .ToList();
             }
             catch (Exception ex)
@@ -222,31 +221,7 @@ namespace RUINORERP.Server.Network.Services
                 return Enumerable.Empty<SessionInfo>();
             }
         }
-
-        /// <summary>
-        /// 创建已认证的会话
-        /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <param name="userInfo">用户会话信息</param>
-        /// <param name="clientIp">客户端IP</param>
-        /// <returns>会话信息</returns>
-        public async Task<SessionInfo> CreateAuthenticatedSessionAsync(string sessionId, UserSessionInfo userInfo, string clientIp)
-        {
-            var session = CreateSession(sessionId, clientIp);
-            if (session != null)
-            {
-                session.UserId = userInfo.UserInfo.User_ID;
-                session.Username = userInfo.UserInfo.UserName;
-                session.IsAuthenticated = true;
-                session.LoginTime = DateTime.UtcNow;
-                session.UpdateActivity();
-                
-                // 使用现有同步方法但包装为异步任务返回
-                await Task.Run(() => UpdateSession(session));
-                return session;
-            }
-            return null;
-        }
+        
 
         /// <summary>
         /// 更新会话信息
@@ -264,7 +239,7 @@ namespace RUINORERP.Server.Network.Services
                 {
                     // 更新会话信息
                     existingSession.UserId = sessionInfo.UserId;
-                    existingSession.Username = sessionInfo.Username;
+                    existingSession.UserName = sessionInfo.UserName;
                     existingSession.IsAuthenticated = sessionInfo.IsAuthenticated;
                     //existingSession.IsAdmin = sessionInfo.IsAdmin;
                     existingSession.UpdateActivity();
@@ -497,7 +472,7 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                _logger.LogInformation($"用户认证成功: SessionID={sessionInfo.SessionID}, Username={sessionInfo.Username}");
+                _logger.LogInformation($"用户认证成功: SessionID={sessionInfo.SessionID}, Username={sessionInfo.UserName}");
                 // 认证成功后的处理逻辑
             }
             catch (Exception ex)
@@ -659,6 +634,201 @@ namespace RUINORERP.Server.Network.Services
             }
         }
 
+        /// <summary>
+        /// 主动断开指定会话连接（T人功能）
+        /// </summary>
+        /// <param name="sessionId">要断开的会话ID</param>
+        /// <param name="reason">断开原因，默认为"服务器强制断开"</param>
+        /// <returns>断开是否成功</returns>
+        public async Task<bool> DisconnectSessionAsync(string sessionId, string reason = "服务器强制断开")
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(sessionId))
+                {
+                    _logger.LogWarning("断开会话失败：会话ID为空");
+                    return false;
+                }
+
+                // 获取会话信息
+                if (!_sessions.TryGetValue(sessionId, out var sessionInfo))
+                {
+                    _logger.LogWarning($"断开会话失败：会话不存在，SessionID={sessionId}");
+                    return false;
+                }
+
+                // 获取SuperSocket会话
+                if (_appSessions.TryGetValue(sessionId, out var appSession))
+                {
+                    try
+                    {
+                        // 主动关闭SuperSocket连接
+                        await appSession.CloseAsync(CloseReason.ServerShutdown);
+                        _logger.LogInformation($"已主动断开会话连接: SessionID={sessionId}, 用户={sessionInfo.UserName}, 原因={reason}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"关闭SuperSocket会话连接失败: SessionID={sessionId}");
+                    }
+                }
+
+                // 移除会话记录
+                var removeResult = RemoveSession(sessionId);
+                
+                if (removeResult)
+                {
+                    _logger.LogInformation($"会话已成功断开并移除: SessionID={sessionId}, 用户={sessionInfo.UserName}, 原因={reason}");
+                    return true;
+                }
+                else
+                {
+                    _logger.LogWarning($"会话断开但移除记录失败: SessionID={sessionId}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"断开会话时发生异常: SessionID={sessionId}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 主动断开指定用户的所有会话连接（T人功能）
+        /// </summary>
+        /// <param name="username">要断开的用户名</param>
+        /// <param name="reason">断开原因，默认为"服务器强制断开"</param>
+        /// <returns>成功断开的会话数量</returns>
+        public async Task<int> DisconnectUserSessionsAsync(string username, string reason = "服务器强制断开")
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(username))
+                {
+                    _logger.LogWarning("断开用户会话失败：用户名为空");
+                    return 0;
+                }
+
+                // 获取该用户的所有会话
+                var userSessions = GetUserSessions(username).ToList();
+                
+                if (userSessions.Count == 0)
+                {
+                    _logger.LogInformation($"用户没有活动会话: Username={username}");
+                    return 0;
+                }
+
+                int successCount = 0;
+                
+                // 并行断开所有会话
+                var disconnectTasks = userSessions.Select(async session =>
+                {
+                    try
+                    {
+                        var result = await DisconnectSessionAsync(session.SessionID, reason);
+                        return result ? 1 : 0;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"断开用户会话失败: SessionID={session.SessionID}, Username={username}");
+                        return 0;
+                    }
+                });
+
+                var results = await Task.WhenAll(disconnectTasks);
+                successCount = results.Sum();
+
+                _logger.LogInformation($"用户会话断开完成: Username={username}, 总会话数={userSessions.Count}, 成功断开={successCount}");
+                return successCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"断开用户所有会话时发生异常: Username={username}");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// 向指定会话发送命令
+        /// </summary>
+        /// <param name="sessionID">会话ID</param>
+        /// <param name="command">命令名称</param>
+        /// <param name="data">命令数据</param>
+        /// <returns>发送是否成功</returns>
+        public bool SendCommandToSession(string sessionID, string command, object data)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(sessionID))
+                {
+                    _logger.LogWarning("发送命令失败：会话ID为空");
+                    return false;
+                }
+
+                if (string.IsNullOrEmpty(command))
+                {
+                    _logger.LogWarning("发送命令失败：命令为空");
+                    return false;
+                }
+
+                // 获取SuperSocket会话
+                if (!_appSessions.TryGetValue(sessionID, out var appSession))
+                {
+                    _logger.LogWarning($"发送命令失败：会话不存在，SessionID={sessionID}");
+                    return false;
+                }
+
+                // 获取会话信息
+                if (!_sessions.TryGetValue(sessionID, out var sessionInfo))
+                {
+                    _logger.LogWarning($"发送命令失败：会话信息不存在，SessionID={sessionID}");
+                    return false;
+                }
+
+                try
+                {
+                    // 这里需要根据实际的命令发送机制来实现
+                    // 可能需要将命令和数据序列化为特定格式，然后通过SuperSocket发送
+                    // 以下是一个示例实现，实际实现可能需要根据项目的通信协议进行调整
+                    
+                    // 创建命令包
+                    var commandPackage = new
+                    {
+                        Command = command,
+                        Data = data,
+                        Timestamp = DateTime.Now
+                    };
+                    
+                    // 将命令包序列化为JSON字符串
+                    var commandJson = System.Text.Json.JsonSerializer.Serialize(commandPackage);
+                    
+                    // 通过SuperSocket发送命令
+                    var result = appSession.SendAsync(System.Text.Encoding.UTF8.GetBytes(commandJson));
+                    
+                    if (result.IsCompletedSuccessfully)
+                    {
+                        _logger.LogInformation($"命令发送成功: SessionID={sessionID}, 用户={sessionInfo.UserName}, 命令={command}");
+                        return true;
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"命令发送失败: SessionID={sessionID}, 用户={sessionInfo.UserName}, 命令={command}");
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"发送命令时发生异常: SessionID={sessionID}, 命令={command}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"发送命令时发生异常: SessionID={sessionID}");
+                return false;
+            }
+        }
+
         #endregion
 
         #region ISessionManager 实现 - 统计和监控
@@ -736,7 +906,7 @@ namespace RUINORERP.Server.Network.Services
                 var abnormalCount = 0;
                 foreach (var session in abnormalSessions)
                 {
-                    _logger.LogWarning($"会话心跳异常: {session.SessionID}, 用户: {session.Username}");
+                    _logger.LogWarning($"会话心跳异常: {session.SessionID}, 用户: {session.UserName}");
                     abnormalCount++;
                 }
 

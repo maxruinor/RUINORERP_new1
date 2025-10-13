@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using MessagePack;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.PacketSpec.Models.Core;
 namespace RUINORERP.PacketSpec.Models.Requests
 {
     /// <summary>
@@ -20,6 +23,12 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// </summary>
         [Key(11)]
         public long UserId { get; set; }
+
+        /// <summary>
+        /// 客户端进程运行时间（秒）
+        /// </summary>
+        [Key(25)]
+        public UserInfo UserInfo { get; set; }
 
         /// <summary>
         /// 客户端时间戳
@@ -136,6 +145,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
         [Key(24)]
         public long ProcessUptime { get; set; }
 
+
+
+
         /// <summary>
         /// 创建资源使用信息
         /// </summary>
@@ -152,4 +164,5 @@ namespace RUINORERP.PacketSpec.Models.Requests
             };
         }
     }
+   
 }

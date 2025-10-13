@@ -1,9 +1,10 @@
-﻿using RUINORERP.PacketSpec.Enums;
+using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using RUINORERP.Server.Network.Interfaces.Services;
 
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
@@ -15,39 +16,49 @@ namespace RUINORERP.Server.Workflow.WFPush
     /// </summary>
     public class PushDataStep : StepBody
     {
+        private  ISessionService _sessionService;
+        
         public string TagetTableName { get; set; }
 
         public override ExecutionResult Run(IStepExecutionContext context)
         {
+            _sessionService = Startup.GetFromFac<ISessionService>();
 
-            //byte[] pushdata = HLH.Lib.Helper.SerializationHelper.SerializeDataEntity(data);
-            //服务器收到客户端基础信息变更分布
-            //回推
-            //WorkflowServiceSender.通知工作流启动成功(UserSession, workflowid);
-            foreach (var item in frmMain.Instance.sessionListBiz)
+            var sessions = _sessionService.GetAllUserSessions();
+            foreach (var session in sessions)
             {
                 try
                 {
-                    OriginalData exMsg = new OriginalData();
-                    exMsg.Cmd = (byte)PacketSpec.Commands.WorkflowCommands.WorkflowCommand; //ServerCommand.工作流数据推送;
-                    exMsg.One = null;
-                    //这种可以写一个扩展方法
-                    ByteBuffer tx = new ByteBuffer(100);
-                    string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    tx.PushString(sendtime);
-                    tx.PushString(TagetTableName);
-                    //  tx.PushInt(pushdata.Length);
-                    //  tx.PushBytes(pushdata);
-                    tx.PushString("给客户端发提示消息测试！分发测试" + TagetTableName.ToString());
-                    exMsg.Two = tx.ToByteArray();
-                    item.Value.AddSendData(exMsg);
-                    frmMain.Instance.PrintInfoLog("工作流数据推送");
+                    // 构建推送消息
+                    var messageData = new
+                    {
+                        Timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                        TableName = TagetTableName,
+                        Message = "给客户端发提示消息测试！分发测试" + TagetTableName.ToString()
+                    };
+                    
+                    var messageJson = System.Text.Json.JsonSerializer.Serialize(messageData);
+                    
+                    // 发送工作流数据推送命令
+                    var success = _sessionService.SendCommandToSession(
+                        session.SessionID, 
+                        "WORKFLOW_DATA_PUSH", 
+                        messageJson
+                    );
+                    
+                    if (success)
+                    {
+                        frmMain.Instance.PrintInfoLog($"工作流数据推送到 {session.UserName} 成功");
+                    }
+                    else
+                    {
+                        frmMain.Instance.PrintInfoLog($"工作流数据推送到 {session.UserName} 失败");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintInfoLog("服务器收到客户端基础信息变更分布失败:" + item.Value.User.用户名 + ex.Message);
+                    frmMain.Instance.PrintInfoLog("服务器收到客户端基础信息变更分布失败:" + session.UserName + ex.Message);
                 }
-
             }
             return ExecutionResult.Next();
         }

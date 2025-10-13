@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using RUINORERP.Business.CommService;
 using RUINORERP.Server.Comm;
+using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.ServerSession;
 using System;
 using System.Collections.Generic;
@@ -84,16 +85,35 @@ namespace RUINORERP.Server.ServerService
             try
             {
                 bool IsProcess = false;
-                foreach (var item in frmMain.Instance.sessionListBiz)
+                var sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
+                var sessions = sessionService.GetAllUserSessions();
+                
+                foreach (var session in sessions)
                 {
-                    SessionforBiz sessionforBiz = item.Value as SessionforBiz;
-                    //自己的不会上传。 只转给超级管理员。
-                    if (sessionforBiz.User.超级用户)
+                    // 只转发给超级管理员
+                    if (session.IsSuperUser)
                     {
-                        SystemService.转发协助处理(sessionforBiz, gd.Two);
-                        IsProcess = true;
-                        return;
-                        // break;//一个人处理就可以了
+                        // 构建协助请求数据
+                        var requestData = new
+                        {
+                            Command = "REQUEST_ASSISTANCE",
+                            Data = Convert.ToBase64String(gd.Two)
+                        };
+                        
+                        var messageJson = System.Text.Json.JsonSerializer.Serialize(requestData);
+                        
+                        // 发送协助请求命令
+                        var success = sessionService.SendCommandToSession(
+                            session.SessionID, 
+                            "ASSISTANCE_REQUEST", 
+                            messageJson
+                        );
+                        
+                        if (success)
+                        {
+                            IsProcess = true;
+                            return; // 一个人处理就可以了
+                        }
                     }
                 }
 
@@ -109,15 +129,6 @@ namespace RUINORERP.Server.ServerService
                     string EntityType = ByteDataAnalysis.GetString(gd.Two, ref index);
                     string BillData = ByteDataAnalysis.GetString(gd.Two, ref index);
 
-                    ////再转发到超级管理员 ，如果超级管理员不在线。缓存 上线再发送
-                    //ByteBuff tx = new ByteBuff(200);
-                    //tx.PushString(sendtime);
-                    //tx.PushInt64(RequestUserID);//请示的人ID
-                    //tx.PushString(RequestEmpName);//请示的人ID
-                    //tx.PushString(RequestContent);
-                    //tx.PushString(EntityType);//请示的人姓名。后面单据数据要保存时要名称开头
-                    //tx.PushString(BillData);
-
                     ReminderData MessageInfo = new ReminderData();
                     MessageInfo.SendTime = sendtime;
                     MessageInfo.SenderEmployeeID = RequestUserID;
@@ -125,10 +136,6 @@ namespace RUINORERP.Server.ServerService
                     MessageInfo.ReminderContent = RequestContent;
                     frmMain.Instance.MessageList.Enqueue(MessageInfo);
                 }
-
-
-
-
             }
             catch (Exception ex)
             {

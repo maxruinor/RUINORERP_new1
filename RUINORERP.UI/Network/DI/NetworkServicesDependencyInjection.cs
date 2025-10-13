@@ -27,21 +27,9 @@ namespace RUINORERP.UI.Network.DI
         {
             // 注册核心网络组件
             services.AddSingleton<ISocketClient, SuperSocketClient>();
-            // 注意：使用PacketSpec项目中的CommandDispatcher，而不是客户端自定义的
-            services.AddSingleton<ICommandDispatcher, RUINORERP.PacketSpec.Commands.CommandDispatcher>();
+            services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
             services.AddSingleton<ClientCommunicationService>();
-            // RequestResponseManager已合并到ClientCommunicationService中，不再需要单独注册
             services.AddSingleton<ClientEventManager>();
-            services.AddSingleton(provider => new HeartbeatManager(
-                provider.GetRequiredService<ISocketClient>(),
-                provider.GetRequiredService<ClientCommunicationService>(),
-                provider.GetRequiredService<TokenManager>(),
-                30000, // 默认30秒心跳间隔
-                5000,  // 默认5秒超时
-                provider.GetService<ILogger<HeartbeatManager>>()
-            ));
-            // 不再需要ClientTokenStorage，使用TokenManager代替
-
 
             // 注册TokenManager相关服务
             // 首先配置TokenServiceOptions

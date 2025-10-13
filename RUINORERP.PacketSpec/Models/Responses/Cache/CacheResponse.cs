@@ -63,7 +63,6 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
             {
                 IsSuccess = false,
                 Message = message,
-                Code = code,
                 CacheTime = DateTime.Now
             };
         }

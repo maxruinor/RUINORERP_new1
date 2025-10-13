@@ -1,3 +1,4 @@
+using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Models.Core;
 using SuperSocket.Connection;
 using SuperSocket.Server;
@@ -21,7 +22,12 @@ namespace RUINORERP.Server.Network.Models
         /// </summary>
         public string ClientIp { get; set; }
 
+        /// <summary>
+        /// 用户信息
+        /// </summary>
+        public UserInfo UserInfo { get; set; } = new();
 
+        
         /// <summary>
         /// 客户端端口
         /// </summary>
@@ -56,6 +62,8 @@ namespace RUINORERP.Server.Network.Models
             get => LastActivityTime;
             set => LastActivityTime = value;
         }
+
+
 
         protected override async ValueTask OnSessionConnectedAsync()
         {
@@ -215,7 +223,7 @@ namespace RUINORERP.Server.Network.Models
         /// <summary>
         /// 用户名
         /// </summary>
-        public string Username { get; set; }
+        public string UserName { get; set; }
 
         /// <summary>
         /// 是否已认证
@@ -267,6 +275,7 @@ namespace RUINORERP.Server.Network.Models
         /// </summary>
         public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
         public bool IsConnected { get; internal set; }
+        public bool IsAdmin { get; internal set; }
 
         /// <summary>
         /// 创建会话信息
@@ -275,13 +284,11 @@ namespace RUINORERP.Server.Network.Models
         /// <param name="clientIp">客户端IP</param>
         /// <param name="clientPort">客户端端口</param>
         /// <returns>会话信息对象</returns>
-        public static SessionInfo Create(string sessionId, string clientIp, int clientPort = 0)
+        public static SessionInfo Create()
         {
             var now = DateTime.Now;
             var sessionInfo = new SessionInfo
             {
-                ClientIp = clientIp,
-                ClientPort = clientPort,
                 ConnectedTime = now,
                 Status = SessionStatus.Connected
             };
@@ -335,7 +342,7 @@ namespace RUINORERP.Server.Network.Models
         /// <returns>字符串表示</returns>
         public override string ToString()
         {
-            return $"SessionId: {SessionID}, Client: {ClientIp}:{ClientPort}, Status: {Status}, User: {Username}";
+            return $"SessionId: {SessionID}, Client: {ClientIp}:{ClientPort}, Status: {Status}, User: {UserName}";
         }
     }
 

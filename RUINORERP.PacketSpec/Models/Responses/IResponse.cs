@@ -42,10 +42,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// </summary>
         DateTime TimestampUtc { get; set; }
 
-        /// <summary>
-        /// 响应代码
-        /// </summary>
-        int Code { get; set; }
 
         /// <summary>
         /// 请求标识

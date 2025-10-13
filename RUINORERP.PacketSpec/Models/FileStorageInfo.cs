@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -55,7 +55,6 @@ namespace RUINORERP.PacketSpec.Models
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.Code = code;
             this.TimestampUtc = DateTime.UtcNow;
         }
 

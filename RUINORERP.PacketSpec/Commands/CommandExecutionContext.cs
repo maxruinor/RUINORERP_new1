@@ -17,17 +17,12 @@ namespace RUINORERP.PacketSpec.Commands
     {
         [Key(16)]
         public string SessionId { get; set; }
-        [Key(17)]
-        public string ClientId { get; set; }
         [Key(18)]
         public string RequestId { get; set; }
-        [Key(19)]
-        public string ClientIp { get; set; }
         [Key(20)]
         public TokenInfo Token { get; set; }
         [Key(21)]
         public DateTime ReceivedTime { get; set; }
-
 
 
         [MessagePack.IgnoreMember]
@@ -87,9 +82,7 @@ namespace RUINORERP.PacketSpec.Commands
             return new CmdContext 
             {
                 SessionId = this.SessionId,
-                ClientId = this.ClientId,
                 RequestId = this.RequestId,
-                ClientIp = this.ClientIp,
                 Token = this.Token,
                 ReceivedTime = this.ReceivedTime,
                 Extensions = new Dictionary<string, object>(this.Extensions),

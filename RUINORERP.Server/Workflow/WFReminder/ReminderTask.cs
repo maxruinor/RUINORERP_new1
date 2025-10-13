@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 using System.Numerics;
+using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.ServerSession;
 using Newtonsoft.Json;
 using Azure.Core;
@@ -25,13 +26,14 @@ namespace RUINORERP.Server.Workflow.WFReminder
     /// </summary>
     public class ReminderTask : StepBody
     {
-
-
+        private readonly ISessionService _sessionService;
+        
         DataServiceChannel serviceChannel;
 
         public ReminderTask(DataServiceChannel _serviceChannel)
         {
             serviceChannel = _serviceChannel;
+            _sessionService = Startup.GetFromFac<ISessionService>();
         }
 
         /// <summary>
@@ -97,56 +99,55 @@ namespace RUINORERP.Server.Workflow.WFReminder
                 //相同的事情提醒最多10次
                 if (System.DateTime.Now > RemindTime && exData.RemindTimes < 10)
                 {
-                    foreach (var item in frmMain.Instance.sessionListBiz)
+                    var sessions = _sessionService.GetAllUserSessions();
+                    foreach (var session in sessions)
                     {
-                        if (exData.ReceiverEmployeeIDs.Contains(item.Value.User.Employee_ID))
+                        if (exData.ReceiverUserIDs.Contains(session.UserInfo.UserID))
                         {
                             try
                             {
                                 exData.RemindTimes++;
-                                //  WorkflowServiceReceiver.发送工作流提醒();
-                                OriginalData exMsg = new OriginalData();
-                                exMsg.Cmd = (byte)PacketSpec.Commands.WorkflowCommands.WorkflowReminder;
-                                exMsg.One = null;
-
-                                //这种可以写一个扩展方法
-                                ByteBuffer tx = new ByteBuffer(100);
-                                string sendtime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                                tx.PushString(sendtime);
-                                string json = JsonConvert.SerializeObject(exData,
-                        new JsonSerializerSettings
-                        {
-                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore // 或 ReferenceLoopHandling.Serialize
-                        });
-
-                                tx.PushString(json);
-                                //tx.PushString("【系统提醒】" + System.DateTime.Now.ToString());//发送者
-                                //tx.PushString(item.Value.SessionID);
-                                //tx.PushString(exData.RemindSubject);
-                                //tx.PushString(exData.ReminderContent);
-                                tx.PushBool(true);//是否强制弹窗
-                                exMsg.Two = tx.ToByteArray();
-                                item.Value.AddSendData(exMsg);
-
-                                frmMain.Instance.ReminderBizDataList.TryUpdate(BizData.BizPrimaryKey, exData, exData);
-                                if (frmMain.Instance.IsDebug)
+                                
+                                // 构建提醒消息
+                                var reminderData = new
                                 {
-                                    frmMain.Instance.PrintInfoLog($"工作流提醒推送到{item.Value.User.用户名}");
+                                    SendTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                    ReminderData = exData,
+                                    ForcePopup = true
+                                };
+                                
+                                var messageJson = System.Text.Json.JsonSerializer.Serialize(reminderData,
+                                    new System.Text.Json.JsonSerializerOptions
+                                    {
+                                        // 忽略循环引用
+                                        ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+                                    });
+                                
+                                // 发送工作流提醒命令
+                                var success = _sessionService.SendCommandToSession(
+                                    session.SessionID, 
+                                    "WORKFLOW_REMINDER", 
+                                    messageJson
+                                );
+                                
+                                if (success)
+                                {
+                                    frmMain.Instance.ReminderBizDataList.TryUpdate(BizData.BizPrimaryKey, exData, exData);
+                                    if (frmMain.Instance.IsDebug)
+                                    {
+                                        frmMain.Instance.PrintInfoLog($"工作流提醒推送到{session.UserName}");
+                                    }
                                 }
-
+                                else
+                                {
+                                    frmMain.Instance.PrintInfoLog($"发送工作流提醒到用户 {session.UserName} 失败");
+                                }
                             }
                             catch (Exception ex)
                             {
-                                frmMain.Instance.PrintInfoLog("服务器工作流提醒推送分布失败:" + item.Value.User.用户名 + ex.Message);
+                                frmMain.Instance.PrintInfoLog("服务器工作流提醒推送分布失败:" + session.UserName + ex.Message);
                             }
                         }
-                        //如果不注释，相同的员工有多个帐号时。员工只会提醒一个。
-                        //else
-                        //{
-                        //    continue;
-                        //}
-
-
                     }
                 }
             }

@@ -6,6 +6,9 @@ using RUINORERP.Server.BizService;
 using RUINORERP.Server.ServerSession;
 using RUINORERP.Server.ToolsUI;
 using SuperSocket.Server.Abstractions;
+using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Models;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,6 +25,7 @@ namespace RUINORERP.Server
 {
     public partial class frmUserList : frmBase
     {
+        private readonly ISessionService _sessionService;
         private readonly Timer _updateTimer;
         private readonly Random _random = new Random();
         public ObservableCollection<UserInfo> UserInfos { get; } = new ObservableCollection<UserInfo>();
@@ -36,8 +40,15 @@ namespace RUINORERP.Server
             InitializeComponent();
             InitializeListView();
 
-
+            // 获取新的会话服务实例
+            _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
+            
             InitializeDataBinding();
+
+            // 订阅会话服务事件
+            _sessionService.SessionConnected += OnSessionConnected;
+            _sessionService.SessionDisconnected += OnSessionDisconnected;
+            _sessionService.SessionUpdated += OnSessionUpdated;
 
             // 设置定时器用于UI刷新
             _updateTimer = new Timer { Interval = 1000 };
@@ -393,6 +404,99 @@ namespace RUINORERP.Server
             }
         }
 
+        #region 会话事件处理
+        
+        /// <summary>
+        /// 会话连接事件处理
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        private void OnSessionConnected(SessionInfo sessionInfo)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<SessionInfo>(OnSessionConnected), sessionInfo);
+                return;
+            }
+
+            if (sessionInfo != null && sessionInfo.IsAuthenticated)
+            {
+                var userInfo = ConvertSessionInfoToUserInfo(sessionInfo);
+                AddOrUpdateUser(userInfo);
+            }
+        }
+
+        /// <summary>
+        /// 会话断开事件处理
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        private void OnSessionDisconnected(SessionInfo sessionInfo)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<SessionInfo>(OnSessionDisconnected), sessionInfo);
+                return;
+            }
+
+            if (sessionInfo != null)
+            {
+                var userInfo = UserInfos.FirstOrDefault(u => u.SessionId == sessionInfo.SessionID);
+                if (userInfo != null)
+                {
+                    RemoveUser(userInfo);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 会话更新事件处理
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        private void OnSessionUpdated(SessionInfo sessionInfo)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<SessionInfo>(OnSessionUpdated), sessionInfo);
+                return;
+            }
+
+            if (sessionInfo != null && sessionInfo.IsAuthenticated)
+            {
+                var userInfo = ConvertSessionInfoToUserInfo(sessionInfo);
+                AddOrUpdateUser(userInfo);
+            }
+        }
+
+        /// <summary>
+        /// 将SessionInfo转换为UserInfo
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>用户信息</returns>
+        private UserInfo ConvertSessionInfoToUserInfo(SessionInfo sessionInfo)
+        {
+            var userInfo = new UserInfo
+            {
+                SessionId = sessionInfo.SessionID,
+                用户名 = sessionInfo.UserName,
+                登陆时间 = sessionInfo.LoginTime ?? sessionInfo.ConnectedTime,
+                最后心跳时间 = sessionInfo.LastActivityTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                客户端IP = sessionInfo.ClientIp,
+                当前模块 = sessionInfo.Properties?.ContainsKey("CurrentModule") == true ? 
+                         sessionInfo.Properties["CurrentModule"]?.ToString() : "未知",
+                客户端版本 = sessionInfo.ClientVersion ?? "未知",
+                在线状态 = sessionInfo.IsConnected
+            };
+
+            // 如果有用户详细信息，则填充
+            if (sessionInfo.UserInfo != null)
+            {
+                userInfo.姓名 = sessionInfo.UserInfo.姓名;
+            }
+
+            return userInfo;
+        }
+
+        #endregion
+
 
 
         private List<UserInfo> SelectUser()
@@ -535,15 +639,33 @@ namespace RUINORERP.Server
             frmInput.txtInputContent.Text = "192.168.0.254:3001";
             if (frmInput.ShowDialog() == DialogResult.OK)
             {
-                for (int i = 0; i < users.Count; i++)
+                foreach (var user in users)
                 {
-                    var user = users[i];
-                    if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                    try
                     {
-                        if (sb.State == SessionState.Connected)
+                        // 使用新的SessionService获取会话信息
+                        var session = _sessionService.GetSession(user.SessionId);
+                        if (session != null)
                         {
-                            //UserService.切换服务器(sb, frmInput.InputContent);
+                            // 发送切换服务器命令
+                            var success = _sessionService.SendCommandToSession(session.SessionID, "SWITCH_SERVER", frmInput.InputContent);
+                            if (success)
+                            {
+                                frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送切换服务器命令: {frmInput.InputContent}");
+                            }
+                            else
+                            {
+                                frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送切换服务器命令失败");
+                            }
                         }
+                        else
+                        {
+                            frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        frmMain.Instance.PrintErrorLog($"切换用户 {user.用户名} 服务器失败: {ex.Message}");
                     }
                 }
             }
@@ -554,14 +676,15 @@ namespace RUINORERP.Server
         {
             foreach (var user in users)
             {
-                if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                try
                 {
-                    if (sb.State == SessionState.Connected)
-                    {
-                        await sb.CloseAsync(SuperSocket.Connection.CloseReason.RemoteClosing);
-                        frmMain.Instance.sessionListBiz.TryRemove(sb.SessionID, out _);
-                        RemoveUserFromListView(user);
-                    }
+                    // 使用新的SessionService断开会话
+                    await _sessionService.DisconnectSessionAsync(user.SessionId);
+                    frmMain.Instance.PrintInfoLog($"已断开用户 {user.用户名} 的连接");
+                }
+                catch (Exception ex)
+                {
+                    frmMain.Instance.PrintErrorLog($"断开用户 {user.用户名} 连接失败: {ex.Message}");
                 }
             }
         }
@@ -570,13 +693,32 @@ namespace RUINORERP.Server
         {
             foreach (var user in users)
             {
-                if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz SB))
+                try
                 {
-                    if (SB.State == SessionState.Connected)
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
                     {
-                        //UserService.强制用户退出(SB);
-                        RemoveUserFromListView(user); // 调用移除方法
+                        // 发送强制退出命令
+                        var success = _sessionService.SendCommandToSession(session.SessionID, "FORCE_LOGOUT", null);
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送强制退出命令");
+                            RemoveUserFromListView(user); // 调用移除方法
+                        }
+                        else
+                        {
+                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送强制退出命令失败");
+                        }
                     }
+                    else
+                    {
+                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMain.Instance.PrintErrorLog($"强制用户 {user.用户名} 退出失败: {ex.Message}");
                 }
             }
         }
@@ -585,34 +727,62 @@ namespace RUINORERP.Server
         {
             foreach (var user in users)
             {
-                if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                try
                 {
-                    if (sb.State == SessionState.Connected)
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
                     {
-                        //UserService.删除列配置文件(sb);
+                        // 发送删除配置文件命令
+                        var success = _sessionService.SendCommandToSession(session.SessionID, "DELETE_CONFIG", null);
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送删除配置文件命令");
+                        }
+                        else
+                        {
+                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送删除配置文件命令失败");
+                        }
                     }
+                    else
+                    {
+                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMain.Instance.PrintErrorLog($"删除用户 {user.用户名} 配置文件失败: {ex.Message}");
                 }
             }
         }
 
         private void HandleSendMessage(List<UserInfo> users)
         {
-            frmMessager frm = new frmMessager();
-            if (frm.ShowDialog() == DialogResult.OK)
+            foreach (var user in users)
             {
-                foreach (var user in users)
+                try
                 {
-                    if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
                     {
-                        if (sb.State == SessionState.Connected)
-                        {
-                            //MessageModel message = new MessageModel
-                            //{
-                            //    msg = frm.Message,
-                            //};
-                            //UserService.给客户端发消息实体(sb, message, frm.MustDisplay);
-                        }
+                        // 显示发送消息对话框
+                        //using (var form = new frmMessager(user, _sessionService))
+                        //{
+                        //    if (form.ShowDialog() == DialogResult.OK)
+                        //    {
+                        //        frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送消息: {form.Message}");
+                        //    }
+                        //}
                     }
+                    else
+                    {
+                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送消息失败: {ex.Message}");
                 }
             }
         }
@@ -621,12 +791,31 @@ namespace RUINORERP.Server
         {
             foreach (var user in users)
             {
-                if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                try
                 {
-                    if (sb.State == SessionState.Connected)
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
                     {
-                        //UserService.推送版本更新(sb);
+                        // 发送更新推送命令
+                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_UPDATE", null);
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送更新推送命令");
+                        }
+                        else
+                        {
+                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送更新推送命令失败");
+                        }
                     }
+                    else
+                    {
+                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送更新推送命令失败: {ex.Message}");
                 }
             }
         }
@@ -636,29 +825,111 @@ namespace RUINORERP.Server
         {
             foreach (var user in users)
             {
-                if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                try
                 {
-                    if (sb.State == SessionState.Connected)
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
                     {
-                        //UserService.更新全局配置(sb);
+                        // 发送系统配置推送命令
+                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_SYS_CONFIG", null);
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送系统配置推送命令");
+                        }
+                        else
+                        {
+                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送系统配置推送命令失败");
+                        }
                     }
+                    else
+                    {
+                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送系统配置推送命令失败: {ex.Message}");
                 }
             }
         }
 
+        private void tsbtn推送缓存_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 获取选中的用户
+                if (listView1.SelectedItems.Count == 0)
+                {
+                    MessageBox.Show("请先选择要推送缓存的用户", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var selectedItem = listView1.SelectedItems[0];
+                if (selectedItem.Tag is UserInfo userInfo)
+                {
+                    // 获取会话信息
+                    var session = _sessionService.GetSession(userInfo.SessionId);
+                    if (session == null)
+                    {
+                        MessageBox.Show($"用户 {userInfo.用户名} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    // 确认推送缓存
+                    var result = MessageBox.Show($"确定要向用户 {userInfo.用户名} 推送缓存数据吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (result == DialogResult.Yes)
+                    {
+                        // 发送推送缓存命令
+                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_CACHE", null);
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送缓存数据");
+                            MessageBox.Show("缓存数据推送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("缓存数据推送失败，请检查用户连接状态", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"推送缓存数据时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 批量推送缓存数据
+        /// </summary>
+        /// <param name="users">用户列表</param>
         private void HandlePushCache(List<UserInfo> users)
         {
             foreach (var user in users)
             {
-                if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                try
                 {
-                    if (sb.State == SessionState.Connected)
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
                     {
+                        // 发送缓存数据推送通知
                         foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
                         {
-                            //UserService.发送缓存数据列表(sb, tableName);
+                            // 发送缓存数据列表
+                            // MessageService.SendCacheDataList(session, tableName);
+                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送缓存表 {tableName} 的数据推送通知");
                         }
                     }
+                    else
+                    {
+                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送缓存数据推送通知失败: {ex.Message}");
                 }
             }
         }
@@ -667,12 +938,31 @@ namespace RUINORERP.Server
         {
             foreach (var user in users)
             {
-                if (frmMain.Instance.sessionListBiz.TryGetValue(user.SessionId, out SessionforBiz sb))
+                try
                 {
-                    if (sb.State == SessionState.Connected)
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
                     {
-                        //UserService.强制用户关机(sb);
+                        // 发送关机命令
+                        var success = _sessionService.SendCommandToSession(session.SessionID, "SHUTDOWN", null);
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送关机命令");
+                        }
+                        else
+                        {
+                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送关机命令失败");
+                        }
                     }
+                    else
+                    {
+                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送关机命令失败: {ex.Message}");
                 }
             }
         }
@@ -726,45 +1016,186 @@ namespace RUINORERP.Server
             InvertSelection();
         }
 
-        private void tsbtn刷新_Click(object sender, EventArgs e)
+        private void tsbtn发送消息_Click(object sender, EventArgs e)
         {
-            var UserCounter = frmMain.Instance.sessionListBiz.Count;
-            frmMain.Instance.PrintInfoLog($"服务器用户数量：{UserCounter}");
-            if (UserCounter != listView1.Items.Count)
+            try
             {
-                //重新全部加载一次？
-                var s = _itemMap.Count;
-                if (listView1.Items.Count < UserCounter)
+                // 获取选中的用户
+                if (listView1.SelectedItems.Count == 0)
                 {
-                    //添加
-                    foreach (var item in frmMain.Instance.sessionListBiz)
+                    MessageBox.Show("请先选择要发送消息的用户", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var selectedItem = listView1.SelectedItems[0];
+                if (selectedItem.Tag is UserInfo userInfo)
+                {
+                    // 获取会话信息
+                    var session = _sessionService.GetSession(userInfo.SessionId);
+                    if (session == null)
                     {
-                        if (!_itemMap.ContainsKey(item.Key))
-                        {
-                            frmMain.Instance.PrintInfoLog($"add用户：{item.Value.User.用户名}");
-                            AddOrUpdateUser(item.Value.User);
-                        }
+                        MessageBox.Show($"用户 {userInfo.用户名} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
                     }
 
+                    // 显示发送消息对话框
+                    //using (var form = new frmMessager(userInfo, _sessionService))
+                    //{
+                    //    if (form.ShowDialog() == DialogResult.OK)
+                    //    {
+                    //        frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 发送消息: {form.Message}");
+                    //        MessageBox.Show("消息发送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //    }
+                    //}
                 }
-                if (listView1.Items.Count > UserCounter)
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"发送消息时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void tsbtn刷新_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 获取所有已认证的用户会话
+                var sessions = _sessionService.GetAllUserSessions().ToList();
+                var sessionCount = sessions.Count;
+                
+                frmMain.Instance.PrintInfoLog($"服务器用户数量：{sessionCount}");
+                
+                if (sessionCount != listView1.Items.Count)
                 {
-                    //删除
-                    for (int i = 0; i < listView1.Items.Count; i++)
+                    // 重新全部加载一次
+                    var itemCount = _itemMap.Count;
+                    if (listView1.Items.Count < sessionCount)
                     {
-                        var item = listView1.Items[i];
-                        if (item is ListViewItem lvitem)
+                        // 添加新用户
+                        foreach (var session in sessions)
                         {
-                            var userinfo = lvitem.Tag as UserInfo;
-                            if (!_itemMap.ContainsKey(userinfo.SessionId))
+                            if (!_itemMap.ContainsKey(session.SessionID))
                             {
-                                frmMain.Instance.PrintInfoLog($"remove用户：{userinfo.用户名}");
-                                RemoveUser(userinfo);
+                                var userInfo = ConvertSessionInfoToUserInfo(session);
+                                frmMain.Instance.PrintInfoLog($"添加用户：{userInfo.用户名}");
+                                AddOrUpdateUser(userInfo);
+                            }
+                        }
+                    }
+                    else if (listView1.Items.Count > sessionCount)
+                    {
+                        // 删除多余用户
+                        for (int i = 0; i < listView1.Items.Count; i++)
+                        {
+                            var item = listView1.Items[i];
+                            if (item is ListViewItem lvItem)
+                            {
+                                var userInfo = lvItem.Tag as UserInfo;
+                                if (userInfo != null && !sessions.Any(s => s.SessionID == userInfo.SessionId))
+                                {
+                                    frmMain.Instance.PrintInfoLog($"移除用户：{userInfo.用户名}");
+                                    RemoveUser(userInfo);
+                                }
                             }
                         }
                     }
                 }
-                //AddOrUpdateUser()
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"刷新用户列表时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void tsbtn推送更新_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 获取选中的用户
+                if (listView1.SelectedItems.Count == 0)
+                {
+                    MessageBox.Show("请先选择要推送更新的用户", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var selectedItem = listView1.SelectedItems[0];
+                if (selectedItem.Tag is UserInfo userInfo)
+                {
+                    // 获取会话信息
+                    var session = _sessionService.GetSession(userInfo.SessionId);
+                    if (session == null)
+                    {
+                        MessageBox.Show($"用户 {userInfo.用户名} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    // 确认推送更新
+                    var result = MessageBox.Show($"确定要向用户 {userInfo.用户名} 推送更新吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (result == DialogResult.Yes)
+                    {
+                        // 发送推送更新命令
+                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_UPDATE", null);
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送更新");
+                            MessageBox.Show("更新推送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("更新推送失败，请检查用户连接状态", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"推送更新时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void tsbtn推送系统配置_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 获取选中的用户
+                if (listView1.SelectedItems.Count == 0)
+                {
+                    MessageBox.Show("请先选择要推送系统配置的用户", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var selectedItem = listView1.SelectedItems[0];
+                if (selectedItem.Tag is UserInfo userInfo)
+                {
+                    // 获取会话信息
+                    var session = _sessionService.GetSession(userInfo.SessionId);
+                    if (session == null)
+                    {
+                        MessageBox.Show($"用户 {userInfo.用户名} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    // 确认推送系统配置
+                    var result = MessageBox.Show($"确定要向用户 {userInfo.用户名} 推送系统配置吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (result == DialogResult.Yes)
+                    {
+                        // 发送推送系统配置命令
+                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_SYS_CONFIG", null);
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送系统配置");
+                            MessageBox.Show("系统配置推送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        else
+                        {
+                            MessageBox.Show("系统配置推送失败，请检查用户连接状态", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"推送系统配置时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

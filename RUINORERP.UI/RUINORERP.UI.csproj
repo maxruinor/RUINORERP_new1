@@ -885,10 +885,7 @@
     <Compile Include="BusyDialog.Designer.cs">
       <DependentUpon>BusyDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="ClientSuperSocket\BizPackageInfo.cs" />
-    <Compile Include="ClientSuperSocket\BizPipelineFilter.cs" />
     <Compile Include="ClientSuperSocket\ClientDataBuilder.cs" />
-    <Compile Include="ClientSuperSocket\EasyClientService.cs" />
     <Compile Include="ClientSuperSocket\SystemOptimizerService.cs" />
     <Compile Include="ClientSuperSocket\WorkflowService.cs" />
     <Compile Include="CommonUI\frmOpinion.cs">
@@ -2115,7 +2112,6 @@
     <Compile Include="Common\MenuPropertyAttribute.cs" />
     <Compile Include="Common\Operator.cs" />
     <Compile Include="Common\ParseFormulaString.cs" />
-    <Compile Include="Common\ServerAuthorizer.cs" />
     <Compile Include="Common\UIExcelHelper.cs" />
     <Compile Include="Common\UIFMSubjectHelper.cs" />
     <Compile Include="Common\UIHelper.cs" />

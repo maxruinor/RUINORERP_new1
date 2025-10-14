@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using RUINORERP.Global.CustomAttribute;
 
-namespace RUINORERP.Business.CommService
+namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 表结构信息管理器，统一管理所有表的元数据信息
@@ -44,19 +44,19 @@ namespace RUINORERP.Business.CommService
         /// <summary>
         /// 表结构信息字典，键为表名
         /// </summary>
-        private readonly ConcurrentDictionary<string, TableSchemaInfo> _tableSchemas = 
+        private readonly ConcurrentDictionary<string, TableSchemaInfo> _tableSchemas =
             new ConcurrentDictionary<string, TableSchemaInfo>();
 
         /// <summary>
         /// 实体类型到表名的映射字典
         /// </summary>
-        private readonly ConcurrentDictionary<Type, string> _typeToTableName = 
+        private readonly ConcurrentDictionary<Type, string> _typeToTableName =
             new ConcurrentDictionary<Type, string>();
 
         /// <summary>
         /// 表名到实体类型的映射字典
         /// </summary>
-        private readonly ConcurrentDictionary<string, Type> _tableNameToType = 
+        private readonly ConcurrentDictionary<string, Type> _tableNameToType =
             new ConcurrentDictionary<string, Type>();
         #endregion
 
@@ -69,7 +69,7 @@ namespace RUINORERP.Business.CommService
         /// <summary>
         /// 获取所有需要缓存的表名
         /// </summary>
-        public IEnumerable<string> CacheableTableNames => 
+        public IEnumerable<string> CacheableTableNames =>
             _tableSchemas.Values.Where(t => t.IsCacheable).Select(t => t.TableName);
         #endregion
 
@@ -320,7 +320,7 @@ namespace RUINORERP.Business.CommService
             }
 
             // 处理转换表达式（如：int -> object）
-            if (expression.Body is UnaryExpression unaryExpression && 
+            if (expression.Body is UnaryExpression unaryExpression &&
                 unaryExpression.Operand is MemberExpression operandMemberExpression)
             {
                 return operandMemberExpression.Member.Name;
@@ -408,7 +408,7 @@ namespace RUINORERP.Business.CommService
 
             return $"总表数: {totalTables}, 可缓存表数: {cacheableTables}, 视图数: {views}";
         }
-        
+
         /// <summary>
         /// 获取所有表结构信息的详细字符串表示
         /// </summary>

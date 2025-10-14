@@ -115,7 +115,7 @@
 
   <ItemGroup>
     <Folder Include="BizCodeGeneration\" />
-    <Folder Include="Cache\Core\" />
+    <Folder Include="Cache\" />
     <Folder Include="DependencyInjection\" />
     <Folder Include="IocExtensions\" />
   </ItemGroup>

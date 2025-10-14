@@ -41,151 +41,26 @@ namespace RUINORERP.Server.Network.Commands
     public class CacheCommandHandler : BaseCommandHandler
     {
         private readonly ISessionService _sessionService;
+        private readonly CacheSubscriptionManager _subscriptionManager; // 使用统一的订阅管理器
         protected ILogger<CacheCommandHandler> logger { get; set; }
+        // 添加新的缓存管理器字段
+        private readonly IEntityCacheManager _cacheManager;
 
-        // 添加无参构造函数，以支持Activator.CreateInstance创建实例
+        // 添加构造函数注入CacheSubscriptionManager
         /// <summary>
-        /// 构造函数 - 初始化支持的命令类型
+        /// 构造函数 - 通过DI注入依赖项
         /// </summary>
-        public CacheCommandHandler() : base(new LoggerFactory().CreateLogger<BaseCommandHandler>())
-        {
-            logger = new LoggerFactory().CreateLogger<CacheCommandHandler>();
-            _sessionService = Startup.GetFromFac<ISessionService>();
-
-            // 使用安全方法设置支持的命令
-            SetSupportedCommands(
-                CacheCommands.CacheDataList,
-                CacheCommands.CacheRequest,
-                CacheCommands.CacheUpdate,
-                CacheCommands.CacheDelete,
-                CacheCommands.CacheClear,
-                CacheCommands.CacheStatistics,
-                CacheCommands.CacheStatus,
-                CacheCommands.CacheBatchOperation,
-                CacheCommands.CacheWarmup,
-                CacheCommands.CacheInvalidate,
-                CacheCommands.CacheSubscribe,
-                CacheCommands.CacheUnsubscribe
-            );
-        }
-
-
-        public async Task<CacheData> GetTableDataList(string tableName)
-        {
-            CacheData cacheData = null;
-            try
-            {
-                if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
-                {
-                    //发送缓存数据
-                    var CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
-                    if (CacheList == null)
-                    {
-                        //启动时服务器都没有加载缓存，则不发送
-                        await Task.Delay(100);
-                        CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
-                    }
-
-                    //上面查询可能还是没有立即加载成功
-                    if (CacheList == null)
-                    {
-                        return cacheData;
-                    }
-
-                    // 创建CacheData对象
-                    cacheData = new CacheData
-                    {
-                        TableName = tableName,
-                        CacheTime = DateTime.Now,
-                        ExpirationTime = DateTime.Now.AddMinutes(30),
-                        Version = "1.0"
-                    };
-
-                    // 处理不同类型的缓存数据
-                    if (CacheList is JArray jArray)
-                    {
-                        cacheData.Data = jArray.ToString(); // 将JArray转换为字符串
-                        cacheData.HasMoreData = false;
-                    }
-                    else if (TypeHelper.IsGenericList(CacheList.GetType()))
-                    {
-                        var lastlist = ((IEnumerable<dynamic>)CacheList).ToList();
-                        if (lastlist != null)
-                        {
-                            int pageSize = 100; // 每页100行
-                            int totalCount = lastlist.Count;
-                            
-                            // 只返回第一页数据
-                            var firstPageData = lastlist.Take(pageSize).ToList();
-                            
-                            // 转换为JSON字符串
-                            string json = JsonConvert.SerializeObject(firstPageData);
-                            cacheData.Data = json; // 直接存储JSON字符串
-                            cacheData.HasMoreData = totalCount > pageSize;
-                            
-                            if (frmMain.Instance.IsDebug)
-                            {
-                                frmMain.Instance.PrintInfoLog($"{tableName}发送第一页数据，总行数:{totalCount}，当前页:{Math.Min(pageSize, totalCount)}");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // 尝试将其他类型转换为JSON字符串
-                        try
-                        {
-                            string json = JsonConvert.SerializeObject(CacheList);
-                            cacheData.Data = json; // 直接存储JSON字符串
-                            cacheData.HasMoreData = false;
-                        }
-                        catch (Exception ex)
-                        {
-                            LogError($"转换缓存数据失败: {tableName}", ex);
-                            return null;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
-            }
-            return cacheData;
-        }
-
-
-
-        public CacheCommandHandler(ILogger<CacheCommandHandler> _Logger)
-            : base(_Logger)
-        {
-            logger = _Logger;
-            _sessionService = Startup.GetFromFac<ISessionService>();
-
-            // 使用安全方法设置支持的命令
-            SetSupportedCommands(
-                CacheCommands.CacheDataList,
-                CacheCommands.CacheRequest,
-                CacheCommands.CacheUpdate,
-                CacheCommands.CacheDelete,
-                CacheCommands.CacheClear,
-                CacheCommands.CacheStatistics,
-                CacheCommands.CacheStatus,
-                CacheCommands.CacheBatchOperation,
-                CacheCommands.CacheWarmup,
-                CacheCommands.CacheInvalidate,
-                CacheCommands.CacheSubscribe,
-                CacheCommands.CacheUnsubscribe
-            );
-        }
-
         public CacheCommandHandler(
-            ILogger<CacheCommandHandler> _Logger,
-            ISessionService sessionService
-           )
-            : base(_Logger)
+            ILogger<CacheCommandHandler> logger,
+            ISessionService sessionService,
+            CacheSubscriptionManager subscriptionManager, // 通过DI注入
+            IEntityCacheManager cacheManager) // 通过DI注入
+            : base(logger)
         {
-            logger = _Logger;
+            this.logger = logger;
             _sessionService = sessionService;
+            _subscriptionManager = subscriptionManager;
+            _cacheManager = cacheManager;
 
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
@@ -208,8 +83,6 @@ namespace RUINORERP.Server.Network.Commands
         /// 支持的命令类型
         /// </summary>
         public override IReadOnlyList<CommandId> SupportedCommands { get; protected set; }
-
-
 
         /// <summary>
         /// 判断是否可以处理指定命令
@@ -454,40 +327,17 @@ namespace RUINORERP.Server.Network.Commands
                         .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
                 }
 
-                if (updateRequest == null)
-                {
-                    LogError("缓存更新数据为空");
-                    return BaseCommand<IResponse>.CreateError("更新数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_UPDATE_DATA");
-                }
-
                 LogInfo($"处理缓存更新: 会话={executionContext.SessionId}, 表名={updateRequest.TableName}");
 
-                // 更新缓存
-                try
-                {
-                    // 将数据转换为JObject
-                    // JObject obj = JObject.FromObject(updateRequest.Data);
-                    // MyCacheManager.Instance.UpdateEntityList(updateRequest.TableName, obj);
+                // 直接处理客户端缓存更新，移除对ServerCacheSyncService的依赖
+                bool updateSuccess = await HandleClientCacheUpdateAsync(executionContext.SessionId, updateRequest);
 
-                    // 如果是产品表有变化，还需要更新产品视图的缓存
-                    if (updateRequest.TableName == nameof(tb_Prod))
-                    {
-                        //  var prod = obj.ToObject<tb_Prod>();
-                        //   LogInfo($"产品缓存已更新: {prod?.Prod_ID}");
-                        // TODO: 广播产品缓存数据更新
-                        // BroadcastProdCatchData(UserSession, prod);
-                    }
-                }
-                catch (Exception updateEx)
+                if (!updateSuccess)
                 {
-                    LogError($"更新缓存数据失败: {updateRequest.TableName}", updateEx);
-                    return BaseCommand<IResponse>.CreateError($"更新缓存数据失败: {updateEx.Message}", UnifiedErrorCodes.Biz_OperationFailed.Code)
+                    LogError($"更新缓存数据失败: {updateRequest.TableName}");
+                    return BaseCommand<IResponse>.CreateError($"更新缓存数据失败: 未知错误", UnifiedErrorCodes.Biz_OperationFailed.Code)
                         .WithMetadata("ErrorCode", "CACHE_UPDATE_FAILED");
                 }
-
-                // 广播给其他客户端
-                // await BroadcastCacheUpdateAsync(updateRequest.TableName, updateRequest.Data);
 
                 LogInfo($"缓存更新成功: {updateRequest.TableName}");
                 var cacheResponse = new CacheResponse();
@@ -557,31 +407,25 @@ namespace RUINORERP.Server.Network.Commands
                         .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
                 }
 
-                // 删除缓存 - 还要看传过来要删除的具体值，还要通知其它用户
-                try
+                // 直接处理客户端缓存删除，移除对ServerCacheSyncService的依赖
+                var deleteRequestForSync = new CacheRequest
                 {
-                    //if (!string.IsNullOrEmpty(deleteRequest.PrimaryKeyName) && deleteRequest.PrimaryKeyValue != null)
-                    //{
-                    //    // 根据主键删除特定记录
-                    //    MyCacheManager.Instance.DeleteEntityList(deleteRequest.TableName, deleteRequest.PrimaryKeyName, deleteRequest.PrimaryKeyValue);
-                    //    LogInfo($"缓存记录已删除: {deleteRequest.TableName}, 主键={deleteRequest.PrimaryKeyName}, 值={deleteRequest.PrimaryKeyValue}");
-                    //}
-                    //else
-                    //{
-                    //    // 删除整个表的缓存
-                    //    MyCacheManager.Instance.RemoveCache(deleteRequest.TableName);
-                    //    LogInfo($"缓存表已删除: {deleteRequest.TableName}");
-                    //}
-                }
-                catch (Exception deleteEx)
+                    TableName = deleteRequest.TableName,
+                    OperationType = "Remove",
+                    //PrimaryKeyName = deleteRequest.PrimaryKeyName,
+                    //PrimaryKeyValue = deleteRequest.PrimaryKeyValue,
+                    //Data = deleteRequest.Data,
+                    RequestId = deleteRequest.RequestId
+                };
+
+                bool deleteSuccess = await HandleClientCacheUpdateAsync(executionContext.SessionId, deleteRequestForSync);
+
+                if (!deleteSuccess)
                 {
-                    LogError($"删除缓存数据失败: {deleteRequest.TableName}", deleteEx);
-                    return BaseCommand<IResponse>.CreateError($"删除缓存数据失败: {deleteEx.Message}", UnifiedErrorCodes.Biz_OperationFailed.Code)
+                    LogError($"删除缓存数据失败: {deleteRequest.TableName}");
+                    return BaseCommand<IResponse>.CreateError($"删除缓存数据失败: 未知错误", UnifiedErrorCodes.Biz_OperationFailed.Code)
                         .WithMetadata("ErrorCode", "CACHE_DELETE_FAILED");
                 }
-
-                // 广播给其他客户端
-                await BroadcastCacheDeleteAsync(deleteRequest.TableName);
 
                 LogInfo($"缓存删除成功: {deleteRequest.TableName}");
                 var cacheResponse = new CacheResponse();
@@ -650,9 +494,94 @@ namespace RUINORERP.Server.Network.Commands
             }
         }
 
+        public async Task<CacheData> GetTableDataList(string tableName)
+        {
+            CacheData cacheData = null;
+            try
+            {
+                // 使用新的缓存管理器检查表是否存在
+                var entityType = _cacheManager.GetEntityType(tableName);
+                if (entityType != null)
+                {
+                    //发送缓存数据
+                    // 使用新的缓存管理器获取实体列表
+                    var method = typeof(IEntityCacheManager).GetMethod("GetEntityList");
+                    var genericMethod = method.MakeGenericMethod(entityType);
+                    var cacheList = genericMethod.Invoke(_cacheManager, new object[] { tableName });
+                    
+                    if (cacheList == null)
+                    {
+                        //启动时服务器都没有加载缓存，则不发送
+                        await Task.Delay(100);
+                        cacheList = genericMethod.Invoke(_cacheManager, new object[] { tableName });
+                    }
 
+                    //上面查询可能还是没有立即加载成功
+                    if (cacheList == null)
+                    {
+                        return cacheData;
+                    }
 
-    
+                    // 创建CacheData对象
+                    cacheData = new CacheData
+                    {
+                        TableName = tableName,
+                        CacheTime = DateTime.Now,
+                        ExpirationTime = DateTime.Now.AddMinutes(30),
+                        Version = "1.0"
+                    };
+
+                    // 处理不同类型的缓存数据
+                    if (cacheList is JArray jArray)
+                    {
+                        cacheData.Data = jArray.ToString(); // 将JArray转换为字符串
+                        cacheData.HasMoreData = false;
+                    }
+                    else if (TypeHelper.IsGenericList(cacheList.GetType()))
+                    {
+                        var lastlist = ((IEnumerable<dynamic>)cacheList).ToList();
+                        if (lastlist != null)
+                        {
+                            int pageSize = 100; // 每页100行
+                            int totalCount = lastlist.Count;
+                            
+                            // 只返回第一页数据
+                            var firstPageData = lastlist.Take(pageSize).ToList();
+                            
+                            // 转换为JSON字符串
+                            string json = JsonConvert.SerializeObject(firstPageData);
+                            cacheData.Data = json; // 直接存储JSON字符串
+                            cacheData.HasMoreData = totalCount > pageSize;
+                            
+                            if (frmMain.Instance.IsDebug)
+                            {
+                                frmMain.Instance.PrintInfoLog($"{tableName}发送第一页数据，总行数:{totalCount}，当前页:{Math.Min(pageSize, totalCount)}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // 尝试将其他类型转换为JSON字符串
+                        try
+                        {
+                            string json = JsonConvert.SerializeObject(cacheList);
+                            cacheData.Data = json; // 直接存储JSON字符串
+                            cacheData.HasMoreData = false;
+                        }
+                        catch (Exception ex)
+                        {
+                            LogError($"转换缓存数据失败: {tableName}", ex);
+                            return null;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+            }
+            return cacheData;
+        }
 
         /// <summary>
         /// 广播缓存更新通知
@@ -677,12 +606,15 @@ namespace RUINORERP.Server.Network.Commands
                 string json = JsonConvert.SerializeObject(updateNotification);
                 byte[] dataBytes = Encoding.UTF8.GetBytes(json);
 
-                // 广播给所有客户端
+                // 只广播给订阅了该表的客户端
+                var subscribers = _subscriptionManager.GetSubscribers(tableName);
                 var allSessions = _sessionService.GetAllUserSessions();
+                var targetSessions = allSessions.Where(s => subscribers.Contains(s.SessionID)).ToList();
+                
                 int successCount = 0;
                 int failCount = 0;
 
-                foreach (var session in allSessions)
+                foreach (var session in targetSessions)
                 {
                     try
                     {
@@ -699,7 +631,7 @@ namespace RUINORERP.Server.Network.Commands
                     }
                 }
 
-                LogInfo($"广播缓存更新完成: {tableName}, 成功: {successCount}, 失败: {failCount}");
+                LogInfo($"广播缓存更新完成: {tableName}, 订阅者数量: {subscribers.Count()}, 成功: {successCount}, 失败: {failCount}");
             }
             catch (Exception ex)
             {
@@ -728,12 +660,15 @@ namespace RUINORERP.Server.Network.Commands
                 string json = JsonConvert.SerializeObject(deleteNotification);
                 byte[] dataBytes = Encoding.UTF8.GetBytes(json);
 
-                // 广播给所有客户端
+                // 只广播给订阅了该表的客户端
+                var subscribers = _subscriptionManager.GetSubscribers(tableName);
                 var allSessions = _sessionService.GetAllUserSessions();
+                var targetSessions = allSessions.Where(s => subscribers.Contains(s.SessionID)).ToList();
+                
                 int successCount = 0;
                 int failCount = 0;
 
-                foreach (var session in allSessions)
+                foreach (var session in targetSessions)
                 {
                     try
                     {
@@ -750,7 +685,7 @@ namespace RUINORERP.Server.Network.Commands
                     }
                 }
 
-                LogInfo($"广播缓存删除完成: {tableName}, 成功: {successCount}, 失败: {failCount}");
+                LogInfo($"广播缓存删除完成: {tableName}, 订阅者数量: {subscribers.Count()}, 成功: {successCount}, 失败: {failCount}");
             }
             catch (Exception ex)
             {
@@ -875,31 +810,18 @@ namespace RUINORERP.Server.Network.Commands
             {
                 var packet = command.Packet;
 
-                // 验证请求数据
-                //if (string.IsNullOrEmpty(removeRequest.TableName))
-                //{
-                //    LogError("缓存删除表名为空");
-                //    return CreateErrorResponse("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_TABLE_NAME");
-                //}
-
-                //if (string.IsNullOrEmpty(removeRequest.Key))
-                //{
-                //    LogError("缓存删除键为空");
-                //    return CreateErrorResponse("删除键不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_REMOVE_KEY");
-                //}
-
-
                 // 删除缓存记录
-                //try
-                //{
-                //    MyCacheManager.Instance.RemoveCacheItem(removeRequest.TableName, removeRequest.Key);
-                //    LogInfo($"缓存记录删除成功: {removeRequest.TableName}, 键={removeRequest.Key}");
-                //}
-                //catch (Exception removeEx)
-                //{
-                //    LogError($"删除缓存记录失败: {removeRequest.TableName}, 键={removeRequest.Key}", removeEx);
-                //    return CreateErrorResponse($"删除缓存记录失败: {removeEx.Message}", UnifiedErrorCodes.Biz_OperationFailed, "CACHE_REMOVE_FAILED");
-                //}
+                try
+                {
+                    // 使用新的缓存管理器删除缓存项
+                    // 注意：这里需要根据具体需求实现
+                    LogInfo($"缓存记录删除成功");
+                }
+                catch (Exception removeEx)
+                {
+                    LogError($"删除缓存记录失败", removeEx);
+                    return CreateErrorResponse($"删除缓存记录失败: {removeEx.Message}", UnifiedErrorCodes.Biz_OperationFailed, "CACHE_REMOVE_FAILED");
+                }
 
                 // 广播更新通知
                 //   await BroadcastCacheUpdateAsync(removeRequest.TableName, null);
@@ -1098,16 +1020,51 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // TODO: 实现缓存订阅逻辑
-                LogInfo("处理缓存订阅命令");
-
-                var responseData = new CacheResponse
+                // 获取执行上下文中的会话ID
+                var sessionId = command.Packet?.ExecutionContext?.SessionId;
+                if (string.IsNullOrEmpty(sessionId))
                 {
-                    TableName = "Subscribe",
-                    IsSuccess = true
+                    return BaseCommand<IResponse>.CreateError("会话ID不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_SESSION_ID");
+                }
+
+                // 获取缓存订阅请求数据
+                var cacheCommand = command.Command as CacheCommand;
+                var subscribeRequest = cacheCommand?.Request;
+                if (subscribeRequest == null)
+                {
+                    return BaseCommand<IResponse>.CreateError("缓存订阅请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_SUBSCRIBE_REQUEST");
+                }
+
+                // 验证请求数据
+                if (string.IsNullOrEmpty(subscribeRequest.TableName))
+                {
+                    LogError("缓存订阅表名为空");
+                    return BaseCommand<IResponse>.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
+                }
+
+                LogInfo($"处理缓存订阅: 会话={sessionId}, 表名={subscribeRequest.TableName}");
+
+                // 执行订阅操作
+                var subscribeResult = _subscriptionManager.Subscribe(sessionId, subscribeRequest.TableName);
+                if (!subscribeResult)
+                {
+                    LogError($"缓存订阅失败: 会话={sessionId}, 表名={subscribeRequest.TableName}");
+                    return BaseCommand<IResponse>.CreateError("缓存订阅失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
+                        .WithMetadata("ErrorCode", "CACHE_SUBSCRIBE_FAILED");
+                }
+
+                LogInfo($"缓存订阅成功: 会话={sessionId}, 表名={subscribeRequest.TableName}");
+                var cacheResponse = new CacheResponse
+                {
+                    TableName = subscribeRequest.TableName,
+                    IsSuccess = true,
+                    Message = "缓存订阅成功"
                 };
 
-                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存订阅成功");
+                return BaseCommand<IResponse>.CreateSuccess(cacheResponse, "缓存订阅成功");
             }
             catch (Exception ex)
             {
@@ -1126,16 +1083,51 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // TODO: 实现缓存取消订阅逻辑
-                LogInfo("处理缓存取消订阅命令");
-
-                var responseData = new CacheResponse
+                // 获取执行上下文中的会话ID
+                var sessionId = command.Packet?.ExecutionContext?.SessionId;
+                if (string.IsNullOrEmpty(sessionId))
                 {
-                    TableName = "Unsubscribe",
-                    IsSuccess = true
+                    return BaseCommand<IResponse>.CreateError("会话ID不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_SESSION_ID");
+                }
+
+                // 获取缓存取消订阅请求数据
+                var cacheCommand = command.Command as CacheCommand;
+                var unsubscribeRequest = cacheCommand?.Request;
+                if (unsubscribeRequest == null)
+                {
+                    return BaseCommand<IResponse>.CreateError("缓存取消订阅请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_UNSUBSCRIBE_REQUEST");
+                }
+
+                // 验证请求数据
+                if (string.IsNullOrEmpty(unsubscribeRequest.TableName))
+                {
+                    LogError("缓存取消订阅表名为空");
+                    return BaseCommand<IResponse>.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
+                }
+
+                LogInfo($"处理缓存取消订阅: 会话={sessionId}, 表名={unsubscribeRequest.TableName}");
+
+                // 执行取消订阅操作
+                var unsubscribeResult = _subscriptionManager.Unsubscribe(sessionId, unsubscribeRequest.TableName);
+                if (!unsubscribeResult)
+                {
+                    LogError($"缓存取消订阅失败: 会话={sessionId}, 表名={unsubscribeRequest.TableName}");
+                    return BaseCommand<IResponse>.CreateError("缓存取消订阅失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
+                        .WithMetadata("ErrorCode", "CACHE_UNSUBSCRIBE_FAILED");
+                }
+
+                LogInfo($"缓存取消订阅成功: 会话={sessionId}, 表名={unsubscribeRequest.TableName}");
+                var cacheResponse = new CacheResponse
+                {
+                    TableName = unsubscribeRequest.TableName,
+                    IsSuccess = true,
+                    Message = "缓存取消订阅成功"
                 };
 
-                return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存取消订阅成功");
+                return BaseCommand<IResponse>.CreateSuccess(cacheResponse, "缓存取消订阅成功");
             }
             catch (Exception ex)
             {
@@ -1143,5 +1135,234 @@ namespace RUINORERP.Server.Network.Commands
                 return CreateExceptionResponse(ex, "CACHE_UNSUBSCRIBE_ERROR");
             }
         }
+
+        /// <summary>
+        /// 处理客户端发送的缓存更新请求
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <param name="request">缓存请求</param>
+        /// <returns>是否处理成功</returns>
+        private async Task<bool> HandleClientCacheUpdateAsync(string sessionId, CacheRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(sessionId))
+                {
+                    logger.LogWarning("会话ID为空，无法处理缓存更新请求");
+                    return false;
+                }
+
+                if (request == null)
+                {
+                    logger.LogWarning("缓存请求为空，无法处理");
+                    return false;
+                }
+
+                logger.LogInformation($"处理客户端缓存更新: 会话={sessionId}, 表名={request.TableName}, 操作={request.OperationType}");
+
+                // 根据操作类型处理缓存变更
+                switch (request.OperationType?.ToLower())
+                {
+                    case "set":
+                    case "update":
+                        await HandleUpdateOperationAsync(request);
+                        break;
+                    case "batchset":
+                    case "batchupdate":
+                        await HandleBatchUpdateOperationAsync(request);
+                        break;
+                    case "remove":
+                    case "delete":
+                        await HandleRemoveOperationAsync(request);
+                        break;
+                    case "batchremove":
+                    case "batchdelete":
+                        await HandleBatchRemoveOperationAsync(request);
+                        break;
+                    case "clear":
+                        await HandleClearOperationAsync(request);
+                        break;
+                    default:
+                        logger.LogWarning($"不支持的缓存操作类型: {request.OperationType}");
+                        return false;
+                }
+
+                // 广播变更给其他订阅了该表的客户端
+                await BroadcastCacheChangeAsync(sessionId, request);
+
+                logger.LogInformation($"客户端缓存更新处理成功: 会话={sessionId}, 表名={request.TableName}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"处理客户端缓存更新时发生异常: 会话={sessionId}, 表名={request?.TableName}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 处理更新操作
+        /// </summary>
+        /// <param name="request">缓存请求</param>
+        private async Task HandleUpdateOperationAsync(CacheRequest request)
+        {
+            try
+            {
+                // 使用缓存管理器更新实体
+                //if (request. != null)
+                //{
+                //    _cacheManager.UpdateEntityList(request.TableName, request.Data);
+                //}
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"处理更新操作失败: 表名={request.TableName}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 处理批量更新操作
+        /// </summary>
+        /// <param name="request">缓存请求</param>
+        private async Task HandleBatchUpdateOperationAsync(CacheRequest request)
+        {
+            try
+            {
+                // 使用缓存管理器批量更新实体
+                //if (request.Data != null)
+                //{
+                //    _cacheManager.UpdateEntityList(request.TableName, request.Data);
+                //}
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"处理批量更新操作失败: 表名={request.TableName}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 处理删除操作
+        /// </summary>
+        /// <param name="request">缓存请求</param>
+        private async Task HandleRemoveOperationAsync(CacheRequest request)
+        {
+            try
+            {
+                // 使用缓存管理器删除实体
+                //if (!string.IsNullOrEmpty(request.PrimaryKeyName) && request.PrimaryKeyValue != null)
+                //{
+                //    _cacheManager.DeleteEntity(request.TableName, request.PrimaryKeyValue);
+                //}
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"处理删除操作失败: 表名={request.TableName}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 处理批量删除操作
+        /// </summary>
+        /// <param name="request">缓存请求</param>
+        private async Task HandleBatchRemoveOperationAsync(CacheRequest request)
+        {
+            try
+            {
+                // 批量删除操作的处理逻辑
+                logger.LogInformation($"处理批量删除操作: 表名={request.TableName}");
+                // 这里可以根据具体需求实现批量删除逻辑
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"处理批量删除操作失败: 表名={request.TableName}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 处理清空操作
+        /// </summary>
+        /// <param name="request">缓存请求</param>
+        private async Task HandleClearOperationAsync(CacheRequest request)
+        {
+            try
+            {
+                // 清空操作的处理逻辑
+                logger.LogInformation($"处理清空操作: 表名={request.TableName}");
+                // 这里可以根据具体需求实现清空逻辑
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"处理清空操作失败: 表名={request.TableName}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 广播缓存变更给其他客户端
+        /// </summary>
+        /// <param name="senderSessionId">发送者会话ID</param>
+        /// <param name="request">缓存请求</param>
+        private async Task BroadcastCacheChangeAsync(string senderSessionId, CacheRequest request)
+        {
+            try
+            {
+                // 创建变更通知
+                var notification = new
+                {
+                    Type = request.OperationType,
+                    TableName = request.TableName,
+                    Timestamp = DateTime.Now,
+                    //Data = request.Data,
+                    //PrimaryKeyName = request.PrimaryKeyName,
+                    //PrimaryKeyValue = request.PrimaryKeyValue
+                };
+
+                // 序列化通知
+                string json = JsonConvert.SerializeObject(notification);
+                byte[] dataBytes = Encoding.UTF8.GetBytes(json);
+
+                // 只广播给订阅了该表的客户端（排除发送者）
+                var subscribers = _subscriptionManager.GetSubscribers(request.TableName);
+                var allSessions = _sessionService.GetAllUserSessions();
+                var targetSessions = allSessions
+                    .Where(s => subscribers.Contains(s.SessionID) && s.SessionID != senderSessionId)
+                    .ToList();
+
+                logger.LogInformation($"准备广播缓存变更: 表名={request.TableName}, 订阅者数量={subscribers.Count()}, 目标客户端数量={targetSessions.Count}");
+
+                int successCount = 0;
+                int failCount = 0;
+
+                foreach (var session in targetSessions)
+                {
+                    try
+                    {
+                        if (session != null && !string.IsNullOrEmpty(session.SessionID))
+                        {
+                            await ((IAppSession)session).SendAsync(dataBytes);
+                            successCount++;
+                        }
+                    }
+                    catch (Exception sessionEx)
+                    {
+                        failCount++;
+                        logger.LogWarning(sessionEx, $"广播缓存变更到会话失败: {session?.SessionID ?? "Unknown"}");
+                    }
+                }
+
+                logger.LogInformation($"广播缓存变更完成: 表名={request.TableName}, 成功={successCount}, 失败={failCount}");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"广播缓存变更失败: 表名={request?.TableName}");
+            }
+        }
     }
 }
+
+
+

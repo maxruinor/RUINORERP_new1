@@ -71,6 +71,15 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// </summary>
         Clear,
 
+        /// <summary>
+        /// 更新
+        /// </summary>
+        Update,
+
+        /// <summary>
+        /// 批量更新
+        /// </summary>
+        BatchUpdate
     }
 
 }

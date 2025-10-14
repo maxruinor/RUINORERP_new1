@@ -17,6 +17,7 @@ using Autofac.Extras.DynamicProxy;
 using RUINORERP.Extensions.AOP;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business.DI
 {

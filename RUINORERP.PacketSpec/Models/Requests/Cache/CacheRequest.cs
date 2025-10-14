@@ -29,8 +29,6 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
         [Key(13)]
         public DateTime LastRequestTime { get; set; } = DateTime.MinValue;
 
-  
-
         /// <summary>
         /// 额外参数
         /// </summary>

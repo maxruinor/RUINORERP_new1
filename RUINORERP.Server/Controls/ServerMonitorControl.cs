@@ -146,11 +146,21 @@ namespace RUINORERP.Server.Controls
             // 更新系统时间
             lblSystemTimeValue.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             
-            // 更新运行时间（这里需要根据实际情况计算）
-            lblUptimeValue.Text = "N/A"; // 需要从NetworkServer获取启动时间来计算
+            // 更新运行时间（使用NetworkServer的StartTime属性）
+            if (_networkServer != null && _networkServer.StartTime.HasValue)
+            {
+                var uptime = DateTime.Now - _networkServer.StartTime.Value;
+                lblUptimeValue.Text = $"{uptime.Days}天 {uptime.Hours}小时 {uptime.Minutes}分钟";
+            }
+            else
+            {
+                lblUptimeValue.Text = "未启动";
+            }
             
-            // 更新内存使用情况（需要实现获取内存使用的方法）
-            lblMemoryUsageValue.Text = "N/A"; // 需要实现获取内存使用情况的方法
+            // 更新内存使用情况
+            var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            var memoryUsage = currentProcess.WorkingSet64 / (1024 * 1024); // 转换为MB
+            lblMemoryUsageValue.Text = $"{memoryUsage} MB";
         }
 
         private void UpdateCommandDispatcherInfo()

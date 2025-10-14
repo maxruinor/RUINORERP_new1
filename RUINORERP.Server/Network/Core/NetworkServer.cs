@@ -46,6 +46,15 @@ namespace RUINORERP.Server.Network.Core
         private readonly CommandDispatcher _commandDispatcher;  // 修改为具体类型
         private IHost _host;
 
+        /// <summary>
+        /// 服务器启动时间
+        /// </summary>
+        public DateTime? StartTime { get; private set; }
+
+        /// <summary>
+        /// 服务器是否正在运行
+        /// </summary>
+        public bool IsRunning => _host != null;
 
         public NetworkServer(ILogger<NetworkServer> logger = null)
         {
@@ -215,6 +224,10 @@ namespace RUINORERP.Server.Network.Core
                 // 启动服务器，使用StartAsync而不是RunAsync，这样不会阻塞线程
                 await _host.StartAsync(cancellationToken);
 
+                // 记录服务器启动时间
+                StartTime = DateTime.Now;
+                LogInfo($"网络服务器启动成功，监听端口: {Serverport}");
+
                 return _host;
             }
             catch (Exception ex)
@@ -237,6 +250,10 @@ namespace RUINORERP.Server.Network.Core
                     await _host.StopAsync();
                     _host.Dispose();
                     _host = null;
+                    
+                    // 清除启动时间
+                    StartTime = null;
+                    
                     LogInfo("网络服务器已停止");
                 }
 
@@ -280,7 +297,8 @@ namespace RUINORERP.Server.Network.Core
                 CurrentConnections = stats.CurrentConnections,
                 TotalConnections = stats.TotalConnections,
                 PeakConnections = stats.PeakConnections,
-                LastActivityTime = DateTime.Now
+                LastActivityTime = DateTime.Now,
+                StartTime = StartTime // 添加启动时间
             };
         }
 
@@ -297,6 +315,7 @@ namespace RUINORERP.Server.Network.Core
             public int TotalConnections { get; set; }
             public int PeakConnections { get; set; }
             public DateTime LastActivityTime { get; set; }
+            public DateTime? StartTime { get; set; }
 
             public override string ToString()
             {

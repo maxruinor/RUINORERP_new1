@@ -1,0 +1,20 @@
+{
+  "SystemGlobalconfig": {
+    "预交日期必须填写": false,
+    "IsFromPlatform": false,
+    "OpenProdTypeForSaleCheck": true,
+    "DirectPrinting": true,
+    "UseSharedPrinter": false,
+    "SomeSetting": null,
+    "ServerName": null,
+    "ServerPort": 0,
+    "MaxConnections": 0,
+    "HeartbeatInterval": 0,
+    "DbConnectionString": null,
+    "DbType": null,
+    "CacheType": null,
+    "CacheConnectionString": null,
+    "EnableLogging": false,
+    "LogLevel": null
+  }
+}

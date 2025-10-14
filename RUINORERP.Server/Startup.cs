@@ -76,6 +76,7 @@ using RUINORERP.Server.Network.DI;
 using RUINORERP.PacketSpec.DI;
 // 添加缓存相关的using语句
 using CacheManager.Core;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Server
 {

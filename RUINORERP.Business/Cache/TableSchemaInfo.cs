@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace RUINORERP.Business.CommService
+namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 表结构信息类，用于存储表的元数据信息
@@ -50,7 +50,7 @@ namespace RUINORERP.Business.CommService
         /// 外键关系列表
         /// </summary>
         public List<ForeignKeyRelation> ForeignKeys { get; set; } = new List<ForeignKeyRelation>();
-        
+
         /// <summary>
         /// 属性信息列表
         /// </summary>
@@ -67,7 +67,7 @@ namespace RUINORERP.Business.CommService
                    !string.IsNullOrEmpty(DisplayField) &&
                    EntityType != null;
         }
-        
+
         /// <summary>
         /// 获取表结构信息的字符串表示
         /// </summary>
@@ -106,7 +106,7 @@ namespace RUINORERP.Business.CommService
         /// 关联表的主键字段
         /// </summary>
         public string RelatedPrimaryKey { get; set; }
-        
+
         /// <summary>
         /// 外键属性信息
         /// </summary>

@@ -9,6 +9,7 @@ using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Network.Services;
+using RUINORERP.Business.CommService; // 添加缓存订阅管理器的引用
 
 namespace RUINORERP.Server.Network.DI
 {
@@ -33,6 +34,10 @@ namespace RUINORERP.Server.Network.DI
             // 注册会话管理服务
             services.AddSingleton<SessionService>();
             services.AddSingleton<ISessionService, SessionService>();
+
+            // 注册缓存订阅管理器
+            services.AddSingleton<CacheSubscriptionManager>(provider =>
+                new CacheSubscriptionManager(provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>(), true));
 
             // 注册诊断相关服务
             services.AddSingleton<DiagnosticsService>();
@@ -92,12 +97,19 @@ namespace RUINORERP.Server.Network.DI
             //builder.RegisterType<FileStorageService>().As<IFileStorageService>().SingleInstance();
 
             // 注册其他服务实现
-            //  builder.RegisterType<CacheService>().AsSelf().SingleInstance();
+            //  services.AddSingleton<IFileStorageService, FileStorageService>();
             builder.RegisterType<SessionService>().AsSelf().SingleInstance();
             builder.RegisterType<SessionService>().As<ISessionService>().SingleInstance();
             //    builder.RegisterType<UserService>().As<IUserService>().AsSelf().SingleInstance();
             //builder.RegisterType<SuperSocketAdapter>().AsSelf().SingleInstance();
             //  builder.RegisterType<FileStorageManager>().AsSelf().SingleInstance();
+
+            // 注册缓存订阅管理器
+            builder.Register(c => new CacheSubscriptionManager(
+                c.Resolve<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>(), 
+                true)) // 服务器模式
+                .As<CacheSubscriptionManager>()
+                .SingleInstance();
 
             // 注册诊断相关服务
             builder.RegisterType<DiagnosticsService>().AsSelf().SingleInstance();

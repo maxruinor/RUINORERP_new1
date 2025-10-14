@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Reflection;
 using System;
+using RUINORERP.Business.CommService; // 添加缓存订阅管理器的引用
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -30,6 +31,10 @@ namespace RUINORERP.UI.Network.DI
             services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
             services.AddSingleton<ClientCommunicationService>();
             services.AddSingleton<ClientEventManager>();
+
+            // 注册缓存订阅管理器
+            services.AddSingleton<CacheSubscriptionManager>(provider =>
+                new CacheSubscriptionManager(provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>(), false));
 
             // 注册TokenManager相关服务
             // 首先配置TokenServiceOptions
@@ -85,6 +90,13 @@ namespace RUINORERP.UI.Network.DI
             
             // RequestResponseManager已合并到ClientCommunicationService中，不再需要单独注册
             builder.RegisterType<ClientEventManager>().AsSelf().SingleInstance();
+            
+            // 注册缓存订阅管理器
+            builder.Register(c => new CacheSubscriptionManager(
+                c.Resolve<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>(), 
+                false)) // 客户端模式
+                .As<CacheSubscriptionManager>()
+                .SingleInstance();
             
             // 注册HeartbeatManager，并使用属性注入解决循环依赖
             builder.RegisterType<HeartbeatManager>().AsSelf().SingleInstance()

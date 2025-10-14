@@ -14,7 +14,7 @@ using SuperSocket.Server.Abstractions.Session;
 using SuperSocket.Server;
 using SuperSocket.Channel;
 using SuperSocket.Connection;
-
+using RUINORERP.Business.CommService; // 使用统一的订阅管理器
 
 namespace RUINORERP.Server.Network.Services
 {
@@ -34,6 +34,7 @@ namespace RUINORERP.Server.Network.Services
         private readonly object _lockObject = new object();
         private bool _disposed = false;
         private readonly ILogger<SessionService> _logger;
+        private readonly CacheSubscriptionManager _subscriptionManager; // 使用统一的订阅管理器
 
         /// <summary>
         /// 活动会话数量
@@ -69,13 +70,14 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="maxSessionCount">最大会话数量</param>
-        public SessionService(ILogger<SessionService> logger, int maxSessionCount = 1000)
+        public SessionService(ILogger<SessionService> logger, CacheSubscriptionManager subscriptionManager, int maxSessionCount = 1000)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             MaxSessionCount = maxSessionCount;
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
             _statistics = SessionStatistics.Create(maxSessionCount);
-
+            _subscriptionManager = subscriptionManager; // 服务器模式
+            _subscriptionManager.IsServerMode = true;
             // 启动清理定时器，每5分钟清理一次超时会话并检查心跳
             _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
@@ -216,7 +218,7 @@ namespace RUINORERP.Server.Network.Services
                 return Enumerable.Empty<SessionInfo>();
             }
         }
-        
+
 
         /// <summary>
         /// 更新会话信息
@@ -282,6 +284,9 @@ namespace RUINORERP.Server.Network.Services
                         sessionInfo.IsConnected = false;
                         sessionInfo.DisconnectTime = DateTime.Now;
 
+                        // 取消该会话的所有缓存订阅
+                        _subscriptionManager.UnsubscribeAll(sessionId);
+
                         // 触发会话断开事件
                         SessionDisconnected?.Invoke(sessionInfo);
 
@@ -324,7 +329,7 @@ namespace RUINORERP.Server.Network.Services
         }
 
         #endregion
-  
+
         #region ISessionEventHandler 实现
 
         /// <summary>
@@ -564,13 +569,13 @@ namespace RUINORERP.Server.Network.Services
             {
                 return null;
             }
-            
+
             // SessionInfo继承自AppSession，本身就是IAppSession
             _sessions.TryGetValue(sessionId, out var sessionInfo);
             return sessionInfo;
         }
 
- 
+
 
         /// <summary>
         /// 更新会话活动时间
@@ -660,7 +665,7 @@ namespace RUINORERP.Server.Network.Services
 
                 // 移除会话记录
                 var removeResult = RemoveSession(sessionId);
-                
+
                 if (removeResult)
                 {
                     _logger.LogInformation($"会话已成功断开并移除: SessionID={sessionId}, 用户={sessionInfo.UserName}, 原因={reason}");
@@ -697,7 +702,7 @@ namespace RUINORERP.Server.Network.Services
 
                 // 获取该用户的所有会话
                 var userSessions = GetUserSessions(username).ToList();
-                
+
                 if (userSessions.Count == 0)
                 {
                     _logger.LogInformation($"用户没有活动会话: Username={username}");
@@ -705,7 +710,7 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 int successCount = 0;
-                
+
                 // 并行断开所有会话
                 var disconnectTasks = userSessions.Select(async session =>
                 {
@@ -769,7 +774,7 @@ namespace RUINORERP.Server.Network.Services
                     // 这里需要根据实际的命令发送机制来实现
                     // 可能需要将命令和数据序列化为特定格式，然后通过SuperSocket发送
                     // 以下是一个示例实现，实际实现可能需要根据项目的通信协议进行调整
-                    
+
                     // 创建命令包
                     var commandPackage = new
                     {
@@ -777,13 +782,13 @@ namespace RUINORERP.Server.Network.Services
                         Data = data,
                         Timestamp = DateTime.Now
                     };
-                    
+
                     // 将命令包序列化为JSON字符串
                     var commandJson = System.Text.Json.JsonSerializer.Serialize(commandPackage);
-                    
+
                     // 通过SuperSocket发送命令
-                  //////////  var result = sessionInfo.AddSendData(System.Text.Encoding.UTF8.GetBytes(commandJson));
-                    
+                    //////////  var result = sessionInfo.AddSendData(System.Text.Encoding.UTF8.GetBytes(commandJson));
+
                     //if (result.IsCompletedSuccessfully)
                     //{
                     //    _logger.LogInformation($"命令发送成功: SessionID={sessionID}, 用户={sessionInfo.UserName}, 命令={command}");
@@ -848,9 +853,10 @@ namespace RUINORERP.Server.Network.Services
                     .ToList();
 
                 var removedCount = 0;
-                
+
                 // 使用Parallel.ForEach并行处理超时会话的移除
-                Parallel.ForEach(timeoutSessions, session => {
+                Parallel.ForEach(timeoutSessions, session =>
+                {
                     if (RemoveSession(session.SessionID))
                     {
                         Interlocked.Increment(ref removedCount);
@@ -902,7 +908,7 @@ namespace RUINORERP.Server.Network.Services
         #endregion
 
         #region 私有方法
- 
+
 
         /// <summary>
         /// 清理和心跳检查回调
@@ -914,10 +920,10 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 清理超时会话
                 var removedCount = CleanupTimeoutSessions();
-                
+
                 // 检查心跳异常
                 var abnormalCount = HeartbeatCheck();
-                
+
                 lock (_lockObject)
                 {
                     _statistics.TimeoutSessions += removedCount;
@@ -972,3 +978,5 @@ namespace RUINORERP.Server.Network.Services
         #endregion
     }
 }
+
+

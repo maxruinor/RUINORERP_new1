@@ -8,8 +8,9 @@ using SqlSugar;
 using RUINORERP.Repository.UnitOfWorks;
 using System.Linq.Expressions;
 using RUINORERP.Model;
+using RUINORERP.Business.CommService;
 
-namespace RUINORERP.Business.CommService
+namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 优化的缓存初始化服务，专门为新的优化缓存管理器设计
@@ -49,7 +50,7 @@ namespace RUINORERP.Business.CommService
                 // 初始化所有表结构信息
                 InitializeAllTableSchemas();
 
-                // 获取所有需要缓存的表名
+                // 只获取需要缓存的表名（基于已注册的表结构信息进行过滤）
                 var tableNames = TableSchemaManager.Instance.GetCacheableTableNamesList();
 
                 // 使用SqlSugar并行查询多个表
@@ -239,7 +240,7 @@ namespace RUINORERP.Business.CommService
                     // 创建正确类型的List
                     var listType = typeof(List<>).MakeGenericType(entityType);
                     var typedList = Activator.CreateInstance(listType);
-                    
+
                     // 使用反射获取Add方法并添加元素
                     var addMethod = listType.GetMethod("Add");
                     foreach (var item in result)

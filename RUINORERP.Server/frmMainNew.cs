@@ -200,6 +200,9 @@ namespace RUINORERP.Server
             
             // 初始化菜单和工具栏事件
             InitializeMenuAndToolbarEvents();
+            
+            // 初始化服务器监控Tab页（默认显示）
+            InitializeDefaultTab();
         }
 
         /// <summary>
@@ -239,6 +242,22 @@ namespace RUINORERP.Server
             toolStripButtonCacheManagement.Click += (s, e) => ShowTabPage("缓存管理");
             toolStripButtonWorkflowTest.Click += (s, e) => ShowTabPage("工作流管理");
             toolStripButtonSystemConfig.Click += (s, e) => ShowTabPage("系统配置");
+        }
+
+        /// <summary>
+        /// 初始化默认Tab页
+        /// </summary>
+        private void InitializeDefaultTab()
+        {
+            try
+            {
+                // 默认显示服务器监控Tab页
+                ShowTabPage("服务器监控");
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"初始化默认Tab页时出错: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -294,19 +313,43 @@ namespace RUINORERP.Server
         /// <summary>
         /// 启动服务器
         /// </summary>
-        private void StartServer()
+        private async void StartServer()
         {
             try
             {
                 // 启动服务器逻辑
-                if (!frmMain.Instance.ServerStart)
+                if (_networkServer == null || !_networkServer.IsRunning)
                 {
-                    frmMain.Instance.InitAll();
-                    frmMain.Instance.timer.Start();
-                    frmMain.Instance.UpdateServerInfoTimer.Start();
-                    frmMain.Instance.tsBtnStartServer.Enabled = false;
-                    
-                    MessageBox.Show("服务器已启动", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // 从依赖注入容器获取网络服务器实例
+                    _networkServer = Startup.GetFromFac<NetworkServer>();
+                    if (_networkServer != null)
+                    {
+                        // 启动网络服务器
+                        var host = await _networkServer.StartAsync(CancellationToken.None);
+                        if (host == null)
+                        {
+                            PrintErrorLog("启动网络服务器失败");
+                            MessageBox.Show("启动网络服务器失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                        
+                        // 启动定时器
+                        UpdateServerInfoTimer.Start();
+                        
+                        // 更新UI状态
+                        toolStripButtonStartServer.Enabled = false;
+                        toolStripButtonStopServer.Enabled = true;
+                        startServerToolStripMenuItem.Enabled = false;
+                        stopServerToolStripMenuItem.Enabled = true;
+                        
+                        PrintInfoLog("服务器已启动");
+                        MessageBox.Show("服务器已启动", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        PrintErrorLog("无法从依赖注入容器获取NetworkServer实例");
+                        MessageBox.Show("无法获取网络服务器实例", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
                 else
                 {
@@ -315,6 +358,7 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
+                PrintErrorLog($"启动服务器时出错: {ex.Message}");
                 MessageBox.Show($"启动服务器时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -322,18 +366,27 @@ namespace RUINORERP.Server
         /// <summary>
         /// 停止服务器
         /// </summary>
-        private void StopServer()
+        private async void StopServer()
         {
             try
             {
                 // 停止服务器逻辑
-                if (frmMain.Instance.ServerStart)
+                if (_networkServer != null && _networkServer.IsRunning)
                 {
-                    frmMain.Instance.Shutdown();
-                    frmMain.Instance.timer.Stop();
-                    frmMain.Instance.UpdateServerInfoTimer.Stop();
-                    frmMain.Instance.tsBtnStartServer.Enabled = true;
+                    // 停止网络服务器
+                    await _networkServer.StopAsync();
+                    _networkServer = null;
                     
+                    // 停止定时器
+                    UpdateServerInfoTimer.Stop();
+                    
+                    // 更新UI状态
+                    toolStripButtonStartServer.Enabled = true;
+                    toolStripButtonStopServer.Enabled = false;
+                    startServerToolStripMenuItem.Enabled = true;
+                    stopServerToolStripMenuItem.Enabled = false;
+                    
+                    PrintInfoLog("服务器已停止");
                     MessageBox.Show("服务器已停止", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else
@@ -343,6 +396,7 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
+                PrintErrorLog($"停止服务器时出错: {ex.Message}");
                 MessageBox.Show($"停止服务器时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -355,11 +409,26 @@ namespace RUINORERP.Server
             try
             {
                 // 重新加载配置逻辑
-                await frmMain.Instance.InitConfig(true);
-                MessageBox.Show("配置已重新加载", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                var configService = _ServiceProvider.GetService<IConfiguration>();
+                if (configService != null)
+                {
+                    // 重新加载配置
+                    var newConfig = new ConfigurationBuilder()
+                        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                        .Build();
+                    
+                    // 更新全局配置
+                    var globalConfig = _ServiceProvider.GetService<IOptionsMonitor<SystemGlobalconfig>>();
+                    if (globalConfig != null)
+                    {
+                        PrintInfoLog("配置已重新加载");
+                        MessageBox.Show("配置已重新加载", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
             }
             catch (Exception ex)
             {
+                PrintErrorLog($"重新加载配置时出错: {ex.Message}");
                 MessageBox.Show($"重新加载配置时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -605,26 +674,31 @@ namespace RUINORERP.Server
             {
                 try
                 {
-                    if (IsDisposed || !Instance.IsHandleCreated) return;
+                    if (IsDisposed || !IsHandleCreated) return;
 
                     // 确保最多只有1000行
-                    EnsureMaxLines(Instance.richTextBoxLog, 1000);
+                    EnsureMaxLines(richTextBoxLog, 1000);
 
                     // 将消息格式化为带时间戳和行号的字符串
                     string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] {msg}\r\n";
-                    if (Instance.InvokeRequired)
+                    
+                    if (InvokeRequired)
                     {
-
+                        BeginInvoke(new MethodInvoker(() =>
+                        {
+                            richTextBoxLog.SelectionColor = Color.Black;
+                            richTextBoxLog.AppendText(formattedMsg);
+                            richTextBoxLog.SelectionColor = Color.Black;
+                            richTextBoxLog.ScrollToCaret(); // 滚动到最新的消息
+                        }));
                     }
-                    Instance.Invoke(new EventHandler(delegate
+                    else
                     {
-                        Instance.richTextBoxLog.SelectionColor = Color.Black;
-                        Instance.richTextBoxLog.AppendText(formattedMsg);
-                        Instance.richTextBoxLog.SelectionColor = Color.Black;
-                        Instance.richTextBoxLog.ScrollToCaret(); // 滚动到最新的消息
-
+                        richTextBoxLog.SelectionColor = Color.Black;
+                        richTextBoxLog.AppendText(formattedMsg);
+                        richTextBoxLog.SelectionColor = Color.Black;
+                        richTextBoxLog.ScrollToCaret(); // 滚动到最新的消息
                     }
-                    ));
                 }
                 catch (Exception ex)
                 {
@@ -643,26 +717,31 @@ namespace RUINORERP.Server
             {
                 try
                 {
-                    if (IsDisposed || !Instance.IsHandleCreated) return;
+                    if (IsDisposed || !IsHandleCreated) return;
 
                     // 确保最多只有1000行
-                    EnsureMaxLines(Instance.richTextBoxLog, 1000);
+                    EnsureMaxLines(richTextBoxLog, 1000);
 
                     // 将消息格式化为带时间戳和行号的字符串
                     string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] [错误] {msg}\r\n";
-                    if (Instance.InvokeRequired)
+                    
+                    if (InvokeRequired)
                     {
-
+                        BeginInvoke(new MethodInvoker(() =>
+                        {
+                            richTextBoxLog.SelectionColor = Color.Red;
+                            richTextBoxLog.AppendText(formattedMsg);
+                            richTextBoxLog.SelectionColor = Color.Black;
+                            richTextBoxLog.ScrollToCaret(); // 滚动到最新的消息
+                        }));
                     }
-                    Instance.Invoke(new EventHandler(delegate
+                    else
                     {
-                        Instance.richTextBoxLog.SelectionColor = Color.Red;
-                        Instance.richTextBoxLog.AppendText(formattedMsg);
-                        Instance.richTextBoxLog.SelectionColor = Color.Black;
-                        Instance.richTextBoxLog.ScrollToCaret(); // 滚动到最新的消息
-
+                        richTextBoxLog.SelectionColor = Color.Red;
+                        richTextBoxLog.AppendText(formattedMsg);
+                        richTextBoxLog.SelectionColor = Color.Black;
+                        richTextBoxLog.ScrollToCaret(); // 滚动到最新的消息
                     }
-                    ));
                 }
                 catch (Exception ex)
                 {
@@ -684,10 +763,17 @@ namespace RUINORERP.Server
                 int end = rtb.GetFirstCharIndexFromLine(linesToRemove);
 
                 // 确保richTextBox1控件在主线程中被操作
-                Instance.Invoke(new MethodInvoker(() =>
+                if (InvokeRequired)
+                {
+                    BeginInvoke(new MethodInvoker(() =>
+                    {
+                        rtb.Text = rtb.Text.Remove(start, end - start);
+                    }));
+                }
+                else
                 {
                     rtb.Text = rtb.Text.Remove(start, end - start);
-                }));
+                }
             }
         }
 

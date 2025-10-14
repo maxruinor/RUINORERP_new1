@@ -52,6 +52,7 @@ using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Extensions.Middlewares;
 
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.UI.Common
 {

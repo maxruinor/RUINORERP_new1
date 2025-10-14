@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,8 +13,9 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Global.CustomAttribute;
 using System.Collections;
 using RUINORERP.Common.CustomAttribute;
+using RUINORERP.Business.CommService;
 
-namespace RUINORERP.Business.CommService
+namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 优化的缓存管理器实现
@@ -33,12 +34,12 @@ namespace RUINORERP.Business.CommService
         /// 实体列表缓存
         /// </summary>
         public ICacheManager<object> EntityListCache { get; }
-        
+
         /// <summary>
         /// 单个实体缓存（按表名+ID存储）
         /// </summary>
         public ICacheManager<object> EntityCache { get; }
-        
+
         /// <summary>
         /// 显示值缓存（按表名+ID存储显示值）
         /// </summary>
@@ -51,13 +52,13 @@ namespace RUINORERP.Business.CommService
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _tableSchemaManager = TableSchemaManager.Instance;
-            
+
             // 初始化缓存管理器
             _cacheManager = CacheFactory.Build<object>(settings =>
                 settings
                     .WithSystemRuntimeCacheHandle()
                     .WithExpiration(ExpirationMode.None, TimeSpan.FromSeconds(120)));
-            
+
             // 初始化缓存
             EntityListCache = _cacheManager;
             EntityCache = CacheFactory.Build<object>(settings => settings.WithSystemRuntimeCacheHandle());
@@ -74,7 +75,7 @@ namespace RUINORERP.Business.CommService
             var tableName = typeof(T).Name;
             return GetEntityList<T>(tableName);
         }
-        
+
         /// <summary>
         /// 根据表名获取指定类型的实体列表
         /// </summary>
@@ -84,7 +85,7 @@ namespace RUINORERP.Business.CommService
             {
                 var cacheKey = $"EntityList_{tableName}";
                 var cachedList = EntityListCache.Get(cacheKey);
-                
+
                 // 修复类型转换问题：处理List<ExpandoObject>的情况
                 if (cachedList is List<System.Dynamic.ExpandoObject> expandoList)
                 {
@@ -107,17 +108,17 @@ namespace RUINORERP.Business.CommService
                     }
                     return result;
                 }
-                
+
                 if (cachedList is List<T> typedList)
                 {
                     return typedList;
                 }
-                
+
                 if (cachedList is List<object> objectList)
                 {
                     return objectList.OfType<T>().ToList();
                 }
-                
+
                 return new List<T>();
             }
             catch (Exception ex)
@@ -126,7 +127,7 @@ namespace RUINORERP.Business.CommService
                 return new List<T>();
             }
         }
-        
+
         /// <summary>
         /// 根据ID获取实体
         /// </summary>
@@ -137,42 +138,42 @@ namespace RUINORERP.Business.CommService
                 var tableName = typeof(T).Name;
                 var cacheKey = $"Entity_{tableName}_{idValue}";
                 var cachedEntity = EntityCache.Get(cacheKey);
-                
+
                 if (cachedEntity is T entity)
                 {
                     return entity;
                 }
-                
+
                 // 如果单个实体缓存中没有，则从列表中查找
                 var list = GetEntityList<T>(tableName);
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-                
+
                 if (schemaInfo != null && list != null)
                 {
-                    var entityFound = list.FirstOrDefault(e => 
+                    var entityFound = list.FirstOrDefault(e =>
                     {
                         var idPropertyValue = e.GetPropertyValue(schemaInfo.PrimaryKeyField);
                         return idPropertyValue?.ToString() == idValue.ToString();
                     });
-                    
+
                     // 将找到的实体加入单个实体缓存
                     if (entityFound != null)
                     {
                         EntityCache.Put(cacheKey, entityFound);
                     }
-                    
+
                     return entityFound;
                 }
-                
-                return default(T);
+
+                return default;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, $"获取表 {typeof(T).Name} ID为 {idValue} 的实体缓存时发生错误");
-                return default(T);
+                return default;
             }
         }
-        
+
         /// <summary>
         /// 根据表名和主键值获取实体
         /// </summary>
@@ -185,23 +186,23 @@ namespace RUINORERP.Business.CommService
                 {
                     return null;
                 }
-                
+
                 var cacheKey = $"Entity_{tableName}_{primaryKeyValue}";
                 var cachedEntity = EntityCache.Get(cacheKey);
-                
+
                 if (cachedEntity != null && entityType.IsInstanceOfType(cachedEntity))
                 {
                     return cachedEntity;
                 }
-                
+
                 // 如果单个实体缓存中没有，则从列表中查找
                 var method = typeof(EntityCacheManager)
                     .GetMethod(nameof(GetEntityList), BindingFlags.Public | BindingFlags.Instance)
                     .MakeGenericMethod(entityType);
-                
+
                 var list = method.Invoke(this, new object[] { tableName }) as IEnumerable;
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-                
+
                 if (schemaInfo != null && list != null)
                 {
                     foreach (var item in list)
@@ -215,7 +216,7 @@ namespace RUINORERP.Business.CommService
                         }
                     }
                 }
-                
+
                 return null;
             }
             catch (Exception ex)
@@ -224,7 +225,7 @@ namespace RUINORERP.Business.CommService
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 获取指定表名的显示值
         /// </summary>
@@ -234,12 +235,12 @@ namespace RUINORERP.Business.CommService
             {
                 var cacheKey = $"DisplayValue_{tableName}_{idValue}";
                 var cachedValue = DisplayValueCache.Get(cacheKey);
-                
+
                 if (cachedValue != null)
                 {
                     return cachedValue;
                 }
-                
+
                 // 如果显示值缓存中没有，则从实体中获取
                 var entity = GetEntity(tableName, idValue);
                 if (entity != null)
@@ -253,7 +254,7 @@ namespace RUINORERP.Business.CommService
                         return displayValue;
                     }
                 }
-                
+
                 return null;
             }
             catch (Exception ex)
@@ -273,7 +274,7 @@ namespace RUINORERP.Business.CommService
             var tableName = typeof(T).Name;
             UpdateEntityList(tableName, list);
         }
-        
+
         /// <summary>
         /// 更新单个实体缓存
         /// </summary>
@@ -283,10 +284,10 @@ namespace RUINORERP.Business.CommService
             {
                 return;
             }
-            
+
             var tableName = typeof(T).Name;
             var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-            
+
             if (schemaInfo != null)
             {
                 var idValue = entity.GetPropertyValue(schemaInfo.PrimaryKeyField);
@@ -294,18 +295,18 @@ namespace RUINORERP.Business.CommService
                 {
                     var cacheKey = $"Entity_{tableName}_{idValue}";
                     EntityCache.Put(cacheKey, entity);
-                    
+
                     // 同时更新显示值缓存
                     var displayValue = entity.GetPropertyValue(schemaInfo.DisplayField);
                     var displayCacheKey = $"DisplayValue_{tableName}_{idValue}";
                     DisplayValueCache.Put(displayCacheKey, displayValue);
                 }
             }
-            
+
             // 同时更新列表缓存中的该实体
             UpdateEntityInList(tableName, entity);
         }
-        
+
         /// <summary>
         /// 根据表名更新缓存
         /// </summary>
@@ -314,10 +315,10 @@ namespace RUINORERP.Business.CommService
             try
             {
                 var cacheKey = $"EntityList_{tableName}";
-                
+
                 // 修复：确保存储的是正确类型的列表而不是ExpandoObject
                 object cacheValue = list;
-                
+
                 // 如果是List<ExpandoObject>，尝试转换为具体类型
                 if (list is List<System.Dynamic.ExpandoObject> expandoList)
                 {
@@ -328,7 +329,7 @@ namespace RUINORERP.Business.CommService
                         // 创建正确类型的List
                         var listType = typeof(List<>).MakeGenericType(entityType);
                         var typedList = Activator.CreateInstance(listType);
-                        
+
                         // 使用反射获取Add方法并添加元素
                         var addMethod = listType.GetMethod("Add");
                         foreach (var item in expandoList)
@@ -345,16 +346,16 @@ namespace RUINORERP.Business.CommService
                                 _logger?.LogWarning(ex, $"转换ExpandoObject到类型 {entityType.Name} 时发生错误");
                             }
                         }
-                        
+
                         cacheValue = typedList;
                     }
                 }
-                
+
                 EntityListCache.Put(cacheKey, cacheValue);
-                
+
                 // 清空该表的所有单个实体缓存和显示值缓存
                 ClearEntityCaches(tableName);
-                
+
                 _logger?.LogInformation($"已更新表 {tableName} 的实体列表缓存");
             }
             catch (Exception ex)
@@ -362,7 +363,7 @@ namespace RUINORERP.Business.CommService
                 _logger?.LogError(ex, $"更新表 {tableName} 的实体列表缓存时发生错误");
             }
         }
-        
+
         /// <summary>
         /// 根据表名更新单个实体缓存
         /// </summary>
@@ -372,7 +373,7 @@ namespace RUINORERP.Business.CommService
             {
                 return;
             }
-            
+
             var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
             if (schemaInfo != null)
             {
@@ -381,18 +382,18 @@ namespace RUINORERP.Business.CommService
                 {
                     var cacheKey = $"Entity_{tableName}_{idValue}";
                     EntityCache.Put(cacheKey, entity);
-                    
+
                     // 同时更新显示值缓存
                     var displayValue = entity.GetPropertyValue(schemaInfo.DisplayField);
                     var displayCacheKey = $"DisplayValue_{tableName}_{idValue}";
                     DisplayValueCache.Put(displayCacheKey, displayValue);
                 }
             }
-            
+
             // 同时更新列表缓存中的该实体
             UpdateEntityInList(tableName, entity);
         }
-        
+
         /// <summary>
         /// 更新列表缓存中的指定实体
         /// </summary>
@@ -402,7 +403,7 @@ namespace RUINORERP.Business.CommService
             {
                 var cacheKey = $"EntityList_{tableName}";
                 var cachedList = EntityListCache.Get(cacheKey);
-                
+
                 if (cachedList is List<T> list)
                 {
                     var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
@@ -416,7 +417,7 @@ namespace RUINORERP.Business.CommService
                                 var idPropertyValue = e.GetPropertyValue(schemaInfo.PrimaryKeyField);
                                 return idPropertyValue?.ToString() == entityId.ToString();
                             });
-                            
+
                             if (existingEntity != null)
                             {
                                 // 更新现有实体
@@ -428,7 +429,7 @@ namespace RUINORERP.Business.CommService
                                 // 添加新实体
                                 list.Add(entity);
                             }
-                            
+
                             EntityListCache.Put(cacheKey, list);
                         }
                     }
@@ -450,7 +451,7 @@ namespace RUINORERP.Business.CommService
             var tableName = typeof(T).Name;
             DeleteEntity(tableName, idValue);
         }
-        
+
         /// <summary>
         /// 删除实体列表缓存
         /// </summary>
@@ -460,10 +461,10 @@ namespace RUINORERP.Business.CommService
             {
                 return;
             }
-            
+
             var tableName = typeof(T).Name;
             var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-            
+
             if (schemaInfo != null)
             {
                 foreach (var entity in entities)
@@ -473,17 +474,17 @@ namespace RUINORERP.Business.CommService
                     {
                         var cacheKey = $"Entity_{tableName}_{idValue}";
                         EntityCache.Remove(cacheKey);
-                        
+
                         var displayCacheKey = $"DisplayValue_{tableName}_{idValue}";
                         DisplayValueCache.Remove(displayCacheKey);
                     }
                 }
             }
-            
+
             // 从列表缓存中删除这些实体
             RemoveEntitiesFromList(tableName, entities);
         }
-        
+
         /// <summary>
         /// 根据表名和主键删除实体缓存
         /// </summary>
@@ -493,13 +494,13 @@ namespace RUINORERP.Business.CommService
             {
                 var cacheKey = $"Entity_{tableName}_{primaryKeyValue}";
                 EntityCache.Remove(cacheKey);
-                
+
                 var displayCacheKey = $"DisplayValue_{tableName}_{primaryKeyValue}";
                 DisplayValueCache.Remove(displayCacheKey);
-                
+
                 // 从列表缓存中删除该实体
                 RemoveEntityFromList(tableName, primaryKeyValue);
-                
+
                 _logger?.LogInformation($"已删除表 {tableName} ID为 {primaryKeyValue} 的实体缓存");
             }
             catch (Exception ex)
@@ -507,7 +508,7 @@ namespace RUINORERP.Business.CommService
                 _logger?.LogError(ex, $"删除表 {tableName} ID为 {primaryKeyValue} 的实体缓存时发生错误");
             }
         }
-        
+
         /// <summary>
         /// 从列表缓存中删除指定实体
         /// </summary>
@@ -517,7 +518,7 @@ namespace RUINORERP.Business.CommService
             {
                 var cacheKey = $"EntityList_{tableName}";
                 var cachedList = EntityListCache.Get(cacheKey);
-                
+
                 if (cachedList is IList list)
                 {
                     var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
@@ -533,7 +534,7 @@ namespace RUINORERP.Business.CommService
                                 break;
                             }
                         }
-                        
+
                         if (entityToRemove != null)
                         {
                             list.Remove(entityToRemove);
@@ -547,7 +548,7 @@ namespace RUINORERP.Business.CommService
                 _logger?.LogError(ex, $"从表 {tableName} 列表缓存中删除实体时发生错误");
             }
         }
-        
+
         /// <summary>
         /// 从列表缓存中删除多个实体
         /// </summary>
@@ -557,7 +558,7 @@ namespace RUINORERP.Business.CommService
             {
                 var cacheKey = $"EntityList_{tableName}";
                 var cachedList = EntityListCache.Get(cacheKey);
-                
+
                 if (cachedList is List<T> list)
                 {
                     var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
@@ -566,13 +567,13 @@ namespace RUINORERP.Business.CommService
                         var entityIds = entities.Select(e => e.GetPropertyValue(schemaInfo.PrimaryKeyField)?.ToString())
                                                 .Where(id => id != null)
                                                 .ToHashSet();
-                        
+
                         list.RemoveAll(e =>
                         {
                             var idPropertyValue = e.GetPropertyValue(schemaInfo.PrimaryKeyField);
                             return idPropertyValue != null && entityIds.Contains(idPropertyValue.ToString());
                         });
-                        
+
                         EntityListCache.Put(cacheKey, list);
                     }
                 }
@@ -582,7 +583,7 @@ namespace RUINORERP.Business.CommService
                 _logger?.LogError(ex, $"从表 {tableName} 列表缓存中删除多个实体时发生错误");
             }
         }
-        
+
         /// <summary>
         /// 清空指定表的所有单个实体缓存和显示值缓存
         /// </summary>
@@ -613,13 +614,13 @@ namespace RUINORERP.Business.CommService
             string description = null) where T : class
         {
             _tableSchemaManager.RegisterTableSchema(
-                primaryKeyExpression, 
-                displayFieldExpression, 
-                isView, 
-                isCacheable, 
+                primaryKeyExpression,
+                displayFieldExpression,
+                isView,
+                isCacheable,
                 description);
         }
-        
+
         /// <summary>
         /// 获取实体类型
         /// </summary>
@@ -627,7 +628,7 @@ namespace RUINORERP.Business.CommService
         {
             return _tableSchemaManager.GetEntityType(tableName);
         }
-        
+
         /// <summary>
         /// 序列化缓存数据
         /// </summary>
@@ -638,7 +639,7 @@ namespace RUINORERP.Business.CommService
         {
             return CacheSerializationHelper.Serialize(data, type);
         }
-        
+
         /// <summary>
         /// 反序列化缓存数据
         /// </summary>

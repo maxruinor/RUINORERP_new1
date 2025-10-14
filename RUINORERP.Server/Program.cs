@@ -39,6 +39,8 @@ using RUINORERP.Server.SmartReminder;
 using WorkflowCore.Services;
 using Autofac;
 using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
+using Microsoft.Extensions.Options;
+using RUINORERP.Model.ConfigModel;
 
 namespace RUINORERP.Server
 {
@@ -190,10 +192,14 @@ namespace RUINORERP.Server
                     //frmMain frmMain1 = new frmMain(logger);
                     //Application.Run(frmMain1);
 
-                    var form1 = Startup.GetFromFac<frmMain>();
-                    form1._ServiceProvider = services;
-                    //starter.GetMultipleServerHost(Startup.Services).StartAsync();
-                    Application.Run(form1);
+                    // 使用新的Tab形式主窗体
+                    var logger = services.GetService<ILogger<frmMainNew>>();
+                    var workflowHost = services.GetService<IWorkflowHost>();
+                    var config = services.GetService<IOptionsMonitor<SystemGlobalconfig>>();
+                    
+                    var newMainForm = new frmMainNew(logger, workflowHost, config);
+                    newMainForm._ServiceProvider = services;
+                    Application.Run(newMainForm);
                     //myhost.StartAsync();
 
                 }

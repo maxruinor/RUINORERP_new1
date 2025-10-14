@@ -1004,8 +1004,6 @@ namespace RUINORERP.UI.Network
             {
                 if (packet != null)
                 {
-
-
                     // 先尝试作为响应处理
                     if (HandleResponse(packet))
                     {
@@ -1049,6 +1047,8 @@ namespace RUINORERP.UI.Network
 
 
 
+
+        
 
         /// <summary>
         /// 处理接收到的命令

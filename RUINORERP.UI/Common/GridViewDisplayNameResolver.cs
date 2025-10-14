@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,6 +15,7 @@ namespace RUINORERP.UI.Common
     using System.IO;
     using System.Linq;
     using System.Windows.Forms;
+    using RUINORERP.Extensions.Middlewares;
 
     /// <summary>
     /// AI代码借鉴 没有使用
@@ -118,7 +119,7 @@ namespace RUINORERP.UI.Common
                 return true;
             }
 
-            var displayValue = BizCacheHelper.Instance.GetValue(nameof(tb_Employee), value);
+            var displayValue = MyCacheManager.Instance.GetValue(nameof(tb_Employee), value);
             if (displayValue != null)
             {
                 e.Value = displayValue.ToString();
@@ -148,7 +149,7 @@ namespace RUINORERP.UI.Common
             var mapping = ForeignKeyMappings.FirstOrDefault(m => m.SourceColumn == columnName);
             if (mapping == null) return;
 
-            var displayValue = BizCacheHelper.Instance.GetValue(
+            var displayValue = MyCacheManager.Instance.GetValue(
                 mapping.TargetTable,
                                mapping.KeyColumn
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,6 +57,7 @@ using RUINORERP.Global;
 using FastReport.Table;
 using Newtonsoft.Json.Linq;
 using FastReport.DevComponents.DotNetBar;
+using RUINORERP.Extensions.Middlewares;
 
 
 namespace RUINORERP.UI.Common
@@ -109,7 +110,7 @@ namespace RUINORERP.UI.Common
             }
             //只处理需要缓存的表
             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (BizCacheHelper.Manager.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+            if (MyCacheManager.Instance.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
             {
                 //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
                 mapping.ReferenceDefaultDisplayFieldName = pair.Value;
@@ -209,7 +210,7 @@ namespace RUINORERP.UI.Common
             }
             if (typeof(T).Name.Contains("tb_"))
             {
-                BizCacheHelper.Manager.SetFkColList(typeof(T));
+                MyCacheManager.Instance.SetFkColList(typeof(T));
             }
             e.Value = displayHelper.GetGridViewDisplayText(typeof(T).Name, columnName, e.Value);
             return;

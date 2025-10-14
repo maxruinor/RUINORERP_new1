@@ -1,4 +1,4 @@
-﻿using AutoUpdateTools;
+using AutoUpdateTools;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Table;
 using Fireasy.Common.Serialization;
@@ -287,7 +287,7 @@ namespace RUINORERP.UI.SuperSocketClient
                             #region  转换为 List<T>
                             // Type elementType = TypeHelper.GetFirstArgumentType(listType);
                             Type elementType = null;
-                            if (BizCacheHelper.Manager.NewTableTypeList.TryGetValue(tablename, out elementType))
+                            if (MyCacheManager.Instance.NewTableTypeList.TryGetValue(tablename, out elementType))
                             {
                                 //foreach (var item in myList)
                                 //{

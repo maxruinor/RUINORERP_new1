@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -60,6 +60,7 @@ using FastReport.DevComponents.DotNetBar;
 using System.Runtime.InteropServices;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.ReminderModel;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.Common
 {
@@ -291,7 +292,7 @@ namespace RUINORERP.UI.Common
 
                             //只处理需要缓存的表
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+                            if (MyCacheManager.Instance.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
                             {
                                 //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
                                 mapping.ReferenceDefaultDisplayFieldName = pair.Value;
@@ -400,7 +401,7 @@ namespace RUINORERP.UI.Common
                         return "";
                     }
                     string SourceTableName = typeof(tb_Employee).Name;
-                    object objText = BizCacheHelper.Instance.GetValue(SourceTableName, IdValue);
+                    object objText = MyCacheManager.Instance.GetValue(SourceTableName, IdValue);
                     if (objText != null && objText.ToString() != "System.Object")
                     {
                         NameValue = objText.ToString();
@@ -420,14 +421,14 @@ namespace RUINORERP.UI.Common
                         object entity = new object();
                         //只处理需要缓存的表
                         KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                        if (BizCacheHelper.Manager.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+                        if (MyCacheManager.Instance.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
                         {
                             string key = pair.Key;
                             string KeyValue = IdValue.ToString();
                             //设置属性的值
-                            if (BizCacheHelper.Manager.CacheEntityList.Exists(mapping.ReferenceTableName))
+                            if (MyCacheManager.Instance.CacheEntityList.Exists(mapping.ReferenceTableName))
                             {
-                                var rslist = BizCacheHelper.Manager.CacheEntityList.Get(mapping.ReferenceTableName);
+                                var rslist = MyCacheManager.Instance.CacheEntityList.Get(mapping.ReferenceTableName);
                                 if (TypeHelper.IsGenericList(rslist.GetType()))
                                 {
                                     var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
@@ -511,14 +512,14 @@ namespace RUINORERP.UI.Common
                     //先处理类型本身
                     //只处理需要缓存的表
                     KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                    if (BizCacheHelper.Manager.NewTableList.TryGetValue(TargetTableName, out pair))
+                    if (MyCacheManager.Instance.NewTableList.TryGetValue(TargetTableName, out pair))
                     {
                         //在基本表中但是缓存中没有则请求
-                        if (!BizCacheHelper.Manager.CacheEntityList.Exists(TargetTableName))
+                        if (!MyCacheManager.Instance.CacheEntityList.Exists(TargetTableName))
                         {
                             UIBizSrvice.RequestCache(TargetTableName);
                         }
-                        var selfTypeDisplayText = BizCacheHelper.Instance.GetValue(TargetTableName, IdValue);
+                        var selfTypeDisplayText = MyCacheManager.Instance.GetValue(TargetTableName, IdValue);
                         if (selfTypeDisplayText != null && !string.IsNullOrWhiteSpace(selfTypeDisplayText.ToString())
                              && selfTypeDisplayText.GetType().Name != "Object"
                             )
@@ -528,7 +529,7 @@ namespace RUINORERP.UI.Common
                     }
                     //再处理外键关联
                     List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
-                    if (BizCacheHelper.Manager.FkPairTableList.TryGetValue(TargetTableName, out kvlist))
+                    if (MyCacheManager.Instance.FkPairTableList.TryGetValue(TargetTableName, out kvlist))
                     {
                         var kv = kvlist.Find(k => k.Key == idColName);
                         //如果找不到呢？
@@ -537,7 +538,7 @@ namespace RUINORERP.UI.Common
                             return string.Empty;
                         }
                         string baseTableName = kv.Value;
-                        object obj = BizCacheHelper.Instance.GetValue(baseTableName, IdValue);
+                        object obj = MyCacheManager.Instance.GetValue(baseTableName, IdValue);
                         if (obj != null)
                         {
                             NameValue = obj.ToString();
@@ -545,7 +546,7 @@ namespace RUINORERP.UI.Common
                     }
                     if (string.IsNullOrEmpty(NameValue) && TargetTableName.Contains("View"))
                     {
-                        object obj = BizCacheHelper.Instance.GetValue(TargetTableName, IdValue);
+                        object obj = MyCacheManager.Instance.GetValue(TargetTableName, IdValue);
                         if (obj != null && obj.GetType().Name != "Object")
                         {
                             NameValue = obj.ToString();
@@ -555,7 +556,7 @@ namespace RUINORERP.UI.Common
                     {
                         if (string.IsNullOrEmpty(NameValue))
                         {
-                            object obj = BizCacheHelper.Instance.GetValue(TargetTableName, IdValue);
+                            object obj = MyCacheManager.Instance.GetValue(TargetTableName, IdValue);
                             if (obj != null && obj.GetType().Name != "Object")
                             {
                                 NameValue = obj.ToString();

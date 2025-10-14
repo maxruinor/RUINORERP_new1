@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -31,7 +31,7 @@ using RUINORERP.UI.SysConfig;
 using Fireasy.Common.Extensions;
 using FastReport.Table;
 using MathNet.Numerics.Optimization;
-
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.FM
 {
@@ -190,7 +190,7 @@ namespace RUINORERP.UI.FM
                         if (entity.PayeeInfoID > 0)
                         {
                             tb_FM_PayeeInfo payeeInfo = null;
-                            var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                            var obj = MyCacheManager.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                             if (obj != null && obj.ToString() != "System.Object")
                             {
                                 if (obj is tb_FM_PayeeInfo cv)
@@ -237,7 +237,7 @@ namespace RUINORERP.UI.FM
             //加载收款信息
             if (entity.PayeeInfoID > 0)
             {
-                var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                var obj = MyCacheManager.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                 if (obj != null && obj.ToString() != "System.Object")
                 {
                     if (obj is tb_FM_PayeeInfo cv)

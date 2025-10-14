@@ -774,14 +774,14 @@ namespace RUINORERP.Business
                             && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
 
                         string ProdName = string.Empty;
-                        View_ProdDetail Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                        View_ProdDetail Prod = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         if (Prod != null && Prod.GetType().Name != "Object" && Prod is View_ProdDetail prodDetail)
                         {
 
                         }
                         else
                         {
-                            Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            Prod = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         }
 
 
@@ -809,14 +809,14 @@ namespace RUINORERP.Business
                             );
 
                         string ProdName = string.Empty;
-                        View_ProdDetail Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                        View_ProdDetail Prod = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         if (Prod != null && Prod.GetType().Name != "Object" && Prod is View_ProdDetail prodDetail)
                         {
 
                         }
                         else
                         {
-                            Prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            Prod = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         }
 
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉

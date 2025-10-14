@@ -41,6 +41,7 @@
     <Compile Remove="BizMapperService\ServiceCollectionExtensions.cs" />
     <Compile Remove="BizMapperService\ServiceRegistrationManager.cs" />
     <Compile Remove="BizMapperService\ServiceRegistrationModule.cs" />
+    <Compile Remove="CommService\BizCacheHelper.cs" />
     <Compile Remove="CommService\CacheManager.cs" />
     <Compile Remove="CommService\DictServiceHelper.cs" />
     <Compile Remove="CommService\ICacheManager.cs" />

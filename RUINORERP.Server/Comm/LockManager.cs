@@ -10,6 +10,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.Business.CommService;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.Server.Comm
 {
@@ -274,7 +275,7 @@ namespace RUINORERP.Server.Comm
             {
                 if (string.IsNullOrEmpty(_LockedByName))
                 {
-                    tb_UserInfo userInfo = BizCacheHelper.Instance.GetEntity<tb_UserInfo>(LockedByID);
+                    tb_UserInfo userInfo = MyCacheManager.Instance.GetEntity<tb_UserInfo>(LockedByID);
                     if (userInfo != null)
                     {
                         _LockedByName = userInfo.UserName;
@@ -287,7 +288,7 @@ namespace RUINORERP.Server.Comm
                 _LockedByName = value;
                 if (string.IsNullOrEmpty(_LockedByName))
                 {
-                    tb_UserInfo userInfo = BizCacheHelper.Instance.GetEntity<tb_UserInfo>(LockedByID);
+                    tb_UserInfo userInfo = MyCacheManager.Instance.GetEntity<tb_UserInfo>(LockedByID);
                     if (userInfo != null)
                     {
                         _LockedByName = userInfo.UserName;

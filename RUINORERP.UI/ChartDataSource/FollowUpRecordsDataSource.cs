@@ -1,4 +1,4 @@
-﻿using Castle.Core.Resource;
+using Castle.Core.Resource;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Model;
 using System;
@@ -112,7 +112,7 @@ namespace RUINORERP.UI.ChartDataSource
                 foreach (var group in seriesGroups)
                 {
                     string seriesName = group.Key.ToString();
-                    tb_Employee Employee = BizCacheHelper.Instance.GetEntity<tb_Employee>(seriesName.ToLong());
+                    tb_Employee Employee = MyCacheManager.Instance.GetEntity<tb_Employee>(seriesName.ToLong());
                     if (Employee != null)
                     {
                         seriesName = Employee.Employee_Name;

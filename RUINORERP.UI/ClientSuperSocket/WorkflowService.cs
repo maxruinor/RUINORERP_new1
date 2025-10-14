@@ -1,4 +1,4 @@
-﻿using RUINORERP.Business.CommService;
+using RUINORERP.Business.CommService;
 using RUINORERP.PacketSpec.Core.DataProcessing;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 
 using static RUINORERP.UI.MainForm;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.SuperSocketClient
 {
@@ -123,7 +124,6 @@ namespace RUINORERP.UI.SuperSocketClient
                 //这里要弹出窗口提示 需要做一个队列处理。不要阻塞UI界面
                 MainForm.Instance.PrintInfoLog(tableName, System.Drawing.Color.Red);
 
-                BizCacheHelper.Instance.SetDictDataSource(new List<string> { tableName });
 
                 //这里要弹出窗口提示 需要做一个队列处理。不要阻塞UI界面
                 //ShowHandler handler = new ShowHandler(MainForm.Instance.ShowTips);

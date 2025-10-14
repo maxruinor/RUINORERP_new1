@@ -20,6 +20,7 @@ using Castle.Core.Resource;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Text.RegularExpressions;
+using RUINORERP.Extensions.Middlewares;
 
 //https://github.com/FluentValidation/FluentValidation 使用实例
 //https://blog.csdn.net/WuLex/article/details/127985756 中文教程
@@ -129,12 +130,12 @@ namespace RUINORERP.Business
             string tableName = nameof(tb_CRM_Contact);
             //只处理需要缓存的表
             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (BizCacheHelper.Manager.NewTableList.TryGetValue(tableName, out pair))
+            if (MyCacheManager.Instance.NewTableList.TryGetValue(tableName, out pair))
             {
 
-                if (BizCacheHelper.Manager.CacheEntityList.Exists(tableName))
+                if (MyCacheManager.Instance.CacheEntityList.Exists(tableName))
                 {
-                    var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    var cachelist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
 
                     // 获取原始 List<T> 的类型参数
                     Type listType = cachelist.GetType();

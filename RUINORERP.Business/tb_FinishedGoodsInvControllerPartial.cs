@@ -280,7 +280,7 @@ namespace RUINORERP.Business
                             string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的缴库数不能大于制令单中发出物料能生产的最小数量。";
                             try
                             {
-                                object obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
+                                object obj = MyCacheManager.Instance.GetEntity<View_ProdDetail>(MinQtyDetail.ProdDetailID);
                                 if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
                                 {
                                     //提示哪个关键物料实发数不够生产。

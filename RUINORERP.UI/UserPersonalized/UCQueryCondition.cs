@@ -8,6 +8,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Common;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.UI.AdvancedUIModule;
@@ -87,7 +88,7 @@ namespace RUINORERP.UI.UserPersonalized
                         KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
-                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
+                            if (MyCacheManager.Instance.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
                             {
                                 //关联要绑定的类型
                                 Type mytype = queryField.SubQueryTargetType;

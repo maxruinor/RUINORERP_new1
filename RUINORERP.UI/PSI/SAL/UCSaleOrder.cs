@@ -49,6 +49,7 @@ using Fireasy.Common.Configuration;
 using RUINORERP.UI.Monitoring.Auditing;
 using NPOI.SS.Formula.Functions;
 using System.Text.RegularExpressions;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -429,7 +430,7 @@ namespace RUINORERP.UI.PSI.SAL
                     //根据币别如果是外币才显示外币相关的字段
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Currency_ID) && entity.Currency_ID > 0)
                     {
-                        // var obj = BizCacheHelper.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
+                        // var obj = MyCacheManager.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
                         //if (obj != null && obj.ToString() != "System.Object")
                         //{
                         if (cmbCurrency_ID.SelectedItem is tb_Currency cv)
@@ -514,7 +515,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //如果客户有变化，带出对应有业务员
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.CustomerVendor_ID))
                 {
-                    var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CustomerVendor cv)
@@ -1018,7 +1019,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                 if (EditEntity.Paytype_ID > 0)
                 {
                     var paytype = EditEntity.Paytype_ID;
-                    var paymethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID);
+                    var paymethod = MyCacheManager.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID);
                     if (paymethod != null && paymethod.ToString() != "System.Object")
                     {
                         if (paymethod is tb_PaymentMethod pm)
@@ -1224,7 +1225,7 @@ using var binder = new UIStateBinder(..., customEvaluator);
                        {
                            if (prodView.tb_producttype == null)
                            {
-                               prodView.tb_producttype = BizCacheHelper.Instance.GetEntity<tb_ProductType>(prodView.Type_ID);
+                               prodView.tb_producttype = MyCacheManager.Instance.GetEntity<tb_ProductType>(prodView.Type_ID);
                            }
                            if (!prodView.tb_producttype.ForSale)
                            {

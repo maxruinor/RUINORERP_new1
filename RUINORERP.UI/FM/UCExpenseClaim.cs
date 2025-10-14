@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -46,6 +46,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using System.Configuration;
 using Fireasy.Common.Extensions;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.FM
 {
@@ -153,7 +154,7 @@ namespace RUINORERP.UI.FM
                 if (entity.PayeeInfoID > 0)
                 {
                     //cmbPayeeInfoID.SelectedIndex = cmbPayeeInfoID.FindStringExact(emp.Account_name);
-                    var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                    var obj = MyCacheManager.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_FM_PayeeInfo cv)
@@ -212,7 +213,7 @@ namespace RUINORERP.UI.FM
                 //如果报销人有变化，带出对应的收款方式
                 if (entity.PayeeInfoID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_ExpenseClaim>(c => c.PayeeInfoID))
                 {
-                    var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                    var obj = MyCacheManager.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_FM_PayeeInfo cv)

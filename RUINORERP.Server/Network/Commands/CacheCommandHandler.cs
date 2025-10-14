@@ -82,7 +82,6 @@ namespace RUINORERP.Server.Network.Commands
                     if (CacheList == null)
                     {
                         //启动时服务器都没有加载缓存，则不发送
-                        MyCacheManager.Instance.SetDictDataSource(tableName, true);
                         await Task.Delay(100);
                         CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                     }
@@ -639,7 +638,6 @@ namespace RUINORERP.Server.Network.Commands
                 // 从数据库加载数据并更新缓存
                 // 注意：这是一个假的异步方法，实际的SetDictDataSource不是异步操作
                 // 未来如果有真正的异步数据库操作，可以在这里实现
-                MyCacheManager.Instance.SetDictDataSource(tableName, true);
 
                 // 添加一个await Task.CompletedTask来使方法真正成为异步方法
                 // 这样可以避免警告，同时保持向后兼容性

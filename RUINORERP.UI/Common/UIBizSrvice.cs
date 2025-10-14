@@ -1,4 +1,4 @@
-﻿using FastReport.DevComponents.DotNetBar.Controls;
+using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using Fireasy.Common.Extensions;
 using MathNet.Numerics.LinearAlgebra.Factorization;
@@ -1132,12 +1132,12 @@ namespace RUINORERP.UI.Common
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             T prodDetail = null;
 
-            if (BizCacheHelper.Manager.NewTableList.ContainsKey(typeof(T).Name))
+            if (MyCacheManager.Instance.NewTableList.ContainsKey(typeof(T).Name))
             {
-                var nkv = BizCacheHelper.Manager.NewTableList[typeof(T).Name];
+                var nkv = MyCacheManager.Instance.NewTableList[typeof(T).Name];
                 if (nkv.Key != null)
                 {
-                    object obj = BizCacheHelper.Instance.GetEntity<T>(ProdDetailID);
+                    object obj = MyCacheManager.Instance.GetEntity<T>(ProdDetailID);
                     if (obj != null && obj.GetType().Name != "Object" && obj is T)
                     {
                         prodDetail = obj as T;
@@ -1190,7 +1190,7 @@ namespace RUINORERP.UI.Common
         {
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
             List<View_ProdDetail> list = new List<View_ProdDetail>();
-            var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(View_ProdDetail));
+            var cachelist = MyCacheManager.Instance.CacheEntityList.Get(nameof(View_ProdDetail));
             if (cachelist == null)
             {
                 list = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().ToList();
@@ -1252,7 +1252,7 @@ namespace RUINORERP.UI.Common
                 ////根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 //KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                 ////只处理需要缓存的表
-                //if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_Collaborator).Name, out pair))
+                //if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_CRM_Collaborator).Name, out pair))
                 //{
                 //    //如果有更新变动就上传到服务器再分发到所有客户端
                 //    OriginalData odforCache = ActionForClient.更新缓存<tb_CRM_Collaborator>(result.ReturnObject);
@@ -1276,7 +1276,7 @@ namespace RUINORERP.UI.Common
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                 //只处理需要缓存的表
-                if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_CRM_Contact).Name, out pair))
+                if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_CRM_Contact).Name, out pair))
                 {
                     //如果有更新变动就上传到服务器再分发到所有客户端
 
@@ -1367,7 +1367,7 @@ namespace RUINORERP.UI.Common
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                 //只处理需要缓存的表
-                if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_FM_PayeeInfo).Name, out pair))
+                if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_FM_PayeeInfo).Name, out pair))
                 {
                     //如果有更新变动就上传到服务器再分发到所有客户端
 
@@ -1451,7 +1451,7 @@ namespace RUINORERP.UI.Common
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                 //只处理需要缓存的表
-                if (BizCacheHelper.Manager.NewTableList.TryGetValue(typeof(tb_BillingInformation).Name, out pair))
+                if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_BillingInformation).Name, out pair))
                 {
                     //如果有更新变动就上传到服务器再分发到所有客户端
 
@@ -1479,15 +1479,28 @@ namespace RUINORERP.UI.Common
             RequestCache(type.Name, type);
         }
 
+        /// <summary>
+        /// 获取需要缓存的表名列表
+        /// </summary>
+        /// <summary>
+        /// 检查表是否在缓存表名列表中
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>是否在缓存表名列表中</returns>
+        private static bool IsCacheableTable(string tableName)
+        {
+            return CacheInitializationService.GetCacheableTableNames().Contains(tableName);
+        }
+
        
         public static async void RequestCache(string tableName, Type type = null)
         {
             //优先处理本身，比方 BOM_ID显示BOM_NO，只要传tb_BOM_S
-            if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
             {
                 //请求本身
-                var rslist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
-                if (NeedRequesCache(rslist, tableName) && BizCacheHelper.Instance.typeNames.Contains(tableName))
+                var rslist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
+                if (NeedRequesCache(rslist, tableName) && IsCacheableTable(tableName))
                 {// 临时代码：标记需要完善的部分
                     CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
                     await cacheClient.RequestCacheAsync(tableName);
@@ -1499,7 +1512,7 @@ namespace RUINORERP.UI.Common
 
             //请求关联表
             List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
-            if (!BizCacheHelper.Manager.FkPairTableList.TryGetValue(tableName, out kvlist))
+            if (!MyCacheManager.Instance.FkPairTableList.TryGetValue(tableName, out kvlist))
             {
                 if (kvlist == null)
                 {
@@ -1508,18 +1521,18 @@ namespace RUINORERP.UI.Common
                         type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
                     }
 
-                    BizCacheHelper.Manager.SetFkColList(type);
+                    MyCacheManager.Instance.SetFkColList(type);
                 }
             }
 
             //获取相关的表
-            if (BizCacheHelper.Manager.FkPairTableList.TryGetValue(tableName, out kvlist))
+            if (MyCacheManager.Instance.FkPairTableList.TryGetValue(tableName, out kvlist))
             {
                 foreach (var item in kvlist)
                 {
-                    var rslist = BizCacheHelper.Manager.CacheEntityList.Get(item.Value);
+                    var rslist = MyCacheManager.Instance.CacheEntityList.Get(item.Value);
                     //并且要存在于缓存列表的表集合中才取。有些是没有缓存的业务单据表。不需要取缓存
-                    if (NeedRequesCache(rslist, item.Value) && BizCacheHelper.Instance.typeNames.Contains(item.Value))
+                    if (NeedRequesCache(rslist, item.Value) && IsCacheableTable(item.Value))
                     {
                         // 临时代码：标记需要完善的部分
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位

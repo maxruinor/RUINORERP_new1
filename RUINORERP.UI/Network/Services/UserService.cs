@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Memory;
 using NetTaste;
@@ -37,16 +37,16 @@ namespace RUINORERP.Server.BizService
         {
             try
             {
-                if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+                if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
                 {
                     //发送缓存数据
-                    var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    var CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                     if (CacheList == null)
                     {
                         //启动时服务器都没有加载缓存，则不发送
-                        BizCacheHelper.Instance.SetDictDataSource(tableName, true);
+                        // BizCacheHelper.Instance.SetDictDataSource(tableName, true); // 已废弃，使用CacheInitializationService替代
                         await Task.Delay(500);
-                        CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                        CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                     }
 
                     //上面查询可能还是没有立即加载成功
@@ -531,7 +531,7 @@ namespace RUINORERP.Server.BizService
             {
                 ByteBuff tx = new ByteBuff(100);
                 List<CacheInfo> CacheInfos = new List<CacheInfo>();
-                foreach (var item in BizCacheHelper.Manager.NewTableList)
+                foreach (var item in MyCacheManager.Instance.NewTableList)
                 {
                     CacheInfo cacheInfo = MyCacheManager.Instance.CacheInfoList.Get(item.Key) as CacheInfo;
                     if (cacheInfo != null)

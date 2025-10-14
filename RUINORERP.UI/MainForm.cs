@@ -99,6 +99,7 @@ using RUINORERP.Business.RowLevelAuthService;
 using RUINORERP.Plugin;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.Business.CommService;
+using RUINORERP.Extensions.Middlewares;
 
 
 
@@ -147,7 +148,7 @@ namespace RUINORERP.UI
             try
             {
                 logger?.LogWarning("客户端重连失败，自动进入注销锁定状态");
-                
+
                 // 在UI线程上执行注销操作
                 if (InvokeRequired)
                 {
@@ -166,7 +167,7 @@ namespace RUINORERP.UI
 
         #endregion
 
- 
+
 
 
         /// <summary>
@@ -212,17 +213,17 @@ namespace RUINORERP.UI
         public FMAuditLogHelper FMAuditLogHelper => fmauditLogHelper;
 
         private System.Threading.Timer _autoSaveTimer;
-        
+
         /// <summary>
         /// 注销状态标记，用于防止注销操作被重复执行
         /// </summary>
         private bool _isLoggingOut = false;
-        
+
         /// <summary>
         /// 用于注销状态同步的锁对象
         /// </summary>
         private readonly object _logoutLock = new object();
-        
+
         /// <summary>
         /// 获取或设置注销状态，确保线程安全
         /// </summary>
@@ -243,9 +244,9 @@ namespace RUINORERP.UI
                 }
             }
         }
-        
+
         public ClientCommunicationService communicationService;
- 
+
 
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper, FMAuditLogHelper _fmauditLogHelper, IOptionsMonitor<SystemGlobalconfig> config)
         {
@@ -259,7 +260,7 @@ namespace RUINORERP.UI
             #region 新的客户端通讯模块的调用
             // 通过依赖注入获取核心组件
             communicationService = Startup.ServiceProvider.GetService<ClientCommunicationService>();
-            
+
             // 订阅重连失败事件，当重连失败时自动进入注销锁定状态
             if (communicationService != null)
             {
@@ -267,7 +268,7 @@ namespace RUINORERP.UI
             }
             #endregion
 
-    
+
             // 移除禁用跨线程检查的代码，这是不安全的做法
             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
 
@@ -278,7 +279,7 @@ namespace RUINORERP.UI
             kryptonDockableWorkspace1.PageCloseClicked += KryptonDockableWorkspace1_PageCloseClicked;
 
 
-     
+
 
             if (config != null)
             {
@@ -296,10 +297,10 @@ namespace RUINORERP.UI
             SourceGrid.Cells.Views.Cell viewGreen = new SourceGrid.Cells.Views.Cell();
             // 初始化日志管理器
             logManager = new UILogManager(this, uclog.grid, viewGreen);
-           // var clientCommandRegistry = new ClientCommandRegistry();
-           // var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
+            // var clientCommandRegistry = new ClientCommandRegistry();
+            // var clientCommandHandlers = clientCommandRegistry.AutoRegisterCommandHandler();
 
-    
+
 
             _menuTracker = Startup.GetFromFac<MenuTracker>();
 
@@ -459,7 +460,7 @@ namespace RUINORERP.UI
 
 
 
-       
+
 
         private byte[] _byteArray;
 
@@ -496,8 +497,8 @@ namespace RUINORERP.UI
                     MessageBox.Show("服务器有新版本，更新前请保存当前操作，关闭系统。", "温馨提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     Process.Start(Update.currentexeName);
                     // 登录成功，重置注销状态
-                IsLoggingOut = false;
-                rs = true;
+                    IsLoggingOut = false;
+                    rs = true;
 
                     // 等待2秒，确保更新程序启动
                     await Task.Delay(1500);
@@ -773,12 +774,12 @@ namespace RUINORERP.UI
             //cache.Set("test1", "test123");
 
             ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
-            configManager.LoadConfigValues();
+            await configManager.LoadConfigValues();
 
-            //手动初始化  打开就加载。省得登陆后还没有加载完
-            BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
-            BizCacheHelper.InitManager();
-            InitCacheConfig(false);
+
+            // 使用CacheInitializationService从数据库查询并初始化缓存数据
+            var cacheInitializationService = Startup.GetFromFac<CacheInitializationService>();
+            await cacheInitializationService.InitializeAllCacheAsync();
 
             //先加载一遍缓存
             var tableNames = CacheInfoList.Keys.ToList();
@@ -834,7 +835,7 @@ namespace RUINORERP.UI
                 {
                     tb_MenuInfoController<tb_MenuInfo> menuInfoController = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
                     List<tb_MenuInfo> menuList = await menuInfoController.QueryAsync();
-                    //var rslist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(tb_MenuInfo));
+                    //var rslist = MyCacheManager.Instance.CacheEntityList.Get(nameof(tb_MenuInfo));
                     //if (rslist != null)
                     //{
                     MainForm.Instance.AppContext.UserMenuList = menuList;
@@ -973,7 +974,7 @@ namespace RUINORERP.UI
 
                 List<tb_Currency> currencies = new List<tb_Currency>();
 
-                var rslist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(tb_Currency));
+                var rslist = MyCacheManager.Instance.CacheEntityList.Get(nameof(tb_Currency));
                 if (rslist != null)
                 {
                     List<object> objlist = rslist as List<object>;
@@ -1024,7 +1025,7 @@ namespace RUINORERP.UI
 
                 List<tb_PaymentMethod> PaymentMethods = new List<tb_PaymentMethod>();
 
-                var rslist = BizCacheHelper.Manager.CacheEntityList.Get(nameof(tb_PaymentMethod));
+                var rslist = MyCacheManager.Instance.CacheEntityList.Get(nameof(tb_PaymentMethod));
                 if (rslist != null)
                 {
                     List<object> objlist = rslist as List<object>;
@@ -1092,7 +1093,7 @@ namespace RUINORERP.UI
                     // 提取重复的订单编号
                     string uniquekey = Regex.Match(errorMsg, @"\((.*?)\)").Groups[1].Value;
                     string value = ExtractDuplicateValue(ex.Message);
-                    
+
                     // 尝试从异常消息中提取表名
                     string tableName = string.Empty;
                     Match tableMatch = Regex.Match(ex.Message, @"object '(.*?)'");
@@ -1102,10 +1103,10 @@ namespace RUINORERP.UI
                         // 如果表名包含.dbo.，提取后面的部分
                         if (tableName.Contains(".dbo."))
                         {
-                            tableName = tableName.Split(new string[] {".dbo."}, StringSplitOptions.None)[1];
+                            tableName = tableName.Split(new string[] { ".dbo." }, StringSplitOptions.None)[1];
                         }
                     }
-                    
+
                     string tableDescription = string.Empty;
                     // 尝试通过IEntityInfoService获取表的中文描述
                     try
@@ -1124,12 +1125,12 @@ namespace RUINORERP.UI
                     {
                         // 如果获取实体信息失败，继续使用原有的错误提示
                     }
-                    
+
                     // 根据是否获取到表描述，显示不同的错误信息
                     string message = string.IsNullOrEmpty(tableDescription)
                         ? $"【{value}】已存在，请检查后重试！"
                         : $"{tableDescription}中【{value}】已存在，请检查后重试！";
-                    
+
                     MessageBox.Show(
                         message,
                         "唯一性错误",
@@ -1148,7 +1149,7 @@ namespace RUINORERP.UI
                         MessageBoxIcon.Error
                     );
                 }
-                
+
                 handled = true;
             }
             return handled;
@@ -1768,7 +1769,7 @@ namespace RUINORERP.UI
 
             // 设置注销状态标记
             IsLoggingOut = true;
-            
+
             MainForm.Instance.Invoke(new Action(async () =>
             {
                 try
@@ -1791,7 +1792,7 @@ namespace RUINORERP.UI
                     // await InitConfig();
                     LoadUIMenus();
                     LoadUIForIM_LogPages();
-                    
+
                     // 登录成功后重置注销状态
                     IsLoggingOut = false;
                 }
@@ -1999,7 +2000,7 @@ namespace RUINORERP.UI
 
         private async Task InitCacheConfig(bool LoadData)
         {
-            BizCacheHelper.Instance.InitCacheDict(LoadData);
+            // MyCacheManager.Instance.InitCacheDict(LoadData); // 已废弃，使用CacheInitializationService替代
             await Task.Delay(5);
         }
 
@@ -2277,7 +2278,7 @@ namespace RUINORERP.UI
                 {
                     // 初始化插件管理器
                     pluginManager.Initialize();
-                    
+
                     // 注册所有插件的菜单项
                     pluginManager.RegisterPluginMenuItems(myToolsMenu);
                 }
@@ -2599,8 +2600,8 @@ namespace RUINORERP.UI
 
                 e.Cancel = false;
                 System.GC.Collect();
-               await Logout();
-          
+                await Logout();
+
                 communicationService.Disconnect();
 
                 logManager.Dispose();
@@ -2719,7 +2720,7 @@ namespace RUINORERP.UI
         private async Task ClearData()
         {
             Program.AppContextData.IsOnline = false;
-           
+
             AppContext.CurUserInfo = null;
             AppContext.IsSuperUser = false;
             RUINORERP.Extensions.SqlsugarSetup.CheckEvent -= SqlsugarSetup_CheckEvent;
@@ -3153,7 +3154,7 @@ namespace RUINORERP.UI
                 bool needRequestCache = false;
                 //Type elementType = null;
                 #region
-                var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(nextTableName);
+                var cachelist = MyCacheManager.Instance.CacheEntityList.Get(nextTableName);
                 if (cachelist != null)
                 {
                     Type listType = cachelist.GetType();
@@ -3187,7 +3188,7 @@ namespace RUINORERP.UI
                     else if (TypeHelper.IsJArrayList(listType))
                     {
                         //elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + nextTableName);
-                        BizCacheHelper.Manager.NewTableTypeList.TryGetValue(nextTableName, out elementType);
+                        MyCacheManager.Instance.NewTableTypeList.TryGetValue(nextTableName, out elementType);
 
                         List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 

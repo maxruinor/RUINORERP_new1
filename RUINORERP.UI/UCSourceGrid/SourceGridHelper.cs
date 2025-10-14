@@ -8,7 +8,7 @@ using MathNet.Numerics.LinearAlgebra.Factorization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NPOI.SS.Formula.Functions;
-
+using RUINORERP.Extensions.Middlewares;
 //using Google.Protobuf.Reflection;
 //using NetTaste;
 using RUINORERP.Business;
@@ -890,7 +890,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (sgdefine.Fk_KeyValuesList.ContainsKey(dc.FKRelationCol.FK_IDColName))
                 {
                     string baseTableName = sgdefine.Fk_KeyValuesList[dc.FKRelationCol.FK_IDColName];
-                    object obj = BizCacheHelper.Instance.GetValue(baseTableName, cellvalue);
+                    object obj = MyCacheManager.Instance.GetValue(baseTableName, cellvalue);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         _DisplayText = obj.ToString();
@@ -2464,12 +2464,12 @@ namespace RUINORERP.UI.UCSourceGrid
                                                 string tableName = col.Value.FKRelationCol.FKTableName;
                                                 string typeName = "RUINORERP.Model." + tableName;
 
-                                                if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+                                                if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
                                                 {
-                                                    string ColID = BizCacheHelper.Manager.NewTableList[tableName].Key;
-                                                    string ColName = BizCacheHelper.Manager.NewTableList[tableName].Value;
+                                                    string ColID = MyCacheManager.Instance.NewTableList[tableName].Key;
+                                                    string ColName = MyCacheManager.Instance.NewTableList[tableName].Value;
                                                     BindingSource bs = new BindingSource();
-                                                    var objlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                                                    var objlist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                                                     if (objlist != null)
                                                     {
                                                         var Oldlist = ((IEnumerable<dynamic>)objlist).ToList();
@@ -2889,12 +2889,12 @@ namespace RUINORERP.UI.UCSourceGrid
                                                             string tableName = col.Value.FKRelationCol.FKTableName;
                                                             string typeName = "RUINORERP.Model." + tableName;
 
-                                                            if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+                                                            if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
                                                             {
-                                                                string ColID = BizCacheHelper.Manager.NewTableList[tableName].Key;
-                                                                string ColName = BizCacheHelper.Manager.NewTableList[tableName].Value;
+                                                                string ColID = MyCacheManager.Instance.NewTableList[tableName].Key;
+                                                                string ColName = MyCacheManager.Instance.NewTableList[tableName].Value;
                                                                 BindingSource bs = new BindingSource();
-                                                                var objlist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                                                                var objlist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                                                                 if (objlist != null)
                                                                 {
                                                                     var Oldlist = ((IEnumerable<dynamic>)objlist).ToList();
@@ -3273,20 +3273,20 @@ namespace RUINORERP.UI.UCSourceGrid
                 string tableName = dci.FKRelationCol.FKTableName;
                 string typeName = "RUINORERP.Model." + tableName;
                 //缓存下拉
-                if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+                if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
                 {
-                    string ColID = BizCacheHelper.Manager.NewTableList[tableName].Key;
-                    string ColName = BizCacheHelper.Manager.NewTableList[tableName].Value;
+                    string ColID = MyCacheManager.Instance.NewTableList[tableName].Key;
+                    string ColName = MyCacheManager.Instance.NewTableList[tableName].Value;
                     BindingSource bs = new BindingSource();
 
-                    //var MyCache = BizCacheHelper.Manager.GetEntityList_AII(tableName); // 返回 List<object>
+                    //var MyCache = MyCacheManager.Instance.GetEntityList_AII(tableName); // 返回 List<object>
                     //if (dci.DataSourceFilter != null)
                     //{
                     //    // 统一用非泛型接口
                     //    MyCache = MyCache.Where(dci.DataSourceFilter.Match).ToList();
                     //}
 
-                    var cache = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    var cache = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                     if (cache != null)
                     {
                         var cachelist = ((IEnumerable<dynamic>)cache).ToList();
@@ -3394,12 +3394,12 @@ namespace RUINORERP.UI.UCSourceGrid
                                             string MytableName = targetCol.FKRelationCol.FKTableName;
                                             string MytypeName = "RUINORERP.Model." + MytableName;
 
-                                            if (BizCacheHelper.Manager.NewTableList.ContainsKey(MytableName))
+                                            if (MyCacheManager.Instance.NewTableList.ContainsKey(MytableName))
                                             {
-                                                string MColID = BizCacheHelper.Manager.NewTableList[MytableName].Key;
-                                                string MColName = BizCacheHelper.Manager.NewTableList[MytableName].Value;
+                                                string MColID = MyCacheManager.Instance.NewTableList[MytableName].Key;
+                                                string MColName = MyCacheManager.Instance.NewTableList[MytableName].Value;
                                                 BindingSource Mbs = new BindingSource();
-                                                var Mobjlist = BizCacheHelper.Manager.CacheEntityList.Get(MytableName);
+                                                var Mobjlist = MyCacheManager.Instance.CacheEntityList.Get(MytableName);
                                                 if (Mobjlist != null)
                                                 {
                                                     var Oldlist = ((IEnumerable<dynamic>)Mobjlist).ToList();

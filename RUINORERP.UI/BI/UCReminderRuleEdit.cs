@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -28,6 +28,8 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Model.ReminderModel.ReminderRules;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
 using NPOI.OpenXmlFormats.Spreadsheet;
+using RUINORERP.Extensions.Middlewares;
+
 
 namespace RUINORERP.UI.BI
 {
@@ -59,7 +61,7 @@ namespace RUINORERP.UI.BI
                 BusinessHelper.Instance.EditEntity(entity);
             }
 
-            UserInfos = BizCacheHelper.Manager.GetEntityList<tb_UserInfo>();
+            UserInfos = MyCacheManager.Instance.GetEntityList<tb_UserInfo>();
 
             DataBindingHelper.BindData4TextBox<tb_ReminderRule>(entity, t => t.RuleName, txtRuleName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderRule, RuleEngineType>(entity, k => k.RuleEngineType, cmbRuleEngineType, false);

@@ -196,12 +196,12 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        private void btnReloadCache_Click(object sender, EventArgs e)
+        private async void btnReloadCache_Click(object sender, EventArgs e)
         {
             try
             {
                 // 重新加载缓存
-                Task.Run(async () => await frmMain.Instance.InitConfig(true)).Wait();
+                await frmMain.Instance.InitConfig(true);
                 
                 // 刷新表列表
                 LoadCacheTableList();

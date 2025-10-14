@@ -49,6 +49,7 @@ using RUINORERP.Global;
 using log4net.Repository.Hierarchy;
 using StackExchange.Redis;
 using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.Common
 {
@@ -495,7 +496,7 @@ namespace RUINORERP.UI.Common
             {
                 if (queryFilter.FilterLimitExpressions.Count == 0)
                 {
-                    var cacheList = BizCacheHelper.Manager.CacheEntityList.Get(entityType.Name);
+                    var cacheList = MyCacheManager.Instance.CacheEntityList.Get(entityType.Name);
                     if (cacheList != null)
                     {
                         var listType = cacheList.GetType();
@@ -505,7 +506,7 @@ namespace RUINORERP.UI.Common
                             return true;
                         }
                         if (TypeHelper.IsJArrayList(listType) &&
-                            BizCacheHelper.Manager.NewTableTypeList.TryGetValue(entityType.Name, out var elementType))
+                            MyCacheManager.Instance.NewTableTypeList.TryGetValue(entityType.Name, out var elementType))
                         {
                             entityList = TypeHelper.ConvertJArrayToList(elementType, cacheList as JArray);
                             return true;
@@ -850,7 +851,7 @@ namespace RUINORERP.UI.Common
 
                                             // 重新加载数据
                                             BindingSource NewBsList = new BindingSource();
-                                            var rslist = BizCacheHelper.Manager.CacheEntityList.Get(targetEntity.Name);
+                                            var rslist = MyCacheManager.Instance.CacheEntityList.Get(targetEntity.Name);
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {
                                                 Type listType = rslist.GetType();
@@ -862,7 +863,7 @@ namespace RUINORERP.UI.Common
                                                 else if (TypeHelper.IsJArrayList(listType))
                                                 {
                                                     Type elementType = null;
-                                                    BizCacheHelper.Manager.NewTableTypeList.TryGetValue(targetEntity.Name, out elementType);
+                                                    MyCacheManager.Instance.NewTableTypeList.TryGetValue(targetEntity.Name, out elementType);
                                                     List<object> myList = TypeHelper.ConvertJArrayToList(elementType, rslist as JArray);
                                                     NewBsList.DataSource = myList;
                                                 }
@@ -1214,7 +1215,7 @@ namespace RUINORERP.UI.Common
                                             //将List<T>类型的结果是object的转换为指定类型的List
                                             //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
                                             //有缓存的情况
-                                            var rslist = BizCacheHelper.Manager.CacheEntityList.Get(targetEntity.Name);
+                                            var rslist = MyCacheManager.Instance.CacheEntityList.Get(targetEntity.Name);
                                             //条件如果有限制了。就不能全部加载
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {
@@ -1230,7 +1231,7 @@ namespace RUINORERP.UI.Common
                                                     // Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + targetEntity.Name);
 
                                                     Type elementType = null;
-                                                    BizCacheHelper.Manager.NewTableTypeList.TryGetValue(targetEntity.Name, out elementType);
+                                                    MyCacheManager.Instance.NewTableTypeList.TryGetValue(targetEntity.Name, out elementType);
 
                                                     List<object> myList = TypeHelper.ConvertJArrayToList(elementType, rslist as JArray);
 
@@ -3309,17 +3310,17 @@ namespace RUINORERP.UI.Common
         /// <param name="cmbBox"></param>
         public static void InitDataToCmb<T>(string key, string value, string tableName, KryptonComboBox cmbBox) where T : class
         {
-            if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
             {
                 if (string.IsNullOrEmpty(value))
                 {
-                    value = BizCacheHelper.Manager.NewTableList[tableName].Value;
+                    value = MyCacheManager.Instance.NewTableList[tableName].Value;
                 }
                 List<T> tlist = new List<T>();
                 BindingSource bs = new BindingSource();
 
 
-                var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                var cachelist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                 if (cachelist == null)
                 {
                     Business.CommService.ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
@@ -3601,11 +3602,11 @@ namespace RUINORERP.UI.Common
             else
             {
                 #region 从缓存中获取数据源，否则查数据库
-                if (BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+                if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
                 {
                     BindingSource bs = new BindingSource();
                     List<T> tlist = new List<T>();
-                    var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    var cachelist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                     if (cachelist == null)
                     {
                         Business.CommService.ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
@@ -3632,7 +3633,7 @@ namespace RUINORERP.UI.Common
                             {
                                 // Type elementType = TypeHelper.GetFirstArgumentType(listType);
                                 Type elementType = null;
-                                if (BizCacheHelper.Manager.NewTableTypeList.TryGetValue(tableName, out elementType))
+                                if (MyCacheManager.Instance.NewTableTypeList.TryGetValue(tableName, out elementType))
                                 {
                                     foreach (var item in convertedList)
                                     {

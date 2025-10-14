@@ -49,6 +49,7 @@ using Fireasy.Common.Extensions;
 using RUINORERP.Global.Model;
 using RUINORERP.UI.BI;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -421,7 +422,7 @@ namespace RUINORERP.UI.PSI.PUR
                         if (entity.PayeeInfoID > 0)
                         {
                             tb_FM_PayeeInfo payeeInfo = null;
-                            var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                            var obj = MyCacheManager.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                             if (obj != null && obj.ToString() != "System.Object")
                             {
                                 if (obj is tb_FM_PayeeInfo cv)
@@ -542,7 +543,7 @@ namespace RUINORERP.UI.PSI.PUR
                 //如果客户有变化，带出对应有业务员
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.CustomerVendor_ID))
                 {
-                    var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CustomerVendor cv)
@@ -890,7 +891,7 @@ namespace RUINORERP.UI.PSI.PUR
                 if (EditEntity.PayStatus == (int)PayStatus.未付款)
                 {
                     var paytype = EditEntity.Paytype_ID.Value;
-                    var paymethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID.Value);
+                    var paymethod = MyCacheManager.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID.Value);
                     if (paymethod != null && paymethod.ToString() != "System.Object")
                     {
                         if (paymethod is tb_PaymentMethod pm)
@@ -908,7 +909,7 @@ namespace RUINORERP.UI.PSI.PUR
                 {
                     //付过时不能选账期  要选部分付款时使用的方式
                     var paytype = EditEntity.Paytype_ID.Value;
-                    var paymethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID.Value);
+                    var paymethod = MyCacheManager.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID.Value);
                     if (paymethod != null && paymethod.ToString() != "System.Object")
                     {
                         if (paymethod is tb_PaymentMethod pm)

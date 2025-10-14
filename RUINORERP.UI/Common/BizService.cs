@@ -1,4 +1,5 @@
 ﻿using RUINORERP.Business.CommService;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
@@ -42,7 +43,7 @@ namespace RUINORERP.UI.Common
         {
             List<tb_CurrencyExchangeRate> rates = new List<tb_CurrencyExchangeRate>();
 
-            var rslist = BizCacheHelper.Manager.CacheEntityList.Get("tb_CurrencyExchangeRate");
+            var rslist = MyCacheManager.Instance.CacheEntityList.Get("tb_CurrencyExchangeRate");
             if (rslist == null)
             {
                 rslist = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_CurrencyExchangeRate>().ToList();

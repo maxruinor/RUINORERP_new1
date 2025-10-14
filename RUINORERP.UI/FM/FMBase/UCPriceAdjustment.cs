@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -48,6 +48,7 @@ using RUINORERP.Business.Security;
 using System.Configuration;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.FM
 {
@@ -372,7 +373,7 @@ namespace RUINORERP.UI.FM
                 //到期日期应该是根据对应客户的账期的天数来算
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_PriceAdjustment>(c => c.CustomerVendor_ID))
                 {
-                    var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CustomerVendor cv)

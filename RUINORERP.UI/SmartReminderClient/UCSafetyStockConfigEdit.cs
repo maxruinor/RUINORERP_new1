@@ -31,6 +31,7 @@ using RUINORERP.Common.Extensions;
 using HLH.WinControl.MyTypeConverter;
 using System.Linq.Expressions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Extensions.Middlewares;
 
 
 namespace RUINORERP.UI.SmartReminderClient
@@ -85,7 +86,7 @@ namespace RUINORERP.UI.SmartReminderClient
             entity,
             e => e.LocationIds,
             clbLocation_IDs,
-           BizCacheHelper.Manager.GetEntityList<tb_Location>(),
+           MyCacheManager.Instance.GetEntityList<tb_Location>(),
             u => u.Location_ID,
             u => u.Name
             );

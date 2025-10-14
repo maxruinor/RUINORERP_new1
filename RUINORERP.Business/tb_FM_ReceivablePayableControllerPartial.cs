@@ -631,7 +631,7 @@ namespace RUINORERP.Business
             }
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -754,7 +754,7 @@ namespace RUINORERP.Business
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -773,7 +773,7 @@ namespace RUINORERP.Business
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -792,7 +792,7 @@ namespace RUINORERP.Business
             payable.BusinessDate = entity.AdjustDate;
             payable.DocumentDate = entity.Created_at.Value;
             payable.Currency_ID = entity.Currency_ID;
-            var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+            var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
             if (obj != null && obj.ToString() != "System.Object")
             {
                 if (obj is tb_CustomerVendor cv)
@@ -2085,7 +2085,7 @@ namespace RUINORERP.Business
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -2115,7 +2115,7 @@ namespace RUINORERP.Business
                 payable.ARAPNo = BizCodeGenerator.Instance.GetBizBillNo(BizType.应收款单);
                 if (entity.tb_saleorder.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
                 {
-                    var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CustomerVendor cv)
@@ -2273,7 +2273,7 @@ namespace RUINORERP.Business
             #region 如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话 
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup = BizCacheHelper.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)
@@ -2308,7 +2308,7 @@ namespace RUINORERP.Business
             //如果销售订单中付款方式不为空，并且是账期时
             if (entity.tb_purorder.Paytype_ID.HasValue && entity.tb_purorder.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
             {
-                var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                 if (obj != null && obj.ToString() != "System.Object")
                 {
                     if (obj is tb_CustomerVendor cv)
@@ -2457,7 +2457,7 @@ namespace RUINORERP.Business
             payable.DocumentDate = entity.Created_at.Value;
             //如果销售订单中付款方式不为空，并且是账期时
 
-            var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+            var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
             if (obj != null && obj.ToString() != "System.Object")
             {
                 if (obj is tb_CustomerVendor cv)

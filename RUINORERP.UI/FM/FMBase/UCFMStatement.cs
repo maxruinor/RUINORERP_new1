@@ -51,6 +51,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.StatusManagerService;
 using FastReport;
 using FastReport.Data;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.FM
 {
@@ -384,7 +385,7 @@ namespace RUINORERP.UI.FM
                         if (entity.PayeeInfoID > 0)
                         {
                             tb_FM_PayeeInfo payeeInfo = null;
-                            var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                            var obj = MyCacheManager.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                             if (obj != null)
                             {
                                 if (obj is tb_FM_PayeeInfo cv)
@@ -420,7 +421,7 @@ namespace RUINORERP.UI.FM
                 //到期日期应该是根据对应客户的账期的天数来算
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_FM_Statement>(c => c.CustomerVendor_ID))
                 {
-                    var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CustomerVendor cv)
@@ -844,7 +845,7 @@ namespace RUINORERP.UI.FM
                 //收付款单中的  收款或付款账号中的币别是否与选的币别一致。
                 //if (NeedValidated && EditEntity.Currency_ID > 0 && EditEntity.Account_id > 0)
                 //{
-                //    tb_FM_Account bizcatch = BizCacheHelper.Instance.GetEntity<tb_FM_Account>(EditEntity.Account_id);
+                //    tb_FM_Account bizcatch = MyCacheManager.Instance.GetEntity<tb_FM_Account>(EditEntity.Account_id);
                 //    if (bizcatch != null && bizcatch.Currency_ID != EditEntity.Currency_ID)
                 //    {
                 //        MessageBox.Show("收付款账号中的币别与当前单据的币别不一致。");

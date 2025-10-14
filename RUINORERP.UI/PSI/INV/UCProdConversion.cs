@@ -40,6 +40,7 @@ using Netron.GraphLib;
 using Krypton.Toolkit;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.CommService;
+using RUINORERP.Extensions.Middlewares;
 
 
 
@@ -448,7 +449,7 @@ namespace RUINORERP.UI.PSI.INV
                         for (global::System.Int32 r = 0; r < zeroDetails.Count; r++)
                         {
                             var zeroDetail = zeroDetails[r];
-                            var prod = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(zeroDetail.ProdDetailID_from);
+                            var prod = MyCacheManager.Instance.GetEntity<View_ProdDetail>(zeroDetail.ProdDetailID_from);
                             if (prod != null && prod.Inv_Cost.HasValue)
                             {
                                 zeroDetail.TargetInitCost = prod.Inv_Cost.Value;

@@ -218,7 +218,7 @@ namespace RUINORERP.Server
             return dataTable;
         }
 
-        private void toolStripButton刷新缓存_Click(object sender, EventArgs e)
+        private async void toolStripButton刷新缓存_Click(object sender, EventArgs e)
         {
             //这里添加所有缓存
             try
@@ -227,7 +227,7 @@ namespace RUINORERP.Server
                 if (MyCacheManager.Instance.CacheEntityList == null)
                 {
                     // 如果缓存为空，尝试重新初始化
-                    Task.Run(async () => await frmMain.Instance.InitConfig(true)).Wait();
+                    await frmMain.Instance.InitConfig(true);
                 }
 
                 // 刷新UI显示
@@ -459,13 +459,12 @@ namespace RUINORERP.Server
                     Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
 
                     // 确保BizCacheHelper实例存在
-                    if (BizCacheHelper.Instance == null)
+                    if (MyCacheManager.Instance == null)
                     {
                         MessageBox.Show("缓存帮助类未初始化", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
 
-                    BizCacheHelper.Instance.SetDictDataSource(tableName, true);
                     stopwatchLoadUI.Stop();
 
                     // 刷新UI显示

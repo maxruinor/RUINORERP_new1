@@ -404,7 +404,7 @@ namespace RUINORERP.UI.SysConfig
 
             // 获取列名
             string columnName = dataGridView.Columns[e.ColumnIndex].Name;
-            object obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(e.Value);
+            object obj = MyCacheManager.Instance.GetEntity<View_ProdDetail>(e.Value);
             if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail prodDetail)
             {
                 e.Value = prodDetail.CNName + prodDetail.prop + prodDetail.Specifications;
@@ -459,7 +459,7 @@ namespace RUINORERP.UI.SysConfig
                 txtUnitCost.Text = inventory.Inv_Cost.ToString();
                 #endregion
 
-                object obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(ProdDetailID);
+                object obj = MyCacheManager.Instance.GetEntity<View_ProdDetail>(ProdDetailID);
                 if (obj != null && obj.GetType().Name != "Object" && obj is View_ProdDetail _prodDetail)
                 {
                     prodDetail = _prodDetail;

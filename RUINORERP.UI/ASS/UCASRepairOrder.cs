@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -47,6 +47,7 @@ using RUINORERP.UI.PSI.SAL;
 using RUINORERP.Common.Extensions;
 using NPOI.SS.Formula.Functions;
 using ICSharpCode.SharpZipLib.Tar;
+using RUINORERP.Extensions.Middlewares;
 
 
 namespace RUINORERP.UI.ASS
@@ -523,7 +524,7 @@ namespace RUINORERP.UI.ASS
 
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleApply>(c => c.CustomerVendor_ID))
                 {
-                    var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CustomerVendor cv)
@@ -936,7 +937,7 @@ namespace RUINORERP.UI.ASS
                     if (EditEntity.Paytype_ID > 0)
                     {
                         var paytype = EditEntity.Paytype_ID;
-                        var paymethod = BizCacheHelper.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID);
+                        var paymethod = MyCacheManager.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID);
                         if (paymethod != null && paymethod.ToString() != "System.Object")
                         {
                             if (paymethod is tb_PaymentMethod pm)

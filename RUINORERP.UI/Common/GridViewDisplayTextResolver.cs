@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -58,6 +58,7 @@ using FastReport.Table;
 using Newtonsoft.Json.Linq;
 using System.Collections;
 using Org.BouncyCastle.Asn1.X509;
+using RUINORERP.Extensions.Middlewares;
 
 
 namespace RUINORERP.UI.Common
@@ -91,7 +92,7 @@ namespace RUINORERP.UI.Common
                 List<Type> RelatedTableTypes = instance.InstanceRelatedTableTypes;
                 foreach (var item in RelatedTableTypes)
                 {
-                    BizCacheHelper.Manager.SetFkColList(item);
+                    MyCacheManager.Instance.SetFkColList(item);
                 }
                 return RelatedTableTypes;
             });
@@ -161,7 +162,7 @@ namespace RUINORERP.UI.Common
             }
             //只处理需要缓存的表
             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (BizCacheHelper.Manager.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+            if (MyCacheManager.Instance.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
             {
                 //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
                 mapping.ReferenceDefaultDisplayFieldName = pair.Value;
@@ -252,7 +253,7 @@ namespace RUINORERP.UI.Common
 
             if (_type.Name.Contains("View_") || _type.Name.Contains("Proc_"))
             {
-                //视图优先添加本身其次是关联表
+                //视图优先添加本身 subsequent to 关联表
                 List<Type> relatedTableTypes = new List<Type>();
                 relatedTableTypes.Add(_type);
                 //BaseViewEntity baseView = (BaseViewEntity)Activator.CreateInstance(_type);
@@ -261,7 +262,7 @@ namespace RUINORERP.UI.Common
                 {
                     if (item.Name.Contains("tb_"))
                     {
-                        BizCacheHelper.Manager.SetFkColList(item);
+                        MyCacheManager.Instance.SetFkColList(item);
                     }
                     string displayName = displayHelper.GetGridViewDisplayText(item.Name, columnName, e.Value);
                     if (!string.IsNullOrEmpty(displayName))

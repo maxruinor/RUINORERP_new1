@@ -2,6 +2,7 @@ using Mapster;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.CommService;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
@@ -137,7 +138,7 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
         private View_ProdInfo GetProductInfoAsync(long productId)
         {
             // 实现产品信息获取...
-            View_ProdInfo obj = BizCacheHelper.Instance.GetEntity<View_ProdInfo>(productId);
+            View_ProdInfo obj = MyCacheManager.Instance.GetEntity<View_ProdInfo>(productId);
             if (obj != null && obj is View_ProdInfo prodDetail)
             {
                 return prodDetail;

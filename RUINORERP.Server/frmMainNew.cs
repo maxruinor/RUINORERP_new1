@@ -350,12 +350,12 @@ namespace RUINORERP.Server
         /// <summary>
         /// 重新加载配置
         /// </summary>
-        private void ReloadConfig()
+        private async void ReloadConfig()
         {
             try
             {
                 // 重新加载配置逻辑
-                Task.Run(async () => await frmMain.Instance.InitConfig(true)).Wait();
+                await frmMain.Instance.InitConfig(true);
                 MessageBox.Show("配置已重新加载", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)

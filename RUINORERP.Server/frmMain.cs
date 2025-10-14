@@ -431,11 +431,6 @@ namespace RUINORERP.Server
                 _logger.LogError("加载了ERP服务器窗体：frmMain_Load");
                 this.IsMdiContainer = true; // 设置父窗体为MDI容器
                 menuStrip1.MdiWindowListItem = 窗口ToolStripMenuItem;
-                //InitAll();
-
-                //手动初始化
-                BizCacheHelper.Instance = Startup.GetFromFac<BizCacheHelper>();
-                BizCacheHelper.InitManager();
 
                 IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
                 cache.Set("test1", "test123");
@@ -678,7 +673,6 @@ namespace RUINORERP.Server
                     {
                         if (!MyCacheManager.Instance.CacheEntityList.Exists(item.Key))
                         {
-                            BizCacheHelper.Instance.SetDictDataSource(item.Key, true);
                             if (frmMain.Instance.IsDebug)
                             {
                                 frmMain.Instance.PrintInfoLog($"检查更新过期的缓存 ，成功添加{item.Key}。");
@@ -758,9 +752,17 @@ namespace RUINORERP.Server
 
         public async Task InitConfig(bool LoadData = true)
         {
-            BizCacheHelper cacheHelper = Startup.GetFromFac<BizCacheHelper>();
+          
             Stopwatch stopwatch = Stopwatch.StartNew();
-            cacheHelper.InitCacheDict(LoadData);
+            // MyCacheManager.Instance.InitCacheDict(LoadData); // 已废弃，使用CacheInitializationService替代
+            
+            // 使用CacheInitializationService从数据库查询并初始化缓存数据
+            if (LoadData)
+            {
+                var cacheInitializationService = Startup.GetFromFac<CacheInitializationService>();
+                await cacheInitializationService.InitializeAllCacheAsync();
+            }
+            
             stopwatch.Stop();
             frmMain.Instance.PrintInfoLog($"InitConfig总执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
             await Task.Delay(0);

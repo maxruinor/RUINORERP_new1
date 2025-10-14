@@ -29,6 +29,7 @@ using Control = System.Windows.Forms.Control;
 using Netron.GraphLib;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -251,7 +252,7 @@ namespace RUINORERP.UI.BaseForm
                         BindingSource NewBsList = new BindingSource();
                         //将List<T>类型的结果是object的转换为指定类型的List
                         //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
-                        var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(fktableName);
+                        var cachelist = MyCacheManager.Instance.CacheEntityList.Get(fktableName);
                         if (cachelist != null)
                         {
                             // 获取原始 List<T> 的类型参数
@@ -266,7 +267,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 //Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
                                 Type elementType = null;
-                                BizCacheHelper.Manager.NewTableTypeList.TryGetValue(fktableName, out elementType);
+                                MyCacheManager.Instance.NewTableTypeList.TryGetValue(fktableName, out elementType);
                                 List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 
                                 #region  jsonlist

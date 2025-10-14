@@ -35,6 +35,7 @@ using RUINOR.WinFormsUI.ChkComboBox;
 using Netron.GraphLib;
 using System.Web.UI;
 using RUINORERP.Business.CommService;
+using RUINORERP.Extensions.Middlewares;
 namespace RUINORERP.UI.AdvancedUIModule
 {
     /// <summary>
@@ -292,7 +293,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                             choiceCanIgnore.Width = 180;
                             //只处理需要缓存的表
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(coldata.FKTableName, out pair))
+                            if (MyCacheManager.Instance.NewTableList.TryGetValue(coldata.FKTableName, out pair))
                             {
                                 string IDColName = pair.Key;
                                 string ColName = pair.Value;
@@ -368,7 +369,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                             cmb.Width = 150;
                             //只处理需要缓存的表
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(coldata.FKTableName, out pair))
+                            if (MyCacheManager.Instance.NewTableList.TryGetValue(coldata.FKTableName, out pair))
                             {
                                 string IDColName = pair.Key;
                                 string ColName = pair.Value;
@@ -450,7 +451,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                             cmb.Width = 150;
                             //只处理需要缓存的表
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(coldata.FKTableName, out pair))
+                            if (MyCacheManager.Instance.NewTableList.TryGetValue(coldata.FKTableName, out pair))
                             {
                                 string IDColName = pair.Key;
                                 string ColName = pair.Value;
@@ -949,7 +950,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                             //只处理需要缓存的表
 
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            if (BizCacheHelper.Manager.NewTableList.TryGetValue(coldata.FKTableName, out pair))
+                            if (MyCacheManager.Instance.NewTableList.TryGetValue(coldata.FKTableName, out pair))
                             {
                                 string IDColName = pair.Key;
                                 string ColName = pair.Value;

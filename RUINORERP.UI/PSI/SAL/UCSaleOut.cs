@@ -48,6 +48,7 @@ using System.Threading;
 using RUINORERP.UI.ToolForm;
 using Netron.GraphLib;
 using LiveChartsCore.Geo;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -530,7 +531,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                     if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.CustomerVendor_ID))
                     {
-                        var obj = BizCacheHelper.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                        var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                         if (obj != null && obj.ToString() != "System.Object")
                         {
                             if (obj is tb_CustomerVendor cv)

@@ -16,6 +16,7 @@ using Autofac.Core;
 using Autofac.Extras.DynamicProxy;
 using RUINORERP.Extensions.AOP;
 using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.Business.DI
 {
@@ -65,9 +66,15 @@ namespace RUINORERP.Business.DI
             // 此处不再重复注册，以避免冲突
 
             // 注册BizCacheHelper缓存帮助类
-            builder.RegisterType<BizCacheHelper>()
+            builder.RegisterType<MyCacheManager>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+
+            // 注册缓存初始化服务
+            builder.RegisterType<CacheInitializationService>()
+                .AsSelf()
+                .SingleInstance()
                 .PropertiesAutowired();
 
             // 注册实体加载服务

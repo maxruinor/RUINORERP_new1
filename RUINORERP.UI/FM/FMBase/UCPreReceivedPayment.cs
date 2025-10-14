@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -34,6 +34,7 @@ using MathNet.Numerics.Optimization;
 using NPOI.SS.Formula.Functions;
 using RUINOR.Core;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.FM
 {
@@ -179,7 +180,7 @@ namespace RUINORERP.UI.FM
                 //根据币别如果是外币才显示外币相关的字段
                 if (entity.Currency_ID > 0)
                 {
-                    var obj = BizCacheHelper.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
+                    var obj = MyCacheManager.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_Currency cv)
@@ -339,7 +340,7 @@ namespace RUINORERP.UI.FM
                         if (entity.PayeeInfoID > 0)
                         {
                             tb_FM_PayeeInfo payeeInfo = null;
-                            var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                            var obj = MyCacheManager.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                             if (obj != null && obj.ToString() != "System.Object")
                             {
                                 if (obj is tb_FM_PayeeInfo cv)
@@ -380,7 +381,7 @@ namespace RUINORERP.UI.FM
                         //根据币别如果是外币才显示外币相关的字段
                         if (entity.Currency_ID > 0)
                         {
-                            var obj = BizCacheHelper.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
+                            var obj = MyCacheManager.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
                             if (obj != null && obj.ToString() != "System.Object")
                             {
                                 if (obj is tb_Currency cv)
@@ -417,7 +418,7 @@ namespace RUINORERP.UI.FM
             //加载收款信息
             if (entity.PayeeInfoID.HasValue && entity.PayeeInfoID > 0)
             {
-                var obj = BizCacheHelper.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                var obj = MyCacheManager.Instance.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                 if (obj != null && obj.ToString() != "System.Object")
                 {
                     if (obj is tb_FM_PayeeInfo cv)
@@ -515,7 +516,7 @@ namespace RUINORERP.UI.FM
                 //收付款单中的  收款或付款账号中的币别是否与选的币别一致。
                 if (NeedValidated && EditEntity.Currency_ID > 0 && EditEntity.Account_id > 0)
                 {
-                    tb_FM_Account bizcatch = BizCacheHelper.Instance.GetEntity<tb_FM_Account>(EditEntity.Account_id);
+                    tb_FM_Account bizcatch = MyCacheManager.Instance.GetEntity<tb_FM_Account>(EditEntity.Account_id);
                     if (bizcatch != null && bizcatch.Currency_ID != EditEntity.Currency_ID)
                     {
                         MessageBox.Show("收付款账号中的币别与当前单据的币别不一致。");

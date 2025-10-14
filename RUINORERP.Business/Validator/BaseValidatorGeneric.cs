@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model.ConfigModel;
 using SharpYaml.Tokens;
 using System;
@@ -57,11 +58,11 @@ namespace RUINORERP.Business
             string tableName = typeof(T).Name;
             //只处理需要缓存的表
             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (BizCacheHelper.Manager.NewTableList.TryGetValue(tableName, out pair))
+            if (MyCacheManager.Instance.NewTableList.TryGetValue(tableName, out pair))
             {
-                if (BizCacheHelper.Manager.CacheEntityList.Exists(tableName))
+                if (MyCacheManager.Instance.CacheEntityList.Exists(tableName))
                 {
-                    var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    var cachelist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
 
                     // 获取原始 List<T> 的类型参数
                     Type listType = cachelist.GetType();

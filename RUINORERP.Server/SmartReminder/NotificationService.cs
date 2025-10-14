@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Pipelines.Sockets.Unofficial;
 using RUINORERP.Business.CommService;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
@@ -160,7 +161,7 @@ namespace RUINORERP.Server.SmartReminder
                                          .ToList();
             for (int i = 0; i < UserIDList.Count; i++)
             {
-                tb_UserInfo userInfo = BizCacheHelper.Instance.GetEntity<tb_UserInfo>(Convert.ToInt64(UserIDList[i]));
+                tb_UserInfo userInfo = MyCacheManager.Instance.GetEntity<tb_UserInfo>(Convert.ToInt64(UserIDList[i]));
                 if (userInfo != null)
                 {
                     recipients.Add(userInfo);

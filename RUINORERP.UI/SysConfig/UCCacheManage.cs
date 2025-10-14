@@ -53,7 +53,7 @@ namespace RUINORERP.UI.SysConfig
             listBoxTableList.Items.Clear();
 
             List<string> list = new List<string>();
-            foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+            foreach (var tableName in MyCacheManager.Instance.NewTableList.Keys)
             {
                 list.Add(tableName);
             }
@@ -61,7 +61,7 @@ namespace RUINORERP.UI.SysConfig
             foreach (var tableName in list)
             {
 
-                var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                var CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                 if (CacheList == null)
                 {
                     SuperValue kv = new SuperValue(tableName + "[" + 0 + "]", tableName);
@@ -110,7 +110,7 @@ namespace RUINORERP.UI.SysConfig
                 }
                 else
                 {
-                    var CacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                    var CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                     if (CacheList == null)
                     {
                         dataGridView1.DataSource = null;
@@ -141,7 +141,7 @@ namespace RUINORERP.UI.SysConfig
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                BizCacheHelper.Manager.CacheEntityList.Remove(tableName);
+                MyCacheManager.Instance.CacheEntityList.Remove(tableName);
                 CacheInfo lastCacheInfo = new CacheInfo(tableName, 0);
                 lastCacheInfo.HasExpire = false;
                 //看是更新好。还是移除好。主要看后面的更新机制。

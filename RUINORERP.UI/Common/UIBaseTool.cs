@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Helper;
@@ -113,7 +113,7 @@ namespace RUINORERP.UI.Common
                                                 BindingSource NewBsList = new BindingSource();
                                                 //将List<T>类型的结果是object的转换为指定类型的List
                                                 //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
-                                                var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(fktableName);
+                                                var cachelist = MyCacheManager.Instance.CacheEntityList.Get(fktableName);
                                                 if (cachelist != null)
                                                 {
                                                     // 获取原始 List<T> 的类型参数
@@ -128,7 +128,7 @@ namespace RUINORERP.UI.Common
                                                     {
                                                        // Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
                                                         Type elementType = null;
-                                                        BizCacheHelper.Manager.NewTableTypeList.TryGetValue(fktableName, out elementType);
+                                                        MyCacheManager.Instance.NewTableTypeList.TryGetValue(fktableName, out elementType);
 
                                                         List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 
@@ -254,7 +254,7 @@ namespace RUINORERP.UI.Common
                                                 BindingSource NewBsList = new BindingSource();
                                                 //将List<T>类型的结果是object的转换为指定类型的List
                                                 //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
-                                                var cachelist = BizCacheHelper.Manager.CacheEntityList.Get(fktableName);
+                                                var cachelist = MyCacheManager.Instance.CacheEntityList.Get(fktableName);
                                                 if (cachelist != null)
                                                 {
                                                     // 获取原始 List<T> 的类型参数
@@ -270,7 +270,7 @@ namespace RUINORERP.UI.Common
                                                        // Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + fktableName);
 
                                                         Type elementType = null;
-                                                        BizCacheHelper.Manager.NewTableTypeList.TryGetValue(fktableName, out elementType);
+                                                        MyCacheManager.Instance.NewTableTypeList.TryGetValue(fktableName, out elementType);
 
                                                         List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
 

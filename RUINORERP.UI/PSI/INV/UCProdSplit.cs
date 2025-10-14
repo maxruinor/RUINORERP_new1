@@ -40,6 +40,7 @@ using FastReport.Table;
 using Org.BouncyCastle.Asn1.Cmp;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Extensions.Middlewares;
 
 
 
@@ -790,7 +791,7 @@ namespace RUINORERP.UI.PSI.INV
                             bOM_SDetail.Qty = (RowDetails.FirstOrDefault(c => c.ProdDetailID == bOM_SDetail.ProdDetailID
 
                             ).UsedQty * EditEntity.SplitParentQty / bomOutQty).ToInt();
-                            View_ProdDetail obj = BizCacheHelper.Instance.GetEntity<View_ProdDetail>(item.ProdDetailID);
+                            View_ProdDetail obj = MyCacheManager.Instance.GetEntity<View_ProdDetail>(item.ProdDetailID);
                             if (obj != null)
                             {
                                 bOM_SDetail.property = obj.prop;

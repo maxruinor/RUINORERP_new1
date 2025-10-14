@@ -1,4 +1,4 @@
-﻿using Castle.Core.Resource;
+using Castle.Core.Resource;
 using NPOI.SS.UserModel.Charts;
 using Org.BouncyCastle.Asn1.Cms;
 using Org.BouncyCastle.Asn1.Crmf;
@@ -24,6 +24,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using ValueType = RUINORERP.UI.ChartFramework.Core.ValueType;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
 {
@@ -521,7 +522,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                 foreach (var group in seriesGroups)
                 {
                     string seriesName = group.Key.ToString();
-                    tb_Employee Employee = BizCacheHelper.Instance.GetEntity<tb_Employee>(seriesName.ToLong());
+                    tb_Employee Employee = MyCacheManager.Instance.GetEntity<tb_Employee>(seriesName.ToLong());
                     if (Employee != null)
                     {
                         seriesName = Employee.Employee_Name;

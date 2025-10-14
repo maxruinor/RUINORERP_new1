@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using RUINORERP.Business.CommService;
+using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
@@ -148,7 +149,7 @@ namespace RUINORERP.Server
         {
             IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
 
-            object obj = BizCacheHelper.Instance.GetValue("tb_CustomerVendor", 1740971599693221888);
+            object obj = MyCacheManager.Instance.GetValue("tb_CustomerVendor", 1740971599693221888);
             if (obj != null)
             {
 

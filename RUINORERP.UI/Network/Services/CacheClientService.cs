@@ -607,7 +607,7 @@ namespace RUINORERP.UI.Network.Services
             if (objList != null && objList is JArray jArrayData)
             {
                 // 获取表对应的实体类型
-                if (BizCacheHelper.Manager.NewTableTypeList.TryGetValue(tableName, out Type entityType))
+                if (MyCacheManager.Instance.NewTableTypeList.TryGetValue(tableName, out Type entityType))
                 {
                     // 转换JArray到实体列表
                     try
@@ -681,7 +681,7 @@ namespace RUINORERP.UI.Network.Services
             _log?.LogDebug("从缓存获取名称，表名={0}，ID={1}", tableName, id);
 
             // 检查表是否在缓存中
-            if (!BizCacheHelper.Manager.NewTableList.ContainsKey(tableName))
+            if (!MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
             {
                 _log?.LogWarning("表{0}不在缓存配置中，尝试请求缓存", tableName);
                 // 如果不在缓存中，尝试请求
@@ -690,7 +690,7 @@ namespace RUINORERP.UI.Network.Services
             }
 
             // 获取缓存数据
-            var cacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+            var cacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
             if (cacheList == null)
             {
                 _log?.LogWarning("表{0}的缓存数据为空", tableName);
@@ -698,7 +698,7 @@ namespace RUINORERP.UI.Network.Services
             }
 
             // 获取ID和Name列名
-            var columnPair = BizCacheHelper.Manager.NewTableList[tableName];
+            var columnPair = MyCacheManager.Instance.NewTableList[tableName];
             string idColName = columnPair.Key;
             string nameColName = columnPair.Value;
 
@@ -776,7 +776,7 @@ namespace RUINORERP.UI.Network.Services
         private async Task ProcessClearAllCacheAsync()
         {
             _log?.LogInformation("开始清理所有缓存");
-            BizCacheHelper.Manager.CacheEntityList.Clear();
+            MyCacheManager.Instance.CacheEntityList.Clear();
             lock (_lockObj)
             {
                 _lastRequestTimes.Clear();
@@ -1008,7 +1008,7 @@ namespace RUINORERP.UI.Network.Services
                 _log?.LogInformation("缓存清理成功，表名={0}", tableName);
 
                 // 清理本地缓存
-                BizCacheHelper.Manager.CacheEntityList.Remove(tableName);
+                MyCacheManager.Instance.CacheEntityList.Remove(tableName);
 
                 // 清理最后请求时间记录
                 lock (_lockObj)
@@ -1061,7 +1061,7 @@ namespace RUINORERP.UI.Network.Services
             if (lastRequestTime == DateTime.MinValue)
                 return false;
 
-            var cacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+            var cacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
             if (cacheList == null)
                 return false;
 
@@ -1209,9 +1209,9 @@ namespace RUINORERP.UI.Network.Services
             var statusInfo = new Dictionary<string, CacheStatusInfo>();
 
             _log?.LogDebug("开始获取缓存状态");
-            foreach (var tableName in BizCacheHelper.Manager.NewTableList.Keys)
+            foreach (var tableName in MyCacheManager.Instance.NewTableList.Keys)
             {
-                var cacheList = BizCacheHelper.Manager.CacheEntityList.Get(tableName);
+                var cacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                 int count = 0;
                 if (cacheList != null && cacheList is IEnumerable<object> enumerable)
                 {

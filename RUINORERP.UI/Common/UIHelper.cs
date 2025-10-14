@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common;
@@ -37,6 +37,7 @@ using FluentValidation.Results;
 using RUINORERP.Global;
 using RUINORERP.Model.Dto;
 using RUINORERP.Model.Utilities;
+using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.Common
 {
@@ -1939,7 +1940,7 @@ namespace RUINORERP.UI.Common
                     return "";
                 }
                 string baseTableName = typeof(tb_Employee).Name;
-                object obj = BizCacheHelper.Instance.GetValue(baseTableName, value);
+                object obj = MyCacheManager.Instance.GetValue(baseTableName, value);
                 if (obj != null && obj.ToString() != "System.Object")
                 {
                     NameValue = obj.ToString();
@@ -1952,7 +1953,7 @@ namespace RUINORERP.UI.Common
             {
                 #region
                 string tableName = TableName;
-                if (!BizCacheHelper.Manager.FkPairTableList.ContainsKey(tableName))
+                if (!MyCacheManager.Instance.FkPairTableList.ContainsKey(tableName))
                 {
                     List<KeyValuePair<string, string>> kvSelflist = new List<KeyValuePair<string, string>>();
                     Expression<Func<tb_ProdCategories, long?>> expKey = c => c.Parent_id;
@@ -1962,7 +1963,7 @@ namespace RUINORERP.UI.Common
                     kvSelflist.Add(kv);
                     if (kvSelflist.Count > 0)
                     {
-                        BizCacheHelper.Manager.FkPairTableList.TryAdd(tableName, kvSelflist);
+                        MyCacheManager.Instance.FkPairTableList.TryAdd(tableName, kvSelflist);
                     }
                 }
 
@@ -1972,17 +1973,17 @@ namespace RUINORERP.UI.Common
             //视图暂时没有实体生成时没有设置关联外键的特性，所以在具体业务实现时 手工指定成一个集合了。
             if (!TableName.Contains("View") && type != null)
             {
-                BizCacheHelper.Manager.SetFkColList(type);
+                MyCacheManager.Instance.SetFkColList(type);
             }
 
             //优先处理本身，比方 BOM_ID显示BOM_NO，只要传tb_BOM_S
-            if (BizCacheHelper.Manager.NewTableList.ContainsKey(TableName))
+            if (MyCacheManager.Instance.NewTableList.ContainsKey(TableName))
             {
-                var nkv = BizCacheHelper.Manager.NewTableList[TableName];
+                var nkv = MyCacheManager.Instance.NewTableList[TableName];
                 if (nkv.Key == idColName)
                 {
                     string baseTableName = TableName;
-                    object obj = BizCacheHelper.Instance.GetValue(baseTableName, value);
+                    object obj = MyCacheManager.Instance.GetValue(baseTableName, value);
                     if (obj != null && obj.GetType().Name != "Object")
                     {
                         NameValue = obj.ToString();
@@ -1993,7 +1994,7 @@ namespace RUINORERP.UI.Common
             }
 
             List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
-            if (BizCacheHelper.Manager.FkPairTableList.TryGetValue(TableName, out kvlist))
+            if (MyCacheManager.Instance.FkPairTableList.TryGetValue(TableName, out kvlist))
             {
                 var kv = kvlist.Find(k => k.Key == idColName);
                 //如果找不到呢？
@@ -2002,7 +2003,7 @@ namespace RUINORERP.UI.Common
                     return string.Empty;
                 }
                 string baseTableName = kv.Value;
-                object obj = BizCacheHelper.Instance.GetValue(baseTableName, value);
+                object obj = MyCacheManager.Instance.GetValue(baseTableName, value);
                 if (obj != null)
                 {
                     NameValue = obj.ToString();
@@ -2010,7 +2011,7 @@ namespace RUINORERP.UI.Common
             }
             if (string.IsNullOrEmpty(NameValue) && TableName.Contains("View"))
             {
-                object obj = BizCacheHelper.Instance.GetValue(TableName, value);
+                object obj = MyCacheManager.Instance.GetValue(TableName, value);
                 if (obj != null && obj.GetType().Name != "Object")
                 {
                     NameValue = obj.ToString();
@@ -2020,7 +2021,7 @@ namespace RUINORERP.UI.Common
             {
                 if (string.IsNullOrEmpty(NameValue))
                 {
-                    object obj = BizCacheHelper.Instance.GetValue(TableName, value);
+                    object obj = MyCacheManager.Instance.GetValue(TableName, value);
                     if (obj != null && obj.GetType().Name != "Object")
                     {
                         NameValue = obj.ToString();
@@ -2060,7 +2061,7 @@ namespace RUINORERP.UI.Common
                 }
                 //通过id找名称，知道哪一个表的情况下。在缓存里面找
                 string baseTableName = typeof(tb_Employee).Name;
-                object obj = BizCacheHelper.Instance.GetValue(baseTableName, value);
+                object obj = MyCacheManager.Instance.GetValue(baseTableName, value);
                 if (obj != null && obj.ToString() != "System.Object")
                 {
                     NameValue = obj.ToString();
@@ -2073,7 +2074,7 @@ namespace RUINORERP.UI.Common
             {
                 #region
                 string tableName = typeof(T).Name;
-                if (!BizCacheHelper.Manager.FkPairTableList.ContainsKey(tableName))
+                if (!MyCacheManager.Instance.FkPairTableList.ContainsKey(tableName))
                 {
                     List<KeyValuePair<string, string>> kvSelflist = new List<KeyValuePair<string, string>>();
                     Expression<Func<tb_ProdCategories, long?>> expKey = c => c.Parent_id;
@@ -2083,7 +2084,7 @@ namespace RUINORERP.UI.Common
                     kvSelflist.Add(kv);
                     if (kvSelflist.Count > 0)
                     {
-                        BizCacheHelper.Manager.FkPairTableList.TryAdd(tableName, kvSelflist);
+                        MyCacheManager.Instance.FkPairTableList.TryAdd(tableName, kvSelflist);
                     }
                 }
 
@@ -2091,11 +2092,11 @@ namespace RUINORERP.UI.Common
             }
             if (!typeof(T).Name.Contains("View"))
             {
-                BizCacheHelper.Manager.SetFkColList<T>();
+                MyCacheManager.Instance.SetFkColList<T>();
             }
 
             List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
-            if (BizCacheHelper.Manager.FkPairTableList.TryGetValue(typeof(T).Name, out kvlist))
+            if (MyCacheManager.Instance.FkPairTableList.TryGetValue(typeof(T).Name, out kvlist))
             {
                 var kv = kvlist.Find(k => k.Key == idColName);
                 //如果找不到呢？
@@ -2104,7 +2105,7 @@ namespace RUINORERP.UI.Common
                     return string.Empty;
                 }
                 string baseTableName = kv.Value;
-                object obj = BizCacheHelper.Instance.GetValue(baseTableName, value);
+                object obj = MyCacheManager.Instance.GetValue(baseTableName, value);
                 if (obj != null)
                 {
                     NameValue = obj.ToString();

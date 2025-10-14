@@ -315,7 +315,7 @@ namespace RUINORERP.UI.SysConfig
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                BizCacheHelper.Manager.CacheEntityList.Remove(tableName);
+                MyCacheManager.Instance.CacheEntityList.Remove(tableName);
                 CacheInfo lastCacheInfo = new CacheInfo(tableName, 0);
                 lastCacheInfo.HasExpire = false;
                 //看是更新好。还是移除好。主要看后面的更新机制。

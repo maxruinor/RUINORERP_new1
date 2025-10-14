@@ -28,9 +28,11 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.CommonUI;
 using RUINORERP.UI.ATechnologyStack;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.UI.Common.HelpSystem;
 
 namespace RUINORERP.UI.PSI.INV
 {
+    [HelpMapping("inventory/query.html", Title = "库存查询")]
     [MenuAttrAssemblyInfo("库存查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.库存管理, BizType.库存查询)]
     public partial class UCInventoryQuery : BaseForm.BaseListGeneric<View_Inventory>, IToolStripMenuInfoAuth
     {

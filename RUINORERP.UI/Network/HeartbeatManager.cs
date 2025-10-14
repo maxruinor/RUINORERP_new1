@@ -61,7 +61,6 @@ namespace RUINORERP.UI.Network
             {
                 lock (_lock)
                 {
-                    double successRate = _totalHeartbeats > 0 ? (double)_successfulHeartbeats / _totalHeartbeats * 100 : 0;
                     return new HeartbeatStatistics(
                         _totalHeartbeats,
                         _successfulHeartbeats,

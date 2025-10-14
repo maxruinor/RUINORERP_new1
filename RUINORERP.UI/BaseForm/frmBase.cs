@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using RUINORERP.UI.Common.HelpSystem;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -17,6 +18,9 @@ namespace RUINORERP.UI.BaseForm
         public frmBase()
         {
             InitializeComponent();
+            
+            // 启用F1帮助功能
+            this.EnableF1Help();
         }
 
         /// <summary>
@@ -37,6 +41,10 @@ namespace RUINORERP.UI.BaseForm
                     case Keys.Escape:
                         this.Close();//csc关闭窗体
                         break;
+                    case Keys.F1:
+                        // 显示帮助
+                        HelpManager.ShowHelp(this);
+                        return true;
                 }
 
             }

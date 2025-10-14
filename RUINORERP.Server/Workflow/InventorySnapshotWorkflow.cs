@@ -129,7 +129,7 @@ namespace RUINORERP.Server.Workflow
                 var timer = new System.Timers.Timer(interval.TotalMilliseconds);
                 timer.Elapsed += async (sender, e) =>
                 {
-                    frmMain.Instance.PrintInfoLog($"开始工作流执行: {System.DateTime.Now.ToString()}");
+                    frmMainNew.Instance.PrintInfoLog($"开始工作流执行: {System.DateTime.Now.ToString()}");
                     try
                     {
                         // 执行工作流

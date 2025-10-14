@@ -49,15 +49,15 @@ namespace RUINORERP.Server.Workflow.WFApproval
                {
                    Console.WriteLine("Workflow complete");
                    _logger.LogInformation($"Workflow complete");
-                  // frmMain.Instance.workflowlist.Remove(session as SessionforBiz);
+                  // frmMainNew.Instance.workflowlist.Remove(session as SessionforBiz);
 
-                   KeyValuePair<string, string> kv = frmMain.Instance.workflowlist.Where(k => k.Value == context.Workflow.Id).FirstOrDefault();
+                   KeyValuePair<string, string> kv = frmMainNew.Instance.workflowlist.Where(k => k.Value == context.Workflow.Id).FirstOrDefault();
                    if (kv.Key != null)
                    {
-                       //frmMain.Instance.workflowlist.Remove<string,string>()
+                       //frmMainNew.Instance.workflowlist.Remove<string,string>()
                    }
 
-                   // frmMain.Instance.workflowlist.TryRemove(context.Workflow.Id,)
+                   // frmMainNew.Instance.workflowlist.TryRemove(context.Workflow.Id,)
                    return ExecutionResult.Next();
                })
                 ;

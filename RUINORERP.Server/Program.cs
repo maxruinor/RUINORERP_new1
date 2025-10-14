@@ -371,21 +371,21 @@ namespace RUINORERP.Server
             });
 
 
-            frmMain.Instance.PrintInfoLog(workflow.Id + step.Id + exception.Message);
+            frmMainNew.Instance.PrintInfoLog(workflow.Id + step.Id + exception.Message);
         }
 
         private static void Application_ThreadException(object sender, ThreadExceptionEventArgs e)
         {
             string errorMessage = "应用程序未处理的线程异常: " + e.Exception.Message;
-            frmMain.Instance.PrintInfoLog(errorMessage);
-            frmMain.Instance.PrintInfoLog(e.Exception.StackTrace);
+            frmMainNew.Instance.PrintInfoLog(errorMessage);
+            frmMainNew.Instance.PrintInfoLog(e.Exception.StackTrace);
 
             // 使用frmMain中的logger记录异常（这与项目原有日志系统兼容）
             try
             {
-                if (frmMain.Instance != null && frmMain.Instance._logger != null)
+                if (frmMainNew.Instance != null && frmMainNew.Instance._logger != null)
                 {
-                    frmMain.Instance._logger.LogError("应用程序未处理的线程异常", e.Exception);
+                    frmMainNew.Instance._logger.LogError("应用程序未处理的线程异常", e.Exception);
                 }
             }
             catch (Exception logEx)
@@ -405,17 +405,17 @@ namespace RUINORERP.Server
                 if (e.IsTerminating)
                 {
                     string terminatingMsg = "严重异常导致程序终止: " + ex.Message;
-                    frmMain.Instance.PrintInfoLog(terminatingMsg);
+                    frmMainNew.Instance.PrintInfoLog(terminatingMsg);
                 }
                 else
                 {
-                    frmMain.Instance.PrintInfoLog("CurrentDomain_UnhandledException:" + errorMsg + ex.Message);
+                    frmMainNew.Instance.PrintInfoLog("CurrentDomain_UnhandledException:" + errorMsg + ex.Message);
                 }
 
                 // 使用frmMain中的logger记录异常（这与项目原有日志系统兼容）
-                if (frmMain.Instance != null && frmMain.Instance._logger != null)
+                if (frmMainNew.Instance != null && frmMainNew.Instance._logger != null)
                 {
-                    frmMain.Instance._logger.LogError("应用程序域未处理的异常", ex);
+                    frmMainNew.Instance._logger.LogError("应用程序域未处理的异常", ex);
                 }
             }
             catch (Exception logEx)

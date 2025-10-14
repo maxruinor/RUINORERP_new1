@@ -1,12 +1,13 @@
-﻿using System;
+﻿using RUINORERP.PacketSpec.Commands.Cache;
+using System;
 using System.Collections.Generic;
 
-namespace RUINORERP.PacketSpec.Commands.Cache
+namespace RUINORERP.Business.Cache
 {
     /// <summary>
-    /// 客户端缓存变更事件参数
+    /// 缓存变更事件参数
     /// </summary>
-    public class ClientCacheChangedEventArgs : EventArgs
+    public class CacheChangedEventArgs : EventArgs
     {
         /// <summary>
         /// 缓存键

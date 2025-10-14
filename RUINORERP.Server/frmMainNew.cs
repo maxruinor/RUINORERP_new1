@@ -36,6 +36,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.VisualBasic.ApplicationServices;
 using Newtonsoft.Json;
 using RUINORERP.Business;
+using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Helper;
 using RUINORERP.Common.Log4Net;
@@ -133,12 +134,18 @@ namespace RUINORERP.Server
         public System.Windows.Forms.Timer UpdateServerInfoTimer = new System.Windows.Forms.Timer();
 
         /// <summary>
+        /// 服务器信息更新定时器
+        /// </summary>
+        private System.Windows.Forms.Timer _serverInfoTimer;
+
+        /// <summary>
         /// 初始化服务器信息更新定时器
         /// </summary>
         private void InitializeServerInfoTimer()
         {
-            UpdateServerInfoTimer.Interval = 1000; // 每秒更新一次
-            UpdateServerInfoTimer.Tick += UpdateServerInfoTimer_Tick;
+            _serverInfoTimer = new System.Windows.Forms.Timer();
+            _serverInfoTimer.Interval = 1000; // 每秒更新一次
+            _serverInfoTimer.Tick += UpdateServerInfoTimer_Tick;
         }
 
         /// <summary>
@@ -173,7 +180,7 @@ namespace RUINORERP.Server
         }
 
         private readonly ISessionService _sessionService;
-        public IWorkflowHost host;
+        public IWorkflowHost WorkflowHost;
         private NetworkServer _networkServer;
 
         public frmMainNew(ILogger<frmMainNew> logger, IWorkflowHost workflowHost, IOptionsMonitor<SystemGlobalconfig> config)
@@ -183,7 +190,7 @@ namespace RUINORERP.Server
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
             _logger = logger;
             _services = Startup.services;
-            host = workflowHost;
+            WorkflowHost = workflowHost;
 
             // 初始化服务器信息更新定时器
             InitializeServerInfoTimer();
@@ -317,44 +324,32 @@ namespace RUINORERP.Server
         {
             try
             {
-                // 启动服务器逻辑
-                if (_networkServer == null || !_networkServer.IsRunning)
+                // 调用InitAll方法初始化所有服务
+                InitAll();
+                
+                // 启动服务器信息刷新定时器
+                if (_serverInfoTimer != null)
                 {
-                    // 从依赖注入容器获取网络服务器实例
-                    _networkServer = Startup.GetFromFac<NetworkServer>();
-                    if (_networkServer != null)
-                    {
-                        // 启动网络服务器
-                        var host = await _networkServer.StartAsync(CancellationToken.None);
-                        if (host == null)
-                        {
-                            PrintErrorLog("启动网络服务器失败");
-                            MessageBox.Show("启动网络服务器失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
-                        }
-                        
-                        // 启动定时器
-                        UpdateServerInfoTimer.Start();
-                        
-                        // 更新UI状态
-                        toolStripButtonStartServer.Enabled = false;
-                        toolStripButtonStopServer.Enabled = true;
-                        startServerToolStripMenuItem.Enabled = false;
-                        stopServerToolStripMenuItem.Enabled = true;
-                        
-                        PrintInfoLog("服务器已启动");
-                        MessageBox.Show("服务器已启动", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        PrintErrorLog("无法从依赖注入容器获取NetworkServer实例");
-                        MessageBox.Show("无法获取网络服务器实例", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    _serverInfoTimer.Start();
                 }
-                else
+                
+                // 禁用启动按钮
+                toolStripButtonStartServer.Enabled = false;
+                startServerToolStripMenuItem.Enabled = false;
+                
+                // 启用停止按钮
+                toolStripButtonStopServer.Enabled = true;
+                stopServerToolStripMenuItem.Enabled = true;
+                
+                // 检查新缓存管理器是否已初始化
+                var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                if (cacheManager != null)
                 {
-                    MessageBox.Show("服务器已经启动", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    PrintInfoLog("缓存管理器已初始化");
                 }
+                
+                // 初始化配置
+                await Task.Run(async () => await InitConfig(true));
             }
             catch (Exception ex)
             {
@@ -370,29 +365,23 @@ namespace RUINORERP.Server
         {
             try
             {
-                // 停止服务器逻辑
-                if (_networkServer != null && _networkServer.IsRunning)
+                // 调用Shutdown方法停止服务器
+                Shutdown();
+                
+                // 停止定时器
+                if (_serverInfoTimer != null)
                 {
-                    // 停止网络服务器
-                    await _networkServer.StopAsync();
-                    _networkServer = null;
-                    
-                    // 停止定时器
-                    UpdateServerInfoTimer.Stop();
-                    
-                    // 更新UI状态
-                    toolStripButtonStartServer.Enabled = true;
-                    toolStripButtonStopServer.Enabled = false;
-                    startServerToolStripMenuItem.Enabled = true;
-                    stopServerToolStripMenuItem.Enabled = false;
-                    
-                    PrintInfoLog("服务器已停止");
-                    MessageBox.Show("服务器已停止", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    _serverInfoTimer.Stop();
                 }
-                else
-                {
-                    MessageBox.Show("服务器未启动", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                
+                // 更新UI状态
+                toolStripButtonStartServer.Enabled = true;
+                toolStripButtonStopServer.Enabled = false;
+                startServerToolStripMenuItem.Enabled = true;
+                stopServerToolStripMenuItem.Enabled = false;
+                
+                PrintInfoLog("服务器已停止");
+                MessageBox.Show("服务器已停止", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -408,23 +397,19 @@ namespace RUINORERP.Server
         {
             try
             {
-                // 重新加载配置逻辑
-                var configService = _ServiceProvider.GetService<IConfiguration>();
-                if (configService != null)
-                {
-                    // 重新加载配置
-                    var newConfig = new ConfigurationBuilder()
-                        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                        .Build();
-                    
-                    // 更新全局配置
-                    var globalConfig = _ServiceProvider.GetService<IOptionsMonitor<SystemGlobalconfig>>();
-                    if (globalConfig != null)
-                    {
-                        PrintInfoLog("配置已重新加载");
-                        MessageBox.Show("配置已重新加载", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                }
+                PrintInfoLog("正在重新加载配置...");
+                
+                // 重新读取配置文件
+                ConfigurationBuilder builder = new ConfigurationBuilder();
+                builder.AddJsonFile("configuration.json");
+                var configuration = builder.Build();
+                var collections = configuration.AsEnumerable();
+                
+                // 重新初始化数据库配置
+                DbInit();
+                
+                PrintInfoLog("配置已重新加载");
+                MessageBox.Show("配置已重新加载", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -581,10 +566,10 @@ namespace RUINORERP.Server
                     blacklistManagementControl.Dock = DockStyle.Fill;
                     return blacklistManagementControl;
                 case "系统配置":
-                    // 创建系统管理控件实例
-                    var systemManagementControl = new SystemManagementControl();
-                    systemManagementControl.Dock = DockStyle.Fill;
-                    return systemManagementControl;
+                    // 创建全局配置控件实例
+                    var globalConfigControl = new GlobalConfigControl();
+                    globalConfigControl.Dock = DockStyle.Fill;
+                    return globalConfigControl;
                 case "数据查看":
                     // 创建数据查看控件实例
                     var dataViewerControl = new DataViewerControl();
@@ -601,16 +586,9 @@ namespace RUINORERP.Server
         /// <returns>缓存管理控件</returns>
         private Control CreateCacheManagementControl()
         {
-            // 创建缓存管理窗体实例
-            var cacheManagementForm = new frmCacheManage();
-            cacheManagementForm.Top = 0;
-            cacheManagementForm.Left = 0;
-            cacheManagementForm.Width = tabControlMain.SelectedTab.Width;
-            cacheManagementForm.Height = tabControlMain.SelectedTab.Height;
-            cacheManagementForm.FormBorderStyle = FormBorderStyle.None;
-            cacheManagementForm.TopLevel = false;
+            // 创建缓存管理控件实例
+            var cacheManagementForm = new Controls.CacheManagementControl();
             cacheManagementForm.Dock = DockStyle.Fill;
-            cacheManagementForm.Show();
             return cacheManagementForm;
         }
 
@@ -752,35 +730,376 @@ namespace RUINORERP.Server
 
         private void EnsureMaxLines(RichTextBox rtb, int maxLines)
         {
-            // 计算当前的行数
-            int currentLines = rtb.GetLineFromCharIndex(rtb.Text.Length) + 1;
-
-            // 如果行数超过了最大限制，则删除旧的行
-            if (currentLines > maxLines)
+            // 确保所有对RichTextBox的操作都在UI线程中执行
+            if (rtb.InvokeRequired)
             {
-                int linesToRemove = currentLines - maxLines;
-                int start = rtb.GetFirstCharIndexFromLine(0);
-                int end = rtb.GetFirstCharIndexFromLine(linesToRemove);
+                rtb.BeginInvoke(new MethodInvoker(() => EnsureMaxLines(rtb, maxLines)));
+                return;
+            }
 
-                // 确保richTextBox1控件在主线程中被操作
-                if (InvokeRequired)
+            try
+            {
+                // 计算当前的行数
+                int currentLines = rtb.GetLineFromCharIndex(rtb.Text.Length) + 1;
+
+                // 如果行数超过了最大限制，则删除旧的行
+                if (currentLines > maxLines)
                 {
-                    BeginInvoke(new MethodInvoker(() =>
+                    int linesToRemove = currentLines - maxLines;
+                    int start = rtb.GetFirstCharIndexFromLine(0);
+                    int end = rtb.GetFirstCharIndexFromLine(linesToRemove);
+
+                    if (end > start && end <= rtb.Text.Length)
                     {
                         rtb.Text = rtb.Text.Remove(start, end - start);
-                    }));
+                    }
                 }
-                else
-                {
-                    rtb.Text = rtb.Text.Remove(start, end - start);
-                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不抛出异常，避免影响主程序
+                Console.WriteLine($"EnsureMaxLines error: {ex.Message}");
             }
         }
 
         private void frmMainNew_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // 在这里处理窗体关闭逻辑
-            // 例如停止服务器、清理资源等
+            Shutdown();
+        }
+
+        /// <summary>
+        /// 初始化所有服务
+        /// </summary>
+        public void InitAll()
+        {
+            try
+            {
+                StartupServer();
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"初始化服务失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 启动服务器
+        /// </summary>
+        public void StartupServer()
+        {
+            try
+            {
+                // 启动新线程执行异步服务器启动
+                Task.Run(async () =>
+                {
+                    await StartServerCore();
+                });
+            }
+            catch (Exception e)
+            {
+                PrintErrorLog($"启动SocketServer失败：{e.Message}");
+            }
+        }
+        IHost host;
+        /// <summary>
+        /// 启动服务器核心逻辑
+        /// </summary>
+        private async Task StartServerCore()
+        {
+            PrintInfoLog("StartServerCore Thread Id =" + System.Threading.Thread.CurrentThread.ManagedThreadId);
+
+            try
+            {
+                var _logger = Startup.GetFromFac<ILogger<frmMainNew>>();
+                
+                // 创建NetworkServer实例
+                if (_networkServer == null)
+                {
+                    var networkLogger = Startup.GetFromFac<ILogger<NetworkServer>>();
+                    _networkServer = new NetworkServer(Startup.services, networkLogger);
+                }
+
+                // 启动网络服务器
+                host = await _networkServer.StartAsync(CancellationToken.None);
+                
+                PrintInfoLog("服务器启动成功");
+                
+                // 启动监控
+                var reminderService = Startup.GetFromFac<SmartReminderService>();
+                //不能加await
+                Task.Run(async () => await reminderService.StartAsync(CancellationToken.None));
+                
+                // 每120秒（120000毫秒）执行一次检查
+                System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1000);
+                
+                //加载提醒数据
+                DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
+                loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
+                
+                //启动每天要执行的定时任务
+                GlobalScheduledData globalScheduled = new GlobalScheduledData();
+                var DailyworkflowId = await WorkflowHost.StartWorkflow("NightlyWorkflow", 1, globalScheduled);
+                PrintInfoLog($"NightlyWorkflow每日任务启动{DailyworkflowId}。");
+            }
+            catch (Exception hostex)
+            {
+                _logger?.LogError($"NetworkServer启动异常: {hostex.Message}", hostex);
+                PrintErrorLog($"NetworkServer启动异常: {hostex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 关闭服务器
+        /// </summary>
+        public async void Shutdown()
+        {
+            try
+            {
+                // 停止NetworkServer
+                if (_networkServer != null)
+                {
+                    await _networkServer.StopAsync();
+                    _networkServer = null;
+                }
+
+                // 清理定时器资源
+                if (_serverInfoTimer != null)
+                {
+                    _serverInfoTimer.Stop();
+                    _serverInfoTimer.Dispose();
+                    _serverInfoTimer = null;
+                }
+            }
+            catch (Exception e)
+            {
+                PrintErrorLog($"关闭SocketServer失败：{e.Message}");
+            }
+            finally
+            {
+                if (host != null)
+                {
+                    host.Dispose();
+                    host = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 关闭所有服务器会话
+        /// </summary>
+        public async Task DrainAllServers()
+        {
+            if (WorkflowHost == null)
+            {
+                return;
+            }
+
+            foreach (var service in host.Services.GetServices<IHostedService>())
+            {
+                if (service is IServer server)
+                {
+                    await DrainServer(server);
+                    await service.StopAsync(CancellationToken.None);
+                }
+            }
+
+            await host.WaitForShutdownAsync();
+        }
+
+        /// <summary>
+        /// 关闭指定服务器的所有会话
+        /// </summary>
+        /// <param name="server">服务器实例</param>
+        private async Task DrainServer(IServer server)
+        {
+            var container = server.GetSessionContainer();
+            if (container != null)
+            {
+                var serverSessions = container.GetSessions();
+                foreach (var session in serverSessions.ToArray())
+                {
+                    try
+                    {
+                        await session.CloseAsync(SuperSocket.Connection.CloseReason.ServerShutdown);
+                    }
+                    catch (Exception ex)
+                    {
+                        PrintErrorLog($"关闭会话异常: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理快捷键
+        /// </summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.P))
+            {
+                // 在这里编写 Ctrl + P 按下时要执行的代码
+                Console.WriteLine("Ctrl + P 被按下");
+                frmInput frmPassword = new frmInput();
+                frmPassword.txtInputContent.PasswordChar = '*';
+                frmPassword.WindowState = FormWindowState.Normal;
+                if (frmPassword.ShowDialog() == DialogResult.OK)
+                {
+                    if (frmPassword.InputContent.Trim() == "amwtjhwxf")
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show("密码错误", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        /// <summary>
+        /// 初始化数据库
+        /// </summary>
+        private void DbInit()
+        {
+            try
+            {
+                var sut = new ServiceCollection()
+                    .AddMemoryCache()
+                    .AddDistributedMemoryCache() // 为了测试，我们就不使用redis之类的东西了，用个内存实现模拟就好
+                    .AddSingleton<ICacheAdapter, MemoryCacheAdapter>()  // 添加缓存适配器
+                    .AddSingleton<ICacheAdapter>(i => new DistributedCacheAdapter(i.GetRequiredService<IDistributedCache>(), "distribute"))
+                    .BuildServiceProvider();
+                
+                IDistributedCache cache = sut.GetService<IDistributedCache>() as IDistributedCache;
+
+                ConfigurationBuilder builder = new ConfigurationBuilder();
+                builder.AddJsonFile("configuration.json");
+                var configuration = builder.Build();
+                var collections = configuration.AsEnumerable();
+
+                PrintInfoLog("数据库初始化完成");
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"数据库初始化失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 初始化配置
+        /// </summary>
+        /// <param name="LoadData">是否加载数据</param>
+        public async Task InitConfig(bool LoadData = true)
+        {
+            try
+            {
+                var _logger = Startup.GetFromFac<ILogger<frmMainNew>>();
+                
+                // 使用缓存初始化服务
+                var entityCacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
+                
+                if (LoadData)
+                {
+                    var startTime = DateTime.Now;
+                    
+                    // 初始化实体缓存
+                    await entityCacheInitializationService.InitializeAllCacheAsync();
+                    
+                    var endTime = DateTime.Now;
+                    var executionTime = endTime - startTime;
+                    
+                    PrintInfoLog($"初始化缓存完成，执行时间: {executionTime.TotalSeconds:F2} 秒");
+                    _logger?.LogInformation($"初始化缓存完成，执行时间: {executionTime.TotalSeconds:F2} 秒");
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"初始化配置失败: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 检查并移除过期的会话
+        /// </summary>
+        /// <param name="state">定时器状态</param>
+        private void CheckAndRemoveExpiredSessions(object state)
+        {
+            try
+            {
+                // 获取会话服务
+                var sessionService = Startup.GetFromFac<ISessionService>();
+                if (sessionService != null)
+                {
+                    // 清理超时会话
+                    int cleanedCount = sessionService.CleanupTimeoutSessions();
+                    if (cleanedCount > 0)
+                    {
+                        PrintInfoLog($"清理了 {cleanedCount} 个超时会话");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"检查过期会话时出错: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 验证注册信息
+        /// </summary>
+        /// <param name="regInfo">注册信息</param>
+        /// <returns>是否注册有效</returns>
+        public bool CheckRegistered(tb_sys_RegistrationInfo regInfo)
+        {
+            string key = "ruinor1234567890"; // 这应该是一个保密的密钥
+            string machineCode = regInfo.MachineCode; // 这可以是机器的硬件信息或其他唯一标识
+            // 假设用户输入的注册码
+            string userProvidedCode = regInfo.RegistrationCode;
+            bool isValid = SecurityService.ValidateRegistrationCode(userProvidedCode, key, machineCode);
+            Console.WriteLine($"Is the provided registration code valid? {isValid}");
+            return isValid;
+        }
+
+        /// <summary>
+        /// 唯一硬件信息
+        /// </summary>
+        public string UniqueHarewareInfo { get; set; }
+
+        /// <summary>
+        /// 创建机器码
+        /// </summary>
+        /// <param name="regInfo">注册信息</param>
+        /// <returns>机器码</returns>
+        public string CreateMachineCode(tb_sys_RegistrationInfo regInfo)
+        {
+            //指定关键字段 这些字段生成加密的机器码
+            List<string> cols = new List<string>();
+            cols.Add("CompanyName");
+            cols.Add("ContactName");
+            cols.Add("PhoneNumber");
+            cols.Add("ConcurrentUsers");
+            cols.Add("ExpirationDate");
+            cols.Add("ProductVersion");
+            cols.Add("LicenseType");
+            cols.Add("FunctionModule");
+
+            //只序列化指定的列
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                ContractResolver = new SelectiveContractResolver(cols),
+                Converters = new List<JsonConverter> { new Newtonsoft.Json.Converters.IsoDateTimeConverter { DateTimeFormat = "yyyy-MM-dd HH:mm:ss" } }
+            };
+
+            // 序列化对象
+            string jsonString = JsonConvert.SerializeObject(regInfo, settings);
+            string originalInfo = this.UniqueHarewareInfo + jsonString;
+            string key = "ruinor1234567890";
+            string reginfo = HLH.Lib.Security.EncryptionHelper.AesEncrypt(originalInfo, key);
+            return reginfo;
         }
     }
 }

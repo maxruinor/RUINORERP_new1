@@ -15,7 +15,7 @@ namespace RUINORERP.Business.Cache
     public class CacheEventManager
     {
         // 定义缓存变更事件
-        public event EventHandler<ClientCacheChangedEventArgs> CacheChanged;
+        public event EventHandler<CacheChangedEventArgs> CacheChanged;
 
         private readonly IEntityCacheManager _cacheManager;
         private readonly TableSchemaManager _tableSchemaManager;
@@ -35,7 +35,7 @@ namespace RUINORERP.Business.Cache
         /// <param name="syncToServer">是否同步到服务器</param>
         protected virtual void OnCacheChanged(string tableName, CacheOperation operation, object value, bool syncToServer = true)
         {
-            CacheChanged?.Invoke(this, new ClientCacheChangedEventArgs
+            CacheChanged?.Invoke(this, new CacheChangedEventArgs
             {
                 Key = tableName,
                 Operation = operation,

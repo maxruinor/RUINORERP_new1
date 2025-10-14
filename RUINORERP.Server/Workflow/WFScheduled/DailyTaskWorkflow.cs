@@ -29,7 +29,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
         {
 
             builder
-            .StartWith(context => frmMain.Instance.PrintInfoLog("任务开始时间: " + DateTime.Now))
+            .StartWith(context => frmMainNew.Instance.PrintInfoLog("任务开始时间: " + DateTime.Now))
              .Recur(data => NextTime, data => data.ToString() != "")
                   .Do(recur => recur
                   .StartWith<DailyTaskStep>(
@@ -39,7 +39,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                           }
                       )
                  .OnError(WorkflowErrorHandling.Retry, TimeSpan.FromMinutes(20))
-                  ).Then(context => frmMain.Instance.PrintInfoLog("任务结束时间: " + DateTime.Now));
+                  ).Then(context => frmMainNew.Instance.PrintInfoLog("任务结束时间: " + DateTime.Now));
         }
     }
 
@@ -69,10 +69,10 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                 
                 logger.LogInformation("开始每日任务" + subtext + System.DateTime.Now);
                 // 在这里编写你的耗时任务逻辑
-                frmMain.Instance.PrintInfoLog($"开始每日任务~~~。DailyTaskStep 测试1");
+                frmMainNew.Instance.PrintInfoLog($"开始每日任务~~~。DailyTaskStep 测试1");
                 // 模拟耗时任务，例如等待 5 秒
                 await Task.Delay(5000);
-                frmMain.Instance.PrintInfoLog($"结束每日任务~~~测试1。DailyTaskStep");
+                frmMainNew.Instance.PrintInfoLog($"结束每日任务~~~测试1。DailyTaskStep");
             }
             catch (Exception ex)
             {

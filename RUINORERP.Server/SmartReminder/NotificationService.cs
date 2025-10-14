@@ -84,7 +84,7 @@ namespace RUINORERP.Server.SmartReminder
                 if (Recipients == null || Recipients.Count == 0)
                     return;
 
-                frmMain.Instance.PrintInfoLog($"智能提醒：{message}");
+                frmMainNew.Instance.PrintInfoLog($"智能提醒：{message}");
                 // 获取通知渠道
                 List<NotifyChannel> channels = SmartReminderHelper.ParseChannels(rule.NotifyChannels);
 

@@ -59,7 +59,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
             {
                 data.ExecutionFrequency = 0;
             }
-            frmMain.Instance.PrintInfoLog($"判断条件是否停止={result}:{data.ExecutionFrequency}");
+            frmMainNew.Instance.PrintInfoLog($"判断条件是否停止={result}:{data.ExecutionFrequency}");
             //因为是一个每天都执行的。所以固定不会停止，只是在执行时算一下只执行一次
             return false;
         }
@@ -87,7 +87,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
 
                     logger.LogInformation("开始每日任务" + subtext + System.DateTime.Now);
                     // 在这里编写你的耗时任务逻辑
-                    frmMain.Instance.PrintInfoLog($"开始每日任务~~~。DailyTaskStep");
+                    frmMainNew.Instance.PrintInfoLog($"开始每日任务~~~。DailyTaskStep");
                     var data = context.Workflow.Data as GlobalScheduledData;
                     data.ExecutionFrequency++;
                     //要把执行过的标记传出步骤，按时间重置。等第二天执行
@@ -96,7 +96,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                         CRM_FollowUpPlansService followUpPlansService = Startup.GetFromFac<CRM_FollowUpPlansService>();
                         int updatecount = await followUpPlansService.AutoUdateCRMPlanStatus();
                         logger.LogInformation($"执行完自动更新任务{updatecount}" + subtext + System.DateTime.Now);
-                        frmMain.Instance.PrintInfoLog($"执行完自动更新任务{updatecount}" + subtext + System.DateTime.Now);
+                        frmMainNew.Instance.PrintInfoLog($"执行完自动更新任务{updatecount}" + subtext + System.DateTime.Now);
                     }
                     else
                     {
@@ -108,7 +108,7 @@ namespace RUINORERP.Server.Workflow.WFScheduled
                     // 模拟耗时任务，例如等待 1 秒
                     await Task.Delay(1000);
 
-                    frmMain.Instance.PrintInfoLog($"结束每日任务~~~。DailyTaskStep：GlobalScheduledData.ExecutionFrequency=> " + data.ExecutionFrequency.ToString());
+                    frmMainNew.Instance.PrintInfoLog($"结束每日任务~~~。DailyTaskStep：GlobalScheduledData.ExecutionFrequency=> " + data.ExecutionFrequency.ToString());
                 }
                 catch (Exception ex)
                 {

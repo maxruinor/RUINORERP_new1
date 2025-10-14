@@ -92,49 +92,17 @@ namespace RUINORERP.UI.Network.Services
 
         private void RegisterCommandHandlers()
         {
-            _comm.CommandReceived += (command, data) =>
-            {
-                if (command.CommandId == CacheCommands.CacheDataList)
-                {
-                    HandleCacheResponse(data);
-                }
-                else if (command.CommandId == CacheCommands.CacheDataSend)
-                {
-                    HandleCacheResponse(data);
-                }
-                else if (command.CommandId == CacheCommands.CacheClear)
-                {
-                    HandleCacheClearResponse(data);
-                }
-                else if (command.CommandId == CacheCommands.CacheStatistics)
-                {
-                    HandleCacheStatisticsResponse(data);
-                }
-                else if (command.CommandId == CacheCommands.CacheStatus)
-                {
-                    HandleCacheStatusResponse(data);
-                }
-                else if (command.CommandId == CacheCommands.CacheBatchOperation)
-                {
-                    HandleCacheBatchOperationResponse(data);
-                }
-                else if (command.CommandId == CacheCommands.CacheWarmup)
-                {
-                    HandleCacheWarmupResponse(data);
-                }
-                else if (command.CommandId == CacheCommands.CacheInvalidate)
-                {
-                    HandleCacheInvalidateResponse(data);
-                }
-                else if (command.CommandId == CacheCommands.CacheSubscribe)
-                {
-                    HandleCacheSubscribeResponse(data);
-                }
-                else if (command.CommandId == CacheCommands.CacheUnsubscribe)
-                {
-                    HandleCacheUnsubscribeResponse(data);
-                }
-            };
+            // 使用新的订阅机制订阅特定缓存命令
+            _comm.SubscribeCommand(CacheCommands.CacheDataList, (packet, data) => HandleCacheResponse(data));
+            _comm.SubscribeCommand(CacheCommands.CacheDataSend, (packet, data) => HandleCacheResponse(data));
+            _comm.SubscribeCommand(CacheCommands.CacheClear, (packet, data) => HandleCacheClearResponse(data));
+            _comm.SubscribeCommand(CacheCommands.CacheStatistics, (packet, data) => HandleCacheStatisticsResponse(data));
+            _comm.SubscribeCommand(CacheCommands.CacheStatus, (packet, data) => HandleCacheStatusResponse(data));
+            _comm.SubscribeCommand(CacheCommands.CacheBatchOperation, (packet, data) => HandleCacheBatchOperationResponse(data));
+            _comm.SubscribeCommand(CacheCommands.CacheWarmup, (packet, data) => HandleCacheWarmupResponse(data));
+            _comm.SubscribeCommand(CacheCommands.CacheInvalidate, (packet, data) => HandleCacheInvalidateResponse(data));
+            _comm.SubscribeCommand(CacheCommands.CacheSubscribe, (packet, data) => HandleCacheSubscribeResponse(data));
+            _comm.SubscribeCommand(CacheCommands.CacheUnsubscribe, (packet, data) => HandleCacheUnsubscribeResponse(data));
         }
 
         /// <summary>
@@ -147,12 +115,6 @@ namespace RUINORERP.UI.Network.Services
                 try
                 {
                     // 移除对CacheNotificationHandler的依赖，直接处理通知数据
-                    // 原来的代码：
-                    // var notificationHandler = new CacheNotificationHandler(_cacheManager, _log);
-                    // await notificationHandler.HandleNotificationAsync(data);
-
-                    // 直接处理缓存变更通知
-                   // await HandleCacheNotificationAsync(data);
                 }
                 catch (Exception ex)
                 {
@@ -287,7 +249,7 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
-        private async void OnClientCacheChanged(object sender, ClientCacheChangedEventArgs e)
+        private async void OnClientCacheChanged(object sender, CacheChangedEventArgs e)
         {
             try
             {

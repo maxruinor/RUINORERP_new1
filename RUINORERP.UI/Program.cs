@@ -213,7 +213,7 @@ namespace RUINORERP.UI
             //        var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
             //        if (interfaceType != null)
             //            services.AddTransient(interfaceType, implementType);
-            //    }
+            //}
             //}
             #endregion
         }
@@ -397,6 +397,9 @@ namespace RUINORERP.UI
 
         private static void StartProgram(string[] args)
         {
+            // 初始化帮助系统
+            InitializeHelpSystem();
+
             // 如果需要处理命令行参数，可以在这里进行
             // 例如，打印所有参数
             if (args.Length > 0)
@@ -560,7 +563,6 @@ namespace RUINORERP.UI
             }
 
         }
-
 
 
         private static void BringExistingInstanceToFront()
@@ -827,6 +829,29 @@ namespace RUINORERP.UI
             MainForm.Instance.logger.LogError("当前域_未处理异常2,请更新到新版本，如果无法解决，请联系管理员", error);
             MessageBox.Show(str, "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
+        /// <summary>
+        /// 初始化帮助系统
+        /// </summary>
+        private static void InitializeHelpSystem()
+        {
+            try
+            {
+                string helpFilePath = Path.Combine(Application.StartupPath, "help.chm");
+                if (File.Exists(helpFilePath))
+                {
+                    RUINORERP.UI.Common.HelpSystem.HelpManager.Initialize(helpFilePath);
+                }
+                else
+                {
+                    Debug.WriteLine("帮助文件未找到: " + helpFilePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"初始化帮助系统时出错: {ex.Message}");
+            }
+        }
+
         /// <summary>
         /// 根据表名获取对应的实体类描述
         /// </summary>

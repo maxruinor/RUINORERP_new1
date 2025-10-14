@@ -250,6 +250,26 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 订阅特定命令
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="handler">处理函数</param>
+        public void SubscribeCommand(CommandId commandId, Action<PacketModel, object> handler)
+        {
+            _eventManager.SubscribeCommand(commandId, handler);
+        }
+
+        /// <summary>
+        /// 取消订阅特定命令
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="handler">处理函数</param>
+        public void UnsubscribeCommand(CommandId commandId, Action<PacketModel, object> handler)
+        {
+            _eventManager.UnsubscribeCommand(commandId, handler);
+        }
+
+        /// <summary>
         /// 重连失败事件，当客户端重连服务器失败时触发
         /// </summary>
         public event Action ReconnectFailed
@@ -519,29 +539,147 @@ namespace RUINORERP.UI.Network
 
 
         /// <summary>
-        /// 处理接收到的响应数据包
+        /// 处理接收到的数据
         /// </summary>
-        /// <param name="packet">数据包</param>
-        /// <returns>是否是响应包</returns>
-        private bool HandleResponse(PacketModel packet)
+        /// <param name="packet">接收到的数据包</param>
+        private async void OnReceived(PacketModel packet)
         {
             try
             {
-                if (!string.IsNullOrEmpty(packet?.ExecutionContext.RequestId))
+                if (packet == null)
                 {
-                    var requestId = packet?.ExecutionContext.RequestId;
-                    if (!string.IsNullOrEmpty(requestId) &&
-                        _pendingRequests.TryRemove(requestId, out var pendingRequest))
+                    _logger.LogWarning("接收到空数据包");
+                    return;
+                }
+
+                // 验证数据包有效性
+                if (!packet.IsValid())
+                {
+                    _logger.LogWarning("接收到无效数据包");
+                    return;
+                }
+
+                // 1. 首先尝试作为响应处理（请求-响应模式）
+                if (IsResponsePacket(packet))
+                {
+                    if (HandleResponsePacket(packet))
                     {
-                        return pendingRequest.Tcs.TrySetResult(packet);
+                        _logger.LogDebug("数据包作为响应处理完成，请求ID: {RequestId}", packet.ExecutionContext?.RequestId);
+                        return;
                     }
                 }
+
+                // 2. 作为服务器主动推送的命令处理（推送模式）
+                if (IsServerPushCommand(packet))
+                {
+                    await HandleServerPushCommandAsync(packet);
+                    return;
+                }
+
+                // 3. 作为通用命令处理
+                await HandleGeneralCommandAsync(packet);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理接收到的数据时发生错误");
+                _eventManager.OnErrorOccurred(new Exception($"处理接收到的数据时发生错误: {ex.Message}", ex));
+            }
+        }
+
+        /// <summary>
+        /// 判断是否为响应数据包
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        /// <returns>是否为响应数据包</returns>
+        private bool IsResponsePacket(PacketModel packet)
+        {
+            // 响应包通常包含请求ID，并且是服务器对客户端请求的响应
+            return !string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId) && 
+                   packet.Direction == PacketDirection.Response;
+        }
+
+        /// <summary>
+        /// 判断是否为服务器主动推送的命令
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        /// <returns>是否为服务器主动推送的命令</returns>
+        private bool IsServerPushCommand(PacketModel packet)
+        {
+            // 服务器主动推送的命令通常没有请求ID，或者方向为推送
+            return packet.Direction == PacketDirection.ServerToClient || 
+                   string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId);
+        }
+
+        /// <summary>
+        /// 处理响应数据包
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        /// <returns>是否成功处理</returns>
+        private bool HandleResponsePacket(PacketModel packet)
+        {
+            try
+            {
+                var requestId = packet?.ExecutionContext?.RequestId;
+                if (string.IsNullOrEmpty(requestId))
+                    return false;
+
+                if (_pendingRequests.TryRemove(requestId, out var pendingRequest))
+                {
+                    return pendingRequest.Tcs.TrySetResult(packet);
+                }
+                
                 return false;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理响应包时发生错误");
+                _logger.LogError(ex, "处理响应包时发生错误，请求ID: {RequestId}", packet?.ExecutionContext?.RequestId);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 处理服务器主动推送的命令
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        private async Task HandleServerPushCommandAsync(PacketModel packet)
+        {
+            _logger.LogDebug("处理服务器主动推送命令: {CommandId}", packet.CommandId);
+            
+            try
+            {
+                // 优先使用事件机制处理命令，避免重复处理
+                _eventManager.OnCommandReceived(packet, packet.CommandData);
+
+                // 如果事件机制没有处理该命令（没有订阅者），则使用命令调度器处理
+                if (!_eventManager.HasCommandSubscribers(packet))
+                {
+                    await ProcessCommandAsync(packet);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理服务器主动推送命令时发生错误: {CommandId}", packet.CommandId);
+                _eventManager.OnErrorOccurred(new Exception($"处理推送命令 {packet.CommandId} 时发生错误: {ex.Message}", ex));
+            }
+        }
+
+        /// <summary>
+        /// 处理通用命令
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        private async Task HandleGeneralCommandAsync(PacketModel packet)
+        {
+            _logger.LogDebug("处理通用命令: {CommandId}", packet.CommandId);
+            
+            try
+            {
+                // 使用命令调度器处理命令
+                await ProcessCommandAsync(packet);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理通用命令时发生错误: {CommandId}", packet.CommandId);
+                _eventManager.OnErrorOccurred(new Exception($"处理通用命令 {packet.CommandId} 时发生错误: {ex.Message}", ex));
             }
         }
 
@@ -994,67 +1132,13 @@ namespace RUINORERP.UI.Network
             }
         }
 
-        /// <summary>
-        /// 处理接收到的数据
-        /// </summary>
-        /// <param name="data">接收到的数据</param>
-        private async void OnReceived(PacketModel packet)
-        {
-            try
-            {
-                if (packet != null)
-                {
-                    // 先尝试作为响应处理
-                    if (HandleResponse(packet))
-                    {
-                        //这里直接返回，实际会到具体的服务中响应处理了
-                        return; // 如果是响应，处理完成，不再作为命令处理
-                    }
-
-                    // 如果不是响应，再作为命令处理
-                    if (packet.IsValid() && packet.CommandId.FullCode > 0)
-                    {
-                        // 优先使用事件机制处理命令，避免重复处理
-                        _eventManager.OnCommandReceived(packet, packet.CommandData);
-
-                        // 如果事件机制没有处理该命令（没有订阅者），则直接处理
-                        if (!_eventManager.HasCommandSubscribers(packet))
-                        {
-                            await ProcessCommandAsync(packet);
-                        }
-                    }
-
-                    //// 处理请求响应
-                    //if (packet.IsValid() && packet.Direction == PacketDirection.Request)
-                    //{
-                    //    //TODO 处理请求响应
-                    //}
-                    //// 处理服务器主动发送的命令
-                    //else if (packet.IsValid() && packet.Command.FullCode > 0)
-                    //{
-                    //    _eventManager.OnCommandReceived(packet.Command, packet.Body);
-                    //    await ProcessCommandAsync(packet.Command, packet.Body);
-                    //}
-                }
-            }
-            catch (Exception ex)
-            {
-                _eventManager.OnErrorOccurred(new Exception($"处理接收到的数据时发生错误: {ex.Message}", ex));
-                _logger.LogError(ex, "处理接收到的数据时发生错误");
-            }
-        }
-
-
-
-
-
+      
         
 
         /// <summary>
         /// 处理接收到的命令
         /// </summary>
-        /// <param name="commandId">命令标识符</param>
-        /// <param name="data">命令回应的业务数据</param>
+        /// <param name="Packet">数据包</param>
         private async Task ProcessCommandAsync(PacketModel Packet)
         {
             try
@@ -1063,27 +1147,78 @@ namespace RUINORERP.UI.Network
                 var command = new GenericCommand<object>(Packet.CommandId, Packet.CommandData);
 
                 // 根据命令类别进行特殊处理
-                if (Packet.CommandId.Category == CommandCategory.System)
+                switch (Packet.CommandId.Category)
                 {
-                    // 处理系统命令，如心跳响应等
-                    if (Packet.CommandId.FullCode == PacketSpec.Commands.System.SystemCommands.HeartbeatResponse.FullCode)
-                    {
-                        // 处理心跳响应，重置失败计数
-                        lock (_syncLock)
-                        {
-                            _heartbeatFailureCount = 0;
-                        }
-                    }
+                    case CommandCategory.System:
+                        await ProcessSystemCommandAsync(Packet);
+                        break;
+                        
+                    case CommandCategory.Cache:
+                        await ProcessCacheCommandAsync(Packet);
+                        break;
+                        
+                    case CommandCategory.Authentication:
+                        await ProcessAuthenticationCommandAsync(Packet);
+                        break;
+                        
+                    default:
+                        // 使用命令调度器处理其他命令
+                        await _commandDispatcher.DispatchAsync(Packet, command, CancellationToken.None).ConfigureAwait(false);
+                        break;
                 }
-
-                // 调度命令到命令处理器
-                await _commandDispatcher.DispatchAsync(Packet, command, CancellationToken.None).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 _eventManager.OnErrorOccurred(new Exception($"处理命令 {Packet.CommandId} 时发生错误: {ex.Message}", ex));
                 _logger.LogError(ex, "处理命令时发生错误");
             }
+        }
+
+        /// <summary>
+        /// 处理系统命令
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        private async Task ProcessSystemCommandAsync(PacketModel packet)
+        {
+            // 处理系统命令，如心跳响应等
+            if (packet.CommandId.FullCode == PacketSpec.Commands.System.SystemCommands.HeartbeatResponse.FullCode)
+            {
+                // 处理心跳响应，重置失败计数
+                lock (_syncLock)
+                {
+                    _heartbeatFailureCount = 0;
+                }
+                _logger.LogDebug("收到心跳响应，重置心跳失败计数");
+            }
+            else
+            {
+                // 其他系统命令使用调度器处理
+                var command = new GenericCommand<object>(packet.CommandId, packet.CommandData);
+                await _commandDispatcher.DispatchAsync(packet, command, CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// 处理缓存命令
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        private async Task ProcessCacheCommandAsync(PacketModel packet)
+        {
+            // 缓存命令可以使用专门的缓存服务处理
+            // 或者使用命令调度器处理
+            var command = new GenericCommand<object>(packet.CommandId, packet.CommandData);
+            await _commandDispatcher.DispatchAsync(packet, command, CancellationToken.None).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 处理认证命令
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        private async Task ProcessAuthenticationCommandAsync(PacketModel packet)
+        {
+            // 认证命令使用调度器处理
+            var command = new GenericCommand<object>(packet.CommandId, packet.CommandData);
+            await _commandDispatcher.DispatchAsync(packet, command, CancellationToken.None).ConfigureAwait(false);
         }
 
 

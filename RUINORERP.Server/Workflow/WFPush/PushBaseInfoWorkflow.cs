@@ -27,7 +27,7 @@ namespace RUINORERP.Server.Workflow.WFPush
                 {
                     // 开始工作流任务
                     Console.WriteLine("Workflow started");
-                    frmMain.Instance.PrintInfoLog("Workflow started");
+                    frmMainNew.Instance.PrintInfoLog("Workflow started");
                     return ExecutionResult.Next();
                 })
                 .Then<PushDataStep>()
@@ -35,7 +35,7 @@ namespace RUINORERP.Server.Workflow.WFPush
                 .Then(context =>
                 {
                     Console.WriteLine("workflow complete");
-                    frmMain.Instance.PrintInfoLog("workflow complete");
+                    frmMainNew.Instance.PrintInfoLog("workflow complete");
                     _logger.LogInformation(" PushData Workflow complete");
                     //这个写到的文件中了
                     //HLH.Lib.Helper.log4netHelper.info("系统级Application_ThreadException");//

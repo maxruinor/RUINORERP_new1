@@ -80,7 +80,7 @@ namespace RUINORERP.Server.Workflow.WFApproval.Steps
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintInfoLog("NotifyApprovedBy:" + ex.Message);
+                    frmMainNew.Instance.PrintInfoLog("NotifyApprovedBy:" + ex.Message);
                 }
             }
 

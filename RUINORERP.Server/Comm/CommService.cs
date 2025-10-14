@@ -18,13 +18,13 @@ namespace RUINORERP.Server.Comm
         public static void ShowExceptionMsg(string msg)
         {
             Console.WriteLine(GetTime() + " > " + msg);
-            frmMain.Instance._logger.Error("ShowExceptionMsg:"+msg);
+            frmMainNew.Instance._logger.Error("ShowExceptionMsg:"+msg);
         }
 
         public static void ShowExceptionMsg(string msg, Exception ex)
         {
             Console.WriteLine(GetTime() + " > " + msg);
-            //frmMain.Instance.PrintInfoLog(GetTime() + " > " + msg + ex.Message + ex.StackTrace);
+            //frmMainNew.Instance.PrintInfoLog(GetTime() + " > " + msg + ex.Message + ex.StackTrace);
         }
     }
 }

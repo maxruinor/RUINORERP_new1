@@ -48,16 +48,16 @@ namespace RUINORERP.Server.Workflow.WFPush
                     
                     if (success)
                     {
-                        frmMain.Instance.PrintInfoLog($"工作流数据推送到 {session.UserName} 成功");
+                        frmMainNew.Instance.PrintInfoLog($"工作流数据推送到 {session.UserName} 成功");
                     }
                     else
                     {
-                        frmMain.Instance.PrintInfoLog($"工作流数据推送到 {session.UserName} 失败");
+                        frmMainNew.Instance.PrintInfoLog($"工作流数据推送到 {session.UserName} 失败");
                     }
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintInfoLog("服务器收到客户端基础信息变更分布失败:" + session.UserName + ex.Message);
+                    frmMainNew.Instance.PrintInfoLog("服务器收到客户端基础信息变更分布失败:" + session.UserName + ex.Message);
                 }
             }
             return ExecutionResult.Next();

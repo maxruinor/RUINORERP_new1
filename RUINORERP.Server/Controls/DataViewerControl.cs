@@ -112,7 +112,7 @@ namespace RUINORERP.Server.Controls
                 if (tableName == "锁定信息列表")
                 {
                     // 显示锁定信息
-                    var lockItems = frmMain.Instance.lockManager.GetLockItems();
+                    var lockItems = frmMainNew.Instance.lockManager.GetLockItems();
                     dataGridViewData.DataSource = lockItems;
                     return;
                 }
@@ -201,7 +201,7 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 重新加载缓存
-                await frmMain.Instance.InitConfig(true);
+                await frmMainNew.Instance.InitConfig(true);
                 
                 // 刷新表列表
                 LoadCacheTableList();

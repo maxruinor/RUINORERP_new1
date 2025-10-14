@@ -84,6 +84,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Cache\CacheChangedEventArgs.cs" />
     <Compile Include="Cache\CacheEventManager.cs" />
     <Compile Include="Cache\CacheSerializationHelper.cs" />
     <Compile Include="Cache\CacheSubscriptionManager.cs" />

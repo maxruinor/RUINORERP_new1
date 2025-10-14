@@ -358,7 +358,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         {
             // 可以在这里添加汇总报告等逻辑
             var alertCount = Results?.Count(r => r.Value.NeedAlert) ?? 0;
-            frmMain.Instance.PrintInfoLog($"安全库存计算完成，共检查 {Results?.Count ?? 0} 个产品，需要提醒的产品有 {alertCount} 个");
+            frmMainNew.Instance.PrintInfoLog($"安全库存计算完成，共检查 {Results?.Count ?? 0} 个产品，需要提醒的产品有 {alertCount} 个");
 
             //ISqlSugarClient sugarScope = Startup.GetFromFac<ISqlSugarClient>();
             //// 记录工作流完成日志
@@ -506,7 +506,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                 var timer = new System.Timers.Timer(interval.TotalMilliseconds);
                 timer.Elapsed += async (sender, e) =>
                 {
-                    frmMain.Instance.PrintInfoLog($"开始工作流执行: {System.DateTime.Now.ToString()}");
+                    frmMainNew.Instance.PrintInfoLog($"开始工作流执行: {System.DateTime.Now.ToString()}");
                     try
                     {
                         // 执行工作流

@@ -34,12 +34,28 @@
     <Compile Remove="CommandService\CommandQueue.cs" />
     <Compile Remove="Comm\AutoMapperProfile.cs" />
     <Compile Remove="Comm\CacheHelper.cs" />
+    <Compile Remove="frmBlacklist.cs" />
+    <Compile Remove="frmBlacklist.Designer.cs" />
+    <Compile Remove="frmCacheManage.cs" />
+    <Compile Remove="frmCacheManage.Designer.cs" />
+    <Compile Remove="frmMain.cs" />
+    <Compile Remove="frmMain.Designer.cs" />
+    <Compile Remove="frmMemoryDataViewer.cs" />
+    <Compile Remove="frmMemoryDataViewer.Designer.cs" />
+    <Compile Remove="frmServerMonitor.cs" />
+    <Compile Remove="frmServerMonitor.Designer.cs" />
+    <Compile Remove="frmUserList.cs" />
+    <Compile Remove="frmUserList.Designer.cs" />
     <Compile Remove="frmUserListManage.cs" />
     <Compile Remove="frmUserListManage.Designer.cs" />
     <Compile Remove="frmUserManage.cs" />
     <Compile Remove="frmUserManage.Designer.cs" />
     <Compile Remove="frmUserOnline.cs" />
     <Compile Remove="frmUserOnline.Designer.cs" />
+    <Compile Remove="frmWFManage.cs" />
+    <Compile Remove="frmWFManage.Designer.cs" />
+    <Compile Remove="frmWorkFlowManage.cs" />
+    <Compile Remove="frmWorkFlowManage.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
     <Compile Remove="Network\Commands\CommandHandlerBase.cs" />
     <Compile Remove="Network\Commands\DataSyncCommandHandler.cs" />
@@ -99,9 +115,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Remove="frmBlacklist.resx" />
+    <EmbeddedResource Remove="frmCacheManage.resx" />
+    <EmbeddedResource Remove="frmMain.resx" />
+    <EmbeddedResource Remove="frmMemoryDataViewer.resx" />
+    <EmbeddedResource Remove="frmServerMonitor.resx" />
+    <EmbeddedResource Remove="frmUserList.resx" />
     <EmbeddedResource Remove="frmUserListManage.resx" />
     <EmbeddedResource Remove="frmUserManage.resx" />
     <EmbeddedResource Remove="frmUserOnline.resx" />
+    <EmbeddedResource Remove="frmWFManage.resx" />
+    <EmbeddedResource Remove="frmWorkFlowManage.resx" />
   </ItemGroup>
 
   <ItemGroup>
@@ -210,6 +234,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Helpers\" />
     <Folder Include="Network\CoreServices\" />
     <Folder Include="Network\Core\Cache\" />
     <Folder Include="Network\Documentation\" />
@@ -235,9 +260,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="frmWFManage.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

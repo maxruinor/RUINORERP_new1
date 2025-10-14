@@ -163,9 +163,9 @@ namespace RUINORERP.Server.Commands
                     int index = 0;
                     if (CleintCmd != ClientCommand.客户端心跳包 && CleintCmd != ClientCommand.角色处于等待)
                     {
-                        if (frmMain.Instance.IsDebug)
+                        if (frmMainNew.Instance.IsDebug)
                         {
-                            frmMain.Instance.PrintMsg($"收到客户端{fromPlayer.User.用户名}的指令:" + CleintCmd.ToString());
+                            frmMainNew.Instance.PrintMsg($"收到客户端{fromPlayer.User.用户名}的指令:" + CleintCmd.ToString());
                         }
                     }
                     switch (CleintCmd)
@@ -179,9 +179,9 @@ namespace RUINORERP.Server.Commands
                             break;
 
                         case ClientCommand.复合型登陆请求:
-                            if (frmMain.Instance.IsDebug)
+                            if (frmMainNew.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "复合型登陆请求");
+                                frmMainNew.Instance.PrintMsg(fromPlayer.User.用户名 + "复合型登陆请求");
                             }
                             // 创建一个命令实例 
                             var MixLoginCommand = new LoginCommand();
@@ -192,9 +192,9 @@ namespace RUINORERP.Server.Commands
                             break;
 
                         case ClientCommand.复合型工作流请求:
-                            if (frmMain.Instance.IsDebug)
+                            if (frmMainNew.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "复合型工作流请求");
+                                frmMainNew.Instance.PrintMsg(fromPlayer.User.用户名 + "复合型工作流请求");
                             }
                             // 创建一个命令实例 
                             var receiveReminderCmd = new ReceiveReminderCmd(gd, fromPlayer);
@@ -202,18 +202,18 @@ namespace RUINORERP.Server.Commands
                             _commandScheduler.EnqueueCommand(receiveReminderCmd); // 修复方法调用
                             break;
                         case ClientCommand.复合型实体请求:
-                            if (frmMain.Instance.IsDebug)
+                            if (frmMainNew.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "复合型实体请求");
+                                frmMainNew.Instance.PrintMsg(fromPlayer.User.用户名 + "复合型实体请求");
                             }
                             // 创建一个命令实例 
                             var receiveEntityTransferCmd = new ReceiveEntityTransferCmd(gd, fromPlayer, CmdOperation.Receive);
                             _commandScheduler.EnqueueCommand(receiveEntityTransferCmd); // 修复方法调用
                             break;
                         case ClientCommand.更新动态配置:
-                            if (frmMain.Instance.IsDebug)
+                            if (frmMainNew.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "更新动态配置");
+                                frmMainNew.Instance.PrintMsg(fromPlayer.User.用户名 + "更新动态配置");
                             }
                             UserService.接收更新动态配置指令(fromPlayer, gd);
                             break;
@@ -274,7 +274,7 @@ namespace RUINORERP.Server.Commands
                             if (UserService.用户登陆回复(fromPlayer, user))
                             {
                                 //判断 是不是有相同的用户已经登陆了。有的话，则提示新登陆的人是不是T掉旧的用户。不是的话自己退出。
-                                var ExistSession = frmMain.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(fromPlayer.SessionID) && c.User.用户名 == user.UserName);
+                                var ExistSession = frmMainNew.Instance.sessionListBiz.Values.FirstOrDefault(c => c.User != null && !c.SessionID.Equals(fromPlayer.SessionID) && c.User.用户名 == user.UserName);
                                 if (ExistSession != null)
                                 {
                                     UserService.回复用户重复登陆(fromPlayer, ExistSession);
@@ -285,7 +285,7 @@ namespace RUINORERP.Server.Commands
                                 }
 
                                 //登陆成功时。
-                                if (frmMain.Instance.sessionListBiz.Count > frmMain.Instance.registrationInfo.ConcurrentUsers)
+                                if (frmMainNew.Instance.sessionListBiz.Count > frmMainNew.Instance.registrationInfo.ConcurrentUsers)
                                 {
                                     //超出人数时：提示一下再T掉第一个人
                                     //优先T重复的人。
@@ -310,7 +310,7 @@ namespace RUINORERP.Server.Commands
                             break;
                             */
                         case ClientCommand.实时汇报异常:
-                            foreach (var item in frmMain.Instance.sessionListBiz.ToArray())
+                            foreach (var item in frmMainNew.Instance.sessionListBiz.ToArray())
                             {
                                 SessionforBiz sessionforBiz = item.Value as SessionforBiz;
                                 //自己的不会上传。 只转给超级管理员。
@@ -326,9 +326,9 @@ namespace RUINORERP.Server.Commands
                             index = 0;
                             string datatime = ByteDataAnalysis.GetString(gd.Two, ref index);
                             string RequestTableName = ByteDataAnalysis.GetString(gd.Two, ref index);
-                            if (frmMain.Instance.IsDebug)
+                            if (frmMainNew.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "请求缓存表：" + RequestTableName);
+                                frmMainNew.Instance.PrintMsg(fromPlayer.User.用户名 + "请求缓存表：" + RequestTableName);
                             }
                             Stopwatch stopwatchSender = Stopwatch.StartNew();
                             stopwatchSender.Start();
@@ -336,16 +336,16 @@ namespace RUINORERP.Server.Commands
                             if (!string.IsNullOrEmpty(RequestTableName) && MyCacheManager.Instance.NewTableList.Keys.Contains(RequestTableName))
                             {
                                 UserService.发送缓存数据列表(fromPlayer, RequestTableName);
-                                if (frmMain.Instance.IsDebug)
+                                if (frmMainNew.Instance.IsDebug)
                                 {
-                                    frmMain.Instance.PrintInfoLog($"发送缓存数据列表{RequestTableName}给{fromPlayer.User.用户名} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
+                                    frmMainNew.Instance.PrintInfoLog($"发送缓存数据列表{RequestTableName}给{fromPlayer.User.用户名} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
                                 }
                             }
                             else
                             {
-                                if (frmMain.Instance.IsDebug)
+                                if (frmMainNew.Instance.IsDebug)
                                 {
-                                    frmMain.Instance.PrintInfoLog($"发送缓存数据列表{RequestTableName}给{fromPlayer.User.用户名} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
+                                    frmMainNew.Instance.PrintInfoLog($"发送缓存数据列表{RequestTableName}给{fromPlayer.User.用户名} 耗时：{stopwatchSender.ElapsedMilliseconds} 毫秒");
                                 }
                             }
                             stopwatchSender.Stop();
@@ -354,9 +354,9 @@ namespace RUINORERP.Server.Commands
                             break;
 
                         case ClientCommand.更新缓存:
-                            if (frmMain.Instance.IsDebug)
+                            if (frmMainNew.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintMsg(fromPlayer.User.用户名 + "更新缓存");
+                                frmMainNew.Instance.PrintMsg(fromPlayer.User.用户名 + "更新缓存");
                             }
                             UserService.接收更新缓存指令(fromPlayer, gd);
 
@@ -530,7 +530,7 @@ namespace RUINORERP.Server.Commands
                         TimeSpan timeDifference = currentTime - clientTime;
                         if (Math.Abs(timeDifference.TotalHours) > 1)
                         {
-                            frmMain.Instance.PrintInfoLog($"{empName}的客户端电脑时间异常，请检查!");
+                            frmMainNew.Instance.PrintInfoLog($"{empName}的客户端电脑时间异常，请检查!");
                             //客户端时间与服务器时间相差1小时以上，则断开连接
                             if (PlayerSession.State == SuperSocket.Server.Abstractions.SessionState.Connected)
                             {

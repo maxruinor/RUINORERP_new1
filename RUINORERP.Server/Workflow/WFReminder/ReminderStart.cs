@@ -14,9 +14,9 @@ namespace RUINORERP.Server.Workflow.WFReminder
         public override ExecutionResult Run(IStepExecutionContext context)
         {
             //这个步骤内得到工流传入的数据
-            if (frmMain.Instance.IsDebug)
+            if (frmMainNew.Instance.IsDebug)
             {
-                frmMain.Instance.PrintInfoLog($"启动{Description} ，成功启动提醒工作流。");
+                frmMainNew.Instance.PrintInfoLog($"启动{Description} ，成功启动提醒工作流。");
             }
             return ExecutionResult.Next();
         }

@@ -1,4 +1,4 @@
-﻿﻿using Azure;
+﻿using Azure;
 using Azure.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -101,14 +101,14 @@ namespace RUINORERP.Server.CommandService
                         }
                         JObject obj = JObject.Parse(json);
                         LockedInfo lockRequest = obj.ToObject<LockedInfo>();
-                        var isLocked = frmMain.Instance.lockManager.TryLock(lockRequest.BillID,
+                        var isLocked = frmMainNew.Instance.lockManager.TryLock(lockRequest.BillID,
                             lockRequest.BillData.BillNo, lockRequest.BillData.BizName, lockRequest.LockedUserID);
                         if (isLocked)
                         {
-                            if (frmMain.Instance.IsDebug)
-                            {
-                                frmMain.Instance.PrintInfoLog($"服务器锁{lockRequest.BillID}成功");
-                            }
+                            if (frmMainNew.Instance.IsDebug)
+                        {
+                            frmMainNew.Instance.PrintInfoLog($"服务器锁{lockRequest.BillID}成功");
+                        }
                         }
                         //通知所有人。这个单被锁了 包含锁单本人
                         ResponseToClient(isLocked, lockRequest);
@@ -119,12 +119,12 @@ namespace RUINORERP.Server.CommandService
                         json = ByteDataAnalysis.GetString(gd.Two, ref index);
                         obj = JObject.Parse(json);
                         UnLockInfo unLockInfo = obj.ToObject<UnLockInfo>();
-                        var isUnlocked = frmMain.Instance.lockManager.Unlock(unLockInfo.BillID, unLockInfo.LockedUserID);
+                        var isUnlocked = frmMainNew.Instance.lockManager.Unlock(unLockInfo.BillID, unLockInfo.LockedUserID);
                         if (isUnlocked)
                         {
-                            if (frmMain.Instance.IsDebug)
+                            if (frmMainNew.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintInfoLog($"服务器解锁{unLockInfo.BillData.BillNo}成功");
+                                frmMainNew.Instance.PrintInfoLog($"服务器解锁{unLockInfo.BillData.BillNo}成功");
                             }
                             //通知所有人。这个单被锁了 包含锁单本人
                             ResponseToClient(isUnlocked, unLockInfo);
@@ -137,12 +137,12 @@ namespace RUINORERP.Server.CommandService
                         json = ByteDataAnalysis.GetString(gd.Two, ref index);
                         obj = JObject.Parse(json);
                         UnLockInfo unLockInfoBizName = obj.ToObject<UnLockInfo>();
-                        var isUnlockedBizName = frmMain.Instance.lockManager.RemoveLockByBizName(unLockInfoBizName.LockedUserID, unLockInfoBizName.BillData.BizName);
+                        var isUnlockedBizName = frmMainNew.Instance.lockManager.RemoveLockByBizName(unLockInfoBizName.LockedUserID, unLockInfoBizName.BillData.BizName);
                         if (isUnlockedBizName)
                         {
-                            if (frmMain.Instance.IsDebug)
+                            if (frmMainNew.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintInfoLog($"服务器解锁业务类型{unLockInfoBizName.BillData.BizName}成功");
+                                frmMainNew.Instance.PrintInfoLog($"服务器解锁业务类型{unLockInfoBizName.BillData.BizName}成功");
                             }
                             //通知所有人。这个类型的单被解锁了， 包含锁单本人
                             ResponseToClient(isUnlockedBizName, unLockInfoBizName);
@@ -202,11 +202,11 @@ namespace RUINORERP.Server.CommandService
                                 if (result.IsSuccess)
                                 {
                                     sentSuccessfully = true;
-                                    frmMain.Instance.PrintInfoLog($"已向用户 {session.UserName} 发送解锁请求");
+                                    frmMainNew.Instance.PrintInfoLog($"已向用户 {session.UserName} 发送解锁请求");
                                 }
                                 else
                                 {
-                                    frmMain.Instance.PrintInfoLog($"向用户 {session.UserName} 发送解锁请求失败: {result.ErrorMessage}");
+                                    frmMainNew.Instance.PrintInfoLog($"向用户 {session.UserName} 发送解锁请求失败: {result.ErrorMessage}");
                                 }
                                 break;
                             }
@@ -214,7 +214,7 @@ namespace RUINORERP.Server.CommandService
 
                         if (!sentSuccessfully)
                         {
-                            frmMain.Instance.PrintInfoLog($"未能找到锁定用户 {requestUnLockInfo.LockedUserID} 的在线会话");
+                            frmMainNew.Instance.PrintInfoLog($"未能找到锁定用户 {requestUnLockInfo.LockedUserID} 的在线会话");
                         }
                         break;
                     case LockCmd.RefuseUnLock:
@@ -265,11 +265,11 @@ namespace RUINORERP.Server.CommandService
                                 if (result.IsSuccess)
                                 {
                                     refuseSentSuccessfully = true;
-                                    frmMain.Instance.PrintInfoLog($"已向用户 {session.UserName} 发送拒绝解锁通知");
+                                    frmMainNew.Instance.PrintInfoLog($"已向用户 {session.UserName} 发送拒绝解锁通知");
                                 }
                                 else
                                 {
-                                    frmMain.Instance.PrintInfoLog($"向用户 {session.UserName} 发送拒绝解锁通知失败: {result.ErrorMessage}");
+                                    frmMainNew.Instance.PrintInfoLog($"向用户 {session.UserName} 发送拒绝解锁通知失败: {result.ErrorMessage}");
                                 }
                                 break;
                             }
@@ -277,7 +277,7 @@ namespace RUINORERP.Server.CommandService
 
                         if (!refuseSentSuccessfully)
                         {
-                            frmMain.Instance.PrintInfoLog($"未能找到请求用户 {refuseUnLockInfo.RequestUserID} 的在线会话");
+                            frmMainNew.Instance.PrintInfoLog($"未能找到请求用户 {refuseUnLockInfo.RequestUserID} 的在线会话");
                         }
                         break;
                     case LockCmd.Broadcast:

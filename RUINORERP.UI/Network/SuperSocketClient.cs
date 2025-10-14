@@ -138,12 +138,6 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 发送数据到服务器
-        /// </summary>
-        /// <param name="data">要发送的数据</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>发送任务</returns>
-        /// <summary>
         /// 异步发送数据到服务器
         /// </summary>
         /// <param name="data">要发送的数据</param>

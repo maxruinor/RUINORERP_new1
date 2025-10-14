@@ -27,7 +27,7 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 获取全局配置
-                _globalConfig = frmMain.Instance.Globalconfig;
+                _globalConfig = frmMainNew.Instance.Globalconfig;
                 
                 // 加载配置数据
                 LoadConfigData();
@@ -138,7 +138,7 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                var registrationInfo = frmMain.Instance.registrationInfo;
+                var registrationInfo = frmMainNew.Instance.registrationInfo;
                 if (registrationInfo != null)
                 {
                     textBoxCompanyName.Text = registrationInfo.CompanyName ?? "";
@@ -197,10 +197,10 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 生成机器码
-                var registrationInfo = frmMain.Instance.registrationInfo;
+                var registrationInfo = frmMainNew.Instance.registrationInfo;
                 if (registrationInfo != null)
                 {
-                    string machineCode = frmMain.Instance.CreateMachineCode(registrationInfo);
+                    string machineCode = frmMainNew.Instance.CreateMachineCode(registrationInfo);
                     textBoxMachineCode.Text = machineCode;
                     MessageBox.Show("机器码已生成", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
@@ -215,10 +215,10 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                var registrationInfo = frmMain.Instance.registrationInfo;
+                var registrationInfo = frmMainNew.Instance.registrationInfo;
                 if (registrationInfo != null)
                 {
-                    bool isValid = frmMain.Instance.CheckRegistered(registrationInfo);
+                    bool isValid = frmMainNew.Instance.CheckRegistered(registrationInfo);
                     if (isValid)
                     {
                         MessageBox.Show("注册信息验证通过", "验证结果", MessageBoxButtons.OK, MessageBoxIcon.Information);

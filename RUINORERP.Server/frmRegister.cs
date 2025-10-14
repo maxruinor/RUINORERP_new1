@@ -1,4 +1,4 @@
-﻿using FluentValidation.Results;
+using FluentValidation.Results;
 using HLH.Lib.Helper;
 using HLH.Lib.Security;
 using HLH.Lib.Security.HLH.Lib.Security;
@@ -156,11 +156,11 @@ namespace RUINORERP.Server
                     var entiry = await Program.AppContextData.Db.Storageable(EditEntity).DefaultAddElseUpdate().ExecuteReturnEntityAsync();
                     if (entiry.RegistrationInfoD > 0)
                     {
-                        frmMain.Instance.PrintInfoLog("保存成功");
+                        frmMainNew.Instance.PrintInfoLog("保存成功");
                     }
                     else
                     {
-                        frmMain.Instance.PrintInfoLog("保存失败");
+                        frmMainNew.Instance.PrintInfoLog("保存失败");
                     }
                     this.DialogResult = DialogResult.OK;
                     this.Close();
@@ -262,7 +262,7 @@ namespace RUINORERP.Server
                 EditEntity.FunctionModule = string.Join(",", selectedModules);
 
                 //生成机器码前 不加密。因为注册码生成时。提供商要审核时。要看到明码
-                EditEntity.MachineCode = frmMain.Instance.CreateMachineCode(EditEntity);
+               EditEntity.MachineCode = frmMainNew.Instance.CreateMachineCode(EditEntity);
 
                 //加密
                 EditEntity.FunctionModule = EncryptionHelper.AesEncryptByHashKey(EditEntity.FunctionModule, "FunctionModule");

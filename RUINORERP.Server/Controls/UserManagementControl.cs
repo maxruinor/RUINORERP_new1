@@ -594,21 +594,21 @@ namespace RUINORERP.Server.Controls
                             var success = _sessionService.SendCommandToSession(session.SessionID, "SWITCH_SERVER", frmInput.InputContent);
                             if (success)
                             {
-                                frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送切换服务器命令: {frmInput.InputContent}");
+                                frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送切换服务器命令: {frmInput.InputContent}");
                             }
                             else
                             {
-                                frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送切换服务器命令失败");
+                                frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送切换服务器命令失败");
                             }
                         }
                         else
                         {
-                            frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                            frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
                         }
                     }
                     catch (Exception ex)
                     {
-                        frmMain.Instance.PrintErrorLog($"切换用户 {user.用户名} 服务器失败: {ex.Message}");
+                        frmMainNew.Instance.PrintErrorLog($"切换用户 {user.用户名} 服务器失败: {ex.Message}");
                     }
                 }
             }
@@ -623,11 +623,11 @@ namespace RUINORERP.Server.Controls
                 {
                     // 使用新的SessionService断开会话
                     await _sessionService.DisconnectSessionAsync(user.SessionId);
-                    frmMain.Instance.PrintInfoLog($"已断开用户 {user.用户名} 的连接");
+                    frmMainNew.Instance.PrintInfoLog($"已断开用户 {user.用户名} 的连接");
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintErrorLog($"断开用户 {user.用户名} 连接失败: {ex.Message}");
+                    frmMainNew.Instance.PrintErrorLog($"断开用户 {user.用户名} 连接失败: {ex.Message}");
                 }
             }
         }
@@ -646,22 +646,22 @@ namespace RUINORERP.Server.Controls
                         var success = _sessionService.SendCommandToSession(session.SessionID, "FORCE_LOGOUT", null);
                         if (success)
                         {
-                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送强制退出命令");
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送强制退出命令");
                             RemoveUserFromListView(user); // 调用移除方法
                         }
                         else
                         {
-                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送强制退出命令失败");
+                            frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送强制退出命令失败");
                         }
                     }
                     else
                     {
-                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
                     }
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintErrorLog($"强制用户 {user.用户名} 退出失败: {ex.Message}");
+                    frmMainNew.Instance.PrintErrorLog($"强制用户 {user.用户名} 退出失败: {ex.Message}");
                 }
             }
         }
@@ -680,21 +680,21 @@ namespace RUINORERP.Server.Controls
                         var success = _sessionService.SendCommandToSession(session.SessionID, "DELETE_CONFIG", null);
                         if (success)
                         {
-                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送删除配置文件命令");
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送删除配置文件命令");
                         }
                         else
                         {
-                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送删除配置文件命令失败");
+                            frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送删除配置文件命令失败");
                         }
                     }
                     else
                     {
-                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
                     }
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintErrorLog($"删除用户 {user.用户名} 配置文件失败: {ex.Message}");
+                    frmMainNew.Instance.PrintErrorLog($"删除用户 {user.用户名} 配置文件失败: {ex.Message}");
                 }
             }
         }
@@ -714,18 +714,18 @@ namespace RUINORERP.Server.Controls
                         //{
                         //    if (form.ShowDialog() == DialogResult.OK)
                         //    {
-                        //        frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送消息: {form.Message}");
+                        //        frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送消息: {form.Message}");
                         //    }
                         //}
                     }
                     else
                     {
-                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
                     }
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送消息失败: {ex.Message}");
+                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送消息失败: {ex.Message}");
                 }
             }
         }
@@ -744,21 +744,21 @@ namespace RUINORERP.Server.Controls
                         var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_UPDATE", null);
                         if (success)
                         {
-                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送更新推送命令");
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送更新推送命令");
                         }
                         else
                         {
-                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送更新推送命令失败");
+                            frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送更新推送命令失败");
                         }
                     }
                     else
                     {
-                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
                     }
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送更新推送命令失败: {ex.Message}");
+                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送更新推送命令失败: {ex.Message}");
                 }
             }
         }
@@ -777,21 +777,21 @@ namespace RUINORERP.Server.Controls
                         var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_SYS_CONFIG", null);
                         if (success)
                         {
-                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送系统配置推送命令");
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送系统配置推送命令");
                         }
                         else
                         {
-                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送系统配置推送命令失败");
+                            frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送系统配置推送命令失败");
                         }
                     }
                     else
                     {
-                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
                     }
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送系统配置推送命令失败: {ex.Message}");
+                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送系统配置推送命令失败: {ex.Message}");
                 }
             }
         }
@@ -826,7 +826,7 @@ namespace RUINORERP.Server.Controls
                         var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_CACHE", null);
                         if (success)
                         {
-                            frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送缓存数据");
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送缓存数据");
                             MessageBox.Show("缓存数据推送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         else
@@ -861,17 +861,17 @@ namespace RUINORERP.Server.Controls
                         {
                             // 发送缓存数据列表
                             // MessageService.SendCacheDataList(session, tableName);
-                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送缓存表 {tableName} 的数据推送通知");
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送缓存表 {tableName} 的数据推送通知");
                         }
                     }
                     else
                     {
-                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
                     }
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送缓存数据推送通知失败: {ex.Message}");
+                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送缓存数据推送通知失败: {ex.Message}");
                 }
             }
         }
@@ -890,21 +890,21 @@ namespace RUINORERP.Server.Controls
                         var success = _sessionService.SendCommandToSession(session.SessionID, "SHUTDOWN", null);
                         if (success)
                         {
-                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送关机命令");
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送关机命令");
                         }
                         else
                         {
-                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送关机命令失败");
+                            frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送关机命令失败");
                         }
                     }
                     else
                     {
-                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
                     }
                 }
                 catch (Exception ex)
                 {
-                    frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送关机命令失败: {ex.Message}");
+                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送关机命令失败: {ex.Message}");
                 }
             }
         }
@@ -985,7 +985,7 @@ namespace RUINORERP.Server.Controls
                     //{
                     //    if (form.ShowDialog() == DialogResult.OK)
                     //    {
-                    //        frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 发送消息: {form.Message}");
+                    //        frmMainNew.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 发送消息: {form.Message}");
                     //        MessageBox.Show("消息发送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     //    }
                     //}
@@ -1005,7 +1005,7 @@ namespace RUINORERP.Server.Controls
                 var sessions = _sessionService.GetAllUserSessions().ToList();
                 var sessionCount = sessions.Count;
                 
-                frmMain.Instance.PrintInfoLog($"服务器用户数量：{sessionCount}");
+                frmMainNew.Instance.PrintInfoLog($"服务器用户数量：{sessionCount}");
                 
                 if (sessionCount != listView1.Items.Count)
                 {
@@ -1019,7 +1019,7 @@ namespace RUINORERP.Server.Controls
                             if (!_itemMap.ContainsKey(session.SessionID))
                             {
                                 var userInfo = ConvertSessionInfoToUserInfo(session);
-                                frmMain.Instance.PrintInfoLog($"添加用户：{userInfo.用户名}");
+                                frmMainNew.Instance.PrintInfoLog($"添加用户：{userInfo.用户名}");
                                 AddOrUpdateUser(userInfo);
                             }
                         }
@@ -1035,7 +1035,7 @@ namespace RUINORERP.Server.Controls
                                 var userInfo = lvItem.Tag as UserInfo;
                                 if (userInfo != null && !sessions.Any(s => s.SessionID == userInfo.SessionId))
                                 {
-                                    frmMain.Instance.PrintInfoLog($"移除用户：{userInfo.用户名}");
+                                    frmMainNew.Instance.PrintInfoLog($"移除用户：{userInfo.用户名}");
                                     RemoveUser(userInfo);
                                 }
                             }
@@ -1079,7 +1079,7 @@ namespace RUINORERP.Server.Controls
                         var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_UPDATE", null);
                         if (success)
                         {
-                            frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送更新");
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送更新");
                             MessageBox.Show("更新推送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         else
@@ -1125,7 +1125,7 @@ namespace RUINORERP.Server.Controls
                         var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_SYS_CONFIG", null);
                         if (success)
                         {
-                            frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送系统配置");
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送系统配置");
                             MessageBox.Show("系统配置推送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         else

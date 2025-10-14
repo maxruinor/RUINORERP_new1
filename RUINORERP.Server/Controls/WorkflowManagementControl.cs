@@ -41,7 +41,7 @@ namespace RUINORERP.Server.Controls
         private void InitializeData()
         {
             // 初始化工作流列表
-            WorkflowList = new BindingList<ReminderData>(frmMain.Instance.ReminderBizDataList.Values.ToList());
+            WorkflowList = new BindingList<ReminderData>(frmMainNew.Instance.ReminderBizDataList.Values.ToList());
             dataGridViewWorkflows.DataSource = WorkflowList;
             
             // 初始化工作流主机
@@ -67,7 +67,7 @@ namespace RUINORERP.Server.Controls
             try
             {
                 WorkflowList.Clear();
-                foreach (var item in frmMain.Instance.ReminderBizDataList.Values)
+                foreach (var item in frmMainNew.Instance.ReminderBizDataList.Values)
                 {
                     WorkflowList.Add(item);
                 }
@@ -102,7 +102,7 @@ namespace RUINORERP.Server.Controls
 
                 //var wfController = Startup.GetFromFac<WFController>();
                 //long billId = long.Parse(textBoxBillId.Text);
-                //string workflowId = wfController.StartApprovalWorkflow(_workflowHost, billId, frmMain.Instance.workflowlist);
+                //string workflowId = wfController.StartApprovalWorkflow(_workflowHost, billId, frmMainNew.Instance.workflowlist);
                 
                 //MessageBox.Show($"审批工作流已启动，工作流ID: {workflowId}", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 //RefreshWorkflowData();
@@ -165,7 +165,7 @@ namespace RUINORERP.Server.Controls
                 //data.approvalEntity = approvalEntity;
                 
                 //var wfController = Startup.GetFromFac<WFController>();
-                //wfController.PublishEvent(_workflowHost, "ApprovalEvent", data, frmMain.Instance.workflowlist);
+                //wfController.PublishEvent(_workflowHost, "ApprovalEvent", data, frmMainNew.Instance.workflowlist);
                 
                 MessageBox.Show("外部事件已发布", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 RefreshWorkflowData();

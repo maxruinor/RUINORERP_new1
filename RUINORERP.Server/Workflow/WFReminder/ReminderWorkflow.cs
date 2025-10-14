@@ -78,9 +78,9 @@ namespace RUINORERP.Server.Workflow.WFReminder
               .Then(
                 context =>
             {
-                if (frmMain.Instance.IsDebug)
+                if (frmMainNew.Instance.IsDebug)
                 {
-                    frmMain.Instance.PrintInfoLog($"结束提醒工作流。" + System.DateTime.Now);
+                    frmMainNew.Instance.PrintInfoLog($"结束提醒工作流。" + System.DateTime.Now);
                 }
                 return ExecutionResult.Next();
             }

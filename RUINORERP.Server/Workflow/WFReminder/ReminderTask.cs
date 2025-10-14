@@ -64,12 +64,12 @@ namespace RUINORERP.Server.Workflow.WFReminder
             //WorkflowServiceSender.通知工作流启动成功(UserSession, workflowid);
             ReminderData exData = null;
             //检测收到的信息
-            frmMain.Instance.ReminderBizDataList.TryGetValue(BizData.BizPrimaryKey, out exData);
+            frmMainNew.Instance.ReminderBizDataList.TryGetValue(BizData.BizPrimaryKey, out exData);
             if (context.CancellationToken.IsCancellationRequested)
             {
                 Status = MessageStatus.Cancel;
                 //直接清除停止
-                frmMain.Instance.ReminderBizDataList.TryRemove(exData.BizPrimaryKey, out exData);
+                frmMainNew.Instance.ReminderBizDataList.TryRemove(exData.BizPrimaryKey, out exData);
                 return ExecutionResult.Next();
             }
             var data = context.Workflow.Data as ReminderData;
@@ -77,7 +77,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
             {
                 Status = MessageStatus.Cancel;
                 //直接清除停止
-                frmMain.Instance.ReminderBizDataList.TryRemove(exData.BizPrimaryKey, out exData);
+                frmMainNew.Instance.ReminderBizDataList.TryRemove(exData.BizPrimaryKey, out exData);
                 return ExecutionResult.Next();
             }
 
@@ -132,20 +132,20 @@ namespace RUINORERP.Server.Workflow.WFReminder
                                 
                                 if (success)
                                 {
-                                    frmMain.Instance.ReminderBizDataList.TryUpdate(BizData.BizPrimaryKey, exData, exData);
-                                    if (frmMain.Instance.IsDebug)
+                                    frmMainNew.Instance.ReminderBizDataList.TryUpdate(BizData.BizPrimaryKey, exData, exData);
+                                    if (frmMainNew.Instance.IsDebug)
                                     {
-                                        frmMain.Instance.PrintInfoLog($"工作流提醒推送到{session.UserName}");
+                                        frmMainNew.Instance.PrintInfoLog($"工作流提醒推送到{session.UserName}");
                                     }
                                 }
                                 else
                                 {
-                                    frmMain.Instance.PrintInfoLog($"发送工作流提醒到用户 {session.UserName} 失败");
+                                    frmMainNew.Instance.PrintInfoLog($"发送工作流提醒到用户 {session.UserName} 失败");
                                 }
                             }
                             catch (Exception ex)
                             {
-                                frmMain.Instance.PrintInfoLog("服务器工作流提醒推送分布失败:" + session.UserName + ex.Message);
+                                frmMainNew.Instance.PrintInfoLog("服务器工作流提醒推送分布失败:" + session.UserName + ex.Message);
                             }
                         }
                     }

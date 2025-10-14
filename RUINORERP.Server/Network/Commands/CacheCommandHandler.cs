@@ -554,9 +554,9 @@ namespace RUINORERP.Server.Network.Commands
                             cacheData.Data = json; // 直接存储JSON字符串
                             cacheData.HasMoreData = totalCount > pageSize;
                             
-                            if (frmMain.Instance.IsDebug)
+                            if (frmMainNew.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintInfoLog($"{tableName}发送第一页数据，总行数:{totalCount}，当前页:{Math.Min(pageSize, totalCount)}");
+                                frmMainNew.Instance.PrintInfoLog($"{tableName}发送第一页数据，总行数:{totalCount}，当前页:{Math.Min(pageSize, totalCount)}");
                             }
                         }
                     }

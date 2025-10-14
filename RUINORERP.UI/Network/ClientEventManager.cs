@@ -3,11 +3,12 @@ using System;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Models.Core;
+using System.Collections.Generic;
 
 namespace RUINORERP.UI.Network
 {
-/// <summary>
-    
+    /// <summary>
+    /// 客户端事件管理器
     /// </summary>
     public class ClientEventManager
     {
@@ -45,6 +46,13 @@ namespace RUINORERP.UI.Network
 
         public event Action<string, TimeSpan> RequestCompleted; // 新增：请求完成事件
         
+        // 专门用于服务器推送命令的事件
+        public event Action<PacketModel, object> ServerPushCommandReceived;
+        
+        // 专门用于特定命令的事件
+        private readonly Dictionary<CommandId, Action<PacketModel, object>> _specificCommandHandlers = 
+            new Dictionary<CommandId, Action<PacketModel, object>>();
+
         public void OnRequestCompleted(string requestId, TimeSpan duration)
         {
             RequestCompleted?.Invoke(requestId, duration);
@@ -64,6 +72,65 @@ namespace RUINORERP.UI.Network
         public ClientEventManager(ILogger logger)
         {
             _logger = logger;
+        }
+
+        /// <summary>
+        /// 订阅特定命令
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="handler">处理函数</param>
+        public void SubscribeCommand(CommandId commandId, Action<PacketModel, object> handler)
+        {
+            lock (_lock)
+            {
+                if (_specificCommandHandlers.ContainsKey(commandId))
+                {
+                    _specificCommandHandlers[commandId] += handler;
+                }
+                else
+                {
+                    _specificCommandHandlers[commandId] = handler;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 取消订阅特定命令
+        /// </summary>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="handler">处理函数</param>
+        public void UnsubscribeCommand(CommandId commandId, Action<PacketModel, object> handler)
+        {
+            lock (_lock)
+            {
+                if (_specificCommandHandlers.ContainsKey(commandId))
+                {
+                    _specificCommandHandlers[commandId] -= handler;
+                    if (_specificCommandHandlers[commandId] == null)
+                    {
+                        _specificCommandHandlers.Remove(commandId);
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 触发服务器推送命令事件
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        /// <param name="data">数据</param>
+        public void OnServerPushCommandReceived(PacketModel packet, object data)
+        {
+            ServerPushCommandReceived?.Invoke(packet, data);
+            
+            // 触发特定命令处理
+            lock (_lock)
+            {
+                if (_specificCommandHandlers.ContainsKey(packet.CommandId))
+                {
+                    _specificCommandHandlers[packet.CommandId]?.Invoke(packet, data);
+                }
+            }
         }
 
         /// <summary>
@@ -230,19 +297,22 @@ namespace RUINORERP.UI.Network
                 ErrorOccurred = null;
                 ConnectionClosed = null;
                 ReconnectFailed = null;
+                ServerPushCommandReceived = null;
+                _specificCommandHandlers.Clear();
             }
         }
 
         /// <summary>
         /// 检查是否有命令订阅者
         /// </summary>
-        /// <param name="commandId">命令ID</param>
+        /// <param name="packetModel">数据包模型</param>
         /// <returns>是否有订阅者</returns>
         public bool HasCommandSubscribers(PacketModel packetModel)
         {
             lock (_lock)
             {
-                return CommandReceived != null;
+                return CommandReceived != null || ServerPushCommandReceived != null ||
+                       _specificCommandHandlers.ContainsKey(packetModel.CommandId);
             }
         }
 

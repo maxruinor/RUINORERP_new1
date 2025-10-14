@@ -77,6 +77,7 @@ using RUINORERP.PacketSpec.DI;
 // 添加缓存相关的using语句
 using CacheManager.Core;
 using RUINORERP.Business.Cache;
+using RUINORERP.Server.Services;
 
 namespace RUINORERP.Server
 {
@@ -242,6 +243,26 @@ namespace RUINORERP.Server
             builder.RegisterModule<SmartReminderModule>();
             #endregion
 
+            #region 注册管理服务
+            // 注册注册管理服务
+            builder.RegisterType<RegistrationService>().As<IRegistrationService>()
+                .AsImplementedInterfaces()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+
+            // 注册硬件信息服务
+            builder.RegisterType<HardwareInfoService>().As<IHardwareInfoService>()
+                .AsImplementedInterfaces()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+
+            // 注册安全服务
+            builder.RegisterType<SecurityService>().As<ISecurityService>()
+                .AsImplementedInterfaces()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+            #endregion
+
             #region 网络服务配置
             // 配置网络服务容器
             builder.ConfigureNetworkServicesContainer();
@@ -319,7 +340,7 @@ namespace RUINORERP.Server
             services.Configure<SystemGlobalconfig>(builder.GetSection(nameof(SystemGlobalconfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
 
-            services.AddSingleton(typeof(frmMain));//MDI最大。才开一次才能单例
+            services.AddSingleton(typeof(frmMainNew));//MDI最大。才开一次才能单例
 
             #region 工作流服务配置
             // 这是新增加工作流的服务

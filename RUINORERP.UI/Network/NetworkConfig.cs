@@ -230,13 +230,6 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public NetworkConfig()
         {
-            // 初始化默认重试策略
-            // DefaultRetryStrategy = new ExponentialBackoffRetryStrategy(
-            //    maxAttempts: MaxRetryAttempts,
-            //    initialDelayMs: RetryBaseDelayMs,
-            //    multiplier: RetryMultiplier,
-            //    maxDelayMs: MaxRetryDelayMs
-            //);
         }
 
         /// <summary>

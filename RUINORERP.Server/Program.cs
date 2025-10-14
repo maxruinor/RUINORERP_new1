@@ -97,6 +97,12 @@ namespace RUINORERP.Server
             {
                 // 启动服务UI
                 StartServerUI();
+
+
+            }
+            catch (Exception ex)
+            {
+
             }
             finally
             {
@@ -123,7 +129,7 @@ namespace RUINORERP.Server
                 try
                 {
 
-                    
+
 
                     Startup starter = new Startup();
                     IHost myhost = starter.CslaDIPort();
@@ -196,7 +202,7 @@ namespace RUINORERP.Server
                     var logger = services.GetService<ILogger<frmMainNew>>();
                     var workflowHost = services.GetService<IWorkflowHost>();
                     var config = services.GetService<IOptionsMonitor<SystemGlobalconfig>>();
-                    
+
                     var newMainForm = new frmMainNew(logger, workflowHost, config);
                     newMainForm._ServiceProvider = services;
                     Application.Run(newMainForm);
@@ -238,7 +244,7 @@ namespace RUINORERP.Server
             //Application.Run(new frmMain());
         }
 
- 
+
 
 
         private static void BringExistingInstanceToFront()
@@ -373,7 +379,7 @@ namespace RUINORERP.Server
             string errorMessage = "应用程序未处理的线程异常: " + e.Exception.Message;
             frmMain.Instance.PrintInfoLog(errorMessage);
             frmMain.Instance.PrintInfoLog(e.Exception.StackTrace);
-            
+
             // 使用frmMain中的logger记录异常（这与项目原有日志系统兼容）
             try
             {
@@ -393,7 +399,7 @@ namespace RUINORERP.Server
         {
             Exception ex = (Exception)e.ExceptionObject;
             string errorMsg = "应用程序发生未处理的异常。请联系管理员并提供以下信息:\n\n";
-            
+
             try
             {
                 if (e.IsTerminating)
@@ -405,7 +411,7 @@ namespace RUINORERP.Server
                 {
                     frmMain.Instance.PrintInfoLog("CurrentDomain_UnhandledException:" + errorMsg + ex.Message);
                 }
-                
+
                 // 使用frmMain中的logger记录异常（这与项目原有日志系统兼容）
                 if (frmMain.Instance != null && frmMain.Instance._logger != null)
                 {

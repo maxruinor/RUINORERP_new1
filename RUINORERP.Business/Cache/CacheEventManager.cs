@@ -4,10 +4,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using RUINORERP.Business.Cache;
 using RUINORERP.PacketSpec.Commands.Cache;
 
-namespace RUINORERP.Business.CommService
+namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 缓存事件管理器，用于处理本地缓存变更事件
@@ -86,7 +85,7 @@ namespace RUINORERP.Business.CommService
         {
             var tableName = typeof(T).Name;
             _cacheManager.UpdateEntity(entity);
-            
+
             // 对于更新操作，我们需要获取主键值
             var primaryKeyValue = GetEntityPrimaryKeyValue(entity, tableName);
             OnCacheChanged(tableName, CacheOperation.Update, entity);

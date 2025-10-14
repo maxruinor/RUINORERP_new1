@@ -29,6 +29,7 @@ using NetTaste;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Errors;
 using SuperSocket.Server.Abstractions.Session;
+using RUINORERP.Business.Cache;
 
 
 namespace RUINORERP.Server.Network.Commands

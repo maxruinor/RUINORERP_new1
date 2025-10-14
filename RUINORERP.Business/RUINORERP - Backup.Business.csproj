@@ -8,14 +8,17 @@
 
   <ItemGroup>
     <Compile Remove="Cache\**" />
+    <Compile Remove="DependencyInjection\**" />
     <Compile Remove="SystemService\**" />
     <Compile Remove="UseCsla\**" />
     <Compile Remove="Validator_back\**" />
     <EmbeddedResource Remove="Cache\**" />
+    <EmbeddedResource Remove="DependencyInjection\**" />
     <EmbeddedResource Remove="SystemService\**" />
     <EmbeddedResource Remove="UseCsla\**" />
     <EmbeddedResource Remove="Validator_back\**" />
     <None Remove="Cache\**" />
+    <None Remove="DependencyInjection\**" />
     <None Remove="SystemService\**" />
     <None Remove="UseCsla\**" />
     <None Remove="Validator_back\**" />
@@ -90,6 +93,7 @@
     <Compile Include="Cache\EntityCacheInitializationService.cs" />
     <Compile Include="Cache\EntityCacheManager.cs" />
     <Compile Include="Cache\IEntityCacheManager.cs" />
+    <Compile Include="Cache\InventoryCacheManager.cs" />
     <Compile Include="Cache\TableSchemaInfo.cs" />
     <Compile Include="Cache\TableSchemaManager.cs" />
   </ItemGroup>
@@ -127,6 +131,10 @@
   <ItemGroup>
     <Folder Include="BizCodeGeneration\" />
     <Folder Include="IocExtensions\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Cache\CACHE_SYSTEM_OVERVIEW.md" />
   </ItemGroup>
 
 </Project>

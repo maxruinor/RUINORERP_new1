@@ -307,7 +307,7 @@ namespace RUINORERP.Server
         }
 
         public bool ServerStart = false;
-        public  System.Timers.Timer timer = null;
+        public System.Timers.Timer timer = null;
 
         static System.Timers.Timer ReminderTimer = null;
 
@@ -752,17 +752,15 @@ namespace RUINORERP.Server
 
         public async Task InitConfig(bool LoadData = true)
         {
-          
+
             Stopwatch stopwatch = Stopwatch.StartNew();
-            // MyCacheManager.Instance.InitCacheDict(LoadData); // 已废弃，使用CacheInitializationService替代
-            
-            // 使用CacheInitializationService从数据库查询并初始化缓存数据
             if (LoadData)
             {
-                var cacheInitializationService = Startup.GetFromFac<CacheInitializationService>();
+                // 使用新的优化缓存初始化服务
+                var cacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
                 await cacheInitializationService.InitializeAllCacheAsync();
             }
-            
+
             stopwatch.Stop();
             frmMain.Instance.PrintInfoLog($"InitConfig总执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
             await Task.Delay(0);
@@ -1458,7 +1456,7 @@ namespace RUINORERP.Server
         }
 
         // 将受保护的成员改为公共成员
-        public void tsBtnStartServer_Click(object sender, EventArgs e)
+        public async void tsBtnStartServer_Click(object sender, EventArgs e)
         {
             if (frmuserList == null)
             {
@@ -1470,13 +1468,10 @@ namespace RUINORERP.Server
             UpdateServerInfoTimer.Start();
             tsBtnStartServer.Enabled = false;
 
-            if (MyCacheManager.Instance.CacheEntityList == null)
-            {
-                // 如果缓存为空，尝试重新初始化
-                Task.Run(async () => await frmMain.Instance.InitConfig(true)).Wait();
-            }
-
-
+            // 检查新缓存管理器是否已初始化
+            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            // 这里可以添加对新缓存管理器的检查逻辑
+            await Task.Run(async () => await InitConfig(true));
         }
 
         private void 系统注册ToolStripMenuItem_Click(object sender, EventArgs e)

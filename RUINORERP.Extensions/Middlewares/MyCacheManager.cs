@@ -14,12 +14,14 @@ using Newtonsoft.Json.Linq;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.CustomAttribute;
 using SharpYaml.Tokens;
+using System.ComponentModel;
 
 namespace RUINORERP.Extensions.Middlewares
 {
     /// <summary>
     /// 企业级缓存管理器（100% 兼容旧调用，同时支持并发、版本、LRU、统计）
     /// </summary>
+    [Obsolete("此缓存管理器已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheManager")]
     public class MyCacheManager
     {
 
@@ -39,6 +41,7 @@ namespace RUINORERP.Extensions.Middlewares
         /// <summary>
         /// 获取MyCacheManager的单例实例
         /// </summary>
+        [Obsolete("此方法已过时，请使用依赖注入方式获取 RUINORERP.Business.CommService.ICacheManager")]
         public static MyCacheManager Instance
         {
             get
@@ -64,6 +67,7 @@ namespace RUINORERP.Extensions.Middlewares
         /// 此方法应在应用程序启动时调用，确保使用正确的缓存配置
         /// </summary>
         /// <param name="cache">自定义的缓存管理器实例</param>
+        [Obsolete("此方法已过时，请使用依赖注入方式获取 RUINORERP.Business.CommService.ICacheManager")]
         public static void Initialize(ICacheManager<object> cache = null)
         {
             lock (_globalLock)
@@ -114,6 +118,7 @@ namespace RUINORERP.Extensions.Middlewares
         #endregion
 
         #region ====== 构造 ======
+        [Obsolete("此构造函数已过时，请使用依赖注入方式获取 RUINORERP.Business.CommService.ICacheManager")]
         public MyCacheManager(ICacheManager<object> cache)
         {
             Cache = cache ?? throw new ArgumentNullException(nameof(cache));

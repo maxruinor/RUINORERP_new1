@@ -1132,12 +1132,19 @@ namespace RUINORERP.UI.Common
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             T prodDetail = null;
 
-            if (MyCacheManager.Instance.NewTableList.ContainsKey(typeof(T).Name))
+            // 获取新的缓存管理器实例
+            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            
+            // 获取表结构管理器实例
+            var tableSchemaManager = TableSchemaManager.Instance;
+            
+            // 检查表是否在缓存表列表中
+            if (tableSchemaManager.ContainsTable(typeof(T).Name))
             {
-                var nkv = MyCacheManager.Instance.NewTableList[typeof(T).Name];
-                if (nkv.Key != null)
+                var schemaInfo = tableSchemaManager.GetSchemaInfo(typeof(T).Name);
+                if (schemaInfo != null)
                 {
-                    object obj = MyCacheManager.Instance.GetEntity<T>(ProdDetailID);
+                    object obj = cacheManager.GetEntity<T>(ProdDetailID);
                     if (obj != null && obj.GetType().Name != "Object" && obj is T)
                     {
                         prodDetail = obj as T;
@@ -1190,46 +1197,13 @@ namespace RUINORERP.UI.Common
         {
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
             List<View_ProdDetail> list = new List<View_ProdDetail>();
-            var cachelist = MyCacheManager.Instance.CacheEntityList.Get(nameof(View_ProdDetail));
-            if (cachelist == null)
-            {
-                list = MainForm.Instance.AppContext.Db.Queryable<View_ProdDetail>().ToList();
-            }
-            else
-            {
-                #region 利用缓存
-                Type listType = cachelist.GetType();
-                if (TypeHelper.IsGenericList(listType))
-                {
-                    if (listType.FullName.Contains("System.Collections.Generic.List`1[[System.Object"))
-                    {
-                        List<View_ProdDetail> lastOKList = new List<View_ProdDetail>();
-                        var lastlist = ((IEnumerable<dynamic>)cachelist).ToList();
-                        foreach (var item in lastlist)
-                        {
-                            lastOKList.Add(item);
-                        }
-                        list = lastOKList;
-                    }
-                    else
-                    {
-                        list = cachelist as List<View_ProdDetail>;
-                    }
-                }
-                else if (TypeHelper.IsJArrayList(listType))
-                {
-                    List<View_ProdDetail> lastOKList = new List<View_ProdDetail>();
-                    var objlist = TypeHelper.ConvertJArrayToList(typeof(View_ProdDetail), cachelist as Newtonsoft.Json.Linq.JArray);
-                    var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
-                    foreach (var item in lastlist)
-                    {
-                        lastOKList.Add(item);
-                    }
-                    list = lastOKList;
-                }
-
-                #endregion
-            }
+            
+            // 获取新的缓存管理器实例
+            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            
+            // 获取View_ProdDetail实体列表
+            list = cacheManager.GetEntityList<View_ProdDetail>();
+            
             foreach (var item in list)
             {
                 proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
@@ -1274,9 +1248,11 @@ namespace RUINORERP.UI.Common
             if (result.Succeeded)
             {
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                // 获取表结构管理器实例
+                var tableSchemaManager = TableSchemaManager.Instance;
+                
                 //只处理需要缓存的表
-                if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_CRM_Contact).Name, out pair))
+                if (tableSchemaManager.ContainsTable(typeof(tb_CRM_Contact).Name))
                 {
                     //如果有更新变动就上传到服务器再分发到所有客户端
 
@@ -1365,9 +1341,11 @@ namespace RUINORERP.UI.Common
             {
 
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                // 获取表结构管理器实例
+                var tableSchemaManager = TableSchemaManager.Instance;
+                
                 //只处理需要缓存的表
-                if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_FM_PayeeInfo).Name, out pair))
+                if (tableSchemaManager.ContainsTable(typeof(tb_FM_PayeeInfo).Name))
                 {
                     //如果有更新变动就上传到服务器再分发到所有客户端
 
@@ -1449,9 +1427,11 @@ namespace RUINORERP.UI.Common
             {
 
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                // 获取表结构管理器实例
+                var tableSchemaManager = TableSchemaManager.Instance;
+                
                 //只处理需要缓存的表
-                if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_BillingInformation).Name, out pair))
+                if (tableSchemaManager.ContainsTable(typeof(tb_BillingInformation).Name))
                 {
                     //如果有更新变动就上传到服务器再分发到所有客户端
 
@@ -1495,12 +1475,18 @@ namespace RUINORERP.UI.Common
        
         public static async void RequestCache(string tableName, Type type = null)
         {
+            // 获取新的缓存管理器实例
+            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            
+            // 获取表结构管理器实例
+            var tableSchemaManager = TableSchemaManager.Instance;
+            
             //优先处理本身，比方 BOM_ID显示BOM_NO，只要传tb_BOM_S
-            if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
+            if (tableSchemaManager.ContainsTable(tableName))
             {
                 //请求本身
-                var rslist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
-                if (NeedRequesCache(rslist, tableName) && IsCacheableTable(tableName))
+                var entityList = cacheManager.GetEntityList<object>(tableName);
+                if (NeedRequesCache(entityList, tableName) && IsCacheableTable(tableName))
                 {// 临时代码：标记需要完善的部分
                     CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
                     await cacheClient.RequestCacheAsync(tableName);
@@ -1511,34 +1497,20 @@ namespace RUINORERP.UI.Common
             }
 
             //请求关联表
-            List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
-            if (!MyCacheManager.Instance.FkPairTableList.TryGetValue(tableName, out kvlist))
+            // 获取外键关系
+            var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
+            if (schemaInfo != null && schemaInfo.ForeignKeys.Any())
             {
-                if (kvlist == null)
+                foreach (var fk in schemaInfo.ForeignKeys)
                 {
-                    if (type == null)
-                    {
-                        type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
-                    }
-
-                    MyCacheManager.Instance.SetFkColList(type);
-                }
-            }
-
-            //获取相关的表
-            if (MyCacheManager.Instance.FkPairTableList.TryGetValue(tableName, out kvlist))
-            {
-                foreach (var item in kvlist)
-                {
-                    var rslist = MyCacheManager.Instance.CacheEntityList.Get(item.Value);
+                    var rslist = cacheManager.GetEntityList<object>(fk.RelatedTableName);
                     //并且要存在于缓存列表的表集合中才取。有些是没有缓存的业务单据表。不需要取缓存
-                    if (NeedRequesCache(rslist, item.Value) && IsCacheableTable(item.Value))
+                    if (NeedRequesCache(rslist, fk.RelatedTableName) && IsCacheableTable(fk.RelatedTableName))
                     {
                         // 临时代码：标记需要完善的部分
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
                         //ClientService.请求缓存(item.Value);
                     }
-
                 }
             }
 
@@ -1995,4 +1967,3 @@ namespace RUINORERP.UI.Common
 
 
 }
-

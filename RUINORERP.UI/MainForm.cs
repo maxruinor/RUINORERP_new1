@@ -778,7 +778,7 @@ namespace RUINORERP.UI
 
 
             // 使用CacheInitializationService从数据库查询并初始化缓存数据
-            var cacheInitializationService = Startup.GetFromFac<CacheInitializationService>();
+            var cacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
             await cacheInitializationService.InitializeAllCacheAsync();
 
             //先加载一遍缓存

@@ -65,10 +65,23 @@ namespace RUINORERP.Business.DI
             // 实体业务映射服务已通过AddEntityInfoServicesWithMappings方法注册
             // 此处不再重复注册，以避免冲突
 
-            // 注册BizCacheHelper缓存帮助类
+            // 注册MyCacheManager缓存管理器（保持向后兼容）
             builder.RegisterType<MyCacheManager>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+
+            // 注册新的优化缓存管理器
+            //这里是单例，批量扫描程序集是 .InstancePerDependency()，这意味着每次请求都会创建一个新的实例
+            builder.RegisterType<EntityCacheManager>()
+                .As<IEntityCacheManager>()
+                .SingleInstance()
+                .PropertiesAutowired();
+                
+            // 注册新的优化缓存初始化服务
+            builder.RegisterType<EntityCacheInitializationService>()
+                .AsSelf()
+                .SingleInstance()
                 .PropertiesAutowired();
 
             // 注册缓存初始化服务

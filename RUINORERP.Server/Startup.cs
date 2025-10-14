@@ -339,18 +339,16 @@ namespace RUINORERP.Server
             services.AddMemoryCacheSetup();
             services.AddDistributedMemoryCache();
 
-            // 添加CacheManager缓存服务
-            services.AddSingleton<ICacheManager<object>>(provider =>
-            {
-                return CacheFactory.Build<object>(settings =>
-                {
-                    settings
-                        .WithSystemRuntimeCacheHandle()
-                        .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30));
-                });
-            });
-
-           
+            // 注释掉重复的CacheManager缓存服务注册，使用BusinessDIConfig.cs中注册的OptimizedCacheManager
+            // services.AddSingleton<ICacheManager<object>>(provider =>
+            // {
+            //     return CacheFactory.Build<object>(settings =>
+            //     {
+            //         settings
+            //             .WithSystemRuntimeCacheHandle()
+            //             .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30));
+            //     });
+            // });
 
             // 注册统一缓存管理器
             // services.AddSingleton<UnifiedCacheManager>();
@@ -382,53 +380,13 @@ namespace RUINORERP.Server
         #endregion
 
         #region 外部DLL依赖注入配置
-        /// <summary>
-        /// 配置外部DLL依赖注入
-        /// </summary>
-        /// <param name="builder">容器构建器</param>
-        public static void ConfigureContainerForDll_new(ContainerBuilder builder)
+ 
+
+        public static void ConfigureContainerForDll(ContainerBuilder builder)
         {
 
-            #region Extensions程序集依赖注入
-            var dalAssemble_Extensions = System.Reflection.Assembly.LoadFrom("RUINORERP.Extensions.dll");
-            builder.RegisterAssemblyTypes(dalAssemble_Extensions)
-                  .AsImplementedInterfaces().AsSelf()
-                  .InstancePerDependency()
-                  .PropertiesAutowired();
-            #endregion
 
-            #region Model程序集依赖注入
-            var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
-            builder.RegisterAssemblyTypes(dalAssemble)
-             .AsImplementedInterfaces().AsSelf()
-             .InstancePerDependency()
-             .PropertiesAutowired();
-
-            Type[] tempModelTypes = dalAssemble.GetTypes();
-            List<Type> ModelTypes = new List<Type>();
-            List<Type> OtherModelTypes = new List<Type>();
-            var suagrAttr = typeof(SugarTable);
-            for (int i = 0; i < tempModelTypes.Length; i++)
-            {
-                if (!tempModelTypes[i].IsDefined(suagrAttr, false))
-                {
-                    //OtherModelTypes.Add(tempModelTypes[i]);
-                }
-                else
-                {
-                    if (tempModelTypes[i].BaseType == typeof(BaseEntity))
-                    {
-                        Type type = Assembly.LoadFrom("RUINORERP.Model.dll").GetType(tempModelTypes[i].FullName);
-                        builder.Register(c => Activator.CreateInstance(type)).Named<BaseEntity>(tempModelTypes[i].Name);
-                    }
-                    if (tempModelTypes[i].BaseType == typeof(BaseConfig))
-                    {
-                        Type type = Assembly.LoadFrom("RUINORERP.Model.dll").GetType(tempModelTypes[i].FullName);
-                        builder.Register(c => Activator.CreateInstance(type)).Named<BaseConfig>(tempModelTypes[i].Name);
-                    }
-                }
-            }
-            #endregion
+         
 
             #region 使用各项目的DI配置类
             // 配置各项目的依赖注入
@@ -444,18 +402,15 @@ namespace RUINORERP.Server
 
             builder.RegisterModule<SmartReminderModule>();
             #endregion
-        }
 
-
-        public static void ConfigureContainerForDll(ContainerBuilder builder)
-        {
-
+            #region Extensions程序集依赖注入
+        
             var dalAssemble_Extensions = System.Reflection.Assembly.LoadFrom("RUINORERP.Extensions.dll");
             builder.RegisterAssemblyTypes(dalAssemble_Extensions)
                   .AsImplementedInterfaces().AsSelf()
                   .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
                   .PropertiesAutowired();//允许属性注入
-
+            #endregion
 
             var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
             builder.RegisterAssemblyTypes(dalAssemble)
@@ -669,9 +624,10 @@ namespace RUINORERP.Server
             .Where(x => x.GetConstructors().Length > 0) //没有构造函数的排除
             .Where(x => x != ExType)//排除
             .Where(x => x != typeof(BizType))
+            .Where(x => x != typeof(EntityCacheManager)) // 排除EntityCacheManager，避免覆盖单例注册
              .AsImplementedInterfaces().AsSelf()
             .PropertiesAutowired()
-            .InstancePerDependency();
+            .InstancePerDependency();//.InstancePerDependency()，这意味着每次请求都会创建一个新的实例
             //==接口
 
             builder.RegisterTypes(IOCCslaTypes.ToArray())

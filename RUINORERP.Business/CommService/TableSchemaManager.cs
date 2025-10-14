@@ -5,117 +5,42 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using RUINORERP.Common;
 using RUINORERP.Global.CustomAttribute;
-using System.ComponentModel;
 
-namespace RUINORERP.Extensions.Middlewares
+namespace RUINORERP.Business.CommService
 {
     /// <summary>
-    /// 表结构信息类，用于存储表的元数据信息
+    /// 表结构信息管理器，统一管理所有表的元数据信息
     /// </summary>
-    [Obsolete("此类已过时，请使用 RUINORERP.Business.CommService.TableSchemaInfo")]
-    public class TableSchemaInfo
+    public class TableSchemaManager
     {
-        /// <summary>
-        /// 表名
-        /// </summary>
-        public string TableName { get; set; }
+        #region 单例模式
+        private static TableSchemaManager _instance;
+        private static readonly object _lock = new object();
 
         /// <summary>
-        /// 主键字段名
+        /// 获取TableSchemaManager的单例实例
         /// </summary>
-        public string PrimaryKeyField { get; set; }
-
-        /// <summary>
-        /// 显示名称字段名
-        /// </summary>
-        public string DisplayField { get; set; }
-
-        /// <summary>
-        /// 实体类型
-        /// </summary>
-        public Type EntityType { get; set; }
-
-        /// <summary>
-        /// 是否是视图
-        /// </summary>
-        public bool IsView { get; set; }
-
-        /// <summary>
-        /// 是否需要缓存
-        /// </summary>
-        public bool IsCacheable { get; set; } = true;
-
-        /// <summary>
-        /// 表描述信息
-        /// </summary>
-        public string Description { get; set; }
-
-        /// <summary>
-        /// 外键关系列表
-        /// </summary>
-        public List<ForeignKeyRelation> ForeignKeys { get; set; } = new List<ForeignKeyRelation>();
-        
-        /// <summary>
-        /// 验证表结构信息是否完整
-        /// </summary>
-        /// <returns>验证结果</returns>
-        public bool Validate()
+        public static TableSchemaManager Instance
         {
-            return !string.IsNullOrEmpty(TableName) &&
-                   !string.IsNullOrEmpty(PrimaryKeyField) &&
-                   !string.IsNullOrEmpty(DisplayField) &&
-                   EntityType != null;
+            get
+            {
+                if (_instance == null)
+                {
+                    lock (_lock)
+                    {
+                        if (_instance == null)
+                        {
+                            _instance = new TableSchemaManager();
+                        }
+                    }
+                }
+                return _instance;
+            }
         }
-        
-        /// <summary>
-        /// 获取表结构信息的字符串表示
-        /// </summary>
-        /// <returns>表结构信息字符串</returns>
-        public string ToInfoString()
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine($"表名: {TableName}");
-            sb.AppendLine($"主键字段: {PrimaryKeyField}");
-            sb.AppendLine($"显示字段: {DisplayField}");
-            sb.AppendLine($"实体类型: {EntityType?.Name ?? "未指定"}");
-            sb.AppendLine($"是否视图: {IsView}");
-            sb.AppendLine($"是否缓存: {IsCacheable}");
-            sb.AppendLine($"描述: {Description ?? "无"}");
-            sb.AppendLine($"外键数量: {ForeignKeys?.Count ?? 0}");
-            return sb.ToString();
-        }
-    }
+        #endregion
 
-    /// <summary>
-    /// 外键关系类
-    /// </summary>
-    [Obsolete("此类已过时，请使用 RUINORERP.Business.CommService.ForeignKeyRelation")]
-    public class ForeignKeyRelation
-    {
-        /// <summary>
-        /// 外键字段名
-        /// </summary>
-        public string ForeignKeyField { get; set; }
-
-        /// <summary>
-        /// 关联的表名
-        /// </summary>
-        public string RelatedTableName { get; set; }
-
-        /// <summary>
-        /// 关联表的主键字段
-        /// </summary>
-        public string RelatedPrimaryKey { get; set; }
-    }
-
-    /// <summary>
-    /// 缓存数据列表管理器，统一管理所有需要缓存的表结构信息
-    /// </summary>
-    [Obsolete("此类已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
-    public class BaseCacheDataList
-    {
+        #region 数据存储
         /// <summary>
         /// 表结构信息字典，键为表名
         /// </summary>
@@ -129,6 +54,14 @@ namespace RUINORERP.Extensions.Middlewares
             new ConcurrentDictionary<Type, string>();
 
         /// <summary>
+        /// 表名到实体类型的映射字典
+        /// </summary>
+        private readonly ConcurrentDictionary<string, Type> _tableNameToType = 
+            new ConcurrentDictionary<string, Type>();
+        #endregion
+
+        #region 公共属性
+        /// <summary>
         /// 获取所有注册的表结构信息
         /// </summary>
         public IReadOnlyDictionary<string, TableSchemaInfo> TableSchemas => _tableSchemas;
@@ -138,7 +71,9 @@ namespace RUINORERP.Extensions.Middlewares
         /// </summary>
         public IEnumerable<string> CacheableTableNames => 
             _tableSchemas.Values.Where(t => t.IsCacheable).Select(t => t.TableName);
+        #endregion
 
+        #region 注册方法
         /// <summary>
         /// 注册表结构信息（泛型方法）
         /// </summary>
@@ -148,8 +83,7 @@ namespace RUINORERP.Extensions.Middlewares
         /// <param name="isView">是否是视图</param>
         /// <param name="isCacheable">是否需要缓存</param>
         /// <param name="description">表描述</param>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
-        public void RegistInformation<T>(
+        public void RegisterTableSchema<T>(
             Expression<Func<T, object>> primaryKeyExpression,
             Expression<Func<T, object>> displayFieldExpression,
             bool isView = false,
@@ -181,7 +115,8 @@ namespace RUINORERP.Extensions.Middlewares
                 EntityType = entityType,
                 IsView = isView,
                 IsCacheable = isCacheable,
-                Description = description ?? tableName
+                Description = description ?? tableName,
+                Properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList()
             };
 
             // 加载外键关系
@@ -196,6 +131,7 @@ namespace RUINORERP.Extensions.Middlewares
             // 添加到字典
             _tableSchemas.TryAdd(tableName, schemaInfo);
             _typeToTableName.TryAdd(entityType, tableName);
+            _tableNameToType.TryAdd(tableName, entityType);
         }
 
         /// <summary>
@@ -207,8 +143,7 @@ namespace RUINORERP.Extensions.Middlewares
         /// <param name="isView">是否是视图</param>
         /// <param name="isCacheable">是否需要缓存</param>
         /// <param name="description">表描述</param>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
-        public void RegistInformation(
+        public void RegisterTableSchema(
             Type entityType,
             string primaryKeyField,
             string displayField,
@@ -241,7 +176,8 @@ namespace RUINORERP.Extensions.Middlewares
                 EntityType = entityType,
                 IsView = isView,
                 IsCacheable = isCacheable,
-                Description = description ?? tableName
+                Description = description ?? tableName,
+                Properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList()
             };
 
             // 加载外键关系
@@ -256,14 +192,16 @@ namespace RUINORERP.Extensions.Middlewares
             // 添加到字典
             _tableSchemas.TryAdd(tableName, schemaInfo);
             _typeToTableName.TryAdd(entityType, tableName);
+            _tableNameToType.TryAdd(tableName, entityType);
         }
+        #endregion
 
+        #region 查询方法
         /// <summary>
         /// 根据表名获取表结构信息
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>表结构信息，如果不存在返回null</returns>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
         public TableSchemaInfo GetSchemaInfo(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
@@ -280,7 +218,6 @@ namespace RUINORERP.Extensions.Middlewares
         /// </summary>
         /// <param name="entityType">实体类型</param>
         /// <returns>表结构信息，如果不存在返回null</returns>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
         public TableSchemaInfo GetSchemaInfo(Type entityType)
         {
             if (entityType == null)
@@ -297,11 +234,48 @@ namespace RUINORERP.Extensions.Middlewares
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>实体类型，如果不存在返回null</returns>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
         public Type GetEntityType(string tableName)
         {
+            if (string.IsNullOrEmpty(tableName))
+            {
+                return null;
+            }
+
+            _tableNameToType.TryGetValue(tableName, out var entityType);
+            return entityType;
+        }
+
+        /// <summary>
+        /// 获取主键字段名
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>主键字段名</returns>
+        public string GetPrimaryKeyField(string tableName)
+        {
             var schemaInfo = GetSchemaInfo(tableName);
-            return schemaInfo?.EntityType;
+            return schemaInfo?.PrimaryKeyField;
+        }
+
+        /// <summary>
+        /// 获取显示字段名
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>显示字段名</returns>
+        public string GetDisplayField(string tableName)
+        {
+            var schemaInfo = GetSchemaInfo(tableName);
+            return schemaInfo?.DisplayField;
+        }
+
+        /// <summary>
+        /// 获取外键关系列表
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>外键关系列表</returns>
+        public List<ForeignKeyRelation> GetForeignKeys(string tableName)
+        {
+            var schemaInfo = GetSchemaInfo(tableName);
+            return schemaInfo?.ForeignKeys ?? new List<ForeignKeyRelation>();
         }
 
         /// <summary>
@@ -309,7 +283,6 @@ namespace RUINORERP.Extensions.Middlewares
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>是否已注册</returns>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
         public bool ContainsTable(string tableName)
         {
             return !string.IsNullOrEmpty(tableName) && _tableSchemas.ContainsKey(tableName);
@@ -320,12 +293,13 @@ namespace RUINORERP.Extensions.Middlewares
         /// </summary>
         /// <param name="entityType">实体类型</param>
         /// <returns>是否已注册</returns>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
         public bool ContainsType(Type entityType)
         {
             return entityType != null && _typeToTableName.ContainsKey(entityType);
         }
+        #endregion
 
+        #region 辅助方法
         /// <summary>
         /// 从表达式中提取成员名称
         /// </summary>
@@ -381,7 +355,8 @@ namespace RUINORERP.Extensions.Middlewares
                         {
                             ForeignKeyField = property.Name,
                             RelatedTableName = fkAttr.FKTableName == "tb_ProdDetail" ? "View_ProdDetail" : fkAttr.FKTableName,
-                            RelatedPrimaryKey = fkAttr.FK_IDColName
+                            RelatedPrimaryKey = fkAttr.FK_IDColName,
+                            ForeignKeyProperty = property
                         };
 
                         schemaInfo.ForeignKeys.Add(foreignKeyRelation);
@@ -394,7 +369,6 @@ namespace RUINORERP.Extensions.Middlewares
         /// 获取所有已注册的表名
         /// </summary>
         /// <returns>表名列表</returns>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
         public List<string> GetAllTableNames()
         {
             return _tableSchemas.Keys.ToList();
@@ -404,7 +378,6 @@ namespace RUINORERP.Extensions.Middlewares
         /// 获取所有需要缓存的表名
         /// </summary>
         /// <returns>需要缓存的表名列表</returns>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
         public List<string> GetCacheableTableNamesList()
         {
             return _tableSchemas.Values
@@ -416,18 +389,17 @@ namespace RUINORERP.Extensions.Middlewares
         /// <summary>
         /// 清除所有注册的表结构信息
         /// </summary>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
         public void Clear()
         {
             _tableSchemas.Clear();
             _typeToTableName.Clear();
+            _tableNameToType.Clear();
         }
 
         /// <summary>
         /// 获取统计信息
         /// </summary>
         /// <returns>统计信息字符串</returns>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
         public string GetStatistics()
         {
             var totalTables = _tableSchemas.Count;
@@ -441,7 +413,6 @@ namespace RUINORERP.Extensions.Middlewares
         /// 获取所有表结构信息的详细字符串表示
         /// </summary>
         /// <returns>所有表结构信息的字符串表示</returns>
-        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.TableSchemaManager")]
         public string GetAllSchemaInfoString()
         {
             var sb = new StringBuilder();
@@ -453,5 +424,6 @@ namespace RUINORERP.Extensions.Middlewares
             }
             return sb.ToString();
         }
+        #endregion
     }
 }

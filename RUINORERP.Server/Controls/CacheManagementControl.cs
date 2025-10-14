@@ -223,11 +223,13 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 先确保缓存已初始化
-                if (MyCacheManager.Instance.CacheEntityList == null)
-                {
-                    // 如果缓存为空，尝试重新初始化
-                    await frmMain.Instance.InitConfig(true);
-                }
+                // 使用新的缓存管理器检查缓存状态
+                var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                // 这里可以添加对新缓存管理器的检查逻辑
+                // 例如检查某个关键表是否已缓存
+
+                // 如果缓存为空，尝试重新初始化
+                await frmMain.Instance.InitConfig(true);
 
                 // 刷新UI显示
                 LoadCacheToUI();
@@ -260,96 +262,28 @@ namespace RUINORERP.Server.Controls
                 //加载所有缓存的表
                 listBoxTableList.Items.Clear();
 
-                List<string> tableNameList = new List<string>();
-
-                // 确保缓存管理器已初始化
-                if (MyCacheManager.Instance == null)
-                {
-                    MessageBox.Show("缓存管理器未初始化", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                // 确保有缓存表
-                if (MyCacheManager.Instance.NewTableList == null || MyCacheManager.Instance.NewTableList.Count == 0)
+                // 获取新的缓存管理器实例
+                var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                
+                // 获取所有可缓存的表名
+                List<string> tableNameList = RUINORERP.Server.Comm.CacheUIHelper.GetCacheableTableNames();
+                
+                if (tableNameList == null || tableNameList.Count == 0)
                 {
                     MessageBox.Show("没有找到缓存表配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
-                foreach (var tableName in MyCacheManager.Instance.NewTableList.Keys)
-                {
-                    tableNameList.Add(tableName);
-                }
                 tableNameList.Sort();
 
                 foreach (var tableName in tableNameList)
                 {
                     SuperValue kv = null;
                     string cacheInfoView = string.Empty;
-                    CacheInfo cacheInfo = MyCacheManager.Instance.CacheInfoList.Get(tableName) as CacheInfo;
-                    if (cacheInfo != null)
-                    {
-                        if (cacheInfo.HasExpire)
-                        {
-                            cacheInfoView = $"  {cacheInfo.CacheCount}-{cacheInfo.ExpirationTime}";
-                        }
-                        else
-                        {
-                            cacheInfoView = $"  {cacheInfo.CacheCount}";
-                        }
-                    }
-
-                    var CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
-                    if (CacheList == null)
-                    {
-                        kv = new SuperValue(tableName + "[0]" + cacheInfoView, tableName);
-                    }
-                    else
-                    {
-                        int count = 0;
-                    // 处理不同类型的缓存数据
-                    if (CacheList is IList list)
-                    {
-                        count = list.Count;
-                    }
-                    else if (CacheList is JArray jArray)
-                    {
-                        count = jArray.Count;
-                    }
-                    else if (CacheList is string jsonString)
-                    {
-                        try
-                        {
-                            // 尝试解析为JArray
-                            var parsedArray = JsonConvert.DeserializeObject<JArray>(jsonString);
-                            count = parsedArray.Count();
-                        }
-                        catch
-                        {
-                            // 如果不是有效的JSON，计为1
-                            count = 1;
-                        }
-                    }
-                    else
-                    {
-                        // 尝试转换为IEnumerable
-                        try
-                        {
-                            var enumerable = CacheList as IEnumerable<dynamic>;
-                            if (enumerable != null)
-                            {
-                                count = enumerable.Count();
-                            }
-                        }
-                        catch
-                        {
-                            // 如果无法转换，显示为1（表示有数据但无法计数）
-                            count = 1;
-                        }
-                    }
-
-                        kv = new SuperValue(tableName + $"[{count}]" + cacheInfoView, tableName);
-                    }
+                    
+                    // 获取实体列表数量
+                    int count = RUINORERP.Server.Comm.CacheUIHelper.GetCacheItemCount(cacheManager, tableName);
+                    kv = new SuperValue(tableName + $"[{count}]" + cacheInfoView, tableName);
 
                     listBoxTableList.Items.Add(kv);
                 }

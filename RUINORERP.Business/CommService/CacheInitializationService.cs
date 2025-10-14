@@ -8,12 +8,15 @@ using SqlSugar;
 using RUINORERP.Repository.UnitOfWorks;
 using System.Linq.Expressions;
 using RUINORERP.Model;
+using System.ComponentModel;
+using System.Reflection;
 
 namespace RUINORERP.Business.CommService
 {
     /// <summary>
     /// 缓存初始化服务，负责从数据库加载数据并初始化缓存
     /// </summary>
+    [Obsolete("此缓存初始化服务已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
     public class CacheInitializationService
     {
         private readonly IUnitOfWorkManage _unitOfWorkManage;
@@ -36,6 +39,7 @@ namespace RUINORERP.Business.CommService
         /// 获取所有可缓存的表名列表
         /// </summary>
         /// <returns>可缓存的表名列表</returns>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         public static List<string> GetCacheableTableNames()
         {
             return _staticBaseCacheDataList.GetCacheableTableNamesList();
@@ -46,6 +50,7 @@ namespace RUINORERP.Business.CommService
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>是否可缓存</returns>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         public static bool IsCacheableTable(string tableName)
         {
             return _staticBaseCacheDataList.ContainsTable(tableName) && 
@@ -58,6 +63,7 @@ namespace RUINORERP.Business.CommService
         /// <param name="unitOfWorkManage">工作单元管理器</param>
         /// <param name="cacheManager">缓存管理器</param>
         /// <param name="logger">日志记录器</param>
+        [Obsolete("此构造函数已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         public CacheInitializationService(
             IUnitOfWorkManage unitOfWorkManage,
             MyCacheManager cacheManager,
@@ -72,6 +78,7 @@ namespace RUINORERP.Business.CommService
         /// <param name="cacheManager">缓存管理器</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="baseCacheDataList">基础缓存数据列表</param>
+        [Obsolete("此构造函数已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         public CacheInitializationService(
             IUnitOfWorkManage unitOfWorkManage,
             MyCacheManager cacheManager,
@@ -91,6 +98,7 @@ namespace RUINORERP.Business.CommService
         /// 初始化所有缓存
         /// </summary>
         /// <returns>初始化任务</returns>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         public async Task InitializeAllCacheAsync()
         {
             try
@@ -131,6 +139,7 @@ namespace RUINORERP.Business.CommService
         /// <summary>
         /// 注册所有表结构信息
         /// </summary>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         private void RegisterAllTableSchemas()
         {
             InitializeAllTableSchemas(_baseCacheDataList);
@@ -140,6 +149,7 @@ namespace RUINORERP.Business.CommService
         /// 初始化所有表结构信息（通用方法）
         /// </summary>
         /// <param name="baseCacheDataList">基础缓存数据列表</param>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         private static void InitializeAllTableSchemas(BaseCacheDataList baseCacheDataList)
         {
             try
@@ -234,6 +244,7 @@ namespace RUINORERP.Business.CommService
         /// <param name="isView">是否是视图</param>
         /// <param name="isCacheable">是否需要缓存</param>
         /// <param name="description">表描述</param>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         private static void RegistInformation<T>(
             BaseCacheDataList baseCacheDataList,
             Expression<Func<T, object>> primaryKeyExpression,
@@ -248,6 +259,7 @@ namespace RUINORERP.Business.CommService
         /// <summary>
         /// 将BaseCacheDataList中的表结构信息同步到MyCacheManager的NewTableList中
         /// </summary>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         private void SyncTableSchemasToCacheManager()
         {
             try
@@ -300,6 +312,7 @@ namespace RUINORERP.Business.CommService
         /// <param name="isView">是否是视图</param>
         /// <param name="isCacheable">是否需要缓存</param>
         /// <param name="description">表描述</param>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         private void RegistInformation<T>(
             Expression<Func<T, object>> primaryKeyExpression,
             Expression<Func<T, object>> displayFieldExpression,
@@ -315,6 +328,7 @@ namespace RUINORERP.Business.CommService
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>初始化任务</returns>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         public async Task InitializeCacheForTableAsync(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
@@ -357,6 +371,7 @@ namespace RUINORERP.Business.CommService
         /// <param name="tableName">表名</param>
         /// <param name="db">数据库客户端</param>
         /// <returns>初始化任务</returns>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         private async Task InitializeCacheForTableAsync(string tableName, ISqlSugarClient db)
         {
             if (string.IsNullOrEmpty(tableName))
@@ -399,6 +414,7 @@ namespace RUINORERP.Business.CommService
         /// <param name="tableName">表名</param>
         /// <param name="db">数据库客户端</param>
         /// <returns>加载任务</returns>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
         private async Task LoadDataAndUpdateCacheAsync(Type entityType, string tableName, ISqlSugarClient db)
         {
             try
@@ -406,12 +422,8 @@ namespace RUINORERP.Business.CommService
                 // 使用SqlSugar直接查询数据库
                 var queryable = db.Queryable(entityType.Name, tableName);
 
-                // 执行查询
-                var result = await Task.Run(() =>
-                {
-                    var toListMethod = queryable.GetType().GetMethod("ToList");
-                    return toListMethod?.Invoke(queryable, null);
-                });
+                // 执行查询，直接调用ToList方法（同步）
+                var result = queryable.ToList();
 
                 if (result != null)
                 {
@@ -439,6 +451,31 @@ namespace RUINORERP.Business.CommService
                 throw;
             }
         }
-
+        
+        /// <summary>
+        /// 序列化缓存数据以便在网络中传输
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="data">要序列化的数据</param>
+        /// <param name="serializationType">序列化方式</param>
+        /// <returns>序列化后的字节数组</returns>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
+        public byte[] SerializeCacheDataForTransmission<T>(T data, CacheSerializationHelper.SerializationType serializationType = CacheSerializationHelper.SerializationType.Json)
+        {
+            return CacheSerializationHelper.Serialize(data, serializationType);
+        }
+        
+        /// <summary>
+        /// 反序列化从网络接收到的缓存数据
+        /// </summary>
+        /// <typeparam name="T">数据类型</typeparam>
+        /// <param name="data">接收到的字节数组</param>
+        /// <param name="serializationType">序列化方式</param>
+        /// <returns>反序列化后的数据</returns>
+        [Obsolete("此方法已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheInitializationService")]
+        public T DeserializeCacheDataFromTransmission<T>(byte[] data, CacheSerializationHelper.SerializationType serializationType = CacheSerializationHelper.SerializationType.Json)
+        {
+            return CacheSerializationHelper.Deserialize<T>(data, serializationType);
+        }
     }
 }

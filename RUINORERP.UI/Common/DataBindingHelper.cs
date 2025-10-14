@@ -51,6 +51,8 @@ using StackExchange.Redis;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Extensions.Middlewares;
 
+using RUINORERP.Extensions.Middlewares;
+
 namespace RUINORERP.UI.Common
 {
 
@@ -3310,56 +3312,25 @@ namespace RUINORERP.UI.Common
         /// <param name="cmbBox"></param>
         public static void InitDataToCmb<T>(string key, string value, string tableName, KryptonComboBox cmbBox) where T : class
         {
-            if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
+            // 使用新的缓存管理器
+            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            
+            if (cacheManager != null)
             {
-                if (string.IsNullOrEmpty(value))
+                // 获取表结构管理器以获取显示字段
+                var tableSchemaManager = TableSchemaManager.Instance;
+                var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
+                
+                if (schemaInfo != null && string.IsNullOrEmpty(value))
                 {
-                    value = MyCacheManager.Instance.NewTableList[tableName].Value;
+                    value = schemaInfo.DisplayField;
                 }
+                
                 List<T> tlist = new List<T>();
                 BindingSource bs = new BindingSource();
 
-
-                var cachelist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
-                if (cachelist == null)
-                {
-                    Business.CommService.ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
-                    tlist = bdc.GetBindSource<T>(tableName);
-                }
-                else
-                {
-                    Type listType = cachelist.GetType();
-                    if (TypeHelper.IsGenericList(listType))
-                    {
-                        if (listType.FullName.Contains("System.Collections.Generic.List`1[[System.Object"))
-                        {
-                            List<T> lastOKList = new List<T>();
-                            var lastlist = ((IEnumerable<dynamic>)cachelist).ToList();
-                            foreach (var item in lastlist)
-                            {
-                                lastOKList.Add(item);
-                            }
-                            tlist = lastOKList;
-                        }
-                        else
-                        {
-                            tlist = cachelist as List<T>;
-                        }
-                    }
-                    else if (TypeHelper.IsJArrayList(listType))
-                    {
-                        List<T> lastOKList = new List<T>();
-
-                        var objlist = TypeHelper.ConvertJArrayToList(typeof(T), cachelist as JArray);
-                        var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
-                        foreach (var item in lastlist)
-                        {
-                            lastOKList.Add(item);
-                        }
-                        tlist = lastOKList;
-                    }
-                    InsertSelectItem<T>(key, value, tlist);
-                }
+                // 从新缓存系统获取数据
+                tlist = cacheManager.GetEntityList<T>(tableName);
 
                 #region exp process
                 BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(T).Name + "Processor");

@@ -31,6 +31,9 @@ namespace RUINORERP.Server.Controls
         private const int SLOW_REFRESH_INTERVAL = 5000; // 慢速刷新间隔(5秒)
         private const int FAST_REFRESH_INTERVAL = 1000; // 快速刷新间隔(1秒)
 
+        /// <summary>
+        /// 创建服务器监控控件
+        /// </summary>
         public ServerMonitorControl()
         {
             InitializeComponent();
@@ -50,6 +53,39 @@ namespace RUINORERP.Server.Controls
             
             // 初始化UI
             InitializeUI();
+            
+            // 立即启动定时器刷新数据（不依赖Load事件）
+            _refreshTimer.Start();
+        }
+
+        /// <summary>
+        /// 创建服务器监控控件，使用指定的NetworkServer实例
+        /// </summary>
+        /// <param name="networkServer">正在运行的NetworkServer实例</param>
+        public ServerMonitorControl(NetworkServer networkServer)
+        {
+            InitializeComponent();
+            
+            // 使用传入的NetworkServer实例
+            _networkServer = networkServer;
+            
+            // 从全局服务提供者获取其他所需服务
+            _sessionService = Startup.GetFromFac<ISessionService>();
+            _commandDispatcher = Startup.GetFromFac<CommandDispatcher>();
+            _diagnosticsService = Startup.GetFromFac<DiagnosticsService>();
+            _performanceMonitoringService = Startup.GetFromFac<PerformanceMonitoringService>();
+            _errorAnalysisService = Startup.GetFromFac<ErrorAnalysisService>();
+            
+            // 初始化定时器
+            _refreshTimer = new System.Windows.Forms.Timer();
+            _refreshTimer.Interval = FAST_REFRESH_INTERVAL; // 初始快速刷新
+            _refreshTimer.Tick += RefreshTimer_Tick;
+            
+            // 初始化UI
+            InitializeUI();
+            
+            // 立即启动定时器刷新数据（不依赖Load事件）
+            _refreshTimer.Start();
         }
 
         private void InitializeUI()
@@ -94,17 +130,38 @@ namespace RUINORERP.Server.Controls
                 
                 // 更新处理器统计信息
                 UpdateHandlerStatistics();
+                
+                // 更新系统健康状态
+                UpdateSystemHealth();
+                
+                // 更新实时监控数据
+                UpdateRealTimeData();
             }
             catch (Exception ex)
             {
                 // 记录错误但不中断程序
                 Console.WriteLine($"刷新监控数据时出错: {ex.Message}");
+                // 在UI上显示错误信息
+                lblStatusValue.Text = "监控数据刷新错误";
+                lblStatusValue.ForeColor = Color.Red;
             }
         }
 
         private void UpdateServerStatus()
         {
-            if (_networkServer == null) return;
+            if (_networkServer == null) 
+            {
+                // 如果_networkServer为null，显示未初始化状态
+                lblStatusValue.Text = "未初始化";
+                lblPortValue.Text = "N/A";
+                lblServerIpValue.Text = "N/A";
+                lblMaxConnectionsValue.Text = "N/A";
+                lblCurrentConnectionsValue.Text = "N/A";
+                lblTotalConnectionsValue.Text = "N/A";
+                lblPeakConnectionsValue.Text = "N/A";
+                lblLastActivityValue.Text = "N/A";
+                return;
+            }
             
             var serverInfo = _networkServer.GetServerInfo();
             
@@ -222,6 +279,53 @@ namespace RUINORERP.Server.Controls
             }
         }
 
+        // 新增：更新系统健康状态
+        private void UpdateSystemHealth()
+        {
+            try
+            {
+                var healthStatus = _diagnosticsService.GetSystemHealth();
+                
+                // 更新健康状态显示
+                lblHealthStatusValue.Text = healthStatus.IsHealthy ? "健康" : "存在问题";
+                lblHealthStatusValue.ForeColor = healthStatus.IsHealthy ? Color.Green : Color.Red;
+                
+                // 更新成功率显示
+                lblSuccessRateValue.Text = $"{healthStatus.SuccessRate:F2}%";
+                
+                // 更新命令统计显示
+                lblTotalCommandsValue.Text = healthStatus.TotalCommands.ToString();
+                lblFailedCommandsValue.Text = healthStatus.FailedCommands.ToString();
+                lblTimeoutCommandsValue.Text = healthStatus.TimeoutCommands.ToString();
+            }
+            catch (Exception ex)
+            {
+                lblHealthStatusValue.Text = "获取失败";
+                lblHealthStatusValue.ForeColor = Color.Red;
+                Console.WriteLine($"更新系统健康状态时出错: {ex.Message}");
+            }
+        }
+
+        // 新增：更新实时监控数据
+        private void UpdateRealTimeData()
+        {
+            try
+            {
+                var realTimeData = _performanceMonitoringService.GetRealTimeData();
+                
+                // 更新实时数据
+                lblTotalHandlersValue.Text = realTimeData.TotalHandlers.ToString();
+                lblActiveHandlersValue.Text = realTimeData.ActiveHandlers.ToString();
+                lblCurrentProcessingValue.Text = realTimeData.CurrentProcessing.ToString();
+                lblRealTimeSuccessRateValue.Text = $"{realTimeData.SuccessRate:F2}%";
+                lblAvgProcessingTimeValue.Text = $"{realTimeData.AverageProcessingTime:F2}ms";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"更新实时监控数据时出错: {ex.Message}");
+            }
+        }
+
         private void ServerMonitorControl_Disposed(object sender, EventArgs e)
         {
             // 停止定时器
@@ -245,6 +349,68 @@ namespace RUINORERP.Server.Controls
             {
                 MessageBox.Show($"重置统计信息时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+        
+        // 新增：显示诊断报告
+        private void btnDiagnosticsReport_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var report = _diagnosticsService.GetDiagnosticsReport();
+                ShowReport("诊断报告", report);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"获取诊断报告时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        // 新增：显示性能报告
+        private void btnPerformanceReport_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var report = _performanceMonitoringService.GetPerformanceReport();
+                ShowReport("性能报告", report);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"获取性能报告时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        // 新增：显示错误分析报告
+        private void btnErrorReport_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var report = _errorAnalysisService.GetErrorAnalysisReport();
+                ShowReport("错误分析报告", report);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"获取错误分析报告时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        // 新增：显示报告的辅助方法
+        private void ShowReport(string title, string content)
+        {
+            var reportForm = new Form();
+            reportForm.Text = title;
+            reportForm.Size = new Size(800, 600);
+            reportForm.StartPosition = FormStartPosition.CenterParent;
+            
+            var textBox = new TextBox();
+            textBox.Dock = DockStyle.Fill;
+            textBox.Multiline = true;
+            textBox.ScrollBars = ScrollBars.Both;
+            textBox.ReadOnly = true;
+            textBox.Text = content;
+            textBox.Font = new Font("Consolas", 10);
+            
+            reportForm.Controls.Add(textBox);
+            reportForm.ShowDialog(this);
         }
     }
 }

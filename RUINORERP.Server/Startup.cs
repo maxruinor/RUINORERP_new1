@@ -78,6 +78,7 @@ using RUINORERP.PacketSpec.DI;
 using CacheManager.Core;
 using RUINORERP.Business.Cache;
 using RUINORERP.Server.Services;
+using RUINORERP.Server.Network.Monitoring;
 
 namespace RUINORERP.Server
 {
@@ -398,6 +399,12 @@ namespace RUINORERP.Server
             // 注册各项目的服务（使用各项目自己的DI配置）
             services.AddNetworkServices();      // 网络服务
             services.AddPacketSpecServices(configuration);   // PacketSpec服务
+            
+            // 注册网络监控相关服务
+            services.AddSingleton<DiagnosticsService>();
+            services.AddSingleton<PerformanceMonitoringService>();
+            services.AddSingleton<ErrorAnalysisService>();
+
         }
         #endregion
 

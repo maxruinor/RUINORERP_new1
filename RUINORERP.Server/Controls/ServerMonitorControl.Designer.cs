@@ -31,6 +31,16 @@ namespace RUINORERP.Server.Controls
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.lblAvgProcessingTimeValue = new System.Windows.Forms.Label();
+            this.lblAvgProcessingTime = new System.Windows.Forms.Label();
+            this.lblRealTimeSuccessRateValue = new System.Windows.Forms.Label();
+            this.lblRealTimeSuccessRate = new System.Windows.Forms.Label();
+            this.lblCurrentProcessingValue = new System.Windows.Forms.Label();
+            this.lblCurrentProcessing = new System.Windows.Forms.Label();
+            this.lblActiveHandlersValue = new System.Windows.Forms.Label();
+            this.lblActiveHandlers = new System.Windows.Forms.Label();
+            this.lblTotalHandlersValue = new System.Windows.Forms.Label();
+            this.lblTotalHandlers = new System.Windows.Forms.Label();
             this.lblMemoryUsageValue = new System.Windows.Forms.Label();
             this.lblMemoryUsage = new System.Windows.Forms.Label();
             this.lblUptimeValue = new System.Windows.Forms.Label();
@@ -70,6 +80,17 @@ namespace RUINORERP.Server.Controls
             this.lblStatusValue = new System.Windows.Forms.Label();
             this.lblStatus = new System.Windows.Forms.Label();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.lblTimeoutCommandsValue = new System.Windows.Forms.Label();
+            this.lblTimeoutCommands = new System.Windows.Forms.Label();
+            this.lblFailedCommandsValue = new System.Windows.Forms.Label();
+            this.lblFailedCommands = new System.Windows.Forms.Label();
+            this.lblTotalCommandsValue = new System.Windows.Forms.Label();
+            this.lblTotalCommands = new System.Windows.Forms.Label();
+            this.lblSuccessRateValue = new System.Windows.Forms.Label();
+            this.lblSuccessRate = new System.Windows.Forms.Label();
+            this.lblHealthStatusValue = new System.Windows.Forms.Label();
+            this.lblHealthStatus = new System.Windows.Forms.Label();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.dgvHandlerStatistics = new System.Windows.Forms.DataGridView();
             this.HandlerName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -87,6 +108,9 @@ namespace RUINORERP.Server.Controls
             this.lblHandlerCount = new System.Windows.Forms.Label();
             this.lblDispatcherInitializedValue = new System.Windows.Forms.Label();
             this.lblDispatcherInitialized = new System.Windows.Forms.Label();
+            this.btnErrorReport = new System.Windows.Forms.Button();
+            this.btnPerformanceReport = new System.Windows.Forms.Button();
+            this.btnDiagnosticsReport = new System.Windows.Forms.Button();
             this.btnResetStats = new System.Windows.Forms.Button();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
@@ -95,6 +119,7 @@ namespace RUINORERP.Server.Controls
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.groupBox6.SuspendLayout();
             this.groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvHandlerStatistics)).BeginInit();
             this.groupBox4.SuspendLayout();
@@ -126,6 +151,16 @@ namespace RUINORERP.Server.Controls
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.lblAvgProcessingTimeValue);
+            this.groupBox3.Controls.Add(this.lblAvgProcessingTime);
+            this.groupBox3.Controls.Add(this.lblRealTimeSuccessRateValue);
+            this.groupBox3.Controls.Add(this.lblRealTimeSuccessRate);
+            this.groupBox3.Controls.Add(this.lblCurrentProcessingValue);
+            this.groupBox3.Controls.Add(this.lblCurrentProcessing);
+            this.groupBox3.Controls.Add(this.lblActiveHandlersValue);
+            this.groupBox3.Controls.Add(this.lblActiveHandlers);
+            this.groupBox3.Controls.Add(this.lblTotalHandlersValue);
+            this.groupBox3.Controls.Add(this.lblTotalHandlers);
             this.groupBox3.Controls.Add(this.lblMemoryUsageValue);
             this.groupBox3.Controls.Add(this.lblMemoryUsage);
             this.groupBox3.Controls.Add(this.lblUptimeValue);
@@ -138,6 +173,96 @@ namespace RUINORERP.Server.Controls
             this.groupBox3.TabIndex = 2;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "服务器运行信息";
+            // 
+            // lblAvgProcessingTimeValue
+            // 
+            this.lblAvgProcessingTimeValue.AutoSize = true;
+            this.lblAvgProcessingTimeValue.Location = new System.Drawing.Point(420, 95);
+            this.lblAvgProcessingTimeValue.Name = "lblAvgProcessingTimeValue";
+            this.lblAvgProcessingTimeValue.Size = new System.Drawing.Size(29, 12);
+            this.lblAvgProcessingTimeValue.TabIndex = 15;
+            this.lblAvgProcessingTimeValue.Text = "N/A";
+            // 
+            // lblAvgProcessingTime
+            // 
+            this.lblAvgProcessingTime.AutoSize = true;
+            this.lblAvgProcessingTime.Location = new System.Drawing.Point(320, 95);
+            this.lblAvgProcessingTime.Name = "lblAvgProcessingTime";
+            this.lblAvgProcessingTime.Size = new System.Drawing.Size(89, 12);
+            this.lblAvgProcessingTime.TabIndex = 14;
+            this.lblAvgProcessingTime.Text = "平均处理时间：";
+            // 
+            // lblRealTimeSuccessRateValue
+            // 
+            this.lblRealTimeSuccessRateValue.AutoSize = true;
+            this.lblRealTimeSuccessRateValue.Location = new System.Drawing.Point(420, 70);
+            this.lblRealTimeSuccessRateValue.Name = "lblRealTimeSuccessRateValue";
+            this.lblRealTimeSuccessRateValue.Size = new System.Drawing.Size(29, 12);
+            this.lblRealTimeSuccessRateValue.TabIndex = 13;
+            this.lblRealTimeSuccessRateValue.Text = "N/A";
+            // 
+            // lblRealTimeSuccessRate
+            // 
+            this.lblRealTimeSuccessRate.AutoSize = true;
+            this.lblRealTimeSuccessRate.Location = new System.Drawing.Point(320, 70);
+            this.lblRealTimeSuccessRate.Name = "lblRealTimeSuccessRate";
+            this.lblRealTimeSuccessRate.Size = new System.Drawing.Size(89, 12);
+            this.lblRealTimeSuccessRate.TabIndex = 12;
+            this.lblRealTimeSuccessRate.Text = "实时成功率：";
+            // 
+            // lblCurrentProcessingValue
+            // 
+            this.lblCurrentProcessingValue.AutoSize = true;
+            this.lblCurrentProcessingValue.Location = new System.Drawing.Point(420, 45);
+            this.lblCurrentProcessingValue.Name = "lblCurrentProcessingValue";
+            this.lblCurrentProcessingValue.Size = new System.Drawing.Size(29, 12);
+            this.lblCurrentProcessingValue.TabIndex = 11;
+            this.lblCurrentProcessingValue.Text = "N/A";
+            // 
+            // lblCurrentProcessing
+            // 
+            this.lblCurrentProcessing.AutoSize = true;
+            this.lblCurrentProcessing.Location = new System.Drawing.Point(320, 45);
+            this.lblCurrentProcessing.Name = "lblCurrentProcessing";
+            this.lblCurrentProcessing.Size = new System.Drawing.Size(89, 12);
+            this.lblCurrentProcessing.TabIndex = 10;
+            this.lblCurrentProcessing.Text = "当前处理数：";
+            // 
+            // lblActiveHandlersValue
+            // 
+            this.lblActiveHandlersValue.AutoSize = true;
+            this.lblActiveHandlersValue.Location = new System.Drawing.Point(420, 20);
+            this.lblActiveHandlersValue.Name = "lblActiveHandlersValue";
+            this.lblActiveHandlersValue.Size = new System.Drawing.Size(29, 12);
+            this.lblActiveHandlersValue.TabIndex = 9;
+            this.lblActiveHandlersValue.Text = "N/A";
+            // 
+            // lblActiveHandlers
+            // 
+            this.lblActiveHandlers.AutoSize = true;
+            this.lblActiveHandlers.Location = new System.Drawing.Point(320, 20);
+            this.lblActiveHandlers.Name = "lblActiveHandlers";
+            this.lblActiveHandlers.Size = new System.Drawing.Size(89, 12);
+            this.lblActiveHandlers.TabIndex = 8;
+            this.lblActiveHandlers.Text = "活跃处理器：";
+            // 
+            // lblTotalHandlersValue
+            // 
+            this.lblTotalHandlersValue.AutoSize = true;
+            this.lblTotalHandlersValue.Location = new System.Drawing.Point(220, 20);
+            this.lblTotalHandlersValue.Name = "lblTotalHandlersValue";
+            this.lblTotalHandlersValue.Size = new System.Drawing.Size(29, 12);
+            this.lblTotalHandlersValue.TabIndex = 7;
+            this.lblTotalHandlersValue.Text = "N/A";
+            // 
+            // lblTotalHandlers
+            // 
+            this.lblTotalHandlers.AutoSize = true;
+            this.lblTotalHandlers.Location = new System.Drawing.Point(120, 20);
+            this.lblTotalHandlers.Name = "lblTotalHandlers";
+            this.lblTotalHandlers.Size = new System.Drawing.Size(89, 12);
+            this.lblTotalHandlers.TabIndex = 6;
+            this.lblTotalHandlers.Text = "处理器总数：";
             // 
             // lblMemoryUsageValue
             // 
@@ -513,6 +638,7 @@ namespace RUINORERP.Server.Controls
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.groupBox6);
             this.tabPage2.Controls.Add(this.groupBox5);
             this.tabPage2.Controls.Add(this.groupBox4);
             this.tabPage2.Location = new System.Drawing.Point(4, 22);
@@ -523,12 +649,121 @@ namespace RUINORERP.Server.Controls
             this.tabPage2.Text = "指令处理状态";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // groupBox6
+            // 
+            this.groupBox6.Controls.Add(this.lblTimeoutCommandsValue);
+            this.groupBox6.Controls.Add(this.lblTimeoutCommands);
+            this.groupBox6.Controls.Add(this.lblFailedCommandsValue);
+            this.groupBox6.Controls.Add(this.lblFailedCommands);
+            this.groupBox6.Controls.Add(this.lblTotalCommandsValue);
+            this.groupBox6.Controls.Add(this.lblTotalCommands);
+            this.groupBox6.Controls.Add(this.lblSuccessRateValue);
+            this.groupBox6.Controls.Add(this.lblSuccessRate);
+            this.groupBox6.Controls.Add(this.lblHealthStatusValue);
+            this.groupBox6.Controls.Add(this.lblHealthStatus);
+            this.groupBox6.Location = new System.Drawing.Point(6, 470);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Size = new System.Drawing.Size(980, 100);
+            this.groupBox6.TabIndex = 2;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "系统健康状态";
+            // 
+            // lblTimeoutCommandsValue
+            // 
+            this.lblTimeoutCommandsValue.AutoSize = true;
+            this.lblTimeoutCommandsValue.Location = new System.Drawing.Point(320, 70);
+            this.lblTimeoutCommandsValue.Name = "lblTimeoutCommandsValue";
+            this.lblTimeoutCommandsValue.Size = new System.Drawing.Size(29, 12);
+            this.lblTimeoutCommandsValue.TabIndex = 9;
+            this.lblTimeoutCommandsValue.Text = "N/A";
+            // 
+            // lblTimeoutCommands
+            // 
+            this.lblTimeoutCommands.AutoSize = true;
+            this.lblTimeoutCommands.Location = new System.Drawing.Point(220, 70);
+            this.lblTimeoutCommands.Name = "lblTimeoutCommands";
+            this.lblTimeoutCommands.Size = new System.Drawing.Size(77, 12);
+            this.lblTimeoutCommands.TabIndex = 8;
+            this.lblTimeoutCommands.Text = "超时命令数：";
+            // 
+            // lblFailedCommandsValue
+            // 
+            this.lblFailedCommandsValue.AutoSize = true;
+            this.lblFailedCommandsValue.Location = new System.Drawing.Point(320, 45);
+            this.lblFailedCommandsValue.Name = "lblFailedCommandsValue";
+            this.lblFailedCommandsValue.Size = new System.Drawing.Size(29, 12);
+            this.lblFailedCommandsValue.TabIndex = 7;
+            this.lblFailedCommandsValue.Text = "N/A";
+            // 
+            // lblFailedCommands
+            // 
+            this.lblFailedCommands.AutoSize = true;
+            this.lblFailedCommands.Location = new System.Drawing.Point(220, 45);
+            this.lblFailedCommands.Name = "lblFailedCommands";
+            this.lblFailedCommands.Size = new System.Drawing.Size(77, 12);
+            this.lblFailedCommands.TabIndex = 6;
+            this.lblFailedCommands.Text = "失败命令数：";
+            // 
+            // lblTotalCommandsValue
+            // 
+            this.lblTotalCommandsValue.AutoSize = true;
+            this.lblTotalCommandsValue.Location = new System.Drawing.Point(320, 20);
+            this.lblTotalCommandsValue.Name = "lblTotalCommandsValue";
+            this.lblTotalCommandsValue.Size = new System.Drawing.Size(29, 12);
+            this.lblTotalCommandsValue.TabIndex = 5;
+            this.lblTotalCommandsValue.Text = "N/A";
+            // 
+            // lblTotalCommands
+            // 
+            this.lblTotalCommands.AutoSize = true;
+            this.lblTotalCommands.Location = new System.Drawing.Point(220, 20);
+            this.lblTotalCommands.Name = "lblTotalCommands";
+            this.lblTotalCommands.Size = new System.Drawing.Size(77, 12);
+            this.lblTotalCommands.TabIndex = 4;
+            this.lblTotalCommands.Text = "总命令数：";
+            // 
+            // lblSuccessRateValue
+            // 
+            this.lblSuccessRateValue.AutoSize = true;
+            this.lblSuccessRateValue.Location = new System.Drawing.Point(100, 70);
+            this.lblSuccessRateValue.Name = "lblSuccessRateValue";
+            this.lblSuccessRateValue.Size = new System.Drawing.Size(29, 12);
+            this.lblSuccessRateValue.TabIndex = 3;
+            this.lblSuccessRateValue.Text = "N/A";
+            // 
+            // lblSuccessRate
+            // 
+            this.lblSuccessRate.AutoSize = true;
+            this.lblSuccessRate.Location = new System.Drawing.Point(20, 70);
+            this.lblSuccessRate.Name = "lblSuccessRate";
+            this.lblSuccessRate.Size = new System.Drawing.Size(65, 12);
+            this.lblSuccessRate.TabIndex = 2;
+            this.lblSuccessRate.Text = "成功率：";
+            // 
+            // lblHealthStatusValue
+            // 
+            this.lblHealthStatusValue.AutoSize = true;
+            this.lblHealthStatusValue.Location = new System.Drawing.Point(100, 20);
+            this.lblHealthStatusValue.Name = "lblHealthStatusValue";
+            this.lblHealthStatusValue.Size = new System.Drawing.Size(29, 12);
+            this.lblHealthStatusValue.TabIndex = 1;
+            this.lblHealthStatusValue.Text = "N/A";
+            // 
+            // lblHealthStatus
+            // 
+            this.lblHealthStatus.AutoSize = true;
+            this.lblHealthStatus.Location = new System.Drawing.Point(20, 20);
+            this.lblHealthStatus.Name = "lblHealthStatus";
+            this.lblHealthStatus.Size = new System.Drawing.Size(65, 12);
+            this.lblHealthStatus.TabIndex = 0;
+            this.lblHealthStatus.Text = "健康状态：";
+            // 
             // groupBox5
             // 
             this.groupBox5.Controls.Add(this.dgvHandlerStatistics);
             this.groupBox5.Location = new System.Drawing.Point(6, 106);
             this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(980, 462);
+            this.groupBox5.Size = new System.Drawing.Size(980, 358);
             this.groupBox5.TabIndex = 1;
             this.groupBox5.TabStop = false;
             this.groupBox5.Text = "处理器统计信息";
@@ -554,7 +789,7 @@ namespace RUINORERP.Server.Controls
             this.dgvHandlerStatistics.Name = "dgvHandlerStatistics";
             this.dgvHandlerStatistics.ReadOnly = true;
             this.dgvHandlerStatistics.RowTemplate.Height = 23;
-            this.dgvHandlerStatistics.Size = new System.Drawing.Size(974, 442);
+            this.dgvHandlerStatistics.Size = new System.Drawing.Size(974, 338);
             this.dgvHandlerStatistics.TabIndex = 0;
             // 
             // HandlerName
@@ -666,6 +901,39 @@ namespace RUINORERP.Server.Controls
             this.lblDispatcherInitialized.TabIndex = 0;
             this.lblDispatcherInitialized.Text = "是否已初始化";
             // 
+            // btnErrorReport
+            // 
+            this.btnErrorReport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnErrorReport.Location = new System.Drawing.Point(751, 606);
+            this.btnErrorReport.Name = "btnErrorReport";
+            this.btnErrorReport.Size = new System.Drawing.Size(75, 23);
+            this.btnErrorReport.TabIndex = 4;
+            this.btnErrorReport.Text = "错误报告";
+            this.btnErrorReport.UseVisualStyleBackColor = true;
+            this.btnErrorReport.Click += new System.EventHandler(this.btnErrorReport_Click);
+            // 
+            // btnPerformanceReport
+            // 
+            this.btnPerformanceReport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnPerformanceReport.Location = new System.Drawing.Point(670, 606);
+            this.btnPerformanceReport.Name = "btnPerformanceReport";
+            this.btnPerformanceReport.Size = new System.Drawing.Size(75, 23);
+            this.btnPerformanceReport.TabIndex = 3;
+            this.btnPerformanceReport.Text = "性能报告";
+            this.btnPerformanceReport.UseVisualStyleBackColor = true;
+            this.btnPerformanceReport.Click += new System.EventHandler(this.btnPerformanceReport_Click);
+            // 
+            // btnDiagnosticsReport
+            // 
+            this.btnDiagnosticsReport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnDiagnosticsReport.Location = new System.Drawing.Point(589, 606);
+            this.btnDiagnosticsReport.Name = "btnDiagnosticsReport";
+            this.btnDiagnosticsReport.Size = new System.Drawing.Size(75, 23);
+            this.btnDiagnosticsReport.TabIndex = 5;
+            this.btnDiagnosticsReport.Text = "诊断报告";
+            this.btnDiagnosticsReport.UseVisualStyleBackColor = true;
+            this.btnDiagnosticsReport.Click += new System.EventHandler(this.btnDiagnosticsReport_Click);
+            // 
             // btnResetStats
             // 
             this.btnResetStats.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -692,6 +960,9 @@ namespace RUINORERP.Server.Controls
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnDiagnosticsReport);
+            this.Controls.Add(this.btnErrorReport);
+            this.Controls.Add(this.btnPerformanceReport);
             this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.btnResetStats);
             this.Controls.Add(this.tabControl1);
@@ -708,6 +979,8 @@ namespace RUINORERP.Server.Controls
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
             this.groupBox5.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvHandlerStatistics)).EndInit();
             this.groupBox4.ResumeLayout(false);
@@ -779,5 +1052,29 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.DataGridViewTextBoxColumn MaxProcessingTime;
         private System.Windows.Forms.Button btnResetStats;
         private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.Label lblHealthStatusValue;
+        private System.Windows.Forms.Label lblHealthStatus;
+        private System.Windows.Forms.Label lblSuccessRateValue;
+        private System.Windows.Forms.Label lblSuccessRate;
+        private System.Windows.Forms.Label lblTotalCommandsValue;
+        private System.Windows.Forms.Label lblTotalCommands;
+        private System.Windows.Forms.Label lblFailedCommandsValue;
+        private System.Windows.Forms.Label lblFailedCommands;
+        private System.Windows.Forms.Label lblTimeoutCommandsValue;
+        private System.Windows.Forms.Label lblTimeoutCommands;
+        private System.Windows.Forms.Label lblTotalHandlersValue;
+        private System.Windows.Forms.Label lblTotalHandlers;
+        private System.Windows.Forms.Label lblActiveHandlersValue;
+        private System.Windows.Forms.Label lblActiveHandlers;
+        private System.Windows.Forms.Label lblCurrentProcessingValue;
+        private System.Windows.Forms.Label lblCurrentProcessing;
+        private System.Windows.Forms.Label lblRealTimeSuccessRateValue;
+        private System.Windows.Forms.Label lblRealTimeSuccessRate;
+        private System.Windows.Forms.Label lblAvgProcessingTimeValue;
+        private System.Windows.Forms.Label lblAvgProcessingTime;
+        private System.Windows.Forms.Button btnErrorReport;
+        private System.Windows.Forms.Button btnPerformanceReport;
+        private System.Windows.Forms.Button btnDiagnosticsReport;
     }
 }

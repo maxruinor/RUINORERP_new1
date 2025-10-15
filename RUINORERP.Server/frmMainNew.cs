@@ -164,10 +164,10 @@ namespace RUINORERP.Server
                         // 更新状态栏显示服务器信息
                         toolStripStatusLabelServerStatus.Text = $"服务状态: {serverInfo.Status}";
                         toolStripStatusLabelConnectionCount.Text = $"连接数: {serverInfo.CurrentConnections}/{serverInfo.MaxConnections}";
-                        
+
                         // 更新额外的服务器信息
                         toolStripStatusLabelMessage.Text = $"服务器IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}";
-                        
+
                         // 记录服务器信息到日志
                         // PrintInfoLog($"服务器信息 - IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}, 当前连接: {serverInfo.CurrentConnections}, 最大连接: {serverInfo.MaxConnections}");
                     }));
@@ -204,10 +204,10 @@ namespace RUINORERP.Server
 
             // 初始化导航按钮事件
             InitializeNavigationButtons();
-            
+
             // 初始化菜单和工具栏事件
             InitializeMenuAndToolbarEvents();
-            
+
             // 初始化服务器监控Tab页（默认显示）
             InitializeDefaultTab();
         }
@@ -217,38 +217,13 @@ namespace RUINORERP.Server
         /// </summary>
         private void InitializeMenuAndToolbarEvents()
         {
-            // 系统菜单事件
-            startServerToolStripMenuItem.Click += (s, e) => StartServer();
-            stopServerToolStripMenuItem.Click += (s, e) => StopServer();
-            reloadConfigToolStripMenuItem.Click += (s, e) => ReloadConfig();
-            exitToolStripMenuItem.Click += (s, e) => ExitApplication();
+            // 注意：事件绑定已在设计器文件中完成，此处仅保留扩展功能的事件绑定
+            // 避免重复绑定导致事件处理程序被多次调用
             
-            // 管理菜单事件
-            userManagementToolStripMenuItem.Click += (s, e) => ShowTabPage("用户管理");
-            cacheManagementToolStripMenuItem.Click += (s, e) => ShowTabPage("缓存管理");
-            workflowManagementToolStripMenuItem.Click += (s, e) => ShowTabPage("工作流管理");
-            blacklistManagementToolStripMenuItem.Click += (s, e) => ShowTabPage("黑名单管理");
-            
-            // 配置菜单事件
-            systemConfigToolStripMenuItem.Click += (s, e) => ShowTabPage("系统配置");
-            registrationInfoToolStripMenuItem.Click += (s, e) => ShowTabPage("系统配置");
-            dataViewerToolStripMenuItem.Click += (s, e) => ShowTabPage("数据查看");
-            
-            // 窗口菜单事件
-            closeAllToolStripMenuItem.Click += (s, e) => CloseAllTabs();
-            
-            // 帮助菜单事件
-            aboutToolStripMenuItem.Click += (s, e) => ShowAbout();
-            helpDocumentationToolStripMenuItem.Click += (s, e) => ShowHelp();
-            
-            // 工具栏事件
-            toolStripButtonStartServer.Click += (s, e) => StartServer();
-            toolStripButtonStopServer.Click += (s, e) => StopServer();
+            // 工具栏事件 - 这些需要在代码中额外绑定
             toolStripButtonRefreshData.Click += (s, e) => RefreshCurrentTab();
-            toolStripButtonUserManagement.Click += (s, e) => ShowTabPage("用户管理");
-            toolStripButtonCacheManagement.Click += (s, e) => ShowTabPage("缓存管理");
-            toolStripButtonWorkflowTest.Click += (s, e) => ShowTabPage("工作流管理");
-            toolStripButtonSystemConfig.Click += (s, e) => ShowTabPage("系统配置");
+            
+            // 如果需要添加新的控件事件，请在此处添加
         }
 
         /// <summary>
@@ -272,13 +247,8 @@ namespace RUINORERP.Server
         /// </summary>
         private void InitializeNavigationButtons()
         {
-            buttonServerMonitor.Click += (s, e) => ShowTabPage("服务器监控");
-            buttonUserList.Click += (s, e) => ShowTabPage("用户管理");
-            buttonCacheManage.Click += (s, e) => ShowTabPage("缓存管理");
-            buttonWorkflow.Click += (s, e) => ShowTabPage("工作流管理");
-            buttonBlacklist.Click += (s, e) => ShowTabPage("黑名单管理");
-            buttonSystemConfig.Click += (s, e) => ShowTabPage("系统配置");
-            buttonDataViewer.Click += (s, e) => ShowTabPage("数据查看");
+            // 事件绑定已在设计器文件中完成，此处不再需要lambda绑定
+            // 保留此方法以便后续扩展
         }
 
         /// <summary>
@@ -303,7 +273,7 @@ namespace RUINORERP.Server
             {
                 existingTabPage = new TabPage(tabName);
                 tabControlMain.TabPages.Add(existingTabPage);
-                
+
                 // 根据Tab页名称创建对应的内容控件
                 Control contentControl = CreateContentControl(tabName);
                 if (contentControl != null)
@@ -320,40 +290,34 @@ namespace RUINORERP.Server
         /// <summary>
         /// 启动服务器
         /// </summary>
-        private async void StartServer()
+        private async Task StartServerAsync()
         {
+            // 防止重复启动
+            if (!toolStripButtonStartServer.Enabled)
+            {
+                PrintInfoLog("服务器正在启动或已启动，请勿重复操作");
+                return;
+            }
+
             try
             {
-                // 调用InitAll方法初始化所有服务
-                InitAll();
+                // 立即禁用启动按钮，防止重复点击
+                SetServerButtonsEnabled(false);
+
+                PrintInfoLog("开始启动服务器...");
                 
-                // 启动服务器信息刷新定时器
-                if (_serverInfoTimer != null)
-                {
-                    _serverInfoTimer.Start();
-                }
+                // 启动核心服务
+                await StartServerCore();
                 
-                // 禁用启动按钮
-                toolStripButtonStartServer.Enabled = false;
-                startServerToolStripMenuItem.Enabled = false;
-                
-                // 启用停止按钮
-                toolStripButtonStopServer.Enabled = true;
-                stopServerToolStripMenuItem.Enabled = true;
-                
-                // 检查新缓存管理器是否已初始化
-                var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                if (cacheManager != null)
-                {
-                    PrintInfoLog("缓存管理器已初始化");
-                }
-                
-                // 初始化配置
-                await Task.Run(async () => await InitConfig(true));
+                PrintInfoLog("服务器启动完成");
             }
             catch (Exception ex)
             {
                 PrintErrorLog($"启动服务器时出错: {ex.Message}");
+                
+                // 发生错误时重新启用启动按钮
+                SetServerButtonsEnabled(true, false);
+                
                 MessageBox.Show($"启动服务器时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -361,25 +325,21 @@ namespace RUINORERP.Server
         /// <summary>
         /// 停止服务器
         /// </summary>
-        private async void StopServer()
+        private async Task StopServerAsync()
         {
             try
             {
-                // 调用Shutdown方法停止服务器
-                Shutdown();
+                PrintInfoLog("正在停止服务器...");
                 
+                // 调用ShutdownAsync方法停止服务器
+                await ShutdownAsync();
+
                 // 停止定时器
-                if (_serverInfoTimer != null)
-                {
-                    _serverInfoTimer.Stop();
-                }
-                
+                _serverInfoTimer?.Stop();
+
                 // 更新UI状态
-                toolStripButtonStartServer.Enabled = true;
-                toolStripButtonStopServer.Enabled = false;
-                startServerToolStripMenuItem.Enabled = true;
-                stopServerToolStripMenuItem.Enabled = false;
-                
+                SetServerButtonsEnabled(true, false);
+
                 PrintInfoLog("服务器已停止");
                 MessageBox.Show("服务器已停止", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -393,21 +353,21 @@ namespace RUINORERP.Server
         /// <summary>
         /// 重新加载配置
         /// </summary>
-        private async void ReloadConfig()
+        private async Task ReloadConfigAsync()
         {
             try
             {
                 PrintInfoLog("正在重新加载配置...");
-                
+
                 // 重新读取配置文件
                 ConfigurationBuilder builder = new ConfigurationBuilder();
                 builder.AddJsonFile("configuration.json");
                 var configuration = builder.Build();
                 var collections = configuration.AsEnumerable();
-                
+
                 // 重新初始化数据库配置
                 DbInit();
-                
+
                 PrintInfoLog("配置已重新加载");
                 MessageBox.Show("配置已重新加载", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -421,7 +381,7 @@ namespace RUINORERP.Server
         /// <summary>
         /// 退出应用程序
         /// </summary>
-        private void ExitApplication()
+        private async Task ExitApplicationAsync()
         {
             try
             {
@@ -430,8 +390,8 @@ namespace RUINORERP.Server
                 if (result == DialogResult.Yes)
                 {
                     // 停止服务器
-                    StopServer();
-                    
+                    await StopServerAsync();
+
                     // 关闭主窗体
                     this.Close();
                 }
@@ -460,7 +420,7 @@ namespace RUINORERP.Server
                         {
                             tabControlMain.TabPages.RemoveAt(i);
                         }
-                        
+
                         MessageBox.Show("所有Tab页已关闭", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
@@ -501,21 +461,21 @@ namespace RUINORERP.Server
                 if (tabControlMain.SelectedTab != null)
                 {
                     string tabName = tabControlMain.SelectedTab.Text;
-                    
+
                     // 重新创建内容控件
                     Control oldControl = null;
                     if (tabControlMain.SelectedTab.Controls.Count > 0)
                     {
                         oldControl = tabControlMain.SelectedTab.Controls[0];
                     }
-                    
+
                     // 移除旧控件
                     if (oldControl != null)
                     {
                         tabControlMain.SelectedTab.Controls.Remove(oldControl);
                         oldControl.Dispose();
                     }
-                    
+
                     // 创建新控件
                     Control newControl = CreateContentControl(tabName);
                     if (newControl != null)
@@ -523,7 +483,7 @@ namespace RUINORERP.Server
                         newControl.Dock = DockStyle.Fill;
                         tabControlMain.SelectedTab.Controls.Add(newControl);
                     }
-                    
+
                     MessageBox.Show($"{tabName} 页面已刷新", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
@@ -543,8 +503,8 @@ namespace RUINORERP.Server
             switch (tabName)
             {
                 case "服务器监控":
-                    // 创建服务器监控控件实例
-                    var serverMonitorControl = new ServerMonitorControl();
+                    // 创建服务器监控控件实例，传入正在运行的NetworkServer实例
+                    var serverMonitorControl = new ServerMonitorControl(_networkServer);
                     serverMonitorControl.Dock = DockStyle.Fill;
                     return serverMonitorControl;
                 case "用户管理":
@@ -610,6 +570,10 @@ namespace RUINORERP.Server
             RefreshData();
         }
 
+        /// <summary>
+        /// 刷新数据 - 已废弃，请使用RefreshCurrentTab方法
+        /// </summary>
+        [Obsolete("请使用RefreshCurrentTab方法替代")]
         private void RefreshData()
         {
             try
@@ -642,46 +606,57 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
-                Instance.PrintInfoLog("更新服务器状态时出错: " + ex.Message);
+                PrintInfoLog("更新服务器状态时出错: " + ex.Message);
             }
         }
 
         public void PrintInfoLog(string msg)
         {
-            if (!System.Diagnostics.Process.GetCurrentProcess().MainModule.ToString().ToLower().Contains("iis"))
+            if (IsIISProcess()) return;
+            
+            SafeLogOperation(msg, Color.Black);
+        }
+
+        /// <summary>
+        /// 检查是否为IIS进程
+        /// </summary>
+        private bool IsIISProcess()
+        {
+            return System.Diagnostics.Process.GetCurrentProcess().MainModule.ToString().ToLower().Contains("iis");
+        }
+
+        /// <summary>
+        /// 安全执行日志操作
+        /// </summary>
+        private void SafeLogOperation(string msg, Color color)
+        {
+            try
             {
-                try
-                {
-                    if (IsDisposed || !IsHandleCreated) return;
+                if (IsDisposed || !IsHandleCreated) return;
 
-                    // 确保最多只有1000行
-                    EnsureMaxLines(richTextBoxLog, 1000);
+                EnsureMaxLines(richTextBoxLog, 1000);
+                string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] {msg}\r\n";
 
-                    // 将消息格式化为带时间戳和行号的字符串
-                    string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] {msg}\r\n";
-                    
-                    if (InvokeRequired)
-                    {
-                        BeginInvoke(new MethodInvoker(() =>
-                        {
-                            richTextBoxLog.SelectionColor = Color.Black;
-                            richTextBoxLog.AppendText(formattedMsg);
-                            richTextBoxLog.SelectionColor = Color.Black;
-                            richTextBoxLog.ScrollToCaret(); // 滚动到最新的消息
-                        }));
-                    }
-                    else
-                    {
-                        richTextBoxLog.SelectionColor = Color.Black;
-                        richTextBoxLog.AppendText(formattedMsg);
-                        richTextBoxLog.SelectionColor = Color.Black;
-                        richTextBoxLog.ScrollToCaret(); // 滚动到最新的消息
-                    }
-                }
-                catch (Exception ex)
+                Action logAction = () =>
                 {
-                    Console.WriteLine("PrintInfoLog时出错" + ex.Message);
+                    richTextBoxLog.SelectionColor = color;
+                    richTextBoxLog.AppendText(formattedMsg);
+                    richTextBoxLog.SelectionColor = Color.Black;
+                    richTextBoxLog.ScrollToCaret();
+                };
+
+                if (InvokeRequired)
+                {
+                    BeginInvoke(new MethodInvoker(logAction));
                 }
+                else
+                {
+                    logAction();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"日志操作出错: {ex.Message}");
             }
         }
 
@@ -691,41 +666,9 @@ namespace RUINORERP.Server
         /// <param name="msg">错误消息内容</param>
         public void PrintErrorLog(string msg)
         {
-            if (!System.Diagnostics.Process.GetCurrentProcess().MainModule.ToString().ToLower().Contains("iis"))
-            {
-                try
-                {
-                    if (IsDisposed || !IsHandleCreated) return;
-
-                    // 确保最多只有1000行
-                    EnsureMaxLines(richTextBoxLog, 1000);
-
-                    // 将消息格式化为带时间戳和行号的字符串
-                    string formattedMsg = $"[{DateTime.Now:HH:mm:ss}] [错误] {msg}\r\n";
-                    
-                    if (InvokeRequired)
-                    {
-                        BeginInvoke(new MethodInvoker(() =>
-                        {
-                            richTextBoxLog.SelectionColor = Color.Red;
-                            richTextBoxLog.AppendText(formattedMsg);
-                            richTextBoxLog.SelectionColor = Color.Black;
-                            richTextBoxLog.ScrollToCaret(); // 滚动到最新的消息
-                        }));
-                    }
-                    else
-                    {
-                        richTextBoxLog.SelectionColor = Color.Red;
-                        richTextBoxLog.AppendText(formattedMsg);
-                        richTextBoxLog.SelectionColor = Color.Black;
-                        richTextBoxLog.ScrollToCaret(); // 滚动到最新的消息
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("PrintErrorLog时出错" + ex.Message);
-                }
-            }
+            if (IsIISProcess()) return;
+            
+            SafeLogOperation($"[错误] {msg}", Color.Red);
         }
 
         private void EnsureMaxLines(RichTextBox rtb, int maxLines)
@@ -762,44 +705,12 @@ namespace RUINORERP.Server
             }
         }
 
-        private void frmMainNew_FormClosing(object sender, FormClosingEventArgs e)
+        private async void frmMainNew_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Shutdown();
+            await ShutdownAsync();
         }
 
-        /// <summary>
-        /// 初始化所有服务
-        /// </summary>
-        public void InitAll()
-        {
-            try
-            {
-                StartupServer();
-            }
-            catch (Exception ex)
-            {
-                PrintErrorLog($"初始化服务失败: {ex.Message}");
-            }
-        }
 
-        /// <summary>
-        /// 启动服务器
-        /// </summary>
-        public void StartupServer()
-        {
-            try
-            {
-                // 启动新线程执行异步服务器启动
-                Task.Run(async () =>
-                {
-                    await StartServerCore();
-                });
-            }
-            catch (Exception e)
-            {
-                PrintErrorLog($"启动SocketServer失败：{e.Message}");
-            }
-        }
         IHost host;
         /// <summary>
         /// 启动服务器核心逻辑
@@ -811,7 +722,7 @@ namespace RUINORERP.Server
             try
             {
                 var _logger = Startup.GetFromFac<ILogger<frmMainNew>>();
-                
+
                 // 创建NetworkServer实例
                 if (_networkServer == null)
                 {
@@ -821,37 +732,60 @@ namespace RUINORERP.Server
 
                 // 启动网络服务器
                 host = await _networkServer.StartAsync(CancellationToken.None);
-                
-                PrintInfoLog("服务器启动成功");
-                
-                // 启动监控
-                var reminderService = Startup.GetFromFac<SmartReminderService>();
-                //不能加await
-                Task.Run(async () => await reminderService.StartAsync(CancellationToken.None));
-                
-                // 每120秒（120000毫秒）执行一次检查
-                System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1000);
-                
-                //加载提醒数据
-                DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
-                loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
-                
-                //启动每天要执行的定时任务
-                GlobalScheduledData globalScheduled = new GlobalScheduledData();
-                var DailyworkflowId = await WorkflowHost.StartWorkflow("NightlyWorkflow", 1, globalScheduled);
-                PrintInfoLog($"NightlyWorkflow每日任务启动{DailyworkflowId}。");
+
+                // 检查启动是否成功
+                if (host != null)
+                {
+                    PrintInfoLog("网络服务器启动成功");
+
+                    // 启动服务器信息刷新定时器
+                    if (_serverInfoTimer != null)
+                    {
+                        _serverInfoTimer.Start();
+                    }
+
+                    // 更新UI状态
+                    SetServerButtonsEnabled(false, true);
+
+                    // 启动监控服务
+                    var reminderService = Startup.GetFromFac<SmartReminderService>();
+                    await Task.Run(async () => await reminderService.StartAsync(CancellationToken.None));
+
+                    // 每120秒（120000毫秒）执行一次检查
+                    System.Threading.Timer timerStatus = new System.Threading.Timer(CheckAndRemoveExpiredSessions, null, 0, 1000);
+
+                    //加载提醒数据
+                    DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
+                    loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
+
+                    //启动每天要执行的定时任务
+                    GlobalScheduledData globalScheduled = new GlobalScheduledData();
+                    var DailyworkflowId = await WorkflowHost.StartWorkflow("NightlyWorkflow", 1, globalScheduled);
+                    PrintInfoLog($"NightlyWorkflow每日任务启动{DailyworkflowId}。");
+
+                    // 初始化配置
+                    await Task.Run(async () => await InitConfig(false));
+                    
+                    PrintInfoLog("服务器核心启动完成");
+                }
+                else
+                {
+                    // 启动失败
+                    throw new Exception("网络服务器返回null，启动失败");
+                }
             }
             catch (Exception hostex)
             {
                 _logger?.LogError($"NetworkServer启动异常: {hostex.Message}", hostex);
                 PrintErrorLog($"NetworkServer启动异常: {hostex.Message}");
+                throw; // 重新抛出异常，让上层处理
             }
         }
 
         /// <summary>
         /// 关闭服务器
         /// </summary>
-        public async void Shutdown()
+        public async Task ShutdownAsync()
         {
             try
             {
@@ -937,11 +871,24 @@ namespace RUINORERP.Server
         {
             if (keyData == (Keys.Control | Keys.P))
             {
-                // 在这里编写 Ctrl + P 按下时要执行的代码
-                Console.WriteLine("Ctrl + P 被按下");
-                frmInput frmPassword = new frmInput();
+                HandleCtrlPShortcut();
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        /// <summary>
+        /// 处理Ctrl+P快捷键
+        /// </summary>
+        private void HandleCtrlPShortcut()
+        {
+            Console.WriteLine("Ctrl + P 被按下");
+            
+            using (var frmPassword = new frmInput())
+            {
                 frmPassword.txtInputContent.PasswordChar = '*';
                 frmPassword.WindowState = FormWindowState.Normal;
+                
                 if (frmPassword.ShowDialog() == DialogResult.OK)
                 {
                     if (frmPassword.InputContent.Trim() == "amwtjhwxf")
@@ -954,9 +901,7 @@ namespace RUINORERP.Server
                         MessageBox.Show("密码错误", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
-                return true;
             }
-            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         /// <summary>
@@ -972,7 +917,7 @@ namespace RUINORERP.Server
                     .AddSingleton<ICacheAdapter, MemoryCacheAdapter>()  // 添加缓存适配器
                     .AddSingleton<ICacheAdapter>(i => new DistributedCacheAdapter(i.GetRequiredService<IDistributedCache>(), "distribute"))
                     .BuildServiceProvider();
-                
+
                 IDistributedCache cache = sut.GetService<IDistributedCache>() as IDistributedCache;
 
                 ConfigurationBuilder builder = new ConfigurationBuilder();
@@ -991,26 +936,26 @@ namespace RUINORERP.Server
         /// <summary>
         /// 初始化配置
         /// </summary>
-        /// <param name="LoadData">是否加载数据</param>
-        public async Task InitConfig(bool LoadData = true)
+        /// <param name="loadData">是否加载数据</param>
+        public async Task InitConfig(bool loadData = true)
         {
             try
             {
                 var _logger = Startup.GetFromFac<ILogger<frmMainNew>>();
-                
+
                 // 使用缓存初始化服务
                 var entityCacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
-                
-                if (LoadData)
+
+                if (loadData)
                 {
                     var startTime = DateTime.Now;
-                    
+
                     // 初始化实体缓存
                     await entityCacheInitializationService.InitializeAllCacheAsync();
-                    
+
                     var endTime = DateTime.Now;
                     var executionTime = endTime - startTime;
-                    
+
                     PrintInfoLog($"初始化缓存完成，执行时间: {executionTime.TotalSeconds:F2} 秒");
                     _logger?.LogInformation($"初始化缓存完成，执行时间: {executionTime.TotalSeconds:F2} 秒");
                 }
@@ -1100,6 +1045,447 @@ namespace RUINORERP.Server
             string key = "ruinor1234567890";
             string reginfo = HLH.Lib.Security.EncryptionHelper.AesEncrypt(originalInfo, key);
             return reginfo;
+        }
+
+        /// <summary>
+        /// 服务器监控按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void buttonServerMonitor_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("服务器监控");
+        }
+
+        /// <summary>
+        /// 用户管理按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void buttonUserList_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("用户管理");
+        }
+
+        /// <summary>
+        /// 缓存管理按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void buttonCacheManage_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("缓存管理");
+        }
+
+        /// <summary>
+        /// 工作流管理按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void buttonWorkflow_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("工作流管理");
+        }
+
+        /// <summary>
+        /// 黑名单管理按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void buttonBlacklist_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("黑名单管理");
+        }
+
+        /// <summary>
+        /// 系统配置按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void buttonSystemConfig_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("系统配置");
+        }
+
+        /// <summary>
+        /// 数据查看按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void buttonDataViewer_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("数据查看");
+        }
+
+        /// <summary>
+        /// 创建工作流管理控件
+        /// </summary>
+        /// <returns>工作流管理控件</returns>
+        private Control CreateWorkflowManagementControl()
+        {
+            var panel = new Panel();
+            panel.Dock = DockStyle.Fill;
+
+            var label = new Label();
+            label.Text = "工作流管理功能开发中...";
+            label.AutoSize = true;
+            label.Font = new Font("微软雅黑", 12f);
+            label.ForeColor = Color.Gray;
+            label.Location = new Point((panel.Width - label.Width) / 2, (panel.Height - label.Height) / 2);
+
+            panel.Controls.Add(label);
+            return panel;
+        }
+
+        /// <summary>
+        /// 创建黑名单管理控件
+        /// </summary>
+        /// <returns>黑名单管理控件</returns>
+        private Control CreateBlacklistManagementControl()
+        {
+            var panel = new Panel();
+            panel.Dock = DockStyle.Fill;
+
+            var label = new Label();
+            label.Text = "黑名单管理功能开发中...";
+            label.AutoSize = true;
+            label.Font = new Font("微软雅黑", 12f);
+            label.ForeColor = Color.Gray;
+            label.Location = new Point((panel.Width - label.Width) / 2, (panel.Height - label.Height) / 2);
+
+            panel.Controls.Add(label);
+            return panel;
+        }
+
+        /// <summary>
+        /// 创建系统配置控件
+        /// </summary>
+        /// <returns>系统配置控件</returns>
+        private Control CreateSystemConfigControl()
+        {
+            var panel = new Panel();
+            panel.Dock = DockStyle.Fill;
+
+            var label = new Label();
+            label.Text = "系统配置功能开发中...";
+            label.AutoSize = true;
+            label.Font = new Font("微软雅黑", 12f);
+            label.ForeColor = Color.Gray;
+            label.Location = new Point((panel.Width - label.Width) / 2, (panel.Height - label.Height) / 2);
+
+            panel.Controls.Add(label);
+            return panel;
+        }
+
+        /// <summary>
+        /// 创建数据查看控件
+        /// </summary>
+        /// <returns>数据查看控件</returns>
+        private Control CreateDataViewerControl()
+        {
+            var panel = new Panel();
+            panel.Dock = DockStyle.Fill;
+
+            var label = new Label();
+            label.Text = "数据查看功能开发中...";
+            label.AutoSize = true;
+            label.Font = new Font("微软雅黑", 12f);
+            label.ForeColor = Color.Gray;
+            label.Location = new Point((panel.Width - label.Width) / 2, (panel.Height - label.Height) / 2);
+
+            panel.Controls.Add(label);
+            return panel;
+        }
+
+        /// <summary>
+        /// 创建服务器监控控件
+        /// </summary>
+        /// <returns>服务器监控控件</returns>
+        private Control CreateServerMonitorControl()
+        {
+            var panel = new Panel();
+            panel.Dock = DockStyle.Fill;
+
+            var label = new Label();
+            label.Text = "服务器监控功能开发中...";
+            label.AutoSize = true;
+            label.Font = new Font("微软雅黑", 12f);
+            label.ForeColor = Color.Gray;
+            label.Location = new Point((panel.Width - label.Width) / 2, (panel.Height - label.Height) / 2);
+
+            panel.Controls.Add(label);
+            return panel;
+        }
+
+        /// <summary>
+        /// 创建用户管理控件
+        /// </summary>
+        /// <returns>用户管理控件</returns>
+        private Control CreateUserManagementControl()
+        {
+            var panel = new Panel();
+            panel.Dock = DockStyle.Fill;
+
+            var label = new Label();
+            label.Text = "用户管理功能开发中...";
+            label.AutoSize = true;
+            label.Font = new Font("微软雅黑", 12f);
+            label.ForeColor = Color.Gray;
+            label.Location = new Point((panel.Width - label.Width) / 2, (panel.Height - label.Height) / 2);
+
+            panel.Controls.Add(label);
+            return panel;
+        }
+
+        /// <summary>
+        /// 工作流测试工具栏按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void toolStripButtonWorkflowTest_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("工作流测试");
+        }
+
+        /// <summary>
+        /// 系统配置工具栏按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void toolStripButtonSystemConfig_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("系统配置");
+        }
+
+
+
+
+
+
+        /// <summary>
+        /// 启动服务器菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private async void startServerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            await StartServerAsync();
+        }
+
+        /// <summary>
+        /// 停止服务器菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private async void stopServerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            await StopServerAsync();
+        }
+
+        /// <summary>
+        /// 重新加载配置菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private async void reloadConfigToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            await ReloadConfigAsync();
+        }
+
+        /// <summary>
+        /// 退出菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private async void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            await ExitApplicationAsync();
+        }
+
+        /// <summary>
+        /// 用户管理菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void userManagementToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("用户管理");
+        }
+
+        /// <summary>
+        /// 缓存管理菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void cacheManagementToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("缓存管理");
+        }
+
+        /// <summary>
+        /// 工作流管理菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void workflowManagementToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("工作流管理");
+        }
+
+        /// <summary>
+        /// 黑名单管理菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void blacklistManagementToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("黑名单管理");
+        }
+
+        /// <summary>
+        /// 系统配置菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void systemConfigToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("系统配置");
+        }
+
+        /// <summary>
+        /// 注册信息菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void registrationInfoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("注册信息");
+        }
+
+        /// <summary>
+        /// 数据查看菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void dataViewerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("数据查看");
+        }
+
+        /// <summary>
+        /// 关闭所有菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void closeAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CloseAllTabs();
+        }
+
+        /// <summary>
+        /// 关于菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowAbout();
+        }
+
+        /// <summary>
+        /// 帮助文档菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void helpDocumentationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowHelp();
+        }
+
+        /// <summary>
+        /// 设置服务器按钮状态
+        /// </summary>
+        /// <param name="startEnabled">启动按钮是否可用</param>
+        /// <param name="stopEnabled">停止按钮是否可用</param>
+        private void SetServerButtonsEnabled(bool startEnabled, bool stopEnabled = true)
+        {
+            this.BeginInvoke(new Action(() =>
+            {
+                toolStripButtonStartServer.Enabled = startEnabled;
+                startServerToolStripMenuItem.Enabled = startEnabled;
+                toolStripButtonStopServer.Enabled = stopEnabled;
+                stopServerToolStripMenuItem.Enabled = stopEnabled;
+            }));
+        }
+
+        /// <summary>
+        /// 启动服务器工具栏按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private async void toolStripButtonStartServer_Click(object sender, EventArgs e)
+        {
+            await StartServerAsync();
+        }
+
+        /// <summary>
+        /// 停止服务器工具栏按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private async void toolStripButtonStopServer_Click(object sender, EventArgs e)
+        {
+            await StopServerAsync();
+        }
+
+        /// <summary>
+        /// 刷新数据工具栏按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void toolStripButtonRefreshData_Click(object sender, EventArgs e)
+        {
+            RefreshCurrentTab();
+        }
+
+        /// <summary>
+        /// 用户管理工具栏按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void toolStripButtonUserManagement_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("用户管理");
+        }
+
+        /// <summary>
+        /// 缓存管理工具栏按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件源</param>
+        /// <param name="e">事件参数</param>
+        private void toolStripButtonCacheManagement_Click(object sender, EventArgs e)
+        {
+            ShowTabPage("缓存管理");
+        }
+
+        /// <summary>
+        /// 创建注册信息控件
+        /// </summary>
+        /// <returns>注册信息控件</returns>
+        private Control CreateRegistrationInfoControl()
+        {
+            var panel = new Panel();
+            panel.Dock = DockStyle.Fill;
+
+            var label = new Label();
+            label.Text = "注册信息功能开发中...";
+            label.AutoSize = true;
+            label.Font = new Font("微软雅黑", 12f);
+            label.ForeColor = Color.Gray;
+            label.Location = new Point((panel.Width - label.Width) / 2, (panel.Height - label.Height) / 2);
+
+            panel.Controls.Add(label);
+            return panel;
         }
     }
 }

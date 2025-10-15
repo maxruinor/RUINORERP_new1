@@ -221,6 +221,7 @@ namespace RUINORERP.Server.Network.Core
                       });
                       // 注册命令处理器 - 这些处理器会被CommandDispatcher自动发现
                   }).Build();
+                
                 // 启动服务器，使用StartAsync而不是RunAsync，这样不会阻塞线程
                 await _host.StartAsync(cancellationToken);
 
@@ -233,6 +234,12 @@ namespace RUINORERP.Server.Network.Core
             catch (Exception ex)
             {
                 LogError($"启动服务器失败: {ex.Message}", ex);
+                // 确保在启动失败时清理资源
+                if (_host != null)
+                {
+                    _host.Dispose();
+                    _host = null;
+                }
                 return null;
             }
         }

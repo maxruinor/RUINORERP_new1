@@ -268,6 +268,140 @@ namespace RUINORERP.UI.BaseForm
                     button表格显示设置.Click += button表格显示设置_Click;
                     frm.flowLayoutPanelButtonsArea.Controls.Add(button表格显示设置);
 
+                    // Setup docking functionality
+
+                    #region 添加控件内容
+                    ws = kryptonDockingManagerQuery.ManageWorkspace(kryptonDockableWorkspaceQuery);
+                    kryptonDockingManagerQuery.ManageControl(kryptonPanelMainBig, ws);
+                    kryptonDockingManagerQuery.ManageFloating(MainForm.Instance);
+
+                    //创建面板并加入
+                    KryptonPageCollection Kpages = new KryptonPageCollection();
+                    if (Kpages.Count == 0)
+                    {
+                        Kpages.Add(MasterQuery());
+                        if (HasChildData)
+                        {
+                            Kpages.Add(ChildQuery());
+                        }
+
+                        if (this.ChildRelatedEntityType != null)
+                        {
+                            Kpages.Add(Child_RelatedQuery());
+                        }
+                        //如果需要分析功能
+                        if (ResultAnalysis)
+                        {
+                            Kpages.Add(UCOutlookGridAnalysis1Load());
+                        }
+                    }
+
+                    //加载布局
+                    try
+                    {
+                        if (!Directory.Exists(basePath))
+                        {
+                            Directory.CreateDirectory(basePath);
+                        }
+                        if (System.IO.File.Exists(xmlfilepath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
+                        {
+                            #region load
+                            // Create the XmlNodeReader object.
+                            XmlDocument doc = new XmlDocument();
+                            doc.Load(xmlfilepath);
+                            XmlNodeReader nodeReader = new XmlNodeReader(doc);
+                            // Set the validation settings.
+                            XmlReaderSettings settings = new XmlReaderSettings();
+
+                            using (XmlReader reader = XmlReader.Create(nodeReader, settings))
+                            {
+                                while (reader.Read())
+                                {
+                                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
+                                    {
+                                        //加载停靠信息
+                                        ws.LoadElementFromXml(reader, Kpages);
+                                    }
+                                }
+
+                            }
+                            #endregion
+                        }
+                        else
+                        {
+                            if (CurMenuInfo == null)
+                            {
+                                //找不到当前菜单直接返回
+                                return;
+                            }
+
+                            //没有个性化文件时用默认的
+                            if (!string.IsNullOrEmpty(CurMenuInfo.DefaultLayout))
+                            {
+                                #region load
+                                //加载XML文件
+                                XmlDocument xmldoc = new XmlDocument();
+                                //获取XML字符串
+                                string xmlStr = xmldoc.InnerXml;
+                                //字符串转XML
+                                xmldoc.LoadXml(CurMenuInfo.DefaultLayout);
+
+                                XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
+                                XmlReaderSettings settings = new XmlReaderSettings();
+                                using (XmlReader reader = XmlReader.Create(nodeReader, settings))
+                                {
+                                    while (reader.Read())
+                                    {
+                                        if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
+                                        {
+                                            //加载停靠信息
+                                            ws.LoadElementFromXml(reader, Kpages);
+                                        }
+                                    }
+
+                                }
+                                #endregion
+                            }
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog("加载查询页布局配置文件出错。" + ex.Message, Global.UILogType.错误);
+                        MainForm.Instance.logger.LogError(ex, "加载查询页布局配置文件出错。");
+                    }
+
+                    //如果加载过的停靠信息中不正常。就手动初始化
+                    foreach (KryptonPage page in Kpages)
+                    {
+                        if (!(page is KryptonStorePage) && !kryptonDockingManagerQuery.ContainsPage(page.UniqueName))
+                        {
+                            switch (page.UniqueName)
+                            {
+                                case "查询条件":
+                                    //kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, Kpages.Where(p => p.UniqueName == "查询条件").ToArray());
+                                    kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, Kpages.Where(p => p.UniqueName == "查询条件").ToArray());
+                                    break;
+                                case "明细信息":
+                                    // kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Left, Kpages.Where(p => p.UniqueName == "明细信息").ToArray());
+                                    kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "明细信息").ToArray());
+                                    break;
+                                case "单据信息":
+                                    kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "单据信息").ToArray());
+                                    break;
+                                case "结果分析":
+                                    kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "结果分析").ToArray());
+                                    break;
+                                case "关联信息":
+                                    if (ChildRelatedEntityType != null)
+                                    {
+                                        kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "关联信息").ToArray());
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                    #endregion
                 }
             }
 
@@ -2327,152 +2461,9 @@ namespace RUINORERP.UI.BaseForm
                 }
                 QueryDto = LoadQueryConditionToUI();
 
-
-
             }
 
-            // Setup docking functionality
-            ws = kryptonDockingManagerQuery.ManageWorkspace(kryptonDockableWorkspaceQuery);
-            kryptonDockingManagerQuery.ManageControl(kryptonPanelMainBig, ws);
-            kryptonDockingManagerQuery.ManageFloating(MainForm.Instance);
-
-            //创建面板并加入
-            KryptonPageCollection Kpages = new KryptonPageCollection();
-            if (Kpages.Count == 0)
-            {
-                Kpages.Add(MasterQuery());
-                if (HasChildData)
-                {
-                    Kpages.Add(ChildQuery());
-                }
-
-                if (this.ChildRelatedEntityType != null)
-                {
-                    Kpages.Add(Child_RelatedQuery());
-                }
-                //如果需要分析功能
-                if (ResultAnalysis)
-                {
-                    Kpages.Add(UCOutlookGridAnalysis1Load());
-                }
-            }
-
-            //加载布局
-            try
-            {
-                if (!Directory.Exists(basePath))
-                {
-                    Directory.CreateDirectory(basePath);
-                }
-                if (System.IO.File.Exists(xmlfilepath) && AuthorizeController.GetQueryPageLayoutCustomize(MainForm.Instance.AppContext))
-                {
-                    #region load
-                    // Create the XmlNodeReader object.
-                    XmlDocument doc = new XmlDocument();
-                    doc.Load(xmlfilepath);
-                    XmlNodeReader nodeReader = new XmlNodeReader(doc);
-                    // Set the validation settings.
-                    XmlReaderSettings settings = new XmlReaderSettings();
-
-                    using (XmlReader reader = XmlReader.Create(nodeReader, settings))
-                    {
-                        while (reader.Read())
-                        {
-                            if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
-                            {
-                                //加载停靠信息
-                                ws.LoadElementFromXml(reader, Kpages);
-                            }
-                        }
-
-                    }
-                    #endregion
-                }
-                else
-                {
-                    if (CurMenuInfo == null)
-                    {
-                        //找不到当前菜单直接返回
-                        return;
-                    }
-
-                    //没有个性化文件时用默认的
-                    if (!string.IsNullOrEmpty(CurMenuInfo.DefaultLayout))
-                    {
-                        #region load
-                        //加载XML文件
-                        XmlDocument xmldoc = new XmlDocument();
-                        //获取XML字符串
-                        string xmlStr = xmldoc.InnerXml;
-                        //字符串转XML
-                        xmldoc.LoadXml(CurMenuInfo.DefaultLayout);
-
-                        XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
-                        XmlReaderSettings settings = new XmlReaderSettings();
-                        using (XmlReader reader = XmlReader.Create(nodeReader, settings))
-                        {
-                            while (reader.Read())
-                            {
-                                if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
-                                {
-                                    //加载停靠信息
-                                    ws.LoadElementFromXml(reader, Kpages);
-                                }
-                            }
-
-                        }
-                        #endregion
-                    }
-
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.uclog.AddLog("加载查询页布局配置文件出错。" + ex.Message, Global.UILogType.错误);
-                MainForm.Instance.logger.LogError(ex, "加载查询页布局配置文件出错。");
-            }
-
-            //如果加载过的停靠信息中不正常。就手动初始化
-            foreach (KryptonPage page in Kpages)
-            {
-                if (!(page is KryptonStorePage) && !kryptonDockingManagerQuery.ContainsPage(page.UniqueName))
-                {
-                    switch (page.UniqueName)
-                    {
-                        case "查询条件":
-                            //kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, Kpages.Where(p => p.UniqueName == "查询条件").ToArray());
-                            kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, Kpages.Where(p => p.UniqueName == "查询条件").ToArray());
-                            break;
-                        case "明细信息":
-                            // kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Left, Kpages.Where(p => p.UniqueName == "明细信息").ToArray());
-                            kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "明细信息").ToArray());
-                            break;
-                        case "单据信息":
-                            kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "单据信息").ToArray());
-                            break;
-                        case "结果分析":
-                            kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "结果分析").ToArray());
-                            break;
-                        case "关联信息":
-                            if (ChildRelatedEntityType != null)
-                            {
-                                kryptonDockingManagerQuery.AddToWorkspace("Workspace", Kpages.Where(p => p.UniqueName == "关联信息").ToArray());
-                            }
-                            break;
-                    }
-                }
-            }
-
-            // Add docking pages
-            /*
-            // Add docking pages
-            kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Top, new KryptonPage[] { QueryCondition() });
-            kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Left, new KryptonPage[] { ChildQuery() });
-            // kryptonDockingManagerQuery.AddDockspace("Control", DockingEdge.Bottom, new KryptonPage[] { NewInput(), NewInput() });
-            //  kryptonDockingManagerQuery.AddAutoHiddenGroup("Control", DockingEdge.Right, new KryptonPage[] { NewPropertyGrid() });
-            //kryptonDockingManagerQuery.AddToWorkspace("Workspace", new KryptonPage[] { MasterQuery(), MasterQuery() });            kryptonDockingManagerQuery.AddToWorkspace("Workspace", new KryptonPage[] { MasterQuery(), MasterQuery() });
-            kryptonDockingManagerQuery.AddToWorkspace("Workspace", new KryptonPage[] { MasterQuery() });
-            */
+          
 
 
 

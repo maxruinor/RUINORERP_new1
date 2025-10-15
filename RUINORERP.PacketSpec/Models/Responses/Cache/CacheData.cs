@@ -145,21 +145,25 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// <summary>
         /// 是否第一页
         /// </summary>
+        [IgnoreMember]
         public bool IsFirstPage => PageIndex <= 0;
 
         /// <summary>
         /// 是否最后一页
         /// </summary>
+        [IgnoreMember]
         public bool IsLastPage => PageIndex >= TotalPages - 1;
 
         /// <summary>
         /// 是否有上一页
         /// </summary>
+        [IgnoreMember]
         public bool HasPreviousPage => PageIndex > 0;
 
         /// <summary>
         /// 是否有下一页
         /// </summary>
+        [IgnoreMember]
         public bool HasNextPage => PageIndex < TotalPages - 1;
     }
 }

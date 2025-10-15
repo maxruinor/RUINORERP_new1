@@ -78,6 +78,13 @@ namespace RUINORERP.UI.Network.Services
                 var commandResponse = await _communicationService.SendCommandWithResponseAsync<LoginRequest, LoginResponse>(
                     loginCommand, ct);
 
+                // 检查响应数据是否为空
+                if (commandResponse.ResponseData == null)
+                {
+                    _log?.LogError("登录失败：服务器返回了空的响应数据");
+                    return BaseCommand<LoginResponse>.CreateError("服务器返回了空的响应数据");
+                }
+
                 // 检查响应是否成功
                 if (!commandResponse.ResponseData.IsSuccess)
                 {

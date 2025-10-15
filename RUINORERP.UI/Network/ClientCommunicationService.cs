@@ -306,7 +306,7 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 断开与服务器的连接
+        /// 断开与服务器的连接 - 增强状态同步验证
         /// </summary>
         public void Disconnect()
         {
@@ -316,10 +316,20 @@ namespace RUINORERP.UI.Network
                 {
                     try
                     {
-                        _socketClient.Disconnect();
+                        // 验证Socket实际状态
+                        if (_socketClient.IsConnected)
+                        {
+                            _socketClient.Disconnect();
+                            _logger.LogInformation("主动断开与服务器的连接");
+                        }
+                        else
+                        {
+                            _logger.LogWarning("尝试断开连接时发现Socket已处于断开状态");
+                        }
                     }
                     catch (Exception ex)
                     {
+                        _logger.LogError(ex, "断开连接时发生错误");
                         _eventManager.OnErrorOccurred(new Exception($"断开连接时发生错误: {ex.Message}", ex));
                     }
                     finally
@@ -1073,7 +1083,7 @@ namespace RUINORERP.UI.Network
 
 
         /// <summary>
-        /// 处理心跳包失败
+        /// 处理心跳包失败 - 增强状态同步检查
         /// </summary>
         private void HandleHeartbeatFailure(Exception exception)
         {
@@ -1086,10 +1096,19 @@ namespace RUINORERP.UI.Network
                 {
                     _logger.LogError("心跳包连续失败，断开连接并尝试重连");
 
-                    // 断开连接
+                    // 断开连接前检查实际Socket状态
                     if (_isConnected)
                     {
-                        _socketClient.Disconnect();
+                        // 验证Socket实际状态
+                        if (_socketClient.IsConnected)
+                        {
+                            _socketClient.Disconnect();
+                        }
+                        else
+                        {
+                            _logger.LogWarning("检测到Socket已断开，但连接状态未同步，立即更新状态");
+                        }
+                        
                         // 使用统一的连接状态更新方法
                         UpdateConnectionState(false);
                     }
@@ -1497,6 +1516,13 @@ namespace RUINORERP.UI.Network
                 TResponse response = default(TResponse);
                 if (packet.ExecutionContext.ResponseType != null)
                 {
+                    // 检查响应数据是否为空
+                    if (baseCommand.ResponseDataByMessagePack == null || baseCommand.ResponseDataByMessagePack.Length == 0)
+                    {
+                        _logger.LogWarning("收到响应数据包，但响应数据为空。命令ID: {CommandId}", packet.CommandId);
+                        return null;
+                    }
+
                     // 反序列化响应数据
                     var responseData = MessagePackSerializer.Deserialize(packet.ExecutionContext.ResponseType, baseCommand.ResponseDataByMessagePack, UnifiedSerializationService.MessagePackOptions);
                     response = responseData as TResponse;
@@ -1535,6 +1561,13 @@ namespace RUINORERP.UI.Network
             }
 
             var responseData = ProcessCommandResponseAsync<TResponse>(packet);
+
+            // 检查响应数据是否为空
+            if (responseData == null)
+            {
+                _logger.LogWarning("命令响应数据为空或处理失败。命令ID: {CommandId}", command.CommandIdentifier);
+                return BaseCommand<TResponse>.Error("服务器返回了空响应数据");
+            }
 
             var commandResponse = BaseCommand<TResponse>.Success(responseData, (responseData as ResponseBase)?.Message ?? "操作成功");
             commandResponse.CommandId = command.CommandIdentifier;

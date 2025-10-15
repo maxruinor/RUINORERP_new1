@@ -74,9 +74,25 @@ namespace RUINORERP.UI.Network
 
         public string SessionID { get; set; }
         /// <summary>
-        /// 连接状态
+        /// 连接状态 - 确保状态同步
         /// </summary>
-        public bool IsConnected => _client?.Socket?.Connected == true;
+        public bool IsConnected
+        {
+            get
+            {
+                // 检查Socket实际状态并同步内部状态
+                var socketConnected = _client?.Socket?.Connected == true;
+                
+                // 如果Socket已断开但内部状态仍为连接，则同步更新
+                if (!socketConnected && _isConnected)
+                {
+                    _isConnected = false;
+                    _logger?.LogDebug("检测到Socket连接已断开，同步更新连接状态");
+                }
+                
+                return _isConnected && socketConnected;
+            }
+        }
 
         /// <summary>
         /// 接收到数据包时触发的事件 - 直接传递PacketModel，避免重复序列化/反序列化
@@ -89,7 +105,7 @@ namespace RUINORERP.UI.Network
         public event Action<EventArgs> Closed;
 
         /// <summary>
-        /// 连接到服务器
+        /// 连接到服务器 - 优化连接状态同步
         /// </summary>
         /// <param name="serverUrl">服务器地址</param>
         /// <param name="port">端口号</param>
@@ -103,6 +119,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 var connected = await _client.ConnectAsync(new IPEndPoint(IPAddress.Parse(serverUrl), port));
+                
                 if (connected)
                 {
                     // 等待连接状态更新（最多等待500ms）
@@ -110,16 +127,26 @@ namespace RUINORERP.UI.Network
                     {
                         await Task.Delay(50, cancellationToken);
                     }
+                    
+                    // 确保状态同步
+                    _isConnected = connected && _client.Socket?.Connected == true;
+                    
+                    if (_isConnected)
+                    {
+                        _logger?.LogInformation("客户端成功连接到服务器 {ServerIp}:{Port}", serverUrl, port);
+                    }
                 }
                 else
                 {
                     _isConnected = false;
+                    _logger?.LogWarning("连接服务器 {ServerIp}:{Port} 失败", serverUrl, port);
                 }
+                
                 return _isConnected;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "连接服务器失败");
+                _logger?.LogError(ex, "连接服务器 {ServerIp}:{Port} 失败", serverUrl, port);
                 _isConnected = false;
                 return false;
             }
@@ -138,7 +165,7 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 异步发送数据到服务器
+        /// 异步发送数据到服务器 - 增强状态同步检查
         /// </summary>
         /// <param name="data">要发送的数据</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -146,6 +173,7 @@ namespace RUINORERP.UI.Network
         /// <exception cref="InvalidOperationException">当未连接到服务器或连接断开时抛出</exception>
         public async Task SendAsync(byte[] data, CancellationToken cancellationToken = default)
         {
+            // 双重检查连接状态
             if (!_isConnected || _client == null)
             {
                 throw new InvalidOperationException("未连接到服务器");
@@ -157,6 +185,7 @@ namespace RUINORERP.UI.Network
                 if (_client.Socket == null || !_client.Socket.Connected)
                 {
                     _isConnected = false;
+                    _logger?.LogWarning("尝试发送数据时发现Socket连接已断开");
                     throw new InvalidOperationException("连接已断开");
                 }
 
@@ -167,6 +196,8 @@ namespace RUINORERP.UI.Network
                     cancellationToken.ThrowIfCancellationRequested();
                     _client.Send(data);
                 }, cancellationToken);
+                
+                _logger?.LogDebug("成功发送数据到服务器，数据长度: {DataLength}", data?.Length ?? 0);
             }
             catch (OperationCanceledException)
             {
@@ -178,22 +209,25 @@ namespace RUINORERP.UI.Network
             {
                 // 处理管道写入器已完成的特定异常
                 _isConnected = false;
+                _logger?.LogWarning("发送数据失败：管道写入器已完成，连接已断开");
                 throw new InvalidOperationException("连接已断开，无法发送数据");
             }
             catch (Exception ex)
             {
                 // 记录其他发送异常
                 _isConnected = false;
+                _logger?.LogError(ex, "发送数据到服务器失败");
                 throw;
             }
         }
 
         /// <summary>
-        /// 处理客户端连接事件
+        /// 处理客户端连接事件 - 确保状态同步
         /// </summary>
         private void OnClientConnected(object sender, EventArgs e)
         {
             _isConnected = true;
+            _logger?.LogInformation("客户端连接事件触发，连接状态已更新为已连接");
         }
 
         /// <summary>
@@ -210,25 +244,33 @@ namespace RUINORERP.UI.Network
 
 
         /// <summary>
-        /// 处理客户端错误事件
+        /// 处理客户端错误事件 - 确保状态同步
         /// </summary>
         private void OnClientError(object sender, ErrorEventArgs e)
         {
             // 连接错误时设置连接状态为false
-            _isConnected = false;
+            if (_isConnected)
+            {
+                _isConnected = false;
+                _logger?.LogError(e.Exception, "客户端发生错误，连接状态已更新为断开");
+            }
         }
 
         /// <summary>
-        /// 处理客户端关闭事件
+        /// 处理客户端关闭事件 - 确保状态同步
         /// </summary>
         private void OnClientClosed(object sender, EventArgs e)
         {
-            _isConnected = false;
+            if (_isConnected)
+            {
+                _isConnected = false;
+                _logger?.LogInformation("客户端连接已关闭，连接状态已更新为断开");
+            }
             Closed?.Invoke(e);
         }
 
         /// <summary>
-        /// 释放资源
+        /// 释放资源 - 确保状态正确清理
         /// </summary>
         public void Dispose()
         {
@@ -237,7 +279,12 @@ namespace RUINORERP.UI.Network
                 _client.Close();
                 _client = null;
             }
-            _isConnected = false;
+            
+            if (_isConnected)
+            {
+                _isConnected = false;
+                _logger?.LogInformation("SuperSocketClient资源已释放，连接状态已重置");
+            }
         }
     }
 }

@@ -135,11 +135,16 @@ namespace RUINORERP.Server.Network.Core
                 }
                 else
                 {
+                    // 数据包无效，记录详细信息
+                    Console.WriteLine("接收到无效的数据包");
                     return null;
                 }
             }
             catch (Exception ex)
             {
+                // 记录详细的异常信息
+                Console.WriteLine($"解码数据包时发生异常: {ex.Message}");
+                Console.WriteLine($"异常堆栈: {ex.StackTrace}");
                 // 记录异常但不抛出，避免影响其他处理
                 return null;
             }

@@ -30,6 +30,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Errors;
 using SuperSocket.Server.Abstractions.Session;
 using RUINORERP.Business.Cache;
+using System.Reflection;
 
 
 namespace RUINORERP.Server.Network.Commands
@@ -495,8 +496,8 @@ namespace RUINORERP.Server.Network.Commands
                 if (entityType != null)
                 {
                     //发送缓存数据
-                    // 使用新的缓存管理器获取实体列表
-                    var method = typeof(IEntityCacheManager).GetMethod("GetEntityList");
+                    // 使用新的缓存管理器获取实体列表 - 指定参数类型以避免AmbiguousMatchException
+                    var method = typeof(IEntityCacheManager).GetMethod("GetEntityList", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string) }, null);
                     var genericMethod = method.MakeGenericMethod(entityType);
                     var cacheList = genericMethod.Invoke(_cacheManager, new object[] { tableName });
                     
@@ -1153,23 +1154,21 @@ namespace RUINORERP.Server.Network.Commands
                 // 根据操作类型处理缓存变更
                 switch (request.Operation)
                 {
-                    case "set":
-                    case "update":
+                    case CacheOperation.Set:
+                    case CacheOperation.Update:
                         await HandleUpdateOperationAsync(request);
                         break;
-                    case "batchset":
-                    case "batchupdate":
+                    case CacheOperation.BatchSet:
+                    case CacheOperation.BatchUpdate:
                         await HandleBatchUpdateOperationAsync(request);
                         break;
-                    case "remove":
-                    case "delete":
+                    case CacheOperation.Remove:
                         await HandleRemoveOperationAsync(request);
                         break;
-                    case "batchremove":
-                    case "batchdelete":
+                    case CacheOperation.BatchRemove:
                         await HandleBatchRemoveOperationAsync(request);
                         break;
-                    case "clear":
+                    case CacheOperation.Clear:
                         await HandleClearOperationAsync(request);
                         break;
                     default:
@@ -1303,7 +1302,7 @@ namespace RUINORERP.Server.Network.Commands
                 // 创建变更通知
                 var notification = new
                 {
-                    Type = request.OperationType,
+                    Type = request.Operation,
                     TableName = request.TableName,
                     Timestamp = DateTime.Now,
                     //Data = request.Data,

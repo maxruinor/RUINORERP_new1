@@ -295,8 +295,11 @@ namespace RUINORERP.UI.Network.Services
             {
                 if (string.IsNullOrEmpty(tableName))
                     throw new ArgumentException("表名不能为空", nameof(tableName));
-
-                _log?.LogInformation("开始请求缓存数据，表名={0}，强制刷新={1}", tableName, forceRefresh);
+                var tableNames = TableSchemaManager.Instance.GetAllTableNames();
+                if (!tableNames.Contains(tableName))
+                {
+                    await Task.CompletedTask;
+                }
 
                 // 使用工厂方法创建请求对象
                 var request = CacheRequest.Create(tableName, forceRefresh);
@@ -407,6 +410,13 @@ namespace RUINORERP.UI.Network.Services
 
                 // 使用新的方法发送命令并获取包含指令信息的响应
                 var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, ct, 30000);
+
+                // 检查响应数据是否为空
+                if (commandResponse.ResponseData == null)
+                {
+                    _log?.LogError("缓存请求失败：服务器返回了空的响应数据");
+                    return BaseCommand<CacheResponse>.CreateError("服务器返回了空的响应数据");
+                }
 
                 // 检查响应是否成功
                 if (!commandResponse.ResponseData.IsSuccess)
@@ -1124,6 +1134,13 @@ namespace RUINORERP.UI.Network.Services
 
                 // 发送命令并获取响应
                 var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, ct, 30000);
+
+                // 检查响应数据是否为空
+                if (commandResponse.ResponseData == null)
+                {
+                    _log?.LogError("缓存请求失败：服务器返回了空的响应数据");
+                    return BaseCommand<CacheResponse>.CreateError("服务器返回了空的响应数据");
+                }
 
                 // 处理成功响应
                 if (commandResponse.ResponseData.IsSuccess && commandResponse.ResponseData != null)

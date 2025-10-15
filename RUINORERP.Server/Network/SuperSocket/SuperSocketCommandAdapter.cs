@@ -224,7 +224,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 return;
             }
 
-            if (result.ResponseData.IsSuccess)
+            if (result.ResponseData != null && result.ResponseData.IsSuccess)
             {
                 // 命令执行成功，发送成功响应
                 var responsePackage = UpdatePacketWithResponse(requestPackage.Packet, command, result);
@@ -248,11 +248,22 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <returns></returns>
         protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, ICommand command, BaseCommand<IResponse> result)
         {
-            package.ExecutionContext.ResponseType = result.ResponseData?.GetType() ?? typeof(IResponse);
+            // 检查响应数据是否为空，避免空引用异常
+            if (result.ResponseData == null)
+            {
+                _logger?.LogWarning("响应数据为空，使用默认错误状态");
+                package.ExecutionContext.ResponseType = typeof(IResponse);
+                package.Status = PacketStatus.Error;
+            }
+            else
+            {
+                package.ExecutionContext.ResponseType = result.ResponseData.GetType();
+                package.Status = result.ResponseData.IsSuccess ? PacketStatus.Completed : PacketStatus.Error;
+            }
+            
             package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
             package.Direction = PacketDirection.Response; // 明确设置为响应方向
             package.SessionId = package.SessionId;
-            package.Status = result.ResponseData.IsSuccess ? PacketStatus.Completed : PacketStatus.Error;
             package.Extensions = new Dictionary<string, object>
             {
                 ["Data"] = result,
@@ -270,7 +281,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
 
 
-            if (command is BaseCommand baseCommand)
+            if (command is BaseCommand baseCommand && result.ResponseData != null)
             {
                 // 序列化响应数据 - 使用具体类型而不是接口类型，确保客户端能正确反序列化
                 var ResponsePackBytes = MessagePackSerializer.Serialize(package.ExecutionContext.ResponseType, result.ResponseData, UnifiedSerializationService.MessagePackOptions);
@@ -461,6 +472,13 @@ namespace RUINORERP.Server.Network.SuperSocket
                 return UnifiedErrorCodes.System_InternalError;
             }
 
+            // 检查响应数据是否为空
+            if (result.ResponseData == null)
+            {
+                _logger?.LogWarning("响应数据为空，使用默认错误信息");
+                return UnifiedErrorCodes.System_InternalError;
+            }
+
             // 优先使用响应中的元数据提取更详细的错误信息
             string detailedMessage = result.ResponseData.ErrorMessage;
 
@@ -469,7 +487,9 @@ namespace RUINORERP.Server.Network.SuperSocket
                 // 尝试获取更详细的错误信息
                 if (result.Metadata.TryGetValue("Exception", out var exceptionObj))
                 {
-                    detailedMessage = $"{result.ResponseData.Message} | Exception: {exceptionObj}";
+                    // 使用空值条件运算符避免空引用异常
+                    string responseMessage = result.ResponseData?.Message ?? "未知错误";
+                    detailedMessage = $"{responseMessage} | Exception: {exceptionObj}";
                 }
             }
 
@@ -493,6 +513,10 @@ namespace RUINORERP.Server.Network.SuperSocket
             ErrorCode errorCode,
             CancellationToken cancellationToken)
         {
+            // 检查响应数据是否为空，避免空引用异常
+            string originalErrorMessage = result.ResponseData?.ErrorMessage ?? "响应数据为空";
+            string originalMessage = result.ResponseData?.Message ?? "无错误消息";
+
             var errorResponse = new PacketModel
             {
                 PacketId = IdGenerator.GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
@@ -504,8 +528,8 @@ namespace RUINORERP.Server.Network.SuperSocket
                     ["ErrorCode"] = errorCode.Code,
                     ["ErrorMessage"] = errorCode.Message,
                     ["Success"] = false,
-                    ["OriginalErrorMessage"] = result.ResponseData.ErrorMessage,
-                    ["OriginalMessage"] = result.ResponseData.Message,
+                    ["OriginalErrorMessage"] = originalErrorMessage,
+                    ["OriginalMessage"] = originalMessage,
                 }
             };
 

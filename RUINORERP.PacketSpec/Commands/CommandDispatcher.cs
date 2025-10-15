@@ -64,10 +64,10 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly object _fallbackHandlerLock = new object();
         // 命令扫描器 - 用于扫描和注册命令处理器
         private readonly CommandScanner _commandScanner;
-        
+
         // 缓存管理器 - 用于访问缓存的命令类型和构造函数
         private readonly CommandCacheManager _cacheManager;
-        
+
         // 本地处理器映射缓存 - 避免重复从扫描器获取
         private readonly ConcurrentDictionary<CommandId, List<ICommandHandler>> _commandHandlerMap;
 
@@ -113,7 +113,7 @@ namespace RUINORERP.PacketSpec.Commands
             _handlerFactory = handlerFactory;
             _commandHistory = new ConcurrentDictionary<CommandId, DateTime>();
             _dispatchSemaphore = new SemaphoreSlim(1, 1); // 添加缺失的信号量
-            
+
             // 初始化缓存管理器和本地处理器映射缓存
             _cacheManager = commandScanner.GetCacheManager();
             _commandHandlerMap = new ConcurrentDictionary<CommandId, List<ICommandHandler>>();
@@ -122,7 +122,7 @@ namespace RUINORERP.PacketSpec.Commands
 
             // 使用传入的熔断器策略，如果未提供则使用默认策略
             _circuit = circuitBreakerPolicy ?? Policy
-                .HandleResult<BaseCommand<IResponse>>(r => !r.ResponseData.IsSuccess)
+                .HandleResult<BaseCommand<IResponse>>(r => r?.ResponseData?.IsSuccess == false)
                 .CircuitBreakerAsync(10, TimeSpan.FromMinutes(1)); // 增加到10次失败后熔断，持续1分钟
 
             // 创建三个优先级的Channel队列
@@ -178,7 +178,7 @@ namespace RUINORERP.PacketSpec.Commands
 
                     // 扫描并真正注册命令类型
                     await _commandScanner.ScanAndRegisterCommandsAsync(commandRegistry, null, assemblies);
-                    
+
                     // 扫描并真正注册处理器类型
                     await _commandScanner.ScanAndRegisterHandlersAsync(commandRegistry, null, assemblies);
 
@@ -194,7 +194,7 @@ namespace RUINORERP.PacketSpec.Commands
                                 LogInfo($"跳过泛型类型定义: {handlerType.FullName}");
                                 continue;
                             }
-                            
+
                             var handler = _handlerFactory.CreateHandler(handlerType);
                             await _commandScanner.RegisterHandlerAsync(handler, cancellationToken);
                             LogInfo($"处理器 {handler.Name} [ID: {handler.HandlerId}] 注册成功");
@@ -428,13 +428,12 @@ namespace RUINORERP.PacketSpec.Commands
                     }
 
                     //// 设置执行时间
-                     if (response != null)
-                     {
-                         response.ResponseData.ExecutionTimeMs = (long)(DateTime.Now - startTime).TotalMilliseconds;
-                     }
+                    if (response != null && response.ResponseData != null)
+                    {
+                        response.ResponseData.ExecutionTimeMs = (long)(DateTime.Now - startTime).TotalMilliseconds;
+                    }
 
-
-                    if (response == null)
+                    if (response == null || response.ResponseData == null)
                     {
                         response = BaseCommand<IResponse>.CreateError("处理器返回空结果", 500);
                     }
@@ -464,7 +463,7 @@ namespace RUINORERP.PacketSpec.Commands
 #pragma warning restore CS0168 // 声明了变量，但从未使用过
             }
         }
- 
+
 
         /// <summary>
         /// 获取所有处理器
@@ -615,18 +614,18 @@ namespace RUINORERP.PacketSpec.Commands
             if (_commandScanner?.GetCacheManager() != null)
             {
                 var cacheManager = _commandScanner.GetCacheManager();
-                
+
                 // 如果命令类型未知，尝试从缓存中获取
                 if (commandType == null)
                 {
                     // 获取当前命令所在程序集
                     var commandAssembly = cmd.Command.GetType().Assembly;
-                    
+
                     try
                     {
                         // 异步获取扫描缓存，但使用同步方式等待（避免在请求处理路径中引入异步）
                         var scanCache = cacheManager.GetOrCreateScanCacheAsync(commandAssembly, null, false).GetAwaiter().GetResult();
-                        
+
                         if (scanCache?.ScanResults != null && scanCache.ScanResults.TryGetValue(commandCode, out var cachedCommandType))
                         {
                             commandType = cachedCommandType;
@@ -646,7 +645,7 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         // 获取所有已扫描程序集的处理器类型
                         var allHandlerTypes = GetAllCachedHandlerTypes(cacheManager);
-                        
+
                         // 筛选兼容的处理器类型
                         var compatibleHandlerTypes = allHandlerTypes
                             .Where(ht => CanHandleCommandTypeByType(ht, commandType))
@@ -685,7 +684,7 @@ namespace RUINORERP.PacketSpec.Commands
                                     }
                                     continue;
                                 }
-                                
+
                                 var handler = _handlerFactory.CreateHandler(handlerType);
                                 if (handler != null && handler.CanHandle(cmd))
                                 {
@@ -762,7 +761,7 @@ namespace RUINORERP.PacketSpec.Commands
         private List<Type> GetAllCachedHandlerTypes(CommandCacheManager cacheManager)
         {
             var handlerTypes = new List<Type>();
-            
+
             try
             {
                 // 获取当前应用程序域中的所有程序集（排除系统程序集）
@@ -776,7 +775,7 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         // 从缓存获取扫描结果
                         var scanCache = cacheManager.GetOrCreateScanCacheAsync(assembly, null, false).GetAwaiter().GetResult();
-                        
+
                         // 从处理器类型缓存中获取处理器类型
                         var handlerTypeEntries = cacheManager.GetAllCachedHandlerTypes();
                         if (handlerTypeEntries != null && handlerTypeEntries.Count > 0)
@@ -1211,7 +1210,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
- 
+
 
 
         /// <summary>
@@ -1229,7 +1228,7 @@ namespace RUINORERP.PacketSpec.Commands
                 LogError("清理命令类型异常", ex);
             }
         }
-          
+
 
         /// <summary>
         /// 释放资源

@@ -1,4 +1,4 @@
-﻿using FastReport.DevComponents.DotNetBar;
+using FastReport.DevComponents.DotNetBar;
 using LiveChartsCore.Geo;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

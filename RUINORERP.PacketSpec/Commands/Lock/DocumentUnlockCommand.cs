@@ -1,22 +1,17 @@
-﻿﻿﻿﻿using RUINORERP.PacketSpec.Enums.Core;
-using RUINORERP.PacketSpec.Models;
-using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Responses;
-using System.Threading;
+﻿﻿using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation.Results;
-using MessagePack;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
     /// <summary>
-    /// 解锁单据命令 - 客户端向服务器请求解锁业务单据
+    /// 单据解锁命令
     /// </summary>
-    [PacketCommand("DocumentUnlock", CommandCategory.Lock)]
-    public class DocumentUnlockCommand : BaseCommand
+    public class DocumentUnlockCommand : BaseCommand<DocumentUnlockRequest, DocumentUnlockResponse>
     {
- 
-
         /// <summary>
         /// 单据ID
         /// </summary>
@@ -32,8 +27,9 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// </summary>
         public DocumentUnlockCommand()
         {
-            Direction = PacketDirection.ClientToServer;
-            TimeoutMs = 30000; // 默认超时时间30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
+            // 注意：移除了 Direction 的设置，因为方向已由 PacketModel 统一控制
             CommandIdentifier = LockCommands.ReleaseLock;
         }
 
@@ -46,8 +42,9 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         {
             BillId = billId;
             UserId = userId;
-            Direction = PacketDirection.ClientToServer;
-            TimeoutMs = 30000; // 默认超时时间30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
+            // 注意：移除了 Direction 的设置，因为方向已由 PacketModel 统一控制
             CommandIdentifier = LockCommands.ReleaseLock;
         }
 

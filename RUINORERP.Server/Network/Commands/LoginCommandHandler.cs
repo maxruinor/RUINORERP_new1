@@ -224,6 +224,21 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
+                // 添加时间对比检测逻辑
+                var serverTime = DateTime.Now;
+                var clientTime = loginRequest.LoginTime;
+                
+                // 计算时间差（绝对值）
+                var timeDifference = Math.Abs((serverTime - clientTime).TotalSeconds);
+                
+                // 如果时间差超过阈值（例如300秒=5分钟），则拒绝登录
+                const double timeDifferenceThreshold = 300.0;
+                if (timeDifference > timeDifferenceThreshold)
+                {
+                    return CreateErrorResponse($"客户端时间与服务器时间差异过大 ({timeDifference:F0}秒)，请校准系统时间", 
+                        UnifiedErrorCodes.Command_ValidationFailed, "TIME_MISMATCH");
+                }
+
                 // 检查并发用户数限制
                 if (SessionService.ActiveSessionCount >= MaxConcurrentUsers)
                 {
@@ -1144,7 +1159,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private OriginalData CreateTokenRefreshResponse(LoginResponse refreshResponse)
         {
-            var responseData = $"TOKEN_REFRESHED|{refreshResponse.Token.AccessToken}|{refreshResponse.Token.RefreshToken}|{refreshResponse.Token.ExpiresIn}";
+            var responseData = $"TOKEN_REFRESHED|{refreshResponse.Token.AccessToken}|{refreshResponse.Token.RefreshToken}|{refreshResponse.Token.ExpiresAt}";
             var data = System.Text.Encoding.UTF8.GetBytes(responseData);
 
             // 将完整的CommandId正确分解为Category和OperationCode

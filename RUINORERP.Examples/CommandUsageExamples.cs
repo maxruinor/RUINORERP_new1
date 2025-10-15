@@ -65,8 +65,6 @@ public class CommandUsageExamples
             AuthenticationCommands.Login,
             request, 
             cmd => { 
-                // 自定义超时时间
-                cmd.TimeoutMs = 45000;
                 // 设置命令优先级
                 cmd.Priority = CommandPriority.High;
             });

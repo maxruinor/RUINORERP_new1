@@ -28,7 +28,7 @@ namespace RUINORERP.Server.Network.Monitoring
         {
             var report = new StringBuilder();
             report.AppendLine("=== 错误分析报告 ===");
-            report.AppendLine($"生成时间: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+            report.AppendLine($"生成时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             report.AppendLine();
 
             var handlers = _commandDispatcher.GetAllHandlers();

@@ -399,8 +399,8 @@ namespace RUINORERP.Server.Network.Commands
 
                 // 生成用户ID
                 user.Id = Guid.NewGuid().ToString();
-                user.CreatedAt = DateTime.UtcNow;
-                user.UpdatedAt = DateTime.UtcNow;
+                user.CreatedAt = DateTime.Now;
+                user.UpdatedAt = DateTime.Now;
                 user.IsActive = true;
 
                 // 保存用户
@@ -456,7 +456,7 @@ namespace RUINORERP.Server.Network.Commands
                 existingUser.Email = user.Email;
                 existingUser.FullName = user.FullName;
                 existingUser.Phone = user.Phone;
-                existingUser.UpdatedAt = DateTime.UtcNow;
+                existingUser.UpdatedAt = DateTime.Now;
 
                 _logger.LogInformation($"用户更新成功：{user.Username} (ID: {user.Id})");
 

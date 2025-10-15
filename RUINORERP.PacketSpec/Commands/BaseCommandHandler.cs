@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -13,6 +13,7 @@ using RUINORERP.Global.CustomAttribute;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Models.Core;
+using MessagePack;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -41,17 +42,25 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
-        public DateTime CreatedTimeUtc { get; set; } = DateTime.UtcNow;
-
-        /// <summary>
-        /// 最后更新时间（UTC时间）
-        /// </summary>
-        public DateTime? LastUpdatedTime { get; set; }
+        public DateTime CreatedTime { get; set; } = DateTime.Now;
 
         /// <summary>
         /// 时间戳（UTC时间）
+        /// 记录对象的当前状态时间点，会随着对象状态变化而更新
         /// </summary>
         public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// 创建时间（本地时间，仅用于调试显示）
+        /// </summary>
+        [IgnoreMember]
+        public DateTime CreatedTimeLocal => CreatedTime.ToLocalTime();
+
+        /// <summary>
+        /// 时间戳（本地时间，仅用于调试显示）
+        /// </summary>
+        [IgnoreMember]
+        public DateTime TimestampLocal => TimestampUtc.ToLocalTime();
 
         /// <summary>
         /// 更新时间戳（实现 ITimestamped 接口）
@@ -59,7 +68,6 @@ namespace RUINORERP.PacketSpec.Commands
         public void UpdateTimestamp()
         {
             TimestampUtc = DateTime.UtcNow;
-            LastUpdatedTime = TimestampUtc;
         }
         #endregion
 
@@ -69,8 +77,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>是否有效</returns>
         public bool IsValid()
         {
-            return CreatedTimeUtc <= DateTime.UtcNow &&
-                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
+            return CreatedTime <= DateTime.Now &&
+                   CreatedTime >= DateTime.Now.AddYears(-1); // 创建时间在1年内
         }
 
         /// <summary>
@@ -160,7 +168,7 @@ namespace RUINORERP.PacketSpec.Commands
             _statistics = new HandlerStatistics();
             Logger = _logger;
             // 初始化ITimestamped属性
-            CreatedTimeUtc = DateTime.UtcNow;
+            CreatedTime = DateTime.Now;
             TimestampUtc = DateTime.UtcNow;
         }
 
@@ -172,36 +180,57 @@ namespace RUINORERP.PacketSpec.Commands
             if (cmd == null)
                 throw new ArgumentNullException(nameof(cmd));
 
+            // 获取执行超时时间
+            var executionTimeoutMs = GetExecutionTimeoutMs(cmd);
+            
+            using var executionCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(executionTimeoutMs));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, executionCts.Token);
+            
             var startTime = DateTime.UtcNow;
             bool success = true;
 
             try
             {
                 // 执行统一的命令预处理流程
-                var preprocessResult = await ExecuteCommandPreprocessingAsync(cmd, cancellationToken);
+                var preprocessResult = await ExecuteCommandPreprocessingAsync(cmd, linkedCts.Token);
                 if (preprocessResult != null)
                     return preprocessResult;
 
                 // 执行命令前置处理
-                var beforeResult = await OnBeforeHandleAsync(cmd, cancellationToken);
+                var beforeResult = await OnBeforeHandleAsync(cmd, linkedCts.Token);
                 if (beforeResult != null)
                     return beforeResult;
 
                 // 执行核心命令处理
-                var result = await OnHandleAsync(cmd, cancellationToken);
+                var result = await OnHandleAsync(cmd, linkedCts.Token);
 
                 // 执行命令后置处理
-                var afterResult = await OnAfterHandleAsync(cmd, result, cancellationToken);
+                var afterResult = await OnAfterHandleAsync(cmd, result, linkedCts.Token);
                 if (afterResult != null)
                     return afterResult;
 
-                // 更新统计信息
-                UpdateStatistics(result?.IsSuccess ?? false, (long)(DateTime.UtcNow - startTime).TotalMilliseconds);
+                // 检查是否接近超时
+                var executionTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
+                if (executionTime > executionTimeoutMs * 0.8) // 超过80%时间发出警告
+                {
+                    Logger.LogWarning($"命令 {cmd.Command.CommandIdentifier} 执行接近超时: {executionTime}ms");
+                }
 
-                // 记录处理完成信息
-                LogCommandCompletion(cmd, result, startTime);
+                // 更新统计信息
+                UpdateStatistics(result.ResponseData?.IsSuccess ?? false, (long)(DateTime.UtcNow - startTime).TotalMilliseconds);
 
                 return result;
+            }
+            catch (OperationCanceledException) when (executionCts.IsCancellationRequested)
+            {
+                var executionTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
+                Logger.LogWarning($"命令执行超时: {cmd.Command.CommandIdentifier}, 设置: {executionTimeoutMs}ms, 实际: {executionTime}ms");
+                
+                // 更新超时统计信息
+                UpdateTimeoutStatistics();
+                
+                success = false;
+                return BaseCommand<IResponse>.CreateError($"业务处理超时: {executionTimeoutMs}ms", 408);
             }
             catch (OperationCanceledException)
             {
@@ -233,24 +262,13 @@ namespace RUINORERP.PacketSpec.Commands
                 return BaseCommand<IResponse>.CreateValidationError(validationResult);
             }
 
-            // 检查命令是否超时
-            var timeoutCheckResult = CheckCommandTimeout(cmd.Command);
-            if (timeoutCheckResult != null)
-            {
-                return timeoutCheckResult;
-            }
+            // 注意：命令超时检查已移除，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
 
             return null; // 预处理通过
         }
 
-        /// <summary>
-        /// 记录命令处理完成信息
-        /// </summary>
-        protected void LogCommandCompletion(QueuedCommand cmd,BaseCommand<IResponse> result, DateTime startTime)
-        {
-            var elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds;
-            Logger.LogInformation($"命令处理完成: {cmd.Command.GetType().Name}, CommandId: {cmd.Command.CommandIdentifier}, 结果: {result.IsSuccess}, 执行时间: {elapsed:F2} ms");
-        }
+ 
 
         /// <summary>
         /// 统一的异常处理
@@ -354,7 +372,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (result)
                 {
                     Status = HandlerStatus.Running;
-                    _statistics.StartTime = DateTime.UtcNow;
+                    _statistics.StartTimeUtc = DateTime.UtcNow;
 
                     LogInfo($"处理器启动成功: {Name}");
                 }
@@ -424,7 +442,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 return new HandlerStatistics
                 {
-                    StartTime = _statistics.StartTime,
+                    StartTimeUtc = _statistics.StartTimeUtc,
                     TotalCommandsProcessed = _statistics.TotalCommandsProcessed,
                     SuccessfulCommands = _statistics.SuccessfulCommands,
                     FailedCommands = _statistics.FailedCommands,
@@ -451,7 +469,7 @@ namespace RUINORERP.PacketSpec.Commands
                 _statistics.MaxProcessingTimeMs = 0;
                 _statistics.MinProcessingTimeMs = 0;
                 _statistics.CurrentProcessingCount = 0;
-                _statistics.StartTime = DateTime.UtcNow;
+                _statistics.StartTimeUtc = DateTime.UtcNow;
             }
         }
 
@@ -460,8 +478,28 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行核心处理逻辑
         /// </summary>
-        [MustOverride]
         protected abstract Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// <summary>
+        /// 基于命令类型确定处理超时
+        /// </summary>
+        /// <param name="cmd">排队命令</param>
+        /// <returns>执行超时毫秒数</returns>
+        protected virtual int GetExecutionTimeoutMs(QueuedCommand cmd)
+        {
+            var baseTimeout = cmd.Command.CommandIdentifier.Category switch
+            {
+                CommandCategory.Authentication => 10000,    // 认证: 10秒
+                CommandCategory.Cache => 5000,              // 缓存: 5秒  
+                CommandCategory.File => 30000,              // 文件: 30秒
+                CommandCategory.DataSync => 60000,          // 数据同步: 60秒
+                _ => 15000                                  // 默认: 15秒
+            };
+            
+            // 优先级已移到数据包中，不再根据命令优先级调整超时
+            return baseTimeout;
+        }
 
         #endregion
 
@@ -511,35 +549,7 @@ namespace RUINORERP.PacketSpec.Commands
 
         #region 辅助方法
 
-        /// <summary>
-        /// 检查命令是否超时（基于TimeoutMs和创建时间计算）
-        /// </summary>
-        /// <param name="command">要检查的命令</param>
-        /// <returns>如果命令已超时返回错误响应，否则返回null</returns>
-        protected virtual BaseCommand<IResponse> CheckCommandTimeout(ICommand command)
-        {
-            if (command is BaseCommand baseCommand && baseCommand.TimeoutMs > 0)
-            {
-                var elapsedTime = (DateTime.UtcNow - baseCommand.CreatedTimeUtc).TotalMilliseconds;
-                if (elapsedTime > baseCommand.TimeoutMs)
-                {
-                    Logger.LogWarning($"命令已超时: 创建时间={baseCommand.CreatedTimeUtc}, 超时时间={baseCommand.TimeoutMs}ms, 已耗时={elapsedTime}ms, 命令ID: {baseCommand.CommandIdentifier}");
-                    return BaseCommand<IResponse>.CreateError(
-                        $"{UnifiedErrorCodes.Command_Timeout.Message}: 命令已超时",
-                        UnifiedErrorCodes.Command_Timeout.Code)
-                        .WithMetadata("CreatedTime", baseCommand.CreatedTimeUtc)
-                        .WithMetadata("TimeoutMs", baseCommand.TimeoutMs)
-                        .WithMetadata("ElapsedTimeMs", elapsedTime)
-                        .WithMetadata("CurrentTime", DateTime.UtcNow);
-                }
-            }
-            return null;
-        }
-
-
-
-
-  
+        
         /// <summary>
         /// 更新统计信息
         /// </summary>
@@ -553,6 +563,7 @@ namespace RUINORERP.PacketSpec.Commands
                     _statistics.FailedCommands++;
 
                 _statistics.LastProcessTime = DateTime.UtcNow;
+                _statistics.TotalCommandsProcessed++;
 
                 // 更新处理时间统计
                 if (_statistics.MinProcessingTimeMs == 0 || processingTimeMs < _statistics.MinProcessingTimeMs)
@@ -565,6 +576,19 @@ namespace RUINORERP.PacketSpec.Commands
                 _statistics.AverageProcessingTimeMs =
                     (_statistics.AverageProcessingTimeMs * (_statistics.TotalCommandsProcessed - 1) + processingTimeMs)
                     / _statistics.TotalCommandsProcessed;
+            }
+        }
+
+        /// <summary>
+        /// 更新超时统计信息
+        /// </summary>
+        private void UpdateTimeoutStatistics()
+        {
+            lock (_lockObject)
+            {
+                _statistics.TimeoutCount++;
+                _statistics.LastProcessTime = DateTime.UtcNow;
+                _statistics.TotalCommandsProcessed++;
             }
         }
 
@@ -641,7 +665,6 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 IsSuccess = baseResponse.IsSuccess,
                 Message = baseResponse.Message,
-                TimestampUtc = baseResponse.TimestampUtc,
                 RequestId = baseResponse.RequestId,
                 Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
                 ExecutionTimeMs = baseResponse.ExecutionTimeMs

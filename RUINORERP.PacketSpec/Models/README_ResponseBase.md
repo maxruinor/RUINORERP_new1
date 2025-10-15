@@ -165,7 +165,7 @@ public ResponseBase<User> Login(string username, string password)
                 .WithMetadata("RefreshToken", refreshToken)
                 .WithMetadata("Roles", roles)
                 .WithMetadata("Permissions", permissions)
-                .WithMetadata("LoginTime", DateTime.UtcNow);
+                .WithMetadata("LoginTime", DateTime.Now);
                 
         return response;
     }
@@ -323,7 +323,7 @@ public ResponseBase<TEntity> HandleBusinessException<TEntity>(Exception ex, stri
         ["Operation"] = operation,
         ["ExceptionType"] = ex.GetType().Name,
         ["StackTrace"] = ex.StackTrace,
-        ["Timestamp"] = DateTime.UtcNow
+        ["Timestamp"] = DateTime.Now
     };
     
     return ResponseBase<TEntity>.CreateError(

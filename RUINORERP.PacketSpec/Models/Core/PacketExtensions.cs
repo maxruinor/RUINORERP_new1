@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -210,7 +210,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             packet.CommandData = data;
             packet.Size = data?.Length ?? 0;
-            packet.LastUpdatedTime = DateTime.UtcNow;
+            packet.TimestampUtc = DateTime.Now;
             return packet;
         }
 

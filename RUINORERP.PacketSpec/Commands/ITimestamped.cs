@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -8,17 +8,12 @@ namespace RUINORERP.PacketSpec.Commands
     public interface ITimestamped
     {
         /// <summary>
-        /// 创建时间（UTC时间）
+        /// 创建时间用于生命周期管理
         /// </summary>
-        DateTime CreatedTimeUtc { get; set; }
+        DateTime CreatedTime { get; set; }
 
         /// <summary>
-        /// 最后更新时间（UTC时间）
-        /// </summary>
-        DateTime? LastUpdatedTime { get; set; }
-
-        /// <summary>
-        /// 时间戳（UTC时间）
+        /// 时间戳用于状态跟踪和缓存失效
         /// </summary>
         DateTime TimestampUtc { get; set; }
 

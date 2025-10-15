@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MessagePack;
 using RUINORERP.PacketSpec.Models.Core;
@@ -45,10 +45,10 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 IsSuccess = isSuccess,
                 Message = message,
                 Status = isSuccess ? "OK" : "ERROR",
-                ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                ServerTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                 ServerInfo = new Dictionary<string, object>
                 {
-                    ["ServerTime"] = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
+                    ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     ["ServerVersion"] = "1.0.0"
                 }
             };
@@ -64,11 +64,11 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 IsSuccess = false,
                 Message = errorMessage,
                 Status = "ERROR",
-                ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                ServerTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
                 ServerInfo = new Dictionary<string, object>
                 {
                     ["ErrorCode"] = errorCode ?? "UNKNOWN_ERROR",
-                    ["ServerTime"] = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
+                    ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
                 }
             };
         }

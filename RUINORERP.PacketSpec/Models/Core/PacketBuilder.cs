@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -68,6 +68,24 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             _packet.Direction = direction;
             return this;
+        }
+
+        /// <summary>
+        /// 设置为请求方向（快捷方法）
+        /// </summary>
+        /// <returns>当前构建器实例</returns>
+        public PacketBuilder AsRequest()
+        {
+            return WithDirection(PacketDirection.Request);
+        }
+
+        /// <summary>
+        /// 设置为响应方向（快捷方法）
+        /// </summary>
+        /// <returns>当前构建器实例</returns>
+        public PacketBuilder AsResponse()
+        {
+            return WithDirection(PacketDirection.Response);
         }
 
         /// <summary>
@@ -203,7 +221,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             return WithCommand(new CommandId(CommandCategory.System, 0xF0))
                 .WithDirection(PacketDirection.ClientToServer)
                 .WithSession(sessionId, clientId)
-                .WithJsonData(new { TimestampUtc = DateTime.UtcNow });
+                .WithJsonData(new { Timestamp = DateTime.Now });
         }
 
         /// <summary>

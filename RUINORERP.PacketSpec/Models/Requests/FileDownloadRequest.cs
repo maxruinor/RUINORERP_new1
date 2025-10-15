@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -51,7 +51,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public bool IsValid()
         {
             return !string.IsNullOrEmpty(FileId) &&
-                   RequestTime > DateTime.UtcNow.AddMinutes(-5); // 请求有效期5分钟
+                   RequestTime > DateTime.Now.AddMinutes(-5); // 请求有效期5分钟
         }
     }
 
@@ -115,7 +115,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.TimestampUtc = DateTime.UtcNow;
+            this.Timestamp = DateTime.Now;
         }
 
         /// <summary>

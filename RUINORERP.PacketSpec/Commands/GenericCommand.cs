@@ -25,7 +25,6 @@ namespace RUINORERP.PacketSpec.Commands
         {
             CommandIdentifier = id;
             Payload = payload;
-            Direction = PacketDirection.ClientToServer;
         }
         
        

@@ -92,7 +92,7 @@ namespace RUINORERP.PacketSpec.Models
         /// 服务运行时间
         /// </summary>
         [IgnoreMember]
-        public TimeSpan Uptime => DateTime.UtcNow - ServiceStartTime;
+        public TimeSpan Uptime => DateTime.Now - ServiceStartTime;
 
         /// <summary>
         /// 成功率

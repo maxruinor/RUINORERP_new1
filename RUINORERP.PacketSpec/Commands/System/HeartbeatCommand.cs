@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Commands;
+﻿﻿﻿using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -53,8 +53,8 @@ namespace RUINORERP.PacketSpec.Commands.System
         public HeartbeatCommand()
         {
             Priority = CommandPriority.Normal;
-            TimeoutMs = 10000; // 心跳命令超时时间10秒
-            TimestampUtc = DateTime.UtcNow;
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
         }
 
  
@@ -74,8 +74,8 @@ namespace RUINORERP.PacketSpec.Commands.System
         };
 
             Priority = CommandPriority.Normal;
-            TimeoutMs = 10000; // 心跳命令超时时间10秒
-            TimestampUtc = DateTime.UtcNow;
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
             CommandIdentifier = SystemCommands.Heartbeat;
         }
 
@@ -123,8 +123,7 @@ namespace RUINORERP.PacketSpec.Commands.System
                 {
                     SessionToken = request.SessionToken,
                     UserId = request.UserId,
-                    TimestampUtc = this.TimestampUtc,
-                    ClientTime = DateTime.UtcNow,
+                    ClientTime = DateTime.Now,
                     NetworkLatency = this.NetworkLatency,
                     ClientVersion = this.ClientVersion,
                     ResourceUsage = resourceUsage,
@@ -134,9 +133,9 @@ namespace RUINORERP.PacketSpec.Commands.System
             catch (Exception ex)
             {
                 // 发生异常时返回基本数据
-                return new
+                return new HeartbeatResponse
                 {
-                    Timestamp = this.TimestampUtc,
+                    Timestamp = DateTime.Now,
                     ErrorMessage = "Failed to collect full heartbeat data"
                 };
             }
@@ -144,23 +143,6 @@ namespace RUINORERP.PacketSpec.Commands.System
         }
 
  
-        /// <summary>
-        /// 将ResponseBase转换为ApiResponse
-        /// </summary>
-        /// <param name="baseResponse">基础响应对象</param>
-        /// <returns>ApiResponse对象</returns>
-        private ResponseBase ConvertToApiResponse(ResponseBase baseResponse)
-        {
-            var response = new ResponseBase
-            {
-                IsSuccess = baseResponse.IsSuccess,
-                Message = baseResponse.Message,
-                TimestampUtc = baseResponse.TimestampUtc,
-                RequestId = baseResponse.RequestId,
-                Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                ExecutionTimeMs = baseResponse.ExecutionTimeMs
-            };
-            return response;
-        }
+      
     }
 }

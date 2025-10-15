@@ -43,7 +43,7 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <param name="userId">用户ID</param>
         /// <param name="bizName">业务名称</param>
         /// <returns>解锁结果</returns>
-        Task<bool> UnlockDocumentsByBizNameAsync(long userId, string bizName);
+        Task<bool> UnlockDocumentsByBizNameAsync(long userId, int BillType);
 
         /// <summary>
         /// 强制解锁单据（管理员操作）

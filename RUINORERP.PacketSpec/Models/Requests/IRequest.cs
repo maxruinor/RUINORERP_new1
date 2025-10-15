@@ -12,18 +12,8 @@ public interface IRequest
     string RequestId { get; set; }
 
     /// <summary>
-    /// 请求操作类型
+    /// 请求时间戳
     /// </summary>
-    string OperationType { get; set; }
-
-    /// <summary>
-    /// 请求时间戳（UTC时间）
-    /// </summary>
-    DateTime TimestampUtc { get; set; }
-
-
-    /// <summary>
-    /// 扩展元数据（可选）
-    /// </summary>
-    Dictionary<string, object> Metadata { get; set; }
+    DateTime Timestamp { get; set; }
+ 
 }

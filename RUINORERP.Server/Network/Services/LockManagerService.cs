@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Global;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.Server.Network.Interfaces.Services;
 
@@ -129,7 +130,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="userId">用户ID</param>
         /// <param name="bizName">业务名称</param>
         /// <returns>解锁结果</returns>
-        public async Task<bool> UnlockDocumentsByBizNameAsync(long userId, string bizName)
+        public async Task<bool> UnlockDocumentsByBizNameAsync(long userId, int BillType)
         {
             try
             {
@@ -139,8 +140,8 @@ namespace RUINORERP.Server.Network.Services
                 // 查找需要解锁的单据
                 foreach (var kvp in _lockedDocuments)
                 {
-                    if (kvp.Value.LockedUserID == userId && 
-                        kvp.Value.BillData?.BizName == bizName)
+                    if (kvp.Value.LockedUserID == userId &&
+                        kvp.Value.BillData?.BizType == (BizType)BillType)
                     {
                         keysToRemove.Add(kvp.Key);
                     }
@@ -156,12 +157,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                _logger.LogInformation($"按业务类型 {bizName} 解锁了 {removedCount} 个单据");
+                _logger.LogInformation($"按业务类型 {(BizType)BillType} 解锁了 {removedCount} 个单据");
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"按业务类型 {bizName} 解锁单据时发生异常");
+                _logger.LogError(ex, $"按业务类型 {(BizType)BillType} 解锁单据时发生异常");
                 return false;
             }
         }
@@ -212,7 +213,7 @@ namespace RUINORERP.Server.Network.Services
 
                 // 记录请求信息（可以存储到数据库或缓存中）
                 _logger.LogInformation($"用户 {requestInfo.RequestUserID} 请求解锁单据 {requestInfo.BillID}");
-                
+
                 // 这里可以添加更多业务逻辑，比如发送通知给锁定用户等
                 return true;
             }
@@ -234,7 +235,7 @@ namespace RUINORERP.Server.Network.Services
             {
                 // 记录拒绝信息（可以存储到数据库或缓存中）
                 _logger.LogInformation($"用户 {refuseInfo.RefuseUserID} 拒绝了解锁请求");
-                
+
                 // 这里可以添加更多业务逻辑，比如发送通知给请求用户等
                 return true;
             }
@@ -244,7 +245,7 @@ namespace RUINORERP.Server.Network.Services
                 return false;
             }
         }
-        
+
         /// <summary>
         /// 检查用户是否有权限修改单据
         /// </summary>
@@ -259,11 +260,11 @@ namespace RUINORERP.Server.Network.Services
                 // 未被锁定，可以修改
                 return true;
             }
-            
+
             // 检查是否是锁定该单据的用户
             return lockInfo.LockedUserID == userId;
         }
-        
+
         /// <summary>
         /// 获取锁定单据的用户ID
         /// </summary>

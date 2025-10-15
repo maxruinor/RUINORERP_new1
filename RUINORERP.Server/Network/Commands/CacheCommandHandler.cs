@@ -407,19 +407,9 @@ namespace RUINORERP.Server.Network.Commands
                     return BaseCommand<IResponse>.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
                 }
+               
 
-                // 直接处理客户端缓存删除，移除对ServerCacheSyncService的依赖
-                var deleteRequestForSync = new CacheRequest
-                {
-                    TableName = deleteRequest.TableName,
-                    OperationType = "Remove",
-                    //PrimaryKeyName = deleteRequest.PrimaryKeyName,
-                    //PrimaryKeyValue = deleteRequest.PrimaryKeyValue,
-                    //Data = deleteRequest.Data,
-                    RequestId = deleteRequest.RequestId
-                };
-
-                bool deleteSuccess = await HandleClientCacheUpdateAsync(executionContext.SessionId, deleteRequestForSync);
+                bool deleteSuccess = await HandleClientCacheUpdateAsync(executionContext.SessionId, deleteRequest);
 
                 if (!deleteSuccess)
                 {
@@ -1159,10 +1149,9 @@ namespace RUINORERP.Server.Network.Commands
                     return false;
                 }
 
-                logger.LogInformation($"处理客户端缓存更新: 会话={sessionId}, 表名={request.TableName}, 操作={request.OperationType}");
-
+          
                 // 根据操作类型处理缓存变更
-                switch (request.OperationType?.ToLower())
+                switch (request.Operation)
                 {
                     case "set":
                     case "update":
@@ -1184,7 +1173,7 @@ namespace RUINORERP.Server.Network.Commands
                         await HandleClearOperationAsync(request);
                         break;
                     default:
-                        logger.LogWarning($"不支持的缓存操作类型: {request.OperationType}");
+                        logger.LogWarning($"不支持的缓存操作类型: {request.Operation}");
                         return false;
                 }
 

@@ -98,10 +98,6 @@ namespace RUINORERP.PacketSpec.Validation
                 failures.Add(new ValidationFailure(nameof(command.CommandIdentifier), "命令标识符不能为默认值"));
             }
 
-            if (command.TimeoutMs <= 0)
-            {
-                failures.Add(new ValidationFailure(nameof(command.TimeoutMs), "超时时间必须大于0"));
-            }
 
             return await Task.FromResult(new ValidationResult(failures));
         }

@@ -66,7 +66,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
                 Username = username,
                 Password = password,
                 ClientVersion = ProtocolVersion.Current,
-                LoginTime = DateTime.UtcNow,
+                LoginTime = DateTime.Now,
             };
         }
 

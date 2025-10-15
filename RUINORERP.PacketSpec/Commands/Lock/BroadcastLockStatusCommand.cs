@@ -1,23 +1,19 @@
-﻿﻿using RUINORERP.PacketSpec.Enums.Core;
-using RUINORERP.PacketSpec.Models;
-using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Responses;
-using System.Collections.Generic;
+﻿﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation.Results;
-using MessagePack;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
     /// <summary>
-    /// 广播锁状态命令 - 服务器向所有客户端广播锁状态变化
+    /// 广播锁定状态命令
     /// </summary>
-    [PacketCommand("BroadcastLockStatus", CommandCategory.Lock)]
-    public class BroadcastLockStatusCommand : BaseCommand
+    public class BroadcastLockStatusCommand : BaseCommand<BroadcastLockRequest, BroadcastLockResponse>
     {
- 
-
         /// <summary>
         /// 锁定的单据信息列表
         /// </summary>
@@ -28,8 +24,9 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// </summary>
         public BroadcastLockStatusCommand()
         {
-            Direction = PacketDirection.ServerToClient;
-            TimeoutMs = 30000; // 默认超时时间30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
+            // 注意：移除了 Direction 的设置，因为方向已由 PacketModel 统一控制
             CommandIdentifier = LockCommands.BroadcastLockStatus;
         }
 
@@ -40,8 +37,9 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         public BroadcastLockStatusCommand(List<LockedInfo> lockedDocuments)
         {
             LockedDocuments = lockedDocuments;
-            Direction = PacketDirection.ServerToClient;
-            TimeoutMs = 30000; // 默认超时时间30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
+            // 注意：移除了 Direction 的设置，因为方向已由 PacketModel 统一控制
             CommandIdentifier = LockCommands.BroadcastLockStatus;
         }
 

@@ -41,7 +41,6 @@ namespace RUINORERP.PacketSpec.Commands.Workflow
         public WorkflowApproveCommand()
         {
             Approved = true; // 默认审批通过
-            Direction = PacketDirection.ClientToServer;
             CommandIdentifier = WorkflowCommands.WorkflowApproval;
         }
 
@@ -58,7 +57,6 @@ namespace RUINORERP.PacketSpec.Commands.Workflow
             TaskId = taskId;
             Approved = approved;
             ApprovalComment = approvalComment;
-            Direction = PacketDirection.ClientToServer;
             CommandIdentifier = WorkflowCommands.WorkflowApproval;
         }
 

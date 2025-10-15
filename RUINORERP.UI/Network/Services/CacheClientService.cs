@@ -261,8 +261,6 @@ namespace RUINORERP.UI.Network.Services
                 var request = new CacheRequest
                 {
                     TableName = e.Key,
-                    OperationType = e.Operation.ToString(),
-                   // Data = e.Value,
                     RequestId = IdGenerator.GenerateRequestId(CacheCommands.CacheUpdate)
                 };
 
@@ -274,9 +272,9 @@ namespace RUINORERP.UI.Network.Services
                 };
 
                 // 发送命令到服务器
-               // await _comm.SendOneWayCommandAsync<CacheRequest>(command, CancellationToken.None);
+                // await _comm.SendOneWayCommandAsync<CacheRequest>(command, CancellationToken.None);
 
-                _log?.LogInformation($"客户端缓存变更已同步到服务器: {e.Key}, 操作: {e.Operation}");
+                _log?.LogInformation($"客户端缓存变更已同步到服务器: {e.Key}, 操作: {e.Operation.ToString()}");
             }
             catch (Exception ex)
             {
@@ -411,14 +409,14 @@ namespace RUINORERP.UI.Network.Services
                 var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, ct, 30000);
 
                 // 检查响应是否成功
-                if (!commandResponse.IsSuccess)
+                if (!commandResponse.ResponseData.IsSuccess)
                 {
-                    return BaseCommand<CacheResponse>.CreateError(commandResponse.Message)
-                        .WithMetadata("RequestId", commandResponse.RequestId ?? string.Empty);
+                    return BaseCommand<CacheResponse>.CreateError(commandResponse.ResponseData.ErrorMessage)
+                        .WithMetadata("RequestId", commandResponse.ResponseData.RequestId ?? string.Empty);
                 }
 
                 // 缓存请求成功后处理数据
-                if (commandResponse.IsSuccess && commandResponse.ResponseData != null)
+                if (commandResponse.ResponseData.IsSuccess && commandResponse.ResponseData != null)
                 {
                     var cacheResponse = commandResponse.ResponseData;
 
@@ -437,8 +435,8 @@ namespace RUINORERP.UI.Network.Services
                 else
                 {
                     _log?.LogWarning("缓存请求失败，表名={0}，错误: {1}",
-                        request.TableName, commandResponse.Message);
-                    MainForm.Instance.PrintInfoLog($"接收缓存失败: {commandResponse.Message ?? "未知错误"}");
+                        request.TableName, commandResponse.ResponseData.ErrorMessage);
+                    MainForm.Instance.PrintInfoLog($"接收缓存失败: {commandResponse.ResponseData.ErrorMessage ?? "未知错误"}");
                 }
 
                 return commandResponse;
@@ -1128,7 +1126,7 @@ namespace RUINORERP.UI.Network.Services
                 var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, ct, 30000);
 
                 // 处理成功响应
-                if (commandResponse.IsSuccess && commandResponse.ResponseData != null)
+                if (commandResponse.ResponseData.IsSuccess && commandResponse.ResponseData != null)
                 {
                     var cacheResponse = commandResponse.ResponseData;
 
@@ -1142,7 +1140,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 else
                 {
-                    _log?.LogWarning("处理表 {0} 的缓存请求失败: {1}", tableName, commandResponse.Message);
+                    _log?.LogWarning("处理表 {0} 的缓存请求失败: {1}", tableName, commandResponse.ResponseData.ErrorMessage);
                 }
 
                 return commandResponse;

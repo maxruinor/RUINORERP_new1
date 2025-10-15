@@ -424,7 +424,7 @@ namespace RUINORERP.UI.Network
         /// <typeparam name="TResponse">响应数据类型</typeparam>
         /// <param name="command">命令对象</param>
         /// <param name="ct">取消令牌</param>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="timeoutMs">请求超时时间（毫秒）</param>
         /// <returns>响应数据对象</returns>
         private async Task<PacketModel> SendRequestAsync<TRequest, TResponse>(
             BaseCommand<TRequest, TResponse> command,
@@ -968,20 +968,7 @@ namespace RUINORERP.UI.Network
             }
         }
 
-        /// <summary>
-        /// 初始化命令对象
-        /// </summary>
-        /// <typeparam name="TData">命令数据类型</typeparam>
-        /// <param name="commandId">命令标识符</param>
-        /// <param name="data">命令数据</param>
-        /// <returns>初始化后的GenericCommand对象</returns>
-        private async Task<GenericCommand<TData>> InitializeCommandAsync<TData>(CommandId commandId, TData data)
-        {
-            var command = new GenericCommand<TData>(commandId, data);
-            command.TimeoutMs = _networkConfig.DefaultRequestTimeoutMs; // 使用网络配置中的默认超时时间
-            command.UpdateTimestamp();
-            return command;
-        }
+
 
         /// <summary>
         /// 安全连接异步方法
@@ -1251,6 +1238,7 @@ namespace RUINORERP.UI.Network
                 // 构建数据包
                 var packet = PacketBuilder.Create()
                     .WithCommand(command.CommandIdentifier)
+                    .WithDirection(PacketDirection.Request) // 明确设置请求方向
                     .WithMessagePackData(command)
                     .WithRequestId(command.Request.RequestId)
                     .WithTimeout(timeoutMs)
@@ -1550,9 +1538,6 @@ namespace RUINORERP.UI.Network
 
             var commandResponse = BaseCommand<TResponse>.Success(responseData, (responseData as ResponseBase)?.Message ?? "操作成功");
             commandResponse.CommandId = command.CommandIdentifier;
-            commandResponse.RequestId = command.Request?.RequestId;
-            commandResponse.ExecutionContext = packet.ExecutionContext;
-
             return commandResponse;
         }
 

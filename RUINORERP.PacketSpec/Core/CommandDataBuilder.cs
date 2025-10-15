@@ -27,9 +27,7 @@ namespace RUINORERP.PacketSpec.Core
             var command = new BaseCommand<TRequest, TResponse>(commandId, request);
             config?.Invoke(command);
             request.RequestId = IdGenerator.GenerateRequestId(commandId);
-            // 自动设置常用属性
-            command.TimeoutMs = command.TimeoutMs > 0 ? command.TimeoutMs : 30000;
-            command.UpdateTimestamp();
+    
             
             return command;
         }
@@ -45,8 +43,6 @@ namespace RUINORERP.PacketSpec.Core
             var command = new GenericCommand<TPayload>(commandId, payload);
             config?.Invoke(command);
             
-            command.TimeoutMs = command.TimeoutMs > 0 ? command.TimeoutMs : 30000;
-            command.UpdateTimestamp();
             
             return command;
         }
@@ -62,8 +58,7 @@ namespace RUINORERP.PacketSpec.Core
             var command = new GenericCommand<object>(commandId, data);
             config?.Invoke(command);
             
-            command.TimeoutMs = command.TimeoutMs > 0 ? command.TimeoutMs : 30000;
-            command.UpdateTimestamp();
+    
             
             return command;
         }
@@ -78,8 +73,7 @@ namespace RUINORERP.PacketSpec.Core
             var request = new TokenValidationRequest { Token = token };
             return BuildGenericCommand(
                 AuthenticationCommands.ValidateToken,
-                request,
-                cmd => cmd.TimeoutMs = 15000
+                request
             );
         }
         
@@ -97,11 +91,8 @@ namespace RUINORERP.PacketSpec.Core
 #pragma warning restore CS0618 // 类型或成员已过时
             return BuildGenericCommand(
                 AuthenticationCommands.RefreshToken,
-                request,
-                cmd => cmd.TimeoutMs = 20000
+                request
             );
         }
     }
-
-
 }

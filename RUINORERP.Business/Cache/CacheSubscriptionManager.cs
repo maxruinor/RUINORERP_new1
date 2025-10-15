@@ -227,7 +227,7 @@ namespace RUINORERP.Business.CommService
                     var request = new CacheRequest
                     {
                         TableName = tableName,
-                        OperationType = "Cache.Subscribe"
+                        Operation =CacheOperation.Get
                     };
 
                     // 发送订阅命令（通过反射调用，避免直接依赖）
@@ -299,7 +299,7 @@ namespace RUINORERP.Business.CommService
                     var request = new CacheRequest
                     {
                         TableName = tableName,
-                        OperationType = "Cache.Unsubscribe"
+                        //Operation = CacheOperation.un "Cache.Unsubscribe"
                     };
 
                     // 发送取消订阅命令（通过反射调用，避免直接依赖）

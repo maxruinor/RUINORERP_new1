@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -185,7 +185,7 @@ namespace RUINORERP.PacketSpec.Commands
                         AssemblyName = assemblyName,
                         CommandTypes = new Dictionary<CommandId, Type>(cacheEntry.ScanResults),
                         HandlerTypes = new List<Type>(), // 处理器类型需要单独扫描
-                        ScanTime = DateTime.UtcNow,
+                        ScanTime = DateTime.Now,
                         ScanDurationMs = stopwatch.ElapsedMilliseconds,
                         AssemblyMetadata = cacheEntry.AssemblyInfo
                     };
@@ -207,7 +207,7 @@ namespace RUINORERP.PacketSpec.Commands
                 result.ScanDurationMs = stopwatch.ElapsedMilliseconds;
                 
                 // 更新最后扫描时间
-                _lastScanTime.AddOrUpdate(assemblyName, DateTime.UtcNow, (key, old) => DateTime.UtcNow);
+                _lastScanTime.AddOrUpdate(assemblyName, DateTime.Now, (key, old) => DateTime.Now);
                 
                 _logger?.LogInformation("智能扫描完成（实际扫描）: {AssemblyName}, 发现 {CommandCount} 个命令, {HandlerCount} 个处理器",
                     assemblyName, result.CommandTypes.Count, result.HandlerTypes.Count);
@@ -236,7 +236,7 @@ namespace RUINORERP.PacketSpec.Commands
                 AssemblyName = assembly.GetName().Name,
                 CommandTypes = new Dictionary<CommandId, Type>(),
                 HandlerTypes = new List<Type>(),
-                ScanTime = DateTime.UtcNow,
+                ScanTime = DateTime.Now,
         
             };
             
@@ -389,7 +389,7 @@ namespace RUINORERP.PacketSpec.Commands
             var stats = new ScanStatistics
             {
                 AssemblyName = assemblyName,
-                ScanTime = DateTime.UtcNow,
+                ScanTime = DateTime.Now,
                 CommandsFound = commandCount,
                 HandlersFound = handlerCount,
                 Success = success,
@@ -493,7 +493,7 @@ namespace RUINORERP.PacketSpec.Commands
                 AssemblyName = assemblyName,
                 CommandsFound = commandCount,
                 HandlersFound = handlerCount,
-                ScanTime = DateTime.UtcNow,
+                ScanTime = DateTime.Now,
                 Success = true
             };
 
@@ -527,7 +527,7 @@ namespace RUINORERP.PacketSpec.Commands
             if (!lastScan.HasValue)
                 return true;
 
-            return DateTime.UtcNow - lastScan.Value >= minInterval;
+            return DateTime.Now - lastScan.Value >= minInterval;
         }
 
     
@@ -750,7 +750,7 @@ namespace RUINORERP.PacketSpec.Commands
             var result = new ScanResult
             {
                 AssemblyName = assemblies?.FirstOrDefault()?.GetName().Name ?? "Unknown",
-                ScanTime = DateTime.UtcNow,
+                ScanTime = DateTime.Now,
                 CommandTypes = new Dictionary<CommandId, Type>(),
                 HandlerTypes = new List<Type>()
             };
@@ -928,7 +928,7 @@ namespace RUINORERP.PacketSpec.Commands
             var result = new ScanResult
             {
                 AssemblyName = assemblies?.FirstOrDefault()?.GetName().Name ?? "Unknown",
-                ScanTime = DateTime.UtcNow,
+                ScanTime = DateTime.Now,
                 CommandTypes = new Dictionary<CommandId, Type>(),
                 HandlerTypes = new List<Type>()
             };

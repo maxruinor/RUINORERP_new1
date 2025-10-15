@@ -1,24 +1,20 @@
-﻿﻿﻿﻿using RUINORERP.Model.CommonModel;
-using RUINORERP.PacketSpec.Models;
-using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Enums.Core;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation.Results;
-using MessagePack;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
     /// <summary>
-    /// 申请锁定单据命令 - 客户端向服务器申请锁定业务单据
+    /// 单据锁定申请命令
     /// </summary>
-    [PacketCommand("DocumentLockApply", CommandCategory.Lock)]
-    public class DocumentLockApplyCommand : BaseCommand
+    public class DocumentLockApplyCommand : BaseCommand<DocumentLockRequest, DocumentLockResponse>
     {
- 
-
         /// <summary>
         /// 单据ID
         /// </summary>
@@ -33,19 +29,15 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// 菜单ID
         /// </summary>
         public long MenuId { get; set; }
-        
-        /// <summary>
-        /// 分布 式锁实例
-        /// </summary>
-        public static IDistributedLock DistributedLock { get; set; } = new LocalDistributedLock();
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public DocumentLockApplyCommand()
         {
-            Direction = PacketDirection.ClientToServer;
-            TimeoutMs = 30000; // 默认超时时间30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
+            // 注意：移除了 Direction 的设置，因为方向已由 PacketModel 统一控制
             CommandIdentifier = LockCommands.RequestLock;
         }
 
@@ -60,8 +52,9 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             BillId = billId;
             BillData = billData;
             MenuId = menuId;
-            Direction = PacketDirection.ClientToServer;
-            TimeoutMs = 30000; // 默认超时时间30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
+            // 注意：移除了 Direction 的设置，因为方向已由 PacketModel 统一控制
             CommandIdentifier = LockCommands.RequestLock;
         }
 
@@ -92,36 +85,6 @@ namespace RUINORERP.PacketSpec.Commands.Lock
 
       
         
-        /// <summary>
-        /// 尝试获取分布式锁
-        /// </summary>
-        /// <param name="lockKey">锁的键</param>
-        /// <param name="timeout">超时时间</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>如果成功获取锁则返回true，否则返回false</returns>
-        public static async Task<bool> TryAcquireLockAsync(string lockKey, TimeSpan timeout, CancellationToken cancellationToken = default)
-        {
-            return await DistributedLock.TryAcquireAsync(lockKey, timeout, cancellationToken);
-        }
         
-        /// <summary>
-        /// 释放分布式锁
-        /// </summary>
-        /// <param name="lockKey">锁的键</param>
-        /// <returns>任务</returns>
-        public static async Task ReleaseLockAsync(string lockKey)
-        {
-            await DistributedLock.ReleaseAsync(lockKey);
-        }
-        
-        /// <summary>
-        /// 检查锁是否存在
-        /// </summary>
-        /// <param name="lockKey">锁的键</param>
-        /// <returns>如果锁存在则返回true，否则返回false</returns>
-        public static async Task<bool> IsLockExistsAsync(string lockKey)
-        {
-            return await DistributedLock.ExistsAsync(lockKey);
-        }
     }
 }

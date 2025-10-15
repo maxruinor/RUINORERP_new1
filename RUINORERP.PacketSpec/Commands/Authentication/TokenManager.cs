@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -61,7 +61,11 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         public async Task<TokenInfo> GenerateAndStoreTokenAsync(string userId, string userName, IDictionary<string, object> claims = null)
         {
             var token = _tokenService.GenerateToken(userId, userName, claims);
-            var tokenInfo = new TokenInfo { AccessToken = token };
+            var tokenInfo = new TokenInfo 
+            { 
+                AccessToken = token,
+                ExpiresAt = DateTime.Now.AddHours(8) // 默认8小时过期
+            };
             await _tokenStorage.SetTokenAsync(tokenInfo);
             return tokenInfo;
         }

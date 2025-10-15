@@ -90,7 +90,7 @@ namespace RUINORERP.Server.Network.Commands
                     SavedFileName = savedFileName,
                     FilePath = filePath,
                     FileSize = uploadRequest.FileData.Length,
-                    UploadTime = DateTime.UtcNow,
+                    UploadTime = DateTime.Now,
                     UploaderSessionId = session.SessionID,
                     UploaderUserName = _sessionService.GetSessionProperty<string>(session.SessionID, "UserName", "Unknown"),
                     ContentType = uploadRequest.ContentType
@@ -108,7 +108,7 @@ namespace RUINORERP.Server.Network.Commands
                     FileId = fileId,
                     FileName = uploadRequest.FileName,
                     FileSize = uploadRequest.FileData.Length,
-                    UploadTime = DateTime.UtcNow
+                    UploadTime = DateTime.Now
                 });
             }
             catch (Exception ex)
@@ -246,7 +246,7 @@ namespace RUINORERP.Server.Network.Commands
                     Message = "获取文件列表成功",
                     Files = fileList,
                     Count = fileList.Count,
-                    Timestamp = DateTime.UtcNow
+                    Timestamp = DateTime.Now
                 });
             }
             catch (Exception ex)

@@ -1,34 +1,24 @@
-﻿﻿﻿﻿using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Responses;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Text;
+﻿﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO.Pipelines;
-using RUINORERP.PacketSpec.Enums.Core;
+using System.Threading;
+using System.Threading.Tasks;
 using FluentValidation.Results;
-using MessagePack;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models.Requests;
 
 namespace RUINORERP.PacketSpec.Commands.FileTransfer
 {
     /// <summary>
-    /// 文件上传命令 - 客户端向服务器上传文件
+    /// 文件上传命令
     /// </summary>
-    [PacketCommand("FileUpload", CommandCategory.File)]
-    public class FileUploadCommand : BaseCommand
+    public class FileUploadCommand : BaseCommand<FileUploadRequest, FileUploadResponse>
     {
- 
-
         /// <summary>
         /// 文件名
         /// </summary>
         public string FileName { get; set; }
-
-        /// <summary>
-        /// 文件大小（字节）
-        /// </summary>
-        public long FileSize { get; set; }
 
         /// <summary>
         /// 文件内容管道读取器
@@ -45,7 +35,7 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
         /// </summary>
         public FileUploadCommand()
         {
-            Direction = PacketDirection.ClientToServer;
+            // 注意：移除了 Direction 的设置，因为方向已由 PacketModel 统一控制
             CommandIdentifier = FileCommands.FileUpload;
         }
 
@@ -60,7 +50,7 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
             FileName = fileName;
             FileContentReader = fileContentReader;
             TargetPath = targetPath;
-            Direction = PacketDirection.ClientToServer;
+            // 注意：移除了 Direction 的设置，因为方向已由 PacketModel 统一控制
             CommandIdentifier = FileCommands.FileUpload;
         }
 

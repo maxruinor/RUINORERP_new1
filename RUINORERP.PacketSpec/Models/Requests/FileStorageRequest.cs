@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -37,7 +37,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.TimestampUtc = DateTime.UtcNow;
+            this.Timestamp = DateTime.Now;
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.TimestampUtc = DateTime.UtcNow;
+            this.Timestamp = DateTime.Now;
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.TimestampUtc = DateTime.UtcNow;
+            this.Timestamp = DateTime.Now;
         }
 
         /// <summary>

@@ -1,20 +1,17 @@
-﻿﻿using FluentValidation.Results;
-using RUINORERP.PacketSpec.Enums.Core;
-using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Responses;
-using System.Threading;
+﻿﻿using System.Threading;
 using System.Threading.Tasks;
-using MessagePack;
+using FluentValidation.Results;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
+
 namespace RUINORERP.PacketSpec.Commands.Lock
 {
     /// <summary>
-    /// 强制解锁命令 - 管理员强制解锁业务单据
+    /// 强制解锁命令
     /// </summary>
-    [PacketCommand("ForceUnlock", CommandCategory.Lock)]
-    public class ForceUnlockCommand : BaseCommand
+    public class ForceUnlockCommand : BaseCommand<ForceUnlockRequest, ForceUnlockResponse>
     {
- 
-
         /// <summary>
         /// 单据ID
         /// </summary>
@@ -25,8 +22,9 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         /// </summary>
         public ForceUnlockCommand()
         {
-            Direction = PacketDirection.ClientToServer;
-            TimeoutMs = 30000; // 默认超时时间30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
+            // 注意：移除了 Direction 的设置，因为方向已由 PacketModel 统一控制
             CommandIdentifier = LockCommands.ForceReleaseLock;
         }
 
@@ -37,8 +35,9 @@ namespace RUINORERP.PacketSpec.Commands.Lock
         public ForceUnlockCommand(long billId)
         {
             BillId = billId;
-            Direction = PacketDirection.ClientToServer;
-            TimeoutMs = 30000; // 默认超时时间30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
+            // 注意：移除了 Direction 的设置，因为方向已由 PacketModel 统一控制
             CommandIdentifier = LockCommands.ForceReleaseLock;
         }
 

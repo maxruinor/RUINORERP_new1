@@ -7,7 +7,8 @@ using System.Text;
 namespace RUINORERP.PacketSpec.Models.Responses.Cache
 {
     /// <summary>
-    /// 共享的缓存数据类型定义（客户端和服务器共用）- 非泛型版本
+    /// 统一缓存数据模型 - 支持多种缓存操作的数据存储
+    /// 与统一缓存请求响应模型配套使用
     /// </summary>
     [MessagePackObject]
     public class CacheData
@@ -16,19 +17,19 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// 表名
         /// </summary>
         [Key(0)]
-        public string TableName { get; set; }
+        public string TableName { get; set; } = string.Empty;
 
         /// <summary>
         /// 缓存时间
         /// </summary>
         [Key(1)]
-        public DateTime CacheTime { get; set; }
+        public DateTime CacheTime { get; set; } = DateTime.Now;
 
         /// <summary>
         /// 过期时间
         /// </summary>
         [Key(2)]
-        public DateTime ExpirationTime { get; set; }
+        public DateTime ExpirationTime { get; set; } = DateTime.Now.AddDays(1);
 
         /// <summary>
         /// 数据（使用object存储，支持动态类型）
@@ -40,17 +41,58 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// 版本
         /// </summary>
         [Key(4)]
-        public string Version { get; set; }
+        public string Version { get; set; } = "1.0.0";
 
         /// <summary>
         /// 是否有更多数据
         /// </summary>
         [Key(5)]
-        public bool HasMoreData { get; set; }
+        public bool HasMoreData { get; set; } = false;
+
+        /// <summary>
+        /// 创建缓存数据
+        /// </summary>
+        public static CacheData Create(string tableName, object data, TimeSpan? expiration = null)
+        {
+            return new CacheData
+            {
+                TableName = tableName,
+                Data = data,
+                CacheTime = DateTime.Now,
+                ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1)),
+                Version = "1.0.0"
+            };
+        }
+
+        /// <summary>
+        /// 检查缓存是否过期
+        /// </summary>
+        public bool IsExpired()
+        {
+            return DateTime.Now > ExpirationTime;
+        }
+
+        /// <summary>
+        /// 获取数据（类型安全）
+        /// </summary>
+        public T GetData<T>()
+        {
+            if (Data == null)
+                return default;
+
+            try
+            {
+                return CacheDataConverter.ConvertToType<T>(Data);
+            }
+            catch
+            {
+                return default;
+            }
+        }
     }
 
     /// <summary>
-    /// 分页缓存数据 - 非泛型版本
+    /// 统一分页缓存数据模型
     /// </summary>
     [MessagePackObject]
     public class PagedCacheData
@@ -65,24 +107,59 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// 页索引
         /// </summary>
         [Key(1)]
-        public int PageIndex { get; set; }
+        public int PageIndex { get; set; } = 0;
 
         /// <summary>
         /// 页大小
         /// </summary>
         [Key(2)]
-        public int PageSize { get; set; }
+        public int PageSize { get; set; } = 20;
 
         /// <summary>
         /// 总记录数
         /// </summary>
         [Key(3)]
-        public int TotalCount { get; set; }
+        public int TotalCount { get; set; } = 0;
 
         /// <summary>
         /// 总页数
         /// </summary>
         [Key(4)]
-        public int TotalPages { get; set; }
+        public int TotalPages { get; set; } = 0;
+
+        /// <summary>
+        /// 创建分页缓存数据
+        /// </summary>
+        public static PagedCacheData Create(CacheData cacheData, int pageIndex, int pageSize, int totalCount)
+        {
+            return new PagedCacheData
+            {
+                CacheData = cacheData,
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+            };
+        }
+
+        /// <summary>
+        /// 是否第一页
+        /// </summary>
+        public bool IsFirstPage => PageIndex <= 0;
+
+        /// <summary>
+        /// 是否最后一页
+        /// </summary>
+        public bool IsLastPage => PageIndex >= TotalPages - 1;
+
+        /// <summary>
+        /// 是否有上一页
+        /// </summary>
+        public bool HasPreviousPage => PageIndex > 0;
+
+        /// <summary>
+        /// 是否有下一页
+        /// </summary>
+        public bool HasNextPage => PageIndex < TotalPages - 1;
     }
 }

@@ -44,7 +44,7 @@ namespace RUINORERP.Server.Network.StateManagement
                 HandlerId = handler.HandlerId,
                 HandlerName = handler.Name,
                 Status = status,
-                LastUpdated = DateTime.UtcNow,
+                LastUpdated = DateTime.Now,
                 AdditionalInfo = additionalInfo,
                 Statistics = handler.GetStatistics()
             };
@@ -83,7 +83,7 @@ namespace RUINORERP.Server.Network.StateManagement
             {
                 SessionId = sessionId,
                 State = state,
-                LastUpdated = DateTime.UtcNow,
+                LastUpdated = DateTime.Now,
                 UserInfo = userInfo
             };
 
@@ -152,7 +152,7 @@ namespace RUINORERP.Server.Network.StateManagement
             if (!activeSessions.Any()) return 0;
             
             // 简化处理，实际应该跟踪会话开始时间
-            return activeSessions.Average(s => (DateTime.UtcNow - s.LastUpdated).TotalMinutes);
+            return activeSessions.Average(s => (DateTime.Now - s.LastUpdated).TotalMinutes);
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace RUINORERP.Server.Network.StateManagement
         /// <param name="state">状态对象</param>
         private void CleanupExpiredStates(object state)
         {
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             
             // 清理会话状态
             var expiredSessions = _sessionStates.Where(kvp => 
@@ -183,7 +183,7 @@ namespace RUINORERP.Server.Network.StateManagement
         public string GetSystemStateReport()
         {
             var report = $"=== 系统状态报告 ===\n";
-            report += $"生成时间: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}\n\n";
+            report += $"生成时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n\n";
             
             // 处理器状态
             report += "== 处理器状态 ==\n";

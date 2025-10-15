@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Commands.Cache;
+using RUINORERP.PacketSpec.Models;
 
 namespace RUINORERP.Business.Cache
 {

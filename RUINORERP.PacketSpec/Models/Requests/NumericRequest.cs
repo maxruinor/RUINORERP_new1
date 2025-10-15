@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Validation;
@@ -64,7 +64,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 Value = value,
                 RequestId = Guid.NewGuid().ToString(),
-                TimestampUtc = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
         }
 
@@ -89,7 +89,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 Value = Convert.ToInt32(value),
                 RequestId = Guid.NewGuid().ToString(),
-                TimestampUtc = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
         }
 

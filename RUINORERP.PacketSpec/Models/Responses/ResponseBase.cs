@@ -1,4 +1,4 @@
-﻿using MessagePack;
+using MessagePack;
 using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
@@ -38,10 +38,10 @@ namespace RUINORERP.PacketSpec.Models.Responses
         public string Message { get; set; }
 
         /// <summary>
-        /// 响应时间戳（UTC时间）
+        /// 响应时间戳
         /// </summary>
         [Key(4)]
-        public DateTime TimestampUtc { get; set; }
+        public DateTime Timestamp { get; set; }
 
         /// <summary>
         /// 请求标识
@@ -67,7 +67,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// </summary>
         public ResponseBase()
         {
-            TimestampUtc = DateTime.UtcNow;
+            Timestamp = DateTime.Now;
             Metadata = new Dictionary<string, object>();
         }
 
@@ -111,7 +111,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = true,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
         }
 
@@ -127,7 +127,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
         }
 
@@ -149,7 +149,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
 
             // 添加详细的验证错误信息到元数据
@@ -212,7 +212,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.TimestampUtc = DateTime.UtcNow;
+            this.Timestamp = DateTime.Now;
             this.ExtraData = new Dictionary<string, object>();
         }
 
@@ -231,9 +231,9 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 Data = data,
                 IsSuccess = true,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow,
+                Timestamp = DateTime.Now,
                 TotalCount = totalCount,
-                DataVersion = dataVersion ?? DateTime.UtcNow.Ticks.ToString()
+                DataVersion = dataVersion ?? DateTime.Now.Ticks.ToString()
             };
         }
 
@@ -250,7 +250,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow,
+                Timestamp = DateTime.Now,
                 ExtraData = extraData ?? new Dictionary<string, object>()
             };
         }
@@ -267,7 +267,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
         }
 
@@ -299,7 +299,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow,
+                Timestamp = DateTime.Now,
                 ExtraData = extraData
             };
         }
@@ -328,7 +328,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 Data = data,
                 IsSuccess = true,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow,
+                Timestamp = DateTime.Now,
                 TotalCount = totalCount,
                 ExtraData = extraData
             };

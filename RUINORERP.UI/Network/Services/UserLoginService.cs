@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -78,17 +79,24 @@ namespace RUINORERP.UI.Network.Services
                     loginCommand, ct);
 
                 // 检查响应是否成功
-                if (!commandResponse.IsSuccess)
+                if (!commandResponse.ResponseData.IsSuccess)
                 {
-                    return new BaseCommand<LoginResponse>
+                    // 检查是否是时间错误
+                    var errorCode = commandResponse.GetMetadata<string>("ErrorCode");
+                    if (errorCode == "TIME_MISMATCH")
                     {
-                        Message = commandResponse.Message,
-                        RequestId = commandResponse.RequestId
-                    };
+                        // 时间不匹配错误，提示用户校准系统时间
+                        return BaseCommand<LoginResponse>.CreateError(
+                            "客户端时间与服务器时间差异过大，请校准系统时间后重试",
+                            UnifiedErrorCodes.Command_ValidationFailed.Code)
+                            .WithMetadata("ErrorCode", "TIME_MISMATCH");
+                    }
+
+                    return BaseCommand<LoginResponse>.CreateError(commandResponse.ResponseData.ErrorMessage);
                 }
 
                 // 登录成功后处理Token - 使用简化版TokenManager
-                if (commandResponse.IsSuccess && commandResponse.ResponseData != null)
+                if (commandResponse.ResponseData.IsSuccess && commandResponse.ResponseData != null)
                 {
                     var loginResponse = commandResponse.ResponseData;
 
@@ -98,7 +106,7 @@ namespace RUINORERP.UI.Network.Services
                         await _tokenManager.TokenStorage.SetTokenAsync(loginResponse.Token);
 
                         _log?.LogInformation("登录成功，Token已保存 - 用户: {Username}, 请求ID: {RequestId}",
-                            username, commandResponse.RequestId);
+                            username, commandResponse.ResponseData.RequestId);
 
                         MainForm.Instance.AppContext.SessionId = loginResponse.SessionId;
 
@@ -117,13 +125,13 @@ namespace RUINORERP.UI.Network.Services
                     else
                     {
                         _log?.LogWarning("登录响应中未包含有效的Token信息 - 用户: {Username}, 请求ID: {RequestId}",
-                            username, commandResponse.RequestId);
+                            username, commandResponse.ResponseData.RequestId);
                     }
                 }
                 else
                 {
                     _log?.LogWarning("登录失败 - 用户: {Username}, 错误: {ErrorMessage}",
-                        username, commandResponse.ErrorMessage);
+                        username, commandResponse.ResponseData.ErrorMessage);
                 }
 
                 return commandResponse;
@@ -149,9 +157,9 @@ namespace RUINORERP.UI.Network.Services
 
             return new ResponseBase<LoginResponse>
             {
-                Message = commandResponse.Message,
+                Message = commandResponse.ResponseData.Message,
                 Data = commandResponse.ResponseData,
-                RequestId = commandResponse.RequestId
+                RequestId = commandResponse.ResponseData.RequestId
             };
         }
 

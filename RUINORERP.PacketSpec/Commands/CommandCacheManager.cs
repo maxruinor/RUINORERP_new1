@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -204,8 +204,8 @@ namespace RUINORERP.PacketSpec.Commands
                 HandlerType = handlerType,
                 HandlerName = handlerType.Name,
                 AssemblyName = handlerType.Assembly.GetName().Name,
-                CreatedTime = DateTime.UtcNow,
-                LastAccessTime = DateTime.UtcNow,
+                CreatedTime = DateTime.Now,
+                LastAccessTime = DateTime.Now,
                 AccessCount = 0
             };
             
@@ -286,7 +286,7 @@ namespace RUINORERP.PacketSpec.Commands
                 // 检查缓存有效性
                 if (await IsCacheValidAsync(existingEntry))
                 {
-                    existingEntry.LastAccessTime = DateTime.UtcNow;
+                    existingEntry.LastAccessTime = DateTime.Now;
                     existingEntry.AccessCount++;
                     return existingEntry;
                 }
@@ -319,8 +319,8 @@ namespace RUINORERP.PacketSpec.Commands
             var newEntry = new ScanCacheEntry
             {
                 CacheKey = cacheKey,
-                CreatedTime = DateTime.UtcNow,
-                LastAccessTime = DateTime.UtcNow,
+                CreatedTime = DateTime.Now,
+                LastAccessTime = DateTime.Now,
                 AccessCount = 1,
                 IsIncremental = canIncremental,
                 AssemblyInfo = assemblyMetadata,
@@ -424,7 +424,7 @@ namespace RUINORERP.PacketSpec.Commands
             try
             {
                 var expiredKeys = new List<string>();
-                var cutoffTime = DateTime.UtcNow.AddHours(-24); // 24小时未访问的缓存
+                var cutoffTime = DateTime.Now.AddHours(-24); // 24小时未访问的缓存
                 
                 foreach (var kvp in _scanResultCache)
                 {
@@ -478,8 +478,8 @@ namespace RUINORERP.PacketSpec.Commands
                     HandlerType = handlerType,
                     HandlerName = handlerType.Name,
                     AssemblyName = assemblyName,
-                    CreatedTime = DateTime.UtcNow,
-                    LastAccessTime = DateTime.UtcNow,
+                    CreatedTime = DateTime.Now,
+                    LastAccessTime = DateTime.Now,
                     AccessCount = 0
                 };
 
@@ -520,7 +520,7 @@ namespace RUINORERP.PacketSpec.Commands
             var cacheKey = $"handler_{handlerType.FullName}";
             if (_handlerTypeCache.TryGetValue(cacheKey, out var cachedHandler))
             {
-                cachedHandler.LastAccessTime = DateTime.UtcNow;
+                cachedHandler.LastAccessTime = DateTime.Now;
                 cachedHandler.AccessCount++;
                 return cachedHandler;
             }
@@ -544,7 +544,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 foreach (var handler in handlers)
                 {
-                    handler.LastAccessTime = DateTime.UtcNow;
+                    handler.LastAccessTime = DateTime.Now;
                     handler.AccessCount++;
                 }
                 return handlers;
@@ -612,9 +612,9 @@ namespace RUINORERP.PacketSpec.Commands
                 Version = name.Version?.ToString(),
                 FilePath = assembly.Location,
                 FileSize = 0,
-                LastModifiedTime = DateTime.UtcNow,
+                LastModifiedTime = DateTime.Now,
                 Checksum = string.Empty,
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
         }
 
@@ -759,7 +759,7 @@ namespace RUINORERP.PacketSpec.Commands
                 FullScans = _fullScans,
                 LastScanTime = _lastScanTime.Values.Any() ? _lastScanTime.Values.Max() : DateTime.MinValue,
                 TotalCacheSize = CalculateTotalCacheSize(),
-                LastUpdateTime = DateTime.UtcNow
+                LastUpdateTime = DateTime.Now
             };
         }
 

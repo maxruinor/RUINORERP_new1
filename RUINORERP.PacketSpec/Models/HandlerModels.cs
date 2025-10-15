@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -251,7 +251,7 @@ namespace RUINORERP.PacketSpec.Handlers
             this.IsSuccess = success;
             this.Message = message;
             this.Data = data;
-            this.TimestampUtc = DateTime.UtcNow;
+            this.Timestamp = DateTime.Now;
         }
 
         /// <summary>

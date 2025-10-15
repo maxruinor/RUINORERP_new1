@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -162,26 +162,19 @@ namespace RUINORERP.PacketSpec.Models.Core
                 PacketId = IdGenerator.GeneratePacketId(command.CommandIdentifier.Name),
                 CommandId = command.CommandIdentifier,
                 CommandData = UnifiedSerializationService.SerializeWithMessagePack(command),
-                CreatedTimeUtc = command.CreatedTimeUtc
             };
         }
 
         #region ITimestamped 接口实现
-
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
         [Key(13)]
-        public DateTime CreatedTimeUtc { get; set; }
-
-        /// <summary>
-        /// 最后更新时间（UTC时间）
-        /// </summary>
-        [Key(14)]
-        public DateTime? LastUpdatedTime { get; set; }
+        public DateTime CreatedTime { get; set; }
 
         /// <summary>
         /// 时间戳（UTC时间）
+        /// 记录对象的当前状态时间点，会随着对象状态变化而更新
         /// </summary>
         [Key(15)]
         public DateTime TimestampUtc { get; set; }
@@ -192,8 +185,8 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>是否有效</returns>
         public bool IsValid()
         {
-            return CreatedTimeUtc <= DateTime.UtcNow &&
-                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1) &&
+            return CreatedTime <= DateTime.UtcNow &&
+                   CreatedTime >= DateTime.UtcNow.AddYears(-1) &&
                    !string.IsNullOrEmpty(PacketId);
         }
 
@@ -203,9 +196,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         public void UpdateTimestamp()
         {
             TimestampUtc = DateTime.UtcNow;
-            LastUpdatedTime = TimestampUtc;
         }
-
         #endregion
 
         #region 构造函数
@@ -216,8 +207,8 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketModel()
         {
             PacketId = Guid.NewGuid().ToString();
-            CreatedTimeUtc = DateTime.UtcNow;
-            TimestampUtc = CreatedTimeUtc;
+            CreatedTime = DateTime.UtcNow;
+            TimestampUtc = CreatedTime;
             Extensions = new System.Collections.Generic.Dictionary<string, object>();
             // 移除CommandData的强制初始化，允许外部设置数据
             // CommandData = Array.Empty<byte>();
@@ -325,7 +316,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             CommandData = UnifiedSerializationService.SerializeWithJson(data);
             Size = CommandData.Length;
-            LastUpdatedTime = DateTime.UtcNow;
+            UpdateTimestamp();  // 使用统一的时间戳更新方法
             return this;
         }
 
@@ -340,7 +331,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             CommandData = MessagePackSerializer.Serialize<T>(data, UnifiedSerializationService.MessagePackOptions);
             Size = CommandData.Length;
-            LastUpdatedTime = DateTime.UtcNow;
+            UpdateTimestamp();  // 使用统一的时间戳更新方法
             return this;
         }
 
@@ -355,7 +346,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         {
             CommandData = MessagePackSerializer.Serialize(data, UnifiedSerializationService.MessagePackOptions);
             Size = CommandData.Length;
-            LastUpdatedTime = DateTime.UtcNow;
+            UpdateTimestamp();  // 使用统一的时间戳更新方法
             return this;
         }
 
@@ -439,8 +430,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 CommandData = CommandData?.Clone() as byte[],
                 Size = Size,
                 Checksum = Checksum,
-                CreatedTimeUtc = CreatedTimeUtc,
-                LastUpdatedTime = LastUpdatedTime,
+                CreatedTime = CreatedTime,
                 Extensions = new System.Collections.Generic.Dictionary<string, object>(Extensions),
                 Flag = Flag,
                 TimestampUtc = TimestampUtc

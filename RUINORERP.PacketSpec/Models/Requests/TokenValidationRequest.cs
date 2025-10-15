@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Commands.Authentication;
+﻿using RUINORERP.PacketSpec.Commands.Authentication;
 using System;
 using System.Collections.Generic;
 using MessagePack;
@@ -56,7 +56,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// </summary>
         public bool IsValid()
         {
-            return !string.IsNullOrEmpty(Token.AccessToken) && Token.AccessTokenExpiryUtc < DateTime.UtcNow;
+            return !string.IsNullOrEmpty(Token.AccessToken) && Token.ExpiresAt > DateTime.Now;
         }
     }
 }

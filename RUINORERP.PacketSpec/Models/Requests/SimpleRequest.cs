@@ -42,7 +42,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 Data = value,
                 DataType = "string",
-                OperationType = operationType ?? "StringOperation"
             };
         }
 
@@ -58,7 +57,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 Data = value,
                 DataType = "bool",
-                OperationType = operationType ?? "BoolOperation"
             };
         }
 
@@ -74,7 +72,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 Data = value,
                 DataType = "int",
-                OperationType = operationType ?? "IntOperation"
             };
         }
 
@@ -90,7 +87,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 Data = value,
                 DataType = "long",
-                OperationType = operationType ?? "LongOperation"
             };
         }
 
@@ -106,7 +102,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 Data = value,
                 DataType = "float",
-                OperationType = operationType ?? "FloatOperation"
             };
         }
 
@@ -122,7 +117,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 Data = value,
                 DataType = "double",
-                OperationType = operationType ?? "DoubleOperation"
             };
         }
 
@@ -139,7 +133,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 Data = value,
                 DataType = dataType ?? value?.GetType().Name ?? "object",
-                OperationType = operationType ?? "ObjectOperation"
             };
         }
 

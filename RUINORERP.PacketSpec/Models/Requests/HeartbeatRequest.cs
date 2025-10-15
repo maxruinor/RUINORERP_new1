@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using MessagePack;
 using RUINORERP.Model.CommonModel;
@@ -83,7 +83,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
             {
                 SessionToken = sessionToken,
                 UserId = userId,
-                ClientTime = DateTime.UtcNow,
+                ClientTime = DateTime.Now,
                 ClientStatus = clientStatus
             };
         }
@@ -95,8 +95,8 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             return !string.IsNullOrEmpty(SessionToken) &&
                    UserId > 0 &&
-                   ClientTime <= DateTime.UtcNow.AddMinutes(5) &&
-                   ClientTime >= DateTime.UtcNow.AddMinutes(-5);
+                   ClientTime <= DateTime.Now.AddMinutes(5) &&
+                   ClientTime >= DateTime.Now.AddMinutes(-5);
         }
 
         /// <summary>

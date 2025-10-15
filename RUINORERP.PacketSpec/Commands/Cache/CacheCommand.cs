@@ -1,4 +1,4 @@
-﻿﻿using RUINORERP.PacketSpec.Models.Core;
+﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests.Cache;
 using RUINORERP.PacketSpec.Models.Responses.Cache;
 using System.Collections.Generic;
@@ -62,14 +62,15 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// <summary>
         /// 构造函数
         /// </summary>
-        public CacheCommand() : base(PacketDirection.ClientToServer)
+        public CacheCommand() : base() // 移除 Direction 参数
         {
             CacheKeys = new List<string>();
             SyncMode = "FULL"; // 默认全量同步
-            Direction = PacketDirection.Request;
+            // 移除: Direction = PacketDirection.Request;
             CommandIdentifier = CacheCommands.CacheRequest;
             Priority = CommandPriority.Normal;
-            TimeoutMs = 30000; // 设置默认超时时间为30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
         }
 
         /// <summary>
@@ -78,10 +79,10 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         /// <param name="tableName">表名</param>
         /// <param name="forceRefresh">是否强制刷新</param>
         /// <param name="clientInfo">客户端信息</param>
-        public CacheCommand(string tableName, bool forceRefresh = false, string clientInfo = null)
+        public CacheCommand(string tableName, bool forceRefresh = false)
             : this()
         {
-            Request = CacheRequest.Create(tableName, forceRefresh, clientInfo);
+            Request = CacheRequest.Create(tableName, forceRefresh);
         }
         
         /// <summary>

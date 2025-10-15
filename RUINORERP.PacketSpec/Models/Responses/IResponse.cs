@@ -38,13 +38,13 @@ namespace RUINORERP.PacketSpec.Models.Responses
         string Message { get; set; }
 
         /// <summary>
-        /// 响应时间戳（UTC时间）
+        /// 响应时间戳
         /// </summary>
-        DateTime TimestampUtc { get; set; }
+        DateTime Timestamp { get; set; }
 
 
         /// <summary>
-        /// 请求标识
+        /// 请求标识 - 用于将响应与原始请求关联，支持异步通信和审计追踪
         /// </summary>
         string RequestId { get; set; }
 
@@ -57,5 +57,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// 扩展元数据（可选）
         /// </summary>
         Dictionary<string, object> Metadata { get; set; }
+
     }
 }

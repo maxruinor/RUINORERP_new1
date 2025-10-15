@@ -206,8 +206,6 @@ namespace RUINORERP.PacketSpec.Commands
                         var command = MessagePackSerializer.Deserialize(commandType, commandData, UnifiedSerializationService.MessagePackOptions) as ICommand;
                         if (command != null)
                         {
-                            // 设置时间戳
-                            command.TimestampUtc = packet.TimestampUtc;
                             return command;
                         }
                     }
@@ -346,17 +344,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             if (command == null || packet == null)
                 return;
-
-            // 设置基本属性
-            command.TimestampUtc = packet.TimestampUtc;
-            command.CreatedTimeUtc = packet.CreatedTimeUtc;
-
-            // 如果命令是BaseCommand类型，设置更多属性
-            if (command is BaseCommand baseCommand)
-            {
-                baseCommand.TimestampUtc = packet.TimestampUtc;
-                baseCommand.CreatedTimeUtc = packet.CreatedTimeUtc;
-            }
+ 
         }
 
         /// <summary>
@@ -458,10 +446,7 @@ namespace RUINORERP.PacketSpec.Commands
                         packetBuilder.WithBinaryData(commandData);
                     }
                 }
-
-                // 设置时间戳
-                packetBuilder.WithExtension("CreatedTimeUtc", command.CreatedTimeUtc);
-                packetBuilder.WithExtension("TimestampUtc", command.TimestampUtc);
+ 
 
                 return packetBuilder.Build();
             }

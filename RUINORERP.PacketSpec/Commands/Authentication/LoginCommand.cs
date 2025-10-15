@@ -1,4 +1,4 @@
-﻿﻿using RUINORERP.PacketSpec.Models;
+﻿using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -39,11 +39,12 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// <summary>
         /// 构造函数
         /// </summary>
-        public LoginCommand() : base(PacketDirection.ClientToServer)
+        public LoginCommand() : base() // 移除 Direction 参数
         {
             CommandIdentifier = AuthenticationCommands.Login;
             Priority = CommandPriority.High;
-            TimeoutMs = 30000; // 设置默认超时时间为30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
         }
 
         /// <summary>

@@ -7,15 +7,7 @@ namespace RUINORERP.PacketSpec.Models
 {
     #region 数据模型类
 
-    /// <summary>
-    /// 登录数据
-    /// </summary>
-    public class LoginData
-    {
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string ClientInfo { get; set; }
-    }
+
 
     /// <summary>
     /// 用户验证结果

@@ -32,9 +32,10 @@ namespace RUINORERP.PacketSpec.Commands.Message
         /// <summary>
         /// 无参构造函数 - 用于MessagePack反序列化
         /// </summary>
-        public MessageCommand() : base(PacketDirection.Response)
+        public MessageCommand() : base()
         {
-            TimeoutMs = 30000; // 默认超时时间30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
         }
 
         /// <summary>
@@ -44,7 +45,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
         /// <param name="packetModel">会话信息</param>
         /// <param name="data">命令数据</param>
         public MessageCommand(uint commandType, PacketModel packetModel, object data)
-            : base(PacketDirection.Response)
+            : base()
         {
             // 注释掉调试用的异常抛出
             // throw new Exception("  这里要调试处理");
@@ -52,7 +53,8 @@ namespace RUINORERP.PacketSpec.Commands.Message
             CommandType = commandType;
             CommandIdentifier = new CommandId(GetCommandCategory(commandType), GetCommandCode(commandType));
             Data = data;
-            TimeoutMs = 30000; // 默认超时时间30秒
+            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
+            // 超时应该是执行环境的问题，由网络层或业务处理层处理
         }
 
         /// <summary>

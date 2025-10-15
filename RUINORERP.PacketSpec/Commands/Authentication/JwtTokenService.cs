@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
@@ -48,7 +48,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                 }
             }
 
-            var expires = DateTime.UtcNow.AddHours(_options.DefaultExpiryHours);
+            var expires = DateTime.Now.AddHours(_options.DefaultExpiryHours);
 
             var token = new JwtSecurityToken(
                 issuer: null,
@@ -217,7 +217,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                 var validationResult = ValidateToken(token);
                 if (validationResult.IsValid && validationResult.ExpiryTime.HasValue)
                 {
-                    var timeUntilExpiry = validationResult.ExpiryTime.Value - DateTime.UtcNow;
+                    var timeUntilExpiry = validationResult.ExpiryTime.Value - DateTime.Now;
                     var isExpiringSoon = timeUntilExpiry.TotalMinutes < thresholdMinutes;
                     var expiresInSeconds = Math.Max(0, (int)timeUntilExpiry.TotalSeconds);
                     

@@ -20,27 +20,17 @@ namespace RUINORERP.PacketSpec.Validation
                 .Length(1, 50)
                 .WithMessage("请求ID长度必须在1-50个字符之间")
                 .WithErrorCode(UnifiedErrorCodes.Command_InvalidFormat.Code.ToString());
-
-            // 操作类型验证
-            RuleFor(request => request.OperationType)
-                .NotEmpty()
-                .WithMessage("操作类型不能为空")
-                .WithErrorCode(UnifiedErrorCodes.Command_InvalidFormat.Code.ToString())
-                .Length(1, 100)
-                .WithMessage("操作类型长度必须在1-100个字符之间")
-                .WithErrorCode(UnifiedErrorCodes.Command_InvalidFormat.Code.ToString());
-
-           
+                     
 
             // 时间戳验证
-            RuleFor(request => request.TimestampUtc)
+            RuleFor(request => request.Timestamp)
                 .NotEqual(default(DateTime))
                 .WithMessage("时间戳不能为默认值")
                 .WithErrorCode(UnifiedErrorCodes.Biz_DataInvalid.Code.ToString())
-                .Must((request, timestamp) => timestamp <= DateTime.UtcNow.AddMinutes(5))
+                .Must((request, timestamp) => timestamp <= DateTime.Now.AddMinutes(5))
                 .WithMessage("时间戳不能超前当前时间超过5分钟")
                 .WithErrorCode(UnifiedErrorCodes.Biz_DataInvalid.Code.ToString())
-                .Must((request, timestamp) => timestamp >= DateTime.UtcNow.AddHours(-24))
+                .Must((request, timestamp) => timestamp >= DateTime.Now.AddHours(-24))
                 .WithMessage("时间戳不能早于当前时间超过24小时")
                 .WithErrorCode(UnifiedErrorCodes.Biz_DataInvalid.Code.ToString());
         }

@@ -63,7 +63,7 @@ namespace RUINORERP.Server.Network.Services
                 if (!Directory.Exists(tempDir))
                     return;
 
-                var cutoffDate = DateTime.UtcNow - olderThan;
+                var cutoffDate = DateTime.Now - olderThan;
                 var files = Directory.GetFiles(tempDir);
                 int deletedCount = 0;
 

@@ -48,7 +48,7 @@ namespace RUINORERP.Server.Network.Timeout
                 CommandId = commandId,
                 ProcessingTime = processingTime,
                 TimeoutThreshold = timeoutThreshold,
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
 
             _timeoutRecords[record.Id] = record;
@@ -80,7 +80,7 @@ namespace RUINORERP.Server.Network.Timeout
         public TimeoutStatistics GetTimeoutStatistics()
         {
             var records = _timeoutRecords.Values.ToList();
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             var last24Hours = now.AddHours(-24);
             var recentRecords = records.Where(r => r.Timestamp >= last24Hours).ToList();
 
@@ -129,7 +129,7 @@ namespace RUINORERP.Server.Network.Timeout
             if (!recentRecords.Any()) return new TimeoutTrend();
 
             var hourlyCounts = new int[24];
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
 
             foreach (var record in recentRecords)
             {
@@ -184,7 +184,7 @@ namespace RUINORERP.Server.Network.Timeout
                     }
 
                     // 清理过期的超时记录（保留最近7天）
-                    var cutoffTime = DateTime.UtcNow.AddDays(-7);
+                    var cutoffTime = DateTime.Now.AddDays(-7);
                     var expiredRecords = _timeoutRecords.Where(kvp => kvp.Value.Timestamp < cutoffTime).ToList();
 
                     foreach (var expired in expiredRecords)
@@ -207,7 +207,7 @@ namespace RUINORERP.Server.Network.Timeout
         {
             var stats = GetTimeoutStatistics();
             var report = $"=== 超时分析报告 ===\n";
-            report += $"生成时间: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}\n\n";
+            report += $"生成时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n\n";
 
             report += "== 超时统计 ==\n";
             report += $"总超时次数: {stats.TotalTimeouts}\n";

@@ -58,7 +58,7 @@ namespace RUINORERP.Server.Network.Monitoring
         {
             var report = new StringBuilder();
             report.AppendLine("=== 系统诊断报告 ===");
-            report.AppendLine($"生成时间: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+            report.AppendLine($"生成时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             report.AppendLine();
 
             // 获取命令调度器信息
@@ -126,7 +126,7 @@ namespace RUINORERP.Server.Network.Monitoring
                 TotalCommands = totalCommands,
                 FailedCommands = failedCommands,
                 TimeoutCommands = timeoutCommands,
-                ReportTime = DateTime.UtcNow
+                ReportTime = DateTime.Now
             };
         }
     }

@@ -1,4 +1,4 @@
-﻿using MessagePack;
+using MessagePack;
 using System;
 using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -78,7 +78,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 HasPreviousPage = pageIndex > 0,
                 IsSuccess = true,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
         }
 
@@ -95,7 +95,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             {
                 IsSuccess = false,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow,
+                Timestamp = DateTime.Now,
                 ExtraData = extraData ?? new Dictionary<string, object>()
             };
         }
@@ -118,7 +118,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 HasPreviousPage = false,
                 IsSuccess = true,
                 Message = message,
-                TimestampUtc = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
         }
     }

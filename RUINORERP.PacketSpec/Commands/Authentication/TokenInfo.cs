@@ -24,10 +24,10 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         public string RefreshToken { get; set; }
 
         /// <summary>
-        /// 访问令牌有效期（秒）- 默认8小时
+        /// 过期时间
         /// </summary>
         [Key(31)]
-        public int ExpiresIn { get; set; } = 28800;
+        public DateTime ExpiresAt { get; set; }
 
         /// <summary>
         /// 令牌类型 - 默认Bearer
@@ -36,33 +36,15 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         public string TokenType { get; set; } = "Bearer";
 
         /// <summary>
-        /// 生成时间（UTC）
-        /// </summary>
-        [Key(33)]
-        public DateTime GeneratedTime { get; set; } = DateTime.UtcNow;
-        
-        /// <summary>
-        /// 访问令牌过期时间（UTC）- 计算属性
-        /// </summary>
-        [IgnoreMember]
-        public DateTime AccessTokenExpiryUtc => GeneratedTime.AddSeconds(ExpiresIn);
-        
-        /// <summary>
-        /// 刷新令牌过期时间（UTC）- 计算属性（默认24倍，8天）
-        /// </summary>
-        [IgnoreMember]
-        public DateTime RefreshTokenExpiryUtc => GeneratedTime.AddSeconds(ExpiresIn * 24);
-
-        /// <summary>
         /// 检查访问令牌是否已过期
         /// 【已废弃】请使用TokenManager.ValidateStoredTokenAsync()进行统一Token验证
         /// </summary>
         [Obsolete("请使用TokenManager.ValidateStoredTokenAsync()进行统一Token验证", false)]
-        public bool IsAccessTokenExpired() => DateTime.UtcNow >= AccessTokenExpiryUtc;
+        public bool IsAccessTokenExpired() => DateTime.Now >= ExpiresAt;
 
         /// <summary>
         /// 检查刷新令牌是否已过期
         /// </summary>
-        public bool IsRefreshTokenExpired() => DateTime.UtcNow >= RefreshTokenExpiryUtc;
+        public bool IsRefreshTokenExpired() => DateTime.Now >= ExpiresAt;
     }
 }

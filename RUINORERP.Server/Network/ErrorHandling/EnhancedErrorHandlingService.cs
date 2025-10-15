@@ -50,7 +50,7 @@ namespace RUINORERP.Server.Network.ErrorHandling
                 CommandId = commandId,
                 Exception = exception,
                 Context = context,
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.Now
             };
 
             _errorRecords[record.Id] = record;
@@ -88,7 +88,7 @@ namespace RUINORERP.Server.Network.ErrorHandling
         public ErrorStatistics GetErrorStatistics()
         {
             var records = _errorRecords.Values.ToList();
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             var last24Hours = now.AddHours(-24);
             var recentRecords = records.Where(r => r.Timestamp >= last24Hours).ToList();
 
@@ -138,7 +138,7 @@ namespace RUINORERP.Server.Network.ErrorHandling
             if (!recentRecords.Any()) return new ErrorTrend();
 
             var hourlyCounts = new int[24];
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
 
             foreach (var record in recentRecords)
             {
@@ -183,7 +183,7 @@ namespace RUINORERP.Server.Network.ErrorHandling
             var report = new StringBuilder();
             
             report.AppendLine("=== 错误分析报告 ===");
-            report.AppendLine($"生成时间: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+            report.AppendLine($"生成时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             report.AppendLine();
 
             report.AppendLine("== 错误统计 ==");

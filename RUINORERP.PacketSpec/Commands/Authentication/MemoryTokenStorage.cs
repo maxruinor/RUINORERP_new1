@@ -22,14 +22,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             if (tokenInfo == null) throw new ArgumentNullException(nameof(tokenInfo));
             if (string.IsNullOrEmpty(tokenInfo.AccessToken))
                 throw new ArgumentException("AccessToken不能为空", nameof(tokenInfo));
-
-            // 确保GeneratedTime有值
-            if (tokenInfo.GeneratedTime == default(DateTime))
-                tokenInfo.GeneratedTime = DateTime.UtcNow;
-
-            // 确保ExpiresIn有合理值
-            if (tokenInfo.ExpiresIn <= 0)
-                tokenInfo.ExpiresIn = 28800; // 默认8小时
+ 
 
             _tokenStore.AddOrUpdate(DEFAULT_KEY, tokenInfo, (key, oldValue) => tokenInfo);
             

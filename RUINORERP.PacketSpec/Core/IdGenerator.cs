@@ -1,4 +1,4 @@
-﻿using RUINORERP.Model;
+using RUINORERP.Model;
 using RUINORERP.PacketSpec.Commands;
 using System;
 
@@ -19,7 +19,7 @@ namespace RUINORERP.PacketSpec.Core
         /// <param name="cmd">命令ID</param>
         /// <returns>格式化的请求ID</returns>
         public static string GenerateRequestId(CommandId cmd) => 
-            $"{cmd.Name}_{DateTime.UtcNow:HHmmssfff}_{Ulid.NewUlid()}";
+            $"{cmd.Name}_{DateTime.Now:HHmmssfff}_{Ulid.NewUlid()}";
 
         /// <summary>
         /// 生成处理器ID

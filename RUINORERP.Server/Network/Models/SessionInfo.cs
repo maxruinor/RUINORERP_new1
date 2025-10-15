@@ -310,7 +310,7 @@ namespace RUINORERP.Server.Network.Models
         /// <returns>是否超时</returns>
         public bool IsTimeout()
         {
-            return (DateTime.UtcNow - LastActivityTime).TotalMinutes > TimeoutMinutes;
+            return (DateTime.Now - LastActivityTime).TotalMinutes > TimeoutMinutes;
         }
 
         /// <summary>
@@ -330,8 +330,8 @@ namespace RUINORERP.Server.Network.Models
         {
             return
                    !string.IsNullOrEmpty(ClientIp) &&
-                   ConnectedTime <= DateTime.UtcNow.AddMinutes(5) &&
-                   ConnectedTime >= DateTime.UtcNow.AddMinutes(-5);
+                   ConnectedTime <= DateTime.Now.AddMinutes(5) &&
+                   ConnectedTime >= DateTime.Now.AddMinutes(-5);
         }
 
         /// <summary>
@@ -487,7 +487,7 @@ namespace RUINORERP.Server.Network.Models
         /// <summary>
         /// 服务器运行时间
         /// </summary>
-        public TimeSpan Uptime => DateTime.UtcNow - ServerStartTime;
+        public TimeSpan Uptime => DateTime.Now - ServerStartTime;
 
 
         /// <summary>

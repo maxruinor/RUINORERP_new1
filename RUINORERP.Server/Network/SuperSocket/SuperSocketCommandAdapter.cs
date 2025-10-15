@@ -167,8 +167,9 @@ namespace RUINORERP.Server.Network.SuperSocket
                     // 使用链接的取消令牌，考虑命令超时设置
                     var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-                    // 如果命令有设置超时时间，则使用命令的超时时间，否则使用默认30秒
-                    var timeout = command.TimeoutMs > 0 ? TimeSpan.FromMilliseconds(command.TimeoutMs) : TimeSpan.FromSeconds(30);
+                    // 如果命令有设置超时时间，则使用命令的超时时间，否则使用默认300秒
+                    //这里设置大一点按执行时间算。每个处理类自己定义了不同的时间
+                    var timeout = TimeSpan.FromSeconds(300);
                     linkedCts.CancelAfter(timeout);
 
                     result = await _commandDispatcher.DispatchAsync(package.Packet, command, linkedCts.Token);
@@ -187,10 +188,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     result = BaseCommand<IResponse>.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
                 }
-                if (!result.IsSuccess)
-                {
-                    _logger?.LogDebug($"命令执行完成:{result.Message}, Success={result.IsSuccess}");
-                }
+
                 await HandleCommandResultAsync(session, package, command, result, cancellationToken);
 
             }
@@ -226,7 +224,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 return;
             }
 
-            if (result.IsSuccess)
+            if (result.ResponseData.IsSuccess)
             {
                 // 命令执行成功，发送成功响应
                 var responsePackage = UpdatePacketWithResponse(requestPackage.Packet, command, result);
@@ -252,14 +250,12 @@ namespace RUINORERP.Server.Network.SuperSocket
         {
             package.ExecutionContext.ResponseType = result.ResponseData?.GetType() ?? typeof(IResponse);
             package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
-            package.Direction = package.Direction == PacketDirection.Request ? PacketDirection.Response : package.Direction;
+            package.Direction = PacketDirection.Response; // 明确设置为响应方向
             package.SessionId = package.SessionId;
-            package.Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error;
+            package.Status = result.ResponseData.IsSuccess ? PacketStatus.Completed : PacketStatus.Error;
             package.Extensions = new Dictionary<string, object>
             {
                 ["Data"] = result,
-                ["Message"] = result.Message,
-                ["TimestampUtc"] = result.TimestampUtc
             };
 
 
@@ -307,7 +303,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     ["Data"] = result,
                     ["Message"] = result.Message,
-                    ["TimestampUtc"] = result.TimestampUtc
                 }
             };
 
@@ -467,14 +462,14 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
 
             // 优先使用响应中的元数据提取更详细的错误信息
-            string detailedMessage = result.Message;
+            string detailedMessage = result.ResponseData.ErrorMessage;
 
             if (result.Metadata != null)
             {
                 // 尝试获取更详细的错误信息
                 if (result.Metadata.TryGetValue("Exception", out var exceptionObj))
                 {
-                    detailedMessage = $"{result.Message} | Exception: {exceptionObj}";
+                    detailedMessage = $"{result.ResponseData.Message} | Exception: {exceptionObj}";
                 }
             }
 
@@ -509,16 +504,12 @@ namespace RUINORERP.Server.Network.SuperSocket
                     ["ErrorCode"] = errorCode.Code,
                     ["ErrorMessage"] = errorCode.Message,
                     ["Success"] = false,
-                    ["TimestampUtc"] = result.TimestampUtc,
-                    ["OriginalMessage"] = result.Message,
+                    ["OriginalErrorMessage"] = result.ResponseData.ErrorMessage,
+                    ["OriginalMessage"] = result.ResponseData.Message,
                 }
             };
 
-            // 添加请求标识
-            if (!string.IsNullOrEmpty(result.RequestId))
-            {
-                errorResponse.Extensions["RequestId"] = result.RequestId;
-            }
+
 
             // 添加元数据中的所有错误信息
             if (result.Metadata != null && result.Metadata.Count > 0)

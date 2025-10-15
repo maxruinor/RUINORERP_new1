@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,32 +37,12 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="direction">命令方向</param>
-        public BaseCommand(PacketDirection direction) : base(direction)
-        {
-
-        }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="direction">命令方向</param>
-        /// <param name="logger">日志记录器</param>
-        public BaseCommand(PacketDirection direction, ILogger<BaseCommand> logger) : base(direction, logger)
-        {
-        }
-
-        /// <summary>
         /// 构造函数 - 支持依赖注入
         /// </summary>
-        /// <param name="tokenManager">Token管理器</param>
         /// <param name="request">请求数据</param>
-        /// <param name="direction">命令方向</param>
         /// <param name="logger">日志记录器</param>
-        public BaseCommand(IRequest request = null, PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
-            : base(direction, logger)
+        public BaseCommand(IRequest request = null, ILogger<BaseCommand> logger = null)
+            : base(logger)
         {
             if (request != null)
                 Request = request as TRequest;
@@ -73,9 +53,8 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="commandId">命令ID</param>
         /// <param name="request">请求数据</param>
-        /// <param name="direction">命令方向</param>
-        public BaseCommand(CommandId commandId, TRequest request, PacketDirection direction = PacketDirection.ClientToServer)
-            : base(direction)
+        public BaseCommand(CommandId commandId, TRequest request)
+            : base()
         {
             CommandIdentifier = commandId;
             Request = request;
@@ -114,8 +93,9 @@ namespace RUINORERP.PacketSpec.Commands
         // 重写基类方法，提供智能数据访问
         protected override object GetSerializableDataCore()
         {
-            // 根据命令方向返回请求或响应数据
-            return Direction == PacketDirection.ClientToServer ? Request : Response;
+            // 方向已由 PacketModel 统一控制，此处不再依赖 Direction
+            // 始终返回 Request 作为待序列化数据
+            return Request;
         }
 
         // 新增高效二进制访问方法
@@ -181,13 +161,11 @@ namespace RUINORERP.PacketSpec.Commands
     /// <summary>
     /// 命令基类 - 提供命令的通用实现
     /// </summary>
-    [Serializable]
-    [MessagePackObject(AllowPrivate = true)]
-    public class BaseCommand : ICommand
+    public abstract class BaseCommand : ICommand
     {
+
         public BaseCommand()
         {
-
         }
 
 
@@ -215,11 +193,7 @@ namespace RUINORERP.PacketSpec.Commands
         [Key(30)]
         public CommandId CommandIdentifier { get; set; }
 
-        /// <summary>
-        /// 命令方向
-        /// </summary>
-        [Key(31)]
-        public PacketDirection Direction { get; set; }
+        // 命令方向已移除 - 简化设计
 
         /// <summary>
         /// 命令优先级
@@ -228,61 +202,11 @@ namespace RUINORERP.PacketSpec.Commands
         public CommandPriority Priority { get; set; }
 
         /// <summary>
-        /// 命令状态
-        /// </summary>
-        [Key(33)]
-        public CommandStatus Status { get; set; }
-
-        /// <summary>
-        /// 创建时间（UTC时间）
-        /// </summary>
-        [Key(34)]
-        public DateTime CreatedTimeUtc { get; set; } = DateTime.UtcNow;
-
-        /// <summary>
-        /// 最后更新时间（UTC时间）
-        /// </summary>
-        [Key(35)]
-        public DateTime? LastUpdatedTime { get; set; }
-
-        /// <summary>
-        /// 时间戳（UTC时间）
-        /// </summary>
-        [Key(36)]
-        public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
-
-        /// <summary>
-        /// 验证模型有效性（实现 ICoreEntity 接口）
-        /// </summary>
-        /// <returns>是否有效</returns>
-        public bool IsValid()
-        {
-            return CreatedTimeUtc <= DateTime.UtcNow &&
-                   CreatedTimeUtc >= DateTime.UtcNow.AddYears(-1); // 创建时间在1年内
-        }
-
-        /// <summary>
-        /// 更新时间戳（实现 ITimestamped 接口）
-        /// </summary>
-        public void UpdateTimestamp()
-        {
-            TimestampUtc = DateTime.UtcNow;
-            LastUpdatedTime = TimestampUtc;
-        }
-
-        [Key(37)]
-        public int TimeoutMs { get; set; }
-
-        /// <summary>
         /// 构造函数
         /// </summary>
-        protected BaseCommand(PacketDirection direction = PacketDirection.Unknown, ILogger<BaseCommand> logger = null)
+        protected BaseCommand(ILogger<BaseCommand> logger = null)
         {
-            Direction = direction;
             Priority = CommandPriority.Normal;
-            Status = CommandStatus.Created;
-            CreatedTimeUtc = DateTime.UtcNow;
-            TimestampUtc = DateTime.UtcNow;
             Logger = logger ?? NullLogger<BaseCommand>.Instance;
         }
 
@@ -331,11 +255,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (deserializedCommand != null)
                 {
                     CommandIdentifier = deserializedCommand.CommandIdentifier;
-                    Direction = deserializedCommand.Direction;
                     Priority = deserializedCommand.Priority;
-                    Status = deserializedCommand.Status;
-                    CreatedTimeUtc = deserializedCommand.CreatedTimeUtc;
-                    TimeoutMs = deserializedCommand.TimeoutMs;
 
                     // 恢复自定义数据
                     return DeserializeCustomData(deserializedCommand.GetSerializableData());
@@ -367,11 +287,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (deserializedCommand != null)
                 {
                     CommandIdentifier = deserializedCommand.CommandIdentifier;
-                    Direction = deserializedCommand.Direction;
                     Priority = deserializedCommand.Priority;
-                    Status = deserializedCommand.Status;
-                    CreatedTimeUtc = deserializedCommand.CreatedTimeUtc;
-                    TimeoutMs = deserializedCommand.TimeoutMs;
 
                     // 恢复自定义数据
                     return DeserializeCustomData(deserializedCommand.GetSerializableData());
@@ -456,7 +372,6 @@ namespace RUINORERP.PacketSpec.Commands
         public void SetRequestData(byte[] data)
         {
             RequestDataByMessagePack = data;
-            LastUpdatedTime = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -467,7 +382,6 @@ namespace RUINORERP.PacketSpec.Commands
         public void SetResponseData(byte[] data)
         {
             ResponseDataByMessagePack = data;
-            LastUpdatedTime = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -486,7 +400,6 @@ namespace RUINORERP.PacketSpec.Commands
             
             // 设置响应数据
             ResponseDataByMessagePack = responseData;
-            LastUpdatedTime = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -530,7 +443,6 @@ namespace RUINORERP.PacketSpec.Commands
             var cacheKey = $"{type.FullName}:{hash}";
             // 尝试从缓存获取或添加
             RequestDataByMessagePack = _jsonCache.GetOrAdd(cacheKey, jsonBytes);
-            LastUpdatedTime = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -590,7 +502,6 @@ namespace RUINORERP.PacketSpec.Commands
         {
             var jsonBytes = UnifiedSerializationService.SerializeWithJson(data);
             ResponseDataByMessagePack = jsonBytes;
-            LastUpdatedTime = DateTime.UtcNow;
         }
 
         /// <summary>
@@ -691,14 +602,8 @@ namespace RUINORERP.PacketSpec.Commands
             return new OriginalData(cmd, one, data2);
         }
 
-
-        /// <summary>
-        /// 检查是否超时（基于TimeoutMs和创建时间）
-        /// </summary>
-        public bool IsTimeout()
-        {
-            return TimeoutMs > 0 && (DateTime.UtcNow - CreatedTimeUtc).TotalMilliseconds > TimeoutMs;
-        }
+ 
+ 
 
         #endregion
     }
@@ -712,17 +617,6 @@ namespace RUINORERP.PacketSpec.Commands
     [MessagePackObject(AllowPrivate = true)]
     public class BaseCommand<TResponse> : BaseCommand where TResponse : class, IResponse
     {
-        /// <summary>
-        /// 操作是否成功
-        /// </summary>
-        [Key(1)]
-        public bool IsSuccess { get; set; }
-
-        /// <summary>
-        /// 响应消息
-        /// </summary>
-        [Key(2)]
-        public string Message { get; set; } = string.Empty;
 
         /// <summary>
         /// 业务响应数据
@@ -735,36 +629,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         [Key(4)]
         public CommandId CommandId { get; set; }
-
-        /// <summary>
-        /// 请求标识
-        /// </summary>
-        [Key(5)]
-        public string RequestId { get; set; } = string.Empty;
-
-        /// <summary>
-        /// 执行上下文（包含Token等信息）
-        /// </summary>
-        [Key(6)]
-        public CmdContext ExecutionContext { get; set; }
-
-        /// <summary>
-        /// 错误消息 - 从响应数据中提取
-        /// </summary>
-        [IgnoreMember]
-        public string ErrorMessage => ResponseData is ResponseBase baseResponse ? baseResponse.ErrorMessage : null;
-
-        /// <summary>
-        /// 时间戳（UTC时间）
-        /// </summary>
-        [Key(7)]
-        public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
-
-        /// <summary>
-        /// 执行时间（毫秒）
-        /// </summary>
-        [Key(8)]
-        public long ExecutionTimeMs { get; set; }
 
         /// <summary>
         /// 元数据字典 - 用于存储额外的响应信息
@@ -786,10 +650,9 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="message">成功消息</param>
         public BaseCommand(TResponse responseData, string message = "操作成功")
         {
-            IsSuccess = true;
-            Message = message;
             ResponseData = responseData;
-            TimestampUtc = DateTime.UtcNow;
+            responseData.IsSuccess = true;
+            responseData.Message = message;
         }
 
         /// <summary>
@@ -799,10 +662,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="errorCode">错误代码</param>
         public BaseCommand(string errorMessage, int Code = 400)
         {
-            IsSuccess = false;
-            Message = errorMessage;
-            TimestampUtc = DateTime.UtcNow;
-
+  
             // 如果TResponse是ResponseBase类型，创建错误响应
             if (typeof(TResponse) == typeof(ResponseBase) || typeof(TResponse).IsSubclassOf(typeof(ResponseBase)))
             {
@@ -819,10 +679,7 @@ namespace RUINORERP.PacketSpec.Commands
 
         public BaseCommand(ErrorCode errorCode)
         {
-            IsSuccess = false;
-            Message = errorCode.Message;
-            TimestampUtc = DateTime.UtcNow;
-
+        
             // 如果TResponse是ResponseBase类型，创建错误响应
             if (typeof(TResponse) == typeof(ResponseBase) || typeof(TResponse).IsSubclassOf(typeof(ResponseBase)))
             {
@@ -981,7 +838,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>字符串表示</returns>
         public override string ToString()
         {
-            return $"BaseCommand<TResponse>: Success={IsSuccess}, Message={Message}, CommandId={CommandId}, RequestId={RequestId}, TimestampUtc={TimestampUtc:yyyy-MM-dd HH:mm:ss}";
+            return $"BaseCommand<TResponse>:  CommandName={CommandId.Name}, CommandId={CommandId}";
         }
     }
 }

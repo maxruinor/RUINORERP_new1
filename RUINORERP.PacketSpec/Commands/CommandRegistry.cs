@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -329,7 +329,7 @@ namespace RUINORERP.PacketSpec.Commands
                 var registrationInfo = new RegistrationInfo
                 {
                     RegisteredType = commandType,
-                    RegistrationTime = DateTime.UtcNow,
+                    RegistrationTime = DateTime.Now,
                     Status = RegistrationStatus.Registered,
                     Metadata = metadata ?? new Dictionary<string, object>(),
                     Source = "DirectRegistration"
@@ -346,7 +346,7 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     RegistrationType = RegistrationType.Command,
                     Info = registrationInfo,
-                    Timestamp = DateTime.UtcNow
+                    Timestamp = DateTime.Now
                 });
 
                 _logger?.LogInformation("命令类型注册成功: {CommandId} -> {TypeName}", commandId, commandType.Name);
@@ -399,7 +399,7 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         RegistrationType = RegistrationType.Command,
                         Info = registrationInfo,
-                        Timestamp = DateTime.UtcNow
+                        Timestamp = DateTime.Now
                     });
 
                     _logger?.LogInformation("命令类型注销成功: {CommandId}", commandId);
@@ -466,7 +466,7 @@ namespace RUINORERP.PacketSpec.Commands
                 var registrationInfo = new RegistrationInfo
                 {
                     RegisteredType = handlerType,
-                    RegistrationTime = DateTime.UtcNow,
+                    RegistrationTime = DateTime.Now,
                     Status = RegistrationStatus.Registered,
                     Metadata = metadata ?? new Dictionary<string, object>(),
                     Source = "DirectRegistration"
@@ -491,7 +491,7 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     RegistrationType = RegistrationType.Handler,
                     Info = registrationInfo,
-                    Timestamp = DateTime.UtcNow
+                    Timestamp = DateTime.Now
                 });
 
                 _logger?.LogInformation("处理器类型注册成功: {TypeName}", handlerType.Name);
@@ -662,7 +662,7 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         RegistrationType = RegistrationType.Handler,
                         Info = registrationInfo,
-                        Timestamp = DateTime.UtcNow
+                        Timestamp = DateTime.Now
                     });
 
                     _logger?.LogInformation("处理器类型注销成功: {TypeName}", handlerName);
@@ -889,7 +889,7 @@ namespace RUINORERP.PacketSpec.Commands
                 PendingRegistrations = _pendingRegistrations.Count,
                 CommandConflicts = _commandConflicts.Count,
                 HandlerConflicts = _handlerConflicts.Count,
-                LastUpdateTime = DateTime.UtcNow
+                LastUpdateTime = DateTime.Now
             };
 
             // 统计状态分布

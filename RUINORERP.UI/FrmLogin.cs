@@ -220,7 +220,7 @@ namespace RUINORERP.UI
                                     var loginSuccess = await userLogin.LoginAsync(UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord);
 
                                     // 检查登录结果
-                                    if (loginSuccess == null || !loginSuccess.IsSuccess)
+                                    if (loginSuccess == null || !loginSuccess.ResponseData.IsSuccess)
                                     {
                                         //MessageBox.Show($"登录失败: {loginSuccess.ErrorMessage}", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                         //base.Cursor = Cursors.Default;

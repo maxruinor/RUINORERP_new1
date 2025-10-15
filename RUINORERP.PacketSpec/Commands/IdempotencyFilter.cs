@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Cryptography;
@@ -51,7 +51,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 上次清理时间
         /// </summary>
-        private DateTime _lastCleanupTime = DateTime.UtcNow;
+        private DateTime _lastCleanupTime = DateTime.Now;
         
         /// <summary>
         /// 清理间隔时间
@@ -78,7 +78,7 @@ namespace RUINORERP.PacketSpec.Commands
             if (_cache.TryGetValue(cacheKey, out var cacheItem))
             {
                 // 检查是否过期
-                if (cacheItem.ExpireTime > DateTime.UtcNow)
+                if (cacheItem.ExpireTime > DateTime.Now)
                 {
                     response = cacheItem.Response;
                     return true;
@@ -125,7 +125,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
             }
             
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             var cacheItem = new CacheItem
             {
                 Response = response,
@@ -252,7 +252,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void TryCleanupExpiredItems()
         {
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             
             // 检查是否需要清理
             if ((now - _lastCleanupTime) < _cleanupInterval)
@@ -283,7 +283,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>缓存统计信息</returns>
         public IdempotencyCacheStatistics GetStatistics()
         {
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             var items = _cache.ToArray();
             
             return new IdempotencyCacheStatistics

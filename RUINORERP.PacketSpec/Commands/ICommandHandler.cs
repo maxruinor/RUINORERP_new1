@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MessagePack;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -139,9 +140,9 @@ namespace RUINORERP.PacketSpec.Commands
     public class HandlerStatistics
     {
         /// <summary>
-        /// 处理器启动时间
+        /// 处理器启动时间（UTC时间）
         /// </summary>
-        public DateTime StartTime { get; set; }
+        public DateTime StartTimeUtc { get; set; }
 
         /// <summary>
         /// 总处理命令数
@@ -174,7 +175,7 @@ namespace RUINORERP.PacketSpec.Commands
         public long MinProcessingTimeMs { get; set; }
 
         /// <summary>
-        /// 最后处理时间
+        /// 最后处理时间（UTC时间）
         /// </summary>
         public DateTime LastProcessTime { get; set; }
 
@@ -194,7 +195,7 @@ namespace RUINORERP.PacketSpec.Commands
         public string LastError { get; set; }
 
         /// <summary>
-        /// 最后一次错误时间
+        /// 最后一次错误时间（UTC时间）
         /// </summary>
         public DateTime? LastErrorTime { get; set; }
 
@@ -206,7 +207,25 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 运行时间
         /// </summary>
-        public TimeSpan Uptime => DateTime.UtcNow - StartTime;
+        public TimeSpan Uptime => DateTime.UtcNow - StartTimeUtc;
+
+        /// <summary>
+        /// 启动时间（本地时间，仅用于调试显示）
+        /// </summary>
+        [IgnoreMember]
+        public DateTime StartTimeLocal => StartTimeUtc.ToLocalTime();
+
+        /// <summary>
+        /// 最后处理时间（本地时间，仅用于调试显示）
+        /// </summary>
+        [IgnoreMember]
+        public DateTime LastProcessTimeLocal => LastProcessTime.ToLocalTime();
+
+        /// <summary>
+        /// 最后一次错误时间（本地时间，仅用于调试显示）
+        /// </summary>
+        [IgnoreMember]
+        public DateTime? LastErrorTimeLocal => LastErrorTime?.ToLocalTime();
 
         /// <summary>
         /// 成功率

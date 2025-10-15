@@ -122,7 +122,7 @@ namespace RUINORERP.PacketSpec.Commands
 
             // 使用传入的熔断器策略，如果未提供则使用默认策略
             _circuit = circuitBreakerPolicy ?? Policy
-                .HandleResult<BaseCommand<IResponse>>(r => !r.IsSuccess)
+                .HandleResult<BaseCommand<IResponse>>(r => !r.ResponseData.IsSuccess)
                 .CircuitBreakerAsync(10, TimeSpan.FromMinutes(1)); // 增加到10次失败后熔断，持续1分钟
 
             // 创建三个优先级的Channel队列
@@ -392,12 +392,6 @@ namespace RUINORERP.PacketSpec.Commands
                                 // 使用熔断器执行回退处理器
                                 response = await _circuit.ExecuteAsync(() => fallbackHandler.HandleAsync(cmd, linkedCts.Token));
 
-                                // 设置执行时间
-                                if (response != null)
-                                {
-                                    response.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                                }
-
                                 return response;
                             }
                             catch (Exception ex)
@@ -433,11 +427,11 @@ namespace RUINORERP.PacketSpec.Commands
                         return BaseCommand<IResponse>.CreateError($"服务暂时不可用，熔断器已打开: {ex.Message}", 503);
                     }
 
-                    // 设置执行时间
-                    if (response != null)
-                    {
-                        response.ExecutionTimeMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                    }
+                    //// 设置执行时间
+                     if (response != null)
+                     {
+                         response.ResponseData.ExecutionTimeMs = (long)(DateTime.Now - startTime).TotalMilliseconds;
+                     }
 
 
                     if (response == null)
@@ -1131,30 +1125,15 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 创建链接的取消令牌，考虑命令超时设置
+        /// 创建链接的取消令牌 - 移除了对命令超时的依赖
         /// </summary>
         /// <param name="cancellationToken">外部取消令牌</param>
         /// <param name="command">命令对象</param>
         /// <returns>链接的取消令牌源</returns>
         private CancellationTokenSource CreateLinkedCancellationToken(CancellationToken cancellationToken, ICommand command)
         {
-            // 如果命令有设置超时时间，创建带超时的取消令牌
-            if (command.TimeoutMs > 0)
-            {
-                var timeoutCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(command.TimeoutMs));
-
-                // 如果外部取消令牌不为空且未取消，创建链接的取消令牌
-                if (cancellationToken != CancellationToken.None && !cancellationToken.IsCancellationRequested)
-                {
-                    return CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-                }
-
-                LogDebug($"创建链接取消令牌，超时时间: {TimeSpan.FromMilliseconds(command.TimeoutMs).TotalSeconds}秒, 命令: {command.CommandIdentifier.FullCode}");
-                return timeoutCts;
-            }
-
-            // 如果外部取消令牌不为空，返回链接的取消令牌
-            if (cancellationToken != CancellationToken.None)
+            // 如果外部取消令牌不为空且未取消，创建链接的取消令牌
+            if (cancellationToken != CancellationToken.None && !cancellationToken.IsCancellationRequested)
             {
                 var cts = new CancellationTokenSource();
                 return CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
@@ -1175,7 +1154,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             try
             {
-                var cutoff = DateTime.UtcNow.AddMinutes(-30); // 保留30分钟的历史
+                var cutoff = DateTime.Now.AddMinutes(-30); // 保留30分钟的历史
                 var keysToRemove = _commandHistory
                     .Where(kvp => kvp.Value < cutoff)
                     .Select(kvp => kvp.Key)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Commands;
@@ -34,7 +34,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             var packet2 = PacketBuilder.Create()
                 .WithCommand(new CommandId(CommandCategory.System, 0xF0))
                 .WithSession("session_123")
-                .WithJsonData(new { TimestampUtc = DateTime.UtcNow })
+                .WithJsonData(new { Timestamp = DateTime.Now })
                 .Build();
 
             Console.WriteLine($"方法2: {packet2}");
@@ -162,7 +162,7 @@ namespace RUINORERP.PacketSpec.Models.Core
 
             var packet = PacketBuilder.Create()
                 .WithCommand(new CommandId(CommandCategory.System, 0xF0))
-                .WithJsonData(new { Status = "OK", TimestampUtc = DateTime.UtcNow })
+                .WithJsonData(new { Status = "OK", Timestamp = DateTime.Now })
                 .Build();
 
             // 序列化为JSON

@@ -45,7 +45,6 @@ namespace RUINORERP.PacketSpec.Commands.Message
         {
             TargetUserIds = new string[0];
             MessageType = "INFO"; // 默认信息类型
-            Direction = PacketDirection.ServerToClient;
             CommandIdentifier = MessageCommands.SendPopupMessage;
         }
 
@@ -62,7 +61,6 @@ namespace RUINORERP.PacketSpec.Commands.Message
             Content = content;
             MessageType = messageType;
             TargetUserIds = targetUserIds ?? new string[0];
-            Direction = PacketDirection.ServerToClient;
             CommandIdentifier = MessageCommands.SendPopupMessage;
         }
 

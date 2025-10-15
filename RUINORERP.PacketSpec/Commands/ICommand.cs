@@ -11,46 +11,11 @@ using RUINORERP.PacketSpec.Models.Requests;
 
 namespace RUINORERP.PacketSpec.Commands
 {
-    /// <summary>
-    /// 命令状态
-    /// </summary>
-    public enum CommandStatus
-    {
-        /// <summary>
-        /// 已创建
-        /// </summary>
-        Created = 0,
-
-        /// <summary>
-        /// 等待处理
-        /// </summary>
-        Pending = 1,
-
-        /// <summary>
-        /// 正在处理
-        /// </summary>
-        Processing = 2,
-
-        /// <summary>
-        /// 处理完成
-        /// </summary>
-        Completed = 3,
-
-        /// <summary>
-        /// 处理失败
-        /// </summary>
-        Failed = 4,
-
-        /// <summary>
-        /// 已取消
-        /// </summary>
-        Cancelled = 5
-    }
 
     /// <summary>
     /// 统一命令接口 - 定义所有命令的基本契约
     /// </summary>
-    public interface ICommand : ITimestamped
+    public interface ICommand 
     {
         /// <summary>
         /// 命令标识符（类型安全命令系统）
@@ -61,11 +26,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// 命令优先级
         /// </summary>
         CommandPriority Priority { get; set; }
-
-        /// <summary>
-        /// 命令超时时间（毫秒）
-        /// </summary>
-        int TimeoutMs { get; set; }
 
         /// <summary>
         /// 业务数据

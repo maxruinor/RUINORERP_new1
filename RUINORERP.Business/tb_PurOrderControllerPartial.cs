@@ -33,6 +33,7 @@ using RUINORERP.Global.EnumExt;
 using Fireasy.Common.Extensions;
 using System.Collections;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -359,7 +360,7 @@ namespace RUINORERP.Business
                                 }
                             }
                         }
-                      
+
 
                         #endregion
 
@@ -760,7 +761,7 @@ namespace RUINORERP.Business
                 //转单要TODO
                 //转换时，默认认为订单出库数量就等于这次出库数量，是否多个订单累计？，如果是UI录单。则只是默认这个数量。也可以手工修改
                 List<tb_PurEntryDetail> NewDetails = new List<tb_PurEntryDetail>();
-
+                IEntityCacheManager _cacheManager = _appContext.GetRequiredService<IEntityCacheManager>();
                 List<string> tipsMsg = new List<string>();
                 for (global::System.Int32 i = 0; i < details.Count; i++)
                 {
@@ -774,14 +775,17 @@ namespace RUINORERP.Business
                             && c.PurOrder_ChildID == details[i].PurOrder_ChildID);
 
                         string ProdName = string.Empty;
-                        View_ProdDetail Prod = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+
+
+
+                        View_ProdDetail Prod = _cacheManager.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         if (Prod != null && Prod.GetType().Name != "Object" && Prod is View_ProdDetail prodDetail)
                         {
 
                         }
                         else
                         {
-                            Prod = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            Prod = _cacheManager.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         }
 
 
@@ -809,14 +813,14 @@ namespace RUINORERP.Business
                             );
 
                         string ProdName = string.Empty;
-                        View_ProdDetail Prod = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                        View_ProdDetail Prod = _cacheManager.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         if (Prod != null && Prod.GetType().Name != "Object" && Prod is View_ProdDetail prodDetail)
                         {
 
                         }
                         else
                         {
-                            Prod = MyCacheManager.Instance.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
+                            Prod = _cacheManager.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         }
 
                         details[i].Quantity = item.Quantity - item.DeliveredQuantity;// 已经交数量去掉

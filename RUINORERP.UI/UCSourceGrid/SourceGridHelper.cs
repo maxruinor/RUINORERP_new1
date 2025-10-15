@@ -3279,13 +3279,6 @@ namespace RUINORERP.UI.UCSourceGrid
                     string ColName = MyCacheManager.Instance.NewTableList[tableName].Value;
                     BindingSource bs = new BindingSource();
 
-                    //var MyCache = MyCacheManager.Instance.GetEntityList_AII(tableName); // 返回 List<object>
-                    //if (dci.DataSourceFilter != null)
-                    //{
-                    //    // 统一用非泛型接口
-                    //    MyCache = MyCache.Where(dci.DataSourceFilter.Match).ToList();
-                    //}
-
                     var cache = MyCacheManager.Instance.CacheEntityList.Get(tableName);
                     if (cache != null)
                     {

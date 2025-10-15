@@ -361,7 +361,7 @@ namespace RUINORERP.UI
 
 
             // 注册客户端缓存管理器
-            // services.AddSingleton<CacheEventManager>();
+            // services.AddSingleton<EventDrivenCacheManager>();
             // services.AddSingleton<CacheSyncCommandHandler>();
 
             // 注册审计日志

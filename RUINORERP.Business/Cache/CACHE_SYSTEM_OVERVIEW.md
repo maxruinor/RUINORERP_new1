@@ -10,7 +10,7 @@
 - [TableSchemaManager.cs](file:///E:/CodeRepository/SynologyDrive/RUINORERP/RUINORERP.Business/CommService/TableSchemaManager.cs)：表结构信息管理器
 - [TableSchemaInfo.cs](file:///E:/CodeRepository/SynologyDrive/RUINORERP/RUINORERP.Business/CommService/TableSchemaInfo.cs)：表结构信息实体类
 - [EntityCacheInitializationService.cs](file:///E:/CodeRepository/SynologyDrive/RUINORERP/RUINORERP.Business/CommService/EntityCacheInitializationService.cs)：缓存初始化服务
-- [CacheEventManager.cs](file:///E:/CodeRepository/SynologyDrive/RUINORERP/RUINORERP.Business/CommService/CacheEventManager.cs)：缓存事件管理器
+- [EventDrivenCacheManager.cs](file:///E:/CodeRepository/SynologyDrive/RUINORERP/RUINORERP.Business/CommService/EventDrivenCacheManager.cs)：事件驱动缓存管理器
 - [CacheSubscriptionManager.cs](file:///E:/CodeRepository/SynologyDrive/RUINORERP/RUINORERP.Business/CommService/CacheSubscriptionManager.cs)：缓存订阅管理器
 
 ### 1.2 设计原则
@@ -32,8 +32,8 @@
 ### 2.4 EntityCacheInitializationService
 缓存初始化服务，负责在系统启动时初始化缓存数据。
 
-### 2.5 CacheEventManager
-缓存事件管理器，用于处理本地缓存变更事件，可以被服务器和客户端共同使用。
+### 2.5 EventDrivenCacheManager
+事件驱动缓存管理器，用于处理本地缓存变更事件，可以被服务器和客户端共同使用。
 
 ### 2.6 CacheSubscriptionManager
 缓存订阅管理器，可以被服务器和客户端共同使用，通过IsServerMode属性区分服务器端和客户端模式。

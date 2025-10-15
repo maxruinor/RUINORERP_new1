@@ -81,11 +81,7 @@ namespace RUINORERP.Server.Network.Commands
             );
         }
 
-        /// <summary>
-        /// 支持的命令类型
-        /// </summary>
-        public override IReadOnlyList<CommandId> SupportedCommands { get; protected set; }
-
+ 
         /// <summary>
         /// 判断是否可以处理指定命令
         /// </summary>

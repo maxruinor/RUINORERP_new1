@@ -47,12 +47,7 @@ namespace RUINORERP.Server.Network.Commands
             // 使用安全方法设置支持的命令
             SetSupportedCommands(SystemCommands.Heartbeat);
         }
-
-        /// <summary>
-        /// 支持的命令类型
-        /// </summary>
-        public override IReadOnlyList<CommandId> SupportedCommands { get; protected set; }
-
+ 
         /// <summary>
         /// 具体的命令处理逻辑
         /// </summary>
@@ -96,10 +91,38 @@ namespace RUINORERP.Server.Network.Commands
             {
                 // 获取或创建会话信息
                 var sessionInfo = SessionService.GetSession(queuedCommand.Packet.ExecutionContext.SessionId);
+                
+                // 检查会话是否存在
+                if (sessionInfo == null)
+                {
+                    LogWarning($"未找到会话信息: SessionId={queuedCommand.Packet.ExecutionContext.SessionId}");
+                    var errorResponse = new HeartbeatResponse
+                    {
+                        IsSuccess = false,
+                        Status = "ERROR",
+                        ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                        NextIntervalMs = 5000, // 错误情况下缩短间隔
+                        ServerInfo = new Dictionary<string, object>
+                        {
+                            ["Error"] = "会话不存在或已过期",
+                            ["ErrorCode"] = "SESSION_NOT_FOUND",
+                            ["SessionId"] = queuedCommand.Packet.ExecutionContext.SessionId
+                        }
+                    };
+                    
+                    return BaseCommand<IResponse>.CreateError("会话不存在或已过期")
+                        .WithMetadata("ErrorCode", "SESSION_NOT_FOUND")
+                        .WithMetadata("SessionId", queuedCommand.Packet.ExecutionContext.SessionId);
+                }
+                
                 if (queuedCommand.Command is HeartbeatCommand heartbeatCommand)
                 {
-                    heartbeatCommand.Request.UserInfo.SessionId = sessionInfo.SessionID;
-                    sessionInfo.UserInfo = heartbeatCommand.Request.UserInfo;
+                    // 确保 UserInfo 不为空
+                    if (heartbeatCommand.Request.UserInfo != null)
+                    {
+                        heartbeatCommand.Request.UserInfo.SessionId = sessionInfo.SessionID;
+                        sessionInfo.UserInfo = heartbeatCommand.Request.UserInfo;
+                    }
                 }
              
                 // 创建心跳响应数据

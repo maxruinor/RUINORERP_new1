@@ -1470,7 +1470,7 @@ namespace RUINORERP.UI.Common
         /// <returns>是否在缓存表名列表中</returns>
         private static bool IsCacheableTable(string tableName)
         {
-            return CacheInitializationService.GetCacheableTableNames().Contains(tableName);
+            return TableSchemaManager.Instance.CacheableTableNames.Contains(tableName);
         }
 
        

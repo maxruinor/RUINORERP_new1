@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 
@@ -36,6 +36,7 @@ using Netron.GraphLib;
 using System.Web.UI;
 using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 namespace RUINORERP.UI.AdvancedUIModule
 {
     /// <summary>
@@ -293,62 +294,68 @@ namespace RUINORERP.UI.AdvancedUIModule
                             choiceCanIgnore.Width = 180;
                             //只处理需要缓存的表
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            if (MyCacheManager.Instance.NewTableList.TryGetValue(coldata.FKTableName, out pair))
+                            if (coldata.FKTableName.IsNotEmptyOrNull())
                             {
-                                string IDColName = pair.Key;
-                                string ColName = pair.Value;
-                                //DataBindingHelper.BindData4Cmb<T>(QueryDto, key, value, coldata.FKTableName, cmb);
-                                //这里加载时 是指定了相关的外键表的对应实体的类型
-                                if (ReladtedEntityType == null)
+                                var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                                var tableSchema = cacheManager.GetTableSchema(queryField.SubFilter.QueryTargetType.Name);
+                                if (tableSchema != null)
                                 {
-                                    ReladtedEntityType = typeof(T);
-                                }
-
-                                //关联要绑定的类型
-                                Type mytype = null;
-
-                                //通过反射来执行类的静态方法
-                                DataBindingHelper dbh = new DataBindingHelper();
-                                if (queryField.IsView)
-                                {
-                                    mytype = queryField.SubQueryTargetType;
-                                }
-                                else
-                                {
-                                    //注意找这个属性类型是小写了，生成规律
-                                    PropertyInfo PI = ReflectionHelper.GetPropertyInfo(ReladtedEntityType, newDto, coldata.FKTableName.ToLower());
-                                    if (PI == null)
+                                    pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);
+                                    string IDColName = pair.Key;
+                                    string ColName = pair.Value;
+                                    //DataBindingHelper.BindData4Cmb<T>(QueryDto, key, value, coldata.FKTableName, cmb);
+                                    //这里加载时 是指定了相关的外键表的对应实体的类型
+                                    if (ReladtedEntityType == null)
                                     {
-                                        mytype = queryField.SubFilter.QueryTargetType;
+                                        ReladtedEntityType = typeof(T);
+                                    }
+
+                                    //关联要绑定的类型
+                                    Type mytype = null;
+
+                                    //通过反射来执行类的静态方法
+                                    DataBindingHelper dbh = new DataBindingHelper();
+                                    if (queryField.IsView)
+                                    {
+                                        mytype = queryField.SubQueryTargetType;
                                     }
                                     else
                                     {
-                                        mytype = PI.PropertyType;
+                                        //注意找这个属性类型是小写了，生成规律
+                                        PropertyInfo PI = ReflectionHelper.GetPropertyInfo(ReladtedEntityType, newDto, coldata.FKTableName.ToLower());
+                                        if (PI == null)
+                                        {
+                                            mytype = queryField.SubFilter.QueryTargetType;
+                                        }
+                                        else
+                                        {
+                                            mytype = PI.PropertyType;
+                                        }
                                     }
-                                }
 
-                                //非常值和学习借鉴有代码 TODO 重点学习代码
-                                //UI传入过滤条件 下拉可以显示不同的数据
-                                ExpConverter expConverter = new ExpConverter();
-                                object whereExp = null;
-                                if (queryField.SubFilter.GetFilterLimitExpression(mytype) != null)
-                                {
-                                    whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryTargetType, queryField.SubFilter.GetFilterLimitExpression(mytype));
-                                }
-                                #region 
+                                    //非常值和学习借鉴有代码 TODO 重点学习代码
+                                    //UI传入过滤条件 下拉可以显示不同的数据
+                                    ExpConverter expConverter = new ExpConverter();
+                                    object whereExp = null;
+                                    if (queryField.SubFilter.GetFilterLimitExpression(mytype) != null)
+                                    {
+                                        whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryTargetType, queryField.SubFilter.GetFilterLimitExpression(mytype));
+                                    }
+                                    #region 
 
-                                //绑定可忽略的那个chkbox
-                                DataBindingHelper.BindData4CheckBox(newDto, IDColName + "_CmbMultiChoiceCanIgnore", choiceCanIgnore.chkCanIgnore, true);
-                                //绑定下拉
-                                MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbChkRefWithLimited").MakeGenericMethod(new Type[] { mytype });
-                                object[] args1 = new object[6] { newDto, IDColName, ColName, coldata.FKTableName, choiceCanIgnore.chkMulti, whereExp };
-                                mf1.Invoke(dbh, args1);
-                                #endregion
+                                    //绑定可忽略的那个chkbox
+                                    DataBindingHelper.BindData4CheckBox(newDto, IDColName + "_CmbMultiChoiceCanIgnore", choiceCanIgnore.chkCanIgnore, true);
+                                    //绑定下拉
+                                    MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbChkRefWithLimited").MakeGenericMethod(new Type[] { mytype });
+                                    object[] args1 = new object[6] { newDto, IDColName, ColName, coldata.FKTableName, choiceCanIgnore.chkMulti, whereExp };
+                                    mf1.Invoke(dbh, args1);
+                                    #endregion
+                                }
                             }
+                            #endregion
                             choiceCanIgnore.Location = new System.Drawing.Point(_x, _y);
                             UcPanel.Controls.Add(choiceCanIgnore);
                             UcPanel.Controls.Add(lbl);
-                            #endregion
 
                             break;
                         }

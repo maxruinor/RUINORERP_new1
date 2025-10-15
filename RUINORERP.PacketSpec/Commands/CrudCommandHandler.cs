@@ -148,7 +148,7 @@ namespace RUINORERP.PacketSpec.Commands
                 OperationType.Update => await UpdateAsync(request.Data, cancellationToken),
                 OperationType.Delete => await DeleteAsync(request.Id, cancellationToken),
                 OperationType.Get => await GetAsync(request.Id, cancellationToken),
-                OperationType.GetList => await GetListAsync(request.QueryParameters, cancellationToken),
+                OperationType.GetList => await GetListAsync(request.Parameters, cancellationToken),
                 _ => ResponseBase.CreateError($"不支持的操作类型: {request.OperationType}")
             };
         }
@@ -237,11 +237,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// 实体数据（用于创建和更新）
         /// </summary>
         public TEntity Data { get; set; }
-
-        /// <summary>
-        /// 查询参数（用于列表查询）
-        /// </summary>
-        public Dictionary<string, object> QueryParameters { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
         /// 创建CRUD请求

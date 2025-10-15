@@ -84,12 +84,14 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .SingleInstance()
                 .PropertiesAutowired();
-
-            // 注册缓存初始化服务
-            builder.RegisterType<CacheInitializationService>()
+                
+            // 注册事件驱动缓存管理器（单例模式）
+            builder.RegisterType<EventDrivenCacheManager>()
                 .AsSelf()
                 .SingleInstance()
                 .PropertiesAutowired();
+
+  
 
             // 注册实体加载服务
             builder.RegisterType<EntityLoader>()

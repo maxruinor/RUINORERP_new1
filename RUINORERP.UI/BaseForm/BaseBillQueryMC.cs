@@ -2444,6 +2444,18 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
+                //设置的主键指向的编号在具体业务的查询窗体的构造函数中设置的。
+
+                if (_UCBillMasterQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
+                {
+                    if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                    {
+                        // MainForm.Instance.logger.LogInformation("当前查询没有设置指向列，自动设置为主表类型及列");
+                    }
+                    _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
+                }
+
+
                 MainForm.Instance.AppContext.log.ActionName = sender.ToString();
                 //先加载一遍缓存
                 var tableNames = MainForm.Instance.CacheInfoList.Keys.ToList();

@@ -39,6 +39,7 @@ using System.Web.UI;
 using RUINORERP.Business.CommService;
 using FastReport.Editor.Dialogs;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 namespace RUINORERP.UI.AdvancedUIModule
 {
     public class UIGenerateHelper
@@ -103,7 +104,8 @@ namespace RUINORERP.UI.AdvancedUIModule
                             {
                                 //只有下拉等三种情况。才会显示是否多选
                                 queryField.AdvQueryFieldType = AdvQueryProcessType.CmbMultiChoiceCanIgnore;
-                            }
+                                
+                        }
                             else
                             {
                                 //只有下拉等三种情况。才会显示是否多选
@@ -412,9 +414,16 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                         //只处理需要缓存的表
                         pair = new KeyValuePair<string, string>();
-                        if (queryField.HasSubFilter && MyCacheManager.Instance.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
+                        if (queryField.HasSubFilter)
                         {
-                            #region 绑定下拉带子查询条件
+                            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                            var tableSchema = cacheManager.GetTableSchema(queryField.SubQueryTargetType.Name);
+                            if (tableSchema != null)
+                            {
+                                    pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);
+                            }
+                                
+                                #region 绑定下拉带子查询条件
                             Type mytype = queryField.SubQueryTargetType;
                             //UI传入过滤条件 下拉可以显示不同的数据
                             ExpConverter expConverter = new ExpConverter();
@@ -469,32 +478,37 @@ namespace RUINORERP.UI.AdvancedUIModule
                         cmb.Width = 150;
                         pair = new KeyValuePair<string, string>();
                         //只处理需要缓存的表
-
-                        if (MyCacheManager.Instance.NewTableList.TryGetValue(queryField.FKTableName, out pair))
+                        if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
-                            string PIDColName = pair.Key;
-                            string PColName = pair.Value;
-                            //DataBindingHelper.BindData4Cmb<T>(QueryDto, key, value, coldata.FKTableName, cmb);
-                            //这里加载时 是指定了相关的外键表的对应实体的类型
-
-                            //关联要绑定的类型
-                            Type mytype = queryField.SubQueryTargetType;
-
-                            //非常值和学习借鉴有代码 TODO 重点学习代码
-                            //UI传入过滤条件 下拉可以显示不同的数据
-                            ExpConverter expConverter = new ExpConverter();
-                            object whereExp = null;
-                            if (queryField.SubFilter.GetFilterLimitExpression(mytype) != null)
+                            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                            var tableSchema = cacheManager.GetTableSchema(queryField.SubQueryTargetType.Name);
+                            if (tableSchema != null)
                             {
-                                whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryTargetType, queryField.SubFilter.GetFilterLimitExpression(mytype));
-                            }
-                            #region 
+                                pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);
+                                string PIDColName = pair.Key;
+                                string PColName = pair.Value;
+                                //DataBindingHelper.BindData4Cmb<T>(QueryDto, key, value, coldata.FKTableName, cmb);
+                                //这里加载时 是指定了相关的外键表的对应实体的类型
 
-                            //绑定下拉
-                            MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbChkRefWithLimited").MakeGenericMethod(new Type[] { mytype });
-                            object[] args1 = new object[6] { newDto, PIDColName, PColName, queryField.FKTableName, cmb, whereExp };
-                            mf1.Invoke(dbh, args1);
-                            #endregion
+                                //关联要绑定的类型
+                                Type mytype = queryField.SubQueryTargetType;
+
+                                //非常值和学习借鉴有代码 TODO 重点学习代码
+                                //UI传入过滤条件 下拉可以显示不同的数据
+                                ExpConverter expConverter = new ExpConverter();
+                                object whereExp = null;
+                                if (queryField.SubFilter.GetFilterLimitExpression(mytype) != null)
+                                {
+                                    whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryTargetType, queryField.SubFilter.GetFilterLimitExpression(mytype));
+                                }
+                                #region 
+
+                                //绑定下拉
+                                MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbChkRefWithLimited").MakeGenericMethod(new Type[] { mytype });
+                                object[] args1 = new object[6] { newDto, PIDColName, PColName, queryField.FKTableName, cmb, whereExp };
+                                mf1.Invoke(dbh, args1);
+                                #endregion
+                            }
 
 
 
@@ -526,8 +540,11 @@ namespace RUINORERP.UI.AdvancedUIModule
                         pair = new KeyValuePair<string, string>();
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
-                            if (MyCacheManager.Instance.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
+                            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                            var tableSchema = cacheManager.GetTableSchema(queryField.SubQueryTargetType.Name);
+                            if (tableSchema != null)
                             {
+                                pair = new KeyValuePair<string, string>(tableSchema.PrimaryKeyField, tableSchema.DisplayField);
                                 //关联要绑定的类型
                                 Type mytype = queryField.SubQueryTargetType;
                                 if (queryField.SubFilter.FilterLimitExpressions.Count == 0)

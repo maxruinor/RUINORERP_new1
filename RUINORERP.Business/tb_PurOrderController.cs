@@ -25,6 +25,7 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using RUINOR.Core;
 using RUINORERP.Common.Helper;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business
 {
@@ -39,13 +40,14 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_PurOrderServices _tb_PurOrderServices { get; set; }
-       // private readonly ApplicationContext _appContext;
-       
-        public tb_PurOrderController(ILogger<tb_PurOrderController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_PurOrderServices tb_PurOrderServices , ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        // private readonly ApplicationContext _appContext;
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; // 事件驱动缓存管理器（通过DI注入）
+        public tb_PurOrderController(ILogger<tb_PurOrderController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_PurOrderServices tb_PurOrderServices , EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_PurOrderServices = tb_PurOrderServices;
+            _eventDrivenCacheManager = eventDrivenCacheManager;
             _appContext = appContext;
         }
       
@@ -89,14 +91,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_PurOrderServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_PurOrder>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_PurOrder>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_PurOrderServices.AddReEntityAsync(entity);
-                    MyCacheManager.Instance.UpdateEntityList<tb_PurOrder>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_PurOrder>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -130,14 +132,14 @@ namespace RUINORERP.Business
                     bool rs = await _tb_PurOrderServices.Update(entity);
                     if (rs)
                     {
-                        MyCacheManager.Instance.UpdateEntityList<tb_PurOrder>(entity);
+                        _eventDrivenCacheManager.UpdateEntity<tb_PurOrder>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_PurOrderServices.AddReEntityAsync(entity) as T ;
-                    MyCacheManager.Instance.UpdateEntityList<tb_PurOrder>(entity);
+                    _eventDrivenCacheManager.UpdateEntity<tb_PurOrder>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;

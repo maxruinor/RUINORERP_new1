@@ -84,7 +84,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             if (package == null)
             {
                 _logger?.LogWarning("接收到空的数据包");
-                await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, cancellationToken);
+                await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
                 return;
             }
 
@@ -102,7 +102,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 if (sessionInfo == null)
                 {
                     // 如果会话不存在，可能是连接已断开或会话已过期
-                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_SessionExpired, cancellationToken);
+                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_SessionExpired, CancellationToken.None);
                     return;
                 }
 
@@ -118,7 +118,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 if (command == null)
                 {
                     _logger?.LogWarning("无法创建命令对象: CommandId={CommandId}", package.Packet.CommandId);
-                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Command_NotFound, cancellationToken);
+                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Command_NotFound, CancellationToken.None);
                     return;
                 }
 
@@ -165,7 +165,18 @@ namespace RUINORERP.Server.Network.SuperSocket
                 try
                 {
                     // 使用链接的取消令牌，考虑命令超时设置
-                    var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    // 修复：正确创建链接令牌源，避免修改原始cancellationToken
+                    CancellationTokenSource linkedCts;
+                    if (cancellationToken != CancellationToken.None)
+                    {
+                        // 如果传入了有效的取消令牌，则创建链接令牌源
+                        linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    }
+                    else
+                    {
+                        // 否则创建新的令牌源
+                        linkedCts = new CancellationTokenSource();
+                    }
 
                     // 如果命令有设置超时时间，则使用命令的超时时间，否则使用默认300秒
                     //这里设置大一点按执行时间算。每个处理类自己定义了不同的时间
@@ -173,6 +184,9 @@ namespace RUINORERP.Server.Network.SuperSocket
                     linkedCts.CancelAfter(timeout);
 
                     result = await _commandDispatcher.DispatchAsync(package.Packet, command, linkedCts.Token);
+                    
+                    // 释放令牌源资源
+                    linkedCts.Dispose();
                 }
                 catch (OperationCanceledException ex)
                 {
@@ -189,14 +203,15 @@ namespace RUINORERP.Server.Network.SuperSocket
                     result = BaseCommand<IResponse>.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
                 }
 
-                await HandleCommandResultAsync(session, package, command, result, cancellationToken);
+                // 使用新的 CancellationToken.None 来确保响应能够发送，即使命令处理超时
+                await HandleCommandResultAsync(session, package, command, result, CancellationToken.None);
 
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理SuperSocket命令时发生异常: CommandId={CommandId}", package.Packet.CommandId);
-                // 发送错误响应给客户端
-                await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, cancellationToken);
+                // 发送错误响应给客户端，使用 CancellationToken.None 确保错误响应能够发送
+                await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
             }
         }
 
@@ -220,7 +235,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             if (result == null)
             {
                 _logger?.LogWarning("命令执行结果为空，发送默认错误响应");
-                await SendErrorResponseAsync(session, requestPackage, UnifiedErrorCodes.System_InternalError, cancellationToken);
+                await SendErrorResponseAsync(session, requestPackage, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
                 return;
             }
 
@@ -228,14 +243,14 @@ namespace RUINORERP.Server.Network.SuperSocket
             {
                 // 命令执行成功，发送成功响应
                 var responsePackage = UpdatePacketWithResponse(requestPackage.Packet, command, result);
-                await SendResponseAsync(session, responsePackage, cancellationToken);
+                await SendResponseAsync(session, responsePackage, CancellationToken.None);
             }
             else
             {
                 // 命令执行失败，发送增强的错误响应
                 // 从结果中提取所有错误信息，包括元数据中的详细信息
                 var errorCode = ExtractErrorCodeFromResponse(result);
-                await SendEnhancedErrorResponseAsync(session, requestPackage, result, errorCode, cancellationToken);
+                await SendEnhancedErrorResponseAsync(session, requestPackage, result, errorCode, CancellationToken.None);
             }
         }
 
@@ -338,18 +353,18 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
             }
 
-            // 优先使用WithJsonData设置业务响应数据
-            if (result != null)
-            {
-                try
-                {
-                    response.WithJsonData(result);
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, "未能为响应数据包设置JSON数据 {PacketId}", response.PacketId);
-                }
-            }
+            //// 优先使用WithJsonData设置业务响应数据
+            //if (result != null)
+            //{
+            //    try
+            //    {
+            //        response.WithJsonData(result);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        _logger?.LogWarning(ex, "未能为响应数据包设置JSON数据 {PacketId}", response.PacketId);
+            //    }
+            //}
 
             return response;
         }

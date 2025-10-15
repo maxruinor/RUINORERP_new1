@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -345,14 +345,6 @@ namespace RUINORERP.PacketSpec.Commands
                         return BaseCommand<IResponse>.CreateError($"命令对象为空", 400);
                     }
 
-                    // 第一层：命令基础验证（不解析具体数据）
-                    var validationResult = await ValidateCommandBasicAsync(cmd.Command, ct);
-                    if (!validationResult.IsValid)
-                    {
-                        LogWarning($"命令基础验证失败: {validationResult.ErrorMessage}");
-                        return BaseCommand<IResponse>.CreateError($"命令验证失败: {validationResult.ErrorMessage}", 400);
-                    }
-
                     // 第二层：命令预处理（获取指令信息，延迟具体解析）
                     var preprocessResult = await PreprocessCommandAsync(cmd.Command, ct);
                     if (!preprocessResult.Success)
@@ -440,9 +432,17 @@ namespace RUINORERP.PacketSpec.Commands
 
                     return response;
                 }
+                catch (OperationCanceledException ex) when (ex.CancellationToken == linkedCts.Token)
+                {
+                    // 区分超时/取消异常与外部取消请求
+                    LogInfo($"命令处理超时: {cmd.Command.CommandIdentifier.FullCode}");
+                    return BaseCommand<IResponse>.CreateError("命令处理超时", 504);
+                }
                 catch (OperationCanceledException ex)
                 {
-                    return BaseCommand<IResponse>.CreateError("命令处理超时或被取消", 504);
+                    // 外部取消请求
+                    LogInfo($"命令处理被外部取消: {cmd.Command.CommandIdentifier.FullCode}");
+                    return BaseCommand<IResponse>.CreateError("命令处理被取消", 504);
                 }
                 catch (Exception ex)
                 {
@@ -914,42 +914,7 @@ namespace RUINORERP.PacketSpec.Commands
             public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
         }
 
-        /// <summary>
-        /// 基础验证（不解析具体数据）
-        /// </summary>
-        private async Task<CommandValidationResult> ValidateCommandBasicAsync(ICommand command, CancellationToken cancellationToken)
-        {
-            await Task.CompletedTask; // 异步占位符
-
-            try
-            {
-                // 基础验证：命令ID有效性
-                if (command.CommandIdentifier == CommandId.Empty)
-                {
-                    return new CommandValidationResult { IsValid = false, ErrorMessage = "命令ID无效" };
-                }
-
-                // 基础验证：会话ID存在性
-                //if (string.IsNullOrEmpty(command.ExecutionContext.SessionId))
-                //{
-                //    return new CommandValidationResult { IsValid = false, ErrorMessage = "会话ID不能为空" };
-                //}
-
-                // 基础验证：命令类型存在性
-                var commandType = command.GetType();
-                if (commandType == null)
-                {
-                    return new CommandValidationResult { IsValid = false, ErrorMessage = "命令类型无效" };
-                }
-
-                return new CommandValidationResult { IsValid = true };
-            }
-            catch (Exception ex)
-            {
-                LogError($"基础验证异常: {ex.Message}", ex);
-                return new CommandValidationResult { IsValid = false, ErrorMessage = $"验证异常: {ex.Message}" };
-            }
-        }
+  
 
         /// <summary>
         /// 预处理命令（获取指令信息，延迟具体解析）
@@ -1134,8 +1099,8 @@ namespace RUINORERP.PacketSpec.Commands
             // 如果外部取消令牌不为空且未取消，创建链接的取消令牌
             if (cancellationToken != CancellationToken.None && !cancellationToken.IsCancellationRequested)
             {
-                var cts = new CancellationTokenSource();
-                return CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token);
+                // 正确创建链接令牌源，避免修改原始令牌
+                return CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             }
 
             // 默认返回新的取消令牌源，设置30秒默认超时

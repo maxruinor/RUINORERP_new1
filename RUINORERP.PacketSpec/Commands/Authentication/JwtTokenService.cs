@@ -66,10 +66,37 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// </summary>
         public TokenValidationResult ValidateToken(string token)
         {
+            return ValidateTokenCore(token);
+        }
+
+        /// <summary>
+        /// 异步验证Token - 合并自TokenValidationService
+        /// </summary>
+        /// <param name="token">要验证的Token</param>
+        /// <returns>验证结果</returns>
+        public Task<TokenValidationResult> ValidateTokenAsync(string token)
+        {
+            return Task.FromResult(ValidateTokenCore(token));
+        }
+
+        /// <summary>
+        /// 统一的Token验证核心逻辑
+        /// </summary>
+        /// <param name="token">要验证的Token</param>
+        /// <returns>验证结果</returns>
+        private TokenValidationResult ValidateTokenCore(string token)
+        {
             var result = new TokenValidationResult();
 
             try
             {
+                if (string.IsNullOrEmpty(token))
+                {
+                    result.IsValid = false;
+                    result.ErrorMessage = "Token不能为空";
+                    return result;
+                }
+
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var key = Encoding.UTF8.GetBytes(_options.SecretKey);
                 var securityKey = new SymmetricSecurityKey(key);
@@ -165,38 +192,6 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         {
             // 简化实现，实际项目中可能需要将Token加入黑名单
             // 这里可以考虑使用Redis等存储被撤销的Token
-        }
-
-        /// <summary>
-        /// 异步验证Token - 合并自TokenValidationService
-        /// </summary>
-        /// <param name="token">要验证的Token</param>
-        /// <returns>验证结果</returns>
-        public Task<TokenValidationResult> ValidateTokenAsync(string token)
-        {
-            if (string.IsNullOrEmpty(token))
-            {
-                return Task.FromResult(new TokenValidationResult
-                {
-                    IsValid = false,
-                    ErrorMessage = "Token不能为空"
-                });
-            }
-            
-            try 
-            {
-                // 直接调用底层验证逻辑
-                var result = ValidateToken(token);
-                return Task.FromResult(result);
-            } 
-            catch (Exception ex) 
-            {
-                return Task.FromResult(new TokenValidationResult
-                {
-                    IsValid = false,
-                    ErrorMessage = $"Token验证异常: {ex.Message}"
-                });
-            }
         }
 
         /// <summary>

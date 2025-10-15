@@ -10,31 +10,32 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// </summary>
     [MessagePackObject(AllowPrivate = true)]
     [Serializable]
-
     public partial class RequestBase : IRequest
     {
         /// <summary>
         /// 请求唯一标识
         /// </summary>
         [Key(0)]
-        public string RequestId { get; set; }
-
-
+        public string RequestId { get; set; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// 请求时间戳
         /// </summary>
-        [Key(2)]
-        public DateTime Timestamp { get; set; }
+        [Key(1)]
+        public DateTime Timestamp { get; set; } = DateTime.Now;
 
+        /// <summary>
+        /// 查询参数（用于复杂查询）
+        /// </summary>
+        [Key(2)]
+        public Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
         /// 构造函数
         /// </summary>
         public RequestBase()
         {
-            RequestId = Guid.NewGuid().ToString();
-            Timestamp = DateTime.Now;
+            // RequestId和Timestamp已经在属性声明时初始化
         }
 
         /// <summary>
@@ -47,8 +48,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             RequestId = requestId;
             return this;
         }
-
- 
     }
 
     /// <summary>
@@ -78,21 +77,15 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public EntityOperationType OperationType { get; set; }
 
         /// <summary>
-        /// 查询参数（用于复杂查询）
-        /// </summary>
-        [Key(8)]
-        public Dictionary<string, object> QueryParameters { get; set; }
-
-        /// <summary>
         /// 数据版本号（用于乐观锁）
         /// </summary>
-        [Key(9)]
+        [Key(8)]
         public string DataVersion { get; set; }
 
         /// <summary>
         /// 是否包含关联数据
         /// </summary>
-        [Key(10)]
+        [Key(9)]
         public bool IncludeRelatedData { get; set; }
 
         /// <summary>
@@ -100,7 +93,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// </summary>
         public RequestBase()
         {
-            QueryParameters = new Dictionary<string, object>();
+            // 移除重复的QueryParameters定义，使用基类的Parameters
         }
 
         /// <summary>
@@ -179,7 +172,8 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             return new RequestBase<TEntity>
             {
-                QueryParameters = queryParameters ?? new Dictionary<string, object>(),
+                // 使用基类的Parameters属性而不是QueryParameters
+                Parameters = queryParameters ?? new Dictionary<string, object>(),
                 OperationType = EntityOperationType.List,
                 IncludeRelatedData = includeRelatedData
             };
@@ -195,7 +189,8 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             return new RequestBase<TEntity>
             {
-                QueryParameters = queryParameters ?? new Dictionary<string, object>(),
+                // 使用基类的Parameters属性而不是QueryParameters
+                Parameters = queryParameters ?? new Dictionary<string, object>(),
                 OperationType = EntityOperationType.Custom,
                 IncludeRelatedData = includeRelatedData
             };

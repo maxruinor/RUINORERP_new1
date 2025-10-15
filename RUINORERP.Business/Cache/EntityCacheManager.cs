@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -267,16 +267,24 @@ namespace RUINORERP.Business.Cache
 
         #region 缓存更新方法实现
         /// <summary>
-        /// 更新实体列表缓存
+        /// 更新实体列表缓存（智能过滤，只处理需要缓存的表）
         /// </summary>
         public void UpdateEntityList<T>(List<T> list) where T : class
         {
             var tableName = typeof(T).Name;
+            
+            // 智能过滤：只处理需要缓存的表
+            if (!IsTableCacheable(tableName))
+            {
+                _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过更新操作");
+                return;
+            }
+            
             UpdateEntityList(tableName, list);
         }
 
         /// <summary>
-        /// 更新单个实体缓存
+        /// 更新单个实体缓存（智能过滤，只处理需要缓存的表）
         /// </summary>
         public void UpdateEntity<T>(T entity) where T : class
         {
@@ -286,6 +294,14 @@ namespace RUINORERP.Business.Cache
             }
 
             var tableName = typeof(T).Name;
+            
+            // 智能过滤：只处理需要缓存的表
+            if (!IsTableCacheable(tableName))
+            {
+                _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过更新操作");
+                return;
+            }
+            
             var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
 
             if (schemaInfo != null)
@@ -308,12 +324,19 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 根据表名更新缓存
+        /// 根据表名更新缓存（智能过滤，只处理需要缓存的表）
         /// </summary>
         public void UpdateEntityList(string tableName, object list)
         {
             try
             {
+                // 智能过滤：只处理需要缓存的表
+                if (!IsTableCacheable(tableName))
+                {
+                    _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过更新操作");
+                    return;
+                }
+                
                 var cacheKey = $"EntityList_{tableName}";
 
                 // 修复：确保存储的是正确类型的列表而不是ExpandoObject
@@ -365,12 +388,19 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 根据表名更新单个实体缓存
+        /// 根据表名更新单个实体缓存（智能过滤，只处理需要缓存的表）
         /// </summary>
         public void UpdateEntity(string tableName, object entity)
         {
             if (entity == null)
             {
+                return;
+            }
+
+            // 智能过滤：只处理需要缓存的表
+            if (!IsTableCacheable(tableName))
+            {
+                _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过更新操作");
                 return;
             }
 
@@ -442,18 +472,51 @@ namespace RUINORERP.Business.Cache
         }
         #endregion
 
+        #region 智能过滤方法
+        /// <summary>
+        /// 检查表是否需要缓存（智能过滤核心方法）
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>是否需要缓存</returns>
+        private bool IsTableCacheable(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return false;
+
+            // 获取表结构信息
+            var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+            
+            // 如果表未注册或明确标记为不需要缓存，则跳过
+            if (schemaInfo == null || !schemaInfo.IsCacheable)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion
+
         #region 缓存删除方法实现
         /// <summary>
-        /// 删除指定ID的实体缓存
+        /// 删除指定ID的实体缓存（智能过滤，只处理需要缓存的表）
         /// </summary>
         public void DeleteEntity<T>(object idValue) where T : class
         {
             var tableName = typeof(T).Name;
+            
+            // 智能过滤：只处理需要缓存的表
+                if (!IsTableCacheable(tableName))
+                {
+                    _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过删除操作");
+                    return;
+                }
+            
             DeleteEntity(tableName, idValue);
         }
 
         /// <summary>
-        /// 删除实体列表缓存
+        /// 删除实体列表缓存（智能过滤，只处理需要缓存的表）
         /// </summary>
         public void DeleteEntityList<T>(List<T> entities) where T : class
         {
@@ -463,6 +526,14 @@ namespace RUINORERP.Business.Cache
             }
 
             var tableName = typeof(T).Name;
+            
+            // 智能过滤：只处理需要缓存的表
+            if (!IsTableCacheable(tableName))
+            {
+                _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过删除操作");
+                return;
+            }
+            
             var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
 
             if (schemaInfo != null)
@@ -486,12 +557,19 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 根据表名和主键删除实体缓存
+        /// 根据表名和主键删除实体缓存（智能过滤，只处理需要缓存的表）
         /// </summary>
         public void DeleteEntity(string tableName, object primaryKeyValue)
         {
             try
             {
+                // 智能过滤：只处理需要缓存的表
+                if (!IsTableCacheable(tableName))
+                {
+                    _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过删除操作");
+                    return;
+                }
+                
                 var cacheKey = $"Entity_{tableName}_{primaryKeyValue}";
                 EntityCache.Remove(cacheKey);
 
@@ -598,6 +676,119 @@ namespace RUINORERP.Business.Cache
             catch (Exception ex)
             {
                 _logger?.LogError(ex, $"清空表 {tableName} 的单个实体缓存和显示值缓存时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 批量删除指定主键数组的实体缓存（智能过滤，只处理需要缓存的表）
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="idValues">主键值数组</param>
+        public void DeleteEntities<T>(object[] idValues) where T : class
+        {
+            var tableName = typeof(T).Name;
+            
+            // 智能过滤：只处理需要缓存的表
+            if (!IsTableCacheable(tableName))
+            {
+                _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过批量删除操作");
+                return;
+            }
+            
+            DeleteEntities(tableName, idValues);
+        }
+
+        /// <summary>
+        /// 根据表名批量删除指定主键数组的实体缓存（智能过滤，只处理需要缓存的表）
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="primaryKeyValues">主键值数组</param>
+        public void DeleteEntities(string tableName, object[] primaryKeyValues)
+        {
+            try
+            {
+                // 智能过滤：只处理需要缓存的表
+                if (!IsTableCacheable(tableName))
+                {
+                    _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过批量删除操作");
+                    return;
+                }
+                
+                if (primaryKeyValues == null || primaryKeyValues.Length == 0)
+                {
+                    _logger?.LogDebug("主键数组为空，跳过批量删除操作");
+                    return;
+                }
+
+                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+                if (schemaInfo == null)
+                {
+                    _logger?.LogWarning($"表 {tableName} 的结构信息未找到，跳过批量删除操作");
+                    return;
+                }
+
+                // 批量删除单个实体缓存和显示值缓存
+                foreach (var primaryKeyValue in primaryKeyValues)
+                {
+                    if (primaryKeyValue != null)
+                    {
+                        var cacheKey = $"Entity_{tableName}_{primaryKeyValue}";
+                        EntityCache.Remove(cacheKey);
+
+                        var displayCacheKey = $"DisplayValue_{tableName}_{primaryKeyValue}";
+                        DisplayValueCache.Remove(displayCacheKey);
+                    }
+                }
+
+                // 从列表缓存中批量删除这些实体
+                RemoveEntitiesFromListByKeys(tableName, primaryKeyValues);
+
+                _logger?.LogInformation($"已批量删除表 {tableName} 中 {primaryKeyValues.Length} 个实体的缓存");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"批量删除表 {tableName} 实体缓存时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 从列表缓存中批量删除指定主键的实体
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="primaryKeyValues">主键值数组</param>
+        private void RemoveEntitiesFromListByKeys(string tableName, object[] primaryKeyValues)
+        {
+            try
+            {
+                var cacheKey = $"EntityList_{tableName}";
+                var cachedList = EntityListCache.Get(cacheKey);
+
+                if (cachedList is IList list)
+                {
+                    var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+                    if (schemaInfo != null)
+                    {
+                        var primaryKeyStrings = primaryKeyValues.Select(pk => pk?.ToString()).Where(pk => pk != null).ToHashSet();
+                        
+                        // 使用LINQ过滤出需要保留的实体
+                        var entitiesToKeep = new List<object>();
+                        foreach (var item in list)
+                        {
+                            var idPropertyValue = item.GetPropertyValue(schemaInfo.PrimaryKeyField)?.ToString();
+                            if (idPropertyValue == null || !primaryKeyStrings.Contains(idPropertyValue))
+                            {
+                                entitiesToKeep.Add(item);
+                            }
+                        }
+
+                        // 重新设置列表缓存
+                        EntityListCache.Put(cacheKey, entitiesToKeep);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"从表 {tableName} 列表缓存中批量删除实体时发生错误");
             }
         }
         #endregion

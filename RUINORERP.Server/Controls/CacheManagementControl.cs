@@ -338,9 +338,6 @@ namespace RUINORERP.Server.Controls
                 // 这里可以添加对新缓存管理器的检查逻辑
                 // 例如检查某个关键表是否已缓存
 
-                // 如果缓存为空，尝试重新初始化
-                await frmMainNew.Instance.InitConfig(true);
-
                 // 刷新UI显示
                 LoadCacheToUI();
 

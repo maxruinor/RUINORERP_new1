@@ -21,11 +21,7 @@ namespace RUINORERP.PacketSpec.Utilities
         /// </summary>
         private static readonly Regex UsernameRegex = new Regex(@"^[a-zA-Z0-9_\-]{3,50}$", RegexOptions.Compiled);
 
-        /// <summary>
-        /// 设备ID正则表达式
-        /// </summary>
-        private static readonly Regex DeviceIdRegex = new Regex(@"^[a-zA-Z0-9_\-]{8,100}$", RegexOptions.Compiled);
-
+  
         /// <summary>
         /// IP地址正则表达式
         /// </summary>
@@ -49,13 +45,7 @@ namespace RUINORERP.PacketSpec.Utilities
             return !string.IsNullOrEmpty(username) && UsernameRegex.IsMatch(username);
         }
 
-        /// <summary>
-        /// 验证设备ID格式
-        /// </summary>
-        public static bool ValidateDeviceId(string deviceId)
-        {
-            return !string.IsNullOrEmpty(deviceId) && DeviceIdRegex.IsMatch(deviceId);
-        }
+ 
 
         /// <summary>
         /// 验证IP地址格式

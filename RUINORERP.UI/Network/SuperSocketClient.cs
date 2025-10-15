@@ -189,20 +189,23 @@ namespace RUINORERP.UI.Network
                     throw new InvalidOperationException("连接已断开");
                 }
 
+                // 检查取消令牌是否已请求取消
+                cancellationToken.ThrowIfCancellationRequested();
+
                 // 使用Task.Run将同步Send方法包装成异步操作
                 // 确保在IO操作期间不会阻塞调用线程
                 await Task.Run(() =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     _client.Send(data);
-                }, cancellationToken);
+                }, cancellationToken).ConfigureAwait(false);
                 
                 _logger?.LogDebug("成功发送数据到服务器，数据长度: {DataLength}", data?.Length ?? 0);
             }
             catch (OperationCanceledException)
             {
                 // 处理取消操作
-                _isConnected = false;
+                _logger?.LogWarning("发送数据操作被取消");
                 throw;
             }
             catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))

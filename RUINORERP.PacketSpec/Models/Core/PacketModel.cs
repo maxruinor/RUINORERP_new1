@@ -42,23 +42,17 @@ namespace RUINORERP.PacketSpec.Models.Core
         #region 网络传输属性
 
         /// <summary>
-        /// 包标志位
-        /// </summary>
-        [Key(3)]
-        public string Flag { get; set; }
-
-        /// <summary>
         /// 数据包唯一标识符
         /// </summary>
         // 网络标识
-        [Key(4)]
+        [Key(3)]
         public string PacketId { get; set; }
 
         /// <summary>
         /// 数据包大小（字节）
         /// </summary>
-        [Key(5)]
-        public int Size { get; set; }
+        [IgnoreMember]
+        public int Size => CommandData?.Length ?? 0;
 
         /// <summary>
         /// 获取包大小
@@ -71,38 +65,14 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 校验和
         /// </summary>
-        [Key(6)]
-        public string Checksum { get; set; }
-
-        /// <summary>
-        /// 是否加密
-        /// </summary>
-        [Key(7)]
-        public bool IsEncrypted { get; set; }
-
-        /// <summary>
-        /// 是否压缩
-        /// </summary>
-        [Key(8)]
-        public bool IsCompressed { get; set; }
+        [IgnoreMember]
+        public string Checksum => ComputeHash();
 
         /// <summary>
         /// 数据包方向
         /// </summary>
-        [Key(9)]
+        [Key(4)]
         public PacketDirection Direction { get; set; }
-
-        /// <summary>
-        /// 模型版本
-        /// </summary>
-        [Key(10)]
-        public string Version { get; set; } = "2.0";
-
-        /// <summary>
-        /// 消息类型
-        /// </summary>
-        [Key(11)]
-        public MessageType MessageType { get; set; } = MessageType.Request;
 
         /// <summary>
         /// 扩展属性字典（用于存储非核心但需要传输的元数据）
@@ -114,7 +84,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 命令执行上下文 - 网络传输层使用
         /// 包含会话、认证、追踪等基础设施信息
         /// </summary>
-        [Key(12)]
+        [Key(5)]
         public CmdContext  ExecutionContext { get; set; }
 
         /// <summary>
@@ -169,14 +139,14 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
-        [Key(13)]
+        [Key(6)]
         public DateTime CreatedTime { get; set; }
 
         /// <summary>
         /// 时间戳（UTC时间）
         /// 记录对象的当前状态时间点，会随着对象状态变化而更新
         /// </summary>
-        [Key(15)]
+        [Key(7)]
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
@@ -210,6 +180,9 @@ namespace RUINORERP.PacketSpec.Models.Core
             CreatedTime = DateTime.UtcNow;
             TimestampUtc = CreatedTime;
             Extensions = new System.Collections.Generic.Dictionary<string, object>();
+            // 初始化默认扩展属性
+            SetExtension("Version", "2.0");
+            SetExtension("MessageType", MessageType.Request);
             // 移除CommandData的强制初始化，允许外部设置数据
             // CommandData = Array.Empty<byte>();
         }
@@ -290,6 +263,62 @@ namespace RUINORERP.PacketSpec.Models.Core
             return Token;
         }
 
+        #region 扩展数据存储方法
+
+        /// <summary>
+        /// 获取扩展属性值
+        /// </summary>
+        /// <typeparam name="T">值的类型</typeparam>
+        /// <param name="key">属性键</param>
+        /// <param name="defaultValue">默认值</param>
+        /// <returns>属性值或默认值</returns>
+        public T GetExtension<T>(string key, T defaultValue = default)
+        {
+            return Extensions.TryGetValue(key, out var value) ? (T)value : defaultValue;
+        }
+
+        /// <summary>
+        /// 设置扩展属性值
+        /// </summary>
+        /// <param name="key">属性键</param>
+        /// <param name="value">属性值</param>
+        public void SetExtension(string key, object value)
+        {
+            Extensions[key] = value;
+        }
+
+        /// <summary>
+        /// 获取包标志位
+        /// </summary>
+        [IgnoreMember]
+        public string Flag
+        {
+            get => GetExtension<string>("Flag");
+            set => SetExtension("Flag", value);
+        }
+
+        /// <summary>
+        /// 获取模型版本
+        /// </summary>
+        [IgnoreMember]
+        public string Version
+        {
+            get => GetExtension<string>("Version");
+            set => SetExtension("Version", value);
+        }
+
+        /// <summary>
+        /// 获取消息类型
+        /// </summary>
+        [IgnoreMember]
+        public MessageType MessageType
+        {
+            get => GetExtension<MessageType>("MessageType");
+            set => SetExtension("MessageType", value);
+        }
+
+        #endregion
+
         #region 重写方法
 
         /// <summary>
@@ -298,7 +327,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>数据包信息字符串</returns>
         public override string ToString()
         {
-            return $"Packet[Id:{PacketId}, Size:{Size}, Encrypted:{IsEncrypted}, Compressed:{IsCompressed}]";
+            return $"Packet[Id:{PacketId}, Size:{Size}, Flag:{Flag}, Version:{Version}, MessageType:{MessageType}]";
         }
 
         internal void SetData(byte[] data)
@@ -315,7 +344,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketModel SetJsonData<T>(T data)
         {
             CommandData = UnifiedSerializationService.SerializeWithJson(data);
-            Size = CommandData.Length;
             UpdateTimestamp();  // 使用统一的时间戳更新方法
             return this;
         }
@@ -330,7 +358,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketModel SetCommandDataByMessagePack<T>(T data)
         {
             CommandData = MessagePackSerializer.Serialize<T>(data, UnifiedSerializationService.MessagePackOptions);
-            Size = CommandData.Length;
             UpdateTimestamp();  // 使用统一的时间戳更新方法
             return this;
         }
@@ -345,7 +372,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketModel SetCommandDataByMessagePack(Type type, object data)
         {
             CommandData = MessagePackSerializer.Serialize(data, UnifiedSerializationService.MessagePackOptions);
-            Size = CommandData.Length;
             UpdateTimestamp();  // 使用统一的时间戳更新方法
             return this;
         }
@@ -428,13 +454,22 @@ namespace RUINORERP.PacketSpec.Models.Core
                 Status = Status,
                 SessionId = SessionId,
                 CommandData = CommandData?.Clone() as byte[],
-                Size = Size,
-                Checksum = Checksum,
                 CreatedTime = CreatedTime,
                 Extensions = new System.Collections.Generic.Dictionary<string, object>(Extensions),
-                Flag = Flag,
                 TimestampUtc = TimestampUtc
             };
+        }
+
+        /// <summary>
+        /// 计算数据包的哈希值
+        /// </summary>
+        /// <returns>数据包的哈希值</returns>
+        private string ComputeHash()
+        {
+            // 这里实现具体的哈希计算逻辑
+            // 例如使用SHA256或其他哈希算法
+            // 为简化起见，这里返回一个占位符
+            return string.Empty; // 实际实现中应该计算CommandData的哈希值
         }
     }
 

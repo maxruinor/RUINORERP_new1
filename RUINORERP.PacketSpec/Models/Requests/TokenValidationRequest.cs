@@ -18,17 +18,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         [Key(10)]
         public TokenInfo Token { get; set; }
 
-        /// <summary>
-        /// 客户端IP地址
-        /// </summary>
-        [Key(11)]
-        public string ClientIp { get; set; }
-
-        /// <summary>
-        /// 设备标识
-        /// </summary>
-        [Key(12)]
-        public string DeviceId { get; set; }
 
         /// <summary>
         /// 附加验证数据
@@ -40,13 +29,11 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 创建Token验证请求
         /// </summary>
-        public static TokenValidationRequest Create(TokenInfo token, string deviceId = null, string clientIp = null)
+        public static TokenValidationRequest Create(TokenInfo token)
         {
             return new TokenValidationRequest
             {
                 Token = token,
-                DeviceId = deviceId ?? Guid.NewGuid().ToString(),
-                ClientIp = clientIp,
                 ValidationData = new Dictionary<string, object>()
             };
         }

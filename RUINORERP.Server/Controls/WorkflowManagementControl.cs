@@ -22,6 +22,7 @@ using RUINORERP.Server.Comm;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Server.Controls
 {
@@ -197,7 +198,9 @@ namespace RUINORERP.Server.Controls
             try
             {
                 IMemoryCache cache = Startup.GetFromFac<IMemoryCache>();
-                object obj = MyCacheManager.Instance.GetValue("tb_CustomerVendor", 1740971599693221888);
+                // 使用新的缓存体系
+                IEntityCacheManager entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                object obj = entityCacheManager.GetEntity("tb_CustomerVendor", 1740971599693221888);
                 
                 if (obj != null)
                 {

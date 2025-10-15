@@ -51,7 +51,7 @@ namespace RUINORERP.UI.Network.Services
         private bool _disposed = false;
         // 添加新的缓存管理器字段
         private readonly IEntityCacheManager _cacheManager;
-        private readonly CacheEventManager _clientCacheManager;
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager;
 
         /// <summary>
         /// 构造函数 - 通过DI注入依赖项
@@ -66,6 +66,7 @@ namespace RUINORERP.UI.Network.Services
             ICommandCreationService commandCreationService,
             CacheSubscriptionManager subscriptionManager, // 通过DI注入
             IEntityCacheManager cacheManager, // 通过DI注入
+            EventDrivenCacheManager eventDrivenCacheManager,
             ILogger<CacheClientService> log = null)
         {
             _comm = comm ?? throw new ArgumentNullException(nameof(comm));
@@ -75,10 +76,9 @@ namespace RUINORERP.UI.Network.Services
             _subscriptionManager.SetCommunicationService(comm); // 设置通信服务
             // 初始化新的缓存管理器
             _cacheManager = cacheManager; // 通过DI注入
-            // 初始化客户端缓存管理器
-            _clientCacheManager = new CacheEventManager(_cacheManager);
+            _eventDrivenCacheManager = eventDrivenCacheManager;
             // 订阅缓存变更事件
-            //_clientCacheManager.CacheChanged += OnClientCacheChanged;
+            _eventDrivenCacheManager.CacheChanged += OnClientCacheChanged;
             // 注册缓存响应处理
             RegisterCommandHandlers();
             // 注册缓存通知事件处理程序
@@ -264,15 +264,21 @@ namespace RUINORERP.UI.Network.Services
                     RequestId = IdGenerator.GenerateRequestId(CacheCommands.CacheUpdate)
                 };
 
+                // 根据操作类型设置请求数据
+                if (e.Value != null)
+                {
+                    request.Data = e.Value;
+                }
+
                 // 发送缓存更新命令到服务器
-                var command = new CacheCommand
+                var command = new BaseCommand<CacheRequest, IResponse>()
                 {
                     Request = request,
                     CommandIdentifier = CacheCommands.CacheUpdate
                 };
 
                 // 发送命令到服务器
-                // await _comm.SendOneWayCommandAsync<CacheRequest>(command, CancellationToken.None);
+                await _comm.SendOneWayCommandAsync<CacheRequest>(command, CancellationToken.None);
 
                 _log?.LogInformation($"客户端缓存变更已同步到服务器: {e.Key}, 操作: {e.Operation.ToString()}");
             }
@@ -1356,7 +1362,10 @@ namespace RUINORERP.UI.Network.Services
                 if (disposing)
                 {
                     // 释放托管资源
-                    //_clientCacheManager?.CacheChanged -= OnClientCacheChanged;
+                    if (_eventDrivenCacheManager != null)
+                    {
+                        _eventDrivenCacheManager.CacheChanged -= OnClientCacheChanged;
+                    }
                 }
 
                 // 释放非托管资源（如果有的话）

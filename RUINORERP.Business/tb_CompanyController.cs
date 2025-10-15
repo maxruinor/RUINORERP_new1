@@ -40,17 +40,18 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_CompanyServices _tb_CompanyServices { get; set; }
-        private readonly IEntityCacheManager _cacheManager; // 新增缓存管理器依赖
-        private readonly CacheEventManager _clientCacheManager; // 缓存事件管理器
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager; // 事件驱动缓存管理器（通过DI注入）
        // private readonly ApplicationContext _appContext;
        
-        public tb_CompanyController(ILogger<tb_CompanyController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_CompanyServices tb_CompanyServices, IEntityCacheManager cacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        /// <summary>
+        /// 构造函数 - 通过依赖注入获取所有依赖项
+        /// </summary>
+        public tb_CompanyController(ILogger<tb_CompanyController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_CompanyServices tb_CompanyServices, EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;
            _tb_CompanyServices = tb_CompanyServices;
-           _cacheManager = cacheManager; // 注入新的缓存管理器
-           _clientCacheManager = new CacheEventManager(cacheManager); // 初始化缓存事件管理器
+           _eventDrivenCacheManager = eventDrivenCacheManager; // 注入事件驱动缓存管理器
             _appContext = appContext;
         }
       
@@ -94,16 +95,16 @@ namespace RUINORERP.Business
                     bool rs = await _tb_CompanyServices.Update(entity);
                     if (rs)
                     {
-                        // 使用新的缓存管理器更新缓存
-                        _cacheManager.UpdateEntity<tb_Company>(entity);
+                        // 使用事件驱动缓存管理器更新缓存并触发事件
+                        _eventDrivenCacheManager.UpdateEntity<tb_Company>(entity);
                     }
                     Returnobj = entity;
                 }
                 else
                 {
                     Returnobj = await _tb_CompanyServices.AddReEntityAsync(entity);
-                    // 使用客户端缓存管理器更新缓存并触发事件
-                    _clientCacheManager.UpdateEntity<tb_Company>(Returnobj);
+                    // 使用事件驱动缓存管理器更新缓存并触发事件
+                    _eventDrivenCacheManager.UpdateEntity<tb_Company>(Returnobj);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -137,16 +138,16 @@ namespace RUINORERP.Business
                     bool rs = await _tb_CompanyServices.Update(entity);
                     if (rs)
                     {
-                        // 使用客户端缓存管理器更新缓存并触发事件
-                        _clientCacheManager.UpdateEntity<tb_Company>(entity);
+                        // 使用事件驱动缓存管理器更新缓存并触发事件
+                        _eventDrivenCacheManager.UpdateEntity<tb_Company>(entity);
                     }
                     Returnobj = entity as T;
                 }
                 else
                 {
                     Returnobj = await _tb_CompanyServices.AddReEntityAsync(entity) as T ;
-                    // 使用客户端缓存管理器更新缓存并触发事件
-                    _clientCacheManager.UpdateEntity<tb_Company>(entity);
+                    // 使用事件驱动缓存管理器更新缓存并触发事件
+                    _eventDrivenCacheManager.UpdateEntity<tb_Company>(entity);
                 }
 
                 rr.ReturnObject = Returnobj;
@@ -171,9 +172,9 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                // 使用客户端缓存管理器更新缓存并触发事件
-                _clientCacheManager.UpdateEntityList<T>(list);
-             }
+                // 使用事件驱动缓存管理器更新缓存并触发事件
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
+            }
             return list;
         }
         
@@ -187,8 +188,8 @@ namespace RUINORERP.Business
             }
             if (list != null)
             {
-                // 使用客户端缓存管理器更新缓存并触发事件
-                _clientCacheManager.UpdateEntityList<T>(list);
+                // 使用事件驱动缓存管理器更新缓存并触发事件
+                _eventDrivenCacheManager.UpdateEntityList<T>(list);
              }
             return list;
         }
@@ -201,8 +202,8 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                // 使用客户端缓存管理器删除缓存并触发事件
-                _clientCacheManager.DeleteEntity<tb_Company>(entity.ID);
+                // 使用事件驱动缓存管理器删除缓存并触发事件
+                _eventDrivenCacheManager.DeleteEntity<tb_Company>(entity.ID);
             }
             return rs;
         }
@@ -216,8 +217,8 @@ namespace RUINORERP.Business
             {
                 rs=true;
                 ////生成时暂时只考虑了一个主键的情况
-                // 使用客户端缓存管理器删除缓存并触发事件
-                _clientCacheManager.DeleteEntityList<tb_Company>(entitys);
+                // 使用事件驱动缓存管理器删除缓存并触发事件
+                _eventDrivenCacheManager.DeleteEntityList<tb_Company>(entitys);
             }
             return rs;
         }
@@ -327,8 +328,8 @@ namespace RUINORERP.Business
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                // 使用新的缓存管理器删除缓存
-                _cacheManager.DeleteEntity<tb_Company>(entity.ID);
+                // 使用事件驱动缓存管理器删除缓存并触发事件
+                _eventDrivenCacheManager.DeleteEntity<tb_Company>(entity.ID);
             }
             return rs;
         }
@@ -340,7 +341,7 @@ namespace RUINORERP.Business
         {
             tb_Company AddEntity =  _tb_CompanyServices.AddReEntity(entity);
             // 使用客户端缓存管理器更新缓存并触发事件
-            _clientCacheManager.UpdateEntity<tb_Company>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_Company>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -349,7 +350,7 @@ namespace RUINORERP.Business
         {
             tb_Company AddEntity = await _tb_CompanyServices.AddReEntityAsync(entity);
             // 使用客户端缓存管理器更新缓存并触发事件
-            _clientCacheManager.UpdateEntity<tb_Company>(AddEntity);
+            _eventDrivenCacheManager.UpdateEntity<tb_Company>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
@@ -360,7 +361,7 @@ namespace RUINORERP.Business
             if(id>0)
             {
                  // 使用客户端缓存管理器更新缓存并触发事件
-                 _clientCacheManager.UpdateEntity<tb_Company>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_Company>(entity);
             }
             return id;
         }
@@ -371,7 +372,7 @@ namespace RUINORERP.Business
             if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
             {
                  // 使用客户端缓存管理器更新缓存并触发事件
-                 _clientCacheManager.UpdateEntityList<tb_Company>(infos);
+                 _eventDrivenCacheManager.UpdateEntityList<tb_Company>(infos);
             }
             return ids;
         }
@@ -383,7 +384,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 // 使用客户端缓存管理器删除缓存并触发事件
-                _clientCacheManager.DeleteEntity<tb_Company>(entity.ID);
+                _eventDrivenCacheManager.DeleteEntity<tb_Company>(entity.ID);
                 
             }
             return rs;
@@ -395,7 +396,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                  // 使用客户端缓存管理器更新缓存并触发事件
-                 _clientCacheManager.UpdateEntity<tb_Company>(entity);
+                 _eventDrivenCacheManager.UpdateEntity<tb_Company>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
@@ -407,7 +408,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 // 使用客户端缓存管理器删除缓存并触发事件
-                _clientCacheManager.DeleteEntity<tb_Company>(id);
+                _eventDrivenCacheManager.DeleteEntity<tb_Company>(id);
             }
             return rs;
         }
@@ -417,11 +418,8 @@ namespace RUINORERP.Business
             bool rs = await _tb_CompanyServices.DeleteByIds(ids);
             if (rs)
             {
-                // 使用客户端缓存管理器删除缓存并触发事件
-                foreach (var id in ids)
-                {
-                    _clientCacheManager.DeleteEntity<tb_Company>(id);
-                }
+                // 使用事件驱动缓存管理器批量删除缓存并触发事件
+                _eventDrivenCacheManager.DeleteEntities<tb_Company>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
@@ -434,7 +432,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             // 使用客户端缓存管理器更新缓存并触发事件
-            _clientCacheManager.UpdateEntityList<tb_Company>(list);
+            _eventDrivenCacheManager.UpdateEntityList<tb_Company>(list);
             return list;
         }
         
@@ -446,7 +444,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             // 使用客户端缓存管理器更新缓存并触发事件
-            _clientCacheManager.UpdateEntityList<tb_Company>(list);
+            _eventDrivenCacheManager.UpdateEntityList<tb_Company>(list);
             return list;
         }
         
@@ -458,7 +456,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             // 使用客户端缓存管理器更新缓存并触发事件
-            _clientCacheManager.UpdateEntityList<tb_Company>(list);
+            _eventDrivenCacheManager.UpdateEntityList<tb_Company>(list);
             return list;
         }
         
@@ -470,7 +468,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             // 使用客户端缓存管理器更新缓存并触发事件
-            _clientCacheManager.UpdateEntityList<tb_Company>(list);
+            _eventDrivenCacheManager.UpdateEntityList<tb_Company>(list);
             return list;
         }
         
@@ -489,7 +487,7 @@ namespace RUINORERP.Business
                 item.HasChanged = false;
             }
             // 使用客户端缓存管理器更新缓存并触发事件
-            _clientCacheManager.UpdateEntityList<tb_Company>(list);
+            _eventDrivenCacheManager.UpdateEntityList<tb_Company>(list);
             return list;
         }
         
@@ -514,7 +512,7 @@ namespace RUINORERP.Business
             }
             
             // 使用客户端缓存管理器更新缓存并触发事件
-            _clientCacheManager.UpdateEntityList<tb_Company>(list);
+            _eventDrivenCacheManager.UpdateEntityList<tb_Company>(list);
             return list;
         }
 
@@ -538,7 +536,7 @@ namespace RUINORERP.Business
             }
             
             // 使用客户端缓存管理器更新缓存并触发事件
-            _clientCacheManager.UpdateEntityList<tb_Company>(list);
+            _eventDrivenCacheManager.UpdateEntityList<tb_Company>(list);
             return list;
         }
         
@@ -562,7 +560,7 @@ namespace RUINORERP.Business
             }
             
             // 使用客户端缓存管理器更新缓存并触发事件
-            _clientCacheManager.UpdateEntityList<tb_Company>(list);
+            _eventDrivenCacheManager.UpdateEntityList<tb_Company>(list);
             return list;
         }
         
@@ -601,8 +599,8 @@ namespace RUINORERP.Business
                 entity.HasChanged = false;
             }
 
-            // 使用新的缓存管理器更新缓存
-            _cacheManager.UpdateEntity<tb_Company>(entity);
+            // 使用缓存事件管理器更新缓存并触发事件
+            _eventDrivenCacheManager.UpdateEntity<tb_Company>(entity);
             return entity as T;
         }
         

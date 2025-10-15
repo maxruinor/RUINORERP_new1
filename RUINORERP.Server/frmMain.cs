@@ -36,6 +36,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.VisualBasic.ApplicationServices;
 using Newtonsoft.Json;
 using RUINORERP.Business;
+using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Helper;
 using RUINORERP.Common.Log4Net;
@@ -663,40 +664,60 @@ namespace RUINORERP.Server
 
         private void CheckCacheList()
         {
-            #region 根据CacheInfoList检查更新过期的缓存。
+            #region 根据缓存配置检查更新过期的缓存。
             try
             {
+                // 使用新的缓存体系
+                TableSchemaManager tableSchemaManager = TableSchemaManager.Instance;
+                IEntityCacheManager entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
 
-                foreach (var item in MyCacheManager.Instance.NewTableList)
+                // 获取所有可缓存的表名
+                List<string> cacheableTables = tableSchemaManager.GetCacheableTableNamesList();
+
+                foreach (var tableName in cacheableTables)
                 {
-                    CacheInfo cacheInfo = MyCacheManager.Instance.CacheInfoList.Get(item.Key) as CacheInfo;
-                    if (cacheInfo != null)
+                    // 检查表结构信息是否存在
+                    TableSchemaInfo schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
+                    if (schemaInfo != null)
                     {
-                        if (!MyCacheManager.Instance.CacheEntityList.Exists(item.Key))
+                        try
+                        {
+                            // 尝试获取实体列表来验证缓存是否存在
+                            var entityList = entityCacheManager.GetEntityList<object>(tableName);
+                            
+                            if (entityList == null || entityList.Count == 0)
+                            {
+                                if (frmMain.Instance.IsDebug)
+                                {
+                                    frmMain.Instance.PrintInfoLog($"检查更新过期的缓存 ，缓存为空：{tableName}。");
+                                }
+                                //只有缓存概率有变化就发到客户端。客户端再根据这个与他本地实际的缓存数据行对比来请求真正的缓存数据
+                                foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
+                                {
+                                    //  BizService.UserService.发送缓存信息列表(PlayerSession);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
                         {
                             if (frmMain.Instance.IsDebug)
                             {
-                                frmMain.Instance.PrintInfoLog($"检查更新过期的缓存 ，成功添加{item.Key}。");
-                            }
-                            //只有缓存概率有变化就发到客户端。客户端再根据这个与他本地实际的缓存数据行对比来请求真正的缓存数据
-                            foreach (SessionforBiz PlayerSession in sessionListBiz.Values)
-                            {
-                                //  BizService.UserService.发送缓存信息列表(PlayerSession);
+                                frmMain.Instance.PrintInfoLog($"检查缓存表 {tableName} 时发生异常：{ex.Message}");
                             }
                         }
                     }
                     else
                     {
-                        //if (frmMain.Instance.IsDebug)
-                        //{
-                        //    frmMain.Instance.PrintInfoLog($"检查更新过期的缓存时没有找到{item.Key}概览信息。");
-                        //}
+                        if (frmMain.Instance.IsDebug)
+                        {
+                            frmMain.Instance.PrintInfoLog($"检查更新过期的缓存时没有找到{tableName}表结构信息。");
+                        }
                     }
                 }
             }
             catch (Exception exc)
             {
-                frmMain.Instance.PrintInfoLog($"根据CacheInfoList检查更新过期的缓存出错：{exc.Message} ");
+                frmMain.Instance.PrintInfoLog($"根据缓存配置检查更新过期的缓存出错：{exc.Message} ");
             }
             #endregion
 

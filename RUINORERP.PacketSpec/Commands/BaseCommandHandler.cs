@@ -50,17 +50,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public DateTime TimestampUtc { get; set; } = DateTime.UtcNow;
 
-        /// <summary>
-        /// 创建时间（本地时间，仅用于调试显示）
-        /// </summary>
-        [IgnoreMember]
-        public DateTime CreatedTimeLocal => CreatedTime.ToLocalTime();
-
-        /// <summary>
-        /// 时间戳（本地时间，仅用于调试显示）
-        /// </summary>
-        [IgnoreMember]
-        public DateTime TimestampLocal => TimestampUtc.ToLocalTime();
 
         /// <summary>
         /// 更新时间戳（实现 ITimestamped 接口）
@@ -96,7 +85,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// 提供默认实现，避免空引用异常
         /// </summary>
         public virtual IReadOnlyList<CommandId> SupportedCommands { get; protected set; } = Array.Empty<CommandId>();
-
         
 
         /// <summary>

@@ -199,7 +199,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 命令优先级
         /// </summary>
         [Key(32)]
-        public CommandPriority Priority { get; set; }
+        public CommandPriority Priority { get; set; } = CommandPriority.Normal;
 
         /// <summary>
         /// 构造函数

@@ -1,4 +1,4 @@
-﻿using RUINORERP.Business.CommService;
+using RUINORERP.Business.CommService;
 using RUINORERP.Common.CustomAttribute;
 using System;
 using System.Collections.Generic;
@@ -76,6 +76,20 @@ namespace RUINORERP.Business.Cache
         /// 根据表名和主键删除实体缓存
         /// </summary>
         void DeleteEntity(string tableName, object primaryKeyValue);
+
+        /// <summary>
+        /// 批量删除指定主键数组的实体缓存
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="idValues">主键值数组</param>
+        void DeleteEntities<T>(object[] idValues) where T : class;
+
+        /// <summary>
+        /// 根据表名批量删除指定主键数组的实体缓存
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="primaryKeyValues">主键值数组</param>
+        void DeleteEntities(string tableName, object[] primaryKeyValues);
         #endregion
 
         #region 缓存初始化方法

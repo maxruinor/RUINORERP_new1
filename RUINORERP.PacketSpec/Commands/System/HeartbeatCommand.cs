@@ -1,4 +1,4 @@
-﻿﻿﻿using RUINORERP.PacketSpec.Commands;
+﻿﻿﻿﻿using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -52,12 +52,9 @@ namespace RUINORERP.PacketSpec.Commands.System
         /// </summary>
         public HeartbeatCommand()
         {
-            Priority = CommandPriority.Normal;
             // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
             // 超时应该是执行环境的问题，由网络层或业务处理层处理
         }
-
- 
 
         /// <summary>
         /// 构造函数
@@ -73,7 +70,6 @@ namespace RUINORERP.PacketSpec.Commands.System
               
         };
 
-            Priority = CommandPriority.Normal;
             // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
             // 超时应该是执行环境的问题，由网络层或业务处理层处理
             CommandIdentifier = SystemCommands.Heartbeat;

@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Core;
 using MessagePack;
+using System.Linq;
 namespace RUINORERP.PacketSpec.Models.Requests
 {
     /// <summary>
@@ -59,12 +60,13 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 创建登录请求
         /// </summary>
         public static LoginRequest Create(string username, string password, 
-            string deviceId = null, string clientType = "Desktop")
+            string clientType = "Desktop")
         {
             return new LoginRequest
             {
                 Username = username,
                 Password = password,
+                DeviceId= GetDeviceId(),
                 ClientVersion = ProtocolVersion.Current,
                 LoginTime = DateTime.Now,
             };
@@ -88,5 +90,47 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             Password = null;
         }
+
+        /// <summary>
+        /// 获取设备标识
+        /// </summary>
+        /// <returns>设备标识</returns>
+        private static string GetDeviceId()
+        {
+            try
+            {
+                // 使用机器名和用户名组合生成设备标识
+                var machineName = Environment.MachineName;
+                var userName = Environment.UserName;
+                return $"{machineName}_{userName}";
+            }
+            catch
+            {
+                // 如果获取失败，使用GUID
+                return Guid.NewGuid().ToString();
+            }
+        }
+
+        /// <summary>
+        /// 获取客户端IP地址
+        /// </summary>
+        /// <returns>客户端IP地址</returns>
+        private static string GetClientIp()
+        {
+            try
+            {
+                // 获取本地机器的IP地址
+                var hostName = System.Net.Dns.GetHostName();
+                var hostEntry = System.Net.Dns.GetHostEntry(hostName);
+                var ipAddress = hostEntry.AddressList
+                    .FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                return ipAddress?.ToString() ?? "127.0.0.1";
+            }
+            catch
+            {
+                return "127.0.0.1";
+            }
+        }
+
     }
 }

@@ -68,7 +68,6 @@ namespace RUINORERP.PacketSpec.Commands.Cache
             SyncMode = "FULL"; // 默认全量同步
             // 移除: Direction = PacketDirection.Request;
             CommandIdentifier = CacheCommands.CacheRequest;
-            Priority = CommandPriority.Normal;
             // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
             // 超时应该是执行环境的问题，由网络层或业务处理层处理
         }

@@ -71,7 +71,6 @@ namespace RUINORERP.Server
             buttonUserList = new System.Windows.Forms.Button();
             buttonServerMonitor = new System.Windows.Forms.Button();
             tabControlMain = new System.Windows.Forms.TabControl();
-            tabPageServerMonitor = new System.Windows.Forms.TabPage();
             richTextBoxLog = new System.Windows.Forms.RichTextBox();
             splitterLog = new System.Windows.Forms.Splitter();
             menuStripMain.SuspendLayout();
@@ -82,7 +81,6 @@ namespace RUINORERP.Server
             splitContainerMain.Panel2.SuspendLayout();
             splitContainerMain.SuspendLayout();
             panelNavigation.SuspendLayout();
-            tabControlMain.SuspendLayout();
             SuspendLayout();
             // 
             // menuStripMain
@@ -107,28 +105,28 @@ namespace RUINORERP.Server
             startServerToolStripMenuItem.Name = "startServerToolStripMenuItem";
             startServerToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             startServerToolStripMenuItem.Text = "启动服务";
-            startServerToolStripMenuItem.Click += new System.EventHandler(this.startServerToolStripMenuItem_Click);
+            startServerToolStripMenuItem.Click += startServerToolStripMenuItem_Click;
             // 
             // stopServerToolStripMenuItem
             // 
             stopServerToolStripMenuItem.Name = "stopServerToolStripMenuItem";
             stopServerToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             stopServerToolStripMenuItem.Text = "关闭服务";
-            stopServerToolStripMenuItem.Click += new System.EventHandler(this.stopServerToolStripMenuItem_Click);
+            stopServerToolStripMenuItem.Click += stopServerToolStripMenuItem_Click;
             // 
             // reloadConfigToolStripMenuItem
             // 
             reloadConfigToolStripMenuItem.Name = "reloadConfigToolStripMenuItem";
             reloadConfigToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             reloadConfigToolStripMenuItem.Text = "重新加载配置";
-            reloadConfigToolStripMenuItem.Click += new System.EventHandler(this.reloadConfigToolStripMenuItem_Click);
+            reloadConfigToolStripMenuItem.Click += reloadConfigToolStripMenuItem_Click;
             // 
             // exitToolStripMenuItem
             // 
             exitToolStripMenuItem.Name = "exitToolStripMenuItem";
             exitToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
             exitToolStripMenuItem.Text = "退出";
-            exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // managementToolStripMenuItem
             // 
@@ -142,28 +140,28 @@ namespace RUINORERP.Server
             userManagementToolStripMenuItem.Name = "userManagementToolStripMenuItem";
             userManagementToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             userManagementToolStripMenuItem.Text = "用户管理";
-            userManagementToolStripMenuItem.Click += new System.EventHandler(this.userManagementToolStripMenuItem_Click);
+            userManagementToolStripMenuItem.Click += userManagementToolStripMenuItem_Click;
             // 
             // cacheManagementToolStripMenuItem
             // 
             cacheManagementToolStripMenuItem.Name = "cacheManagementToolStripMenuItem";
             cacheManagementToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             cacheManagementToolStripMenuItem.Text = "缓存管理";
-            cacheManagementToolStripMenuItem.Click += new System.EventHandler(this.cacheManagementToolStripMenuItem_Click);
+            cacheManagementToolStripMenuItem.Click += cacheManagementToolStripMenuItem_Click;
             // 
             // workflowManagementToolStripMenuItem
             // 
             workflowManagementToolStripMenuItem.Name = "workflowManagementToolStripMenuItem";
             workflowManagementToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             workflowManagementToolStripMenuItem.Text = "工作流管理";
-            workflowManagementToolStripMenuItem.Click += new System.EventHandler(this.workflowManagementToolStripMenuItem_Click);
+            workflowManagementToolStripMenuItem.Click += workflowManagementToolStripMenuItem_Click;
             // 
             // blacklistManagementToolStripMenuItem
             // 
             blacklistManagementToolStripMenuItem.Name = "blacklistManagementToolStripMenuItem";
             blacklistManagementToolStripMenuItem.Size = new System.Drawing.Size(136, 22);
             blacklistManagementToolStripMenuItem.Text = "黑名单管理";
-            blacklistManagementToolStripMenuItem.Click += new System.EventHandler(this.blacklistManagementToolStripMenuItem_Click);
+            blacklistManagementToolStripMenuItem.Click += blacklistManagementToolStripMenuItem_Click;
             // 
             // configurationToolStripMenuItem
             // 
@@ -177,21 +175,21 @@ namespace RUINORERP.Server
             systemConfigToolStripMenuItem.Name = "systemConfigToolStripMenuItem";
             systemConfigToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             systemConfigToolStripMenuItem.Text = "系统配置";
-            systemConfigToolStripMenuItem.Click += new System.EventHandler(this.systemConfigToolStripMenuItem_Click);
+            systemConfigToolStripMenuItem.Click += systemConfigToolStripMenuItem_Click;
             // 
             // registrationInfoToolStripMenuItem
             // 
             registrationInfoToolStripMenuItem.Name = "registrationInfoToolStripMenuItem";
             registrationInfoToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             registrationInfoToolStripMenuItem.Text = "注册信息";
-            registrationInfoToolStripMenuItem.Click += new System.EventHandler(this.registrationInfoToolStripMenuItem_Click);
+            registrationInfoToolStripMenuItem.Click += registrationInfoToolStripMenuItem_Click;
             // 
             // dataViewerToolStripMenuItem
             // 
             dataViewerToolStripMenuItem.Name = "dataViewerToolStripMenuItem";
             dataViewerToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             dataViewerToolStripMenuItem.Text = "数据查看";
-            dataViewerToolStripMenuItem.Click += new System.EventHandler(this.dataViewerToolStripMenuItem_Click);
+            dataViewerToolStripMenuItem.Click += dataViewerToolStripMenuItem_Click;
             // 
             // windowToolStripMenuItem
             // 
@@ -205,7 +203,7 @@ namespace RUINORERP.Server
             closeAllToolStripMenuItem.Name = "closeAllToolStripMenuItem";
             closeAllToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             closeAllToolStripMenuItem.Text = "关闭所有";
-            closeAllToolStripMenuItem.Click += new System.EventHandler(this.closeAllToolStripMenuItem_Click);
+            closeAllToolStripMenuItem.Click += closeAllToolStripMenuItem_Click;
             // 
             // helpToolStripMenuItem
             // 
@@ -219,14 +217,14 @@ namespace RUINORERP.Server
             aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             aboutToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             aboutToolStripMenuItem.Text = "关于";
-            aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            aboutToolStripMenuItem.Click += aboutToolStripMenuItem_Click;
             // 
             // helpDocumentationToolStripMenuItem
             // 
             helpDocumentationToolStripMenuItem.Name = "helpDocumentationToolStripMenuItem";
             helpDocumentationToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
             helpDocumentationToolStripMenuItem.Text = "帮助文档";
-            helpDocumentationToolStripMenuItem.Click += new System.EventHandler(this.helpDocumentationToolStripMenuItem_Click);
+            helpDocumentationToolStripMenuItem.Click += helpDocumentationToolStripMenuItem_Click;
             // 
             // toolStripMain
             // 
@@ -243,7 +241,7 @@ namespace RUINORERP.Server
             toolStripButtonStartServer.Name = "toolStripButtonStartServer";
             toolStripButtonStartServer.Size = new System.Drawing.Size(72, 22);
             toolStripButtonStartServer.Text = "启动服务器";
-            toolStripButtonStartServer.Click += new System.EventHandler(this.toolStripButtonStartServer_Click);
+            toolStripButtonStartServer.Click += toolStripButtonStartServer_Click;
             // 
             // toolStripButtonStopServer
             // 
@@ -251,7 +249,7 @@ namespace RUINORERP.Server
             toolStripButtonStopServer.Name = "toolStripButtonStopServer";
             toolStripButtonStopServer.Size = new System.Drawing.Size(72, 22);
             toolStripButtonStopServer.Text = "停止服务器";
-            toolStripButtonStopServer.Click += new System.EventHandler(this.toolStripButtonStopServer_Click);
+            toolStripButtonStopServer.Click += toolStripButtonStopServer_Click;
             // 
             // toolStripSeparator1
             // 
@@ -262,25 +260,25 @@ namespace RUINORERP.Server
             // 
             toolStripButtonRefreshData.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButtonRefreshData.Name = "toolStripButtonRefreshData";
-            toolStripButtonRefreshData.Size = new System.Drawing.Size(72, 22);
+            toolStripButtonRefreshData.Size = new System.Drawing.Size(60, 22);
             toolStripButtonRefreshData.Text = "刷新数据";
-            toolStripButtonRefreshData.Click += new System.EventHandler(this.toolStripButtonRefreshData_Click);
+            toolStripButtonRefreshData.Click += toolStripButtonRefreshData_Click;
             // 
             // toolStripButtonUserManagement
             // 
             toolStripButtonUserManagement.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButtonUserManagement.Name = "toolStripButtonUserManagement";
-            toolStripButtonUserManagement.Size = new System.Drawing.Size(72, 22);
+            toolStripButtonUserManagement.Size = new System.Drawing.Size(60, 22);
             toolStripButtonUserManagement.Text = "用户管理";
-            toolStripButtonUserManagement.Click += new System.EventHandler(this.toolStripButtonUserManagement_Click);
+            toolStripButtonUserManagement.Click += toolStripButtonUserManagement_Click;
             // 
             // toolStripButtonCacheManagement
             // 
             toolStripButtonCacheManagement.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButtonCacheManagement.Name = "toolStripButtonCacheManagement";
-            toolStripButtonCacheManagement.Size = new System.Drawing.Size(72, 22);
+            toolStripButtonCacheManagement.Size = new System.Drawing.Size(60, 22);
             toolStripButtonCacheManagement.Text = "缓存管理";
-            toolStripButtonCacheManagement.Click += new System.EventHandler(this.toolStripButtonCacheManagement_Click);
+            toolStripButtonCacheManagement.Click += toolStripButtonCacheManagement_Click;
             // 
             // toolStripButtonWorkflowTest
             // 
@@ -288,15 +286,15 @@ namespace RUINORERP.Server
             toolStripButtonWorkflowTest.Name = "toolStripButtonWorkflowTest";
             toolStripButtonWorkflowTest.Size = new System.Drawing.Size(72, 22);
             toolStripButtonWorkflowTest.Text = "工作流测试";
-            toolStripButtonWorkflowTest.Click += new System.EventHandler(this.toolStripButtonWorkflowTest_Click);
+            toolStripButtonWorkflowTest.Click += toolStripButtonWorkflowTest_Click;
             // 
             // toolStripButtonSystemConfig
             // 
             toolStripButtonSystemConfig.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButtonSystemConfig.Name = "toolStripButtonSystemConfig";
-            toolStripButtonSystemConfig.Size = new System.Drawing.Size(72, 22);
+            toolStripButtonSystemConfig.Size = new System.Drawing.Size(60, 22);
             toolStripButtonSystemConfig.Text = "系统配置";
-            toolStripButtonSystemConfig.Click += new System.EventHandler(this.toolStripButtonSystemConfig_Click);
+            toolStripButtonSystemConfig.Click += toolStripButtonSystemConfig_Click;
             // 
             // statusStripMain
             // 
@@ -329,7 +327,7 @@ namespace RUINORERP.Server
             // 
             splitContainerMain.Dock = System.Windows.Forms.DockStyle.Fill;
             splitContainerMain.Location = new System.Drawing.Point(0, 52);
-            splitContainerMain.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            splitContainerMain.Margin = new System.Windows.Forms.Padding(4);
             splitContainerMain.Name = "splitContainerMain";
             // 
             // splitContainerMain.Panel1
@@ -355,7 +353,7 @@ namespace RUINORERP.Server
             panelNavigation.Controls.Add(buttonServerMonitor);
             panelNavigation.Dock = System.Windows.Forms.DockStyle.Fill;
             panelNavigation.Location = new System.Drawing.Point(0, 0);
-            panelNavigation.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            panelNavigation.Margin = new System.Windows.Forms.Padding(4);
             panelNavigation.Name = "panelNavigation";
             panelNavigation.Size = new System.Drawing.Size(175, 810);
             panelNavigation.TabIndex = 0;
@@ -363,107 +361,95 @@ namespace RUINORERP.Server
             // buttonDataViewer
             // 
             buttonDataViewer.Location = new System.Drawing.Point(14, 425);
-            buttonDataViewer.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            buttonDataViewer.Margin = new System.Windows.Forms.Padding(4);
             buttonDataViewer.Name = "buttonDataViewer";
             buttonDataViewer.Size = new System.Drawing.Size(140, 42);
             buttonDataViewer.TabIndex = 6;
             buttonDataViewer.Text = "数据查看";
             buttonDataViewer.UseVisualStyleBackColor = true;
-            buttonDataViewer.Click += new System.EventHandler(this.buttonDataViewer_Click);
+            buttonDataViewer.Click += buttonDataViewer_Click;
             // 
             // buttonSystemConfig
             // 
             buttonSystemConfig.Location = new System.Drawing.Point(14, 354);
-            buttonSystemConfig.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            buttonSystemConfig.Margin = new System.Windows.Forms.Padding(4);
             buttonSystemConfig.Name = "buttonSystemConfig";
             buttonSystemConfig.Size = new System.Drawing.Size(140, 42);
             buttonSystemConfig.TabIndex = 5;
             buttonSystemConfig.Text = "系统配置";
             buttonSystemConfig.UseVisualStyleBackColor = true;
-            buttonSystemConfig.Click += new System.EventHandler(this.buttonSystemConfig_Click);
+            buttonSystemConfig.Click += buttonSystemConfig_Click;
             // 
             // buttonBlacklist
             // 
             buttonBlacklist.Location = new System.Drawing.Point(14, 283);
-            buttonBlacklist.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            buttonBlacklist.Margin = new System.Windows.Forms.Padding(4);
             buttonBlacklist.Name = "buttonBlacklist";
             buttonBlacklist.Size = new System.Drawing.Size(140, 42);
             buttonBlacklist.TabIndex = 4;
             buttonBlacklist.Text = "黑名单管理";
             buttonBlacklist.UseVisualStyleBackColor = true;
-            buttonBlacklist.Click += new System.EventHandler(this.buttonBlacklist_Click);
+            buttonBlacklist.Click += buttonBlacklist_Click;
             // 
             // buttonWorkflow
             // 
             buttonWorkflow.Location = new System.Drawing.Point(14, 212);
-            buttonWorkflow.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            buttonWorkflow.Margin = new System.Windows.Forms.Padding(4);
             buttonWorkflow.Name = "buttonWorkflow";
             buttonWorkflow.Size = new System.Drawing.Size(140, 42);
             buttonWorkflow.TabIndex = 3;
             buttonWorkflow.Text = "工作流管理";
             buttonWorkflow.UseVisualStyleBackColor = true;
-            buttonWorkflow.Click += new System.EventHandler(this.buttonWorkflow_Click);
+            buttonWorkflow.Click += buttonWorkflow_Click;
             // 
             // buttonCacheManage
             // 
             buttonCacheManage.Location = new System.Drawing.Point(14, 142);
-            buttonCacheManage.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            buttonCacheManage.Margin = new System.Windows.Forms.Padding(4);
             buttonCacheManage.Name = "buttonCacheManage";
             buttonCacheManage.Size = new System.Drawing.Size(140, 42);
             buttonCacheManage.TabIndex = 2;
             buttonCacheManage.Text = "缓存管理";
             buttonCacheManage.UseVisualStyleBackColor = true;
-            buttonCacheManage.Click += new System.EventHandler(this.buttonCacheManage_Click);
+            buttonCacheManage.Click += buttonCacheManage_Click;
             // 
             // buttonUserList
             // 
             buttonUserList.Location = new System.Drawing.Point(14, 71);
-            buttonUserList.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            buttonUserList.Margin = new System.Windows.Forms.Padding(4);
             buttonUserList.Name = "buttonUserList";
             buttonUserList.Size = new System.Drawing.Size(140, 42);
             buttonUserList.TabIndex = 1;
             buttonUserList.Text = "用户管理";
             buttonUserList.UseVisualStyleBackColor = true;
-            buttonUserList.Click += new System.EventHandler(this.buttonUserList_Click);
+            buttonUserList.Click += buttonUserList_Click;
             // 
             // buttonServerMonitor
             // 
             buttonServerMonitor.Location = new System.Drawing.Point(14, 14);
-            buttonServerMonitor.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            buttonServerMonitor.Margin = new System.Windows.Forms.Padding(4);
             buttonServerMonitor.Name = "buttonServerMonitor";
             buttonServerMonitor.Size = new System.Drawing.Size(140, 42);
             buttonServerMonitor.TabIndex = 0;
             buttonServerMonitor.Text = "服务器监控";
             buttonServerMonitor.UseVisualStyleBackColor = true;
-            buttonServerMonitor.Click += new System.EventHandler(this.buttonServerMonitor_Click);
+            buttonServerMonitor.Click += buttonServerMonitor_Click;
             // 
             // tabControlMain
             // 
-            tabControlMain.Controls.Add(tabPageServerMonitor);
             tabControlMain.Dock = System.Windows.Forms.DockStyle.Fill;
             tabControlMain.Location = new System.Drawing.Point(0, 0);
-            tabControlMain.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabControlMain.Margin = new System.Windows.Forms.Padding(4);
             tabControlMain.Name = "tabControlMain";
             tabControlMain.SelectedIndex = 0;
             tabControlMain.Size = new System.Drawing.Size(987, 810);
             tabControlMain.TabIndex = 0;
             // 
-            // tabPageServerMonitor
-            // 
-            tabPageServerMonitor.Location = new System.Drawing.Point(4, 26);
-            tabPageServerMonitor.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            tabPageServerMonitor.Name = "tabPageServerMonitor";
-            tabPageServerMonitor.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            tabPageServerMonitor.Size = new System.Drawing.Size(979, 780);
-            tabPageServerMonitor.TabIndex = 0;
-            tabPageServerMonitor.Text = "服务器监控";
-            tabPageServerMonitor.UseVisualStyleBackColor = true;
-            // 
             // richTextBoxLog
             // 
             richTextBoxLog.Dock = System.Windows.Forms.DockStyle.Bottom;
             richTextBoxLog.Location = new System.Drawing.Point(0, 891);
-            richTextBoxLog.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            richTextBoxLog.Margin = new System.Windows.Forms.Padding(4);
             richTextBoxLog.Name = "richTextBoxLog";
             richTextBoxLog.Size = new System.Drawing.Size(1167, 140);
             richTextBoxLog.TabIndex = 4;
@@ -474,7 +460,7 @@ namespace RUINORERP.Server
             splitterLog.BackColor = System.Drawing.Color.DarkGray;
             splitterLog.Dock = System.Windows.Forms.DockStyle.Bottom;
             splitterLog.Location = new System.Drawing.Point(0, 884);
-            splitterLog.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            splitterLog.Margin = new System.Windows.Forms.Padding(4);
             splitterLog.Name = "splitterLog";
             splitterLog.Size = new System.Drawing.Size(1167, 7);
             splitterLog.TabIndex = 5;
@@ -492,7 +478,7 @@ namespace RUINORERP.Server
             Controls.Add(splitterLog);
             Controls.Add(richTextBoxLog);
             MainMenuStrip = menuStripMain;
-            Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            Margin = new System.Windows.Forms.Padding(4);
             Name = "frmMainNew";
             Text = "RUINOR ERP 服务器管理端";
             FormClosing += frmMainNew_FormClosing;
@@ -508,7 +494,6 @@ namespace RUINORERP.Server
             ((System.ComponentModel.ISupportInitialize)splitContainerMain).EndInit();
             splitContainerMain.ResumeLayout(false);
             panelNavigation.ResumeLayout(false);
-            tabControlMain.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -558,7 +543,6 @@ namespace RUINORERP.Server
         private System.Windows.Forms.Button buttonUserList;
         private System.Windows.Forms.Button buttonServerMonitor;
         private System.Windows.Forms.TabControl tabControlMain;
-        private System.Windows.Forms.TabPage tabPageServerMonitor;
         private System.Windows.Forms.RichTextBox richTextBoxLog;
         private System.Windows.Forms.Splitter splitterLog;
     }

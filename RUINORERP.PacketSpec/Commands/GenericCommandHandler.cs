@@ -23,10 +23,6 @@ namespace RUINORERP.PacketSpec.Commands
         where TResponse : IResponse
     {
     
-        /// <summary>
-        /// 日志记录器
-        /// </summary>
-        protected ILogger<GenericCommandHandler<TRequest, TResponse>> Logger { get; set; }
 
         /// <summary>
         /// 无参构造函数，用于动态创建实例

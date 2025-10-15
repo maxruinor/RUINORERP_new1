@@ -31,11 +31,7 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
         [Key(13)]
         public object Data { get; set; }
 
-        /// <summary>
-        /// 操作参数字典（用于传递各种操作参数）
-        /// </summary>
-        [Key(14)]
-        public Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>();
+  
 
         /// <summary>
         /// 是否强制刷新缓存

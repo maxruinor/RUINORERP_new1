@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
@@ -85,12 +85,13 @@
 
   <ItemGroup>
     <Compile Include="Cache\CacheChangedEventArgs.cs" />
-    <Compile Include="Cache\CacheEventManager.cs" />
+    <Compile Include="Cache\EventDrivenCacheManager.cs" />
     <Compile Include="Cache\CacheSerializationHelper.cs" />
     <Compile Include="Cache\CacheSubscriptionManager.cs" />
     <Compile Include="Cache\EntityCacheInitializationService.cs" />
     <Compile Include="Cache\EntityCacheManager.cs" />
     <Compile Include="Cache\IEntityCacheManager.cs" />
+    <Compile Include="Cache\IEntityCacheManagerExtensions.cs" />
     <Compile Include="Cache\TableSchemaInfo.cs" />
     <Compile Include="Cache\TableSchemaManager.cs" />
   </ItemGroup>

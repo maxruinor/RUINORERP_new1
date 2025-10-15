@@ -105,7 +105,7 @@ namespace RUINORERP.PacketSpec.Validation
             When(request => request.OperationType == EntityOperationType.List || 
                          request.OperationType == EntityOperationType.Custom, () =>
             {
-                RuleFor(request => request.QueryParameters)
+                RuleFor(request => request.Parameters)
                     .NotNull()
                     .WithMessage("查询参数不能为空")
                     .WithErrorCode(UnifiedErrorCodes.Biz_DataInvalid.Code.ToString());

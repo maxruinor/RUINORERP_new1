@@ -30,31 +30,19 @@ namespace RUINORERP.PacketSpec.Models.Requests
         [Key(12)]
         public string ClientIp { get; set; }
 
-        /// <summary>
-        /// 设备标识
-        /// </summary>
-        [Key(13)]
-        public string DeviceId { get; set; }
+
 
         /// <summary>
         /// 创建Token刷新请求 - 简化版
         /// </summary>
-        public static TokenRefreshRequest Create(string deviceId = null, string clientIp = null)
+        public static TokenRefreshRequest Create(string clientIp = null)
         {
             return new TokenRefreshRequest
             {
-                DeviceId = deviceId ?? Guid.NewGuid().ToString(),
                 ClientIp = clientIp
             };
         }
 
-        /// <summary>
-        /// 验证请求有效性 - 简化版
-        /// </summary>
-        public bool IsValid()
-        {
-            // 简化版：始终有效，服务端负责验证
-            return true;
-        }
+ 
     }
 }

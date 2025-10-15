@@ -87,11 +87,7 @@ namespace RUINORERP.Server.Network.Commands
         /// </summary>
         private TokenManager TokenManager => Program.ServiceProvider.GetRequiredService<TokenManager>();
 
-        /// <summary>
-        /// 支持的命令类型
-        /// </summary>
-        public override IReadOnlyList<CommandId> SupportedCommands { get; protected set; } = Array.Empty<CommandId>();
-
+ 
 
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数（优化版：分层解析）
@@ -187,14 +183,7 @@ namespace RUINORERP.Server.Network.Commands
             BaseCommand<LoginRequest, LoginResponse> command, PacketModel Packet,
             CancellationToken cancellationToken)
         {
-            var loginRequest = command.Request;
-            if (loginRequest == null)
-            {
-                return BaseCommand<IResponse>.CreateError("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed.Code);
-            }
-
-            // 使用统一的业务逻辑处理方法
-            return await ProcessLoginAsync(loginRequest, Packet.ExecutionContext, cancellationToken);
+            return await HandleLoginRequestAsync(command.Request, Packet.ExecutionContext, cancellationToken);
         }
 
         /// <summary>
@@ -204,13 +193,21 @@ namespace RUINORERP.Server.Network.Commands
             GenericCommand<LoginRequest> command,
             CancellationToken cancellationToken)
         {
-            var loginRequest = command.Payload;
+            return await HandleLoginRequestAsync(command.Payload, Packet.ExecutionContext, cancellationToken);
+        }
+
+        /// <summary>
+        /// 统一的登录请求处理方法
+        /// </summary>
+        private async Task<BaseCommand<IResponse>> HandleLoginRequestAsync(LoginRequest loginRequest, CmdContext context, CancellationToken cancellationToken)
+        {
             if (loginRequest == null)
             {
                 return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
             }
-
-            return await ProcessLoginAsync(loginRequest, Packet.ExecutionContext, cancellationToken);
+            
+            // 统一的验证和处理逻辑
+            return await ProcessLoginAsync(loginRequest, context, cancellationToken);
         }
 
         /// <summary>
@@ -535,7 +532,7 @@ namespace RUINORERP.Server.Network.Commands
             {
                 // 统一使用基类方法获取Token刷新请求数据
                 var refreshReq = ParseBusinessData<TokenRefreshRequest>(command);
-                if (refreshReq == null || !refreshReq.IsValid())
+                if (refreshReq == null)
                 {
                     return BaseCommand<IResponse>.CreateError("Token刷新请求数据无效", UnifiedErrorCodes.Command_ValidationFailed.Code);
                 }

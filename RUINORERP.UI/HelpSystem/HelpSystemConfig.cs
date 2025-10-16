@@ -106,7 +106,8 @@ namespace RUINORERP.UI.HelpSystem
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "help.chm"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\RUINORERP.Helper\\help.chm"),
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\RUINORERP.Helper\\help.chm"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RUINORERP\\help.chm")
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RUINORERP\\help.chm"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "RUINORERP.Helper.chm")
             };
             
             foreach (string path in possiblePaths)
@@ -119,7 +120,7 @@ namespace RUINORERP.UI.HelpSystem
             }
             
             // 如果找不到CHM文件，返回默认路径
-            return "help.chm";
+            return "RUINORERP.Helper.chm";
         }
     }
 }

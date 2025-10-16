@@ -18,6 +18,7 @@ using RUINORERP.Extensions.AOP;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Business.DI
 {
@@ -90,7 +91,12 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .SingleInstance()
                 .PropertiesAutowired();
-
+            
+            // 注册缓存数据提供者，用于在缓存未命中时从数据库加载数据
+            builder.RegisterType<SqlSugarCacheDataProvider>()
+                .As<ICacheDataProvider>()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
   
 
             // 注册实体加载服务

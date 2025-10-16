@@ -109,6 +109,46 @@ namespace RUINORERP.UI.HelpSystem
         }
 
         /// <summary>
+        /// 根据类型显示帮助
+        /// </summary>
+        /// <param name="type">类型</param>
+        public static void ShowHelpByType(Type type)
+        {
+            if (!_config.IsHelpSystemEnabled || type == null)
+                return;
+
+            if (string.IsNullOrEmpty(_helpFilePath))
+            {
+                MessageBox.Show("帮助系统未初始化，请联系系统管理员。", "帮助系统", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                string helpPage = GetHelpPageForType(type);
+                string title = GetHelpTitleForType(type);
+                
+                if (!string.IsNullOrEmpty(helpPage))
+                {
+                    // 记录帮助查看历史
+                    HelpHistoryManager.RecordView(helpPage, title);
+                    
+                    // 显示帮助页面
+                    ShowHelpPage(helpPage);
+                }
+                else
+                {
+                    // 显示默认帮助页面
+                    ShowHelpPage(null);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"显示帮助时出错: {ex.Message}", "帮助系统", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
         /// 根据帮助键显示帮助
         /// </summary>
         /// <param name="helpKey">帮助键</param>
@@ -266,6 +306,9 @@ namespace RUINORERP.UI.HelpSystem
                 if (controlName.Contains("add")) return "controls/button_add.html";
                 if (controlName.Contains("edit")) return "controls/button_edit.html";
                 if (controlName.Contains("cancel")) return "controls/button_cancel.html";
+                if (controlName.Contains("print")) return "controls/button_print.html";
+                if (controlName.Contains("query")) return "controls/button_query.html";
+                if (controlName.Contains("export")) return "controls/button_export.html";
                 return "controls/button_general.html";
             }
             
@@ -345,6 +388,23 @@ namespace RUINORERP.UI.HelpSystem
         }
 
         /// <summary>
+        /// 根据类型获取帮助页面
+        /// </summary>
+        /// <param name="type">类型</param>
+        /// <returns>帮助页面路径</returns>
+        private static string GetHelpPageForType(Type type)
+        {
+            // 1. 首先检查是否有HelpMapping特性
+            if (_formHelpMapping.ContainsKey(type.FullName))
+            {
+                return _formHelpMapping[type.FullName];
+            }
+
+            // 2. 基于类型名称的智能匹配
+            return GetSmartHelpPage(type);
+        }
+
+        /// <summary>
         /// 获取窗体对应的帮助标题
         /// </summary>
         /// <param name="form">窗体实例</param>
@@ -366,6 +426,23 @@ namespace RUINORERP.UI.HelpSystem
 
             // 3. 默认使用窗体名称
             return form.Text ?? form.Name;
+        }
+
+        /// <summary>
+        /// 根据类型获取帮助标题
+        /// </summary>
+        /// <param name="type">类型</param>
+        /// <returns>帮助页面标题</returns>
+        private static string GetHelpTitleForType(Type type)
+        {
+            // 1. 首先检查是否有HelpMapping特性
+            if (_formTitleMapping.ContainsKey(type.FullName))
+            {
+                return _formTitleMapping[type.FullName];
+            }
+
+            // 2. 默认使用类型名称
+            return type.Name;
         }
 
         /// <summary>

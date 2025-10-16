@@ -142,7 +142,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 使用统一的业务逻辑处理方法
-                if (!(command.Command is BaseCommand<CacheRequest, CacheResponse> cacheCommand))
+                if (!(command.Command is BaseCommand<IRequest, CacheResponse> cacheCommand))
                 {
                     return BaseCommand<IResponse>.CreateError("不支持的缓存命令格式", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_FORMAT");
@@ -170,14 +170,14 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 缓存同步命令处理逻辑 - 可以复用现有逻辑或实现新的同步机制
-                if (!(command.Command is BaseCommand<CacheRequest, CacheResponse> cacheCommand))
+                if (!(command.Command is BaseCommand<IRequest, CacheResponse> cacheCommand))
                 {
                     return BaseCommand<IResponse>.CreateError("不支持的缓存同步命令格式", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "UNSUPPORTED_SYNC_FORMAT");
                 }
 
                 // 使用统一的处理方法
-                var result = await ProcessCacheRequestAsync(cacheCommand, command.Packet.ExecutionContext, cancellationToken);
+                var result = await ProcessCacheUpdateAsync(cacheCommand, command.Packet.ExecutionContext, cancellationToken);
 
                 // 同步完成后广播变更到其他客户端
                 if (result?.ResponseData is CacheResponse cacheResponse && cacheResponse.IsSuccess)
@@ -289,32 +289,6 @@ namespace RUINORERP.Server.Network.Commands
             }
         }
 
-        /// <summary>
-        /// 处理缓存请求 - 统一使用泛型命令处理模式
-        /// </summary>
-        /// <param name="command">缓存请求命令</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>处理结果</returns>
-        private async Task<BaseCommand<IResponse>> HandleCacheRequestAsync(QueuedCommand command, CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 使用统一的业务逻辑处理方法
-                if (!(command.Command is BaseCommand<CacheRequest, CacheResponse> cacheCommand))
-                {
-                    return BaseCommand<IResponse>.CreateError("不支持的缓存命令格式", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_FORMAT");
-                }
-
-                return await ProcessCacheRequestAsync(cacheCommand, command.Packet.ExecutionContext, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                LogError($"处理缓存请求异常: {ex.Message}", ex);
-                return BaseCommand<IResponse>.CreateError($"处理缓存请求异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
-                    .WithMetadata("ErrorCode", "CACHE_REQUEST_ERROR");
-            }
-        }
 
         /// <summary>
         /// 统一的缓存请求业务逻辑处理方法
@@ -323,12 +297,12 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="executionContext">执行上下文</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<BaseCommand<IResponse>> ProcessCacheRequestAsync(BaseCommand<CacheRequest, CacheResponse> cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> ProcessCacheRequestAsync(BaseCommand<IRequest, CacheResponse> cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
                 // 获取缓存请求数据
-                var cacheRequest = cacheCommand.Request;
+                CacheRequest cacheRequest = cacheCommand.Request as CacheRequest;
                 if (cacheRequest == null)
                 {
                     return BaseCommand<IResponse>.CreateError("缓存请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
@@ -382,31 +356,7 @@ namespace RUINORERP.Server.Network.Commands
         }
 
 
-        /// <summary>
-        /// 处理缓存更新 - 统一使用泛型命令处理模式
-        /// </summary>
-        /// <param name="command">缓存更新命令</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>处理结果</returns>
-        private async Task<BaseCommand<IResponse>> HandleCacheUpdateAsync(QueuedCommand command, CancellationToken cancellationToken)
-        {
-            try
-            {
-                if (!(command.Command is BaseCommand<CacheRequest, IResponse> baseCommand))
-                {
-                    return BaseCommand<IResponse>.CreateError("不支持的缓存更新命令格式", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_UPDATE_FORMAT");
-                }
 
-                return await ProcessCacheUpdateAsync(baseCommand, command.Packet.ExecutionContext, cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                LogError($"处理缓存更新异常: {ex.Message}", ex);
-                return BaseCommand<IResponse>.CreateError($"处理缓存更新异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
-                    .WithMetadata("ErrorCode", "CACHE_UPDATE_ERROR");
-            }
-        }
 
         /// <summary>
         /// 统一的缓存更新业务逻辑处理方法
@@ -415,12 +365,12 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="executionContext">执行上下文</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<BaseCommand<IResponse>> ProcessCacheUpdateAsync(BaseCommand<CacheRequest, IResponse> cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> ProcessCacheUpdateAsync(BaseCommand<IRequest, CacheResponse> cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
                 // 获取缓存更新请求数据
-                var updateRequest = cacheCommand.Request;
+                CacheRequest updateRequest = cacheCommand.Request as CacheRequest;
                 if (updateRequest == null)
                 {
                     return BaseCommand<IResponse>.CreateError("缓存更新请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)

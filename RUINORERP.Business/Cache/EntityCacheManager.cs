@@ -182,17 +182,33 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         /// <param name="keyType">缓存键类型</param>
         /// <param name="tableName">表名</param>
-        /// <param name="primaryKeyValue">主键值（可选）</param>
+        /// <param name="primaryKeyValue">主键值（不再使用）</param>
         /// <returns>格式化的缓存键</returns>
+        /// <remarks>当前只支持List类型的缓存键生成</remarks>
         public string GenerateCacheKey(CacheKeyType keyType, string tableName, object primaryKeyValue = null)
         {
-            // 统一格式：Table_{表名}_{类型}_{主键值}
-            // 类型使用枚举的短名称，主键值只在需要时添加
-            if (primaryKeyValue != null)
+            try
             {
-                return $"Table_{tableName}_{keyType}_{primaryKeyValue}";
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    throw new ArgumentNullException(nameof(tableName), "表名不能为空");
+                }
+
+                // 当前只支持List类型，忽略其他类型
+                if (keyType != CacheKeyType.List)
+                {
+                    _logger?.LogWarning($"当前只支持List类型的缓存键生成，请求的类型: {keyType}");
+                }
+
+                // 统一格式：Table_{表名}_List
+                // 不再使用主键值，因为现在只存储列表缓存
+                return $"Table_{tableName}_{CacheKeyType.List}";
             }
-            return $"Table_{tableName}_{keyType}";
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"生成缓存键时发生错误。类型: {keyType}, 表名: {tableName}");
+                throw;
+            }
         }
         #endregion
 
@@ -303,9 +319,10 @@ namespace RUINORERP.Business.Cache
                     try
                     {
                         var list = _cacheDataProvider.GetEntityListFromSource<T>(tableName);
-                        if (list != null && list.Any())
+                        // 即使列表为空也要缓存，避免空表频繁查询数据库
+                        if (list != null)
                         {
-                            // 将获取到的数据更新到缓存
+                            // 将获取到的数据（包括空列表）更新到缓存
                             var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
                             PutToCache(cacheKey, list, "List", tableName);
                             return list;
@@ -322,25 +339,16 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 根据ID获取实体
+        /// 根据ID从列表缓存中获取实体
+        /// 注意：现在只从列表缓存中查找，不再使用单个实体缓存
         /// </summary>
         public T GetEntity<T>(object idValue) where T : class
         {
             try
             {
                 var tableName = typeof(T).Name;
-                var cacheKey = GenerateCacheKey(CacheKeyType.Entity, tableName, idValue);
-                var cachedEntity = _cacheManager.Get(cacheKey);
-
-                // 更新缓存访问统计
-                UpdateCacheAccessStatistics(cacheKey, cachedEntity != null, "Entity", tableName, cachedEntity);
-
-                if (cachedEntity is T entity)
-                {
-                    return entity;
-                }
-
-                // 如果单个实体缓存中没有，则从列表中查找
+                
+                // 直接从列表缓存中查找实体
                 var list = GetEntityList<T>(tableName);
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
 
@@ -352,10 +360,9 @@ namespace RUINORERP.Business.Cache
                         return idPropertyValue?.ToString() == idValue.ToString();
                     });
 
-                    // 将找到的实体加入单个实体缓存
                     if (entityFound != null)
                     {
-                        PutToCache(cacheKey, entityFound, "Entity", tableName);
+                        _logger?.LogDebug($"从表 {tableName} 的列表缓存中找到ID为 {idValue} 的实体");
                         return entityFound;
                     }
                     // 如果列表中也没有，则尝试从数据源获取（如果提供了数据提供者）
@@ -366,16 +373,9 @@ namespace RUINORERP.Business.Cache
                             entityFound = _cacheDataProvider.GetEntityFromSource<T>(tableName, idValue);
                             if (entityFound != null)
                             {
-                                // 将获取到的实体更新到缓存
-                                PutToCache(cacheKey, entityFound, "Entity", tableName);
-
-                                // 同时也更新显示值缓存
-                                var displayValue = entityFound.GetCachePropertyValue(schemaInfo.DisplayField);
-                                var displayCacheKey = GenerateCacheKey(CacheKeyType.Display, tableName, idValue);
-                                PutToCache(displayCacheKey, displayValue, "Display", tableName);
-
-                                // 更新列表缓存
+                                // 只更新列表缓存
                                 UpdateEntityInList(tableName, entityFound);
+                                _logger?.LogDebug($"从数据源获取表 {tableName} ID为 {idValue} 的实体并更新到列表缓存");
                             }
                             return entityFound;
                         }
@@ -403,26 +403,19 @@ namespace RUINORERP.Business.Cache
         {
             try
             {
+                // 直接从列表缓存中查找实体
                 var entityType = _tableSchemaManager.GetEntityType(tableName);
                 if (entityType == null)
                 {
                     return null;
                 }
 
-                var cacheKey = GenerateCacheKey(CacheKeyType.Entity, tableName, primaryKeyValue);
-                var cachedEntity = _cacheManager.Get(cacheKey);
+                // 如果需要缓存访问统计，可以使用特定的键格式
+                var accessStatisticsKey = $"Access_Entity_{tableName}_{primaryKeyValue}";
 
-                // 更新缓存访问统计
-                UpdateCacheAccessStatistics(cacheKey, cachedEntity != null, "Entity", tableName, cachedEntity);
-
-                if (cachedEntity != null && entityType.IsInstanceOfType(cachedEntity))
-                {
-                    return cachedEntity;
-                }
-
-                // 如果单个实体缓存中没有，则从列表中查找
+                // 直接从列表中查找 - 使用接受tableName参数的重载版本
                 var method = typeof(EntityCacheManager)
-                    .GetMethod(nameof(GetEntityList), BindingFlags.Public | BindingFlags.Instance)
+                    .GetMethod(nameof(GetEntityList), new[] { typeof(string) })
                     .MakeGenericMethod(entityType);
 
                 var list = method.Invoke(this, new object[] { tableName }) as IEnumerable;
@@ -433,43 +426,37 @@ namespace RUINORERP.Business.Cache
                     foreach (var item in list)
                     {
                         var idPropertyValue = item.GetCachePropertyValue(schemaInfo.PrimaryKeyField);
-                        if (idPropertyValue?.ToString() == primaryKeyValue.ToString())
+                        if (idPropertyValue != null && idPropertyValue.SafeEquals(primaryKeyValue))
                         {
-                            // 将找到的实体加入单个实体缓存
-                            PutToCache(cacheKey, item, "Entity", tableName);
+                            // 更新缓存访问统计
+                            UpdateCacheAccessStatistics(accessStatisticsKey, true, "Entity", tableName, item);
                             return item;
                         }
                     }
                 }
 
+                // 更新缓存访问统计 - 未找到
+                UpdateCacheAccessStatistics(accessStatisticsKey, false, "Entity", tableName, null);
                 return null;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"获取表 {tableName} ID为 {primaryKeyValue} 的实体缓存时发生错误");
+                _logger?.LogError(ex, $"获取表 {tableName} ID为 {primaryKeyValue} 的实体时发生错误");
                 return null;
             }
         }
 
         /// <summary>
-        /// 获取指定表名的显示值
+        /// 获取指定表名和主键的显示值
         /// </summary>
         public object GetDisplayValue(string tableName, object idValue)
         {
             try
             {
-                var cacheKey = GenerateCacheKey(CacheKeyType.Display, tableName, idValue);
-                var cachedValue = _cacheManager.Get(cacheKey);
+                // 如果需要缓存访问统计，可以使用特定的键格式
+                var accessStatisticsKey = $"Access_Display_{tableName}_{idValue}";
 
-                // 更新缓存访问统计
-                UpdateCacheAccessStatistics(cacheKey, cachedValue != null, "Display", tableName, cachedValue);
-
-                if (cachedValue != null)
-                {
-                    return cachedValue;
-                }
-
-                // 如果显示值缓存中没有，则从实体中获取
+                // 直接从实体中获取显示值
                 var entity = GetEntity(tableName, idValue);
                 if (entity != null)
                 {
@@ -477,21 +464,22 @@ namespace RUINORERP.Business.Cache
                     if (schemaInfo != null)
                     {
                         var displayValue = entity.GetCachePropertyValue(schemaInfo.DisplayField);
-                        // 将显示值加入缓存
-                        PutToCache(cacheKey, displayValue, "Display", tableName);
+                        // 更新缓存访问统计
+                        UpdateCacheAccessStatistics(accessStatisticsKey, true, "Display", tableName, displayValue);
                         return displayValue;
                     }
                 }
+
                 // 如果实体缓存也没有，则尝试从数据源直接获取显示值（如果提供了数据提供者）
-                else if (_cacheDataProvider != null)
+                if (_cacheDataProvider != null)
                 {
                     try
                     {
                         var displayValue = _cacheDataProvider.GetDisplayValueFromSource(tableName, idValue);
                         if (displayValue != null)
                         {
-                            // 将获取到的显示值更新到缓存
-                            PutToCache(cacheKey, displayValue, "Display", tableName);
+                            // 更新缓存访问统计
+                            UpdateCacheAccessStatistics(accessStatisticsKey, true, "Display", tableName, displayValue);
                             return displayValue;
                         }
                     }
@@ -505,7 +493,7 @@ namespace RUINORERP.Business.Cache
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"获取表 {tableName} ID为 {idValue} 的显示值缓存时发生错误");
+                _logger?.LogError(ex, $"获取表 {tableName} ID为 {idValue} 的显示值时发生错误");
                 return null;
             }
         }
@@ -530,7 +518,8 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 更新单个实体缓存（智能过滤，只处理需要缓存的表）
+        /// 更新列表缓存中的单个实体（智能过滤，只处理需要缓存的表）
+        /// 注意：现在只更新列表缓存，不再更新单个实体和显示值缓存
         /// </summary>
         public void UpdateEntity<T>(T entity) where T : class
         {
@@ -548,25 +537,10 @@ namespace RUINORERP.Business.Cache
                 return;
             }
 
-            var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-
-            if (schemaInfo != null)
-            {
-                var idValue = entity.GetCachePropertyValue(schemaInfo.PrimaryKeyField);
-                if (idValue != null)
-                {
-                    var cacheKey = GenerateCacheKey(CacheKeyType.Entity, tableName, idValue);
-                    PutToCache(cacheKey, entity, "Entity", tableName);
-
-                    // 同时更新显示值缓存
-                    var displayValue = entity.GetCachePropertyValue(schemaInfo.DisplayField);
-                    var displayCacheKey = GenerateCacheKey(CacheKeyType.Display, tableName, idValue);
-                    PutToCache(displayCacheKey, displayValue, "Display", tableName);
-                }
-            }
-
-            // 同时更新列表缓存中的该实体
+            // 直接更新列表缓存中的该实体
             UpdateEntityInList(tableName, entity);
+            
+            _logger?.LogDebug($"已更新表 {tableName} 列表缓存中的单个实体");
         }
 
         /// <summary>
@@ -663,9 +637,6 @@ namespace RUINORERP.Business.Cache
 
                 PutToCache(cacheKey, cacheValue, "List", tableName);
 
-                // 清空该表的所有单个实体缓存和显示值缓存
-                ClearEntityCaches(tableName);
-
                 _logger?.LogInformation($"已更新表 {tableName} 的实体列表缓存，数据类型: {cacheValue.GetType().Name}");
             }
             catch (Exception ex)
@@ -675,7 +646,8 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 根据表名更新单个实体缓存（智能过滤，只处理需要缓存的表）
+        /// 根据表名更新列表缓存中的单个实体（智能过滤，只处理需要缓存的表）
+        /// 注意：现在只更新列表缓存，不再更新单个实体和显示值缓存
         /// </summary>
         public void UpdateEntity(string tableName, object entity)
         {
@@ -691,24 +663,10 @@ namespace RUINORERP.Business.Cache
                 return;
             }
 
-            var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-            if (schemaInfo != null)
-            {
-                var idValue = entity.GetCachePropertyValue(schemaInfo.PrimaryKeyField);
-                if (idValue != null)
-                {
-                    var cacheKey = GenerateCacheKey(CacheKeyType.Entity, tableName, idValue);
-                    PutToCache(cacheKey, entity, "Entity", tableName);
-
-                    // 同时更新显示值缓存
-                    var displayValue = entity.GetCachePropertyValue(schemaInfo.DisplayField);
-                    var displayCacheKey = GenerateCacheKey(CacheKeyType.Display, tableName, idValue);
-                    PutToCache(displayCacheKey, displayValue, "Display", tableName);
-                }
-            }
-
-            // 同时更新列表缓存中的该实体
+            // 直接更新列表缓存中的该实体
             UpdateEntityInList(tableName, entity);
+            
+            _logger?.LogDebug($"已更新表 {tableName} 列表缓存中的单个实体");
         }
 
 
@@ -760,7 +718,8 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 删除实体列表缓存（智能过滤，只处理需要缓存的表）
+        /// 从列表缓存中删除多个实体（智能过滤，只处理需要缓存的表）
+        /// 注意：现在只从列表缓存中删除，不再删除单个实体和显示值缓存
         /// </summary>
         public void DeleteEntityList<T>(List<T> entities) where T : class
         {
@@ -778,30 +737,14 @@ namespace RUINORERP.Business.Cache
                 return;
             }
 
-            var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-
-            if (schemaInfo != null)
-            {
-                foreach (var entity in entities)
-                {
-                    var idValue = entity.GetCachePropertyValue(schemaInfo.PrimaryKeyField);
-                    if (idValue != null)
-                    {
-                        var cacheKey = GenerateCacheKey(CacheKeyType.Entity, tableName, idValue);
-                        RemoveFromCache(cacheKey);
-
-                        var displayCacheKey = GenerateCacheKey(CacheKeyType.Display, tableName, idValue);
-                        RemoveFromCache(displayCacheKey);
-                    }
-                }
-            }
-
             // 从列表缓存中删除这些实体
             RemoveEntitiesFromList(tableName, entities);
+            _logger?.LogInformation($"已从表 {tableName} 的列表缓存中删除 {entities.Count} 个实体");
         }
 
         /// <summary>
-        /// 根据表名和主键删除实体缓存（智能过滤，只处理需要缓存的表）
+        /// 从列表缓存中删除指定主键的实体（智能过滤，只处理需要缓存的表）
+        /// 注意：现在只从列表缓存中删除，不再删除单个实体和显示值缓存
         /// </summary>
         public void DeleteEntity(string tableName, object primaryKeyValue)
         {
@@ -814,20 +757,14 @@ namespace RUINORERP.Business.Cache
                     return;
                 }
 
-                var cacheKey = GenerateCacheKey(CacheKeyType.Entity, tableName, primaryKeyValue);
-                RemoveFromCache(cacheKey);
-
-                var displayCacheKey = GenerateCacheKey(CacheKeyType.Display, tableName, primaryKeyValue);
-                RemoveFromCache(displayCacheKey);
-
                 // 从列表缓存中删除该实体
                 RemoveEntityFromList(tableName, primaryKeyValue);
 
-                _logger?.LogInformation($"已删除表 {tableName} ID为 {primaryKeyValue} 的实体缓存");
+                _logger?.LogInformation($"已从表 {tableName} 的列表缓存中删除ID为 {primaryKeyValue} 的实体");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"删除表 {tableName} ID为 {primaryKeyValue} 的实体缓存时发生错误");
+                _logger?.LogError(ex, $"从表 {tableName} 的列表缓存中删除ID为 {primaryKeyValue} 的实体时发生错误");
             }
         }
 
@@ -906,31 +843,11 @@ namespace RUINORERP.Business.Cache
             }
         }
 
-        /// <summary>
-        /// 清空指定表的所有缓存（实体列表缓存、单个实体缓存和显示值缓存）
-        /// </summary>
-        private void ClearEntityCaches(string tableName)
-        {
-            try
-            {
-                // 清除实体列表缓存
-                var entityListCacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
-                RemoveFromCache(entityListCacheKey);
 
-                // 注意：对于单个实体和显示值缓存，由于无法直接获取所有相关键
-                // 这里我们依赖于更新操作时会自动替换旧缓存项
-                // 实际项目中可以考虑使用缓存标签或Redis的键模式匹配功能来更彻底地清除
-
-                _logger?.LogInformation($"已清空表 {tableName} 的所有相关缓存");
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"清空表 {tableName} 的缓存时发生错误");
-            }
-        }
 
         /// <summary>
-        /// 批量删除指定主键数组的实体缓存（智能过滤，只处理需要缓存的表）
+        /// 从列表缓存中批量删除指定主键数组的实体（智能过滤，只处理需要缓存的表）
+        /// 注意：现在只从列表缓存中删除，不再删除单个实体和显示值缓存
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="idValues">主键值数组</param>
@@ -949,7 +866,8 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 根据表名批量删除指定主键数组的实体缓存（智能过滤，只处理需要缓存的表）
+        /// 从列表缓存中批量删除指定主键数组的实体（智能过滤，只处理需要缓存的表）
+        /// 注意：现在只从列表缓存中删除，不再删除单个实体和显示值缓存
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="primaryKeyValues">主键值数组</param>
@@ -970,34 +888,14 @@ namespace RUINORERP.Business.Cache
                     return;
                 }
 
-                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-                if (schemaInfo == null)
-                {
-                    _logger?.LogWarning($"表 {tableName} 的结构信息未找到，跳过批量删除操作");
-                    return;
-                }
-
-                // 批量删除单个实体缓存和显示值缓存
-                foreach (var primaryKeyValue in primaryKeyValues)
-                {
-                    if (primaryKeyValue != null)
-                    {
-                        var cacheKey = GenerateCacheKey(CacheKeyType.Entity, tableName, primaryKeyValue);
-                        RemoveFromCache(cacheKey);
-
-                        var displayCacheKey = GenerateCacheKey(CacheKeyType.Display, tableName, primaryKeyValue);
-                        RemoveFromCache(displayCacheKey);
-                    }
-                }
-
                 // 从列表缓存中批量删除这些实体
                 RemoveEntitiesFromListByKeys(tableName, primaryKeyValues);
 
-                _logger?.LogInformation($"已批量删除表 {tableName} 中 {primaryKeyValues.Length} 个实体的缓存");
+                _logger?.LogInformation($"已从表 {tableName} 的列表缓存中批量删除 {primaryKeyValues.Length} 个实体");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"批量删除表 {tableName} 实体缓存时发生错误");
+                _logger?.LogError(ex, $"从表 {tableName} 的列表缓存中批量删除实体时发生错误");
             }
         }
 

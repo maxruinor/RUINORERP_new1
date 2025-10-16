@@ -14,21 +14,14 @@ namespace RUINORERP.Business.Cache
     {
         /// <summary>
         /// 缓存键类型枚举，用于区分不同类型的缓存
+        /// 当前只使用列表缓存
         /// </summary>
         enum CacheKeyType
         {
             /// <summary>
             /// 实体列表缓存
             /// </summary>
-            List,
-            /// <summary>
-            /// 单个实体缓存
-            /// </summary>
-            Entity,
-            /// <summary>
-            /// 显示值缓存
-            /// </summary>
-            Display
+            List
         }
         
         /// <summary>

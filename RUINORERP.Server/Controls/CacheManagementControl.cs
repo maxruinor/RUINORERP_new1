@@ -32,11 +32,13 @@ namespace RUINORERP.Server.Controls
     public partial class CacheManagementControl : UserControl
     {
         private readonly ISessionService _sessionService;
+        private readonly ILogger<CacheManagementControl> _logger;
 
         public CacheManagementControl()
         {
             InitializeComponent();
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
+            _logger = Program.ServiceProvider.GetRequiredService<ILogger<CacheManagementControl>>();
         }
 
         private void CacheManagementControl_Load(object sender, EventArgs e)
@@ -79,16 +81,16 @@ namespace RUINORERP.Server.Controls
                     var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
                     var schemaManager = TableSchemaManager.Instance;
                     var entityType = schemaManager.GetEntityType(tableName);
-                    
+
                     if (entityType != null)
                     {
                         // 使用反射调用GetEntityList<T>(string tableName)方法
-                        var method = typeof(IEntityCacheManager).GetMethod("GetEntityList", 
-                            BindingFlags.Public | BindingFlags.Instance, 
-                            null, 
-                            new[] { typeof(string) }, 
+                        var method = typeof(IEntityCacheManager).GetMethod("GetEntityList",
+                            BindingFlags.Public | BindingFlags.Instance,
+                            null,
+                            new[] { typeof(string) },
                             null);
-                        
+
                         if (method != null)
                         {
                             var genericMethod = method.MakeGenericMethod(entityType);
@@ -98,9 +100,9 @@ namespace RUINORERP.Server.Controls
                             dataGridView1.DataSource = null;
                             dataGridView1.DataSource = entityList;
                         }
-                       
+
                     }
-                   
+
                 }
             }
             catch (Exception ex)
@@ -117,7 +119,7 @@ namespace RUINORERP.Server.Controls
         private DataTable ConvertJArrayToDataTable(JArray jArray)
         {
             DataTable dataTable = new DataTable();
-            
+
             // 如果JArray为空，创建一个空表格
             if (jArray.Count == 0)
             {
@@ -125,10 +127,10 @@ namespace RUINORERP.Server.Controls
                 dataTable.Rows.Add("No data");
                 return dataTable;
             }
-            
+
             // 获取第一个对象来确定列结构
             var firstItem = jArray[0];
-            
+
             // 如果是JObject，根据其属性创建列
             if (firstItem is JObject jObject)
             {
@@ -154,10 +156,10 @@ namespace RUINORERP.Server.Controls
                             columnType = typeof(string);
                             break;
                     }
-                    
+
                     dataTable.Columns.Add(property.Name, columnType);
                 }
-                
+
                 // 填充数据行
                 foreach (var item in jArray)
                 {
@@ -185,7 +187,7 @@ namespace RUINORERP.Server.Controls
                     dataTable.Rows.Add(item?.ToString() ?? "");
                 }
             }
-            
+
             return dataTable;
         }
 
@@ -233,10 +235,10 @@ namespace RUINORERP.Server.Controls
 
                 // 获取新的缓存管理器实例
                 var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                
+
                 // 获取所有可缓存的表名
                 List<string> tableNameList = RUINORERP.Server.Comm.CacheUIHelper.GetCacheableTableNames();
-                
+
                 if (tableNameList == null || tableNameList.Count == 0)
                 {
                     MessageBox.Show("没有找到缓存表配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -249,7 +251,7 @@ namespace RUINORERP.Server.Controls
                 {
                     SuperValue kv = null;
                     string cacheInfoView = string.Empty;
-                    
+
                     // 获取实体列表数量
                     int count = RUINORERP.Server.Comm.CacheUIHelper.GetCacheItemCount(cacheManager, tableName);
                     kv = new SuperValue(tableName + $"[{count}]" + cacheInfoView, tableName);
@@ -328,7 +330,7 @@ namespace RUINORERP.Server.Controls
                 {
                     string tableName = kv.superDataTypeName;
                     var sessions = _sessionService.GetAllUserSessions();
-                    
+
                     foreach (var session in sessions)
                     {
                         // 发送推送缓存命令
@@ -346,7 +348,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        private void 加载缓存数据ToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void 加载缓存数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
@@ -358,6 +360,21 @@ namespace RUINORERP.Server.Controls
                     this.Cursor = Cursors.WaitCursor;
 
                     Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
+
+                    // 从数据库加载指定表的数据到缓存
+                    try
+                    {
+                        // 获取EntityCacheInitializationService实例
+                        var initializationService = Startup.GetFromFac<EntityCacheInitializationService>();
+                        // 调用新方法初始化单个表的缓存
+                        await initializationService.InitializeSingleTableCacheAsync(tableName);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"加载表 {tableName} 数据时发生错误");
+                        MessageBox.Show($"加载表 {tableName} 数据时发生错误：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
 
                     stopwatchLoadUI.Stop();
 

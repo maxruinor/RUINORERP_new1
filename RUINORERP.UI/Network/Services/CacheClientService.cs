@@ -39,18 +39,18 @@ namespace RUINORERP.UI.Network.Services
     /// 客户端缓存服务 - 处理缓存请求和响应
     /// 实现IDisposable接口以支持资源清理
     /// 缓存订阅管理在客户端和服务器端的业务作用 ：
-//客户端 ：
+    //客户端 ：
 
-//- 跟踪本地订阅的表，当收到服务器推送的缓存变更时知道如何处理
-//- 允许客户端主动订阅/取消订阅感兴趣的数据表，以接收实时更新
-//- 优化网络流量，只订阅客户端真正需要的表
-//- 提供本地缓存更新机制，收到服务器推送时自动更新本地缓存
-//服务器端 ：
+    //- 跟踪本地订阅的表，当收到服务器推送的缓存变更时知道如何处理
+    //- 允许客户端主动订阅/取消订阅感兴趣的数据表，以接收实时更新
+    //- 优化网络流量，只订阅客户端真正需要的表
+    //- 提供本地缓存更新机制，收到服务器推送时自动更新本地缓存
+    //服务器端 ：
 
-//- 管理哪些会话订阅了哪些表，数据变更时知道需要通知哪些客户端
-//- 实现缓存变更广播机制，确保所有订阅了特定表的客户端都能及时收到更新
-//- 当会话断开连接时，自动取消其所有订阅，避免资源泄露
-//- 优化服务器性能，只向需要特定数据的客户端发送更新
+    //- 管理哪些会话订阅了哪些表，数据变更时知道需要通知哪些客户端
+    //- 实现缓存变更广播机制，确保所有订阅了特定表的客户端都能及时收到更新
+    //- 当会话断开连接时，自动取消其所有订阅，避免资源泄露
+    //- 优化服务器性能，只向需要特定数据的客户端发送更新
     /// </summary>
     public class CacheClientService : IDisposable
     {
@@ -109,11 +109,11 @@ namespace RUINORERP.UI.Network.Services
             // 处理缓存操作和同步命令
             _comm.SubscribeCommand(CacheCommands.CacheOperation, (packet, data) => HandleCacheResponse((CacheResponse)data));
             _comm.SubscribeCommand(CacheCommands.CacheSync, (packet, data) => HandleCacheResponse((CacheResponse)data));
-            
+
             // 处理订阅命令 - 使用统一的处理方法，内部根据SubscribeAction区分
             _comm.SubscribeCommand(CacheCommands.CacheSubscription, (packet, data) => HandleSubscriptionResponse((CacheResponse)data));
         }
-        
+
         /// <summary>
         /// 处理缓存订阅响应 - 根据SubscribeAction区分订阅和取消订阅操作
         /// </summary>
@@ -125,7 +125,7 @@ namespace RUINORERP.UI.Network.Services
                 _log?.LogWarning("接收到无效的订阅响应或响应失败: {0}", response?.ErrorMessage);
                 return;
             }
-            
+
             try
             {
                 // 从Data中获取订阅信息
@@ -138,7 +138,7 @@ namespace RUINORERP.UI.Network.Services
                         subscribeAction = Convert.ToInt32(response.Metadata["SubscribeAction"]);
                     }
                     var tableName = response.TableName;
-                    
+
                     if (!string.IsNullOrEmpty(tableName))
                     {
                         switch ((SubscribeAction)subscribeAction)
@@ -363,6 +363,7 @@ namespace RUINORERP.UI.Network.Services
                 if (!tableNames.Contains(tableName))
                 {
                     await Task.CompletedTask;
+                    return;
                 }
 
                 // 手动创建Get操作的缓存请求
@@ -484,7 +485,7 @@ namespace RUINORERP.UI.Network.Services
                 //    cmd => cmd.TimeoutMs = 30000
                 //);
 
-              var cacheCommand=  CommandDataBuilder.BuildCommand<CacheRequest, CacheResponse>(CacheCommands.CacheOperation, request);
+                var cacheCommand = CommandDataBuilder.BuildCommand<CacheRequest, CacheResponse>(CacheCommands.CacheOperation, request);
 
                 // 使用新的方法发送命令并获取包含指令信息的响应
                 var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, ct, 30000);
@@ -592,12 +593,12 @@ namespace RUINORERP.UI.Network.Services
                         }
                         else
                         {
-                           _log.LogDebug ($"接收缓存失败: {response?.Message ?? "未知错误"}");
+                            _log.LogDebug($"接收缓存失败: {response?.Message ?? "未知错误"}");
                         }
                     }
                     else
                     {
-                       _log.LogDebug("处理缓存响应失败: 数据格式不正确");
+                        _log.LogDebug("处理缓存响应失败: 数据格式不正确");
                     }
                 }
 
@@ -605,7 +606,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存响应失败: {Message}", ex.Message);
-               _log.LogDebug($"处理缓存响应失败: {ex.Message}");
+                _log.LogDebug($"处理缓存响应失败: {ex.Message}");
             }
         }
 
@@ -652,7 +653,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存数据失败: {Message}", ex.Message);
-    
+
             }
         }
 
@@ -697,20 +698,20 @@ namespace RUINORERP.UI.Network.Services
                 {
                     if (response.IsSuccess)
                     {
-                   
-                       _log.LogDebug("缓存清空成功");
+
+                        _log.LogDebug("缓存清空成功");
                     }
                     else
                     {
                         _log?.LogWarning("缓存清空失败: {Message}", response.Message);
-            
+
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存清空响应失败");
-                
+
             }
         }
 
@@ -727,19 +728,19 @@ namespace RUINORERP.UI.Network.Services
                     if (response.IsSuccess)
                     {
                         _log?.LogDebug("缓存统计获取成功");
-        
+
                     }
                     else
                     {
                         _log?.LogWarning("缓存统计获取失败: {Message}", response.Message);
-                      
+
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存统计响应失败");
-             
+
             }
         }
 
@@ -756,19 +757,19 @@ namespace RUINORERP.UI.Network.Services
                     if (response.IsSuccess)
                     {
                         _log.LogDebug("缓存状态获取成功");
-                      
+
                     }
                     else
                     {
                         _log?.LogWarning("缓存状态获取失败: {Message}", response.Message);
-            
+
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存状态响应失败");
-        
+
             }
         }
 
@@ -785,19 +786,19 @@ namespace RUINORERP.UI.Network.Services
                     if (response.IsSuccess)
                     {
                         _log.LogDebug("缓存批量操作成功");
-                       
+
                     }
                     else
                     {
                         _log?.LogWarning("缓存批量操作失败: {Message}", response.Message);
-                      
+
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存批量操作响应失败");
-               
+
             }
         }
 
@@ -814,12 +815,12 @@ namespace RUINORERP.UI.Network.Services
                     if (response.IsSuccess)
                     {
                         _log?.LogInformation("缓存预热成功");
-                      
+
                     }
                     else
                     {
                         _log?.LogWarning("缓存预热失败: {Message}", response.Message);
-                       
+
                     }
                 }
             }

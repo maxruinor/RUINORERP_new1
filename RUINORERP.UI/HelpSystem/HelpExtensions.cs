@@ -71,6 +71,21 @@ namespace RUINORERP.UI.HelpSystem
         }
         
         /// <summary>
+        /// 为ToolStripItem设置帮助键
+        /// </summary>
+        /// <param name="item">ToolStripItem实例</param>
+        /// <param name="helpKey">帮助键</param>
+        public static void SetControlHelpKey(this ToolStripItem item, string helpKey)
+        {
+            if (item == null || !HelpManager.Config.IsHelpSystemEnabled) return;
+            if (string.IsNullOrEmpty(helpKey)) return;
+
+            item.Tag = helpKey; // 使用Tag存储帮助键
+            // 注意：ToolStripItem没有HelpRequested事件，所以我们只设置Tag
+            // 帮助系统会在其他地方通过Tag来获取帮助键
+        }
+        
+        /// <summary>
         /// 获取控件的帮助键
         /// </summary>
         /// <param name="control">控件实例</param>
@@ -78,6 +93,20 @@ namespace RUINORERP.UI.HelpSystem
         public static string GetControlHelpKey(this Control control)
         {
             if (control?.Tag is string helpKey)
+            {
+                return helpKey;
+            }
+            return null;
+        }
+        
+        /// <summary>
+        /// 获取ToolStripItem的帮助键
+        /// </summary>
+        /// <param name="item">ToolStripItem实例</param>
+        /// <returns>帮助键</returns>
+        public static string GetControlHelpKey(this ToolStripItem item)
+        {
+            if (item?.Tag is string helpKey)
             {
                 return helpKey;
             }

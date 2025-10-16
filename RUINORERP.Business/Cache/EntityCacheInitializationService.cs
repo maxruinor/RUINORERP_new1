@@ -191,7 +191,7 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 初始化指定表的缓存
+        /// 初始化指定表的缓存（内部方法）
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>初始化任务</returns>
@@ -450,6 +450,33 @@ namespace RUINORERP.Business.Cache
         public T DeserializeCacheDataFromTransmission<T>(byte[] data, CacheSerializationHelper.SerializationType serializationType = CacheSerializationHelper.SerializationType.Json)
         {
             return _cacheManager.DeserializeCacheData<T>(data, serializationType);
+        }
+
+        /// <summary>
+        /// 初始化指定表的缓存（公共方法）
+        /// 用于外部调用，初始化单个表的数据到缓存
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>初始化任务</returns>
+        public async Task InitializeSingleTableCacheAsync(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+            {
+                _logger.LogWarning("表名为空，跳过初始化");
+                return;
+            }
+
+            try
+            {
+                _logger.LogInformation($"开始初始化指定表 {tableName} 的缓存");
+                await InitializeCacheForTableAsync(tableName);
+                _logger.LogInformation($"表 {tableName} 的缓存初始化完成");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"初始化表 {tableName} 的缓存时发生错误");
+                throw;
+            }
         }
 
         /// <summary>

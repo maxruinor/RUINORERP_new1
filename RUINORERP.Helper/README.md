@@ -1,62 +1,112 @@
-# RUINOR ERP 帮助系统使用说明
+# RUINOR ERP 帮助系统说明
 
 ## 概述
 
-本目录包含RUINOR ERP系统的帮助文件，使用HTML格式编写，可通过WinCHM Pro或HTML Help Workshop编译为CHM文件。
+本目录包含RUINOR ERP系统的帮助文档，这些文档将被编译成CHM格式的帮助文件，供用户在使用系统时查阅。
 
 ## 目录结构
 
 ```
 RUINORERP.Helper/
-├── *.htm              # 各种帮助文档
-├── controls/          # 控件级别帮助文件
-├── 系统介绍/           # 系统介绍相关文档
-├── help.hhp           # HTML Help项目文件
+├── controls/           # 控件帮助文件
+├── forms/              # 窗体帮助文件
+├── topics/             # 主题帮助文件
+├── images/             # 帮助文件中使用的图片
+├── *.htm              # 各种帮助内容文件
+├── help.hhp           # HTML Help Project文件
 ├── contents.hhc       # 目录文件
-├── compile_help.bat   # 编译脚本
-└── README.md          # 本文件
+├── index.hhk          # 索引文件
+└── compile_help.bat   # 编译脚本
 ```
 
-## 编译帮助文件
+## 如何编译帮助文件
 
-### 方法1: 使用WinCHM Pro
-1. 打开ERP系统帮助.wcp项目文件
-2. 点击"编译"按钮
-3. 生成的CHM文件将保存在当前目录
+1. 确保已安装Microsoft HTML Help Workshop
+2. 运行`compile_help.bat`脚本
+3. 编译成功后将生成`help.chm`文件
 
-### 方法2: 使用HTML Help Workshop
-1. 运行compile_help.bat脚本
-2. 脚本将自动调用hhc.exe编译帮助文件
+## 帮助文件使用说明
 
-## 帮助系统功能
+### 快捷键
+- **F1**: 显示当前焦点控件或窗体的帮助
+- **F2**: 打开帮助系统主窗体
 
-### 控件级别帮助
-- 为每个控件设置特定的帮助内容
-- 用户按F1键可获取当前焦点控件的帮助
-
-### 窗体级别帮助
-- 为每个窗体设置帮助内容
-- 当控件无特定帮助时，显示窗体帮助
-
-### 智能匹配
-- 系统可根据控件类型和名称自动匹配帮助内容
-- 减少手动配置工作量
-
-## 使用示例
-
-在代码中为控件设置帮助键：
-```csharp
-Button testButton = new Button();
-testButton.SetControlHelpKey("button_test");
-```
-
-在代码中为窗体设置帮助页面：
-```csharp
-this.SetHelpPage("forms/my_form.html", "我的窗体");
-```
+### 帮助内容分类
+1. **窗体帮助**: 介绍各个窗体的功能和使用方法
+2. **控件帮助**: 介绍各个控件的功能和使用方法
+3. **主题帮助**: 介绍系统功能和业务流程
 
 ## 维护指南
 
-1. 添加新的帮助内容时，需要更新目录文件(contents.hhc)
-2. 修改现有帮助内容后，需要重新编译CHM文件
-3. 确保帮助文件的编码格式为UTF-8
+### 添加新的帮助内容
+1. 创建对应的HTML帮助文件
+2. 将文件放置在正确的目录中
+3. 更新目录文件(contents.hhc)
+4. 更新项目文件(help.hhp)
+5. 重新编译CHM文件
+
+### 更新现有帮助内容
+1. 直接编辑对应的HTML文件
+2. 确保链接和图片路径正确
+3. 重新编译CHM文件
+
+## 帮助系统集成
+
+RUINOR ERP系统已集成帮助系统，通过以下方式实现：
+
+1. **窗体级别帮助**: 通过`HelpMapping`特性标记窗体对应的帮助页面
+2. **控件级别帮助**: 通过`SetControlHelpKey`扩展方法为控件设置帮助键
+3. **智能帮助匹配**: 系统会根据控件类型和名称自动匹配帮助内容
+
+### 使用示例
+
+```csharp
+// 为窗体设置帮助页面
+[HelpMapping("forms/my_form.html", Title = "我的窗体")]
+public partial class MyForm : frmBase
+{
+    public MyForm()
+    {
+        InitializeComponent();
+        // 启用F1帮助功能（继承自frmBase已自动启用）
+    }
+}
+
+// 为控件设置帮助键
+Button btnSave = new Button();
+btnSave.SetControlHelpKey("button_save");
+```
+
+### 销售订单查询窗体帮助系统说明
+
+销售订单查询窗体(UCSaleOrderQuery)已集成帮助系统，支持以下功能：
+
+1. **F1键帮助**:
+   - 当焦点在窗体上时，显示销售订单查询窗体的帮助内容
+   - 当焦点在特定控件上时，显示该控件的帮助内容
+
+2. **F2键帮助**:
+   - 打开帮助系统主窗体，提供搜索、推荐和历史记录功能
+
+3. **控件帮助**:
+   - 工具栏按钮: 查询、新增、修改、删除、打印、导出、结案等
+   - 右键菜单项: 标记已打印、转为出库单、订单取消作废、转为采购单、预收货款等
+
+### 帮助文件列表
+
+#### 窗体帮助
+- `forms/UCSaleOrderQuery.html` - 销售订单查询窗体帮助
+
+#### 控件帮助
+- `controls/button_query.html` - 查询按钮帮助
+- `controls/button_add.html` - 新增按钮帮助
+- `controls/button_edit.html` - 修改按钮帮助
+- `controls/button_delete.html` - 删除按钮帮助
+- `controls/button_print.html` - 打印按钮帮助
+- `controls/button_export.html` - 导出按钮帮助
+- `controls/button_close_case.html` - 结案按钮帮助
+- `controls/contextmenu_mark_printed.html` - 标记已打印菜单项帮助
+- `controls/contextmenu_convert_to_outbound.html` - 转为出库单菜单项帮助
+- `controls/contextmenu_cancel_order.html` - 订单取消作废菜单项帮助
+- `controls/contextmenu_convert_to_purchase.html` - 转为采购单菜单项帮助
+- `controls/contextmenu_advance_payment.html` - 预收货款菜单项帮助

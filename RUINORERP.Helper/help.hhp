@@ -11,5 +11,20 @@ Title=RUINOR ERP 帮助系统测试
 [FILES]
 test_help_content.html
 controls\button_test.html
+forms\UCSaleOrderQuery.html
+controls\button_query.html
+controls\button_add.html
+controls\button_edit.html
+controls\button_delete.html
+controls\button_print.html
+controls\button_export.html
+controls\button_close_case.html
+controls\button_save.html
+controls\button_cancel.html
+controls\contextmenu_mark_printed.html
+controls\contextmenu_convert_to_outbound.html
+controls\contextmenu_cancel_order.html
+controls\contextmenu_convert_to_purchase.html
+controls\contextmenu_advance_payment.html
 
 [INFOTYPES]

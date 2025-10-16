@@ -15,5 +15,65 @@
 		<param name="Name" value="控件帮助">
 		<param name="Local" value="controls\button_test.html">
 		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="销售订单查询">
+		<param name="Local" value="forms\UCSaleOrderQuery.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="查询按钮">
+		<param name="Local" value="controls\button_query.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="新增按钮">
+		<param name="Local" value="controls\button_add.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="编辑按钮">
+		<param name="Local" value="controls\button_edit.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="删除按钮">
+		<param name="Local" value="controls\button_delete.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="打印按钮">
+		<param name="Local" value="controls\button_print.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="导出按钮">
+		<param name="Local" value="controls\button_export.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="结案按钮">
+		<param name="Local" value="controls\button_close_case.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="保存按钮">
+		<param name="Local" value="controls\button_save.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="取消按钮">
+		<param name="Local" value="controls\button_cancel.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="标记已打印">
+		<param name="Local" value="controls\contextmenu_mark_printed.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="转为出库单">
+		<param name="Local" value="controls\contextmenu_convert_to_outbound.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="订单取消作废">
+		<param name="Local" value="controls\contextmenu_cancel_order.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="转为采购单">
+		<param name="Local" value="controls\contextmenu_convert_to_purchase.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="预收货款">
+		<param name="Local" value="controls\contextmenu_advance_payment.html">
+		</OBJECT>
 </UL>
 </BODY></HTML>

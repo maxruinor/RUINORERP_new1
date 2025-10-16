@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -44,19 +44,208 @@ using RUINORERP.UI.CommonUI;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.ToolForm;
 using NPOI.SS.Formula.Functions;
+using RUINORERP.UI.HelpSystem;
 
 namespace RUINORERP.UI.PSI.SAL
 {
 
     [MenuAttrAssemblyInfo("销售订单查询", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售订单)]
+    [HelpMapping("forms/UCSaleOrderQuery.html", Title = "销售订单查询")]
     public partial class UCSaleOrderQuery : BaseBillQueryMC<tb_SaleOrder, tb_SaleOrderDetail>, UI.AdvancedUIModule.IContextMenuInfoAuth
     {
         public UCSaleOrderQuery()
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.SOrderNo);
+            
+            // 启用F1帮助功能 - 修复ParentForm可能为null的问题
+            // 在Load事件中启用帮助功能，确保控件已完全初始化
+            this.Load += (sender, e) => {
+                // 为当前用户控件启用F1帮助功能
+                if (HelpManager.Config.IsHelpSystemEnabled)
+                {
+                    // 注册当前控件的键盘事件
+                    this.KeyDown += UCSaleOrderQuery_KeyDown;
+                    
+                    // 为工具栏按钮设置帮助键
+                    SetToolbarButtonHelpKeys();
+                }
+            };
         }
-
+        
+        /// <summary>
+        /// 处理键盘事件以支持F1帮助
+        /// </summary>
+        private void UCSaleOrderQuery_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F1)
+            {
+                // 显示当前焦点控件的帮助
+                ShowFocusedControlHelp();
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.F2)
+            {
+                // 显示帮助系统主窗体
+                if (HelpManager.Config.IsHelpSystemEnabled)
+                {
+                    var mainForm = FindMainForm();
+                    if (mainForm != null)
+                    {
+                        mainForm.ShowHelpSystemForm();
+                    }
+                }
+                e.Handled = true;
+            }
+        }
+        
+        /// <summary>
+        /// 显示当前焦点控件的帮助
+        /// </summary>
+        private void ShowFocusedControlHelp()
+        {
+            if (!HelpManager.Config.IsHelpSystemEnabled) return;
+            
+            try
+            {
+                // 获取当前焦点控件
+                Control focusedControl = this.ActiveControl;
+                
+                // 如果焦点控件有帮助键，则显示对应的帮助
+                if (focusedControl?.Tag is string helpKey && !string.IsNullOrEmpty(helpKey))
+                {
+                    HelpManager.ShowHelpByKey(helpKey);
+                    return;
+                }
+                
+                // 否则显示窗体级别的帮助
+                HelpManager.ShowHelpByType(this.GetType());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"显示帮助时出错: {ex.Message}", "帮助系统", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 为工具栏按钮设置帮助键
+        /// </summary>
+        private void SetToolbarButtonHelpKeys()
+        {
+            try
+            {
+                // 为查询工具栏按钮设置帮助键
+                if (BaseToolStrip != null)
+                {
+                    foreach (ToolStripItem item in BaseToolStrip.Items)
+                    {
+                        if (item is ToolStripButton button)
+                        {
+                            switch (button.Text)
+                            {
+                                case "查询":
+                                    button.SetControlHelpKey("button_query");
+                                    break;
+                                case "新增":
+                                    button.SetControlHelpKey("button_add");
+                                    break;
+                                case "修改":
+                                    button.SetControlHelpKey("button_edit");
+                                    break;
+                                case "删除":
+                                    button.SetControlHelpKey("button_delete");
+                                    break;
+                                case "打印":
+                                    button.SetControlHelpKey("button_print");
+                                    break;
+                                case "导出":
+                                    button.SetControlHelpKey("button_export");
+                                    break;
+                                case "结案":
+                                    button.SetControlHelpKey("button_close_case");
+                                    break;
+                            }
+                        }
+                    }
+                }
+                
+                // 为右键菜单项设置帮助键
+                SetContextMenuHelpKeys();
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不中断程序执行
+                System.Diagnostics.Debug.WriteLine($"设置工具栏按钮帮助键时出错: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 为右键菜单项设置帮助键
+        /// </summary>
+        private void SetContextMenuHelpKeys()
+        {
+            try
+            {
+                // 为右键菜单项设置帮助键
+                if (_UCBillMasterQuery?.newSumDataGridViewMaster?.ContextMenuStrip != null)
+                {
+                    foreach (ToolStripItem item in _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip.Items)
+                    {
+                        if (item is ToolStripMenuItem menuItem)
+                        {
+                            switch (menuItem.Text)
+                            {
+                                case "【标记已打印】":
+                                    menuItem.SetControlHelpKey("contextmenu_mark_printed");
+                                    break;
+                                case "【转为出库单】":
+                                    menuItem.SetControlHelpKey("contextmenu_convert_to_outbound");
+                                    break;
+                                case "【订单取消作废】":
+                                    menuItem.SetControlHelpKey("contextmenu_cancel_order");
+                                    break;
+                                case "【转为采购单】":
+                                    menuItem.SetControlHelpKey("contextmenu_convert_to_purchase");
+                                    break;
+                                case "【预收货款】":
+                                    menuItem.SetControlHelpKey("contextmenu_advance_payment");
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不中断程序执行
+                System.Diagnostics.Debug.WriteLine($"设置右键菜单帮助键时出错: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 查找主窗体
+        /// </summary>
+        private Form FindMainForm()
+        {
+            // 首先尝试通过Parent查找
+            Control parent = this.Parent;
+            while (parent != null)
+            {
+                if (parent is Form form)
+                    return form;
+                parent = parent.Parent;
+            }
+            
+            // 如果通过Parent找不到，尝试通过Application.OpenForms查找
+            foreach (Form form in Application.OpenForms)
+            {
+                if (form is RUINORERP.UI.MainForm)
+                    return form;
+            }
+            
+            return null;
+        }
+        
         public override List<ContextMenuController> AddContextMenu()
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();

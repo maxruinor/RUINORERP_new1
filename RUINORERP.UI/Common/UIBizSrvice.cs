@@ -1478,7 +1478,7 @@ namespace RUINORERP.UI.Common
         {
             // 获取新的缓存管理器实例
             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-            
+            CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
             // 获取表结构管理器实例
             var tableSchemaManager = TableSchemaManager.Instance;
             
@@ -1488,12 +1488,8 @@ namespace RUINORERP.UI.Common
                 //请求本身
                 var entityList = cacheManager.GetEntityList<object>(tableName);
                 if (NeedRequesCache(entityList, tableName) && IsCacheableTable(tableName))
-                {// 临时代码：标记需要完善的部分
-                    CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
+                { 
                     await cacheClient.RequestCacheAsync(tableName);
-
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                    //ClientService.请求缓存(tableName);
                 }
             }
 
@@ -1508,9 +1504,7 @@ namespace RUINORERP.UI.Common
                     //并且要存在于缓存列表的表集合中才取。有些是没有缓存的业务单据表。不需要取缓存
                     if (NeedRequesCache(rslist, fk.RelatedTableName) && IsCacheableTable(fk.RelatedTableName))
                     {
-                        // 临时代码：标记需要完善的部分
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                        //ClientService.请求缓存(item.Value);
+                        await cacheClient.RequestCacheAsync(fk.RelatedTableName);
                     }
                 }
             }

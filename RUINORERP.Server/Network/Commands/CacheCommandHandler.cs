@@ -90,19 +90,24 @@ namespace RUINORERP.Server.Network.Commands
             if (cmd?.Command == null)
                 return false;
 
-            return cmd.Command is CacheCommand ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheDataList ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheRequest ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheUpdate ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheDelete ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheClear ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheStatistics ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheStatus ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheBatchOperation ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheWarmup ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheInvalidate ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheSubscribe ||
-                   cmd.Command.CommandIdentifier == CacheCommands.CacheUnsubscribe;
+            // 使用HashSet提高查找效率
+            var supportedCommands = new HashSet<string>
+            {
+                CacheCommands.CacheDataList,
+                CacheCommands.CacheRequest,
+                CacheCommands.CacheUpdate,
+                CacheCommands.CacheDelete,
+                CacheCommands.CacheClear,
+                CacheCommands.CacheStatistics,
+                CacheCommands.CacheStatus,
+                CacheCommands.CacheBatchOperation,
+                CacheCommands.CacheWarmup,
+                CacheCommands.CacheInvalidate,
+                CacheCommands.CacheSubscribe,
+                CacheCommands.CacheUnsubscribe
+            };
+
+            return cmd.Command is CacheCommand || supportedCommands.Contains(cmd.Command.CommandIdentifier);
         }
 
         /// <summary>
@@ -116,55 +121,31 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 var commandId = cmd.Command.CommandIdentifier;
-                if (commandId == CacheCommands.CacheDataList || commandId == CacheCommands.CacheRequest)
+                
+                // 使用字典映射替代冗长的if-else链
+                var commandHandlers = new Dictionary<string, Func<QueuedCommand, CancellationToken, Task<BaseCommand<IResponse>>>>
                 {
-                    return await HandleCacheRequestAsync(cmd, cancellationToken);
-                }
-                else if (commandId == CacheCommands.CacheUpdate)
+                    { CacheCommands.CacheDataList, HandleCacheRequestAsync },
+                    { CacheCommands.CacheRequest, HandleCacheRequestAsync },
+                    { CacheCommands.CacheUpdate, HandleCacheUpdateAsync },
+                    { CacheCommands.CacheDelete, HandleCacheDeleteAsync },
+                    { CacheCommands.CacheClear, HandleCacheClearAsync },
+                    { CacheCommands.CacheStatistics, HandleCacheStatisticsAsync },
+                    { CacheCommands.CacheStatus, HandleCacheStatusAsync },
+                    { CacheCommands.CacheBatchOperation, HandleCacheBatchOperationAsync },
+                    { CacheCommands.CacheWarmup, HandleCacheWarmupAsync },
+                    { CacheCommands.CacheInvalidate, HandleCacheInvalidateAsync },
+                    { CacheCommands.CacheSubscribe, HandleCacheSubscribeAsync },
+                    { CacheCommands.CacheUnsubscribe, HandleCacheUnsubscribeAsync }
+                };
+
+                if (commandHandlers.TryGetValue(commandId, out var handler))
                 {
-                    return await HandleCacheUpdateAsync(cmd, cancellationToken);
+                    return await handler(cmd, cancellationToken);
                 }
-                else if (commandId == CacheCommands.CacheDelete)
-                {
-                    return await HandleCacheDeleteAsync(cmd, cancellationToken);
-                }
-                else if (commandId == CacheCommands.CacheClear)
-                {
-                    return await HandleCacheClearAsync(cmd, cancellationToken);
-                }
-                else if (commandId == CacheCommands.CacheStatistics)
-                {
-                    return await HandleCacheStatisticsAsync(cmd, cancellationToken);
-                }
-                else if (commandId == CacheCommands.CacheStatus)
-                {
-                    return await HandleCacheStatusAsync(cmd, cancellationToken);
-                }
-                else if (commandId == CacheCommands.CacheBatchOperation)
-                {
-                    return await HandleCacheBatchOperationAsync(cmd, cancellationToken);
-                }
-                else if (commandId == CacheCommands.CacheWarmup)
-                {
-                    return await HandleCacheWarmupAsync(cmd, cancellationToken);
-                }
-                else if (commandId == CacheCommands.CacheInvalidate)
-                {
-                    return await HandleCacheInvalidateAsync(cmd, cancellationToken);
-                }
-                else if (commandId == CacheCommands.CacheSubscribe)
-                {
-                    return await HandleCacheSubscribeAsync(cmd, cancellationToken);
-                }
-                else if (commandId == CacheCommands.CacheUnsubscribe)
-                {
-                    return await HandleCacheUnsubscribeAsync(cmd, cancellationToken);
-                }
-                else
-                {
-                    return BaseCommand<IResponse>.CreateError($"不支持的缓存命令类型: {cmd.Command.CommandIdentifier}", UnifiedErrorCodes.Command_NotFound)
-                        .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_COMMAND");
-                }
+                
+                return BaseCommand<IResponse>.CreateError($"不支持的缓存命令类型: {cmd.Command.CommandIdentifier}", UnifiedErrorCodes.Command_NotFound)
+                    .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_COMMAND");
             }
             catch (Exception ex)
             {
@@ -185,15 +166,13 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 使用统一的业务逻辑处理方法
-                if (command.Command is BaseCommand<CacheRequest, CacheResponse> cacheCommand)
-                {
-                    return await ProcessCacheRequestAsync(cacheCommand, command.Packet.ExecutionContext, cancellationToken);
-                }
-                else
+                if (!(command.Command is BaseCommand<CacheRequest, CacheResponse> cacheCommand))
                 {
                     return BaseCommand<IResponse>.CreateError("不支持的缓存命令格式", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_FORMAT");
                 }
+                
+                return await ProcessCacheRequestAsync(cacheCommand, command.Packet.ExecutionContext, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -236,7 +215,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 获取缓存数据
-                var cacheData =await GetTableDataList(cacheRequest.TableName);
+                var cacheData = await GetTableDataList(cacheRequest.TableName);
                 if (cacheData == null)
                 {
                     return BaseCommand<IResponse>.CreateError($"缓存数据不存在: {cacheRequest.TableName}", UnifiedErrorCodes.Biz_DataNotFound)
@@ -279,16 +258,13 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // 使用统一的业务逻辑处理方法
-                if (command.Command is CacheCommand cacheCommand)
-                {
-                    return await ProcessCacheUpdateAsync(cacheCommand, command.Packet.ExecutionContext, cancellationToken);
-                }
-                else
+                if (!(command.Command is BaseCommand<CacheRequest, IResponse> baseCommand))
                 {
                     return BaseCommand<IResponse>.CreateError("不支持的缓存更新命令格式", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_UPDATE_FORMAT");
                 }
+                
+                return await ProcessCacheUpdateAsync(baseCommand, command.Packet.ExecutionContext, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -305,7 +281,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="executionContext">执行上下文</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<BaseCommand<IResponse>> ProcessCacheUpdateAsync(CacheCommand cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> ProcessCacheUpdateAsync(BaseCommand<CacheRequest, IResponse> cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -329,7 +305,6 @@ namespace RUINORERP.Server.Network.Commands
 
                 // 直接处理客户端缓存更新，移除对ServerCacheSyncService的依赖
                 bool updateSuccess = await HandleClientCacheUpdateAsync(executionContext.SessionId, updateRequest);
-
                 if (!updateSuccess)
                 {
                     LogError($"更新缓存数据失败: {updateRequest.TableName}");
@@ -360,15 +335,13 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 使用统一的业务逻辑处理方法
-                if (command.Command is CacheCommand cacheCommand)
-                {
-                    return await ProcessCacheDeleteAsync(cacheCommand, command.Packet.ExecutionContext, cancellationToken);
-                }
-                else
+                if (!(command.Command is CacheCommand cacheCommand))
                 {
                     return BaseCommand<IResponse>.CreateError("不支持的缓存删除命令格式", UnifiedErrorCodes.Command_ValidationFailed.Code)
                         .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_DELETE_FORMAT");
                 }
+                
+                return await ProcessCacheDeleteAsync(cacheCommand, command.Packet.ExecutionContext, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -404,10 +377,8 @@ namespace RUINORERP.Server.Network.Commands
                     return BaseCommand<IResponse>.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
                 }
-               
 
                 bool deleteSuccess = await HandleClientCacheUpdateAsync(executionContext.SessionId, deleteRequest);
-
                 if (!deleteSuccess)
                 {
                     LogError($"删除缓存数据失败: {deleteRequest.TableName}");
@@ -437,19 +408,7 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // 检查缓存是否存在
-                //var cacheInfo = _cacheService.GetCacheInfo(tableName);
-                //if (cacheInfo == null || cacheInfo.LastUpdated < lastRequestTime)
-                //{
-                //    return false;
-                //}
-
-                //// 检查缓存是否过期
-                //if (cacheInfo.ExpirationTime < DateTime.Now)
-                //{
-                //    return false;
-                //}
-
+                // 目前总是返回true，后续可以根据实际需求实现缓存有效性检查逻辑
                 return true;
             }
             catch
@@ -792,6 +751,12 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="command">缓存删除命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
+        /// <summary>
+        /// 处理缓存删除命令
+        /// </summary>
+        /// <param name="command">缓存删除命令</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
         private async Task<BaseCommand<IResponse>> HandleCacheRemoveAsync(QueuedCommand command, CancellationToken cancellationToken)
         {
             try
@@ -801,8 +766,8 @@ namespace RUINORERP.Server.Network.Commands
                 // 删除缓存记录
                 try
                 {
-                    // 使用新的缓存管理器删除缓存项
-                    // 注意：这里需要根据具体需求实现
+                    // TODO: 使用新的缓存管理器删除缓存项
+                    // 暂时记录日志
                     LogInfo($"缓存记录删除成功");
                 }
                 catch (Exception removeEx)
@@ -811,15 +776,12 @@ namespace RUINORERP.Server.Network.Commands
                     return CreateErrorResponse($"删除缓存记录失败: {removeEx.Message}", UnifiedErrorCodes.Biz_OperationFailed, "CACHE_REMOVE_FAILED");
                 }
 
-                // 广播更新通知
-                //   await BroadcastCacheUpdateAsync(removeRequest.TableName, null);
-
                 // 构建响应数据
                 var responseData = new CacheResponse
                 {
                     TableName = "",
+                    IsSuccess = true
                 };
-
 
                 return BaseCommand<IResponse>.CreateSuccess(responseData, "缓存删除成功");
             }
@@ -841,6 +803,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // TODO: 实现缓存清空逻辑
+                // 暂时记录日志
                 LogInfo("处理缓存清空命令");
 
                 var responseData = new CacheResponse
@@ -869,6 +832,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // TODO: 实现缓存统计逻辑
+                // 暂时记录日志
                 LogInfo("处理缓存统计命令");
 
                 var responseData = new CacheResponse
@@ -897,6 +861,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // TODO: 实现缓存状态逻辑
+                // 暂时记录日志
                 LogInfo("处理缓存状态命令");
 
                 var responseData = new CacheResponse
@@ -925,6 +890,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // TODO: 实现缓存批量操作逻辑
+                // 暂时记录日志
                 LogInfo("处理缓存批量操作命令");
 
                 var responseData = new CacheResponse
@@ -953,6 +919,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // TODO: 实现缓存预热逻辑
+                // 暂时记录日志
                 LogInfo("处理缓存预热命令");
 
                 var responseData = new CacheResponse
@@ -981,6 +948,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // TODO: 实现缓存失效逻辑
+                // 暂时记录日志
                 LogInfo("处理缓存失效命令");
 
                 var responseData = new CacheResponse
@@ -1152,7 +1120,7 @@ namespace RUINORERP.Server.Network.Commands
                 {
                     case CacheOperation.Set:
                     case CacheOperation.Update:
-                        await HandleUpdateOperationAsync(request);
+                         HandleUpdateOperationAsync(request);
                         break;
                     case CacheOperation.BatchSet:
                     case CacheOperation.BatchUpdate:
@@ -1189,15 +1157,15 @@ namespace RUINORERP.Server.Network.Commands
         /// 处理更新操作
         /// </summary>
         /// <param name="request">缓存请求</param>
-        private async Task HandleUpdateOperationAsync(CacheRequest request)
+        private void HandleUpdateOperationAsync(CacheRequest request)
         {
             try
             {
                 // 使用缓存管理器更新实体
-                //if (request. != null)
-                //{
-                //    _cacheManager.UpdateEntityList(request.TableName, request.Data);
-                //}
+                if (request.Data != null)
+                {
+                    _cacheManager.UpdateEntityList(request.TableName, request.Data);
+                }
             }
             catch (Exception ex)
             {
@@ -1215,10 +1183,15 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 使用缓存管理器批量更新实体
-                //if (request.Data != null)
-                //{
-                //    _cacheManager.UpdateEntityList(request.TableName, request.Data);
-                //}
+                if (request.Data != null)
+                {
+                    _cacheManager.UpdateEntityList(request.TableName, request.Data);
+                    logger.LogInformation($"批量更新操作成功: 表名={request.TableName}, 数据量={request.Data.Count}");
+                }
+                else
+                {
+                    logger.LogWarning($"批量更新操作数据为空: 表名={request.TableName}");
+                }
             }
             catch (Exception ex)
             {
@@ -1236,10 +1209,15 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 使用缓存管理器删除实体
-                //if (!string.IsNullOrEmpty(request.PrimaryKeyName) && request.PrimaryKeyValue != null)
-                //{
-                //    _cacheManager.DeleteEntity(request.TableName, request.PrimaryKeyValue);
-                //}
+                if (!string.IsNullOrEmpty(request.PrimaryKeyName) && request.PrimaryKeyValue != null)
+                {
+                    _cacheManager.DeleteEntity(request.TableName, request.PrimaryKeyValue);
+                    logger.LogInformation($"删除操作成功: 表名={request.TableName}, 主键={request.PrimaryKeyName}, 值={request.PrimaryKeyValue}");
+                }
+                else
+                {
+                    logger.LogWarning($"删除操作参数不完整: 表名={request.TableName}, 主键={request.PrimaryKeyName}, 值={request.PrimaryKeyValue}");
+                }
             }
             catch (Exception ex)
             {
@@ -1257,8 +1235,23 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 批量删除操作的处理逻辑
-                logger.LogInformation($"处理批量删除操作: 表名={request.TableName}");
-                // 这里可以根据具体需求实现批量删除逻辑
+                if (request.Data != null && request.Data.Any())
+                {
+                    // 遍历数据列表，逐个删除实体
+                    foreach (var item in request.Data)
+                    {
+                        if (item is IDictionary<string, object> dict && 
+                            dict.ContainsKey("Id")) // 假设主键名为Id
+                        {
+                            _cacheManager.DeleteEntity(request.TableName, dict["Id"]);
+                        }
+                    }
+                    logger.LogInformation($"批量删除操作成功: 表名={request.TableName}, 数据量={request.Data.Count}");
+                }
+                else
+                {
+                    logger.LogWarning($"批量删除操作数据为空: 表名={request.TableName}");
+                }
             }
             catch (Exception ex)
             {
@@ -1276,8 +1269,8 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 清空操作的处理逻辑
-                logger.LogInformation($"处理清空操作: 表名={request.TableName}");
-                // 这里可以根据具体需求实现清空逻辑
+                _cacheManager.ClearTableCache(request.TableName);
+                logger.LogInformation($"清空操作成功: 表名={request.TableName}");
             }
             catch (Exception ex)
             {
@@ -1300,10 +1293,7 @@ namespace RUINORERP.Server.Network.Commands
                 {
                     Type = request.Operation,
                     TableName = request.TableName,
-                    Timestamp = DateTime.Now,
-                    //Data = request.Data,
-                    //PrimaryKeyName = request.PrimaryKeyName,
-                    //PrimaryKeyValue = request.PrimaryKeyValue
+                    Timestamp = DateTime.Now
                 };
 
                 // 序列化通知

@@ -271,14 +271,17 @@ namespace RUINORERP.UI.Network.Services
                 }
 
                 // 发送缓存更新命令到服务器
-                var command = new BaseCommand<CacheRequest, IResponse>()
+                var command = new BaseCommand<IRequest, IResponse>()
                 {
                     Request = request,
                     CommandIdentifier = CacheCommands.CacheUpdate
                 };
 
+                //服务器也改一下试试。 BaseCommand<IRequest, IResponse>() 是不是所有的都可以这样？
+
+
                 // 发送命令到服务器
-                await _comm.SendOneWayCommandAsync<CacheRequest>(command, CancellationToken.None);
+                await _comm.SendOneWayCommandAsync<IRequest>(command, CancellationToken.None);
 
                 _log?.LogInformation($"客户端缓存变更已同步到服务器: {e.Key}, 操作: {e.Operation.ToString()}");
             }

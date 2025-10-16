@@ -58,6 +58,16 @@ namespace RUINORERP.PacketSpec.Commands
             try
             {
                 var commandId = packet.CommandId;
+                // 3. 优先处理字节数组命令数据，通过二进制数据创建命令实例
+                if (packet.CommandData != null && packet.CommandData.Length > 0)
+                {
+                    var command = CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext.CommandType);
+                    if (command != null)
+                    {
+                        InitializeCommandProperties(command, packet);
+                        return command;
+                    }
+                }
 
                 // 1. 检查是否有注册的自定义创建器
                 if (_commandCreators.TryGetValue(commandId, out var creator))
@@ -76,17 +86,6 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     _logger?.LogWarning("未找到命令类型: {CommandId}", commandId);
                     return CreateFallbackCommand(packet);
-                }
-
-                // 3. 优先处理字节数组命令数据，通过二进制数据创建命令实例
-                if (packet.CommandData != null && packet.CommandData.Length > 0)
-                {
-                    var command = CreateCommandFromBytes(packet.CommandData, commandType);
-                    if (command != null)
-                    {
-                        InitializeCommandProperties(command, packet);
-                        return command;
-                    }
                 }
 
                 // 4. 如果没有二进制数据，创建空命令实例

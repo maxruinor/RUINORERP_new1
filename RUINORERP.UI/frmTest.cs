@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using RUINOR.Core;
 using RUINORERP.Business;
 using RUINORERP.Model;
@@ -19,7 +19,7 @@ using RUINORERP.UI.Common;
 using System.Reflection;
 using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.Business.CommService;
-
+using RUINORERP.UI.HelpSystem; // 添加帮助系统引用
 
 namespace RUINORERP.UI
 {
@@ -30,8 +30,33 @@ namespace RUINORERP.UI
         public frmTest()
         {
             InitializeComponent();
+            // 启用F1帮助功能
+            this.EnableF1Help();
+            // 为窗体设置帮助页面
+            this.SetHelpPage("forms/test_form.html", "测试窗体帮助");
+            
+            // 为控件设置帮助键
+            InitializeControlHelp();
         }
 
+        /// <summary>
+        /// 初始化控件帮助
+        /// </summary>
+        private void InitializeControlHelp()
+        {
+            // 为按钮控件设置帮助键
+            if (btnNew != null) btnNew.SetControlHelpKey("button_new");
+            if (btnRedo != null) btnRedo.SetControlHelpKey("button_redo");
+            if (btnUndo != null) btnUndo.SetControlHelpKey("button_undo");
+            if (kryptonButton1 != null) kryptonButton1.SetControlHelpKey("button_krypton1");
+            if (kryptonButton2 != null) kryptonButton2.SetControlHelpKey("button_krypton2");
+            if (btnUseSqlsugar != null) btnUseSqlsugar.SetControlHelpKey("button_sqlsugar");
+            if (button1 != null) button1.SetControlHelpKey("button_grid");
+            if (btnGridTest != null) btnGridTest.SetControlHelpKey("button_grid_test");
+            if (btnCslaQuery != null) btnCslaQuery.SetControlHelpKey("button_csla");
+            if (btnBIndTest != null) btnBIndTest.SetControlHelpKey("button_bind_test");
+            if (btnDefaultAddElseUpdateTest != null) btnDefaultAddElseUpdateTest.SetControlHelpKey("button_save_test");
+        }
 
         private void btnNew_Click(object sender, EventArgs e)
         {
@@ -300,7 +325,6 @@ namespace RUINORERP.UI
 
 
 
-
             //设置倒数第二行的高度，直接将最后一行挤到最底部；
             //grid2.Rows[grid2.Rows.Count - 2].Height = grid2.Height - grid2.Rows[0].Height * (grid2.RowsCount) + 10;
             //设置倒数第一行的内容
@@ -379,4 +403,3 @@ namespace RUINORERP.UI
         }
     }
 }
-

@@ -58,6 +58,7 @@ using FastReport.Table;
 using Newtonsoft.Json.Linq;
 using FastReport.DevComponents.DotNetBar;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 
 
 namespace RUINORERP.UI.Common
@@ -109,12 +110,15 @@ namespace RUINORERP.UI.Common
                 mapping.IsSelfReferencing = true;
             }
             //只处理需要缓存的表
-            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (MyCacheManager.Instance.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
-            {
-                //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
-                mapping.ReferenceDefaultDisplayFieldName = pair.Value;
-            }
+            // 使用新的缓存管理器，不再需要检查表是否在缓存中
+              {
+                 KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
+                 if (MyCacheManager.Instance.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+                 {
+                     //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
+                     mapping.ReferenceDefaultDisplayFieldName = pair.Value;
+                 }
+              }
             if (CustomDisplaySourceField != null)
             {
                 MemberInfo CustomDisplayColInfo = CustomDisplaySourceField.GetMemberInfo();

@@ -1020,7 +1020,7 @@ namespace RUINORERP.UI.Network.Services
             var entity = _cacheManager.GetEntity(tableName, id);
             if (entity != null)
             {
-                string name = entity.GetPropertyValue(schemaInfo.DisplayField)?.ToString() ?? string.Empty;
+                string name = entity.GetCachePropertyValue(schemaInfo.DisplayField)?.ToString() ?? string.Empty;
                 _log?.LogDebug("从缓存获取名称成功，表名={0}，ID={1}，名称={2}", tableName, id, name);
                 return name;
             }

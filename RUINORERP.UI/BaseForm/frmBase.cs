@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using FluentValidation.Results;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.UI.Common.HelpSystem;
+using RUINORERP.UI.HelpSystem;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -42,13 +42,22 @@ namespace RUINORERP.UI.BaseForm
                         this.Close();//csc关闭窗体
                         break;
                     case Keys.F1:
-                        // 显示帮助
-                        HelpManager.ShowHelp(this);
+                        // 显示帮助 - 优先显示当前焦点控件的帮助
+                        var focusedControl = this.ActiveControl;
+                        HelpManager.ShowHelpForControl(this, focusedControl);
                         return true;
+                    case Keys.F2:
+                        // 显示帮助系统主窗体
+                        if (HelpManager.Config.IsHelpSystemEnabled)
+                        {
+                            this.ShowHelpSystemForm();
+                            return true;
+                        }
+                        break;
                 }
 
             }
-            return false;
+            return base.ProcessCmdKey(ref msg, keyData); // 调用基类方法处理其他按键
         }
 
     }

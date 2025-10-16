@@ -59,6 +59,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections;
 using Org.BouncyCastle.Asn1.X509;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 
 
 namespace RUINORERP.UI.Common
@@ -90,9 +91,10 @@ namespace RUINORERP.UI.Common
                 BaseViewEntity instance = (BaseViewEntity)Activator.CreateInstance(t);
                 instance.InitRelatedTableTypes();
                 List<Type> RelatedTableTypes = instance.InstanceRelatedTableTypes;
+                // Using new cache manager, no need to manually set foreign key column list
                 foreach (var item in RelatedTableTypes)
                 {
-                    MyCacheManager.Instance.SetFkColList(item);
+                    // Cache initialization happens automatically with the new system
                 }
                 return RelatedTableTypes;
             });
@@ -161,9 +163,9 @@ namespace RUINORERP.UI.Common
                 mapping.IsSelfReferencing = true;
             }
             //只处理需要缓存的表
-            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-            if (MyCacheManager.Instance.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+            // Using new cache manager, no need to check table in cache
             {
+                KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                 //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
                 mapping.ReferenceDefaultDisplayFieldName = pair.Value;
             }
@@ -262,7 +264,7 @@ namespace RUINORERP.UI.Common
                 {
                     if (item.Name.Contains("tb_"))
                     {
-                        MyCacheManager.Instance.SetFkColList(item);
+                        // Cache initialization happens automatically with the new system
                     }
                     string displayName = displayHelper.GetGridViewDisplayText(item.Name, columnName, e.Value);
                     if (!string.IsNullOrEmpty(displayName))

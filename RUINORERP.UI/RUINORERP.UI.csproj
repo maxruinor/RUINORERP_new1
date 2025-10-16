@@ -325,6 +325,15 @@
     <Reference Include="Microsoft.IdentityModel.Tokens, Version=6.32.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.IdentityModel.Tokens.6.32.1\lib\net472\Microsoft.IdentityModel.Tokens.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Web.WebView2.Core, Version=1.0.3537.50, Culture=neutral, PublicKeyToken=2a8ab48044d2601e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.WebView2.1.0.3537.50\lib\net462\Microsoft.Web.WebView2.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.WinForms, Version=1.0.3537.50, Culture=neutral, PublicKeyToken=2a8ab48044d2601e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.WebView2.1.0.3537.50\lib\net462\Microsoft.Web.WebView2.WinForms.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.WebView2.Wpf, Version=1.0.3537.50, Culture=neutral, PublicKeyToken=2a8ab48044d2601e, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.WebView2.1.0.3537.50\lib\net462\Microsoft.Web.WebView2.Wpf.dll</HintPath>
+    </Reference>
     <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
     </Reference>
@@ -904,9 +913,31 @@
     <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlExtensions.cs" />
     <Compile Include="Common\HardwareHelper.cs" />
+    <Compile Include="HelpSystem\ControlHelpDemoForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HelpSystem\ControlHelpDemoForm.Designer.cs">
+      <DependentUpon>ControlHelpDemoForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="HelpSystem\HelpExtensions.cs" />
+    <Compile Include="HelpSystem\HelpHistoryManager.cs" />
     <Compile Include="HelpSystem\HelpManager.cs" />
     <Compile Include="HelpSystem\HelpMappingAttribute.cs" />
+    <Compile Include="HelpSystem\HelpRecommendationManager.cs" />
+    <Compile Include="HelpSystem\HelpSearchManager.cs" />
+    <Compile Include="HelpSystem\HelpSystemConfig.cs" />
+    <Compile Include="HelpSystem\HelpSystemDemoForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HelpSystem\HelpSystemDemoForm.Designer.cs">
+      <DependentUpon>HelpSystemDemoForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="HelpSystem\HelpSystemForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HelpSystem\HelpSystemForm.Designer.cs">
+      <DependentUpon>HelpSystemForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="HelpSystem\IHelpProvider.cs" />
     <Compile Include="Common\MenuItemEnumsExtensions.cs" />
     <Compile Include="Common\ProgressExtensions.cs" />
@@ -2086,6 +2117,12 @@
     </Compile>
     <Compile Include="Common\BarCodeCreator.cs" />
     <Compile Include="Common\BarCodeHelper.cs" />
+    <Compile Include="HelpSystem\TestControlHelpForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HelpSystem\TestControlHelpForm.Designer.cs">
+      <DependentUpon>TestControlHelpForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Monitoring\Auditing\AuditLogHelper.cs" />
     <Compile Include="Common\CustomTupleEqualityComparer.cs" />
     <Compile Include="Common\DuplicateFinder.cs" />
@@ -4129,6 +4166,9 @@
     <EmbeddedResource Include="frmTest.resx">
       <DependentUpon>frmTest.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="HelpSystem\HelpSystemForm.resx">
+      <DependentUpon>HelpSystemForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="IM\InstructionsPrompt.resx">
       <DependentUpon>InstructionsPrompt.cs</DependentUpon>
     </EmbeddedResource>
@@ -5199,9 +5239,11 @@
     <Error Condition="!Exists('..\packages\SkiaSharp.NativeAssets.macOS.2.88.9\build\net462\SkiaSharp.NativeAssets.macOS.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.NativeAssets.macOS.2.88.9\build\net462\SkiaSharp.NativeAssets.macOS.targets'))" />
     <Error Condition="!Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets'))" />
     <Error Condition="!Exists('..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Web.WebView2.1.0.3537.50\build\Microsoft.Web.WebView2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Web.WebView2.1.0.3537.50\build\Microsoft.Web.WebView2.targets'))" />
   </Target>
   <Import Project="..\packages\HarfBuzzSharp.NativeAssets.Win32.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.Win32.targets" Condition="Exists('..\packages\HarfBuzzSharp.NativeAssets.Win32.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.Win32.targets')" />
   <Import Project="..\packages\SkiaSharp.NativeAssets.macOS.2.88.9\build\net462\SkiaSharp.NativeAssets.macOS.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.macOS.2.88.9\build\net462\SkiaSharp.NativeAssets.macOS.targets')" />
   <Import Project="..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets')" />
   <Import Project="..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets" Condition="Exists('..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets')" />
+  <Import Project="..\packages\Microsoft.Web.WebView2.1.0.3537.50\build\Microsoft.Web.WebView2.targets" Condition="Exists('..\packages\Microsoft.Web.WebView2.1.0.3537.50\build\Microsoft.Web.WebView2.targets')" />
 </Project>

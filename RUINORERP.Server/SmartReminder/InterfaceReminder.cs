@@ -27,7 +27,7 @@ namespace RUINORERP.Server.SmartReminder
         void StartMonitoring(TimeSpan interval);
 
         void AddStrategy(IReminderStrategy strategy);
-        Task<List<IReminderRule>> GetActiveRulesAsync();
+        List<IReminderRule> GetActiveRulesAsync();
     }
     // 4. 通知服务实现
     public interface INotificationService

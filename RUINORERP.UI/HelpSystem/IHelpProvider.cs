@@ -1,4 +1,4 @@
-namespace RUINORERP.UI.Common.HelpSystem
+namespace RUINORERP.UI.HelpSystem
 {
     /// <summary>
     /// 帮助提供者接口

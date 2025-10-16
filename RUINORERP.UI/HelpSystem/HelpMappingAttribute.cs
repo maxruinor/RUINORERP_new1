@@ -1,6 +1,6 @@
 using System;
 
-namespace RUINORERP.UI.Common.HelpSystem
+namespace RUINORERP.UI.HelpSystem
 {
     /// <summary>
     /// 帮助映射特性，用于标记窗体对应的帮助页面

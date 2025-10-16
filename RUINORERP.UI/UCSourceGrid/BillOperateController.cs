@@ -1,4 +1,4 @@
-﻿using RUINORERP.Common.Helper;
+using RUINORERP.Common.Helper;
 using SourceGrid;
 using SourceGrid.Cells.Controllers;
 using System;
@@ -20,6 +20,7 @@ using Mysqlx;
 using ZXing.Common;
 using SourceGrid.Cells.Editors;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 using NPOI.SS.UserModel;
 using System.Reflection;
 using SourceGrid.Cells.Views;
@@ -289,10 +290,12 @@ namespace RUINORERP.UI.UCSourceGrid
                             {
                                 //如果指向其他列有值。则取外键实体的名称的值
                                 if (!string.IsNullOrEmpty(rc.ValueParameters[i].PointToColName))
-                                {
+                                {   
                                     object id = ReflectionHelper.GetPropertyValue(setcurrentObj, rc.ValueParameters[i].ParameterColName);
                                     //取值时没有使用指向性列名，用的是初始时 默认指向的名称编号等，这里是不是可以优化成可以指定。或不指定。不指定的话，使用默认的时。SetCol_RelatedValue 可以少输入一个参数
-                                    var obj = MyCacheManager.Instance.GetEntity(rc.ValueParameters[i].FkTableType.Name, id);
+                                    // 通过依赖注入获取缓存管理器
+                                    var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                                    var obj = cacheManager.GetEntity(rc.ValueParameters[i].FkTableType.Name, id);
                                     if (obj != null)
                                     {
                                         object value = ReflectionHelper.GetPropertyValue(obj, rc.ValueParameters[i].PointToColName);

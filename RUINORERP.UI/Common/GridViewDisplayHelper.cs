@@ -61,6 +61,7 @@ using System.Runtime.InteropServices;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.UI.Common
 {
@@ -105,7 +106,7 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, prop.Name, CommonHelper.Instance.GetKeyValuePairs(typeof(ApprovalStatus))));
                 }
-              
+
                 // 检查类型 T 是否包含 PayStatus 列
                 else if (prop.Name == nameof(PayStatus))
                 {
@@ -127,7 +128,7 @@ namespace RUINORERP.UI.Common
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(PurReProcessWay), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "ProcessWay", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(PurReProcessWay))));
                 }
-                else if (prop.Name == nameof(GoodsSource)||prop.Name == "SourceType") //应该字段名和枚举名相同才好
+                else if (prop.Name == nameof(GoodsSource) || prop.Name == "SourceType") //应该字段名和枚举名相同才好
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(GoodsSource), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource))));
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "SourceType", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource))));
@@ -188,8 +189,8 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(CheckMode), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(CheckMode))));
                 }
-               
-                     else if (prop.Name == nameof(ASProcessStatus))
+
+                else if (prop.Name == nameof(ASProcessStatus))
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ASProcessStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ASProcessStatus))));
                 }
@@ -210,7 +211,7 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ARAPStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ARAPStatus))));
                 }
-                else if (prop.Name == nameof(BizType)|| prop.Name == "TargetBizType"|| prop.Name == "SourceBizType")
+                else if (prop.Name == nameof(BizType) || prop.Name == "TargetBizType" || prop.Name == "SourceBizType")
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(BizType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "TargetBizType", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
@@ -259,7 +260,7 @@ namespace RUINORERP.UI.Common
             var type = typeof(T);
             InitializeFixedDictionaryMappings(type);
         }
-  
+
 
         public void InitializeReferenceKeyMapping(Type _type)
         {
@@ -290,12 +291,12 @@ namespace RUINORERP.UI.Common
 
                             ReferenceKeyMapping mapping = new ReferenceKeyMapping(fkrattr.FKTableName, fkrattr.FK_IDColName, tableName);
 
-                            //只处理需要缓存的表
-                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            if (MyCacheManager.Instance.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+                            // 使用依赖注入的缓存管理器
+                            var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(mapping.ReferenceTableName);
+                            if (schemaInfo!=null)
                             {
                                 //要显示的默认值是从缓存表中获取的字段名，默认是主键ID字段对应的名称
-                                mapping.ReferenceDefaultDisplayFieldName = pair.Value;
+                                mapping.ReferenceDefaultDisplayFieldName = schemaInfo.DisplayField;
                             }
                             AddReferenceKeyMapping(fkrattr.FK_IDColName, mapping);
                         }
@@ -380,12 +381,11 @@ namespace RUINORERP.UI.Common
                 {
                     return IdValue.ToString();
                 }
-                string NameValue = string.Empty;
+
                 // 特殊字段处理（如创建人、修改人）
                 #region
                 //如果是修改人创建人统一处理,并且要放在前面
                 //定义两个字段为了怕后面修改，不使用字符串
-                //2024-2-17 完善 这里应该是有点小问题
                 Expression<Func<tb_Employee, long>> Created_by;
                 Expression<Func<tb_Employee, long>> Modified_by;
                 Expression<Func<tb_Employee, long>> Approver_by;
@@ -401,14 +401,14 @@ namespace RUINORERP.UI.Common
                         return "";
                     }
                     string SourceTableName = typeof(tb_Employee).Name;
-                    object objText = MyCacheManager.Instance.GetValue(SourceTableName, IdValue);
+                    // 通过依赖注入获取缓存管理器
+                    var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                    object objText = cacheManager.GetDisplayValue(SourceTableName, IdValue);
                     if (objText != null && objText.ToString() != "System.Object")
                     {
-                        NameValue = objText.ToString();
-                        return NameValue;
+                        return objText.ToString();
                     }
                 }
-
                 #endregion
 
                 ReferenceKeyMapping mapping = ReferenceKeyMappings.Where(c => c.MappedTargetTableName == TargetTableName && c.MappedTargetFieldName == idColName).FirstOrDefault();
@@ -416,154 +416,42 @@ namespace RUINORERP.UI.Common
                 {
                     if (mapping.MappedTargetFieldName == idColName)
                     {
-
-                        #region 从缓存中取值
-                        object entity = new object();
-                        //只处理需要缓存的表
-                        KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                        if (MyCacheManager.Instance.NewTableList.TryGetValue(mapping.ReferenceTableName, out pair))
+                        // 通过依赖注入获取缓存管理器
+                        var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                        object displayValue = cacheManager.GetDisplayValue(mapping.ReferenceTableName, IdValue);
+                        if (displayValue != null)
                         {
-                            string key = pair.Key;
-                            string KeyValue = IdValue.ToString();
-                            //设置属性的值
-                            if (MyCacheManager.Instance.CacheEntityList.Exists(mapping.ReferenceTableName))
-                            {
-                                var rslist = MyCacheManager.Instance.CacheEntityList.Get(mapping.ReferenceTableName);
-                                if (TypeHelper.IsGenericList(rslist.GetType()))
-                                {
-                                    var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
-                                    if (lastlist != null)
-                                    {
-                                        foreach (var item in lastlist)
-                                        {
-                                            var id = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(item, key);
-                                            if (id != null)
-                                            {
-                                                if (id.ToString() == IdValue.ToString())
-                                                {
-                                                    entity = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(item, pair.Value);
-                                                    break;
-                                                }
-                                            }
-
-                                        }
-                                    }
-                                }
-                                else if (rslist != null && TypeHelper.IsJArrayList(rslist.GetType()))
-                                {
-
-                                    var lastlist = ((IEnumerable<dynamic>)rslist).ToList();
-                                    if (lastlist != null)
-                                    {
-                                        foreach (var item in lastlist)
-                                        {
-                                            // 将item转换为JObject
-                                            var jobj = JObject.Parse(item.ToString());
-
-                                            // 获取DepartmentID属性的值
-                                            var id = jobj[key]?.ToString();
-
-                                            if (id != null && id == IdValue.ToString())
-                                            {
-                                                //如果找到了匹配的id，获取对应的属性值，如果有特殊指定则取特殊值
-                                                if (string.IsNullOrEmpty(mapping.CustomDisplayColumnName))
-                                                {
-                                                    // 假设你想要获取的属性是DepartmentName
-                                                    var departmentName = jobj[pair.Value]?.ToString();
-                                                    if (departmentName != null)
-                                                    {
-                                                        entity = departmentName;
-                                                        break;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    var departmentName = jobj[mapping.CustomDisplayColumnName]?.ToString();
-                                                    if (departmentName != null)
-                                                    {
-                                                        entity = departmentName;
-                                                        break;
-                                                    }
-                                                }
-
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        #endregion
-
-                        if (entity != null && entity.GetType().Name != "Object")
-                        {
-                            NameValue = entity.ToString();
-                            return NameValue;
+                            return displayValue.ToString();
                         }
                     }
                 }
                 else
                 {
                     #region 没有映射的情况
+                    // 通过依赖注入获取缓存管理器
+                    var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                    var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(TargetTableName);
+                    // 先尝试直接从目标表获取
+                    object nameValue = cacheManager.GetDisplayValue(TargetTableName, IdValue);
+                    if (nameValue != null && !string.IsNullOrWhiteSpace(nameValue.ToString()))
+                    {
+                        return nameValue.ToString();
+                    }
 
-                    //视图暂时没有实体生成时没有设置关联外键的特性，所以在具体业务实现时 手工指定成一个集合了。
-
-
-                    //先处理类型本身
-                    //只处理需要缓存的表
-                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                    if (MyCacheManager.Instance.NewTableList.TryGetValue(TargetTableName, out pair))
-                    {
-                        //在基本表中但是缓存中没有则请求
-                        if (!MyCacheManager.Instance.CacheEntityList.Exists(TargetTableName))
-                        {
-                            UIBizSrvice.RequestCache(TargetTableName);
-                        }
-                        var selfTypeDisplayText = MyCacheManager.Instance.GetValue(TargetTableName, IdValue);
-                        if (selfTypeDisplayText != null && !string.IsNullOrWhiteSpace(selfTypeDisplayText.ToString())
-                             && selfTypeDisplayText.GetType().Name != "Object"
-                            )
-                        {
-                            return selfTypeDisplayText.ToString();
-                        }
-                    }
-                    //再处理外键关联
-                    List<KeyValuePair<string, string>> kvlist = new List<KeyValuePair<string, string>>();
-                    if (MyCacheManager.Instance.FkPairTableList.TryGetValue(TargetTableName, out kvlist))
-                    {
-                        var kv = kvlist.Find(k => k.Key == idColName);
-                        //如果找不到呢？
-                        if (kv.Key == null)
-                        {
-                            return string.Empty;
-                        }
-                        string baseTableName = kv.Value;
-                        object obj = MyCacheManager.Instance.GetValue(baseTableName, IdValue);
-                        if (obj != null)
-                        {
-                            NameValue = obj.ToString();
-                        }
-                    }
-                    if (string.IsNullOrEmpty(NameValue) && TargetTableName.Contains("View"))
-                    {
-                        object obj = MyCacheManager.Instance.GetValue(TargetTableName, IdValue);
-                        if (obj != null && obj.GetType().Name != "Object")
-                        {
-                            NameValue = obj.ToString();
-                        }
-                    }
-                    else
-                    {
-                        if (string.IsNullOrEmpty(NameValue))
-                        {
-                            object obj = MyCacheManager.Instance.GetValue(TargetTableName, IdValue);
-                            if (obj != null && obj.GetType().Name != "Object")
-                            {
-                                NameValue = obj.ToString();
-                            }
-                        }
-                    }
-                    return NameValue;
+                    // 再尝试外键关联
+                    //if (cacheManager.FkPairTableList.TryGetValue(TargetTableName, out List<KeyValuePair<string, string>> kvlist))
+                    //{
+                    //    var kv = kvlist.Find(k => k.Key == idColName);
+                    //    if (kv.Key != null)
+                    //    {
+                    //        string baseTableName = kv.Value;
+                    //        nameValue = cacheManager.GetDisplayValue(baseTableName, IdValue);
+                    //        if (nameValue != null)
+                    //        {
+                    //            return nameValue.ToString();
+                    //        }
+                    //    }
+                    //}
                     #endregion
                 }
 

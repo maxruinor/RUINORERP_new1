@@ -73,6 +73,7 @@ using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Comm;
 using WorkflowCore.Interface;
 using RUINORERP.Server.Controls;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.Server
 {
@@ -183,6 +184,8 @@ namespace RUINORERP.Server
         public IWorkflowHost WorkflowHost;
         private NetworkServer _networkServer;
 
+        private readonly EntityCacheInitializationService _entityCacheInitializationService;
+
         public frmMainNew(ILogger<frmMainNew> logger, IWorkflowHost workflowHost, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
@@ -191,6 +194,9 @@ namespace RUINORERP.Server
             _logger = logger;
             _services = Startup.services;
             WorkflowHost = workflowHost;
+            
+            // 注入缓存初始化服务
+            _entityCacheInitializationService = Program.ServiceProvider.GetRequiredService<EntityCacheInitializationService>();
 
             // 初始化服务器信息更新定时器
             InitializeServerInfoTimer();
@@ -310,6 +316,27 @@ namespace RUINORERP.Server
                 await StartServerCore();
                 
                 PrintInfoLog("服务器启动完成");
+                
+                // 启动服务器后异步加载缓存，不阻塞UI
+                PrintInfoLog("开始异步加载缓存数据...");
+                Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _entityCacheInitializationService.InitializeAllCacheAsync();
+                        this.BeginInvoke(new Action(() =>
+                        {
+                            PrintInfoLog("缓存数据加载完成");
+                        }));
+                    }
+                    catch (Exception ex)
+                    {
+                        this.BeginInvoke(new Action(() =>
+                        {
+                            PrintErrorLog($"加载缓存数据时出错: {ex.Message}");
+                        }));
+                    }
+                });
             }
             catch (Exception ex)
             {

@@ -12,6 +12,7 @@ namespace RUINORERP.Model.CommonModel
     /// 服务器可以对比这些信息进行更新、刷新缓存等操作
     /// </summary>
     [Serializable]
+    [Obsolete]
     public class CacheInfo
     {
         /// <summary>
@@ -112,6 +113,7 @@ namespace RUINORERP.Model.CommonModel
     /// 最后缓存获取信息
     /// </summary>
     [Serializable]
+    [Obsolete]
     public class LastCacheFetchInfo
     {
         /// <summary>
@@ -129,6 +131,7 @@ namespace RUINORERP.Model.CommonModel
     /// 缓存获取管理器
     /// 负责管理缓存获取的顺序和时间
     /// </summary>
+    [Obsolete]
     public class CacheFetchManager
     {
         private readonly LastCacheFetchInfo _lastCacheFetchInfo = new LastCacheFetchInfo();

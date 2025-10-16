@@ -90,6 +90,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.UI.Network;
 
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -246,7 +247,13 @@ namespace RUINORERP.UI.BaseForm
                 menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                 _entityInfoService = Startup.GetFromFac<IBusinessEntityMappingService>();
             }
+            // 通过依赖注入获取缓存管理器
+            _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            _tableSchemaManager = TableSchemaManager.Instance;
         }
+
+        public readonly IEntityCacheManager _cacheManager;
+        public readonly TableSchemaManager _tableSchemaManager;
 
         private async void button录入数据预设_Click(object sender, EventArgs e)
         {

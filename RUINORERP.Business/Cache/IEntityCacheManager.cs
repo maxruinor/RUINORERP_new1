@@ -10,8 +10,36 @@ using System.Threading.Tasks;
 namespace RUINORERP.Business.Cache
 {
     [NoWantIOC]
-    public interface IEntityCacheManager
+    public interface IEntityCacheManager : ICacheStatistics
     {
+        /// <summary>
+        /// 缓存键类型枚举，用于区分不同类型的缓存
+        /// </summary>
+        enum CacheKeyType
+        {
+            /// <summary>
+            /// 实体列表缓存
+            /// </summary>
+            List,
+            /// <summary>
+            /// 单个实体缓存
+            /// </summary>
+            Entity,
+            /// <summary>
+            /// 显示值缓存
+            /// </summary>
+            Display
+        }
+        
+        /// <summary>
+        /// 生成缓存键
+        /// </summary>
+        /// <param name="type">缓存类型</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="primaryKeyValue">可选的主键值（用于实体和显示值缓存）</param>
+        /// <returns>格式化的缓存键</returns>
+        string GenerateCacheKey(CacheKeyType type, string tableName, object primaryKeyValue = null);
+        
         #region 缓存查询方法
         /// <summary>
         /// 获取指定类型的实体列表

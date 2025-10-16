@@ -50,6 +50,7 @@ using log4net.Repository.Hierarchy;
 using StackExchange.Redis;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
@@ -499,21 +500,13 @@ namespace RUINORERP.UI.Common
             {
                 if (queryFilter.FilterLimitExpressions.Count == 0)
                 {
-                    var cacheList = MyCacheManager.Instance.CacheEntityList.Get(entityType.Name);
-                    if (cacheList != null)
+                    // 通过依赖注入获取缓存管理器
+                    var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                    var cacheList = cacheManager.GetEntityList<object>(entityType.Name);
+                    if (cacheList != null && cacheList.Count > 0)
                     {
-                        var listType = cacheList.GetType();
-                        if (TypeHelper.IsGenericList(listType))
-                        {
-                            entityList = ((IEnumerable<dynamic>)cacheList).ToList();
-                            return true;
-                        }
-                        if (TypeHelper.IsJArrayList(listType) &&
-                            MyCacheManager.Instance.NewTableTypeList.TryGetValue(entityType.Name, out var elementType))
-                        {
-                            entityList = TypeHelper.ConvertJArrayToList(elementType, cacheList as JArray);
-                            return true;
-                        }
+                        entityList = cacheList;
+                        return true;
                     }
                 }
             }
@@ -854,7 +847,9 @@ namespace RUINORERP.UI.Common
 
                                             // 重新加载数据
                                             BindingSource NewBsList = new BindingSource();
-                                            var rslist = MyCacheManager.Instance.CacheEntityList.Get(targetEntity.Name);
+                                            // 通过依赖注入获取缓存管理器
+                                            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                                            var rslist = cacheManager.GetEntityList<object>(targetEntity.Name);
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {
                                                 Type listType = rslist.GetType();
@@ -865,10 +860,10 @@ namespace RUINORERP.UI.Common
                                                 }
                                                 else if (TypeHelper.IsJArrayList(listType))
                                                 {
-                                                    Type elementType = null;
-                                                    MyCacheManager.Instance.NewTableTypeList.TryGetValue(targetEntity.Name, out elementType);
-                                                    List<object> myList = TypeHelper.ConvertJArrayToList(elementType, rslist as JArray);
-                                                    NewBsList.DataSource = myList;
+                                                    //Type elementType = null;
+                                                    //cacheManager.NewTableTypeList.TryGetValue(targetEntity.Name, out elementType);
+                                                    //List<object> myList = TypeHelper.ConvertJArrayToList(elementType, rslist as JArray);
+                                                    //NewBsList.DataSource = myList;
                                                 }
 
                                                 Common.DataBindingHelper.InitDataToCmb(NewBsList, ValueField, display, ktbcombo);
@@ -1218,7 +1213,9 @@ namespace RUINORERP.UI.Common
                                             //将List<T>类型的结果是object的转换为指定类型的List
                                             //var lastlist = ((IEnumerable<dynamic>)rslist).Select(item => Activator.CreateInstance(mytype)).ToList();
                                             //有缓存的情况
-                                            var rslist = MyCacheManager.Instance.CacheEntityList.Get(targetEntity.Name);
+                                            // 通过依赖注入获取缓存管理器
+                                            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                                            var rslist = cacheManager.GetEntityList<object>(targetEntity.Name);
                                             //条件如果有限制了。就不能全部加载
                                             if (rslist != null && queryFilter.FilterLimitExpressions.Count == 0)
                                             {
@@ -1233,13 +1230,13 @@ namespace RUINORERP.UI.Common
                                                 {
                                                     // Type elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + targetEntity.Name);
 
-                                                    Type elementType = null;
-                                                    MyCacheManager.Instance.NewTableTypeList.TryGetValue(targetEntity.Name, out elementType);
+                                                    //Type elementType = null;
+                                                    //cacheManager.NewTableTypeList.TryGetValue(targetEntity.Name, out elementType);
 
-                                                    List<object> myList = TypeHelper.ConvertJArrayToList(elementType, rslist as JArray);
+                                                    //List<object> myList = TypeHelper.ConvertJArrayToList(elementType, rslist as JArray);
 
-                                                    #region  jsonlist
-                                                    NewBsList.DataSource = myList;
+                                                    //#region  jsonlist
+                                                    //NewBsList.DataSource = myList;
                                                     #endregion
                                                 }
 
@@ -1269,7 +1266,7 @@ namespace RUINORERP.UI.Common
 
                                 }
 
-                                #endregion
+                             
                             };
 
 
@@ -1944,7 +1941,7 @@ namespace RUINORERP.UI.Common
 
 
         #endregion
- 
+
         /// <summary>
         /// 这个绑定下拉时，比方在产品表中。T会为tb_unit，expkey为unit_id，expValue为unit_name，Unit_ID会作为外键保存在产品中。
         /// 如果外键列名和单位表本身主键ID不一致时会出错。
@@ -2116,7 +2113,7 @@ namespace RUINORERP.UI.Common
             }
             #endregion
         }
-    
+
 
         public static void BindData4Cmb<T>(object entity, Expression<Func<T, long>> expkey, Expression<Func<T, string>> expValue, KryptonComboBox cmbBox, Expression<Func<T, bool>> expCondition, bool WithClear)
         {
@@ -3315,18 +3312,18 @@ namespace RUINORERP.UI.Common
         {
             // 使用新的缓存管理器
             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-            
+
             if (cacheManager != null)
             {
                 // 获取表结构管理器以获取显示字段
                 var tableSchemaManager = TableSchemaManager.Instance;
                 var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
-                
+
                 if (schemaInfo != null && string.IsNullOrEmpty(value))
                 {
                     value = schemaInfo.DisplayField;
                 }
-                
+
                 List<T> tlist = new List<T>();
                 BindingSource bs = new BindingSource();
 
@@ -3344,7 +3341,7 @@ namespace RUINORERP.UI.Common
                 //var blv = new BindingListView<T>(newlist); // 实现了 IBindingListView ,Filter  才可以使用 bs.SupportsFiltering
                 var blv = new BindingListView<T>(newlist);
                 bs = new BindingSource { DataSource = blv };
-            
+
                 ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, true);
                 if (cmbBox.Tag == null)
                 {
@@ -3574,11 +3571,13 @@ namespace RUINORERP.UI.Common
             else
             {
                 #region 从缓存中获取数据源，否则查数据库
-                if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
+                // 通过依赖注入获取缓存管理器
+                var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                if (TableSchemaManager.Instance.GetAllTableNames().Contains(tableName))
                 {
                     BindingSource bs = new BindingSource();
                     List<T> tlist = new List<T>();
-                    var cachelist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
+                    var cachelist = cacheManager.GetEntityList<object>(tableName);
                     if (cachelist == null)
                     {
                         Business.CommService.ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
@@ -3634,14 +3633,14 @@ namespace RUINORERP.UI.Common
                         }
                         else if (TypeHelper.IsJArrayList(listType))
                         {
-                            List<T> lastOKList = new List<T>();
-                            var objlist = TypeHelper.ConvertJArrayToList(typeof(T), cachelist as JArray);
-                            var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
-                            foreach (var item in lastlist)
-                            {
-                                lastOKList.Add(item);
-                            }
-                            tlist = lastOKList;
+                            //List<T> lastOKList = new List<T>();
+                            //var objlist = TypeHelper.ConvertJArrayToList(typeof(T), cachelist as JArray);
+                            //var lastlist = ((IEnumerable<dynamic>)objlist).ToList();
+                            //foreach (var item in lastlist)
+                            //{
+                            //    lastOKList.Add(item);
+                            //}
+                            //tlist = lastOKList;
                         }
 
                         if (HasSelectItem)

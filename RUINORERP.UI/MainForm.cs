@@ -114,7 +114,8 @@ namespace RUINORERP.UI
     {
 
         public UILogManager logManager;
-
+        private readonly IEntityCacheManager _cacheManager;
+        private readonly TableSchemaManager _tableSchemaManager;
         /// <summary>
         /// 菜单跟踪器菜单推荐器
         /// </summary>
@@ -249,9 +250,16 @@ namespace RUINORERP.UI
         public ClientCommunicationService communicationService;
 
 
-        public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper, FMAuditLogHelper _fmauditLogHelper, IOptionsMonitor<SystemGlobalconfig> config)
+        public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper,
+            FMAuditLogHelper _fmauditLogHelper, IOptionsMonitor<SystemGlobalconfig> config)
         {
             InitializeComponent();
+
+            // 通过依赖注入获取缓存管理器
+            _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            _tableSchemaManager = TableSchemaManager.Instance;
+
+
             lblStatusGlobal.Text = string.Empty;
             auditLogHelper = _auditLogHelper;
             fmauditLogHelper = _fmauditLogHelper;
@@ -334,59 +342,7 @@ namespace RUINORERP.UI
                 tabCloseHandler.ProcessControlOnClose(control);
                 return;
 
-                if (control.GetType() != null && control.GetType().BaseType.Name == "BaseListGeneric`1")
-                {
-                    // 获取泛型参数类型
-                    Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
-                    if (genericArguments.Length > 0)
-                    {
-                        Type genericParameterType = genericArguments[0];
-                        var baseUControl = (BaseUControl)control;
-
-                        UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseDataGridView1, genericParameterType);
-                    }
-                }
-
-                if (control.GetType() != null && (control.GetType().BaseType.Name.Contains("BaseBillQueryMC") ||
-                    control.GetType().BaseType.BaseType.Name.Contains("BaseBillQueryMC")
-                    ))
-                {
-                    // 获取泛型参数类型
-                    Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
-                    if (genericArguments.Length > 0)
-                    {
-                        Type genericParameterType = genericArguments[0];
-                        var baseUControl = (BaseQuery)control;
-
-                        UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
-
-                        if (genericArguments.Length == 2 && !genericArguments[0].Name.Equals(genericArguments[1].Name))
-                        {
-                            UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseSubDataGridView, genericArguments[1]);
-
-                        }
-
-                    }
-                }
-
-
-                if (control.GetType() != null && control.GetType().BaseType.Name.Contains("BaseNavigatorGeneric"))
-                {
-                    // 获取泛型参数类型
-                    Type[] genericArguments = control.GetType().BaseType.GetGenericArguments();
-                    if (genericArguments.Length > 0)
-                    {
-                        Type genericParameterType = genericArguments[0];
-                        var baseUControl = (BaseNavigator)control;
-                        UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
-                    }
-                }
-                if (control.GetType() != null && (control.GetType().BaseType.Name == "BaseBillEditGeneric`2" ||
-                    control.GetType().BaseType.BaseType.Name == "BaseBillEditGeneric`2"))
-                {
-                    var baseBillEdit = (BaseBillEdit)control;
-                    baseBillEdit.UNLock();
-                }
+          
             }
 
         }
@@ -415,9 +371,6 @@ namespace RUINORERP.UI
             //目前就一个旧菜单。先保存一下再清除。加到最后
             toolStripFunctionMenu.Items.Clear();
 
-            //// 清除旧菜单（保留前2个固定按钮）
-            //while (toolStripFunctionMenu.Items.Count > 2)
-            //    toolStripFunctionMenu.Items.RemoveAt(toolStripFunctionMenu.Items.Count - 1);
 
             var SearcherList = MenuList.Where(c => c.MenuType == "行为菜单").OrderBy(c => c.CaptionCN).ToList();
 
@@ -974,19 +927,8 @@ namespace RUINORERP.UI
                 PrintInfoLog("正在查询本位币别...");
 
                 List<tb_Currency> currencies = new List<tb_Currency>();
-
-                var rslist = MyCacheManager.Instance.CacheEntityList.Get(nameof(tb_Currency));
-                if (rslist != null)
-                {
-                    List<object> objlist = rslist as List<object>;
-                    foreach (var item in objlist)
-                    {
-                        if (item is tb_Currency ra)
-                        {
-                            currencies.Add(ra);
-                        }
-                    }
-                }
+                currencies = _cacheManager.GetEntityList<tb_Currency>(nameof(tb_Currency));
+                
                 tb_Currency currency = currencies.Where(m => m.Is_BaseCurrency.HasValue && m.Is_BaseCurrency.Value == true).FirstOrDefault();
                 if (currency != null)
                 {
@@ -1025,19 +967,7 @@ namespace RUINORERP.UI
                 PrintInfoLog("正在查询账期的设置");
 
                 List<tb_PaymentMethod> PaymentMethods = new List<tb_PaymentMethod>();
-
-                var rslist = MyCacheManager.Instance.CacheEntityList.Get(nameof(tb_PaymentMethod));
-                if (rslist != null)
-                {
-                    List<object> objlist = rslist as List<object>;
-                    foreach (var item in objlist)
-                    {
-                        if (item is tb_PaymentMethod ra)
-                        {
-                            PaymentMethods.Add(ra);
-                        }
-                    }
-                }
+                PaymentMethods = _cacheManager.GetEntityList<tb_PaymentMethod>(nameof(tb_PaymentMethod));
 
                 tb_PaymentMethod paymentMethod = PaymentMethods.Where(m => m.Paytype_Name == DefaultPaymentMethod.账期.ToString()).FirstOrDefault();
                 if (paymentMethod != null)

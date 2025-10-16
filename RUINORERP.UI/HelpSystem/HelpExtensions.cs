@@ -1,6 +1,6 @@
 using System.Windows.Forms;
 
-namespace RUINORERP.UI.Common.HelpSystem
+namespace RUINORERP.UI.HelpSystem
 {
     /// <summary>
     /// 帮助系统扩展方法
@@ -13,7 +13,7 @@ namespace RUINORERP.UI.Common.HelpSystem
         /// <param name="form">窗体实例</param>
         public static void EnableF1Help(this Form form)
         {
-            if (form == null) return;
+            if (form == null || !HelpManager.Config.IsHelpSystemEnabled) return;
 
             // 注册KeyDown事件
             form.KeyPreview = true;
@@ -21,7 +21,8 @@ namespace RUINORERP.UI.Common.HelpSystem
             {
                 if (e.KeyCode == Keys.F1)
                 {
-                    HelpManager.ShowHelp(form);
+                    // 显示当前焦点控件或窗体的帮助
+                    HelpManager.ShowHelpForControl(form, form.ActiveControl);
                     e.Handled = true;
                 }
             };
@@ -42,10 +43,66 @@ namespace RUINORERP.UI.Common.HelpSystem
         /// <param name="title">帮助页面标题</param>
         public static void SetHelpPage(this Form form, string helpPage, string title = null)
         {
-            if (form == null) return;
+            if (form == null || !HelpManager.Config.IsHelpSystemEnabled) return;
             if (string.IsNullOrEmpty(helpPage)) return;
 
             HelpManager.RegisterHelpMapping(form.GetType(), helpPage, title);
+        }
+
+        /// <summary>
+        /// 为控件设置帮助键
+        /// </summary>
+        /// <param name="control">控件实例</param>
+        /// <param name="helpKey">帮助键</param>
+        public static void SetControlHelpKey(this Control control, string helpKey)
+        {
+            if (control == null || !HelpManager.Config.IsHelpSystemEnabled) return;
+            if (string.IsNullOrEmpty(helpKey)) return;
+
+            control.Tag = helpKey; // 使用Tag存储帮助键
+            control.HelpRequested += (sender, e) => {
+                var ctrl = sender as Control;
+                if (ctrl?.Tag is string key)
+                {
+                    HelpManager.ShowHelpByKey(key);
+                }
+                e.Handled = true;
+            };
+        }
+        
+        /// <summary>
+        /// 获取控件的帮助键
+        /// </summary>
+        /// <param name="control">控件实例</param>
+        /// <returns>帮助键</returns>
+        public static string GetControlHelpKey(this Control control)
+        {
+            if (control?.Tag is string helpKey)
+            {
+                return helpKey;
+            }
+            return null;
+        }
+        
+        /// <summary>
+        /// 显示帮助系统主窗体
+        /// </summary>
+        /// <param name="form">窗体实例</param>
+        public static void ShowHelpSystemForm(this Form form)
+        {
+            if (form == null || !HelpManager.Config.IsHelpSystemEnabled) return;
+            
+            try
+            {
+                // 创建并显示帮助系统主窗体
+                var helpForm = new HelpSystemForm();
+                helpForm.Show();
+            }
+            catch (System.Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show($"无法打开帮助系统: {ex.Message}", "错误", 
+                    System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Error);
+            }
         }
     }
 }

@@ -375,12 +375,12 @@ namespace RUINORERP.UI.AdvancedUIModule
                             cmb.Text = "";
                             cmb.Width = 150;
                             //只处理需要缓存的表
-                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            if (MyCacheManager.Instance.NewTableList.TryGetValue(coldata.FKTableName, out pair))
+                            var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(coldata.FKTableName);
+                            if (schemaInfo!=null)
                             {
-                                string IDColName = pair.Key;
-                                string ColName = pair.Value;
-                                //DataBindingHelper.BindData4Cmb<T>(QueryDto, key, value, coldata.FKTableName, cmb);
+                                string IDColName = schemaInfo.PrimaryKeyField;
+                                string ColName = schemaInfo.DisplayField;
+
                                 //这里加载时 是指定了相关的外键表的对应实体的类型
                                 if (ReladtedEntityType == null)
                                 {
@@ -429,11 +429,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                                 #endregion
 
 
-                                //注意这样调用不能用同名重载的方法名,这个是加载再次查询功能？
-                                //  MethodInfo mf2 = dbh.GetType().GetMethod("InitFilterForControlNew").MakeGenericMethod(new Type[] { mytype });
-                                // object[] args2 = new object[4] { newDto, cmb, ColName, queryField.SubFilter };
-                                // mf2.Invoke(dbh, args2);
-
 
                             }
                             cmb.Location = new System.Drawing.Point(_x, _y);
@@ -457,12 +452,12 @@ namespace RUINORERP.UI.AdvancedUIModule
                             cmb.Text = "";
                             cmb.Width = 150;
                             //只处理需要缓存的表
-                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            if (MyCacheManager.Instance.NewTableList.TryGetValue(coldata.FKTableName, out pair))
+                            var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(coldata.FKTableName);
+                            if (schemaInfo != null)
                             {
-                                string IDColName = pair.Key;
-                                string ColName = pair.Value;
-                                //DataBindingHelper.BindData4Cmb<T>(QueryDto, key, value, coldata.FKTableName, cmb);
+                                string IDColName = schemaInfo.PrimaryKeyField;
+                                string ColName = schemaInfo.DisplayField;
+
                                 //这里加载时 是指定了相关的外键表的对应实体的类型
                                 if (ReladtedEntityType == null)
                                 {
@@ -514,9 +509,6 @@ namespace RUINORERP.UI.AdvancedUIModule
                                     //非常值和学习借鉴有代码 TODO 重点学习代码
                                     //UI传入过滤条件 下拉可以显示不同的数据
                                     ExpConverter expConverter = new ExpConverter();
-
-                                    //var whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryEntityType, queryField.SubFilter.FilterLimitExpressions[0]);
-                                    //var whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryEntityType, queryField.SubFilter.GetFilterLimitExpression());
                                     var whereExp = expConverter.ConvertToFuncByClassName(queryField.SubFilter.QueryTargetType, queryField.SubFilter.GetFilterLimitExpression(mytype));
                                     #region 
                                     //绑定下拉

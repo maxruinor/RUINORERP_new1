@@ -322,6 +322,13 @@ namespace RUINORERP.Business.Cache
         /// <param name="tableName">表名</param>
         /// <param name="db">数据库客户端</param>
         /// <returns>加载任务</returns>
+        /// <summary>
+        /// 内部实际执行数据加载的方法（支持分批加载）
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="db">数据库客户端</param>
+        /// <returns>加载任务</returns>
         private async Task LoadDataAndUpdateCacheInternalAsync(Type entityType, string tableName, ISqlSugarClient db)
         {
             // 检查参数
@@ -333,56 +340,67 @@ namespace RUINORERP.Business.Cache
 
             try
             {
-                // 使用SqlSugar直接查询数据库
-                var queryable = db.Queryable(entityType.Name, tableName);
+                // 创建正确类型的List
+                var listType = typeof(List<>).MakeGenericType(entityType);
+                var typedList = Activator.CreateInstance(listType);
+                var addMethod = listType.GetMethod("Add");
+                int totalCount = 0;
 
-                // 执行查询
-                var result = queryable.ToList();
+                // 分批加载参数
+                const int batchSize = 200; // 每批加载200条数据
+                int pageIndex = 1;
+                bool hasMoreData = true; // 初始设为true，确保循环至少执行一次
 
-                if (result != null && result.Count > 0)
+                _logger.LogDebug($"开始分批加载表 {tableName} 数据，每批 {batchSize} 条");
+
+                // 分批加载数据 - 使用同步方式避免SqlSugar批量查询时的异步问题
+                while (hasMoreData)
                 {
-                    // 修复：确保传递给缓存管理器的是正确类型的列表
-                    // 创建正确类型的List
-                    var listType = typeof(List<>).MakeGenericType(entityType);
-                    var typedList = Activator.CreateInstance(listType);
+                    // 使用SqlSugar进行分页查询
+                    var queryable = db.Queryable(entityType.Name, tableName);
+                    var result = queryable.ToPageList(pageIndex, batchSize, ref totalCount);
 
-                    // 使用反射获取Add方法并添加元素
-                    var addMethod = listType.GetMethod("Add");
-                    foreach (var item in result)
+                    if (result != null && result.Count > 0)
                     {
-                        // 确保item是正确的类型，如果不是则进行转换
-                        object typedItem = item;
-                        if (item != null && !entityType.IsInstanceOfType(item))
+                        _logger.LogDebug($"已加载表 {tableName} 第 {pageIndex} 页，共 {result.Count} 条数据");
+
+                        // 添加到列表中
+                        foreach (var item in result)
                         {
-                            // 如果item是ExpandoObject，转换为具体类型
-                            if (item is System.Dynamic.ExpandoObject)
+                            // 确保item是正确的类型，如果不是则进行转换
+                            object typedItem = item;
+                            if (item != null && !entityType.IsInstanceOfType(item))
                             {
-                                try
+                                // 如果item是ExpandoObject，转换为具体类型
+                                if (item is System.Dynamic.ExpandoObject)
                                 {
-                                    var json = Newtonsoft.Json.JsonConvert.SerializeObject(item);
-                                    typedItem = Newtonsoft.Json.JsonConvert.DeserializeObject(json, entityType);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogWarning(ex, $"转换ExpandoObject到类型 {entityType.Name} 时发生错误");
+                                    try
+                                    {
+                                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(item);
+                                        typedItem = Newtonsoft.Json.JsonConvert.DeserializeObject(json, entityType);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogWarning(ex, $"转换ExpandoObject到类型 {entityType.Name} 时发生错误");
+                                    }
                                 }
                             }
+                            addMethod?.Invoke(typedList, new[] { typedItem });
                         }
-                        addMethod?.Invoke(typedList, new[] { typedItem });
+
+                        // 检查是否还有更多数据
+                        hasMoreData = (pageIndex * batchSize) < totalCount;
+                        pageIndex++;
                     }
-
-                    _cacheManager.UpdateEntityList(tableName, typedList);
-
-                    _logger.LogInformation($"已从数据库加载 {result.Count} 条 {tableName} 记录到缓存（优化版）");
+                    else
+                    {
+                        hasMoreData = false;
+                    }
                 }
-                else
-                {
-                    _logger.LogInformation($"表 {tableName} 没有数据或数据为空");
-                    // 即使没有数据，也要确保缓存中有一个空列表
-                    var listType = typeof(List<>).MakeGenericType(entityType);
-                    var emptyList = Activator.CreateInstance(listType);
-                    _cacheManager.UpdateEntityList(tableName, emptyList);
-                }
+
+                // 完成加载后更新缓存
+                _cacheManager.UpdateEntityList(tableName, typedList);
+                _logger.LogInformation($"已从数据库分批加载 {totalCount} 条 {tableName} 记录到缓存");
             }
             catch (SqlException sqlEx) when (sqlEx.Message.Contains("Invalid attempt to read when no data is present"))
             {

@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>HelpSystemTest</AssemblyName>
+    <RootNamespace>RUINORERP.UI.HelpSystem</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\BaseForm\frmBase.cs">
+      <Link>frmBase.cs</Link>
+    </Compile>
+    <Compile Include="..\BaseForm\frmBase.Designer.cs">
+      <Link>frmBase.Designer.cs</Link>
+    </Compile>
+    <Compile Include="HelpExtensions.cs" />
+    <Compile Include="HelpHistoryManager.cs" />
+    <Compile Include="HelpManager.cs" />
+    <Compile Include="HelpMappingAttribute.cs" />
+    <Compile Include="HelpRecommendationManager.cs" />
+    <Compile Include="HelpSearchManager.cs" />
+    <Compile Include="HelpSystemConfig.cs" />
+    <Compile Include="HelpSystemTestForm.cs" />
+    <Compile Include="IHelpProvider.cs" />
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\RUINORERP.Common\RUINORERP.Common.csproj" />
+    <ProjectReference Include="..\..\RUINORERP.Model\RUINORERP.Model.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,5 +1,6 @@
-﻿using RUINORERP.Business.CommService;
+using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
@@ -43,22 +44,16 @@ namespace RUINORERP.UI.Common
         {
             List<tb_CurrencyExchangeRate> rates = new List<tb_CurrencyExchangeRate>();
 
-            var rslist = MyCacheManager.Instance.CacheEntityList.Get("tb_CurrencyExchangeRate");
-            if (rslist == null)
+            // 通过依赖注入获取缓存管理器
+            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            var rslist = cacheManager.GetEntityList<tb_CurrencyExchangeRate>();
+            if (rslist == null || rslist.Count == 0)
             {
                 rslist = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_CurrencyExchangeRate>().ToList();
             }
             else
             {
-                List<object> objlist = rslist as List<object>;
-                foreach (var item in objlist)
-                {
-                    if (item is tb_CurrencyExchangeRate ra)
-                    {
-                        rates.Add(ra);
-                    }
-                }
-
+                rates = rslist;
             }
             tb_CurrencyExchangeRate rate = rates.Where(m => m.BaseCurrencyID == fromCurrencyID && m.TargetCurrencyID == toCurrencyID).FirstOrDefault();
             if (rate == null)

@@ -16,6 +16,7 @@ namespace RUINORERP.UI.Common
     using System.Linq;
     using System.Windows.Forms;
     using RUINORERP.Extensions.Middlewares;
+    using RUINORERP.Business.Cache;
 
     /// <summary>
     /// AI代码借鉴 没有使用
@@ -73,9 +74,9 @@ namespace RUINORERP.UI.Common
 
             var columnName = GetOriginalColumnName(grid.Columns[e.ColumnIndex].Name);
             var value = e.Value;
-            if (value==null)
+            if (value == null)
             {
-                return; 
+                return;
             }
             if (HandleImageFormatting(grid, e, columnName)) return;
             if (HandleSpecialEmployeeColumns(e, columnName, value)) return;
@@ -119,7 +120,10 @@ namespace RUINORERP.UI.Common
                 return true;
             }
 
-            var displayValue = MyCacheManager.Instance.GetValue(nameof(tb_Employee), value);
+            // 通过依赖注入获取缓存管理器
+            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            string sourceTableName = typeof(tb_Employee).Name;
+            object displayValue = cacheManager.GetDisplayValue(sourceTableName, value);
             if (displayValue != null)
             {
                 e.Value = displayValue.ToString();
@@ -149,12 +153,9 @@ namespace RUINORERP.UI.Common
             var mapping = ForeignKeyMappings.FirstOrDefault(m => m.SourceColumn == columnName);
             if (mapping == null) return;
 
-            var displayValue = MyCacheManager.Instance.GetValue(
-                mapping.TargetTable,
-                               mapping.KeyColumn
-
-
-            );
+            // 通过依赖注入获取缓存管理器
+            var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            var displayValue = cacheManager.GetEntity(mapping.TargetTable, mapping.KeyColumn);
 
             if (displayValue != null)
             {

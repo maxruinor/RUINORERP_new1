@@ -836,10 +836,23 @@ namespace RUINORERP.UI
         {
             try
             {
+                // 首先尝试在应用程序目录中查找帮助文件
                 string helpFilePath = Path.Combine(Application.StartupPath, "help.chm");
+                
+                // 如果在应用程序目录中找不到，尝试在Helper目录中查找
+                if (!File.Exists(helpFilePath))
+                {
+                    helpFilePath = Path.Combine(Application.StartupPath, "..\\RUINORERP.Helper\\help.chm");
+                    if (!File.Exists(helpFilePath))
+                    {
+                        helpFilePath = Path.Combine(Application.StartupPath, "..\\..\\RUINORERP.Helper\\help.chm");
+                    }
+                }
+                
+                // 如果找到了帮助文件，则初始化帮助系统
                 if (File.Exists(helpFilePath))
                 {
-                    RUINORERP.UI.Common.HelpSystem.HelpManager.Initialize(helpFilePath);
+                    RUINORERP.UI.HelpSystem.HelpManager.Initialize(helpFilePath);
                 }
                 else
                 {

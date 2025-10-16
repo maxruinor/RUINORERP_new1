@@ -1,4 +1,4 @@
-﻿using DevAge.ComponentModel.Converter;
+using DevAge.ComponentModel.Converter;
 using DevAge.Drawing;
 using DevAge.Windows.Forms;
 using FastReport.DevComponents.DotNetBar;
@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NPOI.SS.Formula.Functions;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 //using Google.Protobuf.Reflection;
 //using NetTaste;
 using RUINORERP.Business;
@@ -69,6 +70,17 @@ namespace RUINORERP.UI.UCSourceGrid
     /// <typeparam name="T">明细表</typeparam>
     public class SourceGridHelper
     {
+        public SourceGridHelper()
+        {
+            // 通过依赖注入获取缓存管理器
+            _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            _tableSchemaManager = TableSchemaManager.Instance;
+        }
+
+        public readonly IEntityCacheManager _cacheManager;
+        public readonly TableSchemaManager _tableSchemaManager;
+
+
         /// <summary>
         /// sourcegrid 控件所在的UI窗体所属的菜单信息，用来判断显示列权限
         /// </summary>
@@ -113,20 +125,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
         #region 为了解决主子表双向更新
-        // 添加列刷新方法
-        //public void InvalidateColumn(string columnName)
-        //{
-        //    var dc = SGDefine.DefineColumns.FirstOrDefault(d => d.ColName == columnName);
-        //    if (dc == null) return;
 
-        //    var colIndex = SGDefine.grid.Columns.GetColumnInfo(dc.UniqueId).Index;
-
-        //    // 刷新列的所有行（排除标题和总计行）
-        //    for (int row = 1; row < SGDefine.grid.Rows.Count - 1; row++)
-        //    {
-        //        SGDefine.grid.InvalidateCell(row, colIndex);
-        //    }
-        //}
         public void UpdateGridColumn<T>(string colName)
         {
             var colDef = SGDefine[colName];
@@ -890,7 +889,9 @@ namespace RUINORERP.UI.UCSourceGrid
                 if (sgdefine.Fk_KeyValuesList.ContainsKey(dc.FKRelationCol.FK_IDColName))
                 {
                     string baseTableName = sgdefine.Fk_KeyValuesList[dc.FKRelationCol.FK_IDColName];
-                    object obj = MyCacheManager.Instance.GetValue(baseTableName, cellvalue);
+                    // 通过依赖注入获取缓存管理器
+
+                    object obj = _cacheManager.GetDisplayValue(baseTableName, cellvalue);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         _DisplayText = obj.ToString();
@@ -1455,7 +1456,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 grid.Columns.SetWidth(0, 35);
             }
 
-           
+
 
             //Grid_Minerals.Columns[0].Width = 20; 某一列宽度
             //创建本列上所有的单元格的值等属性
@@ -1918,123 +1919,10 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        /*
-        public static void AddRow(SourceGrid.Grid grid, SourceGridDefine define)
-        {
-            int row = grid.RowsCount;
-            grid.Rows.Insert(row);
-
-            for (int i = 0; i < define.Count; i++)
-            {
-                if (i == 0 && define.HasRowHeader)
-                {
-                    grid[row, 0] = new SourceGrid.Cells.RowHeader(null);
-                    continue;
-                }
-                grid[row, i] = new SourceGrid.Cells.Cell("", define[i].EditorForColumn);
-            }
-            grid.Selection.FocusRow(row);
-        }
-        */
 
 
-        /// <summary>
-        /// 早期代码。只保留参考
-        /// </summary>
-        /// <param name="dci"></param>
-        /// <returns></returns>
-        [Obsolete]
-        private Cell GetGridCell(SGDefineColumnItem dci)
-        {
-            //不同情况会有多种类型，先逻辑处理得到最终的类型
-            Type newcolType;
-
-            SourceGrid.Cells.Cell c = new SourceGrid.Cells.Cell(null, dci.EditorForColumn);
-            System.Reflection.PropertyInfo pi = dci.ColPropertyInfo;
-            //==
-
-            // We need to check whether the property is NULLABLE
-            if (pi.PropertyType.IsGenericType && pi.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
-            {
-                // If it is NULLABLE, then get the underlying type. eg if "Nullable<int>" then this will return just "int"
-                newcolType = pi.PropertyType.GetGenericArguments()[0];
-            }
-            else
-            {
-                newcolType = pi.PropertyType;
-            }
-
-            #region 参考
-            /*
-            if (!pi.PropertyType.IsGenericType)
-            {
-                //非泛型
-
-            }
-            else
-            {
-                //泛型Nullable<>
-                Type genericTypeDefinition = pi.PropertyType.GetGenericTypeDefinition();
-                if (genericTypeDefinition == typeof(Nullable<>))
-                {
-
-                }
-                else
-                {
-
-                }
-            }
-            */
-            #endregion
 
 
-            switch (newcolType.FullName)
-            {
-
-                case "System.Char":
-                case "System.String":
-                    c = new SourceGrid.Cells.Cell("", dci.EditorForColumn);
-
-
-                    break;
-
-                case "System.Guid":
-
-                    break;
-                case "System.Decimal":
-                case "System.Int16":
-                case "System.Int32":
-                case "System.Int64":
-                    //实体中，判断如果是外键，特别是属性指定绑在中的。
-                    //加上一个特性 给出一些参数方便后面自动加载??????
-                    //idatamodel = new SourceGrid2.DataModels.EditorTextBoxButton(typeof(string));
-                    c = new SourceGrid.Cells.Cell(5, dci.EditorForColumn);
-                    break;
-                case "System.Byte[]":
-
-                    break;
-                case "System.Boolean":
-                    //c = new SourceGrid.Cells.CheckBox(null, true);
-                    c = new SourceGrid.Cells.Cell(true, typeof(Boolean));
-                    break;
-                case "System.Double":
-                    c = new SourceGrid.Cells.Cell(1.5, typeof(double));
-                    break;
-                case "System.DateTime":
-                    //idatamodel = new SourceGrid2.DataModels.EditorDateTime(typeof(string));
-                    //                    c = new SourceGrid.Cells.Cell(DateTime.Now, typeof(DateTime));
-                    c = new SourceGrid.Cells.Cell(null, typeof(DateTime));
-                    //c.DataModel = idatamodel;
-                    break;
-                default:
-                    break;
-            }
-
-            //==
-
-
-            return c;
-        }
 
 
         /// <summary>
@@ -2464,12 +2352,14 @@ namespace RUINORERP.UI.UCSourceGrid
                                                 string tableName = col.Value.FKRelationCol.FKTableName;
                                                 string typeName = "RUINORERP.Model." + tableName;
 
-                                                if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
+
+                                                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+                                                if (schemaInfo != null)
                                                 {
-                                                    string ColID = MyCacheManager.Instance.NewTableList[tableName].Key;
-                                                    string ColName = MyCacheManager.Instance.NewTableList[tableName].Value;
-                                                    BindingSource bs = new BindingSource();
-                                                    var objlist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
+                                                    string ColID = schemaInfo.PrimaryKeyField;
+                                                    string ColName = schemaInfo.DisplayField;
+
+                                                    var objlist = _cacheManager.GetEntityList<object>(tableName);
                                                     if (objlist != null)
                                                     {
                                                         var Oldlist = ((IEnumerable<dynamic>)objlist).ToList();
@@ -2566,7 +2456,9 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
                                                     }
+
                                                 }
+
 
                                                 #endregion
                                             }
@@ -2888,13 +2780,10 @@ namespace RUINORERP.UI.UCSourceGrid
 
                                                             string tableName = col.Value.FKRelationCol.FKTableName;
                                                             string typeName = "RUINORERP.Model." + tableName;
-
-                                                            if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
+                                                            var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+                                                            if (schemaInfo != null)
                                                             {
-                                                                string ColID = MyCacheManager.Instance.NewTableList[tableName].Key;
-                                                                string ColName = MyCacheManager.Instance.NewTableList[tableName].Value;
-                                                                BindingSource bs = new BindingSource();
-                                                                var objlist = MyCacheManager.Instance.CacheEntityList.Get(tableName);
+                                                                var objlist = _cacheManager.GetEntityList<object>(tableName);
                                                                 if (objlist != null)
                                                                 {
                                                                     var Oldlist = ((IEnumerable<dynamic>)objlist).ToList();
@@ -2937,9 +2826,9 @@ namespace RUINORERP.UI.UCSourceGrid
                                                                     ConcurrentDictionary<string, string> names = new ConcurrentDictionary<string, string>();
                                                                     foreach (var titem in tlist)
                                                                     {
-                                                                        string id = ReflectionHelper.GetPropertyValue(titem, ColID).ToString();
+                                                                        string id = ReflectionHelper.GetPropertyValue(titem, schemaInfo.PrimaryKeyField).ToString();
                                                                         ids.Add(id.ToString());
-                                                                        names.TryAdd(id, ReflectionHelper.GetPropertyValue(titem, ColName).ToString());
+                                                                        names.TryAdd(id, ReflectionHelper.GetPropertyValue(titem, schemaInfo.DisplayField).ToString());
                                                                     }
 
 
@@ -3152,8 +3041,8 @@ namespace RUINORERP.UI.UCSourceGrid
 
                 #region  判断设置枚举过滤条件
                 // 获取所有枚举值（原始完整列表）
-               // Array allValues = Enum.GetValues(enumType);
-               /// IEnumerable<Enum> values = allValues.Cast<Enum>();
+                // Array allValues = Enum.GetValues(enumType);
+                /// IEnumerable<Enum> values = allValues.Cast<Enum>();
                 IEnumerable<Enum> values = Enum.GetValues(enumType).CastToList<Enum>();
                 // 判断是否设置了过滤
                 if (dci.EnumFilterRuntime != null)
@@ -3171,25 +3060,25 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
                 ConcurrentDictionary<string, string> OutNames = new ConcurrentDictionary<string, string>();
-                 OutNames = new ConcurrentDictionary<string, string>(
-                                values.Select(e =>
-                                {
-                                    // 枚举值 → 字符串（int/long 均可）
-                                    string key = Convert.ToInt64(e).ToString();
+                OutNames = new ConcurrentDictionary<string, string>(
+                               values.Select(e =>
+                               {
+                                   // 枚举值 → 字符串（int/long 均可）
+                                   string key = Convert.ToInt64(e).ToString();
 
-                                    // 描述：优先 Description 特性，其次 ToString()
-                                    string display = e.GetType()
-                                                      .GetField(e.ToString())
-                                                     ?.GetCustomAttributes(typeof(DescriptionAttribute), false)
-                                                      .Cast<DescriptionAttribute>()
-                                                      .FirstOrDefault()
-                                                     ?.Description
-                                                      ?? e.ToString();
+                                   // 描述：优先 Description 特性，其次 ToString()
+                                   string display = e.GetType()
+                                                     .GetField(e.ToString())
+                                                    ?.GetCustomAttributes(typeof(DescriptionAttribute), false)
+                                                     .Cast<DescriptionAttribute>()
+                                                     .FirstOrDefault()
+                                                    ?.Description
+                                                     ?? e.ToString();
 
-                                    return new KeyValuePair<string, string>(key, display);
-                                }));
+                                   return new KeyValuePair<string, string>(key, display);
+                               }));
 
-                
+
 
 
 
@@ -3265,25 +3154,16 @@ namespace RUINORERP.UI.UCSourceGrid
                 //     像这样。再加一个类似 指定数据源、加条件？
                 //         listCols.SetCol_Format<tb_FM_ProfitLossDetail>(c => c.IncomeExpenseDirection, CustomFormatType.EnumOptions, null, typeof(IncomeExpenseDirection));
 
-
-
-
-
-
                 string tableName = dci.FKRelationCol.FKTableName;
                 string typeName = "RUINORERP.Model." + tableName;
-                //缓存下拉
-                if (MyCacheManager.Instance.NewTableList.ContainsKey(tableName))
+
+                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+                if (schemaInfo != null)
                 {
-                    string ColID = MyCacheManager.Instance.NewTableList[tableName].Key;
-                    string ColName = MyCacheManager.Instance.NewTableList[tableName].Value;
-                    BindingSource bs = new BindingSource();
 
-                    var cache = MyCacheManager.Instance.CacheEntityList.Get(tableName);
-                    if (cache != null)
+                    var cachelist = _cacheManager.GetEntityList<object>(tableName);
+                    if (cachelist != null)
                     {
-                        var cachelist = ((IEnumerable<dynamic>)cache).ToList();
-
                         if (dci.DataSourceFilter != null)
                             cachelist = cachelist.Where(dci.DataSourceFilter.Match).ToList();
 
@@ -3297,9 +3177,9 @@ namespace RUINORERP.UI.UCSourceGrid
                                 //这里要不要利用process中设置的条件来判断呢？
                                 try
                                 {
-                                    string id = item[ColID].ToString();
+                                    string id = item.GetPropertyValue(schemaInfo.PrimaryKeyField).ToString();
                                     ids.Add(id.ToString());//设置一个主键集合 
-                                    OutNames.TryAdd(id, item[ColName].ToString());//设置一个显示名称的集合
+                                    OutNames.TryAdd(id, item.GetPropertyValue(schemaInfo.DisplayField).ToString());//设置一个显示名称的集合
                                 }
                                 catch (Exception ex)
                                 {
@@ -3311,9 +3191,9 @@ namespace RUINORERP.UI.UCSourceGrid
                             {
                                 //假如是库位选择  有一个没有启用。但是又要显示原来选择过的数据用于显示。编辑时不能选择没有启用的库位。如何处理实际是如何呢？
                                 //这里要不要利用process中设置的条件来判断呢？
-                                string id = ReflectionHelper.GetPropertyValue(item, ColID).ToString();
+                                string id = ReflectionHelper.GetPropertyValue(item, schemaInfo.PrimaryKeyField).ToString();
                                 ids.Add(id.ToString());//设置一个主键集合 
-                                OutNames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());//设置一个显示名称的集合
+                                OutNames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, schemaInfo.DisplayField).ToString());//设置一个显示名称的集合
                             }
 
                         }
@@ -3386,13 +3266,13 @@ namespace RUINORERP.UI.UCSourceGrid
                                             #region  实时修改下拉列表的值
                                             string MytableName = targetCol.FKRelationCol.FKTableName;
                                             string MytypeName = "RUINORERP.Model." + MytableName;
-
-                                            if (MyCacheManager.Instance.NewTableList.ContainsKey(MytableName))
+                                            var schemaInfo = _tableSchemaManager.GetSchemaInfo(MytableName);
+                                            if (schemaInfo != null)
                                             {
-                                                string MColID = MyCacheManager.Instance.NewTableList[MytableName].Key;
-                                                string MColName = MyCacheManager.Instance.NewTableList[MytableName].Value;
+                                                string MColID = schemaInfo.PrimaryKeyField;
+                                                string MColName = schemaInfo.DisplayField;
                                                 BindingSource Mbs = new BindingSource();
-                                                var Mobjlist = MyCacheManager.Instance.CacheEntityList.Get(MytableName);
+                                                var Mobjlist = _cacheManager.GetEntityList<object>(MytableName);
                                                 if (Mobjlist != null)
                                                 {
                                                     var Oldlist = ((IEnumerable<dynamic>)Mobjlist).ToList();
@@ -3422,9 +3302,9 @@ namespace RUINORERP.UI.UCSourceGrid
                                                     ConcurrentDictionary<string, string> Mynames = new ConcurrentDictionary<string, string>();
                                                     foreach (var item in otlist)
                                                     {
-                                                        string id = ReflectionHelper.GetPropertyValue(item, ColID).ToString();
+                                                        string id = ReflectionHelper.GetPropertyValue(item, schemaInfo.PrimaryKeyField).ToString();
                                                         Myids.Add(id.ToString());
-                                                        Mynames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, ColName).ToString());
+                                                        Mynames.TryAdd(id, ReflectionHelper.GetPropertyValue(item, schemaInfo.DisplayField).ToString());
                                                     }
 
 
@@ -3476,10 +3356,12 @@ namespace RUINORERP.UI.UCSourceGrid
 
                             #endregion
                             _editor = ec;
- 
+
                         }
                     }
                 }
+
+
             }
 
             return _editor;

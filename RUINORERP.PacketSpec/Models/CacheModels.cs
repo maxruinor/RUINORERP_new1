@@ -1,4 +1,4 @@
-using MessagePack;
+﻿using MessagePack;
 using System;
 
 namespace RUINORERP.PacketSpec.Commands.Cache
@@ -134,34 +134,5 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         Timeout = 3
     }
 
-    /// <summary>
-    /// 缓存统计信息
-    /// </summary>
-    [MessagePackObject]
-    public class CacheStatistics
-    {
-        /// <summary>
-        /// 总条目数
-        /// </summary>
-        [Key(0)]
-        public int TotalEntries { get; set; }
-
-        /// <summary>
-        /// 总大小（字节）
-        /// </summary>
-        [Key(1)]
-        public long TotalSize { get; set; }
-
-        /// <summary>
-        /// 命中率
-        /// </summary>
-        [Key(2)]
-        public double HitRate { get; set; }
-
-        /// <summary>
-        /// 创建时间
-        /// </summary>
-        [Key(3)]
-        public DateTime CreatedTime { get; set; }
-    }
+ 
 }

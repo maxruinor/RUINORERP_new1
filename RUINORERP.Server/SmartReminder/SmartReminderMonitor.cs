@@ -88,7 +88,7 @@ namespace RUINORERP.Server.SmartReminder
 
                 //在线有不有人？有人才提醒？
 
-                var activeRules = await GetActiveRulesAsync();
+                var activeRules = GetActiveRulesAsync();
                 foreach (var rule in activeRules)
                 {
                     var irule = rule as IReminderRule;
@@ -143,7 +143,7 @@ namespace RUINORERP.Server.SmartReminder
 
         private static readonly MemoryCache _policyCache = new(new MemoryCacheOptions());
 
-        public async Task<List<IReminderRule>> GetActiveRulesAsync()
+        public List<IReminderRule> GetActiveRulesAsync()
         {
             // 尝试从缓存获取数据
             List<tb_ReminderRule> policies = null;
@@ -152,10 +152,10 @@ namespace RUINORERP.Server.SmartReminder
             if (!cacheHit)
             {
                 // 缓存未命中，从数据库查询
-                policies = await _unitOfWorkManage.GetDbClient()
+                policies = _unitOfWorkManage.GetDbClient()
                     .Queryable<tb_ReminderRule>()
                     .Where(p => p.IsEnabled)
-                    .ToListAsync();
+                    .ToList();
 
                 // 将结果存入缓存，设置5分钟过期
                 _policyCache.Set("ActivePolicies", policies, TimeSpan.FromMinutes(5));

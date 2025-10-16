@@ -50,6 +50,7 @@ using RUINORERP.UI.Monitoring.Auditing;
 using NPOI.SS.Formula.Functions;
 using Netron.GraphLib;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Business.Cache;
 
 
 namespace RUINORERP.UI.ASS
@@ -67,9 +68,13 @@ namespace RUINORERP.UI.ASS
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_AS_AfterSaleApply>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
             AddPublicEntityObject(typeof(ProductSharePart));
+            // 通过依赖注入获取缓存管理器
+            _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            _tableSchemaManager = TableSchemaManager.Instance;
         }
 
-
+        private readonly IEntityCacheManager _cacheManager;
+        private readonly TableSchemaManager _tableSchemaManager;
         internal override void LoadDataToUI(object Entity)
         {
             ActionStatus actionStatus = ActionStatus.无操作;

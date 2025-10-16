@@ -20,10 +20,16 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
         public string TableName { get; set; } = string.Empty;
 
         /// <summary>
-        /// 缓存操作类型
-        /// </summary>
-        [Key(12)]
-        public CacheOperation Operation { get; set; } = CacheOperation.Get;
+    /// 缓存操作类型
+    /// </summary>
+    [Key(12)]
+    public CacheOperation Operation { get; set; } = CacheOperation.Get;
+
+    /// <summary>
+    /// 订阅操作类型 - 用于CacheSubscription命令
+    /// </summary>
+    [Key(1006)]
+    public SubscribeAction SubscribeAction { get; set; } = SubscribeAction.None;
 
         /// <summary>
         /// 缓存数据（用于设置、更新操作）
@@ -103,45 +109,29 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
             };
         }
 
-        /// <summary>
-        /// 创建缓存更新请求
-        /// </summary>
-        public static CacheRequest CreateUpdateRequest(string tableName, object data)
-        {
-            return new CacheRequest
-            {
-                TableName = tableName,
-                Operation = CacheOperation.Update,
-                Data = data,
-            };
-        }
-
-        /// <summary>
-        /// 创建缓存同步请求
-        /// </summary>
-        public static CacheRequest CreateSyncRequest(string syncMode = "FULL", List<string> cacheKeys = null, DateTime? lastSyncTime = null)
-        {
-            var request = new CacheRequest
-            {
-                Operation = CacheOperation.BatchUpdate, // 使用批量更新作为同步操作
-                Parameters = new Dictionary<string, object>()
-            };
-
-            request.Parameters["SyncMode"] = syncMode;
-            if (cacheKeys != null)
-                request.Parameters["CacheKeys"] = cacheKeys;
-            if (lastSyncTime.HasValue)
-                request.Parameters["LastSyncTime"] = lastSyncTime.Value;
-
-            return request;
-        }
-
+     
+        
         /// <summary>
         /// 创建缓存获取请求（兼容旧版本）
         /// </summary>
         public static CacheRequest Create(string tableName, bool forceRefresh = false)
         {
             return CreateGetRequest(tableName, forceRefresh);
+        }
+
+        /// <summary>
+        /// 创建订阅请求
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="subscribeAction">订阅操作类型</param>
+        /// <returns>缓存请求对象</returns>
+        public static CacheRequest CreateSubscriptionRequest(string tableName, SubscribeAction subscribeAction)
+        {
+            return new CacheRequest
+            {
+                TableName = tableName,
+                SubscribeAction = subscribeAction
+            };
         }
 
         /// <summary>
@@ -170,5 +160,24 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
         {
             Parameters[key] = value;
         }
+    }
+
+    /// <summary>
+    /// 订阅操作类型枚举
+    /// </summary>
+    public enum SubscribeAction
+    {
+        /// <summary>
+        /// 无操作
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// 订阅
+        /// </summary>
+        Subscribe = 1,
+        /// <summary>
+        /// 取消订阅
+        /// </summary>
+        Unsubscribe = 2
     }
 }

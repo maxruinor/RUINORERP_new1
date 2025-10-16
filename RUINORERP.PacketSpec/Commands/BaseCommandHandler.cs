@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -101,7 +101,10 @@ namespace RUINORERP.PacketSpec.Commands
             }
             
             SupportedCommands = commands.ToList();
+            // 减少调试日志，在生产环境中不记录
+            #if DEBUG
             Logger?.LogDebug($"处理器 {Name} 设置支持 {commands.Length} 个命令: {string.Join(", ", commands.Select(c => $"{c.Name}(0x{c.FullCode:X4})"))}");
+            #endif
         }
 
         /// <summary>
@@ -246,14 +249,33 @@ namespace RUINORERP.PacketSpec.Commands
             var validationResult = await cmd.Command.ValidateAsync(cancellationToken);
             if (!validationResult.IsValid)
             {
-                Logger.LogWarning($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
+                Logger.LogDebug($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
                 return BaseCommand<IResponse>.CreateValidationError(validationResult);
+            }
+
+            // 验证会话
+            if (!ValidateSession(cmd.Packet?.ExecutionContext?.SessionId))
+            {
+                Logger.LogDebug($"会话验证失败: {cmd.Packet?.ExecutionContext?.SessionId}");
+                return BaseCommand<IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
+                    .WithMetadata("ErrorCode", "INVALID_SESSION");
             }
 
             // 注意：命令超时检查已移除，因为指令本身不应该关心超时
             // 超时应该是执行环境的问题，由网络层或业务处理层处理
 
             return null; // 预处理通过
+        }
+
+        /// <summary>
+        /// 验证会话是否有效
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <returns>会话是否有效</returns>
+        protected virtual bool ValidateSession(string sessionId)
+        {
+            // 默认实现返回true，具体子类可重写
+            return true;
         }
 
  
@@ -469,7 +491,6 @@ namespace RUINORERP.PacketSpec.Commands
         protected abstract Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
 
         /// <summary>
-        /// <summary>
         /// 基于命令类型确定处理超时
         /// </summary>
         /// <param name="cmd">排队命令</param>
@@ -488,6 +509,8 @@ namespace RUINORERP.PacketSpec.Commands
             // 优先级已移到数据包中，不再根据命令优先级调整超时
             return baseTimeout;
         }
+
+ 
 
         #endregion
 
@@ -585,7 +608,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogDebug(string message)
         {
-
             Logger.LogDebug(message);
         }
 
@@ -594,8 +616,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogInfo(string message)
         {
-
-            Logger.LogInformation(message);
+            Logger.LogDebug(message);
         }
 
         /// <summary>
@@ -603,7 +624,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogWarning(string message)
         {
-
             Logger.LogWarning(message);
         }
 
@@ -612,7 +632,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogError(string message, Exception ex = null)
         {
-
             if (ex != null)
             {
                 Logger.LogError(ex, message);

@@ -191,13 +191,19 @@ namespace RUINORERP.PacketSpec.Commands
                             // 跳过泛型类型定义，因为它们无法直接实例化
                             if (handlerType.IsGenericTypeDefinition)
                             {
+                                // 减少调试日志，在生产环境中不记录
+                                #if DEBUG
                                 LogInfo($"跳过泛型类型定义: {handlerType.FullName}");
+                                #endif
                                 continue;
                             }
 
                             var handler = _handlerFactory.CreateHandler(handlerType);
                             await _commandScanner.RegisterHandlerAsync(handler, cancellationToken);
+                            // 减少信息日志，在生产环境中不记录每个处理器的注册
+                            #if DEBUG
                             LogInfo($"处理器 {handler.Name} [ID: {handler.HandlerId}] 注册成功");
+                            #endif
                         }
                         catch (Exception ex)
                         {
@@ -576,7 +582,10 @@ namespace RUINORERP.PacketSpec.Commands
                                 return null;
                             }
 
+                            // 减少信息日志，在生产环境中不记录
+                            #if DEBUG
                             LogInfo("回退处理器初始化并启动成功");
+                            #endif
                         }
                         catch (Exception ex)
                         {
@@ -742,6 +751,10 @@ namespace RUINORERP.PacketSpec.Commands
                 var dynamicHandler = TryCreateDynamicHandler(commandType, commandCode);
                 if (dynamicHandler != null)
                 {
+                    // 减少调试日志，在生产环境中不记录
+                    #if DEBUG
+                    LogDebug($"使用动态处理器处理命令类型: {commandType?.Name}, 命令代码: {commandCode}");
+                    #endif
                     return new HandlerCollection(new List<ICommandHandler> { dynamicHandler }, commandType);
                 }
             }
@@ -785,7 +798,10 @@ namespace RUINORERP.PacketSpec.Commands
                     }
                     catch (Exception ex)
                     {
+                        // 减少调试日志，在生产环境中不记录
+                        #if DEBUG
                         LogDebug($"获取程序集 {assembly.GetName().Name} 的处理器缓存失败: {ex.Message}");
+                        #endif
                     }
                 }
             }
@@ -963,8 +979,6 @@ namespace RUINORERP.PacketSpec.Commands
             var authCommands = new CommandId[]
             {
                 AuthenticationCommands.Login,
-                AuthenticationCommands.LoginRequest,
-                AuthenticationCommands.PrepareLogin,
                 AuthenticationCommands.ValidateToken,
                 AuthenticationCommands.RefreshToken
             };
@@ -1141,7 +1155,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private void LogDebug(string message)
         {
+            // 在生产环境中减少调试日志
+            #if DEBUG
             Logger.LogDebug(message);
+            #endif
         }
 
         /// <summary>
@@ -1149,6 +1166,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public void LogInfo(string message)
         {
+            // 仅记录关键信息日志
             Logger.LogInformation(message);
         }
 

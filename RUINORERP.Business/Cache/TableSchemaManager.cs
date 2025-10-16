@@ -424,6 +424,11 @@ namespace RUINORERP.Business.Cache
             }
             return sb.ToString();
         }
+
+        public IEnumerable<TableSchemaInfo> GetAllSchemaInfo()
+        {
+            return _tableSchemas.Values.ToList();
+        }
         #endregion
     }
 }

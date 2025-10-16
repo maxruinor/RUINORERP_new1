@@ -7,18 +7,6 @@ namespace RUINORERP.PacketSpec.Models
 {
     #region 数据模型类
 
-
-
-    /// <summary>
-    /// 用户验证结果
-    /// </summary>
-    public class UserValidationResult
-    {
-        public bool IsValid { get; set; }
-        public string ErrorMessage { get; set; }
-        public UserSessionInfo UserSessionInfo { get; set; }
-    }
-
     /// <summary>
     /// 用户会话信息
     /// </summary>

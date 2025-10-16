@@ -4,7 +4,7 @@ using System;
 namespace RUINORERP.PacketSpec.Commands.Cache
 {
     /// <summary>
-    /// 统一缓存条目信息模型 - 用于缓存元数据管理
+    /// 缓存条目信息模型 - 用于缓存元数据管理
     /// </summary>
     [MessagePackObject]
     public class CacheEntryInfo
@@ -78,74 +78,34 @@ namespace RUINORERP.PacketSpec.Commands.Cache
     }
 
     /// <summary>
-    /// 统一缓存操作类型枚举 - 支持所有缓存操作
+    /// 缓存操作类型枚举 - 简化的核心操作类型
     /// </summary>
     public enum CacheOperation
     {
         /// <summary>
-        /// 获取缓存
+        /// 获取缓存（支持单个和批量获取）
         /// </summary>
         Get = 0,
 
         /// <summary>
-        /// 设置缓存
+        /// 设置缓存（支持单个和批量设置，包含更新操作）
         /// </summary>
         Set = 1,
 
         /// <summary>
-        /// 批量设置缓存
+        /// 删除缓存（支持单个和批量删除）
         /// </summary>
-        BatchSet = 2,
-
-        /// <summary>
-        /// 删除缓存
-        /// </summary>
-        Remove = 3,
-
-        /// <summary>
-        /// 批量删除缓存
-        /// </summary>
-        BatchRemove = 4,
+        Remove = 2,
 
         /// <summary>
         /// 清空所有缓存
         /// </summary>
-        Clear = 5,
+        Clear = 3,
 
         /// <summary>
-        /// 更新缓存
+        /// 管理操作（包含：Exists、Statistics、Refresh、Size、Keys等）
         /// </summary>
-        Update = 6,
-
-        /// <summary>
-        /// 批量更新缓存
-        /// </summary>
-        BatchUpdate = 7,
-
-        /// <summary>
-        /// 检查缓存是否存在
-        /// </summary>
-        Exists = 8,
-
-        /// <summary>
-        /// 获取缓存统计信息
-        /// </summary>
-        Statistics = 9,
-
-        /// <summary>
-        /// 刷新缓存过期时间
-        /// </summary>
-        Refresh = 10,
-
-        /// <summary>
-        /// 获取缓存大小
-        /// </summary>
-        Size = 11,
-
-        /// <summary>
-        /// 获取所有缓存键
-        /// </summary>
-        Keys = 12
+        Manage = 4
     }
 
     /// <summary>
@@ -169,19 +129,9 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         NotFound = 2,
 
         /// <summary>
-        /// 缓存已过期
-        /// </summary>
-        Expired = 3,
-
-        /// <summary>
         /// 操作超时
         /// </summary>
-        Timeout = 4,
-
-        /// <summary>
-        /// 操作被取消
-        /// </summary>
-        Cancelled = 5
+        Timeout = 3
     }
 
     /// <summary>
@@ -197,28 +147,21 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         public int TotalEntries { get; set; }
 
         /// <summary>
-        /// 过期条目数
-        /// </summary>
-        [Key(1)]
-        public int ExpiredEntries { get; set; }
-
-        /// <summary>
         /// 总大小（字节）
         /// </summary>
-        [Key(2)]
+        [Key(1)]
         public long TotalSize { get; set; }
 
         /// <summary>
         /// 命中率
         /// </summary>
-        [Key(3)]
+        [Key(2)]
         public double HitRate { get; set; }
 
         /// <summary>
         /// 创建时间
         /// </summary>
-        [Key(4)]
+        [Key(3)]
         public DateTime CreatedTime { get; set; }
     }
-
 }

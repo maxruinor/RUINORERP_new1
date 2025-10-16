@@ -59,7 +59,7 @@ namespace RUINORERP.Business.BizMapperService
             }
             catch (Exception ex)
             {
-                _logger.Debug("注册实体映射时发生错误", ex);
+                _logger.LogDebug("注册实体映射时发生错误", ex);
             }
         }
 
@@ -90,7 +90,7 @@ namespace RUINORERP.Business.BizMapperService
                 catch (Exception ex)
                 {
                     errorCount++;
-                    _logger.Error($"注册实体映射失败: {typeof(TEntity).Name}, 业务类型: {bizType}", ex);
+                    _logger.LogError(ex, $"注册实体映射失败: {typeof(TEntity).Name}, 业务类型: {bizType}");
                 }
             }
 
@@ -152,11 +152,11 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_AS_RepairOrder>(BizType.维修工单, e => e.RepairOrderID, e => e.RepairOrderNo, e => e.tb_AS_RepairOrderDetails);
                 SafeRegister<tb_AS_RepairInStock>(BizType.维修入库单, e => e.RepairInStockID, e => e.RepairInStockNo, e => e.tb_AS_RepairInStockDetails);
 
-                _logger.LogInformation("普通实体映射注册完成，成功：{0}，失败：{1}", successCount, errorCount);
+                _logger.LogInformation("普通实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);
             }
             catch (Exception ex)
             {
-                _logger.Debug("注册实体映射时发生错误: {0}", ex.Message);
+                _logger.LogDebug(ex, "注册实体映射时发生错误");
                 errorCount++;
             }
         }
@@ -196,21 +196,18 @@ namespace RUINORERP.Business.BizMapperService
 
                         });
 
-
-
-
                     successCount++;
                 }
                 catch (Exception ex)
                 {
-                    _logger.Debug("注册共用表 {0} 时发生错误：{1}", typeof(TEntity).Name, ex.Message);
+                    _logger.LogDebug(ex, "注册共用表 {EntityName} 时发生错误", typeof(TEntity).Name);
                     errorCount++;
                 }
             }
 
             try
             {
-                _logger.Info("开始注册共用表实体映射...");
+                _logger.LogInformation("开始注册共用表实体映射...");
 
                 // 价格调整单
                 SafeRegister<tb_FM_PriceAdjustment, int>(
@@ -283,11 +280,11 @@ namespace RUINORERP.Business.BizMapperService
                     e => e.ExpenseNo,
                     e => e.tb_FM_OtherExpenseDetails);
 
-                _logger.Debug("共用表实体映射注册完成，成功：{0}，失败：{1}", successCount, errorCount);
+                _logger.LogInformation("共用表实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);
             }
             catch (Exception ex)
             {
-                _logger.Debug("注册共用表实体映射时发生错误: {0}", ex.Message);
+                _logger.LogDebug(ex, "注册共用表实体映射时发生错误");
             }
         }
 

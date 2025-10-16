@@ -38,6 +38,19 @@ namespace RUINORERP.UI.Network.Services
     /// <summary>
     /// 客户端缓存服务 - 处理缓存请求和响应
     /// 实现IDisposable接口以支持资源清理
+    /// 缓存订阅管理在客户端和服务器端的业务作用 ：
+//客户端 ：
+
+//- 跟踪本地订阅的表，当收到服务器推送的缓存变更时知道如何处理
+//- 允许客户端主动订阅/取消订阅感兴趣的数据表，以接收实时更新
+//- 优化网络流量，只订阅客户端真正需要的表
+//- 提供本地缓存更新机制，收到服务器推送时自动更新本地缓存
+//服务器端 ：
+
+//- 管理哪些会话订阅了哪些表，数据变更时知道需要通知哪些客户端
+//- 实现缓存变更广播机制，确保所有订阅了特定表的客户端都能及时收到更新
+//- 当会话断开连接时，自动取消其所有订阅，避免资源泄露
+//- 优化服务器性能，只向需要特定数据的客户端发送更新
     /// </summary>
     public class CacheClientService : IDisposable
     {
@@ -92,17 +105,61 @@ namespace RUINORERP.UI.Network.Services
 
         private void RegisterCommandHandlers()
         {
-            // 使用新的订阅机制订阅特定缓存命令
-            _comm.SubscribeCommand(CacheCommands.CacheDataList, (packet, data) => HandleCacheResponse(data));
-            _comm.SubscribeCommand(CacheCommands.CacheDataSend, (packet, data) => HandleCacheResponse(data));
-            _comm.SubscribeCommand(CacheCommands.CacheClear, (packet, data) => HandleCacheClearResponse(data));
-            _comm.SubscribeCommand(CacheCommands.CacheStatistics, (packet, data) => HandleCacheStatisticsResponse(data));
-            _comm.SubscribeCommand(CacheCommands.CacheStatus, (packet, data) => HandleCacheStatusResponse(data));
-            _comm.SubscribeCommand(CacheCommands.CacheBatchOperation, (packet, data) => HandleCacheBatchOperationResponse(data));
-            _comm.SubscribeCommand(CacheCommands.CacheWarmup, (packet, data) => HandleCacheWarmupResponse(data));
-            _comm.SubscribeCommand(CacheCommands.CacheInvalidate, (packet, data) => HandleCacheInvalidateResponse(data));
-            _comm.SubscribeCommand(CacheCommands.CacheSubscribe, (packet, data) => HandleCacheSubscribeResponse(data));
-            _comm.SubscribeCommand(CacheCommands.CacheUnsubscribe, (packet, data) => HandleCacheUnsubscribeResponse(data));
+            // 使用简化的缓存命令系统
+            // 处理缓存操作和同步命令
+            _comm.SubscribeCommand(CacheCommands.CacheOperation, (packet, data) => HandleCacheResponse((CacheResponse)data));
+            _comm.SubscribeCommand(CacheCommands.CacheSync, (packet, data) => HandleCacheResponse((CacheResponse)data));
+            
+            // 处理订阅命令 - 使用统一的处理方法，内部根据SubscribeAction区分
+            _comm.SubscribeCommand(CacheCommands.CacheSubscription, (packet, data) => HandleSubscriptionResponse((CacheResponse)data));
+        }
+        
+        /// <summary>
+        /// 处理缓存订阅响应 - 根据SubscribeAction区分订阅和取消订阅操作
+        /// </summary>
+        /// <param name="response">缓存响应数据</param>
+        private void HandleSubscriptionResponse(CacheResponse response)
+        {
+            if (response == null || !response.IsSuccess)
+            {
+                _log?.LogWarning("接收到无效的订阅响应或响应失败: {0}", response?.ErrorMessage);
+                return;
+            }
+            
+            try
+            {
+                // 从Data中获取订阅信息
+                if (response.Metadata != null)
+                {
+                    // 获取SubscribeAction信息
+                    int subscribeAction = 0;
+                    if (response.Metadata.ContainsKey("SubscribeAction"))
+                    {
+                        subscribeAction = Convert.ToInt32(response.Metadata["SubscribeAction"]);
+                    }
+                    var tableName = response.TableName;
+                    
+                    if (!string.IsNullOrEmpty(tableName))
+                    {
+                        switch ((SubscribeAction)subscribeAction)
+                        {
+                            case SubscribeAction.Subscribe:
+                                _log?.LogInformation($"成功订阅表缓存变更: {tableName}");
+                                break;
+                            case SubscribeAction.Unsubscribe:
+                                _log?.LogInformation($"成功取消订阅表缓存变更: {tableName}");
+                                break;
+                            default:
+                                _log?.LogWarning("接收到未知的订阅动作类型: {0}", subscribeAction);
+                                break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理缓存订阅响应时发生异常");
+            }
         }
 
         /// <summary>
@@ -257,11 +314,12 @@ namespace RUINORERP.UI.Network.Services
                 if (!e.SyncToServer)
                     return;
 
-                // 创建缓存更新请求
+                // 创建缓存更新请求 - 使用简化的操作类型
                 var request = new CacheRequest
                 {
                     TableName = e.Key,
-                    RequestId = IdGenerator.GenerateRequestId(CacheCommands.CacheUpdate)
+                    Operation = e.Operation, // 直接使用事件中的操作类型
+                    RequestId = IdGenerator.GenerateRequestId(CacheCommands.CacheOperation)
                 };
 
                 // 根据操作类型设置请求数据
@@ -270,15 +328,12 @@ namespace RUINORERP.UI.Network.Services
                     request.Data = e.Value;
                 }
 
-                // 发送缓存更新命令到服务器
+                // 发送缓存更新命令到服务器 - 使用统一的缓存操作命令
                 var command = new BaseCommand<IRequest, IResponse>()
                 {
                     Request = request,
-                    CommandIdentifier = CacheCommands.CacheUpdate
+                    CommandIdentifier = CacheCommands.CacheOperation
                 };
-
-                //服务器也改一下试试。 BaseCommand<IRequest, IResponse>() 是不是所有的都可以这样？
-
 
                 // 发送命令到服务器
                 await _comm.SendOneWayCommandAsync<IRequest>(command, CancellationToken.None);
@@ -310,8 +365,13 @@ namespace RUINORERP.UI.Network.Services
                     await Task.CompletedTask;
                 }
 
-                // 使用工厂方法创建请求对象
-                var request = CacheRequest.Create(tableName, forceRefresh);
+                // 手动创建Get操作的缓存请求
+                var request = new CacheRequest
+                {
+                    TableName = tableName,
+                    Operation = CacheOperation.Get,
+                    ForceRefresh = forceRefresh
+                };
                 request.LastRequestTime = GetLastRequestTime(tableName);
 
                 // 使用统一命令处理模式，模仿登录业务流程
@@ -326,16 +386,20 @@ namespace RUINORERP.UI.Network.Services
             {
                 _log?.LogError(ex, "请求缓存过程中发生异常，表名={0}", tableName);
                 // 记录异常信息但不返回
-                MainForm.Instance.PrintInfoLog($"请求缓存过程中发生异常: {ex.Message}");
                 if (ex.InnerException != null)
                 {
-                    MainForm.Instance.PrintInfoLog($"内部异常: {ex.InnerException.Message}");
+                    _log?.LogError(ex.InnerException, "请求缓存过程中发生异常InnerException，表名={0}", tableName);
                 }
             }
         }
 
         /// <summary>
         /// 订阅缓存变更通知
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>是否订阅成功</returns>
+        /// <summary>
+        /// 订阅缓存变更通知 - 使用简化的订阅命令
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>是否订阅成功</returns>
@@ -349,6 +413,9 @@ namespace RUINORERP.UI.Network.Services
                     return false;
                 }
 
+                // 使用简化的订阅请求创建方法
+                var request = CacheRequest.CreateSubscriptionRequest(tableName, SubscribeAction.Subscribe);
+                // 使用正确的客户端订阅方法（异步版本）
                 return await _subscriptionManager.SubscribeAsync(tableName);
             }
             catch (Exception ex)
@@ -359,7 +426,7 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 取消订阅缓存变更通知
+        /// 取消订阅缓存变更通知 - 使用简化的订阅命令
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>是否取消订阅成功</returns>
@@ -373,6 +440,9 @@ namespace RUINORERP.UI.Network.Services
                     return false;
                 }
 
+                // 使用简化的订阅请求创建方法
+                var request = CacheRequest.CreateSubscriptionRequest(tableName, SubscribeAction.Unsubscribe);
+                // 使用正确的客户端取消订阅方法（异步版本）
                 return await _subscriptionManager.UnsubscribeAsync(tableName);
             }
             catch (Exception ex)
@@ -398,7 +468,7 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 统一处理缓存请求 - 模仿登录业务流程
+        /// 统一处理缓存请求 
         /// </summary>
         /// <param name="request">缓存请求</param>
         /// <param name="ct">取消令牌</param>
@@ -414,8 +484,7 @@ namespace RUINORERP.UI.Network.Services
                 //    cmd => cmd.TimeoutMs = 30000
                 //);
 
-                CacheCommand cacheCommand = new CacheCommand();
-                cacheCommand.Request = request;
+              var cacheCommand=  CommandDataBuilder.BuildCommand<CacheRequest, CacheResponse>(CacheCommands.CacheOperation, request);
 
                 // 使用新的方法发送命令并获取包含指令信息的响应
                 var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, ct, 30000);
@@ -455,7 +524,6 @@ namespace RUINORERP.UI.Network.Services
                 {
                     _log?.LogWarning("缓存请求失败，表名={0}，错误: {1}",
                         request.TableName, commandResponse.ResponseData.ErrorMessage);
-                    MainForm.Instance.PrintInfoLog($"接收缓存失败: {commandResponse.ResponseData.ErrorMessage ?? "未知错误"}");
                 }
 
                 return commandResponse;
@@ -524,12 +592,12 @@ namespace RUINORERP.UI.Network.Services
                         }
                         else
                         {
-                            MainForm.Instance.PrintInfoLog($"接收缓存失败: {response?.Message ?? "未知错误"}");
+                           _log.LogDebug ($"接收缓存失败: {response?.Message ?? "未知错误"}");
                         }
                     }
                     else
                     {
-                        MainForm.Instance.PrintInfoLog("处理缓存响应失败: 数据格式不正确");
+                       _log.LogDebug("处理缓存响应失败: 数据格式不正确");
                     }
                 }
 
@@ -537,7 +605,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存响应失败: {Message}", ex.Message);
-                MainForm.Instance.PrintInfoLog($"处理缓存响应失败: {ex.Message}");
+               _log.LogDebug($"处理缓存响应失败: {ex.Message}");
             }
         }
 
@@ -584,7 +652,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存数据失败: {Message}", ex.Message);
-                MainForm.Instance.PrintInfoLog($"处理缓存数据失败: {ex.Message}");
+    
             }
         }
 
@@ -629,20 +697,20 @@ namespace RUINORERP.UI.Network.Services
                 {
                     if (response.IsSuccess)
                     {
-                        _log?.LogInformation("缓存清空成功");
-                        MainForm.Instance.PrintInfoLog("缓存清空成功");
+                   
+                       _log.LogDebug("缓存清空成功");
                     }
                     else
                     {
                         _log?.LogWarning("缓存清空失败: {Message}", response.Message);
-                        MainForm.Instance.PrintInfoLog($"缓存清空失败: {response.Message}");
+            
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存清空响应失败");
-                MainForm.Instance.PrintInfoLog($"处理缓存清空响应失败: {ex.Message}");
+                
             }
         }
 
@@ -658,20 +726,20 @@ namespace RUINORERP.UI.Network.Services
                 {
                     if (response.IsSuccess)
                     {
-                        _log?.LogInformation("缓存统计获取成功");
-                        MainForm.Instance.PrintInfoLog("缓存统计获取成功");
+                        _log?.LogDebug("缓存统计获取成功");
+        
                     }
                     else
                     {
                         _log?.LogWarning("缓存统计获取失败: {Message}", response.Message);
-                        MainForm.Instance.PrintInfoLog($"缓存统计获取失败: {response.Message}");
+                      
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存统计响应失败");
-                MainForm.Instance.PrintInfoLog($"处理缓存统计响应失败: {ex.Message}");
+             
             }
         }
 
@@ -687,20 +755,20 @@ namespace RUINORERP.UI.Network.Services
                 {
                     if (response.IsSuccess)
                     {
-                        _log?.LogInformation("缓存状态获取成功");
-                        MainForm.Instance.PrintInfoLog("缓存状态获取成功");
+                        _log.LogDebug("缓存状态获取成功");
+                      
                     }
                     else
                     {
                         _log?.LogWarning("缓存状态获取失败: {Message}", response.Message);
-                        MainForm.Instance.PrintInfoLog($"缓存状态获取失败: {response.Message}");
+            
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存状态响应失败");
-                MainForm.Instance.PrintInfoLog($"处理缓存状态响应失败: {ex.Message}");
+        
             }
         }
 
@@ -716,20 +784,20 @@ namespace RUINORERP.UI.Network.Services
                 {
                     if (response.IsSuccess)
                     {
-                        _log?.LogInformation("缓存批量操作成功");
-                        MainForm.Instance.PrintInfoLog("缓存批量操作成功");
+                        _log.LogDebug("缓存批量操作成功");
+                       
                     }
                     else
                     {
                         _log?.LogWarning("缓存批量操作失败: {Message}", response.Message);
-                        MainForm.Instance.PrintInfoLog($"缓存批量操作失败: {response.Message}");
+                      
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存批量操作响应失败");
-                MainForm.Instance.PrintInfoLog($"处理缓存批量操作响应失败: {ex.Message}");
+               
             }
         }
 
@@ -746,19 +814,18 @@ namespace RUINORERP.UI.Network.Services
                     if (response.IsSuccess)
                     {
                         _log?.LogInformation("缓存预热成功");
-                        MainForm.Instance.PrintInfoLog("缓存预热成功");
+                      
                     }
                     else
                     {
                         _log?.LogWarning("缓存预热失败: {Message}", response.Message);
-                        MainForm.Instance.PrintInfoLog($"缓存预热失败: {response.Message}");
+                       
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存预热响应失败");
-                MainForm.Instance.PrintInfoLog($"处理缓存预热响应失败: {ex.Message}");
             }
         }
 
@@ -775,19 +842,16 @@ namespace RUINORERP.UI.Network.Services
                     if (response.IsSuccess)
                     {
                         _log?.LogInformation("缓存失效成功");
-                        MainForm.Instance.PrintInfoLog("缓存失效成功");
                     }
                     else
                     {
                         _log?.LogWarning("缓存失效失败: {Message}", response.Message);
-                        MainForm.Instance.PrintInfoLog($"缓存失效失败: {response.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存失效响应失败");
-                MainForm.Instance.PrintInfoLog($"处理缓存失效响应失败: {ex.Message}");
             }
         }
 
@@ -804,19 +868,16 @@ namespace RUINORERP.UI.Network.Services
                     if (response.IsSuccess)
                     {
                         _log?.LogInformation($"缓存订阅成功: {response.TableName}");
-                        MainForm.Instance.PrintInfoLog($"缓存订阅成功: {response.TableName}");
                     }
                     else
                     {
                         _log?.LogWarning("缓存订阅失败: {Message}", response.Message);
-                        MainForm.Instance.PrintInfoLog($"缓存订阅失败: {response.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存订阅响应失败");
-                MainForm.Instance.PrintInfoLog($"处理缓存订阅响应失败: {ex.Message}");
             }
         }
 
@@ -833,19 +894,16 @@ namespace RUINORERP.UI.Network.Services
                     if (response.IsSuccess)
                     {
                         _log?.LogInformation($"缓存取消订阅成功: {response.TableName}");
-                        MainForm.Instance.PrintInfoLog($"缓存取消订阅成功: {response.TableName}");
                     }
                     else
                     {
                         _log?.LogWarning("缓存取消订阅失败: {Message}", response.Message);
-                        MainForm.Instance.PrintInfoLog($"缓存取消订阅失败: {response.Message}");
                     }
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存取消订阅响应失败");
-                MainForm.Instance.PrintInfoLog($"处理缓存取消订阅响应失败: {ex.Message}");
             }
         }
 
@@ -1020,7 +1078,6 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _log?.LogError(ex, "清理所有缓存失败: {Message}", ex.Message);
-                MainForm.Instance.PrintInfoLog($"清理所有缓存失败: {ex.Message}");
             }
         }
 

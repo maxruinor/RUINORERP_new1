@@ -12,7 +12,8 @@ using MessagePack; // 引用BaseCommand
 namespace RUINORERP.PacketSpec.Commands.Cache
 {
     /// <summary>
-    /// 缓存同步命令 - 用于同步客户端与服务器之间的缓存数据
+    /// 缓存同步命令 - 简化版
+    /// 用于同步客户端与服务器之间的缓存数据
     /// </summary>
     [PacketCommand("CacheCommand", CommandCategory.Cache)]
     [MessagePackObject(AllowPrivate = true)]
@@ -39,49 +40,43 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         }
 
         /// <summary>
-        /// 需要同步的缓存键列表（向后兼容）
-        /// </summary>
-        [Key(1002)]
-        [MessagePack.IgnoreMember]
-        public List<string> CacheKeys { get; set; }
-        
-        /// <summary>
-        /// 缓存键枚举器（向后兼容）
-        /// </summary>
-        [Key(1003)]
-        [MessagePack.IgnoreMember]
-        public IAsyncEnumerable<string> CacheKeysEnumerator { get; set; }
-
-        /// <summary>
-        /// 同步模式（向后兼容）
-        /// </summary>
-        [Key(1004)]
-        [MessagePack.IgnoreMember]
-        public string SyncMode { get; set; }
-
-        /// <summary>
         /// 构造函数
         /// </summary>
-        public CacheCommand() : base() // 移除 Direction 参数
+        public CacheCommand() : base()
         {
-            CacheKeys = new List<string>();
-            SyncMode = "FULL"; // 默认全量同步
-            // 移除: Direction = PacketDirection.Request;
-            CommandIdentifier = CacheCommands.CacheRequest;
-            // 注意：移除了 TimeoutMs 的设置，因为指令本身不应该关心超时
-            // 超时应该是执行环境的问题，由网络层或业务处理层处理
+            // 使用统一的缓存操作命令作为默认
+            CommandIdentifier = CacheCommands.CacheOperation;
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="tableName">表名</param>
+        /// <param name="operation">操作类型</param>
         /// <param name="forceRefresh">是否强制刷新</param>
-        /// <param name="clientInfo">客户端信息</param>
-        public CacheCommand(string tableName, bool forceRefresh = false)
+        public CacheCommand(string tableName, CacheOperation operation = CacheOperation.Get, bool forceRefresh = false)
             : this()
         {
-            Request = CacheRequest.Create(tableName, forceRefresh);
+            // 手动创建CacheRequest对象，因为Create方法不支持三个参数
+            Request = new CacheRequest
+            {
+                TableName = tableName,
+                Operation = operation,
+                ForceRefresh = forceRefresh
+            };
+            CommandIdentifier = CacheCommands.CacheOperation;
+        }
+        
+        /// <summary>
+        /// 构造函数 - 用于订阅操作
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="subscribeAction">订阅操作类型</param>
+        public CacheCommand(string tableName, SubscribeAction subscribeAction)
+            : this()
+        {
+            Request = CacheRequest.CreateSubscriptionRequest(tableName, subscribeAction);
+            CommandIdentifier = CacheCommands.CacheSubscription;
         }
         
         /// <summary>
@@ -94,38 +89,49 @@ namespace RUINORERP.PacketSpec.Commands.Cache
         }
 
         /// <summary>
-        /// 枚举缓存键
+        /// 创建缓存同步命令
         /// </summary>
-        /// <returns>缓存键的异步可枚举集合</returns>
-        public IAsyncEnumerable<string> EnumerateKeys()
+        /// <param name="tableName">表名</param>
+        /// <param name="cacheData">缓存数据</param>
+        /// <returns>缓存命令对象</returns>
+        public static CacheCommand CreateSyncCommand(string tableName, CacheData cacheData)
         {
-            if (CacheKeysEnumerator != null)
+            var command = new CacheCommand
             {
-                return CacheKeysEnumerator;
-            }
+                CommandIdentifier = CacheCommands.CacheSync,
+                Request = CacheRequest.Create(tableName, false) // 使用正确的Create方法重载
+            };
             
-            if (CacheKeys != null)
+            if (command.Response == null)
             {
-                return EnumerateList(CacheKeys);
+                command.Response = new CacheResponse();
             }
+            command.Response.CacheData = cacheData;
+            command.Response.TableName = tableName;
             
-            return EmptyAsyncEnumerable<string>.Instance;
+            return command;
         }
         
         /// <summary>
-        /// 将列表转换为异步可枚举集合
+        /// 创建缓存同步命令（重载）
+        /// 用于广播缓存变更到订阅的客户端
         /// </summary>
-        /// <typeparam name="T">元素类型</typeparam>
-        /// <param name="list">列表</param>
-        /// <returns>异步可枚举集合</returns>
-#pragma warning disable CS1998 // 异步方法缺少 "await" 运算符，将以同步方式运行
-        private async IAsyncEnumerable<T> EnumerateList<T>(List<T> list)
-#pragma warning restore CS1998 // 异步方法缺少 "await" 运算符，将以同步方式运行
+        /// <param name="response">缓存响应对象</param>
+        /// <returns>缓存同步命令</returns>
+        public static CacheCommand CreateSyncCommand(CacheResponse response)
         {
-            foreach (var item in list)
+            var command = new CacheCommand
             {
-                yield return item;
-            }
+                CommandIdentifier = CacheCommands.CacheSync,
+                Request = new CacheRequest
+                {
+                    TableName = response.TableName,
+                    Operation = CacheOperation.Get
+                },
+                Response = response
+            };
+            
+            return command;
         }
 
         /// <summary>
@@ -151,35 +157,5 @@ namespace RUINORERP.PacketSpec.Commands.Cache
        
     }
     
-    /// <summary>
-    /// 空的异步可枚举集合
-    /// </summary>
-    /// <typeparam name="T">元素类型</typeparam>
-    internal class EmptyAsyncEnumerable<T> : IAsyncEnumerable<T>
-    {
-        public static readonly EmptyAsyncEnumerable<T> Instance = new EmptyAsyncEnumerable<T>();
-        
-        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            return new EmptyAsyncEnumerator<T>();
-        }
-        
-#pragma warning disable CS0693 // 类型参数与外部类型中的类型参数同名
-        private class EmptyAsyncEnumerator<T> : IAsyncEnumerator<T>
-#pragma warning restore CS0693 // 类型参数与外部类型中的类型参数同名
-        {
-            public T Current => default;
-            
-            public ValueTask DisposeAsync()
-            {
-                return new ValueTask();
-            }
-            
-            public ValueTask<bool> MoveNextAsync()
-            {
-                return new ValueTask<bool>(false);
-            }
-        }
 
-    }
 }

@@ -185,12 +185,12 @@ namespace RUINORERP.UI.Network
                 
                 if (connected)
                 {
-                    _logger.LogInformation("客户端已连接到服务器");
+                    _logger.Debug("客户端已连接到服务器");
                     // 注意：心跳将在用户登录成功后启动，而不是在连接建立时
                 }
                 else
                 {
-                    _logger.LogInformation("客户端与服务器断开连接");
+                    _logger.Debug("客户端与服务器断开连接");
                     
                     // 停止心跳
                     if (_heartbeatIsRunning)
@@ -287,6 +287,7 @@ namespace RUINORERP.UI.Network
         /// <returns>连接成功返回true，失败返回false</returns>
         public async Task<bool> ConnectAsync(string serverUrl, int port, CancellationToken ct = default)
         {
+            // 使用信号量确保同一时间只有一个连接尝试
             await _connectionLock.WaitAsync(ct);
             try
             {
@@ -302,7 +303,6 @@ namespace RUINORERP.UI.Network
             {
                 _connectionLock.Release();
             }
-
         }
 
         /// <summary>
@@ -320,7 +320,7 @@ namespace RUINORERP.UI.Network
                         if (_socketClient.IsConnected)
                         {
                             _socketClient.Disconnect();
-                            _logger.LogInformation("主动断开与服务器的连接");
+                            _logger.Debug("主动断开与服务器的连接");
                         }
                         else
                         {
@@ -338,6 +338,49 @@ namespace RUINORERP.UI.Network
                         UpdateConnectionState(false);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 安全连接异步方法
+        /// </summary>
+        /// <param name="serverUrl">服务器URL</param>
+        /// <param name="port">服务器端口</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>连接成功返回true，失败返回false</returns>
+        private async Task<bool> SafeConnectAsync(string serverUrl, int port, CancellationToken ct)
+        {
+            lock (_syncLock)
+            {
+                // 如果已经连接，直接返回true
+                if (_isConnected)
+                    return true;
+
+                _serverAddress = serverUrl;
+                _serverPort = port;
+            }
+
+            try
+            {
+                bool connected = await _socketClient.ConnectAsync(serverUrl, port, ct).ConfigureAwait(false);
+
+                if (connected)
+                {
+                    lock (_syncLock)
+                    {
+                        _heartbeatFailureCount = 0;
+                        // 使用统一的连接状态更新方法
+                        UpdateConnectionState(true);
+                    }
+                }
+
+                return connected;
+            }
+            catch (Exception ex)
+            {
+                _eventManager.OnErrorOccurred(new Exception($"连接到服务器失败: {ex.Message}", ex));
+                _logger.LogError(ex, "连接服务器时发生错误");
+                return false;
             }
         }
 
@@ -466,7 +509,6 @@ namespace RUINORERP.UI.Network
 
             try
             {
-
                 // 使用现有的SendPacketCoreAsync发送请求
                 await SendPacketCoreAsync(_socketClient, command, command.Request.RequestId, _networkConfig.DefaultRequestTimeoutMs, ct);
 
@@ -487,15 +529,15 @@ namespace RUINORERP.UI.Network
 
                 if (responsePacket != null)
                 {
-
+                    // 记录请求完成事件
+                    _eventManager.OnRequestCompleted(command.Request.RequestId, DateTime.UtcNow - pendingRequest.CreatedAt);
                 }
-                PacketModel packet = null;
 
+                PacketModel packet = null;
 
                 if (responsePacket is PacketModel)
                 {
                     packet = responsePacket;
-
                 }
                 _logger?.LogDebug("成功接收响应，请求ID: {RequestId}", command.Request.RequestId);
                 return packet;
@@ -510,7 +552,7 @@ namespace RUINORERP.UI.Network
                 _pendingRequests.TryRemove(command.Request.RequestId, out _);
             }
         }
-
+         
 
         #region 设置token
 
@@ -840,9 +882,8 @@ namespace RUINORERP.UI.Network
             });
         }
 
-
         /// <summary>
-        /// 异步发送命令到服务器但不等待响应
+        /// 异步发送命令到服务器但不等待响应（简化版）
         /// </summary>
         /// <typeparam name="TRequest">请求数据类型</typeparam>
         /// <param name="command">命令对象</param>
@@ -860,9 +901,6 @@ namespace RUINORERP.UI.Network
             {
                 try
                 {
-                    // 创建命令对象并设置Token
-                    // var command = InitializeCommandAsync(commandId, requestData);
-
                     // 生成请求ID但不等待响应
                     string requestId = IdGenerator.GenerateRequestId(command.CommandIdentifier);
 
@@ -879,11 +917,6 @@ namespace RUINORERP.UI.Network
                 }
             });
         }
-
-
-
-
-
 
         /// <summary>
         /// 重新连接到服务器
@@ -935,7 +968,7 @@ namespace RUINORERP.UI.Network
                 // 连接断开时尝试重连
                 if (_networkConfig.AutoReconnect && !_isConnected)
                 {
-                    _logger.LogInformation("连接已断开，尝试自动重连");
+                    _logger.Debug("连接已断开，尝试自动重连");
                     await TryReconnectAsync().ConfigureAwait(false);
                 }
 
@@ -970,58 +1003,13 @@ namespace RUINORERP.UI.Network
                 // 连接断开时尝试重连
                 if (_networkConfig.AutoReconnect && !_isConnected)
                 {
-                    _logger.LogInformation("连接已断开，尝试自动重连");
+                    _logger.Debug("连接已断开，尝试自动重连");
                     await TryReconnectAsync().ConfigureAwait(false);
                 }
 
                 throw;
             }
         }
-
-
-
-        /// <summary>
-        /// 安全连接异步方法
-        /// </summary>
-        /// <param name="serverUrl">服务器URL</param>
-        /// <param name="port">服务器端口</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>连接成功返回true，失败返回false</returns>
-        private async Task<bool> SafeConnectAsync(string serverUrl, int port, CancellationToken ct)
-        {
-            lock (_syncLock)
-            {
-                if (_isConnected)
-                    return true;
-
-                _serverAddress = serverUrl;
-                _serverPort = port;
-            }
-
-            try
-            {
-                bool connected = await _socketClient.ConnectAsync(serverUrl, port, ct).ConfigureAwait(false);
-
-                if (connected)
-                {
-                    lock (_syncLock)
-                    {
-                        _heartbeatFailureCount = 0;
-                        // 使用统一的连接状态更新方法
-                        UpdateConnectionState(true);
-                    }
-                }
-
-                return connected;
-            }
-            catch (Exception ex)
-            {
-                _eventManager.OnErrorOccurred(new Exception($"连接到服务器失败: {ex.Message}", ex));
-                _logger.LogError(ex, "连接服务器时发生错误");
-                return false;
-            }
-        }
-
 
 
         /// <summary>
@@ -1033,28 +1021,44 @@ namespace RUINORERP.UI.Network
             if (!_networkConfig.AutoReconnect || _disposed || string.IsNullOrEmpty(_serverAddress))
                 return false;
 
-            _logger.LogInformation("开始尝试重连服务器...");
+            _logger.Debug("开始尝试重连服务器...");
 
             for (int attempt = 0; attempt < _networkConfig.MaxReconnectAttempts; attempt++)
             {
                 if (_disposed)
                     break;
 
-                _logger.LogInformation($"重连尝试 {attempt + 1}/{_networkConfig.MaxReconnectAttempts}");
+                _logger.Debug($"重连尝试 {attempt + 1}/{_networkConfig.MaxReconnectAttempts}");
 
                 try
                 {
-                    if (await _socketClient.ConnectAsync(_serverAddress, _serverPort, CancellationToken.None).ConfigureAwait(false))
+                    // 使用连接锁确保不会并发重连
+                    await _connectionLock.WaitAsync();
+                    try
                     {
-                        lock (_syncLock)
+                        // 检查是否已经连接
+                        if (_isConnected)
                         {
-                            _heartbeatFailureCount = 0;
-                            // 使用统一的连接状态更新方法
-                            UpdateConnectionState(true);
+                            _logger.Debug("检测到已连接，取消重连尝试");
+                            return true;
                         }
 
-                        _logger.LogInformation("服务器重连成功");
-                        return true;
+                        if (await _socketClient.ConnectAsync(_serverAddress, _serverPort, CancellationToken.None).ConfigureAwait(false))
+                        {
+                            lock (_syncLock)
+                            {
+                                _heartbeatFailureCount = 0;
+                                // 使用统一的连接状态更新方法
+                                UpdateConnectionState(true);
+                            }
+
+                            _logger.Debug("服务器重连成功");
+                            return true;
+                        }
+                    }
+                    finally
+                    {
+                        _connectionLock.Release();
                     }
                 }
                 catch (Exception ex)
@@ -1066,7 +1070,7 @@ namespace RUINORERP.UI.Network
                 // 等待重连延迟
                 if (attempt < _networkConfig.MaxReconnectAttempts - 1)
                 {
-                    _logger.LogInformation($"等待 {_networkConfig.ReconnectDelay.TotalSeconds} 秒后进行下一次重连");
+                    _logger.Debug($"等待 {_networkConfig.ReconnectDelay.TotalSeconds} 秒后进行下一次重连");
                     await Task.Delay(_networkConfig.ReconnectDelay, CancellationToken.None).ConfigureAwait(false);
                 }
             }
@@ -1366,6 +1370,7 @@ namespace RUINORERP.UI.Network
         {
             lock (_syncLock)
             {
+                // 只有在当前状态为连接时才处理断开连接
                 if (_isConnected)
                 {
                     // 使用统一的连接状态更新方法
@@ -1374,7 +1379,7 @@ namespace RUINORERP.UI.Network
                     // 尝试重连
                     if (_networkConfig.AutoReconnect && !_disposed)
                     {
-                        _logger.LogInformation("自动重连已启用，尝试重连服务器");
+                        _logger.Debug("自动重连已启用，尝试重连服务器");
                         Task.Run(() => TryReconnectAsync());
                     }
                 }
@@ -1389,7 +1394,7 @@ namespace RUINORERP.UI.Network
         private void SubscribeCommandEvents()
         {
             _eventManager.CommandReceived += OnCommandReceived;
-            _logger.LogInformation("客户端命令处理器已启动，开始监听服务器命令");
+            _logger.Debug("客户端命令处理器已启动，开始监听服务器命令");
         }
 
         /// <summary>
@@ -1402,7 +1407,7 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                _logger.LogInformation("接收到服务器命令: {CommandId}", packetModel.CommandId);
+                _logger.Debug("接收到服务器命令: {CommandId}", packetModel.CommandId);
 
                 // 使用命令调度器处理命令
                 await ProcessCommandAsync(packetModel);

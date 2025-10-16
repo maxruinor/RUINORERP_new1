@@ -3,6 +3,7 @@ using CacheManager.Core;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using HLH.Lib.Helper;
+using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model;
@@ -27,9 +28,15 @@ namespace RUINORERP.UI.SysConfig
     [MenuAttrAssemblyInfo("缓存管理", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
     public partial class UCCacheManage : UserControl
     {
+        private readonly IEntityCacheManager _cacheManager;
+        private readonly TableSchemaManager _tableSchemaManager;
+
         public UCCacheManage()
         {
             InitializeComponent();
+            // 通过依赖注入获取缓存管理器
+            _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            _tableSchemaManager = TableSchemaManager.Instance;
         }
 
         private void 请求缓存ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -52,38 +59,47 @@ namespace RUINORERP.UI.SysConfig
             //加载所有缓存的表
             listBoxTableList.Items.Clear();
 
+            // 获取所有可缓存的表名
             List<string> list = new List<string>();
-            foreach (var tableName in MyCacheManager.Instance.NewTableList.Keys)
+            // 从TableSchemaManager获取所有表信息
+            foreach (var schemaInfo in _tableSchemaManager.GetAllSchemaInfo())
             {
-                list.Add(tableName);
+                list.Add(schemaInfo.TableName);
             }
             list.Sort();
+
             foreach (var tableName in list)
             {
-
-                var CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
-                if (CacheList == null)
+                try
                 {
-                    SuperValue kv = new SuperValue(tableName + "[" + 0 + "]", tableName);
-                    listBoxTableList.Items.Add(kv);
-                }
-                else
-                {
-                    var lastlist = ((IEnumerable<dynamic>)CacheList).ToList();
-                    if (lastlist != null)
+                    // 获取实体类型
+                    var entityType = _tableSchemaManager.GetEntityType(tableName);
+                    if (entityType != null)
                     {
-                        SuperValue kv = new SuperValue(tableName + "[" + lastlist.Count + "]", tableName);
+                        // 使用反射调用泛型方法
+                        var method = typeof(IEntityCacheManager).GetMethod("GetEntityList", new Type[] { typeof(string) })
+                            .MakeGenericMethod(entityType);
+                        var cacheList = method.Invoke(_cacheManager, new object[] { tableName }) as System.Collections.IEnumerable;
+
+                        int count = 0;
+                        if (cacheList != null)
+                        {
+                            count = cacheList.Cast<object>().Count();
+                        }
+
+                        SuperValue kv = new SuperValue(tableName + "[" + count + "]", tableName);
                         listBoxTableList.Items.Add(kv);
                     }
                 }
+                catch (Exception ex)
+                {
+                    // 记录错误但继续处理其他表
+                    Console.WriteLine($"处理表 {tableName} 时发生错误: {ex.Message}");
+                }
             }
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-            //添加锁定信息
-            //if (MainForm.Instance.lockManager != null)
-            //{
-            //    SuperValue kv = new SuperValue($"锁定信息列表{MainForm.Instance.lockManager.GetLockItemCount()}", "锁定信息列表");
-            //    listBoxTableList.Items.Add(kv);
-            //}
+
+            // 添加锁定信息（如果需要）
+            // 注意：这里需要根据新系统的锁定管理器实现进行调整
         }
 
         private void btnRefreshCache_Click(object sender, EventArgs e)
@@ -101,39 +117,56 @@ namespace RUINORERP.UI.SysConfig
             {
                 string tableName = kv.superDataTypeName;
 
+                // 处理锁定信息列表（如果需要）
                 if (tableName == "锁定信息列表")
                 {
                     this.dataGridView1.SetUseCustomColumnDisplay(false);
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                    // dataGridView1.DataSource = MainForm.Instance.lockManager.GetLockItems();
-
+                    // 这里需要根据新系统的锁定管理器实现进行调整
+                    dataGridView1.DataSource = null;
                 }
                 else
                 {
-                    var CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
-                    if (CacheList == null)
+                    try
                     {
-                        dataGridView1.DataSource = null;
-                        return;
-                    }
-                    // 使用 Assembly.Load 加载包含 PrintHelper<T> 类的程序集
-                    dataGridView1.NeedSaveColumnsXml = true;
-                    // 使用 GetType 方法获取 PrintHelper<T> 的类型
-                    Type type = assembly.GetType("RUINORERP.Model." + tableName);
-                    dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(true, type);
-                    dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                    dataGridView1.XmlFileName = "UCCacheManage" + tableName;
-                    dataGridView1.DataSource = null;
-                    dataGridView1.DataSource = CacheList;
-                }
+                        // 获取实体类型
+                        Type type = assembly.GetType("RUINORERP.Model." + tableName);
+                        if (type == null)
+                        {
+                            dataGridView1.DataSource = null;
+                            return;
+                        }
 
+                        // 使用反射调用泛型方法获取实体列表
+                        var method = typeof(IEntityCacheManager).GetMethod("GetEntityList", new Type[] { typeof(string) })
+                            .MakeGenericMethod(type);
+                        var cacheList = method.Invoke(_cacheManager, new object[] { tableName });
+
+                        if (cacheList == null)
+                        {
+                            dataGridView1.DataSource = null;
+                            return;
+                        }
+
+                        // 设置DataGridView属性
+                        dataGridView1.NeedSaveColumnsXml = true;
+                        dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(true, type);
+                        dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                        dataGridView1.XmlFileName = "UCCacheManage" + tableName;
+                        dataGridView1.DataSource = null;
+                        dataGridView1.DataSource = cacheList;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"加载表 {tableName} 数据时发生错误: {ex.Message}");
+                        dataGridView1.DataSource = null;
+                    }
+                }
             }
             else
             {
                 dataGridView1.DataSource = null;
                 return;
             }
-
         }
 
         private void 清空选中缓存ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -141,13 +174,28 @@ namespace RUINORERP.UI.SysConfig
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                MyCacheManager.Instance.CacheEntityList.Remove(tableName);
-                CacheInfo lastCacheInfo = new CacheInfo(tableName, 0);
-                lastCacheInfo.HasExpire = false;
-                //看是更新好。还是移除好。主要看后面的更新机制。
-                MyCacheManager.Instance.CacheInfoList.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
-
-
+                
+                try
+                {
+                    // 获取实体类型
+                    var entityType = _tableSchemaManager.GetEntityType(tableName);
+                    if (entityType != null)
+                    {
+                        // 创建空列表来更新缓存（清空效果）
+                        var emptyListType = typeof(List<>).MakeGenericType(entityType);
+                        var emptyList = Activator.CreateInstance(emptyListType);
+                        
+                        // 调用更新方法来清空缓存
+                        _cacheManager.UpdateEntityList(tableName, emptyList);
+                        
+                        // 刷新UI
+                        LoadCacheToUI();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"清空表 {tableName} 缓存时发生错误: {ex.Message}");
+                }
             }
         }
     }

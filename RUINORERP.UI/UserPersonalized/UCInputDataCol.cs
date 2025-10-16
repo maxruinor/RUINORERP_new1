@@ -128,10 +128,6 @@ namespace RUINORERP.UI.UserPersonalized
                                     #endregion
                                 }
 
-                                ////注意这样调用不能用同名重载的方法名
-                                //MethodInfo mf22 = dbh.GetType().GetMethod("InitFilterForControlRef").MakeGenericMethod(new Type[] { mytype });
-                                //object[] args22 = new object[7] { QueryDto, DefaultCmb, pair.Value, queryField.SubFilter, null, null, false };
-                                //mf22.Invoke(dbh, args22);
                             }
                         }
 

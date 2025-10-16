@@ -72,16 +72,7 @@ namespace RUINORERP.PacketSpec.Commands.Lock
             };
         }
 
-        /// <summary>
-        /// 验证命令参数
-        /// </summary>
-        /// <returns>验证结果</returns>
-        public override async Task<ValidationResult> ValidateAsync(CancellationToken cancellationToken = default)
-        {
-            // 调用基类验证方法，将使用独立的验证器类进行验证
-            var result = await base.ValidateAsync(cancellationToken);
-            return result;
-        }
+ 
 
       
         

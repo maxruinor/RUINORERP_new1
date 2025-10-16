@@ -43,8 +43,6 @@ namespace RUINORERP.PacketSpec.Commands.System
             get => Response;
             set => Response = value;
         }
- 
-
 
 
         /// <summary>

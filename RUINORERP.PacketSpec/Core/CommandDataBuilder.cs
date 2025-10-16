@@ -27,11 +27,10 @@ namespace RUINORERP.PacketSpec.Core
             var command = new BaseCommand<TRequest, TResponse>(commandId, request);
             config?.Invoke(command);
             request.RequestId = IdGenerator.GenerateRequestId(commandId);
-    
-            
+            command.Request = request;
             return command;
         }
-        
+
         /// <summary>
         /// 构建泛型命令（GenericCommand<TPayload>）
         /// </summary>
@@ -42,11 +41,11 @@ namespace RUINORERP.PacketSpec.Core
         {
             var command = new GenericCommand<TPayload>(commandId, payload);
             config?.Invoke(command);
-            
-            
+
+
             return command;
         }
-        
+
         /// <summary>
         /// 构建基础命令（BaseCommand）
         /// </summary>
@@ -57,14 +56,12 @@ namespace RUINORERP.PacketSpec.Core
         {
             var command = new GenericCommand<object>(commandId, data);
             config?.Invoke(command);
-            
-    
-            
+
             return command;
         }
-        
 
-        
+
+
         /// <summary>
         /// 构建Token验证命令
         /// </summary>
@@ -76,7 +73,7 @@ namespace RUINORERP.PacketSpec.Core
                 request
             );
         }
-        
+
         /// <summary>
         /// 构建Token刷新命令
         /// </summary>

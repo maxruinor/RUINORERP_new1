@@ -238,8 +238,6 @@
     <Folder Include="Network\CoreServices\" />
     <Folder Include="Network\Core\Cache\" />
     <Folder Include="Network\Documentation\" />
-    <Folder Include="Network\Examples\" />
-    <Folder Include="Network\Testing\" />
     <Folder Include="Services\Cache\" />
     <Folder Include="SuperSocketServices\Commands\Legacy\" />
     <Folder Include="SuperSocketServices\Commands\System\" />

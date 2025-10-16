@@ -98,147 +98,9 @@ namespace RUINORERP.Server.Controls
                             dataGridView1.DataSource = null;
                             dataGridView1.DataSource = entityList;
                         }
-                        else
-                        {
-                            // 如果无法通过新方法获取，尝试使用旧的MyCacheManager
-                            var CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
-                            if (CacheList != null)
-                            {
-                                // 根据不同的缓存类型处理数据
-                                if (CacheList is IList list)
-                                {
-                                    // 直接使用IList
-                                    dataGridView1.DataSource = null;
-                                    dataGridView1.DataSource = list;
-                                }
-                                else if (CacheList is string jsonString)
-                                {
-                                    try
-                                    {
-                                        // 将JSON字符串转换为JArray
-                                        var jArray = JsonConvert.DeserializeObject<JArray>(jsonString);
-                                        DataTable dt = ConvertJArrayToDataTable(jArray);
-                                        dataGridView1.DataSource = null;
-                                        dataGridView1.DataSource = dt;
-                                    }
-                                    catch
-                                    {
-                                        // 如果不是有效的JSON，创建单列表格
-                                        DataTable dt = new DataTable();
-                                        dt.Columns.Add("Value");
-                                        dt.Rows.Add(jsonString);
-                                        dataGridView1.DataSource = null;
-                                        dataGridView1.DataSource = dt;
-                                    }
-                                }
-                                // 兼容旧的JArray格式
-                                else if (CacheList is JArray jArray)
-                                {
-                                    DataTable dt = ConvertJArrayToDataTable(jArray);
-                                    dataGridView1.DataSource = null;
-                                    dataGridView1.DataSource = dt;
-                                }
-                                else
-                                {
-                                    // 尝试转换为IEnumerable
-                                    try
-                                    {
-                                        var enumerable = CacheList as IEnumerable;
-                                        if (enumerable != null)
-                                        {
-                                            var dataList = enumerable.Cast<object>().ToList();
-                                            dataGridView1.DataSource = null;
-                                            dataGridView1.DataSource = dataList;
-                                        }
-                                    }
-                                    catch
-                                    {
-                                        // 如果无法转换，创建一个简单的显示
-                                        DataTable dt = new DataTable();
-                                        dt.Columns.Add("Value", typeof(object));
-                                        dt.Rows.Add(CacheList.ToString());
-                                        dataGridView1.DataSource = null;
-                                        dataGridView1.DataSource = dt;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // 没有缓存数据
-                                dataGridView1.DataSource = null;
-                            }
-                        }
+                       
                     }
-                    else
-                    {
-                        // 如果无法获取实体类型，尝试使用旧的MyCacheManager
-                        var CacheList = MyCacheManager.Instance.CacheEntityList.Get(tableName);
-                        if (CacheList != null)
-                        {
-                            // 根据不同的缓存类型处理数据
-                            if (CacheList is IList list)
-                            {
-                                // 直接使用IList
-                                dataGridView1.DataSource = null;
-                                dataGridView1.DataSource = list;
-                            }
-                            else if (CacheList is string jsonString)
-                            {
-                                try
-                                {
-                                    // 将JSON字符串转换为JArray
-                                    var jArray = JsonConvert.DeserializeObject<JArray>(jsonString);
-                                    DataTable dt = ConvertJArrayToDataTable(jArray);
-                                    dataGridView1.DataSource = null;
-                                    dataGridView1.DataSource = dt;
-                                }
-                                catch
-                                {
-                                    // 如果不是有效的JSON，创建单列表格
-                                    DataTable dt = new DataTable();
-                                    dt.Columns.Add("Value");
-                                    dt.Rows.Add(jsonString);
-                                    dataGridView1.DataSource = null;
-                                    dataGridView1.DataSource = dt;
-                                }
-                            }
-                            // 兼容旧的JArray格式
-                            else if (CacheList is JArray jArray)
-                            {
-                                DataTable dt = ConvertJArrayToDataTable(jArray);
-                                dataGridView1.DataSource = null;
-                                dataGridView1.DataSource = dt;
-                            }
-                            else
-                            {
-                                // 尝试转换为IEnumerable
-                                try
-                                {
-                                    var enumerable = CacheList as IEnumerable;
-                                    if (enumerable != null)
-                                    {
-                                        var dataList = enumerable.Cast<object>().ToList();
-                                        dataGridView1.DataSource = null;
-                                        dataGridView1.DataSource = dataList;
-                                    }
-                                }
-                                catch
-                                {
-                                    // 如果无法转换，创建一个简单的显示
-                                    DataTable dt = new DataTable();
-                                    dt.Columns.Add("Value", typeof(object));
-                                    dt.Rows.Add(CacheList.ToString());
-                                    dataGridView1.DataSource = null;
-                                    dataGridView1.DataSource = dt;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // 没有缓存数据
-                            dataGridView1.DataSource = null;
-                        }
-                    }
+                   
                 }
             }
             catch (Exception ex)
@@ -496,13 +358,6 @@ namespace RUINORERP.Server.Controls
                     this.Cursor = Cursors.WaitCursor;
 
                     Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
-
-                    // 确保BizCacheHelper实例存在
-                    if (MyCacheManager.Instance == null)
-                    {
-                        MessageBox.Show("缓存帮助类未初始化", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
 
                     stopwatchLoadUI.Stop();
 

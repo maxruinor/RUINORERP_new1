@@ -41,7 +41,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="request">请求数据</param>
         /// <param name="logger">日志记录器</param>
-        public BaseCommand(IRequest request = null, ILogger<BaseCommand> logger = null)
+        public BaseCommand(CommandId commandId, IRequest request = null, ILogger<BaseCommand> logger = null)
             : base(logger)
         {
             if (request != null)
@@ -549,7 +549,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogDebug(string message)
         {
+            // 在生产环境中减少调试日志
+            #if DEBUG
             Logger.LogDebug(message);
+            #endif
         }
 
         /// <summary>
@@ -557,6 +560,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogInfo(string message)
         {
+            // 仅记录关键信息日志
             Logger.LogInformation(message);
         }
 

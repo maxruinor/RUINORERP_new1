@@ -778,9 +778,9 @@ namespace RUINORERP.UI
             await configManager.LoadConfigValues();
 
 
-            // 使用CacheInitializationService从数据库查询并初始化缓存数据
+            // 使用CacheInitializationService 只加载要缓存的表结构。缓存从服务器取
             var cacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
-            await cacheInitializationService.InitializeAllCacheAsync();
+            cacheInitializationService.InitializeAllTableSchemas();
 
             //先加载一遍缓存
             var tableNames = CacheInfoList.Keys.ToList();

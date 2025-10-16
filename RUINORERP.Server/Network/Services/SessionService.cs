@@ -969,7 +969,7 @@ namespace RUINORERP.Server.Network.Services
 
                 _sessions?.Clear();
                 _disposed = true;
-                _logger.LogInformation("统一会话管理器资源已释放");
+                _logger.LogDebug("统一会话管理器资源已释放");
             }
 
             GC.SuppressFinalize(this);

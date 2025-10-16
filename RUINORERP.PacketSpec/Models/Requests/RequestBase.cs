@@ -1,4 +1,5 @@
 ﻿using MessagePack;
+using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
@@ -35,7 +36,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// </summary>
         public RequestBase()
         {
-            // RequestId和Timestamp已经在属性声明时初始化
+            RequestId = IdGenerator.GenerateRequestId();
         }
 
         /// <summary>

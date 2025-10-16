@@ -146,7 +146,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 else
                 {
                     //统一验证基本的命令信息
-                    if (command is LoginCommand)
+                    if (command is BaseCommand<IRequest, LoginResponse>)
                     {
                         executionContext.SessionId = session.SessionID;
                     }

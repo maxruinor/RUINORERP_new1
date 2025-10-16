@@ -29,6 +29,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly ILogger<UserLoginService> _log;
         private readonly SilentTokenRefresher _silentTokenRefresher;
         private readonly TokenManager _tokenManager;
+
         /// <summary>
         /// 构造函数 - 使用依赖注入的TokenManager
         /// </summary>
@@ -69,14 +70,10 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 var loginRequest = LoginRequest.Create(username, password);
-
-                LoginCommand loginCommand = new LoginCommand(username, password);
-                loginCommand.Request = loginRequest;
-                loginCommand.Request.RequestId = IdGenerator.GenerateRequestId(loginCommand.CommandIdentifier);
+                BaseCommand<IRequest, LoginResponse> baseCommand = new BaseCommand<IRequest, LoginResponse>(AuthenticationCommands.Login, loginRequest);
 
                 // 使用新的方法发送命令并获取包含指令信息的响应
-                var commandResponse = await _communicationService.SendCommandWithResponseAsync<LoginRequest, LoginResponse>(
-                    loginCommand, ct);
+                var commandResponse = await _communicationService.SendCommandWithResponseAsync<IRequest, LoginResponse>(baseCommand, ct);
 
                 // 检查响应数据是否为空
                 if (commandResponse.ResponseData == null)
@@ -170,7 +167,6 @@ namespace RUINORERP.UI.Network.Services
             };
         }
 
-
         /// <summary>
         /// 用户登出 - 使用简化版TokenManager
         /// </summary>
@@ -189,15 +185,12 @@ namespace RUINORERP.UI.Network.Services
                 }
 
                 // 创建登出请求
-                var request = SimpleRequest.CreateBool(true);
-
-                var baseCommand = CommandDataBuilder.BuildCommand<SimpleRequest, SimpleResponse>(AuthenticationCommands.Logout, request);
-                baseCommand.Request = request;
-                var response = await _communicationService.SendCommandAsync<SimpleRequest, SimpleResponse>(
-                    baseCommand, ct);
+                var request = LoginRequest.CreateLogoutRequest();
+                var baseCommand = new BaseCommand<LoginRequest, LoginResponse>(AuthenticationCommands.Logout, request);
+                var response = await _communicationService.SendCommandWithResponseAsync<LoginRequest, LoginResponse>(baseCommand, ct);
 
                 // 检查响应是否成功
-                bool isSuccess = response != null;// && response.IsSuccess;
+                bool isSuccess = response != null && response.ResponseData != null && response.ResponseData.IsSuccess;
 
                 if (isSuccess)
                 {
@@ -214,10 +207,6 @@ namespace RUINORERP.UI.Network.Services
                 throw new Exception($"登出失败: {ex.Message}", ex);
             }
         }
-
-
-
-
 
         /// <summary>
         /// 获取当前访问令牌 - 使用简化版TokenManager
@@ -237,6 +226,37 @@ namespace RUINORERP.UI.Network.Services
         {
             return _silentTokenRefresher.TriggerRefreshAsync();
         }
+
+        /// <summary>
+        /// 验证Token
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> ValidateTokenAsync()
+        {
+            try
+            {
+                var currentToken = await _tokenManager.TokenStorage.GetTokenAsync();
+                if (currentToken == null)
+                {
+                    return false;
+                }
+
+                var validateRequest = SimpleRequest.CreateString(currentToken.AccessToken);
+                var baseCommand = new BaseCommand<IRequest, IResponse>();
+
+                var response = await _communicationService.SendCommandWithResponseAsync<IRequest, IResponse>(baseCommand, CancellationToken.None);
+                return response != null;
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "Token验证过程中发生异常");
+                return false;
+            }
+        }
+
+
+
+
 
         /// <summary>
         /// 处理Token刷新成功事件

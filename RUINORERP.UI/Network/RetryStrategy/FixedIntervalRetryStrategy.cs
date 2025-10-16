@@ -16,7 +16,7 @@ namespace RUINORERP.UI.Network.RetryStrategy
         /// </summary>
         /// <param name="maxAttempts">最大重试次数</param>
         /// <param name="delayMs">每次重试的间隔时间（毫秒）</param>
-        public FixedIntervalRetryStrategy(int maxAttempts, int delayMs)
+        public FixedIntervalRetryStrategy(int maxAttempts = 3, int delayMs = 1000)
         {
             if (maxAttempts < 1)
                 throw new ArgumentOutOfRangeException(nameof(maxAttempts), "最大重试次数必须大于0");

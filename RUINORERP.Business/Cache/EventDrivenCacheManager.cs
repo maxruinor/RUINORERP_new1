@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Commands.Cache;
-using RUINORERP.PacketSpec.Models;
 using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.Business.Cache
@@ -55,25 +51,6 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 获取实体的主键值
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="tableName">表名</param>
-        /// <returns>主键值</returns>
-        private object GetEntityPrimaryKeyValue(object entity, string tableName)
-        {
-            if (entity == null)
-                return null;
-
-            var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-            if (schemaInfo == null)
-                return null;
-
-            var property = entity.GetType().GetProperty(schemaInfo.PrimaryKeyField);
-            return property?.GetValue(entity);
-        }
-
-        /// <summary>
         /// 更新实体列表缓存并触发事件（智能过滤，只处理需要缓存的表）
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
@@ -88,11 +65,9 @@ namespace RUINORERP.Business.Cache
                 return;
             }
             
-            // 先更新缓存
+            // 更新缓存并触发事件
             _cacheManager.UpdateEntityList(list);
-            
-            // 触发缓存变更事件，同步到服务器和其他用户
-            OnCacheChanged(tableName, CacheOperation.BatchUpdate, list);
+            OnCacheChanged(tableName, CacheOperation.Set, list);
         }
 
         /// <summary>
@@ -110,11 +85,9 @@ namespace RUINORERP.Business.Cache
                 return;
             }
             
-            // 先更新缓存
+            // 更新缓存并触发事件
             _cacheManager.UpdateEntity(entity);
-            
-            // 触发缓存变更事件，同步到服务器和其他用户
-            OnCacheChanged(tableName, CacheOperation.Update, entity);
+            OnCacheChanged(tableName, CacheOperation.Set, entity);
         }
 
         /// <summary>
@@ -132,10 +105,8 @@ namespace RUINORERP.Business.Cache
                 return;
             }
             
-            // 先删除缓存
+            // 删除缓存并触发事件
             _cacheManager.DeleteEntity<T>(idValue);
-            
-            // 触发缓存变更事件，同步到服务器和其他用户
             OnCacheChanged(tableName, CacheOperation.Remove, idValue);
         }
 
@@ -154,11 +125,9 @@ namespace RUINORERP.Business.Cache
                 return;
             }
             
-            // 先删除缓存
+            // 删除缓存并触发事件
             _cacheManager.DeleteEntityList(entities);
-            
-            // 触发缓存变更事件，同步到服务器和其他用户
-            OnCacheChanged(tableName, CacheOperation.BatchRemove, entities);
+            OnCacheChanged(tableName, CacheOperation.Remove, entities);
         }
 
         /// <summary>
@@ -168,28 +137,13 @@ namespace RUINORERP.Business.Cache
         /// <param name="idValues">主键值数组</param>
         public void DeleteEntities<T>(object[] idValues) where T : class
         {
-            try
+            ProcessDeleteEntities(() =>
             {
                 var tableName = typeof(T).Name;
-                
-                // 智能过滤：只处理需要缓存的表
-                if (!IsTableCacheable(tableName))
-                {
-                    return;
-                }
-                
-                // 调用基础缓存管理器批量删除缓存
                 _cacheManager.DeleteEntities<T>(idValues);
-
-                // 触发缓存删除事件
                 OnCacheChanged(tableName, CacheOperation.Remove, idValues);
-
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"批量删除 {typeof(T).Name} 实体缓存并触发事件时发生错误");
-                throw;
-            }
+                return typeof(T).Name;
+            });
         }
 
         /// <summary>
@@ -199,29 +153,37 @@ namespace RUINORERP.Business.Cache
         /// <param name="primaryKeyValues">主键值数组</param>
         public void DeleteEntities(string tableName, object[] primaryKeyValues)
         {
+            // 智能过滤：只处理需要缓存的表
+            if (!IsTableCacheable(tableName))
+            {
+                return;
+            }
+            
+            ProcessDeleteEntities(() =>
+            {
+                _cacheManager.DeleteEntities(tableName, primaryKeyValues);
+                OnCacheChanged(tableName, CacheOperation.Remove, primaryKeyValues);
+                return tableName;
+            });
+        }
+
+        /// <summary>
+        /// 处理批量删除实体缓存的通用方法，包含异常处理
+        /// </summary>
+        /// <param name="deleteAction">删除操作委托，返回表名用于日志记录</param>
+        private void ProcessDeleteEntities(Func<string> deleteAction)
+        {
             try
             {
-                // 智能过滤：只处理需要缓存的表
-                if (!IsTableCacheable(tableName))
-                {
-                    return;
-                }
-                
-                // 调用基础缓存管理器批量删除缓存
-                _cacheManager.DeleteEntities(tableName, primaryKeyValues);
-                
-                // 触发缓存删除事件
-                OnCacheChanged(tableName, CacheOperation.Remove, primaryKeyValues);
-                
+                string tableName = deleteAction();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"批量删除表 {tableName} 实体缓存并触发事件时发生错误");
+                _logger?.LogError(ex, $"批量删除表缓存并触发事件时发生错误");
                 throw;
             }
         }
 
-        #region 智能过滤方法
         /// <summary>
         /// 检查表是否需要缓存（智能过滤核心方法）
         /// </summary>
@@ -232,17 +194,9 @@ namespace RUINORERP.Business.Cache
             if (string.IsNullOrEmpty(tableName))
                 return false;
 
-            // 获取表结构信息
+            // 获取表结构信息并检查是否可缓存
             var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-            
-            // 如果表未注册或明确标记为不需要缓存，则跳过
-            if (schemaInfo == null || !schemaInfo.IsCacheable)
-            {
-                return false;
-            }
-
-            return true;
+            return schemaInfo != null && schemaInfo.IsCacheable;
         }
-        #endregion
     }
 }

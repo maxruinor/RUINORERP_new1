@@ -20,7 +20,7 @@ namespace RUINORERP.UI.Network.RetryStrategy
         /// <param name="initialDelayMs">初始重试间隔（毫秒）</param>
         /// <param name="multiplier">指数乘数因子</param>
         /// <param name="maxDelayMs">最大重试间隔（毫秒）</param>
-        public ExponentialBackoffRetryStrategy(int maxAttempts, int initialDelayMs = 1000, double multiplier = 2.0, int maxDelayMs = 30000)
+        public ExponentialBackoffRetryStrategy(int maxAttempts = 3, int initialDelayMs = 1000, double multiplier = 2.0, int maxDelayMs = 30000)
         {
             if (maxAttempts < 1)
                 throw new ArgumentOutOfRangeException(nameof(maxAttempts), "最大重试次数必须大于0");
@@ -47,7 +47,7 @@ namespace RUINORERP.UI.Network.RetryStrategy
         public int GetNextDelay(int attempt)
         {
             // 计算指数退避延迟，并限制最大值
-            double delay = _initialDelayMs * Math.Pow(_multiplier, attempt);
+            double delay = _initialDelayMs * Math.Pow(_multiplier, attempt - 1); // 从第0次开始计算
             return Math.Min((int)delay, _maxDelayMs);
         }
         

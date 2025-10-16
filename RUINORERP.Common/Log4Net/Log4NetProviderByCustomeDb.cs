@@ -46,7 +46,29 @@ namespace RUINORERP.Common.Log4Net
         private static XmlElement Parselog4NetConfigFile(string filename)
         {
             XmlDocument log4netConfig = new XmlDocument();
-            log4netConfig.Load(File.OpenRead(filename));
+            
+            // 检查文件是否存在，如果不存在则使用默认配置
+            if (File.Exists(filename))
+            {
+                log4netConfig.Load(File.OpenRead(filename));
+            }
+            else
+            {
+                // 如果指定的配置文件不存在，尝试加载默认的log4net.config
+                string defaultConfigFile = "log4net.config";
+                if (File.Exists(defaultConfigFile))
+                {
+                    log4netConfig.Load(File.OpenRead(defaultConfigFile));
+                    Console.WriteLine($"警告：未找到配置文件 {filename}，使用默认配置文件 {defaultConfigFile}");
+                }
+                else
+                {
+                    // 如果都不存在，创建一个基本的配置
+                    Console.WriteLine($"警告：未找到配置文件 {filename} 和 {defaultConfigFile}，使用基本配置");
+                    XmlElement log4netElement = log4netConfig.CreateElement("log4net");
+                    log4netConfig.AppendChild(log4netElement);
+                }
+            }
             
             // 查找并替换连接字符串占位符
             try
@@ -59,17 +81,16 @@ namespace RUINORERP.Common.Log4Net
                     if (valueAttr != null && valueAttr.Value.Contains("${ConnectionString}"))
                     {
                         valueAttr.Value = connectionString;
-                        Console.WriteLine("已在log4net.config中替换连接字符串占位符");
+                        Console.WriteLine($"已在{filename}中替换连接字符串占位符");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("警告：替换log4net.config中的连接字符串占位符失败: " + ex.Message);
+                Console.WriteLine($"警告：替换{filename}中的连接字符串占位符失败: " + ex.Message);
             }
             
             return log4netConfig["log4net"];
         }
     }
 }
-

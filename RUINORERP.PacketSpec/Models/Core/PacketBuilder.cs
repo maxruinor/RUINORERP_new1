@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -202,7 +202,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>当前构建器实例</returns>
         public PacketBuilder AsLoginRequest(string username, string password, string clientVersion = null)
         {
-            return WithCommand(AuthenticationCommands.LoginRequest)
+            return WithCommand(AuthenticationCommands.Login)
 
                 .WithDirection(PacketDirection.ClientToServer)
                 .WithJsonData(new { Username = username, Password = password, ClientVersion = clientVersion })

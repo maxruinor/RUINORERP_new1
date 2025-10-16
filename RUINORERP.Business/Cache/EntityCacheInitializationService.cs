@@ -85,8 +85,9 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 初始化所有表结构信息（通用方法）
+        /// 客户端启动时加载。不加载缓存。缓存按需从服务器取值
         /// </summary>
-        private void InitializeAllTableSchemas()
+        public void InitializeAllTableSchemas()
         {
             try
             {

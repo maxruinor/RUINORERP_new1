@@ -3491,9 +3491,6 @@
     <Content Include="SqlScript\清空业务表数据.sql" />
     <Content Include="SqlScript\采购汇总.sql" />
     <Content Include="SqlScript\销售汇总.sql" />
-    <Content Include="UpdateLog.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="部署相关.txt" />
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>

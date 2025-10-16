@@ -96,8 +96,10 @@ namespace RUINORERP.Server.Network.Core
                 var handlerCount = _commandDispatcher.HandlerCount;  // 直接使用具体类型属性
                 _logger.LogInformation($"命令处理器注册完成，当前已注册处理器数量: {handlerCount}");
 
-                // 显示已注册的处理器信息
+                // 减少日志输出，仅在调试模式下显示已注册的处理器信息
+                #if DEBUG
                 LogRegisteredHandlers();
+                #endif
 
                 // 设置默认端口，以防配置读取失败
 
@@ -336,7 +338,7 @@ namespace RUINORERP.Server.Network.Core
 
         private void LogInfo(string message)
         {
-            _logger?.LogInformation($"[NetworkServer] {message}");
+            _logger?.LogDebug($"[NetworkServer] {message}");
             Console.WriteLine($"[NetworkServer] INFO: {message}");
         }
 

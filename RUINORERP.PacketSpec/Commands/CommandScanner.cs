@@ -339,7 +339,12 @@ namespace RUINORERP.PacketSpec.Commands
             }
             catch (ReflectionTypeLoadException ex)
             {
+                // 减少警告日志，仅在调试时记录详细信息
+                #if DEBUG
                 _logger?.LogWarning(ex, "加载程序集类型失败: {AssemblyName}, 部分类型可能不可用", assembly.GetName().Name);
+                #else
+                _logger?.LogWarning("加载程序集类型失败: {AssemblyName}, 部分类型可能不可用", assembly.GetName().Name);
+                #endif
                 return ex.Types?.Where(t => t != null).ToArray() ?? Array.Empty<Type>();
             }
         }

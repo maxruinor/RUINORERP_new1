@@ -71,17 +71,55 @@ namespace RUINORERP.PacketSpec.Models.Requests
                 LoginTime = DateTime.Now,
             };
         }
-
+        
         /// <summary>
-        /// 验证请求有效性
+        /// 创建登出请求
         /// </summary>
-        public bool IsValid()
+        public static LoginRequest CreateLogoutRequest()
         {
-            return !string.IsNullOrEmpty(Username) && 
-                   !string.IsNullOrEmpty(Password) &&
-                   Username.Length >= 3 &&
-                   Password.Length >= 6;
+            return new LoginRequest
+            {
+                LoginTime = DateTime.Now,
+                DeviceId = GetDeviceId()
+            };
         }
+        
+        /// <summary>
+        /// 创建Token验证请求
+        /// </summary>
+        public static LoginRequest CreateValidateTokenRequest(TokenInfo token)
+        {
+            return new LoginRequest
+            {
+                Token = token,
+                LoginTime = DateTime.Now
+            };
+        }
+      
+ 
+
+        ///// <summary>
+        ///// 验证请求有效性
+        ///// </summary>
+        //public bool IsValid()
+        //{
+        //    switch (Action)
+        //        {
+        //            case AuthenticationCommands.LoginAction.Login:
+        //                return !string.IsNullOrEmpty(Username) && 
+        //                       !string.IsNullOrEmpty(Password) &&
+        //                       Username.Length >= 3 &&
+        //                       Password.Length >= 6;
+        //            case AuthenticationCommands.LoginAction.RefreshToken:
+        //            case AuthenticationCommands.LoginAction.ValidateToken:
+        //                return Token != null && !string.IsNullOrEmpty(Token.AccessToken);
+        //            case AuthenticationCommands.LoginAction.Logout:
+        //            case AuthenticationCommands.LoginAction.PrepareLogin:
+        //                return true; // 这些操作不需要额外验证
+        //            default:
+        //                return false;
+        //        }
+        //}
 
         /// <summary>
         /// 安全清理敏感信息
@@ -132,5 +170,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
             }
         }
 
+        public bool IsValid()
+        {
+            return true;
+        }
     }
 }

@@ -2,14 +2,90 @@
 Compatibility=1.1 or later
 Compiled file=help.chm
 Contents file=contents.hhc
-Default topic=test_help_content.html
+Default topic=系统简介.htm
 Display compile progress=Yes
 Full-text search=Yes
 Language=0x804 中文(简体，中国)
-Title=RUINOR ERP 帮助系统测试
+Title=RUINOR ERP 帮助系统
 
 [FILES]
-test_help_content.html
+帮助系统使用说明.htm
+系统简介.htm
+系统架构.htm
+模块介绍.htm
+设计理念.htm
+生产管理.htm
+MRP基本资料.htm
+制造规划.htm
+制程生产.htm
+生产品控.htm
+BOM分析报表.htm
+成本管理.htm
+进销存管理.htm
+采购管理.htm
+销售管理.htm
+库存管理.htm
+借出归还.htm
+盘点管理.htm
+调拨管理.htm
+产品分割与组合.htm
+其他出入库管理.htm
+售后管理.htm
+售后流程.htm
+维修中心.htm
+资产处置.htm
+提前交付.htm
+客户关系管理.htm
+市场营销.htm
+客户管理.htm
+跟进管理.htm
+报价管理.htm
+合同管理.htm
+回款管理.htm
+开票管理.htm
+商机总览.htm
+绩效分析.htm
+财务管理.htm
+基础设置.htm
+收款管理.htm
+付款管理.htm
+对账管理.htm
+费用管理.htm
+费用报销.htm
+固定资产.htm
+发票管理.htm
+账务处理.htm
+行政管理.htm
+业务流管理.htm
+资料管理.htm
+行政基础资料.htm
+人事管理.htm
+报表管理.htm
+生产分析.htm
+进销存分析.htm
+综合分析.htm
+报表设置.htm
+报表基础资料.htm
+电商运营.htm
+蓄水管理.htm
+基础资料管理.htm
+产品资料.htm
+仓库资料.htm
+供销资料.htm
+行政资料.htm
+财务资料.htm
+包装资料.htm
+系统设置.htm
+系统参数.htm
+权限管理.htm
+个性化设置.htm
+流程设计.htm
+系统工具.htm
+动态参数.htm
+通用功能.htm
+数据查询.htm
+打印功能.htm
+审核反审核结案业务流程.htm
 controls\button_test.html
 forms\UCSaleOrderQuery.html
 controls\button_query.html

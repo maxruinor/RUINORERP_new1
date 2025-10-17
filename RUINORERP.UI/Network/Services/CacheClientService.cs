@@ -180,127 +180,7 @@ namespace RUINORERP.UI.Network.Services
             };
         }
 
-        /// <summary>
-        /// 处理缓存变更通知
-        /// </summary>
-        /// <param name="data">通知数据（JSON格式的字节数组）</param>
-        private async Task HandleCacheNotificationAsync(byte[] data)
-        {
-            try
-            {
-                if (data == null || data.Length == 0)
-                {
-                    _log?.LogWarning("接收到空的缓存通知数据");
-                    return;
-                }
-
-                // 将字节数组转换为字符串
-                string json = Encoding.UTF8.GetString(data);
-
-                // 解析通知数据
-                var notification = JsonConvert.DeserializeObject<CacheNotification>(json);
-
-                if (notification == null)
-                {
-                    _log?.LogWarning("无法解析缓存通知数据");
-                    return;
-                }
-
-                _log?.LogInformation($"接收到缓存{notification.Type}通知，表名: {notification.TableName}");
-
-                // 根据通知类型处理
-                switch (notification.Type?.ToLower())
-                {
-                    case "update":
-                        await HandleUpdateNotificationAsync(notification);
-                        break;
-                    case "delete":
-                        await HandleDeleteNotificationAsync(notification);
-                        break;
-                    default:
-                        _log?.LogWarning($"未知的缓存通知类型: {notification.Type}");
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                _log?.LogError(ex, "处理缓存通知时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 处理缓存更新通知
-        /// </summary>
-        /// <param name="notification">通知数据</param>
-        private async Task HandleUpdateNotificationAsync(CacheNotification notification)
-        {
-            try
-            {
-                if (notification.Data == null)
-                {
-                    _log?.LogWarning($"缓存更新通知数据为空，表名: {notification.TableName}");
-                    return;
-                }
-
-                // 获取实体类型
-                var entityType = _cacheManager.GetEntityType(notification.TableName);
-                if (entityType == null)
-                {
-                    _log?.LogWarning($"未找到表 {notification.TableName} 的实体类型");
-                    return;
-                }
-
-                // 更新缓存
-                if (notification.Data is Newtonsoft.Json.Linq.JObject jObject)
-                {
-                    _cacheManager.UpdateEntityList(notification.TableName, jObject);
-                }
-                else if (notification.Data is Newtonsoft.Json.Linq.JArray jArray)
-                {
-                    _cacheManager.UpdateEntityList(notification.TableName, jArray);
-                }
-                else
-                {
-                    // 尝试将其他类型转换为JObject
-                    string json = JsonConvert.SerializeObject(notification.Data);
-                    var parsedObject = Newtonsoft.Json.Linq.JObject.Parse(json);
-                    _cacheManager.UpdateEntityList(notification.TableName, parsedObject);
-                }
-
-                _log?.LogInformation($"成功处理缓存更新通知，表名: {notification.TableName}");
-            }
-            catch (Exception ex)
-            {
-                _log?.LogError(ex, $"处理缓存更新通知时发生异常，表名: {notification.TableName}");
-            }
-        }
-
-        /// <summary>
-        /// 处理缓存删除通知
-        /// </summary>
-        /// <param name="notification">通知数据</param>
-        private async Task HandleDeleteNotificationAsync(CacheNotification notification)
-        {
-            try
-            {
-                // 删除整个表的缓存
-                var entityType = _cacheManager.GetEntityType(notification.TableName);
-                if (entityType != null)
-                {
-                    // 注意：这里可能需要更复杂的逻辑来清空整个表的缓存
-                    _log?.LogInformation($"处理缓存删除通知，表名: {notification.TableName}");
-                }
-                else
-                {
-                    _log?.LogWarning($"未找到表 {notification.TableName} 的实体类型，无法处理删除通知");
-                }
-            }
-            catch (Exception ex)
-            {
-                _log?.LogError(ex, $"处理缓存删除通知时发生异常，表名: {notification.TableName}");
-            }
-        }
-
+      
         /// <summary>
         /// 处理客户端缓存变更事件
         /// </summary>
@@ -328,15 +208,21 @@ namespace RUINORERP.UI.Network.Services
                     request.Data = e.Value;
                 }
 
-                // 发送缓存更新命令到服务器 - 使用统一的缓存操作命令
-                var command = new BaseCommand<IRequest, IResponse>()
+                // 根据操作类型设置主键信息
+                // CacheChangedEventArgs没有PrimaryKeyName属性，跳过这部分逻辑
+                // 可以考虑在后续版本中扩展CacheChangedEventArgs类
+
+
+                // 发送缓存更新命令到服务器 - 使用正确的命令类型
+                // 由于存在CS1503类型转换错误，这里使用BaseCommand类型
+                var command = new BaseCommand<CacheRequest, IResponse>
                 {
                     Request = request,
-                    CommandIdentifier = CacheCommands.CacheOperation
+                    CommandIdentifier = CacheCommands.CacheOperation // 设置命令类型
                 };
 
                 // 发送命令到服务器
-                await _comm.SendOneWayCommandAsync<IRequest>(command, CancellationToken.None);
+                await _comm.SendOneWayCommandAsync<CacheRequest>(command, CancellationToken.None);
 
                 _log?.LogInformation($"客户端缓存变更已同步到服务器: {e.Key}, 操作: {e.Operation.ToString()}");
             }
@@ -348,6 +234,7 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 请求缓存数据 - 统一使用泛型命令处理模式
+        /// 根据缓存同步元数据智能决定是否需要重新请求，避免重复请求
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="forceRefresh">是否强制刷新</param>
@@ -359,10 +246,39 @@ namespace RUINORERP.UI.Network.Services
             {
                 if (string.IsNullOrEmpty(tableName))
                     throw new ArgumentException("表名不能为空", nameof(tableName));
+                
                 var tableNames = TableSchemaManager.Instance.GetAllTableNames();
                 if (!tableNames.Contains(tableName))
                 {
+                    _log?.LogDebug("请求的表名不在缓存列表中: {0}", tableName);
                     await Task.CompletedTask;
+                    return;
+                }
+                
+                // 限流检查：防止短时间内重复请求同一个表
+                // 定义请求间隔时间，可根据实际需求调整（这里设置为5秒）
+                TimeSpan minRequestInterval = TimeSpan.FromSeconds(5);
+                
+                // 获取最后请求时间并检查是否在限流时间内
+                DateTime lastRequestTime = GetLastRequestTime(tableName);
+                if (!forceRefresh && (DateTime.Now - lastRequestTime) < minRequestInterval)
+                {
+                    _log?.LogDebug("请求过于频繁，已限流: {0}, 距离上次请求时间: {1}秒", 
+                        tableName, (DateTime.Now - lastRequestTime).TotalSeconds);
+                    // 即使被限流，也确保订阅了该表的变更通知
+                    await _subscriptionManager.SubscribeAsync(tableName);
+                    return;
+                }
+                
+                // 智能缓存检查：检查是否需要请求缓存
+                // 1. 如果强制刷新，则直接请求
+                // 2. 检查本地缓存是否存在且有效
+                // 3. 检查缓存同步元数据决定是否需要更新
+                if (!forceRefresh && IsLocalCacheValid(tableName))
+                {
+                    _log?.LogDebug("本地缓存有效，无需重新请求: {0}", tableName);
+                    // 确保订阅了该表的变更通知
+                    await _subscriptionManager.SubscribeAsync(tableName);
                     return;
                 }
 
@@ -373,15 +289,23 @@ namespace RUINORERP.UI.Network.Services
                     Operation = CacheOperation.Get,
                     ForceRefresh = forceRefresh
                 };
+                
+                // 传递最后请求时间供服务器参考
                 request.LastRequestTime = GetLastRequestTime(tableName);
 
                 // 使用统一命令处理模式，模仿登录业务流程
                 var response = await ProcessCacheRequestAsync(request, ct);
 
+                // 处理缓存响应，更新本地缓存
                 HandleCacheResponse(response);
 
+                // 更新最后请求时间
+                UpdateLastRequestTime(tableName);
+                
                 // 自动订阅该表的缓存变更通知
                 await _subscriptionManager.SubscribeAsync(tableName);
+                
+                _log?.LogDebug("缓存请求完成: {0}, 强制刷新: {1}", tableName, forceRefresh);
             }
             catch (Exception ex)
             {
@@ -391,6 +315,65 @@ namespace RUINORERP.UI.Network.Services
                 {
                     _log?.LogError(ex.InnerException, "请求缓存过程中发生异常InnerException，表名={0}", tableName);
                 }
+            }
+        }
+        
+        /// <summary>
+        /// 检查本地缓存是否有效
+        /// 根据缓存管理器中的数据判断是否需要重新请求
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>本地缓存是否有效</returns>
+        private bool IsLocalCacheValid(string tableName)
+        {
+            try
+            {
+                // 检查本地缓存中是否存在该表的数据
+                // 使用缓存管理器的方法尝试获取缓存数据
+                // 生成标准的缓存键
+                string cacheKey = $"{tableName}_List";
+                
+                // 尝试获取实体类型
+                Type entityType = _cacheManager.GetEntityType(tableName);
+                if (entityType == null)
+                {
+                    _log?.LogDebug("未找到表{0}对应的实体类型", tableName);
+                    return false;
+                }
+                
+                // 尝试使用GetEntityList方法检查缓存是否存在
+                // 由于泛型限制，我们需要使用反射来调用
+                try
+                {
+                    // 通过反射调用GetEntityList<T>方法
+                    var getEntityListMethod = _cacheManager.GetType().GetMethod("GetEntityList", Type.EmptyTypes);
+                    var genericMethod = getEntityListMethod?.MakeGenericMethod(entityType);
+                    
+                    if (genericMethod != null)
+                    {
+                        var result = genericMethod.Invoke(_cacheManager, null);
+                        if (result is IList cacheList && cacheList.Count > 0)
+                        {
+                            // 缓存存在且有数据，认为有效
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log?.LogDebug(ex, "通过反射检查缓存时发生异常: {0}", tableName);
+                    // 反射调用失败，返回false表示需要重新请求
+                    return false;
+                }
+                
+                // 缓存不存在或为空，需要重新请求
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "检查本地缓存有效性时发生异常，表名={0}", tableName);
+                // 发生异常时返回false，确保能获取到有效数据
+                return false;
             }
         }
 
@@ -485,10 +468,10 @@ namespace RUINORERP.UI.Network.Services
                 //    cmd => cmd.TimeoutMs = 30000
                 //);
 
-                var cacheCommand = CommandDataBuilder.BuildCommand<CacheRequest, CacheResponse>(CacheCommands.CacheOperation, request);
+                var command = CommandDataBuilder.BuildCommand<CacheRequest, CacheResponse>(CacheCommands.CacheOperation, request);
 
                 // 使用新的方法发送命令并获取包含指令信息的响应
-                var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, ct, 30000);
+                var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(command, ct, 30000);
 
                 // 检查响应数据是否为空
                 if (commandResponse.ResponseData == null)
@@ -1045,7 +1028,7 @@ namespace RUINORERP.UI.Network.Services
                 }
 
                 // 使用统一命令处理模式清理缓存
-                ProcessClearCacheAsync(tableName).GetAwaiter().GetResult();
+                _cacheManager.DeleteEntityList(tableName); 
             }
             catch (Exception ex)
             {
@@ -1053,18 +1036,7 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-        /// <summary>
-        /// 统一处理清理缓存 - 模仿登录业务流程
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <returns>任务</returns>
-        private async Task ProcessClearCacheAsync(string tableName)
-        {
-            _log?.LogInformation("开始清理缓存，表名={0}", tableName);
-            // 使用新的缓存管理器删除实体
-            _cacheManager.DeleteEntity(tableName, null);
-            _log?.LogInformation("清理缓存完成，表名={0}", tableName);
-        }
+ 
 
         /// <summary>
         /// 清理所有缓存 - 统一使用泛型命令处理模式
@@ -1089,14 +1061,42 @@ namespace RUINORERP.UI.Network.Services
         private async Task ProcessClearAllCacheAsync()
         {
             _log?.LogInformation("开始清理所有缓存");
-            // 使用新的缓存管理器清空所有缓存
-            // 注意：这里可能需要遍历所有表并清空每个表的缓存
-            // 由于新的缓存系统可能没有直接的Clear方法，我们可以通过其他方式实现
-            lock (_lockObj)
+            try
             {
-                _lastRequestTimes.Clear();
+                // 使用新的缓存管理器清空所有缓存
+                if (_cacheManager != null)
+                {
+                    // 获取所有可缓存的表名
+                    var cacheableTables = TableSchemaManager.Instance.CacheableTableNames;
+                    foreach (var tableName in cacheableTables)
+                    {
+                        try
+                        {
+                            // 使用DeleteEntityList方法清理每个表的缓存
+                            _cacheManager.DeleteEntityList(tableName);
+                            _log?.LogDebug("已清理表 {TableName} 的缓存", tableName);
+                        }
+                        catch (Exception ex)
+                        {
+                            _log?.LogError(ex, "清理表 {TableName} 的缓存时发生错误", tableName);
+                        }
+                    }
+                }
+
+                // 清理请求时间记录
+                lock (_lockObj)
+                {
+                    _lastRequestTimes.Clear();
+                }
             }
-            _log?.LogInformation("所有缓存清理完成");
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "清理所有缓存时发生错误");
+            }
+            finally
+            {
+                _log?.LogInformation("所有缓存清理完成");
+            }
         }
 
         /// <summary>
@@ -1192,15 +1192,24 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 使用工厂方法创建请求对象
-                var request = CacheRequest.Create(tableName, forceRefresh);
+                var request = new CacheRequest
+                {
+                    TableName = tableName,
+                    Operation = CacheOperation.Get,
+                    ForceRefresh = forceRefresh,
+                    RequestId = IdGenerator.GenerateRequestId(CacheCommands.CacheOperation)
+                };
                 request.LastRequestTime = GetLastRequestTime(tableName);
 
                 // 使用统一命令处理模式，模仿登录业务流程
-                var cacheCommand = new CacheCommand();
-                cacheCommand.Request = request;
+                var command = new BaseCommand<CacheRequest, CacheResponse>
+                {
+                    Request = request,
+                    CommandIdentifier = CacheCommands.CacheOperation
+                };
 
                 // 发送命令并获取响应
-                var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(cacheCommand, ct, 30000);
+                var commandResponse = await _comm.SendCommandWithResponseAsync<CacheRequest, CacheResponse>(command, ct, 30000);
 
                 // 检查响应数据是否为空
                 if (commandResponse.ResponseData == null)

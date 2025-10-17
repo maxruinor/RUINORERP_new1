@@ -111,7 +111,7 @@ namespace RUINORERP.UI.UCSourceGrid
         }
         private void LoadDefaultColumns_Click(object sender, EventArgs e)
         {
-            ColumnDisplays = UIBizSrvice.LoadInitSourceGridSetting(sgdefine, CurMenuInfo);
+            ColumnDisplays = UIBizService.LoadInitSourceGridSetting(sgdefine, CurMenuInfo);
 
             contextMenuStrip1.Items.Clear();
             InitializeContextMenu();
@@ -121,7 +121,7 @@ namespace RUINORERP.UI.UCSourceGrid
             }
             //SynchronizeColumnOrder(sgdefine.InitDefineColumns);
             ////显示 宽度 排序 生效
-            UIBizSrvice.SynchronizeColumnOrder(sgdefine, ColumnDisplays);
+            UIBizService.SynchronizeColumnOrder(sgdefine, ColumnDisplays);
         }
 
 

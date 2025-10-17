@@ -315,7 +315,7 @@ namespace RUINORERP.UI.FM
             {
                 sgh.LoadItemDataToGrid<tb_FM_StatementDetail>(grid1, sgd, new List<tb_FM_StatementDetail>(), c => c.ARAPId);
             }
-            UIBizSrvice.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
+            UIBizService.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
             //如果属性变化 则状态为修改
             entity.PropertyChanged += async (sender, s2) =>
             {
@@ -670,7 +670,7 @@ namespace RUINORERP.UI.FM
             {
                 listCols.SetCol_DefaultHide<tb_FM_StatementDetail>(c => c.ExchangeRate);
             }
-            UIBizSrvice.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
+            UIBizService.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
         }
         #region 坏账处理
 

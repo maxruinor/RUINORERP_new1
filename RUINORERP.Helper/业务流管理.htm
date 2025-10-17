@@ -1,0 +1,261 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* 鍏ㄥ眬鏍峰紡 */
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* 鏍囬鏍峰紡 */
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* 娈佃惤鏍峰紡 */
+        p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* 鍒楄〃鏍峰紡 */
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* 琛ㄦ牸鏍峰紡 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* 寮鸿皟鏂囨湰 */
+        strong {
+            color: #2c3e50;
+        }
+
+        /* 閾炬帴鏍峰紡 */
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* 鎻愮ず妗嗘牱寮?*/
+        .tip {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+    
+    <title>业务流管理</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <strong>瀵艰埅閾炬帴锛?/strong>
+    <a href="鐢熶骇绠＄悊.htm" style="margin-right: 15px;">鐢熶骇绠＄悊</a>
+    <a href="杩涢攢瀛樼鐞?htm" style="margin-right: 15px;">杩涢攢瀛樼鐞?/a>
+    <a href="鍞悗绠＄悊.htm" style="margin-right: 15px;">鍞悗绠＄悊</a>
+    <a href="瀹㈡埛鍏崇郴绠＄悊.htm" style="margin-right: 15px;">瀹㈡埛鍏崇郴</a>
+    <a href="璐㈠姟绠＄悊.htm" style="margin-right: 15px;">璐㈠姟绠＄悊</a>
+    <a href="琛屾斂绠＄悊.htm" style="margin-right: 15px;">琛屾斂绠＄悊</a>
+    <a href="鎶ヨ〃绠＄悊.htm" style="margin-right: 15px;">鎶ヨ〃绠＄悊</a>
+    <a href="鐢靛晢杩愯惀.htm" style="margin-right: 15px;">鐢靛晢杩愯惀</a>
+    <a href="鍩虹璧勬枡绠＄悊.htm" style="margin-right: 15px;">鍩虹璧勬枡</a>
+    <a href="绯荤粺璁剧疆.htm" style="margin-right: 15px;">绯荤粺璁剧疆</a>
+    <a href="閫氱敤鍔熻兘.htm" style="margin-right: 15px;">閫氱敤鍔熻兘</a>
+    <a href="瀹℃牳鍙嶅鏍哥粨妗堜笟鍔℃祦绋?htm" style="margin-right: 15px;">瀹℃牳娴佺▼</a>
+</div>
+    <h1>业务流管理</h1>
+    <p>业务流管理模块用于管理工作流程和审批流程，确保业务按规范执行。</p>
+    
+    <h2>功能概述</h2>
+    <p>业务流管理主要包括以下功能：</p>
+    <ul>
+        <li><strong>工作流程设计</strong>：设计和配置各类工作流程</li>
+        <li><strong>审批流程管理</strong>：管理各类业务的审批流程</li>
+        <li><strong>流程监控管理</strong>：监控流程的执行情况</li>
+        <li><strong>流程优化管理</strong>：优化和改进业务流程</li>
+        <li><strong>流程统计分析</strong>：统计分析流程执行数据</li>
+    </ul>
+    
+    <h2>核心业务流程</h2>
+    <h3>1. 工作流程设计流程</h3>
+    <p>根据业务需求设计相应的工作流程和审批节点。</p>
+    
+    <h3>2. 审批流程执行流程</h3>
+    <p>按设计的审批流程执行各类业务的审批操作。</p>
+    
+    <h3>3. 流程监控跟踪流程</h3>
+    <p>实时监控各类流程的执行状态和进度。</p>
+    
+    <h3>4. 业务流管理审核流程</h3>
+    <p>业务流管理中的各类单据都需要经过审核流程才能生效：
+    <ul>
+        <li><strong>审核权限</strong>：只有具备审核权限的用户才能执行审核操作</li>
+        <li><strong>审核状态</strong>：单据审核后状态更新为"已审核"</li>
+        <li><strong>审核结果</strong>：审核可以是"同意"或"拒绝"，拒绝的单据需要修改后重新提交</li>
+    </ul>
+    </p>
+    
+    <h3>5. 业务流管理反审核流程</h3>
+    <p>反审核是撤销已审核单据的操作，用于修正审核错误或业务变更：
+    <ul>
+        <li><strong>反审核条件</strong>：只有已审核且未结案的单据才能执行反审核</li>
+        <li><strong>反审核影响</strong>：反审核后单据状态回退到审核前状态</li>
+        <li><strong>数据恢复</strong>：反审核会恢复单据到审核前的数据状态</li>
+    </ul>
+    </p>
+    
+    <h3>6. 业务流管理结案流程</h3>
+    <p>结案是标记业务流管理业务完成状态的操作，结案后的单据通常不能再修改：
+    <ul>
+        <li><strong>结案条件</strong>：只有已审核的单据才能执行结案操作</li>
+        <li><strong>结案状态</strong>：单据结案后状态更新为"已结案"</li>
+        <li><strong>业务完整性</strong>：结案通常表示该笔业务流管理业务已全部完成</li>
+    </ul>
+    </p>
+    
+    <h2>主要单据类型</h2>
+    <ul>
+        <li><strong>工作流程设计单</strong>：记录工作流程设计信息</li>
+        <li><strong>审批流程执行单</strong>：记录审批流程执行信息</li>
+        <li><strong>流程监控表</strong>：记录流程监控信息</li>
+        <li><strong>流程优化建议表</strong>：记录流程优化建议</li>
+    </ul>
+    
+    <h2>审核状态说明</h2>
+    <p>业务流管理中的单据具有以下审核状态：</p>
+    <ul>
+        <li><strong>未审核</strong>：单据创建后初始状态，尚未提交审核</li>
+        <li><strong>已审核</strong>：单据已通过审核，可以参与后续处理流程</li>
+        <li><strong>驳回</strong>：单据审核被拒绝，需要修改后重新提交审核</li>
+    </ul>
+    
+    <h2>结案状态说明</h2>
+    <p>业务流管理中的单据具有以下结案状态：</p>
+    <ul>
+        <li><strong>未结案</strong>：单据审核通过但业务流管理业务尚未完成</li>
+        <li><strong>已结案</strong>：单据业务流管理业务全部完成，不能再进行修改操作</li>
+    </ul>
+    
+    <h2>关键字段说明</h2>
+    <table border="1">
+        <tr>
+            <th>字段名</th>
+            <th>说明</th>
+        </tr>
+        <tr>
+            <td>流程编号</td>
+            <td>工作流程的唯一编号</td>
+        </tr>
+        <tr>
+            <td>流程名称</td>
+            <td>工作流程的名称</td>
+        </tr>
+        <tr>
+            <td>流程类型</td>
+            <td>工作流程的类型</td>
+        </tr>
+        <tr>
+            <td>设计人</td>
+            <td>流程的设计人员</td>
+        </tr>
+        <tr>
+            <td>设计日期</td>
+            <td>流程的设计日期</td>
+        </tr>
+        <tr>
+            <td>审批节点</td>
+            <td>流程的审批节点</td>
+        </tr>
+        <tr>
+            <td>执行状态</td>
+            <td>流程的执行状态</td>
+        </tr>
+        <tr>
+            <td>完成时间</td>
+            <td>流程的完成时间</td>
+        </tr>
+    </table>
+</body>
+</html>

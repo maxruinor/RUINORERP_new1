@@ -417,7 +417,7 @@ namespace RUINORERP.UI.FM
             {
                 sgh.LoadItemDataToGrid<tb_FM_ReceivablePayableDetail>(grid1, sgd, new List<tb_FM_ReceivablePayableDetail>(), c => c.ProdDetailID);
             }
-            UIBizSrvice.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
+            UIBizService.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
             //如果属性变化 则状态为修改
             entity.PropertyChanged += async (sender, s2) =>
             {
@@ -474,7 +474,7 @@ namespace RUINORERP.UI.FM
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.IsExpenseType))
                     {
                         LoadItems(entity.IsExpenseType);
-                        UIBizSrvice.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
+                        UIBizService.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
                     }
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_ReceivablePayable>(c => c.ShippingFee))
@@ -810,6 +810,10 @@ namespace RUINORERP.UI.FM
 
         private void UCStockIn_Load(object sender, EventArgs e)
         {
+            if (this.DesignMode)
+            {
+                return;
+            }
             AddExtendButton(CurMenuInfo);
             #region
             switch (PaymentType)
@@ -835,7 +839,7 @@ namespace RUINORERP.UI.FM
             }
 
             #endregion
-
+            
             MainForm.Instance.LoginWebServer();
             if (CurMenuInfo != null)
             {
@@ -898,7 +902,7 @@ namespace RUINORERP.UI.FM
             {
                 listCols.SetCol_DefaultHide<tb_FM_ReceivablePayableDetail>(c => c.ExchangeRate);
             }
-            UIBizSrvice.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
+            UIBizService.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
         }
         #region 坏账处理
         ToolStripButton toolStripButton坏账处理 = new System.Windows.Forms.ToolStripButton();

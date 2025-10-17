@@ -261,7 +261,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 EditEntity = Activator.CreateInstance(typeof(T)) as T;
             }
-            bool rs = await UIBizSrvice.SetInputDataAsync<T>(CurMenuInfo, EditEntity);
+            bool rs = await UIBizService.SetInputDataAsync<T>(CurMenuInfo, EditEntity);
             if (rs)
             {
                 // EditEntity = LoadQueryConditionToUI();
@@ -3340,7 +3340,7 @@ namespace RUINORERP.UI.BaseForm
                 if (menuSetting != null && menuSetting.tb_UIInputDataFields != null)
                 {
                     List<QueryField> fields = new List<QueryField>();
-                    UIBizSrvice.GetInputDataField(typeof(T), fields);
+                    UIBizService.GetInputDataField(typeof(T), fields);
                     foreach (var item in menuSetting.tb_UIInputDataFields)
                     {
                         if (item.EnableDefault1.HasValue && item.EnableDefault1.Value)
@@ -4895,8 +4895,8 @@ namespace RUINORERP.UI.BaseForm
                     QueryConditionBuilder();
                     #region 请求缓存
                     //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-                    UIBizSrvice.RequestCache<T>();
-                    UIBizSrvice.RequestCache<C>();
+                    UIBizService.RequestCache<T>();
+                    UIBizService.RequestCache<C>();
                     // UIBizSrvice.RequestCache<tb_Prod>();
                     // UIBizSrvice.RequestCache<View_ProdDetail>();
                     //去检测产品视图的缓存并且转换为强类型

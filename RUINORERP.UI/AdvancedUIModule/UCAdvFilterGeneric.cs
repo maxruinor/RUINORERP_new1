@@ -251,7 +251,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         }
         protected async virtual void MenuPersonalizedSettings()
         {
-            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDto as BaseEntity);
+            bool rs = await UIBizService.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDto as BaseEntity);
             if (rs)
             {
                 QueryDto = LoadQueryConditionToUI();
@@ -622,7 +622,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                 #region 请求缓存
                 //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-                UIBizSrvice.RequestCache<T>();
+                UIBizService.RequestCache<T>();
                 #endregion
 
             }

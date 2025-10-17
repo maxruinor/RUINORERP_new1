@@ -8,72 +8,412 @@
 </OBJECT>
 <UL>
 	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="测试帮助内容">
-		<param name="Local" value="test_help_content.html">
+		<param name="Name" value="帮助系统使用说明">
+		<param name="Local" value="帮助系统使用说明.htm">
 		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="系统概述">
+		<param name="Local" value="系统简介.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="系统简介">
+			<param name="Local" value="系统简介.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="系统架构">
+			<param name="Local" value="系统架构.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="模块介绍">
+			<param name="Local" value="模块介绍.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="设计理念">
+			<param name="Local" value="设计理念.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="生产管理">
+		<param name="Local" value="生产管理.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="MRP基本资料">
+			<param name="Local" value="MRP基本资料.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="制造规划">
+			<param name="Local" value="制造规划.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="制程生产">
+			<param name="Local" value="制程生产.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="生产品控">
+			<param name="Local" value="生产品控.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="BOM分析报表">
+			<param name="Local" value="BOM分析报表.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="成本管理">
+			<param name="Local" value="成本管理.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="进销存管理">
+		<param name="Local" value="进销存管理.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="采购管理">
+			<param name="Local" value="采购管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="销售管理">
+			<param name="Local" value="销售管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="库存管理">
+			<param name="Local" value="库存管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="借出归还">
+			<param name="Local" value="借出归还.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="盘点管理">
+			<param name="Local" value="盘点管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="调拨管理">
+			<param name="Local" value="调拨管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="产品分割与组合">
+			<param name="Local" value="产品分割与组合.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="其他出入库管理">
+			<param name="Local" value="其他出入库管理.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="售后管理">
+		<param name="Local" value="售后管理.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="售后流程">
+			<param name="Local" value="售后流程.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="维修中心">
+			<param name="Local" value="维修中心.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="资产处置">
+			<param name="Local" value="资产处置.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="提前交付">
+			<param name="Local" value="提前交付.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="客户关系管理">
+		<param name="Local" value="客户关系管理.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="市场营销">
+			<param name="Local" value="市场营销.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="客户管理">
+			<param name="Local" value="客户管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="跟进管理">
+			<param name="Local" value="跟进管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="报价管理">
+			<param name="Local" value="报价管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="合同管理">
+			<param name="Local" value="合同管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="回款管理">
+			<param name="Local" value="回款管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="开票管理">
+			<param name="Local" value="开票管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="商机总览">
+			<param name="Local" value="商机总览.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="绩效分析">
+			<param name="Local" value="绩效分析.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="财务管理">
+		<param name="Local" value="财务管理.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="基础设置">
+			<param name="Local" value="基础设置.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="收款管理">
+			<param name="Local" value="收款管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="付款管理">
+			<param name="Local" value="付款管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="对账管理">
+			<param name="Local" value="对账管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="费用管理">
+			<param name="Local" value="费用管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="费用报销">
+			<param name="Local" value="费用报销.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="固定资产">
+			<param name="Local" value="固定资产.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="发票管理">
+			<param name="Local" value="发票管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="账务处理">
+			<param name="Local" value="账务处理.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="行政管理">
+		<param name="Local" value="行政管理.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="业务流管理">
+			<param name="Local" value="业务流管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="资料管理">
+			<param name="Local" value="资料管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="基础资料">
+			<param name="Local" value="行政基础资料.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="人事管理">
+			<param name="Local" value="人事管理.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="报表管理">
+		<param name="Local" value="报表管理.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="生产分析">
+			<param name="Local" value="生产分析.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="进销存分析">
+			<param name="Local" value="进销存分析.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="综合分析">
+			<param name="Local" value="综合分析.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="报表设置">
+			<param name="Local" value="报表设置.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="基础资料">
+			<param name="Local" value="报表基础资料.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="电商运营">
+		<param name="Local" value="电商运营.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="蓄水管理">
+			<param name="Local" value="蓄水管理.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="基础资料管理">
+		<param name="Local" value="基础资料管理.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="产品资料">
+			<param name="Local" value="产品资料.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="仓库资料">
+			<param name="Local" value="仓库资料.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="供销资料">
+			<param name="Local" value="供销资料.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="行政资料">
+			<param name="Local" value="行政资料.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="财务资料">
+			<param name="Local" value="财务资料.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="包装资料">
+			<param name="Local" value="包装资料.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="系统设置">
+		<param name="Local" value="系统设置.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="系统参数">
+			<param name="Local" value="系统参数.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="权限管理">
+			<param name="Local" value="权限管理.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="个性化设置">
+			<param name="Local" value="个性化设置.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="流程设计">
+			<param name="Local" value="流程设计.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="系统工具">
+			<param name="Local" value="系统工具.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="动态参数">
+			<param name="Local" value="动态参数.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="通用功能">
+		<param name="Local" value="通用功能.htm">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="数据查询">
+			<param name="Local" value="数据查询.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="打印功能">
+			<param name="Local" value="打印功能.htm">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="审核、反审核、结案业务流程">
+			<param name="Local" value="审核反审核结案业务流程.htm">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="窗体帮助">
+		<param name="Local" value="forms\UCSaleOrderQuery.html">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="销售订单查询">
+			<param name="Local" value="forms\UCSaleOrderQuery.html">
+			</OBJECT>
+	</UL>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="控件帮助">
 		<param name="Local" value="controls\button_test.html">
 		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="销售订单查询">
-		<param name="Local" value="forms\UCSaleOrderQuery.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="查询按钮">
-		<param name="Local" value="controls\button_query.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="新增按钮">
-		<param name="Local" value="controls\button_add.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="编辑按钮">
-		<param name="Local" value="controls\button_edit.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="删除按钮">
-		<param name="Local" value="controls\button_delete.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="打印按钮">
-		<param name="Local" value="controls\button_print.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="导出按钮">
-		<param name="Local" value="controls\button_export.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="结案按钮">
-		<param name="Local" value="controls\button_close_case.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="保存按钮">
-		<param name="Local" value="controls\button_save.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="取消按钮">
-		<param name="Local" value="controls\button_cancel.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="标记已打印">
-		<param name="Local" value="controls\contextmenu_mark_printed.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="转为出库单">
-		<param name="Local" value="controls\contextmenu_convert_to_outbound.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="订单取消作废">
-		<param name="Local" value="controls\contextmenu_cancel_order.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="转为采购单">
-		<param name="Local" value="controls\contextmenu_convert_to_purchase.html">
-		</OBJECT>
-	<LI> <OBJECT type="text/sitemap">
-		<param name="Name" value="预收货款">
-		<param name="Local" value="controls\contextmenu_advance_payment.html">
-		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="查询按钮">
+			<param name="Local" value="controls\button_query.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="新增按钮">
+			<param name="Local" value="controls\button_add.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="编辑按钮">
+			<param name="Local" value="controls\button_edit.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="删除按钮">
+			<param name="Local" value="controls\button_delete.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="打印按钮">
+			<param name="Local" value="controls\button_print.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="导出按钮">
+			<param name="Local" value="controls\button_export.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="结案按钮">
+			<param name="Local" value="controls\button_close_case.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="保存按钮">
+			<param name="Local" value="controls\button_save.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="取消按钮">
+			<param name="Local" value="controls\button_cancel.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="标记已打印">
+			<param name="Local" value="controls\contextmenu_mark_printed.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="转为出库单">
+			<param name="Local" value="controls\contextmenu_convert_to_outbound.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="订单取消作废">
+			<param name="Local" value="controls\contextmenu_cancel_order.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="转为采购单">
+			<param name="Local" value="controls\contextmenu_convert_to_purchase.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="预收货款">
+			<param name="Local" value="controls\contextmenu_advance_payment.html">
+			</OBJECT>
+	</UL>
 </UL>
 </BODY></HTML>

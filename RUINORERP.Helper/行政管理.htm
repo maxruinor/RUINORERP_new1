@@ -1,0 +1,219 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* 鍏ㄥ眬鏍峰紡 */
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* 鏍囬鏍峰紡 */
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* 娈佃惤鏍峰紡 */
+        p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* 鍒楄〃鏍峰紡 */
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* 琛ㄦ牸鏍峰紡 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* 寮鸿皟鏂囨湰 */
+        strong {
+            color: #2c3e50;
+        }
+
+        /* 閾炬帴鏍峰紡 */
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* 鎻愮ず妗嗘牱寮?*/
+        .tip {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+    
+    <title>行政管理模块</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <strong>瀵艰埅閾炬帴锛?/strong>
+    <a href="鐢熶骇绠＄悊.htm" style="margin-right: 15px;">鐢熶骇绠＄悊</a>
+    <a href="杩涢攢瀛樼鐞?htm" style="margin-right: 15px;">杩涢攢瀛樼鐞?/a>
+    <a href="鍞悗绠＄悊.htm" style="margin-right: 15px;">鍞悗绠＄悊</a>
+    <a href="瀹㈡埛鍏崇郴绠＄悊.htm" style="margin-right: 15px;">瀹㈡埛鍏崇郴</a>
+    <a href="璐㈠姟绠＄悊.htm" style="margin-right: 15px;">璐㈠姟绠＄悊</a>
+    <a href="琛屾斂绠＄悊.htm" style="margin-right: 15px;">琛屾斂绠＄悊</a>
+    <a href="鎶ヨ〃绠＄悊.htm" style="margin-right: 15px;">鎶ヨ〃绠＄悊</a>
+    <a href="鐢靛晢杩愯惀.htm" style="margin-right: 15px;">鐢靛晢杩愯惀</a>
+    <a href="鍩虹璧勬枡绠＄悊.htm" style="margin-right: 15px;">鍩虹璧勬枡</a>
+    <a href="绯荤粺璁剧疆.htm" style="margin-right: 15px;">绯荤粺璁剧疆</a>
+    <a href="閫氱敤鍔熻兘.htm" style="margin-right: 15px;">閫氱敤鍔熻兘</a>
+    <a href="瀹℃牳鍙嶅鏍哥粨妗堜笟鍔℃祦绋?htm" style="margin-right: 15px;">瀹℃牳娴佺▼</a>
+</div>
+    <h1>行政管理模块</h1>
+    <p>行政管理模块用于管理企业的行政和人力资源相关业务。</p>
+    
+    <h2>模块功能概述</h2>
+    <p>行政管理模块主要包括以下子模块：</p>
+    <ul>
+        <li><strong>业务流管理</strong>：管理工作流程和审批流程</li>
+        <li><strong>资料管理</strong>：管理企业文档和资料</li>
+        <li><strong>基础资料</strong>：维护部门、员工等基础信息</li>
+        <li><strong>人事管理</strong>：管理员工档案、考勤、薪资等人事相关业务</li>
+    </ul>
+    
+    <h2>核心业务流程</h2>
+    <h3>1. 工作流程管理</h3>
+    <p>设计和管理工作流程，确保业务按规范执行。</p>
+    
+    <h3>2. 文档资料管理</h3>
+    <p>统一管理企业各类文档和资料，便于查找和共享。</p>
+    
+    <h3>3. 员工管理流程</h3>
+    <p>从员工入职、在职管理到离职的完整人事管理流程。</p>
+    
+    <h2>主要功能模块</h2>
+    <ul>
+        <li><strong>部门管理</strong>：维护组织架构和部门信息</li>
+        <li><strong>员工管理</strong>：维护员工基本信息和档案</li>
+        <li><strong>考勤管理</strong>：管理员工考勤和请假</li>
+        <li><strong>薪资管理</strong>：管理员工薪资和福利</li>
+        <li><strong>文档管理</strong>：管理企业各类文档和资料</li>
+    </ul>
+    
+    <h2>关键字段说明</h2>
+    <table border="1">
+        <tr>
+            <th>字段名</th>
+            <th>说明</th>
+        </tr>
+        <tr>
+            <td>部门编号</td>
+            <td>部门的唯一标识号</td>
+        </tr>
+        <tr>
+            <td>部门名称</td>
+            <td>部门的正式名称</td>
+        </tr>
+        <tr>
+            <td>上级部门</td>
+            <td>该部门的上级管理部门</td>
+        </tr>
+        <tr>
+            <td>部门负责人</td>
+            <td>该部门的负责人</td>
+        </tr>
+        <tr>
+            <td>员工编号</td>
+            <td>员工的唯一标识号</td>
+        </tr>
+        <tr>
+            <td>员工姓名</td>
+            <td>员工的姓名</td>
+        </tr>
+        <tr>
+            <td>所属部门</td>
+            <td>员工所在的部门</td>
+        </tr>
+        <tr>
+            <td>职位</td>
+            <td>员工担任的职位</td>
+        </tr>
+    </table>
+</body>
+</html>

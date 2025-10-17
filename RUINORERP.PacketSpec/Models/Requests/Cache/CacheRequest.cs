@@ -1,4 +1,5 @@
-﻿using System;using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Requests;
 using MessagePack;
 using RUINORERP.PacketSpec.Commands.Cache;
@@ -20,16 +21,16 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
         public string TableName { get; set; } = string.Empty;
 
         /// <summary>
-    /// 缓存操作类型
-    /// </summary>
-    [Key(12)]
-    public CacheOperation Operation { get; set; } = CacheOperation.Get;
+        /// 缓存操作类型
+        /// </summary>
+        [Key(12)]
+        public CacheOperation Operation { get; set; } = CacheOperation.Get;
 
-    /// <summary>
-    /// 订阅操作类型 - 用于CacheSubscription命令
-    /// </summary>
-    [Key(1006)]
-    public SubscribeAction SubscribeAction { get; set; } = SubscribeAction.None;
+        /// <summary>
+        /// 订阅操作类型 - 用于CacheSubscription命令
+        /// </summary>
+        [Key(1006)]
+        public SubscribeAction SubscribeAction { get; set; } = SubscribeAction.None;
 
         /// <summary>
         /// 缓存数据（用于设置、更新操作）
@@ -37,18 +38,28 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
         [Key(13)]
         public object Data { get; set; }
 
-  
+        /// <summary>
+        /// 主键名称
+        /// </summary>
+        [Key(14)]
+        public string PrimaryKeyName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 主键值
+        /// </summary>
+        [Key(15)]
+        public object PrimaryKeyValue { get; set; }
 
         /// <summary>
         /// 是否强制刷新缓存
         /// </summary>
-        [Key(15)]
+        [Key(16)]
         public bool ForceRefresh { get; set; } = false;
 
         /// <summary>
         /// 上次请求时间，用于增量更新
         /// </summary>
-        [Key(16)]
+        [Key(17)]
         public DateTime LastRequestTime { get; set; } = DateTime.MinValue;
 
         /// <summary>
@@ -86,13 +97,9 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
             {
                 TableName = tableName,
                 Operation = CacheOperation.Remove,
+                PrimaryKeyName = primaryKeyName ?? string.Empty,
+                PrimaryKeyValue = primaryKeyValue
             };
-
-            if (!string.IsNullOrEmpty(primaryKeyName))
-            {
-                request.Parameters["PrimaryKeyName"] = primaryKeyName;
-                request.Parameters["PrimaryKeyValue"] = primaryKeyValue;
-            }
 
             return request;
         }
@@ -109,8 +116,8 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
             };
         }
 
-     
-        
+
+
         /// <summary>
         /// 创建缓存获取请求（兼容旧版本）
         /// </summary>

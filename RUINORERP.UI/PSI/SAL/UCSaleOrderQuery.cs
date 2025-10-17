@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -58,16 +58,11 @@ namespace RUINORERP.UI.PSI.SAL
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.SOrderNo);
             
-            // 启用F1帮助功能 - 修复ParentForm可能为null的问题
             // 在Load事件中启用帮助功能，确保控件已完全初始化
             this.Load += (sender, e) => {
-                // 为当前用户控件启用F1帮助功能
+                // 为工具栏按钮设置帮助键
                 if (HelpManager.Config.IsHelpSystemEnabled)
                 {
-                    // 注册当前控件的键盘事件
-                    this.KeyDown += UCSaleOrderQuery_KeyDown;
-                    
-                    // 为工具栏按钮设置帮助键
                     SetToolbarButtonHelpKeys();
                 }
             };

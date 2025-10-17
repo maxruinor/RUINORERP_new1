@@ -32,6 +32,7 @@ using SHControls.DataGrid;
 using SourceGrid;
 using SqlSugar;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -50,7 +51,7 @@ using System.Windows.Markup;
 
 namespace RUINORERP.UI.Common
 {
-    public static class UIBizSrvice
+    public static class UIBizService
     {
         #region 录入数据预设模板
 
@@ -1482,69 +1483,41 @@ namespace RUINORERP.UI.Common
             // 获取表结构管理器实例
             var tableSchemaManager = TableSchemaManager.Instance;
             
-            //优先处理本身，比方 BOM_ID显示BOM_NO，只要传tb_BOM_S
-            if (tableSchemaManager.ContainsTable(tableName))
+            // 处理主表
+            if (tableSchemaManager.ContainsTable(tableName) && IsCacheableTable(tableName))
             {
-                //请求本身
+                // 获取本地缓存数据
                 var entityList = cacheManager.GetEntityList<object>(tableName);
-                if (NeedRequesCache(entityList, tableName) && IsCacheableTable(tableName))
+                
+                // 简化的判断逻辑：如果本地没有缓存数据，则请求
+                if (entityList == null || entityList.Count == 0)
                 { 
                     await cacheClient.RequestCacheAsync(tableName);
                 }
             }
 
-            //请求关联表
-            // 获取外键关系
+            // 处理关联表
             var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
             if (schemaInfo != null && schemaInfo.ForeignKeys.Any())
             {
                 foreach (var fk in schemaInfo.ForeignKeys)
                 {
-                    var rslist = cacheManager.GetEntityList<object>(fk.RelatedTableName);
-                    //并且要存在于缓存列表的表集合中才取。有些是没有缓存的业务单据表。不需要取缓存
-                    if (NeedRequesCache(rslist, fk.RelatedTableName) && IsCacheableTable(fk.RelatedTableName))
+                    if (IsCacheableTable(fk.RelatedTableName))
                     {
-                        await cacheClient.RequestCacheAsync(fk.RelatedTableName);
+                        var rslist = cacheManager.GetEntityList<object>(fk.RelatedTableName);
+                        
+                        // 简化的判断逻辑：如果本地没有缓存数据，则请求
+                        if (rslist == null || rslist.Count == 0)
+                        {
+                            await cacheClient.RequestCacheAsync(fk.RelatedTableName);
+                        }
                     }
                 }
             }
-
         }
 
 
-        //将来是不是要判断具体的行里面的数据是不是有变化。
-        public static bool NeedRequesCache(object rslist, string tableName)
-        {
-            if (rslist == null)
-            {
-                return true;
-            }
-            CacheInfo cacheInfo = new CacheInfo();
-            //对比缓存信息概率。行数变化了也要请求最新的
-            if (MainForm.Instance.CacheInfoList.TryGetValue(tableName, out cacheInfo))
-            {
-                if (rslist.GetType().Name == "JArray")//(Newtonsoft.Json.Linq.JArray))
-                {
-                    var jsonlist = rslist as Newtonsoft.Json.Linq.JArray;
-                    if (cacheInfo.CacheCount != jsonlist.Count)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    //强类型
-
-                    return true;
-                }
-            }
-
-            return true;
-        }
+       
 
 
 

@@ -475,7 +475,7 @@ namespace RUINORERP.UI.UserPersonalized
         {
             //ColumnDisplays
             //这里初始化时，注意要以显示到可以操作的列为基准。（比方有些列BuildInvisibleCols在这个方法硬编码不显示，则默认这里也不会显示）
-            UIBizSrvice.InitDataGridViewColumnDisplays(ColumnDisplays, dataGridView, gridviewType, CurMenuInfo, InvisibleCols);
+            UIBizService.InitDataGridViewColumnDisplays(ColumnDisplays, dataGridView, gridviewType, CurMenuInfo, InvisibleCols);
             LoadColumnDisplayList();
         }
 
@@ -524,7 +524,7 @@ namespace RUINORERP.UI.UserPersonalized
         private void btnApply_Click(object sender, EventArgs e)
         {
             //保存设置到DB
-            UIBizSrvice.SaveGridSettingData(CurMenuInfo, dataGridView, gridviewType);
+            UIBizService.SaveGridSettingData(CurMenuInfo, dataGridView, gridviewType);
         }
     }
 }

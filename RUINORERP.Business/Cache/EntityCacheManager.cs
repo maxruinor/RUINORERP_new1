@@ -12,7 +12,6 @@ using RUINORERP.Model.Context;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.CustomAttribute;
 using System.Collections;
-using RUINORERP.Common.CustomAttribute;
 using RUINORERP.Business.CommService;
 using static RUINORERP.Business.Cache.IEntityCacheManager;
 using Newtonsoft.Json.Linq;
@@ -23,15 +22,36 @@ namespace RUINORERP.Business.Cache
     /// <summary>
     /// 优化的缓存管理器实现
     /// </summary>
-    [NoWantIOC]
     public class EntityCacheManager : IEntityCacheManager
     {
         #region 依赖注入字段
         private readonly TableSchemaManager _tableSchemaManager;
         private readonly ILogger<EntityCacheManager> _logger;
         private readonly ICacheDataProvider _cacheDataProvider;
+        private readonly ICacheSyncMetadata _cacheSyncMetadata;
         #endregion
+        
+        #region 缓存同步元数据接口实现
+        /// <summary>
+        /// 获取指定表的缓存同步元数据
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>缓存同步元数据</returns>
+        public CacheSyncInfo GetTableSyncInfo(string tableName)
+        {
+            return _cacheSyncMetadata?.GetTableSyncInfo(tableName);
+        }
 
+        /// <summary>
+        /// 设置表缓存的过期时间
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="expirationTime">过期时间</param>
+        public void SetTableCacheExpiration(string tableName, DateTime expirationTime)
+        {
+            _cacheSyncMetadata?.SetTableExpiration(tableName, expirationTime);
+        }
+        #endregion
         #region 缓存存储
         /// <summary>
         /// 统一缓存管理器 - 优化：使用单一缓存管理器管理所有缓存数据
@@ -215,11 +235,13 @@ namespace RUINORERP.Business.Cache
         #region 构造函数
         public EntityCacheManager(
             ILogger<EntityCacheManager> logger,
-            ICacheDataProvider cacheDataProvider = null)
+            ICacheDataProvider cacheDataProvider = null,
+            ICacheSyncMetadata cacheSyncMetadata = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _tableSchemaManager = TableSchemaManager.Instance;
             _cacheDataProvider = cacheDataProvider;
+            _cacheSyncMetadata = cacheSyncMetadata; // 可选依赖
 
             // 设置缓存大小阈值（最大大小的80%）
             _cacheSizeThreshold = (long)(_maxCacheSize * 0.8);
@@ -325,6 +347,10 @@ namespace RUINORERP.Business.Cache
                             // 将获取到的数据（包括空列表）更新到缓存
                             var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
                             PutToCache(cacheKey, list, "List", tableName);
+                            
+                            // 直接更新缓存同步元数据
+                            UpdateCacheSyncMetadataAfterEntityChange(tableName);
+                            
                             return list;
                         }
                     }
@@ -541,6 +567,9 @@ namespace RUINORERP.Business.Cache
             UpdateEntityInList(tableName, entity);
             
             _logger?.LogDebug($"已更新表 {tableName} 列表缓存中的单个实体");
+            
+            // 更新缓存同步元数据
+            UpdateCacheSyncMetadataAfterEntityChange(tableName);
         }
 
         /// <summary>
@@ -636,6 +665,46 @@ namespace RUINORERP.Business.Cache
                 }
 
                 PutToCache(cacheKey, cacheValue, "List", tableName);
+
+                // 更新缓存同步元数据
+                if (_cacheSyncMetadata != null)
+                {
+                    try
+                    {
+                        int dataCount = 0;
+                        long estimatedSize = 0;
+                        
+                        // 计算数据数量
+                        if (cacheValue is ICollection collection)
+                        {
+                            dataCount = collection.Count;
+                        }
+                        else if (cacheValue is Newtonsoft.Json.Linq.JArray jArray)
+                        {
+                            dataCount = jArray.Count;
+                        }
+                        
+                        // 估计对象大小
+                        estimatedSize = EstimateObjectSize(cacheValue);
+                        
+                        // 创建并更新缓存同步信息
+                        var syncInfo = new CacheSyncInfo
+                        {
+                            TableName = tableName,
+                            DataCount = dataCount,
+                            EstimatedSize = estimatedSize,
+                            LastUpdateTime = DateTime.Now,
+                            ExpirationTime = DateTime.Now.Add(GetCacheExpirationTime())
+                        };
+                        
+                        _cacheSyncMetadata.UpdateTableSyncInfo(tableName, dataCount, estimatedSize);
+                        _logger?.LogDebug($"已更新表 {tableName} 的缓存同步元数据，数据数量: {dataCount}");
+                    }
+                    catch (Exception syncEx)
+                    {
+                        _logger?.LogWarning(syncEx, $"更新表 {tableName} 的缓存同步元数据时发生错误");
+                    }
+                }
 
                 _logger?.LogInformation($"已更新表 {tableName} 的实体列表缓存，数据类型: {cacheValue.GetType().Name}");
             }
@@ -743,6 +812,33 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
+        /// 删除指定表的整个实体列表缓存
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        public void DeleteEntityList(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+            {
+                throw new ArgumentNullException(nameof(tableName), "表名不能为空");
+            }
+
+            // 智能过滤：只处理需要缓存的表
+            if (!IsTableCacheable(tableName))
+            {
+                _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过删除操作");
+                return;
+            }
+
+            // 生成缓存键并直接删除缓存
+            var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
+            RemoveFromCache(cacheKey);
+            
+            // 更新缓存同步元数据
+            UpdateCacheSyncMetadataAfterEntityChange(tableName);
+            _logger?.LogInformation($"已删除表 {tableName} 的整个列表缓存");
+        }
+
+        /// <summary>
         /// 从列表缓存中删除指定主键的实体（智能过滤，只处理需要缓存的表）
         /// 注意：现在只从列表缓存中删除，不再删除单个实体和显示值缓存
         /// </summary>
@@ -765,6 +861,52 @@ namespace RUINORERP.Business.Cache
             catch (Exception ex)
             {
                 _logger?.LogError(ex, $"从表 {tableName} 的列表缓存中删除ID为 {primaryKeyValue} 的实体时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 更新实体变更后的缓存同步元数据
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        private void UpdateCacheSyncMetadataAfterEntityChange(string tableName)
+        {
+            if (_cacheSyncMetadata == null) return;
+            
+            try
+            {
+                var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
+                var cachedList = _cacheManager.Get(cacheKey);
+                
+                if (cachedList != null)
+                {
+                    int dataCount = 0;
+                    long estimatedSize = 0;
+                    
+                    // 计算数据数量
+                    if (cachedList is ICollection collection)
+                    {
+                        dataCount = collection.Count;
+                    }
+                    else if (cachedList is Newtonsoft.Json.Linq.JArray jArray)
+                    {
+                        dataCount = jArray.Count;
+                    }
+                    
+                    // 估计对象大小
+                    estimatedSize = EstimateObjectSize(cachedList);
+                    
+                    _cacheSyncMetadata.UpdateTableSyncInfo(tableName, dataCount, estimatedSize);
+                    _logger?.LogDebug($"已更新表 {tableName} 的缓存同步元数据，数据数量: {dataCount}");
+                }
+                else
+                {
+                    // 如果列表不存在，则移除元数据
+                    _cacheSyncMetadata.RemoveTableSyncInfo(tableName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"更新表 {tableName} 的缓存同步元数据时发生错误");
             }
         }
 
@@ -798,6 +940,9 @@ namespace RUINORERP.Business.Cache
                         {
                             list.Remove(entityToRemove);
                             PutToCache(cacheKey, list, "List", tableName);
+                            
+                            // 更新缓存同步元数据
+                            UpdateCacheSyncMetadataAfterEntityChange(tableName);
                         }
                     }
                 }
@@ -827,6 +972,9 @@ namespace RUINORERP.Business.Cache
                                                 .Where(id => id != null)
                                                 .ToHashSet();
 
+                        // 获取原始列表大小用于比较
+                        int originalCount = list.Count;
+                        
                         list.RemoveAll(e =>
                         {
                             var idPropertyValue = e.GetCachePropertyValue(schemaInfo.PrimaryKeyField);

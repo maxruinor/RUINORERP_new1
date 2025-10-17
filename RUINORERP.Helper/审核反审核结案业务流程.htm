@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* 鍏ㄥ眬鏍峰紡 */
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* 鏍囬鏍峰紡 */
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* 娈佃惤鏍峰紡 */
+        p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* 鍒楄〃鏍峰紡 */
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* 琛ㄦ牸鏍峰紡 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* 寮鸿皟鏂囨湰 */
+        strong {
+            color: #2c3e50;
+        }
+
+        /* 閾炬帴鏍峰紡 */
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* 鎻愮ず妗嗘牱寮?*/
+        .tip {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+    
+    <title>审核、反审核、结案业务流程</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <strong>瀵艰埅閾炬帴锛?/strong>
+    <a href="鐢熶骇绠＄悊.htm" style="margin-right: 15px;">鐢熶骇绠＄悊</a>
+    <a href="杩涢攢瀛樼鐞?htm" style="margin-right: 15px;">杩涢攢瀛樼鐞?/a>
+    <a href="鍞悗绠＄悊.htm" style="margin-right: 15px;">鍞悗绠＄悊</a>
+    <a href="瀹㈡埛鍏崇郴绠＄悊.htm" style="margin-right: 15px;">瀹㈡埛鍏崇郴</a>
+    <a href="璐㈠姟绠＄悊.htm" style="margin-right: 15px;">璐㈠姟绠＄悊</a>
+    <a href="琛屾斂绠＄悊.htm" style="margin-right: 15px;">琛屾斂绠＄悊</a>
+    <a href="鎶ヨ〃绠＄悊.htm" style="margin-right: 15px;">鎶ヨ〃绠＄悊</a>
+    <a href="鐢靛晢杩愯惀.htm" style="margin-right: 15px;">鐢靛晢杩愯惀</a>
+    <a href="鍩虹璧勬枡绠＄悊.htm" style="margin-right: 15px;">鍩虹璧勬枡</a>
+    <a href="绯荤粺璁剧疆.htm" style="margin-right: 15px;">绯荤粺璁剧疆</a>
+    <a href="閫氱敤鍔熻兘.htm" style="margin-right: 15px;">閫氱敤鍔熻兘</a>
+    <a href="瀹℃牳鍙嶅鏍哥粨妗堜笟鍔℃祦绋?htm" style="margin-right: 15px;">瀹℃牳娴佺▼</a>
+</div>
+    <h1>审核、反审核、结案业务流程</h1>
+    <p>本章节详细介绍RUINOR ERP系统中各类业务单据的审核、反审核和结案流程，帮助用户理解和正确使用这些关键业务功能。</p>
+    
+    <h2>业务流程概述</h2>
+    <p>在RUINOR ERP系统中，大部分业务单据都需要经过审核流程才能生效，部分单据还支持反审核操作以修正错误，以及结案操作来标记业务完成状态。</p>
+    
+    <h3>审核流程</h3>
+    <p>审核是确认业务单据有效性的过程，经过审核的单据才能参与后续业务流程和财务核算。</p>
+    <ul>
+        <li><strong>审核权限</strong>：只有具备审核权限的用户才能执行审核操作</li>
+        <li><strong>审核状态</strong>：单据审核后状态更新为"已审核"</li>
+        <li><strong>审核结果</strong>：审核可以是"同意"或"拒绝"，拒绝的单据需要修改后重新提交</li>
+    </ul>
+    
+    <h3>反审核流程</h3>
+    <p>反审核是撤销已审核单据的操作，用于修正审核错误或业务变更。</p>
+    <ul>
+        <li><strong>反审核条件</strong>：只有已审核且未结案的单据才能执行反审核</li>
+        <li><strong>反审核影响</strong>：反审核后单据状态回退到审核前状态</li>
+        <li><strong>数据恢复</strong>：反审核会恢复单据到审核前的数据状态</li>
+    </ul>
+    
+    <h3>结案流程</h3>
+    <p>结案是标记业务完成状态的操作，结案后的单据通常不能再修改。</p>
+    <ul>
+        <li><strong>结案条件</strong>：只有已审核的单据才能执行结案操作</li>
+        <li><strong>结案状态</strong>：单据结案后状态更新为"已结案"</li>
+        <li><strong>业务完整性</strong>：结案通常表示该笔业务已全部完成</li>
+    </ul>
+    
+    <h2>各模块业务流程</h2>
+    <p>不同业务模块的审核、反审核、结案流程在具体操作上会有所差异，详见各模块帮助文档：</p>
+    <ul>
+        <li><a href="进销存管理.htm">进销存管理</a></li>
+        <li><a href="销售管理.htm">销售管理</a></li>
+        <li><a href="采购管理.htm">采购管理</a></li>
+        <li><a href="库存管理.htm">库存管理</a></li>
+        <li><a href="财务管理.htm">财务管理</a></li>
+        <li><a href="生产管理.htm">生产管理</a></li>
+        <li><a href="售后管理.htm">售后管理</a></li>
+    </ul>
+    
+    <h2>操作注意事项</h2>
+    <ol>
+        <li>执行审核、反审核、结案操作前，请确认操作的单据和数据</li>
+        <li>审核操作需要相应权限，请联系系统管理员获取权限</li>
+        <li>反审核和结案操作可能影响关联业务，请谨慎操作</li>
+        <li>已结案的单据通常不能再进行反审核操作</li>
+        <li>批量操作时，请仔细检查选中的单据列表</li>
+    </ol>
+</body>
+</html>

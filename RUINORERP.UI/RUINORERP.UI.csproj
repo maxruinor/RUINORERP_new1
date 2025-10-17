@@ -913,6 +913,7 @@
     <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlExtensions.cs" />
     <Compile Include="Common\HardwareHelper.cs" />
+    <Compile Include="Common\UIBizService.cs" />
     <Compile Include="HelpSystem\ControlHelpDemoForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1729,7 +1730,6 @@
     <Compile Include="Common\GridViewDisplayTextResolver.cs" />
     <Compile Include="Common\UICRMRegionHelper.cs" />
     <Compile Include="Common\UIForKryptonHelper.cs" />
-    <Compile Include="Common\UIBizSrvice.cs" />
     <Compile Include="Common\Network.Ext.cs" />
     <Compile Include="CRM\DockUI\UCCRMContact.cs">
       <SubType>UserControl</SubType>

@@ -291,7 +291,7 @@ namespace RUINORERP.UI.BI
                 frmaddg.BindData(bty);
                 if (frmaddg.ShowDialog() == DialogResult.OK)
                 {
-                    UIBizSrvice.SavePayeeInfo(payeeInfo);
+                    UIBizService.SavePayeeInfo(payeeInfo);
                 }
             }
         }
@@ -402,7 +402,7 @@ namespace RUINORERP.UI.BI
                 frmaddg.BindData(bty);
                 if (frmaddg.ShowDialog() == DialogResult.OK)
                 {
-                    UIBizSrvice.SaveBillingInformation(Info);
+                    UIBizService.SaveBillingInformation(Info);
                 }
             }
         }

@@ -460,7 +460,7 @@ namespace RUINORERP.UI.UserPersonalized
         {
             //ColumnDisplays
             //这里初始化时，注意要以显示到可以操作的列为基准。（比方有些列BuildInvisibleCols在这个方法硬编码不显示，则默认这里也不会显示）
-            InputFields = UIBizSrvice.InitInputDataFields(InputFields, TargetEntityDto, CurMenuInfo, QueryFields);
+            InputFields = UIBizService.InitInputDataFields(InputFields, TargetEntityDto, CurMenuInfo, QueryFields);
             LoadColumnDisplayList();
         }
 
@@ -481,7 +481,7 @@ namespace RUINORERP.UI.UserPersonalized
         private async void btnApply_Click(object sender, EventArgs e)
         {
             //保存设置到DB
-          await  UIBizSrvice.SaveInputDataPresetValues(CurMenuInfo, InputFields);
+          await  UIBizService.SaveInputDataPresetValues(CurMenuInfo, InputFields);
         }
     }
 }

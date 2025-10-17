@@ -166,17 +166,17 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         {
                             item.Cells[11].Value = Order.tb_department.DepartmentName;
                         }
-                        item.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(Order.DataStatus), Order.DataStatus).ToString();
+                        item.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(Order.DataStatus), Order.DataStatus).ToString();
                         string project = string.Empty;
                         #region 加载订单单明细
                         List<tb_PurOrderDetail> OrderDetails = Order.tb_PurOrderDetails;
                         foreach (tb_PurOrderDetail OrderDetail in OrderDetails)
                         {
-                            View_ProdDetail prodDetail = UIBizSrvice.GetProdDetail<View_ProdDetail>(OrderDetail.ProdDetailID);
+                            View_ProdDetail prodDetail = UIBizService.GetProdDetail<View_ProdDetail>(OrderDetail.ProdDetailID);
                             tb_ProductType productType = new tb_ProductType();
                             if (prodDetail.Type_ID.HasValue)
                             {
-                                productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                                productType = UIBizService.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
                             }
 
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
@@ -189,7 +189,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             PurOrderDetailsubrow.Cells[3].Value = OrderDetail.DeliveredQuantity;//还有退回数量
                             PurOrderDetailsubrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                             PurOrderDetailsubrow.Cells[6].Value = "订单产品";
-                            PurOrderDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(Order.DataStatus), Order.DataStatus).ToString();
+                            PurOrderDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(Order.DataStatus), Order.DataStatus).ToString();
 
 
                             #region 在采购订单明细中加载入库单
@@ -210,7 +210,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                         ProduceDetailrow.Cells[3].Value = PurEntryDetail.Quantity;
                                         ProduceDetailrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                                         ProduceDetailrow.Cells[6].Value = "入库";//$"{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
-                                        ProduceDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(PurEntry.DataStatus), PurEntry.DataStatus).ToString();
+                                        ProduceDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(PurEntry.DataStatus), PurEntry.DataStatus).ToString();
                                         #region 采购退货单
                                         LoadPurEntryReData(PurEntry, ProduceDetailrow, OrderDetail, prodDetail, productType);
                                         #endregion
@@ -281,7 +281,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 // PurEntryReRow.Cells[3].Value = PurEntryRe.TotalQty;
                 PurEntryReRow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                 PurEntryReRow.Cells[6].Value = "采购入库退回";
-                PurEntryReRow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(PurEntryRe.DataStatus), PurEntryRe.DataStatus).ToString();
+                PurEntryReRow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(PurEntryRe.DataStatus), PurEntryRe.DataStatus).ToString();
                 //ProduceDetailrow.Cells[3].Value = PurEntryRe.QuantityDelivered;//制令单的交付数量显示到上级的需求上
                 if (PurEntryRe.tb_PurEntryReDetails != null && PurEntryRe.tb_PurEntryReDetails.Count > 0)
                 {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Text;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -155,8 +155,8 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>是否有效</returns>
         public bool IsValid()
         {
-            return CreatedTime <= DateTime.UtcNow &&
-                   CreatedTime >= DateTime.UtcNow.AddYears(-1) &&
+            return CreatedTime <= DateTime.Now &&
+                   CreatedTime >= DateTime.Now.AddYears(-1) &&
                    !string.IsNullOrEmpty(PacketId);
         }
 

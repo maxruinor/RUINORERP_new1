@@ -187,17 +187,17 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         {
                             item.Cells[11].Value = displayHelper.GetGridViewDisplayText(nameof(tb_ProjectGroup), nameof(tb_ProjectGroup.ProjectGroup_ID), SaleOrder.ProjectGroup_ID);
                         }
-                        item.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOrder.DataStatus), SaleOrder.DataStatus).ToString();
+                        item.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(SaleOrder.DataStatus), SaleOrder.DataStatus).ToString();
                         string project = string.Empty;
                         #region 加载订单单明细
                         List<tb_SaleOrderDetail> SaleOrderDetails = SaleOrder.tb_SaleOrderDetails;
                         foreach (tb_SaleOrderDetail SaleOrderDetail in SaleOrderDetails)
                         {
-                            View_ProdDetail prodDetail = UIBizSrvice.GetProdDetail<View_ProdDetail>(SaleOrderDetail.ProdDetailID);
+                            View_ProdDetail prodDetail = UIBizService.GetProdDetail<View_ProdDetail>(SaleOrderDetail.ProdDetailID);
                             tb_ProductType productType = new tb_ProductType();
                             if (prodDetail.Type_ID.HasValue)
                             {
-                                productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                                productType = UIBizService.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
                             }
 
                             project += $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.prop}" + ";";
@@ -210,7 +210,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             PlanDetailsubrow.Cells[3].Value = SaleOrderDetail.TotalDeliveredQty;
                             PlanDetailsubrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                             PlanDetailsubrow.Cells[6].Value = "订单产品";
-                            PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOrder.DataStatus), SaleOrder.DataStatus).ToString();
+                            PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(SaleOrder.DataStatus), SaleOrder.DataStatus).ToString();
 
 
                             #region 在销售订单明细中加载出库单
@@ -231,7 +231,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                         SaleOutDetailrow.Cells[3].Value = SaleOutDetail.Quantity;
                                         SaleOutDetailrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                                         SaleOutDetailrow.Cells[6].Value = "出库";//$"{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
-                                        SaleOutDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOut.DataStatus), SaleOut.DataStatus).ToString();
+                                        SaleOutDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(SaleOut.DataStatus), SaleOut.DataStatus).ToString();
                                         #region 销售退回单
                                         LoadSaleOutReData(SaleOut, SaleOutDetailrow, SaleOrderDetail, prodDetail, productType);
                                         #endregion
@@ -302,7 +302,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 // SaleOutReRow.Cells[3].Value = SaleOutRe.TotalQty;
                 SaleOutReRow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                 SaleOutReRow.Cells[6].Value = "销售退回";
-                SaleOutReRow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(SaleOutRe.DataStatus), SaleOutRe.DataStatus).ToString();
+                SaleOutReRow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(SaleOutRe.DataStatus), SaleOutRe.DataStatus).ToString();
                 //ProduceDetailrow.Cells[3].Value = SaleOutRe.QuantityDelivered;//制令单的交付数量显示到上级的需求上
                 if (SaleOutRe.tb_SaleOutReDetails != null && SaleOutRe.tb_SaleOutReDetails.Count > 0)
                 {

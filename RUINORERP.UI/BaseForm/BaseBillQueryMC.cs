@@ -33,6 +33,7 @@ using RUINORERP.Model.Models;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.FormProperty;
+using RUINORERP.UI.HelpSystem;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.UI.PSI.PUR;
 using RUINORERP.UI.Report;
@@ -284,7 +285,10 @@ namespace RUINORERP.UI.BaseForm
                         {
                             Kpages.Add(ChildQuery());
                         }
-
+                        if (ChildRelatedEntityType==null)
+                        {
+                            ChildRelatedEntityType=typeof(C);
+                        }
                         if (this.ChildRelatedEntityType != null)
                         {
                             Kpages.Add(Child_RelatedQuery());
@@ -409,17 +413,17 @@ namespace RUINORERP.UI.BaseForm
 
         private async void menuItem设置明细表格_Click(object sender, EventArgs e)
         {
-            await UIBizSrvice.SetGridViewAsync(typeof(C), _UCBillChildQuery.newSumDataGridViewChild, CurMenuInfo, true);
+            await UIBizService.SetGridViewAsync(typeof(C), _UCBillChildQuery.newSumDataGridViewChild, CurMenuInfo, true);
         }
 
         private async void button表格显示设置_Click(object sender, EventArgs e)
         {
-            await UIBizSrvice.SetGridViewAsync(typeof(M), _UCBillMasterQuery.newSumDataGridViewMaster, CurMenuInfo, true, _UCBillMasterQuery.InvisibleCols);
+            await UIBizService.SetGridViewAsync(typeof(M), _UCBillMasterQuery.newSumDataGridViewMaster, CurMenuInfo, true, _UCBillMasterQuery.InvisibleCols);
         }
 
         private async void button设置查询条件_Click(object sender, EventArgs e)
         {
-            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDto as BaseEntity);
+            bool rs = await UIBizService.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDto as BaseEntity);
             if (rs)
             {
                 QueryDto = LoadQueryConditionToUI();
@@ -2320,11 +2324,11 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (_UCBillMasterQuery != null && _UCBillMasterQuery.newSumDataGridViewMaster != null)
                 {
-                    UIBizSrvice.SaveGridSettingData(CurMenuInfo, _UCBillMasterQuery.newSumDataGridViewMaster, typeof(M));
+                    UIBizService.SaveGridSettingData(CurMenuInfo, _UCBillMasterQuery.newSumDataGridViewMaster, typeof(M));
                 }
                 if (_UCBillChildQuery != null && _UCBillChildQuery.newSumDataGridViewChild != null)
                 {
-                    UIBizSrvice.SaveGridSettingData(CurMenuInfo, _UCBillChildQuery.newSumDataGridViewChild, typeof(C));
+                    UIBizService.SaveGridSettingData(CurMenuInfo, _UCBillChildQuery.newSumDataGridViewChild, typeof(C));
                 }
 
 
@@ -2408,7 +2412,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="msg"></param>
         /// <param name="keyData"></param>
         /// <returns></returns>
-        protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
+        protected override  bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
         {
             int WM_KEYDOWN = 256;
             int WM_SYSKEYDOWN = 260;
@@ -2421,8 +2425,34 @@ namespace RUINORERP.UI.BaseForm
                         Exit(this);
                         break;
                     case Keys.F1:
-
-                        break;
+                        // 显示帮助 - 优先显示当前焦点控件的帮助
+                        if (HelpManager.Config.IsHelpSystemEnabled)
+                        {
+                            // 对于UserControl，我们需要找到主窗体来显示帮助
+                            Form mainForm = this.FindForm();
+                            if (mainForm != null)
+                            {
+                                var focusedControl = mainForm.ActiveControl;
+                                HelpManager.ShowHelpForControl(mainForm, focusedControl);
+                            }
+                            else
+                            {
+                                // 如果找不到主窗体，显示基于类型的帮助
+                                HelpManager.ShowHelpByType(this.GetType());
+                            }
+                        }
+                        return true;
+                    case Keys.F2:
+                        // 显示帮助系统主窗体
+                        if (HelpManager.Config.IsHelpSystemEnabled)
+                        {
+                            Form mainForm = this.FindForm();
+                            if (mainForm != null)
+                            {
+                                mainForm.ShowHelpSystemForm();
+                            }
+                        }
+                        return true;
                     case Keys.Enter:
                         Query(QueryDto);
                         toolStripSplitButtonPrint.Enabled = true;
@@ -2430,7 +2460,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
             }
-            return false;
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
 
@@ -2488,8 +2518,8 @@ namespace RUINORERP.UI.BaseForm
 
             #region 请求缓存
             //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-            UIBizSrvice.RequestCache<M>();
-            UIBizSrvice.RequestCache<C>();
+            UIBizService.RequestCache<M>();
+            UIBizService.RequestCache<C>();
             #endregion
 
             //设置默认焦点
@@ -2528,14 +2558,14 @@ namespace RUINORERP.UI.BaseForm
             {
                 _UCBillMasterQuery.newSumDataGridViewMaster.NeedSaveColumnsXml = false;
                 BaseMainDataGridView = _UCBillMasterQuery.newSumDataGridViewMaster;
-                await UIBizSrvice.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols);
+                await UIBizService.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCBillMasterQuery.InvisibleCols, _UCBillMasterQuery.DefaultHideCols);
 
             }
             if (_UCBillChildQuery != null)
             {
                 _UCBillChildQuery.newSumDataGridViewChild.NeedSaveColumnsXml = false;
                 BaseSubDataGridView = _UCBillChildQuery.newSumDataGridViewChild;
-                await UIBizSrvice.SetGridViewAsync(typeof(C), BaseSubDataGridView, CurMenuInfo, false, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols);
+                await UIBizService.SetGridViewAsync(typeof(C), BaseSubDataGridView, CurMenuInfo, false, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols);
             }
 
             if (_UCBillChildQuery_Related != null && _UCBillChildQuery_Related.newSumDataGridViewChild != null)

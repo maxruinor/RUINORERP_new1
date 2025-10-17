@@ -97,6 +97,12 @@ namespace RUINORERP.Business.DI
                 .As<ICacheDataProvider>()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
+                
+            // 注册缓存同步元数据管理器，用于管理缓存同步状态信息
+            builder.RegisterType<CacheSyncMetadataManager>()
+                .As<ICacheSyncMetadata>()
+                .SingleInstance()
+                .PropertiesAutowired();
   
 
             // 注册实体加载服务

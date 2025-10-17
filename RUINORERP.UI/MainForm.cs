@@ -781,9 +781,9 @@ namespace RUINORERP.UI
             }
             else
             {
-                UIBizSrvice.RequestCache(typeof(tb_RoleInfo));
-                UIBizSrvice.RequestCache(typeof(tb_ProductType));
-                UIBizSrvice.RequestCache(typeof(View_ProdDetail));
+                UIBizService.RequestCache(typeof(tb_RoleInfo));
+                UIBizService.RequestCache(typeof(tb_ProductType));
+                UIBizService.RequestCache(typeof(View_ProdDetail));
 
                 using (StatusBusy busy = new StatusBusy("系统正在【初始化】 请稍候"))
                 {
@@ -1631,7 +1631,7 @@ namespace RUINORERP.UI
                     this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v2.0" + "-" + Program.ERPVersion;
                 }
 
-                UIBizSrvice.RequestCache(nameof(tb_RoleInfo));
+                UIBizService.RequestCache(nameof(tb_RoleInfo));
 
                 if (loginForm.IsInitPassword)
                 {
@@ -3081,7 +3081,7 @@ namespace RUINORERP.UI
 
 
                 // 您的抓取缓存逻辑FetchCacheForTable
-                UIBizSrvice.RequestCache(nextTableName);
+                UIBizService.RequestCache(nextTableName);
                 bool needRequestCache = false;
                 //Type elementType = null;
                 #region
@@ -3153,7 +3153,7 @@ namespace RUINORERP.UI
                 #endregion
                 if (needRequestCache)
                 {
-                    UIBizSrvice.RequestCache(nextTableName, elementType);
+                    UIBizService.RequestCache(nextTableName, elementType);
                     _cacheFetchManager.UpdateLastCacheFetchInfo(nextTableName);
                     if (authorizeController.GetShowDebugInfoAuthorization())
                     {

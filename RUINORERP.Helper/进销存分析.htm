@@ -1,0 +1,220 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* 鍏ㄥ眬鏍峰紡 */
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* 鏍囬鏍峰紡 */
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* 娈佃惤鏍峰紡 */
+        p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* 鍒楄〃鏍峰紡 */
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* 琛ㄦ牸鏍峰紡 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* 寮鸿皟鏂囨湰 */
+        strong {
+            color: #2c3e50;
+        }
+
+        /* 閾炬帴鏍峰紡 */
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* 鎻愮ず妗嗘牱寮?*/
+        .tip {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+    
+    <title>进销存分析</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <strong>瀵艰埅閾炬帴锛?/strong>
+    <a href="鐢熶骇绠＄悊.htm" style="margin-right: 15px;">鐢熶骇绠＄悊</a>
+    <a href="杩涢攢瀛樼鐞?htm" style="margin-right: 15px;">杩涢攢瀛樼鐞?/a>
+    <a href="鍞悗绠＄悊.htm" style="margin-right: 15px;">鍞悗绠＄悊</a>
+    <a href="瀹㈡埛鍏崇郴绠＄悊.htm" style="margin-right: 15px;">瀹㈡埛鍏崇郴</a>
+    <a href="璐㈠姟绠＄悊.htm" style="margin-right: 15px;">璐㈠姟绠＄悊</a>
+    <a href="琛屾斂绠＄悊.htm" style="margin-right: 15px;">琛屾斂绠＄悊</a>
+    <a href="鎶ヨ〃绠＄悊.htm" style="margin-right: 15px;">鎶ヨ〃绠＄悊</a>
+    <a href="鐢靛晢杩愯惀.htm" style="margin-right: 15px;">鐢靛晢杩愯惀</a>
+    <a href="鍩虹璧勬枡绠＄悊.htm" style="margin-right: 15px;">鍩虹璧勬枡</a>
+    <a href="绯荤粺璁剧疆.htm" style="margin-right: 15px;">绯荤粺璁剧疆</a>
+    <a href="閫氱敤鍔熻兘.htm" style="margin-right: 15px;">閫氱敤鍔熻兘</a>
+    <a href="瀹℃牳鍙嶅鏍哥粨妗堜笟鍔℃祦绋?htm" style="margin-right: 15px;">瀹℃牳娴佺▼</a>
+</div>
+    <h1>进销存分析</h1>
+    <p>进销存分析模块用于提供采购、销售、库存相关的统计分析报表。</p>
+    
+    <h2>功能概述</h2>
+    <p>进销存分析主要包括以下功能：</p>
+    <ul>
+        <li><strong>采购分析</strong>：分析采购情况和供应商表现</li>
+        <li><strong>销售分析</strong>：分析销售情况和客户表现</li>
+        <li><strong>库存分析</strong>：分析库存状况和周转率</li>
+        <li><strong>成本分析</strong>：分析采购和销售成本</li>
+        <li><strong>利润分析</strong>：分析销售利润和盈利情况</li>
+    </ul>
+    
+    <h2>核心业务流程</h2>
+    <h3>1. 数据收集流程</h3>
+    <p>收集采购、销售、库存等业务数据。</p>
+    
+    <h3>2. 数据分析流程</h3>
+    <p>对收集的数据进行统计分析。</p>
+    
+    <h3>3. 报表生成流程</h3>
+    <p>根据分析结果生成各类分析报表。</p>
+    
+    <h2>主要报表类型</h2>
+    <ul>
+        <li><strong>采购分析报表</strong>：分析采购情况和供应商表现</li>
+        <li><strong>销售分析报表</strong>：分析销售情况和客户表现</li>
+        <li><strong>库存分析报表</strong>：分析库存状况和周转率</li>
+        <li><strong>成本分析报表</strong>：分析采购和销售成本</li>
+        <li><strong>利润分析报表</strong>：分析销售利润和盈利情况</li>
+    </ul>
+    
+    <h2>关键字段说明</h2>
+    <table border="1">
+        <tr>
+            <th>字段名</th>
+            <th>说明</th>
+        </tr>
+        <tr>
+            <td>分析期间</td>
+            <td>进销存分析的时间范围</td>
+        </tr>
+        <tr>
+            <td>产品名称</td>
+            <td>分析的产品名称</td>
+        </tr>
+        <tr>
+            <td>采购数量</td>
+            <td>采购的数量</td>
+        </tr>
+        <tr>
+            <td>销售数量</td>
+            <td>销售的数量</td>
+        </tr>
+        <tr>
+            <td>期初库存</td>
+            <td>期初库存数量</td>
+        </tr>
+        <tr>
+            <td>期末库存</td>
+            <td>期末库存数量</td>
+        </tr>
+        <tr>
+            <td>库存周转率</td>
+            <td>库存周转率</td>
+        </tr>
+        <tr>
+            <td>毛利率</td>
+            <td>销售毛利率</td>
+        </tr>
+    </table>
+</body>
+</html>

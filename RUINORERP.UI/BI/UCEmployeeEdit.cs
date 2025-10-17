@@ -229,7 +229,7 @@ namespace RUINORERP.UI.BI
                 frmaddg.BindData(bty);
                 if (frmaddg.ShowDialog() == DialogResult.OK)
                 {
-                    UIBizSrvice.SavePayeeInfo(payeeInfo);
+                    UIBizService.SavePayeeInfo(payeeInfo);
                 }
             }
 

@@ -1234,20 +1234,15 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // 使用缓存管理器更新实体
+                // 使用缓存管理器更新实体列表
                 if (request.Data != null)
                 {
                     _cacheManager.UpdateEntityList(request.TableName, request.Data);
-                }
-                // 使用缓存管理器批量更新实体
-                if (request.Data != null)
-                {
-                    _cacheManager.UpdateEntityList(request.TableName, request.Data);
-                    //  logger.Debug($"批量更新操作成功: 表名={request.TableName}, 数据量={request.Data.Count}");
+                    logger.LogDebug($"更新操作成功: 表名={request.TableName}");
                 }
                 else
                 {
-                    logger.Debug($"批量更新操作数据为空: 表名={request.TableName}");
+                    logger.LogDebug($"更新操作数据为空: 表名={request.TableName}");
                 }
             }
             catch (Exception ex)
@@ -1266,15 +1261,15 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                //如果根据传过来数据情况。是多个KEY还是一个key删除
-                // 使用缓存管理器删除实体
-                if (request.Parameters["PrimaryKeyName"] != null)
+                // 检查是否有主键名和主键值
+                if (!string.IsNullOrEmpty(request.PrimaryKeyName) && request.PrimaryKeyValue != null)
                 {
-                    _cacheManager.DeleteEntity(request.TableName, request.Parameters["PrimaryKeyName"].ToString());
+                    _cacheManager.DeleteEntity(request.TableName, request.PrimaryKeyValue);
+                    logger.LogDebug($"删除操作成功: 表名={request.TableName}, 主键={request.PrimaryKeyName}, 值={request.PrimaryKeyValue}");
                 }
                 else
                 {
-                    logger.Debug($"删除操作参数不完整: 表名={request.TableName}, 主键={request.Parameters["PrimaryKeyName"]}, 值={request.Parameters["PrimaryKeyName"]}");
+                    logger.LogDebug($"删除操作参数不完整: 表名={request.TableName}");
                 }
             }
             catch (Exception ex)
@@ -1292,9 +1287,9 @@ namespace RUINORERP.Server.Network.Commands
         {
             try
             {
-                // 清空操作的处理逻辑
-                //_cacheManager.ClearTableCache(request.TableName);
-                logger.Debug($"清空操作成功: 表名={request.TableName}");
+                // 使用缓存管理器清空表缓存
+                _cacheManager.DeleteEntityList(request.TableName);
+                logger.LogDebug($"清空操作成功: 表名={request.TableName}");
             }
             catch (Exception ex)
             {

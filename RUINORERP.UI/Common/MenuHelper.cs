@@ -506,6 +506,11 @@ namespace RUINORERP.UI.Common
                                 if (!pr.BIBaseForm.Contains("BaseBillEditGeneric") && !pr.BIBaseForm.Contains("BaseEditGeneric") && !pr.BIBaseForm.Contains("BaseListGeneric"))
                                 {
                                     var menu = Startup.GetFromFacByName<UserControl>(pr.FormName);
+                                    if (menu == null)
+                                    {
+                                        MessageBox.Show("未找到窗体:" + pr.FormName + " 请配置正确的菜单 ");
+                                        return;
+                                    }
                                     page = NewPage(pr.CaptionCN, 1, menu);
                                 }
 
@@ -638,7 +643,7 @@ namespace RUINORERP.UI.Common
                             Type genericParameterType = genericArguments[0];
                             var baseUControl = (BaseUControl)control;
 
-                            UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseDataGridView1, genericParameterType);
+                            UIBizService.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseDataGridView1, genericParameterType);
 
                             // 使用反射创建泛型类型的实例
                             //  Type genericListType = typeof(BaseListGeneric<>).MakeGenericType(genericParameterType);
@@ -667,11 +672,11 @@ namespace RUINORERP.UI.Common
                             Type genericParameterType = genericArguments[0];
                             var baseUControl = (BaseQuery)control;
 
-                            UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
+                            UIBizService.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
 
                             if (genericArguments.Length == 2 && !genericArguments[0].Name.Equals(genericArguments[1].Name))
                             {
-                                UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseSubDataGridView, genericArguments[1]);
+                                UIBizService.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseSubDataGridView, genericArguments[1]);
 
                             }
 
@@ -686,7 +691,7 @@ namespace RUINORERP.UI.Common
                         {
                             Type genericParameterType = genericArguments[0];
                             var baseUControl = (BaseNavigator)control;
-                            UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericArguments[0]);
+                            UIBizService.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericArguments[0]);
                         }
                     }
 

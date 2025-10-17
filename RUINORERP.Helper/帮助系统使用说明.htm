@@ -1,0 +1,235 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* 鍏ㄥ眬鏍峰紡 */
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* 鏍囬鏍峰紡 */
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* 娈佃惤鏍峰紡 */
+        p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* 鍒楄〃鏍峰紡 */
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* 琛ㄦ牸鏍峰紡 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* 寮鸿皟鏂囨湰 */
+        strong {
+            color: #2c3e50;
+        }
+
+        /* 閾炬帴鏍峰紡 */
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* 鎻愮ず妗嗘牱寮?*/
+        .tip {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+    
+    <title>RUINOR ERP 帮助系统使用说明</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <strong>瀵艰埅閾炬帴锛?/strong>
+    <a href="鐢熶骇绠＄悊.htm" style="margin-right: 15px;">鐢熶骇绠＄悊</a>
+    <a href="杩涢攢瀛樼鐞?htm" style="margin-right: 15px;">杩涢攢瀛樼鐞?/a>
+    <a href="鍞悗绠＄悊.htm" style="margin-right: 15px;">鍞悗绠＄悊</a>
+    <a href="瀹㈡埛鍏崇郴绠＄悊.htm" style="margin-right: 15px;">瀹㈡埛鍏崇郴</a>
+    <a href="璐㈠姟绠＄悊.htm" style="margin-right: 15px;">璐㈠姟绠＄悊</a>
+    <a href="琛屾斂绠＄悊.htm" style="margin-right: 15px;">琛屾斂绠＄悊</a>
+    <a href="鎶ヨ〃绠＄悊.htm" style="margin-right: 15px;">鎶ヨ〃绠＄悊</a>
+    <a href="鐢靛晢杩愯惀.htm" style="margin-right: 15px;">鐢靛晢杩愯惀</a>
+    <a href="鍩虹璧勬枡绠＄悊.htm" style="margin-right: 15px;">鍩虹璧勬枡</a>
+    <a href="绯荤粺璁剧疆.htm" style="margin-right: 15px;">绯荤粺璁剧疆</a>
+    <a href="閫氱敤鍔熻兘.htm" style="margin-right: 15px;">閫氱敤鍔熻兘</a>
+    <a href="瀹℃牳鍙嶅鏍哥粨妗堜笟鍔℃祦绋?htm" style="margin-right: 15px;">瀹℃牳娴佺▼</a>
+</div>
+    <h1>RUINOR ERP 帮助系统使用说明</h1>
+    <p>本文档介绍如何使用RUINOR ERP系统的帮助系统。</p>
+    
+    <h2>帮助系统概述</h2>
+    <p>RUINOR ERP帮助系统是一个集成的帮助平台，提供全面的系统使用指导。帮助系统支持以下功能：</p>
+    <ul>
+        <li><strong>上下文相关帮助</strong>：按F1键显示当前界面或控件的相关帮助</li>
+        <li><strong>全局帮助搜索</strong>：按F2键打开帮助系统主界面，支持全文搜索</li>
+        <li><strong>结构化目录导航</strong>：通过目录结构快速定位帮助内容</li>
+        <li><strong>索引查找</strong>：通过关键字索引快速查找相关内容</li>
+    </ul>
+    
+    <h2>使用方法</h2>
+    <h3>1. 快捷键使用</h3>
+    <ul>
+        <li><strong>F1键</strong>：显示当前焦点控件或窗体的帮助信息</li>
+        <li><strong>F2键</strong>：打开帮助系统主界面，提供搜索和导航功能</li>
+    </ul>
+    
+    <h3>2. 帮助内容分类</h3>
+    <p>帮助内容按以下方式组织：</p>
+    <ul>
+        <li><strong>模块级帮助</strong>：介绍各业务模块的功能和使用方法</li>
+        <li><strong>窗体级帮助</strong>：介绍具体窗体的功能和操作方法</li>
+        <li><strong>控件级帮助</strong>：介绍界面控件的功能和使用方法</li>
+        <li><strong>流程级帮助</strong>：介绍业务流程和操作步骤</li>
+    </ul>
+    
+    <h3>3. 帮助导航</h3>
+    <p>用户可以通过以下方式浏览帮助内容：</p>
+    <ul>
+        <li><strong>目录导航</strong>：在帮助窗口左侧的目录树中浏览</li>
+        <li><strong>索引查找</strong>：通过关键字索引快速定位内容</li>
+        <li><strong>全文搜索</strong>：使用搜索功能查找相关内容</li>
+    </ul>
+    
+    <h2>帮助内容维护</h2>
+    <h3>1. 帮助文件结构</h3>
+    <p>帮助文件按以下结构组织：</p>
+    <ul>
+        <li><strong>模块帮助文件</strong>：每个业务模块对应一个帮助文件</li>
+        <li><strong>窗体帮助文件</strong>：每个窗体对应一个帮助文件，存放在forms目录</li>
+        <li><strong>控件帮助文件</strong>：每个控件对应一个帮助文件，存放在controls目录</li>
+    </ul>
+    
+    <h3>2. 帮助文件格式</h3>
+    <p>所有帮助文件采用HTML格式，包含以下标准元素：</p>
+    <ul>
+        <li><strong>标题</strong>：使用h1标签作为主标题</li>
+        <li><strong>功能概述</strong>：简要介绍功能用途</li>
+        <li><strong>操作流程</strong>：详细说明操作步骤</li>
+        <li><strong>字段说明</strong>：关键字段的详细说明</li>
+    </ul>
+    
+    <h3>3. 帮助系统编译</h3>
+    <p>更新帮助内容后，需要重新编译CHM文件：</p>
+    <ol>
+        <li>运行"编译帮助.bat"脚本</li>
+        <li>系统会自动调用HTML Help Workshop编译帮助文件</li>
+        <li>编译成功后生成新的help.chm文件</li>
+    </ol>
+    
+    <h2>常见问题</h2>
+    <h3>1. 帮助窗口无法显示</h3>
+    <p>可能原因及解决方法：</p>
+    <ul>
+        <li>未安装HTML Help Workshop - 请安装相应组件</li>
+        <li>help.chm文件损坏 - 重新编译帮助文件</li>
+        <li>权限不足 - 以管理员身份运行程序</li>
+    </ul>
+    
+    <h3>2. F1键无响应</h3>
+    <p>可能原因及解决方法：</p>
+    <ul>
+        <li>帮助系统未正确集成 - 检查HelpMapping特性设置</li>
+        <li>焦点控件无对应帮助 - 为控件设置帮助键</li>
+        <li>帮助文件缺失 - 检查对应帮助文件是否存在</li>
+    </ul>
+    
+    <h2>技术支持</h2>
+    <p>如有任何帮助系统使用问题，请联系技术支持：</p>
+    <ul>
+        <li>技术支持邮箱：support@ruinor.com</li>
+        <li>技术支持电话：400-123-4567</li>
+        <li>在线帮助文档：http://help.ruinor.com</li>
+    </ul>
+</body>
+</html>

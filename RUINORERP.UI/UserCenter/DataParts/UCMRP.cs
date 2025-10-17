@@ -178,17 +178,17 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         {
                             item.Cells[11].Value = ProductionPlan.tb_projectgroup.ProjectGroupName;
                         }
-                        item.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(ProductionPlan.DataStatus), ProductionPlan.DataStatus).ToString();
+                        item.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(ProductionPlan.DataStatus), ProductionPlan.DataStatus).ToString();
                         string project = string.Empty;
                         #region 加载计划单明细
                         List<tb_ProductionPlanDetail> PlanDetails = ProductionPlan.tb_ProductionPlanDetails;
                         foreach (tb_ProductionPlanDetail PlanDetail in PlanDetails)
                         {
-                            View_ProdDetail prodDetail = UIBizSrvice.GetProdDetail<View_ProdDetail>(PlanDetail.ProdDetailID);
+                            View_ProdDetail prodDetail = UIBizService.GetProdDetail<View_ProdDetail>(PlanDetail.ProdDetailID);
                             tb_ProductType productType = new tb_ProductType();
                             if (prodDetail.Type_ID.HasValue)
                             {
-                                productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                                productType = UIBizService.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
                             }
                             project += $"{productType.TypeName}:{prodDetail.CNName}-{prodDetail.prop}" + ";";
 
@@ -201,7 +201,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             PlanDetailsubrow.Cells[3].Value = PlanDetail.CompletedQuantity;
                             PlanDetailsubrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                             PlanDetailsubrow.Cells[6].Value = "计划产品";
-                            PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(ProductionPlan.DataStatus), ProductionPlan.DataStatus).ToString();
+                            PlanDetailsubrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(ProductionPlan.DataStatus), ProductionPlan.DataStatus).ToString();
                             #region 在计划明细中加载自制品明细
 
                             List<tb_ProductionDemand> demandList = ProductionPlan.tb_ProductionDemands;
@@ -219,7 +219,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                         ProduceDetailrow.Cells[2].Value = ProduceDetail.RequirementQty;//分析日期
                                         ProduceDetailrow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                                         ProduceDetailrow.Cells[6].Value = "主需求";//$"{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
-                                        ProduceDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(demand.DataStatus), demand.DataStatus).ToString();
+                                        ProduceDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(demand.DataStatus), demand.DataStatus).ToString();
                                         #region 制令单显示列
                                         BindMOData(ProduceDetail, ProduceDetailrow, prodDetail, productType);
                                         #endregion
@@ -280,11 +280,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 foreach (tb_ProduceGoodsRecommendDetail SubProduceDetail in SubSelfDetails)
                 {
-                    View_ProdDetail SubProdDetail = UIBizSrvice.GetProdDetail<View_ProdDetail>(SubProduceDetail.ProdDetailID);
+                    View_ProdDetail SubProdDetail = UIBizService.GetProdDetail<View_ProdDetail>(SubProduceDetail.ProdDetailID);
                     tb_ProductType productType = new tb_ProductType();
                     if (prodDetail.Type_ID.HasValue)
                     {
-                        productType = UIBizSrvice.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
+                        productType = UIBizService.GetProdDetail<tb_ProductType>(prodDetail.Type_ID.Value);
                     }
                     //子级
                     KryptonTreeGridNodeRow SubProduceDetailrow = ProduceDetailrow.Nodes.Add(demand.PDNo.ToString());
@@ -326,7 +326,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 manufacturerow.Cells[4].Value = $"{productType.TypeName}:{prodDetail.CNName}{prodDetail.Specifications}{prodDetail.Model}{prodDetail.prop}";//项目
                 manufacturerow.Cells[6].Value = "制令单";
                 ProduceDetailrow.Cells[3].Value = manufacturingOrder.QuantityDelivered;//制令单的交付数量显示到上级的需求上
-                manufacturerow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(manufacturingOrder.DataStatus), manufacturingOrder.DataStatus).ToString();
+                manufacturerow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(manufacturingOrder.DataStatus), manufacturingOrder.DataStatus).ToString();
                 if (manufacturingOrder.tb_MaterialRequisitions != null && manufacturingOrder.tb_MaterialRequisitions.Count > 0)
                 {
                     #region 发料单 只显示一个状态
@@ -337,7 +337,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         MaterialRequisitionrow.Cells[0].Tag = "MaterialRequisitionNO";// 保存列名 值对象的列名。比方值是编号：则是PDNo
                         MaterialRequisitionrow.Cells[1].Value = MaterialRequisition.DeliveryDate.Value.ToString("yyyy-MM-dd");//日期
                         MaterialRequisitionrow.Cells[2].Value = MaterialRequisition.ExpectedQuantity;//预计数量
-                        MaterialRequisitionrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(MaterialRequisition.DataStatus), MaterialRequisition.DataStatus).ToString();
+                        MaterialRequisitionrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(MaterialRequisition.DataStatus), MaterialRequisition.DataStatus).ToString();
                         if (MaterialRequisition.DataStatus == (int)DataStatus.确认 || MaterialRequisition.DataStatus == (int)DataStatus.完结)
                         {
                             MaterialRequisitionrow.Cells[4].Value = "已发料";
@@ -361,7 +361,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                             FinishedGoodsDetailrow.Cells[1].Value = FinishedGoodsInv.DeliveryDate.ToString("yyyy-MM-dd"); //日期
                             FinishedGoodsDetailrow.Cells[2].Value = FinishedGoodsInvDetail.PayableQty;
                             FinishedGoodsDetailrow.Cells[3].Value = FinishedGoodsInvDetail.Qty;
-                            FinishedGoodsDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizSrvice.GetFixedDataDict(), nameof(FinishedGoodsInv.DataStatus), FinishedGoodsInv.DataStatus).ToString();
+                            FinishedGoodsDetailrow.Cells[12].Value = UIHelper.GetDisplayText(UIBizService.GetFixedDataDict(), nameof(FinishedGoodsInv.DataStatus), FinishedGoodsInv.DataStatus).ToString();
                             if (FinishedGoodsInvDetail.PayableQty == FinishedGoodsInvDetail.Qty)
                             {
                                 FinishedGoodsDetailrow.Cells[4].Value = "全部缴库";

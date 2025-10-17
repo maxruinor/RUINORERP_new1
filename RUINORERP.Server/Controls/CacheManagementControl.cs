@@ -27,6 +27,7 @@ using System.Collections;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Business.Cache;
 
+
 namespace RUINORERP.Server.Controls
 {
     public partial class CacheManagementControl : UserControl
@@ -39,17 +40,110 @@ namespace RUINORERP.Server.Controls
             InitializeComponent();
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
             _logger = Program.ServiceProvider.GetRequiredService<ILogger<CacheManagementControl>>();
+            _entityCacheManager = Program.ServiceProvider.GetRequiredService<IEntityCacheManager>();
         }
 
         private void CacheManagementControl_Load(object sender, EventArgs e)
         {
             LoadCacheToUI();
+            // 初始化统计表格
+            InitStatisticsGrids();
+            // 加载缓存统计数据
+            LoadCacheStatistics();
+        }
+
+        /// <summary>
+        /// 初始化统计数据表格
+        /// </summary>
+        private void InitStatisticsGrids()
+        {
+            try
+            {
+                // 初始化按表统计表格
+                dataGridViewTableStats.AutoGenerateColumns = false;
+                dataGridViewTableStats.Columns.Clear();
+                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "TableName", HeaderText = "表名", DataPropertyName = "TableName", Width = 150 });
+                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "ItemCount", HeaderText = "缓存项数", DataPropertyName = "ItemCount", Width = 80 });
+                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "EstimatedSize", HeaderText = "估计大小(KB)", DataPropertyName = "EstimatedSize", Width = 100 });
+                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "Hits", HeaderText = "命中次数", DataPropertyName = "Hits", Width = 80 });
+                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "Misses", HeaderText = "未命中次数", DataPropertyName = "Misses", Width = 100 });
+                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "HitRatio", HeaderText = "命中率", DataPropertyName = "HitRatio", Width = 80 });
+                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "LastUpdated", HeaderText = "最后更新时间", DataPropertyName = "LastUpdated", Width = 150 });
+
+                // 初始化缓存项统计表格
+                dataGridViewItemStats.AutoGenerateColumns = false;
+                dataGridViewItemStats.Columns.Clear();
+                dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "CacheKey", HeaderText = "缓存键", DataPropertyName = "CacheKey", Width = 200 });
+                dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "TypeName", HeaderText = "类型", DataPropertyName = "TypeName", Width = 120 });
+                dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "TableName", HeaderText = "表名", DataPropertyName = "TableName", Width = 100 });
+                dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "CreatedTime", HeaderText = "创建时间", DataPropertyName = "CreatedTime", Width = 150 });
+                dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "LastAccessed", HeaderText = "最后访问时间", DataPropertyName = "LastAccessed", Width = 150 });
+                dataGridViewItemStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "AccessCount", HeaderText = "访问次数", DataPropertyName = "AccessCount", Width = 80 });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "初始化统计表格时发生错误");
+            }
         }
 
         /// <summary>
         /// 所有实体表都在这个命名空间下，不需要每次都反射
         /// </summary>
         //Assembly assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+private readonly IEntityCacheManager _entityCacheManager;
+        
+        /// <summary>
+        /// 加载缓存统计数据
+        /// </summary>
+        private void LoadCacheStatistics()
+        {
+            try
+            {
+                // 检查是否实现了ICacheStatistics接口
+                if (_entityCacheManager is ICacheStatistics cacheStats)
+                {
+                    // 更新全局统计指标
+                    txtHits.Text = cacheStats.CacheHits.ToString();
+                    txtMisses.Text = cacheStats.CacheMisses.ToString();
+                    txtItemCount.Text = cacheStats.CacheItemCount.ToString();
+                    txtEstimatedSize.Text = $"{cacheStats.EstimatedCacheSize / 1024.0:F2} KB";
+                    
+                    // 计算并显示命中率
+                    long totalAccess = cacheStats.CacheHits + cacheStats.CacheMisses;
+                    if (totalAccess > 0)
+                    {
+                        double hitRate = (double)cacheStats.CacheHits / totalAccess * 100;
+                        txtHitRatio.Text = $"{hitRate:F2}%";
+                    }
+                    else
+                    {
+                        txtHitRatio.Text = "0.00%";
+                    }
+
+                    // 加载按表统计数据
+                    var tableStats = cacheStats.GetTableCacheStatistics();
+                    dataGridViewTableStats.DataSource = tableStats;
+
+                    // 加载缓存项统计数据
+                    var itemStats = cacheStats.GetCacheItemStatistics();
+                    dataGridViewItemStats.DataSource = itemStats;
+                }
+                else
+                {
+                    // 接口未实现的提示
+                    MessageBox.Show("当前缓存管理器未实现ICacheStatistics接口，无法显示缓存统计数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "加载缓存统计数据时发生错误");
+                MessageBox.Show($"加载缓存统计数据失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #region 事件处理
+
+       
         private void listBoxTableList_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
@@ -204,6 +298,9 @@ namespace RUINORERP.Server.Controls
 
                 // 刷新UI显示
                 LoadCacheToUI();
+                
+                // 刷新缓存统计数据
+                LoadCacheStatistics();
 
                 // 如果有选中的表，刷新该表的数据
                 if (listBoxTableList.SelectedItem != null && listBoxTableList.SelectedItem is SuperValue kv)
@@ -284,6 +381,9 @@ namespace RUINORERP.Server.Controls
 
                 // 加载完成后刷新UI
                 LoadCacheToUI();
+                
+                // 刷新缓存统计数据
+                LoadCacheStatistics();
 
                 MessageBox.Show("缓存加载完成", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -380,6 +480,9 @@ namespace RUINORERP.Server.Controls
 
                     // 刷新UI显示
                     LoadCacheToUI();
+                    
+                    // 刷新缓存统计数据
+                    LoadCacheStatistics();
 
                     // 重新选中当前项以刷新数据显示
                     listBoxTableList.SelectedItem = kv;
@@ -454,5 +557,33 @@ namespace RUINORERP.Server.Controls
                 e.Handled = true;
             }
         }
+
+        // 刷新缓存统计数据
+        public void btnRefreshStatistics_Click(object sender, EventArgs e)
+        {
+            LoadCacheStatistics();
+        }
+
+        // 重置缓存统计数据
+        public void btnResetStatistics_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (_entityCacheManager is ICacheStatistics cacheStats)
+                {
+                    cacheStats.ResetStatistics();
+                    LoadCacheStatistics();
+                    MessageBox.Show("缓存统计数据已重置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "重置缓存统计数据时发生错误");
+                MessageBox.Show($"重置缓存统计数据失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
+
     }
 }

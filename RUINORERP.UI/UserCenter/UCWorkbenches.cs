@@ -47,8 +47,8 @@ namespace RUINORERP.UI.UserCenter
 
             #region 请求缓存
             //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-            UIBizSrvice.RequestCache<tb_Prod>();
-            UIBizSrvice.RequestCache<tb_Employee>();
+            UIBizService.RequestCache<tb_Prod>();
+            UIBizService.RequestCache<tb_Employee>();
             #endregion
 
             // Setup docking functionality

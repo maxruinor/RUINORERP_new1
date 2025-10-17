@@ -24,6 +24,7 @@ using LiveChartsCore.Geo;
 using Netron.GraphLib;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.Model;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.PSI.PUR
 {
@@ -113,12 +114,13 @@ namespace RUINORERP.UI.PSI.PUR
             }
 
             var ReceivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-            tb_FM_ReceivablePayable ReceivablePayable =  ReceivablePayableController.BuildReceivablePayable(RealList[0]);
+            tb_FM_ReceivablePayable ReceivablePayable = ReceivablePayableController.BuildReceivablePayable(RealList[0]);
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             string Flag = string.Empty;
-            //红字付款
-            Flag = typeof(RUINORERP.UI.FM.UCReceivable).FullName;
+            //红字  采购退货 用应付款【红字】
+
+            Flag = typeof(RUINORERP.UI.FM.UCPayable).FullName;
 
             tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
                         && m.EntityName == nameof(tb_FM_ReceivablePayable)
@@ -161,7 +163,7 @@ namespace RUINORERP.UI.PSI.PUR
             //expr2 = (p) => p.Gift;// == name;
             //base.ChildColNameDataDictionary.TryAdd(expr2.GetMemberInfo().Name, kvlist1);
 
-            
+
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
             foreach (var item in MainForm.Instance.View_ProdDetailList)
             {

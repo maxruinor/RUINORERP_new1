@@ -1,0 +1,220 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* 鍏ㄥ眬鏍峰紡 */
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        /* 鏍囬鏍峰紡 */
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        /* 娈佃惤鏍峰紡 */
+        p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        /* 鍒楄〃鏍峰紡 */
+        ul, ol {
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* 琛ㄦ牸鏍峰紡 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        tr:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* 寮鸿皟鏂囨湰 */
+        strong {
+            color: #2c3e50;
+        }
+
+        /* 閾炬帴鏍峰紡 */
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+
+        /* 鎻愮ず妗嗘牱寮?*/
+        .tip {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+    
+    <title>BOM分析报表</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+    <strong>瀵艰埅閾炬帴锛?/strong>
+    <a href="鐢熶骇绠＄悊.htm" style="margin-right: 15px;">鐢熶骇绠＄悊</a>
+    <a href="杩涢攢瀛樼鐞?htm" style="margin-right: 15px;">杩涢攢瀛樼鐞?/a>
+    <a href="鍞悗绠＄悊.htm" style="margin-right: 15px;">鍞悗绠＄悊</a>
+    <a href="瀹㈡埛鍏崇郴绠＄悊.htm" style="margin-right: 15px;">瀹㈡埛鍏崇郴</a>
+    <a href="璐㈠姟绠＄悊.htm" style="margin-right: 15px;">璐㈠姟绠＄悊</a>
+    <a href="琛屾斂绠＄悊.htm" style="margin-right: 15px;">琛屾斂绠＄悊</a>
+    <a href="鎶ヨ〃绠＄悊.htm" style="margin-right: 15px;">鎶ヨ〃绠＄悊</a>
+    <a href="鐢靛晢杩愯惀.htm" style="margin-right: 15px;">鐢靛晢杩愯惀</a>
+    <a href="鍩虹璧勬枡绠＄悊.htm" style="margin-right: 15px;">鍩虹璧勬枡</a>
+    <a href="绯荤粺璁剧疆.htm" style="margin-right: 15px;">绯荤粺璁剧疆</a>
+    <a href="閫氱敤鍔熻兘.htm" style="margin-right: 15px;">閫氱敤鍔熻兘</a>
+    <a href="瀹℃牳鍙嶅鏍哥粨妗堜笟鍔℃祦绋?htm" style="margin-right: 15px;">瀹℃牳娴佺▼</a>
+</div>
+    <h1>BOM分析报表</h1>
+    <p>BOM分析报表模块用于分析物料清单(BOM)的使用情况和成本构成。</p>
+    
+    <h2>功能概述</h2>
+    <p>BOM分析报表主要包括以下功能：</p>
+    <ul>
+        <li><strong>BOM使用分析</strong>：分析各产品BOM的使用频率和范围</li>
+        <li><strong>BOM成本分析</strong>：分析BOM中各物料的成本构成</li>
+        <li><strong>BOM变更分析</strong>：分析BOM的变更历史和影响</li>
+        <li><strong>BOM替代分析</strong>：分析BOM中物料的替代使用情况</li>
+        <li><strong>BOM优化建议</strong>：基于分析结果提供BOM优化建议</li>
+    </ul>
+    
+    <h2>核心业务流程</h2>
+    <h3>1. BOM使用情况分析流程</h3>
+    <p>统计各产品BOM在生产中的使用情况，分析使用频率和范围。</p>
+    
+    <h3>2. BOM成本构成分析流程</h3>
+    <p>分析BOM中各物料的成本占比，识别成本控制重点。</p>
+    
+    <h3>3. BOM变更影响分析流程</h3>
+    <p>分析BOM变更对生产成本和工艺的影响。</p>
+    
+    <h2>主要报表类型</h2>
+    <ul>
+        <li><strong>BOM使用统计表</strong>：统计各产品BOM的使用情况</li>
+        <li><strong>BOM成本构成表</strong>：分析BOM中各物料的成本构成</li>
+        <li><strong>BOM变更记录表</strong>：记录BOM的变更历史</li>
+        <li><strong>BOM替代物料表</strong>：分析BOM中物料的替代使用情况</li>
+        <li><strong>BOM优化建议表</strong>：提供基于分析结果的优化建议</li>
+    </ul>
+    
+    <h2>关键字段说明</h2>
+    <table border="1">
+        <tr>
+            <th>字段名</th>
+            <th>说明</th>
+        </tr>
+        <tr>
+            <td>产品编码</td>
+            <td>产品的唯一标识编码</td>
+        </tr>
+        <tr>
+            <td>产品名称</td>
+            <td>产品的名称</td>
+        </tr>
+        <tr>
+            <td>BOM版本</td>
+            <td>BOM的版本号</td>
+        </tr>
+        <tr>
+            <td>物料编码</td>
+            <td>BOM中使用的物料编码</td>
+        </tr>
+        <tr>
+            <td>物料名称</td>
+            <td>BOM中使用的物料名称</td>
+        </tr>
+        <tr>
+            <td>单位用量</td>
+            <td>每单位产品所需该物料的数量</td>
+        </tr>
+        <tr>
+            <td>单价</td>
+            <td>该物料的单价</td>
+        </tr>
+        <tr>
+            <td>成本占比</td>
+            <td>该物料在产品总成本中的占比</td>
+        </tr>
+    </table>
+</body>
+</html>

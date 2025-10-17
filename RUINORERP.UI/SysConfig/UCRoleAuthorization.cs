@@ -335,7 +335,7 @@ namespace RUINORERP.UI.SysConfig
         }
         private async void UCRoleAuthorization_Load(object sender, EventArgs e)
         {
-            UIBizSrvice.RequestCache<tb_RowAuthPolicy>();
+            UIBizService.RequestCache<tb_RowAuthPolicy>();
             DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_P4RowAuthPolicyByRole));
             kryptonNavigator1.SelectedPageChanged += KryptonNavigator1_SelectedIndexChanged;
 

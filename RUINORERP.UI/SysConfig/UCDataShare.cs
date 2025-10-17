@@ -192,7 +192,7 @@ namespace RUINORERP.UI.SysConfig
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                UIBizSrvice.RequestCache(tableName);
+                UIBizService.RequestCache(tableName);
             }
         }
 
@@ -1274,9 +1274,9 @@ namespace RUINORERP.UI.SysConfig
         public KryptonDockingWorkspace ws;
         protected void Exit(object thisform)
         {
-            UIBizSrvice.SaveGridSettingData(CurMenuInfo, newSumDataGridViewOut, typeof(tb_Prod));
+            UIBizService.SaveGridSettingData(CurMenuInfo, newSumDataGridViewOut, typeof(tb_Prod));
 
-            UIBizSrvice.SaveGridSettingData(CurMenuInfo, newSumDataGridViewImport, typeof(tb_Prod));
+            UIBizService.SaveGridSettingData(CurMenuInfo, newSumDataGridViewImport, typeof(tb_Prod));
 
             CloseTheForm(thisform);
         }

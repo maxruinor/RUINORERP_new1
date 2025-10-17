@@ -245,12 +245,12 @@ namespace RUINORERP.UI.BaseForm
 
         private async void button表格显示设置_Click(object sender, EventArgs e)
         {
-            await UIBizSrvice.SetGridViewAsync(typeof(M), _UCMasterQuery.newSumDataGridViewMaster, CurMenuInfo, true);
+            await UIBizService.SetGridViewAsync(typeof(M), _UCMasterQuery.newSumDataGridViewMaster, CurMenuInfo, true);
         }
 
         private async void button设置查询条件_Click(object sender, EventArgs e)
         {
-            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryFilter, QueryDto);
+            bool rs = await UIBizService.SetQueryConditionsAsync(CurMenuInfo, QueryFilter, QueryDto);
             if (rs)
             {
                 LoadQueryConditionToUI();
@@ -569,7 +569,7 @@ namespace RUINORERP.UI.BaseForm
         {
             if (_UCMasterQuery != null && _UCMasterQuery.newSumDataGridViewMaster != null)
             {
-                UIBizSrvice.SaveGridSettingData(CurMenuInfo, _UCMasterQuery.newSumDataGridViewMaster, typeof(M));
+                UIBizService.SaveGridSettingData(CurMenuInfo, _UCMasterQuery.newSumDataGridViewMaster, typeof(M));
             }
 
             //保存配置
@@ -890,8 +890,8 @@ namespace RUINORERP.UI.BaseForm
 
             #region 请求缓存
             //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-            UIBizSrvice.RequestCache<M>();
-            UIBizSrvice.RequestCache<C>();
+            UIBizService.RequestCache<M>();
+            UIBizService.RequestCache<C>();
             #endregion
 
             List<M> list = new List<M>();
@@ -900,7 +900,7 @@ namespace RUINORERP.UI.BaseForm
 
             BaseMainDataGridView = _UCMasterQuery.newSumDataGridViewMaster;
             _UCMasterQuery.newSumDataGridViewMaster.NeedSaveColumnsXml = false;
-            await UIBizSrvice.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCMasterQuery.InvisibleCols, _UCMasterQuery.DefaultHideCols);
+            await UIBizService.SetGridViewAsync(typeof(M), BaseMainDataGridView, CurMenuInfo, false, _UCMasterQuery.InvisibleCols, _UCMasterQuery.DefaultHideCols);
 
         }
 

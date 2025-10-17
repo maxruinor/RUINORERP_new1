@@ -436,12 +436,12 @@ namespace RUINORERP.UI.BaseForm
 
         private async void button表格显示设置_Click(object sender, EventArgs e)
         {
-            await UIBizSrvice.SetGridViewAsync(typeof(T), this.dataGridView1, CurMenuInfo, true);
+            await UIBizService.SetGridViewAsync(typeof(T), this.dataGridView1, CurMenuInfo, true);
         }
 
         private async void button设置查询条件_Click(object sender, EventArgs e)
         {
-            bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDtoProxy);
+            bool rs = await UIBizService.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDtoProxy);
             if (rs)
             {
                 QueryDtoProxy = LoadQueryConditionToUI();
@@ -1923,7 +1923,7 @@ namespace RUINORERP.UI.BaseForm
 
         protected override void Exit(object thisform)
         {
-            UIBizSrvice.SaveGridSettingData(CurMenuInfo, dataGridView1, typeof(T));
+            UIBizService.SaveGridSettingData(CurMenuInfo, dataGridView1, typeof(T));
             if (!Edited)
             {
                 //退出
@@ -2051,16 +2051,16 @@ namespace RUINORERP.UI.BaseForm
             {
                 foreach (Type item in ColDisplayTypes)
                 {
-                    UIBizSrvice.RequestCache(item);
+                    UIBizService.RequestCache(item);
                 }
             }
-            UIBizSrvice.RequestCache<T>();
+            UIBizService.RequestCache<T>();
             #endregion
 
             if (!this.DesignMode)
             {
                 dataGridView1.NeedSaveColumnsXml = false;
-                await UIBizSrvice.SetGridViewAsync(typeof(T), this.dataGridView1, CurMenuInfo);
+                await UIBizService.SetGridViewAsync(typeof(T), this.dataGridView1, CurMenuInfo);
                 //dataGridView1.ColumnWidthChanged -= DataGridView_ColumnWidthChanged;
                 //dataGridView1.ColumnWidthChanged += DataGridView_ColumnWidthChanged;
 

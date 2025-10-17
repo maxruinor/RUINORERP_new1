@@ -113,7 +113,7 @@ namespace RUINORERP.UI.Common
             {
                 Type genericParameterType = genericArguments[0];
                 var baseUControl = (BaseUControl)control;
-                UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseDataGridView1, genericParameterType);
+                UIBizService.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseDataGridView1, genericParameterType);
             }
         }
 
@@ -127,11 +127,11 @@ namespace RUINORERP.UI.Common
             {
                 Type genericParameterType = genericArguments[0];
                 var baseUControl = (BaseQuery)control;
-                UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
+                UIBizService.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
 
                 if (genericArguments.Length == 2 && !genericArguments[0].Name.Equals(genericArguments[1].Name))
                 {
-                    UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseSubDataGridView, genericArguments[1]);
+                    UIBizService.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseSubDataGridView, genericArguments[1]);
                 }
             }
             else
@@ -141,11 +141,11 @@ namespace RUINORERP.UI.Common
                 {
                     Type genericParameterType = genericArguments[0];
                     var baseUControl = (BaseQuery)control;
-                    UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
+                    UIBizService.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
 
                     if (genericArguments.Length == 2 && !genericArguments[0].Name.Equals(genericArguments[1].Name))
                     {
-                        UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseSubDataGridView, genericArguments[1]);
+                        UIBizService.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseSubDataGridView, genericArguments[1]);
                     }
                 }
             }
@@ -161,7 +161,7 @@ namespace RUINORERP.UI.Common
             {
                 Type genericParameterType = genericArguments[0];
                 var baseUControl = (BaseNavigator)control;
-                UIBizSrvice.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
+                UIBizService.SaveGridSettingData(baseUControl.CurMenuInfo, baseUControl.BaseMainDataGridView, genericParameterType);
             }
         }
     }

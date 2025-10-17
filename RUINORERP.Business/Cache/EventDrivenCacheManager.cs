@@ -129,6 +129,23 @@ namespace RUINORERP.Business.Cache
             _cacheManager.DeleteEntityList(entities);
             OnCacheChanged(tableName, CacheOperation.Remove, entities);
         }
+        
+        /// <summary>
+        /// 删除指定表的整个实体列表缓存并触发事件
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        public void DeleteEntityList(string tableName)
+        {
+            // 智能过滤：只处理需要缓存的表
+            if (!IsTableCacheable(tableName))
+            {
+                return;
+            }
+            
+            // 删除缓存并触发事件
+            _cacheManager.DeleteEntityList(tableName);
+            OnCacheChanged(tableName, CacheOperation.Remove, null);
+        }
 
         /// <summary>
         /// 批量删除指定主键数组的实体缓存并触发事件（智能过滤，只处理需要缓存的表）

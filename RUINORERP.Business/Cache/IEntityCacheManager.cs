@@ -1,5 +1,4 @@
 using RUINORERP.Business.CommService;
-using RUINORERP.Common.CustomAttribute;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Business.Cache
 {
-    [NoWantIOC]
     public interface IEntityCacheManager : ICacheStatistics
     {
         /// <summary>
@@ -92,6 +90,12 @@ namespace RUINORERP.Business.Cache
         /// 删除实体列表缓存
         /// </summary>
         void DeleteEntityList<T>(List<T> entities) where T : class;
+
+        /// <summary>
+        /// 删除指定表的整个实体列表缓存
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        void DeleteEntityList(string tableName);
 
         /// <summary>
         /// 根据表名和主键删除实体缓存

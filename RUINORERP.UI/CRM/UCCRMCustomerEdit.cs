@@ -619,7 +619,7 @@ namespace RUINORERP.UI.CRM
                 {
                     //暂时没有限制不让修改。但是客户对应不能是其它客户。这里再一次指定一下。
                     ContactInfo.Customer_id = _EditEntity.Customer_id;
-                    UIBizSrvice.SaveCRMContact(ContactInfo);
+                    UIBizService.SaveCRMContact(ContactInfo);
                 }
             }
         }
@@ -708,7 +708,7 @@ namespace RUINORERP.UI.CRM
                 {
                     //暂时没有限制不让修改。但是客户对应不能是其它客户。这里再一次指定一下。
                     ContactInfo.Customer_id = _EditEntity.Customer_id;
-                    UIBizSrvice.SaveCRMCollaborator(ContactInfo);
+                    UIBizService.SaveCRMCollaborator(ContactInfo);
                 }
             }
         }

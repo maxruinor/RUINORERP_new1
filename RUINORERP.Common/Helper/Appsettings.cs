@@ -63,7 +63,6 @@ namespace RUINORERP.Common.Helper
             {
                 if (Configuration == null)
                 {
-                    RUINORERP.Common.Log4Net.Logger.Warn("配置对象为null，无法获取配置对象");
                     return "";
                 }
 
@@ -74,7 +73,6 @@ namespace RUINORERP.Common.Helper
             }
             catch (Exception ex)
             {
-                RUINORERP.Common.Log4Net.Logger.Error("获取配置对象失败", ex);
             }
 
             return "";
@@ -92,7 +90,6 @@ namespace RUINORERP.Common.Helper
             {
                 if (Configuration == null)
                 {
-                    RUINORERP.Common.Log4Net.Logger.Warn("配置对象为null，无法获取配置数组");
                     return new List<T>();
                 }
                 
@@ -103,7 +100,6 @@ namespace RUINORERP.Common.Helper
             }
             catch (Exception ex)
             {
-                RUINORERP.Common.Log4Net.Logger.Error("获取配置数组失败", ex);
                 return new List<T>();
             }
         }
@@ -120,14 +116,12 @@ namespace RUINORERP.Common.Helper
             {
                 if (Configuration == null)
                 {
-                    RUINORERP.Common.Log4Net.Logger.Warn("配置对象为null，无法获取配置值: " + sectionsPath);
                     return "";
                 }
                 return Configuration[sectionsPath] ?? "";
             }
             catch (Exception ex)
             {
-                RUINORERP.Common.Log4Net.Logger.Error("获取配置值失败: " + sectionsPath, ex);
             }
 
             return "";

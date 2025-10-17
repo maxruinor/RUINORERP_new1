@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -28,18 +29,31 @@ namespace RUINORERP.Common.Log4Net
         private readonly string _name;
         private readonly XmlElement _xmlElement;
         private readonly ILog _log;
-        private ILoggerRepository _loggerRepository;
         private ApplicationContext _appcontext;
+        
+        // 静态成员变量用于存储单例日志仓库实例
+        private static volatile ILoggerRepository _sharedLoggerRepository = null;
+        // 用于线程同步的锁对象
+        private static readonly object _lockObject = new object();
+        
+        // 静态ConcurrentDictionary用于存储所有logger实例，避免重复创建
+        private static readonly ConcurrentDictionary<string, ILog> _sharedLogs = new ConcurrentDictionary<string, ILog>();
+        
         public Log4NetLoggerByDb(string name, XmlElement xmlElement, string ConnectionStr, ApplicationContext appcontext)
         {
             _appcontext = appcontext;
             _name = name;
             _xmlElement = xmlElement;
-            // _loggerRepository = LogManager.CreateRepository(Assembly.GetEntryAssembly(), typeof(Hierarchy));
-            // _log = CreateLogerByCustomeDb();
-            _loggerRepository = CreateLoggerRepository(ConnectionStr);
-            _log = LogManager.GetLogger(_loggerRepository.Name, name);
-            // XmlConfigurator.Configure(_loggerRepository, xmlElement);//这句如果打开会覆盖 CreateLoggerRepository 这个方法里面的配置
+            
+            // 获取或创建共享的日志仓库
+            var loggerRepository = CreateLoggerRepository(ConnectionStr);
+            
+            // 使用静态ConcurrentDictionary确保每个名称只创建一个logger实例
+            _log = _sharedLogs.GetOrAdd(name, (loggerName) => 
+            {
+                Console.WriteLine($"创建新的日志记录器: {loggerName}");
+                return LogManager.GetLogger(loggerRepository.Name, loggerName);
+            });
         }
 
         public IDisposable BeginScope<TState>(TState state)
@@ -140,7 +154,7 @@ namespace RUINORERP.Common.Log4Net
                 #region 如果这里异常可能会卡死所有db,因为使用了DB存日志 所以加上try
                 try
                 {
-                    //通过反射取出异常值
+                    // 通过反射取出异常值 - 注意：这里只更新上下文属性，不重复记录日志
                     if (state != null)
                     {
                         FieldInfo[] fieldsInfo = state.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
@@ -199,24 +213,31 @@ namespace RUINORERP.Common.Log4Net
                     switch (logLevel)
                     {
                         case LogLevel.Critical:
-                            _log.Fatal(message, exception);
+                            if (_log.IsFatalEnabled)
+                                _log.Fatal(message, exception);
                             break;
                         case LogLevel.Debug:
                         case LogLevel.Trace:
-                            _log.Debug(message, exception);
+                            if (_log.IsDebugEnabled)
+                                _log.Debug(message, exception);
                             break;
                         case LogLevel.Error:
-                            _log.Error(message, exception);
+                            if (_log.IsErrorEnabled)
+                                _log.Error(message, exception);
                             break;
                         case LogLevel.Information:
-                            _log.Info(message, exception);
+                            if (_log.IsInfoEnabled)
+                                _log.Info(message, exception);
                             break;
                         case LogLevel.Warning:
-                            _log.Warn(message, exception);
+                            if (_log.IsWarnEnabled)
+                                _log.Warn(message, exception);
                             break;
                         default:
-                            _log.Warn($"Encountered unknown log level {logLevel}, writing out as Info.");
-                            _log.Info(message, exception);
+                            if (_log.IsWarnEnabled)
+                                _log.Warn($"Encountered unknown log level {logLevel}, writing out as Info.", exception);
+                            else if (_log.IsInfoEnabled)
+                                _log.Info(message, exception);
                             break;
                     }
                 }
@@ -231,90 +252,112 @@ namespace RUINORERP.Common.Log4Net
         }
 
 
-        //TODO  发布前 日志缓存 多设置一些
+        /// <summary>
+        /// 创建或获取日志仓库的单例实例
+        /// 使用双重检查锁定模式确保线程安全
+        /// </summary>
+        /// <param name="_ConnectionString">数据库连接字符串</param>
+        /// <returns>日志仓库实例</returns>
         public ILoggerRepository CreateLoggerRepository(string _ConnectionString)
         {
-            log4net.Repository.ILoggerRepository rep = log4net.LogManager.CreateRepository(Guid.NewGuid().ToString());
-            AdoNetAppender adoNetAppender = new AdoNetAppender();
-            //adoNetAppender.BufferSize = -1; //缓冲区大小  默认为256 ，0 -1 都是 有就保存。这样数据库开销大。
-            adoNetAppender.BufferSize = 0; // 设置合理缓冲 后面可以设置为50，100
-            adoNetAppender.Lossy = false; // 确保不丢失日志
-
-
-            adoNetAppender.ConnectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version=1.0.3300.0, Culture=neutral, PublicKeyToken=b77a5c561934e089";
-            if (string.IsNullOrEmpty(_ConnectionString))
+            // 使用双重检查锁定模式
+            if (_sharedLoggerRepository == null)
             {
-                // 如果连接字符串为空，尝试从配置文件获取
-                try
+                lock (_lockObject)
                 {
-                    _ConnectionString = CryptoHelper.GetDecryptedConnectionString();
-                    Console.WriteLine("从配置文件获取连接字符串成功");
-                    adoNetAppender.ConnectionString = _ConnectionString;
-                    Console.WriteLine("已应用从配置文件获取的连接字符串");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("警告：获取连接字符串失败，使用备用连接字符串: " + ex.Message);
-                    // 只有在无法从配置文件获取时才使用备用连接字符串
-                    adoNetAppender.ConnectionString = "Server=192.168.0.254;Database=erpnew;UID=sa;Password=SA!@#123sa;Max Pool Size=1000;MultipleActiveResultSets=True;Min Pool Size=0;Connection Lifetime=0;";
+                    if (_sharedLoggerRepository == null)
+                    {
+                        // 创建一个固定名称的仓库，而不是每次生成新的GUID
+                        _sharedLoggerRepository = log4net.LogManager.CreateRepository("RUINORERP_Shared_LoggerRepository");
+
+                        AdoNetAppender adoNetAppender = new AdoNetAppender();
+                        // 增加缓冲区大小以减少数据库连接开销
+                        adoNetAppender.BufferSize = 1; // 批量写入100条日志
+                        adoNetAppender.Lossy = false; // 确保不丢失日志
+
+                        adoNetAppender.ConnectionType = "System.Data.SqlClient.SqlConnection, System.Data, Version=1.0.3300.0, Culture=neutral, PublicKeyToken=b77a5c561934e089";
+                        if (string.IsNullOrEmpty(_ConnectionString))
+                        {
+                            // 如果连接字符串为空，尝试从配置文件获取
+                            try
+                            {
+                                _ConnectionString = CryptoHelper.GetDecryptedConnectionString();
+                                Console.WriteLine("从配置文件获取连接字符串成功");
+                                adoNetAppender.ConnectionString = _ConnectionString;
+                                Console.WriteLine("已应用从配置文件获取的连接字符串");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine("警告：获取连接字符串失败，使用备用连接字符串: " + ex.Message);
+                                // 只有在无法从配置文件获取时才使用备用连接字符串
+                                adoNetAppender.ConnectionString = "Server=192.168.0.254;Database=erpnew;UID=sa;Password=SA!@#123sa;Max Pool Size=1000;MultipleActiveResultSets=True;Min Pool Size=0;Connection Lifetime=0;";
+                            }
+                        }
+                        else
+                        {
+                            // 如果传入了连接字符串，直接使用
+                            adoNetAppender.ConnectionString = _ConnectionString;
+                            Console.WriteLine("已应用传入的连接字符串进行日志数据库连接");
+                        }
+
+                        // 配置INSERT命令和参数
+                        adoNetAppender.CommandText = "INSERT INTO Logs ([User_ID],[Date],[Level],[Logger],[Message],[Exception],[Operator],[ModName],[MAC],[IP],[Path],[ActionName],[MachineName]) VALUES (@User_ID,@log_date, @log_level, @logger, @Message, @Exception,@Operator,@ModName,@MAC,@IP,@Path,@ActionName,@MachineName)";
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_date", DbType = System.Data.DbType.DateTime, Layout = new log4net.Layout.RawTimeStampLayout() });
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_level", DbType = System.Data.DbType.String, Size = 50, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%level")) });
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@logger", DbType = System.Data.DbType.String, Size = 255, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%logger")) });
+
+                        log4net.Layout.PatternLayout layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Operator}" };
+                        layout.ActivateOptions();
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Operator", DbType = System.Data.DbType.String, Size = 4000, Layout = new Layout2RawLayoutAdapter(layout) });
+
+                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{User_ID}" };
+                        layout.ActivateOptions();
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@User_ID", DbType = System.Data.DbType.Int64, Size = 4000, Layout = new Layout2RawLayoutAdapter(layout) });
+
+                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{ModName}" };
+                        layout.ActivateOptions();
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@ModName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
+
+                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{MAC}" };
+                        layout.ActivateOptions();
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@MAC", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
+
+                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{IP}" };
+                        layout.ActivateOptions();
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@IP", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
+
+                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Path}" };
+                        layout.ActivateOptions();
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Path", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
+
+                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{ActionName}" };
+                        layout.ActivateOptions();
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@ActionName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
+
+                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{MachineName}" };
+                        layout.ActivateOptions();
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@MachineName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
+
+                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Message}" };
+                        layout.ActivateOptions();
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Message", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
+
+                        layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Exception}" };
+                        layout.ActivateOptions();
+                        adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Exception", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
+                        
+                        // 只在所有参数添加完成后调用一次ActivateOptions
+                        adoNetAppender.ActivateOptions();
+
+                        // 配置仓库使用我们的appender
+                        log4net.Config.BasicConfigurator.Configure(_sharedLoggerRepository, adoNetAppender);
+                        Console.WriteLine("日志仓库已成功创建并配置");
+                    }
                 }
             }
-            else
-            {
-                // 如果传入了连接字符串，直接使用
-                adoNetAppender.ConnectionString = _ConnectionString;
-                Console.WriteLine("已应用传入的连接字符串进行日志数据库连接");
-            }
 
-            adoNetAppender.CommandText = "INSERT INTO Logs ([User_ID],[Date],[Level],[Logger],[Message],[Exception],[Operator],[ModName],[MAC],[IP],[Path],[ActionName],[MachineName]) VALUES (@User_ID,@log_date, @log_level, @logger, @Message, @Exception,@Operator,@ModName,@MAC,@IP,@Path,@ActionName,@MachineName)";
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_date", DbType = System.Data.DbType.DateTime, Layout = new log4net.Layout.RawTimeStampLayout() });
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@log_level", DbType = System.Data.DbType.String, Size = 50, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%level")) });
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@logger", DbType = System.Data.DbType.String, Size = 255, Layout = new Layout2RawLayoutAdapter(new PatternLayout("%logger")) });
-
-            log4net.Layout.PatternLayout layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Operator}" };
-            layout.ActivateOptions();
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Operator", DbType = System.Data.DbType.String, Size = 4000, Layout = new Layout2RawLayoutAdapter(layout) });
-
-            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{User_ID}" };
-            layout.ActivateOptions();
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@User_ID", DbType = System.Data.DbType.Int64, Size = 4000, Layout = new Layout2RawLayoutAdapter(layout) });
-
-            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{ModName}" };
-            layout.ActivateOptions();
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@ModName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{MAC}" };
-            layout.ActivateOptions();
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@MAC", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{IP}" };
-            layout.ActivateOptions();
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@IP", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Path}" };
-            layout.ActivateOptions();
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Path", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{ActionName}" };
-            layout.ActivateOptions();
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@ActionName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{MachineName}" };
-            layout.ActivateOptions();
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@MachineName", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-
-            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Message}" };
-            layout.ActivateOptions();
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Message", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-            adoNetAppender.ActivateOptions();
-
-            layout = new EnhancedCustomLayout() { ConversionPattern = "%property{Exception}" };
-            layout.ActivateOptions();
-            adoNetAppender.AddParameter(new AdoNetAppenderParameter { ParameterName = "@Exception", DbType = System.Data.DbType.String, Size = 214748364, Layout = new Layout2RawLayoutAdapter(layout) });
-            adoNetAppender.ActivateOptions();
-
-            log4net.Config.BasicConfigurator.Configure(rep, adoNetAppender);
-            return rep;
+            // 返回共享的日志仓库实例
+            return _sharedLoggerRepository;
         }
 
         public static ILog CreateLogerByCustomeDb(ILoggerRepository loggerRepository)

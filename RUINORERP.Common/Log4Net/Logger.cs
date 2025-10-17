@@ -10,6 +10,8 @@ using System.Data.SqlClient;
 
 namespace RUINORERP.Common.Log4Net
 {
+    //是一个独立的日志记录类，用于记录日志信息。
+    //在别的日志没准备好时紧急使用
     public static class Logger
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(Logger));

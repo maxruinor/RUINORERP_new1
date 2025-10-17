@@ -3186,6 +3186,10 @@ namespace RUINORERP.UI
 
         private void btntsbRefresh_Click(object sender, EventArgs e)
         {
+
+            MainForm.Instance.logger.LogError("LoginWebServer"+System.DateTime.Now.ToString());
+
+
             Process[] allProcess = Process.GetProcesses();
             foreach (Process p in allProcess)
             {

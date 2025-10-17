@@ -594,16 +594,7 @@ namespace RUINORERP.UI
             .PropertiesAutowired() // 指定属性注入
             .SingleInstance(); // 单例模式
 
-            //直接实现。或排除
-            //builder.Register(c => new ClientEventManager()).As<IClientEventManager>();
-            //注册当前程序集的所有类成员
-            //builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-            //    .AsImplementedInterfaces().AsSelf();
-
-            //builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-            //.Where(type => type != typeof(ClientEventManager)) // 排除指定类
-            //.AsImplementedInterfaces()
-            //.AsSelf();
+        
 
 
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
@@ -627,30 +618,7 @@ namespace RUINORERP.UI
 
             RegisterForm(builder);
 
-            //将配置添加到ConfigurationBuilder
-            //var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory());
-            //config.AddJsonFile("autofac.json");
-            //config.AddJsonFile来自Microsoft.Extensions.Configuration.Json
-            //config.AddXmlFile来自Microsoft.Extensions.Configuration.Xml
-
-            //用Autofac注册ConfigurationModule
-            //var module = new ConfigurationModule(config.Build());
-
-            //builder.RegisterModule(module);
-            //var Configuration = AutofacCore.GetFromFac<IConfiguration>();
-            //AppId = Configuration["AppSettings:AppId"];
-            //AppSecret = Configuration["AppSettings:AppSecret"];
-
-            // builder.Register(c => new BI.UCLocation()).Named<UserControl>("UCLocation");
-            //builder.Register(c => System.Reflection.Assembly.GetExecutingAssembly().CreateInstance("RUINORERP.UI.BI.UCLocation")).Named<UserControl>("UCLocation");
-
-            //builder.RegisterType<ProductEAV.UCProductEdit>();
-
-
-            //builder.RegisterType<Ean13>()
-            //      //选择类型默认最多的，这里用无参的，实际没有的构造函数,如果类型为别的类型，就typeof(别的类型，和构造函数保持一直即可)
-            //      //实际是我在代码中直接实例化的，不需要注入，是不是可以做一个特性，标识不需要参与批量注入
-            //      .UsingConstructor();
+          
 
             builder.RegisterType<AutoComplete>()
             .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
@@ -746,77 +714,7 @@ namespace RUINORERP.UI
          .UseServiceProviderFactory(new AutofacServiceProviderFactory())
         //正确配置Autofac容器
         .ConfigureContainer<ContainerBuilder>(ConfigureAutofacContainer)
-      /*
-        .ConfigureContainer<ContainerBuilder>(builder =>
-         {
-             #region  注册
-             // Services = new ServiceCollection();
-             //BatchServiceRegister(Services);
-             //ConfigureServices(Services);
-
-             //注册当前程序集的所有类成员
-             builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-                 .AsImplementedInterfaces().AsSelf();
-
-             //覆盖上面自动注册的？说是最后的才是
-             //builder.RegisterType<UserControl>().Named<UserControl>("MENU").InstancePerDependency();
-
-             builder.RegisterType<RUINORERP.UI.SS.MenuInit>().Named<UserControl>("MENU")
-             .AsImplementedInterfaces().AsSelf();
-
-             ConfigureContainer(builder);
-
-             RegisterForm(builder);
-
-
-             // builder.Register(c => new BI.UCLocation()).Named<UserControl>("UCLocation");
-             //builder.Register(c => System.Reflection.Assembly.GetExecutingAssembly().CreateInstance("RUINORERP.UI.BI.UCLocation")).Named<UserControl>("UCLocation");
-
-             //builder.RegisterType<ProductEAV.UCProductEdit>();
-
-
-             //builder.RegisterType<Ean13>()
-             //      //选择类型默认最多的，这里用无参的，实际没有的构造函数,如果类型为别的类型，就typeof(别的类型，和构造函数保持一直即可)
-             //      //实际是我在代码中直接实例化的，不需要注入，是不是可以做一个特性，标识不需要参与批量注入
-             //      .UsingConstructor();
-
-             builder.RegisterType<AutoComplete>()
-             .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
-                                                              // 注册依赖
-             builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器
-                                                       //builder.RegisterType<LogInterceptor>(); // 注册拦截器
-                                                       //builder.RegisterType<Person>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-             builder.RegisterType<Person>().InterceptedBy(typeof(BaseDataCacheAOP)).EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-                                                                                                                //builder.RegisterType<AOPDllTest.PersonDLL>().InterceptedBy(typeof(BaseDataCacheAOP)).EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-             builder.RegisterType<PersonBus>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-
-             builder.RegisterType<tb_DepartmentServices>().As<Itb_DepartmentServices>()
-                 .AsImplementedInterfaces()
-                 .InstancePerLifetimeScope()
-                 .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
-             //builder.RegisterType<tb_DepartmentServices>().Named<Itb_DepartmentServices>(typeof(tb_DepartmentServices).Name).InstancePerLifetimeScope().EnableInterfaceInterceptors();
-             //builder.RegisterType<FactoryTwo>().Named<IServiceFactory>(typeof(FactoryTwo).Name).InstancePerLifetimeScope().EnableClassInterceptors();
-
-             //var intermediateFactory = container.Resolve<Func<B, C>>();
-             //Func<A, C> factory =
-             //    a => intermediateFactory(container.Resolve(TypedParameter.From(a)));
-             //var x = factory(new A());
-
-             builder.RegisterType<Form2>();
-
-             //注册是最后的覆盖前面的 ，AOP测试时，业务控制器中的方法不生效。与 ConfigureContainer(builder); 中注册的方式有关。可能参数不对。
-             //后面需要研究
-             builder.Populate(Services);//将自带的也注入到autofac
-
-             //AutoFacContainer = builder.Build();
-             ////var container = containerBuilder.Build();
-             //new AutofacServiceProvider(AutoFacContainer);
-
-             //   _containerBuilder = builder;
-             #endregion
-
-         })
-      */
+     
          .ConfigureServices((context, services) =>
          {
 
@@ -1191,31 +1089,9 @@ namespace RUINORERP.UI
             services.AddTransient<worker>();
             services.AddTransient<WorkWorkflow>();
             services.AddTransient<WorkWorkflow2>();
-            //services.AddTransient<WF.BizOperation.WFSO>();//手动注册
-            //注入Log4Net
-            //Services.AddLogging(cfg =>
-            //{
-            //    //cfg.AddLog4Net();
-            //    //默认的配置文件路径是在根目录，且文件名为log4net.config
-            //    //如果文件路径或名称有变化，需要重新设置其路径或名称
-            //    //比如在项目根目录下创建一个名为cfg的文件夹，将log4net.config文件移入其中，并改名为log.config
-            //    //则需要使用下面的代码来进行配置
-            //    //cfg.AddLog4Net(new Log4NetProviderOptions()
-            //    //{
-            //    //    Log4NetConfigFileName = "cfg/log.config",
-            //    //    Watch = true
-            //    //});
-            //});
+            
             #endregion
-            /*
-            var sqlSugarScope = new SqlSugar.SqlSugarScope(new SqlSugar.ConnectionConfig
-            {
-                ConnectionString = "Server=192.168.0.250;Database=erp;UID=sa;Password=sa",
-                DbType = SqlSugar.DbType.SqlServer,
-                IsAutoCloseConnection = true,
-            });
-            services.AddSingleton<SqlSugar.ISqlSugarClient>(sqlSugarScope); // SqlSugar 官网推荐用单例模式注入
-            */
+           
 
 
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>)); // 注入仓储
@@ -1720,30 +1596,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             }
 
 
-            //如果多次注册以后最后准
-            //https://blog.csdn.net/weixin_30778805/article/details/97148925
-
-            //var dalAssemble_Repository = System.Reflection.Assembly.LoadFrom("RUINORERP.Repository.dll");
-            //builder.RegisterTypes(dalAssemble_Repository.GetTypes())
-            //    .AsImplementedInterfaces()
-            //    .PropertiesAutowired()
-            //    .InstancePerDependency();
-
-            // builder.RegisterTypes(typeof(IBaseRepository<>), typeof(BaseRepository<>)).SingleInstance(); // 注入仓储
-            // builder.RegisterType<UnitOfWorkManage>().As<IUnitOfWorkManage>().InstancePerDependency();
-            //var dalAssembleCore = Assembly.LoadFrom("RUINOR.Framework.Core.dll");
-            //builder.RegisterAssemblyTypes(dalAssembleCore)
-            //      .AsImplementedInterfaces().AsSelf()
-            //      .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-            //      .PropertiesAutowired();//允许属性注入
-            //services.AddScoped<ICurrentUser, CurrentUser>();
-            //services.AddSingleton(typeof(AutoMapperConfig));
-            //services.AddScoped<IMapper, Mapper>();
-            //builder.RegisterType(ipmap)
-
-            //     builder.RegisterType<TestService>()
-            //.UsingConstructor(typeof(TransientService), typeof(SingletonService));
-
+           
 
             //AutofacDependencyResolver.Current.RequestLifetimeScope.ResolveNamed<INewsHelper>("news");
             //模块化注入 - 使用服务注册契约统一管理服务注册
@@ -1755,7 +1608,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             // 注册ILogger和SqlSugarScope服务，用于SqlSugarRowLevelAuthFilter的依赖注入
             builder.RegisterInstance(Program.AppContextData.Db).As<SqlSugarScope>().SingleInstance();
             builder.RegisterGeneric(typeof(Logger<>)).As(typeof(ILogger<>)).InstancePerDependency();
-            builder.RegisterType<Log4NetLoggerByDb>().As<ILogger>().InstancePerDependency();
+           
 
             // 注册SqlSugarRowLevelAuthFilter
             builder.RegisterType<SqlSugarRowLevelAuthFilter>().AsSelf().InstancePerDependency();
@@ -1763,74 +1616,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             builder.RegisterModule(new AutofacServiceRegister());
         }
 
-        //public void Configure(IApplicationBuilder app, MyContext myContext,
-        //    IQuartzNetService quartzNetService,
-        //    ISchedulerCenterService schedulerCenter, ILoggerFactory loggerFactory)
-        //{
-        //    var locOptions = app.ApplicationServices.GetService<IOptions<RequestLocalizationOptions>>();
-        //    if (locOptions != null) app.UseRequestLocalization(locOptions.Value);
-        //    //获取远程真实ip,如果不是nginx代理部署可以不要
-        //    app.UseMiddleware<RealIpMiddleware>();
-        //    //IP限流
-        //    app.UseIpLimitMiddleware();
-        //    //日志
-        //    loggerFactory.AddLog4Net();
-        //    if (WebHostEnvironment.IsDevelopment())
-        //    {
-        //        app.UseDeveloperExceptionPage();
-        //    }
-
-        //    app.Use(next => context =>
-        //    {
-        //        context.Request.EnableBuffering();
-
-        //        return next(context);
-        //    });
-
-        //    //autofac
-        //    AutofacHelper.Container = app.ApplicationServices.GetAutofacRoot();
-        //    //Swagger UI
-        //    app.UseSwaggerMiddleware(() =>
-        //        GetType().GetTypeInfo().Assembly.GetManifestResourceStream("ApeVolo.Api.index.html"));
-        //    // CORS跨域
-        //    app.UseCors(AppSettings.GetValue("Cors", "PolicyName"));
-        //    //静态文件
-        //    app.UseStaticFiles();
-        //    //cookie
-        //    app.UseCookiePolicy();
-        //    //错误页
-        //    app.UseStatusCodePages();
-        //    app.UseRouting();
-
-        //    app.UseCors("IpPolicy");
-        //    // 认证
-        //    app.UseAuthentication();
-        //    // 授权
-        //    app.UseAuthorization();
-        //    //性能监控
-        //    app.UseMiniProfilerMiddleware();
-        //    app.UseEndpoints(endpoints =>
-        //    {
-        //        endpoints.MapControllerRoute(
-        //            name: "default",
-        //            pattern: "{controller=Home}/{action=Index}/{id?}");
-        //    });
-        //    app.UseHttpMethodOverride();
-
-        //    app.UseDataSeederMiddleware(myContext);
-        //    //作业调度
-        //    app.UseQuartzNetJobMiddleware(quartzNetService, schedulerCenter);
-
-        //    //雪花ID器
-        //    new IdHelperBootstrapper().SetWorkderId(1).Boot();
-        //    //事件总线配置订阅
-        //    app.ConfigureEventBus();
-        //    //List<object> items = new List<object>();
-        //    //foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-        //    //{
-        //    //    items.Add(assembly);
-        //    //}
-        //}
+       
 
 
         /// <summary>

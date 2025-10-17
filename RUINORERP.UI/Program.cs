@@ -759,14 +759,12 @@ namespace RUINORERP.UI
             if (isIgnored)
             {
                 // 被忽略的异常仍然记录日志，但不显示给用户
-                RUINORERP.Common.Log4Net.Logger.Error("出现应用程序未处理的异常，客户端没显示！\r\n" + errorDetails, e.Exception);
                 return;
             }
 
             // 处理特定类型的业务异常
             if (HandleUniqueConstraintException(e.Exception))
             {
-                RUINORERP.Common.Log4Net.Logger.Error("业务约束异常处理完成", e.Exception);
                 return;
             }
 
@@ -788,11 +786,9 @@ namespace RUINORERP.UI
             catch (Exception ex)
             {
                 // 确保异常上报失败不会影响主流程
-                RUINORERP.Common.Log4Net.Logger.Error("异常上报服务调用失败", ex);
             }
 
             // 记录详细错误日志
-            RUINORERP.Common.Log4Net.Logger.Error("应用程序未处理的线程异常", e.Exception);
 
             // 显示错误信息给用户
             string userMessage = string.Format("系统发生错误：{0}\r\n\r\n请更新到最新版本，如果无法解决，请联系管理员！\r\n时间：{1}",

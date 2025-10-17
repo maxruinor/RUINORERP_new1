@@ -36,9 +36,9 @@ namespace RUINORERP.Server.Workflow
     public class GenerateSnapshotStep : StepBodyAsync
     {
         private readonly tb_InventorySnapshotController<tb_InventorySnapshot> _snapshotService;
-        private readonly ILogger _logger;
+        private readonly ILogger<GenerateSnapshotStep> _logger;
 
-        public GenerateSnapshotStep(tb_InventorySnapshotController<tb_InventorySnapshot> snapshotService, ILogger logger)
+        public GenerateSnapshotStep(tb_InventorySnapshotController<tb_InventorySnapshot> snapshotService, ILogger<GenerateSnapshotStep> logger)
         {
             _snapshotService = snapshotService;
             _logger = logger;
@@ -48,13 +48,13 @@ namespace RUINORERP.Server.Workflow
         {
             try
             {
-                _logger.Info("开始生成库存快照...");
+                _logger.LogInformation("开始生成库存快照...");
                 var count = _snapshotService.GenerateDailySnapshot();
-                _logger.Info($"库存快照生成完成，共生成 {count} 条记录");
+                _logger.LogInformation($"库存快照生成完成，共生成 {count} 条记录");
             }
             catch (Exception ex)
             {
-                _logger.Error("生成库存快照失败", ex);
+                _logger.LogError(ex, "生成库存快照失败");
                 //return Task.FromResult(ExecutionResult.F(ex.Message));
 
             }
@@ -68,9 +68,9 @@ namespace RUINORERP.Server.Workflow
     public class CleanupOldSnapshotsStep : StepBodyAsync
     {
         private readonly tb_InventorySnapshotController<tb_InventorySnapshot> _snapshotService;
-        private readonly ILogger _logger;
+        private readonly ILogger<CleanupOldSnapshotsStep> _logger;
 
-        public CleanupOldSnapshotsStep(tb_InventorySnapshotController<tb_InventorySnapshot> snapshotService, ILogger logger)
+        public CleanupOldSnapshotsStep(tb_InventorySnapshotController<tb_InventorySnapshot> snapshotService, ILogger<CleanupOldSnapshotsStep> logger)
         {
             _snapshotService = snapshotService;
             _logger = logger;
@@ -80,15 +80,15 @@ namespace RUINORERP.Server.Workflow
         {
             try
             {
-                _logger.Info("开始清理过期库存快照...");
+                _logger.LogInformation("开始清理过期库存快照...");
                 // 保留最近12个月的快照
                 var count = _snapshotService.CleanupExpiredSnapshots(12);
-                _logger.Info($"过期库存快照清理完成，共清理 {count} 条记录");
+                _logger.LogInformation($"过期库存快照清理完成，共清理 {count} 条记录");
 
             }
             catch (Exception ex)
             {
-                _logger.Error("清理过期库存快照失败", ex);
+                _logger.LogError(ex, "清理过期库存快照失败");
 
             }
             return Task.FromResult(ExecutionResult.Next());

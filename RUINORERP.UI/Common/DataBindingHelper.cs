@@ -464,7 +464,6 @@ namespace RUINORERP.UI.Common
 
                 if (image == null)
                 {
-                    RUINORERP.Common.Log4Net.Logger.Warn($"未找到名为 '{resourceName}' 的资源");
                     return null;
                 }
 
@@ -476,7 +475,6 @@ namespace RUINORERP.UI.Common
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.LogError($"获取资源失败: {ex.Message}", ex);
                 return null;
             }
         }

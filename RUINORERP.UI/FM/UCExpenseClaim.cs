@@ -108,7 +108,10 @@ namespace RUINORERP.UI.FM
                 }
 
                 //新增时，默认币别为人民币
-                //cmbCurrency_ID.SelectedIndex = 1;//默认第一个人民币
+                if (cmbCurrency_ID.Items.Count > 1)
+                {
+                    cmbCurrency_ID.SelectedIndex = 1;//默认第一个人民币
+                }
                 entity.Currency_ID = MainForm.Instance.AppContext.BaseCurrency.Currency_ID;
             }
 

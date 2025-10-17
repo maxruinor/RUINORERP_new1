@@ -319,7 +319,7 @@ namespace RUINORERP.Business
                     var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                     if (Counter == 0)
                     {
-                        _logger.LogInformation($"{entity.ReturnNo}审核时，更新库存结果为0行，请检查数据！");
+                        _logger.Debug($"{entity.ReturnNo}审核时，更新库存结果为0行，请检查数据！");
                     }
 
                     if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null)
@@ -569,7 +569,7 @@ namespace RUINORERP.Business
                     var InvCounter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                     if (InvCounter == 0)
                     {
-                        _logger.LogInformation($"销售退回单{entity.ReturnNo}审核时，更新库存结果为0行，请检查数据！");
+                        _logger.Debug($"销售退回单{entity.ReturnNo}审核时，更新库存结果为0行，请检查数据！");
                     }
                     invUpdateList.Clear();
                     if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null)
@@ -595,7 +595,7 @@ namespace RUINORERP.Business
                         var MaterialsInvCounter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (MaterialsInvCounter == 0)
                         {
-                            _logger.LogInformation($"销售退回单{entity.ReturnNo}审核时，更新物料库存结果为0行，请检查数据！");
+                            _logger.Debug($"销售退回单{entity.ReturnNo}审核时，更新物料库存结果为0行，请检查数据！");
                         }
                     }
 

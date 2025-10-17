@@ -91,7 +91,7 @@ namespace RUINORERP.Business
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
-                    _logger.LogInformation($"{entity.BillNo}审核时，更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.BillNo}审核时，更新库存结果为0行，请检查数据！");
 
                 }
                 
@@ -192,7 +192,7 @@ namespace RUINORERP.Business
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
-                    _logger.LogInformation($"{entity.BillNo}反审核时，更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.BillNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
 
                 //==

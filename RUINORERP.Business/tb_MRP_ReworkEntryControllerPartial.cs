@@ -112,7 +112,7 @@ namespace RUINORERP.Business
                         string msg = $"返工退库:{entity.tb_mrp_reworkreturn.ReworkReturnNo}的【{prodName}】的入库数量不能大于返工退库单中对应行的数量\r\n" + $"或存在重复录入了返工入库单。";
                         rs.ErrorMsg = msg;
                         _unitOfWorkManage.RollbackTran();
-                        _logger.LogInformation(msg);
+                        _logger.Debug(msg);
                         return rs;
                     }
                     else
@@ -330,7 +330,7 @@ namespace RUINORERP.Business
                             _unitOfWorkManage.RollbackTran();
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
-                                _logger.LogInformation(msg);
+                                _logger.Debug(msg);
                             }
                             return rs;
                         }

@@ -46,6 +46,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_MenuInfo>(c => c.MenuName);
             queryFilter.SetQueryField<tb_MenuInfo>(c => c.BizType);
             queryFilter.SetQueryField<tb_MenuInfo>(c => c.BIBaseForm);
+            queryFilter.SetQueryField<tb_MenuInfo>(c => c.ClassPath);
             queryFilter.SetQueryField<tb_MenuInfo>(c => c.CaptionCN);
             return queryFilter;
         }

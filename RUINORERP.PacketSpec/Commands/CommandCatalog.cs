@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -121,89 +121,20 @@ namespace RUINORERP.PacketSpec.Commands
 
         #region 缓存命令 (0x02xx)
         /// <summary>
-        /// 缓存更新
+        /// 缓存操作 - 统一的缓存操作命令
+        /// 通过CacheRequest.Operation区分具体操作类型
         /// </summary>
-        public const ushort Cache_CacheUpdate = 0x0200;
+        public const ushort Cache_CacheOperation = 0x0201;
 
         /// <summary>
-        /// 缓存清理
+        /// 缓存同步 - 用于缓存数据的双向同步
         /// </summary>
-        public const ushort Cache_CacheClear = 0x0201;
+        public const ushort Cache_CacheSync = 0x0202;
 
         /// <summary>
-        /// 缓存统计
+        /// 缓存订阅管理 - 用于缓存订阅和取消订阅操作
         /// </summary>
-        public const ushort Cache_CacheStats = 0x0202;
-
-        /// <summary>
-        /// 请求缓存
-        /// </summary>
-        public const ushort Cache_CacheRequest = 0x0203;
-
-        /// <summary>
-        /// 发送缓存数据
-        /// </summary>
-        public const ushort Cache_CacheDataSend = 0x0204;
-
-        /// <summary>
-        /// 删除缓存
-        /// </summary>
-        public const ushort Cache_CacheDelete = 0x0205;
-
-        /// <summary>
-        /// 缓存数据列表
-        /// </summary>
-        public const ushort Cache_CacheDataList = 0x0206;
-
-        /// <summary>
-        /// 缓存信息列表
-        /// </summary>
-        public const ushort Cache_CacheInfoList = 0x0207;
-
-        /// <summary>
-        /// 缓存状态查询 - 查询缓存状态信息
-        /// </summary>
-        public const ushort Cache_CacheStatus = 0x0208;
-
-        /// <summary>
-        /// 批量缓存操作 - 执行批量缓存操作
-        /// </summary>
-        public const ushort Cache_CacheBatchOperation = 0x0209;
-
-        /// <summary>
-        /// 缓存同步 - 同步缓存数据
-        /// </summary>
-        public const ushort Cache_CacheSync = 0x020A;
-
-        /// <summary>
-        /// 缓存预热 - 预热缓存数据
-        /// </summary>
-        public const ushort Cache_CacheWarmup = 0x020B;
-
-        /// <summary>
-        /// 缓存失效 - 使缓存数据失效
-        /// </summary>
-        public const ushort Cache_CacheInvalidate = 0x020C;
-
-        /// <summary>
-        /// 缓存统计信息 - 获取缓存统计信息
-        /// </summary>
-        public const ushort Cache_CacheStatistics = 0x020D;
-
-        /// <summary>
-        /// 缓存订阅 - 订阅缓存变更
-        /// </summary>
-        public const ushort Cache_CacheSubscribe = 0x020E;
-
-        /// <summary>
-        /// 缓存取消订阅 - 取消订阅缓存变更
-        /// </summary>
-        public const ushort Cache_CacheUnsubscribe = 0x020F;
-
-        /// <summary>
-        /// 缓存刷新
-        /// </summary>
-        public const ushort Cache_CacheRefresh = 0x0210;
+        public const ushort Cache_CacheSubscription = 0x0203;
         #endregion
 
         #region 消息命令 (0x03xx)

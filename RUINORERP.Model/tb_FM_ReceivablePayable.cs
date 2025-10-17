@@ -165,7 +165,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool? _IsExpenseType;
+        private bool? _IsExpenseType=false;
         /// <summary>
         /// 费用单据
         /// </summary>

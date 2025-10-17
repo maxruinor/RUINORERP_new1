@@ -285,9 +285,9 @@ namespace RUINORERP.UI.BaseForm
                         {
                             Kpages.Add(ChildQuery());
                         }
-                        if (ChildRelatedEntityType==null)
+                        if (ChildRelatedEntityType == null)
                         {
-                            ChildRelatedEntityType=typeof(C);
+                            ChildRelatedEntityType = typeof(C);
                         }
                         if (this.ChildRelatedEntityType != null)
                         {
@@ -1173,10 +1173,10 @@ namespace RUINORERP.UI.BaseForm
                         string processedFilterClause = PreprocessFilterClause(filterClause);
 
                         #region 新逻辑
-                       
+
                         #endregion
 
-                      
+
 
 
                         // 检查是否包含复杂SQL结构(如EXISTS子查询)
@@ -2184,7 +2184,7 @@ namespace RUINORERP.UI.BaseForm
             }
 
             // 确保在查询前应用行级权限过滤
-           //ApplyRowLevelAuthFilter();
+            //ApplyRowLevelAuthFilter();
             if (LimitQueryConditions != null && !QueryConditionFilter.FilterLimitExpressions.Contains(LimitQueryConditions))
             {
                 QueryConditionFilter.FilterLimitExpressions.Add(LimitQueryConditions);
@@ -2412,7 +2412,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="msg"></param>
         /// <param name="keyData"></param>
         /// <returns></returns>
-        protected override  bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
+        protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
         {
             int WM_KEYDOWN = 256;
             int WM_SYSKEYDOWN = 260;
@@ -2476,7 +2476,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 //设置的主键指向的编号在具体业务的查询窗体的构造函数中设置的。
 
-                if (_UCBillMasterQuery.GridRelated.RelatedInfoList.Count == 0 && RelatedBillEditCol != null)
+                if (_UCBillMasterQuery.GridRelated.RelatedInfoList != null && RelatedBillEditCol != null)
                 {
                     if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                     {
@@ -2505,7 +2505,7 @@ namespace RUINORERP.UI.BaseForm
 
             }
 
-          
+
 
 
 
@@ -2855,7 +2855,7 @@ namespace RUINORERP.UI.BaseForm
             List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
             _UCBillMasterQuery.SummaryCols = masterlist;
 
-          
+
 
             _UCBillMasterQuery.InvisibleCols = RuinorExpressionHelper.ExpressionListToHashSet(MasterInvisibleCols);
 

@@ -77,7 +77,7 @@ namespace RUINORERP.Business.CommService
                             return subscribers;
                         });
 
-                    _logger.LogInformation($"会话 {sessionId} 订阅了表 {tableName} 的缓存变更通知");
+                    _logger.Debug($"会话 {sessionId} 订阅了表 {tableName} 的缓存变更通知");
                     return true;
                 }
             }
@@ -115,7 +115,7 @@ namespace RUINORERP.Business.CommService
                         }
                     }
 
-                    _logger.LogInformation($"会话 {sessionId} 取消订阅了表 {tableName} 的缓存变更通知");
+                    _logger.Debug($"会话 {sessionId} 取消订阅了表 {tableName} 的缓存变更通知");
                     return true;
                 }
             }
@@ -172,7 +172,7 @@ namespace RUINORERP.Business.CommService
                         }
                     }
 
-                    _logger.LogInformation($"会话 {sessionId} 的所有订阅已取消");
+                    _logger.Debug($"会话 {sessionId} 的所有订阅已取消");
                 }
             }
             catch (Exception ex)
@@ -216,7 +216,7 @@ namespace RUINORERP.Business.CommService
                 // 如果已经订阅，则直接返回
                 if (IsSubscribed(tableName))
                 {
-                    _logger.LogInformation($"表 {tableName} 已经订阅，无需重复订阅");
+                    _logger.Debug($"表 {tableName} 已经订阅，无需重复订阅");
                     return true;
                 }
 
@@ -261,7 +261,7 @@ namespace RUINORERP.Business.CommService
 
                 // 添加本地订阅
                 AddSubscription(tableName);
-                _logger.LogInformation($"成功订阅表 {tableName} 的缓存变更通知");
+                _logger.Debug($"成功订阅表 {tableName} 的缓存变更通知");
                 return true;
             }
             catch (Exception ex)
@@ -288,7 +288,7 @@ namespace RUINORERP.Business.CommService
                 // 如果未订阅，则直接返回
                 if (!IsSubscribed(tableName))
                 {
-                    _logger.LogInformation($"表 {tableName} 未订阅，无需取消订阅");
+                    _logger.Debug($"表 {tableName} 未订阅，无需取消订阅");
                     return true;
                 }
 
@@ -333,7 +333,7 @@ namespace RUINORERP.Business.CommService
 
                 // 移除本地订阅
                 RemoveSubscription(tableName);
-                _logger.LogInformation($"成功取消订阅表 {tableName} 的缓存变更通知");
+                _logger.Debug($"成功取消订阅表 {tableName} 的缓存变更通知");
                 return true;
             }
             catch (Exception ex)
@@ -454,7 +454,7 @@ namespace RUINORERP.Business.CommService
                     }
                 }
 
-                _logger.LogInformation($"取消了 {successCount}/{subscriptions.Count} 个表的订阅");
+                _logger.Debug($"取消了 {successCount}/{subscriptions.Count} 个表的订阅");
                 return successCount;
             }
             catch (Exception ex)

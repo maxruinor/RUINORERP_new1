@@ -153,7 +153,7 @@ namespace RUINORERP.Business
                         rmrs.ErrorMsg = $"请先配置付款方式信息！";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            _logger.LogInformation(rmrs.ErrorMsg);
+                            _logger.Debug(rmrs.ErrorMsg);
                         }
                         return rmrs;
                     }
@@ -168,7 +168,7 @@ namespace RUINORERP.Business
                             rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
-                                _logger.LogInformation(rmrs.ErrorMsg);
+                                _logger.Debug(rmrs.ErrorMsg);
                             }
                             return rmrs;
                         }
@@ -183,7 +183,7 @@ namespace RUINORERP.Business
                             rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
-                                _logger.LogInformation(rmrs.ErrorMsg);
+                                _logger.Debug(rmrs.ErrorMsg);
                             }
                             return rmrs;
                         }
@@ -222,7 +222,7 @@ namespace RUINORERP.Business
                                 rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(rmrs.ErrorMsg);
+                                    _logger.Debug(rmrs.ErrorMsg);
                                 }
                             }
                             else
@@ -244,7 +244,7 @@ namespace RUINORERP.Business
                                         fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核失败", autoApproval.ReturnObject as tb_FM_PreReceivedPayment, rmrs.ErrorMsg);
                                         if (_appContext.SysConfig.ShowDebugInfo)
                                         {
-                                            _logger.LogInformation(rmrs.ErrorMsg);
+                                            _logger.Debug(rmrs.ErrorMsg);
                                         }
                                     }
                                     else
@@ -316,7 +316,7 @@ namespace RUINORERP.Business
                     rmrs.ErrorMsg = $"请先配置付款方式信息！";
                     if (_appContext.SysConfig.ShowDebugInfo)
                     {
-                        _logger.LogInformation(rmrs.ErrorMsg);
+                        _logger.Debug(rmrs.ErrorMsg);
                     }
                     return rmrs;
                 }
@@ -331,7 +331,7 @@ namespace RUINORERP.Business
                         rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            _logger.LogInformation(rmrs.ErrorMsg);
+                            _logger.Debug(rmrs.ErrorMsg);
                         }
                         return rmrs;
                     }
@@ -346,7 +346,7 @@ namespace RUINORERP.Business
                         rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            _logger.LogInformation(rmrs.ErrorMsg);
+                            _logger.Debug(rmrs.ErrorMsg);
                         }
                         return rmrs;
                     }
@@ -385,7 +385,7 @@ namespace RUINORERP.Business
                         rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            _logger.LogInformation(rmrs.ErrorMsg);
+                            _logger.Debug(rmrs.ErrorMsg);
                         }
                     }
                     else
@@ -409,7 +409,7 @@ namespace RUINORERP.Business
                                 rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(rmrs.ErrorMsg);
+                                    _logger.Debug(rmrs.ErrorMsg);
                                 }
                             }
                             else
@@ -489,7 +489,7 @@ namespace RUINORERP.Business
                         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (Counter == 0)
                         {
-                            _logger.LogInformation($"{entity.SOrderNo}批量审核时，更新库存结果为0行，请检查数据！");
+                            _logger.Debug($"{entity.SOrderNo}批量审核时，更新库存结果为0行，请检查数据！");
                         }
 
 
@@ -593,7 +593,7 @@ namespace RUINORERP.Business
                         var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (InvUpdateCounter == 0)
                         {
-                            _logger.LogInformation($"{entitys[m].SOrderNo},批量关闭时，更新库存结果为0行，请检查数据！");
+                            _logger.Debug($"{entitys[m].SOrderNo},批量关闭时，更新库存结果为0行，请检查数据！");
                         }
                     }
                     //这部分是否能提出到上一级公共部分？
@@ -688,7 +688,7 @@ namespace RUINORERP.Business
                         var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                         if (InvUpdateCounter == 0)
                         {
-                            _logger.LogInformation($"{entitys[m].SOrderNo}反审核，更新库存结果为0行，请检查数据！");
+                            _logger.Debug($"{entitys[m].SOrderNo}反审核，更新库存结果为0行，请检查数据！");
                         }
 
                     }
@@ -885,7 +885,7 @@ namespace RUINORERP.Business
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _logger.LogInformation($"{entity.SOrderNo}反审核，更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.SOrderNo}反审核，更新库存结果为0行，请检查数据！");
                 }
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
@@ -1577,7 +1577,7 @@ namespace RUINORERP.Business
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _logger.LogInformation($"{entity.SOrderNo}取消时，更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.SOrderNo}取消时，更新库存结果为0行，请检查数据！");
                 }
                 entity.DataStatus = (int)DataStatus.作废;
                 entity.CloseCaseOpinions += CancelReason;

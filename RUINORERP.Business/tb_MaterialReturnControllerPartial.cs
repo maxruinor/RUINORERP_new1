@@ -230,11 +230,11 @@ namespace RUINORERP.Business
                 int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialReturn>(entity).ExecuteCommandAsync();
                 if (last > 0)
                 {
-                    _logger.LogInformation("审核退料单成功" + entity.BillNo);
+                    _logger.Debug("审核退料单成功" + entity.BillNo);
                 }
                 else
                 {
-                    _logger.LogInformation("审核退料单失败" + entity.BillNo);
+                    _logger.Debug("审核退料单失败" + entity.BillNo);
                     _unitOfWorkManage.RollbackTran();
                     rrs.Succeeded = false;
                     return rrs;
@@ -358,7 +358,7 @@ namespace RUINORERP.Business
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvMainCounter == 0)
                 {
-                    _logger.LogInformation($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
                 }
 
                 

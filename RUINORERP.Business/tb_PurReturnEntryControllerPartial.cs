@@ -141,7 +141,7 @@ namespace RUINORERP.Business
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
-                    _logger.LogInformation($"{entity.PurReEntryNo}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.PurReEntryNo}更新库存结果为0行，请检查数据！");
                 }
 
 
@@ -171,7 +171,7 @@ namespace RUINORERP.Business
                             string msg = $"采购退货单:{entity.tb_purentryre.PurEntryReNo}的【{prodName}】在明细中拥有多行记录，必须使用引用的方式添加。";
                             rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
+                            _logger.Debug(msg);
                             return rs;
                         }
                         #endregion
@@ -183,7 +183,7 @@ namespace RUINORERP.Business
                             string msg = $"【{prodName}】的采购退货入库数量不能大于退货单中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购退货入库单。";
                             rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
+                            _logger.Debug(msg);
                             return rs;
                         }
                         else
@@ -215,7 +215,7 @@ namespace RUINORERP.Business
                             string msg = $"采购退回入库单:{entity.PurReEntryNo}的【{prodName}】的入库数量不能大于【采购退货单】中对应行的数量\r\n" + $"或存在针对当前采购退货单重复录入了采购入库单。";
                             rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
+                            _logger.Debug(msg);
                             return rs;
                         }
                         else
@@ -391,7 +391,7 @@ namespace RUINORERP.Business
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _logger.LogInformation($"{entity.PurReEntryNo}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.PurReEntryNo}更新库存结果为0行，请检查数据！");
                 }
 
 
@@ -438,7 +438,7 @@ namespace RUINORERP.Business
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(msg);
+                                    _logger.Debug(msg);
                                 }
                                 return rs;
                             }
@@ -455,7 +455,7 @@ namespace RUINORERP.Business
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(msg);
+                                    _logger.Debug(msg);
                                 }
                                 return rs;
                             }
@@ -489,7 +489,7 @@ namespace RUINORERP.Business
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(msg);
+                                    _logger.Debug(msg);
                                 }
                                 return rs;
                             }

@@ -1,4 +1,4 @@
-﻿using RUINORERP.Business.Processor;
+using RUINORERP.Business.Processor;
 using RUINORERP.Global;
 using SqlSugar;
 using System;

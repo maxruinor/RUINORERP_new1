@@ -398,7 +398,7 @@ namespace RUINORERP.Business
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter.ToInt() == 0)
                 {
-                    _logger.LogInformation($"{entity.PurEntryReNo}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.PurEntryReNo}更新库存结果为0行，请检查数据！");
                 }
 
                 if (entity.tb_purentry != null)

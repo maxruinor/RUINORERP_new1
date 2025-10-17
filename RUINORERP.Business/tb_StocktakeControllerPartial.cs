@@ -176,7 +176,7 @@ namespace RUINORERP.Business
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
-                    _logger.LogInformation($"{entity.CheckNo}审核时，更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.CheckNo}审核时，更新库存结果为0行，请检查数据！");
                 }
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
@@ -356,7 +356,7 @@ namespace RUINORERP.Business
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
-                    _logger.LogInformation($"{entity.CheckNo}反审核时，更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.CheckNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
         
                 //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.

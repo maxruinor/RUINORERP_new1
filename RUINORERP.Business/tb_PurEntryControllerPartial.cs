@@ -746,7 +746,7 @@ namespace RUINORERP.Business
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(msg);
+                                    _logger.Debug(msg);
                                 }
                                 return rs;
                             }
@@ -763,7 +763,7 @@ namespace RUINORERP.Business
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(msg);
+                                    _logger.Debug(msg);
                                 }
                                 return rs;
                             }
@@ -798,7 +798,7 @@ namespace RUINORERP.Business
                                 _unitOfWorkManage.RollbackTran();
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(msg);
+                                    _logger.Debug(msg);
                                 }
                                 return rs;
                             }

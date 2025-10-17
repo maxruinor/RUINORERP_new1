@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -39,7 +39,8 @@ namespace RUINORERP.Business.Processor
 
         public override QueryFilter GetQueryFilter()
         {
-            QueryFilter queryFilter = new QueryFilter();
+            // 使用当前处理器的ApplicationContext创建QueryFilter实例
+            QueryFilter queryFilter = new QueryFilter(_appContext);
 
             var lambda = Expressionable.Create<View_FinishedGoodsInvItems>()
                           .AndIF(AuthorizeController.GetSaleLimitedAuth(_appContext), t => t.Employee_ID == _appContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制

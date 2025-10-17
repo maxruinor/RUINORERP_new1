@@ -41,7 +41,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         {
             try
             {
-                // _logger.LogInformation("开始初始化默认行级权限策略...");
+                // _logger.Debug("开始初始化默认行级权限策略...");
 
                 // 获取所有业务类型
                 var allBizTypes = Enum.GetValues(typeof(BizType)).Cast<BizType>().ToList();
@@ -69,7 +69,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                     }
                 }
 
-                // _logger.LogInformation("默认行级权限策略初始化完成：已初始化 {InitializedCount} 个业务类型，跳过 {SkippedCount} 个已初始化业务类型",                    initializedCount, skippedCount);
+                // _logger.Debug("默认行级权限策略初始化完成：已初始化 {InitializedCount} 个业务类型，跳过 {SkippedCount} 个已初始化业务类型",                    initializedCount, skippedCount);
             }
             catch (Exception ex)
             {
@@ -155,7 +155,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                             policy.PolicyId = _db.Insertable(policy).ExecuteReturnSnowflakeId();
                             newPolicies.Add(policy);
 
-                            //_logger.LogInformation("已创建默认策略: {PolicyName} (ID: {PolicyId})", policy.PolicyName, policy.PolicyId);
+                            //_logger.Debug("已创建默认策略: {PolicyName} (ID: {PolicyId})", policy.PolicyName, policy.PolicyId);
                         }
 
                         // 提交事务

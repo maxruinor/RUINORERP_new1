@@ -139,7 +139,7 @@ namespace RUINORERP.Business
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (InvMainCounter.ToInt() == 0)
                 {
-                    _logger.LogInformation($"{entity.ConversionNo}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.ConversionNo}更新库存结果为0行，请检查数据！");
                 }
 
 

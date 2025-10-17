@@ -177,7 +177,7 @@ namespace RUINORERP.Business
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvMainCounter == 0)
                 {
-                    _logger.LogInformation($"{entity.BorrowNo}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.BorrowNo}更新库存结果为0行，请检查数据！");
                 }
 
                 

@@ -217,7 +217,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 _ruleDescriptions[rule] = config.Description;
             }
             
-            _logger.LogInformation("已注册新的行级权限规则配置: {RuleName}", config.Name);
+            _logger.Debug("已注册新的行级权限规则配置: {RuleName}", config.Name);
         }
 
         /// <summary>

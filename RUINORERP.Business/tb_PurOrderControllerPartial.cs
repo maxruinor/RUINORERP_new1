@@ -99,7 +99,7 @@ namespace RUINORERP.Business
                             var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                             if (Counter == 0)
                             {
-                                _logger.LogInformation($"{entity.PurOrderNo}更新库存结果为0行，请检查数据！");
+                                _logger.Debug($"{entity.PurOrderNo}更新库存结果为0行，请检查数据！");
                             }
                         }
 
@@ -265,7 +265,7 @@ namespace RUINORERP.Business
                         rmrs.ErrorMsg = $"请先配置付款方式信息！";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            _logger.LogInformation(rmrs.ErrorMsg);
+                            _logger.Debug(rmrs.ErrorMsg);
                         }
                         return rmrs;
                     }
@@ -281,7 +281,7 @@ namespace RUINORERP.Business
                             rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
-                                _logger.LogInformation(rmrs.ErrorMsg);
+                                _logger.Debug(rmrs.ErrorMsg);
                             }
                             return rmrs;
                         }
@@ -297,7 +297,7 @@ namespace RUINORERP.Business
                             rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
-                                _logger.LogInformation(rmrs.ErrorMsg);
+                                _logger.Debug(rmrs.ErrorMsg);
                             }
                             return rmrs;
                         }
@@ -332,7 +332,7 @@ namespace RUINORERP.Business
                                 rmrs.ErrorMsg = $"预付款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(rmrs.ErrorMsg);
+                                    _logger.Debug(rmrs.ErrorMsg);
                                 }
                                 return rmrs;
                             }
@@ -348,7 +348,7 @@ namespace RUINORERP.Business
                                         rmrs.ErrorMsg = $"预付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                         if (_appContext.SysConfig.ShowDebugInfo)
                                         {
-                                            _logger.LogInformation(rmrs.ErrorMsg);
+                                            _logger.Debug(rmrs.ErrorMsg);
                                         }
                                         return rmrs;
                                     }
@@ -503,7 +503,7 @@ namespace RUINORERP.Business
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
-                    _logger.LogInformation($"{entity.PurOrderNo}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.PurOrderNo}更新库存结果为0行，请检查数据！");
                 }
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
@@ -629,7 +629,7 @@ namespace RUINORERP.Business
                     rmrs.ErrorMsg = $"请先配置付款方式信息！";
                     if (_appContext.SysConfig.ShowDebugInfo)
                     {
-                        _logger.LogInformation(rmrs.ErrorMsg);
+                        _logger.Debug(rmrs.ErrorMsg);
                     }
                     return rmrs;
                 }
@@ -644,7 +644,7 @@ namespace RUINORERP.Business
                         rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            _logger.LogInformation(rmrs.ErrorMsg);
+                            _logger.Debug(rmrs.ErrorMsg);
                         }
                         return rmrs;
                     }
@@ -659,7 +659,7 @@ namespace RUINORERP.Business
                         rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            _logger.LogInformation(rmrs.ErrorMsg);
+                            _logger.Debug(rmrs.ErrorMsg);
                         }
                         return rmrs;
                     }
@@ -699,7 +699,7 @@ namespace RUINORERP.Business
                         rmrs.ErrorMsg = $"预付款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            _logger.LogInformation(rmrs.ErrorMsg);
+                            _logger.Debug(rmrs.ErrorMsg);
                         }
                     }
                     else
@@ -721,7 +721,7 @@ namespace RUINORERP.Business
                                 rmrs.ErrorMsg = $"预付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(rmrs.ErrorMsg);
+                                    _logger.Debug(rmrs.ErrorMsg);
                                 }
                             }
                             else

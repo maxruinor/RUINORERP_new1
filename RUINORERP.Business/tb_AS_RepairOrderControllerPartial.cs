@@ -108,7 +108,7 @@ namespace RUINORERP.Business
                         rmrs.ErrorMsg = $"请先配置付款方式信息！";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            _logger.LogInformation(rmrs.ErrorMsg);
+                            _logger.Debug(rmrs.ErrorMsg);
                         }
                         return rmrs;
                     }
@@ -123,7 +123,7 @@ namespace RUINORERP.Business
                             rmrs.ErrorMsg = $"付款方式为账期的工单必须是未付款。";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
-                                _logger.LogInformation(rmrs.ErrorMsg);
+                                _logger.Debug(rmrs.ErrorMsg);
                             }
                             return rmrs;
                         }
@@ -138,7 +138,7 @@ namespace RUINORERP.Business
                             rmrs.ErrorMsg = $"未付款工单的付款方式必须是账期。";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
-                                _logger.LogInformation(rmrs.ErrorMsg);
+                                _logger.Debug(rmrs.ErrorMsg);
                             }
                             return rmrs;
                         }
@@ -160,7 +160,7 @@ namespace RUINORERP.Business
                             rmrs.ErrorMsg = $"应收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
-                                _logger.LogInformation(rmrs.ErrorMsg);
+                                _logger.Debug(rmrs.ErrorMsg);
                             }
                         }
                     }
@@ -408,7 +408,7 @@ namespace RUINORERP.Business
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _logger.LogInformation($"{entity.ASApplyNo}反审核，更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.ASApplyNo}反审核，更新库存结果为0行，请检查数据！");
                 }
                 */
 

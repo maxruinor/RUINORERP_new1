@@ -115,6 +115,8 @@ namespace RUINORERP.UI.PSI.PUR
 
             var ReceivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
             tb_FM_ReceivablePayable ReceivablePayable = ReceivablePayableController.BuildReceivablePayable(RealList[0]);
+            //单据默认不会是费用。新建才可能是费用
+       
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             string Flag = string.Empty;

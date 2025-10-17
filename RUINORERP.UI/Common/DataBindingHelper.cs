@@ -1266,7 +1266,7 @@ namespace RUINORERP.UI.Common
 
                                 }
 
-                             
+
                             };
 
 
@@ -2455,44 +2455,53 @@ namespace RUINORERP.UI.Common
         /// <param name="SyncUI"></param>
         public static void BindData4DataTime(object entity, object datetimeValue, string key, KryptonDateTimePicker dtp, bool SyncUI)
         {
-            dtp.DataBindings.Clear();
-            //chkbox
-            Binding dtpdata = null;
-            if (SyncUI)
+            try
             {
-                dtpdata = new Binding("Value", entity, key, true, DataSourceUpdateMode.OnPropertyChanged);
-            }
-            else
-            {
-                dtpdata = new Binding("Value", entity, key, true, DataSourceUpdateMode.OnValidation);
-            }
 
 
-            //数据源的数据类型转换为控件要求的数据类型。
-            dtpdata.Format += (s, args) =>
-            {
-                if (args.Value == null || args.Value.ToString() == "0001-01-01 00:00:00")
+                dtp.DataBindings.Clear();
+                //chkbox
+                Binding dtpdata = null;
+                if (SyncUI)
                 {
-                    args.Value = " ";
-                    dtp.ValueNullable = DBNull.Value;
+                    dtpdata = new Binding("Value", entity, key, true, DataSourceUpdateMode.OnPropertyChanged);
+                }
+                else
+                {
+                    dtpdata = new Binding("Value", entity, key, true, DataSourceUpdateMode.OnValidation);
                 }
 
-            };
-            //将控件的数据类型转换为数据源要求的数据类型。
-            dtpdata.Parse += (s, args) =>
-            {
-                args.Value = !dtp.Checked ? null : args.Value;
-            };
-            dtp.Validating += dtp_Validating;
-            dtp.CheckedChanged += Dtp_CheckedChanged;
 
-            if (datetimeValue == null)
-            {
-                dtp.Format = DateTimePickerFormat.Custom;
-                dtp.CustomFormat = "   ";
+                //数据源的数据类型转换为控件要求的数据类型。
+                dtpdata.Format += (s, args) =>
+                {
+                    if (args.Value == null || args.Value.ToString() == "0001-01-01 00:00:00")
+                    {
+                        args.Value = " ";
+                        dtp.ValueNullable = DBNull.Value;
+                    }
+
+                };
+                //将控件的数据类型转换为数据源要求的数据类型。
+                dtpdata.Parse += (s, args) =>
+                {
+                    args.Value = !dtp.Checked ? null : args.Value;
+                };
+                dtp.Validating += dtp_Validating;
+                dtp.CheckedChanged += Dtp_CheckedChanged;
+
+                if (datetimeValue == null)
+                {
+                    dtp.Format = DateTimePickerFormat.Custom;
+                    dtp.CustomFormat = "   ";
+                }
+
+                dtp.DataBindings.Add(dtpdata);
             }
+            catch (Exception ex)
+            {
 
-            dtp.DataBindings.Add(dtpdata);
+            }
         }
 
 

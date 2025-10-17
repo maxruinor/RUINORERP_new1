@@ -115,7 +115,7 @@ namespace RUINORERP.Business
                     var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                     if (InvMainCounter == 0)
                     {
-                        _logger.LogInformation($"{entitys[m].MONO}更新库存结果为0行，请检查数据！");
+                        _logger.Debug($"{entitys[m].MONO}更新库存结果为0行，请检查数据！");
                     }
 
                     //这部分是否能提出到上一级公共部分？
@@ -273,7 +273,7 @@ namespace RUINORERP.Business
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _logger.LogInformation($"制令单明细更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"制令单明细更新库存结果为0行，请检查数据！");
                 }
 
                 //int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
@@ -393,7 +393,7 @@ namespace RUINORERP.Business
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invMain);
                 if (InvMainCounter == 0)
                 {
-                    _logger.LogInformation($"在制产品库存更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"在制产品库存更新库存结果为0行，请检查数据！");
                 }
                
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
@@ -442,7 +442,7 @@ namespace RUINORERP.Business
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _logger.LogInformation($"制令单明细更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"制令单明细更新库存结果为0行，请检查数据！");
                 }
                 //因为目前库存是整数  纸箱这种用了小数所以更新失败。暂时不管理 后面统一为decimal(18, 4)
                 

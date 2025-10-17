@@ -373,7 +373,7 @@ namespace RUINORERP.Business
                             $"请检查订单状态数据是否正确，或当前为相同订单重复出库！";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
-                            _logger.LogInformation(rrs.ErrorMsg);
+                            _logger.Debug(rrs.ErrorMsg);
                         }
 
                         return rrs;
@@ -392,7 +392,7 @@ namespace RUINORERP.Business
                                 rrs.ErrorMsg = $"出库明细中有产品不属于当前销售订单!请检查数据后重试！";
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {
-                                    _logger.LogInformation(rrs.ErrorMsg);
+                                    _logger.Debug(rrs.ErrorMsg);
                                 }
                                 return rrs;
                             }
@@ -528,7 +528,7 @@ namespace RUINORERP.Business
                     var InvCounter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                     if (InvCounter == 0)
                     {
-                        _logger.LogInformation($"{entity.SaleOutNo}审核时，更新库存结果为0行，请检查数据！");
+                        _logger.Debug($"{entity.SaleOutNo}审核时，更新库存结果为0行，请检查数据！");
                     }
 
 
@@ -541,7 +541,7 @@ namespace RUINORERP.Business
                         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(UpdateSaleOutCostlist);
                         if (Counter == 0)
                         {
-                            _logger.LogInformation($"{entity.SaleOutNo}销售出库时成本价格更新失败，更新结果为0行，请检查数据！");
+                            _logger.Debug($"{entity.SaleOutNo}销售出库时成本价格更新失败，更新结果为0行，请检查数据！");
                         }
                     }
 
@@ -549,7 +549,7 @@ namespace RUINORERP.Business
                     var PriceCounter = await dbHelperPrice.BaseDefaultAddElseUpdateAsync(priceUpdateList);
                     if (PriceCounter == 0)
                     {
-                        _logger.LogInformation($"{entity.SaleOutNo}销售出库时价格记录更新失败，更新结果为0行，请检查数据！");
+                        _logger.Debug($"{entity.SaleOutNo}销售出库时价格记录更新失败，更新结果为0行，请检查数据！");
                     }
 
                     if (!entity.ReplaceOut)
@@ -590,7 +590,7 @@ namespace RUINORERP.Business
                                     string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加。";
                                     rrs.ErrorMsg = msg;
                                     _unitOfWorkManage.RollbackTran();
-                                    _logger.LogInformation(msg);
+                                    _logger.Debug(msg);
                                     return rrs;
                                 }
                                 #endregion
@@ -606,7 +606,7 @@ namespace RUINORERP.Business
                                     string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，\r\n\" " +
                                         $"或存在当前销售订单重复录入了销售出库单。";
                                     rrs.ErrorMsg = msg;
-                                    _logger.LogInformation(msg);
+                                    _logger.Debug(msg);
                                     return rrs;
                                 }
                                 else
@@ -648,7 +648,7 @@ namespace RUINORERP.Business
                                     string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量，\r\n\" " +
                                         $"或存在当前销售订单重复录入了销售出库单，审核失败！";
                                     rrs.ErrorMsg = msg;
-                                    _logger.LogInformation(msg);
+                                    _logger.Debug(msg);
                                     return rrs;
                                 }
                                 else
@@ -707,7 +707,7 @@ namespace RUINORERP.Business
                         _unitOfWorkManage.RollbackTran();
                         string msg = $"出库单:{entity.tb_saleorder.SOrderNo}的总金额为0， 但是订单中不为0，请检查数据!";
                         rrs.ErrorMsg = msg;
-                        _logger.LogInformation(msg);
+                        _logger.Debug(msg);
                         return rrs;
                     }
 
@@ -986,7 +986,7 @@ namespace RUINORERP.Business
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
-                    _logger.LogInformation($"{entity.SaleOutNo}反审核时，更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.SaleOutNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
 
                 if (!entity.ReplaceOut)
@@ -1026,7 +1026,7 @@ namespace RUINORERP.Business
                                 string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】在订单明细中拥有多行记录，必须使用引用的方式添加，反审失败！";
                                 rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
+                                _logger.Debug(msg);
                                 return rs;
                             }
                             #endregion
@@ -1040,7 +1040,7 @@ namespace RUINORERP.Business
                                 string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量。";
                                 rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
+                                _logger.Debug(msg);
                                 return rs;
                             }
                             else
@@ -1071,7 +1071,7 @@ namespace RUINORERP.Business
                                 string msg = $"销售订单:{entity.tb_saleorder.SOrderNo}的【{prodName}】的出库数量不能大于订单中对应行的数量。";
                                 rs.ErrorMsg = msg;
                                 _unitOfWorkManage.RollbackTran();
-                                _logger.LogInformation(msg);
+                                _logger.Debug(msg);
                                 return rs;
                             }
                             else

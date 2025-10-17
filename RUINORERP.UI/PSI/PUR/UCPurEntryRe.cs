@@ -129,7 +129,7 @@ namespace RUINORERP.UI.PSI.PUR
                     }
                 }
                 //如果有出库，则查应收
-                if (entryRe.DataStatus >= (int)DataStatus.确认 && entryRe.ProcessWay == (int)PurReProcessWay.厂商退款)
+                if (entryRe.DataStatus >= (int)DataStatus.确认)
                 {
                     var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
                                                                     .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核

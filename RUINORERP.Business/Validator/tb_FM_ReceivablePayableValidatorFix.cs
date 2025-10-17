@@ -29,8 +29,18 @@ namespace RUINORERP.Business
     {
         public override void Initialize()
         {
+            //比方采购退货 的应付款单的红字，则是负数时，不用提供对应的对方的收款账号等信息
+
+            RuleFor(x => x.Account_id).Must(CheckForeignKeyValueCanNull).When(x => x.TotalLocalPayableAmount > 0).WithMessage("公司账户:下拉选择值不正确。");
+            RuleFor(tb_FM_ReceivablePayable => tb_FM_ReceivablePayable.Account_id).NotEmpty().When(x => x.Account_id.HasValue);
+
+            RuleFor(tb_FM_ReceivablePayable => tb_FM_ReceivablePayable.PayeeInfoID).Must(CheckForeignKeyValueCanNull).When(x => x.TotalLocalPayableAmount > 0).WithMessage("收款信息:下拉选择值不正确。");
+            RuleFor(tb_FM_ReceivablePayable => tb_FM_ReceivablePayable.PayeeInfoID).NotEmpty().When(x => x.PayeeInfoID.HasValue);
+
+            RuleFor(tb_FM_ReceivablePayable => tb_FM_ReceivablePayable.PayeeAccountNo).MaximumMixedLength(100).When(x => x.TotalLocalPayableAmount > 0).WithMessage("收款账号:不能超过最大长度,100.");
+
             //审核时才需验证，所以状态为提交保存时可以忽略
-            RuleFor(x => x.PayeeInfoID).NotNull().When(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款 && c.ARAPStatus > (int)ARAPStatus.待审核).WithMessage("收款信息:付款时，对方的收款账号等信息不能为空。");
+            RuleFor(x => x.PayeeInfoID).NotNull().When(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款 && c.ARAPStatus > (int)ARAPStatus.待审核).When(x => x.TotalLocalPayableAmount > 0).WithMessage("收款信息:付款时，对方的收款账号等信息不能为空。");
         }
     }
 

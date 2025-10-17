@@ -207,7 +207,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 // 清除相关缓存
                 ClearAuthCache(config.RoleId, entityInfo.EntityName);
 
-                _logger.LogInformation("行级权限配置保存成功: {RoleId}, {BizType}", config.RoleId, config.BizType);
+                _logger.Debug("行级权限配置保存成功: {RoleId}, {BizType}", config.RoleId, config.BizType);
                 return true;
             }
             catch (Exception ex)
@@ -305,7 +305,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 // 清除相关缓存
                 ClearAuthCacheForPolicy(policyId);
 
-                _logger.LogInformation("权限策略分配角色成功: {PolicyId}, {RoleId}", policyId, roleId);
+                _logger.Debug("权限策略分配角色成功: {PolicyId}, {RoleId}", policyId, roleId);
                 return true;
             }
             catch (Exception ex)
@@ -332,7 +332,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 // 清除相关缓存
                 ClearAuthCacheForPolicy(policyId);
 
-                _logger.LogInformation("从角色移除权限策略成功: {PolicyId}, {RoleId}", policyId, roleId);
+                _logger.Debug("从角色移除权限策略成功: {PolicyId}, {RoleId}", policyId, roleId);
                 return true;
             }
             catch (Exception ex)
@@ -401,7 +401,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 if (!userRoleIds.Any())
                 {
                     // 用户没有角色，返回null表示无限制
-                    _logger.LogInformation("用户 {UserId} 没有任何角色，不应用行级权限限制", currentUserId);
+                    _logger.Debug("用户 {UserId} 没有任何角色，不应用行级权限限制", currentUserId);
                     _cacheManager.Set(cacheKey, "__NO_RESTRICTION__", cacheEntryOptions);
                     return null;
                 }
@@ -645,7 +645,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                     _cacheManager.Remove(cacheKey);
                 }
 
-                _logger.LogInformation("已清除角色 {RoleId} 对实体 {EntityName} 的权限缓存", roleId, entityName);
+                _logger.Debug("已清除角色 {RoleId} 对实体 {EntityName} 的权限缓存", roleId, entityName);
             }
             catch (Exception ex)
             {

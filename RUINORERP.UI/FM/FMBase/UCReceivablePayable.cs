@@ -261,7 +261,7 @@ namespace RUINORERP.UI.FM
                 {
                     base.toolStripBtnReverseReview.Visible = false;
                 }
-               
+
             }
             else
             {
@@ -269,16 +269,24 @@ namespace RUINORERP.UI.FM
                 entity.ARAPStatus = (int)ARAPStatus.草稿;
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
-                
+
                 //    entity.DocumentDate = System.DateTime.Now;
                 //}
                 //if (!entity.BusinessDate.HasValue)
                 //{
                 //    entity.BusinessDate = System.DateTime.Now;
                 //}
+                //默认新建的都是费用，
+                //明细一开始就是大于0的，则是转单过来的。则不是费用
+                    if (entity.tb_FM_ReceivablePayableDetails.Count > 0)
+                {
+                    entity.IsExpenseType = false;
+                }
+                else
+                {
+                    entity.IsExpenseType = false;
+                }
 
-                //默认新建的都是费用，产品的话是可以转单
-                entity.IsExpenseType = true;
 
                 //到期日期应该是根据对应客户的账期的天数来算
                 chkIsExpenseType.Enabled = true;
@@ -334,12 +342,12 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsForCommission, chkIsForCommission, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             // DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
-                DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
+            DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CmbByEnum<tb_FM_ReceivablePayable, BizType>(entity, k => k.SourceBizType, cmbBizType, false);
             DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.DueDate, dtpDueDate, false);
             DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.BusinessDate, dtpBusinessDate, false);
             DataBindingHelper.BindData4DataTime<tb_FM_ReceivablePayable>(entity, t => t.DocumentDate, dtpDocumentDate, false);
-            
+
 
 
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
@@ -352,7 +360,10 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4Cmb<tb_Currency>(entity, k => k.Currency_ID, v => v.CurrencyName, cmbCurrency_ID);
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
-            cmbCurrency_ID.SelectedIndex = 1;//默认第一个人民币
+            if (cmbCurrency_ID.Items.Count > 1)
+            {
+                cmbCurrency_ID.SelectedIndex = 1;//默认第一个人民币
+            }
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.ApprovalResults, chkApprovalResults, false);
@@ -839,7 +850,7 @@ namespace RUINORERP.UI.FM
             }
 
             #endregion
-            
+
             MainForm.Instance.LoginWebServer();
             if (CurMenuInfo != null)
             {
@@ -969,7 +980,7 @@ namespace RUINORERP.UI.FM
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                   await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("坏账处理", EditEntity, $"原因:{EditEntity.Remark}");
+                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("坏账处理", EditEntity, $"原因:{EditEntity.Remark}");
                     Refreshs();
                 }
                 else
@@ -1170,7 +1181,7 @@ namespace RUINORERP.UI.FM
                         return false;
                     }
                 }
-               
+
 
                 if (NeedValidated && EditEntity.TaxTotalAmount != details.Sum(c => c.TaxLocalAmount))
                 {

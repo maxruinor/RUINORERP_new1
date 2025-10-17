@@ -79,7 +79,7 @@ namespace RUINORERP.Business.CommService
             _baseCache.CacheEntityList.Add(cacheKey, cacheData);
             _baseCache.CacheEntityList.Expire(cacheKey, ExpirationMode.Absolute, _snapshotExpiration);
 
-            _logger.LogInformation($"设置库存快照缓存：{cacheKey}，记录数：{snapshots.Count}");
+            _logger.Debug($"设置库存快照缓存：{cacheKey}，记录数：{snapshots.Count}");
         }
 
         /// <summary>
@@ -136,7 +136,7 @@ namespace RUINORERP.Business.CommService
             _baseCache.CacheEntityList.Add(cacheKey, cacheData);
             _baseCache.CacheEntityList.Expire(cacheKey, ExpirationMode.Absolute, _transactionExpiration);
 
-            _logger.LogInformation($"设置库存流水缓存：{cacheKey}，记录数：{transactions.Count}");
+            _logger.Debug($"设置库存流水缓存：{cacheKey}，记录数：{transactions.Count}");
         }
 
         /// <summary>

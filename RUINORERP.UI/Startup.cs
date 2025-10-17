@@ -150,7 +150,7 @@ namespace RUINORERP.UI
         public static void ConfigureBaseServices(IServiceCollection services)
         {
             // 配置日志（最先注册）
-            ConfigureLogging(services);
+            //ConfigureLogging(services);
 
             // 配置应用程序设置
             ConfigureAppSettings(services);
@@ -171,6 +171,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// 配置日志服务
         /// </summary>
+        [Obsolete]
         private static void ConfigureLogging(IServiceCollection services)
         {
             try
@@ -667,21 +668,7 @@ namespace RUINORERP.UI
                 .AsImplementedInterfaces()
                 .InstancePerLifetimeScope()
                 .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
-            //builder.RegisterType<tb_DepartmentServices>().Named<Itb_DepartmentServices>(typeof(tb_DepartmentServices).Name).InstancePerLifetimeScope().EnableInterfaceInterceptors();
-            //builder.RegisterType<FactoryTwo>().Named<IServiceFactory>(typeof(FactoryTwo).Name).InstancePerLifetimeScope().EnableClassInterceptors();
-
-            //var intermediateFactory = container.Resolve<Func<B, C>>();
-            //Func<A, C> factory =
-            //    a => intermediateFactory(container.Resolve(TypedParameter.From(a)));
-            //var x = factory(new A());
-
-            //注册是最后的覆盖前面的 ，AOP测试时，业务控制器中的方法不生效。与 ConfigureContainer(builder); 中注册的方式有关。可能参数不对。
-            //后面需要研究
-            //IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
-            // var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
-            // IConfiguration configuration = cfgBuilder.Build();
-            /// AppSettings.Configuration = configuration;
-            /// 
+         
             string conn = AppSettings.GetValue("ConnectString");
             string key = "ruinor1234567890";
             string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
@@ -934,13 +921,18 @@ namespace RUINORERP.UI
                         else
                         if (type.BaseType.Name.Contains("BaseNavigatorAnalysis") || type.BaseType.Name.Contains("BaseNavigatorPages") || type.BaseType.Name.Contains("BaseNavigatorGeneric") || type.BaseType.Name.Contains("BaseBillQueryMC") || type.BaseType.Name.Contains("BaseMasterQueryWithCondition"))
                         {
+                            if (type.BaseType.Name.Contains("BaseNavigatorGeneric") && type.Name== "UCFinishedGoodsInvStatistics")
+                            {
+
+                            }
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<UserControl>(type.Name)
+                            //.AsSelf()
                              //.AsImplementedInterfaces().AsSelf() //加上这一行，会出错
                              // .EnableInterfaceInterceptors()
                              //.InstancePerDependency()//默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
                              // .EnableClassInterceptors()//打开AOP类的虚方法注入
-                             .PropertiesAutowired();//指定属性注入
-
+                             //.PropertiesAutowired();//指定属性注入
+                              .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
 
 
                             /*
@@ -1064,13 +1056,21 @@ namespace RUINORERP.UI
             }
             else if (type.BaseType.BaseType.Name.Contains("BaseNavigatorGeneric"))
             {
+                if (type.BaseType.Name.Contains("BaseNavigatorGeneric") && type.Name == "UCFinishedGoodsInvStatistics")
+                {
+
+                }
+
                 //builder.RegisterType(type)
                 //          .As<BaseQuery>()
                 //          //.WithMetadata("BillType", "Payment") // 添加额外元数据
                 //          .PropertiesAutowired();
 
-                _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseNavigator>(type.Name)
+                _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<UserControl>(type.Name)
                           .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
+
+                //_builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseNavigator>(type.Name)
+                //          .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
             }
             else if (type.BaseType.BaseType.Name.Contains("BaseListGeneric"))
             {
@@ -1561,12 +1561,12 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 {
                     //单独处理这个类
                     builder.RegisterType(tempTypes[i]).Named("QueryFilter", typeof(QueryFilter))
-                 .AsImplementedInterfaces().AsSelf()
+                 .AsSelf() // 只注册为自身类型，不注册为实现的接口，避免接口拦截错误
                  .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
                  .InstancePerDependency();
 
                     builder.RegisterType<QueryFilter>()
-                  .AsImplementedInterfaces().AsSelf()
+                  .AsSelf() // 只注册为自身类型，不注册为实现的接口，避免接口拦截错误
                   .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
                   .InstancePerDependency();
                 }
@@ -1654,8 +1654,8 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             .AsImplementedInterfaces().AsSelf()
             .PropertiesAutowired()
             .EnableClassInterceptors()//打开AOP类的虚方法注入
-            .InstancePerDependency()//默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-            .EnableInterfaceInterceptors();
+            .InstancePerDependency();//默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
+            // 移除EnableInterfaceInterceptors()，因为不是所有类都实现了公开可见的接口
 
             // .InterceptedBy(cacheType.ToArray());
 

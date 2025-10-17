@@ -1,4 +1,4 @@
-﻿using Autofac;
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -881,12 +881,12 @@ public IHost CslaDIPortBackup()
                 {
                     //单独处理这个类
                     builder.RegisterType(tempTypes[i]).Named("QueryFilter", typeof(QueryFilter))
-                 .AsImplementedInterfaces().AsSelf()
+                 .AsSelf() // 只注册为自身类型，不注册为实现的接口，避免接口拦截错误
                  .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
                  .InstancePerDependency();
 
                     builder.RegisterType<QueryFilter>()
-                  .AsImplementedInterfaces().AsSelf()
+                  .AsSelf() // 只注册为自身类型，不注册为实现的接口，避免接口拦截错误
                   .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
                   .InstancePerDependency();
                 }

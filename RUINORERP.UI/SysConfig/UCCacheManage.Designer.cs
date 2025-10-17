@@ -114,12 +114,12 @@
             this.kryptonTabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonTabControl1.Location = new System.Drawing.Point(0, 0);
             this.kryptonTabControl1.Name = "kryptonTabControl1";
-            this.kryptonTabControl1.SelectedIndex = 0;
             this.kryptonTabControl1.Size = new System.Drawing.Size(800, 600);
             this.kryptonTabControl1.TabIndex = 0;
             this.kryptonTabControl1.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
             this.tabCacheManage,
             this.tabCacheStatistics});
+            this.kryptonTabControl1.SelectedIndex = 0;
             // 
             // tabCacheManage
             // 
@@ -294,12 +294,12 @@
             this.statisticsNavigator.Dock = System.Windows.Forms.DockStyle.Fill;
             this.statisticsNavigator.Location = new System.Drawing.Point(0, 0);
             this.statisticsNavigator.Name = "statisticsNavigator";
-            this.statisticsNavigator.SelectedIndex = 0;
             this.statisticsNavigator.Size = new System.Drawing.Size(794, 466);
             this.statisticsNavigator.TabIndex = 0;
             this.statisticsNavigator.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
             this.tabPageTableStats,
             this.tabPageItemStats});
+            this.statisticsNavigator.SelectedIndex = 0;
             this.kryptonSplitContainer3.Size = new System.Drawing.Size(794, 570);
             this.kryptonSplitContainer3.SplitterDistance = 100;
             this.kryptonSplitContainer3.TabIndex = 0;

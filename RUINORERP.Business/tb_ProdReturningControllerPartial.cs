@@ -88,7 +88,7 @@ namespace RUINORERP.Business
                             rs.ErrorMsg = $"归还明细中有产品不属于对应的借出单!请检查数据后重试！";
                             if (_appContext.SysConfig.ShowDebugInfo)
                             {
-                                _logger.LogInformation(rs.ErrorMsg);
+                                _logger.Debug(rs.ErrorMsg);
                             }
 
                             return rs;
@@ -121,7 +121,7 @@ namespace RUINORERP.Business
                                 $"或存在当前借出单重复录入了归还单。";
                             MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
+                            _logger.Debug(msg);
                             return rs;
                         }
                         else
@@ -232,7 +232,7 @@ namespace RUINORERP.Business
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter.ToInt() == 0)
                 {
-                    _logger.LogInformation($"{entity.ReturnNo}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.ReturnNo}更新库存结果为0行，请检查数据！");
                 }
 
                 entity.ApprovalStatus = (int)ApprovalStatus.已审核;
@@ -316,7 +316,7 @@ namespace RUINORERP.Business
                             "反审失败！";
                         rs.ErrorMsg = msg;
                         _unitOfWorkManage.RollbackTran();
-                        _logger.LogInformation(msg);
+                        _logger.Debug(msg);
                         return rs;
                     }
                     else

@@ -53,7 +53,6 @@ namespace RUINORERP.Business.Cache
         {
             try
             {
-                _logger.LogInformation("开始初始化所有缓存数据（优化版）");
 
                 // 初始化所有表结构信息
                 InitializeAllTableSchemas();
@@ -74,7 +73,6 @@ namespace RUINORERP.Business.Cache
                 // 等待所有任务完成，但限制并发执行
                 await Task.WhenAll(tasks);
 
-                _logger.LogInformation($"所有缓存初始化完成（优化版），共初始化 {tableNames.Count} 个表");
             }
             catch (Exception ex)
             {
@@ -231,7 +229,6 @@ namespace RUINORERP.Business.Cache
                     _dbSemaphore.Release();
                 }
 
-                _logger.LogInformation($"表 {tableName} 的缓存初始化完成（优化版）");
             }
             catch (Exception ex)
             {
@@ -400,7 +397,6 @@ namespace RUINORERP.Business.Cache
 
                 // 完成加载后更新缓存
                 _cacheManager.UpdateEntityList(tableName, typedList);
-                _logger.LogInformation($"已从数据库分批加载 {totalCount} 条 {tableName} 记录到缓存");
             }
             catch (SqlException sqlEx) when (sqlEx.Message.Contains("Invalid attempt to read when no data is present"))
             {
@@ -468,9 +464,7 @@ namespace RUINORERP.Business.Cache
 
             try
             {
-                _logger.LogInformation($"开始初始化指定表 {tableName} 的缓存");
                 await InitializeCacheForTableAsync(tableName);
-                _logger.LogInformation($"表 {tableName} 的缓存初始化完成");
             }
             catch (Exception ex)
             {

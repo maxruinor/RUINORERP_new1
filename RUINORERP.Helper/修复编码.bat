@@ -3,7 +3,7 @@ chcp 65001 >nul
 echo 正在修复帮助文件编码问题...
 
 REM 运行PowerShell脚本修复所有.htm文件的编码
-powershell -ExecutionPolicy Bypass -File "%~dp0fix_encoding.ps1"
+powershell -ExecutionPolicy Bypass -File "%~dp0fix_encoding_final.ps1"
 
 if %errorlevel% == 0 (
     echo.

@@ -96,7 +96,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             CurMenuInfo.Sort = -99999;
             CurMenuInfo.CaptionCN="高级查询";
             CurMenuInfo.MenuName = "高级查询";
-            CurMenuInfo = MainForm.Instance.AppContext.Db.Insertable<tb_MenuInfo>(CurMenuInfo).ExecuteReturnEntity();
+            //CurMenuInfo = MainForm.Instance.AppContext.Db.Insertable<tb_MenuInfo>(CurMenuInfo).ExecuteReturnEntity();
             return CurMenuInfo;
         }
 

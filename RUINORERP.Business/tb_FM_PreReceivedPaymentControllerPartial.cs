@@ -184,7 +184,7 @@ namespace RUINORERP.Business
 
                     if (_appContext.SysConfig.ShowDebugInfo)
                     {
-                        _logger.LogInformation(rmrs.ErrorMsg);
+                        _logger.Debug(rmrs.ErrorMsg);
                     }
 
                     return rmrs;
@@ -217,7 +217,7 @@ namespace RUINORERP.Business
                     rmrs.ErrorMsg = $" 预{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单{entity.PreRPNO},已生成收款单,系统不支持重复生成收付款。";
                     if (_appContext.SysConfig.ShowDebugInfo)
                     {
-                        _logger.LogInformation(rmrs.ErrorMsg);
+                        _logger.Debug(rmrs.ErrorMsg);
                     }
                     return rmrs;
                 }

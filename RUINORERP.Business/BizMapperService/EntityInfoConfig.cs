@@ -152,7 +152,7 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_AS_RepairOrder>(BizType.维修工单, e => e.RepairOrderID, e => e.RepairOrderNo, e => e.tb_AS_RepairOrderDetails);
                 SafeRegister<tb_AS_RepairInStock>(BizType.维修入库单, e => e.RepairInStockID, e => e.RepairInStockNo, e => e.tb_AS_RepairInStockDetails);
 
-                _logger.LogInformation("普通实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);
+                _logger.Debug("普通实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);
             }
             catch (Exception ex)
             {
@@ -207,7 +207,7 @@ namespace RUINORERP.Business.BizMapperService
 
             try
             {
-                _logger.LogInformation("开始注册共用表实体映射...");
+                _logger.Debug("开始注册共用表实体映射...");
 
                 // 价格调整单
                 SafeRegister<tb_FM_PriceAdjustment, int>(
@@ -280,7 +280,7 @@ namespace RUINORERP.Business.BizMapperService
                     e => e.ExpenseNo,
                     e => e.tb_FM_OtherExpenseDetails);
 
-                _logger.LogInformation("共用表实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);
+                _logger.Debug("共用表实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);
             }
             catch (Exception ex)
             {

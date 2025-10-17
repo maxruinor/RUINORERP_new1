@@ -43,8 +43,9 @@ namespace RUINORERP.Business.Processor
 
         public virtual QueryFilter GetQueryFilter()
         {
-            QueryFilter queryFilter = new QueryFilter();
-            return queryFilter;
+            // 直接使用当前处理器的ApplicationContext创建QueryFilter实例
+            // 这样可以避免业务层依赖UI层，保持良好的分层架构
+            return new QueryFilter(_appContext);
         }
 
         /// <summary>
@@ -54,8 +55,8 @@ namespace RUINORERP.Business.Processor
         /// <returns></returns>
         public virtual QueryFilter GetQueryFilter(LambdaExpression FilterFieldLimitExpression)
         {
-            QueryFilter queryFilter = new QueryFilter();
-            queryFilter = GetQueryFilter();
+            // 调用上面修改后的GetQueryFilter()方法获取实例，确保从DI容器获取
+            QueryFilter queryFilter = GetQueryFilter();
             if (FilterFieldLimitExpression != null)
             {
                 if (!queryFilter.FilterLimitExpressions.Contains(FilterFieldLimitExpression))

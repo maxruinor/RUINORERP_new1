@@ -625,6 +625,7 @@ namespace RUINORERP.Business
             payable.SourceBizType = (int)BizType.销售退回单;
             payable.BusinessDate = entity.ReturnDate.Value;
             payable.DocumentDate = entity.Created_at.Value;
+            payable.IsExpenseType = false;
             if (entity.tb_projectgroup != null && entity.tb_projectgroup.tb_department != null)
             {
                 payable.DepartmentID = entity.tb_projectgroup.tb_department.DepartmentID;
@@ -1068,7 +1069,7 @@ namespace RUINORERP.Business
                                 _unitOfWorkManage.RollbackTran();
                             }
                             string msg = $"应{(ReceivePaymentType)payable.ReceivePaymentType}单状态为【{((ARAPStatus)payable.ARAPStatus.Value).ToString()}】，无法反核销。请联系管理员";
-                            _logger.LogInformation(msg);
+                            _logger.Debug(msg);
                             break;
                         case (int)ARAPStatus.草稿:
                         case (int)ARAPStatus.待审核:
@@ -1094,7 +1095,7 @@ namespace RUINORERP.Business
                                 }
                                 string errormsg = $"应{(ReceivePaymentType)payable.ReceivePaymentType}单状态为【{payable.ARAPStatus}】未核销金额为{payable.LocalBalanceAmount}，核销金额为{payable.LocalPaidAmount}，无法反核销";
 
-                                _logger.LogInformation(errormsg);
+                                _logger.Debug(errormsg);
                             }
                             break;
                     }
@@ -2081,7 +2082,7 @@ namespace RUINORERP.Business
             {
                 payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
             }
-
+            payable.IsExpenseType = false;
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
@@ -2609,7 +2610,7 @@ namespace RUINORERP.Business
             {
                 payable.Account_id = null;
             }
-
+            payable.IsExpenseType = false;
             payable.Remark = $"采购退货入库单：{entity.PurReEntryNo}的应付款";
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.ARAPStatus = (int)ARAPStatus.待审核;
@@ -2731,7 +2732,7 @@ namespace RUINORERP.Business
             }
             //业务经办人
             payable.Employee_ID = entity.Employee_ID;
-
+            payable.IsExpenseType = false;
             payable.Remark = $"采购入库单：{entity.PurEntryNo}对应的采购退货单{entity.PurEntryReNo}的红字应付款";
             //否则会关联性SQL出错，外键
             if (payable.Account_id <= 0)

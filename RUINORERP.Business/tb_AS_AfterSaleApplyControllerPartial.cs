@@ -426,7 +426,7 @@ namespace RUINORERP.Business
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvUpdateCounter == 0)
                 {
-                    _logger.LogInformation($"{entity.ASApplyNo}反审核，更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.ASApplyNo}反审核，更新库存结果为0行，请检查数据！");
                 }
 
                 //AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();

@@ -147,7 +147,7 @@ namespace RUINORERP.Business
                             rrs.ErrorMsg = $"领料明细中，有不属于当前制令单的明细!请检查数据后重试！";
                             MessageBox.Show(rrs.ErrorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             ///没有启动事务时才可以弹窗提示
-                            _logger.LogInformation(rrs.ErrorMsg);
+                            _logger.Debug(rrs.ErrorMsg);
                             return rrs;
                         }
                     }
@@ -176,7 +176,7 @@ namespace RUINORERP.Business
                                 ///没有启动事务时才可以弹窗提示
                                 //_unitOfWorkManage.RollbackTran();
                                 rrs.ErrorMsg = msg;
-                                _logger.LogInformation(msg);
+                                _logger.Debug(msg);
                                 return rrs;
                             }
                             #endregion
@@ -224,7 +224,7 @@ namespace RUINORERP.Business
                                     string msg = $"非补料时，制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的领料数量{totalSent}不能大于制令单对应行的应发数量{mochild.ShouldSendQty}。";
                                     MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                                     rrs.ErrorMsg = msg;
-                                    _logger.LogInformation(msg);
+                                    _logger.Debug(msg);
                                     return rrs;
                                 }
                                 else
@@ -259,7 +259,7 @@ namespace RUINORERP.Business
                         //        MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         //        //_unitOfWorkManage.RollbackTran();
                         //        rrs.ErrorMsg = msg;
-                        //        _logger.LogInformation(msg);
+                        //        _logger.Debug(msg);
                         //        return rrs;
                         //    }
                         //    else
@@ -341,7 +341,7 @@ namespace RUINORERP.Business
                                         rrs.ErrorMsg = msg;
                                         _unitOfWorkManage.RollbackTran();
                                         rrs.ErrorMsg = msg;
-                                        _logger.LogInformation(msg);
+                                        _logger.Debug(msg);
                                         return rrs;
 
                                     }
@@ -358,7 +358,7 @@ namespace RUINORERP.Business
                         {
                             _unitOfWorkManage.RollbackTran();
                             rrs.ErrorMsg = $"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员";
-                            _logger.LogInformation(rrs.ErrorMsg);
+                            _logger.Debug(rrs.ErrorMsg);
                             return rrs;
                         }
                         // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
@@ -372,7 +372,7 @@ namespace RUINORERP.Business
                     var InvCounter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                     if (InvCounter == 0)
                     {
-                        _logger.LogInformation($"{entity.MaterialRequisitionNO}审核时，更新库存结果为0行，请检查数据！");
+                        _logger.Debug($"{entity.MaterialRequisitionNO}审核时，更新库存结果为0行，请检查数据！");
                     }
 
                     //TODO: 制令单  怎么样才能结案
@@ -390,7 +390,7 @@ namespace RUINORERP.Business
                 int last = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisition>(entity).ExecuteCommandAsync();
                 if (last > 0)
                 {
-                    //_logger.LogInformation("审核领料单成功" + entity.MaterialRequisitionNO);
+                    //_logger.Debug("审核领料单成功" + entity.MaterialRequisitionNO);
                 }
 
 
@@ -508,7 +508,7 @@ namespace RUINORERP.Business
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvMainCounter == 0)
                 {
-                    _logger.LogInformation($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
                 }
 
 

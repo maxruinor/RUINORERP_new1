@@ -202,7 +202,7 @@ namespace RUINORERP.Business
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvMainCounter == 0)
                 {
-                    _logger.LogInformation($"{entity.DeliveryBillNo}缴库更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.DeliveryBillNo}缴库更新库存结果为0行，请检查数据！");
                 }
 
                 //如果缴库明细中的品不是来自制令单，则报错
@@ -294,7 +294,7 @@ namespace RUINORERP.Business
 
                             rs.ErrorMsg = msg;
                             _unitOfWorkManage.RollbackTran();
-                            _logger.LogInformation(msg);
+                            _logger.Debug(msg);
                             return rs;
                         }
                     }
@@ -315,7 +315,7 @@ namespace RUINORERP.Business
                     string msg = $"制令单:{entity.tb_manufacturingorder.MONO}的【{prodName}】的缴库数量不能大于制令单中要生产的数量。";
                     rs.ErrorMsg = msg;
                     _unitOfWorkManage.RollbackTran();
-                    _logger.LogInformation(msg);
+                    _logger.Debug(msg);
                     return rs;
                 }
                 else
@@ -553,7 +553,7 @@ namespace RUINORERP.Business
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvMainCounter == 0)
                 {
-                    _logger.LogInformation($"{entity.DeliveryBillNo}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.DeliveryBillNo}更新库存结果为0行，请检查数据！");
                 }
 
 

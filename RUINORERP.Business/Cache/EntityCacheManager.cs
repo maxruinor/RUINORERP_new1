@@ -253,7 +253,7 @@ namespace RUINORERP.Business.Cache
                     .WithExpiration(ExpirationMode.Sliding, GetCacheExpirationTime())); // 使用可配置的缓存过期时间
 
             // 初始化缓存监控日志
-            _logger.LogInformation("实体缓存管理器初始化完成，最大缓存大小：{MaxSize}MB，清理阈值：{Threshold}MB，过期时间：{ExpirationTime}小时",
+            _logger.Debug("实体缓存管理器初始化完成，最大缓存大小：{MaxSize}MB，清理阈值：{Threshold}MB，过期时间：{ExpirationTime}小时",
                 _maxCacheSize / (1024 * 1024), _cacheSizeThreshold / (1024 * 1024), GetCacheExpirationTime().TotalHours);
         }
         #endregion
@@ -706,7 +706,7 @@ namespace RUINORERP.Business.Cache
                     }
                 }
 
-                _logger?.LogInformation($"已更新表 {tableName} 的实体列表缓存，数据类型: {cacheValue.GetType().Name}");
+                _logger?.Debug($"已更新表 {tableName} 的实体列表缓存，数据类型: {cacheValue.GetType().Name}");
             }
             catch (Exception ex)
             {
@@ -808,7 +808,7 @@ namespace RUINORERP.Business.Cache
 
             // 从列表缓存中删除这些实体
             RemoveEntitiesFromList(tableName, entities);
-            _logger?.LogInformation($"已从表 {tableName} 的列表缓存中删除 {entities.Count} 个实体");
+            _logger?.Debug($"已从表 {tableName} 的列表缓存中删除 {entities.Count} 个实体");
         }
 
         /// <summary>
@@ -835,7 +835,7 @@ namespace RUINORERP.Business.Cache
             
             // 更新缓存同步元数据
             UpdateCacheSyncMetadataAfterEntityChange(tableName);
-            _logger?.LogInformation($"已删除表 {tableName} 的整个列表缓存");
+            _logger?.Debug($"已删除表 {tableName} 的整个列表缓存");
         }
 
         /// <summary>
@@ -856,7 +856,7 @@ namespace RUINORERP.Business.Cache
                 // 从列表缓存中删除该实体
                 RemoveEntityFromList(tableName, primaryKeyValue);
 
-                _logger?.LogInformation($"已从表 {tableName} 的列表缓存中删除ID为 {primaryKeyValue} 的实体");
+                _logger?.Debug($"已从表 {tableName} 的列表缓存中删除ID为 {primaryKeyValue} 的实体");
             }
             catch (Exception ex)
             {
@@ -1039,7 +1039,7 @@ namespace RUINORERP.Business.Cache
                 // 从列表缓存中批量删除这些实体
                 RemoveEntitiesFromListByKeys(tableName, primaryKeyValues);
 
-                _logger?.LogInformation($"已从表 {tableName} 的列表缓存中批量删除 {primaryKeyValues.Length} 个实体");
+                _logger?.Debug($"已从表 {tableName} 的列表缓存中批量删除 {primaryKeyValues.Length} 个实体");
             }
             catch (Exception ex)
             {
@@ -1212,7 +1212,7 @@ namespace RUINORERP.Business.Cache
                 _cachePuts = 0;
                 _cacheRemoves = 0;
                 _cacheItemStatistics.Clear();
-                _logger.LogInformation("缓存统计信息已重置");
+                _logger.Debug("缓存统计信息已重置");
             }
         }
 
@@ -1382,7 +1382,7 @@ namespace RUINORERP.Business.Cache
                 // 执行缓存清理（移除最少使用的项目）
                 CleanCacheByLeastRecentlyUsed();
 
-                _logger.LogInformation("缓存清理完成。清理后大小：{NewSize}MB", EstimatedCacheSize / (1024 * 1024));
+                _logger.Debug("缓存清理完成。清理后大小：{NewSize}MB", EstimatedCacheSize / (1024 * 1024));
             }
         }
 

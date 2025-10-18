@@ -45,7 +45,6 @@ using FastReport.DevComponents.DotNetBar.Controls;
 using RUINORERP.UI.CommonUI;
 
 using RUINORERP.Global.EnumExt;
-using Fireasy.Common.Configuration;
 using RUINORERP.UI.Monitoring.Auditing;
 using NPOI.SS.Formula.Functions;
 using Netron.GraphLib;

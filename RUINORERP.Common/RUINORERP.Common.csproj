@@ -69,9 +69,7 @@
   <Compile Remove="Log4Net\GenericLogger.cs" />
   <Compile Remove="Log4Net\Log4netAdapterT.cs" />
   <Compile Remove="Log4Net\Log4NetLoggerT.cs" />
-  <Compile Remove="Logging\Class1.cs" />
-  <Compile Remove="Logging\ConsoleLoggingProvider.cs" />
-  <Compile Remove="Logging\PeriodBatchingLoggingService.cs" />
+  <Compile Remove="Log4Net\Logger.cs" />
   <Compile Remove="MemoryCache\DictServiceHelper.cs" />
 </ItemGroup>
   <ItemGroup>

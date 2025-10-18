@@ -4729,9 +4729,6 @@
     <Content Include="Log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Log4net_file.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="myflow.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4814,10 +4811,6 @@
     <ProjectReference Include="..\CommonProcess\CommonProcess.csproj">
       <Project>{3a6491bd-4731-42ea-8ffe-61489c2f7c55}</Project>
       <Name>CommonProcess</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Fireasy.Common\FE.Common.csproj">
-      <Project>{20b9778a-5320-45ac-8c79-c8106f372223}</Project>
-      <Name>FE.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\HLH.Control\HLH.WinControl.csproj">
       <Project>{fbc35412-5c4c-4461-a281-ebf1b1a0a785}</Project>

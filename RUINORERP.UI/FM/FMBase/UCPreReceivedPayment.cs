@@ -28,7 +28,7 @@ using RUINORERP.UI.BI;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.SysConfig;
-using Fireasy.Common.Extensions;
+
 using FastReport.Table;
 using MathNet.Numerics.Optimization;
 using NPOI.SS.Formula.Functions;
@@ -144,7 +144,7 @@ namespace RUINORERP.UI.FM
             {
                 entity.PrimaryKeyID = entity.PreRPID;
                 entity.ActionStatus = ActionStatus.加载;
-                lblLocalPrepaidAmountInWords.Text = entity.LocalPrepaidAmount.ToUpper();
+                lblLocalPrepaidAmountInWords.Text = entity.LocalPrepaidAmount.ToUpperAmount();
                 if (entity.CustomerVendor_ID > 0)
                 {
                     //如果线索引入相关数据
@@ -409,7 +409,7 @@ namespace RUINORERP.UI.FM
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_PreReceivedPayment>(c => c.LocalPrepaidAmount))
                     {
-                        lblLocalPrepaidAmountInWords.Text = entity.LocalPrepaidAmount.ToUpper();
+                        lblLocalPrepaidAmountInWords.Text = entity.LocalPrepaidAmount.ToUpperAmount();
                     }
 
                 }

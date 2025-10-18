@@ -31,7 +31,6 @@ using RUINORERP.Global.EnumExt;
 using AutoMapper;
 using RUINORERP.Business.StatusManagerService;
 using OfficeOpenXml.Export.ToDataTable;
-using Fireasy.Common.Extensions;
 using RUINORERP.Business.CommService;
 using System.Windows.Forms;
 using RUINORERP.Business.BizMapperService;
@@ -522,7 +521,7 @@ namespace RUINORERP.Business
                 payable.LocalPrepaidAmount = PrepaidAmount;
             }
 
-            payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
+            payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpperAmount();
             payable.IsAvailable = true;//默认可用
             payable.PrePaymentReason = $"销售订单{entity.SOrderNo}的预收款。";
             if (!string.IsNullOrEmpty(entity.PlatformOrderNo) && entity.PlatformOrderNo.Trim().Length > 3)
@@ -623,7 +622,7 @@ namespace RUINORERP.Business
 
 
             //payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToString("C");
-            payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpper();
+            payable.LocalPrepaidAmountInWords = payable.LocalPrepaidAmount.ToUpperAmount();
             payable.IsAvailable = true;//默认可用
             payable.PrePaymentReason = $"采购订单{entity.PurOrderNo}的预付款";
             Business.BusinessHelper.Instance.InitEntity(payable);

@@ -41,7 +41,7 @@ using RUINORERP.UI.SS;
 using System.Windows.Documents;
 using static Google.Protobuf.Reflection.FeatureSet.Types;
 using System.Windows.Media.Animation;
-using Fireasy.Common.Extensions;
+
 using RUINORERP.UI.ChartFramework.Core;
 using Image = System.Drawing.Image;
 using RUINORERP.Global.EnumExt;

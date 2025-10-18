@@ -1,6 +1,6 @@
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
-using Fireasy.Common.Extensions;
+
 using MathNet.Numerics.LinearAlgebra.Factorization;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;

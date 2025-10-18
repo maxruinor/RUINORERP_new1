@@ -30,7 +30,6 @@ using RUINORERP.Business.Security;
 using RUINORERP.Global.EnumExt;
 using AutoMapper;
 using RUINORERP.Business.StatusManagerService;
-using MapsterMapper;
 using IMapper = AutoMapper.IMapper;
 using System.Text;
 using System.Windows.Forms;

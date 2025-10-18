@@ -77,7 +77,6 @@ using RUINORERP.Global;
 using RUINORERP.PacketSpec.Commands;
 using HLH.Lib.Security;
 using System.Xml.Linq;
-using Fireasy.Common.Extensions;
 using AutoMapper;
 using Netron.GraphLib.IO.NML;
 using RUINORERP.Global.EnumExt;

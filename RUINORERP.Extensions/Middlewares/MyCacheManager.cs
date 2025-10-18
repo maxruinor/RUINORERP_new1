@@ -9,7 +9,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using CacheManager.Core;
-using Fireasy.Common.Extensions;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.CustomAttribute;
@@ -669,7 +668,8 @@ namespace RUINORERP.Extensions.Middlewares
                         JArray varJarray = (JArray)cachelist;
                         // 如果旧列表中有这个值，则直接获取
                         var olditem = varJarray.FirstOrDefault(n => n[pair.Key]?.ToString() == PrimaryKeyValue.ToString());
-                        Type type = NewTableTypeList.GetValue(tableName);
+                        Type type = null;
+                        NewTableTypeList.TryGetValue(tableName, out type);
                         if (olditem != null)
                         {
                             return olditem.ToObject(type);
@@ -916,7 +916,8 @@ namespace RUINORERP.Extensions.Middlewares
                         // 直接通过字典查找
                         if (dict.TryGetValue(PrimaryKeyValue.ToString(), out var foundItem))
                         {
-                            Type type = NewTableTypeList.GetValue(tableName);
+                            Type type = null;
+                            NewTableTypeList.TryGetValue(tableName, out type);
                             if (type != null)
                             {
                                 entity = foundItem.ToObject(type);

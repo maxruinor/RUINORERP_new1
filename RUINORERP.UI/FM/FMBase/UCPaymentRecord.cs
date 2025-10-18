@@ -28,7 +28,7 @@ using RUINORERP.UI.BI;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.SysConfig;
-using Fireasy.Common.Extensions;
+
 using FastReport.Table;
 using MathNet.Numerics.Optimization;
 using Netron.GraphLib;
@@ -320,7 +320,7 @@ namespace RUINORERP.UI.FM
 
                 if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentRecord>(c => c.TotalLocalAmount))
                 {
-                    entity.LocalPamountInWords = entity.TotalLocalAmount.ToUpper();
+                    entity.LocalPamountInWords = entity.TotalLocalAmount.ToUpperAmount();
                     //lblMoneyUpper.Text = entity.TotalAmount.Value.ToUpper();
                 }
 

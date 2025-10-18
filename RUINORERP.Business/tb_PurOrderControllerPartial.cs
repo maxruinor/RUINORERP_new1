@@ -30,7 +30,6 @@ using RUINORERP.Extensions;
 using AutoMapper;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
-using Fireasy.Common.Extensions;
 using System.Collections;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.Cache;

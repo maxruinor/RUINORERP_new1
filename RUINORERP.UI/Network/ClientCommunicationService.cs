@@ -26,7 +26,7 @@ using RUINORERP.UI.Network.TimeoutStatistics;
 using RUINORERP.UI.Network.RetryStrategy;
 using System.Collections.Concurrent;
 using RUINORERP.UI.Network.ErrorHandling;
-using Fireasy.Common.Extensions;
+
 using RUINORERP.UI.Network.Exceptions;
 using FastReport.DevComponents.DotNetBar;
 using RUINORERP.Common.Extensions;
@@ -1469,7 +1469,7 @@ namespace RUINORERP.UI.Network
                     _cleanupTimer?.Dispose();
 
                     // 清理超时统计
-                    _timeoutStatistics.TryDispose();
+                   // _timeoutStatistics.TryDispose();
 
                     // 断开连接
                     // 断开连接

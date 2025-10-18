@@ -45,7 +45,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using System.Configuration;
-using Fireasy.Common.Extensions;
+
 using RUINORERP.Extensions.Middlewares;
 
 namespace RUINORERP.UI.FM

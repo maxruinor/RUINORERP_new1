@@ -24,9 +24,7 @@ using System.Security.Policy;
 using AutoMapper;
 using System.Windows.Forms;
 using RUINORERP.Global.EnumExt;
-using Fireasy.Common.Extensions;
 using System.Collections;
-using Mapster;
 using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.Business

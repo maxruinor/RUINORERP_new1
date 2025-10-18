@@ -9,7 +9,6 @@ using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Extensions.Middlewares;
-using Mapster;
 using RUINORERP.Model.Context;
 
 namespace RUINORERP.Business.LogicaService

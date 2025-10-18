@@ -28,7 +28,7 @@ using RUINORERP.UI.BI;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.SysConfig;
-using Fireasy.Common.Extensions;
+
 using FastReport.Table;
 using MathNet.Numerics.Optimization;
 using NPOI.SS.Formula.Functions;

@@ -52,7 +52,7 @@ using RUINORERP.UI.UserCenter;
 using RUINORERP.UI.UserPersonalized;
 using RUINORERP.UI.UControls;
 using Newtonsoft.Json;
-using Fireasy.Common.Extensions;
+
 using RUINORERP.Global;
 using FastReport.Table;
 using Newtonsoft.Json.Linq;

@@ -28,7 +28,7 @@ using RUINORERP.UI.BI;
 using RUINORERP.Business.CommService;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.SysConfig;
-using Fireasy.Common.Extensions;
+
 using FastReport.Table;
 using MathNet.Numerics.Optimization;
 using RUINORERP.Extensions.Middlewares;
@@ -228,8 +228,7 @@ namespace RUINORERP.UI.FM
                 //}
                 if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentApplication>(c => c.TotalAmount))
                 {
-                    entity.PamountInWords = entity.TotalAmount.Value.ToUpper();
-                    //lblMoneyUpper.Text = entity.TotalAmount.Value.ToUpper();
+                    entity.PamountInWords = entity.TotalAmount.Value.ToUpperAmount();
                 }
 
             };

@@ -31,7 +31,6 @@ using RUINORERP.Model.Context;
 using System.Linq;
 using AutoMapper;
 using RUINORERP.Business.StatusManagerService;
-using MapsterMapper;
 using IMapper = AutoMapper.IMapper;
 using System.Text;
 using System.Windows.Forms;

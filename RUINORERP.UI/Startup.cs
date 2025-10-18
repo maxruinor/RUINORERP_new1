@@ -5,7 +5,7 @@ using System;
 using RUINORERP.Common.Helper;
 using RUINORERP.Extensions;
 using Microsoft.Extensions.Logging;
-using RUINORERP.Common.Log4Net;
+// 已删除Logger.cs，使用临时日志功能代替
 using RUINORERP.Business.AutoMapper;
 using Microsoft.Extensions.Configuration;
 using RUINORERP.Repository.UnitOfWorks;
@@ -48,6 +48,7 @@ using WorkflowCore.Services;
 using RUINORERP.UI.SysConfig;
 using RUINORERP.Business.Security;
 using Castle.Core.Logging;
+using log4net;
 using RUINORERP.Model.TransModel;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.UI.IM;
@@ -83,6 +84,10 @@ namespace RUINORERP.UI
 {
     public class Startup
     {
+        // 初始化一个基础日志记录器，用于在完整日志系统初始化前使用
+        private static readonly ILog _logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+
         /// <summary>
         /// 没使用用csla时使用
         /// utofac容器
@@ -133,10 +138,14 @@ namespace RUINORERP.UI
         /// </summary>
         void ConfigureAutofacContainer(HostBuilderContext bc, ContainerBuilder builder)
         {
-            //要在第一行，里面有         Services = new ServiceCollection();
+            Services = new ServiceCollection();
+
             MainRegister(bc, builder);
             // 配置基础服务
             ConfigureBaseServices(Services);
+
+            // 配置日志
+            ConfigureLogger(Services);
 
             // 配置Autofac容器
             ConfigureContainer(builder);
@@ -149,9 +158,6 @@ namespace RUINORERP.UI
         /// </summary>
         public static void ConfigureBaseServices(IServiceCollection services)
         {
-            // 配置日志（最先注册）
-            //ConfigureLogging(services);
-
             // 配置应用程序设置
             ConfigureAppSettings(services);
 
@@ -168,73 +174,33 @@ namespace RUINORERP.UI
             ConfigureOtherServices(services);
         }
 
-        /// <summary>
-        /// 配置日志服务
-        /// </summary>
-        [Obsolete]
-        private static void ConfigureLogging(IServiceCollection services)
+        public static void ConfigureLogger(IServiceCollection services)
         {
-            try
+            //日志优先 前面双份日志的问题，配置顺序不能乱。与DI注入有关
+            string conn = AppSettings.GetValue("ConnectString");
+            string key = "ruinor1234567890";
+            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+
+            Program.InitAppcontextValue(Program.AppContextData);
+            // by watson 2024-6-28
+            services.AddLogging(logBuilder =>
             {
-                // 获取解密后的数据库连接字符串
-                string connectionString = null;
+                // 清除所有现有提供者，避免冲突
+                logBuilder.ClearProviders();
 
-                // 尝试通过CryptoHelper获取（这是标准方式）
-                try
+                // 添加自定义的数据库日志提供者
+                if (!string.IsNullOrEmpty(newconn))
                 {
-                    connectionString = CryptoHelper.GetDecryptedConnectionString();
-                    Console.WriteLine("通过CryptoHelper成功获取解密的连接字符串");
+                    //引用的long4net.dll要版本一样。
+                    logBuilder.AddProvider(new RUINORERP.Common.Log4Net.Log4NetProviderByCustomeDb("log4net.config", newconn, Program.AppContextData));
                 }
-                catch (Exception ex)
+                else
                 {
-                    Console.WriteLine("警告：通过CryptoHelper获取连接字符串失败: " + ex.Message);
-
-                    // 备选方案：直接从应用设置和硬编码密钥获取
-                    try
-                    {
-                        string conn = AppSettings.GetValue("ConnectString");
-                        if (!string.IsNullOrEmpty(conn))
-                        {
-                            string key = "ruinor1234567890";
-                            connectionString = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
-                            Console.WriteLine("通过备选方式成功获取解密的连接字符串");
-                        }
-                    }
-                    catch (Exception ex2)
-                    {
-                        Console.WriteLine("警告：备选方式获取连接字符串也失败: " + ex2.Message);
-                    }
-                }
-
-                // 注册日志服务
-                services.AddLogging(logBuilder =>
-                {
-                    // 清除所有现有提供者，避免冲突
-                    logBuilder.ClearProviders();
-
-                    // 添加自定义的数据库日志提供者
-                    if (!string.IsNullOrEmpty(connectionString))
-                    {
-                        Console.WriteLine("注册Log4NetProviderByCustomeDb，使用log4net.config配置数据库日志");
-                        logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", connectionString, Program.AppContextData));
-                    }
-                    else
-                    {
-                        // 如果没有有效的连接字符串，添加控制台日志作为备用
-                        Console.WriteLine("警告：没有有效的数据库连接字符串，使用控制台日志作为备用");
-                        logBuilder.AddConsole();
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("配置日志服务时出错: " + ex.Message);
-                // 即使出错，也确保有基础日志功能
-                services.AddLogging(logBuilder =>
-                {
+                    // 如果没有有效的连接字符串，添加控制台日志作为备用
                     logBuilder.AddConsole();
-                });
-            }
+                }
+            });
+
         }
 
         /// <summary>
@@ -344,7 +310,7 @@ namespace RUINORERP.UI
             // 注册网络通信服务
             services.AddNetworkServices();
 
-      
+
 
             services.AddMemoryCacheSetup();
             services.AddAppContext(Program.AppContextData);
@@ -448,8 +414,8 @@ namespace RUINORERP.UI
                 ServicesDIConfig.ConfigureContainer(builder);      // Services项目
                 RepositoryDIConfig.ConfigureContainer(builder);    // Repository项目
                 IServicesDIConfig.ConfigureContainer(builder);     // IServices项目
-                
-                
+
+
             }
             catch (Exception ex)
             {
@@ -561,7 +527,7 @@ namespace RUINORERP.UI
                 Console.WriteLine($"加载程序集 {assemblyName} 失败: {ex.Message}");
             }
         }
- 
+
 
 
 
@@ -574,7 +540,7 @@ namespace RUINORERP.UI
         void MainRegister(HostBuilderContext bc, ContainerBuilder builder)
         {
             #region  注册
-            Services = new ServiceCollection();
+
 
             #region 模仿csla 为了上下文
             //为了上下文
@@ -594,7 +560,7 @@ namespace RUINORERP.UI
             .PropertiesAutowired() // 指定属性注入
             .SingleInstance(); // 单例模式
 
-        
+
 
 
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
@@ -618,8 +584,6 @@ namespace RUINORERP.UI
 
             RegisterForm(builder);
 
-          
-
             builder.RegisterType<AutoComplete>()
             .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
             builder.RegisterType<BizCodeGenerator>(); // 注册拦截器
@@ -636,22 +600,7 @@ namespace RUINORERP.UI
                 .AsImplementedInterfaces()
                 .InstancePerLifetimeScope()
                 .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
-         
-            string conn = AppSettings.GetValue("ConnectString");
-            string key = "ruinor1234567890";
-            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
 
-            Program.InitAppcontextValue(Program.AppContextData);
-            //日志要放在最前面，因为要使用
-            Services.AddLogging(logBuilder =>
-            {
-                logBuilder.ClearProviders();
-                //logBuilder.AddProvider(new Log4NetProvider("log4net.config"));
-                //引用的long4net.dll要版本一样。
-                logBuilder.AddProvider(new Log4NetProviderByCustomeDb("log4net.config", newconn, Program.AppContextData));
-            });
-
-            // by watson 2024-6-28
 
             //注入工作单元
             builder.RegisterType<UnitOfWorkManage>().As<IUnitOfWorkManage>()
@@ -695,32 +644,29 @@ namespace RUINORERP.UI
 
         public IHost SartUpDIPort()
         {
-
             var hostBuilder = new HostBuilder()
-         .ConfigureAppConfiguration((context, config) =>
-         {
-             try
-             {
-                 var env = context.HostingEnvironment;
-                 config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
-                 config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-             }
-             catch (Exception ex)
-             {
-                 RUINORERP.Common.Log4Net.Logger.Error("配置应用程序设置失败", ex);
-             }
+           .ConfigureAppConfiguration((context, config) =>
+           {
+               try
+               {
+                   var env = context.HostingEnvironment;
+                   config.SetBasePath(AppDomain.CurrentDomain.BaseDirectory);
+                   config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+               }
+               catch (Exception ex)
+               {
+                   _logger.Error("配置应用程序设置失败", ex);
+               }
 
-         })
-         .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-        //正确配置Autofac容器
-        .ConfigureContainer<ContainerBuilder>(ConfigureAutofacContainer)
-     
-         .ConfigureServices((context, services) =>
-         {
+           })
+           .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+          //正确配置Autofac容器
+          .ConfigureContainer<ContainerBuilder>(ConfigureAutofacContainer)
 
-       
-             services.AddAutofac();
-         }).Build();
+           .ConfigureServices((context, services) =>
+           {
+               services.AddAutofac();
+           }).Build();
 
             return hostBuilder;
         }
@@ -819,17 +765,17 @@ namespace RUINORERP.UI
                         else
                         if (type.BaseType.Name.Contains("BaseNavigatorAnalysis") || type.BaseType.Name.Contains("BaseNavigatorPages") || type.BaseType.Name.Contains("BaseNavigatorGeneric") || type.BaseType.Name.Contains("BaseBillQueryMC") || type.BaseType.Name.Contains("BaseMasterQueryWithCondition"))
                         {
-                            if (type.BaseType.Name.Contains("BaseNavigatorGeneric") && type.Name== "UCFinishedGoodsInvStatistics")
+                            if (type.BaseType.Name.Contains("BaseNavigatorGeneric") && type.Name == "UCFinishedGoodsInvStatistics")
                             {
 
                             }
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<UserControl>(type.Name)
-                            //.AsSelf()
-                             //.AsImplementedInterfaces().AsSelf() //加上这一行，会出错
-                             // .EnableInterfaceInterceptors()
-                             //.InstancePerDependency()//默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-                             // .EnableClassInterceptors()//打开AOP类的虚方法注入
-                             //.PropertiesAutowired();//指定属性注入
+                              //.AsSelf()
+                              //.AsImplementedInterfaces().AsSelf() //加上这一行，会出错
+                              // .EnableInterfaceInterceptors()
+                              //.InstancePerDependency()//默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
+                              // .EnableClassInterceptors()//打开AOP类的虚方法注入
+                              //.PropertiesAutowired();//指定属性注入
                               .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
 
 
@@ -1063,20 +1009,12 @@ namespace RUINORERP.UI
             // services.AddSingleton(new AppSettings(WebHostEnvironment));
             //services.AddScoped<ICurrentUser, CurrentUser>();
             //services.AddSingleton(Configuration);
-            //services.AddLogging();
 
-            #region 日志
-
+            #region 
 
             //  new IdHelperBootstrapper().SetWorkderId(1).Boot();
 
-            //为了修改为DB添加字段，覆盖这前面的
-
-
-
-
             //services.AddWorkflow(x => x.UseMySQL(@"Server=127.0.0.1;Database=workflow;User=root;Password=password;", true, true));
-
 
             //这是新增加的服务 后面才能实例 定义器
             services.AddWorkflowDSL();
@@ -1089,15 +1027,12 @@ namespace RUINORERP.UI
             services.AddTransient<worker>();
             services.AddTransient<WorkWorkflow>();
             services.AddTransient<WorkWorkflow2>();
-            
+
             #endregion
-           
 
 
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>)); // 注入仓储
-            /* by watson 2024-6-28
-         services.AddTransient<IUnitOfWorkManage, UnitOfWorkManage>(); // 注入工作单元
-         */
+
 
             // services.Configure<KestrelServerOptions>(options => { options.AllowSynchronousIO = true; });
             // services.Configure<IISServerOptions>(options => { options.AllowSynchronousIO = true; });
@@ -1108,15 +1043,19 @@ namespace RUINORERP.UI
 
             services.AddAppContext(Program.AppContextData);
 
+            //已经有配置了
+            //string conn = AppSettings.GetValue("ConnectString");
+            //string key = "ruinor1234567890";
+            //string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
+            //services.AddSqlsugarSetup(Program.AppContextData, newconn);
+
 
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
             IConfiguration configuration = cfgBuilder.Build();
             AppSettings.Configuration = configuration;
-            string conn = AppSettings.GetValue("ConnectString");
-            string key = "ruinor1234567890";
-            string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
-            services.AddSqlsugarSetup(Program.AppContextData, newconn);
+
+
 
             // 注册PacketSpec服务
             services.AddPacketSpecServices(configuration);
@@ -1596,19 +1535,19 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             }
 
 
-           
+
 
             //AutofacDependencyResolver.Current.RequestLifetimeScope.ResolveNamed<INewsHelper>("news");
             //模块化注入 - 使用服务注册契约统一管理服务注册
-          
+
 
             // 显式注册GridViewRelated为单例，确保整个应用程序中使用同一个实例
             builder.RegisterType<GridViewRelated>().SingleInstance();
 
             // 注册ILogger和SqlSugarScope服务，用于SqlSugarRowLevelAuthFilter的依赖注入
-            builder.RegisterInstance(Program.AppContextData.Db).As<SqlSugarScope>().SingleInstance();
+            //builder.RegisterInstance(Program.AppContextData.Db).As<SqlSugarScope>().SingleInstance();
             builder.RegisterGeneric(typeof(Logger<>)).As(typeof(ILogger<>)).InstancePerDependency();
-           
+
 
             // 注册SqlSugarRowLevelAuthFilter
             builder.RegisterType<SqlSugarRowLevelAuthFilter>().AsSelf().InstancePerDependency();
@@ -1616,7 +1555,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             builder.RegisterModule(new AutofacServiceRegister());
         }
 
-       
+
 
 
         /// <summary>
@@ -1651,7 +1590,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
 
                 if (getFiles == null || getFiles.Count == 0)
                 {
-                    RUINORERP.Common.Log4Net.Logger.Warn("未找到需要注册的RUINORERP相关DLL文件");
+                    _logger.Warn("未找到需要注册的RUINORERP相关DLL文件");
 
                     return services;
                 }
@@ -1680,7 +1619,6 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                     }
                     catch (Exception ex)
                     {
-                        RUINORERP.Common.Log4Net.Logger.Error($"加载程序集 {Path.GetFileName(file)} 失败", ex);
                         // 继续处理其他程序集，不中断整体注册流程
                         continue;
                     }
@@ -1690,7 +1628,6 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 implementTypes = implementTypes.Distinct().ToList();
                 interfaceTypes = interfaceTypes.Distinct().ToList();
 
-                RUINORERP.Common.Log4Net.Logger.Info($"共发现 {implementTypes.Count} 个实现类和 {interfaceTypes.Count} 个接口需要注册");
 
                 // 注册所有实现类到对应的接口
                 foreach (var implementType in implementTypes)
@@ -1704,7 +1641,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
 
                         if (implementedInterfaces.Count == 0)
                         {
-                            RUINORERP.Common.Log4Net.Logger.Warn($"警告: 类 {0} 实现了IDependency接口但未实现任何已发现的具体接口{implementType.FullName}");
+                            _logger.Warn($"警告: 类实现了IDependency接口但未实现任何已发现的具体接口{implementType.FullName}");
                             continue;
                         }
 
@@ -1714,23 +1651,23 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                             if (typeof(IDependencyService).IsAssignableFrom(implementType))
                             {
                                 services.AddScoped(interfaceType, implementType);
-                                RUINORERP.Common.Log4Net.Logger.Debug($"已注册 Scoped 服务: {interfaceType.Name} -> {implementType.Name}");
+                                _logger.Debug($"已注册 Scoped 服务: {interfaceType.Name} -> {implementType.Name}");
                             }
                             else if (typeof(IDependencyRepository).IsAssignableFrom(implementType))
                             {
                                 services.AddSingleton(interfaceType, implementType);
-                                RUINORERP.Common.Log4Net.Logger.Debug($"已注册 Singleton 服务: {interfaceType.Name} -> {implementType.Name}");
+                                _logger.Debug($"已注册 Singleton 服务: {interfaceType.Name} -> {implementType.Name}");
                             }
                             else
                             {
                                 services.AddTransient(interfaceType, implementType);
-                                RUINORERP.Common.Log4Net.Logger.Debug($"已注册 Transient 服务: {interfaceType.Name} -> {implementType.Name}");
+                                _logger.Debug($"已注册 Transient 服务: {interfaceType.Name} -> {implementType.Name}");
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        RUINORERP.Common.Log4Net.Logger.Error($"注册服务 {implementType.FullName} 失败", ex);
+                        _logger.Error($"注册服务 {implementType.FullName} 失败", ex);
                         // 继续处理其他服务，不中断整体注册流程
                         continue;
                     }
@@ -1738,7 +1675,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             }
             catch (Exception ex)
             {
-                RUINORERP.Common.Log4Net.Logger.Error("批量注册服务过程中发生严重错误", ex);
+                _logger.Error("批量注册服务过程中发生严重错误", ex);
             }
             #endregion
             return services;
@@ -1769,19 +1706,19 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 // 检查容器是否初始化
                 if (AutofacContainerScope == null)
                 {
-                    RUINORERP.Common.Log4Net.Logger.Warn($"警告: AutofacContainerScope尚未初始化，无法解析服务 {typeof(T).FullName}");
+                    _logger.Warn($"警告: AutofacContainerScope尚未初始化，无法解析服务 {typeof(T).FullName}");
                     return default(T);
                 }
 
                 // 记录服务解析日志
-                RUINORERP.Common.Log4Net.Logger.Debug($"正在从Autofac容器中解析服务: {typeof(T).FullName}");
+                _logger.Debug($"正在从Autofac容器中解析服务: {typeof(T).FullName}");
                 T service = AutofacContainerScope.Resolve<T>();
-                RUINORERP.Common.Log4Net.Logger.Debug($"成功解析服务: {typeof(T).FullName}");
+                _logger.Debug($"成功解析服务: {typeof(T).FullName}");
                 return service;
             }
             catch (Exception ex)
             {
-                RUINORERP.Common.Log4Net.Logger.Error($"解析服务失败 {typeof(T).FullName}", ex);
+                _logger.Error($"解析服务失败 {typeof(T).FullName}", ex);
                 // 错误处理：返回默认值而不是抛出异常，确保应用程序继续运行
                 return default(T);
             }
@@ -1799,26 +1736,26 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             {
                 if (string.IsNullOrEmpty(className))
                 {
-                    RUINORERP.Common.Log4Net.Logger.Warn("警告: className参数为空，无法按名称解析服务");
+                    _logger.Warn("警告: className参数为空，无法按名称解析服务");
                     return default(T);
                 }
 
                 // 检查容器是否初始化
                 if (AutofacContainerScope == null)
                 {
-                    RUINORERP.Common.Log4Net.Logger.Warn($"警告: AutofacContainerScope尚未初始化，无法按名称解析服务 {className}");
+                    _logger.Warn($"警告: AutofacContainerScope尚未初始化，无法按名称解析服务 {className}");
                     return default(T);
                 }
 
                 // 记录服务解析日志
-                RUINORERP.Common.Log4Net.Logger.Debug($"正在从Autofac容器中按名称解析服务: {typeof(T).FullName}, 名称: {className}");
+                _logger.Debug($"正在从Autofac容器中按名称解析服务: {typeof(T).FullName}, 名称: {className}");
                 T service = AutofacContainerScope.ResolveNamed<T>(className);
-                RUINORERP.Common.Log4Net.Logger.Debug($"成功按名称解析服务: {typeof(T).FullName}, 名称: {className}");
+                _logger.Debug($"成功按名称解析服务: {typeof(T).FullName}, 名称: {className}");
                 return service;
             }
             catch (Exception ex)
             {
-                RUINORERP.Common.Log4Net.Logger.Error($"按名称解析服务失败 {typeof(T).FullName}, 名称: {className}", ex);
+                _logger.Error($"按名称解析服务失败 {typeof(T).FullName}, 名称: {className}", ex);
                 // 错误处理：返回默认值而不是抛出异常，确保应用程序继续运行
                 return default(T);
             }

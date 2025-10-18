@@ -245,13 +245,7 @@ namespace RUINORERP.UI
             // 基于接口的注册
             //services.AddSingleton<IUserService, UserService>();
             //services.AddSingleton<IUserRepository, UserReposotory>();
-            // 注入日志
-
-            //var conf =  ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-
-            // services.AddSqlsugarSetup(new AddSingleton(typeof(ILogFactory<>), typeof(LogFactory<>));
-            //services.AddLogging();
-            //services.TryAdd(ServiceDescriptor.Singleton<ILoggerFactory, LoggerFactory>());
+            / 
 
 
 
@@ -539,7 +533,9 @@ namespace RUINORERP.UI
 
 
                     #endregion
-                   
+
+                    // 在应用程序启动时调用此方法进行验证
+                     ValidateLoggingConfiguration();
 
                     var form1 = Startup.ServiceProvider.GetService<MainForm>();
                     Application.Run(form1);
@@ -564,6 +560,20 @@ namespace RUINORERP.UI
 
         }
 
+
+        private static void ValidateLoggingConfiguration()
+        {
+            var logRepository = LogManager.GetRepository();
+            var appenders = logRepository.GetAppenders();
+
+            Console.WriteLine($"当前配置的 Appender 数量: {appenders.Length}");
+            foreach (var appender in appenders)
+            {
+                Console.WriteLine($"Appender: {appender.Name}, Type: {appender.GetType().Name}");
+            }
+
+          
+        }
 
         private static void BringExistingInstanceToFront()
         {

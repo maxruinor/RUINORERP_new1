@@ -48,7 +48,7 @@ using HLH.Lib.Security;
 
 using RUINORERP.UI.PSI.SAL;
 using RUINORERP.UI.UserCenter.DataParts;
-using Fireasy.Common.Extensions;
+
 using RUINORERP.UI.UControls;
 using RUINORERP.Common.CollectionExtension;
 using System.Diagnostics;

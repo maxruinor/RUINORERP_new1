@@ -16,7 +16,7 @@ using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using System.Collections.Concurrent;
 using System.Windows.Documents;
-using Fireasy.Common.Extensions;
+
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 

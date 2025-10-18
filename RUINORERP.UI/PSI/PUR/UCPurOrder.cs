@@ -45,7 +45,7 @@ using RUINORERP.UI.AdvancedUIModule;
 using NPOI.SS.Formula.Functions;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using Krypton.Toolkit;
-using Fireasy.Common.Extensions;
+
 using RUINORERP.Global.Model;
 using RUINORERP.UI.BI;
 using RUINORERP.UI.WorkFlowDesigner.Entities;

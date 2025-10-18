@@ -10,7 +10,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls.WebParts;
-using Mapster;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,8 +46,7 @@ namespace RUINORERP.Extensions
 
 
         public static void AddSqlsugarSetup(this IServiceCollection services,
-        ApplicationContext AppContextData, string connectString,
-            string dbName = "ConnectString")
+        ApplicationContext AppContextData, string connectString)
         {
 
             var logProvider = new Log4NetProviderByCustomeDb("Log4net_db.config", connectString, AppContextData);
@@ -151,23 +149,23 @@ namespace RUINORERP.Extensions
                     db.Aop.OnError = (e) =>
                     {
 
-                       //try
-                       //{
-                       
-                       //    string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
-                       //    logger.LogError("db.Aop.OnError:" + e.Message + errorsql);
-                       //}
-                       //catch (Exception exx)
-                       //{
-                       //    Console.WriteLine(exx.Message);
-                       //}
+                        //try
+                        //{
+
+                        //    string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
+                        //    logger.LogError("db.Aop.OnError:" + e.Message + errorsql);
+                        //}
+                        //catch (Exception exx)
+                        //{
+                        //    Console.WriteLine(exx.Message);
+                        //}
 
 
                         try
                         {
                             string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
                             Exception exception = e.GetBaseException();
-                            logger.Error("SQL执行错误" + errorsql, e);
+                            logger.LogError("SQL执行错误" + errorsql, e);
                             if (e.InnerException != null && e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
                             {
                                 var deadlockInfo = new
@@ -177,7 +175,7 @@ namespace RUINORERP.Extensions
                                     StackTrace = e.StackTrace,
                                     Sql = errorsql
                                 };
-                                logger.Error("deadlock:", JsonConvert.SerializeObject(deadlockInfo) + "\n");
+                                logger.LogError("deadlock:", JsonConvert.SerializeObject(deadlockInfo) + "\n");
 
                                 // 自动重试逻辑
                                 //int retryCount = 0;
@@ -203,7 +201,7 @@ namespace RUINORERP.Extensions
                         catch (Exception ex)
                         {
                             Console.WriteLine($"日志记录失败: {ex.Message}\n原始错误: {e.Message}");
-                            logger.Error("记录SQL日志时出错了", ex);
+                            logger.LogError("记录SQL日志时出错了", ex);
                         }
                         if (RemindEvent != null)
                         {

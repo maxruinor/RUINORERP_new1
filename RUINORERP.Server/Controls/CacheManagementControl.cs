@@ -64,7 +64,7 @@ namespace RUINORERP.Server.Controls
                 dataGridViewTableStats.Columns.Clear();
                 dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "TableName", HeaderText = "表名", DataPropertyName = "TableName", Width = 150 });
                 dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "ItemCount", HeaderText = "缓存项数", DataPropertyName = "ItemCount", Width = 80 });
-                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "EstimatedSize", HeaderText = "估计大小(KB)", DataPropertyName = "EstimatedSize", Width = 100 });
+                dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "EstimatedSize", HeaderText = "估计大小(MB)", DataPropertyName = "EstimatedSize", Width = 100 });
                 dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "Hits", HeaderText = "命中次数", DataPropertyName = "Hits", Width = 80 });
                 dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "Misses", HeaderText = "未命中次数", DataPropertyName = "Misses", Width = 100 });
                 dataGridViewTableStats.Columns.Add(new DataGridViewTextBoxColumn { Name = "HitRatio", HeaderText = "命中率", DataPropertyName = "HitRatio", Width = 80 });
@@ -106,7 +106,7 @@ private readonly IEntityCacheManager _entityCacheManager;
                     txtHits.Text = cacheStats.CacheHits.ToString();
                     txtMisses.Text = cacheStats.CacheMisses.ToString();
                     txtItemCount.Text = cacheStats.CacheItemCount.ToString();
-                    txtEstimatedSize.Text = $"{cacheStats.EstimatedCacheSize / 1024.0:F2} KB";
+                    txtEstimatedSize.Text = $"{cacheStats.EstimatedCacheSize / (1024.0 * 1024.0):F2} MB";
                     
                     // 计算并显示命中率
                     long totalAccess = cacheStats.CacheHits + cacheStats.CacheMisses;
@@ -122,7 +122,15 @@ private readonly IEntityCacheManager _entityCacheManager;
 
                     // 加载按表统计数据
                     var tableStats = cacheStats.GetTableCacheStatistics();
-                    dataGridViewTableStats.DataSource = tableStats;
+                    // 创建视图模型列表，将字节转换为MB
+                    var viewModelList = tableStats.Values.Select(ts => new
+                    {
+                        ts.TableName,
+                        ItemCount = ts.TotalItemCount,
+                        EstimatedSize = Math.Round(ts.EstimatedTotalSize / (1024.0 * 1024.0), 2),
+                        ts.HitRatio
+                    }).ToList();
+                    dataGridViewTableStats.DataSource = viewModelList;
 
                     // 加载缓存项统计数据
                     var itemStats = cacheStats.GetCacheItemStatistics();

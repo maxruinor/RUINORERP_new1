@@ -1168,11 +1168,10 @@ namespace RUINORERP.UI.BaseForm
         private KryptonPage UCOutlookGridGroupAnalysisLoad()
         {
             //先加载一遍缓存
-            var tableNames = MainForm.Instance.CacheInfoList.Keys.ToList();
-            foreach (var nextTableName in tableNames)
-            {
-                MainForm.Instance.TryRequestCache(nextTableName);
-            }
+            UIBizService.RequestCache<M>();
+            UIBizService.RequestCache<C>();
+            //去检测产品视图的缓存并且转换为强类型
+            UIBizService.RequestCache(typeof(View_ProdDetail));
 
             _UCOutlookGridGroupAnalysis = new UCBillOutlookGridAnalysis();
             _UCOutlookGridGroupAnalysis.entityType = typeof(M);

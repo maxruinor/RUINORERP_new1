@@ -22,9 +22,14 @@ namespace RUINORERP.Business.Cache
         public string PrimaryKeyField { get; set; }
 
         /// <summary>
-        /// 显示名称字段名
+        /// 主显示字段名（兼容原有逻辑）
         /// </summary>
         public string DisplayField { get; set; }
+
+        /// <summary>
+        /// 所有需要缓存的显示字段名列表
+        /// </summary>
+        public List<string> DisplayFields { get; set; } = new List<string>();
 
         /// <summary>
         /// 实体类型
@@ -40,6 +45,12 @@ namespace RUINORERP.Business.Cache
         /// 是否需要缓存
         /// </summary>
         public bool IsCacheable { get; set; } = true;
+
+        /// <summary>
+        /// 是否缓存整行数据（true）还是只缓存指定字段（false）
+        /// 默认值为true，表示缓存整行数据以保持向后兼容
+        /// </summary>
+        public bool CacheWholeRow { get; set; } = true;
 
         /// <summary>
         /// 表描述信息
@@ -62,10 +73,24 @@ namespace RUINORERP.Business.Cache
         /// <returns>验证结果</returns>
         public bool Validate()
         {
-            return !string.IsNullOrEmpty(TableName) &&
-                   !string.IsNullOrEmpty(PrimaryKeyField) &&
-                   !string.IsNullOrEmpty(DisplayField) &&
-                   EntityType != null;
+            // 基本验证：表名、主键字段、主显示字段和实体类型不能为空
+            var basicValidation = !string.IsNullOrEmpty(TableName) &&
+                                 !string.IsNullOrEmpty(PrimaryKeyField) &&
+                                 !string.IsNullOrEmpty(DisplayField) &&
+                                 EntityType != null;
+            
+            // 如果不是缓存整行，还需要验证DisplayFields列表不为空
+            if (!CacheWholeRow && !basicValidation)
+            {
+                return false;
+            }
+            
+            if (!CacheWholeRow)
+            {
+                return DisplayFields != null && DisplayFields.Count > 0;
+            }
+            
+            return basicValidation;
         }
 
         /// <summary>
@@ -77,10 +102,12 @@ namespace RUINORERP.Business.Cache
             var sb = new StringBuilder();
             sb.AppendLine($"表名: {TableName}");
             sb.AppendLine($"主键字段: {PrimaryKeyField}");
-            sb.AppendLine($"显示字段: {DisplayField}");
+            sb.AppendLine($"主显示字段: {DisplayField}");
+            sb.AppendLine($"所有显示字段: {string.Join(", ", DisplayFields)}");
             sb.AppendLine($"实体类型: {EntityType?.Name ?? "未指定"}");
             sb.AppendLine($"是否视图: {IsView}");
             sb.AppendLine($"是否缓存: {IsCacheable}");
+            sb.AppendLine($"缓存策略: {(CacheWholeRow ? "缓存整行" : "只缓存指定字段")}");
             sb.AppendLine($"描述: {Description ?? "无"}");
             sb.AppendLine($"外键数量: {ForeignKeys?.Count ?? 0}");
             return sb.ToString();

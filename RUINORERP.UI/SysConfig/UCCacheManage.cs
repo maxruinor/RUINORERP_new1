@@ -155,7 +155,8 @@ namespace RUINORERP.UI.SysConfig
                 // 更新总体统计指标
                 txtHitRatio.Text = $"{_cacheManager.HitRatio:P2}";
                 txtTotalItems.Text = _cacheManager.CacheItemCount.ToString();
-                txtCacheSize.Text = $"{(_cacheManager.EstimatedCacheSize / 1024.0):F2} KB";
+                // 改为MB单位
+                txtCacheSize.Text = $"{(_cacheManager.EstimatedCacheSize / (1024.0 * 1024.0)):F2} MB";
 
                 // 更新按表统计数据
                 var tableStats = _cacheManager.GetTableCacheStatistics();
@@ -167,11 +168,15 @@ namespace RUINORERP.UI.SysConfig
                     {
                         TableName = stats.Value.TableName,
                         ItemCount = stats.Value.TotalItemCount,
-                        TotalSize = (stats.Value.EstimatedTotalSize / 1024.0).ToString("F2"),
+                        // 改为MB单位
+                        TotalSize = (stats.Value.EstimatedTotalSize / (1024.0 * 1024.0)).ToString("F2"),
                         HitRatio = stats.Value.HitRatio.ToString("P2"),
                         LastUpdateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") // 使用当前时间替代，因为TableCacheStatistics没有LastAccessedTime属性
                     });
                 }
+                
+                // 更新表个数统计信息
+                txtTableCount.Text = tableStats.Count.ToString();
                 
                 dgvTableStatistics.DataSource = tableStatsList;
 
@@ -187,7 +192,8 @@ namespace RUINORERP.UI.SysConfig
                         EntityType = stats.Value.ValueType ?? "Unknown",
                         TableName = stats.Value.TableName,
                         CreationTime = stats.Value.CreatedTime.ToString("yyyy-MM-dd HH:mm:ss"),
-                        Size = (stats.Value.EstimatedSize / 1024.0).ToString("F3")
+                        // 改为MB单位
+                        Size = (stats.Value.EstimatedSize / (1024.0 * 1024.0)).ToString("F3")
                     });
                 }
                 
@@ -373,20 +379,20 @@ namespace RUINORERP.UI.SysConfig
     }
 
     public class TableStatisticsDisplay
-    {   
-        public string TableName { get; set; }
-        public int ItemCount { get; set; }
-        public string TotalSize { get; set; }
-        public string HitRatio { get; set; }
-        public string LastUpdateTime { get; set; }
-    }
+        {   
+            public string TableName { get; set; }
+            public int ItemCount { get; set; }
+            public string TotalSize { get; set; }
+            public string HitRatio { get; set; }
+            public string LastUpdateTime { get; set; }
+        }
 
-    public class ItemStatisticsDisplay
-    {   
-        public string CacheKey { get; set; }
-        public string EntityType { get; set; }
-        public string TableName { get; set; }
-        public string CreationTime { get; set; }
-        public string Size { get; set; }
-    }
+        public class ItemStatisticsDisplay
+        {   
+            public string CacheKey { get; set; }
+            public string EntityType { get; set; }
+            public string TableName { get; set; }
+            public string CreationTime { get; set; }
+            public string Size { get; set; }
+        }
 }

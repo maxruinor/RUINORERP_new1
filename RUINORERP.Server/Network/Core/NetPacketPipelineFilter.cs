@@ -16,7 +16,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
 using System.Drawing.Printing;
 using RUINORERP.PacketSpec.Core.DataProcessing;
-using Fireasy.Common.ComponentModel;
 using RUINORERP.PacketSpec.Commands.System;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 

@@ -9,7 +9,6 @@ using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
-using NPOI.SS.Formula.Functions;
 using OfficeOpenXml;
 using Org.BouncyCastle.Asn1.X509.Qualified;
 using RUINOR.Core;
@@ -653,7 +652,7 @@ namespace RUINORERP.UI.BaseForm
                 //打印次数提醒
                 if (item.ContainsProperty("PrintStatus"))
                 {
-                    BizType bizType = Bizmapper.GetBizType(typeof(T).Name);
+                    BizType bizType = Bizmapper.GetBizType(typeof(M).Name);
                     int printCounter = item.GetPropertyValue("PrintStatus").ToString().ToInt();
                     if (printCounter > 0)
                     {
@@ -2487,12 +2486,10 @@ namespace RUINORERP.UI.BaseForm
 
 
                 MainForm.Instance.AppContext.log.ActionName = sender.ToString();
-                //先加载一遍缓存
-                var tableNames = MainForm.Instance.CacheInfoList.Keys.ToList();
-                foreach (var nextTableName in tableNames)
-                {
-                    //MainForm.Instance.TryRequestCache(nextTableName);
-                }
+                UIBizService.RequestCache<M>();
+                UIBizService.RequestCache<C>();
+                //去检测产品视图的缓存并且转换为强类型
+                UIBizService.RequestCache(typeof(View_ProdDetail));
 
                 Builder();
                 this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();

@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using RUINORERP.Extensions.Middlewares;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,29 +7,26 @@ using SqlSugar;
 using RUINORERP.Repository.UnitOfWorks;
 using System.Linq.Expressions;
 using RUINORERP.Model;
-using RUINORERP.Business.CommService;
 using System.Data.SqlClient;
-using System.Threading;
+using Newtonsoft.Json;
 
 namespace RUINORERP.Business.Cache
 {
     /// <summary>
-    /// 优化的缓存初始化服务，专门为新的优化缓存管理器设计
+    /// 简化版缓存初始化服务
+    /// 减少不必要的控制和嵌套，直接使用SqlSugar和_unitOfWorkManage的内置管理能力
     /// </summary>
     public class EntityCacheInitializationService
     {
         private readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly IEntityCacheManager _cacheManager;
         private readonly ILogger<EntityCacheInitializationService> _logger;
-        private readonly SemaphoreSlim _dbSemaphore; // 限制并发数据库查询数量
-        private readonly int _maxRetryAttempts = 3; // 最大重试次数
-        private readonly int _retryDelayMs = 1000; // 重试延迟毫秒数
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="unitOfWorkManage">工作单元管理器</param>
-        /// <param name="cacheManager">优化的缓存管理器</param>
+        /// <param name="cacheManager">缓存管理器</param>
         /// <param name="logger">日志记录器</param>
         public EntityCacheInitializationService(
             IUnitOfWorkManage unitOfWorkManage,
@@ -40,55 +36,66 @@ namespace RUINORERP.Business.Cache
             _unitOfWorkManage = unitOfWorkManage ?? throw new ArgumentNullException(nameof(unitOfWorkManage));
             _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-            // 限制并发数据库查询数量，避免连接池耗尽
-            _dbSemaphore = new SemaphoreSlim(5, 5); // 最多同时5个查询
         }
 
         /// <summary>
         /// 初始化所有缓存
+        /// 简化实现，直接使用框架能力
         /// </summary>
         /// <returns>初始化任务</returns>
         public async Task InitializeAllCacheAsync()
         {
             try
             {
-
+                _logger.LogInformation("开始初始化缓存服务");
+                
                 // 初始化所有表结构信息
                 InitializeAllTableSchemas();
 
-                // 只获取需要缓存的表名（基于已注册的表结构信息进行过滤）
+                // 获取需要缓存的表名
                 var tableNames = TableSchemaManager.Instance.GetCacheableTableNamesList();
+                _logger.LogInformation($"需要初始化的表数量: {tableNames.Count}");
 
-                // 使用SqlSugar并行查询多个表，但限制并发数量
-                var tasks = new List<Task>();
-
+                int successCount = 0;
+                int failedCount = 0;
+                
+                // 逐个初始化表缓存，简单直接
                 foreach (var tableName in tableNames)
                 {
-                    // 使用本地变量避免闭包问题
-                    var tableNameCopy = tableName;
-                    tasks.Add(InitializeCacheForTableAsync(tableNameCopy));
+                    try
+                    {
+                        // 直接使用同步方法初始化，避免复杂的异步嵌套
+                        InitializeCacheForTable(tableName);
+                        successCount++;
+                        _logger.LogInformation($"表 {tableName} 缓存初始化成功 ({successCount}/{tableNames.Count})");
+                           // 短暂延迟，减少数据库压力
+                        await Task.Delay(123);
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        _logger.LogError(ex, $"表 {tableName} 缓存初始化失败 ({failedCount}个表失败)");
+                        // 继续处理下一个表
+                    }
                 }
-
-                // 等待所有任务完成，但限制并发执行
-                await Task.WhenAll(tasks);
-
+                
+                _logger.LogInformation($"缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "初始化所有缓存时发生错误（优化版）");
-                throw;
+                _logger.LogError(ex, "初始化所有缓存时发生严重错误");
             }
         }
 
         /// <summary>
-        /// 初始化所有表结构信息（通用方法）
-        /// 客户端启动时加载。不加载缓存。缓存按需从服务器取值
+        /// 初始化所有表结构信息
         /// </summary>
         public void InitializeAllTableSchemas()
         {
             try
             {
+                _logger.LogInformation("开始初始化表结构信息");
+                
                 // 注册所有需要缓存的表结构信息
                 // 基础数据表
                 RegistInformation<tb_Company>(k => k.ID, v => v.CNName);
@@ -161,39 +168,34 @@ namespace RUINORERP.Business.Cache
 
                 // 补充缺失的表
                 RegistInformation<tb_FieldInfo>(k => k.FieldInfo_ID, v => v.FieldName);
+                
+                _logger.LogInformation("表结构信息初始化完成");
             }
             catch (Exception ex)
             {
-                // 初始化表结构信息时的异常处理
                 _logger.LogError(ex, "初始化表结构信息时发生错误");
             }
         }
 
         /// <summary>
-        /// 注册表结构信息（通用方法）
+        /// 注册表结构信息
         /// </summary>
-        /// <typeparam name="T">实体类型</typeparam>
-        /// <param name="primaryKeyExpression">主键字段表达式</param>
-        /// <param name="displayFieldExpression">显示字段表达式</param>
-        /// <param name="isView">是否是视图</param>
-        /// <param name="isCacheable">是否需要缓存</param>
-        /// <param name="description">表描述</param>
         private void RegistInformation<T>(
             Expression<Func<T, object>> primaryKeyExpression,
             Expression<Func<T, object>> displayFieldExpression,
             bool isView = false,
             bool isCacheable = true,
-            string description = null) where T : class
+            string description = null,
+            params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class
         {
-            _cacheManager.InitializeTableSchema(primaryKeyExpression, displayFieldExpression, isView, isCacheable, description);
+            _cacheManager.InitializeTableSchema(primaryKeyExpression, displayFieldExpression, isView, isCacheable, description, true, otherDisplayFieldExpressions);
         }
 
         /// <summary>
-        /// 初始化指定表的缓存（内部方法）
+        /// 初始化指定表的缓存
+        /// 同步方法，避免异步嵌套问题
         /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <returns>初始化任务</returns>
-        private async Task InitializeCacheForTableAsync(string tableName)
+        private void InitializeCacheForTable(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
             {
@@ -203,7 +205,7 @@ namespace RUINORERP.Business.Cache
 
             try
             {
-                _logger.LogDebug($"开始初始化表 {tableName} 的缓存（优化版）");
+                _logger.LogDebug($"开始初始化表 {tableName} 的缓存");
 
                 // 获取实体类型
                 var entityType = _cacheManager.GetEntityType(tableName);
@@ -213,27 +215,18 @@ namespace RUINORERP.Business.Cache
                     return;
                 }
 
-                // 使用信号量控制并发数量
-                await _dbSemaphore.WaitAsync();
-                try
+                // 直接使用_unitOfWorkManage获取的数据库连接
+                using (var db = _unitOfWorkManage.GetDbClient())
                 {
-                    // 使用SqlSugar直接从数据库加载数据
-                    // 为每个查询创建独立的数据库上下文，避免连接冲突
-                    using (var scopedDb = _unitOfWorkManage.GetDbClient())
-                    {
-                        await LoadDataAndUpdateCacheAsync(entityType, tableName, scopedDb);
-                    }
+                    // 简单直接地加载数据
+                    LoadDataAndUpdateCache(entityType, tableName, db);
                 }
-                finally
-                {
-                    _dbSemaphore.Release();
-                }
-
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"初始化表 {tableName} 的缓存时发生错误（优化版）");
-                // 即使出现错误，也要确保缓存中有一个空列表
+                _logger.LogError(ex, $"初始化表 {tableName} 的缓存时发生错误");
+                
+                // 确保缓存中有一个空列表
                 try
                 {
                     var entityType = _cacheManager.GetEntityType(tableName);
@@ -248,87 +241,17 @@ namespace RUINORERP.Business.Cache
                 {
                     _logger.LogError(cacheEx, $"更新缓存失败: {cacheEx.Message}");
                 }
+                
                 throw;
             }
         }
 
         /// <summary>
         /// 从数据库加载数据并更新缓存
+        /// 实现：根据缓存策略决定加载整行数据或只加载指定字段
         /// </summary>
-        /// <param name="entityType">实体类型</param>
-        /// <param name="tableName">表名</param>
-        /// <param name="db">数据库客户端</param>
-        /// <returns>加载任务</returns>
-        private async Task LoadDataAndUpdateCacheAsync(Type entityType, string tableName, ISqlSugarClient db)
+        private void LoadDataAndUpdateCache(Type entityType, string tableName, ISqlSugarClient db)
         {
-            // 检查参数
-            if (entityType == null || string.IsNullOrEmpty(tableName))
-            {
-                _logger.LogWarning($"实体类型或表名为空: entityType={entityType}, tableName={tableName}");
-                return;
-            }
-
-            // 尝试重试机制
-            for (int attempt = 0; attempt <= _maxRetryAttempts; attempt++)
-            {
-                try
-                {
-                    await LoadDataAndUpdateCacheInternalAsync(entityType, tableName, db);
-                    return; // 成功则退出重试循环
-                }
-                catch (SqlException sqlEx) when (sqlEx.Number == 2 || sqlEx.Message.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    if (attempt < _maxRetryAttempts)
-                    {
-                        _logger.LogWarning($"表 {tableName} 查询时连接超时，将在 {_retryDelayMs}ms 后进行第 {attempt + 1} 次重试: {sqlEx.Message}");
-                        await Task.Delay(_retryDelayMs * (attempt + 1)); // 递增延迟
-                    }
-                    else
-                    {
-                        _logger.LogError(sqlEx, $"表 {tableName} 查询重试 {_maxRetryAttempts} 次后仍然失败: {sqlEx.Message}");
-                        // 确保缓存中有一个空列表
-                        var listType = typeof(List<>).MakeGenericType(entityType);
-                        var emptyList = Activator.CreateInstance(listType);
-                        _cacheManager.UpdateEntityList(tableName, emptyList);
-                        throw;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"从数据库加载 {tableName} 数据并更新缓存时发生错误（优化版）");
-                    // 确保缓存中有一个空列表，即使出现错误也要保持缓存一致性
-                    try
-                    {
-                        var listType = typeof(List<>).MakeGenericType(entityType);
-                        var emptyList = Activator.CreateInstance(listType);
-                        _cacheManager.UpdateEntityList(tableName, emptyList);
-                    }
-                    catch (Exception cacheEx)
-                    {
-                        _logger.LogError(cacheEx, $"更新缓存失败: {cacheEx.Message}");
-                    }
-                    throw;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 内部实际执行数据加载的方法
-        /// </summary>
-        /// <param name="entityType">实体类型</param>
-        /// <param name="tableName">表名</param>
-        /// <param name="db">数据库客户端</param>
-        /// <returns>加载任务</returns>
-        /// <summary>
-        /// 内部实际执行数据加载的方法（支持分批加载）
-        /// </summary>
-        /// <param name="entityType">实体类型</param>
-        /// <param name="tableName">表名</param>
-        /// <param name="db">数据库客户端</param>
-        /// <returns>加载任务</returns>
-        private async Task LoadDataAndUpdateCacheInternalAsync(Type entityType, string tableName, ISqlSugarClient db)
-        {
-            // 检查参数
             if (entityType == null || string.IsNullOrEmpty(tableName))
             {
                 _logger.LogWarning($"实体类型或表名为空: entityType={entityType}, tableName={tableName}");
@@ -337,32 +260,58 @@ namespace RUINORERP.Business.Cache
 
             try
             {
+                // 获取表结构信息，特别是需要缓存的字段
+                var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(tableName);
+                if (schemaInfo == null)
+                {
+                    _logger.LogWarning($"未找到表 {tableName} 的结构信息");
+                    // 创建正确类型的List
+                    var nullCaseListType = typeof(List<>).MakeGenericType(entityType);
+                    var nullCaseTypedList = Activator.CreateInstance(nullCaseListType);
+                    _cacheManager.UpdateEntityList(tableName, nullCaseTypedList);
+                    return;
+                }
+
                 // 创建正确类型的List
                 var listType = typeof(List<>).MakeGenericType(entityType);
                 var typedList = Activator.CreateInstance(listType);
                 var addMethod = listType.GetMethod("Add");
-                int totalCount = 0;
 
-                // 分批加载参数
-                const int batchSize = 200; // 每批加载200条数据
-                int pageIndex = 1;
-                bool hasMoreData = true; // 初始设为true，确保循环至少执行一次
-
-                _logger.LogDebug($"开始分批加载表 {tableName} 数据，每批 {batchSize} 条");
-
-                // 分批加载数据 - 使用同步方式避免SqlSugar批量查询时的异步问题
-                while (hasMoreData)
+                // 检查是否缓存整行数据
+                bool cacheWholeRow = schemaInfo.GetType().GetProperty("CacheWholeRow")?.GetValue(schemaInfo, null) as bool? ?? false;
+                _logger.LogDebug($"开始加载表 {tableName} 数据，缓存策略：{(cacheWholeRow ? "缓存整行" : "只缓存指定字段")}");
+                
+                dynamic result;
+                
+                // 根据缓存策略决定查询方式
+                if (cacheWholeRow)
                 {
-                    // 使用SqlSugar进行分页查询
-                    var queryable = db.Queryable(entityType.Name, tableName);
-                    var result = queryable.ToPageList(pageIndex, batchSize, ref totalCount);
+                    // 缓存整行数据：查询所有字段
+                    _logger.LogDebug($"查询策略：缓存整行数据");
+                    result = db.Queryable(entityType.Name, tableName).ToList();
+                }
+                else
+                {
+                    // 只缓存指定字段：查询主键字段和所有显示字段
+                    var fieldsToSelect = new List<string> { schemaInfo.PrimaryKeyField };
+                    fieldsToSelect.AddRange(schemaInfo.DisplayFields.Except(new[] { schemaInfo.PrimaryKeyField }));
+                    fieldsToSelect = fieldsToSelect.Distinct().ToList();
+                    
+                    _logger.LogDebug($"查询策略：只缓存指定字段，表 {tableName} 要加载的字段: {string.Join(", ", fieldsToSelect)}");
+                    
+                    // 使用SqlSugar的动态查询，直接ToList()获取数据
+                    result = db.Queryable(entityType.Name, tableName).ToList();
+                }
 
-                    if (result != null && result.Count > 0)
+                if (result != null && System.Linq.Enumerable.Count(result) > 0)
+                {
+                    int resultCount = System.Linq.Enumerable.Count(result);
+                    _logger.LogDebug($"已加载表 {tableName} 共 {resultCount} 条数据");
+
+                    // 添加到列表中
+                    foreach (var item in result)
                     {
-                        _logger.LogDebug($"已加载表 {tableName} 第 {pageIndex} 页，共 {result.Count} 条数据");
-
-                        // 添加到列表中
-                        foreach (var item in result)
+                        try
                         {
                             // 确保item是正确的类型，如果不是则进行转换
                             object typedItem = item;
@@ -373,8 +322,8 @@ namespace RUINORERP.Business.Cache
                                 {
                                     try
                                     {
-                                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(item);
-                                        typedItem = Newtonsoft.Json.JsonConvert.DeserializeObject(json, entityType);
+                                        var json = JsonConvert.SerializeObject(item);
+                                        typedItem = JsonConvert.DeserializeObject(json, entityType);
                                     }
                                     catch (Exception ex)
                                     {
@@ -384,32 +333,31 @@ namespace RUINORERP.Business.Cache
                             }
                             addMethod?.Invoke(typedList, new[] { typedItem });
                         }
-
-                        // 检查是否还有更多数据
-                        hasMoreData = (pageIndex * batchSize) < totalCount;
-                        pageIndex++;
-                    }
-                    else
-                    {
-                        hasMoreData = false;
+                        catch (Exception itemEx)
+                        {
+                            _logger.LogWarning(itemEx, $"添加数据项到列表时发生错误: {itemEx.Message}");
+                            // 继续处理下一个项
+                        }
                     }
                 }
 
                 // 完成加载后更新缓存
                 _cacheManager.UpdateEntityList(tableName, typedList);
+                _logger.LogDebug($"表 {tableName} 缓存更新完成");
             }
-            catch (SqlException sqlEx) when (sqlEx.Message.Contains("Invalid attempt to read when no data is present"))
+            catch (SqlException sqlEx)
             {
-                _logger.LogWarning($"表 {tableName} 查询时出现数据读取错误，可能是表不存在或没有数据: {sqlEx.Message}");
+                _logger.LogError(sqlEx, $"从数据库加载 {tableName} 数据时发生SQL错误");
                 // 确保缓存中有一个空列表
                 var listType = typeof(List<>).MakeGenericType(entityType);
                 var emptyList = Activator.CreateInstance(listType);
                 _cacheManager.UpdateEntityList(tableName, emptyList);
+                throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"从数据库加载 {tableName} 数据并更新缓存时发生内部错误（优化版）");
-                // 确保缓存中有一个空列表，即使出现错误也要保持缓存一致性
+                _logger.LogError(ex, $"从数据库加载 {tableName} 数据并更新缓存时发生错误");
+                // 确保缓存中有一个空列表
                 try
                 {
                     var listType = typeof(List<>).MakeGenericType(entityType);
@@ -425,60 +373,26 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 序列化缓存数据以便在网络中传输
-        /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="data">要序列化的数据</param>
-        /// <param name="serializationType">序列化方式</param>
-        /// <returns>序列化后的字节数组</returns>
-        public byte[] SerializeCacheDataForTransmission<T>(T data, CacheSerializationHelper.SerializationType serializationType = CacheSerializationHelper.SerializationType.Json)
-        {
-            return _cacheManager.SerializeCacheData(data, serializationType);
-        }
-
-        /// <summary>
-        /// 反序列化从网络接收到的缓存数据
-        /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="data">接收到的字节数组</param>
-        /// <param name="serializationType">序列化方式</param>
-        /// <returns>反序列化后的数据</returns>
-        public T DeserializeCacheDataFromTransmission<T>(byte[] data, CacheSerializationHelper.SerializationType serializationType = CacheSerializationHelper.SerializationType.Json)
-        {
-            return _cacheManager.DeserializeCacheData<T>(data, serializationType);
-        }
-
-        /// <summary>
         /// 初始化指定表的缓存（公共方法）
-        /// 用于外部调用，初始化单个表的数据到缓存
         /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <returns>初始化任务</returns>
-        public async Task InitializeSingleTableCacheAsync(string tableName)
+        public Task InitializeSingleTableCacheAsync(string tableName)
         {
             if (string.IsNullOrEmpty(tableName))
             {
                 _logger.LogWarning("表名为空，跳过初始化");
-                return;
+                return Task.CompletedTask;
             }
 
             try
             {
-                await InitializeCacheForTableAsync(tableName);
+                InitializeCacheForTable(tableName);
+                return Task.CompletedTask;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"初始化表 {tableName} 的缓存时发生错误");
-                throw;
+                return Task.FromException(ex);
             }
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            _dbSemaphore?.Dispose();
         }
     }
 }

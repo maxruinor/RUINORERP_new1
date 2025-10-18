@@ -83,7 +83,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.StatusManagerService;
 using SourceGrid;
 using log4net;
-using NPOI.SS.Formula.Functions;
+
 using RUINORERP.UI.Monitoring.Auditing;
 using System.Text.RegularExpressions;
 using Match = System.Text.RegularExpressions.Match;
@@ -170,11 +170,6 @@ namespace RUINORERP.UI
 
 
 
-
-        /// <summary>
-        /// 保存服务器的一些缓存信息。让客户端可以根据一些机制来获取。得到最新的信息
-        /// </summary>
-        public ConcurrentDictionary<string, CacheInfo> CacheInfoList = new ConcurrentDictionary<string, CacheInfo>();
 
         /// <summary>
         /// 这个用来缓存，录入表单时的详情产品数据。后面看优化为一个全局缓存。
@@ -341,7 +336,7 @@ namespace RUINORERP.UI
                 tabCloseHandler.ProcessControlOnClose(control);
                 return;
 
-          
+
             }
 
         }
@@ -734,12 +729,7 @@ namespace RUINORERP.UI
             var cacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
             cacheInitializationService.InitializeAllTableSchemas();
 
-            //先加载一遍缓存
-            var tableNames = CacheInfoList.Keys.ToList();
-            foreach (var nextTableName in tableNames)
-            {
-                TryRequestCache(nextTableName);
-            }
+
 
 
             this.Text = "企业数字化集成ERP v2.0" + "-" + Program.ERPVersion;
@@ -849,7 +839,7 @@ namespace RUINORERP.UI
                     .ToExpression();//注意 这一句 不能少
                                     //list = await dc.BaseQueryByWhereAsync(exp);
                                     //list = MainForm.Instance.list;
-                    TryRequestCache(nameof(View_ProdDetail), typeof(View_ProdDetail));
+                 //   TryRequestCache(nameof(View_ProdDetail), typeof(View_ProdDetail));
 
                 }
             }
@@ -927,7 +917,7 @@ namespace RUINORERP.UI
 
                 List<tb_Currency> currencies = new List<tb_Currency>();
                 currencies = _cacheManager.GetEntityList<tb_Currency>(nameof(tb_Currency));
-                
+
                 tb_Currency currency = currencies.Where(m => m.Is_BaseCurrency.HasValue && m.Is_BaseCurrency.Value == true).FirstOrDefault();
                 if (currency != null)
                 {
@@ -2990,7 +2980,6 @@ namespace RUINORERP.UI
                 }
             }
         }
-        private CacheFetchManager _cacheFetchManager = new CacheFetchManager();
         private void timer1_Tick(object sender, EventArgs e)
         {
             try
@@ -3016,9 +3005,11 @@ namespace RUINORERP.UI
                 //超过60 就去抓一下缓存  如果不好用。则用线程定时器
                 if (GetLastInputTime() > 5 && MainForm.Instance.AppContext.IsOnline)
                 {
-                    var tableNames = CacheInfoList.Keys.ToList();
-                    string nextTableName = _cacheFetchManager.GetNextTableName(tableNames);
-                    TryRequestCache(nextTableName);
+                    var tableNames = TableSchemaManager.Instance.GetCacheableTableNamesList();
+                    foreach (var item in tableNames)
+                    {
+                        UIBizService.RequestCache(item, TableSchemaManager.Instance.GetEntityType(item));
+                    }
                 }
 
             }
@@ -3062,114 +3053,6 @@ namespace RUINORERP.UI
         }
 
 
-        public void TryRequestCache(string nextTableName, Type elementType = null)
-        {
-            if (nextTableName != null)
-            {
-                //对比缓存信息概率。行数变化了也要请求最新的
-                bool IsView_ProdDetail = false;
-                CacheInfo info = new CacheInfo();
-                //先从缓存中取出缓存概览数据中的基本信息。再对比行数。
-                if (MainForm.Instance.CacheInfoList.TryGetValue(nextTableName, out info))
-                {
-                    if (nextTableName.Equals(nameof(View_ProdDetail)))
-                    {
-                        IsView_ProdDetail = true;
-                    }
-                }
-
-
-                // 您的抓取缓存逻辑FetchCacheForTable
-                UIBizService.RequestCache(nextTableName);
-                bool needRequestCache = false;
-                //Type elementType = null;
-                #region
-                var cachelist = MyCacheManager.Instance.CacheEntityList.Get(nextTableName);
-                if (cachelist != null)
-                {
-                    Type listType = cachelist.GetType();
-                    if (TypeHelper.IsGenericList(listType))
-                    {
-                        #region  强类型
-                        List<object> oldlist = new List<object>();
-                        oldlist = cachelist as List<object>;
-                        //foreach (object ca in (IEnumerable)cachelist)
-                        //{
-                        //    oldlist.Add(ca);
-                        //}
-
-                        //提取产品视图缓存转为强类型
-                        if (info != null && IsView_ProdDetail && !View_ProdDetailList.Count.Equals(oldlist.Count))
-                        {
-                            View_ProdDetailList.Clear();
-                            foreach (var item in oldlist)
-                            {
-                                View_ProdDetailList.Add(item as View_ProdDetail);
-                            }
-                        }
-
-                        if (info != null && (oldlist.Count == 0 || oldlist.Count != info.CacheCount))
-                        {
-                            needRequestCache = true;
-                        }
-
-                        #endregion
-                    }
-                    else if (TypeHelper.IsJArrayList(listType))
-                    {
-                        //elementType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + nextTableName);
-                        MyCacheManager.Instance.NewTableTypeList.TryGetValue(nextTableName, out elementType);
-
-                        List<object> myList = TypeHelper.ConvertJArrayToList(elementType, cachelist as JArray);
-
-                        //提取产品视图缓存转为强类型
-                        if (info != null && IsView_ProdDetail && !View_ProdDetailList.Count.Equals(myList.Count))
-                        {
-                            View_ProdDetailList.Clear();
-                            foreach (var item in myList)
-                            {
-                                View_ProdDetailList.Add(item as View_ProdDetail);
-                            }
-                            #region  jsonlist
-                            if (myList.Count == 0 || myList.Count != info.CacheCount)
-                            {
-                                needRequestCache = true;
-                            }
-                            #endregion
-                        }
-                        else
-                        {
-                            needRequestCache = true;
-                        }
-
-                    }
-                }
-                else
-                {
-                    //请求发送缓存
-                    needRequestCache = true;
-                }
-                #endregion
-                if (needRequestCache)
-                {
-                    UIBizService.RequestCache(nextTableName, elementType);
-                    _cacheFetchManager.UpdateLastCacheFetchInfo(nextTableName);
-                    if (authorizeController.GetShowDebugInfoAuthorization())
-                    {
-                        if (elementType == null)
-                        {
-                            PrintInfoLog($"请求了缓存：{nextTableName}");
-                        }
-                        else
-                        {
-                            PrintInfoLog($"请求了缓存：{nextTableName}-{elementType.Name}");
-                        }
-                    }
-                }
-            }
-        }
-
-
         public void ShowStatusText(string text)
         {
             this.lblStatusGlobal.Text = text;
@@ -3186,7 +3069,7 @@ namespace RUINORERP.UI
         private void btntsbRefresh_Click(object sender, EventArgs e)
         {
 
-            MainForm.Instance.logger.LogError("LoginWebServer"+System.DateTime.Now.ToString());
+            MainForm.Instance.logger.LogError("LoginWebServer" + System.DateTime.Now.ToString());
 
 
             Process[] allProcess = Process.GetProcesses();

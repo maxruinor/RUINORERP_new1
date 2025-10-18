@@ -323,17 +323,33 @@ namespace RUINORERP.Server
                 {
                     try
                     {
+                        // 记录开始时间，便于分析性能
+                        var startTime = DateTime.Now;
+                        
+                        // 执行缓存初始化
                         await _entityCacheInitializationService.InitializeAllCacheAsync();
+                        
+                        // 计算耗时并记录完成信息
+                        var elapsedTime = DateTime.Now - startTime;
                         this.BeginInvoke(new Action(() =>
                         {
-                            PrintInfoLog("缓存数据加载完成");
+                            PrintInfoLog($"缓存数据加载完成，耗时: {elapsedTime.TotalSeconds:F2}秒");
                         }));
                     }
                     catch (Exception ex)
                     {
+                        // 更详细的错误记录
                         this.BeginInvoke(new Action(() =>
                         {
                             PrintErrorLog($"加载缓存数据时出错: {ex.Message}");
+                            // 对于关键错误，可以记录更详细的信息
+                            PrintErrorLog($"异常类型: {ex.GetType().Name}");
+                            
+                            // 如果有内部异常，也记录下来
+                            if (ex.InnerException != null)
+                            {
+                                PrintErrorLog($"内部异常: {ex.InnerException.Message}");
+                            }
                         }));
                     }
                 });

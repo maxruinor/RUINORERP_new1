@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.SysConfig
+namespace RUINORERP.UI.SysConfig
 {
     partial class UCCacheManage
     {
@@ -314,6 +314,8 @@
             this.kryptonPanel3.Controls.Add(this.txtTotalItems);
             this.kryptonPanel3.Controls.Add(this.kryptonLabel3);
             this.kryptonPanel3.Controls.Add(this.txtCacheSize);
+            this.kryptonPanel3.Controls.Add(this.kryptonLabel4);
+            this.kryptonPanel3.Controls.Add(this.txtTableCount);
             this.kryptonPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel3.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel3.Name = "kryptonPanel3";
@@ -387,6 +389,22 @@
             this.txtCacheSize.Size = new System.Drawing.Size(120, 23);
             this.txtCacheSize.TabIndex = 11;
             this.txtCacheSize.ReadOnly = true;
+            // 
+            // kryptonLabel4
+            // 
+            this.kryptonLabel4.Location = new System.Drawing.Point(230, 50);
+            this.kryptonLabel4.Name = "kryptonLabel4";
+            this.kryptonLabel4.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel4.TabIndex = 12;
+            this.kryptonLabel4.Values.Text = "缓存表个数:";
+            // 
+            // txtTableCount
+            // 
+            this.txtTableCount.Location = new System.Drawing.Point(320, 50);
+            this.txtTableCount.Name = "txtTableCount";
+            this.txtTableCount.Size = new System.Drawing.Size(120, 23);
+            this.txtTableCount.TabIndex = 13;
+            this.txtTableCount.ReadOnly = true;
             // 
             // tabPageTableStats
             // 
@@ -512,6 +530,8 @@
         private Krypton.Toolkit.KryptonTextBox txtTotalItems;
         private Krypton.Toolkit.KryptonLabel kryptonLabel3;
         private Krypton.Toolkit.KryptonTextBox txtCacheSize;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel4;
+        private Krypton.Toolkit.KryptonTextBox txtTableCount;
         private Krypton.Toolkit.KryptonDataGridView dgvTableStatistics;
         private Krypton.Toolkit.KryptonDataGridView dgvItemStatistics;
         private Krypton.Toolkit.KryptonListBox kryptonListBox1;

@@ -92,9 +92,9 @@ namespace RUINORERP.Business.Cache
         private readonly object _statisticsLock = new object();
 
         /// <summary>
-        /// 最大缓存大小（默认100MB）
+        /// 最大缓存大小（已调整为500MB以避免频繁清理）
         /// </summary>
-        private readonly long _maxCacheSize = 100 * 1024 * 1024;
+        private readonly long _maxCacheSize = 500 * 1024 * 1024;
 
         /// <summary>
         /// 缓存大小检查阈值（达到最大大小的80%时触发清理）
@@ -1093,19 +1093,31 @@ namespace RUINORERP.Business.Cache
         /// <summary>
         /// 初始化表结构信息
         /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="primaryKeyExpression">主键字段表达式</param>
+        /// <param name="displayFieldExpression">主显示字段表达式</param>
+        /// <param name="isView">是否是视图</param>
+        /// <param name="isCacheable">是否需要缓存</param>
+        /// <param name="description">表描述</param>
+        /// <param name="cacheWholeRow">是否缓存整行数据（true）还是只缓存指定字段（false）</param>
+        /// <param name="otherDisplayFieldExpressions">其他需要缓存的显示字段表达式</param>
         public void InitializeTableSchema<T>(
             Expression<Func<T, object>> primaryKeyExpression,
             Expression<Func<T, object>> displayFieldExpression,
             bool isView = false,
             bool isCacheable = true,
-            string description = null) where T : class
+            string description = null,
+            bool cacheWholeRow = true,
+            params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class
         {
             _tableSchemaManager.RegisterTableSchema(
                 primaryKeyExpression,
                 displayFieldExpression,
                 isView,
                 isCacheable,
-                description);
+                description,
+                cacheWholeRow,
+                otherDisplayFieldExpressions);
         }
 
         /// <summary>
@@ -1315,6 +1327,41 @@ namespace RUINORERP.Business.Cache
             // 估计缓存项大小
             long estimatedSize = EstimateObjectSize(value);
 
+            // 检查是否存在覆盖情况：原列表有数据，新列表数据更少或为空
+            bool isReplacingDataWithLessOrEmpty = false;
+            try
+            {
+                // 尝试获取现有缓存值
+                if (_cacheManager.Exists(cacheKey))
+                {
+                    var existingValue = _cacheManager.Get(cacheKey);
+                    if (existingValue != null)
+                    {
+                        // 检查现有值是否为列表且有数据
+                        var existingList = existingValue as System.Collections.IList;
+                        var newList = value as System.Collections.IList;
+                        
+                        if (existingList != null && newList != null)
+                        {
+                            // 当原列表有数据，而新列表数据更少或为空时记录
+                            if (existingList.Count > 0 && newList.Count <= existingList.Count)
+                            {
+                                isReplacingDataWithLessOrEmpty = true;
+                                // 这里可以添加断点或日志记录，帮助调试
+                                System.Diagnostics.Debug.WriteLine($"[缓存覆盖警告] 表 {tableName} - 缓存键: {cacheKey} 原数据行数: {existingList.Count}, 新数据行数: {newList.Count}");
+                                // 可以在这里设置条件断点
+                                // System.Diagnostics.Debugger.Break(); // 如果需要强制中断调试，可以取消注释这行
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录调试检查过程中的异常，但不影响主要缓存操作
+                System.Diagnostics.Debug.WriteLine($"[缓存调试检查错误] {ex.Message}");
+            }
+
             lock (_statisticsLock)
             {
                 // 更新缓存统计
@@ -1344,6 +1391,12 @@ namespace RUINORERP.Business.Cache
                 }
             }
 
+            // 如果检测到数据覆盖问题，记录详细日志
+            if (isReplacingDataWithLessOrEmpty)
+            {
+                System.Diagnostics.Debug.WriteLine($"[缓存覆盖操作] 正在执行表 {tableName} 的缓存更新，可能导致数据减少");
+            }
+
             // 执行实际的缓存操作
             _cacheManager.Put(cacheKey, value);
         }
@@ -1366,6 +1419,8 @@ namespace RUINORERP.Business.Cache
             _cacheManager.Remove(cacheKey);
         }
 
+ 
+
         /// <summary>
         /// 检查缓存大小并在必要时进行清理
         /// </summary>
@@ -1382,7 +1437,7 @@ namespace RUINORERP.Business.Cache
                 // 执行缓存清理（移除最少使用的项目）
                 CleanCacheByLeastRecentlyUsed();
 
-                _logger.Debug("缓存清理完成。清理后大小：{NewSize}MB", EstimatedCacheSize / (1024 * 1024));
+                _logger.LogInformation("缓存清理完成。清理后大小：{NewSize}MB", EstimatedCacheSize / (1024 * 1024));
             }
         }
 
@@ -1396,9 +1451,17 @@ namespace RUINORERP.Business.Cache
                 // 获取所有缓存项并按最后访问时间排序（最久未使用的在前）
                 var itemsToRemove = _cacheItemStatistics.Values
                     .OrderBy(s => s.LastAccessedTime)
-                    .Take(_cacheItemStatistics.Count / 4) // 移除25%的项
+                    .Take(_cacheItemStatistics.Count / 10) // 减少为移除10%的项，降低清理频率
                     .Select(s => s.Key)
                     .ToList();
+
+                // 记录详细的缓存清理日志
+                if (itemsToRemove.Any())
+                {
+                    _logger.LogWarning("缓存清理执行：移除了{Count}个最少使用的缓存项，包括表：{Tables}",
+                        itemsToRemove.Count,
+                        string.Join(", ", itemsToRemove.Select(k => _cacheItemStatistics[k].TableName)));
+                }
 
                 // 移除选定的缓存项
                 foreach (var key in itemsToRemove)

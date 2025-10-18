@@ -7,8 +7,6 @@ using Netron.GraphLib;
 using Netron.Neon.HtmlHelp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using NPOI.POIFS.Crypt.Dsig;
-using NPOI.SS.Formula.Functions;
 using RUINORERP.Business;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
@@ -1136,10 +1134,10 @@ namespace RUINORERP.UI.Common
 
             // 获取新的缓存管理器实例
             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-            
+
             // 获取表结构管理器实例
             var tableSchemaManager = TableSchemaManager.Instance;
-            
+
             // 检查表是否在缓存表列表中
             if (tableSchemaManager.ContainsTable(typeof(T).Name))
             {
@@ -1199,13 +1197,13 @@ namespace RUINORERP.UI.Common
         {
             List<KeyValuePair<object, string>> proDetailList = new List<KeyValuePair<object, string>>();
             List<View_ProdDetail> list = new List<View_ProdDetail>();
-            
+
             // 获取新的缓存管理器实例
             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-            
+
             // 获取View_ProdDetail实体列表
             list = cacheManager.GetEntityList<View_ProdDetail>();
-            
+
             foreach (var item in list)
             {
                 proDetailList.Add(new KeyValuePair<object, string>(item.ProdDetailID, item.CNName + item.Specifications));
@@ -1252,7 +1250,7 @@ namespace RUINORERP.UI.Common
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 // 获取表结构管理器实例
                 var tableSchemaManager = TableSchemaManager.Instance;
-                
+
                 //只处理需要缓存的表
                 if (tableSchemaManager.ContainsTable(typeof(tb_CRM_Contact).Name))
                 {
@@ -1345,7 +1343,7 @@ namespace RUINORERP.UI.Common
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 // 获取表结构管理器实例
                 var tableSchemaManager = TableSchemaManager.Instance;
-                
+
                 //只处理需要缓存的表
                 if (tableSchemaManager.ContainsTable(typeof(tb_FM_PayeeInfo).Name))
                 {
@@ -1431,7 +1429,7 @@ namespace RUINORERP.UI.Common
                 //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
                 // 获取表结构管理器实例
                 var tableSchemaManager = TableSchemaManager.Instance;
-                
+
                 //只处理需要缓存的表
                 if (tableSchemaManager.ContainsTable(typeof(tb_BillingInformation).Name))
                 {
@@ -1452,13 +1450,16 @@ namespace RUINORERP.UI.Common
         public static async void RequestCache<T>()
         {
             RequestCache(typeof(T).Name, typeof(T));
-            CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
-            await cacheClient.RequestCacheAsync(typeof(T).Name);
         }
 
         public static void RequestCache(Type type)
         {
             RequestCache(type.Name, type);
+        }
+
+        public static void RequestCache(BaseEntity entity)
+        {
+            RequestCache(entity.GetType().Name, entity.GetType());
         }
 
         /// <summary>
@@ -1474,7 +1475,12 @@ namespace RUINORERP.UI.Common
             return TableSchemaManager.Instance.CacheableTableNames.Contains(tableName);
         }
 
-       
+
+        /// <summary>
+        /// 请求缓存数据
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="type">实体类型，如果提供则使用实体的FKRelations属性获取外键关系</param>
         public static async void RequestCache(string tableName, Type type = null)
         {
             // 获取新的缓存管理器实例
@@ -1482,34 +1488,70 @@ namespace RUINORERP.UI.Common
             CacheClientService cacheClient = Startup.GetFromFac<CacheClientService>();
             // 获取表结构管理器实例
             var tableSchemaManager = TableSchemaManager.Instance;
-            
+
             // 处理主表
             if (tableSchemaManager.ContainsTable(tableName) && IsCacheableTable(tableName))
             {
                 // 获取本地缓存数据
                 var entityList = cacheManager.GetEntityList<object>(tableName);
-                
+
                 // 简化的判断逻辑：如果本地没有缓存数据，则请求
                 if (entityList == null || entityList.Count == 0)
-                { 
+                {
                     await cacheClient.RequestCacheAsync(tableName);
                 }
             }
 
-            // 处理关联表
-            var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
-            if (schemaInfo != null && schemaInfo.ForeignKeys.Any())
+            // 处理关联表 - 优先使用实体类型的FKRelations属性（如果提供了类型）
+            if (type != null && typeof(BaseEntity).IsAssignableFrom(type))
             {
-                foreach (var fk in schemaInfo.ForeignKeys)
+                try
                 {
-                    if (IsCacheableTable(fk.RelatedTableName))
+                    // 创建实体实例来获取FKRelations
+                    BaseEntity entityInstance = (BaseEntity)Activator.CreateInstance(type);
+                    
+                    // 获取所有外键关系
+                    var fkRelations = entityInstance.FKRelations;
+                    
+                    foreach (var relation in fkRelations)
                     {
-                        var rslist = cacheManager.GetEntityList<object>(fk.RelatedTableName);
-                        
-                        // 简化的判断逻辑：如果本地没有缓存数据，则请求
-                        if (rslist == null || rslist.Count == 0)
+                        if (IsCacheableTable(relation.FKTableName))
                         {
-                            await cacheClient.RequestCacheAsync(fk.RelatedTableName);
+                            var rslist = cacheManager.GetEntityList<object>(relation.FKTableName);
+
+                            // 简化的判断逻辑：如果本地没有缓存数据，则请求
+                            if (rslist == null || rslist.Count == 0)
+                            {
+                                await cacheClient.RequestCacheAsync(relation.FKTableName);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 记录异常但继续执行
+                    MainForm.Instance.logger.LogError(ex, $"获取实体{type.Name}的外键关系失败");
+                }
+            }
+            // 如果没有提供类型或类型处理失败，则使用表结构管理器
+            else
+            {
+                var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
+                if (schemaInfo != null && schemaInfo.ForeignKeys.Any())
+                {
+                    // 创建副本以避免枚举时修改集合的异常
+                    var foreignKeys = schemaInfo.ForeignKeys.ToList();
+                    foreach (var fk in foreignKeys)
+                    {
+                        if (IsCacheableTable(fk.RelatedTableName))
+                        {
+                            var rslist = cacheManager.GetEntityList<object>(fk.RelatedTableName);
+
+                            // 简化的判断逻辑：如果本地没有缓存数据，则请求
+                            if (rslist == null || rslist.Count == 0)
+                            {
+                                await cacheClient.RequestCacheAsync(fk.RelatedTableName);
+                            }
                         }
                     }
                 }
@@ -1517,7 +1559,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-       
+
 
 
 

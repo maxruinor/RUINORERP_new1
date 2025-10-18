@@ -73,7 +73,6 @@ using RUINORERP.PacketSpec.Models;
 using RUINORERP.Common.LogHelper;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Business.StatusManagerService;
-using NPOI.POIFS.Crypt.Dsig;
 using RUINORERP.Model.Base;
 using System.Windows.Documents;
 using RUINORERP.UI.Monitoring.Auditing;
@@ -4897,17 +4896,10 @@ namespace RUINORERP.UI.BaseForm
                     //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
                     UIBizService.RequestCache<T>();
                     UIBizService.RequestCache<C>();
-                    // UIBizSrvice.RequestCache<tb_Prod>();
-                    // UIBizSrvice.RequestCache<View_ProdDetail>();
                     //去检测产品视图的缓存并且转换为强类型
-                    MainForm.Instance.TryRequestCache(nameof(View_ProdDetail), typeof(View_ProdDetail));
+                    UIBizService.RequestCache(typeof(View_ProdDetail));
 
-                    //先加载一遍缓存
-                    var tableNames = MainForm.Instance.CacheInfoList.Keys.ToList();
-                    foreach (var nextTableName in tableNames)
-                    {
-                        MainForm.Instance.TryRequestCache(nextTableName);
-                    }
+                    
                     #endregion
                 }
             }

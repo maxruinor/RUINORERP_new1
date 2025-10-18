@@ -150,7 +150,7 @@ namespace RUINORERP.Server.Controls
             tabControl1.Controls.Add(tabPageCacheStatistics);
             tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             tabControl1.Location = new System.Drawing.Point(0, 25);
-            tabControl1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabControl1.Margin = new System.Windows.Forms.Padding(4);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
             tabControl1.Size = new System.Drawing.Size(933, 683);
@@ -160,9 +160,9 @@ namespace RUINORERP.Server.Controls
             // 
             tabPageCacheManagement.Controls.Add(splitContainer1);
             tabPageCacheManagement.Location = new System.Drawing.Point(4, 26);
-            tabPageCacheManagement.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabPageCacheManagement.Margin = new System.Windows.Forms.Padding(4);
             tabPageCacheManagement.Name = "tabPageCacheManagement";
-            tabPageCacheManagement.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabPageCacheManagement.Padding = new System.Windows.Forms.Padding(4);
             tabPageCacheManagement.Size = new System.Drawing.Size(925, 653);
             tabPageCacheManagement.TabIndex = 0;
             tabPageCacheManagement.Text = "缓存管理";
@@ -172,7 +172,7 @@ namespace RUINORERP.Server.Controls
             // 
             splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             splitContainer1.Location = new System.Drawing.Point(4, 4);
-            splitContainer1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            splitContainer1.Margin = new System.Windows.Forms.Padding(4);
             splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -194,7 +194,7 @@ namespace RUINORERP.Server.Controls
             listBoxTableList.FormattingEnabled = true;
             listBoxTableList.ItemHeight = 17;
             listBoxTableList.Location = new System.Drawing.Point(0, 0);
-            listBoxTableList.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            listBoxTableList.Margin = new System.Windows.Forms.Padding(4);
             listBoxTableList.Name = "listBoxTableList";
             listBoxTableList.Size = new System.Drawing.Size(310, 645);
             listBoxTableList.TabIndex = 0;
@@ -227,7 +227,7 @@ namespace RUINORERP.Server.Controls
             dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             dataGridView1.Location = new System.Drawing.Point(0, 0);
-            dataGridView1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            dataGridView1.Margin = new System.Windows.Forms.Padding(4);
             dataGridView1.Name = "dataGridView1";
             dataGridView1.ReadOnly = true;
             dataGridView1.RowTemplate.Height = 23;
@@ -237,12 +237,12 @@ namespace RUINORERP.Server.Controls
             // 
             // tabPageCacheStatistics
             // 
-            tabPageCacheStatistics.Controls.Add(panel1);
             tabPageCacheStatistics.Controls.Add(tabControl2);
+            tabPageCacheStatistics.Controls.Add(panel1);
             tabPageCacheStatistics.Location = new System.Drawing.Point(4, 26);
-            tabPageCacheStatistics.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabPageCacheStatistics.Margin = new System.Windows.Forms.Padding(4);
             tabPageCacheStatistics.Name = "tabPageCacheStatistics";
-            tabPageCacheStatistics.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabPageCacheStatistics.Padding = new System.Windows.Forms.Padding(4);
             tabPageCacheStatistics.Size = new System.Drawing.Size(925, 653);
             tabPageCacheStatistics.TabIndex = 1;
             tabPageCacheStatistics.Text = "缓存统计";
@@ -269,15 +269,15 @@ namespace RUINORERP.Server.Controls
             panel1.Controls.Add(txtHits);
             panel1.Dock = System.Windows.Forms.DockStyle.Top;
             panel1.Location = new System.Drawing.Point(4, 4);
-            panel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            panel1.Margin = new System.Windows.Forms.Padding(4);
             panel1.Name = "panel1";
-            panel1.Size = new System.Drawing.Size(917, 170);
+            panel1.Size = new System.Drawing.Size(917, 162);
             panel1.TabIndex = 1;
             // 
             // btnResetStatistics
             // 
             btnResetStatistics.Location = new System.Drawing.Point(805, 113);
-            btnResetStatistics.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnResetStatistics.Margin = new System.Windows.Forms.Padding(4);
             btnResetStatistics.Name = "btnResetStatistics";
             btnResetStatistics.Size = new System.Drawing.Size(88, 33);
             btnResetStatistics.TabIndex = 16;
@@ -288,7 +288,7 @@ namespace RUINORERP.Server.Controls
             // btnRefreshStatistics
             // 
             btnRefreshStatistics.Location = new System.Drawing.Point(805, 72);
-            btnRefreshStatistics.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnRefreshStatistics.Margin = new System.Windows.Forms.Padding(4);
             btnRefreshStatistics.Name = "btnRefreshStatistics";
             btnRefreshStatistics.Size = new System.Drawing.Size(88, 33);
             btnRefreshStatistics.TabIndex = 15;
@@ -379,7 +379,7 @@ namespace RUINORERP.Server.Controls
             // txtEstimatedSize
             // 
             txtEstimatedSize.Location = new System.Drawing.Point(622, 116);
-            txtEstimatedSize.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            txtEstimatedSize.Margin = new System.Windows.Forms.Padding(4);
             txtEstimatedSize.Name = "txtEstimatedSize";
             txtEstimatedSize.ReadOnly = true;
             txtEstimatedSize.Size = new System.Drawing.Size(139, 23);
@@ -388,7 +388,7 @@ namespace RUINORERP.Server.Controls
             // txtItemCount
             // 
             txtItemCount.Location = new System.Drawing.Point(622, 75);
-            txtItemCount.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            txtItemCount.Margin = new System.Windows.Forms.Padding(4);
             txtItemCount.Name = "txtItemCount";
             txtItemCount.ReadOnly = true;
             txtItemCount.Size = new System.Drawing.Size(139, 23);
@@ -397,7 +397,7 @@ namespace RUINORERP.Server.Controls
             // txtRemoves
             // 
             txtRemoves.Location = new System.Drawing.Point(622, 34);
-            txtRemoves.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            txtRemoves.Margin = new System.Windows.Forms.Padding(4);
             txtRemoves.Name = "txtRemoves";
             txtRemoves.ReadOnly = true;
             txtRemoves.Size = new System.Drawing.Size(139, 23);
@@ -406,7 +406,7 @@ namespace RUINORERP.Server.Controls
             // txtPuts
             // 
             txtPuts.Location = new System.Drawing.Point(354, 116);
-            txtPuts.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            txtPuts.Margin = new System.Windows.Forms.Padding(4);
             txtPuts.Name = "txtPuts";
             txtPuts.ReadOnly = true;
             txtPuts.Size = new System.Drawing.Size(139, 23);
@@ -415,7 +415,7 @@ namespace RUINORERP.Server.Controls
             // txtHitRatio
             // 
             txtHitRatio.Location = new System.Drawing.Point(354, 75);
-            txtHitRatio.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            txtHitRatio.Margin = new System.Windows.Forms.Padding(4);
             txtHitRatio.Name = "txtHitRatio";
             txtHitRatio.ReadOnly = true;
             txtHitRatio.Size = new System.Drawing.Size(139, 23);
@@ -424,7 +424,7 @@ namespace RUINORERP.Server.Controls
             // txtMisses
             // 
             txtMisses.Location = new System.Drawing.Point(354, 34);
-            txtMisses.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            txtMisses.Margin = new System.Windows.Forms.Padding(4);
             txtMisses.Name = "txtMisses";
             txtMisses.ReadOnly = true;
             txtMisses.Size = new System.Drawing.Size(139, 23);
@@ -433,7 +433,7 @@ namespace RUINORERP.Server.Controls
             // txtHits
             // 
             txtHits.Location = new System.Drawing.Point(114, 34);
-            txtHits.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            txtHits.Margin = new System.Windows.Forms.Padding(4);
             txtHits.Name = "txtHits";
             txtHits.ReadOnly = true;
             txtHits.Size = new System.Drawing.Size(139, 23);
@@ -444,21 +444,21 @@ namespace RUINORERP.Server.Controls
             tabControl2.Controls.Add(tabPageTableStats);
             tabControl2.Controls.Add(tabPageItemStats);
             tabControl2.Dock = System.Windows.Forms.DockStyle.Fill;
-            tabControl2.Location = new System.Drawing.Point(4, 4);
-            tabControl2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabControl2.Location = new System.Drawing.Point(4, 166);
+            tabControl2.Margin = new System.Windows.Forms.Padding(4);
             tabControl2.Name = "tabControl2";
             tabControl2.SelectedIndex = 0;
-            tabControl2.Size = new System.Drawing.Size(917, 645);
+            tabControl2.Size = new System.Drawing.Size(917, 483);
             tabControl2.TabIndex = 2;
             // 
             // tabPageTableStats
             // 
             tabPageTableStats.Controls.Add(dataGridViewTableStats);
             tabPageTableStats.Location = new System.Drawing.Point(4, 26);
-            tabPageTableStats.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabPageTableStats.Margin = new System.Windows.Forms.Padding(4);
             tabPageTableStats.Name = "tabPageTableStats";
-            tabPageTableStats.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            tabPageTableStats.Size = new System.Drawing.Size(909, 615);
+            tabPageTableStats.Padding = new System.Windows.Forms.Padding(4);
+            tabPageTableStats.Size = new System.Drawing.Size(909, 445);
             tabPageTableStats.TabIndex = 0;
             tabPageTableStats.Text = "按表统计";
             tabPageTableStats.UseVisualStyleBackColor = true;
@@ -470,21 +470,21 @@ namespace RUINORERP.Server.Controls
             dataGridViewTableStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewTableStats.Dock = System.Windows.Forms.DockStyle.Fill;
             dataGridViewTableStats.Location = new System.Drawing.Point(4, 4);
-            dataGridViewTableStats.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            dataGridViewTableStats.Margin = new System.Windows.Forms.Padding(4);
             dataGridViewTableStats.Name = "dataGridViewTableStats";
             dataGridViewTableStats.ReadOnly = true;
             dataGridViewTableStats.RowTemplate.Height = 23;
-            dataGridViewTableStats.Size = new System.Drawing.Size(901, 607);
+            dataGridViewTableStats.Size = new System.Drawing.Size(901, 437);
             dataGridViewTableStats.TabIndex = 0;
             // 
             // tabPageItemStats
             // 
             tabPageItemStats.Controls.Add(dataGridViewItemStats);
             tabPageItemStats.Location = new System.Drawing.Point(4, 26);
-            tabPageItemStats.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabPageItemStats.Margin = new System.Windows.Forms.Padding(4);
             tabPageItemStats.Name = "tabPageItemStats";
-            tabPageItemStats.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            tabPageItemStats.Size = new System.Drawing.Size(909, 598);
+            tabPageItemStats.Padding = new System.Windows.Forms.Padding(4);
+            tabPageItemStats.Size = new System.Drawing.Size(909, 453);
             tabPageItemStats.TabIndex = 1;
             tabPageItemStats.Text = "缓存项统计";
             tabPageItemStats.UseVisualStyleBackColor = true;
@@ -496,11 +496,11 @@ namespace RUINORERP.Server.Controls
             dataGridViewItemStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dataGridViewItemStats.Dock = System.Windows.Forms.DockStyle.Fill;
             dataGridViewItemStats.Location = new System.Drawing.Point(4, 4);
-            dataGridViewItemStats.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            dataGridViewItemStats.Margin = new System.Windows.Forms.Padding(4);
             dataGridViewItemStats.Name = "dataGridViewItemStats";
             dataGridViewItemStats.ReadOnly = true;
             dataGridViewItemStats.RowTemplate.Height = 23;
-            dataGridViewItemStats.Size = new System.Drawing.Size(901, 590);
+            dataGridViewItemStats.Size = new System.Drawing.Size(901, 445);
             dataGridViewItemStats.TabIndex = 0;
             // 
             // CacheManagementControl
@@ -509,7 +509,7 @@ namespace RUINORERP.Server.Controls
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             Controls.Add(tabControl1);
             Controls.Add(toolStrip1);
-            Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            Margin = new System.Windows.Forms.Padding(4);
             Name = "CacheManagementControl";
             Size = new System.Drawing.Size(933, 708);
             Load += CacheManagementControl_Load;

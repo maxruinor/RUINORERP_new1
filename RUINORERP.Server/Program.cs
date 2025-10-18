@@ -34,7 +34,6 @@ using WorkflowCore.Services.DefinitionStorage;
 using RUINORERP.Business.AutoMapper;
 using SuperSocket.Server.Host;
 using RUINORERP.Server.Comm;
-using Mapster;
 using RUINORERP.Server.SmartReminder;
 using WorkflowCore.Services;
 using Autofac;

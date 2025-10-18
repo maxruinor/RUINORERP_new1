@@ -121,12 +121,22 @@ namespace RUINORERP.Business.Cache
         /// <summary>
         /// 初始化表结构信息
         /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="primaryKeyExpression">主键字段表达式</param>
+        /// <param name="displayFieldExpression">主显示字段表达式</param>
+        /// <param name="isView">是否是视图</param>
+        /// <param name="isCacheable">是否需要缓存</param>
+        /// <param name="description">表描述</param>
+        /// <param name="cacheWholeRow">是否缓存整行数据（true）还是只缓存指定字段（false）</param>
+        /// <param name="otherDisplayFieldExpressions">其他需要缓存的显示字段表达式</param>
         void InitializeTableSchema<T>(
             Expression<Func<T, object>> primaryKeyExpression,
             Expression<Func<T, object>> displayFieldExpression,
             bool isView = false,
             bool isCacheable = true,
-            string description = null) where T : class;
+            string description = null,
+            bool cacheWholeRow = true,
+            params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class;
 
         /// <summary>
         /// 获取实体类型

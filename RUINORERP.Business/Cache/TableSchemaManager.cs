@@ -79,16 +79,20 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="primaryKeyExpression">主键字段表达式</param>
-        /// <param name="displayFieldExpression">显示字段表达式</param>
+        /// <param name="displayFieldExpression">主显示字段表达式</param>
         /// <param name="isView">是否是视图</param>
         /// <param name="isCacheable">是否需要缓存</param>
         /// <param name="description">表描述</param>
+        /// <param name="cacheWholeRow">是否缓存整行数据（true）还是只缓存指定字段（false）</param>
+        /// <param name="otherDisplayFieldExpressions">其他需要缓存的显示字段表达式</param>
         public void RegisterTableSchema<T>(
             Expression<Func<T, object>> primaryKeyExpression,
             Expression<Func<T, object>> displayFieldExpression,
             bool isView = false,
             bool isCacheable = true,
-            string description = null) where T : class
+            string description = null,
+            bool cacheWholeRow = true,
+            params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class
         {
             var entityType = typeof(T);
             var tableName = entityType.Name;
@@ -107,14 +111,32 @@ namespace RUINORERP.Business.Cache
                 throw new ArgumentException($"无法从表达式中提取显示字段名: {displayFieldExpression}");
             }
 
+            // 初始化显示字段列表
+            var displayFields = new List<string> { displayField };
+            
+            // 添加其他显示字段
+            if (otherDisplayFieldExpressions != null && otherDisplayFieldExpressions.Length > 0)
+            {
+                foreach (var expr in otherDisplayFieldExpressions)
+                {
+                    var fieldName = GetMemberName(expr);
+                    if (!string.IsNullOrEmpty(fieldName) && !displayFields.Contains(fieldName))
+                    {
+                        displayFields.Add(fieldName);
+                    }
+                }
+            }
+
             var schemaInfo = new TableSchemaInfo
             {
                 TableName = tableName,
                 PrimaryKeyField = primaryKeyField,
                 DisplayField = displayField,
+                DisplayFields = displayFields,
                 EntityType = entityType,
                 IsView = isView,
                 IsCacheable = isCacheable,
+                CacheWholeRow = cacheWholeRow,
                 Description = description ?? tableName,
                 Properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList()
             };
@@ -139,17 +161,21 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         /// <param name="entityType">实体类型</param>
         /// <param name="primaryKeyField">主键字段名</param>
-        /// <param name="displayField">显示字段名</param>
+        /// <param name="displayField">主显示字段名</param>
         /// <param name="isView">是否是视图</param>
         /// <param name="isCacheable">是否需要缓存</param>
         /// <param name="description">表描述</param>
+        /// <param name="otherDisplayFields">其他需要缓存的显示字段名</param>
+        /// <param name="cacheWholeRow">是否缓存整行数据（true）还是只缓存指定字段（false）</param>
         public void RegisterTableSchema(
             Type entityType,
             string primaryKeyField,
             string displayField,
             bool isView = false,
             bool isCacheable = true,
-            string description = null)
+            string description = null,
+            bool cacheWholeRow = true,
+            params string[] otherDisplayFields)
         {
             if (entityType == null)
             {
@@ -166,6 +192,21 @@ namespace RUINORERP.Business.Cache
                 throw new ArgumentException("显示字段名不能为空", nameof(displayField));
             }
 
+            // 初始化显示字段列表
+            var displayFields = new List<string> { displayField };
+            
+            // 添加其他显示字段
+            if (otherDisplayFields != null && otherDisplayFields.Length > 0)
+            {
+                foreach (var fieldName in otherDisplayFields)
+                {
+                    if (!string.IsNullOrEmpty(fieldName) && !displayFields.Contains(fieldName))
+                    {
+                        displayFields.Add(fieldName);
+                    }
+                }
+            }
+
             var tableName = entityType.Name;
 
             var schemaInfo = new TableSchemaInfo
@@ -173,9 +214,11 @@ namespace RUINORERP.Business.Cache
                 TableName = tableName,
                 PrimaryKeyField = primaryKeyField,
                 DisplayField = displayField,
+                DisplayFields = displayFields,
                 EntityType = entityType,
                 IsView = isView,
                 IsCacheable = isCacheable,
+                CacheWholeRow = cacheWholeRow,
                 Description = description ?? tableName,
                 Properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList()
             };
@@ -257,14 +300,25 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 获取显示字段名
+        /// 获取主显示字段名
         /// </summary>
         /// <param name="tableName">表名</param>
-        /// <returns>显示字段名</returns>
+        /// <returns>主显示字段名</returns>
         public string GetDisplayField(string tableName)
         {
             var schemaInfo = GetSchemaInfo(tableName);
             return schemaInfo?.DisplayField;
+        }
+
+        /// <summary>
+        /// 获取所有显示字段名列表
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>显示字段名列表</returns>
+        public List<string> GetDisplayFields(string tableName)
+        {
+            var schemaInfo = GetSchemaInfo(tableName);
+            return schemaInfo?.DisplayFields ?? new List<string>();
         }
 
         /// <summary>

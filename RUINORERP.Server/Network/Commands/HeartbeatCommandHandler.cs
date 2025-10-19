@@ -51,7 +51,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 具体的命令处理逻辑
         /// </summary>
-        protected override async Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<BaseCommand<IRequest, IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -63,14 +63,14 @@ namespace RUINORERP.Server.Network.Commands
                 }
                 else
                 {
-                    return BaseCommand<IResponse>.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}")
+                    return BaseCommand<IRequest, IResponse>.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}")
                         .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
                 }
             }
             catch (Exception ex)
             {
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
-                return BaseCommand<IResponse>.CreateError($"处理异常: {ex.Message}")
+                return BaseCommand<IRequest, IResponse>.CreateError($"处理异常: {ex.Message}")
                     .WithMetadata("ErrorCode", "HANDLER_ERROR")
                     .WithMetadata("Exception", ex.Message)
                     .WithMetadata("StackTrace", ex.StackTrace);
@@ -85,7 +85,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理心跳命令
         /// </summary>
-        private BaseCommand<IResponse> HandleHeartbeatAsync(QueuedCommand queuedCommand, CancellationToken cancellationToken)
+        private BaseCommand<IRequest, IResponse> HandleHeartbeatAsync(QueuedCommand queuedCommand, CancellationToken cancellationToken)
         {
             try
             {
@@ -110,7 +110,7 @@ namespace RUINORERP.Server.Network.Commands
                         }
                     };
                     
-                    return BaseCommand<IResponse>.CreateError("会话不存在或已过期")
+                    return BaseCommand<IRequest, IResponse>.CreateError("会话不存在或已过期")
                         .WithMetadata("ErrorCode", "SESSION_NOT_FOUND")
                         .WithMetadata("SessionId", queuedCommand.Packet.ExecutionContext.SessionId);
                 }
@@ -141,7 +141,7 @@ namespace RUINORERP.Server.Network.Commands
                     }
                 };
                 
-                return BaseCommand<IResponse>.CreateSuccess(response);
+                return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
@@ -159,7 +159,7 @@ namespace RUINORERP.Server.Network.Commands
                     }
                 };
                 
-                return BaseCommand<IResponse>.CreateError("处理心跳命令异常")
+                return BaseCommand<IRequest, IResponse>.CreateError("处理心跳命令异常")
                     .WithMetadata("ErrorCode", "HEARTBEAT_ERROR")
                     .WithMetadata("Exception", ex.Message)
                     .WithMetadata("StackTrace", ex.StackTrace);

@@ -65,60 +65,56 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="password">密码</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>包含指令信息的登录响应</returns>
-        public async Task<BaseCommand<LoginResponse>> LoginAsync(string username, string password, CancellationToken ct = default)
+        public async Task<LoginResponse> LoginAsync(string username, string password, CancellationToken ct = default)
         {
             try
             {
+
                 var loginRequest = LoginRequest.Create(username, password);
                 BaseCommand<IRequest, LoginResponse> baseCommand = new BaseCommand<IRequest, LoginResponse>(AuthenticationCommands.Login, loginRequest);
 
                 // 使用新的方法发送命令并获取包含指令信息的响应
-                var commandResponse = await _communicationService.SendCommandWithResponseAsync<IRequest, LoginResponse>(baseCommand, ct);
+                var command = await _communicationService.SendCommandWithResponseAsync<IRequest, LoginResponse>(baseCommand, ct);
 
                 // 检查响应数据是否为空
-                if (commandResponse.ResponseData == null)
+                if (command.Response == null)
                 {
                     _log?.LogError("登录失败：服务器返回了空的响应数据");
-                    return BaseCommand<LoginResponse>.CreateError("服务器返回了空的响应数据");
+                    return BaseCommand<IRequest, LoginResponse>.CreateError("服务器返回了空的响应数据").Response;
                 }
 
                 // 检查响应是否成功
-                if (!commandResponse.ResponseData.IsSuccess)
+                if (!command.Response.IsSuccess)
                 {
                     // 检查是否是时间错误
-                    var errorCode = commandResponse.GetMetadata<string>("ErrorCode");
+                    var errorCode = command.Response.ErrorMessage;
                     if (errorCode == "TIME_MISMATCH")
                     {
                         // 时间不匹配错误，提示用户校准系统时间
-                        return BaseCommand<LoginResponse>.CreateError(
+                        return BaseCommand<IRequest, LoginResponse>.CreateError(
                             "客户端时间与服务器时间差异过大，请校准系统时间后重试",
                             UnifiedErrorCodes.Command_ValidationFailed.Code)
-                            .WithMetadata("ErrorCode", "TIME_MISMATCH");
+                            .WithMetadata("ErrorCode", "TIME_MISMATCH").Response;
                     }
 
-                    return BaseCommand<LoginResponse>.CreateError(commandResponse.ResponseData.ErrorMessage);
+                    return BaseCommand<IRequest, IResponse>.CreateError("登陆失败").Response as LoginResponse;
                 }
 
                 // 登录成功后处理Token - 使用简化版TokenManager
-                if (commandResponse.ResponseData.IsSuccess && commandResponse.ResponseData != null)
+                if (command.Response.IsSuccess)
                 {
-                    var loginResponse = commandResponse.ResponseData;
+                    var loginResponse = command.Response;
 
                     // 保存Token信息
                     if (loginResponse.Token != null && !string.IsNullOrEmpty(loginResponse.Token.AccessToken))
                     {
                         await _tokenManager.TokenStorage.SetTokenAsync(loginResponse.Token);
-
-                        _log?.LogInformation("登录成功，Token已保存 - 用户: {Username}, 请求ID: {RequestId}",
-                            username, commandResponse.ResponseData.RequestId);
-
-                        MainForm.Instance.AppContext.SessionId = loginResponse.SessionId;
+                        MainForm.Instance.AppContext.SessionId = command.Response.SessionId;
 
                         // 登录成功后启动心跳
                         try
                         {
                             await _communicationService.StartHeartbeatAfterLoginAsync(ct);
-                            _log?.LogInformation("登录成功后心跳启动完成 - 用户: {Username}", username);
                         }
                         catch (Exception heartbeatEx)
                         {
@@ -129,16 +125,16 @@ namespace RUINORERP.UI.Network.Services
                     else
                     {
                         _log?.LogWarning("登录响应中未包含有效的Token信息 - 用户: {Username}, 请求ID: {RequestId}",
-                            username, commandResponse.ResponseData.RequestId);
+                            username, command.Request.RequestId);
                     }
                 }
                 else
                 {
                     _log?.LogWarning("登录失败 - 用户: {Username}, 错误: {ErrorMessage}",
-                        username, commandResponse.ResponseData.ErrorMessage);
+                        username, command.Response.ErrorMessage);
                 }
 
-                return commandResponse;
+                return command.Response;
             }
             catch (Exception ex)
             {
@@ -147,25 +143,7 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-        /// <summary>
-        /// 用户登录（传统方式）- 使用简化版TokenManager
-        /// 返回传统的ResponseBase包装响应，保持向后兼容性
-        /// </summary>
-        /// <param name="username">用户名</param>
-        /// <param name="password">密码</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>登录响应</returns>
-        public async Task<ResponseBase<LoginResponse>> LoginTraditionalAsync(string username, string password, CancellationToken ct = default)
-        {
-            var commandResponse = await LoginAsync(username, password, ct);
 
-            return new ResponseBase<LoginResponse>
-            {
-                Message = commandResponse.ResponseData.Message,
-                Data = commandResponse.ResponseData,
-                RequestId = commandResponse.ResponseData.RequestId
-            };
-        }
 
         /// <summary>
         /// 用户登出 - 使用简化版TokenManager
@@ -187,16 +165,16 @@ namespace RUINORERP.UI.Network.Services
                 // 创建登出请求
                 var request = LoginRequest.CreateLogoutRequest();
                 var baseCommand = new BaseCommand<LoginRequest, LoginResponse>(AuthenticationCommands.Logout, request);
-                var response = await _communicationService.SendCommandWithResponseAsync<LoginRequest, LoginResponse>(baseCommand, ct);
+                var response = await _communicationService.SendCommandAsync<LoginRequest, LoginResponse>(baseCommand, ct);
 
-                // 检查响应是否成功
-                bool isSuccess = response != null && response.ResponseData != null && response.ResponseData.IsSuccess;
+                // 检查响应是否成功 TODO  要完善
+                bool isSuccess = true;// response != null && response.CommandData.Request != null && response.Request.IsSuccess;
 
                 if (isSuccess)
                 {
                     // 登出成功后清除令牌并停止静默刷新 - 使用简化版TokenManager
                     await _tokenManager.TokenStorage.ClearTokenAsync();
-                    _log?.LogInformation("用户登出成功");
+                    _log?.LogDebug("用户登出成功");
                 }
 
                 return isSuccess;
@@ -244,7 +222,7 @@ namespace RUINORERP.UI.Network.Services
                 var validateRequest = SimpleRequest.CreateString(currentToken.AccessToken);
                 var baseCommand = new BaseCommand<IRequest, IResponse>();
 
-                var response = await _communicationService.SendCommandWithResponseAsync<IRequest, IResponse>(baseCommand, CancellationToken.None);
+                var response = await _communicationService.SendCommandAsync<IRequest, IResponse>(baseCommand, CancellationToken.None);
                 return response != null;
             }
             catch (Exception ex)
@@ -265,7 +243,7 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="e">事件参数</param>
         private void OnRefreshSucceeded(object sender, SilentTokenRefresher.RefreshSucceededEventArgs e)
         {
-            _log?.LogInformation("静默刷新Token成功");
+            _log?.LogDebug("静默刷新Token成功");
         }
 
         /// <summary>

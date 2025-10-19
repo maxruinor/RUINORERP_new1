@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -140,7 +140,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected override async Task<ResponseBase> HandleRequestAsync(CrudRequest<TEntity> request, CancellationToken cancellationToken)
         {
-            CrudLogger?.LogInformation($"执行{request.OperationType}操作，实体类型：{typeof(TEntity).Name}");
+            CrudLogger?.LogDebug($"执行{request.OperationType}操作，实体类型：{typeof(TEntity).Name}");
 
             return request.OperationType switch
             {

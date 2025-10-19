@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -172,7 +172,7 @@ namespace RUINORERP.PacketSpec.Commands
             
             try
             {
-                _logger?.LogInformation("开始智能扫描程序集: {AssemblyName} (全量扫描: {ForceFullScan})", assemblyName, forceFullScan);
+                _logger?.LogDebug("开始智能扫描程序集: {AssemblyName} (全量扫描: {ForceFullScan})", assemblyName, forceFullScan);
                 
                 // 尝试从增强缓存获取扫描结果
                 var cacheEntry = await _cacheManager.GetOrCreateScanCacheAsync(assembly, namespaceFilter, forceFullScan);
@@ -196,7 +196,7 @@ namespace RUINORERP.PacketSpec.Commands
                     // 更新扫描统计
                     UpdateScanStatistics(assemblyName, scanResult.CommandTypes.Count, scanResult.HandlerTypes.Count, true, null);
                     
-                    _logger?.LogInformation("智能扫描完成（使用缓存）: {AssemblyName}, 发现 {CommandCount} 个命令, {HandlerCount} 个处理器",
+                    _logger?.LogDebug("智能扫描完成（使用缓存）: {AssemblyName}, 发现 {CommandCount} 个命令, {HandlerCount} 个处理器",
                         assemblyName, scanResult.CommandTypes.Count, scanResult.HandlerTypes.Count);
                     
                     return scanResult;
@@ -209,7 +209,7 @@ namespace RUINORERP.PacketSpec.Commands
                 // 更新最后扫描时间
                 _lastScanTime.AddOrUpdate(assemblyName, DateTime.Now, (key, old) => DateTime.Now);
                 
-                _logger?.LogInformation("智能扫描完成（实际扫描）: {AssemblyName}, 发现 {CommandCount} 个命令, {HandlerCount} 个处理器",
+                _logger?.LogDebug("智能扫描完成（实际扫描）: {AssemblyName}, 发现 {CommandCount} 个命令, {HandlerCount} 个处理器",
                     assemblyName, result.CommandTypes.Count, result.HandlerTypes.Count);
                 
                 return result;
@@ -479,7 +479,7 @@ namespace RUINORERP.PacketSpec.Commands
             _lastScanTime.Clear();
             _scanStatistics.Clear();
 
-            _logger?.LogInformation("清理所有扫描结果，共清理 {CommandCount} 个命令类型和 {HandlerCount} 个处理器类型", 
+            _logger?.LogDebug("清理所有扫描结果，共清理 {CommandCount} 个命令类型和 {HandlerCount} 个处理器类型", 
                 commandCount, handlerCount);
         }
 
@@ -807,7 +807,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
             }
 
-            _logger?.LogInformation("扫描完成，发现 {CommandCount} 个命令类型和 {HandlerCount} 个处理器类型", 
+            _logger?.LogDebug("扫描完成，发现 {CommandCount} 个命令类型和 {HandlerCount} 个处理器类型", 
                 result.CommandTypes.Count, result.HandlerTypes.Count);
             
             return result;
@@ -829,7 +829,7 @@ namespace RUINORERP.PacketSpec.Commands
             // 注册到命令注册表
             await registry.RegisterCommandsAsync(scanResult.CommandTypes);
             
-            _logger?.LogInformation("扫描并注册完成，共注册 {Count} 个命令类型", scanResult.CommandTypes.Count);
+            _logger?.LogDebug("扫描并注册完成，共注册 {Count} 个命令类型", scanResult.CommandTypes.Count);
         }
 
         /// <summary>
@@ -959,7 +959,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
             }
 
-            _logger?.LogInformation("扫描完成，发现 {HandlerCount} 个处理器类型", 
+            _logger?.LogDebug("扫描完成，发现 {HandlerCount} 个处理器类型", 
                 result.HandlerTypes.Count);
             
             return result;
@@ -981,7 +981,7 @@ namespace RUINORERP.PacketSpec.Commands
             // 注册处理器
             await registry.RegisterHandlersAsync(scanResult.HandlerTypes);
             
-            _logger?.LogInformation("扫描并注册处理器完成，共注册 {Count} 个处理器类型", scanResult.HandlerTypes.Count);
+            _logger?.LogDebug("扫描并注册处理器完成，共注册 {Count} 个处理器类型", scanResult.HandlerTypes.Count);
         }
 
         #region 命令处理器扫描功能（仅扫描，不注册）
@@ -1014,7 +1014,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
             }
 
-            _logger?.LogInformation("扫描完成，发现 {Count} 个处理器类型", handlerTypes.Count);
+            _logger?.LogDebug("扫描完成，发现 {Count} 个处理器类型", handlerTypes.Count);
             return handlerTypes;
         }
 
@@ -1205,7 +1205,7 @@ namespace RUINORERP.PacketSpec.Commands
         public void ClearHandlerMappings()
         {
             _commandHandlerMap.Clear();
-            _logger?.LogInformation("已清理所有处理器映射");
+            _logger?.LogDebug("已清理所有处理器映射");
         }
 
         /// <summary>
@@ -1273,7 +1273,7 @@ namespace RUINORERP.PacketSpec.Commands
                     _logger?.LogDebug("处理器类型 {HandlerType} 已缓存", handler.GetType().Name);
                 }
                 
-                _logger?.LogInformation("处理器 {HandlerName} [ID: {HandlerId}] 注册成功", handler.Name, handler.HandlerId);
+                _logger?.LogDebug("处理器 {HandlerName} [ID: {HandlerId}] 注册成功", handler.Name, handler.HandlerId);
                 return true;
             }
             catch (Exception ex)

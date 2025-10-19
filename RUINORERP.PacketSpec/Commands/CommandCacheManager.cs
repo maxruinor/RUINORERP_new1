@@ -92,7 +92,7 @@ namespace RUINORERP.PacketSpec.Commands
                 _cacheCleanupTimer = new Timer(CleanupExpiredCache, null, TimeSpan.FromHours(1), TimeSpan.FromHours(6));
             }
             
-            _logger?.LogInformation("统一缓存管理器初始化完成");
+            _logger?.LogDebug("统一缓存管理器初始化完成");
         }
 
         #region 基础缓存操作
@@ -292,12 +292,12 @@ namespace RUINORERP.PacketSpec.Commands
                 }
                 
                 Interlocked.Increment(ref _cacheMisses);
-                _logger?.LogInformation("缓存失效，重新扫描: {CacheKey}", cacheKey);
+                _logger?.LogDebug("缓存失效，重新扫描: {CacheKey}", cacheKey);
             }
             else
             {
                 Interlocked.Increment(ref _cacheMisses);
-                _logger?.LogInformation("缓存未命中，开始扫描: {CacheKey}", cacheKey);
+                _logger?.LogDebug("缓存未命中，开始扫描: {CacheKey}", cacheKey);
             }
             
             // 检查是否支持增量扫描
@@ -307,12 +307,12 @@ namespace RUINORERP.PacketSpec.Commands
             if (canIncremental)
             {
                 Interlocked.Increment(ref _incrementalScans);
-                _logger?.LogInformation("使用增量扫描: {AssemblyName}", assembly.GetName().Name);
+                _logger?.LogDebug("使用增量扫描: {AssemblyName}", assembly.GetName().Name);
             }
             else
             {
                 Interlocked.Increment(ref _fullScans);
-                _logger?.LogInformation("使用全量扫描: {AssemblyName}", assembly.GetName().Name);
+                _logger?.LogDebug("使用全量扫描: {AssemblyName}", assembly.GetName().Name);
             }
             
             // 创建新的缓存条目
@@ -362,7 +362,7 @@ namespace RUINORERP.PacketSpec.Commands
                 
                 if (cacheEntry != null)
                 {
-                    _logger?.LogInformation("扫描结果已缓存: {AssemblyName} ({CommandCount} 个命令)", 
+                    _logger?.LogDebug("扫描结果已缓存: {AssemblyName} ({CommandCount} 个命令)", 
                         assemblyName, scanResults.Count);
                 }
             }
@@ -442,7 +442,7 @@ namespace RUINORERP.PacketSpec.Commands
                 
                 if (expiredKeys.Count > 0)
                 {
-                    _logger?.LogInformation("清理过期缓存完成: 清理 {Count} 个条目", expiredKeys.Count);
+                    _logger?.LogDebug("清理过期缓存完成: 清理 {Count} 个条目", expiredKeys.Count);
                 }
             }
             catch (Exception ex)
@@ -559,7 +559,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             try
             {
-                _logger?.LogInformation("开始缓存预热...");
+                _logger?.LogDebug("开始缓存预热...");
                 
                 // 预热常用程序集的缓存
                 var commonAssemblies = new[]
@@ -576,7 +576,7 @@ namespace RUINORERP.PacketSpec.Commands
                     });
                 }
                 
-                _logger?.LogInformation("缓存预热完成");
+                _logger?.LogDebug("缓存预热完成");
             }
             catch (Exception ex)
             {
@@ -731,7 +731,7 @@ namespace RUINORERP.PacketSpec.Commands
             _incrementalScans = 0;
             _fullScans = 0;
             
-            _logger?.LogInformation("已清空所有命令缓存");
+            _logger?.LogDebug("已清空所有命令缓存");
         }
 
         /// <summary>

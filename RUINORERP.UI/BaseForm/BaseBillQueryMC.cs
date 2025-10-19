@@ -2479,7 +2479,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                     {
-                        // MainForm.Instance.logger.LogInformation("当前查询没有设置指向列，自动设置为主表类型及列");
+                        // MainForm.Instance.logger.LogDebug("当前查询没有设置指向列，自动设置为主表类型及列");
                     }
                     _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
                 }
@@ -2875,7 +2875,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
                 {
-                    // MainForm.Instance.logger.LogInformation("当前查询没有设置指向列，自动设置为主表类型及列");
+                    // MainForm.Instance.logger.LogDebug("当前查询没有设置指向列，自动设置为主表类型及列");
                 }
                 _UCBillMasterQuery.GridRelated.SetRelatedInfo(typeof(M).Name, RelatedBillEditCol.GetMemberInfo().Name);
             }

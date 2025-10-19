@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Cryptography;
@@ -26,7 +26,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private class CacheItem
         {
-            public BaseCommand<IResponse> Response { get; set; }
+            public BaseCommand<IRequest, IResponse> Response { get; set; }
             public DateTime ExpireTime { get; set; }
             public DateTime CreateTime { get; set; }
         }
@@ -64,7 +64,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="response">如果找到缓存项，则返回对应的响应对象；否则返回null</param>
         /// <returns>如果找到缓存项则返回true，否则返回false</returns>
-        public bool TryGetCached(ICommand command, out BaseCommand<IResponse> response)
+        public bool TryGetCached(ICommand command, out BaseCommand<IRequest, IResponse> response)
         {
             response = null;
             
@@ -98,7 +98,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="command">命令对象</param>
         /// <param name="response">要缓存的响应对象</param>
-        public void Cache(ICommand command, BaseCommand<IResponse> response)
+        public void Cache(ICommand command, BaseCommand<IRequest, IResponse> response)
         {
             if (command == null || response == null)
                 return;

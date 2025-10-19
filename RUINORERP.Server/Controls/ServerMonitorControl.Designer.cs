@@ -131,22 +131,27 @@ namespace RUINORERP.Server.Controls
             tabControl1.Controls.Add(tabPage2);
             tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             tabControl1.Location = new System.Drawing.Point(0, 0);
-            tabControl1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabControl1.Margin = new System.Windows.Forms.Padding(4);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new System.Drawing.Size(1167, 900);
+            tabControl1.Size = new System.Drawing.Size(1167, 850);
             tabControl1.TabIndex = 0;
             // 
             // tabPage1
             // 
+            tabPage1.Controls.Add(btnDiagnosticsReport);
             tabPage1.Controls.Add(groupBox3);
+            tabPage1.Controls.Add(btnErrorReport);
+            tabPage1.Controls.Add(btnPerformanceReport);
             tabPage1.Controls.Add(groupBox2);
+            tabPage1.Controls.Add(btnRefresh);
             tabPage1.Controls.Add(groupBox1);
+            tabPage1.Controls.Add(btnResetStats);
             tabPage1.Location = new System.Drawing.Point(4, 26);
-            tabPage1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabPage1.Margin = new System.Windows.Forms.Padding(4);
             tabPage1.Name = "tabPage1";
-            tabPage1.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            tabPage1.Size = new System.Drawing.Size(1159, 870);
+            tabPage1.Padding = new System.Windows.Forms.Padding(4);
+            tabPage1.Size = new System.Drawing.Size(1159, 820);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "服务器状态";
             tabPage1.UseVisualStyleBackColor = true;
@@ -169,11 +174,11 @@ namespace RUINORERP.Server.Controls
             groupBox3.Controls.Add(lblUptime);
             groupBox3.Controls.Add(lblSystemTimeValue);
             groupBox3.Controls.Add(lblSystemTime);
-            groupBox3.Location = new System.Drawing.Point(7, 599);
-            groupBox3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBox3.Location = new System.Drawing.Point(12, 570);
+            groupBox3.Margin = new System.Windows.Forms.Padding(4);
             groupBox3.Name = "groupBox3";
-            groupBox3.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            groupBox3.Size = new System.Drawing.Size(1143, 192);
+            groupBox3.Padding = new System.Windows.Forms.Padding(4);
+            groupBox3.Size = new System.Drawing.Size(1143, 183);
             groupBox3.TabIndex = 2;
             groupBox3.TabStop = false;
             groupBox3.Text = "服务器运行信息";
@@ -354,11 +359,11 @@ namespace RUINORERP.Server.Controls
             groupBox2.Controls.Add(lblTotalSessions);
             groupBox2.Controls.Add(lblActiveSessionsValue);
             groupBox2.Controls.Add(lblActiveSessions);
-            groupBox2.Location = new System.Drawing.Point(7, 316);
-            groupBox2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBox2.Location = new System.Drawing.Point(7, 294);
+            groupBox2.Margin = new System.Windows.Forms.Padding(4);
             groupBox2.Name = "groupBox2";
-            groupBox2.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            groupBox2.Size = new System.Drawing.Size(1143, 275);
+            groupBox2.Padding = new System.Windows.Forms.Padding(4);
+            groupBox2.Size = new System.Drawing.Size(1143, 246);
             groupBox2.TabIndex = 1;
             groupBox2.TabStop = false;
             groupBox2.Text = "会话统计";
@@ -522,10 +527,10 @@ namespace RUINORERP.Server.Controls
             groupBox1.Controls.Add(lblStatusValue);
             groupBox1.Controls.Add(lblStatus);
             groupBox1.Location = new System.Drawing.Point(7, 8);
-            groupBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBox1.Margin = new System.Windows.Forms.Padding(4);
             groupBox1.Name = "groupBox1";
-            groupBox1.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            groupBox1.Size = new System.Drawing.Size(1143, 299);
+            groupBox1.Padding = new System.Windows.Forms.Padding(4);
+            groupBox1.Size = new System.Drawing.Size(1143, 278);
             groupBox1.TabIndex = 0;
             groupBox1.TabStop = false;
             groupBox1.Text = "基本服务器信息";
@@ -696,9 +701,9 @@ namespace RUINORERP.Server.Controls
             tabPage2.Controls.Add(groupBox5);
             tabPage2.Controls.Add(groupBox4);
             tabPage2.Location = new System.Drawing.Point(4, 26);
-            tabPage2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabPage2.Margin = new System.Windows.Forms.Padding(4);
             tabPage2.Name = "tabPage2";
-            tabPage2.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            tabPage2.Padding = new System.Windows.Forms.Padding(4);
             tabPage2.Size = new System.Drawing.Size(1159, 870);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "指令处理状态";
@@ -717,9 +722,9 @@ namespace RUINORERP.Server.Controls
             groupBox6.Controls.Add(lblHealthStatusValue);
             groupBox6.Controls.Add(lblHealthStatus);
             groupBox6.Location = new System.Drawing.Point(7, 666);
-            groupBox6.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBox6.Margin = new System.Windows.Forms.Padding(4);
             groupBox6.Name = "groupBox6";
-            groupBox6.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBox6.Padding = new System.Windows.Forms.Padding(4);
             groupBox6.Size = new System.Drawing.Size(1143, 142);
             groupBox6.TabIndex = 2;
             groupBox6.TabStop = false;
@@ -829,9 +834,9 @@ namespace RUINORERP.Server.Controls
             // 
             groupBox5.Controls.Add(dgvHandlerStatistics);
             groupBox5.Location = new System.Drawing.Point(7, 150);
-            groupBox5.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBox5.Margin = new System.Windows.Forms.Padding(4);
             groupBox5.Name = "groupBox5";
-            groupBox5.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBox5.Padding = new System.Windows.Forms.Padding(4);
             groupBox5.Size = new System.Drawing.Size(1143, 507);
             groupBox5.TabIndex = 1;
             groupBox5.TabStop = false;
@@ -845,7 +850,7 @@ namespace RUINORERP.Server.Controls
             dgvHandlerStatistics.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] { HandlerName, Status, Priority, TotalCommands, SuccessfulCommands, FailedCommands, TimeoutCount, CurrentProcessing, AvgProcessingTime, MaxProcessingTime });
             dgvHandlerStatistics.Dock = System.Windows.Forms.DockStyle.Fill;
             dgvHandlerStatistics.Location = new System.Drawing.Point(4, 20);
-            dgvHandlerStatistics.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            dgvHandlerStatistics.Margin = new System.Windows.Forms.Padding(4);
             dgvHandlerStatistics.Name = "dgvHandlerStatistics";
             dgvHandlerStatistics.ReadOnly = true;
             dgvHandlerStatistics.RowTemplate.Height = 23;
@@ -919,9 +924,9 @@ namespace RUINORERP.Server.Controls
             groupBox4.Controls.Add(lblDispatcherInitializedValue);
             groupBox4.Controls.Add(lblDispatcherInitialized);
             groupBox4.Location = new System.Drawing.Point(7, 8);
-            groupBox4.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBox4.Margin = new System.Windows.Forms.Padding(4);
             groupBox4.Name = "groupBox4";
-            groupBox4.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            groupBox4.Padding = new System.Windows.Forms.Padding(4);
             groupBox4.Size = new System.Drawing.Size(1143, 124);
             groupBox4.TabIndex = 0;
             groupBox4.TabStop = false;
@@ -970,8 +975,8 @@ namespace RUINORERP.Server.Controls
             // btnErrorReport
             // 
             btnErrorReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnErrorReport.Location = new System.Drawing.Point(876, 850);
-            btnErrorReport.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnErrorReport.Location = new System.Drawing.Point(873, 761);
+            btnErrorReport.Margin = new System.Windows.Forms.Padding(4);
             btnErrorReport.Name = "btnErrorReport";
             btnErrorReport.Size = new System.Drawing.Size(88, 33);
             btnErrorReport.TabIndex = 4;
@@ -982,8 +987,8 @@ namespace RUINORERP.Server.Controls
             // btnPerformanceReport
             // 
             btnPerformanceReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnPerformanceReport.Location = new System.Drawing.Point(782, 850);
-            btnPerformanceReport.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnPerformanceReport.Location = new System.Drawing.Point(779, 761);
+            btnPerformanceReport.Margin = new System.Windows.Forms.Padding(4);
             btnPerformanceReport.Name = "btnPerformanceReport";
             btnPerformanceReport.Size = new System.Drawing.Size(88, 33);
             btnPerformanceReport.TabIndex = 3;
@@ -994,8 +999,8 @@ namespace RUINORERP.Server.Controls
             // btnDiagnosticsReport
             // 
             btnDiagnosticsReport.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnDiagnosticsReport.Location = new System.Drawing.Point(687, 850);
-            btnDiagnosticsReport.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnDiagnosticsReport.Location = new System.Drawing.Point(687, 761);
+            btnDiagnosticsReport.Margin = new System.Windows.Forms.Padding(4);
             btnDiagnosticsReport.Name = "btnDiagnosticsReport";
             btnDiagnosticsReport.Size = new System.Drawing.Size(88, 33);
             btnDiagnosticsReport.TabIndex = 5;
@@ -1006,8 +1011,8 @@ namespace RUINORERP.Server.Controls
             // btnResetStats
             // 
             btnResetStats.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnResetStats.Location = new System.Drawing.Point(1065, 850);
-            btnResetStats.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnResetStats.Location = new System.Drawing.Point(1062, 761);
+            btnResetStats.Margin = new System.Windows.Forms.Padding(4);
             btnResetStats.Name = "btnResetStats";
             btnResetStats.Size = new System.Drawing.Size(88, 33);
             btnResetStats.TabIndex = 1;
@@ -1018,8 +1023,8 @@ namespace RUINORERP.Server.Controls
             // btnRefresh
             // 
             btnRefresh.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            btnRefresh.Location = new System.Drawing.Point(971, 850);
-            btnRefresh.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnRefresh.Location = new System.Drawing.Point(968, 761);
+            btnRefresh.Margin = new System.Windows.Forms.Padding(4);
             btnRefresh.Name = "btnRefresh";
             btnRefresh.Size = new System.Drawing.Size(88, 33);
             btnRefresh.TabIndex = 2;
@@ -1031,15 +1036,10 @@ namespace RUINORERP.Server.Controls
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            Controls.Add(btnDiagnosticsReport);
-            Controls.Add(btnErrorReport);
-            Controls.Add(btnPerformanceReport);
-            Controls.Add(btnRefresh);
-            Controls.Add(btnResetStats);
             Controls.Add(tabControl1);
-            Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            Margin = new System.Windows.Forms.Padding(4);
             Name = "ServerMonitorControl";
-            Size = new System.Drawing.Size(1167, 900);
+            Size = new System.Drawing.Size(1167, 850);
             Load += ServerMonitorControl_Load;
             Disposed += ServerMonitorControl_Disposed;
             tabControl1.ResumeLayout(false);

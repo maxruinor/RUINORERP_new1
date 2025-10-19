@@ -101,7 +101,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<BaseCommand<IRequest, IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -134,7 +134,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
                 else
                 {
-                    var errorResponse = BaseCommand<IResponse>.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}")
+                    var errorResponse = BaseCommand<IRequest, IResponse>.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}")
                         .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
                     return errorResponse;
                 }
@@ -155,7 +155,7 @@ namespace RUINORERP.Server.Network.Commands
         /// 统一的登录业务逻辑处理方法
         /// 整合了所有登录相关的业务逻辑，被不同类型的登录命令处理器调用
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ProcessLoginAsync(
+        private async Task<BaseCommand<IRequest, IResponse>> ProcessLoginAsync(
             LoginRequest loginRequest,
             CmdContext executionContext,
             CancellationToken cancellationToken)
@@ -246,7 +246,7 @@ namespace RUINORERP.Server.Network.Commands
                     };
                     duplicateLoginResponse.WithMetadata("ExistingSessions", sessionInfos);
 
-                    return BaseCommand<IResponse>.CreateSuccess(duplicateLoginResponse)
+                    return BaseCommand<IRequest, IResponse>.CreateSuccess(duplicateLoginResponse)
                         .WithMetadata("ActionRequired", "DuplicateLoginConfirmation");
                 }
 
@@ -276,7 +276,7 @@ namespace RUINORERP.Server.Network.Commands
                 };
 
                 // 添加心跳间隔信息到元数据
-                return BaseCommand<IResponse>.CreateSuccess(loginResponse, "登录成功")
+                return BaseCommand<IRequest, IResponse>.CreateSuccess(loginResponse, "登录成功")
                     .WithMetadata("HeartbeatIntervalMs", "30000") // 默认30秒心跳间隔
                     .WithMetadata("ServerInfo", new Dictionary<string, object>
                     {
@@ -313,7 +313,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理Token验证
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ProcessTokenValidationAsync(
+        private async Task<BaseCommand<IRequest, IResponse>> ProcessTokenValidationAsync(
             CmdContext executionContext,
             CancellationToken cancellationToken)
         {
@@ -345,7 +345,7 @@ namespace RUINORERP.Server.Network.Commands
                     response.Token = new TokenInfo { AccessToken = token };
                 }
 
-                return BaseCommand<IResponse>.CreateSuccess(response);
+                return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
@@ -360,7 +360,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理Token刷新
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ProcessTokenRefreshAsync(
+        private async Task<BaseCommand<IRequest, IResponse>> ProcessTokenRefreshAsync(
             LoginRequest loginRequest,
             CmdContext executionContext,
             CancellationToken cancellationToken)
@@ -396,7 +396,7 @@ namespace RUINORERP.Server.Network.Commands
                     Token = new TokenInfo { AccessToken = newToken }
                 };
 
-                return BaseCommand<IResponse>.CreateSuccess(response);
+                return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
@@ -408,7 +408,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理登出操作
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ProcessLogoutAsync(
+        private async Task<BaseCommand<IRequest, IResponse>> ProcessLogoutAsync(
             LoginRequest loginRequest,
             CmdContext executionContext,
             CancellationToken cancellationToken)
@@ -437,7 +437,7 @@ namespace RUINORERP.Server.Network.Commands
                     Message = "登出成功"
                 };
 
-                return BaseCommand<IResponse>.CreateSuccess(response);
+                return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
             }
             catch (Exception ex)
             {
@@ -562,7 +562,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 请求重复登录确认
         /// </summary>
-        private BaseCommand<IResponse> RequestDuplicateLoginConfirmation(IEnumerable<SessionInfo> existingSessions, CancellationToken cancellationToken)
+        private BaseCommand<IRequest, IResponse> RequestDuplicateLoginConfirmation(IEnumerable<SessionInfo> existingSessions, CancellationToken cancellationToken)
         {
             try
             {
@@ -583,12 +583,12 @@ namespace RUINORERP.Server.Network.Commands
                 duplicateLoginResponse.WithMetadata("ExistingSessions", sessionInfos);
 
                 // 返回需要确认的响应
-                return BaseCommand<IResponse>.CreateSuccess(duplicateLoginResponse);
+                return BaseCommand<IRequest, IResponse>.CreateSuccess(duplicateLoginResponse);
             }
             catch (Exception ex)
             {
                 LogError($"请求重复登录确认失败: {ex.Message}", ex);
-                return BaseCommand<IResponse>.CreateError("请求重复登录确认失败", UnifiedErrorCodes.System_InternalError.Code);
+                return BaseCommand<IRequest, IResponse>.CreateError("请求重复登录确认失败", UnifiedErrorCodes.System_InternalError.Code);
             }
         }
 
@@ -821,18 +821,18 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 创建统一的错误响应
         /// </summary>
-        private BaseCommand<IResponse> CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
+        private BaseCommand<IRequest, IResponse> CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
         {
-            return BaseCommand<IResponse>.CreateError($"{errorCode.Message}: {message}", errorCode.Code)
+            return BaseCommand<IRequest, IResponse>.CreateError($"{errorCode.Message}: {message}", errorCode.Code)
                 .WithMetadata("ErrorCode", customErrorCode);
         }
 
         /// <summary>
         /// 创建统一的异常响应
         /// </summary>
-        private BaseCommand<IResponse> CreateExceptionResponse(Exception ex, string errorCode)
+        private BaseCommand<IRequest, IResponse> CreateExceptionResponse(Exception ex, string errorCode)
         {
-            return BaseCommand<IResponse>.CreateError($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
+            return BaseCommand<IRequest, IResponse>.CreateError($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
                 .WithMetadata("ErrorCode", errorCode)
                 .WithMetadata("Exception", ex.Message)
                 .WithMetadata("StackTrace", ex.StackTrace);
@@ -841,9 +841,9 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 创建统一的成功响应
         /// </summary>
-        private BaseCommand<IResponse> CreateSuccessResponse(IResponse data, string message)
+        private BaseCommand<IRequest, IResponse> CreateSuccessResponse(IResponse data, string message)
         {
-            return BaseCommand<IResponse>.CreateSuccess(data, message);
+            return BaseCommand<IRequest, IResponse>.CreateSuccess(data, message);
         }
 
         #endregion

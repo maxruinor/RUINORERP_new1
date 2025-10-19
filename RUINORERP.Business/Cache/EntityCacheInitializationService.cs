@@ -54,7 +54,7 @@ namespace RUINORERP.Business.Cache
 
                 // 获取需要缓存的表名
                 var tableNames = TableSchemaManager.Instance.GetCacheableTableNamesList();
-                _logger.LogInformation($"需要初始化的表数量: {tableNames.Count}");
+          
 
                 int successCount = 0;
                 int failedCount = 0;

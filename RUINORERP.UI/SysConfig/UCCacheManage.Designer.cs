@@ -30,7 +30,7 @@ namespace RUINORERP.UI.SysConfig
         {
             this.components = new System.ComponentModel.Container();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCCacheManage));
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonTabControl1 = new Krypton.Navigator.KryptonNavigator();
             this.tabCacheManage = new Krypton.Navigator.KryptonPage();
@@ -56,16 +56,19 @@ namespace RUINORERP.UI.SysConfig
             this.txtTotalItems = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.txtCacheSize = new Krypton.Toolkit.KryptonTextBox();
+            this.kryptonLabel4 = new Krypton.Toolkit.KryptonLabel();
+            this.txtTableCount = new Krypton.Toolkit.KryptonTextBox();
+            this.statisticsNavigator = new Krypton.Navigator.KryptonNavigator();
             this.tabPageTableStats = new Krypton.Navigator.KryptonPage();
             this.dgvTableStatistics = new Krypton.Toolkit.KryptonDataGridView();
             this.tabPageItemStats = new Krypton.Navigator.KryptonPage();
-            this.statisticsNavigator = new Krypton.Navigator.KryptonNavigator();
             this.dgvItemStatistics = new Krypton.Toolkit.KryptonDataGridView();
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTabControl1)).BeginInit();
             this.kryptonTabControl1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tabCacheManage)).BeginInit();
             this.tabCacheManage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
@@ -83,6 +86,7 @@ namespace RUINORERP.UI.SysConfig
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).BeginInit();
             this.kryptonPanel2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tabCacheStatistics)).BeginInit();
             this.tabCacheStatistics.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer3.Panel1)).BeginInit();
@@ -92,11 +96,14 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonSplitContainer3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel3)).BeginInit();
             this.kryptonPanel3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.statisticsNavigator)).BeginInit();
+            this.statisticsNavigator.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tabPageTableStats)).BeginInit();
             this.tabPageTableStats.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTableStatistics)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tabPageItemStats)).BeginInit();
             this.tabPageItemStats.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvItemStatistics)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.statisticsNavigator)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).BeginInit();
             this.SuspendLayout();
             // 
@@ -111,24 +118,32 @@ namespace RUINORERP.UI.SysConfig
             // 
             // kryptonTabControl1
             // 
+            this.kryptonTabControl1.ControlKryptonFormFeatures = false;
             this.kryptonTabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonTabControl1.Location = new System.Drawing.Point(0, 0);
             this.kryptonTabControl1.Name = "kryptonTabControl1";
-            this.kryptonTabControl1.Size = new System.Drawing.Size(800, 600);
-            this.kryptonTabControl1.TabIndex = 0;
+            this.kryptonTabControl1.NavigatorMode = Krypton.Navigator.NavigatorMode.BarTabGroup;
+            this.kryptonTabControl1.Owner = null;
+            this.kryptonTabControl1.PageBackStyle = Krypton.Toolkit.PaletteBackStyle.ControlClient;
             this.kryptonTabControl1.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
             this.tabCacheManage,
             this.tabCacheStatistics});
-            this.kryptonTabControl1.SelectedIndex = 0;
+            this.kryptonTabControl1.SelectedIndex = 1;
+            this.kryptonTabControl1.Size = new System.Drawing.Size(800, 600);
+            this.kryptonTabControl1.TabIndex = 0;
             // 
             // tabCacheManage
             // 
+            this.tabCacheManage.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
             this.tabCacheManage.Controls.Add(this.kryptonSplitContainer1);
-            this.tabCacheManage.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabCacheManage.Location = new System.Drawing.Point(0, 0);
+            this.tabCacheManage.Flags = 65534;
+            this.tabCacheManage.LastVisibleSet = true;
+            this.tabCacheManage.MinimumSize = new System.Drawing.Size(150, 50);
             this.tabCacheManage.Name = "tabCacheManage";
-            this.tabCacheManage.Size = new System.Drawing.Size(794, 570);
+            this.tabCacheManage.Size = new System.Drawing.Size(798, 573);
             this.tabCacheManage.Text = "缓存管理";
+            this.tabCacheManage.ToolTipTitle = "Page ToolTip";
+            this.tabCacheManage.UniqueName = "82e51f9a463c49a29bd2b71237dacfaf";
             // 
             // kryptonSplitContainer1
             // 
@@ -144,8 +159,8 @@ namespace RUINORERP.UI.SysConfig
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonSplitContainer2);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(794, 570);
-            this.kryptonSplitContainer1.SplitterDistance = 200;
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(798, 573);
+            this.kryptonSplitContainer1.SplitterDistance = 201;
             this.kryptonSplitContainer1.TabIndex = 0;
             // 
             // kryptonListBox1
@@ -154,7 +169,7 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonListBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonListBox1.Location = new System.Drawing.Point(0, 0);
             this.kryptonListBox1.Name = "kryptonListBox1";
-            this.kryptonListBox1.Size = new System.Drawing.Size(200, 570);
+            this.kryptonListBox1.Size = new System.Drawing.Size(201, 573);
             this.kryptonListBox1.TabIndex = 0;
             this.kryptonListBox1.SelectedIndexChanged += new System.EventHandler(this.kryptonListBox1_SelectedIndexChanged);
             // 
@@ -165,19 +180,19 @@ namespace RUINORERP.UI.SysConfig
             this.请求缓存ToolStripMenuItem,
             this.清空选中缓存ToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(181, 70);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(153, 48);
             // 
             // 请求缓存ToolStripMenuItem
             // 
             this.请求缓存ToolStripMenuItem.Name = "请求缓存ToolStripMenuItem";
-            this.请求缓存ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.请求缓存ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.请求缓存ToolStripMenuItem.Text = "请求缓存";
             this.请求缓存ToolStripMenuItem.Click += new System.EventHandler(this.请求缓存ToolStripMenuItem_Click);
             // 
             // 清空选中缓存ToolStripMenuItem
             // 
             this.清空选中缓存ToolStripMenuItem.Name = "清空选中缓存ToolStripMenuItem";
-            this.清空选中缓存ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.清空选中缓存ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.清空选中缓存ToolStripMenuItem.Text = "清空选中缓存";
             this.清空选中缓存ToolStripMenuItem.Click += new System.EventHandler(this.清空选中缓存ToolStripMenuItem_Click);
             // 
@@ -196,8 +211,8 @@ namespace RUINORERP.UI.SysConfig
             // kryptonSplitContainer2.Panel2
             // 
             this.kryptonSplitContainer2.Panel2.Controls.Add(this.kryptonPanel2);
-            this.kryptonSplitContainer2.Size = new System.Drawing.Size(590, 570);
-            this.kryptonSplitContainer2.SplitterDistance = 470;
+            this.kryptonSplitContainer2.Size = new System.Drawing.Size(592, 573);
+            this.kryptonSplitContainer2.SplitterDistance = 472;
             this.kryptonSplitContainer2.TabIndex = 0;
             // 
             // dataGridView1
@@ -207,21 +222,28 @@ namespace RUINORERP.UI.SysConfig
             this.dataGridView1.AllowUserToOrderColumns = true;
             dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
             this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridView1.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dataGridView1.BizInvisibleCols")));
             this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.CustomRowNo = false;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView1.EnableFiltering = false;
             this.dataGridView1.FieldNameList = null;
             this.dataGridView1.IsShowSumRow = false;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.NeedSaveColumnsXml = true;
             this.dataGridView1.RowTemplate.Height = 23;
             this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(590, 470);
+            this.dataGridView1.Size = new System.Drawing.Size(592, 472);
             this.dataGridView1.SumColumns = null;
             this.dataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.dataGridView1.SumRowCellFormat = "N2";
             this.dataGridView1.TabIndex = 1;
+            this.dataGridView1.UseBatchEditColumn = false;
             this.dataGridView1.UseCustomColumnDisplay = true;
             this.dataGridView1.UseSelectedColumn = false;
             this.dataGridView1.Use是否使用内置右键功能 = true;
@@ -235,9 +257,9 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel2.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel2.Name = "kryptonPanel2";
-            this.kryptonPanel2.Size = new System.Drawing.Size(590, 96);
-            this.kryptonPanel2.TabIndex = 0;
+            this.kryptonPanel2.Size = new System.Drawing.Size(592, 96);
             this.kryptonPanel2.StateCommon.Color1 = System.Drawing.Color.LightSteelBlue;
+            this.kryptonPanel2.TabIndex = 0;
             // 
             // btnRefreshCache
             // 
@@ -252,7 +274,7 @@ namespace RUINORERP.UI.SysConfig
             // 
             this.chkALL.Location = new System.Drawing.Point(150, 15);
             this.chkALL.Name = "chkALL";
-            this.chkALL.Size = new System.Drawing.Size(60, 25);
+            this.chkALL.Size = new System.Drawing.Size(49, 20);
             this.chkALL.TabIndex = 1;
             this.chkALL.Values.Text = "全选";
             // 
@@ -266,12 +288,16 @@ namespace RUINORERP.UI.SysConfig
             // 
             // tabCacheStatistics
             // 
+            this.tabCacheStatistics.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
             this.tabCacheStatistics.Controls.Add(this.kryptonSplitContainer3);
-            this.tabCacheStatistics.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabCacheStatistics.Location = new System.Drawing.Point(0, 0);
+            this.tabCacheStatistics.Flags = 65534;
+            this.tabCacheStatistics.LastVisibleSet = true;
+            this.tabCacheStatistics.MinimumSize = new System.Drawing.Size(150, 50);
             this.tabCacheStatistics.Name = "tabCacheStatistics";
-            this.tabCacheStatistics.Size = new System.Drawing.Size(794, 570);
+            this.tabCacheStatistics.Size = new System.Drawing.Size(798, 573);
             this.tabCacheStatistics.Text = "缓存统计";
+            this.tabCacheStatistics.ToolTipTitle = "Page ToolTip";
+            this.tabCacheStatistics.UniqueName = "ef030f2b6f52496b8260a325433bec58";
             // 
             // kryptonSplitContainer3
             // 
@@ -288,19 +314,7 @@ namespace RUINORERP.UI.SysConfig
             // kryptonSplitContainer3.Panel2
             // 
             this.kryptonSplitContainer3.Panel2.Controls.Add(this.statisticsNavigator);
-            // 
-            // statisticsNavigator
-            // 
-            this.statisticsNavigator.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.statisticsNavigator.Location = new System.Drawing.Point(0, 0);
-            this.statisticsNavigator.Name = "statisticsNavigator";
-            this.statisticsNavigator.Size = new System.Drawing.Size(794, 466);
-            this.statisticsNavigator.TabIndex = 0;
-            this.statisticsNavigator.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
-            this.tabPageTableStats,
-            this.tabPageItemStats});
-            this.statisticsNavigator.SelectedIndex = 0;
-            this.kryptonSplitContainer3.Size = new System.Drawing.Size(794, 570);
+            this.kryptonSplitContainer3.Size = new System.Drawing.Size(798, 573);
             this.kryptonSplitContainer3.SplitterDistance = 100;
             this.kryptonSplitContainer3.TabIndex = 0;
             // 
@@ -319,10 +333,10 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel3.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel3.Name = "kryptonPanel3";
-            this.kryptonPanel3.Size = new System.Drawing.Size(794, 100);
-            this.kryptonPanel3.TabIndex = 0;
-            this.kryptonPanel3.StateCommon.Color1 = System.Drawing.Color.LightSkyBlue;
+            this.kryptonPanel3.Size = new System.Drawing.Size(798, 100);
+            this.kryptonPanel3.StateCommon.Color1 = System.Drawing.Color.LightSteelBlue;
             this.kryptonPanel3.StateCommon.ColorStyle = Krypton.Toolkit.PaletteColorStyle.Solid;
+            this.kryptonPanel3.TabIndex = 0;
             // 
             // btnResetStats
             // 
@@ -346,7 +360,7 @@ namespace RUINORERP.UI.SysConfig
             // 
             this.kryptonLabel1.Location = new System.Drawing.Point(20, 20);
             this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel1.Size = new System.Drawing.Size(78, 20);
             this.kryptonLabel1.TabIndex = 6;
             this.kryptonLabel1.Values.Text = "缓存命中率:";
             // 
@@ -354,15 +368,15 @@ namespace RUINORERP.UI.SysConfig
             // 
             this.txtHitRatio.Location = new System.Drawing.Point(110, 20);
             this.txtHitRatio.Name = "txtHitRatio";
+            this.txtHitRatio.ReadOnly = true;
             this.txtHitRatio.Size = new System.Drawing.Size(100, 23);
             this.txtHitRatio.TabIndex = 7;
-            this.txtHitRatio.ReadOnly = true;
             // 
             // kryptonLabel2
             // 
             this.kryptonLabel2.Location = new System.Drawing.Point(20, 50);
             this.kryptonLabel2.Name = "kryptonLabel2";
-            this.kryptonLabel2.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel2.Size = new System.Drawing.Size(78, 20);
             this.kryptonLabel2.TabIndex = 8;
             this.kryptonLabel2.Values.Text = "缓存项总数:";
             // 
@@ -370,15 +384,15 @@ namespace RUINORERP.UI.SysConfig
             // 
             this.txtTotalItems.Location = new System.Drawing.Point(110, 50);
             this.txtTotalItems.Name = "txtTotalItems";
+            this.txtTotalItems.ReadOnly = true;
             this.txtTotalItems.Size = new System.Drawing.Size(100, 23);
             this.txtTotalItems.TabIndex = 9;
-            this.txtTotalItems.ReadOnly = true;
             // 
             // kryptonLabel3
             // 
             this.kryptonLabel3.Location = new System.Drawing.Point(230, 20);
             this.kryptonLabel3.Name = "kryptonLabel3";
-            this.kryptonLabel3.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel3.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel3.TabIndex = 10;
             this.kryptonLabel3.Values.Text = "缓存大小:";
             // 
@@ -386,15 +400,15 @@ namespace RUINORERP.UI.SysConfig
             // 
             this.txtCacheSize.Location = new System.Drawing.Point(320, 20);
             this.txtCacheSize.Name = "txtCacheSize";
+            this.txtCacheSize.ReadOnly = true;
             this.txtCacheSize.Size = new System.Drawing.Size(120, 23);
             this.txtCacheSize.TabIndex = 11;
-            this.txtCacheSize.ReadOnly = true;
             // 
             // kryptonLabel4
             // 
             this.kryptonLabel4.Location = new System.Drawing.Point(230, 50);
             this.kryptonLabel4.Name = "kryptonLabel4";
-            this.kryptonLabel4.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel4.Size = new System.Drawing.Size(78, 20);
             this.kryptonLabel4.TabIndex = 12;
             this.kryptonLabel4.Values.Text = "缓存表个数:";
             // 
@@ -402,50 +416,74 @@ namespace RUINORERP.UI.SysConfig
             // 
             this.txtTableCount.Location = new System.Drawing.Point(320, 50);
             this.txtTableCount.Name = "txtTableCount";
+            this.txtTableCount.ReadOnly = true;
             this.txtTableCount.Size = new System.Drawing.Size(120, 23);
             this.txtTableCount.TabIndex = 13;
-            this.txtTableCount.ReadOnly = true;
+            // 
+            // statisticsNavigator
+            // 
+            this.statisticsNavigator.ControlKryptonFormFeatures = false;
+            this.statisticsNavigator.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.statisticsNavigator.Location = new System.Drawing.Point(0, 0);
+            this.statisticsNavigator.Name = "statisticsNavigator";
+            this.statisticsNavigator.NavigatorMode = Krypton.Navigator.NavigatorMode.BarTabGroup;
+            this.statisticsNavigator.Owner = null;
+            this.statisticsNavigator.PageBackStyle = Krypton.Toolkit.PaletteBackStyle.ControlClient;
+            this.statisticsNavigator.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
+            this.tabPageTableStats,
+            this.tabPageItemStats});
+            this.statisticsNavigator.SelectedIndex = 1;
+            this.statisticsNavigator.Size = new System.Drawing.Size(798, 468);
+            this.statisticsNavigator.TabIndex = 0;
             // 
             // tabPageTableStats
             // 
+            this.tabPageTableStats.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
             this.tabPageTableStats.Controls.Add(this.dgvTableStatistics);
-            this.tabPageTableStats.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabPageTableStats.Location = new System.Drawing.Point(0, 0);
+            this.tabPageTableStats.Flags = 65534;
+            this.tabPageTableStats.LastVisibleSet = true;
+            this.tabPageTableStats.MinimumSize = new System.Drawing.Size(150, 50);
             this.tabPageTableStats.Name = "tabPageTableStats";
-            this.tabPageTableStats.Size = new System.Drawing.Size(794, 466);
-            this.tabPageTableStats.TabIndex = 1;
+            this.tabPageTableStats.Size = new System.Drawing.Size(796, 441);
             this.tabPageTableStats.Text = "按表统计";
+            this.tabPageTableStats.ToolTipTitle = "Page ToolTip";
+            this.tabPageTableStats.UniqueName = "08082faf7c764d6a8c225339bf6d6314";
             // 
             // dgvTableStatistics
             // 
             this.dgvTableStatistics.AllowUserToAddRows = false;
             this.dgvTableStatistics.AllowUserToDeleteRows = false;
+            this.dgvTableStatistics.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvTableStatistics.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvTableStatistics.Location = new System.Drawing.Point(0, 0);
             this.dgvTableStatistics.Name = "dgvTableStatistics";
             this.dgvTableStatistics.ReadOnly = true;
-            this.dgvTableStatistics.Size = new System.Drawing.Size(794, 466);
+            this.dgvTableStatistics.Size = new System.Drawing.Size(796, 441);
             this.dgvTableStatistics.TabIndex = 0;
             // 
             // tabPageItemStats
             // 
+            this.tabPageItemStats.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
             this.tabPageItemStats.Controls.Add(this.dgvItemStatistics);
-            this.tabPageItemStats.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabPageItemStats.Location = new System.Drawing.Point(0, 0);
+            this.tabPageItemStats.Flags = 65534;
+            this.tabPageItemStats.LastVisibleSet = true;
+            this.tabPageItemStats.MinimumSize = new System.Drawing.Size(150, 50);
             this.tabPageItemStats.Name = "tabPageItemStats";
-            this.tabPageItemStats.Size = new System.Drawing.Size(794, 466);
-            this.tabPageItemStats.TabIndex = 0;
+            this.tabPageItemStats.Size = new System.Drawing.Size(796, 441);
             this.tabPageItemStats.Text = "缓存项统计";
+            this.tabPageItemStats.ToolTipTitle = "Page ToolTip";
+            this.tabPageItemStats.UniqueName = "5f091cb828ba48a49c13006659c65802";
             // 
             // dgvItemStatistics
             // 
             this.dgvItemStatistics.AllowUserToAddRows = false;
             this.dgvItemStatistics.AllowUserToDeleteRows = false;
+            this.dgvItemStatistics.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvItemStatistics.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvItemStatistics.Location = new System.Drawing.Point(0, 0);
             this.dgvItemStatistics.Name = "dgvItemStatistics";
             this.dgvItemStatistics.ReadOnly = true;
-            this.dgvItemStatistics.Size = new System.Drawing.Size(794, 466);
+            this.dgvItemStatistics.Size = new System.Drawing.Size(796, 441);
             this.dgvItemStatistics.TabIndex = 0;
             // 
             // UCCacheManage
@@ -460,6 +498,7 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTabControl1)).EndInit();
             this.kryptonTabControl1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.tabCacheManage)).EndInit();
             this.tabCacheManage.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).EndInit();
             this.kryptonSplitContainer1.Panel1.ResumeLayout(false);
@@ -472,13 +511,13 @@ namespace RUINORERP.UI.SysConfig
             this.kryptonSplitContainer2.Panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).EndInit();
             this.kryptonSplitContainer2.Panel2.ResumeLayout(false);
-            this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).EndInit();
             this.kryptonPanel2.ResumeLayout(false);
             this.kryptonPanel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tabCacheStatistics)).EndInit();
             this.tabCacheStatistics.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer3.Panel1)).EndInit();
             this.kryptonSplitContainer3.Panel1.ResumeLayout(false);
@@ -489,12 +528,14 @@ namespace RUINORERP.UI.SysConfig
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel3)).EndInit();
             this.kryptonPanel3.ResumeLayout(false);
             this.kryptonPanel3.PerformLayout();
-            this.tabPageTableStats.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvTableStatistics)).EndInit();
-            this.tabPageItemStats.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvItemStatistics)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.statisticsNavigator)).EndInit();
             this.statisticsNavigator.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.tabPageTableStats)).EndInit();
+            this.tabPageTableStats.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTableStatistics)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tabPageItemStats)).EndInit();
+            this.tabPageItemStats.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvItemStatistics)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).EndInit();
             this.ResumeLayout(false);
 
@@ -535,5 +576,6 @@ namespace RUINORERP.UI.SysConfig
         private Krypton.Toolkit.KryptonDataGridView dgvTableStatistics;
         private Krypton.Toolkit.KryptonDataGridView dgvItemStatistics;
         private Krypton.Toolkit.KryptonListBox kryptonListBox1;
+        
     }
 }

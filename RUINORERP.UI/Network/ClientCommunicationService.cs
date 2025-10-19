@@ -408,10 +408,10 @@ namespace RUINORERP.UI.Network
                 }
 
                 // 启动心跳
-                _logger?.LogInformation("用户登录成功，开始启动心跳");
+               
                 _heartbeatManager.Start();
                 _heartbeatIsRunning = true;
-                _logger?.LogInformation("心跳启动成功");
+             
             }
             catch (Exception ex)
             {
@@ -757,7 +757,7 @@ namespace RUINORERP.UI.Network
 
             if (removedCount > 0)
             {
-                _logger?.LogInformation("清理了 {RemovedCount} 个超时请求", removedCount);
+                _logger?.LogDebug("清理了 {RemovedCount} 个超时请求", removedCount);
             }
         }
 
@@ -831,7 +831,7 @@ namespace RUINORERP.UI.Network
                     if (attempt < _networkConfig.MaxRetryAttempts)
                     {
                         var delay = retryStrategy.GetNextDelay(attempt);
-                        _logger?.LogInformation("等待 {DelayMs}ms 后进行第 {NextAttempt} 次重试",
+                        _logger?.LogDebug("等待 {DelayMs}ms 后进行第 {NextAttempt} 次重试",
                             delay, attempt + 1);
                         await Task.Delay(delay, ct);
                     }
@@ -1551,7 +1551,7 @@ namespace RUINORERP.UI.Network
         /// <param name="ct">取消令牌</param>
         /// <param name="timeoutMs">超时时间（毫秒）</param>
         /// <returns>包含指令信息的响应数据</returns>
-        public async Task<BaseCommand<TResponse>> SendCommandWithResponseAsync<TRequest, TResponse>(
+        public async Task<BaseCommand<TRequest,TResponse>> SendCommandWithResponseAsync<TRequest, TResponse>(
             BaseCommand<TRequest, TResponse> command,
             CancellationToken ct = default,
             int timeoutMs = 30000)
@@ -1562,7 +1562,7 @@ namespace RUINORERP.UI.Network
 
             if (packet == null)
             {
-                return BaseCommand<TResponse>.Error("未收到服务器响应");
+                return BaseCommand<TRequest,TResponse>.Error("未收到服务器响应");
             }
 
             var responseData = ProcessCommandResponseAsync<TResponse>(packet);
@@ -1571,11 +1571,11 @@ namespace RUINORERP.UI.Network
             if (responseData == null)
             {
                 _logger.LogWarning("命令响应数据为空或处理失败。命令ID: {CommandId}", command.CommandIdentifier);
-                return BaseCommand<TResponse>.Error("服务器返回了空响应数据");
+                return BaseCommand<TRequest,TResponse>.Error("服务器返回了空响应数据");
             }
 
-            var commandResponse = BaseCommand<TResponse>.Success(responseData, (responseData as ResponseBase)?.Message ?? "操作成功");
-            commandResponse.CommandId = command.CommandIdentifier;
+            var commandResponse = BaseCommand<TRequest,TResponse>.Success(responseData, (responseData as ResponseBase)?.Message ?? "操作成功");
+            commandResponse.CommandIdentifier = command.CommandIdentifier;
             return commandResponse;
         }
 

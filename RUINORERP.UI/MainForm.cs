@@ -737,7 +737,7 @@ namespace RUINORERP.UI
 
 
             InitRemind();
-            // logger.LogInformation("打开主窗体准备进入系统");
+
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
             {
                 //更新是不是可以异步？
@@ -1942,8 +1942,8 @@ namespace RUINORERP.UI
                 throw ex;
             }
             stopwatch.Stop();
-            MainForm.Instance.logger.LogInformation($"初始化菜单InitMenu 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
-            MainForm.Instance.uclog.AddLog($"初始化菜单InitMenu 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
+            MainForm.Instance.logger.LogInformation($"初始化菜单执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
+            MainForm.Instance.uclog.AddLog($"初始化菜单执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
         }
 
 

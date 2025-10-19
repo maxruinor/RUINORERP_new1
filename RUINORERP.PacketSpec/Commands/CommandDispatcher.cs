@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,7 +55,7 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly Channel<QueuedCommand>[] _commandChannels;
         private readonly Task[] _channelProcessors;
         // 熔断器
-        private readonly IAsyncPolicy<BaseCommand<IResponse>> _circuit;
+        private readonly IAsyncPolicy<BaseCommand<IRequest, IResponse>> _circuit;
         // 幂等过滤器
         private readonly IdempotencyFilter _idempotent = new IdempotencyFilter();
         // 回退处理器 - 用于处理没有专门处理器的命令
@@ -106,7 +106,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="circuitBreakerPolicy">熔断器策略，默认为6次失败后熔断，30秒后恢复</param>
         public CommandDispatcher(ILogger<CommandDispatcher> logger, CommandScanner commandScanner, ICommandHandlerFactory handlerFactory = null,
             int maxConcurrencyPerCommand = 0,
-            IAsyncPolicy<BaseCommand<IResponse>> circuitBreakerPolicy = null)
+            IAsyncPolicy<BaseCommand<IRequest, IResponse>> circuitBreakerPolicy = null)
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _commandScanner = commandScanner ?? throw new ArgumentNullException(nameof(commandScanner));
@@ -122,7 +122,7 @@ namespace RUINORERP.PacketSpec.Commands
 
             // 使用传入的熔断器策略，如果未提供则使用默认策略
             _circuit = circuitBreakerPolicy ?? Policy
-                .HandleResult<BaseCommand<IResponse>>(r => r?.ResponseData?.IsSuccess == false)
+                .HandleResult<BaseCommand<IRequest, IResponse>>(r => r?.Response?.IsSuccess == false)
                 .CircuitBreakerAsync(10, TimeSpan.FromMinutes(1)); // 增加到10次失败后熔断，持续1分钟
 
             // 创建三个优先级的Channel队列
@@ -192,18 +192,18 @@ namespace RUINORERP.PacketSpec.Commands
                             if (handlerType.IsGenericTypeDefinition)
                             {
                                 // 减少调试日志，在生产环境中不记录
-                                #if DEBUG
+#if DEBUG
                                 LogInfo($"跳过泛型类型定义: {handlerType.FullName}");
-                                #endif
+#endif
                                 continue;
                             }
 
                             var handler = _handlerFactory.CreateHandler(handlerType);
                             await _commandScanner.RegisterHandlerAsync(handler, cancellationToken);
                             // 减少信息日志，在生产环境中不记录每个处理器的注册
-                            #if DEBUG
+#if DEBUG
                             LogInfo($"处理器 {handler.Name} [ID: {handler.HandlerId}] 注册成功");
-                            #endif
+#endif
                         }
                         catch (Exception ex)
                         {
@@ -268,21 +268,21 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        public async Task<BaseCommand<IResponse>> DispatchAsync(PacketModel packet, ICommand command, CancellationToken cancellationToken = default)
+        public async Task<BaseCommand<IRequest, IResponse>> DispatchAsync(PacketModel packet, ICommand command, CancellationToken cancellationToken = default)
         {
 
 
             if (!_isInitialized)
             {
                 LogError("命令调度器未初始化");
-                return BaseCommand<IResponse>.CreateError("命令调度器未初始化", 500);
+                return BaseCommand<IRequest, IResponse>.CreateError("命令调度器未初始化", 500);
             }
 
             // 确定命令优先级
             var channel = GetPriorityChannel(command.Priority);
 
             // 创建任务完成源
-            var tcs = new TaskCompletionSource<BaseCommand<IResponse>>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var tcs = new TaskCompletionSource<BaseCommand<IRequest, IResponse>>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             // 创建队列项
             var queued = new QueuedCommand
@@ -296,7 +296,7 @@ namespace RUINORERP.PacketSpec.Commands
             if (!_commandChannels[channel].Writer.TryWrite(queued))
             {
                 LogWarning($"Channel {channel} 已满，丢弃命令 {command.CommandIdentifier.FullCode}");
-                return BaseCommand<IResponse>.CreateError("系统繁忙，请稍后重试", 503);
+                return BaseCommand<IRequest, IResponse>.CreateError("系统繁忙，请稍后重试", 503);
             }
 
             // 等待结果
@@ -325,22 +325,22 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cmd">命令对象</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<BaseCommand<IResponse>> ProcessAsync(QueuedCommand cmd, CancellationToken ct)
+        private async Task<BaseCommand<IRequest, IResponse>> ProcessAsync(QueuedCommand cmd, CancellationToken ct)
         {
             if (cmd == null)
             {
-                return BaseCommand<IResponse>.CreateError("命令对象不能为空", 400);
+                return BaseCommand<IRequest, IResponse>.CreateError("命令对象不能为空", 400);
             }
 
             if (!_isInitialized)
             {
-                return BaseCommand<IResponse>.CreateError("调度器未初始化", 500);
+                return BaseCommand<IRequest, IResponse>.CreateError("调度器未初始化", 500);
             }
 
             // 创建链接的取消令牌，处理命令超时
             using (var linkedCts = CreateLinkedCancellationToken(ct, cmd.Command))
             {
-                BaseCommand<IResponse> response = null;
+                BaseCommand<IRequest, IResponse> response = null;
 #pragma warning disable CS0168 // 声明了变量，但从未使用过
                 try
                 {
@@ -348,7 +348,7 @@ namespace RUINORERP.PacketSpec.Commands
                     if (cmd?.Command == null)
                     {
                         LogError($"命令对象为空");
-                        return BaseCommand<IResponse>.CreateError($"命令对象为空", 400);
+                        return BaseCommand<IRequest, IResponse>.CreateError($"命令对象为空", 400);
                     }
 
                     // 第二层：命令预处理（获取指令信息，延迟具体解析）
@@ -356,7 +356,7 @@ namespace RUINORERP.PacketSpec.Commands
                     if (!preprocessResult.Success)
                     {
                         LogWarning($"命令预处理失败: {preprocessResult.ErrorMessage}");
-                        return BaseCommand<IResponse>.CreateError($"命令预处理失败: {preprocessResult.ErrorMessage}", 400);
+                        return BaseCommand<IRequest, IResponse>.CreateError($"命令预处理失败: {preprocessResult.ErrorMessage}", 400);
                     }
 
                     // 幂等性检查 - 基于命令标识符和请求参数生成唯一键
@@ -395,12 +395,12 @@ namespace RUINORERP.PacketSpec.Commands
                             catch (Exception ex)
                             {
                                 LogError($"回退处理器处理命令时发生异常: {cmd.Command.CommandIdentifier.FullCode}", ex);
-                                return BaseCommand<IResponse>.CreateError($"回退处理器异常: {ex.Message}", 500);
+                                return BaseCommand<IRequest, IResponse>.CreateError($"回退处理器异常: {ex.Message}", 500);
                             }
                         }
 
                         // 如果回退处理器也不可用，返回原始的404错误
-                        return BaseCommand<IResponse>.CreateError(
+                        return BaseCommand<IRequest, IResponse>.CreateError(
                             $"没有找到适合的处理器处理命令: {cmd.Command.CommandIdentifier.FullCode}", 404);
                     }
 
@@ -408,7 +408,7 @@ namespace RUINORERP.PacketSpec.Commands
                     var bestHandler = SelectBestHandler(handlers, cmd.Command);
                     if (bestHandler == null)
                     {
-                        return BaseCommand<IResponse>.CreateError(
+                        return BaseCommand<IRequest, IResponse>.CreateError(
                             $"无法选择合适的处理器处理命令: {cmd.Command.CommandIdentifier.FullCode}", 500);
                     }
 
@@ -422,18 +422,18 @@ namespace RUINORERP.PacketSpec.Commands
                     {
                         // 熔断器已打开，记录详细信息并返回适当的错误
                         LogWarning($"命令 {cmd.Command.CommandIdentifier} [ID: {commandIdentifier.FullCode}] 的熔断器已打开，拒绝执行: {ex.Message}");
-                        return BaseCommand<IResponse>.CreateError($"服务暂时不可用，熔断器已打开: {ex.Message}", 503);
+                        return BaseCommand<IRequest, IResponse>.CreateError($"服务暂时不可用，熔断器已打开: {ex.Message}", 503);
                     }
 
                     //// 设置执行时间
-                    if (response != null && response.ResponseData != null)
+                    if (response != null && response.Response != null)
                     {
-                        response.ResponseData.ExecutionTimeMs = (long)(DateTime.Now - startTime).TotalMilliseconds;
+                        response.Response.ExecutionTimeMs = (long)(DateTime.Now - startTime).TotalMilliseconds;
                     }
 
-                    if (response == null || response.ResponseData == null)
+                    if (response == null)
                     {
-                        response = BaseCommand<IResponse>.CreateError("处理器返回空结果", 500);
+                        response = BaseCommand<IRequest, IResponse>.CreateError("处理器返回空结果", 500);
                     }
 
                     return response;
@@ -442,18 +442,18 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     // 区分超时/取消异常与外部取消请求
                     LogInfo($"命令处理超时: {cmd.Command.CommandIdentifier.FullCode}");
-                    return BaseCommand<IResponse>.CreateError("命令处理超时", 504);
+                    return BaseCommand<IRequest, IResponse>.CreateError("命令处理超时", 504);
                 }
                 catch (OperationCanceledException ex)
                 {
                     // 外部取消请求
                     LogInfo($"命令处理被外部取消: {cmd.Command.CommandIdentifier.FullCode}");
-                    return BaseCommand<IResponse>.CreateError("命令处理被取消", 504);
+                    return BaseCommand<IRequest, IResponse>.CreateError("命令处理被取消", 504);
                 }
                 catch (Exception ex)
                 {
                     LogError($"分发命令 {cmd.Command.CommandIdentifier.FullCode} 异常: {ex.Message}", ex);
-                    return BaseCommand<IResponse>.CreateError($"命令分发异常: {ex.Message}", 500);
+                    return BaseCommand<IRequest, IResponse>.CreateError($"命令分发异常: {ex.Message}", 500);
                 }
                 finally
                 {
@@ -583,9 +583,9 @@ namespace RUINORERP.PacketSpec.Commands
                             }
 
                             // 减少信息日志，在生产环境中不记录
-                            #if DEBUG
+#if DEBUG
                             LogInfo("回退处理器初始化并启动成功");
-                            #endif
+#endif
                         }
                         catch (Exception ex)
                         {
@@ -752,9 +752,9 @@ namespace RUINORERP.PacketSpec.Commands
                 if (dynamicHandler != null)
                 {
                     // 减少调试日志，在生产环境中不记录
-                    #if DEBUG
+#if DEBUG
                     LogDebug($"使用动态处理器处理命令类型: {commandType?.Name}, 命令代码: {commandCode}");
-                    #endif
+#endif
                     return new HandlerCollection(new List<ICommandHandler> { dynamicHandler }, commandType);
                 }
             }
@@ -799,9 +799,9 @@ namespace RUINORERP.PacketSpec.Commands
                     catch (Exception ex)
                     {
                         // 减少调试日志，在生产环境中不记录
-                        #if DEBUG
+#if DEBUG
                         LogDebug($"获取程序集 {assembly.GetName().Name} 的处理器缓存失败: {ex.Message}");
-                        #endif
+#endif
                     }
                 }
             }
@@ -930,7 +930,7 @@ namespace RUINORERP.PacketSpec.Commands
             public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
         }
 
-  
+
 
         /// <summary>
         /// 预处理命令（获取指令信息，延迟具体解析）
@@ -1156,9 +1156,9 @@ namespace RUINORERP.PacketSpec.Commands
         private void LogDebug(string message)
         {
             // 在生产环境中减少调试日志
-            #if DEBUG
+#if DEBUG
             Logger.LogDebug(message);
-            #endif
+#endif
         }
 
         /// <summary>

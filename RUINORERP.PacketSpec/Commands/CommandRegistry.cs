@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -349,7 +349,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Timestamp = DateTime.Now
                 });
 
-                _logger?.LogInformation("命令类型注册成功: {CommandId} -> {TypeName}", commandId, commandType.Name);
+                _logger?.LogDebug("命令类型注册成功: {CommandId} -> {TypeName}", commandId, commandType.Name);
 
                 return new RegistrationResult { Success = true, Info = registrationInfo };
             }
@@ -402,7 +402,7 @@ namespace RUINORERP.PacketSpec.Commands
                         Timestamp = DateTime.Now
                     });
 
-                    _logger?.LogInformation("命令类型注销成功: {CommandId}", commandId);
+                    _logger?.LogDebug("命令类型注销成功: {CommandId}", commandId);
                     return true;
                 }
                 
@@ -494,7 +494,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Timestamp = DateTime.Now
                 });
 
-                _logger?.LogInformation("处理器类型注册成功: {TypeName}", handlerType.Name);
+                _logger?.LogDebug("处理器类型注册成功: {TypeName}", handlerType.Name);
 
                 return new RegistrationResult { Success = true, Info = registrationInfo };
             }
@@ -665,7 +665,7 @@ namespace RUINORERP.PacketSpec.Commands
                         Timestamp = DateTime.Now
                     });
 
-                    _logger?.LogInformation("处理器类型注销成功: {TypeName}", handlerName);
+                    _logger?.LogDebug("处理器类型注销成功: {TypeName}", handlerName);
                     return true;
                 }
                 
@@ -750,7 +750,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
             }
 
-            _logger?.LogInformation("延迟注册处理完成: 成功 {SuccessCount}, 失败 {FailedCount}", processedCount, failedCount);
+            _logger?.LogDebug("延迟注册处理完成: 成功 {SuccessCount}, 失败 {FailedCount}", processedCount, failedCount);
             return results;
         }
 
@@ -769,7 +769,7 @@ namespace RUINORERP.PacketSpec.Commands
         public void ClearPendingRegistrations()
         {
             while (_pendingRegistrations.TryDequeue(out _)) { }
-            _logger?.LogInformation("已清空延迟注册队列");
+            _logger?.LogDebug("已清空延迟注册队列");
         }
 
         #endregion
@@ -869,7 +869,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             _commandConflicts.Clear();
             _handlerConflicts.Clear();
-            _logger?.LogInformation("已清理冲突记录");
+            _logger?.LogDebug("已清理冲突记录");
         }
 
         #endregion
@@ -1017,7 +1017,7 @@ namespace RUINORERP.PacketSpec.Commands
                 _commandConflicts.Clear();
                 _handlerConflicts.Clear();
                 
-                _logger?.LogInformation("已清理所有注册信息");
+                _logger?.LogDebug("已清理所有注册信息");
             }
             finally
             {
@@ -1032,7 +1032,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             _registrationStatus.Clear();
             _commandConflicts.Clear();
-            _logger?.LogInformation("已清理命令注册信息");
+            _logger?.LogDebug("已清理命令注册信息");
         }
 
         /// <summary>
@@ -1042,7 +1042,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             _handlerRegistrationStatus.Clear();
             _handlerConflicts.Clear();
-            _logger?.LogInformation("已清理处理器注册信息");
+            _logger?.LogDebug("已清理处理器注册信息");
         }
 
         #endregion

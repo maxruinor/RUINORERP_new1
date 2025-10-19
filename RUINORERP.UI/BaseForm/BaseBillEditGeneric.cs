@@ -2869,7 +2869,7 @@ namespace RUINORERP.UI.BaseForm
                                             autoApproval.ErrorMsg = $"应付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                             if (MainForm.Instance.AppContext.SysConfig.ShowDebugInfo)
                                             {
-                                                MainForm.Instance.logger.LogInformation(autoApproval.ErrorMsg);
+                                                MainForm.Instance.logger.LogDebug(autoApproval.ErrorMsg);
                                             }
                                             await MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("应付款单自动审核失败", autoApproval.ReturnObject as tb_FM_ReceivablePayable, autoApproval.ErrorMsg);
                                         }

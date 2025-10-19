@@ -58,12 +58,12 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="cmd">队列命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        protected override async Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<BaseCommand<IRequest, IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             if (cmd?.Command == null)
             {
                 _logger.LogError("命令或命令数据为空");
-                return BaseCommand<IResponse>.CreateError("命令数据无效", 400);
+                return BaseCommand<IRequest, IResponse>.CreateError("命令数据无效", 400);
             }
 
             try
@@ -75,7 +75,7 @@ namespace RUINORERP.Server.Network.Commands
                 var config = await GetBusinessConfigurationAsync(requestType);
                 if (config == null)
                 {
-                    return BaseCommand<IResponse>.CreateError($"未找到业务配置: {requestType.Name}", 404);
+                    return BaseCommand<IRequest, IResponse>.CreateError($"未找到业务配置: {requestType.Name}", 404);
                 }
 
                 // 执行业务处理流程
@@ -84,12 +84,12 @@ namespace RUINORERP.Server.Network.Commands
             catch (OperationCanceledException)
             {
                 _logger.LogWarning("命令处理被取消");
-                return BaseCommand<IResponse>.CreateError("操作被取消", 499);
+                return BaseCommand<IRequest, IResponse>.CreateError("操作被取消", 499);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "可配置业务处理时发生异常");
-                return BaseCommand<IResponse>.CreateError($"处理失败: {ex.Message}", 500);
+                return BaseCommand<IRequest, IResponse>.CreateError($"处理失败: {ex.Message}", 500);
             }
         }
 
@@ -110,7 +110,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 执行业务处理流程 - 提取为独立方法
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ExecuteBusinessProcessAsync(object request, BusinessConfigInfo config, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IRequest, IResponse>> ExecuteBusinessProcessAsync(object request, BusinessConfigInfo config, CancellationToken cancellationToken)
         {
             _logger.LogInformation($"执行配置式业务处理：{request.GetType().Name}");
 
@@ -118,7 +118,7 @@ namespace RUINORERP.Server.Network.Commands
             var validationResult = await ExecuteValidationRules(request, config);
             if (!validationResult.IsValid)
             {
-                return BaseCommand<IResponse>.CreateError($"验证失败: {string.Join(", ", validationResult.Errors)}");
+                return BaseCommand<IRequest, IResponse>.CreateError($"验证失败: {string.Join(", ", validationResult.Errors)}");
             }
 
             // 2. 执行前置处理
@@ -188,7 +188,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 执行业务逻辑
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ExecuteBusinessLogic(object request, BusinessConfigInfo config, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IRequest, IResponse>> ExecuteBusinessLogic(object request, BusinessConfigInfo config, CancellationToken cancellationToken)
         {
             return config.BusinessType switch
             {
@@ -197,14 +197,14 @@ namespace RUINORERP.Server.Network.Commands
                 BusinessType.Delete => await ExecuteDelete(request, config),
                 BusinessType.Query => await ExecuteQuery(request, config, cancellationToken),
                 BusinessType.Custom => await ExecuteCustomBusiness(request, config, cancellationToken),
-                _ => BaseCommand<IResponse>.CreateError($"不支持的業務类型: {config.BusinessType}")
+                _ => BaseCommand<IRequest, IResponse>.CreateError($"不支持的業務类型: {config.BusinessType}")
             };
         }
 
         /// <summary>
         /// 执行创建操作
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ExecuteCreate(object request, BusinessConfigInfo config)
+        private async Task<BaseCommand<IRequest, IResponse>> ExecuteCreate(object request, BusinessConfigInfo config)
         {
             var data = ExtractData(request, config.DataMapping);
             var result = await _dataAccessor.CreateAsync(data, config.EntityType);
@@ -213,13 +213,13 @@ namespace RUINORERP.Server.Network.Commands
                 Message = result.ToString(),
                 IsSuccess = true
             };
-            return BaseCommand<IResponse>.CreateSuccess(response);
+            return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
         }
 
         /// <summary>
         /// 执行更新操作
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ExecuteUpdate(object request, BusinessConfigInfo config)
+        private async Task<BaseCommand<IRequest, IResponse>> ExecuteUpdate(object request, BusinessConfigInfo config)
         {
             var data = ExtractData(request, config.DataMapping);
             var result = await _dataAccessor.UpdateAsync(data, config.EntityType);
@@ -228,13 +228,13 @@ namespace RUINORERP.Server.Network.Commands
                 Message = result.ToString(),
                 IsSuccess = true
             };
-            return BaseCommand<IResponse>.CreateSuccess(response);
+            return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
         }
 
         /// <summary>
         /// 执行删除操作
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ExecuteDelete(object request, BusinessConfigInfo config)
+        private async Task<BaseCommand<IRequest, IResponse>> ExecuteDelete(object request, BusinessConfigInfo config)
         {
             var id = ExtractId(request, config.IdMapping);
             var result = await _dataAccessor.DeleteAsync(id, config.EntityType);
@@ -243,13 +243,13 @@ namespace RUINORERP.Server.Network.Commands
                 Message = result.ToString(),
                 IsSuccess = true
             };
-            return BaseCommand<IResponse>.CreateSuccess(response);
+            return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
         }
 
         /// <summary>
         /// 执行查询操作
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ExecuteQuery(object request, BusinessConfigInfo config, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IRequest, IResponse>> ExecuteQuery(object request, BusinessConfigInfo config, CancellationToken cancellationToken)
         {
             var queryParameters = ExtractQueryParameters(request, config.QueryMapping);
             var result = await _dataAccessor.QueryAsync(queryParameters, config.EntityType, cancellationToken);
@@ -259,13 +259,13 @@ namespace RUINORERP.Server.Network.Commands
                 IsSuccess = true
             };
             response.WithMetadata("QueryResult", result);
-            return BaseCommand<IResponse>.CreateSuccess(response);
+            return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
         }
 
         /// <summary>
         /// 执行自定义业务逻辑
         /// </summary>
-        private async Task<BaseCommand<IResponse>> ExecuteCustomBusiness(object request, BusinessConfigInfo config, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IRequest, IResponse>> ExecuteCustomBusiness(object request, BusinessConfigInfo config, CancellationToken cancellationToken)
         {
             // 这里可以集成脚本引擎或其他动态执行机制
             _logger.LogInformation($"执行自定义业务逻辑: {config.CustomLogic}");
@@ -274,16 +274,16 @@ namespace RUINORERP.Server.Network.Commands
             if (!string.IsNullOrEmpty(config.CustomLogic))
             {
                 // 实际项目中可以集成更强大的脚本引擎
-                return BaseCommand<IResponse>.CreateSuccess(new ResponseBase(), "自定义业务执行成功");
+                return BaseCommand<IRequest, IResponse>.CreateSuccess(new ResponseBase(), "自定义业务执行成功");
             }
 
-            return BaseCommand<IResponse>.CreateError("自定义业务逻辑未配置");
+            return BaseCommand<IRequest, IResponse>.CreateError("自定义业务逻辑未配置");
         }
 
         /// <summary>
         /// 执行后置处理
         /// </summary>
-        private async Task ExecutePostProcessing(object request, BaseCommand<IResponse> result, List<ProcessingRule> rules)
+        private async Task ExecutePostProcessing(object request, BaseCommand<IRequest, IResponse> result, List<ProcessingRule> rules)
         {
             foreach (var rule in rules)
             {

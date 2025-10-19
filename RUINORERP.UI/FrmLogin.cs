@@ -220,7 +220,7 @@ namespace RUINORERP.UI
                                     var loginSuccess = await userLogin.LoginAsync(UserGlobalConfig.Instance.UseName, UserGlobalConfig.Instance.PassWord);
 
                                     // 检查登录结果
-                                    if (loginSuccess == null || !loginSuccess.ResponseData.IsSuccess)
+                                    if (loginSuccess == null || !loginSuccess.IsSuccess)
                                     {
                                         //MessageBox.Show($"登录失败: {loginSuccess.ErrorMessage}", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                         //base.Cursor = Cursors.Default;
@@ -237,7 +237,7 @@ namespace RUINORERP.UI
                                     if (!result)
                                     {
                                         MessageBox.Show("验证失败或超时请重试");
-                                        //MainForm.Instance.logger.LogInformation("验证失败或超时请重试");
+                                        //MainForm.Instance.logger.LogDebug("验证失败或超时请重试");
                                         //base.Cursor = Cursors.Default;
                                         return;
                                     }

@@ -8,6 +8,7 @@ using System;
 using System.Text;
 using RUINORERP.PacketSpec.Enums.Core;
 using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.PacketSpec.Commands.Message
 {
@@ -167,7 +168,7 @@ namespace RUINORERP.PacketSpec.Commands.Message
             }
             catch (Exception ex)
             {
-                LogError("反序列化自定义数据失败: " + ex.Message, ex);
+                Logger.LogError("反序列化自定义数据失败: " + ex.Message, ex);
                 return false;
             }
         }

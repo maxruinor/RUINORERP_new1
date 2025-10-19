@@ -30,7 +30,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        Task<BaseCommand<IResponse>> DispatchAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken = default);
+        Task<BaseCommand<IRequest, IResponse>> DispatchAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken = default);
 
  
 

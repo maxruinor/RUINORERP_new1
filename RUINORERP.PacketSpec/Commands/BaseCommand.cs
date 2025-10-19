@@ -22,6 +22,7 @@ using System.Collections.Concurrent;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using System.Collections.Generic;
 using RUINORERP.PacketSpec.Errors;
+using System.Runtime.CompilerServices;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -78,6 +79,9 @@ namespace RUINORERP.PacketSpec.Commands
             }
         }
 
+
+
+
         [Key(51)]
         public TResponse Response
         {
@@ -128,7 +132,7 @@ namespace RUINORERP.PacketSpec.Commands
                     _requestContainer.BinaryData = null;
                 }
             }
-            
+
             // 设置响应数据
             Response = responseData;
         }
@@ -150,12 +154,184 @@ namespace RUINORERP.PacketSpec.Commands
                     _requestContainer.BinaryData = null;
                 }
             }
-            
+
             // 设置响应数据
             if (_responseContainer == null)
                 _responseContainer = new CommandDataContainer<TResponse>();
             _responseContainer.BinaryData = responseData;
         }
+
+
+        #region 构建默认响应数据
+
+        /// <summary>
+        /// 构造函数 - 创建成功响应
+        /// </summary>
+        /// <param name="responseData">响应数据</param>
+        /// <param name="message">成功消息</param>
+        public BaseCommand(TResponse responseData, string message = "操作成功")
+        {
+            Response = responseData;
+            responseData.IsSuccess = true;
+            responseData.Message = message;
+        }
+
+        /// <summary>
+        /// 构造函数 - 创建错误响应
+        /// </summary>
+        /// <param name="errorMessage">错误消息</param>
+        /// <param name="errorCode">错误代码</param>
+        public BaseCommand(string errorMessage, int Code = 400)
+        {
+
+            // 如果TResponse是ResponseBase类型，创建错误响应
+            if (typeof(TResponse) == typeof(ResponseBase) || typeof(TResponse).IsSubclassOf(typeof(ResponseBase)))
+            {
+                var errorResponse = Activator.CreateInstance(typeof(TResponse)) as ResponseBase;
+                if (errorResponse != null)
+                {
+                    errorResponse.Message = errorMessage;
+                    errorResponse.IsSuccess = false;
+                    errorResponse.ErrorCode = Code;
+                    Response = errorResponse as TResponse;
+                }
+            }
+        }
+
+        public BaseCommand(ErrorCode errorCode)
+        {
+
+            // 如果TResponse是ResponseBase类型，创建错误响应
+            if (typeof(TResponse) == typeof(ResponseBase) || typeof(TResponse).IsSubclassOf(typeof(ResponseBase)))
+            {
+                var errorResponse = Activator.CreateInstance(typeof(TResponse)) as ResponseBase;
+                if (errorResponse != null)
+                {
+                    errorResponse.Message = errorCode.Message;
+                    errorResponse.ErrorCode = errorCode.Code;
+                    errorResponse.IsSuccess = false;
+                    Response = errorResponse as TResponse;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 静态方法 - 创建成功响应
+        /// </summary>
+        /// <param name="responseData">响应数据</param>
+        /// <param name="message">成功消息</param>
+        /// <returns>成功响应</returns>
+        public static BaseCommand<TRequest, TResponse> Success(TResponse responseData, string message = "操作成功")
+        {
+            return new BaseCommand<TRequest, TResponse>(responseData, message);
+        }
+
+        /// <summary>
+        /// 静态方法 - 创建成功响应（兼容ResponseBase.CreateSuccess）
+        /// </summary>
+        /// <param name="responseData">响应数据</param>
+        /// <param name="message">成功消息</param>
+        /// <returns>成功响应</returns>
+        public static BaseCommand<TRequest, TResponse> CreateSuccess(TResponse responseData, string message = "操作成功")
+        {
+            return Success(responseData, message);
+        }
+
+        /// <summary>
+        /// 添加元数据（链式调用）
+        /// </summary>
+        /// <param name="key">元数据键</param>
+        /// <param name="value">元数据值</param>
+        /// <returns>当前实例</returns>
+        public BaseCommand<TRequest, TResponse> WithMetadata(string key, object value)
+        {
+            Metadata[key] = value;
+            return this;
+        }
+
+
+
+
+
+        /// <summary>
+        /// 批量添加元数据（链式调用）
+        /// </summary>
+        /// <param name="metadata">元数据字典</param>
+        /// <returns>当前实例</returns>
+        public BaseCommand<TRequest, TResponse> WithMetadata(Dictionary<string, object> metadata)
+        {
+            foreach (var item in metadata)
+            {
+                Metadata[item.Key] = item.Value;
+            }
+            return this;
+        }
+
+
+        /// <summary>
+        /// 静态方法 - 创建错误响应
+        /// </summary>
+        /// <param name="errorMessage">错误消息</param>
+        /// <param name="errorCode">错误代码</param>
+        /// <returns>错误响应</returns>
+        public static BaseCommand<TRequest, TResponse> Error(string errorMessage)
+        {
+            return new BaseCommand<TRequest, TResponse>(errorMessage);
+        }
+        public static BaseCommand<TRequest, TResponse> Error(string errorMessage, int errorCode)
+        {
+            return new BaseCommand<TRequest, TResponse>(errorMessage, errorCode);
+        }
+        /// <summary>
+        /// 静态方法 - 创建错误响应（兼容ResponseBase.CreateError）
+        /// </summary>
+        /// <param name="errorMessage">错误消息</param>
+        /// <param name="errorCode">错误代码</param>
+        /// <returns>错误响应</returns>
+        public static BaseCommand<TRequest, TResponse> CreateError(string errorMessage)
+        {
+            return Error(errorMessage);
+        }
+
+        public static BaseCommand<TRequest, TResponse> CreateError(string errorMessage, int ErrorCode)
+        {
+            return Error(errorMessage, ErrorCode);
+        }
+
+        public static BaseCommand<TRequest, TResponse> CreateError(ErrorCode error)
+        {
+            return Error(error);
+        }
+
+        /// <summary>
+        /// 从FluentValidation验证结果创建失败响应
+        /// </summary>
+        /// <param name="validationResult">FluentValidation验证结果</param>
+        /// <param name="code">错误代码</param>
+        /// <returns>验证错误响应</returns>
+        public static BaseCommand<TRequest, TResponse> CreateValidationError(FluentValidation.Results.ValidationResult validationResult)
+        {
+            if (validationResult == null || validationResult.IsValid)
+                return CreateError("验证失败");
+
+            var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+            var message = string.Join("; ", errorMessages);
+
+            var errorResponse = CreateError(message);
+
+            // 添加详细的验证错误信息到元数据
+            errorResponse.WithMetadata("ValidationErrors", validationResult.Errors.Select(e => new
+            {
+                Field = e.PropertyName,
+                Message = e.ErrorMessage,
+                AttemptedValue = e.AttemptedValue
+            }).ToList());
+
+            return errorResponse;
+        }
+
+        #endregion
+
     }
 
     /// <summary>
@@ -167,6 +343,13 @@ namespace RUINORERP.PacketSpec.Commands
         public BaseCommand()
         {
         }
+
+        /// <summary>
+        /// 元数据字典 - 用于存储额外的响应信息
+        /// </summary>
+        [Key(9)]
+        public Dictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
+
 
 
         protected virtual object GetSerializableDataCore() { return null; }
@@ -201,6 +384,10 @@ namespace RUINORERP.PacketSpec.Commands
         [Key(32)]
         public CommandPriority Priority { get; set; } = CommandPriority.Normal;
 
+
+
+
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -233,7 +420,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
             catch (Exception ex)
             {
-                LogError($"序列化命令失败: {ex.Message}", ex);
+                Logger.LogError($"序列化命令失败: {ex.Message}", ex);
                 return null;
             }
         }
@@ -265,7 +452,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
             catch (Exception ex)
             {
-                LogError($"反序列化命令失败: {ex.Message}", ex);
+                Logger.LogError($"反序列化命令失败: {ex.Message}", ex);
                 return false;
             }
         }
@@ -297,7 +484,7 @@ namespace RUINORERP.PacketSpec.Commands
             }
             catch (Exception ex)
             {
-                LogError($"MessagePack反序列化命令失败: {ex.Message}", ex);
+                Logger.LogError($"MessagePack反序列化命令失败: {ex.Message}", ex);
                 return false;
             }
         }
@@ -397,7 +584,7 @@ namespace RUINORERP.PacketSpec.Commands
                 Array.Clear(RequestDataByMessagePack, 0, RequestDataByMessagePack.Length);
                 RequestDataByMessagePack = null;
             }
-            
+
             // 设置响应数据
             ResponseDataByMessagePack = responseData;
         }
@@ -411,7 +598,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             // 序列化响应数据
             var responseBytes = UnifiedSerializationService.SerializeWithMessagePack(responseData);
-            
+
             // 调用字节数组版本
             ClearRequestAndSetResponse(responseBytes);
         }
@@ -544,48 +731,6 @@ namespace RUINORERP.PacketSpec.Commands
 
         #region 辅助方法
 
-        /// <summary>
-        /// 记录调试日志
-        /// </summary>
-        protected void LogDebug(string message)
-        {
-            // 在生产环境中减少调试日志
-            #if DEBUG
-            Logger.LogDebug(message);
-            #endif
-        }
-
-        /// <summary>
-        /// 记录信息日志
-        /// </summary>
-        protected void LogInfo(string message)
-        {
-            // 仅记录关键信息日志
-            Logger.LogInformation(message);
-        }
-
-        /// <summary>
-        /// 记录警告日志
-        /// </summary>
-        protected void LogWarning(string message)
-        {
-            Logger.LogWarning(message);
-        }
-
-        /// <summary>
-        /// 记录错误日志
-        /// </summary>
-        protected void LogError(string message, Exception ex = null)
-        {
-            if (ex != null)
-            {
-                Logger.LogError(ex, message);
-            }
-            else
-            {
-                Logger.LogError(message);
-            }
-        }
 
         /// <summary>
         /// 创建响应数据包
@@ -606,8 +751,8 @@ namespace RUINORERP.PacketSpec.Commands
             return new OriginalData(cmd, one, data2);
         }
 
- 
- 
+
+
 
         #endregion
     }
@@ -619,14 +764,10 @@ namespace RUINORERP.PacketSpec.Commands
     /// <typeparam name="TResponse">响应数据类型</typeparam>
     [Serializable]
     [MessagePackObject(AllowPrivate = true)]
-    public class BaseCommand<TResponse> : BaseCommand where TResponse : class, IResponse
+    public class BaseCommand<TRequest> : BaseCommand where TRequest : class, IRequest
     {
 
-        /// <summary>
-        /// 业务响应数据
-        /// </summary>
-        [Key(3)]
-        public TResponse ResponseData { get; set; }
+
 
         /// <summary>
         /// 命令标识符
@@ -634,11 +775,9 @@ namespace RUINORERP.PacketSpec.Commands
         [Key(4)]
         public CommandId CommandId { get; set; }
 
-        /// <summary>
-        /// 元数据字典 - 用于存储额外的响应信息
-        /// </summary>
-        [Key(9)]
-        public Dictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
+
+
+
 
         /// <summary>
         /// 无参构造函数
@@ -648,139 +787,10 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
         /// <summary>
-        /// 构造函数 - 创建成功响应
+        /// 业务响应数据
         /// </summary>
-        /// <param name="responseData">响应数据</param>
-        /// <param name="message">成功消息</param>
-        public BaseCommand(TResponse responseData, string message = "操作成功")
-        {
-            ResponseData = responseData;
-            responseData.IsSuccess = true;
-            responseData.Message = message;
-        }
-
-        /// <summary>
-        /// 构造函数 - 创建错误响应
-        /// </summary>
-        /// <param name="errorMessage">错误消息</param>
-        /// <param name="errorCode">错误代码</param>
-        public BaseCommand(string errorMessage, int Code = 400)
-        {
-  
-            // 如果TResponse是ResponseBase类型，创建错误响应
-            if (typeof(TResponse) == typeof(ResponseBase) || typeof(TResponse).IsSubclassOf(typeof(ResponseBase)))
-            {
-                var errorResponse = Activator.CreateInstance(typeof(TResponse)) as ResponseBase;
-                if (errorResponse != null)
-                {
-                    errorResponse.Message = errorMessage;
-                    errorResponse.IsSuccess = false;
-                    errorResponse.ErrorCode = Code;
-                    ResponseData = errorResponse as TResponse;
-                }
-            }
-        }
-
-        public BaseCommand(ErrorCode errorCode)
-        {
-        
-            // 如果TResponse是ResponseBase类型，创建错误响应
-            if (typeof(TResponse) == typeof(ResponseBase) || typeof(TResponse).IsSubclassOf(typeof(ResponseBase)))
-            {
-                var errorResponse = Activator.CreateInstance(typeof(TResponse)) as ResponseBase;
-                if (errorResponse != null)
-                {
-                    errorResponse.Message = errorCode.Message;
-                    errorResponse.ErrorCode = errorCode.Code;
-                    errorResponse.IsSuccess = false;
-                    ResponseData = errorResponse as TResponse;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 静态方法 - 创建成功响应
-        /// </summary>
-        /// <param name="responseData">响应数据</param>
-        /// <param name="message">成功消息</param>
-        /// <returns>成功响应</returns>
-        public static BaseCommand<TResponse> Success(TResponse responseData, string message = "操作成功")
-        {
-            return new BaseCommand<TResponse>(responseData, message);
-        }
-
-        /// <summary>
-        /// 静态方法 - 创建成功响应（兼容ResponseBase.CreateSuccess）
-        /// </summary>
-        /// <param name="responseData">响应数据</param>
-        /// <param name="message">成功消息</param>
-        /// <returns>成功响应</returns>
-        public static BaseCommand<TResponse> CreateSuccess(TResponse responseData, string message = "操作成功")
-        {
-            return Success(responseData, message);
-        }
-
-        /// <summary>
-        /// 静态方法 - 创建错误响应
-        /// </summary>
-        /// <param name="errorMessage">错误消息</param>
-        /// <param name="errorCode">错误代码</param>
-        /// <returns>错误响应</returns>
-        public static BaseCommand<TResponse> Error(string errorMessage)
-        {
-            return new BaseCommand<TResponse>(errorMessage);
-        }
-        public static BaseCommand<TResponse> Error(string errorMessage, int errorCode)
-        {
-            return new BaseCommand<TResponse>(errorMessage, errorCode);
-        }
-        /// <summary>
-        /// 静态方法 - 创建错误响应（兼容ResponseBase.CreateError）
-        /// </summary>
-        /// <param name="errorMessage">错误消息</param>
-        /// <param name="errorCode">错误代码</param>
-        /// <returns>错误响应</returns>
-        public static BaseCommand<TResponse> CreateError(string errorMessage)
-        {
-            return Error(errorMessage);
-        }
-
-        public static BaseCommand<TResponse> CreateError(string errorMessage, int ErrorCode)
-        {
-            return Error(errorMessage, ErrorCode);
-        }
-
-        public static BaseCommand<TResponse> CreateError(ErrorCode error)
-        {
-            return Error(error);
-        }
-
-        /// <summary>
-        /// 从FluentValidation验证结果创建失败响应
-        /// </summary>
-        /// <param name="validationResult">FluentValidation验证结果</param>
-        /// <param name="code">错误代码</param>
-        /// <returns>验证错误响应</returns>
-        public static BaseCommand<TResponse> CreateValidationError(FluentValidation.Results.ValidationResult validationResult)
-        {
-            if (validationResult == null || validationResult.IsValid)
-                return CreateError("验证失败");
-
-            var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-            var message = string.Join("; ", errorMessages);
-
-            var errorResponse = CreateError(message);
-
-            // 添加详细的验证错误信息到元数据
-            errorResponse.WithMetadata("ValidationErrors", validationResult.Errors.Select(e => new
-            {
-                Field = e.PropertyName,
-                Message = e.ErrorMessage,
-                AttemptedValue = e.AttemptedValue
-            }).ToList());
-
-            return errorResponse;
-        }
+        [Key(33)]
+        public TRequest RequestData { get; set; }
 
         /// <summary>
         /// 添加元数据
@@ -807,31 +817,6 @@ namespace RUINORERP.PacketSpec.Commands
             return default(T);
         }
 
-        /// <summary>
-        /// 添加元数据（链式调用）
-        /// </summary>
-        /// <param name="key">元数据键</param>
-        /// <param name="value">元数据值</param>
-        /// <returns>当前实例</returns>
-        public BaseCommand<TResponse> WithMetadata(string key, object value)
-        {
-            Metadata[key] = value;
-            return this;
-        }
-
-        /// <summary>
-        /// 批量添加元数据（链式调用）
-        /// </summary>
-        /// <param name="metadata">元数据字典</param>
-        /// <returns>当前实例</returns>
-        public BaseCommand<TResponse> WithMetadata(Dictionary<string, object> metadata)
-        {
-            foreach (var item in metadata)
-            {
-                Metadata[item.Key] = item.Value;
-            }
-            return this;
-        }
 
 
 

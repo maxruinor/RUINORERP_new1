@@ -45,12 +45,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cmd">队列命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>响应结果</returns>
-        protected override async Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<BaseCommand<IRequest, IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             if (cmd?.Command == null)
             {
                 Logger?.LogError("命令或命令数据为空");
-                return BaseCommand<IResponse>.CreateError("命令数据无效", 400);
+                return BaseCommand<IRequest, IResponse>.CreateError("命令数据无效", 400);
             }
 
             try
@@ -59,7 +59,7 @@ namespace RUINORERP.PacketSpec.Commands
                 if (!(cmd.Command is TRequest request))
                 {
                     Logger?.LogError($"命令类型转换失败: 期望 {typeof(TRequest).Name}, 实际 {cmd.Command.GetType().Name}");
-                    return BaseCommand<IResponse>.CreateError($"不支持的命令类型: {cmd.Command.GetType().Name}", 400);
+                    return BaseCommand<IRequest, IResponse>.CreateError($"不支持的命令类型: {cmd.Command.GetType().Name}", 400);
                 }
 
                 // 请求验证（调用基础验证方法）
@@ -68,7 +68,7 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     var errorMessage = validationResult.Errors.Count > 0 ? validationResult.Errors[0].ErrorMessage : "验证失败";
                     Logger?.LogWarning($"请求验证失败: {errorMessage}");
-                    return BaseCommand<IResponse>.CreateError(errorMessage, 400);
+                    return BaseCommand<IRequest, IResponse>.CreateError(errorMessage, 400);
                 }
 
                 // 执行业务逻辑
@@ -80,31 +80,31 @@ namespace RUINORERP.PacketSpec.Commands
             catch (OperationCanceledException)
             {
                 Logger?.LogWarning("命令处理被取消");
-                return BaseCommand<IResponse>.CreateError("操作被取消", 499);
+                return BaseCommand<IRequest, IResponse>.CreateError("操作被取消", 499);
             }
             catch (Exception ex)
             {
                 Logger?.LogError(ex, $"处理 {typeof(TRequest).Name} 时发生异常");
-                return BaseCommand<IResponse>.CreateError($"处理失败: {ex.Message}", 500);
+                return BaseCommand<IRequest, IResponse>.CreateError($"处理失败: {ex.Message}", 500);
             }
         }
 
         /// <summary>
         /// 验证和转换响应数据 - 提取为独立方法提高可读性
         /// </summary>
-        private BaseCommand<IResponse> ValidateAndConvertResponse(TResponse response)
+        private BaseCommand<IRequest, IResponse> ValidateAndConvertResponse(TResponse response)
         {
             // 响应验证
             if (response == null)
             {
                 Logger?.LogError("业务处理返回空响应");
-                return BaseCommand<IResponse>.CreateError("处理结果为空", 500);
+                return BaseCommand<IRequest, IResponse>.CreateError("处理结果为空", 500);
             }
 
             // 类型转换验证
             if (response is ResponseBase responseBase)
             {
-                return BaseCommand<IResponse>.CreateSuccess(responseBase as IResponse, responseBase.Message);
+                return BaseCommand<IRequest, IResponse>.CreateSuccess(responseBase as IResponse, responseBase.Message);
             }
 
             // 如果TResponse不是ResponseBase，需要转换或包装

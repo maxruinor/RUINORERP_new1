@@ -166,7 +166,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 异步处理命令 - 统一命令处理流程
         /// </summary>
-        public async Task<BaseCommand<IResponse>> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default)
+        public async Task<BaseCommand<IRequest, IResponse>> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default)
         {
             if (cmd == null)
                 throw new ArgumentNullException(nameof(cmd));
@@ -208,7 +208,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
 
                 // 更新统计信息
-                UpdateStatistics(result.ResponseData?.IsSuccess ?? false, (long)(DateTime.UtcNow - startTime).TotalMilliseconds);
+                UpdateStatistics(result.Response?.IsSuccess ?? false, (long)(DateTime.UtcNow - startTime).TotalMilliseconds);
 
                 return result;
             }
@@ -221,12 +221,12 @@ namespace RUINORERP.PacketSpec.Commands
                 UpdateTimeoutStatistics();
                 
                 success = false;
-                return BaseCommand<IResponse>.CreateError($"业务处理超时: {executionTimeoutMs}ms", 408);
+                return BaseCommand<IRequest, IResponse>.CreateError($"业务处理超时: {executionTimeoutMs}ms", 408);
             }
             catch (OperationCanceledException)
             {
                 success = false;
-                return BaseCommand<IResponse>.CreateError(UnifiedErrorCodes.Command_ProcessCancelled.Message, UnifiedErrorCodes.Command_ProcessCancelled.Code);
+                return BaseCommand<IRequest, IResponse>.CreateError(UnifiedErrorCodes.Command_ProcessCancelled.Message, UnifiedErrorCodes.Command_ProcessCancelled.Code);
             }
             catch (Exception ex)
             {
@@ -243,21 +243,21 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 统一的命令预处理流程 - 提取为独立方法以便复用
         /// </summary>
-        protected async Task<BaseCommand<IResponse>> ExecuteCommandPreprocessingAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected async Task<BaseCommand<IRequest, IResponse>> ExecuteCommandPreprocessingAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             // 验证命令
             var validationResult = await cmd.Command.ValidateAsync(cancellationToken);
             if (!validationResult.IsValid)
             {
                 Logger.LogDebug($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
-                return BaseCommand<IResponse>.CreateValidationError(validationResult);
+                return BaseCommand<IRequest, IResponse>.CreateValidationError(validationResult);
             }
 
             // 验证会话
             if (!ValidateSession(cmd.Packet?.ExecutionContext?.SessionId))
             {
                 Logger.LogDebug($"会话验证失败: {cmd.Packet?.ExecutionContext?.SessionId}");
-                return BaseCommand<IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
+                return BaseCommand<IRequest, IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
                     .WithMetadata("ErrorCode", "INVALID_SESSION");
             }
 
@@ -283,11 +283,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 统一的异常处理
         /// </summary>
-        protected BaseCommand<IResponse> HandleCommandException(Exception ex)
+        protected BaseCommand<IRequest, IResponse> HandleCommandException(Exception ex)
         {
             var errorCode = UnifiedErrorCodes.Command_ExecuteFailed.Code == 0 ? UnifiedErrorCodes.System_InternalError : UnifiedErrorCodes.Command_ExecuteFailed;
             Logger.LogError(ex, $"命令处理异常: {ex.Message}");
-            return BaseCommand<IResponse>.CreateError($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
+            return BaseCommand<IRequest, IResponse>.CreateError($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
                 .WithMetadata("StackTrace", ex.StackTrace);
         }
 
@@ -488,7 +488,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行核心处理逻辑
         /// </summary>
-        protected abstract Task<BaseCommand<IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
+        protected abstract Task<BaseCommand<IRequest, IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
 
         /// <summary>
         /// 基于命令类型确定处理超时
@@ -543,17 +543,17 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行前置处理
         /// </summary>
-        protected virtual Task<BaseCommand<IResponse>> OnBeforeHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected virtual Task<BaseCommand<IRequest, IResponse>> OnBeforeHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
-            return Task.FromResult<BaseCommand<IResponse>>(null);
+            return Task.FromResult<BaseCommand<IRequest, IResponse>>(null);
         }
 
         /// <summary>
         /// 执行后置处理
         /// </summary>
-        protected virtual Task<BaseCommand<IResponse>> OnAfterHandleAsync(QueuedCommand cmd, BaseCommand<IResponse> result, CancellationToken cancellationToken)
+        protected virtual Task<BaseCommand<IRequest, IResponse>> OnAfterHandleAsync(QueuedCommand cmd, BaseCommand<IRequest, IResponse> result, CancellationToken cancellationToken)
         {
-            return Task.FromResult<BaseCommand<IResponse>>(null);
+            return Task.FromResult<BaseCommand<IRequest, IResponse>>(null);
         }
 
         #endregion

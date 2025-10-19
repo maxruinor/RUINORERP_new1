@@ -142,7 +142,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 使用统一的业务逻辑处理方法
-                if (!(command.Command is BaseCommand<IRequest, CacheResponse> cacheCommand))
+                if (!(command.Command is BaseCommand<IRequest, IResponse> cacheCommand))
                 {
                     return BaseCommand<IRequest, IResponse>.CreateError("不支持的缓存命令格式", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_FORMAT");
@@ -297,7 +297,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="executionContext">执行上下文</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<BaseCommand<IRequest, IResponse>> ProcessCacheRequestAsync(BaseCommand<IRequest, CacheResponse> cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IRequest, IResponse>> ProcessCacheRequestAsync(BaseCommand<IRequest, IResponse> cacheCommand, CmdContext executionContext, CancellationToken cancellationToken)
         {
             try
             {

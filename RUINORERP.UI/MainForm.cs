@@ -3003,14 +3003,14 @@ namespace RUINORERP.UI
                 }
 
                 //超过60 就去抓一下缓存  如果不好用。则用线程定时器
-                if (GetLastInputTime() > 5 && MainForm.Instance.AppContext.IsOnline)
-                {
-                    var tableNames = TableSchemaManager.Instance.GetCacheableTableNamesList();
-                    foreach (var item in tableNames)
-                    {
-                        UIBizService.RequestCache(item, TableSchemaManager.Instance.GetEntityType(item));
-                    }
-                }
+                //if (GetLastInputTime() > 5 && MainForm.Instance.AppContext.IsOnline)
+                //{
+                //    var tableNames = TableSchemaManager.Instance.GetCacheableTableNamesList();
+                //    foreach (var item in tableNames)
+                //    {
+                //        UIBizService.RequestCache(item, TableSchemaManager.Instance.GetEntityType(item));
+                //    }
+                //}
 
             }
             catch (Exception ex)

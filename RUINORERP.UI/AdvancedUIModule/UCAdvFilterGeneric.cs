@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.UI.Common;
@@ -582,7 +582,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         //以这个特殊的类路径来找这个高级过滤菜单 如果没有就新建保存
         string menuKey = typeof(T).Name + "UCAdvFilterGeneric";
 
-        private void UCAdvFilterGeneric_Load(object sender, EventArgs e)
+        private async void UCAdvFilterGeneric_Load(object sender, EventArgs e)
         {
             if (!this.DesignMode)
             {
@@ -622,7 +622,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
                 #region 请求缓存
                 //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-                UIBizService.RequestCache<T>();
+                await UIBizService.RequestCache<T>();
                 #endregion
 
             }

@@ -44,12 +44,12 @@ namespace RUINORERP.UI.SysConfig
             _tableSchemaManager = TableSchemaManager.Instance;
         }
 
-        private void 请求缓存ToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void 请求缓存ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (kryptonListBox1.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                UIBizService.RequestCache(tableName);
+                await UIBizService.RequestCache(tableName);
             }
         }
 

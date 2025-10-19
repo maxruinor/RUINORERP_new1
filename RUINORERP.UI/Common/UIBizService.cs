@@ -1447,19 +1447,19 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static async void RequestCache<T>()
+        public static async Task RequestCache<T>()
         {
-            RequestCache(typeof(T).Name, typeof(T));
+            await RequestCache(typeof(T).Name, typeof(T));
         }
 
-        public static void RequestCache(Type type)
+        public static async Task RequestCache(Type type)
         {
-            RequestCache(type.Name, type);
+            await RequestCache(type.Name, type);
         }
 
-        public static void RequestCache(BaseEntity entity)
+        public static async Task RequestCache(BaseEntity entity)
         {
-            RequestCache(entity.GetType().Name, entity.GetType());
+            await RequestCache(entity.GetType().Name, entity.GetType());
         }
 
         /// <summary>
@@ -1481,7 +1481,7 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="type">实体类型，如果提供则使用实体的FKRelations属性获取外键关系</param>
-        public static async void RequestCache(string tableName, Type type = null)
+        public static async Task RequestCache(string tableName, Type type = null)
         {
             // 获取新的缓存管理器实例
             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();

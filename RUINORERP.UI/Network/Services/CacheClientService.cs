@@ -611,7 +611,13 @@ namespace RUINORERP.UI.Network.Services
                                 Task.Run(async () =>
                                 {
                                     await Task.Delay(100);
-                                    await RequestCacheAsync(response.TableName, false);
+                                    // 避免递归调用导致死循环
+                                    // 只在响应明确要求刷新时才重新请求
+                                    //if (response.ForceRefresh) {
+                                    //    // 使用不同的方式处理，或者添加延迟和限制条件
+                                    //    _log?.LogInformation("响应要求刷新缓存: {0}", response.TableName);
+                                    //    // 这里可以考虑使用一个队列或其他机制来处理，而不是直接递归调用
+                                    //}
                                 });
                             }
                         }

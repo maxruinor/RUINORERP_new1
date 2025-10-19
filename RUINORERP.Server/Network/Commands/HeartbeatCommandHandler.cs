@@ -126,7 +126,6 @@ namespace RUINORERP.Server.Network.Commands
                 }
              
                 // 创建心跳响应数据
-                var heartbeatResponse = CreateHeartbeatResponse();
                 var response = new HeartbeatResponse
                 {
                     IsSuccess = true,
@@ -166,25 +165,7 @@ namespace RUINORERP.Server.Network.Commands
             }
         }
 
-        /// <summary>
-        /// 创建心跳响应
-        /// </summary>
-        private OriginalData CreateHeartbeatResponse()
-        {
-            var responseMessage = "ALIVE";
-            var data = System.Text.Encoding.UTF8.GetBytes(responseMessage);
-
-            // 将完整的CommandId正确分解为Category和OperationCode
-            uint commandId = (uint)SystemCommands.HeartbeatResponse;
-            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
-            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
-
-            return new OriginalData(
-                category,
-                new byte[] { operationCode },
-                data
-            );
-        }
+       
        
     }
 }

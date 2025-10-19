@@ -1,4 +1,4 @@
-﻿using FastReport.DevComponents.AdvTree;
+using FastReport.DevComponents.AdvTree;
 using Krypton.Docking;
 using Krypton.Navigator;
 using Krypton.Toolkit;
@@ -37,7 +37,7 @@ namespace RUINORERP.UI.UserCenter
         //创建面板并加入
         public KryptonPageCollection Kpages { get; set; } = new KryptonPageCollection();
 
-        private void UCWorkbenches_Load(object sender, EventArgs e)
+        private async void UCWorkbenches_Load(object sender, EventArgs e)
         {
             if (this.DesignMode)
             {
@@ -47,8 +47,8 @@ namespace RUINORERP.UI.UserCenter
 
             #region 请求缓存
             //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-            UIBizService.RequestCache<tb_Prod>();
-            UIBizService.RequestCache<tb_Employee>();
+            await UIBizService.RequestCache<tb_Prod>();
+            await UIBizService.RequestCache<tb_Employee>();
             #endregion
 
             // Setup docking functionality

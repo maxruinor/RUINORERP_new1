@@ -1,4 +1,4 @@
-﻿using AutoUpdateTools;
+using AutoUpdateTools;
 using CacheManager.Core;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
@@ -187,12 +187,12 @@ namespace RUINORERP.UI.SysConfig
             DoButtonClick(RUINORERP.Common.Helper.EnumHelper.GetEnumByString<MenuItemEnums>(sender.ToString()));
         }
 
-        private void 请求缓存ToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void 请求缓存ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                UIBizService.RequestCache(tableName);
+                await UIBizService.RequestCache(tableName);
             }
         }
 

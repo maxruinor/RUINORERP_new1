@@ -2486,10 +2486,10 @@ namespace RUINORERP.UI.BaseForm
 
 
                 MainForm.Instance.AppContext.log.ActionName = sender.ToString();
-                UIBizService.RequestCache<M>();
-                UIBizService.RequestCache<C>();
+                await UIBizService.RequestCache<M>();
+                await UIBizService.RequestCache<C>();
                 //去检测产品视图的缓存并且转换为强类型
-                UIBizService.RequestCache(typeof(View_ProdDetail));
+                await UIBizService.RequestCache(typeof(View_ProdDetail));
 
                 Builder();
                 this.CurMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(M).Name && m.ClassPath == this.ToString()).FirstOrDefault();
@@ -2515,8 +2515,8 @@ namespace RUINORERP.UI.BaseForm
 
             #region 请求缓存
             //通过表名获取需要缓存的关系表再判断是否存在。没有就从服务器请求。这种是全新的请求。后面还要设计更新式请求。
-            UIBizService.RequestCache<M>();
-            UIBizService.RequestCache<C>();
+            await UIBizService.RequestCache<M>();
+            await UIBizService.RequestCache<C>();
             #endregion
 
             //设置默认焦点

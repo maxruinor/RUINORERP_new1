@@ -22,6 +22,7 @@
     <Compile Remove="Commands\Cache\CacheCommand.cs" />
     <Compile Remove="Commands\CommandBuilder.cs" />
     <Compile Remove="Commands\CommandCreationService.cs" />
+    <Compile Remove="Commands\CommandDataContainer.cs" />
     <Compile Remove="Commands\CommandExecutionContext.cs" />
     <Compile Remove="Commands\CommandPacketAdapter.cs" />
     <Compile Remove="Commands\CrudCommandHandler.cs" />

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,13 +39,13 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly IdempotencyFilter _idempotent = new IdempotencyFilter();
         private FallbackGenericCommandHandler _fallbackHandler;
         private readonly object _fallbackHandlerLock = new object();
-        
+
         // 处理器映射 - 直接映射CommandId到处理器
         private readonly ConcurrentDictionary<CommandId, List<ICommandHandler>> _commandHandlerMap;
-        
+
         // 所有已注册的处理器
         private readonly List<ICommandHandler> _allHandlers;
-        
+
         // 日志记录器
         protected ILogger<CommandDispatcher> Logger { get; set; }
 
@@ -140,7 +140,7 @@ namespace RUINORERP.PacketSpec.Commands
                     var currentAssembly = Assembly.GetExecutingAssembly();
                     var packetSpecAssembly = Assembly.GetAssembly(typeof(PacketModel));
                     assemblies = new[] { currentAssembly };
-                    
+
                     if (packetSpecAssembly != null && packetSpecAssembly != currentAssembly)
                     {
                         assemblies = assemblies.Concat(new[] { packetSpecAssembly }).ToArray();
@@ -210,21 +210,21 @@ namespace RUINORERP.PacketSpec.Commands
             try
             {
                 LogInfo($"开始扫描程序集，共 {assemblies.Length} 个程序集");
-                
+
                 var handlerTypes = new List<Type>();
-                
+
                 // 扫描所有程序集中的处理器类型
                 foreach (var assembly in assemblies)
                 {
                     try
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        
+
                         // 获取所有实现了ICommandHandler接口的非抽象类型
                         var assemblyHandlerTypes = assembly.GetTypes()
                             .Where(t => !t.IsAbstract && !t.IsInterface && typeof(ICommandHandler).IsAssignableFrom(t))
                             .ToList();
-                        
+
                         handlerTypes.AddRange(assemblyHandlerTypes);
                         LogInfo($"从程序集 {assembly.GetName().Name} 中发现 {assemblyHandlerTypes.Count} 个处理器类型");
                     }
@@ -245,19 +245,19 @@ namespace RUINORERP.PacketSpec.Commands
                         LogError($"扫描程序集 {assembly.GetName().Name} 时发生异常", ex);
                     }
                 }
-                
+
                 LogInfo($"总共发现 {handlerTypes.Count} 个处理器类型");
-                
+
                 // 创建并注册处理器
                 foreach (var handlerType in handlerTypes)
                 {
                     try
                     {
                         cancellationToken.ThrowIfCancellationRequested();
-                        
+
                         // 使用处理器工厂创建处理器实例
                         ICommandHandler handler = null;
-                        
+
                         if (_handlerFactory != null)
                         {
                             handler = _handlerFactory.CreateHandler(handlerType);
@@ -267,37 +267,37 @@ namespace RUINORERP.PacketSpec.Commands
                             // 如果没有处理器工厂，直接创建实例
                             handler = (ICommandHandler)Activator.CreateInstance(handlerType);
                         }
-                        
+
                         if (handler != null)
                         {
                             // 初始化处理器
                             await handler.InitializeAsync(cancellationToken);
-                            
+
                             // 启动处理器
                             await handler.StartAsync(cancellationToken);
-                            
+
                             // 获取处理器支持的命令ID列表
                             var supportedCommands = handler.SupportedCommands;
-                            
+
                             // 注册处理器到命令映射
                             foreach (var commandId in supportedCommands)
                             {
                                 _commandHandlerMap.AddOrUpdate(
                                     commandId,
                                     new List<ICommandHandler> { handler },
-                                    (key, existingHandlers) => 
+                                    (key, existingHandlers) =>
                                     {
                                         existingHandlers.Add(handler);
                                         return existingHandlers;
                                     });
                             }
-                            
+
                             // 添加到所有处理器列表
                             lock (_allHandlers)
                             {
                                 _allHandlers.Add(handler);
                             }
-                            
+
                             LogInfo($"已注册处理器: {handler.Name}, 支持命令数: {supportedCommands.Count}");
                         }
                     }
@@ -306,7 +306,7 @@ namespace RUINORERP.PacketSpec.Commands
                         LogError($"创建或初始化处理器 {handlerType.Name} 时发生异常", ex);
                     }
                 }
-                
+
                 LogInfo($"处理器注册完成，共注册 {_allHandlers.Count} 个处理器实例");
             }
             catch (OperationCanceledException)
@@ -405,23 +405,14 @@ namespace RUINORERP.PacketSpec.Commands
                 try
                 {
 
-
-                    // 第二层：命令预处理（获取指令信息，延迟具体解析）
-                    //var preprocessResult = await PreprocessCommandAsync(cmd.Packet, ct);
-                    //if (!preprocessResult.Success)
-                    //{
-                    //    LogWarning($"命令预处理失败: {preprocessResult.ErrorMessage}");
-                    //    return ResponseBase.CreateError($"命令预处理失败: {preprocessResult.ErrorMessage}", 400);
-                    //}
-
                     // 幂等性检查 - 基于命令标识符和请求参数生成唯一键
-                    //if (cmd.Packet.CommandId.FullCode != 0)
-                    //{
-                    //    if (_idempotent.TryGetCached(cmd.Command, out var cached))
-                    //    {
-                    //        //return cached;
-                    //    }
-                    //}
+                    if (cmd.Packet.CommandId.FullCode != 0)
+                    {
+                        if (_idempotent.TryGetCached(cmd.Packet.Request, cmd.Packet.CommandId, out var cached))
+                        {
+                            return cached;
+                        }
+                    }
 
                     var startTime = DateTime.Now;
                     var commandIdentifier = cmd.Packet.CommandId;
@@ -512,10 +503,10 @@ namespace RUINORERP.PacketSpec.Commands
                 finally
                 {
                     // 缓存结果以实现幂等性 - 基于命令标识符和请求参数生成唯一键
-                    //if (cmd.Packet.CommandId != CommandId.Empty)
-                    //{
-                    //    _idempotent.Cache(cmd.Packet.CommandId, response);
-                    //}
+                    if (cmd.Packet.CommandId != CommandId.Empty)
+                    {
+                        _idempotent.Cache(cmd.Packet, response);
+                    }
 
                     // 清理历史记录
                     _ = Task.Run(() => CleanupCommandHistory());
@@ -626,7 +617,7 @@ namespace RUINORERP.PacketSpec.Commands
                     var compatibleHandlers = handlersByCommandId
                         .Where(h => h.CanHandle(cmd))
                         .ToList();
-                    
+
                     if (compatibleHandlers.Any())
                     {
                         return compatibleHandlers;
@@ -658,7 +649,7 @@ namespace RUINORERP.PacketSpec.Commands
             // 如果没有找到兼容的处理器，返回空集合
             return new List<ICommandHandler>();
         }
- 
+
 
         /// <summary>
         /// 通过类型检查处理器是否兼容命令类型（高性能版本）
@@ -780,64 +771,9 @@ namespace RUINORERP.PacketSpec.Commands
 
 
 
-        /// <summary>
-        /// 预处理命令（获取指令信息，延迟具体解析）
-        /// </summary>
-        private async Task<CommandPreprocessResult> PreprocessCommandAsync(PacketModel packet, CancellationToken cancellationToken)
-        {
-            await Task.CompletedTask; // 异步占位符
-
-            try
-            {
-                var commandId = packet.CommandId;
-                var commandName = packet.GetType().Name;
-
-                // 获取处理器类型（不实例化）
-                var handlerTypes = GetHandlerTypesForCommand(commandId);
-                var targetHandlerType = handlerTypes.FirstOrDefault();
-
-                var metadata = new CommandMetadata
-                {
-                    CommandId = commandId,
-                    CommandName = commandName,
-                    RequiresAuthentication = IsAuthenticationRequired(commandId),
-                    Priority = packet.PacketPriority,
-                    TargetHandlerType = targetHandlerType
-                };
-
-                return new CommandPreprocessResult
-                {
-                    Success = true,
-                    Metadata = metadata
-                };
-            }
-            catch (Exception ex)
-            {
-                LogError($"预处理异常: {ex.Message}", ex);
-                return new CommandPreprocessResult { Success = false, ErrorMessage = $"预处理异常: {ex.Message}" };
-            }
-        }
-
-        /// <summary>
-        /// 判断是否需要认证
-        /// </summary>
-        private bool IsAuthenticationRequired(CommandId commandId)
-        {
-            // 登录相关命令不需要认证
-            var authCommands = new CommandId[]
-            {
-                AuthenticationCommands.Login,
-                AuthenticationCommands.ValidateToken,
-                AuthenticationCommands.RefreshToken
-            };
-
-            return !authCommands.Contains(commandId);
-        }
 
 
 
-
-         
         /// <summary>
         /// 尝试创建动态处理器
         /// </summary>
@@ -859,7 +795,7 @@ namespace RUINORERP.PacketSpec.Commands
                         }
                     }
                 }
-                
+
                 // 返回回退处理器
                 return _fallbackHandler;
             }

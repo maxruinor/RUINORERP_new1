@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums;
 

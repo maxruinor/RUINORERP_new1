@@ -66,54 +66,56 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 判断是否可以处理指定命令
         /// </summary>
-        public override bool CanHandle(ICommand command)
+        public override bool CanHandle(PacketModel packet)
         {
-            return SupportedCommands.Contains(command.CommandIdentifier.FullCode);
+            return SupportedCommands.Contains(packet.CommandId.FullCode);
         }
 
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数
         /// </summary>
-        /// <param name="command">命令对象</param>
+        /// <param name="packet">数据包对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<ResponseBase> ProcessCommandAsync(ICommand command, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> ProcessCommandAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {
-                var commandId = command.CommandIdentifier;
+                var commandId = packet.CommandId;
                 
                 switch (commandId.FullCode)
                 {
                     case var id when id == LockCommands.LockRequest.FullCode:
-                        return await HandleLockRequestAsync(command, cancellationToken);
+                        return await HandleLockRequestAsync(packet, cancellationToken);
                         
                     case var id when id == LockCommands.LockRelease.FullCode:
-                        return await HandleLockReleaseAsync(command, cancellationToken);
+                        return await HandleLockReleaseAsync(packet, cancellationToken);
                         
                     case var id when id == LockCommands.ForceUnlock.FullCode:
-                        return await HandleForceUnlockAsync(command, cancellationToken);
+                        return await HandleForceUnlockAsync(packet, cancellationToken);
                         
                     case var id when id == LockCommands.RequestUnlock.FullCode:
-                        return await HandleRequestUnlockAsync(command, cancellationToken);
+                        return await HandleRequestUnlockAsync(packet, cancellationToken);
                         
                     case var id when id == LockCommands.RefuseUnlock.FullCode:
-                        return await HandleRefuseUnlockAsync(command, cancellationToken);
+                        return await HandleRefuseUnlockAsync(packet, cancellationToken);
+                        
+                    // 注意：这里需要修改所有剩余的方法调用参数类型，从ICommand改为PacketModel
                         
                     case var id when id == LockCommands.RequestLock.FullCode:
-                        return await HandleDocumentLockRequestAsync(command, cancellationToken);
+                        return await HandleDocumentLockRequestAsync(packet, cancellationToken);
                         
                     case var id when id == LockCommands.ReleaseLock.FullCode:
-                        return await HandleDocumentUnlockRequestAsync(command, cancellationToken);
+                        return await HandleDocumentUnlockRequestAsync(packet, cancellationToken);
                         
                     case var id when id == LockCommands.ForceReleaseLock.FullCode:
-                        return await HandleForceUnlockDocumentAsync(command, cancellationToken);
+                        return await HandleForceUnlockDocumentAsync(packet, cancellationToken);
                         
                     case var id when id == LockCommands.QueryLockStatus.FullCode:
-                        return await HandleQueryLockStatusAsync(command, cancellationToken);
+                        return await HandleQueryLockStatusAsync(packet, cancellationToken);
                         
                     case var id when id == LockCommands.BroadcastLockStatus.FullCode:
-                        return await HandleBroadcastLockStatusAsync(command, cancellationToken);
+                        return await HandleBroadcastLockStatusAsync(packet, cancellationToken);
                         
                     default:
                         return BaseCommand<IResponse>.CreateError($"不支持的锁命令类型: {command.CommandIdentifier}", UnifiedErrorCodes.Biz_ValidationFailed.Code)
@@ -133,7 +135,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理单据解锁请求命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleDocumentUnlockRequestAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleDocumentUnlockRequestAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {
@@ -204,7 +206,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理锁释放命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleLockReleaseAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleLockReleaseAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {
@@ -261,7 +263,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理强制解锁命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleForceUnlockAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleForceUnlockAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {
@@ -321,7 +323,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理请求解锁命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleRequestUnlockAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleRequestUnlockAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {
@@ -376,7 +378,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理拒绝解锁命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleRefuseUnlockAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleRefuseUnlockAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {
@@ -431,7 +433,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理单据锁定申请命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleDocumentLockRequestAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleDocumentLockRequestAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {
@@ -498,7 +500,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理锁申请命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleLockRequestAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleLockRequestAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {
@@ -562,7 +564,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理强制解锁单据命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleForceUnlockDocumentAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleForceUnlockDocumentAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {
@@ -627,7 +629,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理查询锁状态命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleQueryLockStatusAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleQueryLockStatusAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {
@@ -671,7 +673,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理广播锁状态命令
         /// </summary>
-        private async Task<BaseCommand<IResponse>> HandleBroadcastLockStatusAsync(ICommand command, CancellationToken cancellationToken)
+        private async Task<BaseCommand<IResponse>> HandleBroadcastLockStatusAsync(PacketModel packet, CancellationToken cancellationToken)
         {
             try
             {

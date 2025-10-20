@@ -214,16 +214,8 @@ namespace RUINORERP.UI.Network.Services
                 // CacheChangedEventArgs没有PrimaryKeyName属性，跳过这部分逻辑
                 // 可以考虑在后续版本中扩展CacheChangedEventArgs类
 
-
-                // 发送缓存更新命令到服务器 - 使用正确的命令类型
-                var command = new BaseCommand<IRequest,IResponse>
-                {
-                    Request = request,
-                    CommandIdentifier = CacheCommands.CacheOperation // 设置命令类型
-                };
-
                 // 发送命令到服务器
-                await _comm.SendOneWayCommandAsync<IRequest>(command, CancellationToken.None);
+                await _comm.SendOneWayCommandAsync<IRequest>(CacheCommands.CacheOperation, request, CancellationToken.None);
 
                 _log?.LogDebug($"客户端缓存变更已同步到服务器: {e.Key}, 操作: {e.Operation.ToString()}");
             }
@@ -295,12 +287,12 @@ namespace RUINORERP.UI.Network.Services
                 request.LastRequestTime = GetLastRequestTime(tableName);
 
                 // 使用统一命令处理模式，模仿登录业务流程
-                var command = await ProcessCacheRequestAsync(request, ct);
+                var Response = await ProcessCacheRequestAsync(request, ct);
 
                 // 直接使用ProcessCacheResponse处理缓存数据，避免重复执行
-                if (command.Response != null)
+                if (Response != null)
                 {
-                    ProcessCacheResponse(command.Response as CacheResponse);
+                    ProcessCacheResponse(Response as CacheResponse);
                 }
 
                 // 更新最后请求时间
@@ -460,33 +452,31 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="request">缓存请求</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>缓存响应结果</returns>
-        private async Task<BaseCommand<IRequest, IResponse>> ProcessCacheRequestAsync(CacheRequest request, CancellationToken ct)
+        private async Task<IResponse> ProcessCacheRequestAsync(CacheRequest request, CancellationToken ct)
         {
             try
             {
-                var command = CommandDataBuilder.BuildCommand<IRequest, IResponse>(CacheCommands.CacheOperation, request);
-
                 // 使用新的方法发送命令并获取包含指令信息的响应
-                var packet = await _comm.SendCommandWithResponseAsync<IRequest, IResponse>(command, ct, 30000);
+                var response = await _comm.SendCommandWithResponseAsync<IResponse>( CacheCommands.CacheOperation, request, ct, 30000);
 
                 // 检查响应数据是否为空   
-                if (packet.Response == null)
+                if (response == null)
                 {
                     _log?.LogError("缓存请求失败：服务器返回了空的响应数据");
-                    return BaseCommand<IRequest, IResponse>.CreateError("服务器返回了空的响应数据");
+                    return ResponseBase.CreateError("服务器返回了空的响应数据");
                 }
 
                 // 检查响应是否成功
-                if (!packet.Response.IsSuccess)
+                if (!response.IsSuccess)
                 {
-                    return BaseCommand<IRequest, IResponse>.CreateError(packet.Response.ErrorMessage)
-                        .WithMetadata("RequestId", packet.Request.RequestId ?? string.Empty);
+                    return ResponseBase.CreateError(response.ErrorMessage)
+                        .WithMetadata("RequestId", response.RequestId ?? string.Empty);
                 }
 
                 // 缓存请求成功后处理数据
-                if (packet.Response.IsSuccess && packet.Response != null)
+                if (response.IsSuccess && response != null)
                 {
-                    var cacheResponse = packet.Response;
+                    var cacheResponse = response;
 
                     // 处理缓存数据
                     //ProcessCacheData(request.TableName, cacheResponse.CacheData);
@@ -503,10 +493,10 @@ namespace RUINORERP.UI.Network.Services
                 else
                 {
                     _log?.LogWarning("缓存请求失败，表名={0}，错误: {1}",
-                        request.TableName, packet.Response.ErrorMessage);
+                        request.TableName, response.ErrorMessage);
                 }
 
-                return packet;
+                return response;
             }
             catch (Exception ex)
             {
@@ -590,47 +580,46 @@ namespace RUINORERP.UI.Network.Services
                 {
                     return;
                 }
-                if (data is BaseCommand<IRequest, CacheResponse> baseCommand)
+                if (data is CacheResponse cacheResponse)
                 {
                     // 确保data是CacheResponse类型
-                    if (baseCommand.Request is CacheResponse response)
+
+                    if (cacheResponse.IsSuccess && !string.IsNullOrEmpty(cacheResponse.TableName))
                     {
-                        if (response.IsSuccess && !string.IsNullOrEmpty(response.TableName))
+                        // 处理缓存数据
+                        ProcessCacheData(cacheResponse.TableName, cacheResponse.CacheData);
+
+                        if (authorizeController != null && authorizeController.GetShowDebugInfoAuthorization())
                         {
-                            // 处理缓存数据
-                            ProcessCacheData(response.TableName, response.CacheData);
-
-                            if (authorizeController != null && authorizeController.GetShowDebugInfoAuthorization())
-                            {
-                                //    MainForm.Instance.PrintInfoLog($"接收缓存: {response.TableName}, 数据量: {response.CacheData?.Count ?? 0}");
-                            }
-
-                            // 如果有更多数据，继续请求
-                            if (response.HasMoreData)
-                            {
-                                Task.Run(async () =>
-                                {
-                                    await Task.Delay(100);
-                                    // 避免递归调用导致死循环
-                                    // 只在响应明确要求刷新时才重新请求
-                                    //if (response.ForceRefresh) {
-                                    //    // 使用不同的方式处理，或者添加延迟和限制条件
-                                    //    _log?.LogInformation("响应要求刷新缓存: {0}", response.TableName);
-                                    //    // 这里可以考虑使用一个队列或其他机制来处理，而不是直接递归调用
-                                    //}
-                                });
-                            }
+                            //    MainForm.Instance.PrintInfoLog($"接收缓存: {response.TableName}, 数据量: {response.CacheData?.Count ?? 0}");
                         }
-                        else
+
+                        // 如果有更多数据，继续请求
+                        if (cacheResponse.HasMoreData)
                         {
-                            _log.LogDebug($"接收缓存失败: {response?.Message ?? "未知错误"}");
+                            Task.Run(async () =>
+                            {
+                                await Task.Delay(100);
+                                // 避免递归调用导致死循环
+                                // 只在响应明确要求刷新时才重新请求
+                                //if (response.ForceRefresh) {
+                                //    // 使用不同的方式处理，或者添加延迟和限制条件
+                                //    _log?.LogInformation("响应要求刷新缓存: {0}", response.TableName);
+                                //    // 这里可以考虑使用一个队列或其他机制来处理，而不是直接递归调用
+                                //}
+                            });
                         }
                     }
                     else
                     {
-                        _log.LogDebug("处理缓存响应失败: 数据格式不正确");
+                        _log.LogDebug($"接收缓存失败: {cacheResponse?.Message ?? "未知错误"}");
                     }
                 }
+                else
+                {
+                    _log.LogDebug("处理缓存响应失败: 数据格式不正确");
+                }
+
 
             }
             catch (Exception ex)
@@ -1145,8 +1134,8 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-        
- 
+
+
 
         /// <summary>
         /// 获取缓存状态信息

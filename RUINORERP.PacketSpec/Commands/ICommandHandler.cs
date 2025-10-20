@@ -44,26 +44,20 @@ namespace RUINORERP.PacketSpec.Commands
         HandlerStatus Status { get; }
 
         /// <summary>
-        /// 异步处理命令
+        /// 异步处理命令数据包
         /// </summary>
-        /// <param name="command">命令对象</param>
+        /// <param name="cmd">队列命令对象，包含数据包和任务完成源</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        Task<BaseCommand<IRequest, IResponse>> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default);
+        Task<IResponse> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// 判断是否可以处理该命令
+        /// 判断是否可以处理该命令数据包
         /// </summary>
-        /// <param name="command">命令对象</param>
+        /// <param name="cmd">队列命令对象</param>
         /// <returns>是否可以处理</returns>
         bool CanHandle(QueuedCommand cmd);
 
-        /// <summary>
-        /// 判断是否可以处理该命令 - uint版本（向后兼容）
-        /// </summary>
-        /// <param name="commandCode">命令代码（uint格式）</param>
-        /// <returns>是否可以处理</returns>
-        bool CanHandle(uint commandCode);
 
         /// <summary>
         /// 处理器初始化

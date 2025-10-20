@@ -8,15 +8,53 @@ using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
-    // 文件上传请求
+    /// <summary>
+    /// 文件上传请求 - 用于处理文件上传操作
+    /// </summary>
+    [MessagePack.MessagePackObject]
     public class FileUploadRequest : RequestBase
     {
+        /// <summary>
+        /// 文件名
+        /// </summary>
+        [MessagePack.Key(10)]
         public string FileName { get; set; }
-        public string Category { get; set; } // 分类: Expenses/Products/Payments等
+
+        /// <summary>
+        /// 文件分类: Expenses/Products/Payments等
+        /// </summary>
+        [MessagePack.Key(11)]
+        public string Category { get; set; }
+
+        /// <summary>
+        /// 文件大小
+        /// </summary>
+        [MessagePack.Key(12)]
         public long FileSize { get; set; }
+
+        /// <summary>
+        /// 文件数据
+        /// </summary>
+        [MessagePack.Key(13)]
         public byte[] Data { get; set; }
-        public int ChunkIndex { get; set; } // 分块索引
-        public int TotalChunks { get; set; } // 总分块数
+
+        /// <summary>
+        /// 分块索引
+        /// </summary>
+        [MessagePack.Key(14)]
+        public int ChunkIndex { get; set; }
+
+        /// <summary>
+        /// 总分块数
+        /// </summary>
+        [MessagePack.Key(15)]
+        public int TotalChunks { get; set; }
+
+        /// <summary>
+        /// 目标路径
+        /// </summary>
+        [MessagePack.Key(16)]
+        public string TargetPath { get; set; }
     }
 
     /// <summary>

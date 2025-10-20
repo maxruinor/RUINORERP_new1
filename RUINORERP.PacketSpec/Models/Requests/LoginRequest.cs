@@ -47,7 +47,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 附加数据，用于传递额外信息，如重复登录确认等
         /// </summary>
         [Key(15)]
-        [MessagePack.IgnoreMember]
         public Dictionary<string, object> AdditionalData { get; set; }
 
         /// <summary>

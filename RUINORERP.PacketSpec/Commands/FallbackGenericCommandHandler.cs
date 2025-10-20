@@ -42,41 +42,40 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cmd">命令对象</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>处理结果</returns>
-        protected override Task<BaseCommand<IRequest, IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken ct)
+        protected override Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken ct)
         {
             try
             {
-                LogInfo($"处理未注册命令: {cmd.Command.CommandIdentifier} [ID: {cmd.Command.CommandIdentifier.Name.ToString()}]");
-                
+                string NoRegisteredCommand = $"未注册命令{cmd.Packet.CommandId.ToString()}";
+                LogInfo(NoRegisteredCommand) ;
+
                 // 尝试获取命令的可序列化数据
-                var payload = cmd.Command.GetSerializableData();
-                
+                var payload = cmd.Packet.Response;
+
                 if (payload != null)
                 {
                     // 如果有有效载荷，返回成功响应并包含原数据
-                    return Task.FromResult(BaseCommand<IRequest, IResponse>.CreateError($"未注册命令 [{cmd.Command.CommandIdentifier}] 已通过回退处理器处理")
-                        .WithMetadata("Message", $"未注册命令 [{cmd.Command.CommandIdentifier}] 已通过回退处理器处理")
+                    return Task.FromResult(ResponseBase.CreateError($"{NoRegisteredCommand} 已通过回退处理器处理")
                         .WithMetadata("CommandType", payload.GetType().FullName)
-                        .WithMetadata("HandlerType", Name));
+                        .WithMetadata("HandlerType", Name) as IResponse);
                 }
                 else
                 {
                     // 没有有效载荷，返回成功响应
-                    return Task.FromResult(BaseCommand<IRequest, IResponse>.CreateSuccess(null as IResponse)
-                        .WithMetadata("Message", $"未注册命令 [{cmd.Command.CommandIdentifier}] 已通过回退处理器处理")
-                        .WithMetadata("HandlerType", Name));
+                    return Task.FromResult(ResponseBase.CreateSuccess()
+                        .WithMetadata("Message", $"未注册命令 [{NoRegisteredCommand}] 已通过回退处理器处理")
+                        .WithMetadata("HandlerType", Name) as IResponse);
                 }
             }
             catch (Exception ex)
             {
-                LogError($"处理未注册命令时发生异常: {cmd.Command.CommandIdentifier}", ex);
-                
+                LogError($"处理未注册命令时发生异常", ex);
+
                 // 发生异常时返回错误响应
-                return Task.FromResult(BaseCommand<IRequest, IResponse>.CreateError("处理未注册命令时发生异常")
+                return Task.FromResult(ResponseBase.CreateError("处理未注册命令时发生异常")
                     .WithMetadata("ErrorCode", "FALLBACK_HANDLER_ERROR")
                     .WithMetadata("ErrorMessage", ex.Message)
-                    .WithMetadata("CommandIdentifier", cmd.Command.CommandIdentifier)
-                    .WithMetadata("HandlerType", Name));
+                    .WithMetadata("HandlerType", Name) as IResponse);
             }
         }
     }

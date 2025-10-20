@@ -19,7 +19,7 @@ namespace RUINORERP.UI.Network.Authentication
     {
         private readonly ClientCommunicationService _communicationService;
         private readonly TokenManager _tokenManager;
-        
+
         public TokenRefreshService(ClientCommunicationService communicationService, TokenManager tokenManager)
         {
             _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
@@ -31,17 +31,15 @@ namespace RUINORERP.UI.Network.Authentication
         /// </summary>
         /// <param name="ct">取消令牌</param>
         /// <returns>登录响应</returns>
-        public async Task<TokenInfo> RefreshTokenAsync(CancellationToken ct = default)
+        public async Task<TokenInfo> RefreshTokenAsync(string accessToken, CancellationToken ct = default)
         {
             try
             {
                 // 创建刷新Token请求
-                SimpleRequest request = SimpleRequest.CreateString("");
-                var baseCommand = CommandDataBuilder.BuildCommand<SimpleRequest, LoginResponse>(AuthenticationCommands.RefreshToken, request);
-                
+                SimpleRequest request = SimpleRequest.CreateString(accessToken);
+
                 // 发送请求并获取响应
-                var response = await _communicationService.SendCommandAsync<SimpleRequest, LoginResponse>(
-                    baseCommand, ct);
+                var response = await _communicationService.SendCommandAsync( AuthenticationCommands.RefreshToken, request, ct);
 
                 // 从响应中提取Token信息
                 if (response?.ExecutionContext?.Token != null)
@@ -64,10 +62,7 @@ namespace RUINORERP.UI.Network.Authentication
                 SimpleRequest request = SimpleRequest.CreateString(token);
 
                 // 使用_communicationService发送验证Token的请求
-                var bc = CommandDataBuilder.BuildCommand<SimpleRequest, LoginResponse>(AuthenticationCommands.ValidateToken, request);
-
-                var response = await _communicationService.SendCommandAsync<SimpleRequest, LoginResponse>(bc,
-                    ct, 15000);
+                var response = await _communicationService.SendCommandAsync(AuthenticationCommands.ValidateToken, request, ct, 15000);
 
                 // 验证响应是否成功
                 return response != null && !string.IsNullOrEmpty(response.ExecutionContext?.Token?.AccessToken);

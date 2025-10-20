@@ -147,7 +147,11 @@ namespace RUINORERP.PacketSpec.Models.Core
             return this;
         }
 
-
+        public PacketBuilder WithRequest(IRequest request)
+        {
+            _packet.Request= request;
+            return this;
+        }
 
         /// <summary>
         /// 设置扩展属性

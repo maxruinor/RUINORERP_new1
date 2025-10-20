@@ -3,7 +3,7 @@ chcp 65001 >nul
 echo 正在修复帮助文件中文乱码问题...
 
 REM 运行PowerShell脚本修复所有.htm文件的中文乱码
-powershell -ExecutionPolicy Bypass -File "%~dp0fix_encoding_final.ps1"
+powershell -ExecutionPolicy Bypass -File "%~dp0fix_encoding_ascii.ps1"
 
 if %errorlevel% == 0 (
     echo.

@@ -33,7 +33,6 @@ using RUINORERP.Common.Extensions;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using ICommand = RUINORERP.PacketSpec.Commands.ICommand;
 using MessagePack;
 using System.Windows.Forms;
 using Timer = System.Threading.Timer;
@@ -73,8 +72,7 @@ namespace RUINORERP.UI.Network
 
         // 网络配置
         private readonly NetworkConfig _networkConfig;
-        private readonly ICommandCreationService _CommandCreationService;
- 
+
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
 
         // 用于Token刷新的内部实现
@@ -108,7 +106,6 @@ namespace RUINORERP.UI.Network
         /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
         public ClientCommunicationService(
             ISocketClient socketClient,
-            ICommandCreationService commandCreationService,
         ICommandDispatcher commandDispatcher,
             ILogger<ClientCommunicationService> logger,
             TokenManager _tokenManager,
@@ -116,7 +113,6 @@ namespace RUINORERP.UI.Network
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
-            this._CommandCreationService = commandCreationService ?? throw new ArgumentNullException(nameof(commandCreationService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _networkConfig = networkConfig ?? NetworkConfig.Default;
             _eventManager = new ClientEventManager();
@@ -127,7 +123,7 @@ namespace RUINORERP.UI.Network
 
             #region  扫描注册
             // 获取PacketSpec程序集
-            var packetSpecAssembly = Assembly.GetAssembly(typeof(RUINORERP.PacketSpec.Commands.ICommand));
+            var packetSpecAssembly = Assembly.GetAssembly(typeof(RUINORERP.PacketSpec.Models.Core.PacketModel));
             if (packetSpecAssembly == null)
             {
                 return;
@@ -177,12 +173,12 @@ namespace RUINORERP.UI.Network
         {
             var previousState = _isConnected;
             _isConnected = connected;
-            
+
             // 如果连接状态发生变化，触发事件
             if (previousState != connected)
             {
                 _eventManager.OnConnectionStatusChanged(connected);
-                
+
                 if (connected)
                 {
                     _logger.Debug("客户端已连接到服务器");
@@ -191,7 +187,7 @@ namespace RUINORERP.UI.Network
                 else
                 {
                     _logger.Debug("客户端与服务器断开连接");
-                    
+
                     // 停止心跳
                     if (_heartbeatIsRunning)
                     {
@@ -217,14 +213,14 @@ namespace RUINORERP.UI.Network
 
                     // 检查SocketClient的实际连接状态
                     var socketConnected = _socketClient.IsConnected;
-                    
+
                     // 如果Socket实际已断开但_isConnected仍为true，则更新状态
                     if (!socketConnected && _isConnected)
                     {
                         _logger.LogWarning("检测到Socket连接已断开，但连接状态未同步更新，正在修复...");
                         UpdateConnectionState(false);
                     }
-                    
+
                     return _isConnected && socketConnected;
                 }
             }
@@ -408,10 +404,10 @@ namespace RUINORERP.UI.Network
                 }
 
                 // 启动心跳
-               
+
                 _heartbeatManager.Start();
                 _heartbeatIsRunning = true;
-             
+
             }
             catch (Exception ex)
             {
@@ -469,6 +465,7 @@ namespace RUINORERP.UI.Network
             else
                 return NetworkErrorType.UnknownError;
         }
+        /*
 
         /// <summary>
         /// 发送请求并等待响应（合并自RequestResponseManager）
@@ -552,7 +549,94 @@ namespace RUINORERP.UI.Network
                 _pendingRequests.TryRemove(command.Request.RequestId, out _);
             }
         }
-         
+
+        */
+
+        /// <summary>
+        /// 发送请求并等待响应（合并自RequestResponseManager）
+        /// </summary>
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="command">命令对象</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="timeoutMs">请求超时时间（毫秒）</param>
+        /// <returns>响应数据对象</returns>
+        private async Task<PacketModel> SendRequestAsync<TRequest, TResponse>(
+           CommandId commandId,
+            TRequest request,
+            CancellationToken ct = default,
+            int timeoutMs = 30000)
+            where TRequest : class, IRequest
+            where TResponse : class, IResponse
+        {
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            cts.CancelAfter(timeoutMs);
+
+            var tcs = new TaskCompletionSource<PacketModel>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var pendingRequest = new PendingRequest
+            {
+                Tcs = tcs,
+                CreatedAt = DateTime.UtcNow,
+                CommandId = commandId.ToString()
+            };
+
+            if (request == null)
+            {
+                throw new InvalidOperationException($"请求数据不能为空，指令名称: {commandId.Name}");
+            }
+
+            if (!_pendingRequests.TryAdd(request.RequestId, pendingRequest))
+            {
+                throw new InvalidOperationException($"无法添加请求到待处理列表，请求ID: {request.RequestId}");
+            }
+
+            try
+            {
+                // 使用现有的SendPacketCoreAsync发送请求
+                await SendPacketCoreAsync<TRequest, TResponse>(_socketClient, commandId, request, _networkConfig.DefaultRequestTimeoutMs, ct);
+
+                // 等待响应或超时
+                var timeoutTask = Task.Delay(timeoutMs, cts.Token);
+                var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+
+                if (completedTask == timeoutTask)
+                {
+                    _logger?.LogError("请求超时，请求ID: {RequestId}", request.RequestId);
+                    _timeoutStatistics.RecordTimeout(commandId.ToString(), timeoutMs);
+                    throw new TimeoutException($"请求超时（{timeoutMs}ms），请求ID: {request.RequestId}");
+                }
+
+                ct.ThrowIfCancellationRequested();
+
+                var responsePacket = await tcs.Task;
+
+                if (responsePacket != null)
+                {
+                    // 记录请求完成事件
+                    _eventManager.OnRequestCompleted(request.RequestId, DateTime.UtcNow - pendingRequest.CreatedAt);
+                }
+
+                PacketModel packet = null;
+
+                if (responsePacket is PacketModel)
+                {
+                    packet = responsePacket;
+                }
+                _logger?.LogDebug("成功接收响应，请求ID: {RequestId}", request.RequestId);
+                return packet;
+            }
+            catch (Exception ex) when (!(ex is TimeoutException) && !(ex is OperationCanceledException))
+            {
+                _logger?.LogError(ex, "请求处理失败，请求ID: {RequestId}", request.RequestId);
+                throw new InvalidOperationException($"请求处理失败，请求ID: {request.RequestId}: {ex.Message}", ex);
+            }
+            finally
+            {
+                _pendingRequests.TryRemove(request.RequestId, out _);
+            }
+        }
+
+
 
         #region 设置token
 
@@ -560,7 +644,7 @@ namespace RUINORERP.UI.Network
         /// 自动附加认证Token - 优化版
         /// 增强功能：确保Token的完整性、类型设置、ExecutionContext绑定和异常处理
         /// </summary>
-        protected virtual async void AutoAttachToken(CmdContext ExecutionContext)
+        protected virtual async void AutoAttachToken(CommandContext ExecutionContext)
         {
             try
             {
@@ -576,7 +660,7 @@ namespace RUINORERP.UI.Network
 
                     // 自动设置到ExecutionContext，确保服务器端也能获取
                     if (ExecutionContext == null)
-                        ExecutionContext = new CmdContext();
+                        ExecutionContext = new CommandContext();
                     ExecutionContext.Token = tokenInfo;
                 }
 
@@ -616,7 +700,7 @@ namespace RUINORERP.UI.Network
                 {
                     if (HandleResponsePacket(packet))
                     {
-                        _logger.LogDebug("数据包作为响应处理完成，请求ID: {RequestId}", packet.ExecutionContext?.RequestId);
+                        _logger.LogDebug("数据包作为响应处理完成，请求ID: {RequestId}", packet.Request?.RequestId);
                         return;
                     }
                 }
@@ -646,7 +730,7 @@ namespace RUINORERP.UI.Network
         private bool IsResponsePacket(PacketModel packet)
         {
             // 响应包通常包含请求ID，并且是服务器对客户端请求的响应
-            return !string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId) && 
+            return !string.IsNullOrEmpty(packet?.Request?.RequestId) &&
                    packet.Direction == PacketDirection.Response;
         }
 
@@ -658,8 +742,8 @@ namespace RUINORERP.UI.Network
         private bool IsServerPushCommand(PacketModel packet)
         {
             // 服务器主动推送的命令通常没有请求ID，或者方向为推送
-            return packet.Direction == PacketDirection.ServerToClient || 
-                   string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId);
+            return packet.Direction == PacketDirection.ServerToClient ||
+                   string.IsNullOrEmpty(packet?.Request?.RequestId);
         }
 
         /// <summary>
@@ -671,20 +755,21 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                var requestId = packet?.ExecutionContext?.RequestId;
+                var requestId = packet?.Request?.RequestId;
                 if (string.IsNullOrEmpty(requestId))
                     return false;
 
                 if (_pendingRequests.TryRemove(requestId, out var pendingRequest))
                 {
+                    //会到后面执行：
                     return pendingRequest.Tcs.TrySetResult(packet);
                 }
-                
+
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "处理响应包时发生错误，请求ID: {RequestId}", packet?.ExecutionContext?.RequestId);
+                _logger.LogError(ex, "处理响应包时发生错误，请求ID: {RequestId}", packet?.Request?.RequestId);
                 return false;
             }
         }
@@ -696,7 +781,7 @@ namespace RUINORERP.UI.Network
         private async Task HandleServerPushCommandAsync(PacketModel packet)
         {
             _logger.LogDebug("处理服务器主动推送命令: {CommandId}", packet.CommandId);
-            
+
             try
             {
                 // 优先使用事件机制处理命令，避免重复处理
@@ -722,7 +807,7 @@ namespace RUINORERP.UI.Network
         private async Task HandleGeneralCommandAsync(PacketModel packet)
         {
             _logger.LogDebug("处理通用命令: {CommandId}", packet.CommandId);
-            
+
             try
             {
                 // 使用命令调度器处理命令
@@ -766,7 +851,7 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <typeparam name="TRequest">请求数据类型</typeparam>
         /// <typeparam name="TResponse">响应数据类型</typeparam>
-        /// <param name="command">命令对象</param>
+        /// <param name="request">命令对象</param>
         /// <param name="retryStrategy">重试策略，如果为null则使用默认策略</param>
         /// <param name="ct">取消令牌</param>
         /// <param name="timeoutMs">单次请求超时时间（毫秒），默认30000毫秒</param>
@@ -774,15 +859,16 @@ namespace RUINORERP.UI.Network
         /// <exception cref="ArgumentException">当命令类别无效时抛出</exception>
         /// <exception cref="ArgumentOutOfRangeException">当超时时间小于等于0时抛出</exception>
         public async Task<PacketModel> SendRequestWithRetryAsync<TRequest, TResponse>(
-            BaseCommand<TRequest, TResponse> command,
+            CommandId commandId,
+            TRequest request,
             IRetryStrategy retryStrategy = null,
             CancellationToken ct = default,
             int timeoutMs = 30000)
             where TRequest : class, IRequest
             where TResponse : class, IResponse
         {
-            if (!Enum.IsDefined(typeof(CommandCategory), command.CommandIdentifier.Category))
-                throw new ArgumentException($"无效的命令类别: {command.CommandIdentifier.Category}", nameof(command.CommandIdentifier));
+            if (!Enum.IsDefined(typeof(CommandCategory), commandId.Category))
+                throw new ArgumentException($"无效的命令类别: {commandId.Category}", commandId.Name);
 
             if (timeoutMs <= 0)
                 throw new ArgumentOutOfRangeException(nameof(timeoutMs), "超时时间必须大于0");
@@ -807,7 +893,7 @@ namespace RUINORERP.UI.Network
                 {
                     _logger?.LogDebug("发送请求尝试 {Attempt}/{MaxRetries}", attempt, _networkConfig.MaxRetryAttempts);
 
-                    var response = await SendRequestAsync<TRequest, TResponse>(command, ct, timeoutMs);
+                    var response = await SendRequestAsync<TRequest, TResponse>(commandId, request, ct, timeoutMs);
 
                     _logger?.LogDebug("请求成功，尝试次数: {Attempt}", attempt);
                     return response;
@@ -841,7 +927,7 @@ namespace RUINORERP.UI.Network
             throw new InvalidOperationException($"请求失败（尝试 {attempt} 次），错误: {lastException?.Message}", lastException);
         }
 
-
+        /*
 
         /// <summary>
         /// 异步发送命令到服务器并等待响应
@@ -882,6 +968,47 @@ namespace RUINORERP.UI.Network
             });
         }
 
+        */
+
+        /// <summary>
+        /// 异步发送命令到服务器并等待响应
+        /// </summary>
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="command">命令对象</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="timeoutMs">超时时间（毫秒），默认为30000毫秒</param>
+        /// <returns>TResponse</returns>
+        public async Task<PacketModel> SendCommandAsync(
+            CommandId commandId,
+             IRequest request,
+            CancellationToken ct = default,
+            int timeoutMs = 30000)
+        {
+            if (!Enum.IsDefined(typeof(CommandCategory), commandId.Category))
+                throw new ArgumentException($"无效的命令类别: {commandId.Category}", nameof(commandId.Name));
+
+            return await EnsureConnectedAsync<PacketModel>(async () =>
+            {
+                try
+                {
+                    // BaseCommand会自动处理Token管理，包括获取和刷新Token
+                    return await SendRequestAsync<IRequest, IResponse>(commandId, request, ct, timeoutMs);
+                }
+                catch (Exception ex) when (ex.Message.IndexOf("token expired", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   ex.Message.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   ex.Message.IndexOf("认证失败", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   ex.Message.IndexOf("未授权", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                   ex.Message.IndexOf("权限不足", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    // Token过期情况，现在由BaseCommand统一处理
+                    _logger.LogWarning("检测到Token过期，BaseCommand会自动处理刷新");
+                    throw; // 抛出异常，让调用方处理或让BaseCommand的机制处理
+                }
+            });
+        }
+
+        /*
         /// <summary>
         /// 异步发送命令到服务器但不等待响应（简化版）
         /// </summary>
@@ -917,7 +1044,7 @@ namespace RUINORERP.UI.Network
                 }
             });
         }
-
+        */
         /// <summary>
         /// 重新连接到服务器
         /// </summary>
@@ -1077,10 +1204,10 @@ namespace RUINORERP.UI.Network
 
             _logger.LogError("达到最大重连尝试次数，重连失败");
             _eventManager.OnErrorOccurred(new Exception("重连服务器失败: 达到最大尝试次数"));
-            
+
             // 触发重连失败事件，通知UI层进行注销锁定处理
             _eventManager.OnReconnectFailed();
-            
+
             return false;
         }
 
@@ -1112,7 +1239,7 @@ namespace RUINORERP.UI.Network
                         {
                             _logger.LogWarning("检测到Socket已断开，但连接状态未同步，立即更新状态");
                         }
-                        
+
                         // 使用统一的连接状态更新方法
                         UpdateConnectionState(false);
                     }
@@ -1142,8 +1269,8 @@ namespace RUINORERP.UI.Network
             }
         }
 
-      
-        
+
+
 
         /// <summary>
         /// 处理接收到的命令
@@ -1153,8 +1280,6 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                // 创建一个临时的命令对象用于调度
-                var command = new GenericCommand<object>(Packet.CommandId, Packet.CommandData);
 
                 // 根据命令类别进行特殊处理
                 switch (Packet.CommandId.Category)
@@ -1162,18 +1287,18 @@ namespace RUINORERP.UI.Network
                     case CommandCategory.System:
                         await ProcessSystemCommandAsync(Packet);
                         break;
-                        
+
                     case CommandCategory.Cache:
                         await ProcessCacheCommandAsync(Packet);
                         break;
-                        
+
                     case CommandCategory.Authentication:
                         await ProcessAuthenticationCommandAsync(Packet);
                         break;
-                        
+
                     default:
                         // 使用命令调度器处理其他命令
-                        await _commandDispatcher.DispatchAsync(Packet, command, CancellationToken.None).ConfigureAwait(false);
+                        await _commandDispatcher.DispatchAsync(Packet, CancellationToken.None).ConfigureAwait(false);
                         break;
                 }
             }
@@ -1203,8 +1328,7 @@ namespace RUINORERP.UI.Network
             else
             {
                 // 其他系统命令使用调度器处理
-                var command = new GenericCommand<object>(packet.CommandId, packet.CommandData);
-                await _commandDispatcher.DispatchAsync(packet, command, CancellationToken.None).ConfigureAwait(false);
+                await _commandDispatcher.DispatchAsync(packet, CancellationToken.None).ConfigureAwait(false);
             }
         }
 
@@ -1216,8 +1340,7 @@ namespace RUINORERP.UI.Network
         {
             // 缓存命令可以使用专门的缓存服务处理
             // 或者使用命令调度器处理
-            var command = new GenericCommand<object>(packet.CommandId, packet.CommandData);
-            await _commandDispatcher.DispatchAsync(packet, command, CancellationToken.None).ConfigureAwait(false);
+            await _commandDispatcher.DispatchAsync(packet, CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -1227,11 +1350,10 @@ namespace RUINORERP.UI.Network
         private async Task ProcessAuthenticationCommandAsync(PacketModel packet)
         {
             // 认证命令使用调度器处理
-            var command = new GenericCommand<object>(packet.CommandId, packet.CommandData);
-            await _commandDispatcher.DispatchAsync(packet, command, CancellationToken.None).ConfigureAwait(false);
+            await _commandDispatcher.DispatchAsync(packet, CancellationToken.None).ConfigureAwait(false);
         }
 
-
+        /*
         /// <summary>
         /// 发送数据包的核心私有方法
         /// 封装了构建数据包、序列化、加密和发送的公共逻辑
@@ -1269,14 +1391,14 @@ namespace RUINORERP.UI.Network
 
                 // 自动设置到ExecutionContext，确保服务器端也能获取
                 if (packet.ExecutionContext == null)
-                    packet.ExecutionContext = new CmdContext();
+                    packet.ExecutionContext = new CommandContext();
 
                 packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;
                 //packet.ExecutionContext.UserId=MainForm.Instance.AppContext.CurrentUser.
                 packet.ExecutionContext.RequestId = command.Request.RequestId;
                 packet.ExecutionContext.RequestType = command.Request.GetType();
                 packet.ExecutionContext.CommandType = command.GetType();
-                packet.ExecutionContext.ClientVersion =Application.ProductVersion;
+                packet.ExecutionContext.ClientVersion = Application.ProductVersion;
 
                 // 序列化和加密数据包
                 var payload = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(packet);
@@ -1310,6 +1432,83 @@ namespace RUINORERP.UI.Network
         }
 
 
+        */
+
+
+        /// <summary>
+        /// 发送数据包的核心私有方法
+        /// 封装了构建数据包、序列化、加密和发送的公共逻辑
+        /// </summary>
+        /// <param name="client">Socket客户端</param>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="data">要发送的数据</param>
+        /// <param name="requestId">请求ID</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="authToken">认证令牌（可选）</param>
+        /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+        /// <exception cref="NetworkCommunicationException">当网络通信失败时抛出</exception>
+        private async Task SendPacketCoreAsync<TRequest, TResponse>(
+            ISocketClient client,
+               CommandId commandId,
+            TRequest request,
+            int timeoutMs,
+            CancellationToken ct,
+            string authToken = null)
+            where TRequest : class, IRequest
+            where TResponse : class, IResponse
+        {
+            ct.ThrowIfCancellationRequested();
+            try
+            {
+                // 构建数据包
+                var packet = PacketBuilder.Create()
+                    .WithDirection(PacketDirection.Request) // 明确设置请求方向
+                    .WithRequest(request)
+                    .WithRequestId(request.RequestId)//冗余的。
+                    .WithTimeout(timeoutMs)
+                    .Build();
+
+                // 自动设置到ExecutionContext，确保服务器端也能获取
+                if (packet.ExecutionContext == null)
+                    packet.ExecutionContext = new CommandContext();
+
+                packet.CommandId = commandId;
+                packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;
+                packet.ExecutionContext.UserId = MainForm.Instance.AppContext.CurrentUser.UserID;
+
+                // 序列化和加密数据包
+                var payload = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(packet);
+                var original = new OriginalData(
+                    (byte)packet.CommandId.Category,
+                    new[] { packet.CommandId.OperationCode },
+                    payload);
+                var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
+
+                await client.SendAsync(encrypted, ct);
+
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"发送数据包时发生错误: CommandId={commandId}",
+                    commandId.FullCode, commandId.Name);
+
+                // 如果是取消操作，则直接抛出
+                if (ex is OperationCanceledException)
+                {
+                    throw;
+                }
+
+                // 包装异常以便上层处理（包括可能的Token过期处理）
+                throw new NetworkCommunicationException(
+                    $"发送请求失败: {ex.Message}",
+                    ex,
+                    commandId,
+                    commandId.Name);
+            }
+        }
+
+
 
 
         /// <summary>
@@ -1320,7 +1519,7 @@ namespace RUINORERP.UI.Network
         /// <param name="data">请求数据</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>发送成功返回true，失败返回false</returns>
-        private async Task<bool> SendOneWayCommandAsync<TRequest>(CommandId commandId, TRequest data, CancellationToken ct)
+        public async Task<bool> SendOneWayCommandAsync<TRequest>(CommandId commandId, TRequest data, CancellationToken ct = default)
         {
             try
             {
@@ -1469,7 +1668,7 @@ namespace RUINORERP.UI.Network
                     _cleanupTimer?.Dispose();
 
                     // 清理超时统计
-                   // _timeoutStatistics.TryDispose();
+                    // _timeoutStatistics.TryDispose();
 
                     // 断开连接
                     // 断开连接
@@ -1514,26 +1713,19 @@ namespace RUINORERP.UI.Network
 
             try
             {
-                // 创建命令对象 - 使用ExecutionContext中的响应类型进行反序列化
-                ICommand baseCommand = _CommandCreationService.CreateCommandFromBytes(packet.CommandData, packet.ExecutionContext?.CommandTypeName);
 
                 // 处理登录命令的特殊情况
                 TResponse response = default(TResponse);
-                if (packet.ExecutionContext.ResponseType != null)
+                if (packet.Response != null)
                 {
-                    // 检查响应数据是否为空
-                    if (baseCommand.ResponseDataByMessagePack == null || baseCommand.ResponseDataByMessagePack.Length == 0)
-                    {
-                        _logger.LogWarning("收到响应数据包，但响应数据为空。命令ID: {CommandId}", packet.CommandId);
-                        return null;
-                    }
-
-                    // 反序列化响应数据
-                    var responseData = MessagePackSerializer.Deserialize(packet.ExecutionContext.ResponseType, baseCommand.ResponseDataByMessagePack, UnifiedSerializationService.MessagePackOptions);
-                    response = responseData as TResponse;
+                    response = packet.Response as TResponse;
+                }
+                else
+                {
+                    response= ResponseBuilder.Error($"收到响应数据包，但响应数据为空。命令ID: {packet.CommandId.ToString()}") as TResponse;
                 }
                 return response;
-               
+
             }
             catch (Exception ex)
             {
@@ -1542,6 +1734,9 @@ namespace RUINORERP.UI.Network
             }
         }
 
+
+
+        /*
         /// <summary>
         /// 发送命令并处理响应，返回指令类型的响应数据
         /// </summary>
@@ -1551,7 +1746,7 @@ namespace RUINORERP.UI.Network
         /// <param name="ct">取消令牌</param>
         /// <param name="timeoutMs">超时时间（毫秒）</param>
         /// <returns>包含指令信息的响应数据</returns>
-        public async Task<BaseCommand<TRequest,TResponse>> SendCommandWithResponseAsync<TRequest, TResponse>(
+        public async Task<BaseCommand<TRequest, TResponse>> SendCommandWithResponseAsync<TRequest, TResponse>(
             BaseCommand<TRequest, TResponse> command,
             CancellationToken ct = default,
             int timeoutMs = 30000)
@@ -1562,7 +1757,7 @@ namespace RUINORERP.UI.Network
 
             if (packet == null)
             {
-                return BaseCommand<TRequest,TResponse>.Error("未收到服务器响应");
+                return BaseCommand<TRequest, TResponse>.Error("未收到服务器响应");
             }
 
             var responseData = ProcessCommandResponseAsync<TResponse>(packet);
@@ -1571,13 +1766,51 @@ namespace RUINORERP.UI.Network
             if (responseData == null)
             {
                 _logger.LogWarning("命令响应数据为空或处理失败。命令ID: {CommandId}", command.CommandIdentifier);
-                return BaseCommand<TRequest,TResponse>.Error("服务器返回了空响应数据");
+                return BaseCommand<TRequest, TResponse>.Error("服务器返回了空响应数据");
             }
 
-            var commandResponse = BaseCommand<TRequest,TResponse>.Success(responseData, (responseData as ResponseBase)?.Message ?? "操作成功");
+            var commandResponse = BaseCommand<TRequest, TResponse>.Success(responseData, (responseData as ResponseBase)?.Message ?? "操作成功");
             commandResponse.CommandIdentifier = command.CommandIdentifier;
             return commandResponse;
         }
+        */
+
+        /// <summary>
+        /// 发送命令并处理响应，返回指令类型的响应数据
+        /// </summary>
+        /// <typeparam name="TRequest">请求数据类型</typeparam>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="command">命令对象</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <returns>包含指令信息的响应数据</returns>
+        public async Task<TResponse> SendCommandWithResponseAsync<TResponse>(
+            CommandId commandId,
+                   IRequest request,
+            CancellationToken ct = default,
+            int timeoutMs = 30000)
+            where TResponse : class, IResponse
+        {
+            var packet = await SendCommandAsync(commandId, request, ct, timeoutMs);
+
+            if (packet == null)
+            {
+                return ResponseBase.CreateError("未收到服务器响应") as TResponse;
+            }
+
+            var responseData = packet.Response;
+
+            // 检查响应数据是否为空
+            if (responseData == null)
+            {
+                _logger.LogWarning($"命令响应数据为空或处理失败。命令ID: {commandId}{commandId.Name}", commandId);
+                return ResponseBase.CreateError("服务器返回了空响应数据") as TResponse;
+            }
+            return responseData as TResponse;
+        }
+
+
+
 
     }
 

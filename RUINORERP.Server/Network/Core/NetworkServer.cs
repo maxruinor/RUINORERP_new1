@@ -83,10 +83,10 @@ namespace RUINORERP.Server.Network.Core
             {
 
                
-                // 这会确保所有实现了ICommand接口并使用PacketCommandAttribute特性的命令都被正确注册
-                var commandScanner = Startup.GetFromFac<CommandScanner>();
+    
+               
                 // 扫描RUINORERP.PacketSpec程序集以及其他相关程序集
-                var packetSpecAssembly = Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommand));
+                var packetSpecAssembly = Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommandDispatcher));
                 var serverAssembly = Assembly.GetExecutingAssembly();
 
                 // 初始化命令调度器,里面会扫描并注册所有命令类型到命令调度器
@@ -210,11 +210,7 @@ namespace RUINORERP.Server.Network.Core
                       var commandDispatcher = Program.ServiceProvider.GetRequiredService<CommandDispatcher>();
                       services.AddSingleton<CommandDispatcher>(commandDispatcher);
 
-
-                      // 注册ICommandFactory服务，SuperSocketCommandAdapter也依赖它
-                      var commandFactory = Program.ServiceProvider.GetRequiredService<ICommandCreationService>();
-                      services.AddSingleton<ICommandCreationService>(commandFactory);
-
+ 
                       // 注册命令调度器和适配器
                       services.AddLogging(builder =>
                       {

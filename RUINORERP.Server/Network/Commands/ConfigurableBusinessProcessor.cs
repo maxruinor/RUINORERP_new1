@@ -58,7 +58,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="cmd">队列命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        protected override async Task<BaseCommand<IRequest, IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task< IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             if (cmd?.Command == null)
             {

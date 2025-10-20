@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -85,7 +85,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 提供默认实现，避免空引用异常
         /// </summary>
         public virtual IReadOnlyList<CommandId> SupportedCommands { get; protected set; } = Array.Empty<CommandId>();
-        
+
 
         /// <summary>
         /// 安全设置支持的命令列表 - CommandId版本
@@ -99,12 +99,12 @@ namespace RUINORERP.PacketSpec.Commands
                 Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
                 return;
             }
-            
+
             SupportedCommands = commands.ToList();
             // 减少调试日志，在生产环境中不记录
-            #if DEBUG
+#if DEBUG
             Logger?.LogDebug($"处理器 {Name} 设置支持 {commands.Length} 个命令: {string.Join(", ", commands.Select(c => $"{c.Name}(0x{c.FullCode:X4})"))}");
-            #endif
+#endif
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace RUINORERP.PacketSpec.Commands
                 Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
                 return;
             }
-            
+
             var commandList = commands.ToList();
             if (commandList.Count == 0)
             {
@@ -127,12 +127,12 @@ namespace RUINORERP.PacketSpec.Commands
                 Logger?.LogDebug($"处理器 {Name} 设置支持 0 个命令");
                 return;
             }
-            
+
             SupportedCommands = commandList;
             Logger?.LogDebug($"处理器 {Name} 设置支持 {commandList.Count} 个命令: {string.Join(", ", commandList.Select(c => $"{c.Name}(0x{c.FullCode:X4})"))}");
         }
 
-       
+
         /// <summary>
         /// 处理器状态
         /// </summary>
@@ -166,67 +166,67 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 异步处理命令 - 统一命令处理流程
         /// </summary>
-        public async Task<BaseCommand<IRequest, IResponse>> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default)
+        public async Task<IResponse> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default)
         {
             if (cmd == null)
                 throw new ArgumentNullException(nameof(cmd));
 
             // 获取执行超时时间
             var executionTimeoutMs = GetExecutionTimeoutMs(cmd);
-            
+
             using var executionCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(executionTimeoutMs));
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, executionCts.Token);
-            
+
             var startTime = DateTime.UtcNow;
             bool success = true;
 
             try
             {
                 // 执行统一的命令预处理流程
-                var preprocessResult = await ExecuteCommandPreprocessingAsync(cmd, linkedCts.Token);
-                if (preprocessResult != null)
-                    return preprocessResult;
+                //var preprocessResult = await ExecuteCommandPreprocessingAsync(cmd, linkedCts.Token);
+                //if (preprocessResult != null)
+                //    return preprocessResult;
 
-                // 执行命令前置处理
-                var beforeResult = await OnBeforeHandleAsync(cmd, linkedCts.Token);
-                if (beforeResult != null)
-                    return beforeResult;
+                //// 执行命令前置处理
+                //var beforeResult = await OnBeforeHandleAsync(cmd, linkedCts.Token);
+                //if (beforeResult != null)
+                //    return beforeResult;
 
                 // 执行核心命令处理
-                var result = await OnHandleAsync(cmd, linkedCts.Token);
+                var response = await OnHandleAsync(cmd, linkedCts.Token);
 
                 // 执行命令后置处理
-                var afterResult = await OnAfterHandleAsync(cmd, result, linkedCts.Token);
-                if (afterResult != null)
-                    return afterResult;
+                //var afterResult = await OnAfterHandleAsync(cmd, result, linkedCts.Token);
+                //if (afterResult != null)
+                //    return afterResult;
 
                 // 检查是否接近超时
                 var executionTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
                 if (executionTime > executionTimeoutMs * 0.8) // 超过80%时间发出警告
                 {
-                    Logger.LogWarning($"命令 {cmd.Command.CommandIdentifier} 执行接近超时: {executionTime}ms");
+                    Logger.LogWarning($"命令 {cmd.Packet.CommandId}{cmd.Packet.CommandId.Name} 执行接近超时: {executionTime}ms");
                 }
 
                 // 更新统计信息
-                UpdateStatistics(result.Response?.IsSuccess ?? false, (long)(DateTime.UtcNow - startTime).TotalMilliseconds);
+                UpdateStatistics(response?.IsSuccess ?? false, (long)(DateTime.UtcNow - startTime).TotalMilliseconds);
 
-                return result;
+                return response;
             }
             catch (OperationCanceledException) when (executionCts.IsCancellationRequested)
             {
                 var executionTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                Logger.LogWarning($"命令执行超时: {cmd.Command.CommandIdentifier}, 设置: {executionTimeoutMs}ms, 实际: {executionTime}ms");
-                
+                Logger.LogWarning($"命令执行超时: {cmd.Packet.CommandId}, 设置: {executionTimeoutMs}ms, 实际: {executionTime}ms");
+
                 // 更新超时统计信息
                 UpdateTimeoutStatistics();
-                
+
                 success = false;
-                return BaseCommand<IRequest, IResponse>.CreateError($"业务处理超时: {executionTimeoutMs}ms", 408);
+                return ResponseBase.CreateError($"业务处理超时: {executionTimeoutMs}ms", 408);
             }
             catch (OperationCanceledException)
             {
                 success = false;
-                return BaseCommand<IRequest, IResponse>.CreateError(UnifiedErrorCodes.Command_ProcessCancelled.Message, UnifiedErrorCodes.Command_ProcessCancelled.Code);
+                return ResponseBase.CreateError(UnifiedErrorCodes.Command_ProcessCancelled.Message, UnifiedErrorCodes.Command_ProcessCancelled.Code);
             }
             catch (Exception ex)
             {
@@ -236,36 +236,29 @@ namespace RUINORERP.PacketSpec.Commands
             finally
             {
                 var elapsed = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-                _logHandled(Logger, cmd.Command.ToString(), elapsed, success, null);
+                _logHandled(Logger, cmd.Packet.CommandId.ToString(), elapsed, success, null);
             }
         }
 
         /// <summary>
         /// 统一的命令预处理流程 - 提取为独立方法以便复用
         /// </summary>
-        protected async Task<BaseCommand<IRequest, IResponse>> ExecuteCommandPreprocessingAsync(QueuedCommand cmd, CancellationToken cancellationToken)
-        {
-            // 验证命令
-            var validationResult = await cmd.Command.ValidateAsync(cancellationToken);
-            if (!validationResult.IsValid)
-            {
-                Logger.LogDebug($"命令验证失败: {validationResult.Errors[0].ErrorMessage}");
-                return BaseCommand<IRequest, IResponse>.CreateValidationError(validationResult);
-            }
+        //protected async Task<IResponse> ExecuteCommandPreprocessingAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        //{
 
-            // 验证会话
-            if (!ValidateSession(cmd.Packet?.ExecutionContext?.SessionId))
-            {
-                Logger.LogDebug($"会话验证失败: {cmd.Packet?.ExecutionContext?.SessionId}");
-                return BaseCommand<IRequest, IResponse>.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
-                    .WithMetadata("ErrorCode", "INVALID_SESSION");
-            }
+        //    // 验证会话
+        //    if (!ValidateSession(cmd.Packet?.ExecutionContext?.SessionId))
+        //    {
+        //        Logger.LogDebug($"会话验证失败: {cmd.Packet?.ExecutionContext?.SessionId}");
+        //        return ResponseBase.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
+        //            .WithMetadata("ErrorCode", "INVALID_SESSION");
+        //    }
 
-            // 注意：命令超时检查已移除，因为指令本身不应该关心超时
-            // 超时应该是执行环境的问题，由网络层或业务处理层处理
+        //    // 注意：命令超时检查已移除，因为指令本身不应该关心超时
+        //    // 超时应该是执行环境的问题，由网络层或业务处理层处理
 
-            return null; // 预处理通过
-        }
+        //    return null; // 预处理通过
+        //}
 
         /// <summary>
         /// 验证会话是否有效
@@ -278,16 +271,16 @@ namespace RUINORERP.PacketSpec.Commands
             return true;
         }
 
- 
+
 
         /// <summary>
         /// 统一的异常处理
         /// </summary>
-        protected BaseCommand<IRequest, IResponse> HandleCommandException(Exception ex)
+        protected IResponse HandleCommandException(Exception ex)
         {
             var errorCode = UnifiedErrorCodes.Command_ExecuteFailed.Code == 0 ? UnifiedErrorCodes.System_InternalError : UnifiedErrorCodes.Command_ExecuteFailed;
             Logger.LogError(ex, $"命令处理异常: {ex.Message}");
-            return BaseCommand<IRequest, IResponse>.CreateError($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
+            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
                 .WithMetadata("StackTrace", ex.StackTrace);
         }
 
@@ -296,28 +289,24 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public virtual bool CanHandle(QueuedCommand cmd)
         {
-            if (cmd.Command == null || _disposed || Status != HandlerStatus.Running)
+            if (cmd.Packet == null)
+            {
+                return false;
+            }
+
+            if (cmd.Packet.CommandId.FullCode == 0 || _disposed || Status == HandlerStatus.Error || Status == HandlerStatus.Disposed)
+                return false;
+
+            // 允许已初始化或运行中的处理器处理命令
+            if (Status != HandlerStatus.Initialized && Status != HandlerStatus.Running)
                 return false;
 
             // 安全处理SupportedCommands为null或空的情况
             var supportedCommands = SupportedCommands ?? Array.Empty<CommandId>();
-            return supportedCommands.Contains(cmd.Command.CommandIdentifier);
+            return supportedCommands.Contains(cmd.Packet.CommandId);
         }
 
-        /// <summary>
-        /// 判断是否可以处理该命令 - uint版本（向后兼容）
-        /// </summary>
-        /// <param name="commandCode">命令代码（uint格式）</param>
-        /// <returns>是否可以处理</returns>
-        public virtual bool CanHandle(uint commandCode)
-        {
-            if (_disposed || Status != HandlerStatus.Running)
-                return false;
-
-            // 安全处理SupportedCommands为null或空的情况
-            var supportedCommands = SupportedCommands ?? Array.Empty<CommandId>();
-            return supportedCommands.Any(cmd => cmd.FullCode == commandCode);
-        }
+ 
 
         /// <summary>
         /// 处理器初始化
@@ -488,7 +477,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行核心处理逻辑
         /// </summary>
-        protected abstract Task<BaseCommand<IRequest, IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
+        protected abstract Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
 
         /// <summary>
         /// 基于命令类型确定处理超时
@@ -497,7 +486,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <returns>执行超时毫秒数</returns>
         protected virtual int GetExecutionTimeoutMs(QueuedCommand cmd)
         {
-            var baseTimeout = cmd.Command.CommandIdentifier.Category switch
+            var baseTimeout = cmd.Packet.CommandId.Category switch
             {
                 CommandCategory.Authentication => 10000,    // 认证: 10秒
                 CommandCategory.Cache => 5000,              // 缓存: 5秒  
@@ -505,12 +494,12 @@ namespace RUINORERP.PacketSpec.Commands
                 CommandCategory.DataSync => 60000,          // 数据同步: 60秒
                 _ => 15000                                  // 默认: 15秒
             };
-            
+
             // 优先级已移到数据包中，不再根据命令优先级调整超时
             return baseTimeout;
         }
 
- 
+
 
         #endregion
 
@@ -543,24 +532,24 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行前置处理
         /// </summary>
-        protected virtual Task<BaseCommand<IRequest, IResponse>> OnBeforeHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected virtual Task<IResponse> OnBeforeHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
-            return Task.FromResult<BaseCommand<IRequest, IResponse>>(null);
+            return Task.FromResult<IResponse>(null);
         }
 
         /// <summary>
         /// 执行后置处理
         /// </summary>
-        protected virtual Task<BaseCommand<IRequest, IResponse>> OnAfterHandleAsync(QueuedCommand cmd, BaseCommand<IRequest, IResponse> result, CancellationToken cancellationToken)
+        protected virtual Task<IResponse> OnAfterHandleAsync(QueuedCommand cmd, IResponse result, CancellationToken cancellationToken)
         {
-            return Task.FromResult<BaseCommand<IRequest, IResponse>>(null);
+            return Task.FromResult<IResponse>(null);
         }
 
         #endregion
 
         #region 辅助方法
 
-        
+
         /// <summary>
         /// 更新统计信息
         /// </summary>
@@ -616,7 +605,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         protected void LogInfo(string message)
         {
-            Logger.LogDebug(message);
+            Logger.LogInformation(message);
         }
 
         /// <summary>
@@ -643,22 +632,7 @@ namespace RUINORERP.PacketSpec.Commands
         }
 
 
-        /// <summary>
-        /// 使用GetJsonData方法从PacketModel中解析业务数据
-        /// 推荐使用此方法以确保数据解析的统一性
-        /// </summary>
-        /// <typeparam name="T">目标数据类型</typeparam>
-        /// <param name="command">命令对象</param>
-        /// <returns>解析后的数据对象，如果解析失败则返回null</returns>
-        protected T ParseBusinessData<T>(ICommand command) where T : class
-        {
-            if (command is BaseCommand baseCmd)
-            {
-                return baseCmd.GetObjectData<T>();
-            }
-            return null;
-        }
-
+        
 
 
         /// <summary>

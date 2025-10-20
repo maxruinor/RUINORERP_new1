@@ -111,6 +111,32 @@ namespace RUINORERP.UI
 {
     public partial class MainForm : KryptonForm
     {
+        /// <summary>
+        /// 登录状态枚举
+        /// </summary>
+        public enum LoginStatus
+        {
+            /// <summary>
+            /// 未登录
+            /// </summary>
+            None,
+            /// <summary>
+            /// 登录中
+            /// </summary>
+            LoggingIn,
+            /// <summary>
+            /// 已登录
+            /// </summary>
+            LoggedIn,
+            /// <summary>
+            /// 锁定状态
+            /// </summary>
+            Locked,
+            /// <summary>
+            /// 登出中
+            /// </summary>
+            LoggingOut
+        }
 
         public UILogManager logManager;
         private readonly IEntityCacheManager _cacheManager;
@@ -148,16 +174,33 @@ namespace RUINORERP.UI
         {
             try
             {
-                logger?.LogWarning("客户端重连失败，自动进入注销锁定状态");
-
-                // 在UI线程上执行注销操作
-                if (InvokeRequired)
+                logger?.LogWarning("客户端重连失败，检查当前登录状态");
+                
+                // 只有在已登录状态下才进入锁定状态，避免登录失败后重复弹出登录窗口
+                if (CurrentLoginStatus == LoginStatus.LoggedIn)
                 {
-                    Invoke(new Action(LogLock));
+                    logger?.LogWarning("当前为已登录状态，自动进入注销锁定状态");
+                    
+                    // 在UI线程上执行注销操作
+                    if (InvokeRequired)
+                    {
+                        Invoke(new Action(LogLock));
+                    }
+                    else
+                    {
+                        LogLock();
+                    }
                 }
                 else
                 {
-                    LogLock();
+                    logger?.LogInformation($"当前登录状态为{CurrentLoginStatus}，不执行锁定操作");
+                    
+                    // 如果当前不是登录中状态且已连接，则断开连接
+                    if (CurrentLoginStatus != LoginStatus.LoggingIn && communicationService != null && communicationService.IsConnected)
+                    {
+                        logger?.LogInformation("重连失败，断开与服务器的连接");
+                        Invoke(new Action(() => communicationService.Disconnect()));
+                    }
                 }
             }
             catch (Exception ex)
@@ -238,6 +281,82 @@ namespace RUINORERP.UI
                 {
                     _isLoggingOut = value;
                 }
+            }
+        }
+
+        /// <summary>
+        /// 登录状态字段
+        /// </summary>
+        private LoginStatus _loginStatus = LoginStatus.None;
+
+        /// <summary>
+        /// 登录状态同步锁对象
+        /// </summary>
+        private readonly object _loginStatusLock = new object();
+
+        /// <summary>
+        /// 获取或设置登录状态，确保线程安全
+        /// </summary>
+        public LoginStatus CurrentLoginStatus
+        {
+            get
+            {
+                lock (_loginStatusLock)
+                {
+                    return _loginStatus;
+                }
+            }
+            set
+            {
+                lock (_loginStatusLock)
+                {
+                    _loginStatus = value;
+                }
+                
+                // 更新状态栏显示
+                UpdateStatusBarDisplay();
+            }
+        }
+        
+        /// <summary>
+        /// 更新状态栏显示
+        /// </summary>
+        private void UpdateStatusBarDisplay()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(UpdateStatusBarDisplay));
+                return;
+            }
+            
+            switch (CurrentLoginStatus)
+            {
+                case LoginStatus.LoggedIn:
+                    if (AppContext.CurUserInfo != null)
+                    {
+                        if (AppContext.CurUserInfo.UserInfo != null && AppContext.CurUserInfo.UserInfo.tb_employee != null)
+                        {
+                            this.SystemOperatorState.Text = $"已登录: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole.RoleName}】";
+                        }
+                        else
+                        {
+                            this.SystemOperatorState.Text = $"已登录: {AppContext.CurUserInfo.UserInfo.UserName}【{AppContext.CurrentRole.RoleName}】";
+                        }
+                    }
+                    break;
+                case LoginStatus.LoggingIn:
+                    this.SystemOperatorState.Text = "登录中...";
+                    break;
+                case LoginStatus.Locked:
+                    this.SystemOperatorState.Text = "锁定";
+                    break;
+                case LoginStatus.LoggingOut:
+                    this.SystemOperatorState.Text = "登出中...";
+                    break;
+                case LoginStatus.None:
+                default:
+                    this.SystemOperatorState.Text = "未登录";
+                    break;
             }
         }
 
@@ -1534,13 +1653,24 @@ namespace RUINORERP.UI
 
         private async Task<bool> Login()
         {
+            // 检查是否已经在登录过程中或已登录，避免重复弹出登录窗口
+            if (CurrentLoginStatus == LoginStatus.LoggingIn || CurrentLoginStatus == LoginStatus.LoggedIn)
+            {
+                logger?.LogWarning("当前已经在登录过程中或已登录，忽略重复登录请求");
+                return CurrentLoginStatus == LoginStatus.LoggedIn;
+            }
+            
+            // 设置登录状态为登录中
+            CurrentLoginStatus = LoginStatus.LoggingIn;
+            
             bool rs = false;
             RUINORERP.Business.Security.PTPrincipal.Logout(AppContext);
-            // if (this.LoginToolStripButton.Text == "登出")
-            //{
-            FrmLogin loginForm = new FrmLogin();
-            if (loginForm.ShowDialog(this) == DialogResult.OK)
-            {
+            
+            try
+            {   
+                FrmLogin loginForm = new FrmLogin();
+                if (loginForm.ShowDialog(this) == DialogResult.OK)
+                {
                 tb_SystemConfigController<tb_SystemConfig> ctr = Startup.GetFromFac<tb_SystemConfigController<tb_SystemConfig>>();
                 List<tb_SystemConfig> config = ctr.Query();
                 if (config.Count > 0)
@@ -1559,8 +1689,9 @@ namespace RUINORERP.UI
                 List<tb_sys_BillNoRule> BillNoRules = ctrBillNoRule.Query();
                 AppContext.BillNoRules = BillNoRules;
 
-                // 登录成功，重置注销状态
+                // 登录成功，重置状态
                 IsLoggingOut = false;
+                CurrentLoginStatus = LoginStatus.LoggedIn;
                 rs = true;
                 if (AppContext.CurUserInfo != null)
                 {
@@ -1640,6 +1771,16 @@ namespace RUINORERP.UI
             }
             else
             {
+                // 登录失败，设置状态为未登录
+                CurrentLoginStatus = LoginStatus.None;
+                
+                // 检查是否与服务器连接，如果连接则断开
+                if (communicationService != null && communicationService.IsConnected)
+                {
+                    logger?.LogInformation("登录失败，断开与服务器的连接");
+                    communicationService.Disconnect();
+                }
+                
                 Application.Exit();
             }
             UserGlobalConfig.Instance.Serialize();
@@ -1648,6 +1789,19 @@ namespace RUINORERP.UI
             // notify all documents
             //加载uc
             return rs;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "登录过程中发生异常");
+                CurrentLoginStatus = LoginStatus.None;
+                
+                // 异常情况下断开连接
+                if (communicationService != null && communicationService.IsConnected)
+                {
+                    communicationService.Disconnect();
+                }
+                return false;
+            }
         }
 
 
@@ -1655,8 +1809,10 @@ namespace RUINORERP.UI
         {
             try
             {
-                this.SystemOperatorState.Text = "登出";
-                MainForm.Instance.AuditLogHelper.CreateAuditLog("登出", "成功登出服务器");
+                // 设置状态为登出中
+                CurrentLoginStatus = LoginStatus.LoggingOut;
+                
+                MainForm.Instance.AuditLogHelper.CreateAuditLog("登出", "开始登出服务器");
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
@@ -1667,6 +1823,18 @@ namespace RUINORERP.UI
                 ClearUI();
                 ClearData();
                 Application.DoEvents();
+                
+                // 登出完成，断开与服务器的连接
+                if (communicationService != null && communicationService.IsConnected)
+                {
+                    logger?.LogInformation("登出完成，断开与服务器的连接");
+                    communicationService.Disconnect();
+                }
+                
+                // 设置状态为未登录
+                CurrentLoginStatus = LoginStatus.None;
+                
+                MainForm.Instance.AuditLogHelper.CreateAuditLog("登出", "成功登出服务器并断开连接");
 
             }
             catch (Exception ex)
@@ -1681,40 +1849,55 @@ namespace RUINORERP.UI
         public void LogLock()
         {
             // 检查是否已经在注销过程中，防止重复执行
-            if (IsLoggingOut)
+            if (IsLoggingOut || CurrentLoginStatus == LoginStatus.LoggingOut || CurrentLoginStatus == LoginStatus.LoggingIn)
             {
-                logger?.LogWarning("注销操作已在进行中，忽略重复调用");
+                logger?.LogWarning("注销操作已在进行中或正在登录，忽略重复调用");
                 return;
             }
 
-            // 设置注销状态标记
+            // 设置状态
             IsLoggingOut = true;
+            CurrentLoginStatus = LoginStatus.Locked;
 
             MainForm.Instance.Invoke(new Action(async () =>
             {
                 try
                 {
-                    this.SystemOperatorState.Text = "注销";
                     Program.AppContextData.IsOnline = false;
                     MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
-                    MainForm.Instance.AppContext.CurrentUser.在线状态 = communicationService.IsConnected;
+                    MainForm.Instance.AppContext.CurrentUser.在线状态 = false;
+                    
+                    // 记录锁定审计日志
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog("锁定", "系统锁定并进入重新登录状态");
+                    
+                    // 断开与服务器的连接，避免继续发送心跳
+                    if (communicationService != null && communicationService.IsConnected)
+                    {
+                        logger?.LogInformation("锁定系统，断开与服务器的连接");
+                        communicationService.Disconnect();
+                    }
+                    
                     ClearUI();
                     ClearRoles();
                     System.GC.Collect();
-                    //标记一下状态为注销，可以保存到上下文传到心跳包中
+                    
+                    // 尝试重新登录
                     bool islogin = await Login();
                     if (!islogin)
                     {
-                        // 登录失败时重置注销状态
+                        // 登录失败时重置状态
                         IsLoggingOut = false;
+                        CurrentLoginStatus = LoginStatus.None;
                         return;
                     }
-                    // await InitConfig();
+                    
+                    // 登录成功后加载界面
                     LoadUIMenus();
                     LoadUIForIM_LogPages();
 
-                    // 登录成功后重置注销状态
+                    // 登录成功后重置状态
                     IsLoggingOut = false;
+                    CurrentLoginStatus = LoginStatus.LoggedIn;
                 }
                 catch (Exception ex)
                 {

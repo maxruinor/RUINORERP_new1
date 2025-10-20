@@ -9,7 +9,12 @@ using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Network.Services;
-using RUINORERP.Business.CommService; // 添加缓存订阅管理器的引用
+using RUINORERP.Business.CommService;
+using System.Threading;
+using RUINORERP.PacketSpec.Models.Core;
+using System;
+using RUINORERP.PacketSpec.Models.Responses;
+using System.Threading.Tasks; // 添加缓存订阅管理器的引用
 
 namespace RUINORERP.Server.Network.DI
 {
@@ -76,11 +81,14 @@ namespace RUINORERP.Server.Network.DI
             {
                 services.AddTransient(handlerType);
 
-                // 注册为ICommandHandler
-                var handlerInterface = typeof(ICommandHandler);
-                if (handlerInterface.IsAssignableFrom(handlerType))
+                // 注册为命令处理器接口 - 使用更精确的接口识别方式
+                foreach (var implementedInterface in handlerType.GetInterfaces())
                 {
-                    services.AddTransient(handlerInterface, handlerType);
+                    // 通过接口的基本结构特征来识别命令处理器接口，而不是依赖具体接口名称
+                    if (IsCommandHandlerInterface(implementedInterface))
+                    {
+                        services.AddTransient(implementedInterface, handlerType);
+                    }
                 }
             }
 
@@ -125,8 +133,7 @@ namespace RUINORERP.Server.Network.DI
             // 注册网络命令处理器
             RegisterNetworkCommandHandlers(builder);
 
-            // 注册网络命令
-            RegisterNetworkCommands(builder);
+      
         }
 
         /// <summary>
@@ -138,29 +145,40 @@ namespace RUINORERP.Server.Network.DI
             // 获取当前程序集
             var assembly = Assembly.GetExecutingAssembly();
 
-            // 注册所有实现ICommandHandler接口的类型
+            // 注册所有实现命令处理器接口的类型 - 使用更精确的接口识别方式
             builder.RegisterAssemblyTypes(assembly)
-                .Where(t => t.GetInterfaces().Any(i =>
-                    i.IsGenericType &&
-                    i.GetGenericTypeDefinition() == typeof(ICommandHandler)))
+                .Where(t => t.GetInterfaces().Any(i => IsCommandHandlerInterface(i)))
                 .AsImplementedInterfaces()
                 .InstancePerDependency();
         }
 
-        /// <summary>
-        /// 注册网络命令
-        /// </summary>
-        /// <param name="builder">容器构建器</param>
-        private static void RegisterNetworkCommands(ContainerBuilder builder)
-        {
-            // 获取当前程序集
-            var assembly = Assembly.GetExecutingAssembly();
+ 
 
-            // 注册所有实现IServerCommand接口的类型
-            builder.RegisterAssemblyTypes(assembly)
-                .Where(t => typeof(ICommand).IsAssignableFrom(t) && !t.IsAbstract)
-                .AsSelf()
-                .InstancePerDependency();
+        /// <summary>
+        /// 检查接口是否为命令处理器接口
+        /// 通过接口特征识别，而不是依赖具体接口名称
+        /// </summary>
+        /// <param name="interfaceType">要检查的接口类型</param>
+        /// <returns>是否为命令处理器接口</returns>
+        private static bool IsCommandHandlerInterface(Type interfaceType)
+        {
+            if (!interfaceType.IsInterface)
+                return false;
+
+            // 通过接口特征识别命令处理器接口，而不是依赖具体的接口名称
+            // 检查是否有HandleAsync方法，接受PacketModel参数并返回IResponse
+            var methods = interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            var handleMethod = methods.FirstOrDefault(m => 
+                m.Name == "HandleAsync" && 
+                m.GetParameters().Length == 2 && 
+                m.GetParameters()[0].ParameterType == typeof(PacketModel) &&
+                m.GetParameters()[1].ParameterType == typeof(CancellationToken) &&
+                m.ReturnType.IsGenericType &&
+                m.ReturnType.GetGenericTypeDefinition() == typeof(Task<>) &&
+                m.ReturnType.GetGenericArguments()[0] == typeof(IResponse)
+            );
+            
+            return handleMethod != null;
         }
 
         /// <summary>

@@ -101,47 +101,52 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<BaseCommand<IRequest, IResponse>> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
-                var commandId = cmd.Command.CommandIdentifier;
-                BaseCommand<IRequest, LoginResponse> loginCommand = null;
-                if (commandId == AuthenticationCommands.Login)
+                var commandId = cmd.Packet.CommandId;
+                if (cmd.Packet.Request is LoginRequest loginRequest)
                 {
-                    if (cmd.Command is BaseCommand<IRequest, LoginResponse> baseloginCommand)
+                    if (commandId == AuthenticationCommands.Login)
                     {
-                        loginCommand = baseloginCommand;
                         //登陆指令时上下文session是由服务器来指定的
-                        if (loginCommand.Request == null)
+                        if (loginRequest == null)
                         {
                             return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
                         }
+                        return await ProcessLoginAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
                     }
-                    return await ProcessLoginAsync(loginCommand.Request as LoginRequest, cmd.Packet.ExecutionContext, cancellationToken);
-                }
-                else if (commandId == AuthenticationCommands.Logout)
-                {
-                    return await ProcessLogoutAsync(loginCommand.Request as LoginRequest, cmd.Packet.ExecutionContext, cancellationToken);
-                }
-                else if (commandId == AuthenticationCommands.ValidateToken)
-                {
-                    return await  ProcessTokenValidationAsync(cmd.Packet.ExecutionContext, cancellationToken);
-                }
-                else if (commandId == AuthenticationCommands.RefreshToken)
-                {
-                    return await ProcessTokenRefreshAsync(loginCommand.Request as LoginRequest, cmd.Packet.ExecutionContext, cancellationToken);
+                    else if (commandId == AuthenticationCommands.Logout)
+                    {
+                        return await ProcessLogoutAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
+                    }
+                    else if (commandId == AuthenticationCommands.ValidateToken)
+                    {
+                        return await ProcessTokenValidationAsync(cmd.Packet.ExecutionContext, cancellationToken);
+                    }
+                    else if (commandId == AuthenticationCommands.RefreshToken)
+                    {
+                        return await ProcessTokenRefreshAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
+                    }
+                    else
+                    {
+                        // 确保所有代码路径都有返回值
+                        var errorResponse = ResponseBase.CreateError($"不支持的认证命令ID: {commandId.ToString()}")
+                            .WithMetadata("ErrorCode", "UNSUPPORTED_AUTH_COMMAND");
+                        return errorResponse;
+                    }
                 }
                 else
                 {
-                    var errorResponse = BaseCommand<IRequest, IResponse>.CreateError($"不支持的命令类型: {cmd.Command.CommandIdentifier}")
+                    var errorResponse = ResponseBase.CreateError($"不支持的命令类型: {cmd.Packet.CommandId.ToString()}")
                         .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
                     return errorResponse;
                 }
             }
             catch (Exception ex)
             {
-                LogError($"处理命令 {cmd.Command.CommandIdentifier} 异常: {ex.Message}", ex);
+                LogError($"处理命令 {cmd.Packet.CommandId.ToString()} 异常: {ex.Message}", ex);
                 return CreateExceptionResponse(ex, "HANDLER_ERROR");
             }
         }
@@ -155,9 +160,9 @@ namespace RUINORERP.Server.Network.Commands
         /// 统一的登录业务逻辑处理方法
         /// 整合了所有登录相关的业务逻辑，被不同类型的登录命令处理器调用
         /// </summary>
-        private async Task<BaseCommand<IRequest, IResponse>> ProcessLoginAsync(
+        private async Task<IResponse> ProcessLoginAsync(
             LoginRequest loginRequest,
-            CmdContext executionContext,
+            CommandContext executionContext,
             CancellationToken cancellationToken)
         {
             LogInfo($"处理登录请求: {loginRequest.Username}");
@@ -246,8 +251,7 @@ namespace RUINORERP.Server.Network.Commands
                     };
                     duplicateLoginResponse.WithMetadata("ExistingSessions", sessionInfos);
 
-                    return BaseCommand<IRequest, IResponse>.CreateSuccess(duplicateLoginResponse)
-                        .WithMetadata("ActionRequired", "DuplicateLoginConfirmation");
+                    return duplicateLoginResponse;
                 }
 
                 // 处理重复登录确认后的逻辑
@@ -275,9 +279,9 @@ namespace RUINORERP.Server.Network.Commands
                     Token = tokenInfo
                 };
 
+
                 // 添加心跳间隔信息到元数据
-                return BaseCommand<IRequest, IResponse>.CreateSuccess(loginResponse, "登录成功")
-                    .WithMetadata("HeartbeatIntervalMs", "30000") // 默认30秒心跳间隔
+                loginResponse.WithMetadata("HeartbeatIntervalMs", "30000") // 默认30秒心跳间隔
                     .WithMetadata("ServerInfo", new Dictionary<string, object>
                     {
                         ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
@@ -285,6 +289,10 @@ namespace RUINORERP.Server.Network.Commands
                         ["MaxConcurrentUsers"] = MaxConcurrentUsers.ToString(),
                         ["CurrentActiveUsers"] = SessionService.ActiveSessionCount.ToString()
                     });
+
+                return loginResponse;
+
+
             }
             catch (Exception ex)
             {
@@ -313,8 +321,8 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理Token验证
         /// </summary>
-        private async Task<BaseCommand<IRequest, IResponse>> ProcessTokenValidationAsync(
-            CmdContext executionContext,
+        private async Task<IResponse> ProcessTokenValidationAsync(
+            CommandContext executionContext,
             CancellationToken cancellationToken)
         {
             try
@@ -345,7 +353,7 @@ namespace RUINORERP.Server.Network.Commands
                     response.Token = new TokenInfo { AccessToken = token };
                 }
 
-                return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
+                return response;
             }
             catch (Exception ex)
             {
@@ -360,9 +368,9 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理Token刷新
         /// </summary>
-        private async Task<BaseCommand<IRequest, IResponse>> ProcessTokenRefreshAsync(
+        private async Task<IResponse> ProcessTokenRefreshAsync(
             LoginRequest loginRequest,
-            CmdContext executionContext,
+            CommandContext executionContext,
             CancellationToken cancellationToken)
         {
             try
@@ -396,7 +404,7 @@ namespace RUINORERP.Server.Network.Commands
                     Token = new TokenInfo { AccessToken = newToken }
                 };
 
-                return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
+                return response;
             }
             catch (Exception ex)
             {
@@ -408,16 +416,15 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 处理登出操作
         /// </summary>
-        private async Task<BaseCommand<IRequest, IResponse>> ProcessLogoutAsync(
+        private async Task<IResponse> ProcessLogoutAsync(
             LoginRequest loginRequest,
-            CmdContext executionContext,
+            CommandContext executionContext,
             CancellationToken cancellationToken)
         {
             try
             {
                 // 从上下文中获取会话ID
                 string sessionId = executionContext.SessionId;
-                string userId = executionContext.UserId;
 
                 // 移除会话
                 if (!string.IsNullOrEmpty(sessionId))
@@ -425,7 +432,7 @@ namespace RUINORERP.Server.Network.Commands
                     await SessionService.RemoveSessionAsync(sessionId);
                 }
                 // 撤销Token
-                if (executionContext.Token!=null && !string.IsNullOrEmpty(executionContext.Token.AccessToken))
+                if (executionContext.Token != null && !string.IsNullOrEmpty(executionContext.Token.AccessToken))
                 {
                     _tokenService.RevokeToken(executionContext.Token.AccessToken);
                 }
@@ -437,7 +444,7 @@ namespace RUINORERP.Server.Network.Commands
                     Message = "登出成功"
                 };
 
-                return BaseCommand<IRequest, IResponse>.CreateSuccess(response);
+                return response;
             }
             catch (Exception ex)
             {
@@ -562,7 +569,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 请求重复登录确认
         /// </summary>
-        private BaseCommand<IRequest, IResponse> RequestDuplicateLoginConfirmation(IEnumerable<SessionInfo> existingSessions, CancellationToken cancellationToken)
+        private IResponse RequestDuplicateLoginConfirmation(IEnumerable<SessionInfo> existingSessions, CancellationToken cancellationToken)
         {
             try
             {
@@ -583,12 +590,12 @@ namespace RUINORERP.Server.Network.Commands
                 duplicateLoginResponse.WithMetadata("ExistingSessions", sessionInfos);
 
                 // 返回需要确认的响应
-                return BaseCommand<IRequest, IResponse>.CreateSuccess(duplicateLoginResponse);
+                return duplicateLoginResponse;
             }
             catch (Exception ex)
             {
                 LogError($"请求重复登录确认失败: {ex.Message}", ex);
-                return BaseCommand<IRequest, IResponse>.CreateError("请求重复登录确认失败", UnifiedErrorCodes.System_InternalError.Code);
+                return ResponseBase.CreateError("请求重复登录确认失败", UnifiedErrorCodes.System_InternalError.Code);
             }
         }
 
@@ -649,10 +656,10 @@ namespace RUINORERP.Server.Network.Commands
                         //    System.Text.Encoding.UTF8.GetBytes($"您的账号【{username}】在其他地方登录，您已被强制下线。")
                         //);
 
-                      //  var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(notificationMessage);
+                        //  var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(notificationMessage);
 
                         // 发送通知消息
-                      //  appSession.SendAsync(encryptedData.ToByteArray());
+                        //  appSession.SendAsync(encryptedData.ToByteArray());
                     }
                 }
             }
@@ -821,57 +828,32 @@ namespace RUINORERP.Server.Network.Commands
         /// <summary>
         /// 创建统一的错误响应
         /// </summary>
-        private BaseCommand<IRequest, IResponse> CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
+        private IResponse CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
         {
-            return BaseCommand<IRequest, IResponse>.CreateError($"{errorCode.Message}: {message}", errorCode.Code)
+            return ResponseBase.CreateError($"{errorCode.Message}: {message}", errorCode.Code)
                 .WithMetadata("ErrorCode", customErrorCode);
         }
 
         /// <summary>
         /// 创建统一的异常响应
         /// </summary>
-        private BaseCommand<IRequest, IResponse> CreateExceptionResponse(Exception ex, string errorCode)
+        private IResponse CreateExceptionResponse(Exception ex, string errorCode)
         {
-            return BaseCommand<IRequest, IResponse>.CreateError($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
+            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
                 .WithMetadata("ErrorCode", errorCode)
                 .WithMetadata("Exception", ex.Message)
                 .WithMetadata("StackTrace", ex.StackTrace);
         }
 
-        /// <summary>
-        /// 创建统一的成功响应
-        /// </summary>
-        private BaseCommand<IRequest, IResponse> CreateSuccessResponse(IResponse data, string message)
-        {
-            return BaseCommand<IRequest, IResponse>.CreateSuccess(data, message);
-        }
+
 
         #endregion
-
-        #region 响应创建方法
-
-        private OriginalData CreateLogoutResponse()
-        {
-            var responseData = "LOGGED_OUT";
-            var data = System.Text.Encoding.UTF8.GetBytes(responseData);
-
-            // 将完整的CommandId正确分解为Category和OperationCode
-            uint commandId = (uint)AuthenticationCommands.Logout;
-            byte category = (byte)(commandId & 0xFF); // 取低8位作为Category
-            byte operationCode = (byte)((commandId >> 8) & 0xFF); // 取次低8位作为OperationCode
-
-            return new OriginalData(
-                category,
-                new byte[] { operationCode },
-                data
-            );
-        }
 
 
 
         #endregion
 
-        #endregion
+
 
 
     }

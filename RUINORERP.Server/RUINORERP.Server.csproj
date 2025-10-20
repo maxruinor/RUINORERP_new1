@@ -58,6 +58,7 @@
     <Compile Remove="frmWorkFlowManage.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
     <Compile Remove="Network\Commands\CommandHandlerBase.cs" />
+    <Compile Remove="Network\Commands\ConfigurableBusinessProcessor.cs" />
     <Compile Remove="Network\Commands\DataSyncCommandHandler.cs" />
     <Compile Remove="Network\Commands\EchoCommandHandler.cs" />
     <Compile Remove="Network\Commands\ExceptionReportCommandHandler.cs" />
@@ -69,6 +70,7 @@
     <Compile Remove="Network\Commands\LockCommandHandler.cs" />
     <Compile Remove="Network\Commands\MessageCommandHandler.cs" />
     <Compile Remove="Network\Commands\SendPopupMessageCommandHandler.cs" />
+    <Compile Remove="Network\Commands\SimpleBusinessHandler.cs" />
     <Compile Remove="Network\Commands\SystemManagementCommandHandler.cs" />
     <Compile Remove="Network\Commands\WorkflowApproveCommandHandler.cs" />
     <Compile Remove="Network\CoreServices\CacheService.cs" />

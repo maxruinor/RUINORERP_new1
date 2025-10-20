@@ -16,7 +16,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.PacketSpec;
 using RUINORERP.PacketSpec.Enums.Core;
-using ICommand = RUINORERP.PacketSpec.Commands.ICommand;
 using SuperSocket.Command;
 using Azure;
 using RUINORERP.PacketSpec.Models.Core;
@@ -49,7 +48,6 @@ namespace RUINORERP.Server.Network.SuperSocket
     {
         private readonly CommandDispatcher _commandDispatcher;
         private readonly ILogger<SuperSocketCommandAdapter> _logger;
-        private readonly ICommandCreationService commandCreationService;
         private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
 
 
@@ -61,10 +59,8 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <param name="logger">日志记录器</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
-            ICommandCreationService commandCreationService,
             ILogger<SuperSocketCommandAdapter> logger = null)
         {
-            this.commandCreationService = commandCreationService;
             _commandDispatcher = commandDispatcher;
             _logger = logger;
         }
@@ -91,6 +87,13 @@ namespace RUINORERP.Server.Network.SuperSocket
             try
             {
 
+                if (package.Packet.CommandId == AuthenticationCommands.Login)
+                {
+                    // 如果命令ID为0，则表示是心跳包
+                    package.Packet.SessionId = session.SessionID;
+                    package.Packet.ExecutionContext.SessionId = session.SessionID;
+                }
+
                 // 确保命令调度器已初始化
                 if (!_commandDispatcher.IsInitialized)
                 {
@@ -113,6 +116,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 // 同时调用专门的UpdateSessionActivity方法确保活动时间被正确更新
                 SessionService.UpdateSessionActivity(session.SessionID);
 
+                /*
                 // 创建命令对象（第一层解析：基础命令创建）
                 var command = commandCreationService.CreateCommand(package.Packet);
                 if (command == null)
@@ -150,18 +154,16 @@ namespace RUINORERP.Server.Network.SuperSocket
                     {
                         executionContext.SessionId = session.SessionID;
                     }
-                    // 验证会话有效性,登陆不需要验证
-                    //if (!SessionService.IsValidSession(executionContext.SessionId))
-                    //{
-                    //    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_SessionExpired, cancellationToken);
-                    //    return;
-                    //}
+
 
                 }
-
+                */
 
                 // 通过现有的命令调度器处理命令，添加超时保护
-                BaseCommand<IRequest, IResponse> result;
+                //BaseCommand<IRequest, IResponse> result;
+
+
+                IResponse result;
                 try
                 {
                     // 使用链接的取消令牌，考虑命令超时设置
@@ -182,29 +184,29 @@ namespace RUINORERP.Server.Network.SuperSocket
                     //这里设置大一点按执行时间算。每个处理类自己定义了不同的时间
                     var timeout = TimeSpan.FromSeconds(300);
                     linkedCts.CancelAfter(timeout);
+                    result = await _commandDispatcher.DispatchAsync(package.Packet, linkedCts.Token);
+                    //  result = await _commandDispatcher.DispatchAsync(package.Packet, command, linkedCts.Token);
 
-                    result = await _commandDispatcher.DispatchAsync(package.Packet, command, linkedCts.Token);
-                    
                     // 释放令牌源资源
                     linkedCts.Dispose();
                 }
                 catch (OperationCanceledException ex)
                 {
                     _logger?.LogError(ex, "命令执行超时或被取消: CommandId={CommandId}", package.Packet.CommandId);
-                    result = BaseCommand<IRequest, IResponse>.CreateError(UnifiedErrorCodes.System_Timeout.Message, UnifiedErrorCodes.System_Timeout.Code);
+                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_Timeout.Message, UnifiedErrorCodes.System_Timeout.Code);
                 }
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "命令执行异常: CommandId={CommandId}", package.Packet.CommandId);
-                    result = BaseCommand<IRequest, IResponse>.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
+                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
                 }
                 if (result == null)
                 {
-                    result = BaseCommand<IRequest, IResponse>.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
+                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
                 }
 
                 // 使用新的 CancellationToken.None 来确保响应能够发送，即使命令处理超时
-                await HandleCommandResultAsync(session, package, command, result, CancellationToken.None);
+                await HandleCommandResultAsync(session, package, result, CancellationToken.None);
 
             }
             catch (Exception ex)
@@ -214,6 +216,8 @@ namespace RUINORERP.Server.Network.SuperSocket
                 await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
             }
         }
+
+
 
 
 
@@ -228,31 +232,33 @@ namespace RUINORERP.Server.Network.SuperSocket
         protected virtual async ValueTask HandleCommandResultAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
-            ICommand command,
-            BaseCommand<IRequest, IResponse> result,
+            IResponse response,
             CancellationToken cancellationToken)
         {
-            if (result == null)
+            if (response == null)
             {
-                _logger?.LogWarning("命令执行结果为空，发送默认错误响应");
+                //_logger?.LogWarning("命令执行结果为空，发送默认错误响应");
                 await SendErrorResponseAsync(session, requestPackage, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
                 return;
             }
 
-            if (result.Response != null && result.Response.IsSuccess)
+            if (response != null && response.IsSuccess)
             {
                 // 命令执行成功，发送成功响应
-                var responsePackage = UpdatePacketWithResponse(requestPackage.Packet, command, result);
-                await SendResponseAsync(session, responsePackage, CancellationToken.None);
+                var responsePackage = UpdatePacketWithResponse(requestPackage.Packet, response);
+
+                await SendResponseAsync(session, requestPackage.Packet, CancellationToken.None);
             }
             else
             {
                 // 命令执行失败，发送增强的错误响应
                 // 从结果中提取所有错误信息，包括元数据中的详细信息
-                var errorCode = ExtractErrorCodeFromResponse(result);
-                await SendEnhancedErrorResponseAsync(session, requestPackage, result, errorCode, CancellationToken.None);
+                // var errorCode = ExtractErrorCodeFromResponse(response);
+                await SendEnhancedErrorResponseAsync(session, requestPackage, response, UnifiedErrorCodes.Biz_DataNotFound, CancellationToken.None);
             }
         }
+
+
 
         /// <summary>
         /// 附加响应数据到数据包发回客户端
@@ -261,21 +267,21 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <param name="command"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, ICommand command, BaseCommand<IRequest, IResponse> result)
+        protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, IResponse result)
         {
             // 检查响应数据是否为空，避免空引用异常
-            if (result.Response == null)
+            if (result == null)
             {
                 _logger?.LogWarning("响应数据为空，使用默认错误状态");
-                package.ExecutionContext.ResponseType = typeof(IResponse);
                 package.Status = PacketStatus.Error;
             }
             else
             {
-                package.ExecutionContext.ResponseType = result.Response.GetType();
-                package.Status = result.Response.IsSuccess ? PacketStatus.Completed : PacketStatus.Error;
+                package.Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error;
             }
-            
+            package.Response = result;
+            package.Direction = PacketDirection.Response;
+
             package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
             package.Direction = PacketDirection.Response; // 明确设置为响应方向
             package.SessionId = package.SessionId;
@@ -295,15 +301,14 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
             }
 
-
-            if (command is BaseCommand baseCommand && result.Response != null)
-            {
-                // 序列化响应数据 - 使用具体类型而不是接口类型，确保客户端能正确反序列化
-                var ResponsePackBytes = MessagePackSerializer.Serialize(package.ExecutionContext.ResponseType, result.Response, UnifiedSerializationService.MessagePackOptions);
-                baseCommand.SetResponseData(ResponsePackBytes);
-                package.CommandData = MessagePackSerializer.Serialize(package.ExecutionContext.CommandType, command, UnifiedSerializationService.MessagePackOptions);
-                //package.SetCommandDataByMessagePack(command);
-            }
+            //if (command is BaseCommand baseCommand && result.Response != null)
+            //{
+            //    // 序列化响应数据 - 使用具体类型而不是接口类型，确保客户端能正确反序列化
+            //    var ResponsePackBytes = MessagePackSerializer.Serialize(package.ExecutionContext.ResponseType, result.Response, UnifiedSerializationService.MessagePackOptions);
+            //    baseCommand.SetResponseData(ResponsePackBytes);
+            //    package.CommandData = MessagePackSerializer.Serialize(package.ExecutionContext.CommandType, command, UnifiedSerializationService.MessagePackOptions);
+            //    //package.SetCommandDataByMessagePack(command);
+            //}
 
 
             return package;
@@ -388,6 +393,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                     return;
                 }
                 package.SessionId = session.SessionID;
+                package.Direction = PacketDirection.Response;
                 var serializedData = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(package);
 
                 // 加密数据
@@ -480,7 +486,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// </summary>
         /// <param name="result">响应结果</param>
         /// <returns>错误代码对象</returns>
-        protected virtual ErrorCode ExtractErrorCodeFromResponse(BaseCommand<IRequest, IResponse> result)
+        protected virtual ErrorCode ExtractErrorCodeFromResponse(IResponse result)
         {
             if (result == null)
             {
@@ -488,14 +494,14 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
 
             // 检查响应数据是否为空
-            if (result.Response == null)
+            if (result == null)
             {
                 _logger?.LogWarning("响应数据为空，使用默认错误信息");
                 return UnifiedErrorCodes.System_InternalError;
             }
 
             // 优先使用响应中的元数据提取更详细的错误信息
-            string detailedMessage = result.Response.ErrorMessage;
+            string detailedMessage = result.ErrorMessage;
 
             if (result.Metadata != null)
             {
@@ -503,7 +509,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 if (result.Metadata.TryGetValue("Exception", out var exceptionObj))
                 {
                     // 使用空值条件运算符避免空引用异常
-                    string responseMessage = result.Response?.Message ?? "未知错误";
+                    string responseMessage = result?.Message ?? "未知错误";
                     detailedMessage = $"{responseMessage} | Exception: {exceptionObj}";
                 }
             }
@@ -524,13 +530,13 @@ namespace RUINORERP.Server.Network.SuperSocket
         protected virtual async ValueTask SendEnhancedErrorResponseAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
-            BaseCommand<IRequest, IResponse> result,
+          IResponse result,
             ErrorCode errorCode,
             CancellationToken cancellationToken)
         {
             // 检查响应数据是否为空，避免空引用异常
-            string originalErrorMessage = result.Response?.ErrorMessage ?? "响应数据为空";
-            string originalMessage = result.Response?.Message ?? "无错误消息";
+            string originalErrorMessage = result?.ErrorMessage ?? "响应数据为空";
+            string originalMessage = result?.Message ?? "无错误消息";
 
             var errorResponse = new PacketModel
             {
@@ -578,6 +584,10 @@ namespace RUINORERP.Server.Network.SuperSocket
         }
 
 
+      
+
+
+
     }
 
     /// <summary>
@@ -588,9 +598,8 @@ namespace RUINORERP.Server.Network.SuperSocket
     {
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
-            ICommandCreationService commandCreationService,
             ILogger<SuperSocketCommandAdapter> logger = null)
-            : base(commandDispatcher, commandCreationService, logger)
+            : base(commandDispatcher,  logger)
         { }
     }
 

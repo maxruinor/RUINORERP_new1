@@ -231,32 +231,32 @@ namespace RUINORERP.Business.CommService
                     };
 
                     // 发送订阅命令（通过反射调用，避免直接依赖）
-                    var commType = _commService.GetType();
-                    var sendMethod = commType.GetMethod("SendCommandWithResponseAsync", 
-                        new[] { typeof(CacheCommand), typeof(System.Threading.CancellationToken), typeof(int) });
+                    //var commType = _commService.GetType();
+                    //var sendMethod = commType.GetMethod("SendCommandWithResponseAsync", 
+                    //    new[] { typeof(CacheCommand), typeof(System.Threading.CancellationToken), typeof(int) });
                     
-                    if (sendMethod != null)
-                    {
-                        var cacheCommand = new CacheCommand
-                        {
-                            Request = request
-                        };
+                    //if (sendMethod != null)
+                    //{
+                    //    var cacheCommand = new CacheCommand
+                    //    {
+                    //        Request = request
+                    //    };
                         
-                        var task = (Task)sendMethod.Invoke(_commService, new object[] { cacheCommand, System.Threading.CancellationToken.None, 30000 });
-                        await task;
+                    //    var task = (Task)sendMethod.Invoke(_commService, new object[] { cacheCommand, System.Threading.CancellationToken.None, 30000 });
+                    //    await task;
                         
-                        var resultProperty = task.GetType().GetProperty("Result");
-                        var response = resultProperty?.GetValue(task);
+                    //    var resultProperty = task.GetType().GetProperty("Result");
+                    //    var response = resultProperty?.GetValue(task);
                         
-                        var isSuccessProperty = response?.GetType().GetProperty("IsSuccess");
-                        var isSuccess = (bool?)isSuccessProperty?.GetValue(response) ?? false;
+                    //    var isSuccessProperty = response?.GetType().GetProperty("IsSuccess");
+                    //    var isSuccess = (bool?)isSuccessProperty?.GetValue(response) ?? false;
                         
-                        if (!isSuccess)
-                        {
-                            _logger.LogWarning($"订阅表 {tableName} 失败");
-                            return false;
-                        }
-                    }
+                    //    if (!isSuccess)
+                    //    {
+                    //        _logger.LogWarning($"订阅表 {tableName} 失败");
+                    //        return false;
+                    //    }
+                    //}
                 }
 
                 // 添加本地订阅
@@ -303,32 +303,32 @@ namespace RUINORERP.Business.CommService
                     };
 
                     // 发送取消订阅命令（通过反射调用，避免直接依赖）
-                    var commType = _commService.GetType();
-                    var sendMethod = commType.GetMethod("SendCommandWithResponseAsync", 
-                        new[] { typeof(CacheCommand), typeof(System.Threading.CancellationToken), typeof(int) });
+                    //var commType = _commService.GetType();
+                    //var sendMethod = commType.GetMethod("SendCommandWithResponseAsync", 
+                    //    new[] { typeof(CacheCommand), typeof(System.Threading.CancellationToken), typeof(int) });
                     
-                    if (sendMethod != null)
-                    {
-                        var cacheCommand = new CacheCommand
-                        {
-                            Request = request
-                        };
+                    //if (sendMethod != null)
+                    //{
+                    //    var cacheCommand = new CacheCommand
+                    //    {
+                    //        Request = request
+                    //    };
                         
-                        var task = (Task)sendMethod.Invoke(_commService, new object[] { cacheCommand, System.Threading.CancellationToken.None, 30000 });
-                        await task;
+                    //    var task = (Task)sendMethod.Invoke(_commService, new object[] { cacheCommand, System.Threading.CancellationToken.None, 30000 });
+                    //    await task;
                         
-                        var resultProperty = task.GetType().GetProperty("Result");
-                        var response = resultProperty?.GetValue(task);
+                    //    var resultProperty = task.GetType().GetProperty("Result");
+                    //    var response = resultProperty?.GetValue(task);
                         
-                        var isSuccessProperty = response?.GetType().GetProperty("IsSuccess");
-                        var isSuccess = (bool?)isSuccessProperty?.GetValue(response) ?? false;
+                    //    var isSuccessProperty = response?.GetType().GetProperty("IsSuccess");
+                    //    var isSuccess = (bool?)isSuccessProperty?.GetValue(response) ?? false;
                         
-                        if (!isSuccess)
-                        {
-                            _logger.LogWarning($"取消订阅表 {tableName} 失败");
-                            return false;
-                        }
-                    }
+                    //    if (!isSuccess)
+                    //    {
+                    //        _logger.LogWarning($"取消订阅表 {tableName} 失败");
+                    //        return false;
+                    //    }
+                    //}
                 }
 
                 // 移除本地订阅

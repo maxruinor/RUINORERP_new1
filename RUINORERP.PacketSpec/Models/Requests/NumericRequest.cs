@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Validation;
+using SqlSugar.Extensions;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
@@ -15,7 +16,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 整数值参数
         /// </summary>
-        public int Value { get; set; }
+        public decimal Value { get; set; }
 
         /// <summary>
         /// 获取整数值
@@ -23,7 +24,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <returns>整数值</returns>
         public int GetIntValue()
         {
-            return Value;
+            return Value.ObjToInt();
         }
 
         /// <summary>

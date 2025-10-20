@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
@@ -80,16 +80,16 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 // 构建完整的命令码
                 ushort fullCode = (ushort)(((byte)category << 8) | operationCode);
-                
+
                 // 获取CommandCatalog类的所有公共常量字段
-                var fields = typeof(CommandCatalog).GetFields(BindingFlags.Public | 
-                                                         BindingFlags.Static | 
+                var fields = typeof(CommandCatalog).GetFields(BindingFlags.Public |
+                                                         BindingFlags.Static |
                                                          BindingFlags.FlattenHierarchy);
-                
+
                 // 查找与完整命令码匹配的常量
                 foreach (var field in fields)
                 {
-                    if (field.FieldType == typeof(ushort) && 
+                    if (field.FieldType == typeof(ushort) &&
                         (ushort)field.GetValue(null) == fullCode)
                     {
                         // 从常量名称中提取命令名称（去掉类别前缀）
@@ -107,7 +107,7 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 // 如果发生异常，返回null
             }
-            
+
             // 如果没有找到匹配的命令，返回null
             return null;
         }
@@ -178,7 +178,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// 重写ToString方法
         /// </summary>
         /// <returns>字符串表示</returns>
-        public override string ToString() => $"0x{FullCode:X4}";
+        public override string ToString() => $"0x{FullCode:X4}:{Name}";
 
         /// <summary>
         /// 重写Equals方法
@@ -186,7 +186,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="other">比较对象</param>
         /// <returns>是否相等</returns>
         public bool Equals(CommandId other) => FullCode == other.FullCode;
- 
+
         /// <summary>
         /// 重写Equals方法
         /// </summary>

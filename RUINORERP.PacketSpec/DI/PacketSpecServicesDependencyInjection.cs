@@ -103,16 +103,13 @@ namespace RUINORERP.PacketSpec.DI
             // 注册命令调度器
             services.AddSingleton<CommandDispatcher>();
             services.AddSingleton<ICommandDispatcher, CommandDispatcher>();
-     
-
+      
 
             // 注册命令创建服务（新增）
-            services.AddSingleton<CommandCreationService>();
-            services.AddSingleton<ICommandCreationService, CommandCreationService>();
- 
-
-            // 注册命令扫描和类型辅助服务
-            services.AddSingleton<CommandScanner>();
+            //services.AddSingleton<CommandCreationService>();
+            //services.AddSingleton<ICommandCreationService, CommandCreationService>();
+            
+            // 注意：CommandScanner已不再被CommandDispatcher使用，因此不再注册
 
             // 注册命令处理器工厂
             services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();
@@ -191,10 +188,10 @@ namespace RUINORERP.PacketSpec.DI
 
 
             // 注册命令创建服务（新增）
-            builder.RegisterType<CommandCreationService>()
-                .AsSelf()
-                .As<ICommandCreationService>()
-                .SingleInstance();
+            //builder.RegisterType<CommandCreationService>()
+            //    .AsSelf()
+            //    .As<ICommandCreationService>()
+            //    .SingleInstance();
 
            
 

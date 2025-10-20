@@ -39,19 +39,19 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 客户端状态信息
         /// </summary>
-        [Key(13)]
+        [Key(1005)]
         public string ClientStatus { get; set; }
 
         /// <summary>
         /// 网络延迟（毫秒）
         /// </summary>
-        [Key(14)]
-        public int? NetworkLatency { get; set; }
+        [Key(1007)]
+        public int NetworkLatency { get; set; }
 
         /// <summary>
         /// 客户端资源使用情况
         /// </summary>
-        [Key(15)]
+        [Key(1008)]
         public ClientResourceUsage ResourceUsage { get; set; }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 客户端版本
         /// </summary>
-        [Key(17)]
+        [Key(1002)]
         public string ClientVersion { get; set; }
 
         /// <summary>
@@ -77,14 +77,15 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 创建心跳请求
         /// </summary>
         public static HeartbeatRequest Create(string sessionToken, long userId, 
-            string clientStatus = "Normal")
+            string clientStatus = "Normal", string clientId = null)
         {
             return new HeartbeatRequest
             {
                 SessionToken = sessionToken,
                 UserId = userId,
                 ClientTime = DateTime.Now,
-                ClientStatus = clientStatus
+                ClientStatus = clientStatus,
+                ClientId = clientId
             };
         }
 
@@ -142,7 +143,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 客户端进程运行时间（秒）
         /// </summary>
-        [Key(24)]
+        [Key(1006)]
         public long ProcessUptime { get; set; }
 
 

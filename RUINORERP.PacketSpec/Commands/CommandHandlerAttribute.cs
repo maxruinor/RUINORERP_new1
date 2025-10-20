@@ -1,41 +1,7 @@
 ﻿using System;
-using RUINORERP.PacketSpec.Commands;  // 添加对命令系统的引用以使用CommandCategory
 
 namespace RUINORERP.PacketSpec.Commands
 {
-    /// <summary>
-    /// 命令特性，用于标记命令类
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class PacketCommandAttribute : Attribute
-    {
-        /// <summary>
-        /// 命令名称
-        /// </summary>
-        public string Name { get; }
-
-        /// <summary>
-        /// 命令类别
-        /// </summary>
-        public CommandCategory Category { get; }
-
-        /// <summary>
-        /// 命令描述
-        /// </summary>
-        public string Description { get; set; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="name">命令名称</param>
-        /// <param name="category">命令类别</param>
-        public PacketCommandAttribute(string name, CommandCategory category)
-        {
-            Name = name;
-            Category = category;
-        }
-    }
-
     /// <summary>
     /// 命令处理器特性，用于标记命令处理器类
     /// </summary>

@@ -26,55 +26,55 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private class CacheItem
         {
-            public BaseCommand<IRequest, IResponse> Response { get; set; }
+            public IResponse Response { get; set; }
             public DateTime ExpireTime { get; set; }
             public DateTime CreateTime { get; set; }
         }
-        
+
         /// <summary>
         /// 用于存储命令响应的线程安全缓存字典
         /// 键为基于命令标识符和请求参数生成的唯一键，值为缓存项包装对象
         /// </summary>
         private readonly ConcurrentDictionary<string, CacheItem> _cache = new();
-        
+
         /// <summary>
         /// 缓存项的生存时间，默认为5分钟
         /// 超过此时间的缓存项应被清理
         /// </summary>
         private readonly TimeSpan _ttl = TimeSpan.FromMinutes(5);
-        
+
         /// <summary>
         /// 最大缓存项数量，防止内存占用过大
         /// </summary>
         private const int MaxCacheSize = 10000;
-        
+
         /// <summary>
         /// 上次清理时间
         /// </summary>
         private DateTime _lastCleanupTime = DateTime.Now;
-        
+
         /// <summary>
         /// 清理间隔时间
         /// </summary>
         private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(1);
-        
+
         /// <summary>
         /// 尝试从缓存中获取指定命令的响应
         /// </summary>
         /// <param name="command">命令对象</param>
         /// <param name="response">如果找到缓存项，则返回对应的响应对象；否则返回null</param>
         /// <returns>如果找到缓存项则返回true，否则返回false</returns>
-        public bool TryGetCached(ICommand command, out BaseCommand<IRequest, IResponse> response)
+        public bool TryGetCached(IRequest request,CommandId commandId, out IResponse response)
         {
             response = null;
-            
-            if (command == null)
+
+            if (request == null)
                 return false;
-                
-            var cacheKey = GenerateCacheKey(command);
+
+            var cacheKey = GenerateCacheKey(request, commandId);
             if (string.IsNullOrEmpty(cacheKey))
                 return false;
-                
+
             if (_cache.TryGetValue(cacheKey, out var cacheItem))
             {
                 // 检查是否过期
@@ -89,27 +89,27 @@ namespace RUINORERP.PacketSpec.Commands
                     _cache.TryRemove(cacheKey, out _);
                 }
             }
-            
+
             return false;
         }
-        
+
         /// <summary>
         /// 将命令响应添加到缓存中
         /// </summary>
-        /// <param name="command">命令对象</param>
+        /// <param name="packet">数据包对象</param>
         /// <param name="response">要缓存的响应对象</param>
-        public void Cache(ICommand command, BaseCommand<IRequest, IResponse> response)
+        public void Cache(PacketModel packet, IResponse response)
         {
-            if (command == null || response == null)
+            if (packet == null || response == null)
                 return;
-                
-            var cacheKey = GenerateCacheKey(command);
+
+            var cacheKey = "";// GenerateCacheKey(packet);  不知道哪里调用这个。
             if (string.IsNullOrEmpty(cacheKey))
                 return;
-                
+
             // 检查是否需要清理过期缓存
             TryCleanupExpiredItems();
-            
+
             // 检查缓存大小限制
             if (_cache.Count >= MaxCacheSize)
             {
@@ -118,13 +118,13 @@ namespace RUINORERP.PacketSpec.Commands
                     .Take(MaxCacheSize / 10)
                     .Select(kvp => kvp.Key)
                     .ToList();
-                    
+
                 foreach (var key in itemsToRemove)
                 {
                     _cache.TryRemove(key, out _);
                 }
             }
-            
+
             var now = DateTime.Now;
             var cacheItem = new CacheItem
             {
@@ -132,87 +132,39 @@ namespace RUINORERP.PacketSpec.Commands
                 CreateTime = now,
                 ExpireTime = now.Add(_ttl)
             };
-            
+
             _cache.AddOrUpdate(cacheKey, cacheItem, (key, existing) => cacheItem);
         }
-        
+
         /// <summary>
         /// 生成缓存键
         /// 基于命令标识符和请求参数生成唯一键
         /// </summary>
         /// <param name="command">命令对象</param>
         /// <returns>缓存键，如果无法生成则返回null</returns>
-        private string GenerateCacheKey(ICommand command)
+        private string GenerateCacheKey(IRequest request ,CommandId commandId)
         {
-            if (command?.CommandIdentifier == null)
-                return null;
-                
+
             try
             {
                 // 基础键：命令标识符
-                var baseKey = command.CommandIdentifier.ToString();
-                
+                var baseKey = commandId.ToString();
+
                 // 获取请求数据用于生成参数哈希
-                var requestData = GetRequestDataForHash(command);
-                var parameterHash = ComputeRequestHash(requestData);
-                
+                var parameterHash = ComputeRequestHash(request);
+
                 // 组合成最终缓存键
                 return $"{baseKey}:{parameterHash}";
             }
             catch (Exception ex)
             {
                 // 如果生成失败，记录日志并返回基础键
-                return command.CommandIdentifier.ToString();
+                return commandId.ToString();
             }
         }
-        
-        /// <summary>
-        /// 获取用于哈希计算的请求数据
-        /// </summary>
-        /// <param name="command">命令对象</param>
-        /// <returns>请求数据对象</returns>
-        private object GetRequestDataForHash(ICommand command)
-        {
-            // 优先使用可序列化的数据
-            if (command is BaseCommand baseCommand)
-            {
-                // 尝试获取Request属性
-                var requestProperty = command.GetType().GetProperty("Request");
-                if (requestProperty != null)
-                {
-                    var request = requestProperty.GetValue(command);
-                    if (request != null)
-                        return request;
-                }
-                
-                // 尝试获取Data属性
-                var dataProperty = command.GetType().GetProperty("Data");
-                if (dataProperty != null)
-                {
-                    var data = dataProperty.GetValue(command);
-                    if (data != null)
-                        return data;
-                }
-                
-                // 使用JsonRequestData
-                if (command.RequestDataByMessagePack != null && command.RequestDataByMessagePack.Length > 0)
-                {
-                    return command.RequestDataByMessagePack;
-                }
-            }
-            
-            // 使用GetSerializableData方法
-            try
-            {
-                return command.GetSerializableData();
-            }
-            catch
-            {
-                // 如果失败，使用命令的基本信息
-                return new { CommandId = command.CommandIdentifier.FullCode };
-            }
-        }
-        
+
+       
+
         /// <summary>
         /// 计算请求数据的哈希值
         /// </summary>
@@ -222,12 +174,12 @@ namespace RUINORERP.PacketSpec.Commands
         {
             if (data == null)
                 return "null";
-                
+
             try
             {
                 // 使用MessagePack序列化数据
                 var serializedData = MessagePackSerializer.Serialize(data);
-                
+
                 // 计算SHA256哈希
                 using (var sha256 = SHA256.Create())
                 {
@@ -246,26 +198,26 @@ namespace RUINORERP.PacketSpec.Commands
                 }
             }
         }
-        
+
         /// <summary>
         /// 尝试清理过期缓存项
         /// </summary>
         private void TryCleanupExpiredItems()
         {
             var now = DateTime.Now;
-            
+
             // 检查是否需要清理
             if ((now - _lastCleanupTime) < _cleanupInterval)
                 return;
-                
+
             _lastCleanupTime = now;
-            
+
             try
             {
                 var expiredKeys = _cache.Where(kvp => kvp.Value.ExpireTime <= now)
                     .Select(kvp => kvp.Key)
                     .ToList();
-                    
+
                 foreach (var key in expiredKeys)
                 {
                     _cache.TryRemove(key, out _);
@@ -276,7 +228,7 @@ namespace RUINORERP.PacketSpec.Commands
                 // 清理失败时不影响主流程
             }
         }
-        
+
         /// <summary>
         /// 获取缓存统计信息
         /// </summary>
@@ -285,7 +237,7 @@ namespace RUINORERP.PacketSpec.Commands
         {
             var now = DateTime.Now;
             var items = _cache.ToArray();
-            
+
             return new IdempotencyCacheStatistics
             {
                 TotalItems = items.Length,
@@ -295,7 +247,7 @@ namespace RUINORERP.PacketSpec.Commands
                 NewestItemTime = items.Any() ? items.Max(kvp => kvp.Value.CreateTime) : DateTime.MinValue
             };
         }
-        
+
         /// <summary>
         /// 清理所有缓存
         /// </summary>
@@ -304,7 +256,7 @@ namespace RUINORERP.PacketSpec.Commands
             _cache.Clear();
         }
     }
-    
+
     /// <summary>
     /// 幂等缓存统计信息
     /// </summary>

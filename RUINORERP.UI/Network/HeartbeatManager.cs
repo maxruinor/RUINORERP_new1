@@ -238,11 +238,11 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 创建心跳命令
-                var heartbeatCommand = CreateHeartbeatCommand();
+                var heartbeatRequest = CreateHeartbeatRequest();
 
                 // 使用ClientCommunicationService发送心跳请求
-                var response = await _communicationService.SendCommandAsync<HeartbeatRequest, HeartbeatResponse>(
-                    heartbeatCommand,
+                var response = await _communicationService.SendCommandAsync(
+                    SystemCommands.Heartbeat, heartbeatRequest,
                     cancellationToken,
                     _heartbeatTimeoutMs // 使用配置的心跳超时时间
                 );
@@ -449,9 +449,20 @@ namespace RUINORERP.UI.Network
         /// 定期发送心跳并处理响应
         /// </summary>
         /// <returns>异步任务，心跳循环任务</returns>
+        /// <summary>
+        /// Token过期事件
+        /// 当检测到Token已过期时触发，通知其他组件进行处理
+        /// </summary>
+        public event Action OnTokenExpired = delegate { };
+        
         private async Task SendHeartbeatsAsync()
         {
             _logger?.LogInformation("心跳任务已启动，开始定期发送心跳");
+
+            // 上次Token检查时间
+            DateTime lastTokenCheckTime = DateTime.MinValue;
+            // Token检查间隔（默认5分钟）
+            TimeSpan tokenCheckInterval = TimeSpan.FromMinutes(5);
 
             while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
@@ -459,17 +470,12 @@ namespace RUINORERP.UI.Network
                 {
                     if (_socketClient.IsConnected)
                     {
-                        // Token过期检查，只记录日志不刷新 - 使用依赖注入的TokenManager
-                        var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
-                        if (tokenInfo != null)
+                        // 定期检查Token状态（不必每次心跳都检查）
+                        var now = DateTime.UtcNow;
+                        if (now - lastTokenCheckTime >= tokenCheckInterval)
                         {
-                            var validationResult = await _tokenManager.ValidateStoredTokenAsync();
-                            if (!validationResult.IsValid)
-                            {
-                                _logger?.LogInformation("检测到AccessToken已过期或无效，心跳管理器不负责刷新Token，由专门的Token刷新机制处理");
-                                // 注意：HeartbeatManager不负责刷新Token，只负责检测和记录
-                                // 实际的Token刷新由SilentTokenRefresher或其他专门的Token管理组件处理
-                            }
+                            await CheckTokenValidityAsync();
+                            lastTokenCheckTime = now;
                         }
 
                         // 使用公共心跳发送方法
@@ -723,8 +729,7 @@ namespace RUINORERP.UI.Network
         /// 实现IDisposable接口，确保所有资源被正确释放
         /// </summary>
         public void Dispose()
-        {
-            lock (_lock)
+        {            lock (_lock)
             {
                 if (!_isDisposed)
                 {
@@ -741,6 +746,7 @@ namespace RUINORERP.UI.Network
                         OnReconnectionFailed = null;
                         ConnectionLost = null;
                         HeartbeatFailed = null;
+                        OnTokenExpired = null; // 清理新增的Token过期事件
 
                         // 清理响应时间队列
                         _recentResponseTimes.Clear();
@@ -762,33 +768,70 @@ namespace RUINORERP.UI.Network
 
         /// </summary>
         /// <returns>配置完整的心跳命令对象，用于发送给服务器</returns>
-        private HeartbeatCommand CreateHeartbeatCommand()
+        private HeartbeatRequest CreateHeartbeatRequest()
         {
             try
             {
-
                 // 创建心跳命令
-                HeartbeatCommand command = new HeartbeatCommand(_socketClient.ClientID);
+                HeartbeatRequest heartbeatRequest = new HeartbeatRequest();
                 // 设置客户端信息
-                command.ClientVersion = GetClientVersion();
-                command.Request.UserInfo = new Model.CommonModel.UserInfo();
-                command.Request.UserInfo = MainForm.Instance.AppContext.CurrentUser;
-                command.Request.UserInfo.SessionId = MainForm.Instance.AppContext.SessionId;
-
-                command.ClientStatus = "Normal";
-                command.ProcessUptime = (int)Process.GetCurrentProcess().TotalProcessorTime.TotalSeconds;
+                heartbeatRequest.ClientVersion = GetClientVersion();
                 
-                // 设置网络和资源使用信息
-                command.NetworkLatency = EstimateNetworkLatency();
-                command.ResourceUsage = GetResourceUsage();
+                // 避免直接依赖MainForm.Instance，使用更可靠的方式获取用户信息
+                if (_tokenManager != null)
+                {
+                    try
+                    {
+                        var tokenInfo = _tokenManager.TokenStorage.GetTokenAsync().GetAwaiter().GetResult();
+                        if (tokenInfo != null)
+                        {
+                            // TokenInfo不包含UserInfo属性，这里使用会话ID和用户信息从MainForm获取
+                            // 后续可以考虑通过Token验证结果获取用户信息
+                        }
+                    }
+                    catch (Exception tokenEx)
+                    {
+                        _logger?.LogWarning(tokenEx, "从TokenManager获取Token信息失败");
+                    }
+                }
+                
+                // 如果通过TokenManager获取失败，再尝试使用MainForm
+                if (heartbeatRequest.UserInfo == null)
+                {
+                    try
+                    {
+                        if (MainForm.Instance?.AppContext != null)
+                        {
+                            heartbeatRequest.UserInfo = MainForm.Instance.AppContext.CurrentUser ?? new Model.CommonModel.UserInfo();
+                            if (heartbeatRequest.UserInfo != null && !string.IsNullOrEmpty(MainForm.Instance.AppContext.SessionId))
+                            {
+                                heartbeatRequest.UserInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "从MainForm获取用户信息失败");
+                    }
+                }
 
-                return command;
+                heartbeatRequest.ClientStatus = "Normal";
+
+                // 设置网络和资源使用信息
+                heartbeatRequest.NetworkLatency = EstimateNetworkLatency();
+                heartbeatRequest.ResourceUsage = GetResourceUsage();
+
+                return heartbeatRequest;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "创建心跳命令失败");
-                // 出错时返回基础的心跳命令
-                return new RUINORERP.PacketSpec.Commands.System.HeartbeatCommand();
+                // 出错时返回基础的心跳命令，但包含基本信息
+                return new HeartbeatRequest
+                {
+                    ClientVersion = GetClientVersion(),
+                    ClientStatus = "ErrorCreatingRequest"
+                };
             }
         }
 
@@ -945,9 +988,9 @@ namespace RUINORERP.UI.Network
         }
 
 
-        
-         
- 
+
+
+
         /// <summary>
         /// 心跳发送成功事件
         /// 当心跳包成功发送并收到响应时触发
@@ -999,6 +1042,26 @@ namespace RUINORERP.UI.Network
         {
             try
             {
+                _logger?.LogWarning("心跳失败: {Message}", message);
+                
+                // 检查是否是Token相关错误
+                if (message.Contains("token") || message.Contains("Token") || message.Contains("过期") || message.Contains("invalid"))
+                {
+                    _logger?.LogWarning("心跳失败可能与Token相关，将触发Token过期检查");
+                    // 异步检查Token有效性，不阻塞当前流程
+                    _ = Task.Run(async () => 
+                    {
+                        try
+                        {
+                            await CheckTokenValidityAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "异步检查Token有效性时发生异常");
+                        }
+                    });
+                }
+                
                 // 获取事件处理程序的快照，避免在多线程环境下触发时可能发生的问题
                 Action<string> failedHandler;
                 Action<Exception> exceptionHandler;
@@ -1011,11 +1074,29 @@ namespace RUINORERP.UI.Network
 
                 // 触发带消息的失败事件
                 if (failedHandler != null)
-                    failedHandler.Invoke(message);
+                {
+                    try
+                    {
+                        failedHandler.Invoke(message);
+                    }
+                    catch (Exception handlerEx)
+                    {
+                        _logger?.LogError(handlerEx, "执行OnHeartbeatFailed事件处理器时发生异常");
+                    }
+                }
 
                 // 触发带异常的失败事件
                 if (exceptionHandler != null)
-                    exceptionHandler.Invoke(new Exception(message));
+                {
+                    try
+                    {
+                        exceptionHandler.Invoke(new Exception(message));
+                    }
+                    catch (Exception handlerEx)
+                    {
+                        _logger?.LogError(handlerEx, "执行HeartbeatFailed事件处理器时发生异常");
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -1081,6 +1162,53 @@ namespace RUINORERP.UI.Network
             {
                 _logger?.LogError(ex, "触发连接丢失事件时发生异常");
                 // 忽略事件处理过程中的异常，避免影响主流程
+            }
+        }
+        
+        /// <summary>
+        /// 检查Token有效性
+        /// 验证存储的Token是否有效，如无效则触发Token过期事件
+        /// </summary>
+        /// <returns>异步任务</returns>
+        private async Task CheckTokenValidityAsync()
+        {
+            try
+            {
+                if (_tokenManager != null)
+                {
+                    var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
+                    if (tokenInfo != null)
+                    {
+                        var validationResult = await _tokenManager.ValidateStoredTokenAsync();
+                        if (!validationResult.IsValid)
+                        {
+                            _logger?.LogInformation("检测到AccessToken已过期或无效，触发Token过期事件");
+                            
+                            // 触发Token过期事件
+                            Action tokenExpiredHandler;
+                            lock (_lock)
+                            {
+                                tokenExpiredHandler = OnTokenExpired;
+                            }
+                            
+                            if (tokenExpiredHandler != null)
+                            {
+                                try
+                                {
+                                    tokenExpiredHandler.Invoke();
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger?.LogError(ex, "处理Token过期事件时发生异常");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "检查Token有效性时发生异常");
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -170,6 +170,12 @@ namespace RUINORERP.UI
                         //传入账号密码返回结果
                         
                         
+                        // 设置登录状态为登录中
+                        if (MainForm.Instance != null)
+                        {
+                            MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.LoggingIn;
+                        }
+                        
                         bool ok = PTPrincipal.Login(this.txtUserName.Text, this.txtPassWord.Text, Program.AppContextData, ref isInitPwd);
                         if (ok)
                         {
@@ -198,8 +204,13 @@ namespace RUINORERP.UI
                                         var connected = await MainForm.Instance.communicationService.ConnectAsync(serverIp, serverPort);
                                         if (!connected)
                                         {
+                                            // 连接失败，断开连接（如果有部分连接）
+                                            if (MainForm.Instance.communicationService.IsConnected)
+                                            {
+                                                MainForm.Instance.communicationService.Disconnect();
+                                            }
+                                            
                                             MessageBox.Show("无法连接到服务器，请检查网络连接和服务器配置。", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                            //base.Cursor = Cursors.Default;
                                             return;
                                         }
                                     }
@@ -222,8 +233,20 @@ namespace RUINORERP.UI
                                     // 检查登录结果
                                     if (loginSuccess == null || !loginSuccess.IsSuccess)
                                     {
-                                        //MessageBox.Show($"登录失败: {loginSuccess.ErrorMessage}", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                        //base.Cursor = Cursors.Default;
+                                        // 登录失败，断开连接
+                                        if (MainForm.Instance.communicationService.IsConnected)
+                                        {
+                                             MainForm.Instance.communicationService.Disconnect();
+                                        }
+                                        
+                                        // 设置登录状态为未登录
+                                        if (MainForm.Instance != null)
+                                        {
+                                            MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                                        }
+                                        
+                                        string errorMsg = loginSuccess?.ErrorMessage ?? "登录失败，请检查用户名和密码";  
+                                        MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                         return;
                                     }
                                     else
@@ -268,8 +291,19 @@ namespace RUINORERP.UI
                                 }
                                 catch (Exception ex)
                                 {
+                                    // 异常情况下，断开连接
+                                    if (MainForm.Instance.communicationService.IsConnected)
+                                    {
+                                        MainForm.Instance.communicationService.Disconnect();
+                                    }
+                                    
+                                    // 设置登录状态为未登录
+                                    if (MainForm.Instance != null)
+                                    {
+                                        MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                                    }
+                                    
                                     MessageBox.Show($"登录过程中发生异常: {ex.Message}\n\n详细信息: {ex.InnerException?.Message}", "登录异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                    //base.Cursor = Cursors.Default;
                                     return;
                                 }
                             }
@@ -301,10 +335,17 @@ namespace RUINORERP.UI
                         else
                         {
                             Program.AppContextData.IsOnline = false;
+                            
+                            // 登录失败，断开连接
+                            if (MainForm.Instance != null && MainForm.Instance.communicationService != null && MainForm.Instance.communicationService.IsConnected)
+                            {
+                                MainForm.Instance.communicationService.Disconnect();
+                                MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                            }
+                            
                             this.txtUserName.Focus();
                             this.txtUserName.SelectAll();
                             this.errorProvider1.SetError(this.txtUserName, "账号密码有误");
-                            //base.Cursor = Cursors.Default;
                             this.Refresh();
                             return;
                         }
@@ -315,9 +356,15 @@ namespace RUINORERP.UI
                 }
                 catch (Exception ex)
                 {
+                    // 异常情况下，断开连接
+                    if (MainForm.Instance != null && MainForm.Instance.communicationService != null && MainForm.Instance.communicationService.IsConnected)
+                    {
+                        MainForm.Instance.communicationService.Disconnect();
+                        MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                    }
+                    
                     MessageBox.Show("请检查你的用户名和密码是否正确。" + ex.Message, "登陆出错", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     MainForm.Instance.logger.Error("登陆出错", ex);
-                    //Application.Exit();
                     return;
                 }
 
@@ -355,7 +402,7 @@ namespace RUINORERP.UI
 
 
 
-        private void btncancel_Click(object sender, EventArgs e)
+        private async void btncancel_Click(object sender, EventArgs e)
         {
             try
             {
@@ -367,10 +414,15 @@ namespace RUINORERP.UI
                 {
                     //不延迟会获取不到正确的状态
                     Thread.Sleep(50);
-                    //  Console.WriteLine("task1状态：" + task1.Status);
-                    //  Console.WriteLine("IsFaulted状态：" + task1.IsFaulted);//由于未处理的异常，任务已完成。
-                    //  Console.WriteLine("IsCompleted状态：" + task1.IsCompleted);//获取一个值，该值指示任务是否已完成。
                 });
+                
+                // 取消登录时，如果已连接则断开连接
+                if (MainForm.Instance != null && MainForm.Instance.communicationService != null && MainForm.Instance.communicationService.IsConnected)
+                {
+                    MainForm.Instance.communicationService.Disconnect();
+                    MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                }
+                
                 this.DialogResult = DialogResult.Cancel;
                 this.Close();
 

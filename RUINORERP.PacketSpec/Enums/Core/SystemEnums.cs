@@ -5,7 +5,7 @@ namespace RUINORERP.PacketSpec.Enums.Core
     /// <summary>
     /// 命令优先级
     /// </summary>
-    public enum CommandPriority
+    public enum PacketPriority
     {
         Low = 0,
         Normal = 1,

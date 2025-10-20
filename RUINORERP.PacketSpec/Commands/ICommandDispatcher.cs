@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Generic;
@@ -30,9 +30,17 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        Task<BaseCommand<IRequest, IResponse>> DispatchAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken = default);
+        //Task<BaseCommand<IRequest, IResponse>> DispatchAsync(PacketModel Packet, ICommand command, CancellationToken cancellationToken = default);
 
- 
+        /// <summary>
+        /// 异步分发数据包
+        /// </summary>
+        /// <param name="Packet">数据包对象</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        Task<IResponse> DispatchAsync(PacketModel Packet, CancellationToken cancellationToken = default);
+
+
 
         /// <summary>
         /// 清理注册的命令类型

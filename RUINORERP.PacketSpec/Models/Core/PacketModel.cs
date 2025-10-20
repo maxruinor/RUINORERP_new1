@@ -9,6 +9,7 @@ using MessagePack;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using System.Net.Sockets;
 using RUINORERP.PacketSpec.Serialization;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {
@@ -85,7 +86,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 包含会话、认证、追踪等基础设施信息
         /// </summary>
         [Key(5)]
-        public CmdContext  ExecutionContext { get; set; }
+        public CommandContext ExecutionContext { get; set; }
 
         /// <summary>
         /// 会话ID（通过ExecutionContext获取）
@@ -97,7 +98,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             set
             {
                 if (ExecutionContext == null)
-                    ExecutionContext = new CmdContext ();
+                    ExecutionContext = new CommandContext();
                 ExecutionContext.SessionId = value;
             }
         }
@@ -114,7 +115,7 @@ namespace RUINORERP.PacketSpec.Models.Core
             set
             {
                 if (ExecutionContext == null)
-                    ExecutionContext = new CmdContext ();
+                    ExecutionContext = new CommandContext();
                 if (ExecutionContext.Token == null)
                     ExecutionContext.Token = new Commands.Authentication.TokenInfo();
                 ExecutionContext.Token.AccessToken = value;
@@ -123,16 +124,39 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         #endregion
 
-        // 便捷创建方法
-        public static PacketModel Create<TCommand>(TCommand command)
-            where TCommand : ICommand
+        /// <summary>
+        /// 创建数据包的便捷方法 - 不再依赖ICommand接口
+        /// </summary>
+        /// <typeparam name="TData">数据对象类型</typeparam>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="data">数据对象</param>
+        /// <returns>创建的数据包</returns>
+        public static PacketModel Create<TData>(CommandId commandId, TData data)
         {
+            if (commandId == null)
+                throw new ArgumentNullException(nameof(commandId), "命令标识符不能为空");
+
             return new PacketModel
             {
-                PacketId = IdGenerator.GeneratePacketId(command.CommandIdentifier.Name),
-                CommandId = command.CommandIdentifier,
-                CommandData = UnifiedSerializationService.SerializeWithMessagePack(command),
+                PacketId = IdGenerator.GeneratePacketId(commandId.Name),
+                CommandId = commandId,
+                CommandData = data != null ? UnifiedSerializationService.SerializeWithMessagePack(data) : Array.Empty<byte>(),
             };
+        }
+
+        /// <summary>
+        /// 使用请求对象创建数据包
+        /// </summary>
+        /// <typeparam name="TRequest">请求类型</typeparam>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="request">请求对象</param>
+        /// <returns>创建的数据包</returns>
+        public static PacketModel CreateFromRequest<TRequest>(CommandId commandId, TRequest request) where TRequest : IRequest
+        {
+            var packet = Create(commandId, request);
+            packet.Request = request;
+            packet.Direction = PacketDirection.ClientToServer;
+            return packet;
         }
 
         #region ITimestamped 接口实现
@@ -149,6 +173,22 @@ namespace RUINORERP.PacketSpec.Models.Core
         [Key(7)]
         public DateTime TimestampUtc { get; set; }
 
+
+        /// <summary>
+        /// 请求模型
+        /// </summary>
+        [Key(8)]
+        public IRequest Request { get; set; }
+
+
+        /// <summary>
+        /// 响应模型
+        /// </summary>
+        [Key(9)]
+        public IResponse Response { get; set; }
+
+        [Key(10)]
+        public PacketPriority PacketPriority { get; set; }
         /// <summary>
         /// 验证模型有效性（实现 ICoreEntity 接口）
         /// </summary>

@@ -70,12 +70,14 @@ namespace RUINORERP.UI.Network.Authentication
                 TokenInfo tokenInfo = null;
                 int retryCount = 0;
                 Exception lastException = null;
-                
+
                 while (retryCount < MAX_RETRY_COUNT)
                 {
                     try
                     {
-                        tokenInfo = await _tokenRefreshService.RefreshTokenAsync(cancellationToken);
+                        /// 调用Token刷新服务
+                        /// TODO  这里传入了空字符串 ，待完善
+                        tokenInfo = await _tokenRefreshService.RefreshTokenAsync(string.Empty, cancellationToken);
                         if (tokenInfo != null && !string.IsNullOrEmpty(tokenInfo.AccessToken))
                         {
                             OnRefreshSucceeded(tokenInfo);
@@ -92,7 +94,7 @@ namespace RUINORERP.UI.Network.Authentication
                         }
                     }
                 }
-                
+
                 if (lastException != null)
                 {
                     OnRefreshFailed(lastException);

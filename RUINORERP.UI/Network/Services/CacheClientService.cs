@@ -457,7 +457,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 使用新的方法发送命令并获取包含指令信息的响应
-                var response = await _comm.SendCommandWithResponseAsync<IResponse>( CacheCommands.CacheOperation, request, ct, 30000);
+                var response = await _comm.SendCommandWithResponseAsync<IResponse>(CacheCommands.CacheOperation, request, ct, 30000);
 
                 // 检查响应数据是否为空   
                 if (response == null)
@@ -469,7 +469,7 @@ namespace RUINORERP.UI.Network.Services
                 // 检查响应是否成功
                 if (!response.IsSuccess)
                 {
-                    return ResponseBase.CreateError(response.ErrorMessage)
+                    return ResponseBase.CreateError(response.ErrorMessage + response.Message)
                         .WithMetadata("RequestId", response.RequestId ?? string.Empty);
                 }
 

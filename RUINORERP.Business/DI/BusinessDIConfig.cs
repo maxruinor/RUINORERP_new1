@@ -103,6 +103,18 @@ namespace RUINORERP.Business.DI
                 .As<ICacheSyncMetadata>()
                 .SingleInstance()
                 .PropertiesAutowired();
+                
+            // 注册缓存订阅管理器
+            builder.RegisterType<CacheSubscriptionManager>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+                
+            // 注册库存缓存管理器
+            builder.RegisterType<InventoryCacheManager>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
   
 
             // 注册实体加载服务

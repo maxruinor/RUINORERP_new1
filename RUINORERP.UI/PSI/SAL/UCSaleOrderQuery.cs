@@ -902,7 +902,6 @@ namespace RUINORERP.UI.PSI.SAL
 
             }
             MainForm.Instance.uclog.AddLog("转换完成,成功订单数量:" + conter);
-            MainForm.Instance.logger.LogInformation("转换完成,成功订单数量:" + conter);
         }
 
         /* 放到了 订单的业务层 

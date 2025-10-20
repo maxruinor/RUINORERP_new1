@@ -21,7 +21,6 @@ namespace RUINORERP.UI.WorkFlowTester
         public override ExecutionResult Run(IStepExecutionContext context)
         {
             Console.WriteLine("循环工作" + System.DateTime.Now.ToString());
-            logger.LogInformation("开始工作");
             return ExecutionResult.Next();
         }
     }

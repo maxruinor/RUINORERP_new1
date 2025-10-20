@@ -7,14 +7,15 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Models.Requests.Cache;
 using RUINORERP.PacketSpec.Models.Responses.Cache;
+using RUINORERP.PacketSpec.Models;
 
-namespace RUINORERP.Business.CommService
+namespace RUINORERP.Business.Cache
 {
     /// <summary>
-    /// 缓存订阅管理器 - 可以被服务器和客户端共同使用
-    /// 通过IsServerMode属性区分服务器端和客户端模式
-    /// </summary>
-    public class CacheSubscriptionManager
+        /// 缓存订阅管理器 - 可以被服务器和客户端共同使用
+        /// 通过IsServerMode属性区分服务器端和客户端模式
+        /// </summary>
+        public class CacheSubscriptionManager : IDisposable
     {
         // 服务器端使用：管理每个表的订阅者（会话ID）
         private readonly ConcurrentDictionary<string, HashSet<string>> _tableSubscribers;
@@ -296,11 +297,11 @@ namespace RUINORERP.Business.CommService
                 if (_commService != null)
                 {
                     // 创建取消订阅请求
-                    var request = new CacheRequest
-                    {
-                        TableName = tableName,
-                        //Operation = CacheOperation.un "Cache.Unsubscribe"
-                    };
+                var request = new CacheRequest
+                {
+                    TableName = tableName,
+                    Operation = CacheOperation.Manage
+                };
 
                     // 发送取消订阅命令（通过反射调用，避免直接依赖）
                     //var commType = _commService.GetType();
@@ -494,6 +495,50 @@ namespace RUINORERP.Business.CommService
                 }
             }
         }
+        #region IDisposable 实现
+
+        /// <summary>
+        /// 标记是否已释放资源
+        /// </summary>
+        private bool _disposed = false;
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {            
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        /// <param name="disposing">是否释放托管资源</param>
+        protected virtual void Dispose(bool disposing)
+        {            
+            if (!_disposed)
+            {                
+                if (disposing)
+                {                    
+                    // 清理托管资源
+                    if (!IsServerMode && _subscriptions != null)
+                    {                        
+                        _subscriptions.Clear();
+                    }
+                    else if (IsServerMode && _tableSubscribers != null)
+                    {                        
+                        _tableSubscribers.Clear();
+                    }
+
+                    _commService = null;
+                }
+
+                _disposed = true;
+            }
+        }
+
+        #endregion
     }
 
     /// <summary>

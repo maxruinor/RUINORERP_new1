@@ -86,7 +86,6 @@ namespace RUINORERP.UI.Network.Services
                     return ResponseBase.CreateError("未连接到服务器，请检查网络连接后重试") as LoginResponse;
                 }
 
-                _log?.LogInformation("用户登录请求开始 - 用户: {Username}", username);
                 var loginRequest = LoginRequest.Create(username, password);
 
                 // 使用重试机制发送登录请求
@@ -160,7 +159,6 @@ namespace RUINORERP.UI.Network.Services
                 // 登录成功后处理Token
                 if (response.Token != null && !string.IsNullOrEmpty(response.Token.AccessToken))
                 {
-                    _log?.LogInformation("登录成功，保存Token信息 - 用户: {Username}", username);
                     await _tokenManager.TokenStorage.SetTokenAsync(response.Token);
                     MainForm.Instance.AppContext.SessionId = response.SessionId;
 
@@ -168,7 +166,6 @@ namespace RUINORERP.UI.Network.Services
                     try
                     {
                         await _communicationService.StartHeartbeatAfterLoginAsync(ct);
-                        _log?.LogInformation("心跳服务已成功启动");
                     }
                     catch (Exception heartbeatEx)
                     {
@@ -211,8 +208,6 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                _log?.LogInformation("用户登出请求开始");
-                
                 // 获取当前令牌信息
                 var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
                 if (tokenInfo == null)
@@ -255,18 +250,16 @@ namespace RUINORERP.UI.Network.Services
                 }
                 else
                 {
-                    _log?.LogInformation("未连接到服务器，仅执行本地登出操作");
+                    //未连接到服务器，仅执行本地登出操作;
                 }
 
                 // 执行本地登出清理
                 await CleanupLoginStateAsync();
-                _log?.LogInformation("用户登出操作完成，服务器登出状态: {ServerLogoutSuccess}", serverLogoutSuccess);
                 
                 return serverLogoutSuccess; // 返回服务器登出是否成功
             }
             catch (OperationCanceledException)
             {
-                _log?.LogInformation("登出操作已被取消");
                 return false;
             }
             catch (Exception ex)
@@ -433,7 +426,6 @@ namespace RUINORERP.UI.Network.Services
             if (e.Exception.Message.IndexOf("expired", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 e.Exception.Message.IndexOf("invalid", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                _log?.LogInformation("检测到Token已过期或无效，将触发登出流程");
                 // 注意：这里不能直接调用LogoutAsync，因为这可能在非UI线程中执行
                 // 应该通过事件通知UI线程处理登出
                 // 实际实现中需要添加相应的事件或通知机制

@@ -22,7 +22,6 @@ using System.Threading;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
 using static RUINORERP.Server.Network.Core.ListenerOptions;
-using RUINORERP.Server.Network.Commands;
 using RUINORERP.PacketSpec.DI;
 using System.Reflection;
 using RUINORERP.PacketSpec.Commands.Authentication;
@@ -106,7 +105,6 @@ namespace RUINORERP.Server.Network.Core
                 // 声明一个外部作用域的变量，将在ConfigureServerOptions中被赋值
                 ERPServerOptions serverOptions = null;
 
-                _logger.LogInformation("正在初始化SuperSocket服务器...");
                 _host = MultipleServerHostBuilder.Create()
                 .AddServer<SuperSocketService<ServerPackageInfo>, ServerPackageInfo, PacketPipelineFilter>(builder =>
                 {

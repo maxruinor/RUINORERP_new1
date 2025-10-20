@@ -1,7 +1,7 @@
 ﻿using RUINORERP.Business.Cache;
 using System;
 
-namespace RUINORERP.Common.Extensions
+namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// IEntityCacheManager接口的扩展方法类

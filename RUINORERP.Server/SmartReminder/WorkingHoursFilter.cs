@@ -42,7 +42,6 @@ namespace RUINORERP.Server.SmartReminder
         {
             if (!ShouldCheck())
             {
-                _logger.LogInformation("当前不在工作时间，跳过库存检查");
                 return;
             }
 

@@ -48,9 +48,8 @@ namespace RUINORERP.Server.Workflow
         {
             try
             {
-                _logger.LogInformation("开始生成库存快照...");
                 var count = _snapshotService.GenerateDailySnapshot();
-                _logger.LogInformation($"库存快照生成完成，共生成 {count} 条记录");
+                //库存快照生成完成
             }
             catch (Exception ex)
             {

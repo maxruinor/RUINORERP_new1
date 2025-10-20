@@ -4,7 +4,7 @@ using System.Text;
 using Newtonsoft.Json;
 using MessagePack;
 
-namespace RUINORERP.Business.CommService
+namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 缓存序列化助手类，支持多种序列化方式

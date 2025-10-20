@@ -33,7 +33,7 @@ using System.IO.Packaging;
 using Azure.Core;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace RUINORERP.Server.Network.Commands
+namespace RUINORERP.Server.Network.CommandHandlers
 {
     /// <summary>
     /// 统一登录命令处理器 - 整合了命令模式和处理器模式的登录处理
@@ -676,7 +676,7 @@ namespace RUINORERP.Server.Network.Commands
         {
             // 检查IP是否被封禁
             return BlacklistManager.IsIpBanned(username) ||
-                   (!string.IsNullOrEmpty(ipAddress) && BlacklistManager.IsIpBanned(ipAddress));
+                   !string.IsNullOrEmpty(ipAddress) && BlacklistManager.IsIpBanned(ipAddress);
         }
 
         /// <summary>

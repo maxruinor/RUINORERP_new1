@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RUINORERP.PacketSpec.Commands
+namespace RUINORERP.Server.Network.CommandHandlers
 {
     /// <summary>
     /// 命令调度器的默认回退处理器

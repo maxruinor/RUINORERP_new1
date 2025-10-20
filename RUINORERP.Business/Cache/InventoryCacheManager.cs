@@ -10,7 +10,7 @@ using CacheManager.Core;
 using Newtonsoft.Json.Linq;
 using RUINORERP.Model;
 
-namespace RUINORERP.Business.CommService
+namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 库存缓存管理器

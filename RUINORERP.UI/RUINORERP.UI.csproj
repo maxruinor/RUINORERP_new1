@@ -2310,7 +2310,17 @@
     <Compile Include="Network\RetryStrategy\ExponentialBackoffRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\FixedIntervalRetryStrategy.cs" />
     <Compile Include="Network\RetryStrategy\IRetryStrategy.cs" />
+    <Compile Include="Network\Services\AuthenticationManagementService.cs" />
     <Compile Include="Network\Services\CacheClientService.cs" />
+    <Compile Include="Network\Services\Cache\CacheRequestManager.cs" />
+    <Compile Include="Network\Services\Cache\CacheResponseProcessor.cs" />
+    <Compile Include="Network\Services\Cache\CacheUtility.cs" />
+    <Compile Include="Network\Services\Cache\UICacheSubscriptionManager.cs" />
+    <Compile Include="Network\Services\FileManagementService.cs" />
+    <Compile Include="Network\Services\MessageService.cs" />
+    <Compile Include="Network\Services\MessageServiceUsageExample.cs" />
+    <Compile Include="Network\Services\SimplifiedMessageService.cs" />
+    <Compile Include="Network\Services\SystemManagementService.cs" />
     <Compile Include="Network\Services\UserLoginService.cs" />
     <Compile Include="Network\SuperSocketClient.cs" />
     <Compile Include="Network\TimeoutStatistics\CommandTimeoutStats.cs" />

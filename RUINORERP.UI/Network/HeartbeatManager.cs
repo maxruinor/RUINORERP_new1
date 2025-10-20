@@ -169,7 +169,6 @@ namespace RUINORERP.UI.Network
             {
                 if (_heartbeatTask != null && !_heartbeatTask.IsCompleted)
                 {
-                    _logger?.LogInformation("心跳任务已经在运行中");
                     return; // 已经在运行中
                 }
 
@@ -182,8 +181,6 @@ namespace RUINORERP.UI.Network
                     _resourceCheckTask = Task.Run(ResourceCheckLoopAsync, _cancellationTokenSource.Token);
                 }
 
-                _logger?.LogInformation("心跳任务已启动，间隔: {HeartbeatIntervalMs}毫秒，资源检查间隔: {ResourceCheckIntervalMs}毫秒",
-                    _heartbeatIntervalMs, _resourceCheckIntervalMs);
             }
         }
 
@@ -204,7 +201,6 @@ namespace RUINORERP.UI.Network
                         _heartbeatTask = null;
                         _resourceCheckTask = null;
                         _failedAttempts = 0;
-                        _logger?.LogInformation("心跳任务和资源检查任务已停止");
                     }
                     catch (Exception ex)
                     {
@@ -277,8 +273,6 @@ namespace RUINORERP.UI.Network
                     _lastHeartbeatTime = DateTime.UtcNow;
                 }
 
-                _logger?.LogInformation("{HeartbeatType}心跳成功，耗时: {ElapsedMs}ms",
-                    isManual ? "手动" : "自动", stopwatch.ElapsedMilliseconds);
                 return (true, $"心跳成功", stopwatch.Elapsed);
             }
             catch (TimeoutException ex)
@@ -366,7 +360,6 @@ namespace RUINORERP.UI.Network
                 {
                     // 确保服务器建议的间隔在合理范围内
                     newInterval = Math.Max(_minHeartbeatIntervalMs, Math.Min(serverSuggestedInterval, _maxHeartbeatIntervalMs));
-                    _logger?.LogInformation("根据服务器建议调整心跳间隔: {NewIntervalMs}ms", newInterval);
                 }
                 else
                 {
@@ -402,7 +395,6 @@ namespace RUINORERP.UI.Network
                 if (newInterval != _currentHeartbeatIntervalMs)
                 {
                     _currentHeartbeatIntervalMs = newInterval;
-                    _logger?.LogInformation("心跳间隔已调整为: {NewIntervalMs}ms", _currentHeartbeatIntervalMs);
                 }
             }
         }
@@ -457,7 +449,6 @@ namespace RUINORERP.UI.Network
         
         private async Task SendHeartbeatsAsync()
         {
-            _logger?.LogInformation("心跳任务已启动，开始定期发送心跳");
 
             // 上次Token检查时间
             DateTime lastTokenCheckTime = DateTime.MinValue;
@@ -517,7 +508,6 @@ namespace RUINORERP.UI.Network
                     else
                     {
                         // 连接断开，监控连接状态
-                        _logger?.LogInformation("连接已断开，监控连接状态...");
 
                         // 重置失败计数器
                         lock (_lock)
@@ -580,12 +570,10 @@ namespace RUINORERP.UI.Network
                 catch (TaskCanceledException)
                 {
                     // 正常取消，退出循环
-                    _logger?.LogInformation("心跳间隔等待被取消");
                     break;
                 }
             }
 
-            _logger?.LogInformation("心跳任务已结束");
         }
 
         /// <summary>
@@ -595,7 +583,6 @@ namespace RUINORERP.UI.Network
         /// <returns>异步任务</returns>
         private async Task ResourceCheckLoopAsync()
         {
-            _logger?.LogInformation("资源检查任务已启动，间隔: {ResourceCheckIntervalMs}毫秒", _resourceCheckIntervalMs);
 
             while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
@@ -689,7 +676,6 @@ namespace RUINORERP.UI.Network
                 catch (TaskCanceledException)
                 {
                     // 任务被取消，正常退出
-                    _logger?.LogInformation("资源检查任务收到取消信号，准备退出");
                     break;
                 }
                 catch (OperationCanceledException ex)
@@ -713,12 +699,10 @@ namespace RUINORERP.UI.Network
                 catch (TaskCanceledException)
                 {
                     // 正常取消，退出循环
-                    _logger?.LogInformation("资源检查间隔等待被取消");
                     break;
                 }
             }
 
-            _logger?.LogInformation("资源检查任务已结束");
         }
 
         /// <summary>
@@ -755,7 +739,6 @@ namespace RUINORERP.UI.Network
                         _isDisposed = true;
 
                         GC.SuppressFinalize(this);
-                        _logger?.LogInformation("心跳管理器资源已释放");
                     }
                     catch (Exception ex)
                     {
@@ -1182,7 +1165,6 @@ namespace RUINORERP.UI.Network
                         var validationResult = await _tokenManager.ValidateStoredTokenAsync();
                         if (!validationResult.IsValid)
                         {
-                            _logger?.LogInformation("检测到AccessToken已过期或无效，触发Token过期事件");
                             
                             // 触发Token过期事件
                             Action tokenExpiredHandler;

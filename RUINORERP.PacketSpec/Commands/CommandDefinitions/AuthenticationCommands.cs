@@ -28,6 +28,11 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// 刷新Token - 更新用户身份令牌
         /// </summary>
         public static readonly CommandId RefreshToken = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_RefreshToken & 0xFF));
+
+        /// <summary>
+        /// 强制用户下线 - 管理员强制用户退出系统
+        /// </summary>
+        public static readonly CommandId ForceLogout = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_ForceLogout & 0xFF));
         #endregion
     }
 }

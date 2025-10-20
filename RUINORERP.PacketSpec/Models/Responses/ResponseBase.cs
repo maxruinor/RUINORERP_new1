@@ -175,25 +175,25 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <summary>
         /// 业务实体数据
         /// </summary>
-        [Key(9)]
+        [Key(100)]
         public TEntity Data { get; set; }
 
         /// <summary>
         /// 数据总数（主要用于分页查询）
         /// </summary>
-        [Key(10)]
+        [Key(101)]
         public int TotalCount { get; set; }
 
         /// <summary>
         /// 扩展数据字典（用于存放额外的业务数据）
         /// </summary>
-        [Key(11)]
+        [Key(102)]
         public Dictionary<string, object> ExtraData { get; set; }
 
         /// <summary>
         /// 数据版本号（用于乐观锁和缓存控制）
         /// </summary>
-        [Key(12)]
+        [Key(103)]
         public string DataVersion { get; set; }
 
         /// <summary>

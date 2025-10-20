@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.Server.Network.Commands;
 using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Monitoring;
@@ -14,7 +13,9 @@ using System.Threading;
 using RUINORERP.PacketSpec.Models.Core;
 using System;
 using RUINORERP.PacketSpec.Models.Responses;
-using System.Threading.Tasks; // 添加缓存订阅管理器的引用
+using System.Threading.Tasks;
+using RUINORERP.Business.Cache; // 添加缓存订阅管理器的引用
+using RUINORERP.Server.Network.CommandHandlers;
 
 namespace RUINORERP.Server.Network.DI
 {
@@ -63,6 +64,12 @@ namespace RUINORERP.Server.Network.DI
 
             // 注册工作流服务接收器
             //   services.AddSingleton<WorkflowServiceReceiver>();
+
+            // 注册系统命令处理器
+            services.AddTransient<SystemCommandHandler>();
+            
+            // 注册认证命令处理器
+            services.AddTransient<AuthenticationCommandHandler>();
         }
 
         /// <summary>
@@ -133,7 +140,8 @@ namespace RUINORERP.Server.Network.DI
             // 注册网络命令处理器
             RegisterNetworkCommandHandlers(builder);
 
-      
+            // 注册系统命令处理器
+            builder.RegisterType<SystemCommandHandler>().AsSelf().InstancePerDependency();
         }
 
         /// <summary>
@@ -188,7 +196,7 @@ namespace RUINORERP.Server.Network.DI
         public static string GetNetworkServicesStatistics()
         {
             return $"网络服务依赖注入配置完成。\n" +
-                   $"已注册服务: 14个核心服务\n" +
+                   $"已注册服务: 15个核心服务\n" +
                    $"已注册接口: 3个服务接口\n" +
                    $"生命周期: 单例模式\n" +
                    $"AOP支持: 已启用接口拦截器";

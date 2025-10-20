@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands.FileTransfer
 {
@@ -8,11 +8,7 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
     public static class FileCommands
     {
         #region 文件命令 (0x06xx)
-        /// <summary>
-        /// 文件操作 - 执行文件相关操作
-        /// </summary>
-        public static readonly CommandId FileOperation = new CommandId(CommandCategory.File, (byte)(CommandCatalog.File_FileOperation & 0xFF));
-
+       
         /// <summary>
         /// 文件上传 - 上传文件到服务器
         /// </summary>
@@ -43,20 +39,7 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
         /// </summary>
         public static readonly CommandId FilePermissionCheck = new CommandId(CommandCategory.File, (byte)(CommandCatalog.File_FilePermissionCheck & 0xFF));
 
-        /// <summary>
-        /// 文件重命名 - 重命名文件
-        /// </summary>
-        public static readonly CommandId FileRename = new CommandId(CommandCategory.File, (byte)(CommandCatalog.File_FileRename & 0xFF));
-
-        /// <summary>
-        /// 文件移动 - 移动文件位置
-        /// </summary>
-        public static readonly CommandId FileMove = new CommandId(CommandCategory.File, (byte)(CommandCatalog.File_FileMove & 0xFF));
-
-        /// <summary>
-        /// 文件复制 - 复制文件
-        /// </summary>
-        public static readonly CommandId FileCopy = new CommandId(CommandCategory.File, (byte)(CommandCatalog.File_FileCopy & 0xFF));
+ 
         #endregion
     }
 }

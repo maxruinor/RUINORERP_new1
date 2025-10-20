@@ -16,7 +16,7 @@ using RUINORERP.PacketSpec.Errors;
 using RUINORERP.Server.Network.Services;
 // using RUINORERP.Server.Network.Interfaces.Services; // 暂时注释，缺少ISessionService接口定义
 
-namespace RUINORERP.Server.Network.Commands
+namespace RUINORERP.Server.Network.CommandHandlers
 {
     /// <summary>
     /// 心跳命令处理器
@@ -115,7 +115,7 @@ namespace RUINORERP.Server.Network.Commands
                         .WithMetadata("SessionId", queuedCommand.Packet.ExecutionContext.SessionId);
                 }
 
-                if (queuedCommand.Packet.Request is HeartbeatRequest  heartbeatRequest)
+                if (queuedCommand.Packet.Request is HeartbeatRequest heartbeatRequest)
                 {
                     // 确保 UserInfo 不为空
                     if (heartbeatRequest.UserInfo != null)

@@ -98,7 +98,6 @@ namespace RUINORERP.Server.Controls
                 };
                 _configHistory.Add(historyEntry);
 
-                _logger?.LogInformation("配置保存成功: {FileName}", CONFIG_FILE_NAME);
                 
                 // 更新UI状态
                 UpdateButtonStates();
@@ -140,7 +139,6 @@ namespace RUINORERP.Server.Controls
                     // 绑定到TreeView和PropertyGrid
                     BindConfigurationToUI(configObject);
                     
-                    _logger?.LogInformation("配置加载成功: {FileName}", CONFIG_FILE_NAME);
                 }
                 else
                 {
@@ -457,7 +455,6 @@ namespace RUINORERP.Server.Controls
         private void propertyGrid1_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
         {
             // 可以在这里添加属性改变时的处理逻辑
-            _logger?.LogInformation("配置属性已更改: {PropertyName} = {NewValue}", e.ChangedItem.PropertyDescriptor.Name, e.ChangedItem.Value);
         }
 
         /// <summary>

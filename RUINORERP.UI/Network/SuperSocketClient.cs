@@ -130,11 +130,7 @@ namespace RUINORERP.UI.Network
                     
                     // 确保状态同步
                     _isConnected = connected && _client.Socket?.Connected == true;
-                    
-                    if (_isConnected)
-                    {
-                        _logger?.LogInformation("客户端成功连接到服务器 {ServerIp}:{Port}", serverUrl, port);
-                    }
+                   
                 }
                 else
                 {
@@ -230,7 +226,6 @@ namespace RUINORERP.UI.Network
         private void OnClientConnected(object sender, EventArgs e)
         {
             _isConnected = true;
-            _logger?.LogInformation("客户端连接事件触发，连接状态已更新为已连接");
         }
 
         /// <summary>
@@ -265,7 +260,6 @@ namespace RUINORERP.UI.Network
             if (_isConnected)
             {
                 _isConnected = false;
-                _logger?.LogInformation("客户端连接已关闭，连接状态已更新为断开");
             }
             Closed?.Invoke(e);
         }
@@ -284,7 +278,6 @@ namespace RUINORERP.UI.Network
             if (_isConnected)
             {
                 _isConnected = false;
-                _logger?.LogInformation("SuperSocketClient资源已释放，连接状态已重置");
             }
         }
     }

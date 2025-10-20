@@ -7,10 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using RUINORERP.Server.Network.Models;
 using RUINORERP.PacketSpec.Models.Requests;
-using FileInfo = RUINORERP.PacketSpec.Models.Requests.FileInfo;
 using RUINORERP.Server.Network.Interfaces.Services;
 using StackExchange.Redis;
 
@@ -69,7 +67,7 @@ namespace RUINORERP.Server.Network.Services
 
                 foreach (var file in files)
                 {
-                    var fileInfo = new FileInfo(file);
+                    var fileInfo = new FileStorageInfo(file);
                     if (fileInfo.LastModified < cutoffDate)
                     {
                         try
@@ -88,7 +86,6 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                _logger.LogInformation("已清理 {DeletedCount} 个临时文件", deletedCount);
             }
             catch (Exception ex)
             {
@@ -148,8 +145,7 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                _logger.LogInformation("一致性检查完成: {MissingFiles} 个文件缺失, {OrphanedFiles} 个文件无记录",
-                    missingFiles, orphanedFiles);
+                
             }
             catch (Exception ex)
             {
@@ -168,9 +164,9 @@ namespace RUINORERP.Server.Network.Services
             try
             {
                 var filePath = Path.Combine(_storageRoot, GetCategoryPath(category), fileId);
-                var fileInfo = new FileInfo(filePath);
+                var fileInfo = new FileStorageInfo(filePath);
 
-                var fileInfoObj = new FileInfo(filePath)
+                var fileInfoObj = new FileStorageInfo(filePath)
                 {
                     FileId = fileId,
                     OriginalName = fileId, // 无法恢复原始名称
@@ -187,7 +183,6 @@ namespace RUINORERP.Server.Network.Services
                 var categoryKey = $"files:{category}";
                 await _redisDb.SetAddAsync(categoryKey, fileId);
 
-                _logger.LogInformation("已重建文件记录: {FileId}", fileId);
             }
             catch (Exception ex)
             {
@@ -233,7 +228,7 @@ namespace RUINORERP.Server.Network.Services
                     if (Directory.Exists(fullPath))
                     {
                         var files = Directory.GetFiles(fullPath, "*.*", SearchOption.AllDirectories);
-                        var totalSize = files.Sum(file => new FileInfo(file).Size);
+                        var totalSize = files.Sum(file => new FileStorageInfo(file).Size);
 
                         usageInfo.CategoryUsage[category] = new CategoryUsage
                         {
@@ -261,9 +256,6 @@ namespace RUINORERP.Server.Network.Services
                     //TODO by watson
                     usageInfo.RedisKeyCount = 0;// await _redisDb.ExecuteAsync("DBSIZE") as long? ?? 0;
                 }
-
-                _logger.LogInformation("存储使用统计: {TotalFiles} 个文件, {TotalSize} 字节",
-                    usageInfo.TotalFiles, usageInfo.TotalSize);
 
                 return usageInfo;
             }
@@ -310,7 +302,6 @@ namespace RUINORERP.Server.Network.Services
                     File.Copy(redisDataPath, redisBackupFile, true);
                 }
 
-                _logger.LogInformation("文件存储备份完成: {BackupPath}", backupPath);
                 return true;
             }
             catch (Exception ex)
@@ -367,7 +358,6 @@ namespace RUINORERP.Server.Network.Services
                     await Task.Delay(5000);
                 }
 
-                _logger.LogInformation("文件存储恢复完成: {BackupPath}", backupPath);
                 return true;
             }
             catch (Exception ex)

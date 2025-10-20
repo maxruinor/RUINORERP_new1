@@ -798,7 +798,6 @@ namespace RUINORERP.UI.SysConfig
                     if (policies.Any())
                     {
                         await MainForm.Instance.AppContext.Db.Insertable(policies.Where(c => c.Policy_Role_RID == 0).ToList()).ExecuteReturnSnowflakeIdAsync();
-                        MainForm.Instance.logger.LogInformation("成功保存{Count}条行级权限规则", policies.Count);
                     }
 
                     // 更新内存中的CurrentRole对象，同步最新的权限规则

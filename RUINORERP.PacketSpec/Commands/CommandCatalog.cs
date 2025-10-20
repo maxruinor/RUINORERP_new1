@@ -24,14 +24,24 @@ namespace RUINORERP.PacketSpec.Commands
         public const ushort System_HeartbeatResponse = 0x0002;
 
         /// <summary>
-        /// 系统状态查询
+        /// 电脑状态查询
         /// </summary>
-        public const ushort System_SystemStatus = 0x0003;
+        public const ushort System_ComputerStatus = 0x0003;
 
         /// <summary>
         /// 异常报告
         /// </summary>
         public const ushort System_ExceptionReport = 0x0004;
+
+        /// <summary>
+        /// 关闭电脑
+        /// </summary>
+        public const ushort System_ShutdownComputer = 0x0005;
+
+        /// <summary>
+        /// 退出系统
+        /// </summary>
+        public const ushort System_ExitSystem = 0x0006;
         #endregion
 
         #region 认证命令 (0x01xx)

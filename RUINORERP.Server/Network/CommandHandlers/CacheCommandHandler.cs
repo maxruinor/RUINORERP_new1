@@ -33,7 +33,7 @@ using RUINORERP.Business.Cache;
 using System.Reflection;
 
 
-namespace RUINORERP.Server.Network.Commands
+namespace RUINORERP.Server.Network.CommandHandlers
 {
     /// <summary>
     /// 缓存命令处理器 - 处理客户端的缓存请求
@@ -152,7 +152,7 @@ namespace RUINORERP.Server.Network.Commands
             try
             {
                 // 缓存同步命令处理逻辑 - 可以复用现有逻辑或实现新的同步机制
-                if (!(command.Packet.Request is CacheRequest   cacheRequest))
+                if (!(command.Packet.Request is CacheRequest cacheRequest))
                 {
                     return ResponseBase.CreateError("不支持的缓存同步命令格式", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "UNSUPPORTED_SYNC_FORMAT");
@@ -193,7 +193,7 @@ namespace RUINORERP.Server.Network.Commands
                         .WithMetadata("ErrorCode", "UNSUPPORTED_SUBSCRIPTION_FORMAT");
                 }
 
-                var cacheRequest = command.Packet.Request  as CacheRequest;
+                var cacheRequest = command.Packet.Request as CacheRequest;
                 if (cacheRequest == null || string.IsNullOrEmpty(cacheRequest.TableName))
                 {
                     return ResponseBase.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
@@ -223,7 +223,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 创建响应
-                var response = CacheResponse.CreateSuccess(tableName);
+                var response = ResponseBase.CreateSuccess(tableName);
                 response.Metadata = new Dictionary<string, object> { { "SubscribeAction", (int)subscribeAction } };
 
                 return response;
@@ -348,7 +348,7 @@ namespace RUINORERP.Server.Network.Commands
         /// <param name="executionContext">执行上下文</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<IResponse> ProcessCacheUpdateAsync( IRequest  request, CommandContext executionContext, CancellationToken cancellationToken)
+        private async Task<IResponse> ProcessCacheUpdateAsync(IRequest request, CommandContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -594,7 +594,7 @@ namespace RUINORERP.Server.Network.Commands
             }
             catch (Exception ex)
             {
-                Comm.CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
+                CommService.ShowExceptionMsg("发送缓存数据列表:" + ex.Message);
             }
             return cacheData;
         }
@@ -1061,7 +1061,7 @@ namespace RUINORERP.Server.Network.Commands
                 }
 
                 // 获取缓存订阅请求数据
-     
+
                 var subscribeRequest = command.Packet.Request as CacheRequest;
                 if (subscribeRequest == null)
                 {
@@ -1304,7 +1304,7 @@ namespace RUINORERP.Server.Network.Commands
                 var notification = new
                 {
                     Type = request.Operation,
-                    TableName = request.TableName,
+                    request.TableName,
                     Timestamp = DateTime.Now
                 };
 

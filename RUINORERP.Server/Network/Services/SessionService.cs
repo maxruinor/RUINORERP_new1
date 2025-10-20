@@ -14,7 +14,8 @@ using SuperSocket.Server.Abstractions.Session;
 using SuperSocket.Server;
 using SuperSocket.Channel;
 using SuperSocket.Connection;
-using RUINORERP.Business.CommService; // 使用统一的订阅管理器
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Cache; // 使用统一的订阅管理器
 
 namespace RUINORERP.Server.Network.Services
 {
@@ -81,7 +82,6 @@ namespace RUINORERP.Server.Network.Services
             // 启动清理定时器，每5分钟清理一次超时会话并检查心跳
             _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
-            _logger.LogInformation("统一会话管理器已启动 - 整合SuperSocket和Network会话管理功能");
         }
 
         #endregion

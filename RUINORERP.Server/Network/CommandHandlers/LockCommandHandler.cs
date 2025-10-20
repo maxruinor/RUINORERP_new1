@@ -11,7 +11,6 @@ using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
-using RUINORERP.PacketSpec.Protocol; // 添加这个using语句以使用OriginalData
 
 namespace RUINORERP.Server.Network.Commands
 {
@@ -19,7 +18,7 @@ namespace RUINORERP.Server.Network.Commands
     /// 锁命令处理器 - 处理锁相关的命令
     /// </summary>
     [CommandHandler("LockCommandHandler", priority: CommandPriority.High)]
-    public class LockCommandHandler : CommandHandlerBase
+    public class LockCommandHandler : BaseCommandHandler
     {
         private readonly ILogger<LockCommandHandler> _logger;
 

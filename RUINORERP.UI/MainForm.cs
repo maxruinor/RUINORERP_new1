@@ -193,12 +193,10 @@ namespace RUINORERP.UI
                 }
                 else
                 {
-                    logger?.LogInformation($"当前登录状态为{CurrentLoginStatus}，不执行锁定操作");
                     
                     // 如果当前不是登录中状态且已连接，则断开连接
                     if (CurrentLoginStatus != LoginStatus.LoggingIn && communicationService != null && communicationService.IsConnected)
                     {
-                        logger?.LogInformation("重连失败，断开与服务器的连接");
                         Invoke(new Action(() => communicationService.Disconnect()));
                     }
                 }
@@ -1777,7 +1775,6 @@ namespace RUINORERP.UI
                 // 检查是否与服务器连接，如果连接则断开
                 if (communicationService != null && communicationService.IsConnected)
                 {
-                    logger?.LogInformation("登录失败，断开与服务器的连接");
                     communicationService.Disconnect();
                 }
                 
@@ -1827,7 +1824,6 @@ namespace RUINORERP.UI
                 // 登出完成，断开与服务器的连接
                 if (communicationService != null && communicationService.IsConnected)
                 {
-                    logger?.LogInformation("登出完成，断开与服务器的连接");
                     communicationService.Disconnect();
                 }
                 
@@ -1873,7 +1869,6 @@ namespace RUINORERP.UI
                     // 断开与服务器的连接，避免继续发送心跳
                     if (communicationService != null && communicationService.IsConnected)
                     {
-                        logger?.LogInformation("锁定系统，断开与服务器的连接");
                         communicationService.Disconnect();
                     }
                     

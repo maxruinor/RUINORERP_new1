@@ -255,7 +255,6 @@ namespace RUINORERP.Server.Controls
                 if (result)
                 {
                     MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    _logger.LogInformation("注册信息保存成功");
                 }
                 else
                 {
@@ -298,7 +297,6 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show("注册信息已复制到剪贴板，请提供给软件服务商进行注册。", "提示", 
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 
-                _logger.LogInformation("注册信息生成成功");
             }
             catch (Exception ex)
             {
@@ -333,7 +331,6 @@ namespace RUINORERP.Server.Controls
                     if (result)
                     {
                         MessageBox.Show("恭喜您，注册成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        _logger.LogInformation("系统注册成功");
                         UpdateUIState(true);
                     }
                     else

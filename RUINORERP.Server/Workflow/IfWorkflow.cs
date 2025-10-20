@@ -22,9 +22,7 @@ namespace RUINORERP.Server.Workflow
 
         public void Build(IWorkflowBuilder<MyData> builder)
         {
-            
 
-            _logger.LogInformation(" IfWorkflow info2222 build");
             builder
                 .StartWith<SayHello>()
                 // .WaitFor("审核状态", (data, context) => context.Workflow.Id, data => DateTime.Now)//WaitFor第一个参数是 事件名称，第二个是事件Key，事件Key可以任意取名，在这里用的是工作流的Id，data=>"1"这样也是可以的。

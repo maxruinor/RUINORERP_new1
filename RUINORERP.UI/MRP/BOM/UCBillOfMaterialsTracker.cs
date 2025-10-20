@@ -93,7 +93,6 @@ namespace RUINORERP.UI.MRP.BOM
                     return;
                 }
             }
-            //MainForm.Instance.logger.LogInformation("查询库存");
             if (QueryConditionFilter == null || QueryConditionFilter.QueryFields == null || QueryConditionFilter.QueryFields.Count == 0)
             {
                 dataGridView1.ReadOnly = true;

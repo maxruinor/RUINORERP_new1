@@ -90,7 +90,6 @@ namespace RUINORERP.Server
                 };
                 _configHistory.Add(historyEntry);
 
-                _logger?.LogInformation("配置保存成功: {FileName}", CONFIG_FILE_NAME);
                 
                 // 更新UI状态
                 UpdateButtonStates();
@@ -139,7 +138,6 @@ namespace RUINORERP.Server
                     // 绑定到TreeView和PropertyGrid
                     BindConfigurationToUI(configObject);
                     
-                    _logger?.LogInformation("配置加载成功: {FileName}", CONFIG_FILE_NAME);
                 }
                 else
                 {
@@ -491,7 +489,6 @@ namespace RUINORERP.Server
                 // 保存到文件
                 File.WriteAllText(configFilePath, rootJson.ToString());
                 
-                _logger?.LogInformation("创建默认配置文件成功: {FilePath}", configFilePath);
             }
             catch (Exception ex)
             {

@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using MessagePack;
@@ -8,15 +8,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// <summary>
     /// 所有响应 DTO 可选实现此接口，由框架自动填充公共错误信息
     /// </summary>
-    ///
-    //添加了这些标识。反而拿不到值
-    //[Union(0, typeof(ResponseBase))]
-    //[Union(1, typeof(LoginResponse))]
-    //[Union(2, typeof(SimpleResponse))]
-    //[Union(3, typeof(LogoutResponse))]
-    //[Union(4, typeof(TokenRefreshResponse))]
-    //[Union(5, typeof(ValidationResponse))]
-    //[Union(6, typeof(PrepareLoginResponse))]
+    //[Union(0, typeof(ResponseBase))] 这一行不能加。加了无法解析出数据
     public interface IResponse
     {
         /// <summary>

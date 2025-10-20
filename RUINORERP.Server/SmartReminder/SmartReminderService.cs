@@ -44,18 +44,15 @@ namespace RUINORERP.Server.SmartReminder
         {
             try
             {
-                _logger.LogInformation("开始初始化智能提醒监控服务");
 
                 // 加载所有必要的策略
                 LoadRequiredStrategies();
 
                 StartMonitoring(TimeSpan.FromMinutes(1000));
-                _logger.LogInformation("实时提醒监控已启用");
 
                 // 注册取消令牌回调
                 stoppingToken.Register(() =>
                 {
-                    _logger.LogInformation("收到服务停止请求，正在清理资源...");
                     StopMonitoring();
                 });
 
@@ -94,14 +91,12 @@ namespace RUINORERP.Server.SmartReminder
                 interval);
 
             _isRunning = true;
-            _logger.LogInformation("提醒监控服务已启动，检查间隔: {Interval}", interval);
         }
 
         private void StopMonitoring()
         {
             if (!_isRunning)
             {
-                _logger.LogInformation("监控服务未运行，无需停止");
                 return;
             }
 
@@ -110,7 +105,6 @@ namespace RUINORERP.Server.SmartReminder
                 _timer?.Change(Timeout.Infinite, 0); // 立即停止触发
                 _timer?.Dispose();
                 _isRunning = false;
-                _logger.LogInformation("提醒监控服务已停止");
             }
             catch (Exception ex)
             {
@@ -180,7 +174,6 @@ namespace RUINORERP.Server.SmartReminder
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("正在优雅地停止智能提醒监控服务...");
             StopMonitoring();
             await base.StopAsync(cancellationToken);
         }

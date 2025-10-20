@@ -10,8 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Examples\**" />
     <Compile Remove="Legacy\**" />
+    <EmbeddedResource Remove="Examples\**" />
     <EmbeddedResource Remove="Legacy\**" />
+    <None Remove="Examples\**" />
     <None Remove="Legacy\**" />
   </ItemGroup>
 
@@ -109,7 +112,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Examples\" />
     <Folder Include="Exceptions\" />
   </ItemGroup>
 

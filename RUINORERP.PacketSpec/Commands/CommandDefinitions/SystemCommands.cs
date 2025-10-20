@@ -24,14 +24,24 @@ namespace RUINORERP.PacketSpec.Commands.System
         public static readonly CommandId HeartbeatResponse = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_HeartbeatResponse & 0xFF));
 
         /// <summary>
-        /// 系统状态查询
+        /// 电脑状态查询
         /// </summary>
-        public static readonly CommandId SystemStatus = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_SystemStatus & 0xFF));
+        public static readonly CommandId ComputerStatus = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_ComputerStatus & 0xFF));
 
         /// <summary>
         /// 异常报告
         /// </summary>
         public static readonly CommandId ExceptionReport = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_ExceptionReport & 0xFF));
+
+        /// <summary>
+        /// 关闭电脑
+        /// </summary>
+        public static readonly CommandId ShutdownComputer = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_ShutdownComputer & 0xFF));
+
+        /// <summary>
+        /// 退出系统
+        /// </summary>
+        public static readonly CommandId ExitSystem = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_ExitSystem & 0xFF));
         #endregion
     }
 }

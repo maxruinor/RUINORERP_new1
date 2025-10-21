@@ -37,10 +37,10 @@ namespace RUINORERP.PacketSpec.Commands
         public byte OperationCode { get; private set; }
 
         /// <summary>
-        /// 完整的命令码 (只读)
+        /// 完整的命令码 (计算属性，不序列化)
         /// </summary>
-        [Key(3)]
-        public ushort FullCode { get; private set; }
+        [IgnoreMember] // 关键修改：标记为不序列化
+        public ushort FullCode => (ushort)(((byte)Category << 8) | OperationCode);
 
         /// <summary>
         /// MessagePack序列化所需的默认构造函数
@@ -54,7 +54,6 @@ namespace RUINORERP.PacketSpec.Commands
             Category = CommandCategory.System;
             OperationCode = 0;
             Name = string.Empty;
-            FullCode = 0;
         }
 
         /// <summary>
@@ -68,7 +67,7 @@ namespace RUINORERP.PacketSpec.Commands
             Category = category;
             OperationCode = operationCode;
             Name = name ?? GetDefaultName(category, operationCode);
-            FullCode = (ushort)(((byte)category << 8) | operationCode);
+           // FullCode = (ushort)(((byte)category << 8) | operationCode);
         }
 
         /// <summary>

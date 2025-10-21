@@ -512,9 +512,14 @@ namespace RUINORERP.UI.Network.Services
                 {
                     request.Data = e.Value;
                 }
+  
 
                 // 发送命令到服务器
                 await _commService.SendOneWayCommandAsync<CacheRequest>(CacheCommands.CacheOperation, request, CancellationToken.None);
+
+
+            
+
 
                 _log.LogDebug("客户端缓存变更已同步到服务器: {0}, 操作: {1}", e.Key, e.Operation.ToString());
             }

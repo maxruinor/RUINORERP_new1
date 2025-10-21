@@ -48,7 +48,7 @@ namespace RUINORERP.UI.Network
         /// 用户登录服务实例，用于重连后的认证恢复
         /// </summary>
         private UserLoginService _userLoginService;
-        
+
         /// <summary>
         /// 设置用户登录服务实例
         /// </summary>
@@ -87,12 +87,12 @@ namespace RUINORERP.UI.Network
         private readonly NetworkConfig _networkConfig;
 
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
-        
+
         // 请求队列，用于存储连接断开时的单向命令请求
         private readonly ConcurrentQueue<QueuedCommand> _queuedCommands = new ConcurrentQueue<QueuedCommand>();
         private bool _isProcessingQueue = false;
         private readonly SemaphoreSlim _queueProcessingLock = new SemaphoreSlim(1, 1);
-        
+
         /// <summary>
         /// 队列命令模型，支持单向命令和带响应命令
         /// </summary>
@@ -216,7 +216,7 @@ namespace RUINORERP.UI.Network
                 {
                     _logger.Debug("客户端已连接到服务器");
                     // 注意：心跳将在用户登录成功后启动，而不是在连接建立时
-                    
+
                     // 连接恢复后，处理队列中的请求
                     if (_queuedCommands.Count > 0)
                     {
@@ -309,7 +309,7 @@ namespace RUINORERP.UI.Network
         /// 重连失败事件，当客户端重连服务器失败时触发
         /// </summary>
         public event Action ReconnectFailed
-        {            
+        {
             add => _eventManager.ReconnectFailed += value;
             remove => _eventManager.ReconnectFailed -= value;
         }
@@ -318,7 +318,7 @@ namespace RUINORERP.UI.Network
         /// 连接状态变化事件，当连接状态改变时触发
         /// </summary>
         public event Action<bool> ConnectionStateChanged
-        {            
+        {
             add => _eventManager.ConnectionStatusChanged += value;
             remove => _eventManager.ConnectionStatusChanged -= value;
         }
@@ -509,7 +509,7 @@ namespace RUINORERP.UI.Network
                         {
                             // 处理带响应的命令
                             _logger.Debug("处理队列中的带响应命令: {CommandId}", queuedCommand.CommandId.Name);
-                            
+
                             // 调用SendCommandAsync方法
                             var result = await SendCommandAsync(
                                 queuedCommand.CommandId,
@@ -617,7 +617,7 @@ namespace RUINORERP.UI.Network
             else
                 return NetworkErrorType.UnknownError;
         }
-       
+
 
         /// <summary>
         /// 发送请求并等待响应（合并自RequestResponseManager）
@@ -660,7 +660,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 使用现有的SendPacketCoreAsync发送请求
-                await SendPacketCoreAsync<TRequest, TResponse>(_socketClient, commandId, request, _networkConfig.DefaultRequestTimeoutMs, ct);
+                await SendPacketCoreAsync<TRequest>(_socketClient, commandId, request, _networkConfig.DefaultRequestTimeoutMs, ct);
 
                 // 等待响应或超时
                 var timeoutTask = Task.Delay(timeoutMs, cts.Token);
@@ -959,10 +959,7 @@ namespace RUINORERP.UI.Network
                 try
                 {
                     _logger?.LogDebug("发送请求尝试 {Attempt}/{MaxRetries}", attempt, _networkConfig.MaxRetryAttempts);
-
                     var response = await SendRequestAsync<TRequest, TResponse>(commandId, request, ct, timeoutMs);
-
-                    _logger?.LogDebug("请求成功，尝试次数: {Attempt}", attempt);
                     return response;
                 }
                 catch (Exception ex)
@@ -994,7 +991,7 @@ namespace RUINORERP.UI.Network
             throw new InvalidOperationException($"请求失败（尝试 {attempt} 次），错误: {lastException?.Message}", lastException);
         }
 
-       
+
         /// 异步发送命令到服务器并等待响应
         /// </summary>
         /// <typeparam name="TRequest">请求数据类型</typeparam>
@@ -1032,8 +1029,8 @@ namespace RUINORERP.UI.Network
             });
         }
 
-     
-       
+
+
 
         /// <summary>
         /// 确保连接状态正常并执行操作
@@ -1049,7 +1046,7 @@ namespace RUINORERP.UI.Network
                 _logger.Debug("检测到连接断开，尝试自动重连");
                 // 尝试重连并等待结果
                 bool reconnected = await TryReconnectAsync().ConfigureAwait(false);
-                
+
                 // 如果重连失败，抛出异常
                 if (!reconnected)
                 {
@@ -1092,11 +1089,11 @@ namespace RUINORERP.UI.Network
         /// 确保连接状态正常并执行无返回值操作
         /// </summary>
         /// <param name="operation">要执行的操作</param>
-        private async Task EnsureConnectedAsync(Func<Task> operation) => 
-            await EnsureConnectedAsync(async () => 
-            { 
-                await operation().ConfigureAwait(false); 
-                return true; 
+        private async Task EnsureConnectedAsync(Func<Task> operation) =>
+            await EnsureConnectedAsync(async () =>
+            {
+                await operation().ConfigureAwait(false);
+                return true;
             }).ConfigureAwait(false);
 
 
@@ -1173,7 +1170,7 @@ namespace RUINORERP.UI.Network
 
             return false;
         }
-        
+
 
         /// <summary>
         /// 处理心跳包失败 - 增强状态同步检查
@@ -1315,7 +1312,7 @@ namespace RUINORERP.UI.Network
             await _commandDispatcher.DispatchAsync(packet, CancellationToken.None).ConfigureAwait(false);
         }
 
-       
+
 
 
         /// <summary>
@@ -1331,7 +1328,7 @@ namespace RUINORERP.UI.Network
         /// <param name="authToken">认证令牌（可选）</param>
         /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
         /// <exception cref="NetworkCommunicationException">当网络通信失败时抛出</exception>
-        private async Task SendPacketCoreAsync<TRequest, TResponse>(
+        private async Task SendPacketCoreAsync<TRequest>(
             ISocketClient client,
                CommandId commandId,
             TRequest request,
@@ -1339,7 +1336,6 @@ namespace RUINORERP.UI.Network
             CancellationToken ct,
             string authToken = null)
             where TRequest : class, IRequest
-            where TResponse : class, IResponse
         {
             ct.ThrowIfCancellationRequested();
             try
@@ -1362,14 +1358,9 @@ namespace RUINORERP.UI.Network
 
                 // 序列化和加密数据包
                 var payload = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(packet);
-                var original = new OriginalData(
-                    (byte)packet.CommandId.Category,
-                    new[] { packet.CommandId.OperationCode },
-                    payload);
-
-                //var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
+                var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, payload);
                 var encrypted = UnifiedEncryptionProtocol.EncryptClientDataToServer(original);
-                
+
                 await client.SendAsync(encrypted, ct);
 
             }
@@ -1401,10 +1392,11 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <typeparam name="TRequest">请求数据类型</typeparam>
         /// <param name="commandId">命令标识符</param>
-        /// <param name="data">请求数据</param>
+        /// <param name="request">请求数据</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>发送成功返回true，失败返回false</returns>
-        public async Task<bool> SendOneWayCommandAsync<TRequest>(CommandId commandId, TRequest data, CancellationToken ct = default)
+        public async Task<bool> SendOneWayCommandAsync<TRequest>(CommandId commandId, TRequest request, CancellationToken ct = default)
+              where TRequest : class, IRequest
         {
             try
             {
@@ -1414,28 +1406,28 @@ namespace RUINORERP.UI.Network
                 if (!IsConnected)
                 {
                     _logger.LogWarning("尝试发送单向命令但连接已断开，命令ID: {CommandId}", commandId);
-                    
+
                     // 如果启用了自动重连，将请求加入队列
                     if (_networkConfig.AutoReconnect && !_disposed)
                     {
                         _logger.Debug($"连接已断开，将命令{commandId.Name}加入队列等待发送");
-                        
+
                         // 创建任务完成源
                         var tcs = new TaskCompletionSource<bool>();
-                        
+
                         // 将请求加入队列
                         _queuedCommands.Enqueue(new QueuedCommand
                         {
                             CommandId = commandId,
-                            Data = data,
+                            Data = request,
                             CancellationToken = ct,
                             DataType = typeof(TRequest),
                             CompletionSource = tcs
                         });
-                        
+
                         // 在后台尝试重连
                         _ = Task.Run(() => TryReconnectAsync());
-                        
+
                         // 返回任务结果，让调用者等待连接恢复后发送
                         return await tcs.Task;
                     }
@@ -1444,21 +1436,10 @@ namespace RUINORERP.UI.Network
 
                 if (_disposed)
                     throw new ObjectDisposedException(nameof(ClientCommunicationService));
-
-                // 序列化请求数据，Token管理现在由BaseCommand统一处理
-                var payload = UnifiedSerializationService.SerializeWithMessagePack(data);
-
-                // 创建原始数据包
-                var original = new OriginalData(
-                    (byte)commandId.Category,
-                    new[] { commandId.OperationCode },
-                    payload);
-
-                // 加密数据包
-                // var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
-                var encrypted = UnifiedEncryptionProtocol.EncryptClientDataToServer(original);
-                // 发送数据
-                await _socketClient.SendAsync(encrypted, ct);
+        
+                // 使用现有的SendPacketCoreAsync发送请求
+                await SendPacketCoreAsync<TRequest>(_socketClient, commandId, request, _networkConfig.DefaultRequestTimeoutMs, ct);
+           
                 return true;
             }
             catch (OperationCanceledException)
@@ -1469,28 +1450,28 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _eventManager.OnErrorOccurred(new Exception($"单向命令发送失败: {ex.Message}", ex));
-                
+
                 // 检查是否因为连接断开导致的异常
                 if (_networkConfig.AutoReconnect && !_disposed && IsRetryableException(ex))
                 {
                     _logger.Debug($"因网络异常，将命令{commandId.Name}加入队列等待发送");
-                    
+
                     // 创建任务完成源
                     var tcs = new TaskCompletionSource<bool>();
-                    
+
                     // 将请求加入队列
                     _queuedCommands.Enqueue(new QueuedCommand
                     {
                         CommandId = commandId,
-                        Data = data,
+                        Data = request,
                         CancellationToken = ct,
                         DataType = typeof(TRequest),
                         CompletionSource = tcs
                     });
-                    
+
                     // 在后台尝试重连
                     _ = Task.Run(() => TryReconnectAsync());
-                    
+
                     // 返回任务结果，让调用者等待连接恢复后发送
                     return await tcs.Task;
                 }
@@ -1631,7 +1612,7 @@ namespace RUINORERP.UI.Network
             Dispose(false);
         }
 
-          
+
 
         /// <summary>
         /// 发送命令并处理响应，返回指令类型的响应数据
@@ -1655,18 +1636,19 @@ namespace RUINORERP.UI.Network
                 if (!IsConnected)
                 {
                     _logger.LogWarning("尝试发送带响应命令但连接已断开，命令ID: {CommandId}", commandId);
-                    
+
                     // 如果启用了自动重连，将请求加入队列
                     if (_networkConfig.AutoReconnect && !_disposed)
                     {
                         _logger.Debug($"连接已断开，将带响应命令{commandId.Name}加入队列等待发送");
-                        
+
                         // 创建任务完成源
                         var packetTcs = new TaskCompletionSource<PacketModel>();
                         var responseTcs = new TaskCompletionSource<TResponse>();
-                        
+
                         // 当packetTcs完成时，将结果转换为TResponse并设置到responseTcs
-                        _ = packetTcs.Task.ContinueWith(task => {
+                        _ = packetTcs.Task.ContinueWith(task =>
+                        {
                             if (task.IsCanceled)
                                 responseTcs.TrySetCanceled();
                             else if (task.IsFaulted)
@@ -1676,7 +1658,7 @@ namespace RUINORERP.UI.Network
                             else
                                 responseTcs.TrySetResult(ResponseBase.CreateError("未收到有效响应数据") as TResponse);
                         });
-                        
+
                         // 将请求加入队列
                         _queuedCommands.Enqueue(new QueuedCommand
                         {
@@ -1688,14 +1670,14 @@ namespace RUINORERP.UI.Network
                             IsResponseCommand = true,
                             TimeoutMs = timeoutMs
                         });
-                        
+
                         // 在后台尝试重连
                         _ = Task.Run(() => TryReconnectAsync());
-                        
+
                         // 返回任务结果，让调用者等待连接恢复后发送
                         return await responseTcs.Task;
                     }
-                    
+
                     // 如果未启用自动重连，返回错误响应
                     return ResponseBase.CreateError("连接已断开，无法发送请求") as TResponse;
                 }
@@ -1720,53 +1702,54 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _eventManager.OnErrorOccurred(new Exception($"带响应命令发送失败: {ex.Message}", ex));
-                
+
                 // 检查是否因为连接断开导致的异常
                 if (_networkConfig.AutoReconnect && !_disposed && IsRetryableException(ex))
                 {
                     _logger.Debug($"因网络异常，将带响应命令{commandId.Name}加入队列等待发送");
-                    
+
                     // 创建任务完成源
-                        var packetTcs = new TaskCompletionSource<PacketModel>();
-                        var responseTcs = new TaskCompletionSource<TResponse>();
-                        
-                        // 当packetTcs完成时，将结果转换为TResponse并设置到responseTcs
-                        _ = packetTcs.Task.ContinueWith(task => {
-                            if (task.IsCanceled)
-                                responseTcs.TrySetCanceled();
-                            else if (task.IsFaulted)
-                                responseTcs.TrySetException(task.Exception);
-                            else if (task.Result != null && task.Result.Response != null)
-                                responseTcs.TrySetResult(task.Result.Response as TResponse);
-                            else
-                                responseTcs.TrySetResult(ResponseBase.CreateError("未收到有效响应数据") as TResponse);
-                        });
-                        
-                        // 将请求加入队列
-                        _queuedCommands.Enqueue(new QueuedCommand
-                        {
-                            CommandId = commandId,
-                            Data = request,
-                            CancellationToken = ct,
-                            DataType = request.GetType(),
-                            ResponseCompletionSource = packetTcs,
-                            IsResponseCommand = true,
-                            TimeoutMs = timeoutMs
-                        });
-                    
+                    var packetTcs = new TaskCompletionSource<PacketModel>();
+                    var responseTcs = new TaskCompletionSource<TResponse>();
+
+                    // 当packetTcs完成时，将结果转换为TResponse并设置到responseTcs
+                    _ = packetTcs.Task.ContinueWith(task =>
+                    {
+                        if (task.IsCanceled)
+                            responseTcs.TrySetCanceled();
+                        else if (task.IsFaulted)
+                            responseTcs.TrySetException(task.Exception);
+                        else if (task.Result != null && task.Result.Response != null)
+                            responseTcs.TrySetResult(task.Result.Response as TResponse);
+                        else
+                            responseTcs.TrySetResult(ResponseBase.CreateError("未收到有效响应数据") as TResponse);
+                    });
+
+                    // 将请求加入队列
+                    _queuedCommands.Enqueue(new QueuedCommand
+                    {
+                        CommandId = commandId,
+                        Data = request,
+                        CancellationToken = ct,
+                        DataType = request.GetType(),
+                        ResponseCompletionSource = packetTcs,
+                        IsResponseCommand = true,
+                        TimeoutMs = timeoutMs
+                    });
+
                     // 在后台尝试重连
                     _ = Task.Run(() => TryReconnectAsync());
-                    
+
                     // 返回任务结果，让调用者等待连接恢复后发送
                     return await responseTcs.Task;
                 }
-                
+
                 // 如果是操作取消异常，重新抛出
                 if (ex is OperationCanceledException)
                 {
                     throw;
                 }
-                
+
                 // 返回错误响应
                 return ResponseBase.CreateError($"命令执行失败: {ex.Message}") as TResponse;
             }

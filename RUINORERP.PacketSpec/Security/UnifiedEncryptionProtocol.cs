@@ -26,6 +26,12 @@ namespace RUINORERP.PacketSpec.Security
             /// </summary>
             private const int KEY_LENGTH = 256;
 
+            /// <summary>
+            /// 最大数据包大小（字节）
+            /// 默认设置为10MB以支持更大的数据传输
+            /// </summary>
+            public const int MAX_PACKET_SIZE = 100 * 1024 * 1024; // 100MB
+
             #endregion
 
             #region 字段
@@ -182,7 +188,7 @@ namespace RUINORERP.PacketSpec.Security
                         int twoLength = BinaryPrimitives.ReadInt32LittleEndian(headCopy.AsSpan(6, 4));
 
                         // 验证长度是否有效
-                        if (oneLength >= 0 && twoLength >= 0 && oneLength + twoLength <= 1024 * 1024) // 限制最大1MB
+                        if (oneLength >= 0 && twoLength >= 0 && oneLength + twoLength <= MAX_PACKET_SIZE)
                         {
                             return oneLength + twoLength;
                         }
@@ -238,7 +244,7 @@ namespace RUINORERP.PacketSpec.Security
                 int twoLength = BinaryPrimitives.ReadInt32LittleEndian(headCopy.AsSpan(6, 4));
 
                 // 验证数据长度是否有效
-                if (oneLength < 0 || twoLength < 0 || oneLength + twoLength > 1024 * 1024)
+                if (oneLength < 0 || twoLength < 0 || oneLength + twoLength > MAX_PACKET_SIZE)
                 {
                     throw new InvalidOperationException("无效的数据长度");
                 }
@@ -315,7 +321,7 @@ namespace RUINORERP.PacketSpec.Security
                         int twoLength = BinaryPrimitives.ReadInt32LittleEndian(headCopy.AsSpan(6, 4));
 
                         // 验证长度是否有效
-                        if (oneLength >= 0 && twoLength >= 0 && oneLength + twoLength <= 1024 * 1024)
+                        if (oneLength >= 0 && twoLength >= 0 && oneLength + twoLength <= MAX_PACKET_SIZE)
                         {
                             return oneLength + twoLength;
                         }
@@ -374,7 +380,7 @@ namespace RUINORERP.PacketSpec.Security
                 int twoLength = BinaryPrimitives.ReadInt32LittleEndian(head.AsSpan(6, 4));
 
                 // 验证数据长度是否有效
-                if (oneLength < 0 || twoLength < 0 || oneLength + twoLength > 1024 * 1024)
+                if (oneLength < 0 || twoLength < 0 || oneLength + twoLength > MAX_PACKET_SIZE)
                 {
                     throw new InvalidOperationException("无效的数据长度");
                 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,15 +15,15 @@ namespace RUINORERP.PacketSpec.Serialization
     public static class UnifiedSerializationService
     {
         #region MessagePack配置
-        
+
         // 配置MessagePack序列化选项
         private static readonly MessagePackSerializerOptions _messagePackOptions;
-        
+
         /// <summary>
         /// 获取MessagePack序列化选项（供外部使用）
         /// </summary>
         public static MessagePackSerializerOptions MessagePackOptions => _messagePackOptions;
-        
+
         // 静态构造函数，用于初始化MessagePack选项
         static UnifiedSerializationService()
         {
@@ -41,7 +41,7 @@ namespace RUINORERP.PacketSpec.Serialization
                     // 类型less解析器，支持动态类型
                     TypelessObjectResolver.Instance
                 );
-                
+
                 _messagePackOptions = MessagePackSerializerOptions.Standard
                     .WithResolver(resolver)
                     .WithCompression(MessagePackCompression.Lz4Block)
@@ -54,23 +54,25 @@ namespace RUINORERP.PacketSpec.Serialization
                 throw new InvalidOperationException("MessagePack序列化服务初始化失败", ex);
             }
         }
-        
+
         #endregion
-        
+
         #region JSON配置
-        
+
         private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
         {
             NullValueHandling = NullValueHandling.Ignore,
             Formatting = Formatting.None,
             DefaultValueHandling = DefaultValueHandling.Include,
-            TypeNameHandling = TypeNameHandling.Auto
+            TypeNameHandling = TypeNameHandling.None, // 改为None，避免安全问题
+            DateFormatHandling = DateFormatHandling.IsoDateFormat,
+            DateTimeZoneHandling = DateTimeZoneHandling.Utc
         };
-        
+
         #endregion
 
         #region 基础MessagePack序列化方法
-        
+
         /// <summary>
         /// 序列化对象为字节数组（MessagePack）
         /// </summary>
@@ -210,11 +212,11 @@ namespace RUINORERP.PacketSpec.Serialization
                 return 0;
             }
         }
-        
+
         #endregion
 
         #region JSON序列化方法
-        
+
         /// <summary>
         /// 序列化对象到字节数组（JSON）
         /// </summary>
@@ -287,11 +289,11 @@ namespace RUINORERP.PacketSpec.Serialization
                 return false;
             }
         }
-        
+
         #endregion
 
         #region 二进制序列化方法
-        
+
         /// <summary>
         /// 序列化数据包到二进制格式（用于网络传输）
         /// </summary>
@@ -337,14 +339,14 @@ namespace RUINORERP.PacketSpec.Serialization
                 {
                     // 读取数据长度
                     var length = reader.ReadInt32();
-                    
+
                     // 验证数据长度
                     if (data.Length < 4 + length)
                         return null;
 
                     // 读取实际数据
                     var packetData = reader.ReadBytes(length);
-                    
+
                     // 使用MessagePack反序列化
                     return DeserializeWithMessagePack<T>(packetData);
                 }
@@ -371,11 +373,11 @@ namespace RUINORERP.PacketSpec.Serialization
                 return null;
             }
         }
-        
+
         #endregion
 
         #region 压缩序列化方法
-        
+
         /// <summary>
         /// 压缩序列化（使用GZip）
         /// </summary>
@@ -389,8 +391,8 @@ namespace RUINORERP.PacketSpec.Serialization
 
             try
             {
-                byte[] data = useMessagePack ? 
-                    SerializeWithMessagePack(obj) : 
+                byte[] data = useMessagePack ?
+                    SerializeWithMessagePack(obj) :
                     SerializeWithJson(obj);
                 return Compress(data);
             }
@@ -414,8 +416,8 @@ namespace RUINORERP.PacketSpec.Serialization
             try
             {
                 var data = Decompress(compressedData);
-                return useMessagePack ? 
-                    DeserializeWithMessagePack<T>(data) : 
+                return useMessagePack ?
+                    DeserializeWithMessagePack<T>(data) :
                     DeserializeWithJson<T>(data);
             }
             catch (Exception ex)
@@ -441,11 +443,11 @@ namespace RUINORERP.PacketSpec.Serialization
                 return null;
             }
         }
-        
+
         #endregion
 
         #region 辅助方法
-        
+
         /// <summary>
         /// 压缩数据
         /// </summary>
@@ -480,7 +482,7 @@ namespace RUINORERP.PacketSpec.Serialization
                 return output.ToArray();
             }
         }
-        
+
         #endregion
     }
 
@@ -493,7 +495,7 @@ namespace RUINORERP.PacketSpec.Serialization
         {
         }
 
-        public SerializationException(string message, Exception innerException) 
+        public SerializationException(string message, Exception innerException)
             : base(message, innerException)
         {
         }

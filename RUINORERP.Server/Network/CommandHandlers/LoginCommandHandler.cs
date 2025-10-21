@@ -165,8 +165,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             CommandContext executionContext,
             CancellationToken cancellationToken)
         {
-            LogInfo($"处理登录请求: {loginRequest.Username}");
-
+     
             try
             {
                 // 添加时间对比检测逻辑

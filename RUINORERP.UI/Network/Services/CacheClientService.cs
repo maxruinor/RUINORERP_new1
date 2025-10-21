@@ -515,7 +515,7 @@ namespace RUINORERP.UI.Network.Services
   
 
                 // 发送命令到服务器
-                await _commService.SendOneWayCommandAsync<CacheRequest>(CacheCommands.CacheOperation, request, CancellationToken.None);
+                await _commService.SendOneWayCommandAsync<CacheRequest>(CacheCommands.CacheSync, request, CancellationToken.None);
 
 
             

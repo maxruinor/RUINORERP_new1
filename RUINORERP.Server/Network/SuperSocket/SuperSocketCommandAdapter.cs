@@ -245,8 +245,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             if (response != null && response.IsSuccess)
             {
                 // 命令执行成功，发送成功响应
-                var responsePackage = UpdatePacketWithResponse(requestPackage.Packet, response);
-
+                  UpdatePacketWithResponse(requestPackage.Packet, response);
                 await SendResponseAsync(session, requestPackage.Packet, CancellationToken.None);
             }
             else

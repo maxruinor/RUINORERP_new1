@@ -27,6 +27,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 保存指令实体数据
         /// </summary>
         [Key(0)]
+        [Obsolete("将来去掉")]
         public byte[] CommandData { get; set; }
 
         // 简单的命令标识（不包含业务逻辑）

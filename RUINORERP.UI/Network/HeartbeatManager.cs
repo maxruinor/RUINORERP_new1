@@ -98,8 +98,8 @@ namespace RUINORERP.UI.Network
             int heartbeatTimeoutMs = 5000,
             int resourceCheckIntervalMs = 600000, // 默认10分钟检查一次资源使用情况
             int maxFailedAttempts = 3, // 默认连续失败3次判定连接断开
-            int minHeartbeatIntervalMs = 10000, // 默认最小心跳间隔10秒
-            int maxHeartbeatIntervalMs = 120000, // 默认最大心跳间隔2分钟
+            int minHeartbeatIntervalMs = 5000, // 默认最小心跳间隔10秒
+            int maxHeartbeatIntervalMs = 300000, // 默认最大心跳间隔1分钟
             ILogger<HeartbeatManager> logger = null)
         {
             _socketClient = socketClient ?? throw new ArgumentNullException(nameof(socketClient));

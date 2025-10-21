@@ -1,12 +1,16 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.Cache;
 using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Commands.Cache;
+using RUINORERP.PacketSpec.Validation;
+using FluentValidation.Results;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using RUINORERP.PacketSpec.Models.Requests.Cache;
 
 namespace RUINORERP.UI.Network.Services.Cache
 {
@@ -14,16 +18,16 @@ namespace RUINORERP.UI.Network.Services.Cache
     /// 缓存工具类 - 提供缓存状态、统计等通用功能
     /// 注意：优化版本，简化实现并更好地利用业务层功能
     /// </summary>
-    public class CacheUtility : IDisposable
+    public class CacheUtility : CacheValidationBase, IDisposable
     {
-        private readonly ILogger _log;
+        private readonly ILogger<CacheUtility> _log;
         private readonly IEntityCacheManager _cacheManager;
         private bool _disposed = false;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public CacheUtility(ILogger log, IEntityCacheManager cacheManager)
+        public CacheUtility(ILogger<CacheUtility> log, IEntityCacheManager cacheManager)
         {            
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
@@ -33,8 +37,21 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// 释放资源
         /// </summary>
         public void Dispose()
-        {            
+        {
+            
             _disposed = true;
+        }
+
+        /// <summary>
+        /// 验证缓存请求参数（使用基类方法）
+        /// </summary>
+        /// <param name="request">缓存请求</param>
+        /// <returns>是否有效</returns>
+        public static bool ValidateCacheRequest(CacheRequest request)
+        {
+            var validator = new CacheRequestValidator();
+            var result = validator.Validate(request);
+            return result.IsValid;
         }
 
      

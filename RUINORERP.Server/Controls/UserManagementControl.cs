@@ -51,6 +51,9 @@ namespace RUINORERP.Server.Controls
             _sessionService.SessionDisconnected += OnSessionDisconnected;
             _sessionService.SessionUpdated += OnSessionUpdated;
 
+            // 初始化时加载所有现有会话
+            LoadAllSessions();
+
             // 设置定时器用于UI刷新
             _updateTimer = new Timer { Interval = 1000 };
             _updateTimer.Tick += UpdateTimer_Tick;
@@ -84,6 +87,26 @@ namespace RUINORERP.Server.Controls
                     HandleCollectionChanged(e);
                 }
             };
+        }
+
+        /// <summary>
+        /// 加载所有现有会话
+        /// </summary>
+        private void LoadAllSessions()
+        {
+            try
+            {
+                var sessions = _sessionService.GetAllUserSessions().ToList();
+                foreach (var session in sessions)
+                {
+                    var userInfo = ConvertSessionInfoToUserInfo(session);
+                    AddOrUpdateUser(userInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"加载现有会话时出错: {ex.Message}");
+            }
         }
 
         private void HandleCollectionChanged(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -196,6 +219,12 @@ namespace RUINORERP.Server.Controls
                 newItem.Tag = user;
                 listView1.Items.Add(newItem);
                 _itemMap[user.SessionId] = newItem;
+                
+                // 确保用户信息添加到UserInfos集合中
+                if (!UserInfos.Any(u => u.SessionId == user.SessionId))
+                {
+                    UserInfos.Add(user);
+                }
             }
         }
 
@@ -211,6 +240,13 @@ namespace RUINORERP.Server.Controls
             {
                 listView1.Items.Remove(item);
                 _itemMap.Remove(user.SessionId);
+            }
+            
+            // 从UserInfos集合中移除用户
+            var userToRemove = UserInfos.FirstOrDefault(u => u.SessionId == user.SessionId);
+            if (userToRemove != null)
+            {
+                UserInfos.Remove(userToRemove);
             }
         }
 
@@ -390,6 +426,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
+
         /// <summary>
         /// 会话断开事件处理
         /// </summary>
@@ -404,12 +441,9 @@ namespace RUINORERP.Server.Controls
 
             if (sessionInfo != null)
             {
-                var userInfo = UserInfos.FirstOrDefault(u => u.SessionId == sessionInfo.SessionID);
-                if (userInfo != null)
-                {
-                    // 从UserInfos集合中移除用户，这会触发CollectionChanged事件，进而调用RemoveUser
-                    UserInfos.Remove(userInfo);
-                }
+                var userInfo = ConvertSessionInfoToUserInfo(sessionInfo);
+                // 直接从UI中移除用户
+                RemoveUser(userInfo);
             }
         }
 
@@ -431,6 +465,8 @@ namespace RUINORERP.Server.Controls
                 AddOrUpdateUser(userInfo);
             }
         }
+
+      
 
         /// <summary>
         /// 将SessionInfo转换为UserInfo
@@ -1001,46 +1037,23 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                // 获取所有已认证的用户会话
+                // 清空现有列表
+                listView1.Items.Clear();
+                _itemMap.Clear();
+                UserInfos.Clear();
+
+                // 重新加载所有会话
                 var sessions = _sessionService.GetAllUserSessions().ToList();
                 var sessionCount = sessions.Count;
                 
                 frmMainNew.Instance.PrintInfoLog($"服务器用户数量：{sessionCount}");
                 
-                if (sessionCount != listView1.Items.Count)
+                // 添加所有用户
+                foreach (var session in sessions)
                 {
-                    // 重新全部加载一次
-                    var itemCount = _itemMap.Count;
-                    if (listView1.Items.Count < sessionCount)
-                    {
-                        // 添加新用户
-                        foreach (var session in sessions)
-                        {
-                            if (!_itemMap.ContainsKey(session.SessionID))
-                            {
-                                var userInfo = ConvertSessionInfoToUserInfo(session);
-                                frmMainNew.Instance.PrintInfoLog($"添加用户：{userInfo.用户名}");
-                                AddOrUpdateUser(userInfo);
-                            }
-                        }
-                    }
-                    else if (listView1.Items.Count > sessionCount)
-                    {
-                        // 删除多余用户
-                        for (int i = 0; i < listView1.Items.Count; i++)
-                        {
-                            var item = listView1.Items[i];
-                            if (item is ListViewItem lvItem)
-                            {
-                                var userInfo = lvItem.Tag as UserInfo;
-                                if (userInfo != null && !sessions.Any(s => s.SessionID == userInfo.SessionId))
-                                {
-                                    frmMainNew.Instance.PrintInfoLog($"移除用户：{userInfo.用户名}");
-                                    RemoveUser(userInfo);
-                                }
-                            }
-                        }
-                    }
+                    var userInfo = ConvertSessionInfoToUserInfo(session);
+                    frmMainNew.Instance.PrintInfoLog($"添加用户：{userInfo.用户名}");
+                    AddOrUpdateUser(userInfo);
                 }
             }
             catch (Exception ex)

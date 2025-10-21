@@ -18,7 +18,7 @@ namespace RUINORERP.Business.RowLevelAuthService
     public class SmartRuleConfigHelper
     {
         private readonly IBusinessEntityMappingService _entityInfoService;
-        private readonly ILogger _logger;
+        private readonly ILogger<SmartRuleConfigHelper> _logger;
 
         /// <summary>
         /// 构造函数

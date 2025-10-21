@@ -15,7 +15,7 @@ namespace RUINORERP.UI.Network
         // 用于事件触发的同步锁
         private readonly object _lock = new object();
         // 日志记录器（可选）
-        private readonly ILogger _logger;
+        private readonly ILogger<ClientEventManager> _logger;
 
         /// <summary>
         /// 当接收到服务器命令时触发的事件
@@ -69,7 +69,7 @@ namespace RUINORERP.UI.Network
         /// 构造函数（带日志记录器）
         /// </summary>
         /// <param name="logger">日志记录器，用于记录事件处理过程中的异常和信息</param>
-        public ClientEventManager(ILogger logger)
+        public ClientEventManager(ILogger<ClientEventManager> logger)
         {
             _logger = logger;
         }

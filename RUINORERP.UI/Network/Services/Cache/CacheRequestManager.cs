@@ -6,6 +6,8 @@ using RUINORERP.PacketSpec.Models.Requests.Cache;
 using RUINORERP.PacketSpec.Models.Responses.Cache;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.UI.Network;
+using RUINORERP.PacketSpec.Validation;
+using FluentValidation.Results;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -19,9 +21,9 @@ namespace RUINORERP.UI.Network.Services.Cache
     /// 缓存请求管理器 - 负责处理与服务器的缓存数据请求逻辑
     /// 注意：此类是对业务层缓存功能的UI层封装，提供更友好的请求接口
     /// </summary>
-    public class CacheRequestManager : IDisposable
+    public class CacheRequestManager : CacheValidationBase, IDisposable
     {
-        private readonly ILogger _log;
+        private readonly ILogger<CacheRequestManager> _log;
         private readonly ClientCommunicationService _communicationService;
         private readonly IEntityCacheManager _cacheManager;
         private readonly ConcurrentDictionary<string, DateTime> _lastRequestTimes = new ConcurrentDictionary<string, DateTime>();
@@ -31,7 +33,7 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// <summary>
         /// 构造函数
         /// </summary>
-        public CacheRequestManager(ILogger log, ClientCommunicationService communicationService, IEntityCacheManager cacheManager)
+        public CacheRequestManager(ILogger<CacheRequestManager> log, ClientCommunicationService communicationService, IEntityCacheManager cacheManager)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
@@ -43,35 +45,32 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// </summary>
         public async Task RequestCacheAsync(string tableName)
         {
-            if (string.IsNullOrEmpty(tableName))
+            var validationResult = base.ValidateTableName(tableName);
+            if (!validationResult.IsValid)
             {
-                _log.LogWarning("请求缓存时表名为空");
+                _log.LogError(validationResult.GetValidationErrors());
                 return;
             }
 
-            // 检查限流
+            // 检查限流和缓存有效性，任一条件不满足则跳过请求
             if (!CheckRequestFrequency(tableName, CacheOperation.Get))
             {
                 _log.LogDebug("请求频率过高，跳过请求，表名={0}", tableName);
                 return;
             }
 
-            // 智能缓存检查 - 利用业务层缓存管理器提供的功能
             if (IsLocalCacheValid(tableName))
             {
                 _log.LogDebug("本地缓存有效，跳过请求，表名={0}", tableName);
                 return;
             }
 
-            // 创建Get操作的请求
-            var request = new CacheRequest
+            // 创建Get操作的请求并执行，优化为单步处理
+            var response = await ProcessCacheRequestAsync(new CacheRequest
             {
                 TableName = tableName,
                 Operation = CacheOperation.Get
-            };
-
-            // 执行缓存请求
-            var response = await ProcessCacheRequestAsync(request);
+            });
 
             // 利用业务层缓存管理器更新缓存（如果响应成功）
             if (response?.IsSuccess == true && response.CacheData != null)
@@ -85,23 +84,23 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// </summary>
         public async Task<CacheResponse> SendCacheManageRequestAsync(string tableName, string operationType, Dictionary<string, object> parameters = null)
         {
-            if (string.IsNullOrEmpty(tableName))
+            var validationResult = base.ValidateTableName(tableName);
+            if (!validationResult.IsValid)
             {
-                _log.LogWarning("发送缓存管理请求时表名为空");
+                _log.LogError(validationResult.GetValidationErrors());
                 return null;
             }
 
-            var request = new CacheRequest
+            // 创建请求并设置参数，优化为一步完成
+            return await ProcessCacheRequestAsync(new CacheRequest
             {
                 TableName = tableName,
                 Operation = CacheOperation.Manage,
-                Parameters = parameters ?? new Dictionary<string, object>()
-            };
-
-            // 添加操作类型参数
-            request.Parameters["OperationType"] = operationType;
-
-            return await ProcessCacheRequestAsync(request);
+                Parameters = new Dictionary<string, object>(parameters ?? new Dictionary<string, object>())
+                {
+                    { "OperationType", operationType }
+                }
+            });
         }
 
         /// <summary>
@@ -109,10 +108,9 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// </summary>
         internal async Task<CacheResponse> ProcessCacheRequestAsync(CacheRequest request)
         {
+            // 参数验证
             if (request == null)
-            {
                 throw new ArgumentNullException(nameof(request));
-            }
 
             // 检查请求频率
             if (!CheckRequestFrequency(request.TableName, request.Operation))
@@ -126,13 +124,6 @@ namespace RUINORERP.UI.Network.Services.Cache
 
             try
             {
-                // 检查连接状态
-                if (!_communicationService.IsConnected)
-                {
-                    _log.LogWarning("未连接到服务器，无法发送缓存请求，表名={0}, 操作类型={1}", request.TableName, request.Operation);
-                    return null;
-                }
-
                 // 使用通信服务发送请求到服务器
                 return await _communicationService.SendCommandWithResponseAsync<CacheResponse>(
                     CacheCommands.CacheOperation, request, CancellationToken.None);
@@ -168,11 +159,8 @@ namespace RUINORERP.UI.Network.Services.Cache
         {
             try
             {
-                // 直接使用缓存管理器的GetEntityCount方法检查缓存是否存在
-
+                // 检查缓存是否存在且有数据
                 var rslist = _cacheManager.GetEntityList<object>(tableName);
-
-                // 简化的判断逻辑：如果本地没有缓存数据，则请求
                 if (rslist == null || rslist.Count == 0)
                     return false;
 
@@ -181,9 +169,7 @@ namespace RUINORERP.UI.Network.Services.Cache
                 if (_lastRequestTimes.TryGetValue(cacheKey, out DateTime lastUpdated))
                 {
                     if ((DateTime.Now - lastUpdated).TotalMinutes > MaxCacheAgeMinutes)
-                    {
                         return false;
-                    }
                 }
                 return true;
             }

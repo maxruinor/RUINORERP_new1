@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Models.Requests.Cache;
 using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Validation;
+using FluentValidation.Results;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,7 +19,7 @@ namespace RUINORERP.UI.Network.Services.Cache
     /// UI缓存订阅管理器 - 负责处理缓存变更的订阅和通知
     /// 注意：此类使用业务层的CacheSubscriptionManager并添加UI特定功能
     /// </summary>
-    public class UICacheSubscriptionManager : IDisposable
+    public class UICacheSubscriptionManager : CacheValidationBase, IDisposable
     {
         private readonly ILogger<UICacheSubscriptionManager> _log;
         private readonly ISocketClient _socketClient;
@@ -51,9 +53,10 @@ namespace RUINORERP.UI.Network.Services.Cache
                     return;
                 }
 
-                if (string.IsNullOrEmpty(tableName))
+                var validationResult = ValidateTableName(tableName);
+                if (!validationResult.IsValid)
                 {
-                    _log.LogWarning("订阅缓存变更时表名为空");
+                    _log.LogWarning($"订阅缓存变更时表名无效: {validationResult.GetValidationErrors()}");
                     return;
                 }
 
@@ -81,9 +84,10 @@ namespace RUINORERP.UI.Network.Services.Cache
                     return;
                 }
 
-                if (string.IsNullOrEmpty(tableName))
+                var validationResult = ValidateTableName(tableName);
+                if (!validationResult.IsValid)
                 {
-                    _log.LogWarning("取消订阅缓存变更时表名为空");
+                    _log.LogWarning($"取消订阅缓存变更时表名无效: {validationResult.GetValidationErrors()}");
                     return;
                 }
 
@@ -131,7 +135,8 @@ namespace RUINORERP.UI.Network.Services.Cache
                 return false;
             }
             
-            if (string.IsNullOrEmpty(tableName))
+            var validationResult = ValidateTableName(tableName);
+            if (!validationResult.IsValid)
             {
                 return false;
             }
@@ -238,9 +243,10 @@ namespace RUINORERP.UI.Network.Services.Cache
                 return;
             }
 
-            if (string.IsNullOrEmpty(tableName))
+            var validationResult = ValidateTableName(tableName);
+            if (!validationResult.IsValid)
             {
-                _log.LogWarning("添加订阅时表名为空");
+                _log.LogWarning($"添加订阅时表名无效: {validationResult.GetValidationErrors()}");
                 return;
             }
 
@@ -269,9 +275,10 @@ namespace RUINORERP.UI.Network.Services.Cache
                 return;
             }
 
-            if (string.IsNullOrEmpty(tableName))
+            var validationResult = ValidateTableName(tableName);
+            if (!validationResult.IsValid)
             {
-                _log.LogWarning("移除订阅时表名为空");
+                _log.LogWarning($"移除订阅时表名无效: {validationResult.GetValidationErrors()}");
                 return;
             }
 

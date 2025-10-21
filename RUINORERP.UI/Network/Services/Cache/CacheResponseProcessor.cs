@@ -9,6 +9,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using RUINORERP.PacketSpec.Commands.Cache;
+using RUINORERP.PacketSpec.Validation;
+using FluentValidation.Results;
 
 namespace RUINORERP.UI.Network.Services.Cache
 {
@@ -16,7 +18,7 @@ namespace RUINORERP.UI.Network.Services.Cache
     /// 缓存响应处理器 - 负责处理服务器返回的缓存响应并更新本地缓存
     /// 注意：优化版本，简化实现并更好地利用业务层缓存管理器
     /// </summary>
-    public class CacheResponseProcessor : IDisposable
+    public class CacheResponseProcessor : CacheValidationBase, IDisposable
     {
         private readonly ILogger<CacheResponseProcessor> _log;
         private readonly IEntityCacheManager _cacheManager;
@@ -62,20 +64,19 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// </summary>
         public void ProcessCacheResponse(CacheResponse response)
         {            
-            // 基础验证
-            if (response == null)
+            // 使用基类进行验证
+            var validationResult = base.ValidateCacheResponse(response);
+            if (!validationResult.IsValid)
             {                
-                _log?.LogWarning("缓存响应为空");
+                _log?.LogError($"缓存响应验证失败: {validationResult.GetValidationErrors()}");
                 return;
             }
 
-
-
             try
             {                
-                // 统一验证成功状态和表名
+                // 统一验证成功状态和表名（Manage操作允许失败状态）
                 if (!response.IsSuccess && response.Operation != CacheOperation.Manage)
-                {
+                {                    
                     _log?.LogWarning("缓存响应未成功，表名={0}, 操作类型={1}", response.TableName, response.Operation);
                 }
                 
@@ -83,18 +84,16 @@ namespace RUINORERP.UI.Network.Services.Cache
                 {                    
                     case CacheOperation.Get:
                     case CacheOperation.Set:
-                        // 合并相似操作的处理逻辑
+                        // 合并相似操作的处理逻辑，减少重复判断
                         if (string.IsNullOrEmpty(response.TableName) || response.CacheData == null)
-                        {
+                        {                            
                             _log?.LogWarning("{0}操作响应数据无效，表名={1}", response.Operation, response.TableName);
                             break;
                         }
 
-        
-                        
                         // 对于Set操作，先清理旧缓存
                         if (response.Operation == CacheOperation.Set)
-                        {
+                        {                            
                             CleanCacheSafely(response.TableName);
                         }
 
@@ -102,30 +101,26 @@ namespace RUINORERP.UI.Network.Services.Cache
                         break;
                     
                     case CacheOperation.Remove:
-                        if (string.IsNullOrEmpty(response.TableName))
-                        {
-                            _log?.LogWarning("删除操作响应无效，表名为空");
-                            break;
+                        // 统一处理删除操作
+                        if (!string.IsNullOrEmpty(response.TableName))
+                        {                            
+                            HandleRemoveOperation(response);
                         }
-
-                        HandleRemoveOperation(response);
+                        else
+                        {                            
+                            _log?.LogWarning("删除操作响应无效，表名为空");
+                        }
                         break;
                     
                     case CacheOperation.Clear:
-                        if (string.IsNullOrEmpty(response.TableName))
-                        {
-                            _log?.LogWarning("{0}操作响应无效，表名为空", response.Operation);
-                            break;
+                        // 简化Clear操作的错误处理
+                        if (!string.IsNullOrEmpty(response.TableName))
+                        {                            
+                            CleanCacheSafely(response.TableName);
                         }
-
-                        try
-                        {                
-                            _cacheManager.DeleteEntityList(response.TableName);
-    
-                        }
-                        catch (Exception ex)
-                        {                
-                            _log?.LogError(ex, "处理{0}响应失败，表名={1}", response.Operation, response.TableName);
+                        else
+                        {                            
+                            _log?.LogWarning("Clear操作响应无效，表名为空");
                         }
                         break;
                     
@@ -137,9 +132,7 @@ namespace RUINORERP.UI.Network.Services.Cache
                         _log?.LogWarning("未知的缓存操作类型: {0}", response.Operation);
                         break;
                 }
-                
-    
-            }
+            }            
             catch (Exception ex)
             {                
                 _log?.LogError(ex, "处理缓存响应失败，表名={0}, 操作类型={1}, 错误信息={2}", 
@@ -171,7 +164,7 @@ namespace RUINORERP.UI.Network.Services.Cache
         {
             try
             {                
-                // 如果有数据，删除指定实体；否则删除整个表缓存
+                // 如果有数据，尝试删除指定实体；否则删除整个表缓存
                 if (response.CacheData?.Data != null)
                 {                    
                     // 处理单个实体删除
@@ -179,21 +172,18 @@ namespace RUINORERP.UI.Network.Services.Cache
                     {                
                         var entityId = Convert.ToInt64(response.CacheData.Data);
                         _cacheManager.DeleteEntity(response.TableName, entityId);
-
                     }
                     catch (FormatException ex)
                     {                
                         _log?.LogWarning(ex, "实体ID格式无效，表名={0}, ID值={1}", response.TableName, response.CacheData.Data);
                         // 尝试删除整个表缓存作为降级方案
-                        _cacheManager.DeleteEntityList(response.TableName);
-
+                        CleanCacheSafely(response.TableName);
                     }
                 }
                 else
                 {                    
                     // 删除整个表缓存
-                    _cacheManager.DeleteEntityList(response.TableName);
-                    
+                    CleanCacheSafely(response.TableName);
                 }
             }
             catch (Exception ex)
@@ -208,83 +198,69 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// </summary>
         private void HandleManageOperation(CacheResponse response)
         {
+            // 非成功响应直接记录并返回
             if (!response.IsSuccess)
             {                
                 _log?.LogWarning("管理操作响应无效");
                 return;
             }
             
-            // 根据OperationResult中的操作类型决定如何处理
+            // 获取操作类型
             string operationType = response.GetOperationResult<string>("OperationType")?.ToLower();
+            if (string.IsNullOrEmpty(operationType))
+                return;
             
             switch (operationType)
             {                
-                case "statistics":
-    
-                    break;
-                
-                case "status":
-    
-                    break;
-                
                 case "batch":
-                    if (string.IsNullOrEmpty(response.TableName))
+                    // 批量操作处理
+                    if (!string.IsNullOrEmpty(response.TableName) && response.CacheData?.Data is JArray dataArray)
                     {                
-                        _log?.LogWarning("缓存批量操作响应无效，表名为空");
-                        break;
-                    }
-
-                    try
-                    {                
-                        if (response.CacheData?.Data is JArray dataArray)
+                        try
                         {                    
                             ProcessCacheData(response.TableName, dataArray);
                         }
-                        else
+                        catch (Exception ex)
                         {                    
-                            _log?.LogWarning("缓存批量操作数据格式不正确");
+                            _log?.LogError(ex, "处理缓存批量操作响应失败，表名={0}", response.TableName);
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {                
-                        _log?.LogError(ex, "处理缓存批量操作响应失败，表名={0}", response.TableName);
+                        _log?.LogWarning(string.IsNullOrEmpty(response.TableName) ? 
+                            "缓存批量操作响应无效，表名为空" : 
+                            "缓存批量操作数据格式不正确");
                     }
                     break;
                 
                 case "warmup":
-                    if (response.CacheData?.Data == null)
+                    // 预热操作处理
+                    if (response.CacheData?.Data is JObject dataObject)
                     {                
-                        _log?.LogWarning("缓存预热响应数据为空");
-                        break;
-                    }
-
-                    try
-                    {                
-                        if (response.CacheData.Data is JObject dataObject)
+                        try
                         {                    
                             foreach (var property in dataObject.Properties())
                             {                    
                                 ProcessCacheData(property.Name, property.Value);
                             }
                         }
+                        catch (Exception ex)
+                        {                    
+                            _log?.LogError(ex, "处理缓存预热响应失败");
+                        }
                     }
-                    catch (Exception ex)
+                    else
                     {                
-                        _log?.LogError(ex, "处理缓存预热响应失败");
+                        _log?.LogWarning("缓存预热响应数据为空或格式不正确");
                     }
                     break;
                 
                 case "invalidate":
-                    // 委托给主流程的Invalidate操作处理
-
+                    // 缓存失效操作
                     if (!string.IsNullOrEmpty(response.TableName))
-                    {
+                    {                        
                         CleanCacheSafely(response.TableName);
                     }
-                    break;
-                
-                default:
-    
                     break;
             }
         }

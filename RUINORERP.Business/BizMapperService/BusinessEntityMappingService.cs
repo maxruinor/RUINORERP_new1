@@ -13,7 +13,7 @@ namespace RUINORERP.Business.BizMapperService
 {
     public class BusinessEntityMappingService : IBusinessEntityMappingService
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<BusinessEntityMappingService> _logger;
         private readonly EntityInfoConfig _config;
         private bool _initialized = false;
         private readonly object _lock = new object();

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using RUINORERP.Server.Commands;
 using System;
 using System.Collections.Generic;
@@ -17,6 +17,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using Newtonsoft.Json;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Extensions.ServiceExtensions;
+using RUINORERP.Server.Helpers;
 using Microsoft.Extensions.Logging;
 using static RUINORERP.Extensions.ServiceExtensions.EditConfigCommand;
 
@@ -89,6 +90,11 @@ namespace RUINORERP.Server
                     ConfigSnapshot = (JObject)LastConfigJson.DeepClone()
                 };
                 _configHistory.Add(historyEntry);
+                
+                // 初始化文件存储路径
+                // 将SystemGlobalconfig转换为ServerConfig
+                ServerConfig serverConfig = ConvertToServerConfig(configObject);
+                FileStorageHelper.InitializeStoragePath(serverConfig);
 
                 
                 // 更新UI状态
@@ -103,6 +109,35 @@ namespace RUINORERP.Server
             }
         }
 
+        /// <summary>
+        /// 将SystemGlobalconfig对象转换为ServerConfig对象
+        /// </summary>
+        /// <param name="globalConfig">系统全局配置对象</param>
+        /// <returns>服务器配置对象</returns>
+        private ServerConfig ConvertToServerConfig(SystemGlobalconfig globalConfig)
+        {
+            if (globalConfig == null)
+                return null;
+            
+            // 创建ServerConfig对象并复制相关属性
+            return new ServerConfig
+            {
+                ServerName = globalConfig.ServerName,
+                ServerPort = globalConfig.ServerPort,
+                MaxConnections = globalConfig.MaxConnections,
+                HeartbeatInterval = globalConfig.HeartbeatInterval,
+                DbConnectionString = globalConfig.DbConnectionString,
+                DbType = globalConfig.DbType,
+                CacheType = globalConfig.CacheType,
+                CacheConnectionString = globalConfig.CacheConnectionString,
+                EnableLogging = globalConfig.EnableLogging,
+                LogLevel = globalConfig.LogLevel,
+                // 设置默认文件存储路径
+                FileStoragePath = "D:\\RUINORERP\\FileStorage",
+                MaxFileSizeMB = 10
+            };
+        }
+        
         private void tsbtnRefresh_Click(object sender, EventArgs e)
         {
 
@@ -360,22 +395,22 @@ namespace RUINORERP.Server
             var validationResults = new List<string>();
 
             // 验证服务器端口
-            if (config.ServerPort < 1 || config.ServerPort > 65535)
-            {
-                validationResults.Add("服务器端口必须在1-65535范围内");
-            }
+            //if (config.ServerPort < 1 || config.ServerPort > 65535)
+            //{
+            //    validationResults.Add("服务器端口必须在1-65535范围内");
+            //}
 
-            // 验证最大连接数
-            if (config.MaxConnections < 1 || config.MaxConnections > 10000)
-            {
-                validationResults.Add("最大连接数必须在1-10000范围内");
-            }
+            //// 验证最大连接数
+            //if (config.MaxConnections < 1 || config.MaxConnections > 10000)
+            //{
+            //    validationResults.Add("最大连接数必须在1-10000范围内");
+            //}
 
-            // 验证心跳间隔
-            if (config.HeartbeatInterval < 1000 || config.HeartbeatInterval > 60000)
-            {
-                validationResults.Add("心跳间隔必须在1000-60000毫秒范围内");
-            }
+            //// 验证心跳间隔
+            //if (config.HeartbeatInterval < 1000 || config.HeartbeatInterval > 60000)
+            //{
+            //    validationResults.Add("心跳间隔必须在1000-60000毫秒范围内");
+            //}
 
             // 验证业务逻辑配置
             if (config.采购日期必填 && string.IsNullOrWhiteSpace(config.SomeSetting))
@@ -469,17 +504,12 @@ namespace RUINORERP.Server
                 // 创建默认配置
                 var defaultConfig = new SystemGlobalconfig
                 {
-                    ServerName = "localhost",
-                    ServerPort = 8080,
-                    MaxConnections = 100,
-                    HeartbeatInterval = 30,
-                    DbType = "MySql",
-                    CacheType = "Redis",
-                    EnableLogging = true,
-                    LogLevel = "Information",
+                    采购日期必填 = false,
+                    IsFromPlatform = false,
+                    OpenProdTypeForSaleCheck = true,
                     DirectPrinting = true,
                     UseSharedPrinter = false,
-                    OpenProdTypeForSaleCheck = true
+                    SomeSetting = "默认设置"
                 };
 
                 // 序列化为JSON
@@ -506,10 +536,11 @@ namespace RUINORERP.Server
             {
                 var fallbackConfig = new SystemGlobalconfig
                 {
-                    ServerName = "localhost",
-                    ServerPort = 8080,
-                    MaxConnections = 50,
-                    HeartbeatInterval = 30
+                    采购日期必填 = false,
+                    IsFromPlatform = false,
+                    OpenProdTypeForSaleCheck = true,
+                    DirectPrinting = true,
+                    UseSharedPrinter = false
                 };
 
                 BindConfigurationToUI(fallbackConfig);

@@ -28,11 +28,18 @@ namespace RUINORERP.UI.Network.Services
     public sealed class UserLoginService : IDisposable
     {
         private readonly ClientCommunicationService _communicationService;
-        private readonly ILogger<UserLoginService> _log;
-        private readonly SilentTokenRefresher _silentTokenRefresher;
         private readonly TokenManager _tokenManager;
-        private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1); // 防止并发登录请求
-        private bool _isDisposed = false;
+        private readonly SilentTokenRefresher _silentTokenRefresher;
+        private readonly TokenRefreshService _tokenRefreshService; // 添加TokenRefreshService字段
+        private bool _isLoggedIn = false; // 登录状态标志
+        private UserSessionInfo _currentUserSession; // 当前用户会话信息
+        private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1); // 登录操作信号量防止并发登录请求
+        private CancellationTokenSource _cancellationTokenSource; // 取消令牌源
+        private readonly ILogger<UserLoginService> _logger; // 日志记录器
+        private bool _isDisposed = false; // 防止重复释放标志
+                                          // 客户端事件管理器，管理连接状态和命令接收事件
+        private readonly ClientEventManager _eventManager;
+
 
         /// <summary>
         /// 构造函数 - 使用依赖注入的TokenManager
@@ -42,19 +49,30 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="logger">日志记录器</param>
         /// <exception cref="ArgumentNullException">当必要参数为空时抛出</exception>
         public UserLoginService(
-            ClientCommunicationService communicationService,
+            ClientEventManager eventManager,
+        ClientCommunicationService communicationService,
             TokenManager tokenManager,
-            ILogger<UserLoginService> logger = null)
+            TokenRefreshService tokenRefreshService,
+            ILogger<UserLoginService> log = null)
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
-            _log = logger;
+            _tokenRefreshService = tokenRefreshService ?? throw new ArgumentNullException(nameof(tokenRefreshService));
+            _logger = log;
+            _eventManager = eventManager;
+            // 初始化SilentTokenRefresher
+            _silentTokenRefresher = new SilentTokenRefresher(_tokenRefreshService);
 
-            _silentTokenRefresher = new SilentTokenRefresher(new TokenRefreshService(communicationService, _tokenManager));
+            // 订阅刷新事件
+            _silentTokenRefresher.OnRefreshSucceeded += OnRefreshSucceeded;
+            _silentTokenRefresher.OnRefreshFailed += OnTokenRefreshFailed;
 
-            // 订阅静默刷新事件
-            _silentTokenRefresher.RefreshSucceeded += OnRefreshSucceeded;
-            _silentTokenRefresher.RefreshFailed += OnTokenRefreshFailed;
+            // 订阅通信服务的连接状态变更事件
+            _communicationService.CommandReceived += OnCommandReceived;
+
+            // 通过事件管理器订阅连接状态变更事件
+            _eventManager.ConnectionStatusChanged += OnConnectionStatusChanged;
+
         }
 
         /// <summary>
@@ -82,7 +100,7 @@ namespace RUINORERP.UI.Network.Services
                 // 检查连接状态
                 if (!_communicationService.IsConnected)
                 {
-                    _log?.LogWarning("登录失败：未连接到服务器");
+                    _logger?.LogWarning("登录失败：未连接到服务器");
                     return ResponseBase.CreateError("未连接到服务器，请检查网络连接后重试") as LoginResponse;
                 }
 
@@ -105,7 +123,7 @@ namespace RUINORERP.UI.Network.Services
                     catch (Exception ex) when (IsRetryableException(ex) && retryCount < maxRetries)
                     {
                         retryCount++;
-                        _log?.LogWarning(ex, "登录请求失败，正在重试 ({RetryCount}/{MaxRetries}) - 用户: {Username}", 
+                        _logger?.LogWarning(ex, "登录请求失败，正在重试 ({RetryCount}/{MaxRetries}) - 用户: {Username}",
                             retryCount, maxRetries, username);
                         // 指数退避策略
                         await Task.Delay(100 * (int)Math.Pow(2, retryCount), ct);
@@ -115,7 +133,7 @@ namespace RUINORERP.UI.Network.Services
                 // 检查响应数据是否为空
                 if (response == null)
                 {
-                    _log?.LogError("登录失败：服务器返回了空的响应数据");
+                    _logger?.LogError("登录失败：服务器返回了空的响应数据");
                     return ResponseBase.CreateError("服务器返回了空的响应数据，请联系系统管理员") as LoginResponse;
                 }
 
@@ -151,7 +169,7 @@ namespace RUINORERP.UI.Network.Services
                         }
                     }
 
-                    _log?.LogWarning("登录失败 - 用户: {Username}, 错误: {ErrorMessage}", username, errorMessage);
+                    _logger?.LogWarning("登录失败 - 用户: {Username}, 错误: {ErrorMessage}", username, errorMessage);
                     return ResponseBase.CreateError(detailedMessage, errorCode)
                         .WithMetadata("ErrorCode", errorMessage) as LoginResponse;
                 }
@@ -169,13 +187,13 @@ namespace RUINORERP.UI.Network.Services
                     }
                     catch (Exception heartbeatEx)
                     {
-                        _log?.LogWarning(heartbeatEx, "登录成功后启动心跳失败 - 用户: {Username}", username);
+                        _logger?.LogWarning(heartbeatEx, "登录成功后启动心跳失败 - 用户: {Username}", username);
                         // 心跳启动失败不影响登录流程，只记录警告
                     }
                 }
                 else
                 {
-                    _log?.LogWarning("登录响应中未包含有效的Token信息 - 用户: {Username}, 请求ID: {RequestId}",
+                    _logger?.LogWarning("登录响应中未包含有效的Token信息 - 用户: {Username}, 请求ID: {RequestId}",
                         username, loginRequest.RequestId);
                     return ResponseBase.CreateError("登录响应中未包含有效的Token信息") as LoginResponse;
                 }
@@ -184,12 +202,12 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (OperationCanceledException ex)
             {
-                _log?.LogInformation(ex, "登录操作已被用户取消 - 用户: {Username}", username);
+                _logger?.LogInformation(ex, "登录操作已被用户取消 - 用户: {Username}", username);
                 return ResponseBase.CreateError("登录操作已取消") as LoginResponse;
             }
             catch (Exception ex)
             {
-                _log?.LogError(ex, "登录过程中发生未预期的异常 - 用户: {Username}", username);
+                _logger?.LogError(ex, "登录过程中发生未预期的异常 - 用户: {Username}", username);
                 return ResponseBase.CreateError("登录过程中发生错误，请稍后重试") as LoginResponse;
             }
             finally
@@ -212,14 +230,14 @@ namespace RUINORERP.UI.Network.Services
                 var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
                 if (tokenInfo == null)
                 {
-                    _log?.LogWarning("登出失败：未找到有效的令牌信息，可能已处于登出状态");
+                    _logger?.LogWarning("登出失败：未找到有效的令牌信息，可能已处于登出状态");
                     // 即使没有令牌，我们也应该清除可能存在的会话信息
                     await CleanupLoginStateAsync();
                     return true; // 认为登出成功，因为没有什么需要登出的
                 }
 
                 bool serverLogoutSuccess = true;
-                
+
                 // 只有当连接有效时，才发送服务器登出请求
                 if (_communicationService.IsConnected)
                 {
@@ -227,23 +245,23 @@ namespace RUINORERP.UI.Network.Services
                     {
                         // 创建登出请求
                         var request = LoginRequest.CreateLogoutRequest();
-                        
+
                         // 使用SendCommandWithResponseAsync获取更详细的响应信息
                         var response = await _communicationService.SendCommandWithResponseAsync<LogoutResponse>(
                             AuthenticationCommands.Logout, request, ct);
-                        
+
                         // 完善响应检查
                         serverLogoutSuccess = response != null && response.IsSuccess;
-                        
+
                         if (!serverLogoutSuccess)
                         {
-                            _log?.LogWarning("服务器登出请求失败，响应状态: {IsSuccess}, 错误: {ErrorMessage}", 
+                            _logger?.LogWarning("服务器登出请求失败，响应状态: {IsSuccess}, 错误: {ErrorMessage}",
                                 response?.IsSuccess ?? false, response?.ErrorMessage);
                         }
                     }
                     catch (Exception ex)
                     {
-                        _log?.LogWarning(ex, "发送服务器登出请求时发生异常，但将继续本地登出流程");
+                        _logger?.LogWarning(ex, "发送服务器登出请求时发生异常，但将继续本地登出流程");
                         // 即使发送登出请求失败，我们仍然执行本地登出清理
                         serverLogoutSuccess = false;
                     }
@@ -255,7 +273,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 执行本地登出清理
                 await CleanupLoginStateAsync();
-                
+
                 return serverLogoutSuccess; // 返回服务器登出是否成功
             }
             catch (OperationCanceledException)
@@ -264,7 +282,7 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (Exception ex)
             {
-                _log?.LogError(ex, "登出过程中发生异常");
+                _logger?.LogError(ex, "登出过程中发生异常");
                 // 即使发生异常，也尝试清理基本的登录状态
                 try
                 {
@@ -272,7 +290,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 catch (Exception cleanupEx)
                 {
-                    _log?.LogError(cleanupEx, "清理登录状态时也发生异常");
+                    _logger?.LogError(cleanupEx, "清理登录状态时也发生异常");
                 }
                 throw new Exception($"登出失败: {ex.Message}", ex);
             }
@@ -294,65 +312,165 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 手动触发Token刷新（通常由静默刷新器调用）
+        /// 尝试静默刷新Token - 使用新的无参数刷新方法
         /// </summary>
-        /// <returns>刷新是否成功</returns>
+        /// <returns>是否刷新成功</returns>
         public async Task<bool> TrySilentRefreshAsync()
         {
             try
             {
-                return await _silentTokenRefresher.TriggerRefreshAsync();
+                // 使用TokenRefreshService进行刷新
+                var tokenRefreshResponse = await _tokenRefreshService.RefreshTokenAsync(CancellationToken.None);
+                if (tokenRefreshResponse != null && !string.IsNullOrEmpty(tokenRefreshResponse.AccessToken))
+                {
+                    _logger?.LogDebug("Token刷新成功");
+                    return true;
+                }
+                return false;
             }
             catch (Exception ex)
             {
-                _log?.LogError(ex, "手动触发Token刷新失败");
+                _logger?.LogError(ex, "Token刷新失败");
+                // 触发刷新失败事件
+                OnTokenRefreshFailed(this, ex);
                 return false;
             }
         }
 
         /// <summary>
-        /// 验证Token有效性
+        /// 处理连接状态变更事件
         /// </summary>
-        /// <returns>Token是否有效</returns>
-        public async Task<bool> ValidateTokenAsync()
+        /// <param name="connected">连接状态</param>
+        private void OnConnectionStatusChanged(bool connected)
+        {
+            if (connected)
+            {
+                // 使用Task.Run避免阻塞事件处理线程
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await TryRestoreAuthenticationAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "在连接恢复后尝试恢复认证时发生异常");
+                    }
+                });
+            }
+            else
+            {
+                // 连接断开时，可以考虑清理一些状态
+                _isLoggedIn = false;
+            }
+        }
+
+        /// <summary>
+        /// 处理接收到的命令
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        /// <param name="data">数据对象</param>
+        private void OnCommandReceived(PacketModel packet, object data)
+        {
+            // 根据需要处理特定的命令
+            // 目前主要用于接收连接状态相关的通知
+        }
+
+        /// <summary>
+        /// 当连接恢复后尝试恢复认证状态
+        /// </summary>
+        /// <returns>是否恢复成功</returns>
+        public async Task<bool> TryRestoreAuthenticationAsync()
         {
             try
             {
-                var currentToken = await _tokenManager.TokenStorage.GetTokenAsync();
-                if (currentToken == null)
+                // 检查通信服务是否已连接
+                if (!_communicationService.IsConnected)
                 {
-                    _log?.LogDebug("Token验证失败：未找到Token信息");
+                    _logger?.LogWarning("尝试恢复认证失败：通信服务未连接");
                     return false;
                 }
 
-                // 先进行本地验证
-                if (currentToken.ExpiresAt <= DateTime.UtcNow)
+                // 获取当前存储的Token
+                var storedToken = await _tokenManager.TokenStorage.GetTokenAsync();
+                if (storedToken == null || string.IsNullOrEmpty(storedToken.AccessToken))
                 {
-                    _log?.LogDebug("Token验证失败：Token已过期");
+                    _logger?.LogDebug("没有找到存储的Token，无法恢复认证");
                     return false;
                 }
 
-                // 如果连接有效，发送到服务器验证
-                if (_communicationService.IsConnected)
+                // 验证Token是否有效
+                bool isTokenValid = await ValidateTokenAsync(storedToken.AccessToken);
+                if (!isTokenValid)
                 {
-                    var validateRequest = SimpleRequest.CreateString(currentToken.AccessToken);
-                    var response = await _communicationService.SendCommandWithResponseAsync<TokenValidationResponse>(
-                        AuthenticationCommands.ValidateToken, validateRequest, CancellationToken.None);
-                    
-                    bool isValid = response != null && response.IsSuccess;
-                    _log?.LogDebug("服务器Token验证结果: {IsValid}", isValid);
-                    return isValid;
+                    // Token无效，尝试刷新
+                    _logger?.LogDebug("存储的Token无效，尝试刷新");
+                    bool refreshed = await TrySilentRefreshAsync();
+                    if (!refreshed)
+                    {
+                        _logger?.LogWarning("Token刷新失败，无法恢复认证");
+                        return false;
+                    }
+                    // 刷新成功后，获取新的Token
+                    storedToken = await _tokenManager.TokenStorage.GetTokenAsync();
+                    if (storedToken == null || string.IsNullOrEmpty(storedToken.AccessToken))
+                    {
+                        _logger?.LogWarning("刷新后未获取到有效Token");
+                        return false;
+                    }
+                }
+
+                // Token有效，向服务器发送认证恢复请求
+                _logger?.LogDebug("Token有效，向服务器恢复认证状态");
+
+                // 使用ValidateToken命令验证用户身份，作为认证恢复的方式
+                var validateRequest = new TokenValidationRequest
+                {
+                    Token = storedToken
+                };
+
+                // 使用SendCommandWithResponseAsync获取更可靠的响应处理
+                var response = await _communicationService.SendCommandWithResponseAsync<TokenValidationResponse>(
+                    AuthenticationCommands.ValidateToken, validateRequest, CancellationToken.None);
+
+                // 确保响应不为null并且成功
+                if (response != null && response.IsSuccess)
+                {
+                    _logger?.LogInformation("通过Token验证成功恢复认证状态");
+                    // 更新登录状态
+                    _isLoggedIn = true;
+                    // SilentTokenRefresher没有Start方法，这里不再需要额外操作
+                    // 令牌刷新会在需要时自动触发
+                    return true;
                 }
                 else
                 {
-                    _log?.LogDebug("未连接到服务器，无法进行服务器Token验证");
-                    // 未连接到服务器时，仅依赖本地验证
-                    return true;
+                    _logger?.LogWarning("向服务器恢复认证失败: {Message}",
+                        response?.ErrorMessage ?? "Token验证被拒绝");
+                    return false;
                 }
             }
             catch (Exception ex)
             {
-                _log?.LogError(ex, "Token验证过程中发生异常");
+                _logger?.LogError(ex, "恢复认证过程中发生异常");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 验证Token是否有效
+        /// </summary>
+        /// <param name="token">要验证的Token</param>
+        /// <returns>Token是否有效</returns>
+        public async Task<bool> ValidateTokenAsync(string token)
+        {
+            try
+            {
+                return await _tokenRefreshService.ValidateTokenAsync(token, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Token验证失败");
                 return false;
             }
         }
@@ -360,37 +478,46 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 清理登录状态
         /// </summary>
-        /// <returns>异步任务</returns>
-        private async Task CleanupLoginStateAsync()
+        public async Task CleanupLoginStateAsync()
         {
             try
             {
-                // 清除令牌信息
+                // 清除Token存储
                 await _tokenManager.TokenStorage.ClearTokenAsync();
-                
-                // 清除会话信息
-                if (MainForm.Instance != null && MainForm.Instance.AppContext != null)
-                {
-                    MainForm.Instance.AppContext.SessionId = null;
-                }
-                
-                // 释放静默刷新器资源
-                _silentTokenRefresher.Dispose();
-                
-                _log?.LogDebug("登录状态已清理完毕");
+                // 重置登录状态
+                _isLoggedIn = false;
+                _currentUserSession = null;
+                _logger?.LogDebug("登录状态已清理");
             }
             catch (Exception ex)
             {
-                _log?.LogError(ex, "清理登录状态时发生异常");
-                throw;
+                _logger?.LogError(ex, "清理登录状态失败");
             }
         }
 
+        // 移除重复的事件处理方法，保留与SilentTokenRefresher事件匹配的方法
+
         /// <summary>
-        /// 判断异常是否可以重试
+        /// 当Token刷新成功时调用 - 适配SilentTokenRefresher的事件参数
         /// </summary>
-        /// <param name="ex">异常</param>
-        /// <returns>是否可以重试</returns>
+        private void OnRefreshSucceeded(object sender, TokenInfo e)
+        {
+            _logger?.LogInformation("Token refresh succeeded");
+            // 更新登录状态
+            _isLoggedIn = true;
+        }
+
+        /// <summary>
+        /// 当Token刷新失败时调用 - 适配SilentTokenRefresher的事件参数
+        /// </summary>
+        private void OnTokenRefreshFailed(object sender, Exception ex)
+        {
+            _logger?.LogError(ex, "Token refresh failed during background refresh");
+            // 不需要自动登出，让用户决定下一步操作
+        }
+
+
+
         private bool IsRetryableException(Exception ex)
         {
             return ex is TimeoutException ||
@@ -403,34 +530,7 @@ namespace RUINORERP.UI.Network.Services
                        ex.Message.IndexOf("网络", StringComparison.OrdinalIgnoreCase) >= 0));
         }
 
-        /// <summary>
-        /// 处理Token刷新成功事件
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void OnRefreshSucceeded(object sender, SilentTokenRefresher.RefreshSucceededEventArgs e)
-        {
-            _log?.LogDebug("静默刷新Token成功");
-        }
 
-        /// <summary>
-        /// 处理Token刷新失败事件
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void OnTokenRefreshFailed(object sender, SilentTokenRefresher.RefreshFailedEventArgs e)
-        {
-            _log?.LogWarning("静默刷新Token失败: {Message}", e.Exception.Message);
-            
-            // 如果是Token过期或无效的错误，尝试清理登录状态
-            if (e.Exception.Message.IndexOf("expired", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                e.Exception.Message.IndexOf("invalid", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                // 注意：这里不能直接调用LogoutAsync，因为这可能在非UI线程中执行
-                // 应该通过事件通知UI线程处理登出
-                // 实际实现中需要添加相应的事件或通知机制
-            }
-        }
 
         /// <summary>
         /// 释放资源
@@ -441,23 +541,30 @@ namespace RUINORERP.UI.Network.Services
                 return;
 
             _isDisposed = true;
-            
+
             try
             {
                 // 取消订阅事件
-                _silentTokenRefresher.RefreshFailed -= OnTokenRefreshFailed;
-                _silentTokenRefresher.RefreshSucceeded -= OnRefreshSucceeded;
-                
-                // 释放静默刷新器资源
-                _silentTokenRefresher.Dispose();
-                
-                // 释放资源
-                _silentTokenRefresher.Dispose();
+                if (_silentTokenRefresher != null)
+                {
+                    _silentTokenRefresher.OnRefreshSucceeded -= OnRefreshSucceeded;
+                    _silentTokenRefresher.OnRefreshFailed -= OnTokenRefreshFailed;
+                }
+
+                // 取消订阅通信服务事件
+                if (_communicationService != null)
+                {
+                    _communicationService.CommandReceived -= OnCommandReceived;
+                }
+                if (_eventManager != null)
+                {
+                    _eventManager.ConnectionStatusChanged -= OnConnectionStatusChanged;
+                }
                 _loginLock.Dispose();
             }
             catch (Exception ex)
             {
-                _log?.LogError(ex, "释放UserLoginService资源时发生异常");
+                _logger?.LogError(ex, "释放UserLoginService资源时发生异常");
             }
         }
     }

@@ -33,6 +33,7 @@ using RUINORERP.WF.WorkFlow;
 using RUINORERP.WF;
 using System.Workflow.ComponentModel;
 using Newtonsoft.Json.Linq;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
 
 namespace RUINORERP.UI.WorkFlowDesigner.Service
 {
@@ -62,7 +63,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
 
 
         /// <summary>
-        /// ¶ÔÏóÊµÀı»¯
+        /// åˆå§‹åŒ–å®ä¾‹
         /// </summary>
         public static void Initialize()
         {
@@ -186,7 +187,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             bool rs = true;
             GraphAbstract g = this.site.Abstract;
 
-            //Ô¤´¦Àí
+            //é¢„å¤„ç†
             foreach (Shape item in g.Shapes)
             {
                 WFNodes.Add(item as BaseNode);
@@ -194,7 +195,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
 
             if (WFNodes.Count > 0 && WFNodes.Where(x => x.NodeType == WFNodeType.Start).Count() == 0)
             {
-                MessageBox.Show("Á÷³ÌÖĞ±ØĞëÒªÓĞÇÒÖ»ÄÜÒ»¸ö¿ªÊ¼½Úµã¡£");
+                MessageBox.Show("æµç¨‹ä¸­å¿…é¡»è¦æœ‰ä¸€ä¸ªå¼€å§‹èŠ‚ç‚¹ã€‚");
                 rs = false;
                 return rs;
             }
@@ -204,19 +205,19 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             //    {
             //        continue;
             //    }
-            //    //Èç¹ûÕâ¸ö½ÚµãÓĞÏà¹ØÁªµÄ½Úµã¡£ÔòÉèÖÃ¹ØÁªĞÔ
+            //    //éå†èŠ‚ç‚¹çš„æ‰€æœ‰è¿æ¥çš„èŠ‚ç‚¹ã€‚ç„¶åè®¾ç½®ä¸‹ä¸€æ­¥
             //    if (item.AdjacentNodes.Count > 0)
             //    {
             //        foreach (Connector connPoint in item.Connectors)
             //        {
-            //            //Ò»¸ö½ÚµãÓĞËÄ¸öµã£¬·Ö±ğÊÇÉÏ£¬ÏÂ£¬×ó£¬ÓÒ£¬¿´Ã¿¸öµãµÄÏßµÄÇé¿öÀ´¶¨ÏÂÒ»¸önextnodeidÊôĞÔ
+            //            //ä¸€ä¸ªèŠ‚ç‚¹çš„å››ä¸ªç‚¹ï¼Œåˆ†åˆ«æ˜¯ä¸Šï¼Œä¸‹ï¼Œå·¦ï¼Œå³ï¼Œæ¯æ¡è¿æ¥çº¿çš„èµ·å§‹ç‚¹å’Œç»ˆç‚¹éƒ½æœ‰nextnodeidå±æ€§çš„å€¼
             //            if (connPoint.Connections.Count > 0)
             //            {
             //                Console.WriteLine(connPoint.Name);
             //                var targetPoint = connPoint.Connections[0].To;
             //                if (targetPoint.BelongsTo.UID == item.UID)
             //                {
-            //                    continue;//Ö¸Ïò×Ô¼ºÌø¹ı
+            //                    continue;//æŒ‡å‘è‡ªå·±èŠ‚ç‚¹
             //                }
             //                else
             //                {
@@ -230,7 +231,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             Start start = WFNodes.Where(x => x.NodeType == WFNodeType.Start).FirstOrDefault() as Start;
             if (start == null)
             {
-                MessageBox.Show("Á÷³ÌÖĞ±ØĞëÒªÓĞÇÒÖ»ÄÜÒ»¸ö¿ªÊ¼½Úµã¡£");
+                MessageBox.Show("æµç¨‹ä¸­å¿…é¡»è¦æœ‰ä¸€ä¸ªå¼€å§‹èŠ‚ç‚¹ã€‚");
                 rs = false;
                 return rs;
             }
@@ -239,7 +240,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
         }
 
         /// <summary>
-        /// Ö»Òª¸ù¾İUIÉÏµÄ½Úµã±ä³Éjson¸ñÊ½µÄ×Ö·û´®¹¤×÷Á÷ÅäÖÃ¼´¿É
+        /// åªè¦ä¿å­˜UIä¸Šçš„èŠ‚ç‚¹ä¸ºjsonæ ¼å¼çš„å­—ç¬¦ä¸²ï¼Œç„¶åäº¤ç»™æµ‹è¯•
         /// </summary>	
         /// <returns></returns>
         public string Serialize()
@@ -259,55 +260,55 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                                                                     ShopID = 1,
                                                                     Price=10,
                                                                     Count=4,
-                                                                    Name = "²úÆ·Ò»"
+                                                                    Name = "å•†å“ä¸€"
                                                                 },
                                                                 new Product
                                                                 {
                                                                     ShopID = 2,
                                                                      Price=11,
                                                                     Count=3,
-                                                                    Name = "²úÆ·¶ş"
+                                                                    Name = "å•†å“äºŒ"
                                                                 },
                                                                 new Product
                                                                 {
                                                                     ShopID = 1,
                                                                      Price=12,
                                                                     Count=1,
-                                                                    Name = "²úÆ·Èı"
+                                                                    Name = "å•†å“ä¸‰"
                                                                 },
                                                                 new Product
                                                                 {
                                                                     ShopID = 2,
                                                                      Price=17,
                                                                     Count=10,
-                                                                    Name = "²úÆ·ËÄ"
+                                                                    Name = "å•†å“å››"
                                                                 },
                                                                 new Product
                                                                 {
                                                                     ShopID = 3,
                                                                     Price=13,
                                                                     Count=2,
-                                                                    Name = "²úÆ·Îå"
+                                                                    Name = "å•†å“äº”"
                                                                 }
                                                             };
 
-                        //³¡¾°Ò»
+                        //æ–¹æ³•ä¸€
                         string jsonString = JsonConvert.SerializeObject(ProductList, Formatting.Indented, new JsonSerializerSettings
                         {
                             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                             ContractResolver = new JsonPropertyContractResolver(new List<string> { "ShopID", "Name", "Count" })
                         });
-                        Console.WriteLine("³¡¾°Ò»£º" + jsonString);
+                        Console.WriteLine("æ–¹æ³•ä¸€ï¼š" + jsonString);
                         sb.Append(jsonString);
                         sb.Append("===============");
-                        //³¡¾°¶ş
+                        //æ–¹æ³•äºŒ
 
                         var prod = new Product
                         {
                             ShopID = 3,
                             Price = 13,
                             Count = 2,
-                            Name = "ÄãºÃ"
+                            Name = "æµ‹è¯•"
                         };
 
                         JsonSerializerSettings settings = new JsonSerializerSettings();
@@ -315,7 +316,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                         settings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                         settings.ContractResolver = new JsonPropertyContractResolver(new List<string> { "Name", "Price" });
                         string s = JsonConvert.SerializeObject(prod, settings);
-                        Console.WriteLine("³¡¾°¶ş£º" +s );
+                        Console.WriteLine("æ–¹æ³•äºŒ" +s );
                         sb.Append(s);
                         sb.Append("===============");
              */
@@ -323,11 +324,11 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             try
             {
                 var obj = this.site.WorkflowData;
-                //ÀàÍ·Òª±ê¼Ç [JsonObject(MemberSerialization.OptIn)]
+                //å¤´éƒ¨è¦åŠ ä¸Š [JsonObject(MemberSerialization.OptIn)]
                 //https://www.cnblogs.com/1175429393wljblog/p/5888098.html
-                //Newtonsoft.Json¸ß¼¶ÓÃ·¨ 1.ºöÂÔÄ³Ğ©ÊôĞÔ 2.Ä¬ÈÏÖµµÄ´¦Àí 3.¿ÕÖµµÄ´¦Àí 4.Ö§³Ö·Ç¹«¹²³ÉÔ± 5.ÈÕÆÚ´¦Àí 6.×Ô¶¨ÒåĞòÁĞ»¯µÄ×Ö¶ÎÃû³Æ 
+                //Newtonsoft.Jsoné«˜çº§ç”¨æ³• 1.å¿½ç•¥æŸäº›å±æ€§ 2.é»˜è®¤å€¼çš„å¤„ç† 3.ç©ºå€¼çš„å¤„ç† 4.æ”¯æŒéå…¬å…±æˆå‘˜ 5.æ—¥æœŸå¤„ç† 6.è‡ªå®šä¹‰åºåˆ—åŒ–çš„å­—æ®µåç§° 
                 JsonSerializerSettings mysettings = new JsonSerializerSettings();
-                mysettings.Formatting = Formatting.Indented; //Ëõ½øÏÔÊ¾
+                mysettings.Formatting = Formatting.Indented; //æ ¼å¼åŒ–æ˜¾ç¤º
                                                              //mysettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                                                              //mysettings.ContractResolver = new JsonPropertyContractResolver(new List<string> { "Id", "Version", "Steps", "NextStepId", "StepType" });
                 string ss = JsonConvert.SerializeObject(obj, mysettings);
@@ -335,20 +336,33 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
 
 
 
-                // ½«¹¤×÷Á÷¶ÔÏóĞòÁĞ»¯Îª JSON ×Ö·û´®g
+                // å°†åºåˆ—åŒ–åçš„å†…å®¹ä¿å­˜åˆ°æ•°æ®åº“
+                SaveWorkflowDefinitionToDatabase(ss);
+
+                // è¿”å›åºåˆ—åŒ–åçš„JSONå­—ç¬¦ä¸²
                 return sb.ToString();
             }
             catch (Exception exc)
             {
-                Trace.WriteLine(exc.Message, "Éú³ÉJSON×Ö·û´®Òì³£");
+                Trace.WriteLine(exc.Message, "åºåˆ—åŒ–JSONå­—ç¬¦ä¸²å¼‚å¸¸");
                 return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// å°†å·¥ä½œæµå®šä¹‰ä¿å­˜åˆ°æ•°æ®åº“
+        /// </summary>
+        /// <param name="json"></param>
+        private void SaveWorkflowDefinitionToDatabase(string json)
+        {
+            // TODO: å®ç°å°†å·¥ä½œæµå®šä¹‰ä¿å­˜åˆ°æ•°æ®åº“çš„é€»è¾‘
+            // è¿™é‡Œéœ€è¦ä½¿ç”¨WorkflowDefinitionServiceæ¥ä¿å­˜æ•°æ®
         }
 
         #endregion
 
         /// <summary>
-        /// ²âÊÔ¹¤×÷Á÷
+        /// æµ‹è¯•å·¥ä½œæµç¨‹
         /// </summary>
         /// <returns></returns>
         public async Task<string> TestWorkflow()
@@ -359,10 +373,10 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
                 return string.Empty;
             }
             string json = JsonText;
-            // ½âÎöJSONÊı¾İ
+            // è§£æJSONå¯¹è±¡
             JObject jsonObject = JObject.Parse(json);
 
-            // »ñÈ¡IdÖµ
+            // è·å–Idå€¼
             string idValue = jsonObject["Id"].ToString();
             string version = jsonObject["Version"].ToString();
             //WorkFlowConfigData wFStartRool = (WFNodes.FirstOrDefault(c => c.NodeType == WFNodeType.Start).NodeStepPropertyValue as WorkFlowConfigData);

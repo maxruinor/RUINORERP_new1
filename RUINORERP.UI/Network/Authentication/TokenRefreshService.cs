@@ -1,20 +1,13 @@
 using RUINORERP.PacketSpec.Commands.Authentication;
-using RUINORERP.PacketSpec.Core;
-using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Requests.Authentication;
+using RUINORERP.PacketSpec.Models.Responses;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.Network.Authentication
 {
-    /// <summary>
-    /// 客户端Token请求刷新服务
-    /// </summary>
     public class TokenRefreshService : ITokenRefreshService
     {
         private readonly ClientCommunicationService _communicationService;
@@ -22,28 +15,37 @@ namespace RUINORERP.UI.Network.Authentication
 
         public TokenRefreshService(ClientCommunicationService communicationService, TokenManager tokenManager)
         {
-            _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
-            _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
+            _communicationService = communicationService;
+            _tokenManager = tokenManager;
         }
 
         /// <summary>
-        /// 刷新Token - 简化参数，移除Token验证和存储逻辑
+        /// 刷新Token - 从TokenManager获取当前Token并刷新
         /// </summary>
         /// <param name="ct">取消令牌</param>
-        /// <returns>登录响应</returns>
-        public async Task<TokenInfo> RefreshTokenAsync(string accessToken, CancellationToken ct = default)
+        /// <returns>新的Token信息</returns>
+        public async Task<TokenInfo> RefreshTokenAsync(CancellationToken ct = default)
         {
+            // 从TokenManager获取当前Token
+            var currentToken = await _tokenManager.TokenStorage.GetTokenAsync();
+            if (currentToken == null || string.IsNullOrEmpty(currentToken.AccessToken))
+            {
+                throw new InvalidOperationException("没有可用的Token进行刷新");
+            }
+            
             try
             {
                 // 创建刷新Token请求
-                SimpleRequest request = SimpleRequest.CreateString(accessToken);
+                SimpleRequest request = SimpleRequest.CreateString(currentToken.AccessToken);
 
                 // 发送请求并获取响应
-                var response = await _communicationService.SendCommandAsync( AuthenticationCommands.RefreshToken, request, ct);
+                var response = await _communicationService.SendCommandAsync(AuthenticationCommands.RefreshToken, request, ct);
 
                 // 从响应中提取Token信息
                 if (response?.ExecutionContext?.Token != null)
                 {
+                    // 自动更新存储的Token
+                    await _tokenManager.TokenStorage.SetTokenAsync(response.ExecutionContext.Token);
                     return response.ExecutionContext.Token;
                 }
 
@@ -60,18 +62,12 @@ namespace RUINORERP.UI.Network.Authentication
             try
             {
                 SimpleRequest request = SimpleRequest.CreateString(token);
-
-                // 使用_communicationService发送验证Token的请求
-                var response = await _communicationService.SendCommandAsync(AuthenticationCommands.ValidateToken, request, ct, 15000);
-
-                // 验证响应是否成功
-                return response != null && !string.IsNullOrEmpty(response.ExecutionContext?.Token?.AccessToken);
+                var response = await _communicationService.SendCommandAsync(AuthenticationCommands.ValidateToken, request, ct);
+                return response?.Response.IsSuccess ?? false;
             }
             catch (Exception ex)
             {
-                // 记录日志但不抛出异常
-                System.Diagnostics.Debug.WriteLine($"Token验证失败: {ex.Message}");
-                return false;
+                throw new Exception($"Token验证服务调用失败: {ex.Message}", ex);
             }
         }
     }

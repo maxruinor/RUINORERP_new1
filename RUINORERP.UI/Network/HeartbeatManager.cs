@@ -200,7 +200,6 @@ namespace RUINORERP.UI.Network
                         _cancellationTokenSource.Dispose();
                         _heartbeatTask = null;
                         _resourceCheckTask = null;
-                        _failedAttempts = 0;
                     }
                     catch (Exception ex)
                     {
@@ -224,12 +223,7 @@ namespace RUINORERP.UI.Network
             {
                 return (false, "心跳管理器已释放", TimeSpan.Zero);
             }
-
-            if (!_socketClient.IsConnected)
-            {
-                return (false, "连接未建立，无法发送心跳", TimeSpan.Zero);
-            }
-
+            
             var stopwatch = Stopwatch.StartNew();
             try
             {
@@ -449,7 +443,6 @@ namespace RUINORERP.UI.Network
         
         private async Task SendHeartbeatsAsync()
         {
-
             // 上次Token检查时间
             DateTime lastTokenCheckTime = DateTime.MinValue;
             // Token检查间隔（默认5分钟）
@@ -459,63 +452,35 @@ namespace RUINORERP.UI.Network
             {
                 try
                 {
-                    if (_socketClient.IsConnected)
+                    
+                    // 定期检查Token状态（不必每次心跳都检查）
+                    var now = DateTime.UtcNow;
+                    if (now - lastTokenCheckTime >= tokenCheckInterval)
                     {
-                        // 定期检查Token状态（不必每次心跳都检查）
-                        var now = DateTime.UtcNow;
-                        if (now - lastTokenCheckTime >= tokenCheckInterval)
-                        {
-                            await CheckTokenValidityAsync();
-                            lastTokenCheckTime = now;
-                        }
-
-                        // 使用公共心跳发送方法
-                        var result = await SendHeartbeatCoreAsync(_cancellationTokenSource.Token, false);
-
-                        if (result.Success)
-                        {
-                            // 心跳发送成功
-                            lock (_lock)
-                            {
-                                _failedAttempts = 0;
-                            }
-                            OnHeartbeatSuccess();
-                        }
-                        else
-                        {
-                            // 心跳发送失败
-                            lock (_lock)
-                            {
-                                _failedAttempts++;
-                            }
-                            HandleHeartbeatFailure(result.Message);
-
-                            // 检查是否达到最大失败次数
-                            if (_failedAttempts >= _maxFailedAttempts)
-                            {
-                                _logger?.LogError("连续心跳失败次数({FailedAttempts})达到最大阈值({MaxFailedAttempts})，判定连接已断开",
-                                    _failedAttempts, _maxFailedAttempts);
-                                OnConnectionLost();
-
-                                // 重置失败计数器，避免重复触发连接丢失事件
-                                lock (_lock)
-                                {
-                                    _failedAttempts = 0;
-                                }
-                            }
-                        }
+                        await CheckTokenValidityAsync();
+                        lastTokenCheckTime = now;
                     }
-                    else
-                    {
-                        // 连接断开，监控连接状态
 
-                        // 重置失败计数器
+                    // 直接尝试发送心跳，连接状态由ClientCommunicationService处理
+                    var result = await SendHeartbeatCoreAsync(_cancellationTokenSource.Token, false);
+
+                    if (result.Success)
+                    {
+                        // 心跳发送成功
                         lock (_lock)
                         {
                             _failedAttempts = 0;
                         }
-
-                        // 不执行重连逻辑，重连由ClientCommunicationService负责
+                        OnHeartbeatSuccess();
+                    }
+                    else
+                    {
+                        // 心跳发送失败，仅记录失败次数，不再判定连接断开
+                        lock (_lock)
+                        {
+                            _failedAttempts++;
+                        }
+                        HandleHeartbeatFailure(result.Message);
                     }
                 }
                 catch (TaskCanceledException)
@@ -531,29 +496,15 @@ namespace RUINORERP.UI.Network
                     break;
                 }
                 catch (Exception ex)
-                {
-                    // 处理其他异常，增加失败计数器
-                    lock (_lock)
                     {
-                        _failedAttempts++;
-                    }
-                    _logger?.LogError(ex, "心跳处理过程中发生未预期的异常，连续失败次数: {FailedAttempts}", _failedAttempts);
-                    HandleHeartbeatException(ex);
-
-                    // 检查是否达到最大失败次数
-                    if (_failedAttempts >= _maxFailedAttempts)
-                    {
-                        _logger?.LogError("连续心跳异常次数({FailedAttempts})达到最大阈值({MaxFailedAttempts})，判定连接已断开",
-                            _failedAttempts, _maxFailedAttempts);
-                        OnConnectionLost();
-
-                        // 重置失败计数器，避免重复触发连接丢失事件
+                        // 处理其他异常，增加失败计数器
                         lock (_lock)
                         {
-                            _failedAttempts = 0;
+                            _failedAttempts++;
                         }
+                        _logger?.LogError(ex, "心跳处理过程中发生未预期的异常，连续失败次数: {FailedAttempts}", _failedAttempts);
+                        HandleHeartbeatException(ex);
                     }
-                }
 
                 // 等待下一次心跳间隔，使用自适应间隔
                 try
@@ -728,7 +679,6 @@ namespace RUINORERP.UI.Network
                         OnHeartbeatException = null;
                         OnReconnectionAttempt = null;
                         OnReconnectionFailed = null;
-                        ConnectionLost = null;
                         HeartbeatFailed = null;
                         OnTokenExpired = null; // 清理新增的Token过期事件
 
@@ -1005,16 +955,10 @@ namespace RUINORERP.UI.Network
         public event Action OnReconnectionFailed = delegate { };
 
         /// <summary>
-        /// 连接丢失事件
-        /// 当与服务器的连接完全丢失时触发
-        /// </summary>
-        public event Action ConnectionLost = delegate { };
-
-        /// <summary>
         /// 心跳失败事件（带异常信息）
         /// 当心跳包处理失败时触发，提供相关异常
         /// </summary>
-        public event Action<Exception> HeartbeatFailed = delegate { };
+        public event Action<Exception> HeartbeatFailed = delegate {};
 
         /// <summary>
         /// 处理心跳失败
@@ -1122,32 +1066,7 @@ namespace RUINORERP.UI.Network
             }
         }
 
-        /// <summary>
-        /// 触发连接丢失事件
-        /// 通知订阅者与服务器的连接已完全丢失
-        /// </summary>
-        private void OnConnectionLost()
-        {
-            try
-            {
-                // 获取事件处理程序的快照
-                Action handler;
-
-                lock (_lock)
-                {
-                    handler = ConnectionLost;
-                }
-
-                if (handler != null)
-                    handler.Invoke();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "触发连接丢失事件时发生异常");
-                // 忽略事件处理过程中的异常，避免影响主流程
-            }
-        }
-        
+              
         /// <summary>
         /// 检查Token有效性
         /// 验证存储的Token是否有效，如无效则触发Token过期事件

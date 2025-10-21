@@ -400,12 +400,13 @@ namespace RUINORERP.Server.Network.SuperSocket
                 var originalData = new OriginalData((byte)package.CommandId.Category, new byte[] { package.CommandId.OperationCode },
                     serializedData
                 );
-                var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
+                //                var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
+                var encryptedData = PacketSpec.Security.UnifiedEncryptionProtocol.EncryptServerDataToClient(originalData);
 
                 // 发送数据并捕获可能的异常
                 try
                 {
-                    await session.SendAsync(encryptedData.ToByteArray(), cancellationToken);
+                    await (session as SessionInfo).SendAsync(encryptedData.ToArray(), cancellationToken);
                 }
                 catch (TaskCanceledException ex) when (ex.InnerException is OperationCanceledException && cancellationToken.IsCancellationRequested)
                 {
@@ -584,7 +585,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         }
 
 
-      
+
 
 
 
@@ -599,7 +600,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             ILogger<SuperSocketCommandAdapter> logger = null)
-            : base(commandDispatcher,  logger)
+            : base(commandDispatcher, logger)
         { }
     }
 

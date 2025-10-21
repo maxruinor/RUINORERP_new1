@@ -226,6 +226,24 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>按顺序包含Head、One和Two数据的ReadOnlyMemory</returns>
         public ReadOnlyMemory<byte> ToByteArray()
         {
+            return new ReadOnlyMemory<byte>(BuildByteArray());
+        }
+        
+        /// <summary>
+        /// 将加密后的数据包转换为字节数组
+        /// </summary>
+        /// <returns>按顺序包含Head、One和Two数据的byte[]</returns>
+        public byte[] ToArray()
+        {
+            return BuildByteArray();
+        }
+        
+        /// <summary>
+        /// 构建字节数组的私有辅助方法
+        /// </summary>
+        /// <returns>按顺序包含Head、One和Two数据的byte[]</returns>
+        private byte[] BuildByteArray()
+        {
             // 创建足够大的字节数组来存储所有数据
             byte[] result = new byte[Length];
             int offset = 0;
@@ -248,8 +266,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 Buffer.BlockCopy(Two, 0, result, offset, Two.Length);
             }
 
-            // 返回ReadOnlyMemory视图
-            return new ReadOnlyMemory<byte>(result);
+            return result;
         }
     }
 }

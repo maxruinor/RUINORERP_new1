@@ -19,6 +19,7 @@ namespace RUINORERP.Plugin
         private readonly List<IPlugin> _plugins = new List<IPlugin>();
         private readonly Dictionary<string, Assembly> _loadedAssemblies = new Dictionary<string, Assembly>();
         private Func<string, bool> _permissionChecker;
+        private IPluginCommunicationChannel _communicationChannel;
         
         /// <summary>
         /// 获取已加载的所有插件
@@ -55,6 +56,15 @@ namespace RUINORERP.Plugin
         public void SetPermissionChecker(Func<string, bool> permissionChecker)
         {
             _permissionChecker = permissionChecker;
+        }
+        
+        /// <summary>
+        /// 设置插件与主程序的通信通道
+        /// </summary>
+        /// <param name="communicationChannel">通信通道实例</param>
+        public void SetCommunicationChannel(IPluginCommunicationChannel communicationChannel)
+        {
+            _communicationChannel = communicationChannel;
         }
         
         /// <summary>
@@ -110,6 +120,12 @@ namespace RUINORERP.Plugin
                                 
                                 // 设置权限检查器
                                 plugin.SetPermissionChecker(_permissionChecker);
+                                
+                                // 设置通信通道
+                                if (_communicationChannel != null)
+                                {
+                                    plugin.SetCommunicationChannel(_communicationChannel);
+                                }
                                 
                                 // 初始化插件
                                 if (plugin.Initialize())

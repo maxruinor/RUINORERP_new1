@@ -5,6 +5,7 @@ using RUINORERP.PacketSpec.Security;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Core;
 
+
 namespace RUINORERP.UI.Network
 {
     /// <summary>
@@ -36,7 +37,8 @@ namespace RUINORERP.UI.Network
             bufferStream.Read(head, 0, HeaderLen);
 
             // 使用加密协议解析包头
-            int bodyLength = EncryptedProtocol.AnalyzeSeverPackHeader(head);
+            //int bodyLength = EncryptedProtocol.AnalyzeSeverPackHeader(head);
+            int bodyLength = UnifiedEncryptionProtocol.AnalyzeServerPacketHeader(head);
             return bodyLength;
         }
 
@@ -52,12 +54,14 @@ namespace RUINORERP.UI.Network
             BizPackageInfo packageInfo = new BizPackageInfo();
             try
             {
-                var package = EncryptedProtocol.DecryptServerPack(packageContents);
+                //var package = EncryptedProtocol.DecryptServerPack(packageContents);
+                var package = UnifiedEncryptionProtocol.DecryptServerPacket(packageContents);
+                
                 packageInfo.Packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(package.Two);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"解析数据包时出错: {ex.Message}");
+                //Console.WriteLine($"解析数据包时出错: {ex.Message}");
             }
 
             return packageInfo;

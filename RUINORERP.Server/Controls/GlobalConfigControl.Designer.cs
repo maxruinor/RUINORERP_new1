@@ -28,278 +28,298 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void InitializeComponent()
         {
-            this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.tsbtnSave = new System.Windows.Forms.ToolStripButton();
-            this.tsbtnUndo = new System.Windows.Forms.ToolStripButton();
-            this.tsbtnRedo = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.tsbtnRefresh = new System.Windows.Forms.ToolStripButton();
-            this.tsbtnHistory = new System.Windows.Forms.ToolStripButton();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabPageBasic = new System.Windows.Forms.TabPage();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.treeView1 = new System.Windows.Forms.TreeView();
-            this.propertyGrid1 = new System.Windows.Forms.PropertyGrid();
-            this.tabPageAdvanced = new System.Windows.Forms.TabPage();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.tabPageHistory = new System.Windows.Forms.TabPage();
-            this.listViewHistory = new System.Windows.Forms.ListView();
-            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.toolStrip1.SuspendLayout();
-            this.tabControl1.SuspendLayout();
-            this.tabPageBasic.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
-            this.tabPageAdvanced.SuspendLayout();
-            this.groupBox1.SuspendLayout();
-            this.tabPageHistory.SuspendLayout();
-            this.SuspendLayout();
+            toolStrip1 = new System.Windows.Forms.ToolStrip();
+            tsbtnSave = new System.Windows.Forms.ToolStripButton();
+            tsbtnUndo = new System.Windows.Forms.ToolStripButton();
+            tsbtnRedo = new System.Windows.Forms.ToolStripButton();
+            toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            tsbtnRefresh = new System.Windows.Forms.ToolStripButton();
+            tsbtnHistory = new System.Windows.Forms.ToolStripButton();
+            tabControl1 = new System.Windows.Forms.TabControl();
+            tabPageBasic = new System.Windows.Forms.TabPage();
+            splitContainer2 = new System.Windows.Forms.SplitContainer();
+            treeView2 = new System.Windows.Forms.TreeView();
+            splitContainer1 = new System.Windows.Forms.SplitContainer();
+            treeView1 = new System.Windows.Forms.TreeView();
+            propertyGrid1 = new System.Windows.Forms.PropertyGrid();
+            tabPageAdvanced = new System.Windows.Forms.TabPage();
+            groupBox1 = new System.Windows.Forms.GroupBox();
+            textBox1 = new System.Windows.Forms.TextBox();
+            label1 = new System.Windows.Forms.Label();
+            tabPageHistory = new System.Windows.Forms.TabPage();
+            listViewHistory = new System.Windows.Forms.ListView();
+            columnHeader1 = new System.Windows.Forms.ColumnHeader();
+            columnHeader2 = new System.Windows.Forms.ColumnHeader();
+            columnHeader3 = new System.Windows.Forms.ColumnHeader();
+            columnHeader4 = new System.Windows.Forms.ColumnHeader();
+            toolStrip1.SuspendLayout();
+            tabControl1.SuspendLayout();
+            tabPageBasic.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainer2).BeginInit();
+            splitContainer2.Panel1.SuspendLayout();
+            splitContainer2.Panel2.SuspendLayout();
+            splitContainer2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
+            splitContainer1.Panel1.SuspendLayout();
+            splitContainer1.Panel2.SuspendLayout();
+            splitContainer1.SuspendLayout();
+            tabPageAdvanced.SuspendLayout();
+            groupBox1.SuspendLayout();
+            tabPageHistory.SuspendLayout();
+            SuspendLayout();
             // 
             // toolStrip1
             // 
-            this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.tsbtnSave,
-            this.tsbtnUndo,
-            this.tsbtnRedo,
-            this.toolStripSeparator1,
-            this.tsbtnRefresh,
-            this.tsbtnHistory});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
-            this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(933, 25);
-            this.toolStrip1.TabIndex = 0;
-            this.toolStrip1.Text = "toolStrip1";
+            toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { tsbtnSave, tsbtnUndo, tsbtnRedo, toolStripSeparator1, tsbtnRefresh, tsbtnHistory });
+            toolStrip1.Location = new System.Drawing.Point(0, 0);
+            toolStrip1.Name = "toolStrip1";
+            toolStrip1.Size = new System.Drawing.Size(933, 25);
+            toolStrip1.TabIndex = 0;
+            toolStrip1.Text = "toolStrip1";
             // 
             // tsbtnSave
             // 
-            this.tsbtnSave.Image = global::RUINORERP.Server.Properties.Resources.save;
-            this.tsbtnSave.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbtnSave.Name = "tsbtnSave";
-            this.tsbtnSave.Size = new System.Drawing.Size(52, 22);
-            this.tsbtnSave.Text = "保存";
-            this.tsbtnSave.Click += new System.EventHandler(this.tsbtnSave_Click);
+            tsbtnSave.Image = Properties.Resources.save;
+            tsbtnSave.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbtnSave.Name = "tsbtnSave";
+            tsbtnSave.Size = new System.Drawing.Size(52, 22);
+            tsbtnSave.Text = "保存";
+            tsbtnSave.Click += tsbtnSave_Click;
             // 
             // tsbtnUndo
             // 
-            this.tsbtnUndo.Image = null; // 资源文件缺失，暂时设为null
-            this.tsbtnUndo.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbtnUndo.Name = "tsbtnUndo";
-            this.tsbtnUndo.Size = new System.Drawing.Size(52, 22);
-            this.tsbtnUndo.Text = "撤销";
-            this.tsbtnUndo.Click += new System.EventHandler(this.tsbtnUndo_Click);
+            tsbtnUndo.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbtnUndo.Name = "tsbtnUndo";
+            tsbtnUndo.Size = new System.Drawing.Size(36, 22);
+            tsbtnUndo.Text = "撤销";
+            tsbtnUndo.Click += tsbtnUndo_Click;
             // 
             // tsbtnRedo
             // 
-            this.tsbtnRedo.Image = null; // 资源文件缺失，暂时设为null
-            this.tsbtnRedo.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbtnRedo.Name = "tsbtnRedo";
-            this.tsbtnRedo.Size = new System.Drawing.Size(52, 22);
-            this.tsbtnRedo.Text = "重做";
-            this.tsbtnRedo.Click += new System.EventHandler(this.tsbtnRedo_Click);
+            tsbtnRedo.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbtnRedo.Name = "tsbtnRedo";
+            tsbtnRedo.Size = new System.Drawing.Size(36, 22);
+            tsbtnRedo.Text = "重做";
+            tsbtnRedo.Click += tsbtnRedo_Click;
             // 
             // toolStripSeparator1
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
             // 
             // tsbtnRefresh
             // 
-            this.tsbtnRefresh.Image = null; // 资源文件缺失，暂时设为null
-            this.tsbtnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbtnRefresh.Name = "tsbtnRefresh";
-            this.tsbtnRefresh.Size = new System.Drawing.Size(52, 22);
-            this.tsbtnRefresh.Text = "刷新";
-            this.tsbtnRefresh.Click += new System.EventHandler(this.tsbtnRefresh_Click);
+            tsbtnRefresh.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbtnRefresh.Name = "tsbtnRefresh";
+            tsbtnRefresh.Size = new System.Drawing.Size(36, 22);
+            tsbtnRefresh.Text = "刷新";
+            tsbtnRefresh.Click += tsbtnRefresh_Click;
             // 
             // tsbtnHistory
             // 
-            this.tsbtnHistory.Image = null; // 资源文件缺失，暂时设为null
-            this.tsbtnHistory.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.tsbtnHistory.Name = "tsbtnHistory";
-            this.tsbtnHistory.Size = new System.Drawing.Size(76, 22);
-            this.tsbtnHistory.Text = "历史记录";
-            this.tsbtnHistory.Click += new System.EventHandler(this.tsbtnHistory_Click);
+            tsbtnHistory.ImageTransparentColor = System.Drawing.Color.Magenta;
+            tsbtnHistory.Name = "tsbtnHistory";
+            tsbtnHistory.Size = new System.Drawing.Size(60, 22);
+            tsbtnHistory.Text = "历史记录";
+            tsbtnHistory.Click += tsbtnHistory_Click;
             // 
             // tabControl1
             // 
-            this.tabControl1.Controls.Add(this.tabPageBasic);
-            this.tabControl1.Controls.Add(this.tabPageAdvanced);
-            this.tabControl1.Controls.Add(this.tabPageHistory);
-            this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl1.Location = new System.Drawing.Point(0, 25);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(933, 600);
-            this.tabControl1.TabIndex = 1;
+            tabControl1.Controls.Add(tabPageBasic);
+            tabControl1.Controls.Add(tabPageAdvanced);
+            tabControl1.Controls.Add(tabPageHistory);
+            tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
+            tabControl1.Location = new System.Drawing.Point(0, 25);
+            tabControl1.Name = "tabControl1";
+            tabControl1.SelectedIndex = 0;
+            tabControl1.Size = new System.Drawing.Size(933, 600);
+            tabControl1.TabIndex = 1;
             // 
             // tabPageBasic
             // 
-            this.tabPageBasic.Controls.Add(this.splitContainer1);
-            this.tabPageBasic.Location = new System.Drawing.Point(4, 26);
-            this.tabPageBasic.Name = "tabPageBasic";
-            this.tabPageBasic.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageBasic.Size = new System.Drawing.Size(925, 570);
-            this.tabPageBasic.TabIndex = 0;
-            this.tabPageBasic.Text = "基本配置";
-            this.tabPageBasic.UseVisualStyleBackColor = true;
+            tabPageBasic.Controls.Add(splitContainer2);
+            tabPageBasic.Location = new System.Drawing.Point(4, 26);
+            tabPageBasic.Name = "tabPageBasic";
+            tabPageBasic.Padding = new System.Windows.Forms.Padding(3);
+            tabPageBasic.Size = new System.Drawing.Size(925, 570);
+            tabPageBasic.TabIndex = 0;
+            tabPageBasic.Text = "基本配置";
+            tabPageBasic.UseVisualStyleBackColor = true;
+            // 
+            // splitContainer2
+            // 
+            splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            splitContainer2.Location = new System.Drawing.Point(3, 3);
+            splitContainer2.Name = "splitContainer2";
+            // 
+            // splitContainer2.Panel1
+            // 
+            splitContainer2.Panel1.Controls.Add(treeView2);
+            // 
+            // splitContainer2.Panel2
+            // 
+            splitContainer2.Panel2.Controls.Add(splitContainer1);
+            splitContainer2.Size = new System.Drawing.Size(919, 564);
+            splitContainer2.SplitterDistance = 200;
+            splitContainer2.TabIndex = 0;
+            // 
+            // treeView2
+            // 
+            treeView2.Dock = System.Windows.Forms.DockStyle.Fill;
+            treeView2.Location = new System.Drawing.Point(0, 0);
+            treeView2.Name = "treeView2";
+            treeView2.Size = new System.Drawing.Size(200, 564);
+            treeView2.TabIndex = 0;
+            treeView2.AfterSelect += treeView2_AfterSelect;
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(3, 3);
-            this.splitContainer1.Name = "splitContainer1";
+            splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            splitContainer1.Location = new System.Drawing.Point(0, 0);
+            splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.treeView1);
+            splitContainer1.Panel1.Controls.Add(treeView1);
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.propertyGrid1);
-            this.splitContainer1.Size = new System.Drawing.Size(919, 564);
-            this.splitContainer1.SplitterDistance = 306;
-            this.splitContainer1.TabIndex = 0;
+            splitContainer1.Panel2.Controls.Add(propertyGrid1);
+            splitContainer1.Size = new System.Drawing.Size(715, 564);
+            splitContainer1.SplitterDistance = 175;
+            splitContainer1.TabIndex = 0;
             // 
             // treeView1
             // 
-            this.treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeView1.Location = new System.Drawing.Point(0, 0);
-            this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(306, 564);
-            this.treeView1.TabIndex = 0;
-            this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
+            treeView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            treeView1.Location = new System.Drawing.Point(0, 0);
+            treeView1.Name = "treeView1";
+            treeView1.Size = new System.Drawing.Size(175, 564);
+            treeView1.TabIndex = 0;
+            treeView1.AfterSelect += treeView1_AfterSelect;
             // 
             // propertyGrid1
             // 
-            this.propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.propertyGrid1.Location = new System.Drawing.Point(0, 0);
-            this.propertyGrid1.Name = "propertyGrid1";
-            this.propertyGrid1.Size = new System.Drawing.Size(609, 564);
-            this.propertyGrid1.TabIndex = 0;
-            this.propertyGrid1.PropertyValueChanged += new System.Windows.Forms.PropertyValueChangedEventHandler(this.propertyGrid1_PropertyValueChanged);
+            propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
+            propertyGrid1.Location = new System.Drawing.Point(0, 0);
+            propertyGrid1.Name = "propertyGrid1";
+            propertyGrid1.Size = new System.Drawing.Size(536, 564);
+            propertyGrid1.TabIndex = 0;
+            propertyGrid1.PropertyValueChanged += propertyGrid1_PropertyValueChanged;
             // 
             // tabPageAdvanced
             // 
-            this.tabPageAdvanced.Controls.Add(this.groupBox1);
-            this.tabPageAdvanced.Location = new System.Drawing.Point(4, 26);
-            this.tabPageAdvanced.Name = "tabPageAdvanced";
-            this.tabPageAdvanced.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageAdvanced.Size = new System.Drawing.Size(925, 570);
-            this.tabPageAdvanced.TabIndex = 1;
-            this.tabPageAdvanced.Text = "高级配置";
-            this.tabPageAdvanced.UseVisualStyleBackColor = true;
+            tabPageAdvanced.Controls.Add(groupBox1);
+            tabPageAdvanced.Location = new System.Drawing.Point(4, 26);
+            tabPageAdvanced.Name = "tabPageAdvanced";
+            tabPageAdvanced.Padding = new System.Windows.Forms.Padding(3);
+            tabPageAdvanced.Size = new System.Drawing.Size(925, 570);
+            tabPageAdvanced.TabIndex = 1;
+            tabPageAdvanced.Text = "高级配置";
+            tabPageAdvanced.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.textBox1);
-            this.groupBox1.Controls.Add(this.label1);
-            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBox1.Location = new System.Drawing.Point(3, 3);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(919, 100);
-            this.groupBox1.TabIndex = 0;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "属性编辑";
+            groupBox1.Controls.Add(textBox1);
+            groupBox1.Controls.Add(label1);
+            groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
+            groupBox1.Location = new System.Drawing.Point(3, 3);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Size = new System.Drawing.Size(919, 100);
+            groupBox1.TabIndex = 0;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "属性编辑";
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(88, 42);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(300, 23);
-            this.textBox1.TabIndex = 1;
-            this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            textBox1.Location = new System.Drawing.Point(88, 42);
+            textBox1.Name = "textBox1";
+            textBox1.Size = new System.Drawing.Size(300, 23);
+            textBox1.TabIndex = 1;
+            textBox1.TextChanged += textBox1_TextChanged;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(16, 45);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(68, 17);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "属性值：";
+            label1.AutoSize = true;
+            label1.Location = new System.Drawing.Point(16, 45);
+            label1.Name = "label1";
+            label1.Size = new System.Drawing.Size(56, 17);
+            label1.TabIndex = 0;
+            label1.Text = "属性值：";
             // 
             // tabPageHistory
             // 
-            this.tabPageHistory.Controls.Add(this.listViewHistory);
-            this.tabPageHistory.Location = new System.Drawing.Point(4, 26);
-            this.tabPageHistory.Name = "tabPageHistory";
-            this.tabPageHistory.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageHistory.Size = new System.Drawing.Size(925, 570);
-            this.tabPageHistory.TabIndex = 2;
-            this.tabPageHistory.Text = "历史记录";
-            this.tabPageHistory.UseVisualStyleBackColor = true;
+            tabPageHistory.Controls.Add(listViewHistory);
+            tabPageHistory.Location = new System.Drawing.Point(4, 26);
+            tabPageHistory.Name = "tabPageHistory";
+            tabPageHistory.Padding = new System.Windows.Forms.Padding(3);
+            tabPageHistory.Size = new System.Drawing.Size(925, 570);
+            tabPageHistory.TabIndex = 2;
+            tabPageHistory.Text = "历史记录";
+            tabPageHistory.UseVisualStyleBackColor = true;
             // 
             // listViewHistory
             // 
-            this.listViewHistory.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1,
-            this.columnHeader2,
-            this.columnHeader3,
-            this.columnHeader4});
-            this.listViewHistory.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listViewHistory.FullRowSelect = true;
-            this.listViewHistory.GridLines = true;
-            this.listViewHistory.HideSelection = false;
-            this.listViewHistory.Location = new System.Drawing.Point(3, 3);
-            this.listViewHistory.Name = "listViewHistory";
-            this.listViewHistory.Size = new System.Drawing.Size(919, 564);
-            this.listViewHistory.TabIndex = 0;
-            this.listViewHistory.UseCompatibleStateImageBehavior = false;
-            this.listViewHistory.View = System.Windows.Forms.View.Details;
+            listViewHistory.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] { columnHeader1, columnHeader2, columnHeader3, columnHeader4 });
+            listViewHistory.Dock = System.Windows.Forms.DockStyle.Fill;
+            listViewHistory.FullRowSelect = true;
+            listViewHistory.GridLines = true;
+            listViewHistory.Location = new System.Drawing.Point(3, 3);
+            listViewHistory.Name = "listViewHistory";
+            listViewHistory.Size = new System.Drawing.Size(919, 564);
+            listViewHistory.TabIndex = 0;
+            listViewHistory.UseCompatibleStateImageBehavior = false;
+            listViewHistory.View = System.Windows.Forms.View.Details;
             // 
             // columnHeader1
             // 
-            this.columnHeader1.Text = "时间";
-            this.columnHeader1.Width = 150;
+            columnHeader1.Text = "时间";
+            columnHeader1.Width = 150;
             // 
             // columnHeader2
             // 
-            this.columnHeader2.Text = "操作";
-            this.columnHeader2.Width = 100;
+            columnHeader2.Text = "操作";
+            columnHeader2.Width = 100;
             // 
             // columnHeader3
             // 
-            this.columnHeader3.Text = "描述";
-            this.columnHeader3.Width = 300;
+            columnHeader3.Text = "描述";
+            columnHeader3.Width = 300;
             // 
             // columnHeader4
             // 
-            this.columnHeader4.Text = "用户";
-            this.columnHeader4.Width = 150;
+            columnHeader4.Text = "用户";
+            columnHeader4.Width = 150;
             // 
             // GlobalConfigControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.tabControl1);
-            this.Controls.Add(this.toolStrip1);
-            this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.Margin = new System.Windows.Forms.Padding(4);
-            this.Name = "GlobalConfigControl";
-            this.Size = new System.Drawing.Size(933, 625);
-            this.Load += new System.EventHandler(this.GlobalConfigControl_Load);
-            this.toolStrip1.ResumeLayout(false);
-            this.toolStrip1.PerformLayout();
-            this.tabControl1.ResumeLayout(false);
-            this.tabPageBasic.ResumeLayout(false);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
-            this.tabPageAdvanced.ResumeLayout(false);
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
-            this.tabPageHistory.ResumeLayout(false);
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            Controls.Add(tabControl1);
+            Controls.Add(toolStrip1);
+            Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            Margin = new System.Windows.Forms.Padding(4);
+            Name = "GlobalConfigControl";
+            Size = new System.Drawing.Size(933, 625);
+            Load += GlobalConfigControl_Load;
+            toolStrip1.ResumeLayout(false);
+            toolStrip1.PerformLayout();
+            tabControl1.ResumeLayout(false);
+            tabPageBasic.ResumeLayout(false);
+            splitContainer2.Panel1.ResumeLayout(false);
+            splitContainer2.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainer2).EndInit();
+            splitContainer2.ResumeLayout(false);
+            splitContainer1.Panel1.ResumeLayout(false);
+            splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
+            splitContainer1.ResumeLayout(false);
+            tabPageAdvanced.ResumeLayout(false);
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
+            tabPageHistory.ResumeLayout(false);
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -313,6 +333,8 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.ToolStripButton tsbtnHistory;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPageBasic;
+        private System.Windows.Forms.SplitContainer splitContainer2;
+        private System.Windows.Forms.TreeView treeView2;
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TreeView treeView1;
         private System.Windows.Forms.PropertyGrid propertyGrid1;

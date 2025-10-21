@@ -92,9 +92,9 @@ namespace RUINORERP.Business.Cache
         private readonly object _statisticsLock = new object();
 
         /// <summary>
-        /// 最大缓存大小（已调整为500MB以避免频繁清理）
+        /// 最大缓存大小（已调整为800MB以避免频繁清理）
         /// </summary>
-        private readonly long _maxCacheSize = 500 * 1024 * 1024;
+        private readonly long _maxCacheSize = 800 * 1024 * 1024;
 
         /// <summary>
         /// 缓存大小检查阈值（达到最大大小的80%时触发清理）
@@ -163,6 +163,60 @@ namespace RUINORERP.Business.Cache
                                     _cacheManager.Put(listCacheKey, expandoList);
                                     break;
                                 }
+                            }
+                        }
+                    }
+                    else if (cachedListObj is IList && cachedListObj.GetType().IsGenericType)
+                    {
+                        // 处理强类型List<T>（如List<tb_Employee>）
+                        var listType = cachedListObj.GetType();
+                        var itemType = listType.GenericTypeArguments[0];
+                        
+                        // 创建一个强类型的列表引用
+                        var typedList = Convert.ChangeType(cachedListObj, typeof(List<>).MakeGenericType(itemType));
+                        
+                        if (typedList is IList list)
+                        {
+                            bool updated = false;
+                            for (int i = 0; i < list.Count; i++)
+                            {
+                                var item = list[i];
+                                if (item != null)
+                                {
+                                    var cachedItemId = item.GetCachePropertyValue(schemaInfo.PrimaryKeyField);
+                                    if (cachedItemId?.ToString() == entityId?.ToString())
+                                    {
+                                        // 找到匹配的实体，替换为新实体
+                                        // 确保实体类型与列表项类型兼容
+                                        if (itemType.IsAssignableFrom(entity.GetType()))
+                                        {
+                                            list[i] = entity;
+                                        }
+                                        else
+                                        {
+                                            // 如果类型不完全匹配，尝试转换
+                                            try
+                                            {
+                                                var convertedEntity = Convert.ChangeType(entity, itemType);
+                                                list[i] = convertedEntity;
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                _logger?.LogWarning(ex, $"无法将实体转换为目标类型 {itemType.Name}");
+                                                continue;
+                                            }
+                                        }
+                                        updated = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            // 如果已更新，则将列表放回缓存
+                            if (updated)
+                            {
+                                _cacheManager.Put(listCacheKey, cachedListObj);
+                                _logger?.LogDebug($"已成功更新表 {tableName} 中ID为 {entityId} 的实体缓存");
                             }
                         }
                     }

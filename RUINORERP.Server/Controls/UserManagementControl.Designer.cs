@@ -176,14 +176,157 @@ namespace RUINORERP.Server.Controls
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.断开连接ToolStripMenuItem,
             this.强制用户退出ToolStripMenuItem,
+            this.toolStripSeparator2,
+            this.列显示选项ToolStripMenuItem,
             this.删除列配置文件ToolStripMenuItem,
+            this.toolStripSeparator3,
             this.发消息给客户端ToolStripMenuItem,
             this.推送版本更新ToolStripMenuItem,
             this.更新全局配置ToolStripMenuItem,
             this.推送缓存数据ToolStripMenuItem,
+            this.toolStripSeparator4,
             this.关机ToolStripMenuItem,
             this.切换服务器ToolStripMenuItem,
             this.全部切换服务器ToolStripMenuItem});
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(157, 6);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(157, 6);
+            // 
+            // toolStripSeparator4
+            // 
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(157, 6);
+            // 
+            // 列显示选项ToolStripMenuItem
+            // 
+            this.列显示选项ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.用户名列ToolStripMenuItem,
+            this.姓名列ToolStripMenuItem,
+            this.当前模块列ToolStripMenuItem,
+            this.当前窗体列ToolStripMenuItem,
+            this.登陆时间列ToolStripMenuItem,
+            this.心跳数列ToolStripMenuItem,
+            this.最后心跳时间列ToolStripMenuItem,
+            this.客户端版本列ToolStripMenuItem,
+            this.客户端IP列ToolStripMenuItem,
+            this.静止时间列ToolStripMenuItem,
+            this.超级用户列ToolStripMenuItem,
+            this.在线状态列ToolStripMenuItem,
+            this.授权状态列ToolStripMenuItem});
+            this.列显示选项ToolStripMenuItem.Name = "列显示选项ToolStripMenuItem";
+            this.列显示选项ToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            this.列显示选项ToolStripMenuItem.Text = "列显示选项";
+            // 
+            // 用户名列ToolStripMenuItem
+            // 
+            this.用户名列ToolStripMenuItem.CheckOnClick = true;
+            this.用户名列ToolStripMenuItem.Name = "用户名列ToolStripMenuItem";
+            this.用户名列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.用户名列ToolStripMenuItem.Text = "用户名";
+            this.用户名列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 姓名列ToolStripMenuItem
+            // 
+            this.姓名列ToolStripMenuItem.CheckOnClick = true;
+            this.姓名列ToolStripMenuItem.Name = "姓名列ToolStripMenuItem";
+            this.姓名列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.姓名列ToolStripMenuItem.Text = "姓名";
+            this.姓名列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 当前模块列ToolStripMenuItem
+            // 
+            this.当前模块列ToolStripMenuItem.CheckOnClick = true;
+            this.当前模块列ToolStripMenuItem.Name = "当前模块列ToolStripMenuItem";
+            this.当前模块列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.当前模块列ToolStripMenuItem.Text = "当前模块";
+            this.当前模块列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 当前窗体列ToolStripMenuItem
+            // 
+            this.当前窗体列ToolStripMenuItem.CheckOnClick = true;
+            this.当前窗体列ToolStripMenuItem.Name = "当前窗体列ToolStripMenuItem";
+            this.当前窗体列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.当前窗体列ToolStripMenuItem.Text = "当前窗体";
+            this.当前窗体列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 登陆时间列ToolStripMenuItem
+            // 
+            this.登陆时间列ToolStripMenuItem.CheckOnClick = true;
+            this.登陆时间列ToolStripMenuItem.Name = "登陆时间列ToolStripMenuItem";
+            this.登陆时间列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.登陆时间列ToolStripMenuItem.Text = "登陆时间";
+            this.登陆时间列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 心跳数列ToolStripMenuItem
+            // 
+            this.心跳数列ToolStripMenuItem.CheckOnClick = true;
+            this.心跳数列ToolStripMenuItem.Name = "心跳数列ToolStripMenuItem";
+            this.心跳数列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.心跳数列ToolStripMenuItem.Text = "心跳数";
+            this.心跳数列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 最后心跳时间列ToolStripMenuItem
+            // 
+            this.最后心跳时间列ToolStripMenuItem.CheckOnClick = true;
+            this.最后心跳时间列ToolStripMenuItem.Name = "最后心跳时间列ToolStripMenuItem";
+            this.最后心跳时间列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.最后心跳时间列ToolStripMenuItem.Text = "最后心跳时间";
+            this.最后心跳时间列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 客户端版本列ToolStripMenuItem
+            // 
+            this.客户端版本列ToolStripMenuItem.CheckOnClick = true;
+            this.客户端版本列ToolStripMenuItem.Name = "客户端版本列ToolStripMenuItem";
+            this.客户端版本列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.客户端版本列ToolStripMenuItem.Text = "客户端版本";
+            this.客户端版本列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 客户端IP列ToolStripMenuItem
+            // 
+            this.客户端IP列ToolStripMenuItem.CheckOnClick = true;
+            this.客户端IP列ToolStripMenuItem.Name = "客户端IP列ToolStripMenuItem";
+            this.客户端IP列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.客户端IP列ToolStripMenuItem.Text = "客户端IP";
+            this.客户端IP列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 静止时间列ToolStripMenuItem
+            // 
+            this.静止时间列ToolStripMenuItem.CheckOnClick = true;
+            this.静止时间列ToolStripMenuItem.Name = "静止时间列ToolStripMenuItem";
+            this.静止时间列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.静止时间列ToolStripMenuItem.Text = "静止时间";
+            this.静止时间列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 超级用户列ToolStripMenuItem
+            // 
+            this.超级用户列ToolStripMenuItem.CheckOnClick = true;
+            this.超级用户列ToolStripMenuItem.Name = "超级用户列ToolStripMenuItem";
+            this.超级用户列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.超级用户列ToolStripMenuItem.Text = "超级用户";
+            this.超级用户列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 在线状态列ToolStripMenuItem
+            // 
+            this.在线状态列ToolStripMenuItem.CheckOnClick = true;
+            this.在线状态列ToolStripMenuItem.Name = "在线状态列ToolStripMenuItem";
+            this.在线状态列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.在线状态列ToolStripMenuItem.Text = "在线状态";
+            this.在线状态列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
+            // 
+            // 授权状态列ToolStripMenuItem
+            // 
+            this.授权状态列ToolStripMenuItem.CheckOnClick = true;
+            this.授权状态列ToolStripMenuItem.Name = "授权状态列ToolStripMenuItem";
+            this.授权状态列ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.授权状态列ToolStripMenuItem.Text = "授权状态";
+            this.授权状态列ToolStripMenuItem.CheckedChanged += new System.EventHandler(this.列显示选项_CheckedChanged);
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.Size = new System.Drawing.Size(161, 224);
             // 
@@ -286,7 +429,22 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.ToolStripMenuItem 更新全局配置ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 推送缓存数据ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 关机ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 切换服务器ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 全部切换服务器ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripMenuItem 列显示选项ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 用户名列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 姓名列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 当前模块列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 当前窗体列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 登陆时间列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 心跳数列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 最后心跳时间列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 客户端版本列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 客户端IP列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 静止时间列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 超级用户列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 在线状态列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 授权状态列ToolStripMenuItem;
     }
 }

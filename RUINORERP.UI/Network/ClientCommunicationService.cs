@@ -44,6 +44,19 @@ namespace RUINORERP.UI.Network
     /// </summary>
     public class ClientCommunicationService : IDisposable
     {
+        /// <summary>
+        /// 用户登录服务实例，用于重连后的认证恢复
+        /// </summary>
+        private UserLoginService _userLoginService;
+        
+        /// <summary>
+        /// 设置用户登录服务实例
+        /// </summary>
+        /// <param name="loginService">用户登录服务</param>
+        public void SetUserLoginService(UserLoginService loginService)
+        {
+            _userLoginService = loginService;
+        }
         private readonly NetworkConfig _config;
         // Socket客户端，负责底层网络通信
         private readonly ISocketClient _socketClient;
@@ -74,6 +87,26 @@ namespace RUINORERP.UI.Network
         private readonly NetworkConfig _networkConfig;
 
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
+        
+        // 请求队列，用于存储连接断开时的单向命令请求
+        private readonly ConcurrentQueue<QueuedCommand> _queuedCommands = new ConcurrentQueue<QueuedCommand>();
+        private bool _isProcessingQueue = false;
+        private readonly SemaphoreSlim _queueProcessingLock = new SemaphoreSlim(1, 1);
+        
+        /// <summary>
+        /// 队列命令模型，支持单向命令和带响应命令
+        /// </summary>
+        private class QueuedCommand
+        {
+            public CommandId CommandId { get; set; }
+            public object Data { get; set; }
+            public CancellationToken CancellationToken { get; set; }
+            public Type DataType { get; set; }
+            public TaskCompletionSource<bool> CompletionSource { get; set; } // 用于单向命令
+            public TaskCompletionSource<PacketModel> ResponseCompletionSource { get; set; } // 用于带响应命令
+            public int TimeoutMs { get; set; } = 30000;
+            public bool IsResponseCommand { get; set; } // 标识是否是带响应的命令
+        }
 
         // 用于Token刷新的内部实现
 
@@ -183,6 +216,13 @@ namespace RUINORERP.UI.Network
                 {
                     _logger.Debug("客户端已连接到服务器");
                     // 注意：心跳将在用户登录成功后启动，而不是在连接建立时
+                    
+                    // 连接恢复后，处理队列中的请求
+                    if (_queuedCommands.Count > 0)
+                    {
+                        _logger.Debug($"连接恢复，开始处理队列中的{_queuedCommands.Count}个请求");
+                        Task.Run(() => ProcessCommandQueueAsync());
+                    }
                 }
                 else
                 {
@@ -269,9 +309,18 @@ namespace RUINORERP.UI.Network
         /// 重连失败事件，当客户端重连服务器失败时触发
         /// </summary>
         public event Action ReconnectFailed
-        {
+        {            
             add => _eventManager.ReconnectFailed += value;
             remove => _eventManager.ReconnectFailed -= value;
+        }
+
+        /// <summary>
+        /// 连接状态变化事件，当连接状态改变时触发
+        /// </summary>
+        public event Action<bool> ConnectionStateChanged
+        {            
+            add => _eventManager.ConnectionStatusChanged += value;
+            remove => _eventManager.ConnectionStatusChanged -= value;
         }
 
         /// <summary>
@@ -422,6 +471,109 @@ namespace RUINORERP.UI.Network
 
 
         /// <summary>
+        /// 处理命令队列中的请求
+        /// </summary>
+        private async Task ProcessCommandQueueAsync()
+        {
+            // 使用信号量确保同一时间只有一个处理队列的任务在运行
+            if (!await _queueProcessingLock.WaitAsync(0))
+                return;
+
+            try
+            {
+                _isProcessingQueue = true;
+                _logger.Debug("开始处理命令队列");
+
+                while (!_queuedCommands.IsEmpty && _isConnected)
+                {
+                    if (!_queuedCommands.TryDequeue(out var queuedCommand))
+                        continue;
+
+                    // 检查是否已取消
+                    if (queuedCommand.CancellationToken.IsCancellationRequested)
+                    {
+                        if (queuedCommand.IsResponseCommand)
+                        {
+                            queuedCommand.ResponseCompletionSource.TrySetCanceled();
+                        }
+                        else
+                        {
+                            queuedCommand.CompletionSource.TrySetResult(false);
+                        }
+                        continue;
+                    }
+
+                    try
+                    {
+                        if (queuedCommand.IsResponseCommand)
+                        {
+                            // 处理带响应的命令
+                            _logger.Debug("处理队列中的带响应命令: {CommandId}", queuedCommand.CommandId.Name);
+                            
+                            // 调用SendCommandAsync方法
+                            var result = await SendCommandAsync(
+                                queuedCommand.CommandId,
+                                queuedCommand.Data as IRequest,
+                                queuedCommand.CancellationToken,
+                                queuedCommand.TimeoutMs);
+
+                            // 设置任务结果
+                            queuedCommand.ResponseCompletionSource.TrySetResult(result);
+                        }
+                        else
+                        {
+                            // 处理单向命令
+                            // 动态调用SendOneWayCommandAsync方法
+                            var method = GetType().GetMethod(
+                                nameof(SendOneWayCommandAsync),
+                                BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public,
+                                null,
+                                new[] { typeof(CommandId), queuedCommand.DataType, typeof(CancellationToken) },
+                                null);
+
+                            if (method != null)
+                            {
+                                var genericMethod = method.MakeGenericMethod(queuedCommand.DataType);
+                                var result = (Task<bool>)genericMethod.Invoke(this, new object[]
+                                { queuedCommand.CommandId, queuedCommand.Data, queuedCommand.CancellationToken });
+
+                                bool success = await result;
+                                queuedCommand.CompletionSource.TrySetResult(success);
+                            }
+                            else
+                            {
+                                _logger.LogError("找不到SendOneWayCommandAsync方法");
+                                queuedCommand.CompletionSource.TrySetResult(false);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "处理队列命令时发生错误: {CommandId}", queuedCommand.CommandId.Name);
+                        if (queuedCommand.IsResponseCommand)
+                        {
+                            queuedCommand.ResponseCompletionSource.TrySetException(ex);
+                        }
+                        else
+                        {
+                            queuedCommand.CompletionSource.TrySetResult(false);
+                        }
+                    }
+
+                    // 添加短暂延迟，避免大量请求同时发送
+                    await Task.Delay(10);
+                }
+
+                _logger.Debug("命令队列处理完成");
+            }
+            finally
+            {
+                _isProcessingQueue = false;
+                _queueProcessingLock.Release();
+            }
+        }
+
+        /// <summary>
         /// 判断异常是否支持重试
         /// </summary>
         /// <param name="ex">异常</param>
@@ -465,92 +617,7 @@ namespace RUINORERP.UI.Network
             else
                 return NetworkErrorType.UnknownError;
         }
-        /*
-
-        /// <summary>
-        /// 发送请求并等待响应（合并自RequestResponseManager）
-        /// </summary>
-        /// <typeparam name="TRequest">请求数据类型</typeparam>
-        /// <typeparam name="TResponse">响应数据类型</typeparam>
-        /// <param name="command">命令对象</param>
-        /// <param name="ct">取消令牌</param>
-        /// <param name="timeoutMs">请求超时时间（毫秒）</param>
-        /// <returns>响应数据对象</returns>
-        private async Task<PacketModel> SendRequestAsync<TRequest, TResponse>(
-            BaseCommand<TRequest, TResponse> command,
-            CancellationToken ct = default,
-            int timeoutMs = 30000)
-            where TRequest : class, IRequest
-            where TResponse : class, IResponse
-        {
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            cts.CancelAfter(timeoutMs);
-
-            var tcs = new TaskCompletionSource<PacketModel>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var pendingRequest = new PendingRequest
-            {
-                Tcs = tcs,
-                CreatedAt = DateTime.UtcNow,
-                CommandId = command.ToString()
-            };
-
-            if (command.Request == null)
-            {
-                throw new InvalidOperationException($"请求数据不能为空，指令名称: {command.CommandIdentifier.Name}");
-            }
-
-            if (!_pendingRequests.TryAdd(command.Request.RequestId, pendingRequest))
-            {
-                throw new InvalidOperationException($"无法添加请求到待处理列表，请求ID: {command.Request.RequestId}");
-            }
-
-            try
-            {
-                // 使用现有的SendPacketCoreAsync发送请求
-                await SendPacketCoreAsync(_socketClient, command, command.Request.RequestId, _networkConfig.DefaultRequestTimeoutMs, ct);
-
-                // 等待响应或超时
-                var timeoutTask = Task.Delay(timeoutMs, cts.Token);
-                var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
-
-                if (completedTask == timeoutTask)
-                {
-                    _logger?.LogError("请求超时，请求ID: {RequestId}", command.Request.RequestId);
-                    _timeoutStatistics.RecordTimeout(command.ToString(), timeoutMs);
-                    throw new TimeoutException($"请求超时（{timeoutMs}ms），请求ID: {command.Request.RequestId}");
-                }
-
-                ct.ThrowIfCancellationRequested();
-
-                var responsePacket = await tcs.Task;
-
-                if (responsePacket != null)
-                {
-                    // 记录请求完成事件
-                    _eventManager.OnRequestCompleted(command.Request.RequestId, DateTime.UtcNow - pendingRequest.CreatedAt);
-                }
-
-                PacketModel packet = null;
-
-                if (responsePacket is PacketModel)
-                {
-                    packet = responsePacket;
-                }
-                _logger?.LogDebug("成功接收响应，请求ID: {RequestId}", command.Request.RequestId);
-                return packet;
-            }
-            catch (Exception ex) when (!(ex is TimeoutException) && !(ex is OperationCanceledException))
-            {
-                _logger?.LogError(ex, "请求处理失败，请求ID: {RequestId}", command.Request.RequestId);
-                throw new InvalidOperationException($"请求处理失败，请求ID: {command.Request.RequestId}: {ex.Message}", ex);
-            }
-            finally
-            {
-                _pendingRequests.TryRemove(command.Request.RequestId, out _);
-            }
-        }
-
-        */
+       
 
         /// <summary>
         /// 发送请求并等待响应（合并自RequestResponseManager）
@@ -927,50 +994,7 @@ namespace RUINORERP.UI.Network
             throw new InvalidOperationException($"请求失败（尝试 {attempt} 次），错误: {lastException?.Message}", lastException);
         }
 
-        /*
-
-        /// <summary>
-        /// 异步发送命令到服务器并等待响应
-        /// </summary>
-        /// <typeparam name="TRequest">请求数据类型</typeparam>
-        /// <typeparam name="TResponse">响应数据类型</typeparam>
-        /// <param name="command">命令对象</param>
-        /// <param name="ct">取消令牌</param>
-        /// <param name="timeoutMs">超时时间（毫秒），默认为30000毫秒</param>
-        /// <returns>TResponse</returns>
-        public async Task<PacketModel> SendCommandAsync<TRequest, ResponseBase>(
-            BaseCommand<TRequest, ResponseBase> command,
-            CancellationToken ct = default,
-            int timeoutMs = 30000)
-            where TRequest : class, IRequest
-            where ResponseBase : class, IResponse
-        {
-            if (!Enum.IsDefined(typeof(CommandCategory), command.CommandIdentifier.Category))
-                throw new ArgumentException($"无效的命令类别: {command.CommandIdentifier.Category}", nameof(command.CommandIdentifier));
-
-            return await EnsureConnectedAsync<PacketModel>(async () =>
-            {
-                try
-                {
-                    // BaseCommand会自动处理Token管理，包括获取和刷新Token
-                    return await SendRequestAsync<TRequest, ResponseBase>(command, ct, timeoutMs);
-                }
-                catch (Exception ex) when (ex.Message.IndexOf("token expired", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   ex.Message.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   ex.Message.IndexOf("认证失败", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   ex.Message.IndexOf("未授权", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                   ex.Message.IndexOf("权限不足", StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    // Token过期情况，现在由BaseCommand统一处理
-                    _logger.LogWarning("检测到Token过期，BaseCommand会自动处理刷新");
-                    throw; // 抛出异常，让调用方处理或让BaseCommand的机制处理
-                }
-            });
-        }
-
-        */
-
-        /// <summary>
+       
         /// 异步发送命令到服务器并等待响应
         /// </summary>
         /// <typeparam name="TRequest">请求数据类型</typeparam>
@@ -1008,100 +1032,8 @@ namespace RUINORERP.UI.Network
             });
         }
 
-        /*
-        /// <summary>
-        /// 异步发送命令到服务器但不等待响应（简化版）
-        /// </summary>
-        /// <typeparam name="TRequest">请求数据类型</typeparam>
-        /// <param name="command">命令对象</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>发送成功返回true，失败返回false</returns>
-        public async Task<bool> SendOneWayCommandAsync<TRequest>(
-            BaseCommand<TRequest, IResponse> command,
-            CancellationToken ct = default)
-            where TRequest : class, IRequest
-        {
-            if (!Enum.IsDefined(typeof(CommandCategory), command.CommandIdentifier.Category))
-                throw new ArgumentException($"无效的命令类别: {command.CommandIdentifier.Category}", nameof(command.CommandIdentifier));
-
-            return await EnsureConnectedAsync<bool>(async () =>
-            {
-                try
-                {
-                    // 生成请求ID但不等待响应
-                    string requestId = IdGenerator.GenerateRequestId(command.CommandIdentifier);
-
-                    // 使用内部的SendPacketCoreAsync发送单向命令，确保Token正确附加
-                    await SendPacketCoreAsync(_socketClient, command, command.Request.RequestId, _networkConfig.DefaultRequestTimeoutMs, ct);
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "发送单向命令失败: {CommandId}", command.CommandIdentifier.FullCode);
-                    _eventManager.OnErrorOccurred(ex);
-                    return false;
-                }
-            });
-        }
-        */
-        /// <summary>
-        /// 重新连接到服务器
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>重连是否成功</returns>
-        public Task<bool> ReconnectAsync(CancellationToken cancellationToken = default)
-        {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(ClientCommunicationService));
-
-            // 断开当前连接（如果有）
-            Disconnect();
-
-            // 如果已有服务器地址和端口，则尝试重新连接
-            if (!string.IsNullOrEmpty(_serverAddress) && _serverPort > 0)
-            {
-                return ConnectAsync(_serverAddress, _serverPort, cancellationToken);
-            }
-
-            // 如果没有保存的服务器地址，返回失败
-            _eventManager.OnErrorOccurred(new InvalidOperationException("没有保存的服务器地址和端口"));
-            return Task.FromResult(false);
-        }
-
-        /// <summary>
-        /// 确保连接状态正常并执行操作
-        /// </summary>
-        /// <typeparam name="TResult">操作结果类型</typeparam>
-        /// <param name="operation">要执行的操作</param>
-        /// <returns>操作结果</returns>
-        private async Task EnsureConnectedAsync(Func<Task> operation)
-        {
-            if (!_isConnected)
-            {
-                _eventManager.OnErrorOccurred(new InvalidOperationException("未连接到服务器"));
-                throw new InvalidOperationException("未连接到服务器");
-            }
-
-            try
-            {
-                await operation().ConfigureAwait(false);
-            }
-            catch (Exception ex) when (!(ex is OperationCanceledException))
-            {
-                _eventManager.OnErrorOccurred(ex);
-                _logger.LogError(ex, "操作执行失败: {Operation}", operation.Method.Name);
-
-                // 连接断开时尝试重连
-                if (_networkConfig.AutoReconnect && !_isConnected)
-                {
-                    _logger.Debug("连接已断开，尝试自动重连");
-                    await TryReconnectAsync().ConfigureAwait(false);
-                }
-
-                throw;
-            }
-        }
+     
+       
 
         /// <summary>
         /// 确保连接状态正常并执行操作
@@ -1111,11 +1043,29 @@ namespace RUINORERP.UI.Network
         /// <returns>操作结果</returns>
         private async Task<TResult> EnsureConnectedAsync<TResult>(Func<Task<TResult>> operation)
         {
-            if (!_isConnected)
+            // 检查连接状态，如果断开且启用了自动重连，则尝试重连
+            if (!_isConnected && _networkConfig.AutoReconnect)
             {
-                _eventManager.OnErrorOccurred(new InvalidOperationException("未连接到服务器"));
-                _logger.LogError("未连接到服务器，无法执行操作");
-                throw new InvalidOperationException("未连接到服务器");
+                _logger.Debug("检测到连接断开，尝试自动重连");
+                // 尝试重连并等待结果
+                bool reconnected = await TryReconnectAsync().ConfigureAwait(false);
+                
+                // 如果重连失败，抛出异常
+                if (!reconnected)
+                {
+                    var errorMsg = "未连接到服务器，重连失败";
+                    _eventManager.OnErrorOccurred(new InvalidOperationException(errorMsg));
+                    _logger.LogError(errorMsg);
+                    throw new InvalidOperationException(errorMsg);
+                }
+            }
+            // 如果未启用自动重连但连接已断开，直接抛出异常
+            else if (!_isConnected)
+            {
+                var errorMsg = "未连接到服务器";
+                _eventManager.OnErrorOccurred(new InvalidOperationException(errorMsg));
+                _logger.LogError(errorMsg);
+                throw new InvalidOperationException(errorMsg);
             }
 
             try
@@ -1127,7 +1077,7 @@ namespace RUINORERP.UI.Network
                 _eventManager.OnErrorOccurred(ex);
                 _logger.LogError(ex, "操作执行失败: {Operation}", operation.Method.Name);
 
-                // 连接断开时尝试重连
+                // 检查是否是网络异常，如果是则尝试重连
                 if (_networkConfig.AutoReconnect && !_isConnected)
                 {
                     _logger.Debug("连接已断开，尝试自动重连");
@@ -1137,6 +1087,17 @@ namespace RUINORERP.UI.Network
                 throw;
             }
         }
+
+        /// <summary>
+        /// 确保连接状态正常并执行无返回值操作
+        /// </summary>
+        /// <param name="operation">要执行的操作</param>
+        private async Task EnsureConnectedAsync(Func<Task> operation) => 
+            await EnsureConnectedAsync(async () => 
+            { 
+                await operation().ConfigureAwait(false); 
+                return true; 
+            }).ConfigureAwait(false);
 
 
         /// <summary>
@@ -1180,6 +1141,8 @@ namespace RUINORERP.UI.Network
                             }
 
                             _logger.Debug("服务器重连成功");
+                            // 通过UpdateConnectionState方法会触发连接状态变更事件
+                            // UserLoginService可以订阅此事件并自行处理认证恢复
                             return true;
                         }
                     }
@@ -1210,8 +1173,7 @@ namespace RUINORERP.UI.Network
 
             return false;
         }
-
-
+        
 
         /// <summary>
         /// 处理心跳包失败 - 增强状态同步检查
@@ -1353,86 +1315,7 @@ namespace RUINORERP.UI.Network
             await _commandDispatcher.DispatchAsync(packet, CancellationToken.None).ConfigureAwait(false);
         }
 
-        /*
-        /// <summary>
-        /// 发送数据包的核心私有方法
-        /// 封装了构建数据包、序列化、加密和发送的公共逻辑
-        /// </summary>
-        /// <param name="client">Socket客户端</param>
-        /// <param name="commandId">命令标识符</param>
-        /// <param name="data">要发送的数据</param>
-        /// <param name="requestId">请求ID</param>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
-        /// <param name="ct">取消令牌</param>
-        /// <param name="authToken">认证令牌（可选）</param>
-        /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
-        /// <exception cref="NetworkCommunicationException">当网络通信失败时抛出</exception>
-        private async Task SendPacketCoreAsync<TRequest, TResponse>(
-            ISocketClient client,
-            BaseCommand<TRequest, TResponse> command,
-            string requestId,
-            int timeoutMs,
-            CancellationToken ct,
-            string authToken = null)
-            where TRequest : class, IRequest
-            where TResponse : class, IResponse
-        {
-            ct.ThrowIfCancellationRequested();
-            try
-            {
-                // 构建数据包
-                var packet = PacketBuilder.Create()
-                    .WithCommand(command.CommandIdentifier)
-                    .WithDirection(PacketDirection.Request) // 明确设置请求方向
-                    .WithMessagePackData(command)
-                    .WithRequestId(command.Request.RequestId)
-                    .WithTimeout(timeoutMs)
-                    .Build();
-
-                // 自动设置到ExecutionContext，确保服务器端也能获取
-                if (packet.ExecutionContext == null)
-                    packet.ExecutionContext = new CommandContext();
-
-                packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;
-                //packet.ExecutionContext.UserId=MainForm.Instance.AppContext.CurrentUser.
-                packet.ExecutionContext.RequestId = command.Request.RequestId;
-                packet.ExecutionContext.RequestType = command.Request.GetType();
-                packet.ExecutionContext.CommandType = command.GetType();
-                packet.ExecutionContext.ClientVersion = Application.ProductVersion;
-
-                // 序列化和加密数据包
-                var payload = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(packet);
-                var original = new OriginalData(
-                    (byte)command.CommandIdentifier.Category,
-                    new[] { command.CommandIdentifier.OperationCode },
-                    payload);
-                var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
-
-                await client.SendAsync(encrypted, ct);
-
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"发送数据包时发生错误: CommandId={command.CommandIdentifier}, RequestId={command.Request.RequestId}",
-                    command.CommandIdentifier.FullCode, requestId);
-
-                // 如果是取消操作，则直接抛出
-                if (ex is OperationCanceledException)
-                {
-                    throw;
-                }
-
-                // 包装异常以便上层处理（包括可能的Token过期处理）
-                throw new NetworkCommunicationException(
-                    $"发送请求失败: {ex.Message}",
-                    ex,
-                    command.CommandIdentifier,
-                    requestId);
-            }
-        }
-
-
-        */
+       
 
 
         /// <summary>
@@ -1483,8 +1366,10 @@ namespace RUINORERP.UI.Network
                     (byte)packet.CommandId.Category,
                     new[] { packet.CommandId.OperationCode },
                     payload);
-                var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
 
+                //var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
+                var encrypted = UnifiedEncryptionProtocol.EncryptClientDataToServer(original);
+                
                 await client.SendAsync(encrypted, ct);
 
             }
@@ -1525,14 +1410,40 @@ namespace RUINORERP.UI.Network
             {
                 ct.ThrowIfCancellationRequested();
 
-                lock (_syncLock)
+                // 检查连接状态
+                if (!IsConnected)
                 {
-                    if (!_isConnected)
-                        return false;
-
-                    if (_disposed)
-                        throw new ObjectDisposedException(nameof(ClientCommunicationService));
+                    _logger.LogWarning("尝试发送单向命令但连接已断开，命令ID: {CommandId}", commandId);
+                    
+                    // 如果启用了自动重连，将请求加入队列
+                    if (_networkConfig.AutoReconnect && !_disposed)
+                    {
+                        _logger.Debug($"连接已断开，将命令{commandId.Name}加入队列等待发送");
+                        
+                        // 创建任务完成源
+                        var tcs = new TaskCompletionSource<bool>();
+                        
+                        // 将请求加入队列
+                        _queuedCommands.Enqueue(new QueuedCommand
+                        {
+                            CommandId = commandId,
+                            Data = data,
+                            CancellationToken = ct,
+                            DataType = typeof(TRequest),
+                            CompletionSource = tcs
+                        });
+                        
+                        // 在后台尝试重连
+                        _ = Task.Run(() => TryReconnectAsync());
+                        
+                        // 返回任务结果，让调用者等待连接恢复后发送
+                        return await tcs.Task;
+                    }
+                    return false;
                 }
+
+                if (_disposed)
+                    throw new ObjectDisposedException(nameof(ClientCommunicationService));
 
                 // 序列化请求数据，Token管理现在由BaseCommand统一处理
                 var payload = UnifiedSerializationService.SerializeWithMessagePack(data);
@@ -1544,8 +1455,8 @@ namespace RUINORERP.UI.Network
                     payload);
 
                 // 加密数据包
-                var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
-
+                // var encrypted = EncryptedProtocol.EncryptClientPackToServer(original);
+                var encrypted = UnifiedEncryptionProtocol.EncryptClientDataToServer(original);
                 // 发送数据
                 await _socketClient.SendAsync(encrypted, ct);
                 return true;
@@ -1558,6 +1469,31 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _eventManager.OnErrorOccurred(new Exception($"单向命令发送失败: {ex.Message}", ex));
+                
+                // 检查是否因为连接断开导致的异常
+                if (_networkConfig.AutoReconnect && !_disposed && IsRetryableException(ex))
+                {
+                    _logger.Debug($"因网络异常，将命令{commandId.Name}加入队列等待发送");
+                    
+                    // 创建任务完成源
+                    var tcs = new TaskCompletionSource<bool>();
+                    
+                    // 将请求加入队列
+                    _queuedCommands.Enqueue(new QueuedCommand
+                    {
+                        CommandId = commandId,
+                        Data = data,
+                        CancellationToken = ct,
+                        DataType = typeof(TRequest),
+                        CompletionSource = tcs
+                    });
+                    
+                    // 在后台尝试重连
+                    _ = Task.Run(() => TryReconnectAsync());
+                    
+                    // 返回任务结果，让调用者等待连接恢复后发送
+                    return await tcs.Task;
+                }
                 return false;
             }
         }
@@ -1695,85 +1631,7 @@ namespace RUINORERP.UI.Network
             Dispose(false);
         }
 
-        /// <summary>
-        /// 处理命令响应并提取业务数据
-        /// 将重复的响应处理逻辑提取到通信服务层
-        /// </summary>
-        /// <typeparam name="TResponse">响应数据类型</typeparam>
-        /// <param name="packet">接收到的数据包</param>
-        /// <returns>处理后的响应数据</returns>
-        public TResponse ProcessCommandResponseAsync<TResponse>(PacketModel packet)
-            where TResponse : class, IResponse
-        {
-            if (packet == null)
-            {
-                _logger.LogWarning("接收到的数据包为空");
-                return null;
-            }
-
-            try
-            {
-
-                // 处理登录命令的特殊情况
-                TResponse response = default(TResponse);
-                if (packet.Response != null)
-                {
-                    response = packet.Response as TResponse;
-                }
-                else
-                {
-                    response= ResponseBuilder.Error($"收到响应数据包，但响应数据为空。命令ID: {packet.CommandId.ToString()}") as TResponse;
-                }
-                return response;
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "处理命令响应时发生错误");
-                throw new InvalidOperationException($"处理命令响应失败: {ex.Message}", ex);
-            }
-        }
-
-
-
-        /*
-        /// <summary>
-        /// 发送命令并处理响应，返回指令类型的响应数据
-        /// </summary>
-        /// <typeparam name="TRequest">请求数据类型</typeparam>
-        /// <typeparam name="TResponse">响应数据类型</typeparam>
-        /// <param name="command">命令对象</param>
-        /// <param name="ct">取消令牌</param>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
-        /// <returns>包含指令信息的响应数据</returns>
-        public async Task<BaseCommand<TRequest, TResponse>> SendCommandWithResponseAsync<TRequest, TResponse>(
-            BaseCommand<TRequest, TResponse> command,
-            CancellationToken ct = default,
-            int timeoutMs = 30000)
-            where TRequest : class, IRequest
-            where TResponse : class, IResponse
-        {
-            var packet = await SendCommandAsync<TRequest, TResponse>(command, ct, timeoutMs);
-
-            if (packet == null)
-            {
-                return BaseCommand<TRequest, TResponse>.Error("未收到服务器响应");
-            }
-
-            var responseData = ProcessCommandResponseAsync<TResponse>(packet);
-
-            // 检查响应数据是否为空
-            if (responseData == null)
-            {
-                _logger.LogWarning("命令响应数据为空或处理失败。命令ID: {CommandId}", command.CommandIdentifier);
-                return BaseCommand<TRequest, TResponse>.Error("服务器返回了空响应数据");
-            }
-
-            var commandResponse = BaseCommand<TRequest, TResponse>.Success(responseData, (responseData as ResponseBase)?.Message ?? "操作成功");
-            commandResponse.CommandIdentifier = command.CommandIdentifier;
-            return commandResponse;
-        }
-        */
+          
 
         /// <summary>
         /// 发送命令并处理响应，返回指令类型的响应数据
@@ -1791,22 +1649,127 @@ namespace RUINORERP.UI.Network
             int timeoutMs = 30000)
             where TResponse : class, IResponse
         {
-            var packet = await SendCommandAsync(commandId, request, ct, timeoutMs);
-
-            if (packet == null)
+            try
             {
-                return ResponseBase.CreateError("未收到服务器响应") as TResponse;
+                // 检查连接状态
+                if (!IsConnected)
+                {
+                    _logger.LogWarning("尝试发送带响应命令但连接已断开，命令ID: {CommandId}", commandId);
+                    
+                    // 如果启用了自动重连，将请求加入队列
+                    if (_networkConfig.AutoReconnect && !_disposed)
+                    {
+                        _logger.Debug($"连接已断开，将带响应命令{commandId.Name}加入队列等待发送");
+                        
+                        // 创建任务完成源
+                        var packetTcs = new TaskCompletionSource<PacketModel>();
+                        var responseTcs = new TaskCompletionSource<TResponse>();
+                        
+                        // 当packetTcs完成时，将结果转换为TResponse并设置到responseTcs
+                        _ = packetTcs.Task.ContinueWith(task => {
+                            if (task.IsCanceled)
+                                responseTcs.TrySetCanceled();
+                            else if (task.IsFaulted)
+                                responseTcs.TrySetException(task.Exception);
+                            else if (task.Result != null && task.Result.Response != null)
+                                responseTcs.TrySetResult(task.Result.Response as TResponse);
+                            else
+                                responseTcs.TrySetResult(ResponseBase.CreateError("未收到有效响应数据") as TResponse);
+                        });
+                        
+                        // 将请求加入队列
+                        _queuedCommands.Enqueue(new QueuedCommand
+                        {
+                            CommandId = commandId,
+                            Data = request,
+                            CancellationToken = ct,
+                            DataType = request.GetType(),
+                            ResponseCompletionSource = packetTcs,
+                            IsResponseCommand = true,
+                            TimeoutMs = timeoutMs
+                        });
+                        
+                        // 在后台尝试重连
+                        _ = Task.Run(() => TryReconnectAsync());
+                        
+                        // 返回任务结果，让调用者等待连接恢复后发送
+                        return await responseTcs.Task;
+                    }
+                    
+                    // 如果未启用自动重连，返回错误响应
+                    return ResponseBase.CreateError("连接已断开，无法发送请求") as TResponse;
+                }
+
+                var packet = await SendCommandAsync(commandId, request, ct, timeoutMs);
+
+                if (packet == null)
+                {
+                    return ResponseBase.CreateError("未收到服务器响应") as TResponse;
+                }
+
+                var responseData = packet.Response;
+
+                // 检查响应数据是否为空
+                if (responseData == null)
+                {
+                    _logger.LogWarning($"命令响应数据为空或处理失败。命令ID: {commandId}");
+                    return ResponseBase.CreateError("服务器返回了空响应数据") as TResponse;
+                }
+                return responseData as TResponse;
             }
-
-            var responseData = packet.Response;
-
-            // 检查响应数据是否为空
-            if (responseData == null)
+            catch (Exception ex)
             {
-                _logger.LogWarning($"命令响应数据为空或处理失败。命令ID: {commandId}{commandId.Name}", commandId);
-                return ResponseBase.CreateError("服务器返回了空响应数据") as TResponse;
+                _eventManager.OnErrorOccurred(new Exception($"带响应命令发送失败: {ex.Message}", ex));
+                
+                // 检查是否因为连接断开导致的异常
+                if (_networkConfig.AutoReconnect && !_disposed && IsRetryableException(ex))
+                {
+                    _logger.Debug($"因网络异常，将带响应命令{commandId.Name}加入队列等待发送");
+                    
+                    // 创建任务完成源
+                        var packetTcs = new TaskCompletionSource<PacketModel>();
+                        var responseTcs = new TaskCompletionSource<TResponse>();
+                        
+                        // 当packetTcs完成时，将结果转换为TResponse并设置到responseTcs
+                        _ = packetTcs.Task.ContinueWith(task => {
+                            if (task.IsCanceled)
+                                responseTcs.TrySetCanceled();
+                            else if (task.IsFaulted)
+                                responseTcs.TrySetException(task.Exception);
+                            else if (task.Result != null && task.Result.Response != null)
+                                responseTcs.TrySetResult(task.Result.Response as TResponse);
+                            else
+                                responseTcs.TrySetResult(ResponseBase.CreateError("未收到有效响应数据") as TResponse);
+                        });
+                        
+                        // 将请求加入队列
+                        _queuedCommands.Enqueue(new QueuedCommand
+                        {
+                            CommandId = commandId,
+                            Data = request,
+                            CancellationToken = ct,
+                            DataType = request.GetType(),
+                            ResponseCompletionSource = packetTcs,
+                            IsResponseCommand = true,
+                            TimeoutMs = timeoutMs
+                        });
+                    
+                    // 在后台尝试重连
+                    _ = Task.Run(() => TryReconnectAsync());
+                    
+                    // 返回任务结果，让调用者等待连接恢复后发送
+                    return await responseTcs.Task;
+                }
+                
+                // 如果是操作取消异常，重新抛出
+                if (ex is OperationCanceledException)
+                {
+                    throw;
+                }
+                
+                // 返回错误响应
+                return ResponseBase.CreateError($"命令执行失败: {ex.Message}") as TResponse;
             }
-            return responseData as TResponse;
         }
 
 

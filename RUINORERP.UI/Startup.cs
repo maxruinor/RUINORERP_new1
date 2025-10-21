@@ -136,7 +136,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// Autofac容器配置回调
         /// </summary>
-        void ConfigureAutofacContainer(HostBuilderContext bc, ContainerBuilder builder)
+        void ConfigureAutofacContainer(HostBuilderContext bc, ContainerBuilder builder)        
         {
             Services = new ServiceCollection();
 
@@ -152,6 +152,8 @@ namespace RUINORERP.UI
 
             // 将服务集合注册到Autofac
             builder.Populate(Services);
+            
+          
         }
         /// <summary>
         /// 配置基础服务

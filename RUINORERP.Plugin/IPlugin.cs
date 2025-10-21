@@ -76,6 +76,43 @@ namespace RUINORERP.Plugin
         /// </summary>
         /// <param name="permissionChecker">权限检查委托</param>
         void SetPermissionChecker(Func<string, bool> permissionChecker);
+        
+        /// <summary>
+        /// 设置插件与主程序的通信通道
+        /// </summary>
+        /// <param name="communicationChannel">通信通道实例</param>
+        void SetCommunicationChannel(IPluginCommunicationChannel communicationChannel);
+    }
+    
+    /// <summary>
+    /// 插件与主程序之间的通信通道接口
+    /// </summary>
+    public interface IPluginCommunicationChannel
+    {
+        /// <summary>
+        /// 发送数据到主程序
+        /// </summary>
+        /// <param name="pluginName">插件名称</param>
+        /// <param name="data">要发送的数据</param>
+        /// <returns>是否发送成功</returns>
+        bool SendDataToHost(string pluginName, object data);
+        
+        /// <summary>
+        /// 从主程序请求数据
+        /// </summary>
+        /// <param name="pluginName">插件名称</param>
+        /// <param name="request">请求参数</param>
+        /// <returns>返回的数据</returns>
+        object RequestDataFromHost(string pluginName, object request);
+        
+        /// <summary>
+        /// 调用主程序服务
+        /// </summary>
+        /// <param name="pluginName">插件名称</param>
+        /// <param name="service">服务名称</param>
+        /// <param name="parameters">服务参数</param>
+        /// <returns>服务调用结果</returns>
+        object InvokeHostService(string pluginName, string service, object parameters);
     }
     
     /// <summary>

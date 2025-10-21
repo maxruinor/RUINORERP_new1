@@ -15,4 +15,13 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="PluginCommunicationChannel.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="SampleDataInteractionPlugin.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
 </Project>

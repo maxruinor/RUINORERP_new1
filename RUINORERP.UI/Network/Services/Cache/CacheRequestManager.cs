@@ -124,14 +124,17 @@ namespace RUINORERP.UI.Network.Services.Cache
 
             try
             {
-                // 使用通信服务发送请求到服务器
+                // 不再需要检查连接状态，直接发送请求
+                // ClientCommunicationService会自动处理连接状态和离线队列
                 return await _communicationService.SendCommandWithResponseAsync<CacheResponse>(
                     CacheCommands.CacheOperation, request, CancellationToken.None);
             }
             catch (Exception ex)
             {
                 _log.LogError(ex, "请求缓存失败，表名={0}, 操作类型={1}", request.TableName, request.Operation);
-                return null;
+                
+                // 直接返回错误响应，不再需要特殊处理连接异常
+                return new CacheResponse { IsSuccess = false, ErrorMessage = $"处理缓存请求失败: {ex.Message}" };
             }
         }
 

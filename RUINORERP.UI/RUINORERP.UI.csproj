@@ -1645,12 +1645,7 @@
     <Compile Include="BI\UCUserInfoList.Designer.cs">
       <DependentUpon>UCUserInfoList.cs</DependentUpon>
     </Compile>
-    <Compile Include="BusinessFlow\FlowDesign.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="BusinessFlow\FlowDesign.Designer.cs">
-      <DependentUpon>FlowDesign.cs</DependentUpon>
-    </Compile>
+  
     <Compile Include="ChartFramework\Core\Models\DimensionConfig.cs" />
     <Compile Include="ChartFramework\Core\Models\MetricConfig.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\ChartInteractionEventArgs.cs" />
@@ -3491,6 +3486,9 @@
     <Compile Include="WorkFlowDesigner\WFMainForm.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="WorkFlowDesigner\WFMainForm.Designer.cs">
+      <DependentUpon>WFMainForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="WorkFlowTester\loopWork.cs" />
     <Compile Include="WorkFlowTester\MyNameClass.cs" />
     <Compile Include="WorkFlowTester\NextWorker.cs" />
@@ -3929,9 +3927,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="BI\UCUserInfoList.resx">
       <DependentUpon>UCUserInfoList.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="BusinessFlow\FlowDesign.resx">
-      <DependentUpon>FlowDesign.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="BusyDialog.resx">
       <DependentUpon>BusyDialog.cs</DependentUpon>

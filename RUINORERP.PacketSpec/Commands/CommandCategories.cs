@@ -8,9 +8,12 @@ namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 命令ID结构体，提供类型安全的命令标识
+    /// Category 作为一级分类
+    /// OperationCode 作为二级具体指令
+    /// FullCode 只是这两个值的组合，用于唯一标识命令
     /// </summary>
     [MessagePackObject]
-    public struct CommandId : IEquatable<CommandId>
+    public partial struct CommandId : IEquatable<CommandId>
     {
         /// <summary>
         /// 空命令ID（用于表示无效或未设置的命令）
@@ -21,25 +24,23 @@ namespace RUINORERP.PacketSpec.Commands
         /// 命令类别
         /// </summary>
         [Key(0)]
-        public CommandCategory Category { get; set; }
-
+        public CommandCategory Category { get; private set; }
 
         // 添加命令名称属性
         [Key(1)]
-        public string Name { get; set; }
-
+        public string Name { get; private set; }
 
         /// <summary>
         /// 操作码
         /// </summary>
         [Key(2)]
-        public byte OperationCode { get; set; }
+        public byte OperationCode { get; private set; }
 
         /// <summary>
-        /// 完整的命令码
+        /// 完整的命令码 (只读)
         /// </summary>
         [Key(3)]
-        public ushort FullCode => (ushort)(((byte)Category << 8) | OperationCode);
+        public ushort FullCode { get; private set; }
 
         /// <summary>
         /// MessagePack序列化所需的默认构造函数
@@ -53,6 +54,7 @@ namespace RUINORERP.PacketSpec.Commands
             Category = CommandCategory.System;
             OperationCode = 0;
             Name = string.Empty;
+            FullCode = 0;
         }
 
         /// <summary>
@@ -66,6 +68,7 @@ namespace RUINORERP.PacketSpec.Commands
             Category = category;
             OperationCode = operationCode;
             Name = name ?? GetDefaultName(category, operationCode);
+            FullCode = (ushort)(((byte)category << 8) | operationCode);
         }
 
         /// <summary>

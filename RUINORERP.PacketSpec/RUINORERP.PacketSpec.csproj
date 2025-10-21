@@ -54,6 +54,7 @@
     <Compile Remove="Security\EncryptedProtocolPool.cs" />
     <Compile Remove="Security\KxCryptographyService.cs" />
     <Compile Remove="Security\UnifiedCryptographyService.cs" />
+    <Compile Remove="Security\UnifiedEncryptionProtocol_old.cs" />
   </ItemGroup>
 
   <ItemGroup>

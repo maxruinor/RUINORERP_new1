@@ -12,7 +12,7 @@ using System.Reflection;
 using System;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Cache;
-using RUINORERP.UI.Network.Services.Cache; // 添加缓存订阅管理器的引用
+using RUINORERP.UI.Network.Services.Cache;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -35,6 +35,12 @@ namespace RUINORERP.UI.Network.DI
             services.AddSingleton<ClientEventManager>();
 
             services.AddSingleton<UICacheSubscriptionManager>();
+            
+            // 注册缓存相关服务
+            services.AddSingleton<IEntityCacheManager, EntityCacheManager>();
+            services.AddSingleton<EventDrivenCacheManager>();
+            services.AddSingleton<CacheRequestManager>();
+            services.AddSingleton<CacheResponseProcessor>();
 
             // 注册TokenManager相关服务
             // 首先配置TokenServiceOptions
@@ -65,7 +71,11 @@ namespace RUINORERP.UI.Network.DI
             // 注册TokenManager
             services.AddSingleton<TokenManager>();
 
-            // 注册业务服务 使用瞬态
+            // 注册Token刷新服务
+            services.AddSingleton<TokenRefreshService>();
+            services.AddSingleton<SilentTokenRefresher>();
+
+            // 注册业务服务
             services.AddTransient<UserLoginService>();
             services.AddSingleton<CacheClientService>();
             services.AddTransient<MessageService>();
@@ -95,6 +105,12 @@ namespace RUINORERP.UI.Network.DI
 
             // 注册缓存订阅管理器
             builder.RegisterType<UICacheSubscriptionManager>().AsSelf().SingleInstance();
+            
+            // 注册缓存相关服务
+            builder.RegisterType<EntityCacheManager>().As<IEntityCacheManager>().SingleInstance();
+            builder.RegisterType<EventDrivenCacheManager>().AsSelf().SingleInstance();
+            builder.RegisterType<CacheRequestManager>().AsSelf().SingleInstance();
+            builder.RegisterType<CacheResponseProcessor>().AsSelf().SingleInstance();
 
             // 注册HeartbeatManager，并使用属性注入解决循环依赖
             builder.RegisterType<HeartbeatManager>().AsSelf().SingleInstance()
@@ -117,9 +133,14 @@ namespace RUINORERP.UI.Network.DI
 
             builder.RegisterType<TokenManager>().AsSelf().SingleInstance();
 
+            // 注册Token刷新服务
+            builder.RegisterType<TokenRefreshService>().AsSelf().SingleInstance();
+            builder.RegisterType<SilentTokenRefresher>().AsSelf().SingleInstance();
+
             // 注册业务服务
             builder.RegisterType<UserLoginService>().AsSelf().SingleInstance();
             builder.RegisterType<CacheClientService>().AsSelf().SingleInstance();
+            // CacheClientService构造函数会自动注入所需的依赖项
             builder.RegisterType<MessageService>().AsSelf().InstancePerDependency();
             builder.RegisterType<SimplifiedMessageService>().AsSelf().InstancePerDependency();
             builder.RegisterType<SystemManagementService>().AsSelf().InstancePerDependency();
@@ -136,12 +157,12 @@ namespace RUINORERP.UI.Network.DI
         /// <returns>服务统计信息字符串</returns>
         public static string GetNetworkServicesStatistics()
         {
-            return $"Network服务依赖注入配置完成。\n" +
-                   $"已注册服务: 14个核心服务（RequestResponseManager已合并到ClientCommunicationService）\n" +
-                   $"已注册接口: 3个服务接口\n" +
-                   $"生命周期: 单例模式和瞬态模式\n" +
-                   $"AOP支持: 已启用接口拦截器\n" +
-                   $"架构版本: 重构后新架构";
+            return $"Network服务依赖注入配置完成。\n"
+                   + $"已注册服务: 16个核心服务（RequestResponseManager已合并到ClientCommunicationService，新增TokenRefreshService和SilentTokenRefresher）\n"
+                   + $"已注册接口: 3个服务接口\n"
+                   + $"生命周期: 单例模式和瞬态模式\n"
+                   + $"AOP支持: 已启用接口拦截器\n"
+                   + $"架构版本: 重构后新架构";
         }
     }
 }

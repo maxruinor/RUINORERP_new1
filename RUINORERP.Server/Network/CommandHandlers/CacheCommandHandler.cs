@@ -636,7 +636,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         if (session != null && !string.IsNullOrEmpty(session.SessionID))
                         {
-                            await ((IAppSession)session).SendAsync(dataBytes);
+                            await (session).SendAsync(dataBytes);
                             successCount++;
                         }
                     }
@@ -690,7 +690,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         if (session != null && !string.IsNullOrEmpty(session.SessionID))
                         {
-                            await ((IAppSession)session).SendAsync(dataBytes);
+                            await (session).SendAsync(dataBytes);
                             successCount++;
                         }
                     }
@@ -1330,7 +1330,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         if (session != null && !string.IsNullOrEmpty(session.SessionID))
                         {
-                            await ((IAppSession)session).SendAsync(dataBytes);
+                            await (session).SendAsync(dataBytes);
                             successCount++;
                         }
                     }

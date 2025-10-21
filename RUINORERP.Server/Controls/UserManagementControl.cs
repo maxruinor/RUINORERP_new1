@@ -32,6 +32,9 @@ namespace RUINORERP.Server.Controls
         public ObservableCollection<UserInfo> UserInfos { get; } = new ObservableCollection<UserInfo>();
         private readonly Dictionary<string, ListViewItem> _itemMap = new Dictionary<string, ListViewItem>();
         private DateTime _lastFullUpdate = DateTime.MinValue;
+        // 添加缺失的菜单项字段，以解决设计器文件中的引用错误
+        private ToolStripMenuItem 切换服务器ToolStripMenuItem;
+        private ToolStripMenuItem 全部切换服务器ToolStripMenuItem;
         [DllImport("user32.dll")]
         private static extern int GetScrollPos(IntPtr hWnd, int nBar);
         private const int SB_HORZ = 0;
@@ -43,7 +46,7 @@ namespace RUINORERP.Server.Controls
 
             // 获取新的会话服务实例
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
-            
+
             InitializeDataBinding();
 
             // 订阅会话服务事件
@@ -60,6 +63,9 @@ namespace RUINORERP.Server.Controls
             _updateTimer.Start();
 
             contextMenuStrip1.ItemClicked += contextMenuStrip1_ItemClicked;
+
+            // 初始化列显示选项为选中状态
+            InitializeColumnDisplayOptions();
         }
 
         private void InitializeListView()
@@ -71,6 +77,7 @@ namespace RUINORERP.Server.Controls
             listView1.CheckBoxes = true;
             listView1.View = View.Details;
             listView1.FullRowSelect = true;
+            listView1.MouseDoubleClick += listView1_MouseDoubleClick;
             AddCols();
         }
 
@@ -163,6 +170,87 @@ namespace RUINORERP.Server.Controls
             listView1.Columns.Add("授权状态", 80);        // 授权状态
         }
 
+        #region 列显示选项
+
+        private void InitializeColumnDisplayOptions()
+        {
+            // 初始化所有列显示选项为选中状态
+            用户名列ToolStripMenuItem.Checked = true;
+            姓名列ToolStripMenuItem.Checked = true;
+            当前模块列ToolStripMenuItem.Checked = true;
+            当前窗体列ToolStripMenuItem.Checked = true;
+            登陆时间列ToolStripMenuItem.Checked = true;
+            心跳数列ToolStripMenuItem.Checked = true;
+            最后心跳时间列ToolStripMenuItem.Checked = true;
+            客户端版本列ToolStripMenuItem.Checked = true;
+            客户端IP列ToolStripMenuItem.Checked = true;
+            静止时间列ToolStripMenuItem.Checked = true;
+            超级用户列ToolStripMenuItem.Checked = true;
+            在线状态列ToolStripMenuItem.Checked = true;
+            授权状态列ToolStripMenuItem.Checked = true;
+        }
+
+        private void 列显示选项_CheckedChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (sender is ToolStripMenuItem menuItem)
+                {
+                    // 获取列名并找到对应的列索引
+                    string columnName = menuItem.Text;
+                    int columnIndex = FindColumnIndexByName(columnName) + 1; // +1 因为第一列是复选框
+
+                    if (columnIndex > 0 && columnIndex < listView1.Columns.Count)
+                    {
+                        // 设置列的可见性
+                        listView1.Columns[columnIndex].Width = menuItem.Checked ? listView1.Columns[columnIndex].Width : 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("设置列显示选项时出错: " + ex.Message);
+            }
+        }
+
+        private int FindColumnIndexByName(string columnName)
+        {
+            // 跳过第一列（复选框列）
+            for (int i = 1; i < listView1.Columns.Count; i++)
+            {
+                if (listView1.Columns[i].Text == columnName)
+                {
+                    return i - 1; // 返回相对于数据列的索引（不包括复选框列）
+                }
+            }
+            return -1;
+        }
+
+        #endregion
+
+        private void listView1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                var hitTest = listView1.HitTest(e.Location);
+                if (hitTest.Item != null && hitTest.Item.Tag is UserInfo userInfo)
+                {
+                    // 查找对应的会话信息
+                    var session = _sessionService.GetAppSession(userInfo.SessionId);
+                    if (session != null)
+                    {
+                        // 创建并显示会话性能详情窗体
+                        var sessionPerformanceForm = new SessionPerformanceForm(session as SessionInfo);
+                        sessionPerformanceForm.Show();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("显示会话性能详情时出错: " + ex.Message);
+            }
+        }
+
         #region 列头右键菜单实现
 
         private void SelectAllItems()
@@ -219,7 +307,7 @@ namespace RUINORERP.Server.Controls
                 newItem.Tag = user;
                 listView1.Items.Add(newItem);
                 _itemMap[user.SessionId] = newItem;
-                
+
                 // 确保用户信息添加到UserInfos集合中
                 if (!UserInfos.Any(u => u.SessionId == user.SessionId))
                 {
@@ -241,7 +329,7 @@ namespace RUINORERP.Server.Controls
                 listView1.Items.Remove(item);
                 _itemMap.Remove(user.SessionId);
             }
-            
+
             // 从UserInfos集合中移除用户
             var userToRemove = UserInfos.FirstOrDefault(u => u.SessionId == user.SessionId);
             if (userToRemove != null)
@@ -466,7 +554,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-      
+
 
         /// <summary>
         /// 将SessionInfo转换为UserInfo
@@ -482,7 +570,7 @@ namespace RUINORERP.Server.Controls
                 登陆时间 = sessionInfo.LoginTime ?? sessionInfo.ConnectedTime,
                 最后心跳时间 = sessionInfo.LastActivityTime.ToString("yyyy-MM-dd HH:mm:ss"),
                 客户端IP = sessionInfo.ClientIp,
-                当前模块 = sessionInfo.Properties?.ContainsKey("CurrentModule") == true ? 
+                当前模块 = sessionInfo.Properties?.ContainsKey("CurrentModule") == true ?
                          sessionInfo.Properties["CurrentModule"]?.ToString() : "未知",
                 客户端版本 = sessionInfo.ClientVersion ?? "未知",
                 在线状态 = sessionInfo.IsConnected
@@ -1045,9 +1133,9 @@ namespace RUINORERP.Server.Controls
                 // 重新加载所有会话
                 var sessions = _sessionService.GetAllUserSessions().ToList();
                 var sessionCount = sessions.Count;
-                
+
                 frmMainNew.Instance.PrintInfoLog($"服务器用户数量：{sessionCount}");
-                
+
                 // 添加所有用户
                 foreach (var session in sessions)
                 {

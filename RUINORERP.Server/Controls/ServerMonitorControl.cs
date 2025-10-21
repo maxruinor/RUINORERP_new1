@@ -196,6 +196,31 @@ namespace RUINORERP.Server.Controls
             // 更新时间信息
             lblLastCleanupValue.Text = stats.LastCleanupTime.ToString("yyyy-MM-dd HH:mm:ss");
             lblLastHeartbeatCheckValue.Text = stats.LastHeartbeatCheck.ToString("yyyy-MM-dd HH:mm:ss");
+            
+            // 更新新增的性能指标
+            try
+            {
+                // 更新连接利用率
+                double utilization = stats.GetConnectionUtilization();
+                lblConnectionUtilizationValue.Text = $"{utilization:F2}%";
+                
+                // 更新吞吐量
+                double throughput = stats.GetAverageThroughput();
+                lblThroughputValue.Text = $"{FormatBytes(throughput)}/秒";
+                
+                // 更新请求率
+                double requestsPerSecond = stats.GetRequestsPerSecond();
+                lblRequestsPerSecondValue.Text = $"{requestsPerSecond:F2}/秒";
+                
+                // 更新健康状态
+                string healthStatus = stats.GetHealthStatus();
+                lblSystemHealthValue.Text = healthStatus;
+                lblSystemHealthValue.ForeColor = healthStatus == "正常" ? Color.Green : Color.OrangeRed;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"更新性能指标时出错: {ex.Message}");
+            }
         }
 
         private void UpdateServerRuntimeInfo()
@@ -279,7 +304,26 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        // 新增：更新系统健康状态
+        /// <summary>
+        /// 格式化字节数为可读字符串
+        /// </summary>
+        private string FormatBytes(double bytes)
+        {
+            string[] suffix = { "B", "KB", "MB", "GB", "TB" };
+            int i;
+            double doubleBytes = bytes;
+
+            for (i = 0; i < suffix.Length && bytes >= 1024; i++, bytes /= 1024)
+            {
+                doubleBytes = bytes / 1024.0;
+            }
+
+            return $"{doubleBytes:F2} {suffix[i]}";
+        }
+        
+        /// <summary>
+        /// 更新系统健康状态
+        /// </summary>
         private void UpdateSystemHealth()
         {
             try
@@ -306,7 +350,9 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        // 新增：更新实时监控数据
+        /// <summary>
+        /// 更新实时监控数据
+        /// </summary>
         private void UpdateRealTimeData()
         {
             try
@@ -351,7 +397,9 @@ namespace RUINORERP.Server.Controls
             }
         }
         
-        // 新增：显示诊断报告
+        /// <summary>
+        /// 显示诊断报告
+        /// </summary>
         private void btnDiagnosticsReport_Click(object sender, EventArgs e)
         {
             try
@@ -365,7 +413,9 @@ namespace RUINORERP.Server.Controls
             }
         }
         
-        // 新增：显示性能报告
+        /// <summary>
+        /// 显示性能报告
+        /// </summary>
         private void btnPerformanceReport_Click(object sender, EventArgs e)
         {
             try
@@ -379,7 +429,9 @@ namespace RUINORERP.Server.Controls
             }
         }
         
-        // 新增：显示错误分析报告
+        /// <summary>
+        /// 显示错误分析报告
+        /// </summary>
         private void btnErrorReport_Click(object sender, EventArgs e)
         {
             try
@@ -393,7 +445,9 @@ namespace RUINORERP.Server.Controls
             }
         }
         
-        // 新增：显示报告的辅助方法
+        /// <summary>
+        /// 显示报告的辅助方法
+        /// </summary>
         private void ShowReport(string title, string content)
         {
             var reportForm = new Form();

@@ -55,22 +55,22 @@ namespace RUINORERP.Server.Controls
                     var config = _globalConfig.CurrentValue;
                     
                     // 基本配置
-                    textBoxServerName.Text = config.ServerName ?? "";
-                    textBoxServerPort.Text = config.ServerPort.ToString();
-                    textBoxMaxConnections.Text = config.MaxConnections.ToString();
-                    textBoxHeartbeatInterval.Text = config.HeartbeatInterval.ToString();
+                    //textBoxServerName.Text = config.ServerName ?? "";
+                    //textBoxServerPort.Text = config.ServerPort.ToString();
+                    //textBoxMaxConnections.Text = config.MaxConnections.ToString();
+                    //textBoxHeartbeatInterval.Text = config.HeartbeatInterval.ToString();
                     
-                    // 数据库配置
-                    textBoxDbConnectionString.Text = config.DbConnectionString ?? "";
-                    textBoxDbType.Text = config.DbType ?? "";
+                    //// 数据库配置
+                    //textBoxDbConnectionString.Text = config.DbConnectionString ?? "";
+                    //textBoxDbType.Text = config.DbType ?? "";
                     
-                    // 缓存配置
-                    textBoxCacheType.Text = config.CacheType ?? "";
-                    textBoxCacheConnectionString.Text = config.CacheConnectionString ?? "";
+                    //// 缓存配置
+                    //textBoxCacheType.Text = config.CacheType ?? "";
+                    //textBoxCacheConnectionString.Text = config.CacheConnectionString ?? "";
                     
-                    // 日志配置
-                    checkBoxEnableLogging.Checked = config.EnableLogging;
-                    textBoxLogLevel.Text = config.LogLevel ?? "";
+                    //// 日志配置
+                    //checkBoxEnableLogging.Checked = config.EnableLogging;
+                    //textBoxLogLevel.Text = config.LogLevel ?? "";
                     
                     // 其他配置
                     textBoxSomeSetting.Text = config.SomeSetting ?? "";

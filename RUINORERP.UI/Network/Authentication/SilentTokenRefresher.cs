@@ -1,175 +1,93 @@
 using RUINORERP.PacketSpec.Commands.Authentication;
-using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace RUINORERP.UI.Network.Authentication
 {
-    /// <summary>
-    /// 静默Token刷新管理器
-    /// 只负责触发Token刷新操作，不自行维护定时器
-    /// </summary>
-    public sealed class SilentTokenRefresher : IDisposable
+    public class SilentTokenRefresher
     {
         private readonly ITokenRefreshService _tokenRefreshService;
-        private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
-        private const int MAX_RETRY_COUNT = 3; // 最大重试次数
-        private const int RETRY_DELAY_MS = 2000; // 重试延迟（毫秒）
-
+        private readonly SemaphoreSlim _refreshSemaphore = new SemaphoreSlim(1, 1);
+        private readonly int _maxRetries = 3;
+        private readonly int _retryDelayMs = 1000; // 更合理的初始延迟
+        private readonly double _backoffMultiplier = 1.5; // 指数退避乘数
+        
         /// <summary>
-        /// 刷新失败事件
+        /// 当Token刷新成功时触发
         /// </summary>
-        public event EventHandler<RefreshFailedEventArgs> RefreshFailed;
-
+        public event EventHandler<TokenInfo> OnRefreshSucceeded;
+        
         /// <summary>
-        /// 刷新成功事件
+        /// 当Token刷新失败时触发
         /// </summary>
-        public event EventHandler<RefreshSucceededEventArgs> RefreshSucceeded;
+        public event EventHandler<Exception> OnRefreshFailed;
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="tokenRefreshService">Token刷新服务实例</param>
         public SilentTokenRefresher(ITokenRefreshService tokenRefreshService)
         {
             _tokenRefreshService = tokenRefreshService ?? throw new ArgumentNullException(nameof(tokenRefreshService));
         }
 
         /// <summary>
-        /// 触发一次Token刷新
-        /// 由UserLoginService的定时器调用
+        /// 异步刷新Token，使用信号量确保并发安全
         /// </summary>
-        /// <returns>刷新是否成功</returns>
-        public async Task<bool> TriggerRefreshAsync()
+        /// <param name="ct">取消令牌</param>
+        /// <returns>是否刷新成功</returns>
+        public async Task<bool> TryRefreshTokenAsync(CancellationToken ct = default)
         {
-            try
+            if (!await _refreshSemaphore.WaitAsync(0))
             {
-                return await RefreshTokenInternalAsync(CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                // 记录异常但不抛出，避免影响用户操作
-                System.Diagnostics.Debug.WriteLine($"手动刷新Token异常: {ex.Message}");
-                OnRefreshFailed(ex);
+                // 已有刷新操作正在进行，避免重复刷新
                 return false;
             }
-        }
 
-
-        /// <summary>
-        /// 内部Token刷新方法 - 简化版
-        /// </summary>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>刷新是否成功</returns>
-        private async Task<bool> RefreshTokenInternalAsync(CancellationToken cancellationToken)
-        {
-            await _refreshLock.WaitAsync(cancellationToken);
             try
             {
-                TokenInfo tokenInfo = null;
                 int retryCount = 0;
+                TokenInfo refreshedToken = null;
                 Exception lastException = null;
 
-                while (retryCount < MAX_RETRY_COUNT)
+                while (retryCount < _maxRetries)
                 {
                     try
                     {
-                        /// 调用Token刷新服务
-                        /// TODO  这里传入了空字符串 ，待完善
-                        tokenInfo = await _tokenRefreshService.RefreshTokenAsync(string.Empty, cancellationToken);
-                        if (tokenInfo != null && !string.IsNullOrEmpty(tokenInfo.AccessToken))
+                        // 使用新的无参数刷新方法
+                        refreshedToken = await _tokenRefreshService.RefreshTokenAsync(ct);
+                        
+                        if (refreshedToken != null)
                         {
-                            OnRefreshSucceeded(tokenInfo);
+                            // 触发刷新成功事件
+                            OnRefreshSucceeded?.Invoke(this, refreshedToken);
                             return true;
                         }
                     }
                     catch (Exception ex)
                     {
                         lastException = ex;
-                        retryCount++;
-                        if (retryCount < MAX_RETRY_COUNT)
-                        {
-                            await Task.Delay(RETRY_DELAY_MS, cancellationToken);
-                        }
+                        // 记录异常但继续尝试
+                    }
+
+                    retryCount++;
+                    
+                    if (retryCount < _maxRetries)
+                    {
+                        // 指数退避策略
+                        int delayMs = (int)(_retryDelayMs * Math.Pow(_backoffMultiplier, retryCount - 1));
+                        await Task.Delay(delayMs, ct);
                     }
                 }
 
+                // 所有重试都失败了
                 if (lastException != null)
                 {
-                    OnRefreshFailed(lastException);
+                    OnRefreshFailed?.Invoke(this, lastException);
                 }
+                
                 return false;
             }
             finally
             {
-                _refreshLock.Release();
-            }
-        }
-
-        /// <summary>
-        /// 触发刷新失败事件
-        /// </summary>
-        /// <param name="exception">导致刷新失败的异常</param>
-        private void OnRefreshFailed(Exception exception)
-        {
-            RefreshFailed?.Invoke(this, new RefreshFailedEventArgs(exception));
-        }
-
-        /// <summary>
-        /// 触发刷新成功事件
-        /// </summary>
-        /// <param name="response">刷新响应</param>
-        private void OnRefreshSucceeded(TokenInfo tokenInfo)
-        {
-            RefreshSucceeded?.Invoke(this, new RefreshSucceededEventArgs(tokenInfo));
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        public void Dispose()
-        {
-            _refreshLock.Dispose();
-        }
-
-        /// <summary>
-        /// Token刷新失败事件参数
-        /// </summary>
-        public class RefreshFailedEventArgs : EventArgs
-        {
-            /// <summary>
-            /// 获取导致刷新失败的异常
-            /// </summary>
-            public Exception Exception { get; }
-
-            /// <summary>
-            /// 构造函数
-            /// </summary>
-            /// <param name="exception">导致刷新失败的异常</param>
-            public RefreshFailedEventArgs(Exception exception)
-            {
-                Exception = exception;
-            }
-        }
-
-        /// <summary>
-        /// Token刷新成功事件参数
-        /// </summary>
-        public class RefreshSucceededEventArgs : EventArgs
-        {
-            /// <summary>
-            /// 获取刷新响应
-            /// </summary>
-            public TokenInfo tokenInfo { get; }
-
-            /// <summary>
-            /// 构造函数
-            /// </summary>
-            /// <param name="response">刷新响应</param>
-            public RefreshSucceededEventArgs(TokenInfo _tokenInfo)
-            {
-                tokenInfo = _tokenInfo;
+                _refreshSemaphore.Release();
             }
         }
     }

@@ -60,7 +60,8 @@ namespace RUINORERP.Server.Network.Core
 
             try
             {
-                bodyLength = EncryptedProtocol.AnalyzeClientPackHeader(headCopy2);
+                //                bodyLength = EncryptedProtocol.AnalyzeClientPackHeader(headCopy2);
+                bodyLength = UnifiedEncryptionProtocol.AnalyzeClientPacketHeader(headCopy2);
             }
             catch (Exception)
             {
@@ -75,7 +76,8 @@ namespace RUINORERP.Server.Network.Core
 
             try
             {
-                int bodyLength3 = PacketSpec.Security.EncryptedProtocol.AnalyzeClientPackHeader(headCopy3);
+                //                int bodyLength3 = PacketSpec.Security.EncryptedProtocol.AnalyzeClientPackHeader(headCopy3);
+                int bodyLength3 = PacketSpec.Security.UnifiedEncryptionProtocol.AnalyzeClientPacketHeader(headCopy3);
             }
             catch (Exception)
             {
@@ -99,8 +101,8 @@ namespace RUINORERP.Server.Network.Core
                 //取出18位包头长的数据
                 Array.Copy(packageBytes, 0, Head, 0, HeaderLength);
                 // 解密数据
-                var decryptedData = PacketSpec.Security.EncryptedProtocol.DecryptionClientPack(Head, HeaderLength, packageBytes);
-
+                //var decryptedData = PacketSpec.Security.EncryptedProtocol.DecryptionClientPack(Head, HeaderLength, packageBytes);
+                var decryptedData = PacketSpec.Security.UnifiedEncryptionProtocol.DecryptClientPacket(Head,  packageBytes);
                 // 反序列化数据包
                 PacketModel packet;
 

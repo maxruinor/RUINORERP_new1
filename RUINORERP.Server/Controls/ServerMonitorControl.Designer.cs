@@ -7,6 +7,16 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
+        // 为性能指标添加的控件声明
+        private System.Windows.Forms.Label lblConnectionUtilization;
+        private System.Windows.Forms.Label lblConnectionUtilizationValue;
+        private System.Windows.Forms.Label lblThroughput;
+        private System.Windows.Forms.Label lblThroughputValue;
+        private System.Windows.Forms.Label lblRequestsPerSecond;
+        private System.Windows.Forms.Label lblRequestsPerSecondValue;
+        private System.Windows.Forms.Label lblSystemHealth;
+        private System.Windows.Forms.Label lblSystemHealthValue;
+
         /// <summary> 
         /// Clean up any resources being used.
         /// </summary>
@@ -62,6 +72,15 @@ namespace RUINORERP.Server.Controls
             lblTotalSessions = new System.Windows.Forms.Label();
             lblActiveSessionsValue = new System.Windows.Forms.Label();
             lblActiveSessions = new System.Windows.Forms.Label();
+            // 实例化性能指标相关控件
+            lblConnectionUtilization = new System.Windows.Forms.Label();
+            lblConnectionUtilizationValue = new System.Windows.Forms.Label();
+            lblThroughput = new System.Windows.Forms.Label();
+            lblThroughputValue = new System.Windows.Forms.Label();
+            lblRequestsPerSecond = new System.Windows.Forms.Label();
+            lblRequestsPerSecondValue = new System.Windows.Forms.Label();
+            lblSystemHealth = new System.Windows.Forms.Label();
+            lblSystemHealthValue = new System.Windows.Forms.Label();
             groupBox1 = new System.Windows.Forms.GroupBox();
             lblLastActivityValue = new System.Windows.Forms.Label();
             lblLastActivity = new System.Windows.Forms.Label();
@@ -134,7 +153,7 @@ namespace RUINORERP.Server.Controls
             tabControl1.Margin = new System.Windows.Forms.Padding(4);
             tabControl1.Name = "tabControl1";
             tabControl1.SelectedIndex = 0;
-            tabControl1.Size = new System.Drawing.Size(1167, 850);
+            tabControl1.Size = new System.Drawing.Size(1167, 965);
             tabControl1.TabIndex = 0;
             // 
             // tabPage1
@@ -151,7 +170,7 @@ namespace RUINORERP.Server.Controls
             tabPage1.Margin = new System.Windows.Forms.Padding(4);
             tabPage1.Name = "tabPage1";
             tabPage1.Padding = new System.Windows.Forms.Padding(4);
-            tabPage1.Size = new System.Drawing.Size(1159, 820);
+            tabPage1.Size = new System.Drawing.Size(1159, 935);
             tabPage1.TabIndex = 0;
             tabPage1.Text = "服务器状态";
             tabPage1.UseVisualStyleBackColor = true;
@@ -345,6 +364,14 @@ namespace RUINORERP.Server.Controls
             // 
             // groupBox2
             // 
+            groupBox2.Controls.Add(lblSystemHealthValue);
+            groupBox2.Controls.Add(lblSystemHealth);
+            groupBox2.Controls.Add(lblRequestsPerSecondValue);
+            groupBox2.Controls.Add(lblRequestsPerSecond);
+            groupBox2.Controls.Add(lblThroughputValue);
+            groupBox2.Controls.Add(lblThroughput);
+            groupBox2.Controls.Add(lblConnectionUtilizationValue);
+            groupBox2.Controls.Add(lblConnectionUtilization);
             groupBox2.Controls.Add(lblLastHeartbeatCheckValue);
             groupBox2.Controls.Add(lblLastHeartbeatCheck);
             groupBox2.Controls.Add(lblLastCleanupValue);
@@ -363,7 +390,7 @@ namespace RUINORERP.Server.Controls
             groupBox2.Margin = new System.Windows.Forms.Padding(4);
             groupBox2.Name = "groupBox2";
             groupBox2.Padding = new System.Windows.Forms.Padding(4);
-            groupBox2.Size = new System.Drawing.Size(1143, 246);
+            groupBox2.Size = new System.Drawing.Size(1143, 310);
             groupBox2.TabIndex = 1;
             groupBox2.TabStop = false;
             groupBox2.Text = "会话统计";
@@ -380,6 +407,86 @@ namespace RUINORERP.Server.Controls
             // 
             // lblLastHeartbeatCheck
             // 
+            // 
+            // lblConnectionUtilization
+            // 
+            lblConnectionUtilization.AutoSize = true;
+            lblConnectionUtilization.Location = new System.Drawing.Point(23, 241);
+            lblConnectionUtilization.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblConnectionUtilization.Name = "lblConnectionUtilization";
+            lblConnectionUtilization.Size = new System.Drawing.Size(80, 17);
+            lblConnectionUtilization.TabIndex = 16;
+            lblConnectionUtilization.Text = "连接利用率：";
+            // 
+            // lblConnectionUtilizationValue
+            // 
+            lblConnectionUtilizationValue.AutoSize = true;
+            lblConnectionUtilizationValue.Location = new System.Drawing.Point(117, 241);
+            lblConnectionUtilizationValue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblConnectionUtilizationValue.Name = "lblConnectionUtilizationValue";
+            lblConnectionUtilizationValue.Size = new System.Drawing.Size(31, 17);
+            lblConnectionUtilizationValue.TabIndex = 17;
+            lblConnectionUtilizationValue.Text = "N/A";
+            // 
+            // lblThroughput
+            // 
+            lblThroughput.AutoSize = true;
+            lblThroughput.Location = new System.Drawing.Point(23, 277);
+            lblThroughput.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblThroughput.Name = "lblThroughput";
+            lblThroughput.Size = new System.Drawing.Size(56, 17);
+            lblThroughput.TabIndex = 18;
+            lblThroughput.Text = "吞吐量：";
+            // 
+            // lblThroughputValue
+            // 
+            lblThroughputValue.AutoSize = true;
+            lblThroughputValue.Location = new System.Drawing.Point(117, 277);
+            lblThroughputValue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblThroughputValue.Name = "lblThroughputValue";
+            lblThroughputValue.Size = new System.Drawing.Size(31, 17);
+            lblThroughputValue.TabIndex = 19;
+            lblThroughputValue.Text = "N/A";
+            // 
+            // lblRequestsPerSecond
+            // 
+            lblRequestsPerSecond.AutoSize = true;
+            lblRequestsPerSecond.Location = new System.Drawing.Point(257, 241);
+            lblRequestsPerSecond.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblRequestsPerSecond.Name = "lblRequestsPerSecond";
+            lblRequestsPerSecond.Size = new System.Drawing.Size(68, 17);
+            lblRequestsPerSecond.TabIndex = 20;
+            lblRequestsPerSecond.Text = "请求率：";
+            // 
+            // lblRequestsPerSecondValue
+            // 
+            lblRequestsPerSecondValue.AutoSize = true;
+            lblRequestsPerSecondValue.Location = new System.Drawing.Point(373, 241);
+            lblRequestsPerSecondValue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblRequestsPerSecondValue.Name = "lblRequestsPerSecondValue";
+            lblRequestsPerSecondValue.Size = new System.Drawing.Size(31, 17);
+            lblRequestsPerSecondValue.TabIndex = 21;
+            lblRequestsPerSecondValue.Text = "N/A";
+            // 
+            // lblSystemHealth
+            // 
+            lblSystemHealth.AutoSize = true;
+            lblSystemHealth.Location = new System.Drawing.Point(257, 277);
+            lblSystemHealth.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblSystemHealth.Name = "lblSystemHealth";
+            lblSystemHealth.Size = new System.Drawing.Size(80, 17);
+            lblSystemHealth.TabIndex = 22;
+            lblSystemHealth.Text = "系统健康状态：";
+            // 
+            // lblSystemHealthValue
+            // 
+            lblSystemHealthValue.AutoSize = true;
+            lblSystemHealthValue.Location = new System.Drawing.Point(373, 277);
+            lblSystemHealthValue.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            lblSystemHealthValue.Name = "lblSystemHealthValue";
+            lblSystemHealthValue.Size = new System.Drawing.Size(31, 17);
+            lblSystemHealthValue.TabIndex = 23;
+            lblSystemHealthValue.Text = "N/A";
             lblLastHeartbeatCheck.AutoSize = true;
             lblLastHeartbeatCheck.Location = new System.Drawing.Point(23, 205);
             lblLastHeartbeatCheck.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
@@ -1039,7 +1146,7 @@ namespace RUINORERP.Server.Controls
             Controls.Add(tabControl1);
             Margin = new System.Windows.Forms.Padding(4);
             Name = "ServerMonitorControl";
-            Size = new System.Drawing.Size(1167, 850);
+            Size = new System.Drawing.Size(1167, 965);
             Load += ServerMonitorControl_Load;
             Disposed += ServerMonitorControl_Disposed;
             tabControl1.ResumeLayout(false);

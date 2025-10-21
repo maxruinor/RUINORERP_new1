@@ -16,6 +16,7 @@ namespace RUINORERP.Plugin
         private PluginState _state = PluginState.Uninitialized;
         private readonly Dictionary<string, object> _pluginData = new Dictionary<string, object>();
         private Func<string, bool> _permissionChecker;
+        private IPluginCommunicationChannel _communicationChannel;
         
         /// <summary>
         /// 插件名称
@@ -56,6 +57,11 @@ namespace RUINORERP.Plugin
         /// 插件菜单项目
         /// </summary>
         protected ToolStripMenuItem PluginMenuItem { get; private set; }
+        
+        /// <summary>
+        /// 通信通道实例
+        /// </summary>
+        protected IPluginCommunicationChannel CommunicationChannel => _communicationChannel;
         
         /// <summary>
         /// 初始化插件
@@ -180,6 +186,15 @@ namespace RUINORERP.Plugin
         public virtual void SetPermissionChecker(Func<string, bool> permissionChecker)
         {
             _permissionChecker = permissionChecker;
+        }
+        
+        /// <summary>
+        /// 设置插件与主程序的通信通道
+        /// </summary>
+        /// <param name="communicationChannel">通信通道实例</param>
+        public virtual void SetCommunicationChannel(IPluginCommunicationChannel communicationChannel)
+        {
+            _communicationChannel = communicationChannel;
         }
         
         /// <summary>

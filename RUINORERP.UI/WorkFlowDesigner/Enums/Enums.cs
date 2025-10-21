@@ -1,66 +1,66 @@
-using System;
+ï»¿using System;
 using System.ComponentModel;
 
 namespace RUINORERP.UI.WorkFlowDesigner
 {
     public enum ApprovalMode
     {
-        Single,     // µ¥ÈËÉóÅú
-        All,        // »áÇ©£¨ĞèËùÓĞÈËÍ¬Òâ£©
-        Any         // »òÇ©£¨ÈÎÒâÒ»ÈËÍ¬Òâ¼´¿É£©
+        Single,     // å•äººå®¡æ‰¹
+        All,        // ä¼šç­¾ï¼ˆéœ€æ‰€æœ‰äººåŒæ„ï¼‰
+        Any         // æˆ–ç­¾ï¼ˆä»»æ„ä¸€äººåŒæ„å³å¯ï¼‰
     }
     public enum ConditionType
     {
-        [Description("¶şÔª¾ö²ß")]
+        [Description("äºŒå…ƒå†³ç­–")]
         BinaryDecision,
 
-        [Description("¶àÂ··ÖÖ§")]
+        [Description("å¤šè·¯åˆ†æ”¯")]
         MultipleBranches,
 
-        [Description("·¶Î§¼ì²é")]
+        [Description("èŒƒå›´æ£€æŸ¥")]
         RangeCheck,
 
-        [Description("³ÉÔ±×Ê¸ñ¼ì²é")]
+        [Description("æˆå‘˜èµ„æ ¼æ£€æŸ¥")]
         MembershipCheck,
 
-        [Description("×´Ì¬¼ì²é")]
+        [Description("çŠ¶æ€æ£€æŸ¥")]
         StatusCheck,
 
-        [Description("Ê±¼äÌõ¼ş")]
+        [Description("æ—¶é—´æ¡ä»¶")]
         TimeCondition,
 
-        [Description("Êı¾İ´æÔÚĞÔ")]
+        [Description("æ•°æ®å­˜åœ¨æ€§")]
         DataExistence,
 
-        [Description("ÓÅÏÈ¼¶ÅĞ¶Ï")]
+        [Description("ä¼˜å…ˆçº§åˆ¤æ–­")]
         PriorityJudgment,
 
-        [Description("Ë³ĞòÒÀÀµ")]
+        [Description("é¡ºåºä¾èµ–")]
         SequenceDependency,
 
-        [Description("Òì³£´¦Àí")]
+        [Description("å¼‚å¸¸å¤„ç†")]
         ExceptionHandling,
 
-        [Description("²¢ĞĞ´¦Àí¾ö²ß")]
+        [Description("å¹¶è¡Œå¤„ç†å†³ç­–")]
         ParallelProcessingDecision,
 
-        [Description("Ñ­»·¿ØÖÆ")]
+        [Description("å¾ªç¯æ§åˆ¶")]
         LoopControl,
 
-        [Description("×ÊÔ´¿ÉÓÃĞÔ")]
+        [Description("èµ„æºå¯ç”¨æ€§")]
         ResourceAvailability,
 
-        [Description("ºÏ¹æĞÔ¼ì²é")]
+        [Description("åˆè§„æ€§æ£€æŸ¥")]
         ComplianceCheck,
 
-        [Description("×Ô¶¨ÒåÂß¼­")]
+        [Description("è‡ªå®šä¹‰é€»è¾‘")]
         CustomLogic
     }
     public enum WFStepType
     {
-        Ìá½»,
-        ÉóºË,
-        ½á°¸,
+        æäº¤,
+        å®¡æ ¸,
+        ç»“æ¡ˆ,
     }
 
 

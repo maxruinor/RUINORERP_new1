@@ -9,6 +9,10 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Security;
+using Microsoft.Extensions.Logging;
+using System.Net.Sockets;
 
 namespace RUINORERP.Server.Network.Models
 {
@@ -70,52 +74,17 @@ namespace RUINORERP.Server.Network.Models
         {
             try
             {
-                // 创建新会话
-                var sessionInfo = new SessionInfo
-                {
-                   // SessionID = this.SessionID,
-                   // RemoteEndPoint = this.RemoteEndPoint?.ToString(),
-                    ConnectedTime = DateTime.Now,
-                    Status = SessionStatus.Connected
-                };
-                sessionInfo.UpdateActivity();
-
-                // 保存到会话管理器
-                // await SessionService.AddSessionAsync(sessionInfo);
-
+                // 设置会话初始状态
+                this.ConnectedTime = DateTime.Now;
+                this.Status = SessionStatus.Connected;
+                this.UpdateActivity();
+                
                 await base.OnSessionConnectedAsync();
-
-                ////通知客户端一条消息 - 使用增强的通讯组件
-                //OriginalData WelcomeMsg = new OriginalData
-                //{
-                //    Cmd = (byte)ServerCommand.首次连接欢迎消息,
-                //    One = null
-                //};
-
-                //var tx = new ByteBufferer(100);
-                //tx.PushString("欢迎连接到贝思特服务器，请登录。");
-                //WelcomeMsg.Two = tx.toByte();
-
-                //// 使用增强的通讯适配器
-                //await LegacyCommAdapter.SendDataToSession(this, WelcomeMsg);
-
-
-                //string msg;
-                //byte[] head;
-                //// 发送 256个固定值
-                //Tool4DataProcess.StrToHex("310631B5316D315B314231D33170319031D43189313931A231AA314A315731A5316031FB31BD31AF3188318A3126313B31253177317C318531DA316031C631AD31D031F531AE31F0310531173120311331B531D731DD3109313331583030316B31BB317F31F331143120314631B4312D31E331D2318831F1315231BE31F131AD315F31D231F7310C3183311931E4314931BC311831EA31053120318B3129311D31663143313B3114312931E8317631F1315231D4315331F431AD31DF318731E0319131F2310431903116318931FF3196312A314931BB319831C731103126319B310731C8310B31A83165314C31D931DD31CC31903185314F31A6313931A1312E", 0, -1, out head, out msg);
-                //await (this as IAppSession).SendAsync(head);
-
-                ////发送欢迎消息：在第一次连接时，服务器可能会发送一条欢迎消息或登录提示给客户端，例如：“欢迎连接到服务器，请登录。”
-                ////Console.WriteLine($@"{DateTime.Now} {SessionName} New Session connected: {RemoteEndPoint}.");
-
-                ////发送消息给客户端
-                //// var msg = $@"Welcome to {SessionName}: {RemoteEndPoint}";
-                //// await (this as IAppSession).SendAsync(Encoding.UTF8.GetBytes(msg + "\r\n"));
             }
-            catch (Exception exx)
+            catch (Exception ex)
             {
-
+                // 记录错误
+                this.LastError = $"会话连接处理错误: {ex.Message}";
             }
         }
         public ConcurrentQueue<byte[]> DataQueue = new ConcurrentQueue<byte[]>();
@@ -151,19 +120,140 @@ namespace RUINORERP.Server.Network.Models
                 Console.WriteLine("发送数据时出错：DataQueue AddSendData" + ex.Message);
             }
         }
-
-        public virtual void AddSendData(OriginalData d)
+ 
+        
+        /// <summary>
+        /// 统一发送数据方法
+        /// 支持直接发送字节数组，并处理队列中的数据
+        /// </summary>
+        /// <param name="dataBytes">要发送的字节数组</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>发送任务</returns>
+        public virtual async ValueTask SendAsync(byte[] dataBytes, CancellationToken cancellationToken = default)
         {
             try
             {
-                // 使用增强的通讯适配器
-                //EncryptedData gde = PacketSpec.Security.UnifiedCryptographyService.EncryptData(d);
-                //AddSendData(gde);
+                // 检查会话是否有效和连接状态
+                if (Status == SessionStatus.Disconnected || !IsConnected)
+                {
+                    LastError = "会话无效或已断开连接";    
+                    return;
+                }
+                
+                // 如果有数据要发送
+                if (dataBytes != null && dataBytes.Length > 0)
+                {
+                    // 直接发送数据
+                    await ((IAppSession)this).SendAsync(dataBytes, cancellationToken);
+                    
+                    // 更新发送统计
+                    Interlocked.Increment(ref _sentPacketsCount);
+                    Interlocked.Add(ref _totalBytesSent, dataBytes.Length);
+                    
+                    // 更新会话活动时间
+                    UpdateActivity();
+                }
+            }
+            catch (TaskCanceledException ex)
+            {
+                // 任务被取消，正常处理
+                LastError = $"发送取消: {ex.Message}";
+            }
+            catch (SocketException ex)
+            {
+                // 网络错误，标记会话为断开
+                LastError = $"网络错误: {ex.Message}";
+                Status = SessionStatus.Disconnected;
+                IsConnected = false;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("发送数据时出错：AddSendData" + ex.Message);
+                // 其他错误
+                LastError = $"发送数据时发生异常: {ex.Message}";
+                try
+                {
+                    // 尝试记录日志
+                    Console.WriteLine($"Session {SessionID} 发送数据失败: {ex.Message}");
+                }
+                catch
+                {
+                    // 忽略日志记录错误
+                }
             }
+        }
+        
+        /// <summary>
+        /// 记录接收数据统计
+        /// </summary>
+        /// <param name="dataLength">接收的数据长度</param>
+        public void RecordReceivedData(int dataLength)
+        {
+            Interlocked.Increment(ref _receivedPacketsCount);
+            Interlocked.Add(ref _totalBytesReceived, dataLength);
+            UpdateActivity();
+        }
+        
+        /// <summary>
+        /// 处理队列中的数据并发送
+        /// 用于批量处理和发送队列中的数据
+        /// </summary>
+        /// <param name="maxItemsToProcess">单次处理的最大项目数</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理任务</returns>
+        public virtual async ValueTask ProcessQueueAsync(int maxItemsToProcess = 100, CancellationToken cancellationToken = default)
+        {
+            if (!IsConnected || Status == SessionStatus.Disconnected)
+                return;
+            
+            int processedCount = 0;
+            try
+            {
+                // 处理队列中的数据，限制单次处理数量
+                while (processedCount < maxItemsToProcess && DataQueue.TryDequeue(out byte[] dataToSend))
+                {
+                    if (dataToSend != null && dataToSend.Length > 0)
+                    {
+                        await SendAsync(dataToSend, cancellationToken);
+                        processedCount++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LastError = $"处理数据队列时发生异常: {ex.Message}";
+                try
+                {
+                    Console.WriteLine($"Session {SessionID} 处理队列失败: {ex.Message}");
+                }
+                catch
+                {
+                    // 忽略日志记录错误
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 获取会话性能统计信息
+        /// </summary>
+        /// <returns>会话性能统计对象</returns>
+        public SessionPerformanceStats GetPerformanceStats()
+        {
+            return new SessionPerformanceStats
+            {
+                SessionId = SessionID,
+                UserName = UserName,
+                Status = Status,
+                SentPackets = SentPacketsCount,
+                ReceivedPackets = ReceivedPacketsCount,
+                TotalBytesSent = TotalBytesSent,
+                TotalBytesReceived = TotalBytesReceived,
+                ConnectedDuration = DateTime.Now - ConnectedTime,
+                LastActivity = LastActivityTime,
+                IsConnected = IsConnected,
+                ClientInfo = $"{ClientIp}:{ClientPort}",
+                ClientVersion = ClientVersion,
+                DeviceInfo = DeviceInfo
+            };
         }
         
         protected override async ValueTask OnSessionClosedAsync(CloseEventArgs e)
@@ -236,7 +326,12 @@ namespace RUINORERP.Server.Network.Models
         /// <summary>
         /// 发送数据包计数
         /// </summary>
-        public long SentPacketsCount { get; set; }
+        private long _sentPacketsCount = 0;
+        public long SentPacketsCount 
+        {
+            get => _sentPacketsCount;
+            set => Interlocked.Exchange(ref _sentPacketsCount, value);
+        }
 
         /// <summary>
         /// 发送数据包计数（兼容性属性）
@@ -246,12 +341,37 @@ namespace RUINORERP.Server.Network.Models
         /// <summary>
         /// 接收数据包计数
         /// </summary>
-        public long ReceivedPacketsCount { get; set; }
+        private long _receivedPacketsCount = 0;
+        public long ReceivedPacketsCount 
+        {
+            get => _receivedPacketsCount;
+            set => Interlocked.Exchange(ref _receivedPacketsCount, value);
+        }
 
         /// <summary>
         /// 接收数据包计数（兼容性属性）
         /// </summary>
         public long TotalReceived => ReceivedPacketsCount;
+        
+        /// <summary>
+        /// 发送字节总数
+        /// </summary>
+        private long _totalBytesSent = 0;
+        public long TotalBytesSent
+        {
+            get => _totalBytesSent;
+            set => Interlocked.Exchange(ref _totalBytesSent, value);
+        }
+        
+        /// <summary>
+        /// 接收字节总数
+        /// </summary>
+        private long _totalBytesReceived = 0;
+        public long TotalBytesReceived
+        {
+            get => _totalBytesReceived;
+            set => Interlocked.Exchange(ref _totalBytesReceived, value);
+        }
 
         /// <summary>
         /// 最后错误信息
@@ -392,7 +512,6 @@ namespace RUINORERP.Server.Network.Models
     /// </summary>
     public class SessionStatistics
     {
-
         /// <summary>
         /// 总连接数
         /// </summary>
@@ -489,7 +608,6 @@ namespace RUINORERP.Server.Network.Models
         /// </summary>
         public TimeSpan Uptime => DateTime.Now - ServerStartTime;
 
-
         /// <summary>
         /// 更新统计信息
         /// </summary>
@@ -525,6 +643,129 @@ namespace RUINORERP.Server.Network.Models
         {
             var totalSeconds = Uptime.TotalSeconds;
             return totalSeconds > 0 ? (TotalBytesSent + TotalBytesReceived) / totalSeconds : 0;
+        }
+        
+        /// <summary>
+        /// 获取每秒处理请求数
+        /// </summary>
+        /// <returns>每秒请求数</returns>
+        public double GetRequestsPerSecond()
+        {
+            var totalSeconds = Uptime.TotalSeconds;
+            var totalRequests = TotalBytesSent + TotalBytesReceived; // 简化计算，实际应使用消息计数
+            return totalSeconds > 0 ? totalRequests / totalSeconds : 0;
+        }
+        
+        /// <summary>
+        /// 获取系统健康状态
+        /// </summary>
+        /// <returns>健康状态描述</returns>
+        public string GetHealthStatus()
+        {
+            if (CurrentConnections >= MaxConnections * 0.9)
+                return "警告：连接数接近上限";
+            if (TimeoutSessions > CurrentConnections * 0.1)
+                return "警告：超时会话比例较高";
+            return "正常";
+        }
+    }
+    
+    /// <summary>
+    /// 会话性能统计信息
+    /// 用于服务器监控UI显示
+    /// </summary>
+    public class SessionPerformanceStats
+    {
+        /// <summary>
+        /// 会话ID
+        /// </summary>
+        public string SessionId { get; set; }
+        
+        /// <summary>
+        /// 用户名
+        /// </summary>
+        public string UserName { get; set; }
+        
+        /// <summary>
+        /// 会话状态
+        /// </summary>
+        public SessionStatus Status { get; set; }
+        
+        /// <summary>
+        /// 发送数据包数
+        /// </summary>
+        public long SentPackets { get; set; }
+        
+        /// <summary>
+        /// 接收数据包数
+        /// </summary>
+        public long ReceivedPackets { get; set; }
+        
+        /// <summary>
+        /// 发送总字节数
+        /// </summary>
+        public long TotalBytesSent { get; set; }
+        
+        /// <summary>
+        /// 接收总字节数
+        /// </summary>
+        public long TotalBytesReceived { get; set; }
+        
+        /// <summary>
+        /// 连接时长
+        /// </summary>
+        public TimeSpan ConnectedDuration { get; set; }
+        
+        /// <summary>
+        /// 最后活动时间
+        /// </summary>
+        public DateTime LastActivity { get; set; }
+        
+        /// <summary>
+        /// 是否已连接
+        /// </summary>
+        public bool IsConnected { get; set; }
+        
+        /// <summary>
+        /// 客户端信息
+        /// </summary>
+        public string ClientInfo { get; set; }
+        
+        /// <summary>
+        /// 客户端版本
+        /// </summary>
+        public string ClientVersion { get; set; }
+        
+        /// <summary>
+        /// 设备信息
+        /// </summary>
+        public string DeviceInfo { get; set; }
+        
+        /// <summary>
+        /// 获取格式化的连接时长
+        /// </summary>
+        public string FormattedDuration => $"{ConnectedDuration.Days}天 {ConnectedDuration.Hours}小时 {ConnectedDuration.Minutes}分钟";
+        
+        /// <summary>
+        /// 获取总流量（格式化）
+        /// </summary>
+        public string FormattedTotalTraffic => $"{FormatBytes(TotalBytesSent + TotalBytesReceived)}";
+        
+        /// <summary>
+        /// 格式化字节数为可读字符串
+        /// </summary>
+        private string FormatBytes(long bytes)
+        {
+            string[] suffix = { "B", "KB", "MB", "GB", "TB" };
+            int i;
+            double doubleBytes = bytes;
+
+            for (i = 0; i < suffix.Length && bytes >= 1024; i++, bytes /= 1024)
+            {
+                doubleBytes = bytes / 1024.0;
+            }
+
+            return $"{doubleBytes:F2} {suffix[i]}";
         }
     }
 }

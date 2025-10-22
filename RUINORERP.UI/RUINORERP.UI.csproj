@@ -295,9 +295,6 @@
     <Reference Include="Microsoft.Extensions.Logging.EventSource, Version=7.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.Logging.EventSource.7.0.0\lib\net462\Microsoft.Extensions.Logging.EventSource.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore, Version=8.0.0.0, Culture=neutral, PublicKeyToken=5d1104efbd0e675d, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Extensions.Logging.Log4Net.AspNetCore.8.0.0\lib\netstandard2.0\Microsoft.Extensions.Logging.Log4Net.AspNetCore.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Extensions.ObjectPool, Version=2.2.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.ObjectPool.2.2.0\lib\netstandard2.0\Microsoft.Extensions.ObjectPool.dll</HintPath>
     </Reference>
@@ -363,9 +360,6 @@
     </Reference>
     <Reference Include="ObjectsComparer, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\ObjectsComparer.1.4.1\lib\net45\ObjectsComparer.dll</HintPath>
-    </Reference>
-    <Reference Include="OfficeOpenXml.Extension.AspNetCore, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\OfficeOpenXml.Extension.AspNetCore.1.0.0\lib\netstandard2.0\OfficeOpenXml.Extension.AspNetCore.dll</HintPath>
     </Reference>
     <Reference Include="OpenTelemetry.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7bd6737fe5b67e3c, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenTelemetry.Api.1.1.0\lib\net452\OpenTelemetry.Api.dll</HintPath>
@@ -500,30 +494,6 @@
     </Reference>
     <Reference Include="System.Reflection.TypeExtensions, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Reflection.TypeExtensions.4.7.0\lib\net461\System.Reflection.TypeExtensions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.4.3.0\lib\net462\System.Runtime.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Runtime.Caching" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.Extensions, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.Extensions.4.3.0\lib\net462\System.Runtime.Extensions.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Runtime.InteropServices, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.InteropServices.4.3.0\lib\net463\System.Runtime.InteropServices.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
-      <Private>True</Private>
-      <Private>True</Private>
     </Reference>
     <Reference Include="System.Security" />
     <Reference Include="System.Security.AccessControl, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -1645,7 +1615,6 @@
     <Compile Include="BI\UCUserInfoList.Designer.cs">
       <DependentUpon>UCUserInfoList.cs</DependentUpon>
     </Compile>
-  
     <Compile Include="ChartFramework\Core\Models\DimensionConfig.cs" />
     <Compile Include="ChartFramework\Core\Models\MetricConfig.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\ChartInteractionEventArgs.cs" />

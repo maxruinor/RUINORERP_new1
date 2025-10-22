@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 using MessagePack;
+using RUINORERP.PacketSpec.Serialization;
 
 namespace RUINORERP.Business.Cache
 {
@@ -35,7 +36,7 @@ namespace RUINORERP.Business.Cache
                 case SerializationType.Json:
                     return SerializeJson(obj);
                 case SerializationType.MessagePack:
-                    return SerializeMessagePack(obj);
+                    return UnifiedSerializationService.SerializeWithMessagePack(obj);
                 case SerializationType.Xml:
                     return SerializeXml(obj);
                 default:
@@ -57,7 +58,7 @@ namespace RUINORERP.Business.Cache
                 case SerializationType.Json:
                     return DeserializeJson<T>(data);
                 case SerializationType.MessagePack:
-                    return DeserializeMessagePack<T>(data);
+                    return UnifiedSerializationService.DeserializeWithMessagePack<T>(data);
                 case SerializationType.Xml:
                     return DeserializeXml<T>(data);
                 default:
@@ -82,20 +83,7 @@ namespace RUINORERP.Business.Cache
         }
         #endregion
 
-        #region MessagePack序列化
-        private static byte[] SerializeMessagePack<T>(T obj)
-        {
-            return MessagePackSerializer.Serialize(obj);
-        }
-
-        private static T DeserializeMessagePack<T>(byte[] data)
-        {
-            if (data == null)
-                return default(T);
-            
-            return MessagePackSerializer.Deserialize<T>(data);
-        }
-        #endregion
+       
 
         #region XML序列化
         private static byte[] SerializeXml<T>(T obj)

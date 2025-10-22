@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Threading;
+using RUINORERP.PacketSpec.Commands;
 
 namespace RUINORERP.UI.Network.Services.Cache
 {
@@ -66,7 +67,7 @@ namespace RUINORERP.UI.Network.Services.Cache
             }
 
             // 创建Get操作的请求并执行，优化为单步处理
-            var response = await ProcessCacheRequestAsync(new CacheRequest
+            var response = await ProcessCacheOperationAsync(CacheCommands.CacheOperation, new CacheRequest
             {
                 TableName = tableName,
                 Operation = CacheOperation.Get
@@ -75,14 +76,14 @@ namespace RUINORERP.UI.Network.Services.Cache
             // 利用业务层缓存管理器更新缓存（如果响应成功）
             if (response?.IsSuccess == true && response.CacheData != null)
             {
-                _cacheManager.UpdateEntityList(tableName, response.CacheData.Data);
+                _cacheManager.UpdateEntityList(tableName, response.CacheData.EntityByte);
             }
         }
 
         /// <summary>
         /// 向服务器发送缓存管理请求
         /// </summary>
-        public async Task<CacheResponse> SendCacheManageRequestAsync(string tableName, string operationType, Dictionary<string, object> parameters = null)
+        public async Task<CacheResponse> SendCacheSubscriptionAsync(string tableName, string operationType, Dictionary<string, object> parameters = null)
         {
             var validationResult = base.ValidateTableName(tableName);
             if (!validationResult.IsValid)
@@ -92,7 +93,7 @@ namespace RUINORERP.UI.Network.Services.Cache
             }
 
             // 创建请求并设置参数，优化为一步完成
-            return await ProcessCacheRequestAsync(new CacheRequest
+            return await ProcessCacheOperationAsync(CacheCommands.CacheSubscription, new CacheRequest
             {
                 TableName = tableName,
                 Operation = CacheOperation.Manage,
@@ -106,7 +107,9 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// <summary>
         /// 统一处理缓存请求
         /// </summary>
-        internal async Task<CacheResponse> ProcessCacheRequestAsync(CacheRequest request)
+        /// <param name="command">命令ID 区别是同步，还是操作</param>  
+        /// <param name="request">请求参数</param>
+        internal async Task<CacheResponse> ProcessCacheOperationAsync(CommandId command, CacheRequest request)
         {
             // 参数验证
             if (request == null)
@@ -126,13 +129,12 @@ namespace RUINORERP.UI.Network.Services.Cache
             {
                 // 不再需要检查连接状态，直接发送请求
                 // ClientCommunicationService会自动处理连接状态和离线队列
-                return await _communicationService.SendCommandWithResponseAsync<CacheResponse>(
-                    CacheCommands.CacheOperation, request, CancellationToken.None);
+                return await _communicationService.SendCommandWithResponseAsync<CacheResponse>(command, request, CancellationToken.None);
             }
             catch (Exception ex)
             {
                 _log.LogError(ex, "请求缓存失败，表名={0}, 操作类型={1}", request.TableName, request.Operation);
-                
+
                 // 直接返回错误响应，不再需要特殊处理连接异常
                 return new CacheResponse { IsSuccess = false, ErrorMessage = $"处理缓存请求失败: {ex.Message}" };
             }

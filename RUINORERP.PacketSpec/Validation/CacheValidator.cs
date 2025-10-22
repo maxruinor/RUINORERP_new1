@@ -58,7 +58,7 @@ namespace RUINORERP.PacketSpec.Validation
             // 设置缓存时验证数据
             When(request => request.Operation == CacheOperation.Set,
                 () => {
-                    RuleFor(request => request.Data)
+                    RuleFor(request => request.CacheData)
                         .NotNull()
                         .WithMessage("设置缓存时数据不能为空")
                         .WithErrorCode(UnifiedErrorCodes.Biz_DataInvalid.Code.ToString());

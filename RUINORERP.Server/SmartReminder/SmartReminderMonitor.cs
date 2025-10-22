@@ -88,7 +88,7 @@ namespace RUINORERP.Server.SmartReminder
 
                 //在线有不有人？有人才提醒？
 
-                var activeRules = GetActiveRulesAsync();
+                var activeRules = await GetActiveRulesAsync();
                 foreach (var rule in activeRules)
                 {
                     var irule = rule as IReminderRule;
@@ -132,18 +132,34 @@ namespace RUINORERP.Server.SmartReminder
 
         private async Task<IReminderContext> CreateInventoryContextAsync(IReminderRule rule)
         {
-            var productIds = (rule.GetConfig<SafetyStockConfig>() as SafetyStockConfig).ProductIds;
-            var stocks = await _unitOfWorkManage.GetDbClient().Queryable<tb_Inventory>()
-                .Where(s => productIds.Contains(s.ProdDetailID))
-                .WithCache()
-                .ToListAsync();
-            return new InventoryContext(stocks);
+            try
+            {
+                var productIds = (rule.GetConfig<SafetyStockConfig>() as SafetyStockConfig)?.ProductIds;
+                if (productIds == null || productIds.Count == 0)
+                {
+                    _logger.LogWarning("产品ID列表为空，无法创建库存上下文");
+                    return new InventoryContext(new List<tb_Inventory>());
+                }
+                
+                // 移除WithCache()，直接异步查询数据库
+                using var db = _unitOfWorkManage.GetDbClient();
+                var stocks = await db.Queryable<tb_Inventory>()
+                    .Where(s => productIds.Contains(s.ProdDetailID))
+                    .ToListAsync();
+                    
+                return new InventoryContext(stocks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "创建库存上下文失败");
+                return new InventoryContext(new List<tb_Inventory>());
+            }
         }
 
 
         private static readonly MemoryCache _policyCache = new(new MemoryCacheOptions());
 
-        public List<IReminderRule> GetActiveRulesAsync()
+        public async Task<List<IReminderRule>> GetActiveRulesAsync()
         {
             // 尝试从缓存获取数据
             List<tb_ReminderRule> policies = null;
@@ -151,14 +167,22 @@ namespace RUINORERP.Server.SmartReminder
 
             if (!cacheHit)
             {
-                // 缓存未命中，从数据库查询
-                policies = _unitOfWorkManage.GetDbClient()
-                    .Queryable<tb_ReminderRule>()
-                    .Where(p => p.IsEnabled)
-                    .ToList();
+                try
+                {
+                    // 缓存未命中，从数据库异步查询，使用using块正确管理数据库连接
+                    using var db = _unitOfWorkManage.GetDbClient();
+                    policies = await db.Queryable<tb_ReminderRule>()
+                        .Where(p => p.IsEnabled)
+                        .ToListAsync();
 
-                // 将结果存入缓存，设置5分钟过期
-                _policyCache.Set("ActivePolicies", policies, TimeSpan.FromMinutes(5));
+                    // 将结果存入缓存，设置5分钟过期
+                    _policyCache.Set("ActivePolicies", policies, TimeSpan.FromMinutes(5));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "获取活跃规则失败");
+                    policies = new List<tb_ReminderRule>();
+                }
             }
 
             // 显式转换为接口列表

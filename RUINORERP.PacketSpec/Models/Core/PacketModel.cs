@@ -23,12 +23,6 @@ namespace RUINORERP.PacketSpec.Models.Core
     [MessagePackObject]
     public class PacketModel : ITimestamped
     {
-        /// <summary>
-        /// 保存指令实体数据
-        /// </summary>
-        [Key(0)]
-        [Obsolete("将来去掉")]
-        public byte[] CommandData { get; set; }
 
         // 简单的命令标识（不包含业务逻辑）
         //命令类型
@@ -50,20 +44,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         [Key(3)]
         public string PacketId { get; set; }
 
-        /// <summary>
-        /// 数据包大小（字节）
-        /// </summary>
-        [IgnoreMember]
-        public int Size => CommandData?.Length ?? 0;
-
-        /// <summary>
-        /// 获取包大小
-        /// </summary>
-        public int GetPackageSize()
-        {
-            return CommandData?.Length ?? 0;
-        }
-
+         
         /// <summary>
         /// 校验和
         /// </summary>
@@ -134,14 +115,13 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>创建的数据包</returns>
         public static PacketModel Create<TData>(CommandId commandId, TData data)
         {
-            if (commandId == null)
+            if (commandId.OperationCode ==0)
                 throw new ArgumentNullException(nameof(commandId), "命令标识符不能为空");
 
             return new PacketModel
             {
                 PacketId = IdGenerator.GeneratePacketId(commandId.Name),
                 CommandId = commandId,
-                CommandData = data != null ? UnifiedSerializationService.SerializeWithMessagePack(data) : Array.Empty<byte>(),
             };
         }
 
@@ -228,36 +208,8 @@ namespace RUINORERP.PacketSpec.Models.Core
             // CommandData = Array.Empty<byte>();
         }
 
-        /// <summary>
-        /// 获取JSON数据为指定类型
-        /// </summary>
-        /// <typeparam name="T">目标类型</typeparam>
-        /// <returns>反序列化后的对象</returns>
-        public T GetJsonData<T>()
-        {
-            if (CommandData == null || CommandData.Length == 0)
-                return default;
-
-            var json = Encoding.UTF8.GetString(CommandData);
-            return JsonConvert.DeserializeObject<T>(json);
-        }
-
-
-        /// <summary>
-        /// 获取MessagePack数据为指定类型
-        /// </summary>
-        /// <typeparam name="T">目标类型</typeparam>
-        /// <returns>反序列化后的对象</returns>
-        public T GetMessagePackData<T>()
-        {
-            if (CommandData == null || CommandData.Length == 0)
-                return default;
-
-            // 为了利用缓存，我们需要重新计算缓存键
-            // 但由于我们不知道原始数据，只能从CommandData反序列化
-            // 这里保持简单实现，直接反序列化
-            return UnifiedSerializationService.DeserializeWithMessagePack<T>(CommandData);
-        }
+ 
+ 
 
         #endregion
 
@@ -279,10 +231,13 @@ namespace RUINORERP.PacketSpec.Models.Core
 
             Extensions?.Clear();
             // 清理包体数据
-            if (CommandData != null)
+            if (Response != null)
             {
-                Array.Clear(CommandData, 0, CommandData.Length);
-                CommandData = null;
+                Response = null;
+            }
+            if (Request != null)
+            {
+                Request = null;
             }
         }
 
@@ -368,124 +323,19 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>数据包信息字符串</returns>
         public override string ToString()
         {
-            return $"Packet[Id:{PacketId}, Size:{Size}, Flag:{Flag}, Version:{Version}, MessageType:{MessageType}]";
+            return $"Packet[Id:{PacketId}, Direction:{Direction}, Flag:{Flag}, Version:{Version}, MessageType:{MessageType}]";
         }
 
-        internal void SetData(byte[] data)
-        {
-            this.CommandData = data;
-        }
+ 
 
-        /// <summary>
-        /// 设置JSON格式数据
-        /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="data">要序列化的数据</param>
-        /// <returns>当前数据包实例</returns>
-        public PacketModel SetJsonData<T>(T data)
-        {
-            CommandData = UnifiedSerializationService.SerializeWithJson(data);
-            UpdateTimestamp();  // 使用统一的时间戳更新方法
-            return this;
-        }
+    
 
-
-        /// <summary>
-        /// 设置MessagePack格式数据
-        /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="data">要序列化的数据</param>
-        /// <returns>当前数据包实例</returns>
-        public PacketModel SetCommandDataByMessagePack<T>(T data)
-        {
-            CommandData = MessagePackSerializer.Serialize<T>(data, UnifiedSerializationService.MessagePackOptions);
-            UpdateTimestamp();  // 使用统一的时间戳更新方法
-            return this;
-        }
-
-
-        /// <summary>
-        /// 设置MessagePack格式数据（非泛型版本）
-        /// </summary>
-        /// <param name="type">数据类型</param>
-        /// <param name="data">要序列化的数据</param>
-        /// <returns>当前数据包实例</returns>
-        public PacketModel SetCommandDataByMessagePack(Type type, object data)
-        {
-            CommandData = MessagePackSerializer.Serialize(data, UnifiedSerializationService.MessagePackOptions);
-            UpdateTimestamp();  // 使用统一的时间戳更新方法
-            return this;
-        }
+ 
 
 
         #endregion
 
-        /// <summary>
-        /// 获取数据为文本格式
-        /// </summary>
-        /// <param name="encoding">编码格式，默认UTF-8</param>
-        /// <returns>文本数据</returns>
-        public string GetDataAsText(Encoding encoding = null)
-        {
-            if (CommandData == null || CommandData.Length == 0)
-                return string.Empty;
-
-            encoding ??= Encoding.UTF8;
-            return encoding.GetString(CommandData);
-        }
-
-        /// <summary>
-        /// 提取请求数据为指定的IRequest类型
-        /// </summary>
-        /// <typeparam name="T">目标IRequest类型</typeparam>
-        /// <returns>反序列化后的请求对象</returns>
-        /// <exception cref="InvalidOperationException">提取请求数据失败时抛出</exception>
-        public T ExtractRequest<T>() where T : class, IRequest
-        {
-            try
-            {
-                if (CommandData == null || CommandData.Length == 0)
-                    return default(T);
-
-                // 优先尝试使用UnifiedSerializationService进行MessagePack反序列化
-                try
-                {
-                    return UnifiedSerializationService.DeserializeWithMessagePack<T>(CommandData);
-                }
-                catch
-                {
-                    // 回退到JSON反序列化
-                    var json = Encoding.UTF8.GetString(CommandData);
-                    return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"提取请求数据失败: {ex.Message}", ex);
-            }
-        }
-
-        /// <summary>
-        /// 提取Payload数据为指定类型
-        /// </summary>
-        /// <typeparam name="T">目标类型</typeparam>
-        /// <returns>反序列化后的Payload对象</returns>
-        /// <exception cref="InvalidOperationException">提取Payload数据失败时抛出</exception>
-        public T ExtractPayload<T>()
-        {
-            try
-            {
-                if (CommandData == null || CommandData.Length == 0)
-                    return default(T);
-
-                return UnifiedSerializationService.DeserializeWithMessagePack<T>(CommandData);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"提取Payload数据失败: {ex.Message}", ex);
-            }
-        }
-
+     
         public PacketModel Clone()
         {
             return new PacketModel
@@ -494,7 +344,6 @@ namespace RUINORERP.PacketSpec.Models.Core
                 CommandId = CommandId,
                 Status = Status,
                 SessionId = SessionId,
-                CommandData = CommandData?.Clone() as byte[],
                 CreatedTime = CreatedTime,
                 Extensions = new System.Collections.Generic.Dictionary<string, object>(Extensions),
                 TimestampUtc = TimestampUtc

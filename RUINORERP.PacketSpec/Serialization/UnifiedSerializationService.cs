@@ -5,51 +5,52 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using MessagePack;
 using MessagePack.Resolvers;
+using System.Runtime.Serialization;
+using System.Reflection;
 
 namespace RUINORERP.PacketSpec.Serialization
 {
     /// <summary>
-    /// 统一序列化服务 - 整合所有序列化功能
-    /// 支持JSON、MessagePack、二进制和压缩序列化1
+    /// 统一序列化服务 - 简化版本，专注于核心功能
+    /// 支持JSON、MessagePack序列化，自动忽略null值
     /// </summary>
     public static class UnifiedSerializationService
     {
         #region MessagePack配置
 
-        // 配置MessagePack序列化选项
         private static readonly MessagePackSerializerOptions _messagePackOptions;
 
-        /// <summary>
-        /// 获取MessagePack序列化选项（供外部使用）
-        /// </summary>
-        public static MessagePackSerializerOptions MessagePackOptions => _messagePackOptions;
-
-        // 静态构造函数，用于初始化MessagePack选项
         static UnifiedSerializationService()
         {
             try
             {
-                // 创建自定义格式化器来支持接口序列化
+                // 增强的解析器配置，支持[Key]属性和接口序列化
                 var resolver = CompositeResolver.Create(
                     // 原生解析器，支持[Key]特性
                     NativeDateTimeResolver.Instance,
+                    // 优先使用基于属性的解析器，支持[Key]属性
+                    AttributeFormatterResolver.Instance, // 支持[MessagePack.Key]和[DataMember]属性
+                    // 支持接口类型的序列化
+                    TypelessObjectResolver.Instance, // 保留完整类型信息，支持接口和抽象类
+                    // 标准解析器作为后备
                     StandardResolver.Instance,
-                    // 契约无关解析器，支持无契约类型
-                    ContractlessStandardResolver.Instance,
-                    // 动态泛型解析器，支持接口和抽象类
+                                        // 动态泛型解析器，支持接口和抽象类
                     DynamicGenericResolver.Instance,
                     // 类型less解析器，支持动态类型
-                    TypelessObjectResolver.Instance
+                    TypelessObjectResolver.Instance,
+                    ContractlessStandardResolver.Instance // 支持无属性标记的类
                 );
 
+                // 配置选项，确保支持接口和[Key]属性
                 _messagePackOptions = MessagePackSerializerOptions.Standard
                     .WithResolver(resolver)
                     .WithCompression(MessagePackCompression.Lz4Block)
-                    .WithSecurity(MessagePackSecurity.UntrustedData);
+                    .WithSecurity(MessagePackSecurity.UntrustedData)
+                    .WithAllowAssemblyVersionMismatch(true) // 重新添加此选项以支持不同版本程序集间的序列化
+                    .WithOmitAssemblyVersion(true); // 允许跨版本序列化
             }
             catch (Exception ex)
             {
-                // 记录初始化异常，但不抛出，避免类型初始化器异常
                 System.Diagnostics.Debug.WriteLine($"UnifiedSerializationService初始化失败: {ex}");
                 throw new InvalidOperationException("MessagePack序列化服务初始化失败", ex);
             }
@@ -61,24 +62,29 @@ namespace RUINORERP.PacketSpec.Serialization
 
         private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
         {
-            NullValueHandling = NullValueHandling.Ignore,
+            NullValueHandling = NullValueHandling.Ignore, // 这里已经配置了忽略null值
             Formatting = Formatting.None,
             DefaultValueHandling = DefaultValueHandling.Include,
-            TypeNameHandling = TypeNameHandling.None, // 改为None，避免安全问题
+            TypeNameHandling = TypeNameHandling.None,
             DateFormatHandling = DateFormatHandling.IsoDateFormat,
             DateTimeZoneHandling = DateTimeZoneHandling.Utc
         };
 
         #endregion
 
-        #region 基础MessagePack序列化方法
+        #region 核心序列化方法（推荐使用）
 
         /// <summary>
-        /// 序列化对象为字节数组（MessagePack）
+        /// 【核心方法】序列化对象为字节数组（MessagePack）- 支持[Key]属性和接口类型
+        /// 这是最常用的序列化方法
         /// </summary>
-        /// <typeparam name="T">对象类型</typeparam>
+        /// <typeparam name="T">对象类型，支持接口类型</typeparam>
         /// <param name="obj">要序列化的对象</param>
         /// <returns>序列化后的字节数组</returns>
+        /// <remarks>
+        /// 支持带有[MessagePack.Key]属性标记的类，允许自定义字段顺序和名称映射。
+        /// 也支持接口类型的对象序列化，会保留实际类型信息。
+        /// </remarks>
         public static byte[] SerializeWithMessagePack<T>(T obj)
         {
             try
@@ -92,31 +98,16 @@ namespace RUINORERP.PacketSpec.Serialization
         }
 
         /// <summary>
-        /// 异步序列化对象为字节数组（MessagePack）
+        /// 【核心方法】反序列化字节数组为对象（MessagePack）- 支持[Key]属性和接口类型
+        /// 这是最常用的反序列化方法
         /// </summary>
-        /// <typeparam name="T">对象类型</typeparam>
-        /// <param name="obj">要序列化的对象</param>
-        /// <returns>序列化后的字节数组</returns>
-        public static async Task<byte[]> SerializeWithMessagePackAsync<T>(T obj)
-        {
-            try
-            {
-                using var stream = new MemoryStream();
-                await MessagePackSerializer.SerializeAsync(stream, obj, _messagePackOptions);
-                return stream.ToArray();
-            }
-            catch (Exception ex)
-            {
-                throw new SerializationException($"MessagePack异步序列化失败: {ex.Message}", ex);
-            }
-        }
-
-        /// <summary>
-        /// 反序列化字节数组为对象（MessagePack）
-        /// </summary>
-        /// <typeparam name="T">目标对象类型</typeparam>
+        /// <typeparam name="T">目标对象类型，支持接口类型</typeparam>
         /// <param name="data">要反序列化的字节数组</param>
         /// <returns>反序列化后的对象</returns>
+        /// <remarks>
+        /// 支持带有[MessagePack.Key]属性标记的类，能正确映射自定义字段顺序和名称。
+        /// 也支持接口类型的对象反序列化，会创建正确的实现类实例。
+        /// </remarks>
         public static T DeserializeWithMessagePack<T>(byte[] data)
         {
             if (data == null || data.Length == 0)
@@ -124,92 +115,55 @@ namespace RUINORERP.PacketSpec.Serialization
 
             try
             {
+                // 简化反序列化调用，确保与.NET Framework兼容
                 return MessagePackSerializer.Deserialize<T>(data, _messagePackOptions);
             }
             catch (Exception ex)
             {
-                throw new SerializationException($"MessagePack反序列化失败: {ex.Message}", ex);
+                // 添加更详细的错误信息，方便调试
+                string detailedError = $"MessagePack反序列化失败: 类型={typeof(T).FullName}, 数据长度={data.Length}, 错误={ex.Message}";
+                throw new SerializationException(detailedError, ex);
             }
         }
 
-        /// <summary>
-        /// 异步反序列化字节数组为对象（MessagePack）
-        /// </summary>
-        /// <typeparam name="T">目标对象类型</typeparam>
-        /// <param name="data">要反序列化的字节数组</param>
-        /// <returns>反序列化后的对象</returns>
-        public static async Task<T> DeserializeWithMessagePackAsync<T>(byte[] data)
-        {
-            if (data == null || data.Length == 0)
-                return default(T);
 
+
+        #endregion
+
+        #region 带类型信息的序列化（用于动态类型）
+
+        /// <summary>
+        /// 序列化对象并保留类型信息（用于接口、抽象类等动态类型）
+        /// 使用场景：需要运行时确定类型的对象
+        /// </summary>
+        public static byte[] SerializeWithTypeInfo(object obj)
+        {
             try
             {
-                using var stream = new MemoryStream(data);
-                return await MessagePackSerializer.DeserializeAsync<T>(stream, _messagePackOptions);
+                return MessagePackSerializer.Typeless.Serialize(obj);
             }
             catch (Exception ex)
             {
-                throw new SerializationException($"MessagePack异步反序列化失败: {ex.Message}", ex);
+                throw new SerializationException($"MessagePack带类型信息序列化失败: {ex.Message}", ex);
             }
         }
 
         /// <summary>
-        /// 尝试反序列化字节数组为对象（MessagePack）
+        /// 反序列化并恢复原始类型（用于动态类型）
+        /// 使用场景：反序列化使用SerializeWithTypeInfo序列化的数据
         /// </summary>
-        /// <typeparam name="T">目标对象类型</typeparam>
-        /// <param name="data">要反序列化的字节数组</param>
-        /// <param name="result">反序列化后的对象</param>
-        /// <returns>是否反序列化成功</returns>
-        public static bool TryDeserializeWithMessagePack<T>(byte[] data, out T result)
+        public static object DeserializeWithTypeInfo(byte[] data)
         {
-            try
-            {
-                result = DeserializeWithMessagePack<T>(data);
-                return true;
-            }
-            catch
-            {
-                result = default(T);
-                return false;
-            }
-        }
+            if (data == null || data.Length == 0)
+                return null;
 
-        /// <summary>
-        /// 安全反序列化（MessagePack，捕获异常返回默认值）
-        /// </summary>
-        /// <typeparam name="T">目标对象类型</typeparam>
-        /// <param name="data">要反序列化的字节数组</param>
-        /// <returns>反序列化后的对象</returns>
-        public static T SafeDeserializeWithMessagePack<T>(byte[] data)
-        {
             try
             {
-                return DeserializeWithMessagePack<T>(data);
+                return MessagePackSerializer.Typeless.Deserialize(data);
             }
-            catch
+            catch (Exception ex)
             {
-                return default(T);
-            }
-        }
-
-        /// <summary>
-        /// 获取序列化后的数据大小（MessagePack，不实际序列化）
-        /// </summary>
-        /// <typeparam name="T">对象类型</typeparam>
-        /// <param name="obj">要测量的对象</param>
-        /// <returns>估计的序列化大小</returns>
-        public static int GetSerializedSizeWithMessagePack<T>(T obj)
-        {
-            try
-            {
-                // 序列化一次来获取大小
-                var data = SerializeWithMessagePack(obj);
-                return data?.Length ?? 0;
-            }
-            catch
-            {
-                return 0;
+                throw new SerializationException($"MessagePack带类型信息反序列化失败: {ex.Message}", ex);
             }
         }
 
@@ -218,7 +172,47 @@ namespace RUINORERP.PacketSpec.Serialization
         #region JSON序列化方法
 
         /// <summary>
-        /// 序列化对象到字节数组（JSON）
+        /// 序列化对象为JSON字符串
+        /// </summary>
+        /// <typeparam name="T">对象类型</typeparam>
+        /// <param name="obj">要序列化的对象</param>
+        /// <returns>JSON字符串</returns>
+        public static string SerializeWithJson<T>(T obj)
+        {
+            try
+            {
+                return JsonConvert.SerializeObject(obj, _jsonSettings);
+            }
+            catch (Exception ex)
+            {
+                throw new SerializationException($"JSON序列化失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 反序列化JSON字符串为对象
+        /// </summary>
+        /// <typeparam name="T">目标对象类型</typeparam>
+        /// <param name="json">JSON字符串</param>
+        /// <returns>反序列化后的对象</returns>
+        public static T DeserializeWithJson<T>(string json)
+        {
+            if (string.IsNullOrEmpty(json))
+                return default(T);
+
+            try
+            {
+                return JsonConvert.DeserializeObject<T>(json, _jsonSettings);
+            }
+            catch (Exception ex)
+            {
+                throw new SerializationException($"JSON反序列化失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 序列化对象到字节数组（JSON）- 自动忽略null值
+        /// 使用场景：需要人类可读格式或与其他系统交互
         /// </summary>
         public static byte[] SerializeWithJson(object obj)
         {
@@ -255,192 +249,37 @@ namespace RUINORERP.PacketSpec.Serialization
             }
         }
 
-        /// <summary>
-        /// 安全反序列化（JSON，捕获异常返回默认值）
-        /// </summary>
-        public static T SafeDeserializeWithJson<T>(byte[] data) where T : class
-        {
-            try
-            {
-                return DeserializeWithJson<T>(data);
-            }
-            catch
-            {
-                return default;
-            }
-        }
-
-        /// <summary>
-        /// 验证字节数组是否可以反序列化（JSON）
-        /// </summary>
-        public static bool CanDeserializeWithJson(byte[] data)
-        {
-            if (data == null || data.Length < 10) // 最小长度检查
-                return false;
-
-            try
-            {
-                string json = Encoding.UTF8.GetString(data);
-                JsonConvert.DeserializeObject(json);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         #endregion
 
-        #region 二进制序列化方法
+        #region 安全版本（不抛出异常）
 
         /// <summary>
-        /// 序列化数据包到二进制格式（用于网络传输）
+        /// 安全序列化（捕获异常返回空数组）
         /// </summary>
-        /// <param name="packet">统一数据包</param>
-        /// <returns>二进制数据</returns>
-        public static byte[] SerializeToBinary<T>(T packet) where T : class
-        {
-            if (packet == null)
-                return Array.Empty<byte>();
-
-            try
-            {
-                using (var stream = new MemoryStream())
-                using (var writer = new BinaryWriter(stream))
-                {
-                    // 使用MessagePack序列化对象到二进制
-                    var data = SerializeWithMessagePack(packet);
-                    writer.Write(data.Length);
-                    writer.Write(data);
-                    return stream.ToArray();
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new SerializationException($"二进制序列化失败: {ex.Message}", ex);
-            }
-        }
-
-        /// <summary>
-        /// 从二进制格式反序列化数据包
-        /// </summary>
-        /// <param name="data">二进制数据</param>
-        /// <returns>反序列化后的对象</returns>
-        public static T DeserializeFromBinary<T>(byte[] data) where T : class
-        {
-            if (data == null || data.Length < 4) // 最小长度：4字节长度信息
-                return null;
-
-            try
-            {
-                using (var stream = new MemoryStream(data))
-                using (var reader = new BinaryReader(stream))
-                {
-                    // 读取数据长度
-                    var length = reader.ReadInt32();
-
-                    // 验证数据长度
-                    if (data.Length < 4 + length)
-                        return null;
-
-                    // 读取实际数据
-                    var packetData = reader.ReadBytes(length);
-
-                    // 使用MessagePack反序列化
-                    return DeserializeWithMessagePack<T>(packetData);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new SerializationException($"二进制反序列化失败: {ex.Message}", ex);
-            }
-        }
-
-        /// <summary>
-        /// 安全反序列化（二进制，捕获异常返回默认值）
-        /// </summary>
-        /// <param name="data">二进制数据</param>
-        /// <returns>反序列化后的对象或null</returns>
-        public static T SafeDeserializeFromBinary<T>(byte[] data) where T : class
+        public static byte[] SafeSerializeWithMessagePack<T>(T obj)
         {
             try
             {
-                return DeserializeFromBinary<T>(data);
+                return SerializeWithMessagePack(obj);
             }
             catch
             {
-                return null;
-            }
-        }
-
-        #endregion
-
-        #region 压缩序列化方法
-
-        /// <summary>
-        /// 压缩序列化（使用GZip）
-        /// </summary>
-        /// <param name="obj">要序列化的对象</param>
-        /// <param name="useMessagePack">是否使用MessagePack序列化，默认为true</param>
-        /// <returns>压缩后的字节数组</returns>
-        public static byte[] SerializeCompressed<T>(T obj, bool useMessagePack = true)
-        {
-            if (obj == null)
                 return Array.Empty<byte>();
-
-            try
-            {
-                byte[] data = useMessagePack ?
-                    SerializeWithMessagePack(obj) :
-                    SerializeWithJson(obj);
-                return Compress(data);
-            }
-            catch (Exception ex)
-            {
-                throw new SerializationException($"压缩序列化失败: {ex.Message}", ex);
             }
         }
 
         /// <summary>
-        /// 解压缩反序列化
+        /// 安全反序列化（捕获异常返回默认值）
         /// </summary>
-        /// <param name="compressedData">压缩的字节数组</param>
-        /// <param name="useMessagePack">是否使用MessagePack反序列化，默认为true</param>
-        /// <returns>反序列化后的对象</returns>
-        public static T DeserializeCompressed<T>(byte[] compressedData, bool useMessagePack = true) where T : class
-        {
-            if (compressedData == null || compressedData.Length == 0)
-                return null;
-
-            try
-            {
-                var data = Decompress(compressedData);
-                return useMessagePack ?
-                    DeserializeWithMessagePack<T>(data) :
-                    DeserializeWithJson<T>(data);
-            }
-            catch (Exception ex)
-            {
-                throw new SerializationException($"解压缩反序列化失败: {ex.Message}", ex);
-            }
-        }
-
-        /// <summary>
-        /// 安全解压缩反序列化（捕获异常返回默认值）
-        /// </summary>
-        /// <param name="compressedData">压缩的字节数组</param>
-        /// <param name="useMessagePack">是否使用MessagePack反序列化，默认为true</param>
-        /// <returns>反序列化后的对象或null</returns>
-        public static T SafeDeserializeCompressed<T>(byte[] compressedData, bool useMessagePack = true) where T : class
+        public static T SafeDeserializeWithMessagePack<T>(byte[] data)
         {
             try
             {
-                return DeserializeCompressed<T>(compressedData, useMessagePack);
+                return DeserializeWithMessagePack<T>(data);
             }
             catch
             {
-                return null;
+                return default(T);
             }
         }
 
@@ -449,37 +288,34 @@ namespace RUINORERP.PacketSpec.Serialization
         #region 辅助方法
 
         /// <summary>
-        /// 压缩数据
+        /// 验证数据是否可以反序列化为指定类型
         /// </summary>
-        public static byte[] Compress(byte[] data)
+        public static bool CanDeserialize<T>(byte[] data)
         {
-            if (data == null || data.Length == 0)
-                return Array.Empty<byte>();
-
-            using (var output = new MemoryStream())
+            try
             {
-                using (var gzip = new System.IO.Compression.GZipStream(output, System.IO.Compression.CompressionMode.Compress))
-                {
-                    gzip.Write(data, 0, data.Length);
-                }
-                return output.ToArray();
+                var result = DeserializeWithMessagePack<T>(data);
+                return result != null;
+            }
+            catch
+            {
+                return false;
             }
         }
 
         /// <summary>
-        /// 解压缩数据
+        /// 获取序列化后的大小估计
         /// </summary>
-        public static byte[] Decompress(byte[] compressedData)
+        public static int GetSerializedSize<T>(T obj)
         {
-            if (compressedData == null || compressedData.Length == 0)
-                return Array.Empty<byte>();
-
-            using (var input = new MemoryStream(compressedData))
-            using (var gzip = new System.IO.Compression.GZipStream(input, System.IO.Compression.CompressionMode.Decompress))
-            using (var output = new MemoryStream())
+            try
             {
-                gzip.CopyTo(output);
-                return output.ToArray();
+                var data = SerializeWithMessagePack(obj);
+                return data?.Length ?? 0;
+            }
+            catch
+            {
+                return 0;
             }
         }
 

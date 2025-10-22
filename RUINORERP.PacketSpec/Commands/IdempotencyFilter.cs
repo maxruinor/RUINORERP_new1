@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Cryptography;
@@ -6,6 +6,7 @@ using System.Text;
 using MessagePack;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Serialization;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -178,7 +179,7 @@ namespace RUINORERP.PacketSpec.Commands
             try
             {
                 // 使用MessagePack序列化数据
-                var serializedData = MessagePackSerializer.Serialize(data);
+                var serializedData = UnifiedSerializationService.SerializeWithMessagePack(data);
 
                 // 计算SHA256哈希
                 using (var sha256 = SHA256.Create())

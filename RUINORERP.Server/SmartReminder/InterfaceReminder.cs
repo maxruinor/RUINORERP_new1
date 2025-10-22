@@ -1,4 +1,4 @@
-﻿using RUINORERP.Global.EnumExt;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model.ReminderModel.ReminderRules;
@@ -27,7 +27,7 @@ namespace RUINORERP.Server.SmartReminder
         void StartMonitoring(TimeSpan interval);
 
         void AddStrategy(IReminderStrategy strategy);
-        List<IReminderRule> GetActiveRulesAsync();
+        Task<List<IReminderRule>> GetActiveRulesAsync();
     }
     // 4. 通知服务实现
     public interface INotificationService

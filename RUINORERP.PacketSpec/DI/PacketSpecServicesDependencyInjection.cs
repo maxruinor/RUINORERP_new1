@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Commands;
@@ -81,10 +81,7 @@ namespace RUINORERP.PacketSpec.DI
         /// <param name="configureTokenOptions">自定义Token服务配置选项</param>
         public static void AddPacketSpecServices(this IServiceCollection services, IConfiguration configuration, Action<TokenServiceOptions> configureTokenOptions)
         {
-            // 注册序列化服务包装器
-            // 为静态UnifiedSerializationService类提供可注入的实例包装
-            services.AddSingleton<IUnifiedSerializationService, UnifiedSerializationServiceWrapper>();
-
+           
             // 注意：Token服务通过Autofac注册，不在此处注册
             services.AddSingleton<TokenManager>();
 
@@ -139,10 +136,7 @@ namespace RUINORERP.PacketSpec.DI
         /// <param name="configureTokenOptions">自定义Token服务配置选项</param>
         public static void ConfigurePacketSpecServicesContainer(this ContainerBuilder builder, Action<TokenServiceOptions> configureTokenOptions)
         {
-            // 注册序列化服务包装器
-            builder.RegisterType<UnifiedSerializationServiceWrapper>()
-                .As<IUnifiedSerializationService>()
-                .SingleInstance();
+            
 
             // 注册命令调度器
             builder.RegisterType<CommandDispatcher>().AsSelf().SingleInstance();

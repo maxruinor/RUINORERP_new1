@@ -852,7 +852,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 优先使用事件机制处理命令，避免重复处理
-                _eventManager.OnCommandReceived(packet, packet.CommandData);
+                _eventManager.OnCommandReceived(packet, packet.Response);
 
                 // 如果事件机制没有处理该命令（没有订阅者），则使用命令调度器处理
                 if (!_eventManager.HasCommandSubscribers(packet))
@@ -1072,7 +1072,7 @@ namespace RUINORERP.UI.Network
             catch (Exception ex) when (!(ex is OperationCanceledException))
             {
                 _eventManager.OnErrorOccurred(ex);
-                _logger.LogError(ex, "操作执行失败: {Operation}", operation.Method.Name);
+                _logger.LogError(ex, $"操作执行失败: {ex.Message}", operation.Method.Name);
 
                 // 检查是否是网络异常，如果是则尝试重连
                 if (_networkConfig.AutoReconnect && !_isConnected)
@@ -1436,10 +1436,10 @@ namespace RUINORERP.UI.Network
 
                 if (_disposed)
                     throw new ObjectDisposedException(nameof(ClientCommunicationService));
-        
+
                 // 使用现有的SendPacketCoreAsync发送请求
                 await SendPacketCoreAsync<TRequest>(_socketClient, commandId, request, _networkConfig.DefaultRequestTimeoutMs, ct);
-           
+
                 return true;
             }
             catch (OperationCanceledException)

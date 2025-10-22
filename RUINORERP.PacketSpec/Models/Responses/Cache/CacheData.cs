@@ -1,5 +1,6 @@
-using MessagePack;
+﻿using MessagePack;
 using Newtonsoft.Json.Linq;
+using RUINORERP.PacketSpec.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -19,6 +20,21 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         [Key(0)]
         public string TableName { get; set; } = string.Empty;
 
+
+        /// <summary>
+        /// 表实体类型
+        /// </summary>
+        [Key(18)]
+        public Type EntityType { get; set; }
+
+  
+        /// <summary>
+        /// 二进制数据
+        /// </summary>
+        [Key(19)]
+        public byte[] EntityByte { get; set; }
+
+
         /// <summary>
         /// 缓存时间
         /// </summary>
@@ -31,11 +47,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         [Key(2)]
         public DateTime ExpirationTime { get; set; } = DateTime.Now.AddDays(1);
 
-        /// <summary>
-        /// 数据（使用object存储，支持动态类型）
-        /// </summary>
-        [Key(3)]
-        public object Data { get; set; }
+ 
 
         /// <summary>
         /// 版本
@@ -52,12 +64,15 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// <summary>
         /// 创建缓存数据
         /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="data">实体数据</param>
         public static CacheData Create(string tableName, object data, TimeSpan? expiration = null)
         {
             return new CacheData
             {
                 TableName = tableName,
-                Data = data,
+                EntityByte = UnifiedSerializationService.SerializeWithTypeInfo(data),
+                EntityType = data.GetType(),
                 CacheTime = DateTime.Now,
                 ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1)),
                 Version = "1.0.0"
@@ -77,12 +92,12 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// </summary>
         public T GetData<T>()
         {
-            if (Data == null)
+            if (EntityByte == null)
                 return default;
 
             try
             {
-                return CacheDataConverter.ConvertToType<T>(Data);
+                return CacheDataConverter.ConvertToType<T>(EntityByte);
             }
             catch
             {

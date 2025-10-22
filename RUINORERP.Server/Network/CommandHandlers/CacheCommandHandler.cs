@@ -389,7 +389,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     switch (updateRequest.Operation)
                     {
                         case CacheOperation.Set:
-                            _cacheManager.UpdateEntityList(updateRequest.TableName, updateRequest.Data);
+                            //CacheDataConverter.SerializeToBytes
+                            object entity = UnifiedSerializationService.DeserializeWithTypeInfo(updateRequest.CacheData.EntityByte);
+                            _cacheManager.UpdateEntityList(updateRequest.TableName, entity);
                             break;
                         case CacheOperation.Remove:
                             _cacheManager.DeleteEntity(updateRequest.TableName, updateRequest.PrimaryKeyValue);
@@ -527,7 +529,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 处理不同类型的缓存数据
                     if (cacheList is JArray jArray)
                     {
-                        cacheData.Data = jArray.ToString(); // 将JArray转换为字符串
+                        cacheData.EntityByte = UnifiedSerializationService.SerializeWithTypeInfo(cacheList);// jArray.ToString(); // 将JArray转换为字符串
+                        cacheData.EntityType = cacheList.GetType();
                         cacheData.HasMoreData = false;
                     }
                     else if (TypeHelper.IsGenericList(cacheList.GetType()))
@@ -542,8 +545,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             var firstPageData = lastlist.Take(pageSize).ToList();
 
                             // 转换为JSON字符串
-                            string json = JsonConvert.SerializeObject(firstPageData);
-                            cacheData.Data = json; // 直接存储JSON字符串
+                            //  string json = JsonConvert.SerializeObject(firstPageData);
+                            //  cacheData.Data = json; // 直接存储JSON字符串
+                            // 使用带类型信息的序列化方法
+                            cacheData.EntityByte = UnifiedSerializationService.SerializeWithTypeInfo(lastlist);
+                            cacheData.EntityType = lastlist.GetType();
+
                             cacheData.HasMoreData = totalCount > pageSize;
 
                             if (frmMainNew.Instance.IsDebug)
@@ -557,8 +564,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         // 尝试将其他类型转换为JSON字符串
                         try
                         {
-                            string json = JsonConvert.SerializeObject(cacheList);
-                            cacheData.Data = json; // 直接存储JSON字符串
+                            //string json = JsonConvert.SerializeObject(cacheList);
+                           // cacheData.Data = json; // 直接存储JSON字符串
+                            cacheData.EntityByte = UnifiedSerializationService.SerializeWithTypeInfo(cacheList);
+                            cacheData.EntityType = cacheList.GetType();
                             cacheData.HasMoreData = false;
                         }
                         catch (Exception ex)
@@ -632,59 +641,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
-        /// <summary>
-        /// 广播缓存删除通知
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <returns>任务</returns>
-        private async Task BroadcastCacheDeleteAsync(string tableName)
-        {
-            try
-            {
-                // 创建删除通知
-                var deleteNotification = new
-                {
-                    Type = "Delete",
-                    TableName = tableName,
-                    Timestamp = DateTime.Now
-                };
 
-                // 序列化通知
-                string json = JsonConvert.SerializeObject(deleteNotification);
-                byte[] dataBytes = Encoding.UTF8.GetBytes(json);
-
-                // 只广播给订阅了该表的客户端
-                var subscribers = _subscriptionManager.GetSubscribers(tableName);
-                var allSessions = _sessionService.GetAllUserSessions();
-                var targetSessions = allSessions.Where(s => subscribers.Contains(s.SessionID)).ToList();
-
-                int successCount = 0;
-                int failCount = 0;
-
-                foreach (var session in targetSessions)
-                {
-                    try
-                    {
-                        if (session != null && !string.IsNullOrEmpty(session.SessionID))
-                        {
-                            await (session).SendAsync(dataBytes);
-                            successCount++;
-                        }
-                    }
-                    catch (Exception sessionEx)
-                    {
-                        failCount++;
-                        logger.LogWarning(sessionEx, $"广播缓存删除到会话失败: {session?.SessionID ?? "Unknown"}");
-                    }
-                }
-
-                LogInfo($"广播缓存删除完成: {tableName}, 订阅者数量: {subscribers.Count()}, 成功: {successCount}, 失败: {failCount}");
-            }
-            catch (Exception ex)
-            {
-                LogError($"广播缓存删除失败: {tableName}", ex);
-            }
-        }
 
         /// <summary>
         /// 将对象转换为字典
@@ -791,37 +748,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         #endregion
 
-      
 
-        /// <summary>
-        /// 处理缓存失效命令
-        /// </summary>
-        /// <param name="command">缓存失效命令</param>
-        /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>处理结果</returns>
-        private async Task<IResponse> HandleCacheInvalidateAsync(QueuedCommand command, CancellationToken cancellationToken)
-        {
-            try
-            {
-                // TODO: 实现缓存失效逻辑
-                // 暂时记录日志
-                LogInfo("处理缓存失效命令");
 
-                var responseData = new CacheResponse
-                {
-                    TableName = "Invalidate",
-                    IsSuccess = true,
-                    Message = "缓存失效成功"
-                };
 
-                return responseData;
-            }
-            catch (Exception ex)
-            {
-                LogError($"处理缓存失效异常: {ex.Message}", ex);
-                return CreateExceptionResponse(ex, "CACHE_INVALIDATE_ERROR");
-            }
-        }
 
         /// <summary>
         /// 处理缓存订阅命令

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace RUINORERP.PacketSpec.Serialization
@@ -72,10 +72,7 @@ namespace RUINORERP.PacketSpec.Serialization
 
         #region JSON序列化方法
         
-        /// <summary>
-        /// 序列化对象到字节数组（JSON）
-        /// </summary>
-        byte[] SerializeWithJson(object obj);
+   
 
         /// <summary>
         /// 从字节数组反序列化对象（JSON）

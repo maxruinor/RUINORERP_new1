@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums;
 
@@ -23,7 +23,7 @@ namespace RUINORERP.PacketSpec.Commands.Cache
 
         /// <summary>
         /// 缓存同步 - 用于缓存数据的双向同步
-        /// 服务器向客户端推送缓存变更，客户端向服务器报告本地变更
+        /// 服务器向客户端推送缓存变更，客户端向服务器报告本地变更 通过这个来处理是不中同步到其它用户
         /// </summary>
         public static readonly CommandId CacheSync = new CommandId(CommandCategory.Cache, (byte)(CommandCatalog.Cache_CacheSync & 0xFF), "CacheSync");
         

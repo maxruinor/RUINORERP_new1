@@ -43,25 +43,50 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 解析数据包
+        /// 解析网络数据包，提取业务信息
         /// </summary>
-        /// <param name="bufferStream">缓冲区流</param>
-        /// <returns>业务数据包信息</returns>
+        /// <param name="bufferStream">包含数据包的缓冲流</param>
+        /// <returns>解析后的业务包信息</returns>
         public override BizPackageInfo ResolvePackage(IBufferStream bufferStream)
         {
             byte[] packageContents = new byte[bufferStream.Length];
             bufferStream.Read(packageContents, 0, (int)bufferStream.Length);
             BizPackageInfo packageInfo = new BizPackageInfo();
+            
             try
             {
-                //var package = EncryptedProtocol.DecryptServerPack(packageContents);
+                // 解密数据包
                 var package = UnifiedEncryptionProtocol.DecryptServerPacket(packageContents);
                 
-                packageInfo.Packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(package.Two);
+                if (package.Two != null && package.Two.Length > 0)
+                {
+                    try
+                    {
+                        // 首先尝试使用MessagePack反序列化
+                        packageInfo.Packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(package.Two);
+                    }
+                    catch (Exception msgPackEx)
+                    {
+                        // MessagePack反序列化失败，尝试使用JSON作为备选方案
+                        System.Diagnostics.Debug.WriteLine($"MessagePack反序列化失败，尝试JSON: {msgPackEx.Message}");
+                        try
+                        {
+                            packageInfo.Packet = UnifiedSerializationService.DeserializeWithJson<PacketModel>(package.Two);
+                        }
+                        catch (Exception jsonEx)
+                        {
+                            // 如果两种反序列化都失败，记录详细错误
+                            System.Diagnostics.Debug.WriteLine($"JSON反序列化也失败: {jsonEx.Message}");
+                            // 可以在这里添加日志记录或通知机制
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
-                //Console.WriteLine($"解析数据包时出错: {ex.Message}");
+                // 记录解密或其他过程中的错误
+                System.Diagnostics.Debug.WriteLine($"数据包处理过程出错: {ex.Message}");
+                // 可以在这里添加更详细的日志记录
             }
 
             return packageInfo;

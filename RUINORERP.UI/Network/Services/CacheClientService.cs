@@ -14,6 +14,11 @@ using System.Linq;
 using RUINORERP.UI.Network;
 using RUINORERP.Business.CommService;
 using System.Threading;
+using Netron.GraphLib;
+using RUINORERP.PacketSpec.Serialization;
+using NPOI.SS.Formula.Functions;
+using Netron.NetronLight;
+using FastReport.Table;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -72,17 +77,17 @@ namespace RUINORERP.UI.Network.Services
             // 注册缓存响应处理
             RegisterCommandHandlers();
         }
-        
+
         /// <summary>
         /// 处理连接状态变化事件
         /// </summary>
         /// <param name="isConnected">是否已连接</param>
-        private void OnConnectionStateChanged(bool isConnected)        
+        private void OnConnectionStateChanged(bool isConnected)
         {
             // 不再需要手动管理缓存队列，现在由ClientCommunicationService自动处理
             _log.LogInformation("连接状态变化: {0}", isConnected ? "已连接" : "已断开");
         }
-        
+
         // 不再需要ProcessPendingCacheChangesAsync方法，由ClientCommunicationService的队列机制处理
 
         /// <summary>
@@ -131,7 +136,7 @@ namespace RUINORERP.UI.Network.Services
                 _subscriptionManager.AddSubscription(tableName);
 
                 // 发送订阅请求到服务器
-                await _cacheRequestManager.SendCacheManageRequestAsync(tableName, "Subscribe", null);
+                await _cacheRequestManager.SendCacheSubscriptionAsync(tableName, "Subscribe", null);
             }
             catch (Exception ex)
             {
@@ -163,7 +168,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 发送取消订阅请求到服务器
-                await _cacheRequestManager.SendCacheManageRequestAsync(tableName, "Unsubscribe", null);
+                await _cacheRequestManager.SendCacheSubscriptionAsync(tableName, "Unsubscribe", null);
 
                 // 成功后移除本地订阅
                 _subscriptionManager.RemoveSubscription(tableName);
@@ -398,12 +403,16 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
+                CacheData cacheData = CacheData.Create(tableName, entity);
+                cacheData.EntityType = TableSchemaManager.Instance.GetSchemaInfo(tableName).EntityType;
+                cacheData.EntityByte = UnifiedSerializationService.SerializeWithTypeInfo(entity);
+
                 // 创建缓存更新请求并处理
-                await _cacheRequestManager.ProcessCacheRequestAsync(new CacheRequest
+                await _cacheRequestManager.ProcessCacheOperationAsync(CacheCommands.CacheSync, new CacheRequest
                 {
                     Operation = CacheOperation.Set,
                     TableName = tableName,
-                    Data = entity,
+                    CacheData = cacheData,
                     Timestamp = DateTime.UtcNow
                 });
             }
@@ -436,11 +445,12 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 创建缓存删除请求并处理
-                await _cacheRequestManager.ProcessCacheRequestAsync(new CacheRequest
+                await _cacheRequestManager.ProcessCacheOperationAsync(CacheCommands.CacheSync, new CacheRequest
                 {
                     Operation = CacheOperation.Remove,
                     TableName = tableName,
-                    Data = entityId,
+                    PrimaryKeyName = TableSchemaManager.Instance.GetSchemaInfo(tableName).PrimaryKeyField,
+                    PrimaryKeyValue = entityId,
                     Timestamp = DateTime.UtcNow
                 });
             }
@@ -496,9 +506,7 @@ namespace RUINORERP.UI.Network.Services
                 if (!e.SyncToServer)
                     return;
 
-                // 不再需要手动检查连接状态，ClientCommunicationService会自动处理离线队列
-                _log.LogDebug("准备同步缓存变更，表名: {0}, 操作: {1}", e.Key, e.Operation.ToString());
-
+     
                 // 创建缓存更新请求 - 使用简化的操作类型
                 var request = new CacheRequest
                 {
@@ -507,18 +515,20 @@ namespace RUINORERP.UI.Network.Services
                     Timestamp = DateTime.UtcNow
                 };
 
+               
+               
                 // 根据操作类型设置请求数据
                 if (e.Value != null)
                 {
-                    request.Data = e.Value;
+                    CacheData cacheData = CacheData.Create(e.Key, e.Value);
+                    request.CacheData = cacheData;
                 }
-  
 
                 // 发送命令到服务器
                 await _commService.SendOneWayCommandAsync<CacheRequest>(CacheCommands.CacheSync, request, CancellationToken.None);
 
 
-            
+
 
 
                 _log.LogDebug("客户端缓存变更已同步到服务器: {0}, 操作: {1}", e.Key, e.Operation.ToString());
@@ -526,7 +536,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _log.LogError(ex, "同步客户端缓存变更到服务器时发生异常: {0}", ex.Message);
-                
+
                 // 发生异常时也记录到日志，后续可以考虑添加重试或队列机制
             }
         }
@@ -535,13 +545,13 @@ namespace RUINORERP.UI.Network.Services
         /// 释放资源
         /// </summary>
         public void Dispose()
-        {            
+        {
             if (!_disposed)
-            {                
+            {
                 _disposed = true;
                 // 取消订阅缓存变更事件
                 if (_eventDrivenCacheManager != null)
-                {                    
+                {
                     _eventDrivenCacheManager.CacheChanged -= OnClientCacheChanged;
                 }
                 // 取消订阅连接状态变化事件

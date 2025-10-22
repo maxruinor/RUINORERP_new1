@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Requests;
 using MessagePack;
 using RUINORERP.PacketSpec.Commands.Cache;
+using RUINORERP.PacketSpec.Serialization;
+using RUINORERP.PacketSpec.Models.Responses.Cache;
 
 namespace RUINORERP.PacketSpec.Models.Requests.Cache
 {
@@ -32,11 +34,12 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
         [Key(1006)]
         public SubscribeAction SubscribeAction { get; set; } = SubscribeAction.None;
 
+
         /// <summary>
-        /// 缓存数据（用于设置、更新操作）
+        /// 缓存数据
         /// </summary>
-        [Key(13)]
-        public object Data { get; set; }
+        [Key(10)]
+        public CacheData CacheData { get; set; }
 
         /// <summary>
         /// 主键名称
@@ -75,18 +78,6 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
             };
         }
 
-        /// <summary>
-        /// 创建缓存设置请求
-        /// </summary>
-        public static CacheRequest CreateSetRequest(string tableName, object data)
-        {
-            return new CacheRequest
-            {
-                TableName = tableName,
-                Operation = CacheOperation.Set,
-                Data = data,
-            };
-        }
 
         /// <summary>
         /// 创建缓存删除请求

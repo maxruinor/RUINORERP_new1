@@ -109,7 +109,6 @@ namespace RUINORERP.Business.Cache
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
                 if (schemaInfo == null)
                 {
-                    _logger?.LogWarning($"未找到表 {tableName} 的结构信息");
                     return null;
                 }
 

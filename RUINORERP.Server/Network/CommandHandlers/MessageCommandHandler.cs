@@ -75,14 +75,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 else
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("消息请求格式错误")
-                        ;
+                        return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet,  "消息请求格式错误  ");
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理消息命令时出错");
-                return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex, $"处理消息命令时出错{cmd.Packet.CommandId.ToString()}");
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext,ex, "处理消息命令时出错  ");
             }
         }
 

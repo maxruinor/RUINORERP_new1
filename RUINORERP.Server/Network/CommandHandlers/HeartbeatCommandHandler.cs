@@ -63,14 +63,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 else
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"不支持的命令类型: {cmd.Packet.CommandId.ToString()}")
-                        ;
+                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, $"不支持的命令类型: {cmd.Packet.CommandId.ToString()}");
                 }
             }
             catch (Exception ex)
             {
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
-                return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex);
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, "处理心跳命令异常");
             }
         }
 
@@ -106,7 +105,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             ["SessionId"] = queuedCommand.Packet.ExecutionContext.SessionId
                         }
                     };
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("会话不存在或已过期");
+                    return ResponseFactory.CreateSpecificErrorResponse(queuedCommand.Packet, "会话不存在或已过期");
                 }
 
                 if (queuedCommand.Packet.Request is HeartbeatRequest heartbeatRequest)
@@ -152,7 +151,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     }
                 };
 
-                return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex, "处理心跳命令异常");
+                return ResponseFactory.CreateSpecificErrorResponse(queuedCommand.Packet.ExecutionContext, ex, "处理心跳命令异常");
             }
         }
 

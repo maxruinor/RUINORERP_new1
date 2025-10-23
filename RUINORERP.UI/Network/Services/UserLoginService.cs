@@ -103,7 +103,7 @@ namespace RUINORERP.UI.Network.Services
                 if (!_communicationService.IsConnected)
                 {
                     _logger?.LogWarning("登录失败：未连接到服务器");
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("未连接到服务器，请检查网络连接后重试") as LoginResponse;
+                    return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("未连接到服务器，请检查网络连接后重试");
                 }
 
                 var loginRequest = LoginRequest.Create(username, password);
@@ -136,7 +136,7 @@ namespace RUINORERP.UI.Network.Services
                 if (response == null)
                 {
                     _logger?.LogError("登录失败：服务器返回了空的响应数据");
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("服务器返回了空的响应数据，请联系系统管理员") as LoginResponse;
+                    return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("服务器返回了空的响应数据，请联系系统管理员");
                 }
 
                 // 检查响应是否成功
@@ -190,12 +190,12 @@ namespace RUINORERP.UI.Network.Services
             catch (OperationCanceledException ex)
             {
                 _logger?.LogInformation(ex, "登录操作已被用户取消 - 用户: {Username}", username);
-                return ResponseFactory.CreateSpecificErrorResponse<IResponse>("登录操作已取消") as LoginResponse;
+                return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("登录操作已取消");
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "登录过程中发生未预期的异常 - 用户: {Username}", username);
-                return ResponseFactory.CreateSpecificErrorResponse<IResponse>("登录过程中发生错误，请稍后重试") as LoginResponse;
+                return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("登录过程中发生错误，请稍后重试");
             }
             finally
             {

@@ -1633,7 +1633,7 @@ namespace RUINORERP.UI.Network
         /// <returns>包含指令信息的响应数据</returns>
         public async Task<TResponse> SendCommandWithResponseAsync<TResponse>(
             CommandId commandId,
-                    IRequest request,
+            IRequest request,
             CancellationToken ct = default,
             int timeoutMs = 30000)
             where TResponse : class, IResponse

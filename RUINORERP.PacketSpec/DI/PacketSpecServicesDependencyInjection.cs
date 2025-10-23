@@ -112,6 +112,15 @@ namespace RUINORERP.PacketSpec.DI
 
             // 注册命令处理器工厂
             services.AddSingleton<ICommandHandlerFactory, CommandHandlerFactory>();
+            
+            // 注册命令处理器注册表
+            services.AddSingleton<CommandHandlerRegistry>();
+            
+            // 注册熔断器指标收集器
+            services.AddSingleton<CircuitBreakerMetrics>();
+            
+            // 注册命令类型分类器
+            services.AddSingleton<CommandTypeClassifier>();
 
             // 注意：CommandPacketAdapter已由ICommandCreationService替代，不再需要注册
 
@@ -195,6 +204,21 @@ namespace RUINORERP.PacketSpec.DI
             // 注册命令处理器工厂
             builder.RegisterType<CommandHandlerFactory>()
                 .As<ICommandHandlerFactory>()
+                .SingleInstance();
+            
+            // 注册命令处理器注册表
+            builder.RegisterType<CommandHandlerRegistry>()
+                .AsSelf()
+                .SingleInstance();
+            
+            // 注册熔断器指标收集器
+            builder.RegisterType<CircuitBreakerMetrics>()
+                .AsSelf()
+                .SingleInstance();
+            
+            // 注册命令类型分类器
+            builder.RegisterType<CommandTypeClassifier>()
+                .AsSelf()
                 .SingleInstance();
 
             // 注意：CommandPacketAdapter已由ICommandCreationService替代，不再需要注册

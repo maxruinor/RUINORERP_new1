@@ -63,7 +63,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 验证管理员权限
                 if (!await ValidateAdminPermissionAsync(cmd.Packet.ExecutionContext))
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("权限不足，仅管理员可执行此操作", 403);
+                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet,$"权限不足，仅管理员可执行此操作{cmd.Packet.CommandId.ToString()}");
                 }
 
                 if (commandId == SystemCommands.ComputerStatus)
@@ -80,13 +80,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 else
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"不支持的系统命令: {commandId.Name}");
+                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet,$"不支持的系统命令: {commandId.Name}");
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理系统命令时出错: {Message}", ex.Message);
-                return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex, $"处理系统命令时出错{cmd.Packet.CommandId.ToString()}");
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext,ex, $"处理系统命令时出错{cmd.Packet.CommandId.ToString()}");
             }
         }
 

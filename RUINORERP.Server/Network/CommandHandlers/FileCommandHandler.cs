@@ -78,14 +78,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 else
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"不支持的文件命令: {commandId.Name}")
-                        ;
+                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的文件命令");
+
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理文件命令时出错: {Message}", ex.Message);
-                return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex, $"处理文件命令时出错{cmd.Packet.CommandId.ToString()}");
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, "处理文件命令时出错");
             }
         }
 
@@ -293,6 +292,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
-       
+
     }
 }

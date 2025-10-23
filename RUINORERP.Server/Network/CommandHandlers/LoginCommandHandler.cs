@@ -34,6 +34,7 @@ using Azure.Core;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using RUINORERP.PacketSpec.Models.Responses.Authentication;
 using RUINORERP.PacketSpec.Models.Responses.Message;
+using log4net.Core;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {
@@ -115,7 +116,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         //登陆指令时上下文session是由服务器来指定的
                         if (loginRequest == null)
                         {
-                            return CreateErrorResponse("登录请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed, "EMPTY_LOGIN_REQUEST");
+                            return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "登录请求数据不能为空");
                         }
                         return await ProcessLoginAsync(loginRequest, cmd.Packet.ExecutionContext, cancellationToken);
                     }
@@ -134,22 +135,17 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     else
                     {
                         // 确保所有代码路径都有返回值
-                        var errorResponse = ResponseBase.CreateError($"不支持的认证命令ID: {commandId.ToString()}")
-                            .WithMetadata("ErrorCode", "UNSUPPORTED_AUTH_COMMAND");
-                        return errorResponse;
+                        return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的认证命令");
                     }
                 }
                 else
                 {
-                    var errorResponse = ResponseBase.CreateError($"不支持的命令类型: {cmd.Packet.CommandId.ToString()}")
-                        .WithMetadata("ErrorCode", "UNSUPPORTED_COMMAND");
-                    return errorResponse;
+                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的命令类型");
                 }
             }
             catch (Exception ex)
             {
-                LogError($"处理命令 {cmd.Packet.CommandId.ToString()} 异常: {ex.Message}", ex);
-                return CreateExceptionResponse(ex, "HANDLER_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex);
             }
         }
 
@@ -162,7 +158,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 统一的登录业务逻辑处理方法
         /// 整合了所有登录相关的业务逻辑，被不同类型的登录命令处理器调用
         /// </summary>
-        private async Task<ResponseBase> ProcessLoginAsync(
+        private async Task<IResponse> ProcessLoginAsync(
             LoginRequest loginRequest,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -181,20 +177,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 const double timeDifferenceThreshold = 300.0;
                 if (timeDifference > timeDifferenceThreshold)
                 {
-                    return CreateErrorResponse($"客户端时间与服务器时间差异过大 ({timeDifference:F0}秒)，请校准系统时间",
-                        UnifiedErrorCodes.Command_ValidationFailed, "TIME_MISMATCH");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, new Exception($"客户端时间与服务器时间差异过大 ({timeDifference:F0}秒)，请校准系统时间"));
                 }
 
                 // 验证请求参数
                 if (!loginRequest.IsValid())
                 {
-                    return CreateErrorResponse("用户名和密码不能为空", UnifiedErrorCodes.Auth_PasswordError, "VALIDATION_FAILED");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, new Exception("用户名和密码不能为空"));
                 }
 
                 // 检查并发用户数限制
                 if (SessionService.ActiveSessionCount >= MaxConcurrentUsers)
                 {
-                    return CreateErrorResponse("当前系统用户数已达到上限，请稍后再试", UnifiedErrorCodes.Biz_LimitExceeded, "MAX_USERS_EXCEEDED");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, "当前系统用户数已达到上限，请稍后再试");
                 }
 
                 // 获取或创建会话信息
@@ -205,20 +200,20 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                     if (sessionInfo == null)
                     {
-                        return CreateErrorResponse("创建会话失败", UnifiedErrorCodes.System_InternalError, "SESSION_CREATION_FAILED");
+                        return ResponseFactory.CreateSpecificErrorResponse(executionContext,"创建会话失败");
                     }
                 }
 
                 // 检查黑名单
                 if (IsUserBlacklisted(loginRequest.Username, sessionInfo.ClientIp))
                 {
-                    return CreateErrorResponse("用户或IP在黑名单中", UnifiedErrorCodes.Auth_UserNotFound, "BLACKLISTED");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext,"用户或IP在黑名单中");
                 }
 
                 // 检查登录尝试次数
                 if (GetLoginAttempts(loginRequest.Username) >= MaxLoginAttempts)
                 {
-                    return CreateErrorResponse("登录尝试次数过多，请稍后再试", UnifiedErrorCodes.Command_Timeout, "TOO_MANY_ATTEMPTS");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext,"登录尝试次数过多，请稍后再试");
                 }
 
                 // 验证用户凭据
@@ -226,7 +221,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (userSessionInfo == null)
                 {
                     IncrementLoginAttempts(loginRequest.Username);
-                    return CreateErrorResponse("用户名或密码错误", UnifiedErrorCodes.Auth_PasswordError, "INVALID_CREDENTIALS");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext,"用户名或密码错误");
                 }
 
                 // 重置登录尝试次数
@@ -297,8 +292,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
-                LogError($"处理登录异常: {ex.Message}", ex);
-                return CreateExceptionResponse(ex, "LOGIN_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse(executionContext,ex, "处理登录异常");
             }
         }
 
@@ -318,7 +312,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理Token刷新
         /// </summary>
-        private async Task<ResponseBase> ProcessTokenRefreshAsync(
+        private async Task<IResponse> ProcessTokenRefreshAsync(
             LoginRequest loginRequest,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -332,7 +326,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 验证Token
                 if (string.IsNullOrEmpty(refreshToken) || string.IsNullOrEmpty(currentToken))
                 {
-                    return CreateErrorResponse("刷新Token和当前Token不能为空", UnifiedErrorCodes.Auth_TokenInvalid, "EMPTY_TOKEN");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext,  "刷新Token和当前Token不能为空");
                 }
 
                 // 使用TokenService刷新Token
@@ -343,7 +337,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 catch (Exception ex)
                 {
-                    return CreateErrorResponse(ex.Message, UnifiedErrorCodes.Auth_TokenInvalid, "REFRESH_FAILED");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext,ex);
                 }
 
                 // 创建响应
@@ -360,15 +354,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
-                LogError($"处理Token刷新异常: {ex.Message}", ex);
-                return CreateExceptionResponse(ex, "REFRESH_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse(executionContext, ex);
             }
         }
 
         /// <summary>
         /// 处理登出操作
         /// </summary>
-        private async Task<ResponseBase> ProcessLogoutAsync(
+        private async Task<IResponse> ProcessLogoutAsync(
             LoginRequest loginRequest,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -400,15 +393,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
-                LogError($"处理登出异常: {ex.Message}", ex);
-                return CreateExceptionResponse(ex, "LOGOUT_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse(executionContext, ex, "处理登出异常");
             }
         }
 
         /// <summary>
         /// 处理Token验证
         /// </summary>
-        private async Task<ResponseBase> ProcessTokenValidationAsync(
+        private async Task<IResponse> ProcessTokenValidationAsync(
             CommandContext executionContext,
             CancellationToken cancellationToken)
         {
@@ -419,7 +411,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 验证Token
                 if (string.IsNullOrEmpty(token))
                 {
-                    return CreateErrorResponse("Token不能为空", UnifiedErrorCodes.Auth_TokenInvalid, "EMPTY_TOKEN");
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext,"Token不能为空");
                 }
 
                 // 使用TokenService验证Token
@@ -445,7 +437,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 LogError($"处理Token验证异常: {ex.Message}", ex);
-                return CreateExceptionResponse(ex, "VALIDATION_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse(executionContext, ex, "处理Token验证异常  ");
             }
         }
 
@@ -560,38 +552,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             return session != null && session.IsAuthenticated && !session.UserId.HasValue;
         }
 
-        /// <summary>
-        /// 请求重复登录确认
-        /// </summary>
-        private IResponse RequestDuplicateLoginConfirmation(IEnumerable<SessionInfo> existingSessions, CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 收集现有会话信息
-                var sessionInfos = existingSessions.Select(s => new Dictionary<string, object>
-                {
-                    { "SessionId", s.SessionID },
-                    { "LoginTime", s.LoginTime },
-                    { "ClientIp", s.ClientIp },
-                    { "DeviceInfo", s.DeviceInfo }
-                }).ToList();
 
-                var duplicateLoginResponse = new LoginResponse
-                {
-                    Message = "检测到重复登录",
-                    IsSuccess = true
-                };
-                duplicateLoginResponse.WithMetadata("ExistingSessions", sessionInfos);
-
-                // 返回需要确认的响应
-                return duplicateLoginResponse;
-            }
-            catch (Exception ex)
-            {
-                LogError($"请求重复登录确认失败: {ex.Message}", ex);
-                return ResponseFactory.CreateSpecificErrorResponse<IResponse>("请求重复登录确认失败", UnifiedErrorCodes.System_InternalError.Code);
-            }
-        }
 
         /// <summary>
         /// 踢掉现有会话
@@ -816,28 +777,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         #region 响应辅助方法
 
-        /// <summary>
-        /// 创建统一的错误响应
-        /// </summary>
-        private LoginResponse CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
-        {
-            var metadata = new Dictionary<string, object> { { "ErrorCode", customErrorCode } };
-            return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>($"{errorCode.Message}: {message}", errorCode.Code, metadata);
-        }
 
-        /// <summary>
-        /// 创建统一的异常响应
-        /// </summary>
-        private LoginResponse CreateExceptionResponse(Exception ex, string errorCode)
-        {
-            var metadata = new Dictionary<string, object>
-            {
-                { "ErrorCode", errorCode },
-                { "Exception", ex.Message },
-                { "StackTrace", ex.StackTrace }
-            };
-            return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code, metadata);
-        }
 
 
 

@@ -1,4 +1,5 @@
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Concurrent;
@@ -286,38 +287,7 @@ namespace RUINORERP.Server.Network.ErrorHandling
             _errorRecords.Clear();
         }
 
-        /// <summary>
-        /// 创建友好的错误响应
-        /// </summary>
-        /// <param name="exception">异常</param>
-        /// <param name="defaultMessage">默认消息</param>
-        /// <param name="defaultCode">默认代码</param>
-        /// <returns>API响应</returns>
-        public IResponse CreateFriendlyErrorResponse(Exception exception, string defaultMessage = "处理请求时发生错误", int defaultCode = 500)
-        {
-            // 根据异常类型创建不同的错误响应
-            switch (exception)
-            {
-                case ApiResponseException apiEx:
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>(apiEx.Message);
-
-                case ArgumentException argEx:
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"参数错误: {argEx.Message}", 400);
-
-                case UnauthorizedAccessException _:
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("访问被拒绝", 403);
-
-                case TimeoutException _:
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("请求超时", 408);
-
-                case NotImplementedException _:
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("功能未实现", 501);
-
-                default:
-                    // 记录未知错误
-                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>(defaultMessage, defaultCode);
-            }
-        }
+        
     }
 
     /// <summary>

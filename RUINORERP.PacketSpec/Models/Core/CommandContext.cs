@@ -58,85 +58,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 客户端在请求时知道需要什么类型的响应结果，将这个类型名称保存起来
         /// </summary>
         public string ExpectedResponseTypeName { get; set; }
-        
-        /// <summary>
-        /// 期望的响应类型 - 缓存反射获取的Type对象，避免重复反射
-        /// </summary>
-        [NonSerialized]
-        private Type _expectedResponseType;
-        
-        /// <summary>
-        /// 获取期望的响应类型
-        /// </summary>
-        /// <returns>响应类型对象，如果无法解析则返回null</returns>
-        public Type GetExpectedResponseType()
-        {            
-            // 如果已经缓存了类型信息，直接返回
-            if (_expectedResponseType != null)
-                return _expectedResponseType;
-                
-            // 如果没有提供类型名称，则无法解析
-            if (string.IsNullOrEmpty(ExpectedResponseTypeName))
-                return null;
-                
-            try
-            {                
-                // 通过类型名称反射获取Type对象
-                // 注意：这里需要确保类型名称是完全限定名，包括命名空间
-                _expectedResponseType = Type.GetType(ExpectedResponseTypeName, false);
-                
-                // 如果直接获取失败，可以尝试在当前程序集中查找
-                if (_expectedResponseType == null)
-                {
-                    // 首先尝试当前执行程序集
-                    var currentAssembly = Assembly.GetExecutingAssembly();
-                    _expectedResponseType = currentAssembly.GetType(ExpectedResponseTypeName);
-                    
-                    // 如果仍然找不到，搜索所有已加载的程序集
-                    if (_expectedResponseType == null)
-                    {
-                        foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-                        {
-                            // 跳过动态程序集
-                            if (assembly.IsDynamic) continue;
-                            
-                            _expectedResponseType = assembly.GetType(ExpectedResponseTypeName);
-                            if (_expectedResponseType != null)
-                                break;
-                        }
-                    }
-                }
-                
-                return _expectedResponseType;
-            }
-            catch (Exception ex)
-            {
-                // 记录反射失败信息，但不抛出异常
-                System.Diagnostics.Debug.WriteLine($"反射获取响应类型失败: {ExpectedResponseTypeName}, 错误: {ex.Message}");
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 安全地创建响应实例
-        /// </summary>
-        /// <returns>响应实例，如果创建失败则返回null</returns>
-        public IResponse CreateExpectedResponseInstance()
-        {
-            var responseType = GetExpectedResponseType();
-            if (responseType == null) return null;
-            
-            try
-            {
-                return Activator.CreateInstance(responseType) as IResponse;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"创建响应实例失败: {responseType.Name}, 错误: {ex.Message}");
-                return null;
-            }
-        }
-
+         
         /// <summary>
         /// 初始化新的CommandContext实例
         /// </summary>
@@ -168,7 +90,6 @@ namespace RUINORERP.PacketSpec.Models.Core
                 UserName = this.UserName,
                 IsAuthenticated = this.IsAuthenticated,
                 ExpectedResponseTypeName = this.ExpectedResponseTypeName
-                // _expectedResponseType不需要克隆，因为它是[NonSerialized]的，会在需要时重新解析
             };
         }
 

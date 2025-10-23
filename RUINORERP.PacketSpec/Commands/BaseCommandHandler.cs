@@ -223,29 +223,19 @@ namespace RUINORERP.PacketSpec.Commands
                 success = false;
 
                 // 使用增强版的特定错误响应创建方法
-                return ResponseFactory.CreateSpecificErrorResponse(
-                    cmd.Packet.ExecutionContext,
-                    cmd.Packet.CommandId,
-                    $"业务处理超时: {executionTimeoutMs}ms",
-                    408
-                );
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, $"业务处理超时: {executionTimeoutMs}ms");
             }
             catch (OperationCanceledException)
             {
                 success = false;
                 // 使用增强版的特定错误响应创建方法
-                return ResponseFactory.CreateSpecificErrorResponse(
-                    cmd.Packet.ExecutionContext,
-                    cmd.Packet.CommandId,
-                    UnifiedErrorCodes.Command_ProcessCancelled.Message,
-                    UnifiedErrorCodes.Command_ProcessCancelled.Code
-                );
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, UnifiedErrorCodes.Command_ProcessCancelled.Message);
             }
             catch (Exception ex)
             {
                 success = false;
-                // 传递命令ID和上下文给异常处理方法
-                return HandleCommandException(ex, cmd.Packet.CommandId, cmd.Packet.ExecutionContext);
+                // 否则使用基础错误响应
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex);
             }
             finally
             {
@@ -264,7 +254,7 @@ namespace RUINORERP.PacketSpec.Commands
         //    if (!ValidateSession(cmd.Packet?.ExecutionContext?.SessionId))
         //    {
         //        Logger.LogDebug($"会话验证失败: {cmd.Packet?.ExecutionContext?.SessionId}");
-        //        return ResponseFactory.CreateSpecificErrorResponse<IResponse>("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
+        //        return ResponseFactory.CreateSpecificErrorResponse<IResponse>("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code, commandContext: context)
         //            .WithMetadata("ErrorCode", "INVALID_SESSION");
         //    }
 
@@ -284,39 +274,6 @@ namespace RUINORERP.PacketSpec.Commands
             // 默认实现返回true，具体子类可重写
             return true;
         }
-
-
-
-        /// <summary>
-        /// 统一的异常处理
-        /// </summary>
-        protected IResponse HandleCommandException(Exception ex, CommandId commandId = default, CommandContext context = null)
-        {
-            var errorCode = UnifiedErrorCodes.Command_ExecuteFailed.Code == 0 ? UnifiedErrorCodes.System_InternalError : UnifiedErrorCodes.Command_ExecuteFailed;
-            Logger.LogError(ex, $"命令处理异常: {ex.Message}");
-
-            // 创建包含异常信息的元数据
-            var metadata = new Dictionary<string, object> { { "StackTrace", ex.StackTrace } };
-
-            // 首先检查上下文中是否有指定的响应类型
-            if (context != null && !string.IsNullOrEmpty(context.ExpectedResponseTypeName))
-            {
-                return ResponseFactory.CreateSpecificErrorResponse(context, $"[{ex.GetType().Name}] {ex.Message}", errorCode.Code, metadata);
-            }
-
-            // 如果有命令ID，使用特定类型的错误响应
-
-
-            // 否则使用基础错误响应
-            return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
-                 ;
-        }
-
-
-
-       
-
-
 
 
         /// <summary>

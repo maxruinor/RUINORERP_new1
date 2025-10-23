@@ -187,7 +187,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送强制下线通知时出错");
-                return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"发送通知失败: {ex.Message}");
+                return SystemCommandResponse.CreateForceLogoutFailure($"发送通知失败: {ex.Message}", "NOTIFICATION_ERROR");
             }
         }
 
@@ -196,7 +196,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private IResponse CreateExceptionResponse(Exception ex, string errorCode)
         {
-            return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex, errorCode);
+            return SystemCommandResponse.CreateForceLogoutFailure($"处理异常: {ex.Message}", errorCode);
         }
     }
 }

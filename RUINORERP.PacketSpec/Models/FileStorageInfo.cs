@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using MessagePack;
 using System.Runtime.Serialization;
 using RUINORERP.PacketSpec.Models.Responses;
 
@@ -16,25 +15,21 @@ namespace RUINORERP.PacketSpec.Models
     /// <summary>
     /// 存储使用信息数据类
     /// </summary>
-    [MessagePackObject]
     public class StorageUsageInfoData
     {
         /// <summary>
         /// 总存储大小（字节）
         /// </summary>
-        [Key(0)]
         public long TotalSize { get; set; }
 
         /// <summary>
         /// 总文件数量
         /// </summary>
-        [Key(1)]
         public int TotalFileCount { get; set; }
 
         /// <summary>
         /// 分类使用情况字典
         /// </summary>
-        [Key(2)]
         public Dictionary<string, CategoryUsage> CategoryUsage { get; set; } = new Dictionary<string, CategoryUsage>();
         
         /// <summary>
@@ -146,12 +141,9 @@ namespace RUINORERP.PacketSpec.Models
         }
     }
 
-    [MessagePackObject]
     public class CategoryUsage
     {
-        [Key(0)]
         public int FileCount { get; set; }
-        [Key(1)]
         public long TotalSize { get; set; }
     }
 

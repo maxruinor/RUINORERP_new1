@@ -1,4 +1,4 @@
-﻿using MessagePack;
+﻿using Newtonsoft.Json;
 using System;
 
 namespace RUINORERP.PacketSpec.Commands.Cache
@@ -6,44 +6,40 @@ namespace RUINORERP.PacketSpec.Commands.Cache
     /// <summary>
     /// 缓存条目信息模型 - 用于缓存元数据管理
     /// </summary>
-    [MessagePackObject]
+    
     public class CacheEntryInfo
     {
         /// <summary>
         /// 缓存键
         /// </summary>
-        [Key(0)]
         public string Key { get; set; } = string.Empty;
 
         /// <summary>
         /// 缓存值类型
         /// </summary>
-        [Key(1)]
         public string Type { get; set; } = "object";
 
         /// <summary>
         /// 创建时间（UTC）
         /// </summary>
-        [Key(2)]
         public DateTime CreatedTimeUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// 过期时间
         /// </summary>
-        [Key(3)]
         public TimeSpan? Expiration { get; set; }
 
         /// <summary>
         /// 是否已过期
         /// </summary>
-        [IgnoreMember]
+        [JsonIgnore]
         public bool IsExpired => Expiration.HasValue &&
             DateTime.UtcNow > CreatedTimeUtc.Add(Expiration.Value);
 
         /// <summary>
         /// 获取剩余过期时间
         /// </summary>
-        [IgnoreMember]
+        [JsonIgnore]
         public TimeSpan? RemainingExpiration
         {
             get

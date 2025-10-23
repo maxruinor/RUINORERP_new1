@@ -9,6 +9,7 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Lock;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
 
@@ -725,7 +726,7 @@ namespace RUINORERP.Server.Network.Commands
                 var broadcastCommand = new BroadcastLockStatusCommand(lockedDocuments);
                 
                 // 序列化数据
-                var serializedData = RUINORERP.PacketSpec.Serialization.UnifiedSerializationService.SerializeToBinary(broadcastCommand);
+                var serializedData = JsonCompressionSerializationService.Serialize(broadcastCommand, true);
                 
                 // 创建原始数据包
                 var originalData = new OriginalData(

@@ -1,5 +1,5 @@
 using System;
-using MessagePack;
+using Newtonsoft.Json; // 新增
 
 namespace RUINORERP.PacketSpec.Commands.Authentication
 {
@@ -8,34 +8,33 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     /// 包含访问令牌、刷新令牌和过期时间等信息
     /// </summary>
     [Serializable]
-    [MessagePackObject]
     public class TokenInfo
     {
         /// <summary>
         /// 访问令牌
         /// 用于API访问的主要令牌
         /// </summary>
-        [Key(29)]
+        [JsonProperty("accessToken")]
         public string AccessToken { get; set; }
 
         /// <summary>
         /// 刷新令牌
         /// 用于在访问令牌过期后获取新的访问令牌
         /// </summary>
-        [Key(30)]
+        [JsonProperty("refreshToken")]
         public string RefreshToken { get; set; }
 
         /// <summary>
         /// 过期时间
         /// 令牌的到期时间点
         /// </summary>
-        [Key(31)]
+        [JsonProperty("expiresAt")]
         public DateTime ExpiresAt { get; set; }
 
         /// <summary>
         /// 令牌类型 - 默认Bearer
         /// </summary>
-        [Key(32)]
+        [JsonProperty("tokenType")]
         public string TokenType { get; set; } = "Bearer";
 
         /// <summary>

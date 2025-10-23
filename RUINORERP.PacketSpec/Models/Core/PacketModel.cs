@@ -26,13 +26,11 @@ namespace RUINORERP.PacketSpec.Models.Core
 
         // 简单的命令标识（不包含业务逻辑）
         //命令类型
-        [JsonProperty(Order=1)]
         public CommandId CommandId { get; set; }
 
         /// <summary>
         /// 数据包状态
         /// </summary>
-        [JsonProperty(Order=2)]
         public PacketStatus Status { get; set; }
 
         #region 网络传输属性
@@ -41,7 +39,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 数据包唯一标识符
         /// </summary>
         // 网络标识
-        [JsonProperty(Order=3)]
         public string PacketId { get; set; }
 
 
@@ -49,26 +46,22 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 数据包方向
         /// </summary>
-        [JsonProperty(Order=4)]
         public PacketDirection Direction { get; set; }
 
         /// <summary>
         /// 扩展属性字典（用于存储非核心但需要传输的元数据）
         /// </summary>
-        [MessagePack.IgnoreMember]  // 忽略此属性，不序列化
-        public System.Collections.Generic.Dictionary<string, object> Extensions { get; set; }
+        public Dictionary<string, object> Extensions { get; set; }
 
         /// <summary>
         /// 命令执行上下文 - 网络传输层使用
         /// 包含会话、认证、追踪等基础设施信息
         /// </summary>
-        [JsonProperty(Order=5)]
         public CommandContext ExecutionContext { get; set; }
 
         /// <summary>
         /// 会话ID（通过ExecutionContext获取）
         /// </summary>
-        [IgnoreMember]
         public string SessionId
         {
             get => ExecutionContext?.SessionId;
@@ -121,31 +114,26 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
-        [JsonProperty(Order=6)]
         public DateTime CreatedTime { get; set; }
 
         /// <summary>
         /// 时间戳（UTC时间）
         /// 记录对象的当前状态时间点，会随着对象状态变化而更新
         /// </summary>
-        [JsonProperty(Order=7)]
         public DateTime TimestampUtc { get; set; }
 
 
         /// <summary>
         /// 请求模型
         /// </summary>
-        [JsonProperty(Order=8)]
-        public RequestBase Request { get; set; }
+        public IRequest Request { get; set; }
 
 
         /// <summary>
         /// 响应模型
         /// </summary>
-        [JsonProperty(Order=9)]
-        public ResponseBase Response { get; set; }
+        public IResponse Response { get; set; }
 
-        [JsonProperty(Order=10)]
         public PacketPriority PacketPriority { get; set; }
         /// <summary>
         /// 验证模型有效性（实现 ICoreEntity 接口）
@@ -175,9 +163,9 @@ namespace RUINORERP.PacketSpec.Models.Core
         public PacketModel()
         {
             PacketId = Guid.NewGuid().ToString();
-            CreatedTime = DateTime.UtcNow;
-            TimestampUtc = CreatedTime;
-            Extensions = new System.Collections.Generic.Dictionary<string, object>();
+            CreatedTime = DateTime.Now;
+            TimestampUtc = DateTime.UtcNow;
+            Extensions = new Dictionary<string, object>();
             // 初始化默认扩展属性
             SetExtension("Version", "2.0");
             SetExtension("MessageType", MessageType.Request);
@@ -200,9 +188,9 @@ namespace RUINORERP.PacketSpec.Models.Core
             if (ExecutionContext != null)
             {
                 ExecutionContext.SessionId = null;
-                if (ExecutionContext.AccessToken != null)
+                if (ExecutionContext.Token != null)
                 {
-                    ExecutionContext.AccessToken = null;
+                    ExecutionContext.Token.AccessToken = null;
                 }
             }
 
@@ -248,7 +236,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 获取包标志位
         /// </summary>
-        [IgnoreMember]
         public string Flag
         {
             get => GetExtension<string>("Flag");
@@ -258,7 +245,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 获取模型版本
         /// </summary>
-        [IgnoreMember]
         public string Version
         {
             get => GetExtension<string>("Version");
@@ -268,7 +254,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 获取消息类型
         /// </summary>
-        [IgnoreMember]
         public MessageType MessageType
         {
             get => GetExtension<MessageType>("MessageType");

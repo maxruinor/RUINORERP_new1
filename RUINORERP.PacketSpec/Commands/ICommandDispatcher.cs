@@ -30,7 +30,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="Packet">数据包对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        Task<ResponseBase> DispatchAsync(PacketModel Packet, CancellationToken cancellationToken = default);
+        Task<IResponse> DispatchAsync(PacketModel Packet, CancellationToken cancellationToken = default);
 
 
 

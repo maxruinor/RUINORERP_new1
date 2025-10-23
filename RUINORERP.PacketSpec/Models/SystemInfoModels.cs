@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using MessagePack;
+
 
 namespace RUINORERP.PacketSpec.Models
 {
@@ -8,31 +8,26 @@ namespace RUINORERP.PacketSpec.Models
     /// 磁盘信息
     /// </summary>
     [Serializable]
-    [MessagePackObject]
     public class DiskInfo
     {
         /// <summary>
         /// 磁盘名称
         /// </summary>
-        [Key(0)]
         public string Name { get; set; }
 
         /// <summary>
         /// 总大小（GB）
         /// </summary>
-        [Key(1)]
         public float TotalSize { get; set; }
 
         /// <summary>
         /// 可用空间（GB）
         /// </summary>
-        [Key(2)]
         public float AvailableSpace { get; set; }
 
         /// <summary>
         /// 使用率（百分比）
         /// </summary>
-        [Key(3)]
         public float UsagePercentage { get; set; }
     }
 

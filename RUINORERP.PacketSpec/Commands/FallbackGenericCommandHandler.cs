@@ -42,7 +42,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cmd">命令对象</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>处理结果</returns>
-        protected override Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken ct)
+        protected override Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken ct)
         {
             try
             {
@@ -57,14 +57,14 @@ namespace RUINORERP.PacketSpec.Commands
                     // 如果有有效载荷，返回成功响应并包含原数据
                     return Task.FromResult(ResponseBase.CreateError($"{NoRegisteredCommand} 已通过回退处理器处理")
                         .WithMetadata("CommandType", payload.GetType().FullName)
-                        .WithMetadata("HandlerType", Name) as ResponseBase);
+                        .WithMetadata("HandlerType", Name) as IResponse);
                 }
                 else
                 {
                     // 没有有效载荷，返回成功响应
                     return Task.FromResult(ResponseBase.CreateSuccess()
                         .WithMetadata("Message", $"未注册命令 [{NoRegisteredCommand}] 已通过回退处理器处理")
-                        .WithMetadata("HandlerType", Name) as ResponseBase);
+                        .WithMetadata("HandlerType", Name) as IResponse);
                 }
             }
             catch (Exception ex)
@@ -75,7 +75,7 @@ namespace RUINORERP.PacketSpec.Commands
                 return Task.FromResult(ResponseBase.CreateError("处理未注册命令时发生异常")
                     .WithMetadata("ErrorCode", "FALLBACK_HANDLER_ERROR")
                     .WithMetadata("ErrorMessage", ex.Message)
-                    .WithMetadata("HandlerType", Name) as ResponseBase);
+                    .WithMetadata("HandlerType", Name) as IResponse);
             }
         }
     }

@@ -76,7 +76,7 @@ namespace RUINORERP.UI.Network.Services.Cache
             // 利用业务层缓存管理器更新缓存（如果响应成功）
             if (response?.IsSuccess == true && response.CacheData != null)
             {
-                _cacheManager.UpdateEntityList(tableName, response.CacheData.EntityByte);
+                _cacheManager.UpdateEntityList(tableName, response.CacheData.GetData());
             }
         }
 

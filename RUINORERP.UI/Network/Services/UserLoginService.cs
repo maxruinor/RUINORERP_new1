@@ -1,4 +1,3 @@
-using MessagePack;
 using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;
@@ -140,38 +139,7 @@ namespace RUINORERP.UI.Network.Services
                 // 检查响应是否成功
                 if (!response.IsSuccess)
                 {
-                    // 检查特定错误类型并提供更详细的错误信息
-                    string errorMessage = response.ErrorMessage;
-                    string detailedMessage = "登录失败";
-                    var errorCode = UnifiedErrorCodes.Command_ValidationFailed;
-
-                    if (!string.IsNullOrEmpty(errorMessage))
-                    {
-                        if (errorMessage.IndexOf("TIME_MISMATCH", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            detailedMessage = "客户端时间与服务器时间差异过大，请校准系统时间后重试";
-                        }
-                        else if (errorMessage.IndexOf("invalid", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            detailedMessage = "用户名或密码错误，请重新输入";
-                        }
-                        else if (errorMessage.IndexOf("lock", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            detailedMessage = "账户已被锁定，请联系系统管理员";
-                        }
-                        else if (errorMessage.IndexOf("expire", StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            detailedMessage = "账户已过期，请联系系统管理员";
-                        }
-                        else
-                        {
-                            detailedMessage = $"登录失败: {errorMessage}";
-                        }
-                    }
-
-                    _logger?.LogWarning("登录失败 - 用户: {Username}, 错误: {ErrorMessage}", username, errorMessage);
-                    return ResponseBase.CreateError(detailedMessage, errorCode)
-                        .WithMetadata("ErrorCode", errorMessage) as LoginResponse;
+                    return response;
                 }
 
                 // 登录成功后处理Token
@@ -190,12 +158,6 @@ namespace RUINORERP.UI.Network.Services
                         _logger?.LogWarning(heartbeatEx, "登录成功后启动心跳失败 - 用户: {Username}", username);
                         // 心跳启动失败不影响登录流程，只记录警告
                     }
-                }
-                else
-                {
-                    _logger?.LogWarning("登录响应中未包含有效的Token信息 - 用户: {Username}, 请求ID: {RequestId}",
-                        username, loginRequest.RequestId);
-                    return ResponseBase.CreateError("登录响应中未包含有效的Token信息") as LoginResponse;
                 }
 
                 return response;

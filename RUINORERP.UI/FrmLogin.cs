@@ -234,10 +234,10 @@ namespace RUINORERP.UI
                                     if (loginSuccess == null || !loginSuccess.IsSuccess)
                                     {
                                         // 登录失败，断开连接
-                                        if (MainForm.Instance.communicationService.IsConnected)
-                                        {
-                                             MainForm.Instance.communicationService.Disconnect();
-                                        }
+                                        //if (MainForm.Instance.communicationService.IsConnected)
+                                        //{
+                                        //     MainForm.Instance.communicationService.Disconnect();
+                                        //}
                                         
                                         // 设置登录状态为未登录
                                         if (MainForm.Instance != null)

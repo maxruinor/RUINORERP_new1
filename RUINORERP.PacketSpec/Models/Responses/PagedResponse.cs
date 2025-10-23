@@ -1,4 +1,3 @@
-using MessagePack;
 using System;
 using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -9,37 +8,31 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// 分页响应基类 - 专门用于分页查询结果的响应
     /// </summary>
     /// <typeparam name="TEntity">实体数据类型</typeparam>
-    [MessagePackObject]
     public class PagedResponse<TEntity> : ResponseBase<List<TEntity>>
     {
         /// <summary>
         /// 当前页索引（从0开始）
         /// </summary>
-        [Key(13)]
         public int PageIndex { get; set; }
 
         /// <summary>
         /// 每页大小
         /// </summary>
-        [Key(14)]
         public int PageSize { get; set; }
 
         /// <summary>
         /// 总页数
         /// </summary>
-        [Key(15)]
         public int TotalPages { get; set; }
 
         /// <summary>
         /// 是否有下一页
         /// </summary>
-        [Key(16)]
         public bool HasNextPage { get; set; }
 
         /// <summary>
         /// 是否有上一页
         /// </summary>
-        [Key(17)]
         public bool HasPreviousPage { get; set; }
 
         /// <summary>
@@ -126,37 +119,31 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// <summary>
     /// 分页查询请求类 - 与分页响应配套使用
     /// </summary>
-    [MessagePackObject]
     public class PagedRequest : RequestBase
     {
         /// <summary>
         /// 当前页索引（从0开始）
         /// </summary>
-        [Key(5)]
         public int PageIndex { get; set; } = 0;
 
         /// <summary>
         /// 每页大小
         /// </summary>
-        [Key(6)]
         public int PageSize { get; set; } = 20;
 
         /// <summary>
         /// 排序字段
         /// </summary>
-        [Key(7)]
         public string SortField { get; set; } = "";
 
         /// <summary>
         /// 排序方向（ASC/DESC）
         /// </summary>
-        [Key(8)]
         public string SortDirection { get; set; } = "ASC";
 
         /// <summary>
         /// 是否获取总记录数
         /// </summary>
-        [Key(9)]
         public bool IncludeTotalCount { get; set; } = true;
 
         /// <summary>
@@ -196,7 +183,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <summary>
         /// 跳过的记录数
         /// </summary>
-        [MessagePack.IgnoreMember]
         public int SkipCount => PageIndex * PageSize;
 
         /// <summary>

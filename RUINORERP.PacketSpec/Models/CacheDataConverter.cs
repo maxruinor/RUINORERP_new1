@@ -1,5 +1,4 @@
-﻿using MessagePack;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -31,14 +30,6 @@ namespace RUINORERP.PacketSpec.Models
 
             try
             {
-                // 优先使用MessagePack进行转换（性能更好）
-                var bytes = MessagePackSerializer.Serialize(source);
-                return MessagePackSerializer.Deserialize<T>(bytes);
-            }
-            catch
-            {
-                try
-                {
                     // 使用JSON进行转换（兼容性更好）
                     var json = JsonConvert.SerializeObject(source);
                     return JsonConvert.DeserializeObject<T>(json);
@@ -48,7 +39,7 @@ namespace RUINORERP.PacketSpec.Models
                     throw new InvalidOperationException($"无法将对象转换为类型 {typeof(T).Name}", jsonEx);
                 }
             }
-        }
+        
 
         /// <summary>
         /// 将对象转换为指定类型的列表
@@ -131,7 +122,8 @@ namespace RUINORERP.PacketSpec.Models
 
             try
             {
-                return MessagePackSerializer.Serialize(source);
+                var json = JsonConvert.SerializeObject(source);
+                return Encoding.UTF8.GetBytes(json);
             }
             catch (Exception ex)
             {
@@ -151,7 +143,8 @@ namespace RUINORERP.PacketSpec.Models
 
             try
             {
-                return MessagePackSerializer.Deserialize<T>(bytes);
+                var json = Encoding.UTF8.GetString(bytes);
+                return JsonConvert.DeserializeObject<T>(json);
             }
             catch (Exception ex)
             {
@@ -171,9 +164,9 @@ namespace RUINORERP.PacketSpec.Models
 
             try
             {
-                // 使用MessagePack进行深拷贝
-                var bytes = MessagePackSerializer.Serialize(source);
-                return MessagePackSerializer.Deserialize<T>(bytes);
+                // 使用JSON进行深拷贝
+                var json = JsonConvert.SerializeObject(source);
+                return JsonConvert.DeserializeObject<T>(json);
             }
             catch (Exception ex)
             {

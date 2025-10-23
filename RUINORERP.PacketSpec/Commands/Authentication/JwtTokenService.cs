@@ -5,7 +5,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace RUINORERP.PacketSpec.Commands.Authentication
 {
@@ -65,8 +64,8 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             var expires = DateTime.Now.AddHours(_options.DefaultExpiryHours);
 
             var token = new JwtSecurityToken(
-                issuer: null,
-                audience: null,
+                issuer: _options.Issuer,
+                audience: _options.Audience,
                 claims: claims,
                 expires: expires,
                 signingCredentials: _signingCredentials
@@ -81,26 +80,6 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// <param name="token">要验证的令牌</param>
         /// <returns>验证结果</returns>
         public TokenValidationResult ValidateToken(string token)
-        {
-            return ValidateTokenCore(token);
-        }
-
-        /// <summary>
-        /// 异步验证JWT令牌
-        /// </summary>
-        /// <param name="token">要验证的令牌</param>
-        /// <returns>验证结果</returns>
-        public Task<TokenValidationResult> ValidateTokenAsync(string token)
-        {
-            return Task.FromResult(ValidateTokenCore(token));
-        }
-
-        /// <summary>
-        /// 统一的Token验证核心逻辑
-        /// </summary>
-        /// <param name="token">要验证的Token</param>
-        /// <returns>验证结果</returns>
-        private TokenValidationResult ValidateTokenCore(string token)
         {
             var result = new TokenValidationResult();
 
@@ -119,11 +98,13 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
 
                 var validationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero,
-                    IssuerSigningKey = securityKey
+                    ValidateIssuer = _options.ValidateIssuer,
+                    ValidateAudience = _options.ValidateAudience,
+                    ValidateLifetime = _options.ValidateLifetime,
+                    ClockSkew = TimeSpan.FromSeconds(_options.ClockSkewSeconds),
+                    IssuerSigningKey = securityKey,
+                    ValidIssuer = _options.Issuer,
+                    ValidAudience = _options.Audience
                 };
 
                 var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
@@ -149,35 +130,44 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                         result.Claims[claim.Type] = claim.Value;
                     }
                 }
+                
+                result.Token = new TokenInfo
+                {
+                    AccessToken = token,
+                    ExpiresAt = result.ExpiryTime ?? DateTime.MinValue,
+                    TokenType = "Bearer"
+                };
+
+                return result;
             }
             catch (SecurityTokenExpiredException)
             {
                 result.IsValid = false;
                 result.ErrorMessage = "Token已过期";
+                return result;
             }
             catch (SecurityTokenInvalidSignatureException)
             {
                 result.IsValid = false;
                 result.ErrorMessage = "Token签名无效";
+                return result;
             }
             catch (Exception ex)
             {
                 result.IsValid = false;
                 result.ErrorMessage = $"Token验证失败: {ex.Message}";
+                return result;
             }
-
-            return result;
         }
 
         /// <summary>
         /// 刷新JWT令牌
         /// </summary>
         /// <param name="refreshToken">刷新令牌</param>
-        /// <param name="currentToken">当前访问令牌（可选，用于额外验证）</param>
         /// <returns>新生成的访问令牌</returns>
         /// <exception cref="ArgumentException">当刷新令牌为空时抛出</exception>
         /// <exception cref="SecurityTokenException">当令牌验证失败时抛出</exception>
-        public string RefreshToken(string refreshToken, string currentToken = null)
+        public string RefreshToken(string refreshToken)
         {
             if (string.IsNullOrEmpty(refreshToken))
                 throw new ArgumentException("刷新Token不能为空", nameof(refreshToken));
@@ -187,20 +177,8 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             if (!refreshValidation.IsValid)
                 throw new SecurityTokenException($"刷新Token无效: {refreshValidation.ErrorMessage}");
 
-            // 如果提供了当前Token，验证其一致性（额外的安全检查）
-            if (!string.IsNullOrEmpty(currentToken))
-            {
-                var currentValidation = ValidateToken(currentToken);
-                if (!currentValidation.IsValid)
-                    throw new SecurityTokenException("当前Token无效，无法执行刷新操作");
-                
-                // 确保两个Token属于同一用户
-                if (refreshValidation.UserId != currentValidation.UserId)
-                    throw new SecurityTokenException("Token用户不一致，刷新操作被拒绝");
-            }
-
             // 生成新的访问Token，保持用户信息一致
-            return GenerateToken(refreshValidation.UserId, refreshValidation.UserName, refreshValidation.Claims);
+            return GenerateToken(refreshValidation.UserId, refreshValidation.UserName);
         }
 
         /// <summary>
@@ -212,39 +190,6 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         {
             // 简化实现，实际项目中应使用Redis等存储被撤销的Token
             // 此处仅作为接口实现占位
-        }
-
-        /// <summary>
-        /// 检查Token是否即将过期
-        /// </summary>
-        /// <param name="token">要检查的Token</param>
-        /// <param name="thresholdMinutes">过期阈值（分钟），默认5分钟</param>
-        /// <returns>包含是否即将过期和剩余有效秒数的元组</returns>
-        public Task<(bool isExpiringSoon, int expiresInSeconds)> CheckTokenExpiryAsync(string token, int thresholdMinutes = 5)
-        { 
-            if (string.IsNullOrEmpty(token))
-            {
-                return Task.FromResult((false, 0));
-            }
-
-            try
-            {
-                var validationResult = ValidateToken(token);
-                if (validationResult.IsValid && validationResult.ExpiryTime.HasValue)
-                {
-                    var timeUntilExpiry = validationResult.ExpiryTime.Value - DateTime.Now;
-                    var isExpiringSoon = timeUntilExpiry.TotalMinutes < thresholdMinutes;
-                    var expiresInSeconds = Math.Max(0, (int)timeUntilExpiry.TotalSeconds);
-                    
-                    return Task.FromResult((isExpiringSoon, expiresInSeconds));
-                }
-            }
-            catch
-            {
-                // 验证失败时返回安全默认值
-            }
-
-            return Task.FromResult((false, 0));
         }
     }
 }

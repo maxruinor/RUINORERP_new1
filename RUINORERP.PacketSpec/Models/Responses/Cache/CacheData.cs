@@ -1,4 +1,4 @@
-using MessagePack;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RUINORERP.PacketSpec.Serialization;
 using System;
@@ -11,43 +11,37 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
     /// 统一缓存数据模型 - 支持多种缓存操作的数据存储
     /// 与统一缓存请求响应模型配套使用
     /// </summary>
-    [MessagePackObject]
     public class CacheData
     {
         /// <summary>
         /// 表名
         /// </summary>
-        [Key(0)]
         public string TableName { get; set; } = string.Empty;
 
 
         /// <summary>
         /// 获取实体类型
         /// </summary>
-        [IgnoreMember]
+        [JsonIgnore]
         public Type EntityType => TypeResolver.GetType(EntityTypeName);
 
-        [Key(18)]
         public string EntityTypeName { get; set; }
 
 
         /// <summary>
         /// 二进制数据
         /// </summary>
-        [Key(19)]
         public byte[] EntityByte { get; set; }
 
 
         /// <summary>
         /// 缓存时间
         /// </summary>
-        [Key(1)]
         public DateTime CacheTime { get; set; } = DateTime.Now;
 
         /// <summary>
         /// 过期时间
         /// </summary>
-        [Key(2)]
         public DateTime ExpirationTime { get; set; } = DateTime.Now.AddDays(1);
 
  
@@ -55,13 +49,11 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// <summary>
         /// 版本
         /// </summary>
-        [Key(4)]
         public string Version { get; set; } = "1.0.0";
 
         /// <summary>
         /// 是否有更多数据
         /// </summary>
-        [Key(5)]
         public bool HasMoreData { get; set; } = false;
 
         /// <summary>
@@ -72,7 +64,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
             return new CacheData
             {
                 TableName = tableName,
-                EntityByte = UnifiedSerializationService.SerializeWithMessagePack(data),
+                EntityByte = JsonCompressionSerializationService.Serialize(data, true),
                 EntityTypeName = typeof(T).AssemblyQualifiedName, // 使用程序集限定名称
                 CacheTime = DateTime.Now,
                 ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1))
@@ -89,7 +81,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
             return new CacheData
             {
                 TableName = tableName,
-                EntityByte = UnifiedSerializationService.SafeSerializeWithMessagePack(data),
+                EntityByte = JsonCompressionSerializationService.Serialize(data, true),
                 EntityTypeName = data.GetType().AssemblyQualifiedName,
                 CacheTime = DateTime.Now,
                 ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1)),
@@ -137,9 +129,9 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
             try
             {
                 // 使用反射调用泛型反序列化方法
-                var method = typeof(UnifiedSerializationService).GetMethod("DeserializeWithMessagePack");
+                var method = typeof(JsonCompressionSerializationService).GetMethod("Deserialize");
                 var genericMethod = method.MakeGenericMethod(type);
-                return genericMethod.Invoke(null, new object[] { EntityByte });
+                return genericMethod.Invoke(null, new object[] { EntityByte, true });
             }
             catch (Exception ex)
             {
@@ -161,7 +153,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
                 return default(T);
             }
 
-            return UnifiedSerializationService.DeserializeWithMessagePack<T>(EntityByte);
+            return JsonCompressionSerializationService.Deserialize<T>(EntityByte, true);
         }
 
 
@@ -170,37 +162,31 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
     /// <summary>
     /// 统一分页缓存数据模型
     /// </summary>
-    [MessagePackObject]
     public class PagedCacheData
     {
         /// <summary>
         /// 缓存数据
         /// </summary>
-        [Key(0)]
         public CacheData CacheData { get; set; }
 
         /// <summary>
         /// 页索引
         /// </summary>
-        [Key(1)]
         public int PageIndex { get; set; } = 0;
 
         /// <summary>
         /// 页大小
         /// </summary>
-        [Key(2)]
         public int PageSize { get; set; } = 20;
 
         /// <summary>
         /// 总记录数
         /// </summary>
-        [Key(3)]
         public int TotalCount { get; set; } = 0;
 
         /// <summary>
         /// 总页数
         /// </summary>
-        [Key(4)]
         public int TotalPages { get; set; } = 0;
 
         /// <summary>
@@ -221,25 +207,25 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// <summary>
         /// 是否第一页
         /// </summary>
-        [IgnoreMember]
+        [JsonIgnore]
         public bool IsFirstPage => PageIndex <= 0;
 
         /// <summary>
         /// 是否最后一页
         /// </summary>
-        [IgnoreMember]
+        [JsonIgnore]
         public bool IsLastPage => PageIndex >= TotalPages - 1;
 
         /// <summary>
         /// 是否有上一页
         /// </summary>
-        [IgnoreMember]
+        [JsonIgnore]
         public bool HasPreviousPage => PageIndex > 0;
 
         /// <summary>
         /// 是否有下一页
         /// </summary>
-        [IgnoreMember]
+        [JsonIgnore]
         public bool HasNextPage => PageIndex < TotalPages - 1;
     }
 }

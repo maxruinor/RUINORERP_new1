@@ -61,16 +61,13 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <returns>Token刷新请求对象</returns>
         public static TokenRefreshRequest CreateTokenRefreshRequest(string token, string refreshToken)
         {
-#pragma warning disable CS0618 // 类型或成员已过时
             return CreateRequest(
                 AuthenticationCommands.RefreshToken,
                 new TokenRefreshRequest
                 {
-                    Token = token,
                     RefreshToken = refreshToken
                 }
             );
-#pragma warning restore CS0618 // 类型或成员已过时
         }
         
         /// <summary>

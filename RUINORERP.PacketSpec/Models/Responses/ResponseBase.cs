@@ -1,5 +1,4 @@
-using MessagePack;
-using RUINORERP.PacketSpec.Core;
+﻿using RUINORERP.PacketSpec.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,56 +9,46 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// <summary>
     /// 响应基类 - 提供所有响应的公共属性和方法
     /// </summary>
-    [MessagePackObject]
     public class ResponseBase : IResponse
     {
         /// <summary>
         /// 业务级错误码；0 表示成功
         /// </summary>
-        [Key(0)]
         public int ErrorCode { get; set; }
 
         /// <summary>
         /// 人类可读错误消息；Success 时可为空
         /// </summary>
-        [Key(1)]
         public string ErrorMessage { get; set; }
 
         /// <summary>
         /// 操作是否成功
         /// </summary>
-        [Key(2)]
         public bool IsSuccess { get; set; }
 
         /// <summary>
         /// 响应消息
         /// </summary>
-        [Key(3)]
         public string Message { get; set; }
 
         /// <summary>
         /// 响应时间戳
         /// </summary>
-        [Key(4)]
         public DateTime Timestamp { get; set; }
 
         /// <summary>
         /// 请求标识
         /// </summary>
-        [Key(6)]
         public string RequestId { get; set; }
 
         /// <summary>
         /// 执行时间（毫秒）
         /// </summary>
-        [Key(7)]
         public long ExecutionTimeMs { get; set; }
 
         /// <summary>
         /// 扩展元数据（可选）
         /// </summary>
-        [Key(8)]
-        [MessagePack.IgnoreMember]
         public Dictionary<string, object> Metadata { get; set; }
 
         /// <summary>
@@ -115,20 +104,32 @@ namespace RUINORERP.PacketSpec.Models.Responses
             };
         }
 
+        
         /// <summary>
-        /// 创建失败响应
+        /// 创建失败响应（带元数据）
         /// </summary>
         /// <param name="message">失败消息</param>
         /// <param name="code">错误代码</param>
+        /// <param name="metadata">元数据字典</param>
         /// <returns>响应实例</returns>
-        public static ResponseBase CreateError(string message, int code = 500)
+        public static ResponseBase CreateError(string message, int code = 500, Dictionary<string, object> metadata = null)
         {
-            return new ResponseBase
+            var response = new ResponseBase
             {
                 IsSuccess = false,
                 Message = message,
+                ErrorCode = code,
+                ErrorMessage = message,
                 Timestamp = DateTime.Now
             };
+            
+            // 添加元数据（如果有）
+            if (metadata != null && metadata.Count > 0)
+            {
+                response.WithMetadata(metadata);
+            }
+            
+            return response;
         }
 
         /// <summary>
@@ -169,31 +170,26 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// 专门用于承载业务实体数据，支持复杂查询和CRUD操作结果
     /// </summary>
     /// <typeparam name="TEntity">业务实体数据类型</typeparam>
-    [MessagePackObject]
     public class ResponseBase<TEntity> : ResponseBase
     {
         /// <summary>
         /// 业务实体数据
         /// </summary>
-        [Key(100)]
         public TEntity Data { get; set; }
 
         /// <summary>
         /// 数据总数（主要用于分页查询）
         /// </summary>
-        [Key(101)]
         public int TotalCount { get; set; }
 
         /// <summary>
         /// 扩展数据字典（用于存放额外的业务数据）
         /// </summary>
-        [Key(102)]
         public Dictionary<string, object> ExtraData { get; set; }
 
         /// <summary>
         /// 数据版本号（用于乐观锁和缓存控制）
         /// </summary>
-        [Key(103)]
         public string DataVersion { get; set; }
 
         /// <summary>

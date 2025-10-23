@@ -12,7 +12,6 @@ using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Models.Requests;
 using System.Collections.Generic;
 using System.Linq;
-using MessagePack;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {
@@ -51,7 +50,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数
         /// </summary>
-        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {

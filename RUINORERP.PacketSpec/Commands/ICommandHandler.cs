@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using MessagePack;
+using Newtonsoft.Json;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -49,7 +49,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cmd">队列命令对象，包含数据包和任务完成源</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        Task<ResponseBase> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default);
+        Task<IResponse> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 判断是否可以处理该命令数据包
@@ -206,19 +206,19 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 启动时间（本地时间，仅用于调试显示）
         /// </summary>
-        [IgnoreMember]
+        [JsonIgnore]
         public DateTime StartTimeLocal => StartTimeUtc.ToLocalTime();
 
         /// <summary>
         /// 最后处理时间（本地时间，仅用于调试显示）
         /// </summary>
-        [IgnoreMember]
+        [JsonIgnore]
         public DateTime LastProcessTimeLocal => LastProcessTime.ToLocalTime();
 
         /// <summary>
         /// 最后一次错误时间（本地时间，仅用于调试显示）
         /// </summary>
-        [IgnoreMember]
+        [JsonIgnore]
         public DateTime? LastErrorTimeLocal => LastErrorTime?.ToLocalTime();
 
         /// <summary>

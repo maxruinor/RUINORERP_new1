@@ -46,7 +46,7 @@ namespace RUINORERP.PacketSpec.DI
                     {
                         options.SecretKey = configuration["TokenService:SecretKey"] ?? "your-default-secret-key";
                         options.DefaultExpiryHours = 8;
-                        options.RefreshTokenExpiryHours = 24;
+                        // 移除对已删除属性的引用
                     }
                     // 验证配置
                     options.Validate();
@@ -167,10 +167,7 @@ namespace RUINORERP.PacketSpec.DI
                     {
                         options.DefaultExpiryHours = defaultExpiryHours;
                     }
-                    if (int.TryParse(configuration["TokenService:RefreshTokenExpiryHours"], out var refreshTokenExpiryHours))
-                    {
-                        options.RefreshTokenExpiryHours = refreshTokenExpiryHours;
-                    }
+                    // 移除对已删除属性的引用
                 }
 
                 return options;
@@ -193,7 +190,7 @@ namespace RUINORERP.PacketSpec.DI
             //    .As<ICommandCreationService>()
             //    .SingleInstance();
 
-           
+          
 
             // 注册命令处理器工厂
             builder.RegisterType<CommandHandlerFactory>()

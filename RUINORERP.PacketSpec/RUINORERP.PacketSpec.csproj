@@ -63,12 +63,6 @@
   <ItemGroup>
     <PackageReference Include="CacheManager.Core" Version="2.0.0" />
     <PackageReference Include="CircularBuffer" Version="1.4.0" />
-    <PackageReference Include="MessagePack" Version="3.1.4" />
-    <PackageReference Include="MessagePack.Annotations" Version="3.1.4" />
-    <PackageReference Include="MessagePackAnalyzer" Version="3.1.4">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />

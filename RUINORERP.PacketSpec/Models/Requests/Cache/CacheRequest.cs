@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Requests;
-using MessagePack;
 using RUINORERP.PacketSpec.Commands.Cache;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Responses.Cache;
@@ -13,56 +12,48 @@ namespace RUINORERP.PacketSpec.Models.Requests.Cache
     /// 通过 OperationType 区分不同的缓存操作
     /// </summary>
     [Serializable]
-    [MessagePackObject]
+    
     public class CacheRequest : RequestBase
     {
         /// <summary>
         /// 表名
         /// </summary>
-        [Key(11)]
         public string TableName { get; set; } = string.Empty;
 
         /// <summary>
         /// 缓存操作类型
         /// </summary>
-        [Key(12)]
         public CacheOperation Operation { get; set; } = CacheOperation.Get;
 
         /// <summary>
         /// 订阅操作类型 - 用于CacheSubscription命令
         /// </summary>
-        [Key(1006)]
         public SubscribeAction SubscribeAction { get; set; } = SubscribeAction.None;
 
 
         /// <summary>
         /// 缓存数据
         /// </summary>
-        [Key(10)]
         public CacheData CacheData { get; set; }
 
         /// <summary>
         /// 主键名称
         /// </summary>
-        [Key(14)]
         public string PrimaryKeyName { get; set; } = string.Empty;
 
         /// <summary>
         /// 主键值
         /// </summary>
-        [Key(15)]
         public object PrimaryKeyValue { get; set; }
 
         /// <summary>
         /// 是否强制刷新缓存
         /// </summary>
-        [Key(16)]
         public bool ForceRefresh { get; set; } = false;
 
         /// <summary>
         /// 上次请求时间，用于增量更新
         /// </summary>
-        [Key(17)]
         public DateTime LastRequestTime { get; set; } = DateTime.MinValue;
 
         /// <summary>

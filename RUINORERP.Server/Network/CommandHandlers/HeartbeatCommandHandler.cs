@@ -51,7 +51,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 具体的命令处理逻辑
         /// </summary>
-        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {

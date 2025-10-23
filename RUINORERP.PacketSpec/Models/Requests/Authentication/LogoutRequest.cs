@@ -1,5 +1,4 @@
-using MessagePack;
-using RUINORERP.PacketSpec.Models.Requests;
+﻿using RUINORERP.PacketSpec.Models.Requests;
 using System;
 
 namespace RUINORERP.PacketSpec.Models.Requests.Authentication
@@ -7,25 +6,22 @@ namespace RUINORERP.PacketSpec.Models.Requests.Authentication
     /// <summary>
     /// 登出请求 - 用于用户退出系统
     /// </summary>
-    [MessagePackObject]
+    
     public class LogoutRequest : RequestBase
     {
         /// <summary>
         /// 用户ID
         /// </summary>
-        [Key(10)]
         public long UserId { get; set; }
 
         /// <summary>
         /// 设备ID
         /// </summary>
-        [Key(11)]
         public string DeviceId { get; set; }
 
         /// <summary>
         /// 登出原因
         /// </summary>
-        [Key(12)]
         public string LogoutReason { get; set; }
 
         /// <summary>

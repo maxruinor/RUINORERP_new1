@@ -1,4 +1,3 @@
-﻿using MessagePack;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Core;
 using System;
@@ -9,26 +8,22 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// <summary>
     /// 请求基类 - 提供所有请求的公共属性和方法
     /// </summary>
-    [MessagePackObject(AllowPrivate = true)]
     [Serializable]
     public partial class RequestBase : IRequest
     {
         /// <summary>
         /// 请求唯一标识
         /// </summary>
-        [Key(0)]
         public string RequestId { get; set; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// 请求时间戳
         /// </summary>
-        [Key(1)]
         public DateTime Timestamp { get; set; } = DateTime.Now;
 
         /// <summary>
         /// 查询参数（用于复杂查询）
         /// </summary>
-        [Key(2)]
         public Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
@@ -55,38 +50,32 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// 业务实体请求基类 - 专门用于CRUD操作的请求
     /// </summary>
     /// <typeparam name="TEntity">业务实体类型</typeparam>
-    [MessagePackObject]
     public class RequestBase<TEntity> : RequestBase
         where TEntity : class
     {
         /// <summary>
         /// 业务实体数据
         /// </summary>
-        [Key(5)]
         public TEntity Entity { get; set; }
 
         /// <summary>
         /// 实体ID（用于查询、删除、更新操作）
         /// </summary>
-        [Key(6)]
         public string EntityId { get; set; }
 
         /// <summary>
         /// 操作类型
         /// </summary>
-        [Key(7)]
         public EntityOperationType OperationType { get; set; }
 
         /// <summary>
         /// 数据版本号（用于乐观锁）
         /// </summary>
-        [Key(8)]
         public string DataVersion { get; set; }
 
         /// <summary>
         /// 是否包含关联数据
         /// </summary>
-        [Key(9)]
         public bool IncludeRelatedData { get; set; }
 
         /// <summary>
@@ -253,26 +242,23 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// 批量实体请求类 - 支持批量CRUD操作
     /// </summary>
     /// <typeparam name="TEntity">业务实体类型</typeparam>
-    [MessagePackObject]
+    
     public class BatchEntityRequest<TEntity> : RequestBase
         where TEntity : class
     {
         /// <summary>
         /// 实体列表
         /// </summary>
-        [Key(5)]
         public List<TEntity> Entities { get; set; }
 
         /// <summary>
         /// 操作类型
         /// </summary>
-        [Key(6)]
         public EntityOperationType OperationType { get; set; }
 
         /// <summary>
         /// 是否事务处理
         /// </summary>
-        [Key(7)]
         public bool UseTransaction { get; set; } = true;
 
         /// <summary>

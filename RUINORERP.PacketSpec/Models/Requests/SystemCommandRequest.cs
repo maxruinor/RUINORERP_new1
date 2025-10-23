@@ -1,5 +1,5 @@
 using System;
-using MessagePack;
+
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Commands.System;
 using RUINORERP.PacketSpec.Core;
@@ -38,55 +38,46 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// 统一系统指令请求
     /// </summary>
     [Serializable]
-    [MessagePackObject]
     public class SystemCommandRequest : RequestBase
     {
         /// <summary>
         /// 系统指令类型
         /// </summary>
-        [Key(10)]
         public SystemCommandType CommandType { get; set; }
 
         /// <summary>
         /// 目标用户ID
         /// </summary>
-        [Key(11)]
         public string TargetUserId { get; set; }
 
         /// <summary>
         /// 关闭类型（关机、重启等）
         /// </summary>
-        [Key(12)]
         public string ShutdownType { get; set; } = "Shutdown";
 
         /// <summary>
         /// 延迟时间（秒）
         /// </summary>
-        [Key(13)]
         public int DelaySeconds { get; set; } = 0;
 
         /// <summary>
         /// 管理员ID
         /// </summary>
-        [Key(14)]
         public string AdminUserId { get; set; }
 
         /// <summary>
         /// 强制下线原因
         /// </summary>
-        [Key(15)]
         public string Reason { get; set; }
 
         /// <summary>
         /// 管理员备注
         /// </summary>
-        [Key(16)]
         public string AdminRemark { get; set; }
 
         /// <summary>
         /// 请求类型
         /// </summary>
-        [Key(17)]
         public string RequestType { get; set; }
 
         /// <summary>

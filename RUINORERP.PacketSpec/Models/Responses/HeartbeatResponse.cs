@@ -1,6 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using MessagePack;
 using RUINORERP.PacketSpec.Models.Core;
 namespace RUINORERP.PacketSpec.Models.Responses
 {
@@ -8,31 +7,27 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// 心跳响应数据模型
     /// </summary>
     [Serializable]
-    [MessagePackObject]
+    
     public class HeartbeatResponse : ResponseBase
     {
         /// <summary>
         /// 响应状态
         /// </summary>
-        [Key(30)]
         public string Status { get; set; } = "OK";
 
         /// <summary>
         /// 服务器时间戳
         /// </summary>
-        [Key(31)]
         public long ServerTimestamp { get; set; }
 
         /// <summary>
         /// 下次心跳间隔（毫秒）
         /// </summary>
-        [Key(32)]
         public int NextIntervalMs { get; set; } = 30000;
 
         /// <summary>
         /// 服务器信息
         /// </summary>
-        [Key(33)]
         public Dictionary<string, object> ServerInfo { get; set; } = new();
 
         /// <summary>

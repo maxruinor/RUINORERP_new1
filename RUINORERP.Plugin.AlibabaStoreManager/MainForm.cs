@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -160,17 +160,17 @@ namespace RUINORERP.Plugin.AlibabaStoreManager
                             cookieData.Path);
                         
                         // 设置过期时间
+                        // 确保cookieData.Expires不为null且是有效日期
                         if (cookieData.Expires != null && cookieData.Expires > DateTime.MinValue && cookieData.Expires != DateTime.MaxValue)
                         {
                             try
                             {
-                                // 将DateTime转换为Unix时间戳
-                                DateTimeOffset dto = new DateTimeOffset(cookieData.Expires);
-                                cookie.Expires = dto.ToUnixTimeSeconds();
+                                // 直接赋值DateTime类型
+                                cookie.Expires = cookieData.Expires;
                             }
                             catch
                             {
-                                // 如果转换失败，不设置过期时间
+                                // 如果赋值失败，不设置过期时间
                             }
                         }
                         
@@ -204,11 +204,13 @@ namespace RUINORERP.Plugin.AlibabaStoreManager
                     {
                         // 检查cookie.Expires的类型并正确处理
                         DateTime expires = DateTime.MaxValue;
-                        if (cookie.Expires > 0)
+                        // 如果cookie.Expires不是默认的最小值，则使用它
+                        if (cookie.Expires != null && cookie.Expires > DateTime.MinValue)
                         {
                             try
                             {
-                                expires = DateTimeOffset.FromUnixTimeSeconds((long)cookie.Expires).DateTime;
+                                // 直接使用DateTime类型的Expires值
+                                expires = cookie.Expires;
                             }
                             catch
                             {

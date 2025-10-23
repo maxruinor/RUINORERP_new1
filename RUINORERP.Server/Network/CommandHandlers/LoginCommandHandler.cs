@@ -103,7 +103,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -315,9 +315,95 @@ namespace RUINORERP.Server.Network.CommandHandlers
             return false;
         }
 
+        /// <summary>
+        /// 处理Token刷新
+        /// </summary>
+        private async Task<ResponseBase> ProcessTokenRefreshAsync(
+            LoginRequest loginRequest,
+            CommandContext executionContext,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 从请求中提取刷新Token和当前Token
+                string refreshToken = loginRequest.Token?.RefreshToken;
+                string currentToken = loginRequest.Token?.AccessToken;
 
+                // 验证Token
+                if (string.IsNullOrEmpty(refreshToken) || string.IsNullOrEmpty(currentToken))
+                {
+                    return CreateErrorResponse("刷新Token和当前Token不能为空", UnifiedErrorCodes.Auth_TokenInvalid, "EMPTY_TOKEN");
+                }
 
+                // 使用TokenService刷新Token
+                string newToken;
+                try
+                {
+                    newToken = _tokenService.RefreshToken(refreshToken);
+                }
+                catch (Exception ex)
+                {
+                    return CreateErrorResponse(ex.Message, UnifiedErrorCodes.Auth_TokenInvalid, "REFRESH_FAILED");
+                }
 
+                // 创建响应
+                var response = new TokenRefreshResponse
+                {
+                    IsSuccess = true,
+                    Message = "Token刷新成功",
+                    NewAccessToken = newToken,
+                    NewRefreshToken = newToken, // 在简化版本中，我们可能需要调整这个逻辑
+                    ExpireTime = DateTime.Now.AddHours(8)
+                };
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理Token刷新异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "REFRESH_ERROR");
+            }
+        }
+
+        /// <summary>
+        /// 处理登出操作
+        /// </summary>
+        private async Task<ResponseBase> ProcessLogoutAsync(
+            LoginRequest loginRequest,
+            CommandContext executionContext,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 从上下文中获取会话ID
+                string sessionId = executionContext.SessionId;
+
+                // 移除会话
+                if (!string.IsNullOrEmpty(sessionId))
+                {
+                    await SessionService.RemoveSessionAsync(sessionId);
+                }
+                // 撤销Token
+                if (executionContext.Token?.AccessToken != null && !string.IsNullOrEmpty(executionContext.Token?.AccessToken))
+                {
+                    _tokenService.RevokeToken(executionContext.Token?.AccessToken);
+                }
+
+                // 创建响应
+                var response = new LoginResponse
+                {
+                    IsSuccess = true,
+                    Message = "登出成功"
+                };
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                LogError($"处理登出异常: {ex.Message}", ex);
+                return CreateExceptionResponse(ex, "LOGOUT_ERROR");
+            }
+        }
 
         /// <summary>
         /// 处理Token验证
@@ -328,8 +414,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 从请求中提取Token
-                string token = executionContext.AccessToken;
+                // 从上下文中获取Token
+                string token = executionContext.Token?.AccessToken;
                 // 验证Token
                 if (string.IsNullOrEmpty(token))
                 {
@@ -362,99 +448,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 return CreateExceptionResponse(ex, "VALIDATION_ERROR");
             }
         }
-
-        /// <summary>
-        /// 处理Token刷新命令 - 使用TokenManager提供智能刷新机制
-        /// </summary>
-        /// <summary>
-        /// 处理Token刷新
-        /// </summary>
-        private async Task<ResponseBase> ProcessTokenRefreshAsync(
-            LoginRequest loginRequest,
-            CommandContext executionContext,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 从请求中提取刷新Token和当前Token
-                string refreshToken = loginRequest.Token?.RefreshToken;
-                string currentToken = loginRequest.Token?.AccessToken;
-
-                // 验证Token
-                if (string.IsNullOrEmpty(refreshToken) || string.IsNullOrEmpty(currentToken))
-                {
-                    return CreateErrorResponse("刷新Token和当前Token不能为空", UnifiedErrorCodes.Auth_TokenInvalid, "EMPTY_TOKEN");
-                }
-
-                // 使用TokenService刷新Token
-                string newToken;
-                try
-                {
-                    newToken = _tokenService.RefreshToken(refreshToken, currentToken);
-                }
-                catch (Exception ex)
-                {
-                    return CreateErrorResponse(ex.Message, UnifiedErrorCodes.Auth_TokenInvalid, "REFRESH_FAILED");
-                }
-
-                // 创建响应
-                var response = new TokenRefreshResponse
-                {
-                    IsSuccess = true,
-                    Message = "Token刷新成功",
-                    RefreshToken = new TokenInfo { AccessToken = newToken }
-                };
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                LogError($"处理Token刷新异常: {ex.Message}", ex);
-                return CreateExceptionResponse(ex, "REFRESH_ERROR");
-            }
-        }
-
-        /// <summary>
-        /// 处理登出操作
-        /// </summary>
-        private async Task<ResponseBase> ProcessLogoutAsync(
-            LoginRequest loginRequest,
-            CommandContext executionContext,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                // 从上下文中获取会话ID
-                string sessionId = executionContext.SessionId;
-
-                // 移除会话
-                if (!string.IsNullOrEmpty(sessionId))
-                {
-                    await SessionService.RemoveSessionAsync(sessionId);
-                }
-                // 撤销Token
-                if (executionContext.AccessToken != null && !string.IsNullOrEmpty(executionContext.AccessToken))
-                {
-                    _tokenService.RevokeToken(executionContext.AccessToken);
-                }
-
-                // 创建响应
-                var response = new LoginResponse
-                {
-                    IsSuccess = true,
-                    Message = "登出成功"
-                };
-
-                return response;
-            }
-            catch (Exception ex)
-            {
-                LogError($"处理登出异常: {ex.Message}", ex);
-                return CreateExceptionResponse(ex, "LOGOUT_ERROR");
-            }
-        }
-
-
 
         #region 核心业务逻辑方法
 
@@ -730,15 +723,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
         /// <summary>
-        /// 验证Token
         /// 验证Token：客户端在后续的请求中携带此Token，服务器验证Token的合法性（如签名、有效期等）以确定用户身份
         /// </summary>
-        private async Task<TokenValidationResult> ValidateTokenAsync(string token, string sessionId)
+        private TokenValidationResult ValidateToken(string token, string sessionId)
         {
-            await Task.Delay(20);
-
             // 使用新的ITokenService验证Token（TokenValidationService已合并到JwtTokenService）
-            var validationResult = await TokenService.ValidateTokenAsync(token);
+            var validationResult = TokenService.ValidateToken(token);
 
             // 检查Token对应的会话是否仍然有效
             if (validationResult.IsValid && !string.IsNullOrEmpty(sessionId))
@@ -766,12 +756,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
             try
             {
-                // 使用TokenManager进行Token刷新
-                var tokenInfo = await TokenManager.RefreshTokenAsync(refreshToken, currentToken);
+                // 使用TokenService进行Token刷新
+                var newToken = _tokenService.RefreshToken(refreshToken);
 
-                if (tokenInfo != null && !string.IsNullOrEmpty(tokenInfo.AccessToken))
+                if (!string.IsNullOrEmpty(newToken))
                 {
-                    return (true, tokenInfo.AccessToken, null);
+                    return (true, newToken, null);
                 }
 
                 return (false, null, "无法生成有效的刷新令牌");
@@ -829,21 +819,24 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 创建统一的错误响应
         /// </summary>
-        private ResponseBase CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
+        private LoginResponse CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
         {
-            return ResponseBase.CreateError($"{errorCode.Message}: {message}", errorCode.Code)
-                .WithMetadata("ErrorCode", customErrorCode);
+            var metadata = new Dictionary<string, object> { { "ErrorCode", customErrorCode } };
+            return CreateSpecificErrorResponse<LoginResponse>($"{errorCode.Message}: {message}", errorCode.Code, metadata);
         }
 
         /// <summary>
         /// 创建统一的异常响应
         /// </summary>
-        private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
+        private LoginResponse CreateExceptionResponse(Exception ex, string errorCode)
         {
-            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                .WithMetadata("ErrorCode", errorCode)
-                .WithMetadata("Exception", ex.Message)
-                .WithMetadata("StackTrace", ex.StackTrace);
+            var metadata = new Dictionary<string, object>
+            {
+                { "ErrorCode", errorCode },
+                { "Exception", ex.Message },
+                { "StackTrace", ex.StackTrace }
+            };
+            return CreateSpecificErrorResponse<LoginResponse>($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code, metadata);
         }
 
 

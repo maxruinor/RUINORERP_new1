@@ -167,10 +167,10 @@ namespace RUINORERP.UI.Network.Services.Cache
                 // 如果有数据，尝试删除指定实体；否则删除整个表缓存
                 if (response.CacheData?.EntityByte != null)
                 {                    
-                    // 处理单个实体删除
+                    // 处理单个实体删除  具体要调度！ 是用请求给KEY 和表名呢？还是？
                     try
-                    {                
-                        var entityId = Convert.ToInt64(response.CacheData.EntityByte);
+                    {
+                        var entityId = 0;// Convert.ToInt64(response.ke);
                         _cacheManager.DeleteEntity(response.TableName, entityId);
                     }
                     catch (FormatException ex)

@@ -116,116 +116,144 @@ namespace RUINORERP.Business.Cache
             try
             {
                 var listCacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
-                // 使用Get方法获取缓存，检查是否存在
                 var cachedListObj = _cacheManager.Get(listCacheKey);
-                if (cachedListObj != null)
-                {
-                    var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
-                    if (schemaInfo == null)
-                        return;
+                
+                if (cachedListObj == null)
+                    return;
+                    
+                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+                if (schemaInfo == null)
+                    return;
 
-                    var entityId = entity.GetCachePropertyValue(schemaInfo.PrimaryKeyField);
-                    if (cachedListObj is JArray jArray)
-                    {
-                        // 处理JArray类型的列表缓存
-                        for (int i = 0; i < jArray.Count; i++)
-                        {
-                            if (jArray[i] is JObject jobj && jobj[schemaInfo.PrimaryKeyField]?.ToString() == entityId?.ToString())
-                            {
-                                // 替换为新的实体数据
-                                jArray[i] = JObject.FromObject(entity);
-                                _cacheManager.Put(listCacheKey, jArray);
-                                break;
-                            }
-                        }
-                    }
-                    else if (cachedListObj is List<ExpandoObject> expandoList)
-                    {
-                        // 处理ExpandoObject列表，使用IDictionary接口访问
-                        for (int i = 0; i < expandoList.Count; i++)
-                        {
-                            var expando = expandoList[i] as IDictionary<string, object>;
-                            if (expando != null && expando.ContainsKey(schemaInfo.PrimaryKeyField))
-                            {
-                                var cachedId = expando[schemaInfo.PrimaryKeyField]?.ToString();
-                                if (cachedId == entityId?.ToString())
-                                {
-                                    // 创建新的ExpandoObject并复制属性
-                                    var newExpando = new ExpandoObject();
-                                    var expandoDict = (IDictionary<string, object>)newExpando;
-                                    
-                                    foreach (var prop in entity.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
-                                    {
-                                        expandoDict[prop.Name] = prop.GetValue(entity);
-                                    }
-                                    
-                                    expandoList[i] = newExpando;
-                                    _cacheManager.Put(listCacheKey, expandoList);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else if (cachedListObj is IList && cachedListObj.GetType().IsGenericType)
-                    {
-                        // 处理强类型List<T>（如List<tb_Employee>）
-                        var listType = cachedListObj.GetType();
-                        var itemType = listType.GenericTypeArguments[0];
-                        
-                        // 创建一个强类型的列表引用
-                        var typedList = Convert.ChangeType(cachedListObj, typeof(List<>).MakeGenericType(itemType));
-                        
-                        if (typedList is IList list)
-                        {
-                            bool updated = false;
-                            for (int i = 0; i < list.Count; i++)
-                            {
-                                var item = list[i];
-                                if (item != null)
-                                {
-                                    var cachedItemId = item.GetCachePropertyValue(schemaInfo.PrimaryKeyField);
-                                    if (cachedItemId?.ToString() == entityId?.ToString())
-                                    {
-                                        // 找到匹配的实体，替换为新实体
-                                        // 确保实体类型与列表项类型兼容
-                                        if (itemType.IsAssignableFrom(entity.GetType()))
-                                        {
-                                            list[i] = entity;
-                                        }
-                                        else
-                                        {
-                                            // 如果类型不完全匹配，尝试转换
-                                            try
-                                            {
-                                                var convertedEntity = Convert.ChangeType(entity, itemType);
-                                                list[i] = convertedEntity;
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                _logger?.LogWarning(ex, $"无法将实体转换为目标类型 {itemType.Name}");
-                                                continue;
-                                            }
-                                        }
-                                        updated = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            
-                            // 如果已更新，则将列表放回缓存
-                            if (updated)
-                            {
-                                _cacheManager.Put(listCacheKey, cachedListObj);
-                                _logger?.LogDebug($"已成功更新表 {tableName} 中ID为 {entityId} 的实体缓存");
-                            }
-                        }
-                    }
+                var entityId = entity.GetCachePropertyValue(schemaInfo.PrimaryKeyField);
+                bool updated = false;
+                
+                // 根据缓存对象类型选择适当的更新方法
+                if (cachedListObj is JArray jArray)
+                {
+                    updated = UpdateJArrayEntity(jArray, schemaInfo.PrimaryKeyField, entityId, entity);
+                }
+                else if (cachedListObj is List<ExpandoObject> expandoList)
+                {
+                    updated = UpdateExpandoListEntity(expandoList, schemaInfo.PrimaryKeyField, entityId, entity);
+                }
+                else if (cachedListObj is IList && cachedListObj.GetType().IsGenericType)
+                {
+                    updated = UpdateGenericListEntity(cachedListObj, schemaInfo.PrimaryKeyField, entityId, entity, tableName);
+                }
+                
+                // 如果已更新，则将列表放回缓存
+                if (updated)
+                {
+                    _cacheManager.Put(listCacheKey, cachedListObj);
+                    _logger?.LogDebug($"已成功更新表 {tableName} 中ID为 {entityId} 的实体缓存");
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, $"更新表 {tableName} 的列表缓存中的实体时发生错误");
             }
+        }
+        
+        /// <summary>
+        /// 比较两个实体ID是否匹配
+        /// </summary>
+        private bool AreEntityIdsMatching(object id1, object id2)
+        {
+            return id1?.ToString() == id2?.ToString();
+        }
+        
+        /// <summary>
+        /// 更新JArray中的实体
+        /// </summary>
+        private bool UpdateJArrayEntity(JArray jArray, string primaryKeyField, object entityId, object entity)
+        {
+            for (int i = 0; i < jArray.Count; i++)
+            {
+                if (jArray[i] is JObject jobj && AreEntityIdsMatching(jobj[primaryKeyField], entityId))
+                {
+                    // 替换为新的实体数据
+                    jArray[i] = JObject.FromObject(entity);
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        /// <summary>
+        /// 更新ExpandoObject列表中的实体
+        /// </summary>
+        private bool UpdateExpandoListEntity(List<ExpandoObject> expandoList, string primaryKeyField, object entityId, object entity)
+        {
+            for (int i = 0; i < expandoList.Count; i++)
+            {
+                var expando = expandoList[i] as IDictionary<string, object>;
+                if (expando != null && expando.ContainsKey(primaryKeyField) && 
+                    AreEntityIdsMatching(expando[primaryKeyField], entityId))
+                {
+                    // 创建新的ExpandoObject并复制属性
+                    var newExpando = new ExpandoObject();
+                    var expandoDict = (IDictionary<string, object>)newExpando;
+                    
+                    foreach (var prop in entity.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                    {
+                        expandoDict[prop.Name] = prop.GetValue(entity);
+                    }
+                    
+                    expandoList[i] = newExpando;
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        /// <summary>
+        /// 更新强类型List<T>中的实体
+        /// </summary>
+        private bool UpdateGenericListEntity(object cachedListObj, string primaryKeyField, object entityId, object entity, string tableName)
+        {
+            var listType = cachedListObj.GetType();
+            var itemType = listType.GenericTypeArguments[0];
+            
+            // 创建一个强类型的列表引用
+            var typedList = Convert.ChangeType(cachedListObj, typeof(List<>).MakeGenericType(itemType));
+            
+            if (typedList is IList list)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var item = list[i];
+                    if (item != null)
+                    {
+                        var cachedItemId = item.GetCachePropertyValue(primaryKeyField);
+                        if (AreEntityIdsMatching(cachedItemId, entityId))
+                        {
+                            // 找到匹配的实体，替换为新实体
+                            // 确保实体类型与列表项类型兼容
+                            if (itemType.IsAssignableFrom(entity.GetType()))
+                            {
+                                list[i] = entity;
+                            }
+                            else
+                            {
+                                // 如果类型不完全匹配，尝试转换
+                                try
+                                {
+                                    var convertedEntity = Convert.ChangeType(entity, itemType);
+                                    list[i] = convertedEntity;
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger?.LogWarning(ex, $"无法将实体转换为目标类型 {itemType.Name}");
+                                    continue;
+                                }
+                            }
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
         #endregion
 
@@ -628,20 +656,60 @@ namespace RUINORERP.Business.Cache
 
         /// <summary>
         /// 根据表名更新缓存（智能过滤，只处理需要缓存的表）
+        /// 智能更新逻辑：
+        /// 1. 如果传入的是单个实体对象，使用主键查找并更新列表中的相应项
+        /// 2. 如果传入的是集合对象（List、Array、IEnumerable等），则更新整个缓存
         /// </summary>
         public void UpdateEntityList(string tableName, object list)
         {
             try
             {
-                // 智能过滤：只处理需要缓存的表
-                if (!IsTableCacheable(tableName))
+                // 使用封装的智能过滤方法
+                if (!CheckAndLogIfTableCacheable(tableName))
                 {
-                    _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过更新操作");
                     return;
                 }
 
                 var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
 
+                // 智能检测：判断是单个实体还是集合
+                // 1. 检查是否是单个实体对象
+                // 获取实体类型信息
+                var entityType = _tableSchemaManager.GetEntityType(tableName);
+                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+                
+                // 判断是否为单个实体对象（非字符串、非集合类型，且类型匹配或可转换）
+                if (list != null && 
+                    !(list is string) && 
+                    !(list is Newtonsoft.Json.Linq.JArray) &&
+                    !(list is IEnumerable) && 
+                    entityType != null && 
+                    schemaInfo != null)
+                {
+                    // 获取列表缓存，检查是否已存在
+                    var cachedListObj = _cacheManager.Get(cacheKey);
+                    if (cachedListObj != null)
+                    {
+                        // 如果缓存中存在列表，执行单个实体更新
+                        try
+                        {
+                            // 使用UpdateEntityInList方法更新单个实体
+                            // 需要根据实体类型进行适当转换
+                            var entity = Convert.ChangeType(list, entityType);
+                            UpdateEntityInList(tableName, entity);
+                            
+                            // 更新缓存同步元数据
+                            UpdateCacheSyncMetadataAfterEntityChange(tableName);
+                            
+                            return;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, $"尝试执行单个实体更新失败，回退到更新整个缓存: {ex.Message}");
+                        }
+                    }
+                }
+                
                 // 修复：确保存储的是正确类型的列表
                 object cacheValue = list;
 
@@ -665,7 +733,6 @@ namespace RUINORERP.Business.Cache
                 if (cacheValue is Newtonsoft.Json.Linq.JArray jArrayData)
                 {
                     // 获取实体类型
-                    var entityType = _tableSchemaManager.GetEntityType(tableName);
                     if (entityType != null)
                     {
                         try
@@ -690,7 +757,7 @@ namespace RUINORERP.Business.Cache
                 if (cacheValue is List<System.Dynamic.ExpandoObject> expandoList)
                 {
                     // 获取实体类型
-                    var entityType = _tableSchemaManager.GetEntityType(tableName);
+         
                     if (entityType != null)
                     {
                         // 创建正确类型的List
@@ -721,44 +788,7 @@ namespace RUINORERP.Business.Cache
                 PutToCache(cacheKey, cacheValue, "List", tableName);
 
                 // 更新缓存同步元数据
-                if (_cacheSyncMetadata != null)
-                {
-                    try
-                    {
-                        int dataCount = 0;
-                        long estimatedSize = 0;
-                        
-                        // 计算数据数量
-                        if (cacheValue is ICollection collection)
-                        {
-                            dataCount = collection.Count;
-                        }
-                        else if (cacheValue is Newtonsoft.Json.Linq.JArray jArray)
-                        {
-                            dataCount = jArray.Count;
-                        }
-                        
-                        // 估计对象大小
-                        estimatedSize = EstimateObjectSize(cacheValue);
-                        
-                        // 创建并更新缓存同步信息
-                        var syncInfo = new CacheSyncInfo
-                        {
-                            TableName = tableName,
-                            DataCount = dataCount,
-                            EstimatedSize = estimatedSize,
-                            LastUpdateTime = DateTime.Now,
-                            ExpirationTime = DateTime.Now.Add(GetCacheExpirationTime())
-                        };
-                        
-                        _cacheSyncMetadata.UpdateTableSyncInfo(tableName, dataCount, estimatedSize);
-                        _logger?.LogDebug($"已更新表 {tableName} 的缓存同步元数据，数据数量: {dataCount}");
-                    }
-                    catch (Exception syncEx)
-                    {
-                        _logger?.LogWarning(syncEx, $"更新表 {tableName} 的缓存同步元数据时发生错误");
-                    }
-                }
+                UpdateCacheSyncMetadataAfterEntityChange(tableName);
 
                 _logger?.Debug($"已更新表 {tableName} 的实体列表缓存，数据类型: {cacheValue.GetType().Name}");
             }
@@ -779,17 +809,34 @@ namespace RUINORERP.Business.Cache
                 return;
             }
 
-            // 智能过滤：只处理需要缓存的表
-            if (!IsTableCacheable(tableName))
+            // 使用封装的智能过滤方法
+            if (!CheckAndLogIfTableCacheable(tableName))
             {
-                _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过更新操作");
                 return;
             }
-
+            
             // 直接更新列表缓存中的该实体
             UpdateEntityInList(tableName, entity);
             
             _logger?.LogDebug($"已更新表 {tableName} 列表缓存中的单个实体");
+            
+            // 更新缓存同步元数据
+            UpdateCacheSyncMetadataAfterEntityChange(tableName);
+        }
+        
+        /// <summary>
+        /// 检查并记录表是否可缓存，封装智能过滤逻辑
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>表是否可缓存</returns>
+        private bool CheckAndLogIfTableCacheable(string tableName)
+        {
+            if (!IsTableCacheable(tableName))
+            {
+                _logger?.LogDebug($"表 {tableName} 不需要缓存，跳过更新操作");
+                return false;
+            }
+            return true;
         }
 
 
@@ -933,21 +980,9 @@ namespace RUINORERP.Business.Cache
                 
                 if (cachedList != null)
                 {
-                    int dataCount = 0;
-                    long estimatedSize = 0;
-                    
-                    // 计算数据数量
-                    if (cachedList is ICollection collection)
-                    {
-                        dataCount = collection.Count;
-                    }
-                    else if (cachedList is Newtonsoft.Json.Linq.JArray jArray)
-                    {
-                        dataCount = jArray.Count;
-                    }
-                    
-                    // 估计对象大小
-                    estimatedSize = EstimateObjectSize(cachedList);
+                    // 使用专门的方法计算数据数量和大小
+                    int dataCount = CalculateDataCount(cachedList);
+                    long estimatedSize = EstimateObjectSize(cachedList);
                     
                     _cacheSyncMetadata.UpdateTableSyncInfo(tableName, dataCount, estimatedSize);
                     _logger?.LogDebug($"已更新表 {tableName} 的缓存同步元数据，数据数量: {dataCount}");
@@ -965,8 +1000,26 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 从列表缓存中删除指定实体
+        /// 计算缓存对象中的数据数量
         /// </summary>
+        /// <param name="cacheObject">缓存对象</param>
+        /// <returns>数据数量</returns>
+        private int CalculateDataCount(object cacheObject)
+        {
+            if (cacheObject == null) return 0;
+            
+            if (cacheObject is ICollection collection)
+            {
+                return collection.Count;
+            }
+            else if (cacheObject is Newtonsoft.Json.Linq.JArray jArray)
+            {
+                return jArray.Count;
+            }
+            
+            return 0;
+        }
+        
         private void RemoveEntityFromList(string tableName, object primaryKeyValue)
         {
             try

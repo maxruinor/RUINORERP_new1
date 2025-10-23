@@ -1,4 +1,3 @@
-using MessagePack;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 
@@ -7,31 +6,26 @@ namespace RUINORERP.PacketSpec.Models.Responses.Authentication
     /// <summary>
     /// 令牌验证响应 - 表示令牌验证的结果
     /// </summary>
-    [MessagePackObject]
     public class TokenValidationResponse : ResponseBase
     {
         /// <summary>
         /// 用户ID
         /// </summary>
-        [Key(10)]
         public long UserId { get; set; }
 
         /// <summary>
         /// 令牌是否有效
         /// </summary>
-        [Key(11)]
         public bool IsTokenValid { get; set; }
 
         /// <summary>
         /// 令牌过期时间
         /// </summary>
-        [Key(12)]
         public DateTime? ExpireTime { get; set; }
 
         /// <summary>
         /// 会话ID
         /// </summary>
-        [Key(13)]
         public string SessionId { get; set; }
 
         /// <summary>

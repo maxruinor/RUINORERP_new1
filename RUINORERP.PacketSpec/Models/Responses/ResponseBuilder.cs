@@ -1,4 +1,3 @@
-using MessagePack;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using System;

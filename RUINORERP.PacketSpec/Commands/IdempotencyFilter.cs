@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using MessagePack;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
@@ -28,7 +27,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         private class CacheItem
         {
-            public ResponseBase Response { get; set; }
+            public IResponse Response { get; set; }
             public DateTime ExpireTime { get; set; }
             public DateTime CreateTime { get; set; }
         }
@@ -66,7 +65,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="command">命令对象</param>
         /// <param name="response">如果找到缓存项，则返回对应的响应对象；否则返回null</param>
         /// <returns>如果找到缓存项则返回true，否则返回false</returns>
-        public bool TryGetCached(RequestBase request, CommandId commandId, out ResponseBase response)
+        public bool TryGetCached(IRequest request, CommandId commandId, out IResponse response)
         {
             response = null;
 
@@ -100,7 +99,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="packet">数据包对象</param>
         /// <param name="response">要缓存的响应对象</param>
-        public void Cache(PacketModel packet, ResponseBase response)
+        public void Cache(PacketModel packet, IResponse response)
         {
             if (packet == null || response == null) 
                 return;
@@ -144,7 +143,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="command">命令对象</param>
         /// <returns>缓存键，如果无法生成则返回null</returns>
-        private string GenerateCacheKey(RequestBase request, CommandId commandId)
+        private string GenerateCacheKey(IRequest request, CommandId commandId)
         {
 
             try

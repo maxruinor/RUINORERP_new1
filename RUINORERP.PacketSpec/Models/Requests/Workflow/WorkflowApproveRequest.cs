@@ -1,5 +1,4 @@
-using MessagePack;
-using RUINORERP.PacketSpec.Models.Requests;
+﻿using RUINORERP.PacketSpec.Models.Requests;
 using System;
 
 namespace RUINORERP.PacketSpec.Models.Requests.Workflow
@@ -7,31 +6,27 @@ namespace RUINORERP.PacketSpec.Models.Requests.Workflow
     /// <summary>
     /// 工作流审批请求 - 用于处理工作流审批任务
     /// </summary>
-    [MessagePackObject]
+    
     public class WorkflowApproveRequest : RequestBase
     {
         /// <summary>
         /// 工作流实例ID
         /// </summary>
-        [Key(10)]
         public string WorkflowInstanceId { get; set; }
 
         /// <summary>
         /// 任务ID
         /// </summary>
-        [Key(11)]
         public string TaskId { get; set; }
 
         /// <summary>
         /// 审批意见
         /// </summary>
-        [Key(12)]
         public string ApprovalComment { get; set; }
 
         /// <summary>
         /// 审批结果
         /// </summary>
-        [Key(13)]
         public bool Approved { get; set; }
 
         /// <summary>

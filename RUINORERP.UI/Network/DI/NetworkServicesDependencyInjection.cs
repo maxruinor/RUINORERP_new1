@@ -52,14 +52,12 @@ namespace RUINORERP.UI.Network.DI
             {
                 options.SecretKey = "RUINORERP-Default-Secret-Key-2024";
                 options.DefaultExpiryHours = 8;
-                options.RefreshTokenExpiryHours = 24;
                 options.Issuer = "RUINORERP";
                 options.Audience = "RUINORERP-Users";
                 options.ValidateIssuer = true;
                 options.ValidateAudience = true;
                 options.ValidateLifetime = true;
                 options.ClockSkewSeconds = 300;
-                options.ExpiryThresholdMinutes = 5;
             });
 
             // 注册TokenStorage

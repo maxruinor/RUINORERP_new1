@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using MessagePack;
+
 using RUINORERP.PacketSpec.Models.Requests;
 
 /// <summary>

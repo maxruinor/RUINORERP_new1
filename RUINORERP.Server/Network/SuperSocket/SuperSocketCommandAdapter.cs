@@ -23,7 +23,6 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Core;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using MessagePack;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Net.Sockets;
 using RUINORERP.Server.Network.Services;
@@ -163,7 +162,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 //BaseCommand<IRequest, ResponseBase> result;
 
 
-                ResponseBase result;
+                IResponse result;
                 try
                 {
                     // 使用链接的取消令牌，考虑命令超时设置
@@ -230,7 +229,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         protected virtual async ValueTask HandleCommandResultAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
-            ResponseBase response,
+            IResponse response,
             CancellationToken cancellationToken)
         {
             if (response == null)
@@ -263,7 +262,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <param name="command"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, ResponseBase result)
+        protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, IResponse result)
         {
             // 检查响应数据是否为空，避免空引用异常
             if (result == null)
@@ -400,7 +399,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// </summary>
         /// <param name="result">响应结果</param>
         /// <returns>错误代码对象</returns>
-        protected virtual ErrorCode ExtractErrorCodeFromResponse(ResponseBase result)
+        protected virtual ErrorCode ExtractErrorCodeFromResponse(IResponse result)
         {
             if (result == null)
             {
@@ -444,7 +443,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         protected virtual async ValueTask SendEnhancedErrorResponseAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
-            ResponseBase result,
+            IResponse result,
             ErrorCode errorCode,
             CancellationToken cancellationToken)
         {
@@ -476,8 +475,16 @@ namespace RUINORERP.Server.Network.SuperSocket
                     errorResponse.ExecutionContext.RequestId = requestPackage.Packet.Request.RequestId;
                 }
 
-                // 设置响应对象
-                errorResponse.Response = result;
+                // 设置响应对象 - 使用CreateCommandSpecificResponse确保返回正确类型的响应
+                // 这样客户端在使用as TResponse转换时才能成功
+                if (result is ResponseBase responseBase)
+                {
+                    errorResponse.Response = responseBase;
+                }
+                else
+                {
+                    errorResponse.Response = result;
+                }
                 
                 // 添加元数据中的所有错误信息
                 if (result.Metadata != null && result.Metadata.Count > 0)

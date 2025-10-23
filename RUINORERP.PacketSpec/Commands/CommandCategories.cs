@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
-using MessagePack;
+using Newtonsoft.Json;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -12,7 +12,7 @@ namespace RUINORERP.PacketSpec.Commands
     /// OperationCode 作为二级具体指令
     /// FullCode 只是这两个值的组合，用于唯一标识命令
     /// </summary>
-    [MessagePackObject]
+    
     public partial struct CommandId : IEquatable<CommandId>
     {
         /// <summary>
@@ -23,23 +23,20 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 命令类别
         /// </summary>
-        [Key(0)]
-        public CommandCategory Category { get; private set; }
+        public CommandCategory Category { get; set; }
 
         // 添加命令名称属性
-        [Key(1)]
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// 操作码
         /// </summary>
-        [Key(2)]
-        public byte OperationCode { get; private set; }
+        public byte OperationCode { get; set; }
 
         /// <summary>
         /// 完整的命令码 (计算属性，不序列化)
         /// </summary>
-        [IgnoreMember] // 关键修改：标记为不序列化
+        [JsonIgnore] // 关键修改：标记为不序列化
         public ushort FullCode => (ushort)(((byte)Category << 8) | OperationCode);
 
         /// <summary>
@@ -48,7 +45,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// <remarks>
         /// MessagePack反序列化需要无参构造函数，所有属性必须有setter
         /// </remarks>
-        [SerializationConstructor]
         public CommandId()
         {
             Category = CommandCategory.System;

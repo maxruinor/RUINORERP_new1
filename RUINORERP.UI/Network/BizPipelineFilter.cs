@@ -59,26 +59,29 @@ namespace RUINORERP.UI.Network
                 var package = UnifiedEncryptionProtocol.DecryptServerPacket(packageContents);
                 
                 if (package.Two != null && package.Two.Length > 0)
-                {
+                {   // 只有一种反序列化方式：JSON序列化
                     try
-                    {
-                        // 首先尝试使用MessagePack反序列化
+                    {   // 使用JsonCompressionSerializationService进行反序列化
                         packageInfo.Packet = JsonCompressionSerializationService.Deserialize<PacketModel>(package.Two);
+                        
+                        // 验证反序列化结果
+                        if (packageInfo.Packet == null)
+                        {
+                            System.Diagnostics.Debug.WriteLine("反序列化成功，但结果为null");
+                        }
                     }
-                    catch (Exception msgPackEx)
-                    {
-                        // MessagePack反序列化失败，尝试使用JSON作为备选方案
-                        System.Diagnostics.Debug.WriteLine($"MessagePack反序列化失败，尝试JSON: {msgPackEx.Message}");
-                        try
+                    catch (Exception deserializationEx)
+                    {   // 记录详细的反序列化错误信息
+                        System.Diagnostics.Debug.WriteLine($"JSON反序列化失败: {deserializationEx.Message}");
+                        
+                        // 记录内部异常（如果有），这对于诊断类型解析问题非常重要
+                        if (deserializationEx.InnerException != null)
                         {
-                            packageInfo.Packet = JsonCompressionSerializationService.Deserialize<PacketModel>(package.Two);
+                            System.Diagnostics.Debug.WriteLine($"内部异常: {deserializationEx.InnerException.Message}");
                         }
-                        catch (Exception jsonEx)
-                        {
-                            // 如果两种反序列化都失败，记录详细错误
-                            System.Diagnostics.Debug.WriteLine($"JSON反序列化也失败: {jsonEx.Message}");
-                            // 可以在这里添加日志记录或通知机制
-                        }
+                        
+                        // 记录堆栈跟踪，便于定位问题
+                        System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {deserializationEx.StackTrace}");
                     }
                 }
             }

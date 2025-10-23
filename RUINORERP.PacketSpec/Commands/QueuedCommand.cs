@@ -17,6 +17,6 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 任务完成源，用于异步获取命令处理结果
         /// </summary>
-        public TaskCompletionSource<ResponseBase> Tcs { get; set; }
+        public TaskCompletionSource<IResponse> Tcs { get; set; }
     }
 }

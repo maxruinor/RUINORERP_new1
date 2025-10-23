@@ -89,21 +89,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             return this;
         }
 
-        /// <summary>
-        /// 创建成功响应
-        /// </summary>
-        /// <param name="message">成功消息</param>
-        /// <returns>响应实例</returns>
-        public static ResponseBase CreateSuccess(string message = "操作成功")
-        {
-            return new ResponseBase
-            {
-                IsSuccess = true,
-                Message = message,
-                Timestamp = DateTime.Now
-            };
-        }
-
+ 
         
         /// <summary>
         /// 创建失败响应（带元数据）
@@ -132,37 +118,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             return response;
         }
 
-        /// <summary>
-        /// 从FluentValidation验证结果创建失败响应
-        /// </summary>
-        /// <param name="validationResult">FluentValidation验证结果</param>
-        /// <param name="code">错误代码</param>
-        /// <returns>响应实例</returns>
-        public static ResponseBase CreateValidationError(FluentValidation.Results.ValidationResult validationResult, int code = 400)
-        {
-            if (validationResult == null || validationResult.IsValid)
-                return CreateError("验证失败", code);
-
-            var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-            var message = string.Join("; ", errorMessages);
-            
-            var response = new ResponseBase
-            {
-                IsSuccess = false,
-                Message = message,
-                Timestamp = DateTime.Now
-            };
-
-            // 添加详细的验证错误信息到元数据
-            response.WithMetadata("ValidationErrors", validationResult.Errors.Select(e => new 
-            {
-                Field = e.PropertyName,
-                Message = e.ErrorMessage,
-                AttemptedValue = e.AttemptedValue
-            }).ToList());
-
-            return response;
-        }
+     
     }
 
     /// <summary>
@@ -212,123 +168,9 @@ namespace RUINORERP.PacketSpec.Models.Responses
             this.ExtraData = new Dictionary<string, object>();
         }
 
-        /// <summary>
-        /// 创建成功响应
-        /// </summary>
-        /// <param name="data">业务实体数据</param>
-        /// <param name="message">成功消息</param>
-        /// <param name="totalCount">数据总数（用于分页）</param>
-        /// <param name="dataVersion">数据版本号</param>
-        /// <returns>响应实例</returns>
-        public static ResponseBase<TEntity> CreateSuccess(TEntity data, string message = "操作成功", int totalCount = 0, string dataVersion = null)
-        {
-            return new ResponseBase<TEntity>
-            {
-                Data = data,
-                IsSuccess = true,
-                Message = message,
-                Timestamp = DateTime.Now,
-                TotalCount = totalCount,
-                DataVersion = dataVersion ?? DateTime.Now.Ticks.ToString()
-            };
-        }
+       
 
-        /// <summary>
-        /// 创建失败响应
-        /// </summary>
-        /// <param name="message">失败消息</param>
-        /// <param name="code">错误代码</param>
-        /// <param name="extraData">扩展错误信息</param>
-        /// <returns>响应实例</returns>
-        public new static ResponseBase<TEntity> CreateError(string message, int code = 500, Dictionary<string, object> extraData = null)
-        {
-            return new ResponseBase<TEntity>
-            {
-                IsSuccess = false,
-                Message = message,
-                Timestamp = DateTime.Now,
-                ExtraData = extraData ?? new Dictionary<string, object>()
-            };
-        }
-
-        /// <summary>
-        /// 创建失败响应（简化方法）
-        /// </summary>
-        /// <param name="message">失败消息</param>
-        /// <param name="code">错误代码</param>
-        /// <returns>响应实例</returns>
-        public static ResponseBase<TEntity> Failure(string message, int code = 500)
-        {
-            return new ResponseBase<TEntity>
-            {
-                IsSuccess = false,
-                Message = message,
-                Timestamp = DateTime.Now
-            };
-        }
-
-        /// <summary>
-        /// 从FluentValidation验证结果创建失败响应
-        /// </summary>
-        /// <param name="validationResult">FluentValidation验证结果</param>
-        /// <param name="code">错误代码</param>
-        /// <returns>响应实例</returns>
-        public static ResponseBase<TEntity> CreateValidationError(FluentValidation.Results.ValidationResult validationResult, int code = 400)
-        {
-            if (validationResult == null || validationResult.IsValid)
-                return Failure("验证失败", code);
-
-            var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
-            var message = string.Join("; ", errorMessages);
-            
-            var extraData = new Dictionary<string, object>
-            {
-                ["ValidationErrors"] = validationResult.Errors.Select(e => new 
-                {
-                    Field = e.PropertyName,
-                    Message = e.ErrorMessage,
-                    AttemptedValue = e.AttemptedValue
-                }).ToList()
-            };
-
-            return new ResponseBase<TEntity>
-            {
-                IsSuccess = false,
-                Message = message,
-                Timestamp = DateTime.Now,
-                ExtraData = extraData
-            };
-        }
-
-        /// <summary>
-        /// 创建分页查询成功响应
-        /// </summary>
-        /// <param name="data">实体数据列表</param>
-        /// <param name="totalCount">总记录数</param>
-        /// <param name="pageIndex">当前页索引</param>
-        /// <param name="pageSize">每页大小</param>
-        /// <param name="message">成功消息</param>
-        /// <returns>响应实例</returns>
-        public static ResponseBase<TEntity> CreatePagedSuccess(TEntity data, int totalCount, int pageIndex, int pageSize, string message = "查询成功")
-        {
-            var extraData = new Dictionary<string, object>
-            {
-                ["PageIndex"] = pageIndex,
-                ["PageSize"] = pageSize,
-                ["HasNextPage"] = (pageIndex + 1) * pageSize < totalCount,
-                ["HasPreviousPage"] = pageIndex > 0
-            };
-
-            return new ResponseBase<TEntity>
-            {
-                Data = data,
-                IsSuccess = true,
-                Message = message,
-                Timestamp = DateTime.Now,
-                TotalCount = totalCount,
-                ExtraData = extraData
-            };
-        }
+ 
 
         /// <summary>
         /// 添加扩展数据

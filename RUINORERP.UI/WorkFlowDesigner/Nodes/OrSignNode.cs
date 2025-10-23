@@ -168,7 +168,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             
             // 添加或签节点特定属性
             Bag.Properties.Add(new PropertySpec("审批人员", typeof(List<ApprovalUser>), "或签属性", 
-                "或签节点的审批人员列表", new List<ApprovalUser>(), typeof(ApprovalUserListEditor)));
+                "或签节点的审批人员列表", new List<ApprovalUser>()));
             Bag.Properties.Add(new PropertySpec("已审批人数", typeof(int), "或签属性", 
                 "已审批通过的人数", 0));
             Bag.Properties.Add(new PropertySpec("状态", typeof(string), "或签属性", 

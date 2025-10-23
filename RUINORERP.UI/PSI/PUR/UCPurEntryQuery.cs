@@ -176,13 +176,16 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 if (obj is tb_PurEntry purEntry)
                 {
-                    if (purEntry.PurOrder_ID == null)
+                    if (purEntry==null|| purEntry.PurOrder_ID == null)
                     {
                         bindingSource.DataSource = null;
                     }
-                    else
+                    else if (purEntry.PurOrder_ID>0)
                     {
-                        bindingSource.DataSource = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrderDetail>().Where(c => c.PurOrder_ID == purEntry.tb_purorder.PurOrder_ID).ToListAsync();
+                        if (bindingSource.DataSource==null)
+                        {
+                            bindingSource.DataSource = await MainForm.Instance.AppContext.Db.Queryable<tb_PurOrderDetail>().Where(c => c.PurOrder_ID == purEntry.tb_purorder.PurOrder_ID).ToListAsync();
+                        }
                     }
 
                 }

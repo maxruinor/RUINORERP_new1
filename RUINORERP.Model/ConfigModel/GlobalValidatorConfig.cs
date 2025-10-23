@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,6 +13,7 @@ namespace RUINORERP.Model.ConfigModel
     /// 可以从客户端或服务器端分布这些配置
     /// </summary>
     [Serializable()]
+    [DisplayName("全局验证配置")]
     public class GlobalValidatorConfig : BaseConfig
     {
         /// <summary>

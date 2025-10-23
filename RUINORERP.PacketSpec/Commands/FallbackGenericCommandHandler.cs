@@ -47,7 +47,7 @@ namespace RUINORERP.PacketSpec.Commands
             try
             {
                 string NoRegisteredCommand = $"未注册命令{cmd.Packet.CommandId.ToString()}";
-                LogInfo(NoRegisteredCommand) ;
+                LogInfo(NoRegisteredCommand);
 
                 // 尝试获取命令的可序列化数据
                 var payload = cmd.Packet.Response;
@@ -55,27 +55,22 @@ namespace RUINORERP.PacketSpec.Commands
                 if (payload != null)
                 {
                     // 如果有有效载荷，返回成功响应并包含原数据
-                    return Task.FromResult(ResponseBase.CreateError($"{NoRegisteredCommand} 已通过回退处理器处理")
-                        .WithMetadata("CommandType", payload.GetType().FullName)
-                        .WithMetadata("HandlerType", Name) as IResponse);
+                    return Task.FromResult(ResponseFactory.CreateSpecificErrorResponse<IResponse>($"{NoRegisteredCommand} 已通过回退处理器处理"));
+
+                    ;
                 }
                 else
                 {
                     // 没有有效载荷，返回成功响应
-                    return Task.FromResult(ResponseBase.CreateSuccess()
-                        .WithMetadata("Message", $"未注册命令 [{NoRegisteredCommand}] 已通过回退处理器处理")
-                        .WithMetadata("HandlerType", Name) as IResponse);
+                    return Task.FromResult(ResponseFactory.CreateSpecificErrorResponse<IResponse>($"未注册命令 [{NoRegisteredCommand}] 已通过回退处理器处理"));
                 }
             }
             catch (Exception ex)
             {
                 LogError($"处理未注册命令时发生异常", ex);
-
                 // 发生异常时返回错误响应
-                return Task.FromResult(ResponseBase.CreateError("处理未注册命令时发生异常")
-                    .WithMetadata("ErrorCode", "FALLBACK_HANDLER_ERROR")
-                    .WithMetadata("ErrorMessage", ex.Message)
-                    .WithMetadata("HandlerType", Name) as IResponse);
+                return Task.FromResult(ResponseFactory.CreateSpecificErrorResponse<IResponse>($"处理未注册命令时发生异常,指令信息：{cmd.Packet.CommandId.ToString()}"));
+
             }
         }
     }

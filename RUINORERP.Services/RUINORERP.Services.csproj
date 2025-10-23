@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RUINORERP.IServices\RUINORERP.IServices.csproj" />
     <ProjectReference Include="..\RUINORERP.Repository\RUINORERP.Repository.csproj" />
+
   </ItemGroup>
 
 </Project>

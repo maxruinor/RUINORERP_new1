@@ -35,6 +35,7 @@ using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using Timer = System.Threading.Timer;
+using System.Collections.Generic;
 
 namespace RUINORERP.UI.Network
 {
@@ -653,12 +654,12 @@ namespace RUINORERP.UI.Network
 
             if (!_pendingRequests.TryAdd(request.RequestId, pendingRequest))
             {
-                throw new InvalidOperationException($"无法添加请求到待处理列表，请求ID: {request.RequestId}");
+                throw new InvalidOperationException($"无法添加请求到待处理列表，指令类型：{commandId.ToString()}，请求ID: {request.RequestId}");
             }
 
             try
             {
-               string ResponseTypeName = typeof(TResponse).AssemblyQualifiedName;
+                string ResponseTypeName = typeof(TResponse).AssemblyQualifiedName;
 
                 // 使用现有的SendPacketCoreAsync发送请求，并传递带有响应类型信息的上下文
                 await SendPacketCoreAsync<TRequest>(_socketClient, commandId, request, _networkConfig.DefaultRequestTimeoutMs, ct, ResponseTypeName);
@@ -670,7 +671,7 @@ namespace RUINORERP.UI.Network
                 if (completedTask == timeoutTask)
                 {
                     _timeoutStatistics.RecordTimeout(commandId.ToString(), timeoutMs);
-                    throw new TimeoutException($"请求超时（{timeoutMs}ms），请求ID: {request.RequestId}");
+                    throw new TimeoutException($"请求超时（{timeoutMs}ms），指令类型：{commandId.ToString()}，请求ID: {request.RequestId}");
                 }
 
                 ct.ThrowIfCancellationRequested();
@@ -688,7 +689,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex) when (!(ex is TimeoutException) && !(ex is OperationCanceledException))
             {
-                throw new InvalidOperationException($"请求处理失败，请求ID: {request.RequestId}: {ex.Message}", ex);
+                throw new InvalidOperationException($"请求处理失败，指令类型：{commandId.ToString()}，请求ID: {request.RequestId}: {ex.Message}", ex);
             }
             finally
             {
@@ -1341,11 +1342,11 @@ namespace RUINORERP.UI.Network
                     .Build();
 
                 // 自动设置到ExecutionContext，确保服务器端也能获取
-                 if (packet.ExecutionContext == null)
+                if (packet.ExecutionContext == null)
                 {
                     packet.ExecutionContext = new CommandContext();
                 }
-                
+
                 // 确保必要的上下文属性被设置
                 packet.ExecutionContext.RequestId = request.RequestId;
                 packet.CommandId = commandId;
@@ -1355,7 +1356,15 @@ namespace RUINORERP.UI.Network
                 packet.ExecutionContext.ExpectedResponseTypeName = ResponseTypeName;
 
                 await AutoAttachTokenAsync(packet.ExecutionContext);
-
+                //除登陆登出命令，其他命令都需要附加令牌
+                if (packet.CommandId != AuthenticationCommands.Login)
+                {
+                    if (packet.ExecutionContext.Token == null)
+                    {
+                        // 附加令牌
+                        throw new Exception($"发送请求失败: 没有合法授权令牌,指令：{commandId.ToString()}");
+                    }
+                }
                 // 序列化和加密数据包
                 var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
                 var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, payload);
@@ -1612,70 +1621,6 @@ namespace RUINORERP.UI.Network
             Dispose(false);
         }
 
-        /// <summary>
-        /// 根据TResponse类型创建特定类型的错误响应
-        /// 确保在客户端本地错误处理时也能返回正确类型的响应
-        /// </summary>
-        /// <typeparam name="TResponse">响应类型</typeparam>
-        /// <param name="errorMessage">错误消息</param>
-        /// <param name="errorCode">错误代码</param>
-        /// <returns>特定类型的错误响应</returns>
-        private TResponse CreateSpecificErrorResponse<TResponse>(string errorMessage, int errorCode = 500)
-            where TResponse : class, IResponse
-        {
-            // 创建基础错误响应
-            var baseResponse = ResponseBase.CreateError(errorMessage, errorCode);
-            
-            // 根据TResponse类型创建特定的错误响应
-            // 这里可以根据需要扩展更多特定类型的处理
-            if (typeof(TResponse) == typeof(LoginResponse))
-            {
-                return new LoginResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = errorMessage,
-                    Message = errorMessage,
-                    ErrorCode = errorCode,
-                    Metadata = baseResponse.Metadata
-                } as TResponse;
-            }
-            
-            // 尝试使用反射创建特定类型的实例（适用于泛型类型或其他特定类型）
-            try
-            {
-                var responseType = typeof(TResponse);
-                
-                // 检查是否是泛型类型如ResponseBase<T>
-                if (responseType.IsGenericType && responseType.GetGenericTypeDefinition() == typeof(ResponseBase<>))
-                {
-                    // 创建泛型参数类型的空默认值
-                    var entityType = responseType.GetGenericArguments()[0];
-                    var genericInstance = Activator.CreateInstance(responseType);
-                    
-                    // 设置公共属性
-                    foreach (var prop in typeof(IResponse).GetProperties())
-                    {
-                        if (prop.CanWrite && prop.CanRead)
-                        {
-                            if (prop.Name == "IsSuccess") prop.SetValue(genericInstance, false);
-                            else if (prop.Name == "ErrorMessage") prop.SetValue(genericInstance, errorMessage);
-                            else if (prop.Name == "Message") prop.SetValue(genericInstance, errorMessage);
-                            else if (prop.Name == "ErrorCode") prop.SetValue(genericInstance, errorCode);
-                            else if (prop.Name == "Metadata") prop.SetValue(genericInstance, baseResponse.Metadata);
-                        }
-                    }
-                    
-                    return genericInstance as TResponse;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"无法为类型{typeof(TResponse).Name}创建特定类型错误响应: {ex.Message}");
-            }
-            
-            // 最后的回退方案 - 但我们应该尽量避免这种情况
-            return baseResponse as TResponse;
-        }
 
         /// <summary>
         /// 发送命令并处理响应，返回指令类型的响应数据
@@ -1719,7 +1664,7 @@ namespace RUINORERP.UI.Network
                             else if (task.Result != null && task.Result.Response != null)
                                 responseTcs.TrySetResult(task.Result.Response as TResponse);
                             else
-                                responseTcs.TrySetResult(CreateSpecificErrorResponse<TResponse>("未收到有效响应数据"));
+                                responseTcs.TrySetResult(ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到有效响应数据"));
                         });
 
                         // 将请求加入队列
@@ -1742,14 +1687,14 @@ namespace RUINORERP.UI.Network
                     }
 
                     // 如果未启用自动重连，返回错误响应
-                    return CreateSpecificErrorResponse<TResponse>("连接已断开，无法发送请求");
+                    return ResponseFactory.CreateSpecificErrorResponse<TResponse>("连接已断开，无法发送请求");
                 }
 
                 var packet = await SendCommandAsync(commandId, request, ct, timeoutMs);
 
                 if (packet == null)
                 {
-                    return CreateSpecificErrorResponse<TResponse>("未收到服务器响应");
+                    return ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到服务器响应");
                 }
 
                 var responseData = packet.Response;
@@ -1758,7 +1703,7 @@ namespace RUINORERP.UI.Network
                 if (responseData == null)
                 {
                     _logger.LogWarning($"命令响应数据为空或处理失败。命令ID: {commandId}");
-                    return CreateSpecificErrorResponse<TResponse>("服务器返回了空响应数据");
+                    return ResponseFactory.CreateSpecificErrorResponse<TResponse>("服务器返回了空响应数据");
                 }
                 return responseData as TResponse;
             }
@@ -1814,7 +1759,7 @@ namespace RUINORERP.UI.Network
                 }
 
                 // 返回错误响应
-                return CreateSpecificErrorResponse<TResponse>($"命令执行失败: {ex.Message}");
+                return ResponseFactory.CreateSpecificErrorResponse<TResponse>($"命令执行失败: {ex.Message}");
             }
         }
 

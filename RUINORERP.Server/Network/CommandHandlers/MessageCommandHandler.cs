@@ -75,14 +75,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 else
                 {
-                    return ResponseBase.CreateError("消息请求格式错误")
-                        .WithMetadata("ErrorCode", "INVALID_MESSAGE_REQUEST");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("消息请求格式错误")
+                        ;
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理消息命令时出错");
-                return CreateExceptionResponse(ex, "MESSAGE_HANDLER_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex, $"处理消息命令时出错{cmd.Packet.CommandId.ToString()}");
             }
         }
 
@@ -507,15 +507,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
-        /// <summary>
-        /// 创建统一的异常响应
-        /// </summary>
-        private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
-        {
-            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}")
-                .WithMetadata("ErrorCode", errorCode)
-                .WithMetadata("Exception", ex.Message)
-                .WithMetadata("StackTrace", ex.StackTrace);
-        }
+      
     }
 }

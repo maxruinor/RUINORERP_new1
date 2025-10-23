@@ -32,12 +32,12 @@ namespace RUINORERP.Server.Controls
         public ObservableCollection<UserInfo> UserInfos { get; } = new ObservableCollection<UserInfo>();
         private readonly Dictionary<string, ListViewItem> _itemMap = new Dictionary<string, ListViewItem>();
         private DateTime _lastFullUpdate = DateTime.MinValue;
-        // 添加缺失的菜单项字段，以解决设计器文件中的引用错误
-        private ToolStripMenuItem 切换服务器ToolStripMenuItem;
-        private ToolStripMenuItem 全部切换服务器ToolStripMenuItem;
         [DllImport("user32.dll")]
         private static extern int GetScrollPos(IntPtr hWnd, int nBar);
         private const int SB_HORZ = 0;
+        // 菜单项引用（与设计器关联）
+        private System.Windows.Forms.ToolStripMenuItem 切换服务器ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 全部切换服务器ToolStripMenuItem;
 
         public UserManagementControl()
         {

@@ -7,6 +7,33 @@ using System.Text;
 namespace RUINORERP.Business.Cache
 {
     /// <summary>
+    /// 表类型枚举
+    /// </summary>
+    public enum TableType
+    {
+        /// <summary>
+        /// 基础数据表（如系统配置、字典表等）
+        /// </summary>
+        Base,
+        /// <summary>
+        /// 业务表（核心业务数据）
+        /// </summary>
+        Business,
+        /// <summary>
+        /// 事务表（如订单、发票等）
+        /// </summary>
+        Transaction,
+        /// <summary>
+        /// 报表或分析用表
+        /// </summary>
+        Report,
+        /// <summary>
+        /// 其他类型的表
+        /// </summary>
+        Other
+    }
+
+    /// <summary>
     /// 表结构信息类，用于存储表的元数据信息
     /// </summary>
     public class TableSchemaInfo
@@ -56,6 +83,11 @@ namespace RUINORERP.Business.Cache
         /// 表描述信息
         /// </summary>
         public string Description { get; set; }
+
+        /// <summary>
+        /// 表类型
+        /// </summary>
+        public TableType Type { get; set; } = TableType.Other;
 
         /// <summary>
         /// 外键关系列表
@@ -108,6 +140,7 @@ namespace RUINORERP.Business.Cache
             sb.AppendLine($"是否视图: {IsView}");
             sb.AppendLine($"是否缓存: {IsCacheable}");
             sb.AppendLine($"缓存策略: {(CacheWholeRow ? "缓存整行" : "只缓存指定字段")}");
+            sb.AppendLine($"表类型: {Type}");
             sb.AppendLine($"描述: {Description ?? "无"}");
             sb.AppendLine($"外键数量: {ForeignKeys?.Count ?? 0}");
             return sb.ToString();

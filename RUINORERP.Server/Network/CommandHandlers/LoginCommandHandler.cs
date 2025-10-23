@@ -167,7 +167,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             CommandContext executionContext,
             CancellationToken cancellationToken)
         {
-     
+
             try
             {
                 // 添加时间对比检测逻辑
@@ -563,7 +563,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 请求重复登录确认
         /// </summary>
-        private ResponseBase RequestDuplicateLoginConfirmation(IEnumerable<SessionInfo> existingSessions, CancellationToken cancellationToken)
+        private IResponse RequestDuplicateLoginConfirmation(IEnumerable<SessionInfo> existingSessions, CancellationToken cancellationToken)
         {
             try
             {
@@ -589,7 +589,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 LogError($"请求重复登录确认失败: {ex.Message}", ex);
-                return ResponseBase.CreateError("请求重复登录确认失败", UnifiedErrorCodes.System_InternalError.Code);
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>("请求重复登录确认失败", UnifiedErrorCodes.System_InternalError.Code);
             }
         }
 
@@ -822,7 +822,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private LoginResponse CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
         {
             var metadata = new Dictionary<string, object> { { "ErrorCode", customErrorCode } };
-            return CreateSpecificErrorResponse<LoginResponse>($"{errorCode.Message}: {message}", errorCode.Code, metadata);
+            return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>($"{errorCode.Message}: {message}", errorCode.Code, metadata);
         }
 
         /// <summary>
@@ -836,7 +836,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 { "Exception", ex.Message },
                 { "StackTrace", ex.StackTrace }
             };
-            return CreateSpecificErrorResponse<LoginResponse>($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code, metadata);
+            return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code, metadata);
         }
 
 

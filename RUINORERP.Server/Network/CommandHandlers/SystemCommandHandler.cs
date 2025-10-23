@@ -63,8 +63,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 验证管理员权限
                 if (!await ValidateAdminPermissionAsync(cmd.Packet.ExecutionContext))
                 {
-                    return ResponseBase.CreateError("权限不足，仅管理员可执行此操作", 403)
-                        .WithMetadata("ErrorCode", "INSUFFICIENT_PERMISSIONS");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("权限不足，仅管理员可执行此操作", 403);
                 }
 
                 if (commandId == SystemCommands.ComputerStatus)
@@ -81,14 +80,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 else
                 {
-                    return ResponseBase.CreateError($"不支持的系统命令: {commandId.Name}")
-                        .WithMetadata("ErrorCode", "UNSUPPORTED_SYSTEM_COMMAND");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"不支持的系统命令: {commandId.Name}");
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理系统命令时出错: {Message}", ex.Message);
-                return CreateExceptionResponse(ex, "SYSTEM_HANDLER_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex, $"处理系统命令时出错{cmd.Packet.CommandId.ToString()}");
             }
         }
 
@@ -116,8 +114,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 向目标用户发送状态查询请求
                     var targetSession = targetSessions.First();
                     var response = await SendRequestToClientAsync<SystemCommandResponse>(
-                        targetSession.SessionID, 
-                        SystemCommands.ComputerStatus, 
+                        targetSession.SessionID,
+                        SystemCommands.ComputerStatus,
                         SystemCommandRequest.CreateComputerStatusRequest(request.TargetUserId, request.RequestType),
                         cancellationToken);
 
@@ -129,8 +127,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     else
                     {
                         return SystemCommandResponse.CreateComputerStatusFailure(
-                            response?.Message ?? "无法获取目标电脑状态", 
-                            response?.Metadata?.ContainsKey("ErrorCode") == true ? 
+                            response?.Message ?? "无法获取目标电脑状态",
+                            response?.Metadata?.ContainsKey("ErrorCode") == true ?
                                 response.Metadata["ErrorCode"].ToString() : "STATUS_QUERY_FAILED");
                     }
                 }
@@ -170,22 +168,22 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 向目标用户发送关闭指令
                     var targetSession = targetSessions.First();
                     var response = await SendRequestToClientAsync<SystemCommandResponse>(
-                        targetSession.SessionID, 
-                        SystemCommands.ShutdownComputer, 
+                        targetSession.SessionID,
+                        SystemCommands.ShutdownComputer,
                         SystemCommandRequest.CreateShutdownRequest(request.TargetUserId, request.ShutdownType, request.DelaySeconds, request.AdminRemark),
                         cancellationToken);
 
                     if (response != null && response.IsSuccess)
                     {
-                        _logger?.LogInformation("关闭电脑指令发送成功 - 目标用户: {TargetUserId}, 类型: {ShutdownType}", 
+                        _logger?.LogInformation("关闭电脑指令发送成功 - 目标用户: {TargetUserId}, 类型: {ShutdownType}",
                             request.TargetUserId, request.ShutdownType);
                         return response;
                     }
                     else
                     {
                         return SystemCommandResponse.CreateShutdownFailure(
-                            response?.Message ?? "无法发送关闭指令", 
-                            response?.Metadata?.ContainsKey("ErrorCode") == true ? 
+                            response?.Message ?? "无法发送关闭指令",
+                            response?.Metadata?.ContainsKey("ErrorCode") == true ?
                                 response.Metadata["ErrorCode"].ToString() : "SHUTDOWN_FAILED");
                     }
                 }
@@ -225,8 +223,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 向目标用户发送退出系统指令
                     var targetSession = targetSessions.First();
                     var response = await SendRequestToClientAsync<SystemCommandResponse>(
-                        targetSession.SessionID, 
-                        SystemCommands.ExitSystem, 
+                        targetSession.SessionID,
+                        SystemCommands.ExitSystem,
                         SystemCommandRequest.CreateExitSystemRequest(request.TargetUserId, request.DelaySeconds, request.AdminRemark),
                         cancellationToken);
 
@@ -238,8 +236,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     else
                     {
                         return SystemCommandResponse.CreateShutdownFailure(
-                            response?.Message ?? "无法发送退出系统指令", 
-                            response?.Metadata?.ContainsKey("ErrorCode") == true ? 
+                            response?.Message ?? "无法发送退出系统指令",
+                            response?.Metadata?.ContainsKey("ErrorCode") == true ?
                                 response.Metadata["ErrorCode"].ToString() : "EXIT_SYSTEM_FAILED");
                     }
                 }
@@ -283,15 +281,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 向客户端发送请求并等待响应
         /// </summary>
         private async Task<T> SendRequestToClientAsync<T>(
-            string sessionId, 
-            CommandId commandId, 
-            IRequest request, 
-            CancellationToken cancellationToken) where T :  ResponseBase
+            string sessionId,
+            CommandId commandId,
+            IRequest request,
+            CancellationToken cancellationToken) where T : ResponseBase
         {
             // 这里需要实现实际的客户端通信逻辑
             // 由于这是一个示例，我们返回一个模拟的响应
             await Task.Delay(100, cancellationToken);
-            
+
             if (typeof(T) == typeof(SystemCommandResponse))
             {
                 return new SystemCommandResponse
@@ -313,15 +311,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             return null;
         }
 
-        /// <summary>
-        /// 创建统一的异常响应
-        /// </summary>
-        private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
-        {
-            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}")
-                .WithMetadata("ErrorCode", errorCode)
-                .WithMetadata("Exception", ex.Message)
-                .WithMetadata("StackTrace", ex.StackTrace);
-        }
+
     }
 }

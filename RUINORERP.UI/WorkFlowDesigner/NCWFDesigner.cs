@@ -20,7 +20,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.WorkFlowDesigner
 {
 
-    [MenuAttrAssemblyInfo("工作流设计器", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.系统设置)]
+    [MenuAttrAssemblyInfo("工作流设计器", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.流程设计)]
     public partial class NCWFDesigner : UserControl
     {
         public NCWFDesigner()
@@ -326,6 +326,11 @@ namespace RUINORERP.UI.WorkFlowDesigner
                 listViewItem.Tag = shapeType.ToString();
                 shapesListView.Items.Add(listViewItem);
             }
+
+        }
+
+        private void ungroupButton_Click(object sender, EventArgs e)
+        {
 
         }
     }

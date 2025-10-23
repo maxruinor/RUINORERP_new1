@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -12,11 +12,12 @@ namespace RUINORERP.Model.ConfigModel
     /// 包含客户端业务操作相关的配置项以及服务器配置项
     /// </summary>
     [Serializable()]
+    [DisplayName("系统全局配置")]
     public class SystemGlobalconfig : BaseConfig
     {
-        [JsonProperty("预交日期必须填写")]
+        [JsonProperty("采购日期必填")]
         [Category("采购模块")]
-        [Description("是否需要填写预交日期")]
+        [Description("是否需要填写采购日期")]
         public bool 采购日期必填 { get; set; }
 
         [JsonProperty("IsFromPlatform")]
@@ -31,8 +32,12 @@ namespace RUINORERP.Model.ConfigModel
 
         [JsonProperty("DirectPrinting")]
         [Category("打印设置")]
-        [Description("是否直接打印，如果否则会先打开设计功能再打印")]
-        public bool DirectPrinting { get; set; } = true;
+        [Description("是否启用直接打印功能")]
+        public bool DirectPrinting { get; set; } = false;
+        
+        [Category("其他设置")]
+        [Description("销售出库单生成后自动打印")]
+        public bool AutoPrintAfterSave { get; set; }
 
         [JsonProperty("UseSharedPrinter")]
         [Category("使用共享打印机")]
@@ -40,7 +45,9 @@ namespace RUINORERP.Model.ConfigModel
         public bool UseSharedPrinter { get; set; }
 
         [JsonProperty("SomeSetting")]
-        public string SomeSetting { get; set; }
+        [Category("其他设置")]
+        [Description("通用配置设置")]
+        public string SomeSetting { get; set; } = "";
         
         // 添加服务器相关配置属性
         [JsonProperty("ServerName")]

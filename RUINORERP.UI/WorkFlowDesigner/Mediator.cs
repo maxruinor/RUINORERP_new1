@@ -1144,7 +1144,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
         /// </summary>
         public void TransferWorkFlowJsonToEditor()
         {
-            Service.JSONSerializer jSONSerializer = new Service.JSONSerializer(this.GraphControl);
+            Service.WorkflowSerializer jSONSerializer = new Service.WorkflowSerializer(this.GraphControl);
             this.Editor.Text = jSONSerializer.Serialize();
             this.Editor.SetHighlighting("C#");
             this.OpenCodeTab();
@@ -1155,7 +1155,7 @@ namespace RUINORERP.UI.WorkFlowDesigner
         /// </summary>
         public async Task TestWorkFlowByJson(object sender, EventArgs e)
         {
-            Service.JSONSerializer jSONSerializer = new Service.JSONSerializer(this.GraphControl);
+            Service.WorkflowSerializer jSONSerializer = new Service.WorkflowSerializer(this.GraphControl);
             jSONSerializer.JsonText = this.Editor.Text;
             await jSONSerializer.TestWorkflow();
         }

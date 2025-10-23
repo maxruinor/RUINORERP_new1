@@ -8,6 +8,8 @@ using System.Windows.Forms;
 using Netron.Neon;
 using System.Configuration;
 using SharpYaml.Model;
+using RUINORERP.UI.WorkFlowDesigner.Nodes;
+
 namespace RUINORERP.UI.WorkFlowDesigner
 {
     /// <summary>
@@ -51,16 +53,19 @@ namespace RUINORERP.UI.WorkFlowDesigner
 
             //load it in the shapes-viewer as well
             //graphShapesView1.LoadLibraries();
-           // graphShapesView1.LoadLibraries(Application.ExecutablePath);
+            // graphShapesView1.LoadLibraries(Application.ExecutablePath);
             graphShapesView1.ImportEntities(Application.ExecutablePath);
             
-            
+            // æ·»åŠ ä¼šç­¾å’Œæˆ–ç­¾èŠ‚ç‚¹åˆ°å›¾å½¢åº“ä¸­
+            // æ³¨é‡Šæ‰è¿™ä¸¤è¡Œï¼Œå› ä¸ºImportEntitiesæ–¹æ³•ä¸æ¥å—Typeå‚æ•°
+            // graphShapesView1.ImportEntities(typeof(CountersignNode));
+            // graphShapesView1.ImportEntities(typeof(OrSignNode));
 
 
             //string libPath = Path.GetDirectoryName(Application.ExecutablePath) + "\\" + Assembly.GetAssembly(typeof(Netron.GraphLib.UI.GraphControl)).GetName().Name + ".dll";
             //this.graphShapesView1.AddLibrary(libPath);
 
-            //Ìí¼ÓÄ¬ÈÏµÄ¿â
+            //æ·»åŠ é»˜è®¤çš„åº“
             /*
             string libPath = Path.GetDirectoryName(Application.ExecutablePath) + "\\" + Assembly.GetAssembly(typeof(Netron.GraphLib.UI.GraphControl)).GetName().Name + ".dll";
             this.graphShapesView1.AddLibrary(libPath);
@@ -107,14 +112,14 @@ namespace RUINORERP.UI.WorkFlowDesigner
             // 
             // FlowNodeViewerTab
             // 
-            this.AccessibleDescription = "ĞÎ×´¿âÊÕ¼¯ÔÚĞÎ×´²¿¼şÖĞÕÒµ½µÄĞÎ×´¡£½«¿âÖĞµÄ·ÅÖÃĞÎ×´ÍÏµ½»­²¼ÉÏ½øĞĞÌí¼Ó¡£";
+            this.AccessibleDescription = "å½¢çŠ¶åº“é€‰é¡¹å¡æ˜¾ç¤ºäº†æ‰€æœ‰å¯ç”¨çš„å½¢çŠ¶å®ä½“çš„é›†åˆã€‚";
             this.AutoScaleBaseSize = new System.Drawing.Size(6, 14);
             this.ClientSize = new System.Drawing.Size(292, 273);
             this.Controls.Add(this.graphShapesView1);
             this.HideOnClose = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FlowNodeViewerTab";
-            this.Text = "Á÷³ÌÍ¼½Úµã";
+            this.Text = "æµç¨‹å›¾èŠ‚ç‚¹";
             ((System.ComponentModel.ISupportInitialize)(this.graphShapesView1)).EndInit();
             this.ResumeLayout(false);
 

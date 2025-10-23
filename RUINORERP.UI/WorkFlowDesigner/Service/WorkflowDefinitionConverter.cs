@@ -310,7 +310,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
             }
             
             // 序列化为JSON
-            string json = JsonConvert.SerializeObject(workflowDefinition, Formatting.Indented);
+            string json = JsonConvert.SerializeObject(workflowDefinition, Newtonsoft.Json.Formatting.Indented);
             return json;
         }
         

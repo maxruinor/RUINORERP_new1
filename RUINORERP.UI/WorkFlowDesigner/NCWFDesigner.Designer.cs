@@ -533,7 +533,7 @@
             this.layoutButton});
             this.actionsStrip.Location = new System.Drawing.Point(3, 50);
             this.actionsStrip.Name = "actionsStrip";
-            this.actionsStrip.Size = new System.Drawing.Size(413, 25);
+            this.actionsStrip.Size = new System.Drawing.Size(444, 25);
             this.actionsStrip.TabIndex = 8;
             // 
             // sendToBackButton
@@ -582,6 +582,7 @@
             this.ungroupButton.Name = "ungroupButton";
             this.ungroupButton.Size = new System.Drawing.Size(63, 22);
             this.ungroupButton.Text = "取消分组";
+            this.ungroupButton.Click += new System.EventHandler(this.ungroupButton_Click);
             // 
             // toolStripSeparator11
             // 

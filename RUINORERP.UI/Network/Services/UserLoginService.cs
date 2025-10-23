@@ -30,6 +30,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly TokenManager _tokenManager;
         private readonly SilentTokenRefresher _silentTokenRefresher;
         private readonly TokenRefreshService _tokenRefreshService; // 添加TokenRefreshService字段
+        private readonly CacheClientService _cacheClientService; // 缓存客户端服务，用于订阅表
         private bool _isLoggedIn = false; // 登录状态标志
         private UserSessionInfo _currentUserSession; // 当前用户会话信息
         private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1); // 登录操作信号量防止并发登录请求
@@ -52,11 +53,13 @@ namespace RUINORERP.UI.Network.Services
         ClientCommunicationService communicationService,
             TokenManager tokenManager,
             TokenRefreshService tokenRefreshService,
+            CacheClientService cacheClientService,
             ILogger<UserLoginService> log = null)
         {
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _tokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
             _tokenRefreshService = tokenRefreshService ?? throw new ArgumentNullException(nameof(tokenRefreshService));
+            _cacheClientService = cacheClientService ?? throw new ArgumentNullException(nameof(cacheClientService));
             _logger = log;
             _eventManager = eventManager;
             // 初始化SilentTokenRefresher
@@ -100,7 +103,7 @@ namespace RUINORERP.UI.Network.Services
                 if (!_communicationService.IsConnected)
                 {
                     _logger?.LogWarning("登录失败：未连接到服务器");
-                    return ResponseBase.CreateError("未连接到服务器，请检查网络连接后重试") as LoginResponse;
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("未连接到服务器，请检查网络连接后重试") as LoginResponse;
                 }
 
                 var loginRequest = LoginRequest.Create(username, password);
@@ -133,7 +136,7 @@ namespace RUINORERP.UI.Network.Services
                 if (response == null)
                 {
                     _logger?.LogError("登录失败：服务器返回了空的响应数据");
-                    return ResponseBase.CreateError("服务器返回了空的响应数据，请联系系统管理员") as LoginResponse;
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("服务器返回了空的响应数据，请联系系统管理员") as LoginResponse;
                 }
 
                 // 检查响应是否成功
@@ -158,6 +161,28 @@ namespace RUINORERP.UI.Network.Services
                         _logger?.LogWarning(heartbeatEx, "登录成功后启动心跳失败 - 用户: {Username}", username);
                         // 心跳启动失败不影响登录流程，只记录警告
                     }
+
+                    // 登录成功后订阅基础业务表缓存
+                    try
+                    {
+                        // 使用Task.Run避免阻塞登录流程
+                        _ = Task.Run(async () => 
+                        {
+                            try
+                            {
+                                await _cacheClientService.SubscribeAllBaseTablesAsync();
+                            }
+                            catch (Exception cacheEx)
+                            {
+                                _logger?.LogError(cacheEx, "登录成功后订阅基础业务表缓存失败 - 用户: {Username}", username);
+                                // 缓存订阅失败不影响登录流程
+                            }
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "启动缓存订阅任务失败 - 用户: {Username}", username);
+                    }
                 }
 
                 return response;
@@ -165,12 +190,12 @@ namespace RUINORERP.UI.Network.Services
             catch (OperationCanceledException ex)
             {
                 _logger?.LogInformation(ex, "登录操作已被用户取消 - 用户: {Username}", username);
-                return ResponseBase.CreateError("登录操作已取消") as LoginResponse;
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>("登录操作已取消") as LoginResponse;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "登录过程中发生未预期的异常 - 用户: {Username}", username);
-                return ResponseBase.CreateError("登录过程中发生错误，请稍后重试") as LoginResponse;
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>("登录过程中发生错误，请稍后重试") as LoginResponse;
             }
             finally
             {

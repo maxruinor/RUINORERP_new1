@@ -9,6 +9,7 @@ namespace RUINORERP.Model.ConfigModel
     /// 专注于服务器相关的配置项，包括网络设置、数据库连接、文件存储等
     /// </summary>
     [Serializable()]
+    [DisplayName("服务器配置")]
     public class ServerConfig : BaseConfig
     {
         #region 服务器基础配置
@@ -79,6 +80,12 @@ namespace RUINORERP.Model.ConfigModel
         [Category("文件存储设置")]
         [Description("单个文件最大上传大小(MB)")]
         public int MaxFileSizeMB { get; set; } = 10;
+        
+        // 确保与控件中引用的属性一致
+        [JsonProperty("SomeSetting")]
+        [Category("其他设置")]
+        [Description("通用配置设置")]
+        public string SomeSetting { get; set; } = "";
         #endregion
     }
 }

@@ -288,6 +288,69 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
+
+        /// <summary>
+        /// 按表类型订阅数据表
+        /// </summary>
+        /// <param name="tableType">表类型</param>
+        public async Task SubscribeTablesByTypeAsync(TableType tableType)
+        {
+            try
+            {
+                // 获取指定类型且可缓存的表
+                var tables = TableSchemaManager.Instance.GetCacheableTableNamesByType(tableType);
+                var failedTables = new List<string>();
+
+                if (tables.Count == 0)
+                {
+                    _log.LogInformation("没有找到类型为{0}且可缓存的表", tableType);
+                    return;
+                }
+
+                // 并行订阅以提高效率
+                var tasks = tables.Select(async tableName =>
+                {
+                    try
+                    {
+                        await SubscribeCacheAsync(tableName);
+                        _log.LogDebug("已订阅表: {0}, 类型: {1}", tableName, tableType);
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.LogWarning(ex, "订阅表{0}失败，类型: {1}", tableName, tableType);
+                        failedTables.Add(tableName);
+                    }
+                });
+
+                await Task.WhenAll(tasks);
+
+                _log.LogInformation("类型{0}表订阅完成: 成功={1}, 失败={2}",
+                    tableType, tables.Count - failedTables.Count, failedTables.Count);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "按类型{0}订阅表时发生错误", tableType);
+            }
+        }
+
+        /// <summary>
+        /// 订阅所有基础业务表
+        /// </summary>
+        public async Task SubscribeAllBaseTablesAsync()
+        {
+            try
+            {
+                // 使用优化后的订阅方法
+                await SubscribeTablesByTypeAsync(TableType.Base);
+                await SubscribeTablesByTypeAsync(TableType.Business);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "全量订阅基础业务表时发生错误");
+            }
+        }
+
+
         /// <summary>
         /// 清理指定表的缓存
         /// </summary>

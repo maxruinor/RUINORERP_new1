@@ -98,76 +98,76 @@ namespace RUINORERP.Business.Cache
                 
                 // 注册所有需要缓存的表结构信息
                 // 基础数据表
-                RegistInformation<tb_Company>(k => k.ID, v => v.CNName);
-                RegistInformation<tb_Currency>(k => k.Currency_ID, v => v.CurrencyName);
-                RegistInformation<tb_CurrencyExchangeRate>(k => k.ExchangeRateID, v => v.ConversionName);
-                RegistInformation<tb_BOM_S>(k => k.BOM_ID, v => v.BOM_Name);
-                RegistInformation<tb_ProductType>(k => k.Type_ID, v => v.TypeName);
-                RegistInformation<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name);
-                RegistInformation<tb_Unit>(k => k.Unit_ID, v => v.UnitName);
-                RegistInformation<tb_Department>(k => k.DepartmentID, v => v.DepartmentName);
-                RegistInformation<tb_LocationType>(k => k.LocationType_ID, v => v.TypeName);
-                RegistInformation<tb_Location>(k => k.Location_ID, v => v.Name);
+                RegistInformation<tb_Company>(k => k.ID, v => v.CNName, tableType: TableType.Base);
+                RegistInformation<tb_Currency>(k => k.Currency_ID, v => v.CurrencyName, tableType: TableType.Base);
+                RegistInformation<tb_CurrencyExchangeRate>(k => k.ExchangeRateID, v => v.ConversionName, tableType: TableType.Base);
+                RegistInformation<tb_BOM_S>(k => k.BOM_ID, v => v.BOM_Name, tableType: TableType.Base);
+                RegistInformation<tb_ProductType>(k => k.Type_ID, v => v.TypeName, tableType: TableType.Base);
+                RegistInformation<tb_PaymentMethod>(k => k.Paytype_ID, v => v.Paytype_Name, tableType: TableType.Base);
+                RegistInformation<tb_Unit>(k => k.Unit_ID, v => v.UnitName, tableType: TableType.Base);
+                RegistInformation<tb_Department>(k => k.DepartmentID, v => v.DepartmentName, tableType: TableType.Base);
+                RegistInformation<tb_LocationType>(k => k.LocationType_ID, v => v.TypeName, tableType: TableType.Base);
+                RegistInformation<tb_Location>(k => k.Location_ID, v => v.Name, tableType: TableType.Base);
 
                 // 供应商相关
-                RegistInformation<tb_CustomerVendor>(k => k.CustomerVendor_ID, v => v.CVName);
-                RegistInformation<tb_CustomerVendorType>(k => k.Type_ID, v => v.TypeName);
-                RegistInformation<tb_ProdCategories>(k => k.Category_ID, v => v.Category_name);
-                RegistInformation<tb_Prod>(k => k.ProdBaseID, v => v.CNName);
+                RegistInformation<tb_CustomerVendor>(k => k.CustomerVendor_ID, v => v.CVName, tableType: TableType.Business);
+                RegistInformation<tb_CustomerVendorType>(k => k.Type_ID, v => v.TypeName, tableType: TableType.Base);
+                RegistInformation<tb_ProdCategories>(k => k.Category_ID, v => v.Category_name, tableType: TableType.Base);
+                RegistInformation<tb_Prod>(k => k.ProdBaseID, v => v.CNName, tableType: TableType.Business);
 
                 // 视图
                 RegistInformation<View_ProdDetail>(k => k.ProdDetailID, v => v.CNName, isView: true);
                 RegistInformation<View_ProdInfo>(k => k.ProdBaseID, v => v.CNName, isView: true);
 
                 // 产品相关表
-                RegistInformation<tb_ProdPropertyType>(k => k.PropertyType_ID, v => v.PropertyTypeName);
-                RegistInformation<tb_ProdProperty>(k => k.Property_ID, v => v.PropertyName);
-                RegistInformation<tb_ProdPropertyValue>(k => k.PropertyValueID, v => v.PropertyValueName);
-                RegistInformation<tb_ProdBundle>(k => k.BundleID, v => v.BundleName);
-                RegistInformation<tb_Packing>(k => k.Pack_ID, v => v.PackagingName);
+                RegistInformation<tb_ProdPropertyType>(k => k.PropertyType_ID, v => v.PropertyTypeName, tableType: TableType.Base);
+                RegistInformation<tb_ProdProperty>(k => k.Property_ID, v => v.PropertyName, tableType: TableType.Base);
+                RegistInformation<tb_ProdPropertyValue>(k => k.PropertyValueID, v => v.PropertyValueName, tableType: TableType.Base);
+                RegistInformation<tb_ProdBundle>(k => k.BundleID, v => v.BundleName, tableType: TableType.Business);
+                RegistInformation<tb_Packing>(k => k.Pack_ID, v => v.PackagingName, tableType: TableType.Base);
 
                 // 员工和权限相关
-                RegistInformation<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name);
-                RegistInformation<tb_UserInfo>(k => k.User_ID, v => v.UserName);
-                RegistInformation<tb_RoleInfo>(k => k.RoleID, v => v.RoleName);
-                RegistInformation<tb_MenuInfo>(k => k.MenuID, v => v.MenuName);
-                RegistInformation<tb_ModuleDefinition>(k => k.ModuleID, v => v.ModuleName);
+                RegistInformation<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, tableType: TableType.Business);
+                RegistInformation<tb_UserInfo>(k => k.User_ID, v => v.UserName, tableType: TableType.Base);
+                RegistInformation<tb_RoleInfo>(k => k.RoleID, v => v.RoleName, tableType: TableType.Base);
+                RegistInformation<tb_MenuInfo>(k => k.MenuID, v => v.MenuName, tableType: TableType.Base);
+                RegistInformation<tb_ModuleDefinition>(k => k.ModuleID, v => v.ModuleName, tableType: TableType.Base);
 
                 // 业务类型
-                RegistInformation<tb_BizType>(k => k.Type_ID, v => v.TypeName);
-                RegistInformation<tb_StorageRack>(k => k.Rack_ID, v => v.RackName);
-                RegistInformation<tb_OutInStockType>(k => k.Type_ID, v => v.TypeName);
-                RegistInformation<tb_OnlineStoreInfo>(k => k.Store_ID, v => v.StoreName);
-                RegistInformation<tb_ProjectGroup>(k => k.ProjectGroup_ID, v => v.ProjectGroupName);
+                RegistInformation<tb_BizType>(k => k.Type_ID, v => v.TypeName, tableType: TableType.Base);
+                RegistInformation<tb_StorageRack>(k => k.Rack_ID, v => v.RackName, tableType: TableType.Base);
+                RegistInformation<tb_OutInStockType>(k => k.Type_ID, v => v.TypeName, tableType: TableType.Base);
+                RegistInformation<tb_OnlineStoreInfo>(k => k.Store_ID, v => v.StoreName, tableType: TableType.Base);
+                RegistInformation<tb_ProjectGroup>(k => k.ProjectGroup_ID, v => v.ProjectGroupName, tableType: TableType.Business);
 
                 // 财务相关
-                RegistInformation<tb_FM_Account>(k => k.Account_id, v => v.Account_name);
-                RegistInformation<tb_FM_ExpenseType>(k => k.ExpenseType_id, v => v.Expense_name);
-                RegistInformation<tb_FM_Subject>(k => k.Subject_id, v => v.Subject_name);
-                RegistInformation<tb_FM_PayeeInfo>(k => k.PayeeInfoID, v => v.Account_name);
+                RegistInformation<tb_FM_Account>(k => k.Account_id, v => v.Account_name, tableType: TableType.Base);
+                RegistInformation<tb_FM_ExpenseType>(k => k.ExpenseType_id, v => v.Expense_name, tableType: TableType.Base);
+                RegistInformation<tb_FM_Subject>(k => k.Subject_id, v => v.Subject_name, tableType: TableType.Base);
+                RegistInformation<tb_FM_PayeeInfo>(k => k.PayeeInfoID, v => v.Account_name, tableType: TableType.Base);
 
                 // 其他基础数据
-                RegistInformation<tb_BoxRules>(k => k.BoxRules_ID, v => v.BoxRuleName);
-                RegistInformation<tb_CartoonBox>(k => k.CartonID, v => v.CartonName);
-                RegistInformation<tb_Files>(k => k.Doc_ID, v => v.FileName);
+                RegistInformation<tb_BoxRules>(k => k.BoxRules_ID, v => v.BoxRuleName, tableType: TableType.Base);
+                RegistInformation<tb_CartoonBox>(k => k.CartonID, v => v.CartonName, tableType: TableType.Base);
+                RegistInformation<tb_Files>(k => k.Doc_ID, v => v.FileName, tableType: TableType.Business);
 
                 // CRM相关
-                RegistInformation<tb_CRM_Customer>(k => k.Customer_id, v => v.CustomerName);
-                RegistInformation<tb_CRM_Leads>(k => k.LeadID, v => v.CustomerName);
-                RegistInformation<tb_CRM_Region>(k => k.Region_ID, v => v.Region_Name);
-                RegistInformation<tb_CRM_Contact>(k => k.Contact_id, v => v.Contact_Name);
+                RegistInformation<tb_CRM_Customer>(k => k.Customer_id, v => v.CustomerName, tableType: TableType.Business);
+                RegistInformation<tb_CRM_Leads>(k => k.LeadID, v => v.CustomerName, tableType: TableType.Business);
+                RegistInformation<tb_CRM_Region>(k => k.Region_ID, v => v.Region_Name, tableType: TableType.Base);
+                RegistInformation<tb_CRM_Contact>(k => k.Contact_id, v => v.Contact_Name, tableType: TableType.Business);
 
                 // 地理信息
-                RegistInformation<tb_Provinces>(k => k.ProvinceID, v => v.ProvinceCNName);
-                RegistInformation<tb_Cities>(k => k.CityID, v => v.CityCNName);
+                RegistInformation<tb_Provinces>(k => k.ProvinceID, v => v.ProvinceCNName, tableType: TableType.Base);
+                RegistInformation<tb_Cities>(k => k.CityID, v => v.CityCNName, tableType: TableType.Base);
 
                 // 配置相关
-                RegistInformation<tb_BOMConfigHistory>(k => k.BOM_S_VERID, v => v.VerNo);
-                RegistInformation<tb_RolePropertyConfig>(k => k.RolePropertyID, v => v.RolePropertyName);
-                RegistInformation<tb_Unit_Conversion>(k => k.UnitConversion_ID, v => v.UnitConversion_Name);
+                RegistInformation<tb_BOMConfigHistory>(k => k.BOM_S_VERID, v => v.VerNo, tableType: TableType.Business);
+                RegistInformation<tb_RolePropertyConfig>(k => k.RolePropertyID, v => v.RolePropertyName, tableType: TableType.Base);
+                RegistInformation<tb_Unit_Conversion>(k => k.UnitConversion_ID, v => v.UnitConversion_Name, tableType: TableType.Base);
 
                 // 补充缺失的表
-                RegistInformation<tb_FieldInfo>(k => k.FieldInfo_ID, v => v.FieldName);
+                RegistInformation<tb_FieldInfo>(k => k.FieldInfo_ID, v => v.FieldName, tableType: TableType.Base);
                 
                 _logger.LogInformation("表结构信息初始化完成");
             }
@@ -186,9 +186,19 @@ namespace RUINORERP.Business.Cache
             bool isView = false,
             bool isCacheable = true,
             string description = null,
+            TableType tableType = TableType.Other,
             params Expression<Func<T, object>>[] otherDisplayFieldExpressions) where T : class
         {
+            // 先初始化表结构
             _cacheManager.InitializeTableSchema(primaryKeyExpression, displayFieldExpression, isView, isCacheable, description, true, otherDisplayFieldExpressions);
+            
+            // 设置表类型
+            string tableName = typeof(T).Name;
+            var schemaInfo = TableSchemaManager.Instance.GetSchemaInfo(tableName);
+            if (schemaInfo != null)
+            {
+                schemaInfo.Type = tableType;
+            }
         }
 
         /// <summary>
@@ -392,6 +402,83 @@ namespace RUINORERP.Business.Cache
             {
                 _logger.LogError(ex, $"初始化表 {tableName} 的缓存时发生错误");
                 return Task.FromException(ex);
+            }
+        }
+
+        /// <summary>
+        /// 初始化指定类型的表缓存
+        /// </summary>
+        /// <param name="tableType">表类型</param>
+        public async Task InitializeTablesByTypeAsync(TableType tableType)
+        {
+            try
+            {
+                _logger.LogInformation($"开始初始化类型为 {tableType} 的表缓存");
+                var tables = TableSchemaManager.Instance.GetCacheableTableNamesByType(tableType);
+                
+                int successCount = 0;
+                int failedCount = 0;
+                
+                foreach (var tableName in tables)
+                {
+                    try
+                    {
+                        InitializeCacheForTable(tableName);
+                        successCount++;
+                        _logger.LogInformation($"表 {tableName} 缓存初始化成功 ({successCount}/{tables.Count})");
+                        // 短暂延迟，减少数据库压力
+                        await Task.Delay(123);
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        _logger.LogError(ex, $"表 {tableName} 缓存初始化失败 ({failedCount}个表失败)");
+                    }
+                }
+                
+                _logger.LogInformation($"类型 {tableType} 的表缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"初始化类型为 {tableType} 的表缓存时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 初始化基础业务表缓存（系统启动或用户登录时通常需要加载）
+        /// </summary>
+        public async Task InitializeBaseBusinessTablesAsync()
+        {
+            try
+            {
+                _logger.LogInformation("开始初始化基础业务表缓存");
+                var tables = TableSchemaManager.Instance.GetBaseBusinessTableNames();
+                
+                int successCount = 0;
+                int failedCount = 0;
+                
+                foreach (var tableName in tables)
+                {
+                    try
+                    {
+                        InitializeCacheForTable(tableName);
+                        successCount++;
+                        _logger.LogInformation($"基础业务表 {tableName} 缓存初始化成功 ({successCount}/{tables.Count})");
+                        // 短暂延迟，减少数据库压力
+                        await Task.Delay(123);
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        _logger.LogError(ex, $"基础业务表 {tableName} 缓存初始化失败 ({failedCount}个表失败)");
+                    }
+                }
+                
+                _logger.LogInformation($"基础业务表缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "初始化基础业务表缓存时发生错误");
             }
         }
     }

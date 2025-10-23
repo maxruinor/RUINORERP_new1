@@ -441,6 +441,44 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
+        /// 根据表类型获取表名列表
+        /// </summary>
+        /// <param name="tableType">表类型</param>
+        /// <returns>指定类型的表名列表</returns>
+        public List<string> GetTableNamesByType(TableType tableType)
+        {
+            return _tableSchemas.Values
+                .Where(t => t.Type == tableType)
+                .Select(t => t.TableName)
+                .ToList();
+        }
+
+        /// <summary>
+        /// 获取指定类型且需要缓存的表名列表
+        /// </summary>
+        /// <param name="tableType">表类型</param>
+        /// <returns>指定类型且需要缓存的表名列表</returns>
+        public List<string> GetCacheableTableNamesByType(TableType tableType)
+        {
+            return _tableSchemas.Values
+                .Where(t => t.Type == tableType && t.IsCacheable)
+                .Select(t => t.TableName)
+                .ToList();
+        }
+
+        /// <summary>
+        /// 获取所有基础业务表名（通常在系统初始化时需要加载）
+        /// </summary>
+        /// <returns>基础业务表名列表</returns>
+        public List<string> GetBaseBusinessTableNames()
+        {
+            return _tableSchemas.Values
+                .Where(t => (t.Type == TableType.Base || t.Type == TableType.Business) && t.IsCacheable)
+                .Select(t => t.TableName)
+                .ToList();
+        }
+
+        /// <summary>
         /// 清除所有注册的表结构信息
         /// </summary>
         public void Clear()

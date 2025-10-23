@@ -78,14 +78,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 else
                 {
-                    return ResponseBase.CreateError($"不支持的文件命令: {commandId.Name}")
-                        .WithMetadata("ErrorCode", "UNSUPPORTED_FILE_COMMAND");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"不支持的文件命令: {commandId.Name}")
+                        ;
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理文件命令时出错: {Message}", ex.Message);
-                return CreateExceptionResponse(ex, "FILE_HANDLER_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex, $"处理文件命令时出错{cmd.Packet.CommandId.ToString()}");
             }
         }
 
@@ -293,15 +293,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
-        /// <summary>
-        /// 创建统一的异常响应
-        /// </summary>
-        private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
-        {
-            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}")
-                .WithMetadata("ErrorCode", errorCode)
-                .WithMetadata("Exception", ex.Message)
-                .WithMetadata("StackTrace", ex.StackTrace);
-        }
+       
     }
 }

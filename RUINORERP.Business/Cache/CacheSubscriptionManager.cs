@@ -14,6 +14,12 @@ namespace RUINORERP.Business.Cache
     /// <summary>
         /// 缓存订阅管理器 - 可以被服务器和客户端共同使用
         /// 通过IsServerMode属性区分服务器端和客户端模式
+        /// ## 订阅功能必要性分析
+//1. 分布式缓存同步机制 ：管理服务器端和客户端之间的缓存变更通知
+//2. 双向通信支持 ：
+//   - 服务器端维护每个表的订阅者列表（按会话ID组织）
+//   - 客户端管理其订阅的表集合
+//3. 智能事件传播 ：结合 EventDrivenCacheManager 实现缓存变更事件的智能分发
         /// </summary>
         public class CacheSubscriptionManager : IDisposable
     {

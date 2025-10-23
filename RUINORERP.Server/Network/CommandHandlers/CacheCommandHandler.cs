@@ -106,14 +106,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return await handler(cmd, cancellationToken);
                 }
 
-                return ResponseBase.CreateError($"不支持的缓存命令类型: {commandId.ToString()}", UnifiedErrorCodes.Command_NotFound)
-                    .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_COMMAND");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"不支持的缓存命令类型: {commandId.ToString()}", UnifiedErrorCodes.Command_NotFound)
+                    ;
             }
             catch (Exception ex)
             {
                 LogError($"处理缓存命令异常: {ex.Message}", ex);
-                return ResponseBase.CreateError($"处理缓存命令异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
-                    .WithMetadata("ErrorCode", "CACHE_PROCESSING_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"处理缓存命令异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                     ;
             }
         }
 
@@ -130,8 +130,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 使用统一的业务逻辑处理方法
                 if (!(command.Packet.Request is CacheRequest cacheCommand))
                 {
-                    return ResponseBase.CreateError("不支持的缓存命令格式", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "UNSUPPORTED_CACHE_FORMAT");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("不支持的缓存命令格式", UnifiedErrorCodes.Command_ValidationFailed)
+                         ;
                 }
 
                 // 直接调用统一处理方法
@@ -140,8 +140,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 LogError($"处理缓存操作异常: {ex.Message}", ex);
-                return ResponseBase.CreateError($"处理缓存操作异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
-                    .WithMetadata("ErrorCode", "CACHE_OPERATION_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"处理缓存操作异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                    ;
             }
         }
 
@@ -158,8 +158,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 缓存同步命令处理逻辑 - 可以复用现有逻辑或实现新的同步机制
                 if (!(command.Packet.Request is CacheRequest cacheRequest))
                 {
-                    return ResponseBase.CreateError("不支持的缓存同步命令格式", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "UNSUPPORTED_SYNC_FORMAT");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("不支持的缓存同步命令格式", UnifiedErrorCodes.Command_ValidationFailed)
+                        ;
                 }
 
                 // 使用统一的处理方法
@@ -177,8 +177,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 LogError($"处理缓存同步异常: {ex.Message}", ex);
-                return ResponseBase.CreateError($"处理缓存同步异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
-                    .WithMetadata("ErrorCode", "CACHE_SYNC_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"处理缓存同步异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                   ;
             }
         }
 
@@ -194,15 +194,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 if (!(command.Packet.Request is CacheRequest cacheCommand))
                 {
-                    return ResponseBase.CreateError("不支持的缓存订阅命令格式", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "UNSUPPORTED_SUBSCRIPTION_FORMAT");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("不支持的缓存订阅命令格式", UnifiedErrorCodes.Command_ValidationFailed)
+                        ;
                 }
 
                 var cacheRequest = command.Packet.Request as CacheRequest;
                 if (cacheRequest == null || string.IsNullOrEmpty(cacheRequest.TableName))
                 {
-                    return ResponseBase.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "TABLE_NAME_EMPTY");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                       ;
                 }
 
                 // 获取订阅动作类型
@@ -223,12 +223,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         LogInfo($"客户端取消订阅缓存: 会话={sessionId}, 表名={tableName}, 结果={success}");
                         break;
                     default:
-                        return ResponseBase.CreateError("未知的订阅动作类型", UnifiedErrorCodes.Command_ValidationFailed)
-                            .WithMetadata("ErrorCode", "UNKNOWN_SUBSCRIBE_ACTION");
+                        return ResponseFactory.CreateSpecificErrorResponse<IResponse>("未知的订阅动作类型", UnifiedErrorCodes.Command_ValidationFailed)
+                            ;
                 }
 
                 // 创建响应
-                var response = ResponseBase.CreateSuccess(tableName);
+                var response = ResponseFactory.CreateSpecificSuccessResponse<IResponse>(tableName);
                 response.Metadata = new Dictionary<string, object> { { "SubscribeAction", (int)subscribeAction } };
 
                 return response;
@@ -236,8 +236,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 LogError($"处理缓存订阅异常: {ex.Message}", ex);
-                return ResponseBase.CreateError($"处理缓存订阅异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
-                    .WithMetadata("ErrorCode", "CACHE_SUBSCRIPTION_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"处理缓存订阅异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                   ;
             }
         }
 
@@ -301,15 +301,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 CacheRequest cacheRequest = request as CacheRequest;
                 if (cacheRequest == null)
                 {
-                    return ResponseBase.CreateError("缓存请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_CACHE_REQUEST");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("缓存请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        ;
                 }
 
                 // 验证请求数据有效性
                 if (string.IsNullOrEmpty(cacheRequest.TableName))
                 {
-                    return ResponseBase.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        ;
                 }
 
                 // 检查是否需要刷新缓存
@@ -322,8 +322,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var cacheData = await GetTableDataList(cacheRequest.TableName);
                 if (cacheData == null)
                 {
-                    return ResponseBase.CreateError($"缓存数据不存在: {cacheRequest.TableName}", UnifiedErrorCodes.Biz_DataNotFound)
-                        .WithMetadata("ErrorCode", "CACHE_DATA_NOT_FOUND");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"缓存数据不存在: {cacheRequest.TableName}", UnifiedErrorCodes.Biz_DataNotFound)
+                        ;
                 }
 
                 // 创建缓存响应
@@ -346,8 +346,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 LogError($"处理缓存请求业务逻辑异常: {ex.Message}", ex);
-                return ResponseBase.CreateError($"处理缓存请求业务逻辑异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
-                    .WithMetadata("ErrorCode", "CACHE_BUSINESS_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"处理缓存请求业务逻辑异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                    ;
             }
         }
 
@@ -587,7 +587,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         try
                         {
                             //string json = JsonConvert.SerializeObject(cacheList);
-                           // cacheData.Data = json; // 直接存储JSON字符串
+                            // cacheData.Data = json; // 直接存储JSON字符串
                             cacheData.EntityByte = JsonCompressionSerializationService.Serialize(cacheList);
                             cacheData.EntityTypeName = GetCrossPlatformCompatibleTypeName(cacheList.GetType());
                             cacheData.HasMoreData = false;
@@ -715,8 +715,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private IResponse CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
         {
-            return ResponseBase.CreateError($"{errorCode.Message}: {message}", errorCode.Code)
-                .WithMetadata("ErrorCode", customErrorCode);
+            return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"{errorCode.Message}: {message}", errorCode.Code)
+                ;
         }
 
         /// <summary>
@@ -724,10 +724,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private IResponse CreateExceptionResponse(Exception ex, string errorCode)
         {
-            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
-                .WithMetadata("ErrorCode", errorCode)
-                .WithMetadata("Exception", ex.Message)
-                .WithMetadata("StackTrace", ex.StackTrace);
+
+            return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex);
         }
 
         /// <summary>
@@ -788,8 +786,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var sessionId = command.Packet?.ExecutionContext?.SessionId;
                 if (string.IsNullOrEmpty(sessionId))
                 {
-                    return ResponseBase.CreateError("会话ID不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_SESSION_ID");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("会话ID不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        ;
                 }
 
                 // 获取缓存订阅请求数据
@@ -797,16 +795,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var subscribeRequest = command.Packet.Request as CacheRequest;
                 if (subscribeRequest == null)
                 {
-                    return ResponseBase.CreateError("缓存订阅请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_SUBSCRIBE_REQUEST");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("缓存订阅请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                       ;
                 }
 
                 // 验证请求数据
                 if (string.IsNullOrEmpty(subscribeRequest.TableName))
                 {
                     LogError("缓存订阅表名为空");
-                    return ResponseBase.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                    ;
                 }
 
                 LogInfo($"处理缓存订阅: 会话={sessionId}, 表名={subscribeRequest.TableName}");
@@ -816,8 +814,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (!subscribeResult)
                 {
                     LogError($"缓存订阅失败: 会话={sessionId}, 表名={subscribeRequest.TableName}");
-                    return ResponseBase.CreateError("缓存订阅失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
-                        .WithMetadata("ErrorCode", "CACHE_SUBSCRIBE_FAILED");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("缓存订阅失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
+                       ;
                 }
 
                 LogInfo($"缓存订阅成功: 会话={sessionId}, 表名={subscribeRequest.TableName}");
@@ -851,24 +849,24 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var sessionId = command.Packet?.ExecutionContext?.SessionId;
                 if (string.IsNullOrEmpty(sessionId))
                 {
-                    return ResponseBase.CreateError("会话ID不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_SESSION_ID");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("会话ID不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        ;
                 }
 
                 // 获取缓存取消订阅请求数据
                 var unsubscribeRequest = command.Packet.Request as CacheRequest;
                 if (unsubscribeRequest == null)
                 {
-                    return ResponseBase.CreateError("缓存取消订阅请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_UNSUBSCRIBE_REQUEST");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("缓存取消订阅请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        ;
                 }
 
                 // 验证请求数据
                 if (string.IsNullOrEmpty(unsubscribeRequest.TableName))
                 {
                     LogError("缓存取消订阅表名为空");
-                    return ResponseBase.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                        ;
                 }
 
                 LogInfo($"处理缓存取消订阅: 会话={sessionId}, 表名={unsubscribeRequest.TableName}");
@@ -878,8 +876,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (!unsubscribeResult)
                 {
                     LogError($"缓存取消订阅失败: 会话={sessionId}, 表名={unsubscribeRequest.TableName}");
-                    return ResponseBase.CreateError("缓存取消订阅失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
-                        .WithMetadata("ErrorCode", "CACHE_UNSUBSCRIBE_FAILED");
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("缓存取消订阅失败", UnifiedErrorCodes.Biz_OperationFailed.Code)
+                        ;
                 }
 
                 LogInfo($"缓存取消订阅成功: 会话={sessionId}, 表名={unsubscribeRequest.TableName}");

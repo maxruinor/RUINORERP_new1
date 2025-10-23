@@ -38,14 +38,16 @@ using RUINORERP.UI.WorkFlowDesigner.Entities;
 namespace RUINORERP.UI.WorkFlowDesigner.Service
 {
     /// <summary>
-    /// JSONSerializer serializes a graph to JSON
+    /// 工作流JSON序列化器 - 将图形化工作流序列化为WorkflowCore可识别的JSON格式
+    /// 用于将Netron图形控件中的流程图转换为WorkflowCore工作流引擎可执行的JSON格式
+    /// 支持会签、或签等复杂审批流程的转换
     /// Thanks to Martin Cully for his work on this.
     /// </summary>
-    public class JSONSerializer
+    public class WorkflowSerializer
     {
-        private static JSONSerializer m_instance;
+        private static WorkflowSerializer m_instance;
 
-        public static JSONSerializer Instance
+        public static WorkflowSerializer Instance
         {
             get
             {
@@ -67,7 +69,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
         /// </summary>
         public static void Initialize()
         {
-            m_instance = new JSONSerializer();
+            m_instance = new WorkflowSerializer();
         }
 
         #region Fields
@@ -83,7 +85,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
         /// <summary>
         /// Constructor
         /// </summary>
-        private JSONSerializer()
+        private WorkflowSerializer()
         {
         }
 
@@ -91,7 +93,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
         /// Constructor
         /// </summary>
         /// <param name="site"></param>
-        public JSONSerializer(GraphControl site)
+        public WorkflowSerializer(GraphControl site)
         {
             this.site = site;
         }
@@ -100,7 +102,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Service
         /// Constructor
         /// </summary>
         /// <param name="dtdPath"></param>
-        public JSONSerializer(string dtdPath)
+        public WorkflowSerializer(string dtdPath)
         {
             this.dtdPath = dtdPath;
         }

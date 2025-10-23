@@ -44,11 +44,11 @@ namespace RUINORERP.UI.MRP.MP
             {
                 if (obj is tb_ProductionDemand Production)
                 {
-                    if (Production.PDID == 0)
+                    if (Production == null || Production.PDID == 0)
                     {
                         bindingSource.DataSource = null;
                     }
-                    else
+                    else if (Production.PDID > 0 && (bindingSource.DataSource == null))
                     {
                         bindingSource.DataSource = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemandTargetDetail>().Where(c => c.PDID == Production.PDID).ToListAsync();
                     }

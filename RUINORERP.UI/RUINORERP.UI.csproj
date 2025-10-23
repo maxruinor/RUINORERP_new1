@@ -3366,17 +3366,34 @@
     <Compile Include="WorkFlowDesigner\Dialogs\TemplatePropertiesDialog.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="WorkFlowDesigner\Entities\ApprovalUser.cs" />
+    <Compile Include="WorkFlowDesigner\Entities\CountersignStep.cs" />
+    <Compile Include="WorkFlowDesigner\Entities\CountersignStepExtension.cs" />
+    <Compile Include="WorkFlowDesigner\Entities\OrSignStep.cs" />
+    <Compile Include="WorkFlowDesigner\Entities\OrSignStepExtension.cs" />
+    <Compile Include="WorkFlowDesigner\Entities\WorkflowConnection.cs" />
+    <Compile Include="WorkFlowDesigner\Entities\WorkflowDefinition.cs" />
+    <Compile Include="WorkFlowDesigner\Entities\WorkflowStep.cs" />
     <Compile Include="WorkFlowDesigner\Enums\Enums.cs" />
     <Compile Include="WorkFlowDesigner\Mediator.cs" />
+    <Compile Include="WorkFlowDesigner\NCWFDesigner.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="WorkFlowDesigner\NCWFDesigner.Designer.cs">
+      <DependentUpon>NCWFDesigner.cs</DependentUpon>
+    </Compile>
     <Compile Include="WorkFlowDesigner\NetronPrinter.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="WorkFlowDesigner\Nodes\CountersignNode.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\NotificationStep.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\DecisionShape.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\End.cs" />
+    <Compile Include="WorkFlowDesigner\Nodes\OrSignNode.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\Start.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\ApprovalStep.cs" />
     <Compile Include="WorkFlowDesigner\Entities\User.cs" />
+    <Compile Include="WorkFlowDesigner\Nodes\StartNode.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\WFConditionStep.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\BaseNode.cs" />
     <Compile Include="WorkFlowDesigner\Nodes\SubmitStep.cs" />
@@ -3400,7 +3417,9 @@
     <Compile Include="WorkFlowDesigner\Samples\Snap.cs" />
     <Compile Include="WorkFlowDesigner\Samples\TreeAsCodeSample.cs" />
     <Compile Include="WorkFlowDesigner\Samples\ZOrderSample.cs" />
-    <Compile Include="WorkFlowDesigner\Service\JSONSerializer.cs" />
+    <Compile Include="WorkFlowDesigner\Service\WorkflowSerializer.cs" />
+    <Compile Include="WorkFlowDesigner\Service\WorkflowDefinitionConverter.cs" />
+    <Compile Include="WorkFlowDesigner\Service\WorkflowDefinitionService.cs" />
     <Compile Include="WorkFlowDesigner\TabCodon.cs" />
     <Compile Include="WorkFlowDesigner\TabFactory.cs" />
     <Compile Include="WorkFlowDesigner\TabPages\BrowserTab.cs">
@@ -3455,6 +3474,7 @@
       <DependentUpon>ConditionEditorDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="WorkFlowDesigner\TypeTransfer\ConditionTypeConverter.cs" />
+    <Compile Include="WorkFlowDesigner\TypeTransfer\ConditionTypeEditor.cs" />
     <Compile Include="WorkFlowDesigner\TypeTransfer\GeneralTypeConverter.cs" />
     <Compile Include="WorkFlowDesigner\TypeTransfer\ListConditionEditor.cs" />
     <Compile Include="WorkFlowDesigner\TypeTransfer\ListConditionEditorDialog.cs">
@@ -3465,6 +3485,15 @@
     </Compile>
     <Compile Include="WorkFlowDesigner\TypeTransfer\ListConditionTypeConverter.cs" />
     <Compile Include="WorkFlowDesigner\TypeTransfer\RangeConverter.cs" />
+    <Compile Include="WorkFlowDesigner\UI\ApprovalUserListEditor.cs" />
+    <Compile Include="WorkFlowDesigner\UI\ApprovalUserListEditorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="WorkFlowDesigner\UI\ApprovalUserListEditorForm.Designer.cs">
+      <DependentUpon>ApprovalUserListEditorForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="WorkFlowDesigner\UI\WorkflowConnection.cs" />
+    <Compile Include="WorkFlowDesigner\UI\WorkflowConnectionPainter.cs" />
     <Compile Include="WorkFlowDesigner\WFEnum.cs" />
     <Compile Include="WorkFlowDesigner\WFMainForm.cs">
       <SubType>UserControl</SubType>
@@ -4662,6 +4691,9 @@
     <EmbeddedResource Include="WorkFlowDesigner\Dialogs\TemplatePropertiesDialog.resx">
       <DependentUpon>TemplatePropertiesDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="WorkFlowDesigner\NCWFDesigner.resx">
+      <DependentUpon>NCWFDesigner.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="WorkFlowDesigner\TabPages\BrowserTab.resx">
       <DependentUpon>BrowserTab.cs</DependentUpon>
     </EmbeddedResource>
@@ -5192,7 +5224,6 @@
     <Folder Include="UControls\TreeGridView\" />
     <Folder Include="UICreator\" />
     <Folder Include="WorkFlowDesigner\Nodes\editor\" />
-    <Folder Include="WorkFlowDesigner\UI\" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8">

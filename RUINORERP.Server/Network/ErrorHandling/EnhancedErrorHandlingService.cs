@@ -181,7 +181,7 @@ namespace RUINORERP.Server.Network.ErrorHandling
         {
             var stats = GetErrorStatistics();
             var report = new StringBuilder();
-            
+
             report.AppendLine("=== 错误分析报告 ===");
             report.AppendLine($"生成时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             report.AppendLine();
@@ -234,20 +234,20 @@ namespace RUINORERP.Server.Network.ErrorHandling
         public string GetDetailedErrorInfo(ErrorRecord record)
         {
             var info = new StringBuilder();
-            
+
             info.AppendLine("=== 详细错误信息 ===");
             info.AppendLine($"记录ID: {record.Id}");
             info.AppendLine($"处理器: {record.HandlerName} ({record.HandlerId})");
             info.AppendLine($"命令ID: {record.CommandId}");
             info.AppendLine($"时间戳: {record.Timestamp:yyyy-MM-dd HH:mm:ss}");
             info.AppendLine();
-            
+
             info.AppendLine("异常信息:");
             info.AppendLine($"  类型: {record.Exception.GetType().FullName}");
             info.AppendLine($"  消息: {record.Exception.Message}");
             info.AppendLine($"  堆栈跟踪: {record.Exception.StackTrace}");
             info.AppendLine();
-            
+
             if (record.Exception.InnerException != null)
             {
                 info.AppendLine("内部异常:");
@@ -256,7 +256,7 @@ namespace RUINORERP.Server.Network.ErrorHandling
                 info.AppendLine($"  堆栈跟踪: {record.Exception.InnerException.StackTrace}");
                 info.AppendLine();
             }
-            
+
             if (record.Context != null)
             {
                 info.AppendLine("上下文信息:");
@@ -266,7 +266,7 @@ namespace RUINORERP.Server.Network.ErrorHandling
                 info.AppendLine($"  请求数据: {record.Context.RequestData}");
                 info.AppendLine();
             }
-            
+
             if (record.Exception is ApiResponseException apiEx && apiEx.ApiResponse != null)
             {
                 info.AppendLine("API响应信息:");
@@ -293,29 +293,29 @@ namespace RUINORERP.Server.Network.ErrorHandling
         /// <param name="defaultMessage">默认消息</param>
         /// <param name="defaultCode">默认代码</param>
         /// <returns>API响应</returns>
-        public ResponseBase CreateFriendlyErrorResponse(Exception exception, string defaultMessage = "处理请求时发生错误", int defaultCode = 500)
+        public IResponse CreateFriendlyErrorResponse(Exception exception, string defaultMessage = "处理请求时发生错误", int defaultCode = 500)
         {
             // 根据异常类型创建不同的错误响应
             switch (exception)
             {
                 case ApiResponseException apiEx:
-                    return ResponseBase.CreateError(apiEx.Message, apiEx.Code);
-                    
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>(apiEx.Message);
+
                 case ArgumentException argEx:
-                    return ResponseBase.CreateError($"参数错误: {argEx.Message}", 400);
-                    
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"参数错误: {argEx.Message}", 400);
+
                 case UnauthorizedAccessException _:
-                    return ResponseBase.CreateError("访问被拒绝", 403);
-                    
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("访问被拒绝", 403);
+
                 case TimeoutException _:
-                    return ResponseBase.CreateError("请求超时", 408);
-                    
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("请求超时", 408);
+
                 case NotImplementedException _:
-                    return ResponseBase.CreateError("功能未实现", 501);
-                    
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("功能未实现", 501);
+
                 default:
                     // 记录未知错误
-                    return ResponseBase.CreateError(defaultMessage, defaultCode);
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>(defaultMessage, defaultCode);
             }
         }
     }

@@ -114,54 +114,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                 SessionService.UpdateSession(sessionInfo);
                 // 同时调用专门的UpdateSessionActivity方法确保活动时间被正确更新
                 SessionService.UpdateSessionActivity(session.SessionID);
-
-                /*
-                // 创建命令对象（第一层解析：基础命令创建）
-                var command = commandCreationService.CreateCommand(package.Packet);
-                if (command == null)
-                {
-                    _logger?.LogWarning("无法创建命令对象: CommandId={CommandId}", package.Packet.CommandId);
-                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Command_NotFound, CancellationToken.None);
-                    return;
-                }
-
-                // 优化：如果命令已经通过ExecutionContext中的类型信息成功创建，则跳过冗余处理
-                var executionContext = package.Packet.ExecutionContext;
-                var isFromExecutionContext = executionContext?.CommandType != null && command.GetType() == executionContext.CommandType;
-                if (!isFromExecutionContext)
-                {
-                    // 只有当初始化不是来自ExecutionContext时，才进行这些处理
-                    if (command is BaseCommand baseCmd && package.Packet.CommandData != null && package.Packet.CommandData.Length > 0)
-                    {
-                        baseCmd.SetJsonBizData(package.Packet.CommandData);
-                    }
-
-                    // 第三层解析：设置基础数据（不解析具体业务内容）
-                    // 检查是否为泛型BaseCommand<,>类型，如果是则自动设置请求二进制数据
-                    var commandType = command.GetType();
-                    if (commandType.IsGenericType &&
-                        commandType.GetGenericTypeDefinition() == typeof(BaseCommand<,>))
-                    {
-                        var setRequest = commandType.GetMethod("SetRequestFromBinary");
-                        setRequest?.Invoke(command, new object[] { package.Packet.CommandData });
-                    }
-                }
-                else
-                {
-                    //统一验证基本的命令信息
-                    if (command is BaseCommand<IRequest, LoginResponse>)
-                    {
-                        executionContext.SessionId = session.SessionID;
-                    }
-
-
-                }
-                */
-
-                // 通过现有的命令调度器处理命令，添加超时保护
-                //BaseCommand<IRequest, ResponseBase> result;
-
-
                 IResponse result;
                 try
                 {

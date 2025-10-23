@@ -111,7 +111,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     if (response != null && response.IsSuccess)
                     {
                         _logger?.LogInformation("强制用户下线指令发送成功 - 目标用户: {TargetUserId}", request.TargetUserId);
-                        
+
                         // 返回成功响应
                         return SystemCommandResponse.CreateForceLogoutSuccess(
                             request.TargetUserId,
@@ -187,7 +187,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送强制下线通知时出错");
-                return ResponseBase.CreateError($"发送通知失败: {ex.Message}");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"发送通知失败: {ex.Message}");
             }
         }
 
@@ -196,10 +196,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private IResponse CreateExceptionResponse(Exception ex, string errorCode)
         {
-            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}")
-                .WithMetadata("ErrorCode", errorCode)
-                .WithMetadata("Exception", ex.Message)
-                .WithMetadata("StackTrace", ex.StackTrace);
+            return ResponseFactory.CreateSpecificErrorResponse<IResponse>(ex, errorCode);
         }
     }
 }

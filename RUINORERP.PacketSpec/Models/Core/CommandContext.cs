@@ -1,7 +1,9 @@
 ﻿using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Commands;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Models.Core
 {
@@ -81,24 +83,56 @@ namespace RUINORERP.PacketSpec.Models.Core
             {                
                 // 通过类型名称反射获取Type对象
                 // 注意：这里需要确保类型名称是完全限定名，包括命名空间
-                _expectedResponseType = Type.GetType(ExpectedResponseTypeName);
+                _expectedResponseType = Type.GetType(ExpectedResponseTypeName, false);
                 
                 // 如果直接获取失败，可以尝试在当前程序集中查找
                 if (_expectedResponseType == null)
                 {
-                    foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+                    // 首先尝试当前执行程序集
+                    var currentAssembly = Assembly.GetExecutingAssembly();
+                    _expectedResponseType = currentAssembly.GetType(ExpectedResponseTypeName);
+                    
+                    // 如果仍然找不到，搜索所有已加载的程序集
+                    if (_expectedResponseType == null)
                     {
-                        _expectedResponseType = assembly.GetType(ExpectedResponseTypeName);
-                        if (_expectedResponseType != null)
-                            break;
+                        foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+                        {
+                            // 跳过动态程序集
+                            if (assembly.IsDynamic) continue;
+                            
+                            _expectedResponseType = assembly.GetType(ExpectedResponseTypeName);
+                            if (_expectedResponseType != null)
+                                break;
+                        }
                     }
                 }
                 
                 return _expectedResponseType;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // 反射失败时返回null
+                // 记录反射失败信息，但不抛出异常
+                System.Diagnostics.Debug.WriteLine($"反射获取响应类型失败: {ExpectedResponseTypeName}, 错误: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 安全地创建响应实例
+        /// </summary>
+        /// <returns>响应实例，如果创建失败则返回null</returns>
+        public IResponse CreateExpectedResponseInstance()
+        {
+            var responseType = GetExpectedResponseType();
+            if (responseType == null) return null;
+            
+            try
+            {
+                return Activator.CreateInstance(responseType) as IResponse;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"创建响应实例失败: {responseType.Name}, 错误: {ex.Message}");
                 return null;
             }
         }

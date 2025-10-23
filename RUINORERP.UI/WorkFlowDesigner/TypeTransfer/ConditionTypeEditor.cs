@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Drawing.Design;
 using System.Linq;
@@ -26,9 +26,9 @@ namespace RUINORERP.UI.WorkFlowDesigner.TypeTransfer
             // context.Instance —— 可以得到当前的Demo3对象。
             // ((Demo3)context.Instance).Grade —— 可以得到当前Grade的值。
 
-            ConditionEditor1 dialog = new ConditionEditor1();
+            ConditionEditorDialog dialog = new ConditionEditorDialog(new RUINORERP.UI.WorkFlowDesigner.Entities.WFCondition());
             editorService.ShowDialog(dialog);
-            String grade = dialog.Condition;
+            String grade = dialog.Condition.Name;
             dialog.Dispose();
 
             return grade;

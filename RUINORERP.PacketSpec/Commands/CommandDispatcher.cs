@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Polly;
+using Polly.CircuitBreaker;
 using System.Threading.Channels;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Core;
@@ -36,7 +37,11 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly SemaphoreSlim _dispatchSemaphore;
         private readonly Channel<QueuedCommand>[] _commandChannels;
         private readonly Task[] _channelProcessors;
-        private readonly IAsyncPolicy<IResponse> _circuit;
+
+        //当熔断器触发打开后，默认的恢复时间是1分钟。在这段时间内，熔断器会拒绝所有请求，直接返回503错误。1分钟后，熔断器会进入半开状态，尝试处理少量请求以检测服务是否已恢复正常。
+        private readonly IAsyncPolicy<IResponse> _defaultCircuitBreakerPolicy;
+        private readonly CircuitBreakerPolicyManager _circuitBreakerPolicyManager;
+        private readonly CircuitBreakerMetrics _metrics;
         private readonly IdempotencyFilter _idempotent = new IdempotencyFilter();
         private FallbackGenericCommandHandler _fallbackHandler;
         private readonly object _fallbackHandlerLock = new object();
@@ -79,7 +84,9 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="circuitBreakerPolicy">熔断器策略，默认为6次失败后熔断，30秒后恢复</param>
         public CommandDispatcher(ILogger<CommandDispatcher> logger, ICommandHandlerFactory handlerFactory = null,
             int maxConcurrencyPerCommand = 0,
-            IAsyncPolicy<IResponse> circuitBreakerPolicy = null)
+            IAsyncPolicy<IResponse> circuitBreakerPolicy = null,
+            CircuitBreakerPolicyManager circuitBreakerPolicyManager = null,
+            CircuitBreakerMetrics metrics = null)
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _handlerFactory = handlerFactory;
@@ -91,9 +98,28 @@ namespace RUINORERP.PacketSpec.Commands
             MaxConcurrencyPerCommand = maxConcurrencyPerCommand > 0 ? maxConcurrencyPerCommand : Environment.ProcessorCount;
 
             // 使用传入的熔断器策略，如果未提供则使用默认策略
-            _circuit = circuitBreakerPolicy ?? Policy
+            // 熔断器的核心参数
+            /*
+            - 触发条件 ：当响应不为空且 IsSuccess=false 时，认为是一次失败
+            - 失败阈值 ：连续10次失败后触发熔断
+            - 熔断持续时间 ：熔断器打开后，持续1分钟
+            - 错误码 ：熔断器打开时返回503错误
+            */
+            _defaultCircuitBreakerPolicy = circuitBreakerPolicy ?? Policy
                 .HandleResult<IResponse>(r => r != null && !r.IsSuccess)
-                .CircuitBreakerAsync(10, TimeSpan.FromMinutes(1));
+                .OrResult(r => r == null) // 处理空响应情况
+                .CircuitBreakerAsync<IResponse>(
+                    handledEventsAllowedBeforeBreaking: 10,
+                    durationOfBreak: TimeSpan.FromMinutes(1),
+                    onBreak: OnCircuitBreak,
+                    onReset: OnCircuitReset,
+                    onHalfOpen: OnCircuitHalfOpen);
+
+            // 初始化差异化熔断器策略管理器
+            _circuitBreakerPolicyManager = circuitBreakerPolicyManager ?? new CircuitBreakerPolicyManager();
+
+            // 初始化熔断器指标监控
+            _metrics = metrics ?? new CircuitBreakerMetrics();
 
             // 创建三个优先级的Channel队列
             _commandChannels = new Channel<QueuedCommand>[3];
@@ -335,7 +361,8 @@ namespace RUINORERP.PacketSpec.Commands
             if (!_isInitialized)
             {
                 LogError("命令调度器未初始化");
-                return ResponseBase.CreateError("命令调度器未初始化", 500);
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>("命令调度器未初始化", 500);
+
             }
 
             // 确定优先级
@@ -355,7 +382,7 @@ namespace RUINORERP.PacketSpec.Commands
             if (!_commandChannels[channel].Writer.TryWrite(queued))
             {
                 LogWarning($"Channel {channel} 已满，丢弃命令 {packet.CommandId.FullCode},{packet.CommandId.Name}");
-                return ResponseBase.CreateError("系统繁忙，请稍后重试", 503);
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>("系统繁忙，请稍后重试", 503);
             }
 
             // 等待结果
@@ -390,12 +417,12 @@ namespace RUINORERP.PacketSpec.Commands
         {
             if (cmd == null || cmd.Packet == null)
             {
-                return ResponseBase.CreateError("命令对象不能为空", 400);
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>("命令对象不能为空", 400);
             }
 
             if (!_isInitialized)
             {
-                return ResponseBase.CreateError("调度器未初始化", 500);
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>("调度器未初始化", 500);
             }
 
             // 创建链接的取消令牌，处理命令超时
@@ -405,7 +432,6 @@ namespace RUINORERP.PacketSpec.Commands
 #pragma warning disable CS0168 // 声明了变量，但从未使用过
                 try
                 {
-
                     // 幂等性检查 - 基于命令标识符和请求参数生成唯一键
                     if (cmd.Packet.CommandId.FullCode != 0)
                     {
@@ -427,59 +453,108 @@ namespace RUINORERP.PacketSpec.Commands
 
                     if (handlers == null || !handlers.Any())
                     {
-
                         // 获取或初始化回退处理器
                         var fallbackHandler = GetFallbackHandler();
                         if (fallbackHandler != null)
                         {
                             try
                             {
-                                // 使用熔断器执行回退处理器
-                                response = await _circuit.ExecuteAsync(() => fallbackHandler.HandleAsync(cmd, linkedCts.Token));
+                                // 记录请求开始
+                                var startTimefallback = DateTime.UtcNow;
+                                bool isSuccessfallback = false;
+
+                                // 获取适合当前命令的熔断器策略
+                                var policyfallback = _circuitBreakerPolicyManager.GetPolicyForCommand(cmd.Packet) ?? _defaultCircuitBreakerPolicy;
+                                var commandCategoryObj = _circuitBreakerPolicyManager.Classifier?.GetCommandCategory(cmd.Packet);
+                                var commandCategoryfallback = commandCategoryObj?.ToString() ?? "Default";
+
+                                try
+                                {
+                                    // 使用熔断器执行回退处理器
+                                    response = await policyfallback.ExecuteAsync(() => fallbackHandler.HandleAsync(cmd, linkedCts.Token));
+
+                                    isSuccessfallback = response != null && response.IsSuccess;
+
+                                    // 记录命令执行指标
+                                    _metrics.RecordCommandExecution(
+                                        cmd.Packet?.CommandId.Name ?? "Unknown",
+                                        commandCategoryfallback,
+                                        isSuccessfallback,
+                                        DateTime.UtcNow - startTimefallback);
+                                }
+                                catch (Exception ex)
+                                {
+                                    // 记录异常
+                                    _metrics.RecordCommandExecution(
+                                        cmd.Packet?.CommandId.Name ?? "Unknown",
+                                        commandCategoryfallback,
+                                        false,
+                                        DateTime.UtcNow - startTimefallback);
+
+                                    throw;
+                                }
 
                                 return response;
                             }
                             catch (Exception ex)
                             {
                                 LogError($"回退处理器处理命令时发生异常: {cmd.Packet.CommandId.ToString()}", ex);
-                                return ResponseBase.CreateError($"回退处理器异常: {ex.Message}", 500);
+                                return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"回退处理器异常: {ex.Message}", 500);
                             }
                         }
 
                         // 如果回退处理器也不可用，返回原始的404错误
-                    return ResponseBase.CreateError(
-                        $"没有找到适合的处理器处理命令: {cmd.Packet.CommandId.ToString()}", 404);
+                        return ResponseFactory.CreateSpecificErrorResponse<IResponse>(
+                            $"没有找到适合的处理器处理命令: {cmd.Packet.CommandId.ToString()}", 404);
                     }
 
                     // 选择最佳处理器
                     var bestHandler = SelectBestHandler(handlers, cmd.Packet.CommandId);
                     if (bestHandler == null)
                     {
-                        return ResponseBase.CreateError($"无法选择合适的处理器处理命令: {cmd.Packet.CommandId.ToString()}");
+                        return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"无法选择合适的处理器处理命令: {cmd.Packet.CommandId.ToString()}");
                     }
 
 
-                    // 使用熔断器执行处理逻辑
+                    // 记录请求开始
+                    var processingStartTime = DateTime.UtcNow;
+                    bool isSuccess = false;
+
+                    // 获取适合当前命令的熔断器策略
+                    var policy = _circuitBreakerPolicyManager.GetPolicyForCommand(cmd.Packet) ?? _defaultCircuitBreakerPolicy;
+                    var category = _circuitBreakerPolicyManager.Classifier?.GetCommandCategory(cmd.Packet);
+                    var commandCategory = category?.ToString() ?? "Default";
+
                     try
                     {
-                        response = await _circuit.ExecuteAsync(() => bestHandler.HandleAsync(cmd, linkedCts.Token));
+                        // 使用熔断器执行处理逻辑
+                        response = await policy.ExecuteAsync(() => bestHandler.HandleAsync(cmd, linkedCts.Token));
+
+                        isSuccess = response != null && response.IsSuccess;
+
+                        // 记录命令执行指标
+                        _metrics.RecordCommandExecution(
+                            (cmd.Packet != null && cmd.Packet.CommandId != null) ? cmd.Packet.CommandId.Name : "Unknown",
+                            commandCategory,
+                            isSuccess,
+                            DateTime.UtcNow - processingStartTime);
                     }
                     catch (Polly.CircuitBreaker.BrokenCircuitException ex)
                     {
                         // 熔断器已打开，记录详细信息并返回适当的错误
                         LogWarning($"命令 {cmd.Packet.CommandId.ToString()}[ID: {commandIdentifier.FullCode}] 的熔断器已打开，拒绝执行: {ex.Message}");
-                        return ResponseBase.CreateError($"服务暂时不可用，熔断器已打开: {ex.Message}", 503);
+                        return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"服务暂时不可用，熔断器已打开: {ex.Message}", 503);
                     }
 
                     //// 设置执行时间
-                    if (response != null && response != null)
+                    if (response != null)
                     {
-                        response.ExecutionTimeMs = (long)(DateTime.Now - startTime).TotalMilliseconds;
+                        response.ExecutionTimeMs = (long)(DateTime.Now - processingStartTime).TotalMilliseconds;
                     }
 
                     if (response == null)
                     {
-                        response = ResponseBase.CreateError("处理器返回空结果", 500);
+                        response = ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, "处理器返回空结果", 500);
                     }
 
                     return response;
@@ -488,18 +563,18 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     // 区分超时/取消异常与外部取消请求
                     LogInfo($"命令处理超时:{cmd.Packet.CommandId.ToString()}");
-                    return ResponseBase.CreateError("命令处理超时", 504);
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("命令处理超时", 504);
                 }
                 catch (OperationCanceledException ex)
                 {
                     // 外部取消请求
                     LogInfo($"命令处理被外部取消: {cmd.Packet.CommandId.ToString()}");
-                    return ResponseBase.CreateError("命令处理被取消", 504);
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>("命令处理被取消", 504);
                 }
                 catch (Exception ex)
                 {
                     LogError($"分发命令 {cmd.Packet.CommandId.ToString()} 异常: {ex.Message}", ex);
-                    return ResponseBase.CreateError($"命令分发异常: {ex.Message}", 500);
+                    return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"命令分发异常: {ex.Message}", 500);
                 }
                 finally
                 {
@@ -896,6 +971,45 @@ namespace RUINORERP.PacketSpec.Commands
         {
             Logger.LogWarning(message);
         }
+
+        /// <summary>
+        /// 熔断器打开时的回调
+        /// </summary>
+        private void OnCircuitBreak(Polly.DelegateResult<IResponse> result, TimeSpan breakDuration)
+        {
+            string message = result?.Exception?.Message ?? "unknown reason";
+            LogWarning($"Circuit broken for {breakDuration.TotalSeconds} seconds due to {message}");
+
+            // 记录熔断器状态变化
+            _metrics.RecordCircuitStateChange("Break", breakDuration, message);
+        }
+
+        /// <summary>
+        /// 熔断器重置时的回调
+        /// </summary>
+        private void OnCircuitReset()
+        {
+            LogInfo("Circuit reset to closed state");
+
+            // 记录熔断器状态变化
+            _metrics.RecordCircuitStateChange("Reset", TimeSpan.Zero, "Circuit reset");
+        }
+
+        /// <summary>
+        /// 熔断器半开时的回调
+        /// </summary>
+        private void OnCircuitHalfOpen()
+        {
+            LogInfo("Circuit transitioned to half-open state");
+
+            // 记录熔断器状态变化
+            _metrics.RecordCircuitStateChange("HalfOpen", TimeSpan.Zero, "Circuit half-open");
+        }
+
+        /// <summary>
+        /// 获取熔断器指标
+        /// </summary>
+        public CircuitBreakerMetrics Metrics => _metrics;
 
         /// <summary>
         /// 记录错误日志

@@ -8,11 +8,13 @@ using RUINORERP.PacketSpec.Utilities;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Models.Responses.Authentication;
 using System.Text;
 using RUINORERP.Global.CustomAttribute;
 using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Commands.Authentication;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -214,34 +216,30 @@ namespace RUINORERP.PacketSpec.Commands
             catch (OperationCanceledException) when (executionCts.IsCancellationRequested)
             {
                 var executionTime = (DateTime.UtcNow - startTime).TotalMilliseconds;
-                Logger.LogWarning($"命令执行超时: {cmd.Packet.CommandId}, 设置: {executionTimeoutMs}ms, 实际: {executionTime}ms");
+                LogWarning($"命令执行超时: {cmd.Packet.CommandId}, 设置: {executionTimeoutMs}ms, 实际: {executionTime}ms");
 
                 // 更新超时统计信息
                 UpdateTimeoutStatistics();
-
                 success = false;
 
-                // 首先检查上下文中是否有指定的响应类型
-                if (cmd.Packet.ExecutionContext != null && !string.IsNullOrEmpty(cmd.Packet.ExecutionContext.ExpectedResponseTypeName))
-                {
-                    return CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, $"业务处理超时: {executionTimeoutMs}ms", 408);
-                }
-
-                // 否则使用基于命令ID的特定类型错误响应
-                return CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, $"业务处理超时: {executionTimeoutMs}ms", 408);
+                // 使用增强版的特定错误响应创建方法
+                return ResponseFactory.CreateSpecificErrorResponse(
+                    cmd.Packet.ExecutionContext,
+                    cmd.Packet.CommandId,
+                    $"业务处理超时: {executionTimeoutMs}ms",
+                    408
+                );
             }
             catch (OperationCanceledException)
             {
                 success = false;
-
-                // 首先检查上下文中是否有指定的响应类型
-                if (cmd.Packet.ExecutionContext != null && !string.IsNullOrEmpty(cmd.Packet.ExecutionContext.ExpectedResponseTypeName))
-                {
-                    return CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, UnifiedErrorCodes.Command_ProcessCancelled.Message, UnifiedErrorCodes.Command_ProcessCancelled.Code);
-                }
-
-                // 否则使用基于命令ID的特定类型错误响应
-                return CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, UnifiedErrorCodes.Command_ProcessCancelled.Message, UnifiedErrorCodes.Command_ProcessCancelled.Code);
+                // 使用增强版的特定错误响应创建方法
+                return ResponseFactory.CreateSpecificErrorResponse(
+                    cmd.Packet.ExecutionContext,
+                    cmd.Packet.CommandId,
+                    UnifiedErrorCodes.Command_ProcessCancelled.Message,
+                    UnifiedErrorCodes.Command_ProcessCancelled.Code
+                );
             }
             catch (Exception ex)
             {
@@ -266,7 +264,7 @@ namespace RUINORERP.PacketSpec.Commands
         //    if (!ValidateSession(cmd.Packet?.ExecutionContext?.SessionId))
         //    {
         //        Logger.LogDebug($"会话验证失败: {cmd.Packet?.ExecutionContext?.SessionId}");
-        //        return ResponseBase.CreateError("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
+        //        return ResponseFactory.CreateSpecificErrorResponse<IResponse>("会话无效或未认证", UnifiedErrorCodes.Auth_SessionExpired.Code)
         //            .WithMetadata("ErrorCode", "INVALID_SESSION");
         //    }
 
@@ -303,109 +301,23 @@ namespace RUINORERP.PacketSpec.Commands
             // 首先检查上下文中是否有指定的响应类型
             if (context != null && !string.IsNullOrEmpty(context.ExpectedResponseTypeName))
             {
-                return CreateSpecificErrorResponse(context, $"[{ex.GetType().Name}] {ex.Message}", errorCode.Code, metadata);
+                return ResponseFactory.CreateSpecificErrorResponse(context, $"[{ex.GetType().Name}] {ex.Message}", errorCode.Code, metadata);
             }
 
             // 如果有命令ID，使用特定类型的错误响应
-        
+
 
             // 否则使用基础错误响应
-            return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
-                .WithMetadata("StackTrace", ex.StackTrace);
+            return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"[{ex.GetType().Name}] {ex.Message}", errorCode.Code)
+                 ;
         }
 
 
-        /// <summary>
-        /// 根据上下文创建特定类型的错误响应
-        /// 利用CommandContext中保存的期望响应类型信息，通过反射创建对应的响应对象
-        /// </summary>
-        /// <param name="context">命令上下文，包含期望的响应类型信息</param>
-        /// <param name="errorMessage">错误消息</param>
-        /// <param name="errorCode">错误代码</param>
-        /// <param name="metadata">元数据</param>
-        /// <returns>特定类型的错误响应</returns>
-        protected IResponse CreateSpecificErrorResponse(CommandContext context, string errorMessage, int errorCode = 500, Dictionary<string, object> metadata = null)
-        {
-            if (context == null || string.IsNullOrEmpty(context.ExpectedResponseTypeName))
-            {                // 如果上下文为空或没有指定响应类型，返回基础错误响应
-                return ResponseBase.CreateError(errorMessage, errorCode, metadata);
-            }
 
-            try
-            {                // 获取期望的响应类型
-                Type responseType = context.GetExpectedResponseType();
-
-                if (responseType == null)
-                {                    // 如果无法解析类型，返回基础错误响应
-                    return ResponseBase.CreateError(errorMessage, errorCode, metadata);
-                }
-
-                // 反射创建响应对象
-                object response = Activator.CreateInstance(responseType);
-
-                if (response is IResponse responseObj)
-                {                    // 设置通用错误属性
-                    if (responseObj is ResponseBase baseResponse)
-                    {
-                        baseResponse.IsSuccess = false;
-                        baseResponse.ErrorMessage = errorMessage;
-                        baseResponse.ErrorCode = errorCode;
-
-                        // 添加元数据
-                        if (metadata != null && metadata.Count > 0)
-                        {
-                            foreach (var kvp in metadata)
-                            {
-                                baseResponse = baseResponse.WithMetadata(kvp.Key, kvp.Value);
-                            }
-                        }
-                    }
-
-                    return responseObj;
-                }
-
-                // 如果创建的对象不是IResponse类型，返回基础错误响应
-                return ResponseBase.CreateError(errorMessage, errorCode, metadata);
-            }
-            catch (Exception ex)
-            {                // 反射过程中出现异常，记录日志并返回基础错误响应
-                Logger.LogError(ex, $"创建特定类型错误响应失败: {context.ExpectedResponseTypeName}");
-                return ResponseBase.CreateError(errorMessage, errorCode, metadata);
-            }
-        }
-
-        /// <summary>
-        /// 泛型版本：创建特定类型的错误响应
-        /// </summary>
-        /// <typeparam name="TResponse">响应类型</typeparam>
-        /// <param name="errorMessage">错误消息</param>
-        /// <param name="errorCode">错误代码</param>
-        /// <param name="metadata">元数据</param>
-        /// <returns>特定类型的错误响应</returns>
-        protected TResponse CreateSpecificErrorResponse<TResponse>(string errorMessage, int errorCode = 500, Dictionary<string, object> metadata = null) where TResponse : IResponse, new()
-        {
-            var response = new TResponse();
-
-            // 设置通用错误属性
-            if (response is ResponseBase baseResponse)
-            {
-                baseResponse.IsSuccess = false;
-                baseResponse.ErrorMessage = errorMessage;
-                baseResponse.ErrorCode = errorCode;
+       
 
 
-                // 添加元数据
-                if (metadata != null && metadata.Count > 0)
-                {
-                    foreach (var kvp in metadata)
-                    {
-                        baseResponse = baseResponse.WithMetadata(kvp.Key, kvp.Value);
-                    }
-                }
-            }
 
-            return response;
-        }
 
         /// <summary>
         /// 判断是否可以处理该命令 - 使用CommandId进行判断
@@ -753,7 +665,6 @@ namespace RUINORERP.PacketSpec.Commands
                 Logger.LogError(message);
             }
         }
-
 
 
 

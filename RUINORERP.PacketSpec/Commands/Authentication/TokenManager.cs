@@ -1,14 +1,14 @@
 ﻿﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.IdentityModel.Tokens;
 using RUINORERP.PacketSpec.Models;
 
 namespace RUINORERP.PacketSpec.Commands.Authentication
 {
     /// <summary>
-    /// Token存储接口 - 定义Token的存储和获取抽象方法
-    /// 统一异步接口，简化Token生命周期管理
+    /// Token存储接口
+    /// 定义Token的存储和获取抽象方法
     /// </summary>
     public interface ITokenStorage
     {
@@ -37,14 +37,20 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
     }
 
     /// <summary>
-    /// Token管理器 - 简化的Token管理实现
-    /// 提供核心的Token生成、验证和存储功能
+    /// Token管理器
+    /// 负责Token的生成、验证、刷新和存储管理
     /// </summary>
     public class TokenManager
     {
         private readonly ITokenService _tokenService;
         private readonly ITokenStorage _tokenStorage;
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="tokenService">令牌服务实例</param>
+        /// <param name="tokenStorage">令牌存储实例</param>
+        /// <exception cref="ArgumentNullException">当服务或存储为空时抛出</exception>
         public TokenManager(ITokenService tokenService, ITokenStorage tokenStorage)
         {
             _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
@@ -56,7 +62,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         /// </summary>
         /// <param name="userId">用户ID</param>
         /// <param name="userName">用户名</param>
-        /// <param name="claims">自定义声明</param>
+        /// <param name="claims">自定义声明（可选）</param>
         /// <returns>生成的Token信息</returns>
         public async Task<TokenInfo> GenerateAndStoreTokenAsync(string userId, string userName, IDictionary<string, object> claims = null)
         {
@@ -78,13 +84,13 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         {
             var tokenInfo = await _tokenStorage.GetTokenAsync();
             if (tokenInfo == null)
-                return new TokenValidationResult { IsValid = false, ErrorMessage = "No token found" };
+                return new TokenValidationResult { IsValid = false, ErrorMessage = "未找到Token" };
             
             return _tokenService.ValidateToken(tokenInfo.AccessToken);
         }
 
         /// <summary>
-        /// 获取Token存储（用于兼容现有代码）
+        /// 获取Token存储实例
         /// </summary>
         public ITokenStorage TokenStorage => _tokenStorage;
 
@@ -94,50 +100,64 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         public Task ClearTokenAsync() => _tokenStorage.ClearTokenAsync();
 
         /// <summary>
-        /// 刷新Token - 简化版Token刷新实现
-        /// 验证当前Token并生成新的Token对
-        /// 服务器端使用
+        /// 刷新Token
+        /// 使用刷新令牌生成新的访问令牌
         /// </summary>
         /// <param name="refreshToken">刷新Token</param>
         /// <param name="currentAccessToken">当前访问Token</param>
-        /// <returns>Token刷新结果</returns>
-        public async Task<(bool Success, string AccessToken, string ErrorMessage)> RefreshTokenAsync(string refreshToken, string currentAccessToken)
+        /// <returns>刷新后的Token信息</returns>
+        /// <exception cref="ArgumentException">当参数无效时抛出</exception>
+        /// <exception cref="SecurityTokenException">当Token验证失败时抛出</exception>
+        public async Task<TokenInfo> RefreshTokenAsync(string refreshToken, string currentAccessToken)
         {
+            if (string.IsNullOrEmpty(refreshToken))
+                throw new ArgumentException("刷新令牌不能为空", nameof(refreshToken));
+            
+            if (string.IsNullOrEmpty(currentAccessToken))
+                throw new ArgumentException("当前访问令牌不能为空", nameof(currentAccessToken));
+
             try
             {
                 // 验证当前Token
                 var validationResult = _tokenService.ValidateToken(currentAccessToken);
                 if (!validationResult.IsValid)
                 {
-                    return (false, null, "Invalid current token");
+                    throw new SecurityTokenException("当前令牌无效，无法刷新");
                 }
 
                 // 验证刷新Token
                 var refreshValidation = _tokenService.ValidateToken(refreshToken);
                 if (!refreshValidation.IsValid)
                 {
-                    return (false, null, "Invalid refresh token");
+                    throw new SecurityTokenException("刷新令牌无效");
                 }
 
-                // 从当前Token获取用户信息
-                var userId = validationResult.UserId;
-                var userName = validationResult.UserName;
+                // 确保两个Token属于同一用户
+                if (validationResult.UserId != refreshValidation.UserId)
+                {
+                    throw new SecurityTokenException("令牌用户不一致");
+                }
 
-                // 生成新的Token对
+                // 生成新的Token
                 var newToken = _tokenService.RefreshToken(refreshToken, currentAccessToken);
 
                 // 更新存储的Token信息
                 var newTokenInfo = new TokenInfo 
                 { 
-                    AccessToken = newToken
+                    AccessToken = newToken,
+                    ExpiresAt = DateTime.Now.AddHours(8) // 默认8小时过期
                 };
                 await _tokenStorage.SetTokenAsync(newTokenInfo);
 
-                return (true, newToken, null);
+                return newTokenInfo;
+            }
+            catch (SecurityTokenException)
+            {
+                throw; // 直接抛出安全令牌异常
             }
             catch (Exception ex)
             {
-                return (false, null, $"Token refresh failed: {ex.Message}");
+                throw new Exception($"Token刷新失败: {ex.Message}", ex);
             }
         }
     }

@@ -6,6 +6,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
 {
     /// <summary>
     /// Token验证结果类
+    /// 存储令牌验证过程中的所有相关信息
     /// </summary>
     [MessagePackObject]
     public class TokenValidationResult
@@ -47,13 +48,14 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         public IDictionary<string, object> Claims { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
-        /// Token信息
+        /// 完整的Token信息对象
         /// </summary>
         [Key(5)]
         public TokenInfo Token { get; set; }
 
         /// <summary>
-        /// 获取刷新令牌（通过TokenInfo实例获取）
+        /// 获取刷新令牌
+        /// 从TokenInfo对象中获取RefreshToken属性
         /// </summary>
         [IgnoreMember]
         public string RefreshToken => Token?.RefreshToken;

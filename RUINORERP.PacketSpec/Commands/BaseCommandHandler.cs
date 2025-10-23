@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -166,7 +166,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 异步处理命令 - 统一命令处理流程
         /// </summary>
-        public async Task<IResponse> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default)
+        public async Task<ResponseBase> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default)
         {
             if (cmd == null)
                 throw new ArgumentNullException(nameof(cmd));
@@ -243,7 +243,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 统一的命令预处理流程 - 提取为独立方法以便复用
         /// </summary>
-        //protected async Task<IResponse> ExecuteCommandPreprocessingAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        //protected async Task<ResponseBase> ExecuteCommandPreprocessingAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         //{
 
         //    // 验证会话
@@ -276,7 +276,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 统一的异常处理
         /// </summary>
-        protected IResponse HandleCommandException(Exception ex)
+        protected ResponseBase HandleCommandException(Exception ex)
         {
             var errorCode = UnifiedErrorCodes.Command_ExecuteFailed.Code == 0 ? UnifiedErrorCodes.System_InternalError : UnifiedErrorCodes.Command_ExecuteFailed;
             Logger.LogError(ex, $"命令处理异常: {ex.Message}");
@@ -477,7 +477,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行核心处理逻辑
         /// </summary>
-        protected abstract Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
+        protected abstract Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken);
 
         /// <summary>
         /// 基于命令类型确定处理超时
@@ -532,17 +532,17 @@ namespace RUINORERP.PacketSpec.Commands
         /// <summary>
         /// 执行前置处理
         /// </summary>
-        protected virtual Task<IResponse> OnBeforeHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected virtual Task<ResponseBase> OnBeforeHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
-            return Task.FromResult<IResponse>(null);
+            return Task.FromResult<ResponseBase>(null);
         }
 
         /// <summary>
         /// 执行后置处理
         /// </summary>
-        protected virtual Task<IResponse> OnAfterHandleAsync(QueuedCommand cmd, IResponse result, CancellationToken cancellationToken)
+        protected virtual Task<ResponseBase> OnAfterHandleAsync(QueuedCommand cmd, ResponseBase result, CancellationToken cancellationToken)
         {
-            return Task.FromResult<IResponse>(null);
+            return Task.FromResult<ResponseBase>(null);
         }
 
         #endregion
@@ -635,23 +635,7 @@ namespace RUINORERP.PacketSpec.Commands
         
 
 
-        /// <summary>
-        /// 将ResponseBase转换为ResponseBase
-        /// </summary>
-        /// <param name="baseResponse">基础响应对象</param>
-        /// <returns>ResponseBase对象</returns>
-        protected ResponseBase ConvertToResponseBase(ResponseBase baseResponse)
-        {
-            var response = new ResponseBase
-            {
-                IsSuccess = baseResponse.IsSuccess,
-                Message = baseResponse.Message,
-                RequestId = baseResponse.RequestId,
-                Metadata = baseResponse.Metadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-                ExecutionTimeMs = baseResponse.ExecutionTimeMs
-            };
-            return response;
-        }
+      
 
         #endregion
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using MessagePack;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Commands.System;

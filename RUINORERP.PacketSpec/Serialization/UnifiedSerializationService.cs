@@ -26,19 +26,24 @@ namespace RUINORERP.PacketSpec.Serialization
             {
                 // 增强的解析器配置，支持[Key]属性和接口序列化
                 var resolver = CompositeResolver.Create(
-                    // 原生解析器，支持[Key]特性
+
+                    
+
+                                                           // 原生解析器，支持[Key]特性
                     NativeDateTimeResolver.Instance,
                     // 优先使用基于属性的解析器，支持[Key]属性
                     AttributeFormatterResolver.Instance, // 支持[MessagePack.Key]和[DataMember]属性
-                    // 支持接口类型的序列化
-                    TypelessObjectResolver.Instance, // 保留完整类型信息，支持接口和抽象类
+                                                         // 支持接口类型的序列化
+                                                         //TypelessObjectResolver.Instance, // 保留完整类型信息，支持接口和抽象类
+                     ContractlessStandardResolver.Instance, // 支持无属性标记的类
+
                     // 标准解析器作为后备
-                    StandardResolver.Instance,
+                    StandardResolver.Instance
                                         // 动态泛型解析器，支持接口和抽象类
-                    DynamicGenericResolver.Instance,
-                    // 类型less解析器，支持动态类型
-                    TypelessObjectResolver.Instance,
-                    ContractlessStandardResolver.Instance // 支持无属性标记的类
+                                        //  DynamicGenericResolver.Instance
+                                        // 类型less解析器，支持动态类型
+                                        //TypelessObjectResolver.Instance
+
                 );
 
                 // 配置选项，确保支持接口和[Key]属性
@@ -133,41 +138,117 @@ namespace RUINORERP.PacketSpec.Serialization
         #region 带类型信息的序列化（用于动态类型）
 
         /// <summary>
-        /// 序列化对象并保留类型信息（用于接口、抽象类等动态类型）
-        /// 使用场景：需要运行时确定类型的对象
+        /// 安全动态序列化 - 专门处理动态类型和接口类型
         /// </summary>
-        public static byte[] SerializeWithTypeInfo(object obj)
+        public static byte[] SafeSerializeDynamic(object obj)
         {
+            if (obj == null)
+                return Array.Empty<byte>();
+
             try
             {
-                return MessagePackSerializer.Typeless.Serialize(obj);
+                // 使用 Contractless 模式进行序列化
+                var options = MessagePackSerializerOptions.Standard
+                    .WithResolver(ContractlessStandardResolver.Instance)
+                    .WithCompression(MessagePackCompression.Lz4Block);
+
+                // 获取实际类型
+                var type = obj.GetType();
+
+                // 使用反射调用序列化方法
+                var method = typeof(MessagePackSerializer).GetMethod("Serialize", new[] { typeof(object), typeof(MessagePackSerializerOptions) });
+                return (byte[])method.Invoke(null, new object[] { obj, options });
             }
             catch (Exception ex)
             {
-                throw new SerializationException($"MessagePack带类型信息序列化失败: {ex.Message}", ex);
+                System.Diagnostics.Debug.WriteLine($"动态序列化失败，降级到JSON: {ex.Message}");
+
+                // 降级到 JSON
+                try
+                {
+                    return SerializeWithJson(obj);
+                }
+                catch
+                {
+                    return Array.Empty<byte>();
+                }
             }
         }
 
         /// <summary>
-        /// 反序列化并恢复原始类型（用于动态类型）
-        /// 使用场景：反序列化使用SerializeWithTypeInfo序列化的数据
+        /// 专门处理列表类型的序列化
         /// </summary>
-        public static object DeserializeWithTypeInfo(byte[] data)
+        public static byte[] SafeSerializeList(IEnumerable<object> list)
         {
-            if (data == null || data.Length == 0)
-                return null;
+            if (list == null || !list.Any())
+                return Array.Empty<byte>();
 
             try
             {
-                return MessagePackSerializer.Typeless.Deserialize(data);
+                // 转换为具体类型的列表
+                var elementType = GetCommonElementType(list);
+                if (elementType != null)
+                {
+                    // 创建具体类型的列表
+                    var concreteListType = typeof(List<>).MakeGenericType(elementType);
+                    var concreteList = Activator.CreateInstance(concreteListType);
+
+                    var addMethod = concreteListType.GetMethod("Add");
+                    foreach (var item in list)
+                    {
+                        addMethod.Invoke(concreteList, new[] { item });
+                    }
+
+                    return SafeSerializeDynamic(concreteList);
+                }
+
+                // 如果无法确定具体类型，直接序列化
+                return SafeSerializeDynamic(list.ToList());
             }
             catch (Exception ex)
             {
-                throw new SerializationException($"MessagePack带类型信息反序列化失败: {ex.Message}", ex);
+                System.Diagnostics.Debug.WriteLine($"列表序列化失败: {ex.Message}");
+                return Array.Empty<byte>();
             }
         }
 
+        /// <summary>
+        /// 获取列表中元素的公共类型
+        /// </summary>
+        private static Type GetCommonElementType(IEnumerable<object> list)
+        {
+            if (list == null || !list.Any())
+                return null;
+
+            var firstType = list.First().GetType();
+
+            // 检查所有元素是否都是相同类型
+            if (list.All(item => item.GetType() == firstType))
+                return firstType;
+
+            // 如果类型不同，查找公共基类
+            var types = list.Select(item => item.GetType()).Distinct().ToList();
+            if (types.Count == 1)
+                return types[0];
+
+            // 查找公共基类或接口
+            var commonType = types[0];
+            foreach (var type in types.Skip(1))
+            {
+                while (commonType != null && !commonType.IsAssignableFrom(type))
+                {
+                    commonType = commonType.BaseType;
+                }
+
+                if (commonType == null || commonType == typeof(object))
+                    break;
+            }
+
+            return commonType != typeof(object) ? commonType : null;
+        }
         #endregion
+
+
 
         #region JSON序列化方法
 
@@ -250,6 +331,8 @@ namespace RUINORERP.PacketSpec.Serialization
         }
 
         #endregion
+
+
 
         #region 安全版本（不抛出异常）
 

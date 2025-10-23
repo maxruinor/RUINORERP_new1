@@ -160,10 +160,10 @@ namespace RUINORERP.Server.Network.SuperSocket
                 */
 
                 // 通过现有的命令调度器处理命令，添加超时保护
-                //BaseCommand<IRequest, IResponse> result;
+                //BaseCommand<IRequest, ResponseBase> result;
 
 
-                IResponse result;
+                ResponseBase result;
                 try
                 {
                     // 使用链接的取消令牌，考虑命令超时设置
@@ -185,7 +185,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                     var timeout = TimeSpan.FromSeconds(300);
                     linkedCts.CancelAfter(timeout);
                     result = await _commandDispatcher.DispatchAsync(package.Packet, linkedCts.Token);
-                    //  result = await _commandDispatcher.DispatchAsync(package.Packet, command, linkedCts.Token);
 
                     // 释放令牌源资源
                     linkedCts.Dispose();
@@ -212,7 +211,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理SuperSocket命令时发生异常: CommandId={CommandId}", package.Packet.CommandId);
-                // 发送错误响应给客户端，使用 CancellationToken.None 确保错误响应能够发送
                 await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
             }
         }
@@ -232,12 +230,11 @@ namespace RUINORERP.Server.Network.SuperSocket
         protected virtual async ValueTask HandleCommandResultAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
-            IResponse response,
+            ResponseBase response,
             CancellationToken cancellationToken)
         {
             if (response == null)
             {
-                //_logger?.LogWarning("命令执行结果为空，发送默认错误响应");
                 await SendErrorResponseAsync(session, requestPackage, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
                 return;
             }
@@ -245,7 +242,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             if (response != null && response.IsSuccess)
             {
                 // 命令执行成功，发送成功响应
-                  UpdatePacketWithResponse(requestPackage.Packet, response);
+                UpdatePacketWithResponse(requestPackage.Packet, response);
                 await SendResponseAsync(session, requestPackage.Packet, CancellationToken.None);
             }
             else
@@ -266,12 +263,11 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <param name="command"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, IResponse result)
+        protected virtual PacketModel UpdatePacketWithResponse(PacketModel package, ResponseBase result)
         {
             // 检查响应数据是否为空，避免空引用异常
             if (result == null)
             {
-                _logger?.LogWarning("响应数据为空，使用默认错误状态");
                 package.Status = PacketStatus.Error;
             }
             else
@@ -279,100 +275,33 @@ namespace RUINORERP.Server.Network.SuperSocket
                 package.Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error;
             }
             package.Response = result;
+            package.Request = null;
             package.Direction = PacketDirection.Response;
 
             package.PacketId = IdGenerator.GenerateResponseId(package.PacketId);
             package.Direction = PacketDirection.Response; // 明确设置为响应方向
             package.SessionId = package.SessionId;
-            package.Extensions = new Dictionary<string, object>
+
+            // 设置请求ID 配对响应
+            if (package.Request != null)
             {
-                ["Data"] = result,
-            };
-
-
-
+                package.ExecutionContext.RequestId = package.Request.RequestId;
+            }
             // 添加元数据
             if (result.Metadata != null && result.Metadata.Count > 0)
             {
+                package.Extensions = new Dictionary<string, object>();
                 foreach (var metadata in result.Metadata)
                 {
                     package.Extensions[metadata.Key] = metadata.Value;
                 }
             }
 
-            //if (command is BaseCommand baseCommand && result.Response != null)
-            //{
-            //    // 序列化响应数据 - 使用具体类型而不是接口类型，确保客户端能正确反序列化
-            //    var ResponsePackBytes = MessagePackSerializer.Serialize(package.ExecutionContext.ResponseType, result.Response, UnifiedSerializationService.MessagePackOptions);
-            //    baseCommand.SetResponseData(ResponsePackBytes);
-            //    package.CommandData = MessagePackSerializer.Serialize(package.ExecutionContext.CommandType, command, UnifiedSerializationService.MessagePackOptions);
-            //    //package.SetCommandDataByMessagePack(command);
-            //}
-
-
             return package;
         }
 
 
-
-        /// <summary>
-        /// 创建响应数据包
-        /// </summary>
-        /// <param name="requestPackage">请求数据包</param>
-        /// <param name="result">命令执行结果</param>
-        /// <returns>响应数据包</returns>
-        protected virtual PacketModel CreateResponsePackage(ServerPackageInfo requestPackage, ResponseBase result)
-        {
-            var response = new PacketModel
-            {
-                PacketId = IdGenerator.GenerateResponseId(requestPackage.Packet.PacketId),
-                Direction = requestPackage.Packet.Direction == PacketDirection.Request ? PacketDirection.Response : requestPackage.Packet.Direction,
-                SessionId = requestPackage.Packet.SessionId,
-                Status = result.IsSuccess ? PacketStatus.Completed : PacketStatus.Error,
-                Extensions = new Dictionary<string, object>
-                {
-                    ["Data"] = result,
-                    ["Message"] = result.Message,
-                }
-            };
-
-            // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
-            if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
-            {
-                response.Extensions["RequestId"] = requestId;
-            }
-
-            // 设置请求标识
-            if (!string.IsNullOrEmpty(result.RequestId))
-            {
-                response.Extensions["RequestId"] = result.RequestId;
-            }
-
-            // 添加元数据
-            if (result.Metadata != null && result.Metadata.Count > 0)
-            {
-                foreach (var metadata in result.Metadata)
-                {
-                    response.Extensions[metadata.Key] = metadata.Value;
-                }
-            }
-
-            //// 优先使用WithJsonData设置业务响应数据
-            //if (result != null)
-            //{
-            //    try
-            //    {
-            //        response.WithJsonData(result);
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        _logger?.LogWarning(ex, "未能为响应数据包设置JSON数据 {PacketId}", response.PacketId);
-            //    }
-            //}
-
-            return response;
-        }
-
+  
         /// <summary>
         /// 发送响应
         /// </summary>
@@ -393,13 +322,17 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
                 package.SessionId = session.SessionID;
                 package.Direction = PacketDirection.Response;
-                var serializedData = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(package);
+
+                //if (package.Response != null && !(package.Response is LoginResponse))
+                //{
+                //    package.Response = null;
+                //}
+                var serializedData = JsonCompressionSerializationService.Serialize<PacketModel>(package);
 
                 // 加密数据
                 var originalData = new OriginalData((byte)package.CommandId.Category, new byte[] { package.CommandId.OperationCode },
                     serializedData
                 );
-                //                var encryptedData = PacketSpec.Security.EncryptedProtocol.EncryptionServerPackToClient(originalData);
                 var encryptedData = PacketSpec.Security.UnifiedEncryptionProtocol.EncryptServerDataToClient(originalData);
 
                 // 发送数据并捕获可能的异常
@@ -443,7 +376,7 @@ namespace RUINORERP.Server.Network.SuperSocket
 
 
         /// <summary>
-        /// 发送错误响应
+        /// 发送错误响应（兼容旧版调用的方法）
         /// </summary>
         /// <param name="session">SuperSocket会话</param>
         /// <param name="requestPackage">请求数据包</param>
@@ -456,27 +389,8 @@ namespace RUINORERP.Server.Network.SuperSocket
             ErrorCode errorCode,
             CancellationToken cancellationToken)
         {
-            var errorResponse = new PacketModel
-            {
-                PacketId = IdGenerator.GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
-                Direction = PacketDirection.Response,
-                SessionId = requestPackage.Packet?.SessionId,
-                Status = PacketStatus.Error,
-                Extensions = new Dictionary<string, object>
-                {
-                    ["ErrorCode"] = errorCode.Code,
-                    ["ErrorMessage"] = errorCode.Message,
-                    ["Success"] = false
-                }
-            };
-
-            // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
-            if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
-            {
-                errorResponse.Extensions["RequestId"] = requestId;
-            }
-
-            await SendResponseAsync(session, errorResponse, cancellationToken);
+            // 调用增强版本的错误响应方法，传入null作为result参数
+            await SendEnhancedErrorResponseAsync(session, requestPackage, null, errorCode, cancellationToken);
         }
 
 
@@ -486,7 +400,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// </summary>
         /// <param name="result">响应结果</param>
         /// <returns>错误代码对象</returns>
-        protected virtual ErrorCode ExtractErrorCodeFromResponse(IResponse result)
+        protected virtual ErrorCode ExtractErrorCodeFromResponse(ResponseBase result)
         {
             if (result == null)
             {
@@ -523,21 +437,18 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// </summary>
         /// <param name="session">SuperSocket会话</param>
         /// <param name="requestPackage">请求数据包</param>
-        /// <param name="result">命令处理结果</param>
+        /// <param name="result">命令处理结果（可选）</param>
         /// <param name="errorCode">错误代码</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>发送结果任务</returns>
         protected virtual async ValueTask SendEnhancedErrorResponseAsync(
             TAppSession session,
             ServerPackageInfo requestPackage,
-          IResponse result,
+            ResponseBase result,
             ErrorCode errorCode,
             CancellationToken cancellationToken)
         {
-            // 检查响应数据是否为空，避免空引用异常
-            string originalErrorMessage = result?.ErrorMessage ?? "响应数据为空";
-            string originalMessage = result?.Message ?? "无错误消息";
-
+            // 创建错误响应包
             var errorResponse = new PacketModel
             {
                 PacketId = IdGenerator.GenerateResponseId(requestPackage.Packet?.PacketId ?? Guid.NewGuid().ToString()),
@@ -548,23 +459,36 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     ["ErrorCode"] = errorCode.Code,
                     ["ErrorMessage"] = errorCode.Message,
-                    ["Success"] = false,
-                    ["OriginalErrorMessage"] = originalErrorMessage,
-                    ["OriginalMessage"] = originalMessage,
+                    ["Success"] = false
                 }
             };
 
-
-
-            // 添加元数据中的所有错误信息
-            if (result.Metadata != null && result.Metadata.Count > 0)
+            // 如果提供了result参数，则添加增强的错误信息
+            if (result != null)
             {
-                foreach (var metadata in result.Metadata)
+                // 添加原始错误信息
+                errorResponse.Extensions["OriginalErrorMessage"] = result.ErrorMessage ?? "无错误消息";
+                errorResponse.Extensions["OriginalMessage"] = result.Message ?? "无消息";
+                
+                // 设置请求ID
+                if (requestPackage.Packet != null && requestPackage.Packet.Request != null)
                 {
-                    // 避免重复添加已经存在的键
-                    if (!errorResponse.Extensions.ContainsKey(metadata.Key))
+                    errorResponse.ExecutionContext.RequestId = requestPackage.Packet.Request.RequestId;
+                }
+
+                // 设置响应对象
+                errorResponse.Response = result;
+                
+                // 添加元数据中的所有错误信息
+                if (result.Metadata != null && result.Metadata.Count > 0)
+                {
+                    foreach (var metadata in result.Metadata)
                     {
-                        errorResponse.Extensions[metadata.Key] = metadata.Value;
+                        // 避免重复添加已经存在的键
+                        if (!errorResponse.Extensions.ContainsKey(metadata.Key))
+                        {
+                            errorResponse.Extensions[metadata.Key] = metadata.Value;
+                        }
                     }
                 }
             }
@@ -576,10 +500,11 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
 
             // 记录详细的错误信息用于调试
-            _logger?.LogWarning("发送增强错误响应: ErrorCode={ErrorCode}, ErrorMessage={ErrorMessage}, MetadataKeys=[{MetadataKeys}]",
+            _logger?.LogWarning("发送错误响应: ErrorCode={ErrorCode}, ErrorMessage={ErrorMessage}, MetadataKeys=[{MetadataKeys}]",
                 errorCode.Code, errorCode.Message,
-                result.Metadata != null ? string.Join(", ", result.Metadata.Keys) : "none");
+                result?.Metadata != null ? string.Join(", ", result.Metadata.Keys) : "none");
 
+            // 发送响应
             await SendResponseAsync(session, errorResponse, cancellationToken);
         }
 

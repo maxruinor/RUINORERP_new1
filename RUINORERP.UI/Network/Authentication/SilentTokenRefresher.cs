@@ -51,14 +51,19 @@ namespace RUINORERP.UI.Network.Authentication
                 {
                     try
                     {
-                        // 使用新的无参数刷新方法
+                        // 调用刷新服务获取新Token
                         refreshedToken = await _tokenRefreshService.RefreshTokenAsync(ct);
                         
-                        if (refreshedToken != null)
+                        // 验证是否成功获取到有效的TokenInfo对象
+                        if (refreshedToken != null && !string.IsNullOrEmpty(refreshedToken.AccessToken))
                         {
                             // 触发刷新成功事件
                             OnRefreshSucceeded?.Invoke(this, refreshedToken);
                             return true;
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("刷新Token失败：未获取到有效的TokenInfo对象");
                         }
                     }
                     catch (Exception ex)

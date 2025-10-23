@@ -84,14 +84,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="cmd">队列命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
                 var commandId = cmd.Packet.CommandId;
 
                 // 使用字典映射替代冗长的if-else链 - 适配简化的缓存命令系统
-                var commandHandlers = new Dictionary<CommandId, Func<QueuedCommand, CancellationToken, Task<IResponse>>>
+                var commandHandlers = new Dictionary<CommandId, Func<QueuedCommand, CancellationToken, Task<ResponseBase>>>
                 {
                     // 统一处理缓存操作命令，内部根据Operation类型区分具体操作
                     { CacheCommands.CacheOperation, HandleCacheOperationAsync },
@@ -123,7 +123,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="command">缓存操作命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<IResponse> HandleCacheOperationAsync(QueuedCommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleCacheOperationAsync(QueuedCommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -151,7 +151,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="command">缓存同步命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<IResponse> HandleCacheSyncAsync(QueuedCommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleCacheSyncAsync(QueuedCommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -187,7 +187,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="command">缓存订阅命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<IResponse> HandleCacheSubscriptionAsync(QueuedCommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleCacheSubscriptionAsync(QueuedCommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -259,7 +259,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                     var package = PacketModel.CreateFromRequest(CacheCommands.CacheSync, request)
                         .WithDirection(PacketSpec.Enums.Core.PacketDirection.ServerToClient);
-                    var serializedData = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(package);
+                    var serializedData = JsonCompressionSerializationService.Serialize(package).ToArray();
 
                     var sessions = _sessionService.GetAllUserSessions(excludeSessionId);
                     // 加密数据
@@ -291,7 +291,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="executionContext">执行上下文</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<IResponse> ProcessCacheRequestAsync(IRequest request, CommandContext executionContext, CancellationToken cancellationToken)
+        private async Task<ResponseBase> ProcessCacheRequestAsync(IRequest request, CommandContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -360,7 +360,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="executionContext">执行上下文</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private Task<IResponse> ProcessCacheSyncAsync(IRequest request, CommandContext executionContext, CancellationToken cancellationToken)
+        private Task<ResponseBase> ProcessCacheSyncAsync(IRequest request, CommandContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -368,7 +368,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 CacheRequest updateRequest = request as CacheRequest;
                 if (updateRequest == null)
                 {
-                    return Task.FromResult<IResponse>(ResponseBase.CreateError("缓存更新请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                    return Task.FromResult<ResponseBase>(ResponseBase.CreateError("缓存更新请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "EMPTY_CACHE_UPDATE_REQUEST"));
                 }
 
@@ -376,7 +376,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (string.IsNullOrEmpty(updateRequest.TableName))
                 {
                     LogError("缓存更新表名为空");
-                    return Task.FromResult<IResponse>(ResponseBase.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
+                    return Task.FromResult<ResponseBase>(ResponseBase.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
                         .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME"));
                 }
 
@@ -390,7 +390,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         case CacheOperation.Set:
                             //CacheDataConverter.SerializeToBytes
-                            object entity = UnifiedSerializationService.DeserializeWithTypeInfo(updateRequest.CacheData.EntityByte);
+                            object entity = updateRequest.CacheData.GetData();
                             _cacheManager.UpdateEntityList(updateRequest.TableName, entity);
                             break;
                         case CacheOperation.Remove:
@@ -420,19 +420,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (!updateSuccess)
                 {
                     LogError($"更新缓存数据失败: {updateRequest.TableName}");
-                    return Task.FromResult<IResponse>(ResponseBase.CreateError($"更新缓存数据失败: 未知错误", UnifiedErrorCodes.Biz_OperationFailed.Code)
+                    return Task.FromResult<ResponseBase>(ResponseBase.CreateError($"更新缓存数据失败: 未知错误", UnifiedErrorCodes.Biz_OperationFailed.Code)
                         .WithMetadata("ErrorCode", "CACHE_UPDATE_FAILED"));
                 }
 
                 var cacheResponse = new CacheResponse();
                 cacheResponse.Message = "缓存同步成功";
                 cacheResponse.IsSuccess = true;
-                return Task.FromResult<IResponse>(cacheResponse);
+                return Task.FromResult<ResponseBase>(cacheResponse);
             }
             catch (Exception ex)
             {
                 LogError($"处理缓存更新业务逻辑异常: {ex.Message}", ex);
-                return Task.FromResult<IResponse>(ResponseBase.CreateError($"处理缓存更新业务逻辑异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
+                return Task.FromResult<ResponseBase>(ResponseBase.CreateError($"处理缓存更新业务逻辑异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
                     .WithMetadata("ErrorCode", "CACHE_UPDATE_BUSINESS_ERROR"));
             }
         }
@@ -529,8 +529,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 处理不同类型的缓存数据
                     if (cacheList is JArray jArray)
                     {
-                        cacheData.EntityByte = UnifiedSerializationService.SerializeWithTypeInfo(cacheList);// jArray.ToString(); // 将JArray转换为字符串
-                        cacheData.EntityType = cacheList.GetType();
+                        cacheData.EntityByte = JsonCompressionSerializationService.Serialize(cacheList).ToArray();// jArray.ToString(); // 将JArray转换为字符串
+                        cacheData.EntityTypeName = cacheList.GetType().AssemblyQualifiedName; // 使用程序集限定名称
                         cacheData.HasMoreData = false;
                     }
                     else if (TypeHelper.IsGenericList(cacheList.GetType()))
@@ -548,9 +548,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             //  string json = JsonConvert.SerializeObject(firstPageData);
                             //  cacheData.Data = json; // 直接存储JSON字符串
                             // 使用带类型信息的序列化方法
-                            cacheData.EntityByte = UnifiedSerializationService.SerializeWithTypeInfo(lastlist);
-                            cacheData.EntityType = lastlist.GetType();
-
+                            cacheData.EntityByte = JsonCompressionSerializationService.Serialize(lastlist).ToArray();
+                            cacheData.EntityTypeName = lastlist.GetType().AssemblyQualifiedName;
                             cacheData.HasMoreData = totalCount > pageSize;
 
                             if (frmMainNew.Instance.IsDebug)
@@ -566,8 +565,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         {
                             //string json = JsonConvert.SerializeObject(cacheList);
                            // cacheData.Data = json; // 直接存储JSON字符串
-                            cacheData.EntityByte = UnifiedSerializationService.SerializeWithTypeInfo(cacheList);
-                            cacheData.EntityType = cacheList.GetType();
+                            cacheData.EntityByte = JsonCompressionSerializationService.Serialize(cacheList);
+                            cacheData.EntityTypeName = cacheList.GetType().AssemblyQualifiedName;
                             cacheData.HasMoreData = false;
                         }
                         catch (Exception ex)
@@ -691,7 +690,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 创建统一的错误响应
         /// </summary>
-        private IResponse CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
+        private ResponseBase CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
         {
             return ResponseBase.CreateError($"{errorCode.Message}: {message}", errorCode.Code)
                 .WithMetadata("ErrorCode", customErrorCode);
@@ -700,7 +699,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 创建统一的异常响应
         /// </summary>
-        private IResponse CreateExceptionResponse(Exception ex, string errorCode)
+        private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
         {
             return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
                 .WithMetadata("ErrorCode", errorCode)
@@ -758,7 +757,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="command">缓存订阅命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<IResponse> HandleCacheSubscribeAsync(QueuedCommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleCacheSubscribeAsync(QueuedCommand command, CancellationToken cancellationToken)
         {
             try
             {
@@ -821,7 +820,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="command">缓存取消订阅命令</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<IResponse> HandleCacheUnsubscribeAsync(QueuedCommand command, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleCacheUnsubscribeAsync(QueuedCommand command, CancellationToken cancellationToken)
         {
             try
             {

@@ -81,6 +81,8 @@ namespace RUINORERP.PacketSpec.DI
         /// <param name="configureTokenOptions">自定义Token服务配置选项</param>
         public static void AddPacketSpecServices(this IServiceCollection services, IConfiguration configuration, Action<TokenServiceOptions> configureTokenOptions)
         {
+            // 注册JSON序列化服务
+            services.AddSingleton<IJsonSerializationService, JsonSerializationService>();
            
             // 注意：Token服务通过Autofac注册，不在此处注册
             services.AddSingleton<TokenManager>();
@@ -136,6 +138,10 @@ namespace RUINORERP.PacketSpec.DI
         /// <param name="configureTokenOptions">自定义Token服务配置选项</param>
         public static void ConfigurePacketSpecServicesContainer(this ContainerBuilder builder, Action<TokenServiceOptions> configureTokenOptions)
         {
+            // 注册JSON序列化服务
+            builder.RegisterType<JsonSerializationService>()
+                .As<IJsonSerializationService>()
+                .SingleInstance();
             
 
             // 注册命令调度器
@@ -214,11 +220,12 @@ namespace RUINORERP.PacketSpec.DI
         /// <returns>服务统计信息字符串</returns>
         public static string GetPacketSpecServicesStatistics()
         {
-            return $"PacketSpec服务依赖注入配置完成。\n" +
-                   $"已注册服务: 4个核心服务\n" +
-                   $"已注册接口: 4个服务接口\n" +
-                   $"生命周期: 单例模式和瞬态模式\n" +
-                   $"AOP支持: 已启用接口拦截器";
+            return $"PacketSpec服务依赖注入配置完成。\n"
+                   + $"已注册服务: 5个核心服务\n"
+                   + $"已注册接口: 5个服务接口\n"
+                   + $"生命周期: 单例模式\n"
+                   + $"AOP支持: 已启用接口拦截器\n"
+                   + $"新增功能: JSON序列化服务依赖注入支持";
         }
     }
 }

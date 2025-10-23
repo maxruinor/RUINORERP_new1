@@ -106,7 +106,7 @@ namespace RUINORERP.Server.Network.Core
                 // 反序列化数据包
                 PacketModel packet;
 
-                packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(decryptedData.Two);
+                packet = JsonCompressionSerializationService.Deserialize<PacketModel>(decryptedData.Two);
 
                 if (packet.IsValid())
                 {

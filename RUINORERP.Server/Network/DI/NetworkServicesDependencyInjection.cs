@@ -174,7 +174,7 @@ namespace RUINORERP.Server.Network.DI
                 return false;
 
             // 通过接口特征识别命令处理器接口，而不是依赖具体的接口名称
-            // 检查是否有HandleAsync方法，接受PacketModel参数并返回IResponse
+            // 检查是否有HandleAsync方法，接受PacketModel参数并返回ResponseBase
             var methods = interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
             var handleMethod = methods.FirstOrDefault(m => 
                 m.Name == "HandleAsync" && 
@@ -183,7 +183,7 @@ namespace RUINORERP.Server.Network.DI
                 m.GetParameters()[1].ParameterType == typeof(CancellationToken) &&
                 m.ReturnType.IsGenericType &&
                 m.ReturnType.GetGenericTypeDefinition() == typeof(Task<>) &&
-                m.ReturnType.GetGenericArguments()[0] == typeof(IResponse)
+                m.ReturnType.GetGenericArguments()[0] == typeof(ResponseBase)
             );
             
             return handleMethod != null;

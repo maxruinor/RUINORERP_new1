@@ -6,84 +6,84 @@ using System.Threading.Tasks;
 using RUINORERP.Model;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Models.Core;
-using MessagePack;
+using Newtonsoft.Json;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
     /// <summary>
     /// 文件上传请求 - 用于处理文件上传操作
     /// </summary>
-    [MessagePackObject]
+    [JsonObject]
     public class FileUploadRequest : RequestBase
     {
         /// <summary>
-        /// 文件名
+        /// 文件�?
         /// </summary>
-        [Key(10)]
+        [JsonProperty(Order=10)]
         public string FileName { get; set; }
 
         /// <summary>
-        /// 文件分类: Expenses/Products/Payments等
+        /// 文件分类: Expenses/Products/Payments�?
         /// </summary>
-        [Key(11)]
+        [JsonProperty(Order=11)]
         public string Category { get; set; }
 
         /// <summary>
         /// 文件大小
         /// </summary>
-        [Key(12)]
+        [JsonProperty(Order=12)]
         public long FileSize { get; set; }
 
         /// <summary>
         /// 文件数据
         /// </summary>
-        [Key(13)]
+        [JsonProperty(Order=13)]
         public byte[] Data { get; set; }
 
         /// <summary>
         /// 分块索引
         /// </summary>
-        [Key(14)]
+        [JsonProperty(Order=14)]
         public int ChunkIndex { get; set; }
 
         /// <summary>
         /// 总分块数
         /// </summary>
-        [Key(15)]
+        [JsonProperty(Order=15)]
         public int TotalChunks { get; set; }
 
         /// <summary>
         /// 目标路径
         /// </summary>
-        [Key(16)]
+        [JsonProperty(Order=16)]
         public string TargetPath { get; set; }
 
         /// <summary>
         /// 上传用户
         /// </summary>
-        [Key(17)]
+        [JsonProperty(Order=17)]
         public string UploadedBy { get; set; }
 
         /// <summary>
         /// 上传时间
         /// </summary>
-        [Key(18)]
+        [JsonProperty(Order=18)]
         public DateTime UploadTime { get; set; } = DateTime.Now;
     }
 
     /// <summary>
     /// 文件上传响应 - 使用统一的ApiResponse模式
     /// </summary>
-    [MessagePackObject]
+    [JsonObject]
     public class FileUploadResponse : ResponseBase<FileUploadResponseData>
     {
         /// <summary>
-        /// 默认构造函数
+        /// 默认构造函�?
         /// </summary>
         public FileUploadResponse() : base() { }
 
         /// <summary>
-        /// 带参数的构造函数
+        /// 带参数的构造函�?
         /// </summary>
         public FileUploadResponse(bool success, string message, FileUploadResponseData data = null, int code = 200) 
         {
@@ -116,19 +116,19 @@ namespace RUINORERP.PacketSpec.Models.Requests
     /// <summary>
     /// 文件上传响应数据
     /// </summary>
-    [MessagePackObject]
+    [JsonObject]
     public class FileUploadResponseData
     {
         /// <summary>
-        /// 文件唯一标识符
+        /// 文件唯一标识�?
         /// </summary>
-        [Key(0)]
+        [JsonProperty(Order=0)]
         public string FileId { get; set; }
     }
 
 
-    // 文件信息类
-    [MessagePackObject]
+    // 文件信息�?
+    [JsonObject]
     public class FileStorageInfo
     {
         private string filePath;
@@ -138,59 +138,59 @@ namespace RUINORERP.PacketSpec.Models.Requests
             this.filePath = filePath;
         }
 
-        [Key(0)]
+        [JsonProperty(Order=0)]
         public string FileId { get; set; }
         
-        [Key(1)]
+        [JsonProperty(Order=1)]
         public string OriginalName { get; set; }
         
-        [Key(2)]
+        [JsonProperty(Order=2)]
         public string Category { get; set; }
         
-        [Key(3)]
+        [JsonProperty(Order=3)]
         public long Size { get; set; }
         
-        [Key(4)]
+        [JsonProperty(Order=4)]
         public DateTime UploadTime { get; set; }
         
-        [Key(5)]
+        [JsonProperty(Order=5)]
         public DateTime LastModified { get; set; }
         
-        [Key(6)]
+        [JsonProperty(Order=6)]
         public string Version { get; set; }
 
-        [Key(7)]
+        [JsonProperty(Order=7)]
         public string UploadedBy { get; set; }
 
-        [Key(8)]
+        [JsonProperty(Order=8)]
         public string MimeType { get; set; }
 
-        [Key(9)]
+        [JsonProperty(Order=9)]
         public string FilePath { get; set; }
 
     }
 
     // 请求和响应类
-    [MessagePackObject]
+    [JsonObject]
     public class FileDeleteRequest : RequestBase
     {
-        [Key(10)]
+        [JsonProperty(Order=10)]
         public string FileId { get; set; }
     }
 
     /// <summary>
     /// 文件删除响应 - 使用统一的ApiResponse模式
     /// </summary>
-    [MessagePackObject]
+    [JsonObject]
     public class FileDeleteResponse : ResponseBase
     {
         /// <summary>
-        /// 默认构造函数
+        /// 默认构造函�?
         /// </summary>
         public FileDeleteResponse() : base() { }
 
         /// <summary>
-        /// 带参数的构造函数
+        /// 带参数的构造函�?
         /// </summary>
         public FileDeleteResponse(bool success, string message, int code = 200) 
         {
@@ -215,26 +215,26 @@ namespace RUINORERP.PacketSpec.Models.Requests
         }
     }
 
-    [MessagePackObject]
+    [JsonObject]
     public class FileInfoRequest : RequestBase
     {
-        [Key(10)]
+        [JsonProperty(Order=10)]
         public string FileId { get; set; }
     }
 
     /// <summary>
     /// 文件信息响应 - 使用统一的ApiResponse模式
     /// </summary>
-    [MessagePackObject]
+    [JsonObject]
     public class FileInfoResponse : ResponseBase<FileStorageInfo>
     {
         /// <summary>
-        /// 默认构造函数
+        /// 默认构造函�?
         /// </summary>
         public FileInfoResponse() : base() { }
 
         /// <summary>
-        /// 带参数的构造函数
+        /// 带参数的构造函�?
         /// </summary>
         public FileInfoResponse(bool success, string message, FileStorageInfo data = null, int code = 200) 
         {
@@ -261,66 +261,66 @@ namespace RUINORERP.PacketSpec.Models.Requests
         }
     }
 
-    [MessagePackObject]
+    [JsonObject]
     public class FileListRequest : RequestBase
     {
-        [Key(10)]
+        [JsonProperty(Order=10)]
         public string Category { get; set; }
         
-        [Key(11)]
-        public string Pattern { get; set; } // 文件名模式匹配
+        [JsonProperty(Order=11)]
+        public string Pattern { get; set; } // 文件名模式匹�?
         
-        [Key(12)]
+        [JsonProperty(Order=12)]
         public int PageIndex { get; set; } = 1;
         
-        [Key(13)]
+        [JsonProperty(Order=13)]
         public int PageSize { get; set; } = 20;
     }
 
     /// <summary>
-    /// 文件列表响应数据类
+    /// 文件列表响应数据�?
     /// </summary>
-    [MessagePackObject]
+    [JsonObject]
     public class FileListResponseData
     {
         /// <summary>
         /// 文件列表
         /// </summary>
-        [Key(0)]
+        [JsonProperty(Order=0)]
         public List<FileStorageInfo> Files { get; set; }
 
         /// <summary>
         /// 总记录数
         /// </summary>
-        [Key(1)]
+        [JsonProperty(Order=1)]
         public int TotalCount { get; set; }
 
         /// <summary>
         /// 当前页码
         /// </summary>
-        [Key(2)]
+        [JsonProperty(Order=2)]
         public int PageIndex { get; set; }
 
         /// <summary>
         /// 每页大小
         /// </summary>
-        [Key(3)]
+        [JsonProperty(Order=3)]
         public int PageSize { get; set; }
     }
 
     /// <summary>
     /// 文件列表响应 - 使用统一的ApiResponse模式
     /// </summary>
-    [MessagePackObject]
+    [JsonObject]
     public class FileListResponse : ResponseBase<FileListResponseData>
     {
         /// <summary>
-        /// 默认构造函数
+        /// 默认构造函�?
         /// </summary>
         public FileListResponse() : base() { }
 
         /// <summary>
-        /// 带参数的构造函数
+        /// 带参数的构造函�?
         /// </summary>
         public FileListResponse(bool success, string message, FileListResponseData data = null, int code = 200) 
         {
@@ -355,3 +355,5 @@ namespace RUINORERP.PacketSpec.Models.Requests
     }
 
 }
+
+

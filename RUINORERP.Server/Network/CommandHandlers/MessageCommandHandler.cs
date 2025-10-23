@@ -47,7 +47,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数
         /// </summary>
-        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -89,7 +89,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理发送弹窗消息命令
         /// </summary>
-        private async Task<IResponse> HandleSendPopupMessageAsync(
+        private async Task<ResponseBase> HandleSendPopupMessageAsync(
             MessageRequest request,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -157,7 +157,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理转发弹窗消息命令
         /// </summary>
-        private async Task<IResponse> HandleForwardPopupMessageAsync(
+        private async Task<ResponseBase> HandleForwardPopupMessageAsync(
             MessageRequest request,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -225,7 +225,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理发送消息给指定用户命令
         /// </summary>
-        private async Task<IResponse> HandleSendMessageToUserAsync(
+        private async Task<ResponseBase> HandleSendMessageToUserAsync(
             MessageRequest request,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -293,7 +293,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理发送消息给指定部门命令
         /// </summary>
-        private async Task<IResponse> HandleSendMessageToDepartmentAsync(
+        private async Task<ResponseBase> HandleSendMessageToDepartmentAsync(
             MessageRequest request,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -362,7 +362,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理广播消息命令
         /// </summary>
-        private async Task<IResponse> HandleBroadcastMessageAsync(
+        private async Task<ResponseBase> HandleBroadcastMessageAsync(
             MessageRequest request,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -422,7 +422,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理发送系统通知命令
         /// </summary>
-        private async Task<IResponse> HandleSendSystemNotificationAsync(
+        private async Task<ResponseBase> HandleSendSystemNotificationAsync(
             MessageRequest request,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -481,7 +481,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 向指定会话发送响应
         /// </summary>
-        private async Task<bool> SendResponseToSessionAsync(string sessionId, IResponse response, CancellationToken cancellationToken)
+        private async Task<bool> SendResponseToSessionAsync(string sessionId, ResponseBase response, CancellationToken cancellationToken)
         {
             try
             {
@@ -510,7 +510,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 创建统一的异常响应
         /// </summary>
-        private IResponse CreateExceptionResponse(Exception ex, string errorCode)
+        private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
         {
             return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}")
                 .WithMetadata("ErrorCode", errorCode)

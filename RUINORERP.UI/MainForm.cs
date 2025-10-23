@@ -100,6 +100,7 @@ using RUINORERP.PacketSpec.Enums;
 using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
+using RUINORERP.PacketSpec.Serialization;
 
 
 
@@ -961,7 +962,11 @@ namespace RUINORERP.UI
                 }
             }
 
+            #region 注册缓存用的类型
 
+            Initialize();
+
+            #endregion
             timer1.Start();
             Stopwatch stopwatchLoadUI = Stopwatch.StartNew();
             LoadUIMenus();
@@ -1096,7 +1101,39 @@ namespace RUINORERP.UI
 
         }
 
+        #region 注册缓存用的类型
 
+
+        public static void Initialize()
+        {
+            // 预注册常用类型
+            TypeResolver.PreRegisterCommonTypes();
+
+            // 注册当前程序集中的所有类型
+            Assembly.GetExecutingAssembly().RegisterAllTypesFromAssembly();
+
+            // 注册其他相关程序集
+            var relatedAssemblies = new[]
+            {
+            "RUINORERP.PacketSpec",
+            "RUINORERP.Model",
+        };
+
+            foreach (var assemblyName in relatedAssemblies)
+            {
+                try
+                {
+                    var assembly = Assembly.Load(assemblyName);
+                    assembly.RegisterAllTypesFromAssembly();
+                }
+                catch
+                {
+                    // 忽略加载失败的程序集
+                }
+            }
+        }
+
+        #endregion
 
 
 

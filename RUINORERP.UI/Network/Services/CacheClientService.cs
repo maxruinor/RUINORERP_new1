@@ -404,8 +404,9 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 CacheData cacheData = CacheData.Create(tableName, entity);
-                cacheData.EntityType = TableSchemaManager.Instance.GetSchemaInfo(tableName).EntityType;
-                cacheData.EntityByte = UnifiedSerializationService.SerializeWithTypeInfo(entity);
+                //cacheData.EntityType = TableSchemaManager.Instance.GetSchemaInfo(tableName).EntityType;
+                cacheData.EntityTypeName = entity.GetType().AssemblyQualifiedName;
+                cacheData.EntityByte = JsonCompressionSerializationService.Serialize(entity);
 
                 // 创建缓存更新请求并处理
                 await _cacheRequestManager.ProcessCacheOperationAsync(CacheCommands.CacheSync, new CacheRequest
@@ -506,7 +507,7 @@ namespace RUINORERP.UI.Network.Services
                 if (!e.SyncToServer)
                     return;
 
-     
+
                 // 创建缓存更新请求 - 使用简化的操作类型
                 var request = new CacheRequest
                 {
@@ -515,8 +516,8 @@ namespace RUINORERP.UI.Network.Services
                     Timestamp = DateTime.UtcNow
                 };
 
-               
-               
+
+
                 // 根据操作类型设置请求数据
                 if (e.Value != null)
                 {

@@ -50,11 +50,14 @@
     <Compile Remove="Enums\CommandHelper.cs" />
     <Compile Remove="Enums\CommandId.cs" />
     <Compile Remove="Enums\UsageExamples.cs" />
+    <Compile Remove="Models\Responses\SimpleResponse.cs" />
     <Compile Remove="Security\CryptoProtocol_deep.cs" />
     <Compile Remove="Security\EncryptedProtocolPool.cs" />
     <Compile Remove="Security\KxCryptographyService.cs" />
     <Compile Remove="Security\UnifiedCryptographyService.cs" />
     <Compile Remove="Security\UnifiedEncryptionProtocol_old.cs" />
+    <Compile Remove="Serialization\IUnifiedSerializationService.cs" />
+    <Compile Remove="Serialization\UnifiedSerializationService.cs" />
   </ItemGroup>
 
   <ItemGroup>

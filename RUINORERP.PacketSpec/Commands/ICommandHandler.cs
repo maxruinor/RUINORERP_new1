@@ -1,4 +1,4 @@
-using RUINORERP.PacketSpec.Models.Core;
+﻿using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Collections.Generic;
@@ -49,7 +49,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cmd">队列命令对象，包含数据包和任务完成源</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        Task<IResponse> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default);
+        Task<ResponseBase> HandleAsync(QueuedCommand cmd, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 判断是否可以处理该命令数据包

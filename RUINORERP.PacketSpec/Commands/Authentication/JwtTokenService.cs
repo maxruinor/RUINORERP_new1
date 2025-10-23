@@ -9,11 +9,21 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.PacketSpec.Commands.Authentication
 {
+    /// <summary>
+    /// JWT令牌服务实现
+    /// 负责生成、验证和刷新JWT令牌
+    /// </summary>
     public class JwtTokenService : ITokenService
     {
         private readonly TokenServiceOptions _options;
         private readonly SigningCredentials _signingCredentials;
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="options">令牌服务配置选项</param>
+        /// <exception cref="ArgumentNullException">当选项为空时抛出</exception>
+        /// <exception cref="ArgumentException">当密钥为空时抛出</exception>
         public JwtTokenService(TokenServiceOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -27,8 +37,12 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         }
 
         /// <summary>
-        /// 生成Token
+        /// 生成JWT令牌
         /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <param name="userName">用户名</param>
+        /// <param name="additionalClaims">附加声明（可选）</param>
+        /// <returns>生成的JWT令牌字符串</returns>
         public string GenerateToken(string userId, string userName, IDictionary<string, object> additionalClaims = null)
         {
             var claims = new List<Claim>
@@ -62,17 +76,19 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         }
 
         /// <summary>
-        /// 验证Token
+        /// 验证JWT令牌
         /// </summary>
+        /// <param name="token">要验证的令牌</param>
+        /// <returns>验证结果</returns>
         public TokenValidationResult ValidateToken(string token)
         {
             return ValidateTokenCore(token);
         }
 
         /// <summary>
-        /// 异步验证Token - 合并自TokenValidationService
+        /// 异步验证JWT令牌
         /// </summary>
-        /// <param name="token">要验证的Token</param>
+        /// <param name="token">要验证的令牌</param>
         /// <returns>验证结果</returns>
         public Task<TokenValidationResult> ValidateTokenAsync(string token)
         {
@@ -116,7 +132,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
                 result.UserId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
                 result.UserName = principal.FindFirst(JwtRegisteredClaimNames.UniqueName)?.Value;
                 
-                // 直接从JwtSecurityToken获取过期时间，而不是从validatedToken.ValidTo
+                // 直接从JwtSecurityToken获取过期时间
                 if (validatedToken is JwtSecurityToken jwtToken)
                 {
                     result.ExpiryTime = jwtToken.ValidTo;
@@ -154,11 +170,13 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         }
 
         /// <summary>
-        /// 刷新Token - 增强版刷新逻辑
+        /// 刷新JWT令牌
         /// </summary>
-        /// <param name="refreshToken">刷新Token</param>
-        /// <param name="currentToken">当前访问Token（可选，用于验证用户身份）</param>
-        /// <returns>新的访问Token</returns>
+        /// <param name="refreshToken">刷新令牌</param>
+        /// <param name="currentToken">当前访问令牌（可选，用于额外验证）</param>
+        /// <returns>新生成的访问令牌</returns>
+        /// <exception cref="ArgumentException">当刷新令牌为空时抛出</exception>
+        /// <exception cref="SecurityTokenException">当令牌验证失败时抛出</exception>
         public string RefreshToken(string refreshToken, string currentToken = null)
         {
             if (string.IsNullOrEmpty(refreshToken))
@@ -169,7 +187,7 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             if (!refreshValidation.IsValid)
                 throw new SecurityTokenException($"刷新Token无效: {refreshValidation.ErrorMessage}");
 
-            // 如果提供了当前Token，验证其一致性（可选的安全检查）
+            // 如果提供了当前Token，验证其一致性（额外的安全检查）
             if (!string.IsNullOrEmpty(currentToken))
             {
                 var currentValidation = ValidateToken(currentToken);
@@ -186,22 +204,24 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
         }
 
         /// <summary>
-    /// 撤销Token
-    /// </summary>
+        /// 撤销令牌
+        /// 注意：在生产环境中，应将Token加入黑名单存储
+        /// </summary>
+        /// <param name="token">要撤销的令牌</param>
         public void RevokeToken(string token)
         {
-            // 简化实现，实际项目中可能需要将Token加入黑名单
-            // 这里可以考虑使用Redis等存储被撤销的Token
+            // 简化实现，实际项目中应使用Redis等存储被撤销的Token
+            // 此处仅作为接口实现占位
         }
 
         /// <summary>
-        /// 检查Token是否即将过期 - 合并自TokenValidationService
+        /// 检查Token是否即将过期
         /// </summary>
         /// <param name="token">要检查的Token</param>
-        /// <param name="thresholdMinutes">过期阈值（分钟）</param>
-        /// <returns>检查结果</returns>
+        /// <param name="thresholdMinutes">过期阈值（分钟），默认5分钟</param>
+        /// <returns>包含是否即将过期和剩余有效秒数的元组</returns>
         public Task<(bool isExpiringSoon, int expiresInSeconds)> CheckTokenExpiryAsync(string token, int thresholdMinutes = 5)
-        {
+        { 
             if (string.IsNullOrEmpty(token))
             {
                 return Task.FromResult((false, 0));

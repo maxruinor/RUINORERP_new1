@@ -88,7 +88,6 @@
     <Compile Include="Cache\CacheSyncExtensions.cs" />
     <Compile Include="Cache\CacheSyncMetadataManager.cs" />
     <Compile Include="Cache\EventDrivenCacheManager.cs" />
-    <Compile Include="Cache\CacheSerializationHelper.cs" />
     <Compile Include="Cache\CacheSubscriptionManager.cs" />
     <Compile Include="Cache\EntityCacheInitializationService.cs" />
     <Compile Include="Cache\EntityCacheManager.cs" />

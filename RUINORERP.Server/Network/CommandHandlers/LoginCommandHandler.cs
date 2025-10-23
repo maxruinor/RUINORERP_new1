@@ -32,6 +32,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.IO.Packaging;
 using Azure.Core;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using RUINORERP.PacketSpec.Models.Responses.Authentication;
+using RUINORERP.PacketSpec.Models.Responses.Message;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {
@@ -101,7 +103,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <param name="command">命令对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>命令处理结果</returns>
-        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -160,7 +162,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 统一的登录业务逻辑处理方法
         /// 整合了所有登录相关的业务逻辑，被不同类型的登录命令处理器调用
         /// </summary>
-        private async Task<IResponse> ProcessLoginAsync(
+        private async Task<ResponseBase> ProcessLoginAsync(
             LoginRequest loginRequest,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -243,7 +245,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     { "DeviceInfo", s.DeviceInfo }
                 }).ToList();
 
-                    var duplicateLoginResponse = new ResponseBase
+                    var duplicateLoginResponse = new LoginResponse
                     {
                         Message = "您的账号已在其他地方登录，确认强制对方下线，保持当前登陆吗？",
                         IsSuccess = true
@@ -320,14 +322,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理Token验证
         /// </summary>
-        private async Task<IResponse> ProcessTokenValidationAsync(
+        private async Task<ResponseBase> ProcessTokenValidationAsync(
             CommandContext executionContext,
             CancellationToken cancellationToken)
         {
             try
             {
                 // 从请求中提取Token
-                string token = executionContext.Token?.AccessToken;
+                string token = executionContext.AccessToken;
                 // 验证Token
                 if (string.IsNullOrEmpty(token))
                 {
@@ -367,7 +369,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理Token刷新
         /// </summary>
-        private async Task<IResponse> ProcessTokenRefreshAsync(
+        private async Task<ResponseBase> ProcessTokenRefreshAsync(
             LoginRequest loginRequest,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -396,11 +398,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
 
                 // 创建响应
-                var response = new LoginResponse
+                var response = new TokenRefreshResponse
                 {
                     IsSuccess = true,
                     Message = "Token刷新成功",
-                    Token = new TokenInfo { AccessToken = newToken }
+                    RefreshToken = new TokenInfo { AccessToken = newToken }
                 };
 
                 return response;
@@ -415,7 +417,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理登出操作
         /// </summary>
-        private async Task<IResponse> ProcessLogoutAsync(
+        private async Task<ResponseBase> ProcessLogoutAsync(
             LoginRequest loginRequest,
             CommandContext executionContext,
             CancellationToken cancellationToken)
@@ -431,9 +433,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     await SessionService.RemoveSessionAsync(sessionId);
                 }
                 // 撤销Token
-                if (executionContext.Token != null && !string.IsNullOrEmpty(executionContext.Token.AccessToken))
+                if (executionContext.AccessToken != null && !string.IsNullOrEmpty(executionContext.AccessToken))
                 {
-                    _tokenService.RevokeToken(executionContext.Token.AccessToken);
+                    _tokenService.RevokeToken(executionContext.AccessToken);
                 }
 
                 // 创建响应
@@ -568,7 +570,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 请求重复登录确认
         /// </summary>
-        private IResponse RequestDuplicateLoginConfirmation(IEnumerable<SessionInfo> existingSessions, CancellationToken cancellationToken)
+        private ResponseBase RequestDuplicateLoginConfirmation(IEnumerable<SessionInfo> existingSessions, CancellationToken cancellationToken)
         {
             try
             {
@@ -581,7 +583,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     { "DeviceInfo", s.DeviceInfo }
                 }).ToList();
 
-                var duplicateLoginResponse = new ResponseBase
+                var duplicateLoginResponse = new LoginResponse
                 {
                     Message = "检测到重复登录",
                     IsSuccess = true
@@ -765,14 +767,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
             try
             {
                 // 使用TokenManager进行Token刷新
-                var refreshResult = await TokenManager.RefreshTokenAsync(refreshToken, currentToken);
+                var tokenInfo = await TokenManager.RefreshTokenAsync(refreshToken, currentToken);
 
-                if (!refreshResult.Success)
+                if (tokenInfo != null && !string.IsNullOrEmpty(tokenInfo.AccessToken))
                 {
-                    return (false, null, refreshResult.ErrorMessage);
+                    return (true, tokenInfo.AccessToken, null);
                 }
 
-                return (true, refreshResult.AccessToken, null);
+                return (false, null, "无法生成有效的刷新令牌");
             }
             catch (Microsoft.IdentityModel.Tokens.SecurityTokenException ex)
             {
@@ -827,7 +829,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 创建统一的错误响应
         /// </summary>
-        private IResponse CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
+        private ResponseBase CreateErrorResponse(string message, ErrorCode errorCode, string customErrorCode)
         {
             return ResponseBase.CreateError($"{errorCode.Message}: {message}", errorCode.Code)
                 .WithMetadata("ErrorCode", customErrorCode);
@@ -836,7 +838,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 创建统一的异常响应
         /// </summary>
-        private IResponse CreateExceptionResponse(Exception ex, string errorCode)
+        private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
         {
             return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}", UnifiedErrorCodes.System_InternalError.Code)
                 .WithMetadata("ErrorCode", errorCode)

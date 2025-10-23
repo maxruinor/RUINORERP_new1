@@ -13,6 +13,7 @@ using System;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Cache;
 using RUINORERP.UI.Network.Services.Cache;
+using RUINORERP.PacketSpec.Serialization;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -22,6 +23,9 @@ namespace RUINORERP.UI.Network.DI
     /// </summary>
     public static class NetworkServicesDependencyInjection
     {
+
+
+
         /// <summary>
         /// 配置Network服务依赖注入
         /// </summary>

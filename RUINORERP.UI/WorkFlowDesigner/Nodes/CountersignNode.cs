@@ -48,6 +48,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         
         // 会签节点特定属性
         private CountersignStep _countersignStep;
+        private CountersignStepExtension _extension; // 扩展属性
         
         #endregion
 
@@ -60,6 +61,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         {
             NodeType = WFNodeType.Step;
             _countersignStep = new CountersignStep();
+            _extension = new CountersignStepExtension(); // 初始化扩展属性
             NodeStepPropertyValue = _countersignStep;
 
             Rectangle = new RectangleF(0, 0, 70, 40);
@@ -93,6 +95,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             //set the default size
             Rectangle = new RectangleF(0, 0, 70, 20);
             _countersignStep = new CountersignStep();
+            _extension = new CountersignStepExtension(); // 初始化扩展属性
             NodeStepPropertyValue = _countersignStep;
             
             //add the connectors
@@ -139,6 +142,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             Connectors.Add(RightNode);
             
             _countersignStep = (CountersignStep)info.GetValue("CountersignStep", typeof(CountersignStep));
+            _extension = (CountersignStepExtension)info.GetValue("Extension", typeof(CountersignStepExtension));
         }
         #endregion
 
@@ -149,6 +153,13 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
         {
             get { return _countersignStep; }
             set { _countersignStep = value; }
+        }
+
+        [Browsable(false)]
+        public CountersignStepExtension Extension
+        {
+            get { return _extension; }
+            set { _extension = value; }
         }
 
         public override void AddProperties()
@@ -162,6 +173,16 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
                 "已审批通过的人数", 0));
             Bag.Properties.Add(new PropertySpec("状态", typeof(string), "会签属性", 
                 "会签节点的当前状态", "Pending"));
+            
+            // 添加扩展属性
+            Bag.Properties.Add(new PropertySpec("超时时间(小时)", typeof(int), "超时设置", 
+                "超时时间（小时），默认24小时", 24));
+            Bag.Properties.Add(new PropertySpec("超时动作", typeof(string), "超时设置", 
+                "超时后的处理动作 (Remind/Approve/Reject)", "Remind"));
+            Bag.Properties.Add(new PropertySpec("启用通知", typeof(bool), "通知设置", 
+                "是否启用通知", false));
+            Bag.Properties.Add(new PropertySpec("通知邮箱", typeof(List<string>), "通知设置", 
+                "通知邮箱列表", new List<string>()));
         }
         
         #region PropertyBag
@@ -180,6 +201,19 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
                 case "状态":
                     e.Value = _countersignStep.Status;
                     break;
+                // 扩展属性
+                case "超时时间(小时)":
+                    e.Value = _extension.TimeoutHours;
+                    break;
+                case "超时动作":
+                    e.Value = _extension.TimeoutAction;
+                    break;
+                case "启用通知":
+                    e.Value = _extension.EnableNotifications;
+                    break;
+                case "通知邮箱":
+                    e.Value = _extension.NotificationEmails;
+                    break;
             }
         }
 
@@ -197,6 +231,19 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
                     break;
                 case "状态":
                     _countersignStep.Status = e.Value.ToString();
+                    break;
+                // 扩展属性
+                case "超时时间(小时)":
+                    _extension.TimeoutHours = (int)e.Value;
+                    break;
+                case "超时动作":
+                    _extension.TimeoutAction = e.Value.ToString();
+                    break;
+                case "启用通知":
+                    _extension.EnableNotifications = (bool)e.Value;
+                    break;
+                case "通知邮箱":
+                    _extension.NotificationEmails = (List<string>)e.Value;
                     break;
             }
         }
@@ -259,6 +306,14 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
 
                 // 会签节点使用特殊颜色以区分
                 g.FillPath(new SolidBrush(Color.Purple), path);
+                
+                // 如果启用了通知或设置了超时，绘制特殊标记
+                if (_extension.EnableNotifications || _extension.TimeoutHours > 0)
+                {
+                    // 绘制一个小铃铛图标表示有通知或超时设置
+                    g.FillEllipse(Brushes.Yellow, Rectangle.Right - 15, Rectangle.Top + 2, 10, 10);
+                    g.DrawEllipse(Pens.Black, Rectangle.Right - 15, Rectangle.Top + 2, 10, 10);
+                }
             }
             if (ShowLabel)
             {
@@ -304,6 +359,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
             info.AddValue("RightNode", RightNode, typeof(Connector));
             
             info.AddValue("CountersignStep", _countersignStep, typeof(CountersignStep));
+            info.AddValue("Extension", _extension, typeof(CountersignStepExtension));
         }
 
         #endregion

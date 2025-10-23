@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using RUINORERP.Model;
@@ -239,13 +240,11 @@ namespace RUINORERP.PacketSpec.Handlers
     public class OperationResult : ResponseBase<object>
     {
         /// <summary>
-        /// 默认构造函数
-        /// </summary>
+        /// 默认构造函�?        /// </summary>
         public OperationResult() : base() { }
 
         /// <summary>
-        /// 带参数的构造函数
-        /// </summary>
+        /// 带参数的构造函�?        /// </summary>
         public OperationResult(bool success, string message, object data = null, int code = 200) 
         {
             this.IsSuccess = success;
@@ -257,9 +256,9 @@ namespace RUINORERP.PacketSpec.Handlers
         /// <summary>
         /// 创建成功结果
         /// </summary>
-#pragma warning disable CS0108 // 成员隐藏继承的成员；缺少关键字 new
+#pragma warning disable CS0108 // 成员隐藏继承的成员；缺少关键�?new
         public static OperationResult CreateSuccess(object data = null, string message = "操作成功")
-#pragma warning restore CS0108 // 成员隐藏继承的成员；缺少关键字 new
+#pragma warning restore CS0108 // 成员隐藏继承的成员；缺少关键�?new
         {
             return new OperationResult(true, message, data, 200);
         }
@@ -312,3 +311,6 @@ namespace RUINORERP.PacketSpec.Handlers
         public double ReceiveRate { get; set; }
     }
 }
+
+
+

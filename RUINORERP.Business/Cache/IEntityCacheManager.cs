@@ -143,21 +143,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         Type GetEntityType(string tableName);
 
-        /// <summary>
-        /// 序列化缓存数据
-        /// </summary>
-        /// <param name="data">要序列化的数据</param>
-        /// <param name="type">序列化方式</param>
-        /// <returns>序列化后的字节数组</returns>
-        byte[] SerializeCacheData<T>(T data, CacheSerializationHelper.SerializationType type = CacheSerializationHelper.SerializationType.Json);
-
-        /// <summary>
-        /// 反序列化缓存数据
-        /// </summary>
-        /// <param name="data">序列化后的字节数组</param>
-        /// <param name="type">序列化方式</param>
-        /// <returns>反序列化后的对象</returns>
-        T DeserializeCacheData<T>(byte[] data, CacheSerializationHelper.SerializationType type = CacheSerializationHelper.SerializationType.Json);
+      
         #endregion
     }
 }

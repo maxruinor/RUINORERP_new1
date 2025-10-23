@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,7 +35,7 @@ namespace RUINORERP.PacketSpec.Commands
         private readonly SemaphoreSlim _dispatchSemaphore;
         private readonly Channel<QueuedCommand>[] _commandChannels;
         private readonly Task[] _channelProcessors;
-        private readonly IAsyncPolicy<IResponse> _circuit;
+        private readonly IAsyncPolicy<ResponseBase> _circuit;
         private readonly IdempotencyFilter _idempotent = new IdempotencyFilter();
         private FallbackGenericCommandHandler _fallbackHandler;
         private readonly object _fallbackHandlerLock = new object();
@@ -78,7 +78,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="circuitBreakerPolicy">熔断器策略，默认为6次失败后熔断，30秒后恢复</param>
         public CommandDispatcher(ILogger<CommandDispatcher> logger, ICommandHandlerFactory handlerFactory = null,
             int maxConcurrencyPerCommand = 0,
-            IAsyncPolicy<IResponse> circuitBreakerPolicy = null)
+            IAsyncPolicy<ResponseBase> circuitBreakerPolicy = null)
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _handlerFactory = handlerFactory;
@@ -91,7 +91,7 @@ namespace RUINORERP.PacketSpec.Commands
 
             // 使用传入的熔断器策略，如果未提供则使用默认策略
             _circuit = circuitBreakerPolicy ?? Policy
-                .HandleResult<IResponse>(r => r != null && !r.IsSuccess)
+                .HandleResult<ResponseBase>(r => r != null && !r.IsSuccess)
                 .CircuitBreakerAsync(10, TimeSpan.FromMinutes(1));
 
             // 创建三个优先级的Channel队列
@@ -327,7 +327,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="packet">数据包对象</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
-        public async Task<IResponse> DispatchAsync(PacketModel packet, CancellationToken cancellationToken = default)
+        public async Task<ResponseBase> DispatchAsync(PacketModel packet, CancellationToken cancellationToken = default)
         {
 
 
@@ -341,7 +341,7 @@ namespace RUINORERP.PacketSpec.Commands
             var channel = GetPriorityChannel(packet.PacketPriority);
 
             // 创建任务完成源
-            var tcs = new TaskCompletionSource<IResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var tcs = new TaskCompletionSource<ResponseBase>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             // 创建队列项
             var queued = new QueuedCommand
@@ -385,7 +385,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// <param name="cmd">命令对象</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>处理结果</returns>
-        private async Task<IResponse> ProcessAsync(QueuedCommand cmd, CancellationToken ct)
+        private async Task<ResponseBase> ProcessAsync(QueuedCommand cmd, CancellationToken ct)
         {
             if (cmd == null || cmd.Packet == null)
             {
@@ -400,7 +400,7 @@ namespace RUINORERP.PacketSpec.Commands
             // 创建链接的取消令牌，处理命令超时
             using (var linkedCts = CreateLinkedCancellationToken(ct, cmd.Packet.CommandId))
             {
-                IResponse response = null;
+                ResponseBase response = null;
 #pragma warning disable CS0168 // 声明了变量，但从未使用过
                 try
                 {

@@ -51,7 +51,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 具体的命令处理逻辑
         /// </summary>
-        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -85,7 +85,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理心跳命令
         /// </summary>
-        private IResponse HandleHeartbeatAsync(QueuedCommand queuedCommand, CancellationToken cancellationToken)
+        private ResponseBase HandleHeartbeatAsync(QueuedCommand queuedCommand, CancellationToken cancellationToken)
         {
             try
             {

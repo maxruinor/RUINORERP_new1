@@ -63,7 +63,7 @@ namespace RUINORERP.UI.Network
                     try
                     {
                         // 首先尝试使用MessagePack反序列化
-                        packageInfo.Packet = UnifiedSerializationService.DeserializeWithMessagePack<PacketModel>(package.Two);
+                        packageInfo.Packet = JsonCompressionSerializationService.Deserialize<PacketModel>(package.Two);
                     }
                     catch (Exception msgPackEx)
                     {
@@ -71,7 +71,7 @@ namespace RUINORERP.UI.Network
                         System.Diagnostics.Debug.WriteLine($"MessagePack反序列化失败，尝试JSON: {msgPackEx.Message}");
                         try
                         {
-                            packageInfo.Packet = UnifiedSerializationService.DeserializeWithJson<PacketModel>(package.Two);
+                            packageInfo.Packet = JsonCompressionSerializationService.Deserialize<PacketModel>(package.Two);
                         }
                         catch (Exception jsonEx)
                         {

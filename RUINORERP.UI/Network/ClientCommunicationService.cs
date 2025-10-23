@@ -513,7 +513,7 @@ namespace RUINORERP.UI.Network
                             // 调用SendCommandAsync方法
                             var result = await SendCommandAsync(
                                 queuedCommand.CommandId,
-                                queuedCommand.Data as IRequest,
+                                queuedCommand.Data as RequestBase,
                                 queuedCommand.CancellationToken,
                                 queuedCommand.TimeoutMs);
 
@@ -620,7 +620,7 @@ namespace RUINORERP.UI.Network
 
 
         /// <summary>
-        /// 发送请求并等待响应（合并自RequestResponseManager）
+        /// 发送请求并等待响应
         /// </summary>
         /// <typeparam name="TRequest">请求数据类型</typeparam>
         /// <typeparam name="TResponse">响应数据类型</typeparam>
@@ -633,8 +633,8 @@ namespace RUINORERP.UI.Network
             TRequest request,
             CancellationToken ct = default,
             int timeoutMs = 30000)
-            where TRequest : class, IRequest
-            where TResponse : class, IResponse
+            where TRequest : RequestBase
+            where TResponse : ResponseBase
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(timeoutMs);
@@ -668,7 +668,6 @@ namespace RUINORERP.UI.Network
 
                 if (completedTask == timeoutTask)
                 {
-                    _logger?.LogError("请求超时，请求ID: {RequestId}", request.RequestId);
                     _timeoutStatistics.RecordTimeout(commandId.ToString(), timeoutMs);
                     throw new TimeoutException($"请求超时（{timeoutMs}ms），请求ID: {request.RequestId}");
                 }
@@ -683,18 +682,11 @@ namespace RUINORERP.UI.Network
                     _eventManager.OnRequestCompleted(request.RequestId, DateTime.UtcNow - pendingRequest.CreatedAt);
                 }
 
-                PacketModel packet = null;
-
-                if (responsePacket is PacketModel)
-                {
-                    packet = responsePacket;
-                }
-                _logger?.LogDebug("成功接收响应，请求ID: {RequestId}", request.RequestId);
-                return packet;
+                // 直接进行类型检查并返回响应包
+                return responsePacket as PacketModel;
             }
             catch (Exception ex) when (!(ex is TimeoutException) && !(ex is OperationCanceledException))
             {
-                _logger?.LogError(ex, "请求处理失败，请求ID: {RequestId}", request.RequestId);
                 throw new InvalidOperationException($"请求处理失败，请求ID: {request.RequestId}: {ex.Message}", ex);
             }
             finally
@@ -711,26 +703,26 @@ namespace RUINORERP.UI.Network
         /// 自动附加认证Token - 优化版
         /// 增强功能：确保Token的完整性、类型设置、ExecutionContext绑定和异常处理
         /// </summary>
-        protected virtual async void AutoAttachToken(CommandContext ExecutionContext)
+        /// <summary>
+        /// 自动将访问令牌附加到命令上下文中
+        /// </summary>
+        /// <param name="executionContext">命令执行上下文，不能为空</param>
+        /// <exception cref="Exception">附加令牌过程中发生的任何异常都将被捕获并记录</exception>
+        protected virtual async Task AutoAttachTokenAsync(CommandContext executionContext)
         {
             try
             {
-                // 检查TokenManager是否可用
-                if (tokenManager == null)
-                {
-                    return;
-                }
-                // 简化版：使用依赖注入的TokenManager
+                // 使用null条件运算符简化检查
+                if (tokenManager?.TokenStorage == null) return;
+
+                // 获取令牌并验证有效性
                 var tokenInfo = await tokenManager.TokenStorage.GetTokenAsync();
-                if (tokenInfo != null && !string.IsNullOrEmpty(tokenInfo.AccessToken))
+
+                // 简化条件判断并设置访问令牌
+                if (tokenInfo?.AccessToken != null)
                 {
-
-                    // 自动设置到ExecutionContext，确保服务器端也能获取
-                    if (ExecutionContext == null)
-                        ExecutionContext = new CommandContext();
-                    ExecutionContext.Token = tokenInfo;
+                    executionContext.AccessToken = tokenInfo.AccessToken;
                 }
-
             }
             catch (Exception ex)
             {
@@ -797,7 +789,7 @@ namespace RUINORERP.UI.Network
         private bool IsResponsePacket(PacketModel packet)
         {
             // 响应包通常包含请求ID，并且是服务器对客户端请求的响应
-            return !string.IsNullOrEmpty(packet?.Request?.RequestId) &&
+            return !string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId) &&
                    packet.Direction == PacketDirection.Response;
         }
 
@@ -810,7 +802,7 @@ namespace RUINORERP.UI.Network
         {
             // 服务器主动推送的命令通常没有请求ID，或者方向为推送
             return packet.Direction == PacketDirection.ServerToClient ||
-                   string.IsNullOrEmpty(packet?.Request?.RequestId);
+                   string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId);
         }
 
         /// <summary>
@@ -822,7 +814,7 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                var requestId = packet?.Request?.RequestId;
+                var requestId = packet?.ExecutionContext?.RequestId;
                 if (string.IsNullOrEmpty(requestId))
                     return false;
 
@@ -931,8 +923,8 @@ namespace RUINORERP.UI.Network
             IRetryStrategy retryStrategy = null,
             CancellationToken ct = default,
             int timeoutMs = 30000)
-            where TRequest : class, IRequest
-            where TResponse : class, IResponse
+            where TRequest : RequestBase
+            where TResponse : ResponseBase
         {
             if (!Enum.IsDefined(typeof(CommandCategory), commandId.Category))
                 throw new ArgumentException($"无效的命令类别: {commandId.Category}", commandId.Name);
@@ -1002,7 +994,7 @@ namespace RUINORERP.UI.Network
         /// <returns>TResponse</returns>
         public async Task<PacketModel> SendCommandAsync(
             CommandId commandId,
-             IRequest request,
+             RequestBase request,
             CancellationToken ct = default,
             int timeoutMs = 30000)
         {
@@ -1014,7 +1006,7 @@ namespace RUINORERP.UI.Network
                 try
                 {
                     // BaseCommand会自动处理Token管理，包括获取和刷新Token
-                    return await SendRequestAsync<IRequest, IResponse>(commandId, request, ct, timeoutMs);
+                    return await SendRequestAsync<RequestBase, ResponseBase>(commandId, request, ct, timeoutMs);
                 }
                 catch (Exception ex) when (ex.Message.IndexOf("token expired", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    ex.Message.IndexOf("unauthorized", StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -1335,7 +1327,7 @@ namespace RUINORERP.UI.Network
             int timeoutMs,
             CancellationToken ct,
             string authToken = null)
-            where TRequest : class, IRequest
+            where TRequest : RequestBase
         {
             ct.ThrowIfCancellationRequested();
             try
@@ -1343,21 +1335,23 @@ namespace RUINORERP.UI.Network
                 // 构建数据包
                 var packet = PacketBuilder.Create()
                     .WithDirection(PacketDirection.Request) // 明确设置请求方向
-                    .WithRequest(request)
-                    .WithRequestId(request.RequestId)//冗余的。
                     .WithTimeout(timeoutMs)
+                    .WithRequest(request)
                     .Build();
 
                 // 自动设置到ExecutionContext，确保服务器端也能获取
                 if (packet.ExecutionContext == null)
                     packet.ExecutionContext = new CommandContext();
-
+                packet.ExecutionContext.AccessToken = authToken;
+                packet.ExecutionContext.RequestId = request.RequestId;
                 packet.CommandId = commandId;
                 packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;
                 packet.ExecutionContext.UserId = MainForm.Instance.AppContext.CurrentUser.UserID;
 
+                await AutoAttachTokenAsync(packet.ExecutionContext);
+
                 // 序列化和加密数据包
-                var payload = UnifiedSerializationService.SerializeWithMessagePack<PacketModel>(packet);
+                var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
                 var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, payload);
                 var encrypted = UnifiedEncryptionProtocol.EncryptClientDataToServer(original);
 
@@ -1396,7 +1390,7 @@ namespace RUINORERP.UI.Network
         /// <param name="ct">取消令牌</param>
         /// <returns>发送成功返回true，失败返回false</returns>
         public async Task<bool> SendOneWayCommandAsync<TRequest>(CommandId commandId, TRequest request, CancellationToken ct = default)
-              where TRequest : class, IRequest
+              where TRequest : RequestBase
         {
             try
             {
@@ -1625,10 +1619,10 @@ namespace RUINORERP.UI.Network
         /// <returns>包含指令信息的响应数据</returns>
         public async Task<TResponse> SendCommandWithResponseAsync<TResponse>(
             CommandId commandId,
-                   IRequest request,
+                   RequestBase request,
             CancellationToken ct = default,
             int timeoutMs = 30000)
-            where TResponse : class, IResponse
+            where TResponse :  ResponseBase
         {
             try
             {

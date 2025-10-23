@@ -5,7 +5,7 @@ using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Requests;
-using MessagePack;
+using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using System.Net.Sockets;
 using RUINORERP.PacketSpec.Serialization;
@@ -20,19 +20,19 @@ namespace RUINORERP.PacketSpec.Models.Core
     /// 职责：包头、加密、压缩、序列化等网络传输相关属性
     /// 不包含任何业务逻辑或业务属性
     /// </summary>
-    [MessagePackObject]
+    [JsonObject]
     public class PacketModel : ITimestamped
     {
 
         // 简单的命令标识（不包含业务逻辑）
         //命令类型
-        [Key(1)]
+        [JsonProperty(Order=1)]
         public CommandId CommandId { get; set; }
 
         /// <summary>
         /// 数据包状态
         /// </summary>
-        [Key(2)]
+        [JsonProperty(Order=2)]
         public PacketStatus Status { get; set; }
 
         #region 网络传输属性
@@ -41,20 +41,15 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 数据包唯一标识符
         /// </summary>
         // 网络标识
-        [Key(3)]
+        [JsonProperty(Order=3)]
         public string PacketId { get; set; }
 
-         
-        /// <summary>
-        /// 校验和
-        /// </summary>
-        [IgnoreMember]
-        public string Checksum => ComputeHash();
+
 
         /// <summary>
         /// 数据包方向
         /// </summary>
-        [Key(4)]
+        [JsonProperty(Order=4)]
         public PacketDirection Direction { get; set; }
 
         /// <summary>
@@ -67,7 +62,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// 命令执行上下文 - 网络传输层使用
         /// 包含会话、认证、追踪等基础设施信息
         /// </summary>
-        [Key(5)]
+        [JsonProperty(Order=5)]
         public CommandContext ExecutionContext { get; set; }
 
         /// <summary>
@@ -84,25 +79,7 @@ namespace RUINORERP.PacketSpec.Models.Core
                 ExecutionContext.SessionId = value;
             }
         }
-
-
-
-        /// <summary>
-        /// 认证Token（通过ExecutionContext获取）
-        /// </summary>
-        [IgnoreMember]
-        public string Token
-        {
-            get => ExecutionContext?.Token?.AccessToken;
-            set
-            {
-                if (ExecutionContext == null)
-                    ExecutionContext = new CommandContext();
-                if (ExecutionContext.Token == null)
-                    ExecutionContext.Token = new Commands.Authentication.TokenInfo();
-                ExecutionContext.Token.AccessToken = value;
-            }
-        }
+    
 
         #endregion
 
@@ -115,7 +92,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <returns>创建的数据包</returns>
         public static PacketModel Create<TData>(CommandId commandId, TData data)
         {
-            if (commandId.OperationCode ==0)
+            if (commandId.OperationCode == 0)
                 throw new ArgumentNullException(nameof(commandId), "命令标识符不能为空");
 
             return new PacketModel
@@ -132,7 +109,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <param name="commandId">命令标识符</param>
         /// <param name="request">请求对象</param>
         /// <returns>创建的数据包</returns>
-        public static PacketModel CreateFromRequest<TRequest>(CommandId commandId, TRequest request) where TRequest : IRequest
+        public static PacketModel CreateFromRequest<TRequest>(CommandId commandId, TRequest request) where TRequest : RequestBase
         {
             var packet = Create(commandId, request);
             packet.Request = request;
@@ -144,31 +121,31 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// <summary>
         /// 创建时间（UTC时间）
         /// </summary>
-        [Key(6)]
+        [JsonProperty(Order=6)]
         public DateTime CreatedTime { get; set; }
 
         /// <summary>
         /// 时间戳（UTC时间）
         /// 记录对象的当前状态时间点，会随着对象状态变化而更新
         /// </summary>
-        [Key(7)]
+        [JsonProperty(Order=7)]
         public DateTime TimestampUtc { get; set; }
 
 
         /// <summary>
         /// 请求模型
         /// </summary>
-        [Key(8)]
-        public IRequest Request { get; set; }
+        [JsonProperty(Order=8)]
+        public RequestBase Request { get; set; }
 
 
         /// <summary>
         /// 响应模型
         /// </summary>
-        [Key(9)]
-        public IResponse Response { get; set; }
+        [JsonProperty(Order=9)]
+        public ResponseBase Response { get; set; }
 
-        [Key(10)]
+        [JsonProperty(Order=10)]
         public PacketPriority PacketPriority { get; set; }
         /// <summary>
         /// 验证模型有效性（实现 ICoreEntity 接口）
@@ -208,8 +185,8 @@ namespace RUINORERP.PacketSpec.Models.Core
             // CommandData = Array.Empty<byte>();
         }
 
- 
- 
+
+
 
         #endregion
 
@@ -223,9 +200,9 @@ namespace RUINORERP.PacketSpec.Models.Core
             if (ExecutionContext != null)
             {
                 ExecutionContext.SessionId = null;
-                if (ExecutionContext.Token != null)
+                if (ExecutionContext.AccessToken != null)
                 {
-                    ExecutionContext.Token.AccessToken = null;
+                    ExecutionContext.AccessToken = null;
                 }
             }
 
@@ -241,23 +218,8 @@ namespace RUINORERP.PacketSpec.Models.Core
             }
         }
 
-        /// <summary>
-        /// 设置Token
-        /// </summary>
-        /// <param name="token">认证Token</param>
-        public void SetToken(string token)
-        {
-            Token = token;
-        }
 
-        /// <summary>
-        /// 获取Token
-        /// </summary>
-        /// <returns>认证Token</returns>
-        public string GetToken()
-        {
-            return Token;
-        }
+
 
         #region 扩展数据存储方法
 
@@ -326,16 +288,16 @@ namespace RUINORERP.PacketSpec.Models.Core
             return $"Packet[Id:{PacketId}, Direction:{Direction}, Flag:{Flag}, Version:{Version}, MessageType:{MessageType}]";
         }
 
- 
 
-    
 
- 
+
+
+
 
 
         #endregion
 
-     
+
         public PacketModel Clone()
         {
             return new PacketModel
@@ -384,3 +346,6 @@ namespace RUINORERP.PacketSpec.Models.Core
         }
     }
 }
+
+
+

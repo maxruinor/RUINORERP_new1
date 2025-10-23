@@ -1,4 +1,4 @@
-using MessagePack;
+using Newtonsoft.Json;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 
@@ -7,30 +7,29 @@ namespace RUINORERP.PacketSpec.Models.Responses.Authentication
     /// <summary>
     /// 登出响应 - 表示用户退出系统的结果
     /// </summary>
-    [MessagePackObject]
+    [JsonObject]
     public class LogoutResponse : ResponseBase
     {
         /// <summary>
         /// 用户ID
         /// </summary>
-        [Key(10)]
+        [JsonProperty(Order=10)]
         public long UserId { get; set; }
 
         /// <summary>
         /// 登出时间
         /// </summary>
-        [Key(11)]
+        [JsonProperty(Order=11)]
         public DateTime LogoutTime { get; set; }
 
         /// <summary>
         /// 会话ID
         /// </summary>
-        [Key(12)]
+        [JsonProperty(Order=12)]
         public string SessionId { get; set; }
 
         /// <summary>
-        /// 构造函数
-        /// </summary>
+        /// 构造函�?        /// </summary>
         public LogoutResponse()
         {
             LogoutTime = DateTime.Now;
@@ -41,7 +40,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Authentication
         /// </summary>
         /// <param name="userId">用户ID</param>
         /// <param name="sessionId">会话ID</param>
-        /// <returns>成功的响应实例</returns>
+        /// <returns>成功的响应实�?/returns>
         public static LogoutResponse Success(long userId, string sessionId)
         {
             return new LogoutResponse
@@ -58,9 +57,9 @@ namespace RUINORERP.PacketSpec.Models.Responses.Authentication
         /// <summary>
         /// 创建失败响应
         /// </summary>
-        /// <param name="errorCode">错误码</param>
+        /// <param name="errorCode">错误�?/param>
         /// <param name="errorMessage">错误消息</param>
-        /// <returns>失败的响应实例</returns>
+        /// <returns>失败的响应实�?/returns>
         public static LogoutResponse Fail(int errorCode, string errorMessage)
         {
             return new LogoutResponse
@@ -73,3 +72,5 @@ namespace RUINORERP.PacketSpec.Models.Responses.Authentication
         }
     }
 }
+
+

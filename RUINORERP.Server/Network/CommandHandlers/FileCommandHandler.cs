@@ -51,7 +51,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数
         /// </summary>
-        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -93,7 +93,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理文件上传
         /// </summary>
-        private async Task<IResponse> HandleFileUploadAsync(FileUploadRequest uploadRequest, CommandContext executionContext, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleFileUploadAsync(FileUploadRequest uploadRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -126,7 +126,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理文件下载
         /// </summary>
-        private async Task<IResponse> HandleFileDownloadAsync(FileDownloadRequest downloadRequest, CommandContext executionContext, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleFileDownloadAsync(FileDownloadRequest downloadRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -171,7 +171,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理文件删除
         /// </summary>
-        private async Task<IResponse> HandleFileDeleteAsync(FileDeleteRequest deleteRequest, CommandContext executionContext, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleFileDeleteAsync(FileDeleteRequest deleteRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -217,7 +217,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理文件列表
         /// </summary>
-        private async Task<IResponse> HandleFileListAsync(FileListRequest listRequest, CommandContext executionContext, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleFileListAsync(FileListRequest listRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -253,7 +253,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理文件信息查询
         /// </summary>
-        private async Task<IResponse> HandleFileInfoAsync(FileInfoRequest infoRequest, CommandContext executionContext, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleFileInfoAsync(FileInfoRequest infoRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -297,7 +297,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 创建统一的异常响应
         /// </summary>
-        private IResponse CreateExceptionResponse(Exception ex, string errorCode)
+        private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
         {
             return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}")
                 .WithMetadata("ErrorCode", errorCode)

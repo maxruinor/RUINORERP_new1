@@ -54,7 +54,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 核心处理方法，根据命令类型分发到对应的处理函数
         /// </summary>
-        protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        protected override async Task<ResponseBase> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -95,7 +95,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理电脑状态查询命令
         /// </summary>
-        private async Task<IResponse> HandleComputerStatusAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleComputerStatusAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -149,7 +149,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理关闭电脑命令
         /// </summary>
-        private async Task<IResponse> HandleShutdownComputerAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleShutdownComputerAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -204,7 +204,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 处理退出系统命令
         /// </summary>
-        private async Task<IResponse> HandleExitSystemAsync(QueuedCommand cmd, CancellationToken cancellationToken)
+        private async Task<ResponseBase> HandleExitSystemAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
             try
             {
@@ -286,7 +286,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             string sessionId, 
             CommandId commandId, 
             IRequest request, 
-            CancellationToken cancellationToken) where T : class, IResponse
+            CancellationToken cancellationToken) where T :  ResponseBase
         {
             // 这里需要实现实际的客户端通信逻辑
             // 由于这是一个示例，我们返回一个模拟的响应
@@ -316,7 +316,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 创建统一的异常响应
         /// </summary>
-        private IResponse CreateExceptionResponse(Exception ex, string errorCode)
+        private ResponseBase CreateExceptionResponse(Exception ex, string errorCode)
         {
             return ResponseBase.CreateError($"[{ex.GetType().Name}] {ex.Message}")
                 .WithMetadata("ErrorCode", errorCode)

@@ -74,6 +74,8 @@ using RUINORERP.Server.Comm;
 using WorkflowCore.Interface;
 using RUINORERP.Server.Controls;
 using RUINORERP.Business.Cache;
+using RUINORERP.PacketSpec.Serialization;
+using System.Reflection;
 
 namespace RUINORERP.Server
 {
@@ -599,7 +601,43 @@ namespace RUINORERP.Server
         {
             // 初始化界面
             InitializeUI();
+
+            Initialize();
         }
+
+        #region 注册缓存用的类型
+
+
+        public static void Initialize()
+        {
+            // 预注册常用类型
+            TypeResolver.PreRegisterCommonTypes();
+
+            // 注册当前程序集中的所有类型
+            Assembly.GetExecutingAssembly().RegisterAllTypesFromAssembly();
+
+            // 注册其他相关程序集
+            var relatedAssemblies = new[]
+            {
+            "RUINORERP.PacketSpec",
+            "RUINORERP.Model",
+        };
+
+            foreach (var assemblyName in relatedAssemblies)
+            {
+                try
+                {
+                    var assembly = Assembly.Load(assemblyName);
+                    assembly.RegisterAllTypesFromAssembly();
+                }
+                catch
+                {
+                    // 忽略加载失败的程序集
+                }
+            }
+        }
+
+        #endregion
 
         private void InitializeUI()
         {

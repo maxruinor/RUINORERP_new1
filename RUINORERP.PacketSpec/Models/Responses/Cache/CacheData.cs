@@ -1,4 +1,4 @@
-﻿using MessagePack;
+using MessagePack;
 using Newtonsoft.Json.Linq;
 using RUINORERP.PacketSpec.Serialization;
 using System;
@@ -22,12 +22,15 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
 
 
         /// <summary>
-        /// 表实体类型
+        /// 获取实体类型
         /// </summary>
-        [Key(18)]
-        public Type EntityType { get; set; }
+        [IgnoreMember]
+        public Type EntityType => TypeResolver.GetType(EntityTypeName);
 
-  
+        [Key(18)]
+        public string EntityTypeName { get; set; }
+
+
         /// <summary>
         /// 二进制数据
         /// </summary>
@@ -64,6 +67,21 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
         /// <summary>
         /// 创建缓存数据
         /// </summary>
+        public static CacheData Create<T>(string tableName, T data, TimeSpan? expiration = null) where T : class
+        {
+            return new CacheData
+            {
+                TableName = tableName,
+                EntityByte = UnifiedSerializationService.SerializeWithMessagePack(data),
+                EntityTypeName = typeof(T).AssemblyQualifiedName, // 使用程序集限定名称
+                CacheTime = DateTime.Now,
+                ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1))
+            };
+        }
+
+        /// <summary>
+        /// 创建缓存数据
+        /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="data">实体数据</param>
         public static CacheData Create(string tableName, object data, TimeSpan? expiration = null)
@@ -71,8 +89,8 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
             return new CacheData
             {
                 TableName = tableName,
-                EntityByte = UnifiedSerializationService.SerializeWithTypeInfo(data),
-                EntityType = data.GetType(),
+                EntityByte = UnifiedSerializationService.SafeSerializeWithMessagePack(data),
+                EntityTypeName = data.GetType().AssemblyQualifiedName,
                 CacheTime = DateTime.Now,
                 ExpirationTime = DateTime.Now.Add(expiration ?? TimeSpan.FromDays(1)),
                 Version = "1.0.0"
@@ -104,6 +122,49 @@ namespace RUINORERP.PacketSpec.Models.Responses.Cache
                 return default;
             }
         }
+
+        /// <summary>
+        /// 动态获取数据（高性能版本）
+        /// </summary>
+        public object GetData()
+        {
+            if (EntityByte == null || string.IsNullOrEmpty(EntityTypeName))
+                return null;
+
+            var type = TypeResolver.GetType(EntityTypeName);
+            if (type == null) return null;
+
+            try
+            {
+                // 使用反射调用泛型反序列化方法
+                var method = typeof(UnifiedSerializationService).GetMethod("DeserializeWithMessagePack");
+                var genericMethod = method.MakeGenericMethod(type);
+                return genericMethod.Invoke(null, new object[] { EntityByte });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"动态反序列化失败: {EntityTypeName}, 错误: {ex.Message}");
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// 安全获取数据，带类型验证
+        /// </summary>
+        public T GetDataSafe<T>() where T : class
+        {
+            var entityType = EntityType;
+            if (entityType == null || !typeof(T).IsAssignableFrom(entityType))
+            {
+                System.Diagnostics.Debug.WriteLine($"类型不匹配: 期望 {typeof(T).Name}, 实际 {entityType?.Name}");
+                return default(T);
+            }
+
+            return UnifiedSerializationService.DeserializeWithMessagePack<T>(EntityByte);
+        }
+
+
     }
 
     /// <summary>

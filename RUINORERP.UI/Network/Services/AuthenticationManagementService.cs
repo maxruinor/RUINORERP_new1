@@ -8,6 +8,7 @@ using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
 using static RUINORERP.PacketSpec.Models.Requests.SystemCommandRequest;
 using RUINORERP.UI.Network;
+using RUINORERP.PacketSpec.Models.Responses.Message;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -89,7 +90,7 @@ namespace RUINORERP.UI.Network.Services
                 // 模拟异步处理
                 await Task.Delay(100);
 
-                var response = new ResponseBase
+                var response = new MessageResponse
                 {
                     IsSuccess = true,
                     Message = "已收到强制下线通知"

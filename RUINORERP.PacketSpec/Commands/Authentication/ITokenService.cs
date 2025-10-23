@@ -1,59 +1,58 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RUINORERP.PacketSpec.Commands.Authentication
 {
+    /// <summary>
+    /// 令牌服务接口
+    /// 定义令牌的生成、验证、刷新和撤销功能
+    /// </summary>
     public interface ITokenService
     {
         /// <summary>
-        /// 生成Token
+        /// 生成JWT令牌
         /// </summary>
         /// <param name="userId">用户ID</param>
         /// <param name="userName">用户名</param>
-        /// <param name="additionalClaims">附加声明</param>
-        /// <returns>生成的Token</returns>
+        /// <param name="additionalClaims">附加声明（可选）</param>
+        /// <returns>生成的JWT令牌字符串</returns>
         string GenerateToken(string userId, string userName, IDictionary<string, object> additionalClaims = null);
 
         /// <summary>
-        /// 验证Token
+        /// 验证JWT令牌
         /// </summary>
-        /// <param name="token">要验证的Token</param>
-        /// <returns>Token验证结果</returns>
+        /// <param name="token">要验证的令牌</param>
+        /// <returns>令牌验证结果</returns>
         TokenValidationResult ValidateToken(string token);
 
         /// <summary>
-        /// 刷新Token - 增强版支持可选的当前Token验证
+        /// 刷新JWT令牌
         /// </summary>
-        /// <param name="refreshToken">刷新Token</param>
-        /// <param name="currentToken">当前访问Token（可选，用于验证用户身份）</param>
-        /// <returns>新的访问Token</returns>
+        /// <param name="refreshToken">刷新令牌</param>
+        /// <param name="currentToken">当前访问令牌（可选，用于额外验证）</param>
+        /// <returns>新生成的访问令牌</returns>
         string RefreshToken(string refreshToken, string currentToken = null);
 
         /// <summary>
-        /// 撤销Token
+        /// 撤销令牌
         /// </summary>
-        /// <param name="token">要撤销的Token</param>
+        /// <param name="token">要撤销的令牌</param>
         void RevokeToken(string token);
 
         /// <summary>
-        /// 异步验证Token - 合并自TokenValidationService
+        /// 异步验证JWT令牌
         /// </summary>
-        /// <param name="token">要验证的Token</param>
-        /// <returns>验证结果</returns>
+        /// <param name="token">要验证的令牌</param>
+        /// <returns>令牌验证结果</returns>
         Task<TokenValidationResult> ValidateTokenAsync(string token);
 
         /// <summary>
-        /// 检查Token是否即将过期 - 合并自TokenValidationService
+        /// 检查令牌是否即将过期
         /// </summary>
-        /// <param name="token">要检查的Token</param>
-        /// <param name="thresholdMinutes">过期阈值（分钟）</param>
-        /// <returns>检查结果</returns>
+        /// <param name="token">要检查的令牌</param>
+        /// <param name="thresholdMinutes">过期阈值（分钟），默认5分钟</param>
+        /// <returns>包含是否即将过期和剩余有效秒数的元组</returns>
         Task<(bool isExpiringSoon, int expiresInSeconds)> CheckTokenExpiryAsync(string token, int thresholdMinutes = 5);
     }
-
-
-
-
 }

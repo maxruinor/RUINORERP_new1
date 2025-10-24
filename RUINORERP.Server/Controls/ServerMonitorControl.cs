@@ -23,6 +23,7 @@ namespace RUINORERP.Server.Controls
         private readonly DiagnosticsService _diagnosticsService;
         private readonly PerformanceMonitoringService _performanceMonitoringService;
         private readonly ErrorAnalysisService _errorAnalysisService;
+        private readonly CircuitBreakerMetrics _circuitBreakerMetrics;
         private readonly System.Windows.Forms.Timer _refreshTimer;
         
         // 用于控制刷新频率的字段
@@ -45,6 +46,7 @@ namespace RUINORERP.Server.Controls
             _diagnosticsService = Startup.GetFromFac<DiagnosticsService>();
             _performanceMonitoringService = Startup.GetFromFac<PerformanceMonitoringService>();
             _errorAnalysisService = Startup.GetFromFac<ErrorAnalysisService>();
+            _circuitBreakerMetrics = Startup.GetFromFac<CircuitBreakerMetrics>();
             
             // 初始化定时器
             _refreshTimer = new System.Windows.Forms.Timer();
@@ -75,6 +77,7 @@ namespace RUINORERP.Server.Controls
             _diagnosticsService = Startup.GetFromFac<DiagnosticsService>();
             _performanceMonitoringService = Startup.GetFromFac<PerformanceMonitoringService>();
             _errorAnalysisService = Startup.GetFromFac<ErrorAnalysisService>();
+            _circuitBreakerMetrics = Startup.GetFromFac<CircuitBreakerMetrics>();
             
             // 初始化定时器
             _refreshTimer = new System.Windows.Forms.Timer();
@@ -135,7 +138,10 @@ namespace RUINORERP.Server.Controls
                 UpdateSystemHealth();
                 
                 // 更新实时监控数据
-                UpdateRealTimeData();
+            UpdateRealTimeData();
+            
+            // 更新熔断器监控数据
+            UpdateCircuitBreakerMetrics();
             }
             catch (Exception ex)
             {
@@ -335,7 +341,7 @@ namespace RUINORERP.Server.Controls
                 lblHealthStatusValue.ForeColor = healthStatus.IsHealthy ? Color.Green : Color.Red;
                 
                 // 更新成功率显示
-                lblSuccessRateValue.Text = $"{healthStatus.SuccessRate:F2}%";
+                cbLblSuccessRateValue.Text = $"{healthStatus.SuccessRate:F2}%";
                 
                 // 更新命令统计显示
                 lblTotalCommandsValue.Text = healthStatus.TotalCommands.ToString();
@@ -465,6 +471,91 @@ namespace RUINORERP.Server.Controls
             
             reportForm.Controls.Add(textBox);
             reportForm.ShowDialog(this);
+        }
+        
+        /// <summary>
+        /// 更新熔断器监控指标
+        /// </summary>
+        private void UpdateCircuitBreakerMetrics()
+        {
+            try
+            {
+                if (_circuitBreakerMetrics == null)
+                {
+                    // 如果熔断器指标对象为null，显示默认值
+                cbLblStatusValue.Text = "未初始化";
+                cbLblTotalRequestsValue.Text = "0";
+                cbLblSuccessRateValue.Text = "N/A";
+                cbLblFailedRequestsValue.Text = "0";
+                cbLblStateChangesValue.Text = "0";
+                cbLblAvgResponseTimeValue.Text = "N/A";
+                    return;
+                }
+                
+                // 获取全局熔断器指标
+                var globalMetrics = _circuitBreakerMetrics.GlobalMetrics;
+                
+                // 直接从_circuitBreakerMetrics获取状态
+                string circuitState = _circuitBreakerMetrics.CurrentState.ToString();
+                cbLblStatusValue.Text = circuitState;
+                
+                // 根据状态设置颜色
+                switch (circuitState)
+                {
+                    case "Closed":
+                        cbLblStatusValue.Text = "关闭";
+                        cbLblStatusValue.ForeColor = Color.Green;
+                        break;
+                    case "Open":
+                        cbLblStatusValue.Text = "开启";
+                        cbLblStatusValue.ForeColor = Color.Red;
+                        break;
+                    case "HalfOpen":
+                        cbLblStatusValue.Text = "半开";
+                        cbLblStatusValue.ForeColor = Color.Orange;
+                        break;
+                    default:
+                        cbLblStatusValue.ForeColor = Color.Black;
+                        break;
+                }
+                
+                // 更新总请求数
+                cbLblTotalRequestsValue.Text = globalMetrics.TotalRequests.ToString();
+                
+                // 更新成功率
+                if (globalMetrics.TotalRequests > 0)
+                {
+                    double successRate = (double)globalMetrics.SuccessfulRequests / globalMetrics.TotalRequests * 100;
+                    cbLblSuccessRateValue.Text = $"{successRate:F2}%";
+                }
+                else
+                {
+                    cbLblSuccessRateValue.Text = "100%";
+                }
+                
+                // 更新失败请求数
+                cbLblFailedRequestsValue.Text = globalMetrics.FailedRequests.ToString();
+                
+                // 更新状态变化次数
+                cbLblStateChangesValue.Text = globalMetrics.StateChanges.ToString();
+                
+                // 更新平均响应时间
+                if (globalMetrics.AverageExecutionTimeMs > 0)
+                {
+                    cbLblAvgResponseTimeValue.Text = $"{globalMetrics.AverageExecutionTimeMs:F2}ms";
+                }
+                else
+                {
+                    cbLblAvgResponseTimeValue.Text = "0ms";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"更新熔断器监控指标时出错: {ex.Message}");
+                // 在UI上显示错误状态
+                cbLblStatusValue.Text = "数据获取失败";
+                cbLblStatusValue.ForeColor = Color.Red;
+            }
         }
     }
 }

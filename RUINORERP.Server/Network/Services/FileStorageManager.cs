@@ -11,6 +11,7 @@ using RUINORERP.Server.Network.Models;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.Server.Network.Interfaces.Services;
 using StackExchange.Redis;
+using RUINORERP.PacketSpec.Models;
 
 namespace RUINORERP.Server.Network.Services
 {
@@ -214,8 +215,16 @@ namespace RUINORERP.Server.Network.Services
         /// <returns>存储使用信息</returns>
         public async Task<StorageUsageInfo> GetStorageUsageAsync()
         {
-            var usageInfo = new StorageUsageInfo();
-
+            // 初始化响应数据
+            var data = new StorageUsageInfoData
+            {
+                CategoryUsage = new Dictionary<string, CategoryUsage>(),
+                TotalSize = 0,
+                TotalFileCount = 0
+            };
+            
+            var usageInfo = new StorageUsageInfo(true, "获取存储使用信息成功", data);
+            
             try
             {
                 var categories = new[] { "Expenses", "Products", "Payments", "Manuals", "Templates", "Temp" };
@@ -230,31 +239,23 @@ namespace RUINORERP.Server.Network.Services
                         var files = Directory.GetFiles(fullPath, "*.*", SearchOption.AllDirectories);
                         var totalSize = files.Sum(file => new FileStorageInfo(file).Size);
 
-                        usageInfo.CategoryUsage[category] = new CategoryUsage
+                        usageInfo.Data.CategoryUsage[category] = new CategoryUsage
                         {
                             FileCount = files.Length,
                             TotalSize = totalSize
                         };
 
-                        usageInfo.TotalFiles += files.Length;
-                        usageInfo.TotalSize += totalSize;
+                        usageInfo.Data.TotalFileCount += files.Length;
+                        usageInfo.Data.TotalSize += totalSize;
                     }
                     else
                     {
-                        usageInfo.CategoryUsage[category] = new CategoryUsage
+                        usageInfo.Data.CategoryUsage[category] = new CategoryUsage
                         {
                             FileCount = 0,
                             TotalSize = 0
                         };
                     }
-                }
-
-                // 获取Redis中的文件统计
-                var redisStats = await _redisDb.ExecuteAsync("INFO", "keyspace");
-                if (redisStats != null)
-                {
-                    //TODO by watson
-                    usageInfo.RedisKeyCount = 0;// await _redisDb.ExecuteAsync("DBSIZE") as long? ?? 0;
                 }
 
                 return usageInfo;
@@ -410,23 +411,7 @@ namespace RUINORERP.Server.Network.Services
         #endregion
     }
 
-    /// <summary>
-    /// 存储使用信息
-    /// </summary>
-    public class StorageUsageInfo
-    {
-        public long TotalFiles { get; set; }
-        public long TotalSize { get; set; }
-        public long RedisKeyCount { get; set; }
-        public Dictionary<string, CategoryUsage> CategoryUsage { get; set; } = new Dictionary<string, CategoryUsage>();
-    }
+    
 
-    /// <summary>
-    /// 分类使用信息
-    /// </summary>
-    public class CategoryUsage
-    {
-        public int FileCount { get; set; }
-        public long TotalSize { get; set; }
-    }
+     
 }

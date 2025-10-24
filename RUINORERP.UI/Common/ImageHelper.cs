@@ -616,7 +616,7 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static byte[] imageToByteArray(Image imageIn)
+        public static byte[] ImageToByteArray(Image imageIn)
         {
             MemoryStream ms = new MemoryStream();
             imageIn.Save(ms, ImageFormat.Gif);

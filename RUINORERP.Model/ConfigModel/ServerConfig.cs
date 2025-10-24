@@ -73,8 +73,8 @@ namespace RUINORERP.Model.ConfigModel
         #region 文件存储配置
         [JsonProperty("FileStoragePath")]
         [Category("文件存储设置")]
-        [Description("服务器文件存储位置，用于保存上传的图片等文件，建议不要设置为程序运行目录")]
-        public string FileStoragePath { get; set; } = "D:\\RUINORERP\\FileStorage";
+        [Description("服务器文件存储位置，用于保存上传的图片等文件，建议不要设置为程序运行目录。支持使用环境变量，格式: %ENV_VAR%\\path")]
+        public string FileStoragePath { get; set; } = "%APPDATA%\\RUINORERP\\FileStorage";
 
         [JsonProperty("MaxFileSizeMB")]
         [Category("文件存储设置")]
@@ -86,6 +86,23 @@ namespace RUINORERP.Model.ConfigModel
         [Category("其他设置")]
         [Description("通用配置设置")]
         public string SomeSetting { get; set; } = "";
+        #endregion
+        
+        #region 文件分类配置
+        [JsonProperty("PaymentVoucherPath")]
+        [Category("文件分类设置")]
+        [Description("付款凭证文件存储路径")]
+        public string PaymentVoucherPath { get; set; } = "PaymentVouchers";
+        
+        [JsonProperty("ProductImagePath")]
+        [Category("文件分类设置")]
+        [Description("产品图片文件存储路径")]
+        public string ProductImagePath { get; set; } = "ProductImages";
+        
+        [JsonProperty("BOMManualPath")]
+        [Category("文件分类设置")]
+        [Description("BOM配方手册文件存储路径")]
+        public string BOMManualPath { get; set; } = "BOMManuals";
         #endregion
     }
 }

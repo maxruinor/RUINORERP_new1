@@ -260,6 +260,7 @@
             this.magicPictureBox1.AllowDrop = true;
             this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.magicPictureBox1.Location = new System.Drawing.Point(927, 145);
+            this.magicPictureBox1.MultiImageSupport = true; // 启用多图片支持
             this.magicPictureBox1.Name = "magicPictureBox1";
             this.magicPictureBox1.RowImage = ((RUINORERP.Global.Model.DataRowImage)(resources.GetObject("magicPictureBox1.RowImage")));
             this.magicPictureBox1.Size = new System.Drawing.Size(178, 95);

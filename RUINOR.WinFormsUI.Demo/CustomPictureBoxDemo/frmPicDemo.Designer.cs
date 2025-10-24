@@ -29,16 +29,31 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmPicDemo));
+            this.ucMagicPictrueBoxes1 = new RUINOR.WinFormsUI.CustomPictureBox.UCMagicPictrueBoxes();
             this.magicPictureBox1 = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).BeginInit();
             this.SuspendLayout();
+            // 
+            // ucMagicPictrueBoxes1
+            // 
+            this.ucMagicPictrueBoxes1.AllowUpload = true;
+            this.ucMagicPictrueBoxes1.ImagePaths = "";
+            this.ucMagicPictrueBoxes1.Location = new System.Drawing.Point(510, 12);
+            this.ucMagicPictrueBoxes1.MaxImageCount = 10;
+            this.ucMagicPictrueBoxes1.Name = "ucMagicPictrueBoxes1";
+            this.ucMagicPictrueBoxes1.Size = new System.Drawing.Size(387, 426);
+            this.ucMagicPictrueBoxes1.TabIndex = 1;
             // 
             // magicPictureBox1
             // 
             this.magicPictureBox1.AllowDrop = true;
             this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.magicPictureBox1.ImagePaths = "";
             this.magicPictureBox1.Location = new System.Drawing.Point(12, 12);
+            this.magicPictureBox1.MultiImageSupport = true;
             this.magicPictureBox1.Name = "magicPictureBox1";
+            this.magicPictureBox1.RowImage = ((RUINORERP.Global.Model.DataRowImage)(resources.GetObject("magicPictureBox1.RowImage")));
             this.magicPictureBox1.Size = new System.Drawing.Size(469, 426);
             this.magicPictureBox1.TabIndex = 0;
             this.magicPictureBox1.TabStop = false;
@@ -47,7 +62,8 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(946, 598);
+            this.Controls.Add(this.ucMagicPictrueBoxes1);
             this.Controls.Add(this.magicPictureBox1);
             this.Name = "frmPicDemo";
             this.Text = "frmPicDemo";
@@ -59,5 +75,6 @@
         #endregion
 
         private CustomPictureBox.MagicPictureBox magicPictureBox1;
+        private CustomPictureBox.UCMagicPictrueBoxes ucMagicPictrueBoxes1;
     }
 }

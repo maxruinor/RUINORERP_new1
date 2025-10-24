@@ -250,6 +250,10 @@
       <Project>{bb1d0eac-2f97-404a-bdf3-08101553b1f2}</Project>
       <Name>RUINORERP.Extensions</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj">
+      <Project>{4838ca4a-b538-4bfd-a366-ce7b25620558}</Project>
+      <Name>RUINORERP.Global</Name>
+    </ProjectReference>
     <ProjectReference Include="..\WinLib\WinLib.csproj">
       <Project>{4346ACB3-CF7F-4797-BAE6-681E32E10FF5}</Project>
       <Name>WinLib</Name>

@@ -299,7 +299,7 @@ namespace RUINORERP.Server
             // statusStripMain
             // 
             statusStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripStatusLabelServerStatus, toolStripStatusLabelConnectionCount, toolStripStatusLabelMessage });
-            statusStripMain.Location = new System.Drawing.Point(0, 862);
+            statusStripMain.Location = new System.Drawing.Point(0, 1009);
             statusStripMain.Name = "statusStripMain";
             statusStripMain.Padding = new System.Windows.Forms.Padding(1, 0, 16, 0);
             statusStripMain.Size = new System.Drawing.Size(1167, 22);
@@ -337,7 +337,7 @@ namespace RUINORERP.Server
             // splitContainerMain.Panel2
             // 
             splitContainerMain.Panel2.Controls.Add(tabControlMain);
-            splitContainerMain.Size = new System.Drawing.Size(1167, 810);
+            splitContainerMain.Size = new System.Drawing.Size(1167, 876);
             splitContainerMain.SplitterDistance = 175;
             splitContainerMain.SplitterWidth = 5;
             splitContainerMain.TabIndex = 3;
@@ -355,12 +355,12 @@ namespace RUINORERP.Server
             panelNavigation.Location = new System.Drawing.Point(0, 0);
             panelNavigation.Margin = new System.Windows.Forms.Padding(4);
             panelNavigation.Name = "panelNavigation";
-            panelNavigation.Size = new System.Drawing.Size(175, 810);
+            panelNavigation.Size = new System.Drawing.Size(175, 876);
             panelNavigation.TabIndex = 0;
             // 
             // buttonDataViewer
             // 
-            buttonDataViewer.Location = new System.Drawing.Point(14, 425);
+            buttonDataViewer.Location = new System.Drawing.Point(13, 391);
             buttonDataViewer.Margin = new System.Windows.Forms.Padding(4);
             buttonDataViewer.Name = "buttonDataViewer";
             buttonDataViewer.Size = new System.Drawing.Size(140, 42);
@@ -371,7 +371,7 @@ namespace RUINORERP.Server
             // 
             // buttonSystemConfig
             // 
-            buttonSystemConfig.Location = new System.Drawing.Point(14, 354);
+            buttonSystemConfig.Location = new System.Drawing.Point(13, 15);
             buttonSystemConfig.Margin = new System.Windows.Forms.Padding(4);
             buttonSystemConfig.Name = "buttonSystemConfig";
             buttonSystemConfig.Size = new System.Drawing.Size(140, 42);
@@ -382,7 +382,7 @@ namespace RUINORERP.Server
             // 
             // buttonBlacklist
             // 
-            buttonBlacklist.Location = new System.Drawing.Point(14, 283);
+            buttonBlacklist.Location = new System.Drawing.Point(13, 326);
             buttonBlacklist.Margin = new System.Windows.Forms.Padding(4);
             buttonBlacklist.Name = "buttonBlacklist";
             buttonBlacklist.Size = new System.Drawing.Size(140, 42);
@@ -393,7 +393,7 @@ namespace RUINORERP.Server
             // 
             // buttonWorkflow
             // 
-            buttonWorkflow.Location = new System.Drawing.Point(14, 212);
+            buttonWorkflow.Location = new System.Drawing.Point(13, 256);
             buttonWorkflow.Margin = new System.Windows.Forms.Padding(4);
             buttonWorkflow.Name = "buttonWorkflow";
             buttonWorkflow.Size = new System.Drawing.Size(140, 42);
@@ -404,7 +404,7 @@ namespace RUINORERP.Server
             // 
             // buttonCacheManage
             // 
-            buttonCacheManage.Location = new System.Drawing.Point(14, 142);
+            buttonCacheManage.Location = new System.Drawing.Point(13, 191);
             buttonCacheManage.Margin = new System.Windows.Forms.Padding(4);
             buttonCacheManage.Name = "buttonCacheManage";
             buttonCacheManage.Size = new System.Drawing.Size(140, 42);
@@ -415,7 +415,7 @@ namespace RUINORERP.Server
             // 
             // buttonUserList
             // 
-            buttonUserList.Location = new System.Drawing.Point(14, 71);
+            buttonUserList.Location = new System.Drawing.Point(13, 131);
             buttonUserList.Margin = new System.Windows.Forms.Padding(4);
             buttonUserList.Name = "buttonUserList";
             buttonUserList.Size = new System.Drawing.Size(140, 42);
@@ -426,7 +426,7 @@ namespace RUINORERP.Server
             // 
             // buttonServerMonitor
             // 
-            buttonServerMonitor.Location = new System.Drawing.Point(14, 14);
+            buttonServerMonitor.Location = new System.Drawing.Point(13, 74);
             buttonServerMonitor.Margin = new System.Windows.Forms.Padding(4);
             buttonServerMonitor.Name = "buttonServerMonitor";
             buttonServerMonitor.Size = new System.Drawing.Size(140, 42);
@@ -442,16 +442,16 @@ namespace RUINORERP.Server
             tabControlMain.Margin = new System.Windows.Forms.Padding(4);
             tabControlMain.Name = "tabControlMain";
             tabControlMain.SelectedIndex = 0;
-            tabControlMain.Size = new System.Drawing.Size(987, 810);
+            tabControlMain.Size = new System.Drawing.Size(987, 876);
             tabControlMain.TabIndex = 0;
             // 
             // richTextBoxLog
             // 
             richTextBoxLog.Dock = System.Windows.Forms.DockStyle.Bottom;
-            richTextBoxLog.Location = new System.Drawing.Point(0, 891);
+            richTextBoxLog.Location = new System.Drawing.Point(0, 935);
             richTextBoxLog.Margin = new System.Windows.Forms.Padding(4);
             richTextBoxLog.Name = "richTextBoxLog";
-            richTextBoxLog.Size = new System.Drawing.Size(1167, 140);
+            richTextBoxLog.Size = new System.Drawing.Size(1167, 74);
             richTextBoxLog.TabIndex = 4;
             richTextBoxLog.Text = "";
             // 
@@ -459,7 +459,7 @@ namespace RUINORERP.Server
             // 
             splitterLog.BackColor = System.Drawing.Color.DarkGray;
             splitterLog.Dock = System.Windows.Forms.DockStyle.Bottom;
-            splitterLog.Location = new System.Drawing.Point(0, 884);
+            splitterLog.Location = new System.Drawing.Point(0, 928);
             splitterLog.Margin = new System.Windows.Forms.Padding(4);
             splitterLog.Name = "splitterLog";
             splitterLog.Size = new System.Drawing.Size(1167, 7);
@@ -472,11 +472,11 @@ namespace RUINORERP.Server
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1167, 1031);
             Controls.Add(splitContainerMain);
-            Controls.Add(statusStripMain);
             Controls.Add(toolStripMain);
             Controls.Add(menuStripMain);
             Controls.Add(splitterLog);
             Controls.Add(richTextBoxLog);
+            Controls.Add(statusStripMain);
             MainMenuStrip = menuStripMain;
             Margin = new System.Windows.Forms.Padding(4);
             Name = "frmMainNew";

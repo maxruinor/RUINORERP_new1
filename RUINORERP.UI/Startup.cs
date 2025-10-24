@@ -251,7 +251,7 @@ namespace RUINORERP.UI
             if (!File.Exists(globalValidatorConfigPath))
             {
                 var globalValidatorConfig = new GlobalValidatorConfig();
-                string globalValidatorConfigJson = JsonConvert.SerializeObject(globalValidatorConfig, Formatting.Indented);
+                string globalValidatorConfigJson = JsonConvert.SerializeObject(new { GlobalValidatorConfig = globalValidatorConfig }, Formatting.Indented);
                 File.WriteAllText(globalValidatorConfigPath, globalValidatorConfigJson);
             }
         }
@@ -970,7 +970,7 @@ namespace RUINORERP.UI
             if (!File.Exists(globalValidatorConfigPath))
             {
                 var globalValidatorConfig = new GlobalValidatorConfig();
-                string globalValidatorConfigJson = JsonConvert.SerializeObject(globalValidatorConfig, Formatting.Indented);
+                string globalValidatorConfigJson = JsonConvert.SerializeObject(new { GlobalValidatorConfig = globalValidatorConfig }, Formatting.Indented);
                 File.WriteAllText(globalValidatorConfigPath, globalValidatorConfigJson);
             }
             #endregion

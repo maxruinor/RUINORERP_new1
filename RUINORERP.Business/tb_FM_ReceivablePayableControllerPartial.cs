@@ -394,6 +394,8 @@ namespace RUINORERP.Business
 
 
 
+
+
         /// <summary>
         /// 来源业务单等没有。是手工建的。则不进入这里检测
         /// </summary>
@@ -464,6 +466,120 @@ namespace RUINORERP.Business
         }
 
 
+
+        /// <summary>
+        /// 检查选中的应收应付款单是否有未确认的预收付款单据
+        /// </summary>
+        /// <param name="receivablePayable">应收应付款单实体</param>
+        /// <returns>包含检查结果和未确认单据编号列表的对象</returns>
+        public async Task<BooleanWithDataListResult<string>> CheckUnconfirmedPrePaymentExists(tb_FM_ReceivablePayable receivablePayable)
+        {
+            BooleanWithDataListResult<string> result = new BooleanWithDataListResult<string>();
+            result.DataList = new List<string>();
+
+            try
+            {
+                if (receivablePayable == null)
+                {
+                    result.ErrorMsg = "无效的应收应付款单据";
+                    return result;
+                }
+
+                // 查询与当前应收应付款单相关的未审核预收款/预付款单据
+                var unconfirmedPrePayments = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                    .Where(p => p.CustomerVendor_ID == receivablePayable.CustomerVendor_ID) // 相同客户/供应商
+                    .Where(p => p.Currency_ID == receivablePayable.Currency_ID) // 相同币种
+                    .Where(p => p.ReceivePaymentType == receivablePayable.ReceivePaymentType) // 相同收付类型
+                    .Where(p => p.ApprovalStatus != (int)ApprovalStatus.已审核) // 未审核状态
+                    .Where(p => p.IsAvailable == true) // 可用状态
+                    .OrderBy(p => p.PrePayDate) // 按时间排序
+                    .ToListAsync();
+
+                if (unconfirmedPrePayments.Any())
+                {
+                    // 如果存在未确认的预收付款单据，检查是否有业务关联
+                    // 尝试通过来源单据建立关联
+                    bool hasRelatedUnconfirmed = false;
+                    List<string> unconfirmedBillNos = new List<string>();
+
+                    foreach (var prePayment in unconfirmedPrePayments)
+                    {
+                        // 检查是否有业务关联：相同的来源单据或业务流程关联
+                        bool isRelated = false;
+
+                        // 1. 检查是否有直接关联的来源单据ID
+                        if (receivablePayable.SourceBillId.HasValue && prePayment.SourceBillId.HasValue)
+                        {
+                            // 根据业务类型判断关联关系
+                            if (receivablePayable.SourceBizType == (int)BizType.销售出库单 &&
+                                prePayment.SourceBizType == (int)BizType.销售订单)
+                            {
+                                // 查询销售出库单对应的销售订单ID
+                                var saleOut = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
+                                    .Where(s => s.SaleOut_MainID == receivablePayable.SourceBillId.Value)
+                                    .FirstAsync();
+
+                                if (saleOut != null && saleOut.SOrder_ID == prePayment.SourceBillId)
+                                {
+                                    isRelated = true;
+                                }
+                            }
+                            else if (receivablePayable.SourceBizType == (int)BizType.采购入库单 &&
+                                prePayment.SourceBizType == (int)BizType.采购订单)
+                            {
+                                // 查询采购入库单对应的采购订单ID
+                                var purEntry = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntry>()
+                                    .Where(p => p.PurEntryID == receivablePayable.SourceBillId.Value)
+                                    .FirstAsync();
+
+                                if (purEntry != null && purEntry.PurOrder_ID == prePayment.SourceBillId)
+                                {
+                                    isRelated = true;
+                                }
+                            }
+                        }
+
+                        //暂时一对一去核验
+                        // 2. 如果没有直接的业务关联，但属于同一客户/供应商的未确认预收付款，也视为相关
+                        //if (!isRelated && prePayment.LocalPrepaidAmount > 0)
+                        //{
+                        //    isRelated = true;
+                        //}
+
+                        if (isRelated)
+                        {
+                            hasRelatedUnconfirmed = true;
+                            unconfirmedBillNos.Add("【"+prePayment.PreRPNO+"】");
+                        }
+                    }
+
+                    if (hasRelatedUnconfirmed)
+                    {
+                        result.DataList = unconfirmedBillNos;
+                        result.Succeeded = false;
+                        result.ErrorMsg = $"存在未确认的{(receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款 ? "预收款" : "预付款")}单：{string.Join(", ", unconfirmedBillNos)}。请先确认这些预{(receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款 ? "收款" : "付款")}单后再操作快捷收付款。";
+                        return result;
+                    }
+                }
+
+                // 没有未确认的相关预收付款单据
+                result.Succeeded = true;
+                result.DataList = new List<string>();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"检查未确认预收付款失败，应收应付款单ID: {receivablePayable.ARAPId}");
+                result.Succeeded = false;
+                result.DataList = new List<string>();
+                result.ErrorMsg = "检查未确认预收付款时发生错误：" + ex.Message;
+                return result;
+            }
+        }
+
+
+
+
         /// <summary>
         /// 维修工单中的维修物料
         /// </summary>
@@ -492,7 +608,7 @@ namespace RUINORERP.Business
             //如果部门还是没有值 则从缓存中加载,如果项目有所属部门的话
             if (payable.ProjectGroup_ID.HasValue && !payable.DepartmentID.HasValue)
             {
-                var projectgroup =MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                var projectgroup = MyCacheManager.Instance.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
                 if (projectgroup != null && projectgroup.ToString() != "System.Object")
                 {
                     if (projectgroup is tb_ProjectGroup pj)

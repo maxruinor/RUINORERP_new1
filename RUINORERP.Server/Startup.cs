@@ -115,6 +115,33 @@ namespace RUINORERP.Server
         {
 
         }
+        
+        /// <summary>
+        /// 批量确保配置文件存在，如果不存在则创建默认配置文件
+        /// </summary>
+        /// <param name="configDirectory">配置文件目录</param>
+        /// <param name="configTypes">配置类型和名称的集合</param>
+        private static void EnsureConfigFilesExist(string configDirectory, params (Type type, string name)[] configTypes)
+        {
+            foreach (var (type, name) in configTypes)
+            {
+                string configPath = Path.Combine(configDirectory, name + ".json");
+                if (!File.Exists(configPath))
+                {
+                    // 创建配置对象实例
+                    object configInstance = Activator.CreateInstance(type);
+                    
+                    // 创建ExpandoObject用于序列化，将配置实例放在以其名称为键的属性下
+                    var expandoObject = new System.Dynamic.ExpandoObject();
+                    var expandoDict = (System.Collections.Generic.IDictionary<string, object>)expandoObject;
+                    expandoDict[name] = configInstance;
+                    
+                    // 序列化并保存配置文件
+                    string configJson = JsonConvert.SerializeObject(expandoObject, Formatting.Indented);
+                    File.WriteAllText(configPath, configJson);
+                }
+            }
+        }
 
         /// <summary>
         /// 配置容器构建器
@@ -304,7 +331,7 @@ namespace RUINORERP.Server
             services.AddSingleton<CommandDispatcher>();
 
 
-            #region 配置文件创建
+            #region 配置文件检查和创建
             // 配置文件所在的目录
             string configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
             if (!Directory.Exists(configDirectory))
@@ -312,23 +339,13 @@ namespace RUINORERP.Server
                 Directory.CreateDirectory(configDirectory);
             }
 
-            // 检查并生成 SystemGlobalconfig 配置文件
-            string systemGlobalConfigPath = Path.Combine(configDirectory, nameof(SystemGlobalconfig) + ".json");
-            if (!File.Exists(systemGlobalConfigPath))
+            // 批量检查并创建配置文件
+            EnsureConfigFilesExist(configDirectory, new[]
             {
-                var systemGlobalConfig = new SystemGlobalconfig();
-                string systemGlobalConfigJson = JsonConvert.SerializeObject(new { SystemGlobalconfig = systemGlobalConfig }, Formatting.Indented);
-                File.WriteAllText(systemGlobalConfigPath, systemGlobalConfigJson);
-            }
-
-            // 检查并生成 GlobalValidatorConfig 配置文件
-            string globalValidatorConfigPath = Path.Combine(configDirectory, nameof(GlobalValidatorConfig) + ".json");
-            if (!File.Exists(globalValidatorConfigPath))
-            {
-                var globalValidatorConfig = new GlobalValidatorConfig();
-                string globalValidatorConfigJson = JsonConvert.SerializeObject(globalValidatorConfig, Formatting.Indented);
-                File.WriteAllText(globalValidatorConfigPath, globalValidatorConfigJson);
-            }
+                (typeof(SystemGlobalconfig), nameof(SystemGlobalconfig)),
+                (typeof(GlobalValidatorConfig), nameof(GlobalValidatorConfig)),
+                (typeof(ServerConfig), nameof(ServerConfig))
+            });
             #endregion
 
             // 读取自定义的 JSON 配置文件
@@ -336,10 +353,22 @@ namespace RUINORERP.Server
                 .SetBasePath(System.IO.Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles"))
                 .AddJsonFile(nameof(SystemGlobalconfig) + ".json", optional: false, reloadOnChange: true)
                 .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
+                .AddJsonFile(nameof(ServerConfig) + ".json", optional: false, reloadOnChange: true)
                 .Build();
 
             services.Configure<SystemGlobalconfig>(builder.GetSection(nameof(SystemGlobalconfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
+            services.Configure<ServerConfig>(builder.GetSection(nameof(ServerConfig)));
+            
+
+            // 注册ServerConfig单例实例，便于在应用中直接获取
+            services.AddSingleton<ServerConfig>(provider =>
+            {
+                var config = provider.GetRequiredService<IConfiguration>();
+                var serverConfig = new ServerConfig();
+                config.GetSection(nameof(ServerConfig)).Bind(serverConfig);
+                return serverConfig;
+            });
 
             services.AddSingleton(typeof(frmMainNew));//MDI最大。才开一次才能单例
 
@@ -409,7 +438,6 @@ namespace RUINORERP.Server
         #endregion
 
         #region 外部DLL依赖注入配置
- 
 
         public static void ConfigureContainerForDll(ContainerBuilder builder)
         {

@@ -291,6 +291,11 @@ namespace RUINORERP.PacketSpec.Commands
         /// 文件权限检查 - 检查文件访问权限
         /// </summary>
         public const ushort File_FilePermissionCheck = 0x0606;
+        
+        /// <summary>
+        /// 文件存储信息 - 获取文件存储使用情况
+        /// </summary>
+        public const ushort File_FileStorageInfo = 0x060A;
 
         /// <summary>
         /// 文件重命名 - 重命名文件

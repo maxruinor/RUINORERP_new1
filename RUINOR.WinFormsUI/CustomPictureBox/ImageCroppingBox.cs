@@ -14,11 +14,6 @@ using System.Runtime.InteropServices;
  *说明：若不喜欢口形的裁剪框 稍微调整一下代码就可以变成 # 形的九宫模式
  *      - -！、、矩形框都在哪里把绘制的方式换一下不用DrawRectangle用四次DrawLine就搞定
  *      好吧 其实我是用来做截图写的一个控件、、但是似乎不仅仅是截图可以用 正常切图也可以使用
- *时间：2014-08-04
- *作者：Crystal_lz
- *blog:clzf.co
- *email:beckstreet221b@gmail.com
- *其他：若只是单纯使用 或者 简单修改 请保留此注释头 好歹能让原著装个逼 谢谢！、、
  *******************************************************************************************/
 namespace RUINOR.WinFormsUI.CustomPictureBox
 {

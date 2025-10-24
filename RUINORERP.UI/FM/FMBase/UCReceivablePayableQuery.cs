@@ -61,8 +61,8 @@ namespace RUINORERP.UI.FM
 
             //应收付款中的往来单位额外添加一些条件
             var lambdaCv = Expressionable.Create<tb_CustomerVendor>()
-                //.AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
-                //.AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
+              //.AndIF(PaymentType == ReceivePaymentType.收款, t => t.IsCustomer == true)
+              //.AndIF(PaymentType == ReceivePaymentType.付款, t => t.IsVendor == true)
               .ToExpression();
             QueryField queryField = QueryConditionFilter.QueryFields.Where(c => c.FieldName == customerVendorId).FirstOrDefault();
             queryField.SubFilter.FilterLimitExpressions.Add(lambdaCv);
@@ -256,6 +256,23 @@ namespace RUINORERP.UI.FM
                 msg.Append($"请至少选择一行数据转为收{PaymentType.ToString()}单");
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
+            }
+            else
+            {
+                //查验选中的应收 应付款单 是不是有预收付款的单据。
+                //优化提醒。比方：有预收付款，但是没有确认预收款单，也无法预收付款抵扣，而直接去操作快捷收付款。这个顺序不对。
+                var receivablePayableController = Startup.GetFromFac<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                foreach (var item in RealList)
+                {
+                    var checkResult = await receivablePayableController.CheckUnconfirmedPrePaymentExists(item);
+                    if (!checkResult.Succeeded)
+                    {
+                        MessageBox.Show($"【{item.ARAPNo}】有未确认的预收付款单{string.Join(",", checkResult.DataList)}，请确认！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+
+
             }
 
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();

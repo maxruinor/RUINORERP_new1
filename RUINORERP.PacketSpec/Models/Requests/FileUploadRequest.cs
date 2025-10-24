@@ -17,13 +17,13 @@ namespace RUINORERP.PacketSpec.Models.Requests
     public class FileUploadRequest : RequestBase
     {
         /// <summary>
-        /// 文件�?
+        /// 文件名
         /// </summary>
         [JsonProperty(Order=10)]
         public string FileName { get; set; }
 
         /// <summary>
-        /// 文件分类: Expenses/Products/Payments�?
+        /// 文件分类: PaymentVoucher/ProductImage/BOMManual等
         /// </summary>
         [JsonProperty(Order=11)]
         public string Category { get; set; }
@@ -69,6 +69,12 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// </summary>
         [JsonProperty(Order=18)]
         public DateTime UploadTime { get; set; } = DateTime.Now;
+        
+        /// <summary>
+        /// 业务关联ID（如订单ID、产品ID等）
+        /// </summary>
+        [JsonProperty(Order=19)]
+        public string BusinessId { get; set; }
     }
 
     /// <summary>
@@ -78,12 +84,12 @@ namespace RUINORERP.PacketSpec.Models.Requests
     public class FileUploadResponse : ResponseBase<FileUploadResponseData>
     {
         /// <summary>
-        /// 默认构造函�?
+        /// 默认构造函数
         /// </summary>
         public FileUploadResponse() : base() { }
 
         /// <summary>
-        /// 带参数的构造函�?
+        /// 带参数的构造函数
         /// </summary>
         public FileUploadResponse(bool success, string message, FileUploadResponseData data = null, int code = 200) 
         {
@@ -120,14 +126,26 @@ namespace RUINORERP.PacketSpec.Models.Requests
     public class FileUploadResponseData
     {
         /// <summary>
-        /// 文件唯一标识�?
+        /// 文件唯一标识符
         /// </summary>
         [JsonProperty(Order=0)]
         public string FileId { get; set; }
+        
+        /// <summary>
+        /// 文件存储路径
+        /// </summary>
+        [JsonProperty(Order=1)]
+        public string FilePath { get; set; }
+        
+        /// <summary>
+        /// 文件URL（用于Web访问）
+        /// </summary>
+        [JsonProperty(Order=2)]
+        public string FileUrl { get; set; }
     }
 
 
-    // 文件信息�?
+    // 文件信息类
     [JsonObject]
     public class FileStorageInfo
     {
@@ -167,6 +185,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
 
         [JsonProperty(Order=9)]
         public string FilePath { get; set; }
+        
+        [JsonProperty(Order=10)]
+        public string BusinessId { get; set; }
 
     }
 
@@ -176,6 +197,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
     {
         [JsonProperty(Order=10)]
         public string FileId { get; set; }
+        
+        [JsonProperty(Order=11)]
+        public string Category { get; set; }
     }
 
     /// <summary>
@@ -185,12 +209,12 @@ namespace RUINORERP.PacketSpec.Models.Requests
     public class FileDeleteResponse : ResponseBase
     {
         /// <summary>
-        /// 默认构造函�?
+        /// 默认构造函数
         /// </summary>
         public FileDeleteResponse() : base() { }
 
         /// <summary>
-        /// 带参数的构造函�?
+        /// 带参数的构造函数
         /// </summary>
         public FileDeleteResponse(bool success, string message, int code = 200) 
         {
@@ -220,6 +244,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
     {
         [JsonProperty(Order=10)]
         public string FileId { get; set; }
+        
+        [JsonProperty(Order=11)]
+        public string Category { get; set; }
     }
 
     /// <summary>
@@ -229,12 +256,12 @@ namespace RUINORERP.PacketSpec.Models.Requests
     public class FileInfoResponse : ResponseBase<FileStorageInfo>
     {
         /// <summary>
-        /// 默认构造函�?
+        /// 默认构造函数
         /// </summary>
         public FileInfoResponse() : base() { }
 
         /// <summary>
-        /// 带参数的构造函�?
+        /// 带参数的构造函数
         /// </summary>
         public FileInfoResponse(bool success, string message, FileStorageInfo data = null, int code = 200) 
         {
@@ -268,7 +295,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public string Category { get; set; }
         
         [JsonProperty(Order=11)]
-        public string Pattern { get; set; } // 文件名模式匹�?
+        public string Pattern { get; set; } // 文件名模式匹配
         
         [JsonProperty(Order=12)]
         public int PageIndex { get; set; } = 1;
@@ -278,7 +305,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
     }
 
     /// <summary>
-    /// 文件列表响应数据�?
+    /// 文件列表响应数据类
     /// </summary>
     [JsonObject]
     public class FileListResponseData
@@ -315,12 +342,12 @@ namespace RUINORERP.PacketSpec.Models.Requests
     public class FileListResponse : ResponseBase<FileListResponseData>
     {
         /// <summary>
-        /// 默认构造函�?
+        /// 默认构造函数
         /// </summary>
         public FileListResponse() : base() { }
 
         /// <summary>
-        /// 带参数的构造函�?
+        /// 带参数的构造函数
         /// </summary>
         public FileListResponse(bool success, string message, FileListResponseData data = null, int code = 200) 
         {
@@ -355,5 +382,3 @@ namespace RUINORERP.PacketSpec.Models.Requests
     }
 
 }
-
-

@@ -366,6 +366,66 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
+        /// 上传付款凭证文件
+        /// </summary>
+        /// <param name="fileName">文件名</param>
+        /// <param name="fileData">文件数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>文件上传响应</returns>
+        public async Task<FileUploadResponse> UploadPaymentVoucherAsync(string fileName, byte[] fileData, CancellationToken ct = default)
+        {
+            var request = new FileUploadRequest
+            {
+                FileName = fileName,
+                Category = "PaymentVoucher",
+                FileSize = fileData.Length,
+                Data = fileData
+            };
+            
+            return await UploadFileAsync(request, ct);
+        }
+
+        /// <summary>
+        /// 上传产品图片文件
+        /// </summary>
+        /// <param name="fileName">文件名</param>
+        /// <param name="fileData">文件数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>文件上传响应</returns>
+        public async Task<FileUploadResponse> UploadProductImageAsync(string fileName, byte[] fileData, CancellationToken ct = default)
+        {
+            var request = new FileUploadRequest
+            {
+                FileName = fileName,
+                Category = "ProductImage",
+                FileSize = fileData.Length,
+                Data = fileData
+            };
+            
+            return await UploadFileAsync(request, ct);
+        }
+
+        /// <summary>
+        /// 上传BOM配方手册文件
+        /// </summary>
+        /// <param name="fileName">文件名</param>
+        /// <param name="fileData">文件数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>文件上传响应</returns>
+        public async Task<FileUploadResponse> UploadBOMManualAsync(string fileName, byte[] fileData, CancellationToken ct = default)
+        {
+            var request = new FileUploadRequest
+            {
+                FileName = fileName,
+                Category = "BOMManual",
+                FileSize = fileData.Length,
+                Data = fileData
+            };
+            
+            return await UploadFileAsync(request, ct);
+        }
+
+        /// <summary>
         /// 释放资源
         /// </summary>
         public void Dispose()

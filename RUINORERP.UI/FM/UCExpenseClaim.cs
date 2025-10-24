@@ -47,6 +47,7 @@ using RUINORERP.Business.Security;
 using System.Configuration;
 
 using RUINORERP.Extensions.Middlewares;
+using Image = System.Drawing.Image;
 
 namespace RUINORERP.UI.FM
 {
@@ -289,16 +290,34 @@ namespace RUINORERP.UI.FM
         {
             if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))
             {
-                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                try
+                // 检查是否为多图片路径（包含分号分隔的多个路径）
+                if (CloseCaseImagePath.Contains(";"))
                 {
-                    byte[] img = await httpWebService.DownloadImgFileAsync(CloseCaseImagePath);
-                    magicPictureBox1.Image = UI.Common.ImageHelper.byteArrayToImage(img);
-                    magicPictureBox1.Visible = true;
+                    // 启用多图片支持模式
+                    magicPictureBox1.MultiImageSupport = true;
+                    magicPictureBox1.ImagePaths = CloseCaseImagePath;
                 }
-                catch (Exception ex)
+                else
                 {
-                    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                    // 单图片模式
+                    magicPictureBox1.MultiImageSupport = false;
+                    // 使用ImageManagementHelper替代HttpWebService
+                    try
+                    {
+                        var image = await UI.Common.ImageManagementHelper.DownloadImageAsync(
+                            CloseCaseImagePath, 
+                            MainForm.Instance.AppContext);
+                        
+                        if (image != null)
+                        {
+                            magicPictureBox1.Image = image;
+                            magicPictureBox1.Visible = true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                    }
                 }
             }
             else
@@ -348,6 +367,9 @@ namespace RUINORERP.UI.FM
             }
             InitDataTocmbbox();
             base.ToolBarEnabledControl(MenuItemEnums.刷新);
+
+            // 为结案凭证图片控件添加双击事件，支持上传图片
+            magicPictureBox1.DoubleClick += MagicPictureBox1_DoubleClick;
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
@@ -622,6 +644,24 @@ namespace RUINORERP.UI.FM
                 {
                     return false;
                 }
+                
+                // 处理结案凭证图片上传
+                if (NeedValidated && magicPictureBox1.Image != null)
+                {
+                    string fileName = $"CloseCase_{EditEntity.ClaimNo}_{DateTime.Now:yyyyMMddHHmmss}.png";
+                    string fileId = await UploadCloseCaseImage(magicPictureBox1.Image, fileName);
+                    if (!string.IsNullOrEmpty(fileId))
+                    {
+                        EditEntity.CloseCaseImagePath = fileId;
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog("结案凭证图片上传失败。", Global.UILogType.错误);
+                        // 根据业务需求决定是否阻止保存
+                        // return false;
+                    }
+                }
+                
                 if (NeedValidated)
                 {//处理图片
                     bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
@@ -697,9 +737,25 @@ namespace RUINORERP.UI.FM
 
             if (!string.IsNullOrEmpty(EditEntity.CloseCaseImagePath))
             {
-                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                string deleteRsult = await httpWebService.DeleteImageAsync(EditEntity.CloseCaseImagePath, "delete123");
-                MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
+                // 检查是否为多图片路径
+                if (EditEntity.CloseCaseImagePath.Contains(";"))
+                {
+                    // 多图片路径处理
+                    var fileIds = EditEntity.CloseCaseImagePath.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImagesAsync(
+                        fileIds, 
+                        MainForm.Instance.AppContext);
+                    MainForm.Instance.PrintInfoLog($"批量删除图片: {(deleteResult ? "Success" : "Failed")}");
+                }
+                else
+                {
+                    // 单图片路径处理
+                    // 使用ImageManagementHelper替代HttpWebService
+                    bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImageAsync(
+                        EditEntity.CloseCaseImagePath, 
+                        MainForm.Instance.AppContext);
+                    MainForm.Instance.PrintInfoLog($"删除图片: {(deleteResult ? "Success" : "Failed")}");
+                }
             }
             #endregion
 
@@ -732,9 +788,11 @@ namespace RUINORERP.UI.FM
                                     System.IO.File.Delete(TempFileName);
                                 }
                                 //上传到服务器，删除本地
-                                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                                string deleteRsult = await httpWebService.DeleteImageAsync(newfileName, "delete123");
-                                MainForm.Instance.PrintInfoLog(deleteRsult);
+                                // 使用ImageManagementHelper替代HttpWebService
+                                bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImageAsync(
+                                    newfileName, 
+                                    MainForm.Instance.AppContext);
+                                MainForm.Instance.PrintInfoLog(deleteResult ? "Success" : "Failed");
                             }
                         }
                     }
@@ -853,5 +911,58 @@ namespace RUINORERP.UI.FM
                 }
             }
         }
+
+        /// <summary>
+        /// 结案凭证图片控件双击事件处理
+        /// </summary>
+        private void MagicPictureBox1_DoubleClick(object sender, EventArgs e)
+        {
+            // 如果是多图片模式，使用MagicPictureBox内置的上传功能
+            if (magicPictureBox1.MultiImageSupport)
+            {
+                // MagicPictureBox已经内置了上传功能，无需额外处理
+                return;
+            }
+
+            // 单图片模式，打开文件选择对话框
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Title = "选择结案凭证图片";
+                openFileDialog.Filter = "图片文件|*.bmp;*.jpg;*.jpeg;*.png;*.gif";
+                
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        System.Drawing.Image image = System.Drawing.Image.FromFile(openFileDialog.FileName);
+                        magicPictureBox1.Image = image;
+                        magicPictureBox1.Visible = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"加载图片失败: {ex.Message}", Global.UILogType.错误);
+                        MessageBox.Show($"加载图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 上传结案凭证图片
+        /// </summary>
+        /// <param name="image">要上传的图片</param>
+        /// <param name="fileName">文件名</param>
+        /// <returns>上传结果</returns>
+        private async Task<string> UploadCloseCaseImage(System.Drawing.Image image, string fileName)
+        {
+            // 使用ImageManagementHelper简化图片上传
+            return await UI.Common.ImageManagementHelper.UploadImageAsync(
+                image, 
+                fileName, 
+                "PaymentVoucher", 
+                MainForm.Instance.AppContext);
+        }
     }
 }
+
+

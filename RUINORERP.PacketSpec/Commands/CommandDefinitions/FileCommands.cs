@@ -39,6 +39,10 @@ namespace RUINORERP.PacketSpec.Commands.FileTransfer
         /// </summary>
         public static readonly CommandId FilePermissionCheck = new CommandId(CommandCategory.File, (byte)(CommandCatalog.File_FilePermissionCheck & 0xFF));
 
+        /// <summary>
+        /// 文件存储信息 - 获取文件存储使用情况
+        /// </summary>
+        public static readonly CommandId FileStorageInfo = new CommandId(CommandCategory.File, (byte)(CommandCatalog.File_FileStorageInfo & 0xFF));
  
         #endregion
     }

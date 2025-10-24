@@ -9,6 +9,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -25,6 +26,7 @@ using Button = System.Windows.Forms.Button;
 using static RUINORERP.Server.Controls.GlobalConfigControl.ConfigHistoryManager;
 using RUINORERP.IServices;
 using TextBox = System.Windows.Forms.TextBox;
+using System.ComponentModel.DataAnnotations;
 
 namespace RUINORERP.Server.Controls
 {
@@ -49,12 +51,26 @@ namespace RUINORERP.Server.Controls
         
         private readonly string basePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
         private ConfigHistoryManager _historyManager = new ConfigHistoryManager();
-        private const string SYSTEM_GLOBAL_CONFIG_FILE_NAME = "SystemGlobalConfig.json";
-        private const string SYSTEM_GLOBAL_CONFIG_ROOT_NODE = "SystemGlobalConfig";
-        private const string SERVER_CONFIG_FILE_NAME = "ServerConfig.json";
-        private const string SERVER_CONFIG_ROOT_NODE = "ServerConfig";
-        private const string GLOBAL_VALIDATOR_CONFIG_FILE_NAME = "GlobalValidatorConfig.json";
-        private const string GLOBAL_VALIDATOR_CONFIG_ROOT_NODE = "GlobalValidatorConfig";
+        
+        /// <summary>
+        /// 配置元数据字典 - 用于缓存配置类型和文件信息
+        /// </summary>
+        private readonly Dictionary<string, ConfigMetadata> _configMetadataCache = new Dictionary<string, ConfigMetadata>();
+
+        /// <summary>
+        /// 配置实体类型列表
+        /// </summary>
+        private readonly List<Type> _configEntityTypes = new List<Type>();
+        
+        /// <summary>
+        /// 配置元数据类
+        /// </summary>
+        private class ConfigMetadata
+        {
+            public Type ConfigType { get; set; }
+            public string FileName { get; set; }
+            public string RootNode { get; set; }
+        }
 
         private BaseConfig _currentConfig; // 当前配置对象
         private string _currentConfigFileName; // 当前配置文件名
@@ -82,6 +98,102 @@ namespace RUINORERP.Server.Controls
             
             // 初始化版本管理工具栏按钮
             InitializeVersionManagementButtons();
+            
+            // 注册所有配置类型
+            RegisterConfigTypes();
+        }
+        
+        /// <summary>
+        /// 注册所有配置类型
+        /// </summary>
+        private void RegisterConfigTypes()
+        {
+            try
+            {
+                // 注册已知的配置类型
+                RegisterConfigType(typeof(ServerConfig), "ServerConfig.json", "ServerConfig");
+                RegisterConfigType(typeof(SystemGlobalconfig), "SystemGlobalConfig.json", "SystemGlobalconfig");
+                RegisterConfigType(typeof(GlobalValidatorConfig), "GlobalValidatorConfig.json", "GlobalValidatorConfig");
+                
+                // 可以在这里添加对配置目录的扫描，自动发现新的配置类型
+                ScanConfigDirectoryForNewTypes();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "注册配置类型失败");
+            }
+        }
+        
+        /// <summary>
+        /// 注册单个配置类型
+        /// </summary>
+        /// <param name="configType">配置类型</param>
+        /// <param name="fileName">配置文件名</param>
+        /// <param name="rootNode">配置根节点名称</param>
+        private void RegisterConfigType(Type configType, string fileName, string rootNode)
+        {
+            if (!typeof(BaseConfig).IsAssignableFrom(configType))
+            {
+                _logger?.LogWarning("尝试注册非BaseConfig类型: {TypeName}", configType.Name);
+                return;
+            }
+            
+            _configMetadataCache[configType.Name] = new ConfigMetadata
+            {
+                ConfigType = configType,
+                FileName = fileName,
+                RootNode = rootNode
+            };
+            
+            if (!_configEntityTypes.Contains(configType))
+            {
+                _configEntityTypes.Add(configType);
+            }
+        }
+        
+        /// <summary>
+        /// 扫描配置目录，发现新的配置类型
+        /// </summary>
+        private void ScanConfigDirectoryForNewTypes()
+        {
+            try
+            {
+                if (!Directory.Exists(basePath))
+                {
+                    return;
+                }
+                
+                var jsonFiles = Directory.GetFiles(basePath, "*.json");
+                foreach (var filePath in jsonFiles)
+                {
+                    string fileName = Path.GetFileName(filePath);
+                    // 如果文件尚未在缓存中注册，尝试解析它
+                    if (!_configMetadataCache.Values.Any(m => m.FileName == fileName))
+                    {
+                        try
+                        {
+                            string json = File.ReadAllText(filePath);
+                            JObject configJson = JObject.Parse(json);
+                            // 获取根节点名称
+                            string rootNode = configJson.Properties().FirstOrDefault()?.Name;
+                            if (!string.IsNullOrEmpty(rootNode))
+                            {
+                                // 这里可以尝试通过反射找到对应的类型
+                                // 暂时只记录日志
+                                _logger?.LogInformation("发现未注册的配置文件: {FileName}, 根节点: {RootNode}", fileName, rootNode);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "解析配置文件失败: {FilePath}", filePath);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "扫描配置目录失败");
+            }
         }
         
         /// <summary>
@@ -98,8 +210,6 @@ namespace RUINORERP.Server.Controls
         }
         private void GlobalConfigControl_Load(object sender, EventArgs e)
         {
-            // 初始化TreeView，按文件显示配置
-            InitializeConfigTreeView();
             // 初始化新的TreeView，加载JSON文件
             InitializeJsonFilesTreeView();
         }
@@ -194,28 +304,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        /// <summary>
-        /// 根据配置类型进行验证
-        /// </summary>
-        private bool ValidateConfiguration(BaseConfig config)
-        {
-            if (config is ServerConfig serverConfig)
-            {
-                return ValidateServerConfiguration(serverConfig);
-            }
-            else if (config is SystemGlobalconfig systemConfig)
-            {
-                return ValidateSystemGlobalConfiguration(systemConfig);
-            }
-            else if (config is GlobalValidatorConfig validatorConfig)
-            {
-                return ValidateGlobalValidatorConfiguration(validatorConfig);
-            }
-            
-            MessageBox.Show("未知的配置类型", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return false;
-        }
-
+      
         /// <summary>
         /// 获取配置描述
         /// </summary>
@@ -266,44 +355,7 @@ namespace RUINORERP.Server.Controls
             return true;
         }
 
-        /// <summary>
-        /// 初始化配置TreeView（右侧树）
-        /// </summary>
-        private void InitializeConfigTreeView()
-        {
-            try
-            {
-                treeView1.Nodes.Clear();
-
-                // 添加服务器配置节点
-                TreeNode serverNode = new TreeNode("服务器配置");
-                serverNode.Tag = new ConfigInfo { FileName = SERVER_CONFIG_FILE_NAME, RootNode = SERVER_CONFIG_ROOT_NODE, ConfigType = typeof(ServerConfig) };
-                treeView1.Nodes.Add(serverNode);
-
-                // 添加系统全局配置节点
-                TreeNode systemNode = new TreeNode("系统全局配置");
-                systemNode.Tag = new ConfigInfo { FileName = SYSTEM_GLOBAL_CONFIG_FILE_NAME, RootNode = SYSTEM_GLOBAL_CONFIG_ROOT_NODE, ConfigType = typeof(SystemGlobalconfig) };
-                treeView1.Nodes.Add(systemNode);
-
-                // 添加全局验证配置节点
-                TreeNode validatorNode = new TreeNode("全局验证配置");
-                validatorNode.Tag = new ConfigInfo { FileName = GLOBAL_VALIDATOR_CONFIG_FILE_NAME, RootNode = GLOBAL_VALIDATOR_CONFIG_ROOT_NODE, ConfigType = typeof(GlobalValidatorConfig) };
-                treeView1.Nodes.Add(validatorNode);
-
-                treeView1.ExpandAll();
-                
-                // 订阅TreeView选择事件
-                treeView1.AfterSelect -= treeView1_AfterSelect;
-                treeView1.AfterSelect += treeView1_AfterSelect;
-
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "初始化配置TreeView失败");
-                MessageBox.Show($"初始化配置树时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
+ 
         /// <summary>
         /// 初始化JSON文件TreeView（左侧树）
         /// </summary>
@@ -313,20 +365,17 @@ namespace RUINORERP.Server.Controls
             {
                 treeView2.Nodes.Clear();
 
-                // 添加服务器配置JSON文件节点
-                TreeNode serverJsonNode = new TreeNode("ServerConfig.json");
-                serverJsonNode.Tag = new ConfigInfo { FileName = SERVER_CONFIG_FILE_NAME, RootNode = SERVER_CONFIG_ROOT_NODE, ConfigType = typeof(ServerConfig) };
-                treeView2.Nodes.Add(serverJsonNode);
-
-                // 添加系统全局配置JSON文件节点
-                TreeNode systemJsonNode = new TreeNode("SystemGlobalConfig.json");
-                systemJsonNode.Tag = new ConfigInfo { FileName = SYSTEM_GLOBAL_CONFIG_FILE_NAME, RootNode = SYSTEM_GLOBAL_CONFIG_ROOT_NODE, ConfigType = typeof(SystemGlobalconfig) };
-                treeView2.Nodes.Add(systemJsonNode);
-
-                // 添加全局验证配置JSON文件节点
-                TreeNode validatorJsonNode = new TreeNode("GlobalValidatorConfig.json");
-                validatorJsonNode.Tag = new ConfigInfo { FileName = GLOBAL_VALIDATOR_CONFIG_FILE_NAME, RootNode = GLOBAL_VALIDATOR_CONFIG_ROOT_NODE, ConfigType = typeof(GlobalValidatorConfig) };
-                treeView2.Nodes.Add(validatorJsonNode);
+                // 使用配置元数据字典创建所有配置文件节点
+                foreach (var metadata in _configMetadataCache.Values)
+                {
+                    TreeNode node = new TreeNode(GetDisplayName(metadata.ConfigType));
+                    node.Tag = new ConfigInfo {
+                        FileName = metadata.FileName, 
+                        RootNode = metadata.RootNode, 
+                        ConfigType = metadata.ConfigType 
+                    };
+                    treeView2.Nodes.Add(node);
+                }
 
                 treeView2.ExpandAll();
 
@@ -337,27 +386,62 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show($"初始化JSON文件树时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        
+   
 
         /// <summary>
-        /// 左侧TreeView选择事件处理
+        /// 获取类型的DisplayName属性值
+        /// </summary>
+        /// <param name="type">配置类类型</param>
+        /// <returns>DisplayName属性值，如果不存在则返回类型名称</returns>
+        private string GetDisplayName(Type type)
+        {
+            var displayNameAttr = type.GetCustomAttributes(typeof(DisplayNameAttribute), false)
+                .FirstOrDefault() as DisplayNameAttribute;
+            
+            return displayNameAttr?.DisplayName ?? type.Name;
+        }
+
+        /// <summary>
+        /// TreeView选择事件处理
         /// </summary>
         private void treeView2_AfterSelect(object sender, TreeViewEventArgs e)
         {
             try
             {
+                // 处理配置文件节点的选择
                 if (e.Node?.Tag is ConfigInfo configInfo)
                 {
                     // 加载配置文件
                     LoadConfigurationFile(configInfo.FileName, configInfo.RootNode, configInfo.ConfigType);
+                }
+                // 处理原有属性节点的选择，保留兼容性
+                else if (e.Node.Tag != null && _currentConfig != null)
+                {
+                    // 尝试获取属性信息
+                    var tagType = e.Node.Tag.GetType();
+                    var propertyInfo = tagType.GetProperty("Property");
                     
-                    // 在右侧TreeView中展开并选中对应配置文件的节点
-                    ExpandAndSelectTreeNode(treeView1, configInfo.FileName);
+                    if (propertyInfo != null)
+                    {
+                        var propertyName = propertyInfo.GetValue(e.Node.Tag)?.ToString();
+                        if (!string.IsNullOrEmpty(propertyName))
+                        {
+                            var configType = _currentConfig.GetType();
+                            var prop = configType.GetProperty(propertyName);
+                            if (prop != null)
+                            {
+                                var value = prop.GetValue(_currentConfig);
+                                textBox1.Text = value?.ToString() ?? "";
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理TreeView2选择事件失败");
-                MessageBox.Show($"加载配置文件时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger?.LogError(ex, "处理TreeView选择事件失败");
+                MessageBox.Show($"处理配置选择时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -372,10 +456,9 @@ namespace RUINORERP.Server.Controls
             {
                 if (node.Tag is ConfigInfo configInfo && configInfo.FileName == fileName)
                 {
+                    // 选中节点并确保可见，但不手动触发事件处理程序以避免循环引用
                     treeView.SelectedNode = node;
                     node.EnsureVisible();
-                    // 触发选择事件处理
-                    treeView1_AfterSelect(treeView, new TreeViewEventArgs(node));
                     break;
                 }
             }
@@ -391,14 +474,7 @@ namespace RUINORERP.Server.Controls
             public Type ConfigType { get; set; }
         }
 
-        /// <summary>
-        /// 加载数据
-        /// </summary>
-        private void LoadData()
-        {
-            // 此方法保留以兼容现有调用，但主要功能已移至InitializeConfigTreeView
-            InitializeConfigTreeView();
-        }
+        
 
         /// <summary>
         /// 加载配置文件
@@ -446,29 +522,6 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        /// <summary>
-        /// 加载系统全局配置
-        /// </summary>
-        private void LoadSystemGlobalConfiguration()
-        {
-            LoadConfigurationFile(SYSTEM_GLOBAL_CONFIG_FILE_NAME, SYSTEM_GLOBAL_CONFIG_ROOT_NODE, typeof(SystemGlobalconfig));
-        }
-
-        /// <summary>
-        /// 加载服务器配置
-        /// </summary>
-        private void LoadServerConfiguration()
-        {
-            LoadConfigurationFile(SERVER_CONFIG_FILE_NAME, SERVER_CONFIG_ROOT_NODE, typeof(ServerConfig));
-        }
-
-        /// <summary>
-        /// 加载全局验证配置
-        /// </summary>
-        private void LoadGlobalValidatorConfiguration()
-        {
-            LoadConfigurationFile(GLOBAL_VALIDATOR_CONFIG_FILE_NAME, GLOBAL_VALIDATOR_CONFIG_ROOT_NODE, typeof(GlobalValidatorConfig));
-        }
 
         /// <summary>
         /// 撤销操作
@@ -687,6 +740,22 @@ namespace RUINORERP.Server.Controls
                 }
             }
 
+            // 分类路径验证
+            if (string.IsNullOrEmpty(configObject.PaymentVoucherPath))
+            {
+                validationResults.Add("付款凭证路径不能为空");
+            }
+            
+            if (string.IsNullOrEmpty(configObject.ProductImagePath))
+            {
+                validationResults.Add("产品图片路径不能为空");
+            }
+            
+            if (string.IsNullOrEmpty(configObject.BOMManualPath))
+            {
+                validationResults.Add("BOM手册路径不能为空");
+            }
+
             // 最大文件大小验证
             if (configObject.MaxFileSizeMB <= 0 || configObject.MaxFileSizeMB > 1000)
             {
@@ -738,149 +807,282 @@ namespace RUINORERP.Server.Controls
             propertyGrid1.SelectedObject = configObject;
             _currentConfig = configObject;
 
-            // 绑定到TreeView，显示当前配置的属性分类
-            if (configObject is SystemGlobalconfig systemConfig)
+            // 找到当前配置对应的根节点
+            TreeNode rootNode = null;
+            foreach (TreeNode node in treeView2.Nodes)
             {
-                CreateSystemGlobalCategoryNodes(systemConfig);
-            }
-            else if (configObject is ServerConfig serverConfig)
-            {
-                CreateServerCategoryNodes(serverConfig);
-            }
-            else if (configObject is GlobalValidatorConfig validatorConfig)
-            {
-                CreateGlobalValidatorCategoryNodes(validatorConfig);
-            }
-        }
-
-        /// <summary>
-        /// 创建全局验证配置分类节点
-        /// </summary>
-        private void CreateGlobalValidatorCategoryNodes(GlobalValidatorConfig configObject)
-        {
-            // 保存当前选中的配置文件节点
-            TreeNode selectedConfigNode = null;
-            foreach (TreeNode node in treeView1.Nodes)
-            {
-                if (node.Tag is ConfigInfo info && info.ConfigType == typeof(GlobalValidatorConfig))
+                if (node.Tag is ConfigInfo info && info.ConfigType == configObject.GetType())
                 {
-                    selectedConfigNode = node;
+                    rootNode = node;
                     break;
                 }
             }
+            
+            // 创建配置详情节点结构
+            CreateDetailedConfigurationNodes(configObject, rootNode);
 
-            // 清空并重新创建子节点
-            if (selectedConfigNode != null)
+            // 使用通用的UI绑定方法
+            if (rootNode != null)
             {
-                selectedConfigNode.Nodes.Clear();
-
-                // 采购模块节点
-                var purchaseNode = new TreeNode("采购模块");
-                purchaseNode.Nodes.Add("预交日期必填").Tag = new { Property = nameof(configObject.预交日期必填), Category = "采购模块" };
-                selectedConfigNode.Nodes.Add(purchaseNode);
-
-                // 生产模块节点
-                var productionNode = new TreeNode("生产模块");
-                productionNode.Nodes.Add("预开工日期必填").Tag = new { Property = nameof(configObject.预开工日期必填), Category = "生产模块" };
-                productionNode.Nodes.Add("预完工日期必填").Tag = new { Property = nameof(configObject.预完工日期必填), Category = "生产模块" };
-                productionNode.Nodes.Add("返工提醒天数").Tag = new { Property = nameof(configObject.ReworkTipDays), Category = "生产模块" };
-                selectedConfigNode.Nodes.Add(productionNode);
-
-                // 客户关系节点
-                var customerNode = new TreeNode("客户关系");
-                customerNode.Nodes.Add("计划提前提示天数").Tag = new { Property = nameof(configObject.计划提前提示天数), Category = "客户关系" };
-                selectedConfigNode.Nodes.Add(customerNode);
-
-                // 销售模块节点
-                var salesNode = new TreeNode("销售模块");
-                salesNode.Nodes.Add("销售金额精度").Tag = new { Property = nameof(configObject.MoneyDataPrecision), Category = "销售模块" };
-                salesNode.Nodes.Add("是否来自平台").Tag = new { Property = nameof(configObject.IsFromPlatform), Category = "销售模块" };
-                salesNode.Nodes.Add("项目组必填").Tag = new { Property = nameof(configObject.NeedInputProjectGroup), Category = "销售模块" };
-                selectedConfigNode.Nodes.Add(salesNode);
-
-                // 借出模块节点
-                var lendNode = new TreeNode("借出模块");
-                lendNode.Nodes.Add("借出单的接收单位必填").Tag = new { Property = nameof(configObject.借出单的接收单位必填), Category = "借出" };
-                selectedConfigNode.Nodes.Add(lendNode);
-
-                selectedConfigNode.ExpandAll();
+                BindConfigurationToUI(configObject, rootNode);
             }
         }
 
         /// <summary>
-        /// 创建系统全局配置分类节点
+        /// 通用的配置UI绑定方法，通过反射处理所有配置类型
         /// </summary>
-        /// <param name="configObject">系统全局配置对象</param>
-        private void CreateSystemGlobalCategoryNodes(SystemGlobalconfig configObject)
+        /// <param name="configObject">配置对象</param>
+        /// <param name="rootNode">根节点</param>
+        private void BindConfigurationToUI(BaseConfig configObject, TreeNode rootNode)
         {
-            treeView1.Nodes.Clear();
-
-            // 采购模块配置节点
-            var purchaseNode = new TreeNode("采购模块配置");
-            purchaseNode.Nodes.Add("采购日期必填").Tag = new { Property = "采购日期必填", Category = "Purchase" };
-            purchaseNode.Nodes.Add("是否来自平台").Tag = new { Property = nameof(configObject.IsFromPlatform), Category = "Purchase" };
-            treeView1.Nodes.Add(purchaseNode);
-
-            // 销售模块配置节点
-            var salesNode = new TreeNode("销售模块配置");
-            salesNode.Nodes.Add("是否来自平台").Tag = new { Property = nameof(configObject.IsFromPlatform), Category = "Sales" };
-            salesNode.Nodes.Add("开启产品类型检查").Tag = new { Property = nameof(configObject.OpenProdTypeForSaleCheck), Category = "Sales" };
-            treeView1.Nodes.Add(salesNode);
-
-            // 打印设置节点
-            var printNode = new TreeNode("打印设置");
-            printNode.Nodes.Add("直接打印").Tag = new { Property = nameof(configObject.DirectPrinting), Category = "Printing" };
-            printNode.Nodes.Add("使用共享打印机").Tag = new { Property = nameof(configObject.UseSharedPrinter), Category = "Printing" };
-            treeView1.Nodes.Add(printNode);
-
-            treeView1.ExpandAll();
+            try
+            {
+                // 清空子节点
+                rootNode.Nodes.Clear();
+                
+                // 创建节点结构
+                CreateConfigurationNodes(configObject, rootNode);
+                
+                // 展开节点
+                rootNode.ExpandAll();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "绑定配置到UI失败");
+            }
+        }
+        
+        /// <summary>
+        /// 根据配置对象的属性分类创建TreeView节点
+        /// </summary>
+        /// <param name="configObject">配置对象</param>
+        /// <param name="parentNode">父节点</param>
+        private void CreateConfigurationNodes(BaseConfig configObject, TreeNode parentNode)
+        {
+            try
+            {
+                // 获取配置对象的所有公开属性
+                var properties = configObject.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                
+                // 按Category分组属性
+                var propertiesByCategory = properties.GroupBy(prop => {
+                    var categoryAttr = prop.GetCustomAttributes(typeof(CategoryAttribute), false).FirstOrDefault() as CategoryAttribute;
+                    return categoryAttr?.Category ?? "通用设置"; // 如果没有Category属性，使用默认分类
+                });
+                
+                // 为每个分类创建节点
+                foreach (var categoryGroup in propertiesByCategory)
+                {
+                    TreeNode categoryNode = new TreeNode(categoryGroup.Key);
+                    
+                    // 为分类中的每个属性创建子节点
+                    foreach (var property in categoryGroup)
+                    {
+                        // 获取属性的DisplayName或使用属性名
+                        var displayName = GetPropertyDisplayName(property);
+                        
+                        TreeNode propertyNode = new TreeNode(displayName);
+                        // 保存属性信息到Tag
+                        propertyNode.Tag = new { Property = property.Name, Category = categoryGroup.Key };
+                        
+                        categoryNode.Nodes.Add(propertyNode);
+                    }
+                    
+                    parentNode.Nodes.Add(categoryNode);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "创建配置节点失败");
+            }
+        }
+        
+        /// <summary>
+        /// 获取属性的DisplayName
+        /// </summary>
+        /// <param name="property">属性信息</param>
+        /// <returns>显示名称</returns>
+        private string GetPropertyDisplayName(PropertyInfo property)
+        {
+            var displayNameAttr = property.GetCustomAttributes(typeof(DisplayNameAttribute), false)
+                .FirstOrDefault() as DisplayNameAttribute;
+            
+            return displayNameAttr?.DisplayName ?? property.Name;
         }
 
         /// <summary>
-        /// 创建服务器配置分类节点
+        /// 使用通用验证方法替换类型特定的验证方法
         /// </summary>
-        /// <param name="configObject">服务器配置对象</param>
-        private void CreateServerCategoryNodes(ServerConfig configObject)
+        private bool ValidateConfiguration(BaseConfig config)
         {
-            treeView1.Nodes.Clear();
-
-            // 服务器基础设置节点
-            var serverNode = new TreeNode("服务器基础设置");
-            serverNode.Nodes.Add("服务器名称").Tag = new { Property = "ServerName", Category = "ServerSettings" };
-            serverNode.Nodes.Add("服务器端口").Tag = new { Property = "ServerPort", Category = "ServerSettings" };
-            serverNode.Nodes.Add("最大连接数").Tag = new { Property = "MaxConnections", Category = "ServerSettings" };
-            serverNode.Nodes.Add("心跳间隔").Tag = new { Property = "HeartbeatInterval", Category = "ServerSettings" };
-            treeView1.Nodes.Add(serverNode);
-
-            // 数据库配置节点
-            var dbNode = new TreeNode("数据库配置");
-            dbNode.Nodes.Add("数据库类型").Tag = new { Property = "DbType", Category = "DatabaseSettings" };
-            dbNode.Nodes.Add("连接字符串").Tag = new { Property = "DbConnectionString", Category = "DatabaseSettings" };
-            treeView1.Nodes.Add(dbNode);
-
-            // 缓存配置节点
-            var cacheNode = new TreeNode("缓存配置");
-            cacheNode.Nodes.Add("缓存类型").Tag = new { Property = "CacheType", Category = "CacheSettings" };
-            cacheNode.Nodes.Add("缓存连接字符串").Tag = new { Property = "CacheConnectionString", Category = "CacheSettings" };
-            treeView1.Nodes.Add(cacheNode);
-
-            // 日志配置节点
-            var logNode = new TreeNode("日志配置");
-            logNode.Nodes.Add("日志级别").Tag = new { Property = "LogLevel", Category = "LoggingSettings" };
-            logNode.Nodes.Add("启用日志").Tag = new { Property = "EnableLogging", Category = "LoggingSettings" };
-            treeView1.Nodes.Add(logNode);
-
-            // 文件存储配置节点
-            var fileNode = new TreeNode("文件存储配置");
-            fileNode.Nodes.Add("文件存储路径").Tag = new { Property = "FileStoragePath", Category = "FileStorageSettings" };
-            fileNode.Nodes.Add("最大文件大小(MB)").Tag = new { Property = "MaxFileSizeMB", Category = "FileStorageSettings" };
-            treeView1.Nodes.Add(fileNode);
-
-            treeView1.ExpandAll();
+            return ValidateConfiguration((object)config);
+        }
+        
+        /// <summary>
+        /// 通用配置验证方法
+        /// </summary>
+        /// <param name="configObject">配置对象</param>
+        /// <returns>验证结果</returns>
+        private bool ValidateConfiguration(object configObject)
+        {
+            try
+            {
+                var validationResults = new List<string>();
+                
+                // 检查是否为BaseConfig类型
+                if (configObject is BaseConfig config)
+                {
+                    // 首先使用配置验证服务进行验证
+                    var serviceValidation = _configValidationService.ValidateConfig(config);
+                    if (!serviceValidation.IsValid)
+                    {
+                        // 获取所有属性错误
+                        if (serviceValidation.Errors != null && serviceValidation.Errors.Count > 0)
+                        {
+                            foreach (var error in serviceValidation.Errors)
+                            {
+                                validationResults.Add($"{error.Key}: {error.Value}");
+                            }
+                        }
+                        
+                        // 获取所有全局错误
+                        if (serviceValidation.GlobalErrors != null && serviceValidation.GlobalErrors.Count > 0)
+                        {
+                            validationResults.AddRange(serviceValidation.GlobalErrors);
+                        }
+                    }
+                    
+                    // 使用反射获取配置对象的属性并根据特性进行验证
+                    var properties = config.GetType().GetProperties();
+                    foreach (var property in properties)
+                    {
+                        // 获取属性值
+                        var value = property.GetValue(config);
+                        
+                        // 执行通用验证
+                        ValidateProperty(property, value, validationResults);
+                    }
+                }
+                
+                // 如果有验证错误，显示错误消息
+                if (validationResults.Count > 0)
+                {
+                    var errorMessage = string.Join("\n", validationResults);
+                    MessageBox.Show($"配置验证失败:\n{errorMessage}", "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "验证配置失败");
+                MessageBox.Show($"验证配置时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 对单个属性进行验证
+        /// </summary>
+        /// <param name="property">属性信息</param>
+        /// <param name="value">属性值</param>
+        /// <param name="validationResults">验证结果列表</param>
+        private void ValidateProperty(PropertyInfo property, object value, List<string> validationResults)
+        {
+            // 检查必填字段
+            if (property.IsDefined(typeof(RequiredAttribute), false) && (value == null || (value is string && string.IsNullOrEmpty((string)value))))
+            {
+                var displayName = GetPropertyDisplayName(property);
+                validationResults.Add($"{displayName} 是必填项");
+            }
+            
+            // 检查范围约束
+            if (value != null && property.IsDefined(typeof(RangeAttribute), false))
+            {
+                var rangeAttr = property.GetCustomAttribute<RangeAttribute>();
+                if (rangeAttr != null)
+                {
+                    // 只对数值类型进行范围验证
+                    if (value is IConvertible)
+                    {
+                        try
+                        {
+                            decimal numericValue = Convert.ToDecimal(value);
+                            if (numericValue < Convert.ToDecimal(rangeAttr.Minimum) || numericValue > Convert.ToDecimal(rangeAttr.Maximum))
+                            {
+                                var displayName = GetPropertyDisplayName(property);
+                                validationResults.Add($"{displayName} 必须在 {rangeAttr.Minimum} 到 {rangeAttr.Maximum} 之间");
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+            
+            // 检查字符串长度
+            if (value is string stringValue && property.IsDefined(typeof(StringLengthAttribute), false))
+            {
+                var lengthAttr = property.GetCustomAttribute<StringLengthAttribute>();
+                if (lengthAttr != null && stringValue.Length > lengthAttr.MaximumLength)
+                {
+                    var displayName = GetPropertyDisplayName(property);
+                    validationResults.Add($"{displayName} 的长度不能超过 {lengthAttr.MaximumLength} 个字符");
+                }
+            }
+            
+            // 文件路径验证
+            if (value is string pathValue && property.Name.Contains("Path"))
+            {
+                if (!string.IsNullOrEmpty(pathValue))
+                {
+                    try
+                    {
+                        // 检查路径是否有效
+                        var directoryPath = Path.GetDirectoryName(pathValue);
+                        if (!string.IsNullOrEmpty(directoryPath) && !Directory.Exists(directoryPath))
+                        {
+                            try
+                            {
+                                Directory.CreateDirectory(directoryPath);
+                            }
+                            catch
+                            {
+                                var displayName = GetPropertyDisplayName(property);
+                                validationResults.Add($"{displayName} 路径无效或无法访问: {pathValue}");
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        var displayName = GetPropertyDisplayName(property);
+                        validationResults.Add($"{displayName} 包含无效的路径: {pathValue}");
+                    }
+                }
+            }
         }
 
         /// <summary>
-        /// 创建默认配置
+        /// 创建详细配置节点结构
+        /// </summary>
+        /// <param name="configObject">配置对象</param>
+        /// <param name="parentNode">父节点</param>
+        private void CreateDetailedConfigurationNodes(BaseConfig configObject, TreeNode parentNode)
+        {
+            if (parentNode == null || configObject == null)
+                return;
+
+            // 清除现有子节点但保留根节点
+            parentNode.Nodes.Clear();
+
+            // 使用通用节点创建方法生成详细配置结构
+            CreateConfigurationNodes(configObject, parentNode);
+
+            // 展开节点以显示详细信息
+            parentNode.Expand();
+        }
+        /// <summary>
+        /// 创建默认配置 - 使用反射方式
         /// </summary>
         /// <param name="configType">配置类型</param>
         /// <param name="filePath">配置文件路径</param>
@@ -894,70 +1096,189 @@ namespace RUINORERP.Server.Controls
                 Directory.CreateDirectory(directory);
             }
 
-            JObject configJson;
-
-            if (configType == typeof(ServerConfig))
+            try
             {
-                // 创建服务器默认配置
-                var defaultServerConfig = new ServerConfig
+                // 使用反射创建配置实例
+                BaseConfig configInstance = CreateDefaultConfigInstance(configType);
+                
+                // 使用反射设置默认属性值
+                SetDefaultPropertyValues(configInstance, configType);
+                
+                // 转换为JSON
+                JObject configJson = JObject.FromObject(configInstance);
+                
+                var fullConfig = new JObject(new JProperty(rootNode, configJson));
+                File.WriteAllText(filePath, fullConfig.ToString(Newtonsoft.Json.Formatting.Indented));
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"创建默认配置失败: {ex.Message}", ex);
+            }
+        }
+        
+        /// <summary>
+        /// 使用反射创建配置实例
+        /// </summary>
+        private BaseConfig CreateDefaultConfigInstance(Type configType)
+        {
+            // 验证类型是否为BaseConfig的派生类
+            if (!typeof(BaseConfig).IsAssignableFrom(configType))
+            {
+                throw new ArgumentException($"类型 {configType.Name} 不是 BaseConfig 的有效派生类");
+            }
+            
+            try
+            {
+                return (BaseConfig)Activator.CreateInstance(configType);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"无法创建类型 {configType.Name} 的实例: {ex.Message}", ex);
+            }
+        }
+        
+        /// <summary>
+        /// 使用反射设置配置对象的默认属性值
+        /// </summary>
+        /// <param name="configObject">配置对象</param>
+        /// <param name="configType">配置类型</param>
+        private void SetDefaultPropertyValues(BaseConfig configObject, Type configType)
+        {
+            // 获取所有公共实例属性
+            PropertyInfo[] properties = configType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            
+            foreach (PropertyInfo property in properties)
+            {
+                // 检查是否可写
+                if (!property.CanWrite)
+                    continue;
+                
+                // 尝试设置默认值
+                object defaultValue = null;
+                
+                // 对于特定配置类型的特定属性，设置自定义默认值
+                if (configType == typeof(ServerConfig))
                 {
-                    ServerName = "RUINORERP Server",
-                    ServerPort = 8080,
-                    MaxConnections = 100,
-                    HeartbeatInterval = 30000,
-                    DbType = "MySql",
-                    DbConnectionString = "Server=localhost;Database=RUINORERP;Uid=root;Pwd=123456;",
-                    CacheType = "Memory",
-                    CacheConnectionString = "",
-                    LogLevel = "Info",
-                    EnableLogging = true,
-                    FileStoragePath = "D:\\RUINORERP\\FileStorage",
-                    MaxFileSizeMB = 10
-                };
-
-                configJson = JObject.FromObject(defaultServerConfig);
-            }
-            else if (configType == typeof(SystemGlobalconfig))
-            {
-                // 创建系统全局默认配置
-                var defaultSystemConfig = new SystemGlobalconfig
+                    defaultValue = GetServerConfigDefaultValue(property.Name, property.PropertyType);
+                }
+                else if (configType == typeof(SystemGlobalconfig))
                 {
-                    UseSharedPrinter = false,
-                    SomeSetting = "",
-                    采购日期必填 = false,
-                    IsFromPlatform = false,
-                    OpenProdTypeForSaleCheck = true,
-                    DirectPrinting = true
-                };
-
-                configJson = JObject.FromObject(defaultSystemConfig);
-            }
-            else if (configType == typeof(GlobalValidatorConfig))
-            {
-                // 创建全局验证默认配置
-                var defaultValidatorConfig = new GlobalValidatorConfig
+                    defaultValue = GetSystemGlobalConfigDefaultValue(property.Name, property.PropertyType);
+                }
+                else if (configType == typeof(GlobalValidatorConfig))
                 {
-                    预交日期必填 = false,
-                    预开工日期必填 = false,
-                    预完工日期必填 = false,
-                    ReworkTipDays = 3,
-                    计划提前提示天数 = 1,
-                    MoneyDataPrecision = 4,
-                    IsFromPlatform = true,
-                    NeedInputProjectGroup = true,
-                    借出单的接收单位必填 = false,
-                    SomeSetting = ""
-                };
-
-                configJson = JObject.FromObject(defaultValidatorConfig);
+                    defaultValue = GetGlobalValidatorConfigDefaultValue(property.Name, property.PropertyType);
+                }
+                
+                // 如果找到了合适的默认值，设置它
+                if (defaultValue != null)
+                {
+                    property.SetValue(configObject, defaultValue);
+                }
             }
-            else
+        }
+        
+        /// <summary>
+        /// 获取服务器配置特定属性的默认值
+        /// </summary>
+        private object GetServerConfigDefaultValue(string propertyName, Type propertyType)
+        {
+            switch (propertyName)
             {
-                throw new ArgumentException($"未知的配置类型: {configType.Name}");
+                case nameof(ServerConfig.ServerName):
+                    return "RUINORERP Server";
+                case nameof(ServerConfig.ServerPort):
+                    return 8080;
+                case nameof(ServerConfig.MaxConnections):
+                    return 100;
+                case nameof(ServerConfig.HeartbeatInterval):
+                    return 30000;
+                case nameof(ServerConfig.DbType):
+                    return "MySql";
+                case nameof(ServerConfig.DbConnectionString):
+                    return "Server=localhost;Database=RUINORERP;Uid=root;Pwd=123456;";
+                case nameof(ServerConfig.CacheType):
+                    return "Memory";
+                case nameof(ServerConfig.CacheConnectionString):
+                    return "";
+                case nameof(ServerConfig.LogLevel):
+                    return "Info";
+                case nameof(ServerConfig.EnableLogging):
+                    return true;
+                case nameof(ServerConfig.FileStoragePath):
+                    return "D:\\RUINORERP\\FileStorage";
+                case nameof(ServerConfig.MaxFileSizeMB):
+                    return 10;
+                case nameof(ServerConfig.PaymentVoucherPath):
+                    return "PaymentVouchers";
+                case nameof(ServerConfig.ProductImagePath):
+                    return "ProductImages";
+                case nameof(ServerConfig.BOMManualPath):
+                    return "BOMManuals";
+                default:
+                    return GetDefaultValueForType(propertyType);
             }
-
-            var fullConfig = new JObject(new JProperty(rootNode, configJson));
-            File.WriteAllText(filePath, fullConfig.ToString(Newtonsoft.Json.Formatting.Indented));
+        }
+        
+        /// <summary>
+        /// 获取系统全局配置特定属性的默认值
+        /// </summary>
+        private object GetSystemGlobalConfigDefaultValue(string propertyName, Type propertyType)
+        {
+            switch (propertyName)
+            {
+                case nameof(SystemGlobalconfig.UseSharedPrinter):
+                case "采购日期必填":
+                case nameof(SystemGlobalconfig.IsFromPlatform):
+                    return false;
+                case nameof(SystemGlobalconfig.SomeSetting):
+                    return "";
+                case nameof(SystemGlobalconfig.OpenProdTypeForSaleCheck):
+                case nameof(SystemGlobalconfig.DirectPrinting):
+                    return true;
+                default:
+                    return GetDefaultValueForType(propertyType);
+            }
+        }
+        
+        /// <summary>
+        /// 获取全局验证配置特定属性的默认值
+        /// </summary>
+        private object GetGlobalValidatorConfigDefaultValue(string propertyName, Type propertyType)
+        {
+            switch (propertyName)
+            {
+                case "预交日期必填":
+                case "预开工日期必填":
+                case "预完工日期必填":
+                case "借出单的接收单位必填":
+                    return false;
+                case nameof(GlobalValidatorConfig.ReworkTipDays):
+                    return 3;
+                case "计划提前提示天数":
+                    return 1;
+                case nameof(GlobalValidatorConfig.MoneyDataPrecision):
+                    return 4;
+                case nameof(GlobalValidatorConfig.IsFromPlatform):
+                case nameof(GlobalValidatorConfig.NeedInputProjectGroup):
+                    return true;
+                case nameof(GlobalValidatorConfig.SomeSetting):
+                    return "";
+                default:
+                    return GetDefaultValueForType(propertyType);
+            }
+        }
+        
+        /// <summary>
+        /// 获取类型的默认值
+        /// </summary>
+        private object GetDefaultValueForType(Type propertyType)
+        {
+            if (propertyType.IsValueType)
+            {
+                return Activator.CreateInstance(propertyType);
+            }
+            return null;
         }
 
         /// <summary>
@@ -991,54 +1312,7 @@ namespace RUINORERP.Server.Controls
 
 
 
-        /// <summary>
-        /// TreeView选择改变事件
-        /// </summary>
-        private void treeView1_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            try
-            {
-                // 处理配置文件节点的选择
-                if (e.Node?.Tag is ConfigInfo configInfo)
-                {
-                    // 加载配置文件
-                    LoadConfigurationFile(configInfo.FileName, configInfo.RootNode, configInfo.ConfigType);
-                    
-                    // 在左侧TreeView中展开并选中相应的节点
-                    ExpandAndSelectTreeNode((System.Windows.Forms.TreeView)treeView2, configInfo.FileName);
-                }
-                // 处理原有属性节点的选择，保留兼容
-                else if (e.Node.Tag != null && propertyGrid1.SelectedObject != null)
-                {
-                    // 尝试获取属性信息
-                    var tagType = e.Node.Tag.GetType();
-                    var propertyInfo = tagType.GetProperty("Property");
-                    
-                    if (propertyInfo != null)
-                    {
-                        var propertyName = propertyInfo.GetValue(e.Node.Tag)?.ToString();
-                        if (!string.IsNullOrEmpty(propertyName))
-                        {
-                            var configType = _currentConfig?.GetType();
-                            if (configType != null)
-                            {
-                                var prop = configType.GetProperty(propertyName);
-                                if (prop != null)
-                                {
-                                    var value = prop.GetValue(_currentConfig);
-                                    textBox1.Text = value?.ToString() ?? "";
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理TreeView1选择事件失败");
-                MessageBox.Show($"处理TreeView1选择事件时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+        // 已移除treeView1_AfterSelect方法，功能已整合到treeView2_AfterSelect
 
         /// <summary>
         /// PropertyGrid属性改变事件
@@ -1068,15 +1342,15 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            if (treeView1.SelectedNode?.Tag != null && _currentConfig != null)
+            if (treeView2.SelectedNode?.Tag != null && _currentConfig != null)
             {
                 // 尝试获取属性信息
-                var tagType = treeView1.SelectedNode.Tag.GetType();
+                var tagType = treeView2.SelectedNode.Tag.GetType();
                 var propertyInfo = tagType.GetProperty("Property");
                 
                 if (propertyInfo != null)
                 {
-                    var propertyName = propertyInfo.GetValue(treeView1.SelectedNode.Tag)?.ToString();
+                    var propertyName = propertyInfo.GetValue(treeView2.SelectedNode.Tag)?.ToString();
                     if (!string.IsNullOrEmpty(propertyName))
                     {
                         var configType = _currentConfig.GetType();
@@ -1092,6 +1366,7 @@ namespace RUINORERP.Server.Controls
                             catch (Exception ex)
                             {
                                 _logger?.LogWarning(ex, "属性值转换失败: {PropertyName} = {Value}", propertyName, textBox1.Text);
+                                MessageBox.Show($"属性值转换失败: {propertyName} = {textBox1.Text}\n错误: {ex.Message}", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             }
                         }
                     }
@@ -1128,7 +1403,17 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void tsbtnRefresh_Click(object sender, EventArgs e)
         {
-            LoadData();
+            // 刷新TreeView和当前配置
+            InitializeJsonFilesTreeView();
+            if (!string.IsNullOrEmpty(_currentConfigFileName))
+            {
+                // 重新加载当前配置文件
+                var metadata = _configMetadataCache.Values.FirstOrDefault(m => m.FileName == _currentConfigFileName);
+                if (metadata != null)
+                {
+                    LoadConfigurationFile(metadata.FileName, metadata.RootNode, metadata.ConfigType);
+                }
+            }
         }
 
         /// <summary>

@@ -2359,7 +2359,7 @@ namespace RUINORERP.UI.BaseForm
                 if (pkid > 0)
                 {
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                  
+
                     /*var lockuserid = MainForm.Instance.lockManager.GetLockedBy(pkid);
                     if (lockuserid > 0)
                     {
@@ -2441,7 +2441,7 @@ namespace RUINORERP.UI.BaseForm
                     if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
                         string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
-                        byte[] bytes = UI.Common.ImageHelper.imageToByteArray(frm.CloseCaseImage);
+                        byte[] bytes = UI.Common.ImageHelper.ImageToByteArray(frm.CloseCaseImage);
                         HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
                         ////上传新文件时要加后缀名
                         string uploadRsult = await httpWebService.UploadImageAsyncOK("", strCloseCaseImagePath + ".jpg", bytes, "upload");
@@ -2855,7 +2855,7 @@ namespace RUINORERP.UI.BaseForm
                                         payable.ApprovalOpinions = $"由采购入库单确认{payable.SourceBillNo},系统自动审核";
                                         payable.ApprovalStatus = (int)ApprovalStatus.已审核;
                                         payable.ApprovalResults = true;
-                                    
+
                                         //if (PurEntry.tb_purorder != null && !payable.PayeeInfoID.HasValue)
                                         //{
                                         //    //通过订单添加付款信息
@@ -4007,7 +4007,7 @@ namespace RUINORERP.UI.BaseForm
                     return new ReturnMainSubResults<T>()
                     {
                         Succeeded = false,
-                       // ErrorMsg = tipmsg
+                        // ErrorMsg = tipmsg
                     };
                 }
             }
@@ -4606,7 +4606,7 @@ namespace RUINORERP.UI.BaseForm
                 long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
                 if (pkid > 0)
                 {
-                #warning TODO: 这里需要完善具体逻辑，当前仅为占位
+#warning TODO: 这里需要完善具体逻辑，当前仅为占位
                     /*
 
                     //如果这个锁是自己锁的。就释放
@@ -4899,7 +4899,17 @@ namespace RUINORERP.UI.BaseForm
                     //去检测产品视图的缓存并且转换为强类型
                     UIBizService.RequestCache(typeof(View_ProdDetail));
 
-                    
+
+                    #region 产品公共显示数据
+                    var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                    var cachelist = cacheManager.GetEntityList<View_ProdDetail>();
+                    if (cachelist != null)
+                    {
+                        MainForm.Instance.View_ProdDetailList = cachelist;
+                    }
+
+                    #endregion
+
                     #endregion
                 }
             }

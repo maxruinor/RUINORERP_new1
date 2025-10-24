@@ -26,6 +26,11 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 可选参数，如果为空，服务器会尝试在所有分类中查找文件
         /// </summary>
         public string Category { get; set; }
+        
+        /// <summary>
+        /// 业务ID（关联到特定业务实体）
+        /// </summary>
+        public string BusinessId { get; set; }
 
         /// <summary>
         /// 是否返回文件内容
@@ -93,8 +98,17 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 下载令牌（用于后续操作，如断点续传）
         /// </summary>
-
         public string DownloadToken { get; set; }
+        
+        /// <summary>
+        /// 文件分类
+        /// </summary>
+        public string Category { get; set; }
+        
+        /// <summary>
+        /// 业务关联ID
+        /// </summary>
+        public string BusinessId { get; set; }
     }
 
     /// <summary>
@@ -185,12 +199,16 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 文件哈希值（用于校验完整性）
         /// </summary>
         public string Hash { get; set; }
+        
+        /// <summary>
+        /// 业务关联ID
+        /// </summary>
+        public string BusinessId { get; set; }
     }
 
     /// <summary>
     /// 文件下载选项类（用于扩展下载功能）
     /// </summary>
-
     public class DownloadOptions
     {
         /// <summary>

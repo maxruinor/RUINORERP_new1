@@ -229,6 +229,7 @@
     <Folder Include="SuperSocketServices\Commands\System\" />
     <Folder Include="SuperSocketServices\Documentation\" />
     <Folder Include="SuperSocketServices\Pipeline\" />
+    <Folder Include="SysConfigFiles\" />
     <Folder Include="Workflow\WFOrder\" />
     <Folder Include="Workflow\WFProduce\" />
     <Folder Include="文档\" />

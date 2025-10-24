@@ -872,19 +872,7 @@ namespace RUINORERP.UI.BaseForm
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
 
-            //// 获取销售订单实体类型
-            //var entityType = _mapper.GetEntityType(BizType.销售订单);
-
-            //var bi = _mapper.GetBizType(typeof(M), EditEntity);
-            //// 获取字段映射
-            //var (idField, noField) = _mapper.GetEntityFields(typeof(M));
-
-            // 使用字段名查询数据库...
-            //var order = await MainForm.Instance.AppContext.Db.Queryable<M>(entityType.Name)
-            //    .Includes()
-            //    .Where($"{idField} = @id", new { pkid })
-            //   .SingleAsync();
-
+             
 
 
             ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;

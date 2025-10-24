@@ -170,7 +170,12 @@ namespace RUINORERP.Services
         /// </summary>
         public string GetConfigFilePath(string configType)
         {
-            return Path.Combine(_configDirectory, $"{configType}.json");
+            // 检查是否已经包含.json后缀，如果没有则添加
+            string fileName = configType.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                ? configType
+                : $"{configType}.json";
+            
+            return Path.Combine(_configDirectory, fileName);
         }
 
         /// <summary>

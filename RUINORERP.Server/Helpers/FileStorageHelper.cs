@@ -1,161 +1,240 @@
-using RUINORERP.Model.ConfigModel;
 using System;
 using System.IO;
-using System.Windows.Forms;
+using RUINORERP.Model.ConfigModel;
+using System.Collections.Generic;
+using RUINORERP.PacketSpec.Models;
 
 namespace RUINORERP.Server.Helpers
 {
     /// <summary>
     /// 文件存储帮助类
-    /// 用于处理文件存储路径的初始化、验证和管理
+    /// 提供文件路径管理、存储初始化等辅助功能
     /// </summary>
     public static class FileStorageHelper
     {
+        private static ServerConfig _serverConfig;
+        
         /// <summary>
         /// 初始化文件存储路径
-        /// 确保配置的存储目录存在，如果不存在则创建
         /// </summary>
-        /// <param name="config">服务器配置对象</param>
-        /// <returns>是否初始化成功</returns>
-        public static bool InitializeStoragePath(ServerConfig config)
+        /// <param name="serverConfig">服务器配置</param>
+        public static void InitializeStoragePath(ServerConfig serverConfig)
         {
+            _serverConfig = serverConfig;
+            
+            // 确保根存储目录存在
+            if (!string.IsNullOrEmpty(_serverConfig.FileStoragePath))
+            {
+                var resolvedPath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
+                if (!Directory.Exists(resolvedPath))
+                {
+                    Directory.CreateDirectory(resolvedPath);
+                }
+            }
+            
+            // 确保各类别存储目录存在
+            var categoryPaths = GetCategoryPaths();
+            foreach (var path in categoryPaths)
+            {
+                if (!Directory.Exists(path.Value))
+                {
+                    Directory.CreateDirectory(path.Value);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 解析路径中的环境变量
+        /// </summary>
+        /// <param name="path">包含环境变量的路径</param>
+        /// <returns>解析后的实际路径</returns>
+        private static string ResolveEnvironmentVariables(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return path;
+                
+            // 解析路径中的环境变量（如 %APPDATA%）
+            return System.Environment.ExpandEnvironmentVariables(path);
+        }
+        
+        /// <summary>
+        /// 获取所有分类存储路径
+        /// </summary>
+        /// <returns>分类存储路径字典</returns>
+        public static Dictionary<string, string> GetCategoryPaths()
+        {
+            var paths = new Dictionary<string, string>();
+            
+            if (_serverConfig != null)
+            {
+                var basePath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
+                paths["PaymentVoucher"] = Path.Combine(basePath, _serverConfig.PaymentVoucherPath);
+                paths["ProductImage"] = Path.Combine(basePath, _serverConfig.ProductImagePath);
+                paths["BOMManual"] = Path.Combine(basePath, _serverConfig.BOMManualPath);
+            }
+            
+            return paths;
+        }
+        
+        /// <summary>
+        /// 根据分类获取存储路径
+        /// </summary>
+        /// <param name="category">文件分类</param>
+        /// <returns>存储路径</returns>
+        public static string GetStoragePathByCategory(string category)
+        {
+            if (_serverConfig == null || string.IsNullOrEmpty(category))
+                return null;
+                
+            var categoryPaths = GetCategoryPaths();
+            return categoryPaths.ContainsKey(category) ? categoryPaths[category] : ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
+        }
+        
+        /// <summary>
+        /// 获取文件完整路径
+        /// </summary>
+        /// <param name="fileId">文件ID</param>
+        /// <param name="category">文件分类</param>
+        /// <returns>文件完整路径</returns>
+        public static string GetFullFilePath(string fileId, string category = null)
+        {
+            if (string.IsNullOrEmpty(fileId))
+                return null;
+                
+            var basePath = string.IsNullOrEmpty(category) ? 
+                (_serverConfig != null ? ResolveEnvironmentVariables(_serverConfig.FileStoragePath) : null) : 
+                GetStoragePathByCategory(category);
+                
+            if (string.IsNullOrEmpty(basePath))
+                return null;
+                
+            // 查找文件（支持带扩展名和不带扩展名的查找）
+            var files = Directory.GetFiles(basePath, $"{fileId}.*");
+            return files.Length > 0 ? files[0] : Path.Combine(basePath, fileId);
+        }
+        
+        /// <summary>
+        /// 验证文件大小是否符合限制
+        /// </summary>
+        /// <param name="fileSize">文件大小（字节）</param>
+        /// <returns>是否符合限制</returns>
+        public static bool ValidateFileSize(long fileSize)
+        {
+            if (_serverConfig == null)
+                return true;
+                
+            return fileSize <= _serverConfig.MaxFileSizeMB * 1024 * 1024;
+        }
+        
+        /// <summary>
+        /// 获取存储使用情况
+        /// </summary>
+        /// <returns>存储使用信息</returns>
+        public static StorageUsageInfoData GetStorageUsageInfo()
+        {
+            var usageInfo = new StorageUsageInfoData
+            {
+                CategoryUsage = new Dictionary<string, CategoryUsage>()
+            };
+            
+            if (_serverConfig == null)
+                return usageInfo;
+                
             try
             {
-                // 验证配置对象
-                if (config == null || string.IsNullOrEmpty(config.FileStoragePath))
+                // 计算根目录使用情况
+                var resolvedRootPath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
+                var rootDir = new DirectoryInfo(resolvedRootPath);
+                if (rootDir.Exists)
                 {
-                    MessageBox.Show("文件存储路径未配置，请在全局配置中设置", "配置错误", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
+                    usageInfo.TotalSize = GetDirectorySize(rootDir);
+                    usageInfo.TotalFileCount = GetFileCount(rootDir);
                 }
-
-                // 检查是否为程序运行目录或其子目录
-                string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                string storagePath = Path.GetFullPath(config.FileStoragePath);
                 
-                if (storagePath.StartsWith(appDirectory, StringComparison.OrdinalIgnoreCase))
+                // 计算各类别使用情况
+                var categoryPaths = GetCategoryPaths();
+                foreach (var category in categoryPaths)
                 {
-                    DialogResult result = MessageBox.Show(
-                        "警告：您正在使用程序运行目录作为文件存储位置，这可能导致程序文件和数据文件混淆。\n" +
-                        "建议使用单独的目录存储文件。\n\n是否继续使用此路径？",
-                        "路径警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
-                    
-                    if (result == DialogResult.No)
+                    var categoryDir = new DirectoryInfo(category.Value);
+                    if (categoryDir.Exists)
                     {
-                        return false;
+                        var categoryUsage = new CategoryUsage
+                        {
+                            FileCount = GetFileCount(categoryDir),
+                            TotalSize = GetDirectorySize(categoryDir)
+                        };
+                        
+                        usageInfo.CategoryUsage[category.Key] = categoryUsage;
                     }
                 }
-
-                // 确保目录存在
-                if (!Directory.Exists(storagePath))
-                {
-                    Directory.CreateDirectory(storagePath);
-                    MessageBox.Show($"已创建文件存储目录: {storagePath}", "目录创建", 
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-
-                // 创建子目录结构
-                CreateSubDirectories(storagePath);
-                
-                return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"初始化文件存储路径时出错: {ex.Message}", "错误", 
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
+                // 记录日志但不抛出异常
+                Console.WriteLine($"获取存储使用信息时出错: {ex.Message}");
             }
+            
+            return usageInfo;
         }
-
+        
         /// <summary>
-        /// 创建必要的子目录结构
+        /// 获取目录大小
         /// </summary>
-        /// <param name="basePath">基础存储路径</param>
-        private static void CreateSubDirectories(string basePath)
+        /// <param name="directory">目录信息</param>
+        /// <returns>目录大小（字节）</returns>
+        private static long GetDirectorySize(DirectoryInfo directory)
         {
-            string[] subDirectories = {
-                "Products",      // 产品图片
-                "Documents",     // 文档
-                "Certificates",  // 凭证
-                "Temp",          // 临时文件
-                "Backups"        // 备份
-            };
-
-            foreach (string dir in subDirectories)
-            {
-                string subDirPath = Path.Combine(basePath, dir);
-                if (!Directory.Exists(subDirPath))
-                {
-                    Directory.CreateDirectory(subDirPath);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 验证文件存储路径的有效性
-        /// </summary>
-        /// <param name="path">要验证的路径</param>
-        /// <returns>路径是否有效</returns>
-        public static bool ValidateStoragePath(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                return false;
-
+            long size = 0;
+            
             try
             {
-                // 检查路径格式是否有效
-                Path.GetFullPath(path);
+                // 计算文件大小
+                foreach (var file in directory.GetFiles())
+                {
+                    size += file.Length;
+                }
                 
-                // 检查是否为系统保留路径
-                string root = Path.GetPathRoot(path);
-                if (string.IsNullOrEmpty(root))
-                    return false;
-
-                return true;
+                // 递归计算子目录大小
+                foreach (var subDirectory in directory.GetDirectories())
+                {
+                    size += GetDirectorySize(subDirectory);
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                // 记录日志但不抛出异常
+                Console.WriteLine($"计算目录大小时出错: {ex.Message}");
             }
+            
+            return size;
         }
-
+        
         /// <summary>
-        /// 获取指定类型的文件存储子目录
+        /// 获取目录中文件数量
         /// </summary>
-        /// <param name="basePath">基础存储路径</param>
-        /// <param name="fileType">文件类型</param>
-        /// <returns>完整的子目录路径</returns>
-        public static string GetFileTypeDirectory(string basePath, FileType fileType)
+        /// <param name="directory">目录信息</param>
+        /// <returns>文件数量</returns>
+        private static int GetFileCount(DirectoryInfo directory)
         {
-            string subDirName = fileType switch
+            int count = 0;
+            
+            try
             {
-                FileType.Product => "Products",
-                FileType.Document => "Documents",
-                FileType.Certificate => "Certificates",
-                FileType.Temp => "Temp",
-                FileType.Backup => "Backups",
-                _ => "Other"
-            };
-
-            string subDirPath = Path.Combine(basePath, subDirName);
-            if (!Directory.Exists(subDirPath))
-            {
-                Directory.CreateDirectory(subDirPath);
+                count = directory.GetFiles().Length;
+                
+                // 递归计算子目录中的文件数量
+                foreach (var subDirectory in directory.GetDirectories())
+                {
+                    count += GetFileCount(subDirectory);
+                }
             }
-            return subDirPath;
+            catch (Exception ex)
+            {
+                // 记录日志但不抛出异常
+                Console.WriteLine($"计算文件数量时出错: {ex.Message}");
+            }
+            
+            return count;
         }
-    }
-
-    /// <summary>
-    /// 文件类型枚举
-    /// </summary>
-    public enum FileType
-    {
-        Product,      // 产品图片
-        Document,     // 文档
-        Certificate,  // 凭证
-        Temp,         // 临时文件
-        Backup,       // 备份
-        Other         // 其他文件
     }
 }

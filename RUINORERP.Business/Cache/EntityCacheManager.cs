@@ -360,8 +360,75 @@ namespace RUINORERP.Business.Cache
                 var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
                 var cachedList = _cacheManager.Get(cacheKey);
 
+                // 检查缓存是否过期，如果过期则强制从数据源获取
+                bool isCacheExpired = _cacheSyncMetadata?.IsTableExpired(tableName) ?? false;
+                if (isCacheExpired)
+                {
+                    _logger?.LogDebug($"表 {tableName} 的缓存已过期，将从数据源获取最新数据");
+                    cachedList = null; // 强制从数据源获取
+                }
+
                 // 更新缓存访问统计
                 UpdateCacheAccessStatistics(cacheKey, cachedList != null, "List", tableName, cachedList);
+
+                // 如果缓存为空或已过期，尝试从数据源获取
+                if (cachedList == null)
+                {
+                    if (_cacheDataProvider != null)
+                    {
+                        try
+                        {
+                            List<T> list = null;
+                            
+                            // 处理当T是Object类型的情况
+                            if (typeof(T) == typeof(object))
+                            {
+                                // 从TableSchemaManager获取正确的实体类型
+                                var entityType = _tableSchemaManager.GetEntityType(tableName);
+                                if (entityType != null)
+                                {
+                                    _logger?.LogDebug($"检测到T是Object类型，从表名 {tableName} 获取实体类型: {entityType.Name}");
+                                    
+                                    // 使用反射创建并调用正确类型的GetEntityListFromSource方法
+                                    var getListMethod = typeof(ICacheDataProvider).GetMethod("GetEntityListFromSource");
+                                    if (getListMethod != null)
+                                    {
+                                        var genericMethod = getListMethod.MakeGenericMethod(entityType);
+                                        var stronglyTypedList = genericMethod.Invoke(_cacheDataProvider, new object[] { tableName }) as IEnumerable;
+                                        
+                                        if (stronglyTypedList != null)
+                                        {
+                                            // 转换为List<object>返回
+                                            list = stronglyTypedList.Cast<T>().ToList();
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // 正常情况：直接使用T类型查询
+                                list = _cacheDataProvider.GetEntityListFromSource<T>(tableName);
+                            }
+                            
+                            // 即使列表为空也要缓存，避免空表频繁查询数据库
+                            if (list != null)
+                            {
+                                // 将获取到的数据（包括空列表）更新到缓存
+                                PutToCache(cacheKey, list, "List", tableName);
+                                
+                                // 直接更新缓存同步元数据
+                                UpdateCacheSyncMetadataAfterEntityChange(tableName);
+                                
+                                return list;
+                            }
+                        }
+                        catch (Exception dataEx)
+                        {
+                            _logger?.LogError(dataEx, $"从数据源获取表 {tableName} 的实体列表时发生错误");
+                        }
+                    }
+                    return new List<T>();
+                }
 
                 // 支持处理从socket传输过来的JArray类型数据
                 if (cachedList != null && cachedList.GetType().FullName == "Newtonsoft.Json.Linq.JArray")
@@ -417,31 +484,7 @@ namespace RUINORERP.Business.Cache
             {
                 _logger?.LogError(ex, $"获取表 {tableName} 的实体列表缓存时发生错误");
 
-                // 尝试从数据源获取数据（如果提供了数据提供者）
-                if (_cacheDataProvider != null)
-                {
-                    try
-                    {
-                        var list = _cacheDataProvider.GetEntityListFromSource<T>(tableName);
-                        // 即使列表为空也要缓存，避免空表频繁查询数据库
-                        if (list != null)
-                        {
-                            // 将获取到的数据（包括空列表）更新到缓存
-                            var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
-                            PutToCache(cacheKey, list, "List", tableName);
-                            
-                            // 直接更新缓存同步元数据
-                            UpdateCacheSyncMetadataAfterEntityChange(tableName);
-                            
-                            return list;
-                        }
-                    }
-                    catch (Exception dataEx)
-                    {
-                        _logger?.LogError(dataEx, $"从数据源获取表 {tableName} 的实体列表时发生错误");
-                    }
-                }
-
+                // 在catch块中不再重复数据源获取逻辑，因为已在try块前部处理
                 return new List<T>();
             }
         }
@@ -457,6 +500,7 @@ namespace RUINORERP.Business.Cache
                 var tableName = typeof(T).Name;
                 
                 // 直接从列表缓存中查找实体
+                // GetEntityList方法内部已经处理了缓存过期的情况
                 var list = GetEntityList<T>(tableName);
                 var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
 
@@ -478,12 +522,41 @@ namespace RUINORERP.Business.Cache
                     {
                         try
                         {
-                            entityFound = _cacheDataProvider.GetEntityFromSource<T>(tableName, idValue);
-                            if (entityFound != null)
+                            // 处理当T是Object类型的情况
+                            if (typeof(T) == typeof(object))
                             {
-                                // 只更新列表缓存
-                                UpdateEntityInList(tableName, entityFound);
-                                _logger?.LogDebug($"从数据源获取表 {tableName} ID为 {idValue} 的实体并更新到列表缓存");
+                                // 从TableSchemaManager获取正确的实体类型
+                                var entityType = _tableSchemaManager.GetEntityType(tableName);
+                                if (entityType != null)
+                                {
+                                    _logger?.LogDebug($"检测到T是Object类型，从表名 {tableName} 获取实体类型: {entityType.Name}");
+                                    
+                                    // 使用反射创建并调用正确类型的GetEntityFromSource方法
+                                    var getEntityMethod = typeof(ICacheDataProvider).GetMethod("GetEntityFromSource");
+                                    if (getEntityMethod != null)
+                                    {
+                                        var genericMethod = getEntityMethod.MakeGenericMethod(entityType);
+                                        entityFound = genericMethod.Invoke(_cacheDataProvider, new object[] { tableName, idValue }) as T;
+                                        
+                                        if (entityFound != null)
+                                        {
+                                            // 只更新列表缓存
+                                            UpdateEntityInList(tableName, entityFound);
+                                            _logger?.LogDebug($"从数据源获取表 {tableName} ID为 {idValue} 的实体并更新到列表缓存");
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // 正常情况：直接使用T类型查询
+                                entityFound = _cacheDataProvider.GetEntityFromSource<T>(tableName, idValue);
+                                if (entityFound != null)
+                                {
+                                    // 只更新列表缓存
+                                    UpdateEntityInList(tableName, entityFound);
+                                    _logger?.LogDebug($"从数据源获取表 {tableName} ID为 {idValue} 的实体并更新到列表缓存");
+                                }
                             }
                             return entityFound;
                         }

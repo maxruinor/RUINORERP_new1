@@ -8,19 +8,14 @@ using System.Drawing;
 using HLH.Lib.Draw;
 using System.Reflection;
 using RUINORERP.Global.Model;
+using System.IO;
+using System.ComponentModel;
 
 namespace RUINOR.WinFormsUI.CustomPictureBox
 {
     /// <summary>
     /// 自定义PictureBox控件
-    /// 是不是考虑多个图片的情况？比方凭证多张。路径用;隔开
-    /// 名称路径思路：
-    /// 创建第一次Image有值时就给一个默认的名称，唯一的
-    /// 保存图片的hash值，用于判断图片是否已经存在并且没有改变
-    /// 为了方便比较是否修改过。直接用hash值作为名称。并不长。
-    /// TODO:重点: 因为修改后。要删除旧文件。所以文件名保存了新旧新的hash值。如果hash值相同，则不删除。不同则上传新的删除旧的。
-    /// 格式为: oldhash_newhash 无后缀 默认.jpg
-    /// 
+    /// 支持多张图片显示，路径用;隔开
     /// </summary>
     public class MagicPictureBox : PictureBox
     {
@@ -45,7 +40,39 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         private DataRowImage _RowImage = new DataRowImage();
         public DataRowImage RowImage { get => _RowImage; set => _RowImage = value; }
- 
+        
+        // 多图片支持
+        private List<Image> images = new List<Image>();
+        private int currentImageIndex = 0;
+        private string imagePaths = ""; // 存储图片路径，用;分隔
+        
+        // 导航控件
+        private Panel navigationPanel;
+        private Button prevButton;
+        private Button nextButton;
+        private Label pageInfoLabel;
+
+        [Browsable(true)]
+        [Category("自定义属性")]
+        [Description("是否支持多图片显示")]
+        public bool MultiImageSupport { get; set; } = false;
+
+        [Browsable(true)]
+        [Category("自定义属性")]
+        [Description("图片路径，用;分隔")]
+        public string ImagePaths
+        {
+            get { return imagePaths; }
+            set 
+            { 
+                imagePaths = value;
+                if (MultiImageSupport)
+                {
+                    LoadImagesFromPaths();
+                }
+            }
+        }
+
         public MagicPictureBox() : base()
         {
             // 设置允许拖拽
@@ -67,10 +94,200 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             this.MouseMove += CustomPictureBox_MouseMove;
             this.MouseUp += CustomPictureBox_MouseUp;
             this.MouseWheel += CustomPictureBox_MouseWheel;
-
-
         }
 
+        /// <summary>
+        /// 从路径加载多张图片
+        /// </summary>
+        private void LoadImagesFromPaths()
+        {
+            images.Clear();
+            
+            if (string.IsNullOrEmpty(imagePaths))
+                return;
+
+            var paths = imagePaths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            
+            foreach (var path in paths)
+            {
+                if (File.Exists(path))
+                {
+                    try
+                    {
+                        images.Add(Image.FromFile(path));
+                    }
+                    catch
+                    {
+                        // 加载失败，跳过
+                    }
+                }
+            }
+            
+            currentImageIndex = 0;
+            ShowCurrentImage();
+            CreateNavigationControls();
+        }
+
+        /// <summary>
+        /// 显示当前图片
+        /// </summary>
+        private void ShowCurrentImage()
+        {
+            if (images.Count > 0 && currentImageIndex < images.Count)
+            {
+                this.Image = images[currentImageIndex];
+            }
+            else
+            {
+                this.Image = null;
+            }
+            
+            UpdatePageInfo();
+        }
+
+        /// <summary>
+        /// 更新图片路径字符串
+        /// </summary>
+        private void UpdateImagePathsFromImages()
+        {
+            if (MultiImageSupport)
+            {
+                // 注意：这里只是示例实现，实际应用中可能需要保存图片到指定位置并更新路径
+                // 当前实现仅用于同步图片数量信息
+                var pathList = new List<string>();
+                for (int i = 0; i < images.Count; i++)
+                {
+                    // 如果原来有路径且图片存在，则保留原路径
+                    var originalPaths = imagePaths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (i < originalPaths.Length && File.Exists(originalPaths[i]))
+                    {
+                        pathList.Add(originalPaths[i]);
+                    }
+                    else
+                    {
+                        pathList.Add($"image_{i}.png"); // 占位符路径
+                    }
+                }
+                imagePaths = string.Join(";", pathList);
+            }
+        }
+
+        /// <summary>
+        /// 创建导航控件
+        /// </summary>
+        private void CreateNavigationControls()
+        {
+            if (!MultiImageSupport || images.Count <= 1)
+            {
+                // 隐藏导航控件
+                if (navigationPanel != null)
+                {
+                    navigationPanel.Visible = false;
+                }
+                return;
+            }
+
+            // 如果已经创建过导航控件，直接更新
+            if (navigationPanel != null)
+            {
+                navigationPanel.Visible = true;
+                UpdatePageInfo();
+                return;
+            }
+
+            // 创建导航面板
+            navigationPanel = new Panel
+            {
+                Height = 30,
+                Dock = DockStyle.Bottom,
+                BackColor = Color.LightGray,
+                Visible = true
+            };
+
+            // 上一张按钮
+            prevButton = new Button
+            {
+                Text = "<",
+                Width = 30,
+                Height = 25,
+                Location = new Point(10, 2),
+                Enabled = currentImageIndex > 0
+            };
+            prevButton.Click += PrevButton_Click;
+
+            // 下一张按钮
+            nextButton = new Button
+            {
+                Text = ">",
+                Width = 30,
+                Height = 25,
+                Location = new Point(70, 2),
+                Enabled = currentImageIndex < images.Count - 1
+            };
+            nextButton.Click += NextButton_Click;
+
+            // 页码信息
+            pageInfoLabel = new Label
+            {
+                Text = "1/1",
+                AutoSize = true,
+                Location = new Point(110, 7)
+            };
+
+            navigationPanel.Controls.Add(prevButton);
+            navigationPanel.Controls.Add(nextButton);
+            navigationPanel.Controls.Add(pageInfoLabel);
+
+            // 添加到当前控件中
+            this.Controls.Add(navigationPanel);
+            
+            UpdatePageInfo();
+        }
+
+        /// <summary>
+        /// 更新页码信息
+        /// </summary>
+        private void UpdatePageInfo()
+        {
+            if (pageInfoLabel != null)
+            {
+                pageInfoLabel.Text = $"{currentImageIndex + 1}/{images.Count}";
+            }
+            
+            if (prevButton != null)
+            {
+                prevButton.Enabled = currentImageIndex > 0;
+            }
+            
+            if (nextButton != null)
+            {
+                nextButton.Enabled = currentImageIndex < images.Count - 1;
+            }
+        }
+
+        /// <summary>
+        /// 上一张图片
+        /// </summary>
+        private void PrevButton_Click(object sender, EventArgs e)
+        {
+            if (currentImageIndex > 0)
+            {
+                currentImageIndex--;
+                ShowCurrentImage();
+            }
+        }
+
+        /// <summary>
+        /// 下一张图片
+        /// </summary>
+        private void NextButton_Click(object sender, EventArgs e)
+        {
+            if (currentImageIndex < images.Count - 1)
+            {
+                currentImageIndex++;
+                ShowCurrentImage();
+            }
+        }
 
         //动态添加右键菜单
         private void AddContextMenuItems()
@@ -82,6 +299,14 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             if (!contextMenuStrip.Items.ContainsKey("清除图片"))
             {
                 contextMenuStrip.Items.Add(new ToolStripMenuItem("清除图片", null, new EventHandler(ClearImage), "清除图片"));
+            }
+            if (MultiImageSupport && !contextMenuStrip.Items.ContainsKey("添加图片"))
+            {
+                contextMenuStrip.Items.Add(new ToolStripMenuItem("添加图片", null, new EventHandler(AddImage), "添加图片"));
+            }
+            if (MultiImageSupport && !contextMenuStrip.Items.ContainsKey("删除当前图片"))
+            {
+                contextMenuStrip.Items.Add(new ToolStripMenuItem("删除当前图片", null, new EventHandler(DeleteCurrentImage), "删除当前图片"));
             }
             if (!contextMenuStrip.Items.ContainsKey("裁剪图片"))
             {
@@ -100,11 +325,91 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
         }
 
+        /// <summary>
+        /// 删除当前图片
+        /// </summary>
+        private void DeleteCurrentImage(object sender, EventArgs e)
+        {
+            if (MultiImageSupport && images.Count > 0)
+            {
+                // 删除当前图片
+                images.RemoveAt(currentImageIndex);
+                
+                // 调整当前索引
+                if (currentImageIndex >= images.Count && images.Count > 0)
+                {
+                    currentImageIndex = images.Count - 1;
+                }
+                
+                // 显示新图片或清空
+                if (images.Count > 0)
+                {
+                    ShowCurrentImage();
+                }
+                else
+                {
+                    this.Image = null;
+                    imagePaths = "";
+                }
+                
+                // 更新导航控件
+                CreateNavigationControls();
+                UpdatePageInfo();
+                UpdateImagePathsFromImages(); // 更新图片路径
+            }
+        }
+
         private void ClearImage(object sender, EventArgs e)
         {
             this.Image = null;
+            if (MultiImageSupport)
+            {
+                images.Clear();
+                currentImageIndex = 0;
+                imagePaths = "";
+            }
             // 重绘 PictureBox
             this.Invalidate();
+        }
+
+        /// <summary>
+        /// 添加图片
+        /// </summary>
+        private void AddImage(object sender, EventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Title = "选择图片";
+                openFileDialog.Filter = "图片文件|*.bmp;*.jpg;*.jpeg;*.png;*.gif";
+                openFileDialog.Multiselect = true; // 允许多选
+                
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    foreach (var fileName in openFileDialog.FileNames)
+                    {
+                        try
+                        {
+                            var image = Image.FromFile(fileName);
+                            images.Add(image);
+                            
+                            // 如果是第一张图片，显示它
+                            if (images.Count == 1)
+                            {
+                                currentImageIndex = 0;
+                                ShowCurrentImage();
+                                CreateNavigationControls();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"加载图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    
+                    UpdatePageInfo();
+                    UpdateImagePathsFromImages(); // 更新图片路径
+                }
+            }
         }
 
         private void PictureBoxViewer_Paint(object sender, PaintEventArgs e)
@@ -164,6 +469,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 this.Visible = true;
                 this.imageCroppingBox1.Visible = false;
                 this.Image = this.imageCroppingBox1.GetSelectedImage();
+                
+                // 更新多图片列表中的当前图片
+                if (MultiImageSupport && currentImageIndex < images.Count)
+                {
+                    images[currentImageIndex] = this.Image;
+                }
             }
         }
 
@@ -183,24 +494,46 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
         }
         // 拖拽事件
-        protected override void OnDragEnter(DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
-            {
-                e.Effect = DragDropEffects.Copy;
-            }
-            base.OnDragEnter(e);
-        }
-
         protected override void OnDragDrop(DragEventArgs e)
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (files != null && files.Length > 0)
             {
-                Image image = Image.FromFile(files[0]);
-                string newhash = ImageHelper.GetImageHash(this.Image);
-                RowImage.SetImageNewHash(newhash);
-                this.Image = image;
+                if (MultiImageSupport)
+                {
+                    // 多图片模式，添加所有拖拽的图片
+                    foreach (var file in files)
+                    {
+                        try
+                        {
+                            var image = Image.FromFile(file);
+                            images.Add(image);
+                            
+                            // 如果是第一张图片，显示它
+                            if (images.Count == 1)
+                            {
+                                currentImageIndex = 0;
+                                ShowCurrentImage();
+                                CreateNavigationControls();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"加载图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    
+                    UpdatePageInfo();
+                    UpdateImagePathsFromImages(); // 更新图片路径
+                }
+                else
+                {
+                    // 单图片模式，只加载第一张
+                    Image image = Image.FromFile(files[0]);
+                    string newhash = ImageHelper.GetImageHash(this.Image);
+                    RowImage.SetImageNewHash(newhash);
+                    this.Image = image;
+                }
             }
             base.OnDragDrop(e);
         }
@@ -216,6 +549,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 string newhash = ImageHelper.GetImageHash(image);
                 RowImage.SetImageNewHash(newhash);
                 this.Image = image;
+
+                // 如果是多图片模式，添加到列表中
+                if (MultiImageSupport)
+                {
+                    images.Add(image);
+                    currentImageIndex = images.Count - 1;
+                    CreateNavigationControls();
+                    UpdatePageInfo();
+                    UpdateImagePathsFromImages(); // 更新图片路径
+                }
 
                 AddContextMenuItems();
             }
@@ -245,6 +588,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         this.Image = Image.FromFile(openFileDialog.FileName);
                         string newhash = ImageHelper.GetImageHash(this.Image);
                         RowImage.SetImageNewHash(newhash);
+                        
+                        // 如果是多图片模式，添加到列表中
+                        if (MultiImageSupport)
+                        {
+                            images.Add(this.Image);
+                            currentImageIndex = images.Count - 1;
+                            CreateNavigationControls();
+                            UpdatePageInfo();
+                            UpdateImagePathsFromImages(); // 更新图片路径
+                        }
                     }
                 }
             }
@@ -258,6 +611,14 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     this.Image = CropImage(this.Image, cropRectangle);
                     string newhash = ImageHelper.GetImageHash(this.Image);
                     RowImage.SetImageNewHash(newhash);
+                    
+                    // 更新多图片列表中的当前图片
+                    if (MultiImageSupport && currentImageIndex < images.Count)
+                    {
+                        images[currentImageIndex] = this.Image;
+                        UpdateImagePathsFromImages(); // 更新图片路径
+                    }
+                    
                     isCropping = false;
                 }
                 else
@@ -351,6 +712,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     this.Image = CropImage(this.Image, cropRectangle);
                     string newhash = ImageHelper.GetImageHash(this.Image);
                     RowImage.SetImageNewHash(newhash);
+                    
+                    // 更新多图片列表中的当前图片
+                    if (MultiImageSupport && currentImageIndex < images.Count)
+                    {
+                        images[currentImageIndex] = this.Image;
+                    }
+                    
                     cropRectangle = Rectangle.Empty;
                 }
             }
@@ -391,6 +759,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 rotationAngle += 90;
                 this.Image = RotateImage(this.Image, rotationAngle);
+                
+                // 更新多图片列表中的当前图片
+                if (MultiImageSupport && currentImageIndex < images.Count)
+                {
+                    images[currentImageIndex] = this.Image;
+                }
             }
         }
 
@@ -411,6 +785,51 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 var bmp = new Bitmap(img.Width, img.Height);
                 graphics.DrawImage(img, new Point(0, 0));
                 return bmp;
+            }
+        }
+        
+        /// <summary>
+        /// 获取当前图片路径
+        /// </summary>
+        /// <returns>当前图片路径</returns>
+        public string GetCurrentImagePath()
+        {
+            if (MultiImageSupport)
+            {
+                if (!string.IsNullOrEmpty(imagePaths))
+                {
+                    var paths = imagePaths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (currentImageIndex >= 0 && currentImageIndex < paths.Length)
+                    {
+                        return paths[currentImageIndex];
+                    }
+                }
+            }
+            return "";
+        }
+        
+        /// <summary>
+        /// 获取所有图片
+        /// </summary>
+        /// <returns>图片列表</returns>
+        public List<Image> GetImages()
+        {
+            return new List<Image>(images);
+        }
+        
+        /// <summary>
+        /// 设置图片列表
+        /// </summary>
+        /// <param name="imageList">图片列表</param>
+        public void SetImages(List<Image> imageList)
+        {
+            if (MultiImageSupport)
+            {
+                images = new List<Image>(imageList);
+                currentImageIndex = 0;
+                ShowCurrentImage();
+                CreateNavigationControls();
+                UpdateImagePathsFromImages(); // 更新图片路径
             }
         }
     }

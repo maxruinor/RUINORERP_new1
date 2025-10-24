@@ -58,7 +58,7 @@ namespace RUINORERP.Model
                            {
                                item.tb_proddetail.DisplayText,
                               "数量:"+ item.Quantity.ToString(),
-                              "单价:"+ item.UnitPrice.ToString(),
+                              "单价:"+(item.CustomizedCost+item.UnitPrice).ToString(),//包含定制成本
                               "小计:"+ item.SubtotalAmount.ToString(),
                             }.Where(s => !string.IsNullOrWhiteSpace(s));
                         parts.Add(string.Join(",", part));

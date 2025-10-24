@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,10 +8,6 @@ using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Models
 {
-    internal class FileStorageInfo
-    {
-    }
-
     /// <summary>
     /// 存储使用信息数据类
     /// </summary>
@@ -141,6 +137,9 @@ namespace RUINORERP.PacketSpec.Models
         }
     }
 
+    /// <summary>
+    /// 分类使用信息
+    /// </summary>
     public class CategoryUsage
     {
         public int FileCount { get; set; }

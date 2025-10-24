@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
+using System.IO;
 using Autofac;
 using Autofac.Core;
 using Autofac.Extensions.DependencyInjection;
@@ -73,7 +74,6 @@ using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Comm;
 using WorkflowCore.Interface;
 using RUINORERP.Server.Controls;
-using RUINORERP.Business.Cache;
 using RUINORERP.PacketSpec.Serialization;
 using System.Reflection;
 
@@ -296,6 +296,68 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
+        /// 检查服务器配置是否有效
+        /// </summary>
+        /// <returns>配置是否有效</returns>
+        private bool CheckServerConfiguration()
+        {
+            try
+            {
+                PrintInfoLog("正在检查服务器配置...");
+                
+                // 检查必要的配置文件是否存在
+                string configurationFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "configuration.json");
+                if (!File.Exists(configurationFilePath))
+                {
+                    PrintErrorLog($"配置文件不存在: {configurationFilePath}");
+                    MessageBox.Show($"服务器配置文件不存在: {configurationFilePath}\n请确保配置文件已正确创建。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                
+                // 尝试读取和解析配置文件
+                try
+                {
+                    var configuration = new ConfigurationBuilder()
+                        .AddJsonFile("configuration.json")
+                        .Build();
+                    
+                    // 检查必要的配置项是否存在
+                    var connectionString = configuration.GetConnectionString("DefaultConnection");
+                    if (string.IsNullOrEmpty(connectionString))
+                    {
+                        PrintErrorLog("配置文件中缺少数据库连接字符串: DefaultConnection");
+                        MessageBox.Show("配置文件中缺少必要的数据库连接字符串\n请确保 'DefaultConnection' 已正确配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return false;
+                    }
+                    
+                    // 检查服务器端口配置
+                    var portSection = configuration.GetSection("Server:Port");
+                    if (portSection.Value == null || !int.TryParse(portSection.Value, out int port) || port <= 0 || port > 65535)
+                    {
+                        PrintErrorLog("配置文件中缺少或无效的服务器端口配置");
+                        MessageBox.Show("配置文件中缺少或无效的服务器端口配置\n请确保 'Server:Port' 已正确设置为有效的端口号。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return false;
+                    }
+                    
+                    PrintInfoLog("服务器配置检查通过");
+                    return true;
+                }
+                catch (JsonException ex)
+                {
+                    PrintErrorLog($"配置文件格式错误: {ex.Message}");
+                    MessageBox.Show($"配置文件格式错误: {ex.Message}\n请检查 configuration.json 文件的格式是否正确。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"检查配置时发生错误: {ex.Message}");
+                MessageBox.Show($"检查服务器配置时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 启动服务器
         /// </summary>
         private async Task StartServerAsync()
@@ -309,6 +371,13 @@ namespace RUINORERP.Server
 
             try
             {
+                // 检查服务器配置
+                if (!CheckServerConfiguration())
+                {
+                    PrintErrorLog("服务器配置检查失败，启动被取消");
+                    return;
+                }
+                
                 // 立即禁用启动按钮，防止重复点击
                 SetServerButtonsEnabled(false);
 

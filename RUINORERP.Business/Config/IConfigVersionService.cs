@@ -1,10 +1,10 @@
-using RUINORERP.Model.ConfigModel;
+﻿using RUINORERP.Model.ConfigModel;
 using RUINORERP.Model;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
 
-namespace RUINORERP.IServices
+namespace RUINORERP.Business.Config
 {
     /// <summary>
     /// 配置版本控制服务接口

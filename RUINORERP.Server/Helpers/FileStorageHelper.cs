@@ -32,15 +32,7 @@ namespace RUINORERP.Server.Helpers
                 }
             }
             
-            // 确保各类别存储目录存在
-            var categoryPaths = GetCategoryPaths();
-            foreach (var path in categoryPaths)
-            {
-                if (!Directory.Exists(path.Value))
-                {
-                    Directory.CreateDirectory(path.Value);
-                }
-            }
+            
         }
         
         /// <summary>
@@ -57,61 +49,9 @@ namespace RUINORERP.Server.Helpers
             return System.Environment.ExpandEnvironmentVariables(path);
         }
         
-        /// <summary>
-        /// 获取所有分类存储路径
-        /// </summary>
-        /// <returns>分类存储路径字典</returns>
-        public static Dictionary<string, string> GetCategoryPaths()
-        {
-            var paths = new Dictionary<string, string>();
-            
-            if (_serverConfig != null)
-            {
-                var basePath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
-                paths["PaymentVoucher"] = Path.Combine(basePath, _serverConfig.PaymentVoucherPath);
-                paths["ProductImage"] = Path.Combine(basePath, _serverConfig.ProductImagePath);
-                paths["BOMManual"] = Path.Combine(basePath, _serverConfig.BOMManualPath);
-            }
-            
-            return paths;
-        }
+     
         
-        /// <summary>
-        /// 根据分类获取存储路径
-        /// </summary>
-        /// <param name="category">文件分类</param>
-        /// <returns>存储路径</returns>
-        public static string GetStoragePathByCategory(string category)
-        {
-            if (_serverConfig == null || string.IsNullOrEmpty(category))
-                return null;
-                
-            var categoryPaths = GetCategoryPaths();
-            return categoryPaths.ContainsKey(category) ? categoryPaths[category] : ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
-        }
-        
-        /// <summary>
-        /// 获取文件完整路径
-        /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="category">文件分类</param>
-        /// <returns>文件完整路径</returns>
-        public static string GetFullFilePath(string fileId, string category = null)
-        {
-            if (string.IsNullOrEmpty(fileId))
-                return null;
-                
-            var basePath = string.IsNullOrEmpty(category) ? 
-                (_serverConfig != null ? ResolveEnvironmentVariables(_serverConfig.FileStoragePath) : null) : 
-                GetStoragePathByCategory(category);
-                
-            if (string.IsNullOrEmpty(basePath))
-                return null;
-                
-            // 查找文件（支持带扩展名和不带扩展名的查找）
-            var files = Directory.GetFiles(basePath, $"{fileId}.*");
-            return files.Length > 0 ? files[0] : Path.Combine(basePath, fileId);
-        }
+       
         
         /// <summary>
         /// 验证文件大小是否符合限制
@@ -152,21 +92,21 @@ namespace RUINORERP.Server.Helpers
                 }
                 
                 // 计算各类别使用情况
-                var categoryPaths = GetCategoryPaths();
-                foreach (var category in categoryPaths)
-                {
-                    var categoryDir = new DirectoryInfo(category.Value);
-                    if (categoryDir.Exists)
-                    {
-                        var categoryUsage = new CategoryUsage
-                        {
-                            FileCount = GetFileCount(categoryDir),
-                            TotalSize = GetDirectorySize(categoryDir)
-                        };
+                //var categoryPaths = GetCategoryPaths();
+                //foreach (var category in categoryPaths)
+                //{
+                //    var categoryDir = new DirectoryInfo(category.Value);
+                //    if (categoryDir.Exists)
+                //    {
+                //        var categoryUsage = new CategoryUsage
+                //        {
+                //            FileCount = GetFileCount(categoryDir),
+                //            TotalSize = GetDirectorySize(categoryDir)
+                //        };
                         
-                        usageInfo.CategoryUsage[category.Key] = categoryUsage;
-                    }
-                }
+                //        usageInfo.CategoryUsage[category.Key] = categoryUsage;
+                //    }
+                //}
             }
             catch (Exception ex)
             {

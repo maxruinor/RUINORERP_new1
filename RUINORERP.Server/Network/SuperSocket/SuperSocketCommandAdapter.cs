@@ -143,16 +143,16 @@ namespace RUINORERP.Server.Network.SuperSocket
                 catch (OperationCanceledException ex)
                 {
                     _logger?.LogError(ex, "命令执行超时或被取消: CommandId={CommandId}", package.Packet.CommandId);
-                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_Timeout.Message, UnifiedErrorCodes.System_Timeout.Code);
+                    result = ResponseFactory.CreateSpecificErrorResponse(package.Packet.ExecutionContext, UnifiedErrorCodes.System_Timeout.Message);
                 }
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "命令执行异常: CommandId={CommandId}", package.Packet.CommandId);
-                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
+                    result = ResponseFactory.CreateSpecificErrorResponse(package.Packet.ExecutionContext, UnifiedErrorCodes.System_InternalError.Message);
                 }
                 if (result == null)
                 {
-                    result = ResponseBase.CreateError(UnifiedErrorCodes.System_InternalError.Message, UnifiedErrorCodes.System_InternalError.Code);
+                    result = ResponseFactory.CreateSpecificErrorResponse(package.Packet.ExecutionContext, UnifiedErrorCodes.System_InternalError.Message);
                 }
 
                 // 使用新的 CancellationToken.None 来确保响应能够发送，即使命令处理超时
@@ -252,7 +252,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         }
 
 
-  
+
         /// <summary>
         /// 发送响应
         /// </summary>
@@ -420,7 +420,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 // 添加原始错误信息
                 errorResponse.Extensions["OriginalErrorMessage"] = result.ErrorMessage ?? "无错误消息";
                 errorResponse.Extensions["OriginalMessage"] = result.Message ?? "无消息";
-                
+
                 // 设置请求ID
                 if (requestPackage.Packet != null && requestPackage.Packet.Request != null)
                 {
@@ -437,7 +437,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     errorResponse.Response = result;
                 }
-                
+
                 // 添加元数据中的所有错误信息
                 if (result.Metadata != null && result.Metadata.Count > 0)
                 {

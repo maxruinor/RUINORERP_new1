@@ -14,6 +14,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Cache;
 using RUINORERP.UI.Network.Services.Cache;
 using RUINORERP.PacketSpec.Serialization;
+using RUINORERP.Business;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -45,6 +46,7 @@ namespace RUINORERP.UI.Network.DI
             services.AddSingleton<EventDrivenCacheManager>();
             services.AddSingleton<CacheRequestManager>();
             services.AddSingleton<CacheResponseProcessor>();
+
 
             // 注册TokenManager相关服务
             // 首先配置TokenServiceOptions
@@ -84,8 +86,9 @@ namespace RUINORERP.UI.Network.DI
             services.AddTransient<SimplifiedMessageService>();
             services.AddTransient<SystemManagementService>();
             services.AddTransient<AuthenticationManagementService>();
-
-
+            services.AddSingleton<FileManagementController>();
+            services.AddSingleton<FileManagementService>();
+            
         }
 
 
@@ -148,8 +151,15 @@ namespace RUINORERP.UI.Network.DI
             builder.RegisterType<SystemManagementService>().AsSelf().InstancePerDependency();
             builder.RegisterType<AuthenticationManagementService>().AsSelf().InstancePerDependency();
 
-
-
+            // 注册文件管理控制器
+            builder.RegisterType<FileManagementController>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
+            builder.RegisterType<FileManagementService>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
             // 移除RegisterBuildCallback回调，因为我们已经通过构造函数注入解决了循环依赖问题
         }
 

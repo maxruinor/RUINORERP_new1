@@ -14,6 +14,11 @@ using System.Collections.Generic;
 using System.Linq;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Server.Helpers;
+using RUINORERP.Model;
+using RUINORERP.Business;
+using RUINORERP.IServices;
+using Azure;
+using SqlSugar;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {
@@ -27,22 +32,38 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly ILogger<FileCommandHandler> _logger;
         private readonly string _fileStoragePath;
         private readonly ServerConfig _serverConfig;
+        // 添加业务控制器用于数据库操作
+        private readonly tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo> _fileStorageInfoController;
+        private readonly tb_FS_BusinessRelationController<tb_FS_BusinessRelation> _businessRelationController;
+        private readonly tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> _fileStorageVersionController;
 
-        public FileCommandHandler(SessionService sessionService, ILogger<FileCommandHandler> logger = null)
+
+        public FileCommandHandler(
+            SessionService sessionService,
+            ILogger<FileCommandHandler> logger = null,
+            tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo> fileStorageInfoController = null,
+            tb_FS_BusinessRelationController<tb_FS_BusinessRelation> businessRelationController = null,
+            tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> fileStorageVersionController = null)
         {
             _sessionService = sessionService;
             _logger = logger;
-            
+
             // 从配置管理器获取服务器配置
             _serverConfig = Startup.GetFromFac<ServerConfig>() ?? new ServerConfig();
             _fileStoragePath = _serverConfig.FileStoragePath;
+
+            // 注入业务控制器
+            _fileStorageInfoController = fileStorageInfoController;
+            _businessRelationController = businessRelationController;
+            _fileStorageVersionController = fileStorageVersionController;
+
 
             // 确保文件存储目录存在
             if (!Directory.Exists(_fileStoragePath))
             {
                 Directory.CreateDirectory(_fileStoragePath);
             }
-            
+
             // 初始化文件存储路径
             FileStorageHelper.InitializeStoragePath(_serverConfig);
 
@@ -77,14 +98,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     return await HandleFileDeleteAsync(deleteRequest, cmd.Packet.ExecutionContext, cancellationToken);
                 }
-                else if (cmd.Packet.Request is FileListRequest listRequest && commandId == FileCommands.FileList)
-                {
-                    return await HandleFileListAsync(listRequest, cmd.Packet.ExecutionContext, cancellationToken);
-                }
-                else if (cmd.Packet.Request is FileInfoRequest infoRequest && commandId == FileCommands.FileInfoQuery)
-                {
-                    return await HandleFileInfoAsync(infoRequest, cmd.Packet.ExecutionContext, cancellationToken);
-                }
+                //else if (cmd.Packet.Request is FileListRequest listRequest && commandId == FileCommands.FileList)
+                //{
+                //    return await HandleFileListAsync(listRequest, cmd.Packet.ExecutionContext, cancellationToken);
+                //}
+                //else if (cmd.Packet.Request is FileInfoRequest infoRequest && commandId == FileCommands.FileInfoQuery)
+                //{
+                //    return await HandleFileInfoAsync(infoRequest, cmd.Packet.ExecutionContext, cancellationToken);
+                //}
                 else
                 {
                     return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "不支持的文件命令");
@@ -99,98 +120,121 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <summary>
         /// 获取文件存储路径
         /// </summary>
-        private string GetCategoryPath(string category)
+        private string GetCategoryPath(string BizCategory)
         {
-            switch (category?.ToLower())
-            {
-                case "paymentvoucher":
-                    return Path.Combine(_fileStoragePath, _serverConfig.PaymentVoucherPath);
-                case "productimage":
-                    return Path.Combine(_fileStoragePath, _serverConfig.ProductImagePath);
-                case "bommanual":
-                    return Path.Combine(_fileStoragePath, _serverConfig.BOMManualPath);
-                default:
-                    return _fileStoragePath;
-            }
+            return Path.Combine(_fileStoragePath, BizCategory);
+
+
+
         }
 
         /// <summary>
         /// 处理文件上传
         /// </summary>
-        private async Task<ResponseBase> HandleFileUploadAsync(FileUploadRequest uploadRequest, CommandContext executionContext, CancellationToken cancellationToken)
+        private async Task<IResponse> HandleFileUploadAsync(FileUploadRequest uploadRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
+
+            var responseData = new FileUploadResponse();
             try
             {
-                if (uploadRequest == null || uploadRequest.Data == null)
+
+                for (int i = 0; i < uploadRequest.FileStorageInfos.Count; i++)
                 {
-                    return FileUploadResponse.CreateFailure("文件上传请求格式错误");
+                    var FileStorageInfo = uploadRequest.FileStorageInfos[i];
+                    #region 保存单文件 
+
+                    // 生成唯一文件名
+                    var fileId = Guid.NewGuid().ToString();
+                    var fileExtension = Path.GetExtension(FileStorageInfo.OriginalFileName);
+                    var savedFileName = $"{fileId}{fileExtension}";
+
+                    // 根据分类确定存储路径
+                    var categoryPath = GetCategoryPath(FileStorageInfo.BusinessType.ToString());
+                    if (!Directory.Exists(categoryPath))
+                    {
+                        Directory.CreateDirectory(categoryPath);
+                    }
+
+                    var filePath = Path.Combine(categoryPath, savedFileName);
+
+                    // 保存文件
+                    await File.WriteAllBytesAsync(filePath, FileStorageInfo.FileData, cancellationToken);
+
+                    // 计算文件哈希值
+                    var hashValue = FileManagementHelper.CalculateFileHash(filePath);
+
+                    // 创建文件信息实体并保存到数据库
+                    var fileStorageInfo = FileManagementHelper.CreateFileStorageInfo(
+                        FileStorageInfo.OriginalFileName,
+                        FileStorageInfo.FileData.Length,
+                        fileExtension,
+                        filePath,
+                        FileStorageInfo.BusinessType != null ? FileStorageInfo.BusinessType.GetHashCode() : 0,
+                        executionContext.UserId);
+
+                    // 设置哈希值
+                    fileStorageInfo.HashValue = hashValue;
+
+                    // 保存文件信息到数据库
+
+                    var saveResult = await _fileStorageInfoController.SaveOrUpdate(fileStorageInfo);
+                    if (!saveResult.Succeeded)
+                    {
+                        _logger?.LogWarning("文件信息保存到数据库失败: {FileName}", FileStorageInfo.OriginalFileName);
+                    }
+                    else
+                    {
+                        responseData.FileStorageInfos.Add(saveResult.ReturnObject);
+                        // 创建业务关联记录
+                        var businessRelation = new tb_FS_BusinessRelation
+                        {
+                            BusinessType = (int)uploadRequest.BusinessType,
+                            BusinessNo = uploadRequest.BusinessNo,
+                            FileId = fileStorageInfo.FileId,
+                            IsMainFile = (i == 0),
+                            Created_at = DateTime.Now,
+                            Created_by = uploadRequest.Created_by
+                        };
+
+                        // 保存业务关联
+                        await _businessRelationController.SaveOrUpdate(businessRelation);
+                    }
+
+                    #endregion
                 }
-
-                // 检查文件大小限制
-                if (uploadRequest.FileSize > _serverConfig.MaxFileSizeMB * 1024 * 1024)
-                {
-                    return FileUploadResponse.CreateFailure($"文件大小超过限制 ({_serverConfig.MaxFileSizeMB}MB)");
-                }
-
-                // 生成唯一文件名
-                var fileId = Guid.NewGuid().ToString();
-                var fileExtension = Path.GetExtension(uploadRequest.FileName);
-                var savedFileName = $"{fileId}{fileExtension}";
-                
-                // 根据分类确定存储路径
-                var categoryPath = GetCategoryPath(uploadRequest.Category);
-                if (!Directory.Exists(categoryPath))
-                {
-                    Directory.CreateDirectory(categoryPath);
-                }
-                
-                var filePath = Path.Combine(categoryPath, savedFileName);
-
-                // 保存文件
-                await File.WriteAllBytesAsync(filePath, uploadRequest.Data, cancellationToken);
-
-                // 只记录关键信息，移除详细的文件ID日志
-                _logger?.LogDebug("文件上传成功: {FileId}", fileId);
-
-                // 返回文件路径信息
-                var responseData = new FileUploadResponseData
-                {
-                    FileId = fileId,
-                    FilePath = filePath,
-                    FileUrl = $"/files/{uploadRequest.Category}/{fileId}{fileExtension}"
-                };
-
-                return new FileUploadResponse(true, "文件上传成功", responseData, 200);
+                responseData.Message = "文件上传成功";
+                return responseData;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "文件上传时出错");
-                return FileUploadResponse.CreateFailure(ex.Message);
+                return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>(ex.Message);
             }
         }
 
         /// <summary>
         /// 处理文件下载
         /// </summary>
-        private async Task<ResponseBase> HandleFileDownloadAsync(FileDownloadRequest downloadRequest, CommandContext executionContext, CancellationToken cancellationToken)
+        private async Task<FileDownloadResponse> HandleFileDownloadAsync(FileDownloadRequest downloadRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
+            FileDownloadResponse downloadResponse = new FileDownloadResponse();
             try
             {
-                if (downloadRequest == null || string.IsNullOrEmpty(downloadRequest.FileId))
+                if (downloadRequest == null || downloadRequest.FileStorageInfo == null)
                 {
                     return FileDownloadResponse.CreateFailure("文件下载请求格式错误");
                 }
-
                 // 根据分类确定存储路径
-                var categoryPath = GetCategoryPath(downloadRequest.Category);
-                var files = Directory.GetFiles(categoryPath, $"{downloadRequest.FileId}.*");
-                
+                var categoryPath = GetCategoryPath(downloadRequest.FileStorageInfo.BusinessType.Value.ToString());
+
+                var files = Directory.GetFiles(categoryPath, $"{downloadRequest.FileStorageInfo.FileId}.*");
+
                 // 如果在分类目录中找不到，尝试在根目录查找
-                if (files.Length == 0 && !string.IsNullOrEmpty(downloadRequest.Category))
+                if (files.Length == 0 && downloadRequest.FileStorageInfo.BusinessType.HasValue)
                 {
-                    files = Directory.GetFiles(_fileStoragePath, $"{downloadRequest.FileId}.*");
+                    files = Directory.GetFiles(_fileStoragePath, $"{downloadRequest.FileStorageInfo.FileId}.*");
                 }
-                
+
                 if (files.Length == 0)
                 {
                     return FileDownloadResponse.CreateFailure("文件不存在");
@@ -199,23 +243,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var filePath = files[0];
                 var fileData = await File.ReadAllBytesAsync(filePath, cancellationToken);
                 var fileName = Path.GetFileName(filePath);
-
+                downloadRequest.FileStorageInfo.FileData = fileData;
                 // 创建响应数据
-                var responseData = new FileDownloadResponseData
-                {
-                    FileName = fileName,
-                    Data = fileData,
-                    FileSize = fileData.Length,
-                    ContentType = "application/octet-stream",
-                    LastModified = File.GetLastWriteTime(filePath),
-                    Category = downloadRequest.Category,
-                    BusinessId = downloadRequest.BusinessId
-                };
+                downloadResponse.FileStorageInfos.Add(downloadRequest.FileStorageInfo);
+                downloadResponse.Message = "文件下载成功";
 
-                // 只记录关键信息，移除详细的文件ID日志
-                _logger?.LogDebug("文件下载成功: {FileId}", downloadRequest.FileId);
-
-                return FileDownloadResponse.CreateSuccess(responseData, "文件下载成功");
+                return downloadResponse;
             }
             catch (Exception ex)
             {
@@ -239,7 +272,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 查找并删除文件（在所有可能的目录中）
                 var deletedCount = 0;
                 var searchPaths = new List<string> { _fileStoragePath };
-                
+
                 // 添加分类目录
                 searchPaths.Add(GetCategoryPath("paymentvoucher"));
                 searchPaths.Add(GetCategoryPath("productimage"));
@@ -282,147 +315,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
-        /// <summary>
-        /// 处理文件列表
-        /// </summary>
-        private async Task<ResponseBase> HandleFileListAsync(FileListRequest listRequest, CommandContext executionContext, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var fileList = new List<FileStorageInfo>();
-                
-                // 确定搜索路径
-                var searchPaths = new List<string>();
-                
-                if (!string.IsNullOrEmpty(listRequest.Category))
-                {
-                    // 如果指定了分类，只搜索该分类目录
-                    searchPaths.Add(GetCategoryPath(listRequest.Category));
-                }
-                else
-                {
-                    // 如果未指定分类，搜索所有目录
-                    searchPaths.Add(_fileStoragePath);
-                    searchPaths.Add(GetCategoryPath("paymentvoucher"));
-                    searchPaths.Add(GetCategoryPath("productimage"));
-                    searchPaths.Add(GetCategoryPath("bommanual"));
-                }
-
-                // 收集所有文件信息
-                foreach (var searchPath in searchPaths)
-                {
-                    if (Directory.Exists(searchPath))
-                    {
-                        var files = Directory.GetFiles(searchPath);
-                        foreach (var filePath in files)
-                        {
-                            var fileInfo = new FileInfo(filePath);
-                            var fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
-
-                            fileList.Add(new FileStorageInfo(filePath)
-                            {
-                                FileId = fileNameWithoutExt,
-                                OriginalName = fileInfo.Name,
-                                Size = fileInfo.Length,
-                                UploadTime = fileInfo.CreationTime,
-                                LastModified = fileInfo.LastWriteTime,
-                                FilePath = filePath,
-                                Category = GetCategoryFromPath(searchPath)
-                            });
-                        }
-                    }
-                }
-
-                // 只记录关键信息，简化日志内容
-                _logger?.LogDebug("获取文件列表成功，共 {Count} 个文件", fileList.Count);
-
-                return FileListResponse.CreateSuccess(fileList, fileList.Count, listRequest.PageIndex, listRequest.PageSize, "获取文件列表成功");
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取文件列表时出错");
-                return FileListResponse.CreateFailure(ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// 根据路径获取分类名称
-        /// </summary>
-        private string GetCategoryFromPath(string path)
-        {
-            if (path.EndsWith(_serverConfig.PaymentVoucherPath))
-                return "PaymentVoucher";
-            if (path.EndsWith(_serverConfig.ProductImagePath))
-                return "ProductImage";
-            if (path.EndsWith(_serverConfig.BOMManualPath))
-                return "BOMManual";
-            return "General";
-        }
-
-        /// <summary>
-        /// 处理文件信息查询
-        /// </summary>
-        private async Task<ResponseBase> HandleFileInfoAsync(FileInfoRequest infoRequest, CommandContext executionContext, CancellationToken cancellationToken)
-        {
-            try
-            {
-                if (infoRequest == null || string.IsNullOrEmpty(infoRequest.FileId))
-                {
-                    return FileInfoResponse.CreateFailure("文件信息请求格式错误");
-                }
-
-                // 查找文件（在所有可能的目录中）
-                string filePath = null;
-                var searchPaths = new List<string> { _fileStoragePath };
-                
-                // 添加分类目录
-                searchPaths.Add(GetCategoryPath("paymentvoucher"));
-                searchPaths.Add(GetCategoryPath("productimage"));
-                searchPaths.Add(GetCategoryPath("bommanual"));
-
-                foreach (var searchPath in searchPaths)
-                {
-                    if (Directory.Exists(searchPath))
-                    {
-                        var files = Directory.GetFiles(searchPath, $"{infoRequest.FileId}.*");
-                        if (files.Length > 0)
-                        {
-                            filePath = files[0];
-                            break;
-                        }
-                    }
-                }
-
-                if (string.IsNullOrEmpty(filePath))
-                {
-                    return FileInfoResponse.CreateFailure("文件不存在");
-                }
-
-                var fileInfo = new FileInfo(filePath);
-                var category = GetCategoryFromPath(Path.GetDirectoryName(filePath));
-
-                var fileInfoData = new FileStorageInfo(filePath)
-                {
-                    FileId = infoRequest.FileId,
-                    OriginalName = fileInfo.Name,
-                    Size = fileInfo.Length,
-                    UploadTime = fileInfo.CreationTime,
-                    LastModified = fileInfo.LastWriteTime,
-                    FilePath = filePath,
-                    MimeType = "application/octet-stream",
-                    Category = category
-                };
-
-                // 只记录关键信息，移除详细的文件ID日志
-                _logger?.LogDebug("获取文件信息成功: {FileId}", infoRequest.FileId);
-
-                return FileInfoResponse.CreateSuccess(fileInfoData, "获取文件信息成功");
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "获取文件信息时出错");
-                return FileInfoResponse.CreateFailure(ex.Message);
-            }
-        }
+      
     }
 }

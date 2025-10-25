@@ -377,16 +377,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 CacheRequest updateRequest = request as CacheRequest;
                 if (updateRequest == null)
                 {
-                    return Task.FromResult<IResponse>(ResponseBase.CreateError("缓存更新请求数据不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_CACHE_UPDATE_REQUEST"));
+                    return Task.FromResult<IResponse>(ResponseFactory.CreateSpecificErrorResponse(executionContext, "缓存更新请求数据不能为空" + UnifiedErrorCodes.Command_ValidationFailed.Message
+                     ));
                 }
 
                 // 验证请求数据
                 if (string.IsNullOrEmpty(updateRequest.TableName))
                 {
                     LogError("缓存更新表名为空");
-                    return Task.FromResult<IResponse>(ResponseBase.CreateError("表名不能为空", UnifiedErrorCodes.Command_ValidationFailed)
-                        .WithMetadata("ErrorCode", "EMPTY_TABLE_NAME"));
+                    return Task.FromResult<IResponse>(ResponseFactory.CreateSpecificErrorResponse(executionContext, "表名不能为空"
+                         ));
                 }
 
                 #region
@@ -429,8 +429,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (!updateSuccess)
                 {
                     LogError($"更新缓存数据失败: {updateRequest.TableName}");
-                    return Task.FromResult<IResponse>(ResponseBase.CreateError($"更新缓存数据失败: 未知错误", UnifiedErrorCodes.Biz_OperationFailed.Code)
-                        .WithMetadata("ErrorCode", "CACHE_UPDATE_FAILED"));
+                    return Task.FromResult<IResponse>(ResponseFactory.CreateSpecificErrorResponse(executionContext,$"更新缓存数据失败: 未知错误"));
                 }
 
                 var cacheResponse = new CacheResponse();
@@ -441,8 +440,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 LogError($"处理缓存更新业务逻辑异常: {ex.Message}", ex);
-                return Task.FromResult<IResponse>(ResponseBase.CreateError($"处理缓存更新业务逻辑异常: {ex.Message}", UnifiedErrorCodes.System_InternalError)
-                    .WithMetadata("ErrorCode", "CACHE_UPDATE_BUSINESS_ERROR"));
+                return Task.FromResult<IResponse>(ResponseFactory.CreateSpecificErrorResponse(executionContext,$"处理缓存更新业务逻辑异常: {ex.Message}"));
             }
         }
 

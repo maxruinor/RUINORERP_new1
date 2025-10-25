@@ -69,6 +69,8 @@ namespace RUINORERP.Services.DI
                             .PropertiesAutowired();
                     }
                 }
+                
+               
             }
             catch (Exception ex)
             {

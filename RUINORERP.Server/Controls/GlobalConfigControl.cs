@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-
 using Newtonsoft.Json;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Extensions.ServiceExtensions;
@@ -23,10 +22,11 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using static RUINORERP.Extensions.ServiceExtensions.EditConfigCommand;
 using Button = System.Windows.Forms.Button;
-using static RUINORERP.Server.Controls.GlobalConfigControl.ConfigHistoryManager;
 using RUINORERP.IServices;
 using TextBox = System.Windows.Forms.TextBox;
 using System.ComponentModel.DataAnnotations;
+using RUINORERP.Business.Config;
+using static RUINORERP.Server.Controls.GlobalConfigControl.ConfigHistoryManager;
 
 namespace RUINORERP.Server.Controls
 {
@@ -432,7 +432,6 @@ namespace RUINORERP.Server.Controls
                             if (prop != null)
                             {
                                 var value = prop.GetValue(_currentConfig);
-                                textBox1.Text = value?.ToString() ?? "";
                             }
                         }
                     }
@@ -697,92 +696,8 @@ namespace RUINORERP.Server.Controls
             return true;
         }
 
-        /// <summary>
-        /// 验证服务器配置
-        /// </summary>
-        /// <param name="configObject">服务器配置对象</param>
-        /// <returns>验证结果</returns>
-        private bool ValidateServerConfiguration(ServerConfig configObject)
-        {
-            var validationResults = new List<string>();
-
-            // 服务器基础设置验证
-            if (configObject.ServerPort < 1 || configObject.ServerPort > 65535)
-            {
-                validationResults.Add("服务器端口必须在1-65535范围内");
-            }
-
-            if (configObject.MaxConnections < 1 || configObject.MaxConnections > 10000)
-            {
-                validationResults.Add("最大连接数必须在1-10000范围内");
-            }
-
-            if (configObject.HeartbeatInterval < 1000 || configObject.HeartbeatInterval > 60000)
-            {
-                validationResults.Add("心跳间隔必须在1000-60000毫秒范围内");
-            }
-
-            // 文件存储路径验证
-            if (string.IsNullOrEmpty(configObject.FileStoragePath))
-            {
-                validationResults.Add("文件存储路径不能为空");
-            }
-            else if (!Directory.Exists(configObject.FileStoragePath))
-            {
-                try
-                {
-                    // 尝试创建目录
-                    Directory.CreateDirectory(configObject.FileStoragePath);
-                }
-                catch
-                {
-                    validationResults.Add("文件存储路径无效或无法访问");
-                }
-            }
-
-            // 分类路径验证
-            if (string.IsNullOrEmpty(configObject.PaymentVoucherPath))
-            {
-                validationResults.Add("付款凭证路径不能为空");
-            }
-            
-            if (string.IsNullOrEmpty(configObject.ProductImagePath))
-            {
-                validationResults.Add("产品图片路径不能为空");
-            }
-            
-            if (string.IsNullOrEmpty(configObject.BOMManualPath))
-            {
-                validationResults.Add("BOM手册路径不能为空");
-            }
-
-            // 最大文件大小验证
-            if (configObject.MaxFileSizeMB <= 0 || configObject.MaxFileSizeMB > 1000)
-            {
-                validationResults.Add("单个文件最大上传大小必须在1-1000MB之间");
-            }
-
-            // 数据库连接字符串验证
-            if (string.IsNullOrEmpty(configObject.DbConnectionString))
-            {
-                validationResults.Add("数据库连接字符串不能为空");
-            }
-
-            // 日志级别验证
-            if (string.IsNullOrEmpty(configObject.LogLevel))
-            {
-                validationResults.Add("日志级别不能为空");
-            }
-
-            if (validationResults.Count > 0)
-            {
-                var errorMessage = string.Join("\n", validationResults);
-                MessageBox.Show($"服务器配置验证失败:\n{errorMessage}", "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
-            }
-
-            return true;
-        }
+        // 注意：以下特定类型的验证方法已被移除，因为所有验证逻辑现在都在FluentValidation验证器中实现
+        // 保留此注释以表明这些方法不再使用，并且验证已移至ServerConfigValidator、SystemGlobalconfigValidator和GlobalValidatorConfigValidator中
 
         /// <summary>
         /// 更新按钮状态
@@ -911,63 +826,21 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
-        /// 使用通用验证方法替换类型特定的验证方法
+        /// 使用基于FluentValidation的验证方法
+        /// 所有验证逻辑已移至FluentValidation验证器中实现
         /// </summary>
         private bool ValidateConfiguration(BaseConfig config)
         {
-            return ValidateConfiguration((object)config);
-        }
-        
-        /// <summary>
-        /// 通用配置验证方法
-        /// </summary>
-        /// <param name="configObject">配置对象</param>
-        /// <returns>验证结果</returns>
-        private bool ValidateConfiguration(object configObject)
-        {
             try
             {
-                var validationResults = new List<string>();
+                // 完全依赖配置验证服务进行验证（现在使用FluentValidation）
+                var validationResult = _configValidationService.ValidateConfig(config);
                 
-                // 检查是否为BaseConfig类型
-                if (configObject is BaseConfig config)
+                // 检查验证结果
+                if (!validationResult.IsValid)
                 {
-                    // 首先使用配置验证服务进行验证
-                    var serviceValidation = _configValidationService.ValidateConfig(config);
-                    if (!serviceValidation.IsValid)
-                    {
-                        // 获取所有属性错误
-                        if (serviceValidation.Errors != null && serviceValidation.Errors.Count > 0)
-                        {
-                            foreach (var error in serviceValidation.Errors)
-                            {
-                                validationResults.Add($"{error.Key}: {error.Value}");
-                            }
-                        }
-                        
-                        // 获取所有全局错误
-                        if (serviceValidation.GlobalErrors != null && serviceValidation.GlobalErrors.Count > 0)
-                        {
-                            validationResults.AddRange(serviceValidation.GlobalErrors);
-                        }
-                    }
-                    
-                    // 使用反射获取配置对象的属性并根据特性进行验证
-                    var properties = config.GetType().GetProperties();
-                    foreach (var property in properties)
-                    {
-                        // 获取属性值
-                        var value = property.GetValue(config);
-                        
-                        // 执行通用验证
-                        ValidateProperty(property, value, validationResults);
-                    }
-                }
-                
-                // 如果有验证错误，显示错误消息
-                if (validationResults.Count > 0)
-                {
-                    var errorMessage = string.Join("\n", validationResults);
+                    // 获取完整的错误信息
+                    string errorMessage = validationResult.GetErrorMessage();
                     MessageBox.Show($"配置验证失败:\n{errorMessage}", "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
@@ -983,84 +856,20 @@ namespace RUINORERP.Server.Controls
         }
         
         /// <summary>
-        /// 对单个属性进行验证
+        /// 通用配置验证方法（兼容旧代码调用）
         /// </summary>
-        /// <param name="property">属性信息</param>
-        /// <param name="value">属性值</param>
-        /// <param name="validationResults">验证结果列表</param>
-        private void ValidateProperty(PropertyInfo property, object value, List<string> validationResults)
+        /// <param name="configObject">配置对象</param>
+        /// <returns>验证结果</returns>
+        private bool ValidateConfiguration(object configObject)
         {
-            // 检查必填字段
-            if (property.IsDefined(typeof(RequiredAttribute), false) && (value == null || (value is string && string.IsNullOrEmpty((string)value))))
+            if (configObject is BaseConfig config)
             {
-                var displayName = GetPropertyDisplayName(property);
-                validationResults.Add($"{displayName} 是必填项");
+                return ValidateConfiguration(config);
             }
             
-            // 检查范围约束
-            if (value != null && property.IsDefined(typeof(RangeAttribute), false))
-            {
-                var rangeAttr = property.GetCustomAttribute<RangeAttribute>();
-                if (rangeAttr != null)
-                {
-                    // 只对数值类型进行范围验证
-                    if (value is IConvertible)
-                    {
-                        try
-                        {
-                            decimal numericValue = Convert.ToDecimal(value);
-                            if (numericValue < Convert.ToDecimal(rangeAttr.Minimum) || numericValue > Convert.ToDecimal(rangeAttr.Maximum))
-                            {
-                                var displayName = GetPropertyDisplayName(property);
-                                validationResults.Add($"{displayName} 必须在 {rangeAttr.Minimum} 到 {rangeAttr.Maximum} 之间");
-                            }
-                        }
-                        catch { }
-                    }
-                }
-            }
-            
-            // 检查字符串长度
-            if (value is string stringValue && property.IsDefined(typeof(StringLengthAttribute), false))
-            {
-                var lengthAttr = property.GetCustomAttribute<StringLengthAttribute>();
-                if (lengthAttr != null && stringValue.Length > lengthAttr.MaximumLength)
-                {
-                    var displayName = GetPropertyDisplayName(property);
-                    validationResults.Add($"{displayName} 的长度不能超过 {lengthAttr.MaximumLength} 个字符");
-                }
-            }
-            
-            // 文件路径验证
-            if (value is string pathValue && property.Name.Contains("Path"))
-            {
-                if (!string.IsNullOrEmpty(pathValue))
-                {
-                    try
-                    {
-                        // 检查路径是否有效
-                        var directoryPath = Path.GetDirectoryName(pathValue);
-                        if (!string.IsNullOrEmpty(directoryPath) && !Directory.Exists(directoryPath))
-                        {
-                            try
-                            {
-                                Directory.CreateDirectory(directoryPath);
-                            }
-                            catch
-                            {
-                                var displayName = GetPropertyDisplayName(property);
-                                validationResults.Add($"{displayName} 路径无效或无法访问: {pathValue}");
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        var displayName = GetPropertyDisplayName(property);
-                        validationResults.Add($"{displayName} 包含无效的路径: {pathValue}");
-                    }
-                }
-            }
-        }
+            _logger?.LogWarning("尝试验证非BaseConfig类型的配置对象");
+            return false;
+        } 
 
         /// <summary>
         /// 创建详细配置节点结构
@@ -1193,10 +1002,6 @@ namespace RUINORERP.Server.Controls
                     return 100;
                 case nameof(ServerConfig.HeartbeatInterval):
                     return 30000;
-                case nameof(ServerConfig.DbType):
-                    return "MySql";
-                case nameof(ServerConfig.DbConnectionString):
-                    return "Server=localhost;Database=RUINORERP;Uid=root;Pwd=123456;";
                 case nameof(ServerConfig.CacheType):
                     return "Memory";
                 case nameof(ServerConfig.CacheConnectionString):
@@ -1209,12 +1014,7 @@ namespace RUINORERP.Server.Controls
                     return "D:\\RUINORERP\\FileStorage";
                 case nameof(ServerConfig.MaxFileSizeMB):
                     return 10;
-                case nameof(ServerConfig.PaymentVoucherPath):
-                    return "PaymentVouchers";
-                case nameof(ServerConfig.ProductImagePath):
-                    return "ProductImages";
-                case nameof(ServerConfig.BOMManualPath):
-                    return "BOMManuals";
+             
                 default:
                     return GetDefaultValueForType(propertyType);
             }
@@ -1337,42 +1137,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        /// <summary>
-        /// 文本框文本改变事件
-        /// </summary>
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-            if (treeView2.SelectedNode?.Tag != null && _currentConfig != null)
-            {
-                // 尝试获取属性信息
-                var tagType = treeView2.SelectedNode.Tag.GetType();
-                var propertyInfo = tagType.GetProperty("Property");
-                
-                if (propertyInfo != null)
-                {
-                    var propertyName = propertyInfo.GetValue(treeView2.SelectedNode.Tag)?.ToString();
-                    if (!string.IsNullOrEmpty(propertyName))
-                    {
-                        var configType = _currentConfig.GetType();
-                        var prop = configType.GetProperty(propertyName);
-                        if (prop != null && prop.CanWrite)
-                        {
-                            try
-                            {
-                                var convertedValue = Convert.ChangeType(textBox1.Text, prop.PropertyType);
-                                prop.SetValue(_currentConfig, convertedValue);
-                                propertyGrid1.Refresh();
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger?.LogWarning(ex, "属性值转换失败: {PropertyName} = {Value}", propertyName, textBox1.Text);
-                                MessageBox.Show($"属性值转换失败: {propertyName} = {textBox1.Text}\n错误: {ex.Message}", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            }
-                        }
-                    }
-                }
-            }
-        }
+       
 
         /// <summary>
         /// 保存按钮点击事件

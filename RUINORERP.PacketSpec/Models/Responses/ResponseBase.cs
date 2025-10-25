@@ -88,36 +88,6 @@ namespace RUINORERP.PacketSpec.Models.Responses
             }
             return this;
         }
-
- 
-        
-        /// <summary>
-        /// 创建失败响应（带元数据）
-        /// </summary>
-        /// <param name="message">失败消息</param>
-        /// <param name="code">错误代码</param>
-        /// <param name="metadata">元数据字典</param>
-        /// <returns>响应实例</returns>
-        public static ResponseBase CreateError(string message, int code = 500, Dictionary<string, object> metadata = null)
-        {
-            var response = new ResponseBase
-            {
-                IsSuccess = false,
-                Message = message,
-                ErrorCode = code,
-                ErrorMessage = message,
-                Timestamp = DateTime.Now
-            };
-            
-            // 添加元数据（如果有）
-            if (metadata != null && metadata.Count > 0)
-            {
-                response.WithMetadata(metadata);
-            }
-            
-            return response;
-        }
-
      
     }
 

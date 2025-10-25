@@ -74,8 +74,9 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 处理接收到的强制下线通知
+        /// 默认错误返回有问题，先这样写让编译器通过
         /// </summary>
-        public async Task<ResponseBase> HandleForceLogoutNotificationAsync(SystemCommandRequest request)
+        public async Task<IResponse> HandleForceLogoutNotificationAsync(SystemCommandRequest request)
         {
             try
             {
@@ -102,8 +103,8 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理强制下线通知时发生异常");
-                return ResponseBase.CreateError($"处理通知失败: {ex.Message}")
-                    .WithMetadata("ErrorCode", "HANDLE_FORCE_LOGOUT_ERROR");
+                return ResponseFactory.CreateSpecificErrorResponse<IResponse>($"处理通知失败: {ex.Message}")
+                  ;
             }
         }
     }

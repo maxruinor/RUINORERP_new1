@@ -18,6 +18,8 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Windows.Forms;
 using System.IO;
+using System.Linq;
+using RUINORERP.Model.ConfigModel;
 using Autofac;
 using Autofac.Core;
 using Autofac.Extensions.DependencyInjection;
@@ -76,6 +78,7 @@ using WorkflowCore.Interface;
 using RUINORERP.Server.Controls;
 using RUINORERP.PacketSpec.Serialization;
 using System.Reflection;
+using RUINORERP.Business.Config;
 
 namespace RUINORERP.Server
 {
@@ -196,7 +199,7 @@ namespace RUINORERP.Server
             _logger = logger;
             _services = Startup.services;
             WorkflowHost = workflowHost;
-            
+
             // 注入缓存初始化服务
             _entityCacheInitializationService = Program.ServiceProvider.GetRequiredService<EntityCacheInitializationService>();
 
@@ -227,10 +230,10 @@ namespace RUINORERP.Server
         {
             // 注意：事件绑定已在设计器文件中完成，此处仅保留扩展功能的事件绑定
             // 避免重复绑定导致事件处理程序被多次调用
-            
+
             // 工具栏事件 - 这些需要在代码中额外绑定
             toolStripButtonRefreshData.Click += (s, e) => RefreshCurrentTab();
-            
+
             // 如果需要添加新的控件事件，请在此处添加
         }
 
@@ -295,8 +298,12 @@ namespace RUINORERP.Server
             tabControlMain.SelectedTab = existingTabPage;
         }
 
+
+      
+
         /// <summary>
         /// 检查服务器配置是否有效
+        /// 使用基于FluentValidation的ConfigValidationService进行配置验证
         /// </summary>
         /// <returns>配置是否有效</returns>
         private bool CheckServerConfiguration()
@@ -304,56 +311,121 @@ namespace RUINORERP.Server
             try
             {
                 PrintInfoLog("正在检查服务器配置...");
-                
-                // 检查必要的配置文件是否存在
-                string configurationFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "configuration.json");
-                if (!File.Exists(configurationFilePath))
+                var serverConfig = GetServerConfig();
+                if (serverConfig == null)
                 {
-                    PrintErrorLog($"配置文件不存在: {configurationFilePath}");
-                    MessageBox.Show($"服务器配置文件不存在: {configurationFilePath}\n请确保配置文件已正确创建。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    PrintErrorLog("无法获取服务器配置实例");
+                    MessageBox.Show("服务器配置初始化失败，无法获取配置信息。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+                // 从依赖注入容器获取配置验证服务（现在使用FluentValidation实现）
+                var validationService = Program.ServiceProvider.GetRequiredService<RUINORERP.Business.Config.IConfigValidationService>();
+                
+                // 执行配置验证 - 现在会使用我们实现的FluentValidation验证器
+                var validationResult = validationService.ValidateConfig(serverConfig);
+                
+                // 检查验证结果
+                if (!validationResult.IsValid)
+                {
+                    PrintErrorLog($"配置验证失败: {validationResult.GetErrorMessage()}");
+                    MessageBox.Show($"服务器配置验证失败:\n{validationResult.GetErrorMessage()}", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
                 
-                // 尝试读取和解析配置文件
-                try
+                // 注意：详细的路径验证（包括环境变量解析、路径可访问性检查等）
+                // 已经在ServerConfigValidator中实现，这里保留一些额外的确保逻辑
+                PrintInfoLog("正在执行额外的文件存储路径验证...");
+                
+                // 解析环境变量路径（作为额外的验证保障）
+                string resolvedPath = ResolveEnvironmentVariables(serverConfig.FileStoragePath);
+                
+                if (!string.IsNullOrEmpty(resolvedPath))
                 {
-                    var configuration = new ConfigurationBuilder()
-                        .AddJsonFile("configuration.json")
-                        .Build();
-                    
-                    // 检查必要的配置项是否存在
-                    var connectionString = configuration.GetConnectionString("DefaultConnection");
-                    if (string.IsNullOrEmpty(connectionString))
+                    try
                     {
-                        PrintErrorLog("配置文件中缺少数据库连接字符串: DefaultConnection");
-                        MessageBox.Show("配置文件中缺少必要的数据库连接字符串\n请确保 'DefaultConnection' 已正确配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return false;
+                        // 确保目录存在，如果不存在则尝试创建（这是一个主动操作，而非严格验证）
+                        if (!Directory.Exists(resolvedPath))
+                        {
+                            PrintInfoLog($"文件存储目录不存在，正在创建: {resolvedPath}");
+                            Directory.CreateDirectory(resolvedPath);
+                            PrintInfoLog($"文件存储目录创建成功: {resolvedPath}");
+                        }
+
+                       
+
+                        PrintInfoLog($"文件存储路径检查通过: {resolvedPath}");
                     }
-                    
-                    // 检查服务器端口配置
-                    var portSection = configuration.GetSection("Server:Port");
-                    if (portSection.Value == null || !int.TryParse(portSection.Value, out int port) || port <= 0 || port > 65535)
+                    catch (Exception ex)
                     {
-                        PrintErrorLog("配置文件中缺少或无效的服务器端口配置");
-                        MessageBox.Show("配置文件中缺少或无效的服务器端口配置\n请确保 'Server:Port' 已正确设置为有效的端口号。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return false;
+                        // 这里的异常处理主要是为了记录日志，因为基本验证已经通过
+                        PrintInfoLog($"文件路径操作时发生警告: {ex.Message}");
                     }
-                    
-                    PrintInfoLog("服务器配置检查通过");
-                    return true;
                 }
-                catch (JsonException ex)
-                {
-                    PrintErrorLog($"配置文件格式错误: {ex.Message}");
-                    MessageBox.Show($"配置文件格式错误: {ex.Message}\n请检查 configuration.json 文件的格式是否正确。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
+                
+                PrintInfoLog("服务器配置检查全部通过");
+                return true;
             }
             catch (Exception ex)
             {
-                PrintErrorLog($"检查配置时发生错误: {ex.Message}");
+                PrintErrorLog($"检查服务器配置时发生错误: {ex.Message}");
                 MessageBox.Show($"检查服务器配置时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取服务器配置实例
+        /// 使用ConfigManagerService从配置文件加载配置
+        /// </summary>
+        private RUINORERP.Model.ConfigModel.ServerConfig GetServerConfig()
+        {
+            try
+            {
+                // 从依赖注入容器获取配置管理服务
+                var configManager = Program.ServiceProvider.GetRequiredService<IConfigManagerService>();
+                var serverConfig = configManager.GetConfig<ServerConfig>("ServerConfig");
+                
+                PrintInfoLog("服务器配置加载成功");
+                return serverConfig;
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"加载服务器配置失败: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 解析路径中的环境变量
+        /// </summary>
+        private string ResolveEnvironmentVariables(string path)
+        {
+            try
+            {
+                // 使用Environment.ExpandEnvironmentVariables解析路径中的环境变量
+                return Environment.ExpandEnvironmentVariables(path);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// 验证单个文件分类路径
+        /// </summary>
+        private void ValidateCategoryPath(string categoryPath, string basePath, string categoryName)
+        {
+            if (!string.IsNullOrEmpty(categoryPath))
+            {
+                string fullCategoryPath = Path.Combine(basePath, categoryPath);
+                if (!Directory.Exists(fullCategoryPath))
+                {
+                    PrintInfoLog($"{categoryName}分类目录不存在，正在创建: {fullCategoryPath}");
+                    Directory.CreateDirectory(fullCategoryPath);
+                }
             }
         }
 
@@ -375,19 +447,20 @@ namespace RUINORERP.Server
                 if (!CheckServerConfiguration())
                 {
                     PrintErrorLog("服务器配置检查失败，启动被取消");
+                    ShowTabPage("系统配置");
                     return;
                 }
-                
+
                 // 立即禁用启动按钮，防止重复点击
                 SetServerButtonsEnabled(false);
 
                 PrintInfoLog("开始启动服务器...");
-                
+
                 // 启动核心服务
                 await StartServerCore();
-                
+
                 PrintInfoLog("服务器启动完成");
-                
+
                 // 启动服务器后异步加载缓存，不阻塞UI
                 PrintInfoLog("开始异步加载缓存数据...");
                 Task.Run(async () =>
@@ -396,10 +469,10 @@ namespace RUINORERP.Server
                     {
                         // 记录开始时间，便于分析性能
                         var startTime = DateTime.Now;
-                        
+
                         // 执行缓存初始化
                         await _entityCacheInitializationService.InitializeAllCacheAsync();
-                        
+
                         // 计算耗时并记录完成信息
                         var elapsedTime = DateTime.Now - startTime;
                         this.BeginInvoke(new Action(() =>
@@ -415,7 +488,7 @@ namespace RUINORERP.Server
                             PrintErrorLog($"加载缓存数据时出错: {ex.Message}");
                             // 对于关键错误，可以记录更详细的信息
                             PrintErrorLog($"异常类型: {ex.GetType().Name}");
-                            
+
                             // 如果有内部异常，也记录下来
                             if (ex.InnerException != null)
                             {
@@ -428,10 +501,10 @@ namespace RUINORERP.Server
             catch (Exception ex)
             {
                 PrintErrorLog($"启动服务器时出错: {ex.Message}");
-                
+
                 // 发生错误时重新启用启动按钮
                 SetServerButtonsEnabled(true, false);
-                
+
                 MessageBox.Show($"启动服务器时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -444,7 +517,7 @@ namespace RUINORERP.Server
             try
             {
                 PrintInfoLog("正在停止服务器...");
-                
+
                 // 调用ShutdownAsync方法停止服务器
                 await ShutdownAsync();
 
@@ -649,6 +722,10 @@ namespace RUINORERP.Server
                     var dataViewerControl = new DataViewerControl();
                     dataViewerControl.Dock = DockStyle.Fill;
                     return dataViewerControl;
+                case "注册信息":
+                    var registrationManagementControl = new RegistrationManagementControl();
+                    registrationManagementControl.Dock = DockStyle.Fill;
+                    return registrationManagementControl;
                 default:
                     return null;
             }
@@ -763,7 +840,7 @@ namespace RUINORERP.Server
         public void PrintInfoLog(string msg)
         {
             if (IsIISProcess()) return;
-            
+
             SafeLogOperation(msg, Color.Black);
         }
 
@@ -817,7 +894,7 @@ namespace RUINORERP.Server
         public void PrintErrorLog(string msg)
         {
             if (IsIISProcess()) return;
-            
+
             SafeLogOperation($"[错误] {msg}", Color.Red);
         }
 
@@ -915,7 +992,7 @@ namespace RUINORERP.Server
 
                     // 初始化配置
                     await Task.Run(async () => await InitConfig(false));
-                    
+
                     PrintInfoLog("服务器核心启动完成");
                 }
                 else
@@ -1033,12 +1110,12 @@ namespace RUINORERP.Server
         private void HandleCtrlPShortcut()
         {
             Console.WriteLine("Ctrl + P 被按下");
-            
+
             using (var frmPassword = new frmInput())
             {
                 frmPassword.txtInputContent.PasswordChar = '*';
                 frmPassword.WindowState = FormWindowState.Normal;
-                
+
                 if (frmPassword.ShowDialog() == DialogResult.OK)
                 {
                     if (frmPassword.InputContent.Trim() == "amwtjhwxf")

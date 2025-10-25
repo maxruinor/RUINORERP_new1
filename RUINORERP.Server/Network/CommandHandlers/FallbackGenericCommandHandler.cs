@@ -51,10 +51,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (payload != null)
                 {
                     // 如果有有效载荷，返回成功响应并包含原数据
-                    return Task.FromResult(ResponseBase.CreateError($"未注册命令 [{cmd.Packet.CommandId.ToString()}] 已通过回退处理器处理")
-                        .WithMetadata("Message", $"未注册命令 [{cmd.Packet.CommandId.ToString()}] 已通过回退处理器处理")
-                        .WithMetadata("CommandType", payload.GetType().FullName)
-                        .WithMetadata("HandlerType", Name) as IResponse);
+                    return Task.FromResult(ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, $"未注册命令 [{cmd.Packet.CommandId.ToString()}] 已通过回退处理器处理")
+                           as IResponse);
                 }
                 else
                 {
@@ -72,11 +70,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 LogError($"处理未注册命令时发生异常: {cmd.Packet.CommandId.ToString()}", ex);
 
                 // 发生异常时返回错误响应
-                return Task.FromResult(ResponseBase.CreateError("处理未注册命令时发生异常")
-                    .WithMetadata("ErrorCode", "FALLBACK_HANDLER_ERROR")
-                    .WithMetadata("ErrorMessage", ex.Message)
-                    .WithMetadata("CommandIdentifier", cmd.Packet.CommandId.ToString())
-                    .WithMetadata("HandlerType", Name) as IResponse);
+                return Task.FromResult(ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ("处理未注册命令时发生异常"))
+                       as IResponse);
             }
         }
     }

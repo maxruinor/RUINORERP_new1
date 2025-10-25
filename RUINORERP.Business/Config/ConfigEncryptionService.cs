@@ -1,12 +1,11 @@
-using RUINORERP.IServices;
-using RUINORERP.Model.ConfigModel;
-using RUINORERP.Common.Helper.Security;
+﻿using RUINORERP.Model.ConfigModel;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Common.Helper.Security;
 
-namespace RUINORERP.Services
+namespace RUINORERP.Business.Config
 {
     /// <summary>
     /// 配置加密服务实现

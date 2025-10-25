@@ -1,5 +1,4 @@
-using RUINORERP.IServices;
-using RUINORERP.Model.ConfigModel;
+﻿using RUINORERP.Model.ConfigModel;
 using System;
 using System.IO;
 using System.Reflection;
@@ -7,7 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 
-namespace RUINORERP.Services
+namespace RUINORERP.Business.Config
 {
     /// <summary>
     /// 配置管理服务实现

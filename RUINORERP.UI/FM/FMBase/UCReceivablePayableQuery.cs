@@ -348,7 +348,18 @@ namespace RUINORERP.UI.FM
                 MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
+            else
+            {
+                var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                // 2. 查找可抵扣的预收付款单
+                var availableAdvances = await receivablePayableController.FindAvailableAdvances(RealList);
+                if (availableAdvances.Any())
+                {
+                    MessageBox.Show($"有可抵扣的预{PaymentType.ToString()}单！,请先进行抵扣操作！", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
+            }
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
             tb_FM_PaymentRecord ReturnObject = paymentController.BuildPaymentRecord(RealList);
             tb_FM_PaymentRecord paymentRecord = ReturnObject;

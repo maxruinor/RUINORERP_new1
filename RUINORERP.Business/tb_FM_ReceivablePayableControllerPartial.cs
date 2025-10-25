@@ -549,7 +549,7 @@ namespace RUINORERP.Business
                         if (isRelated)
                         {
                             hasRelatedUnconfirmed = true;
-                            unconfirmedBillNos.Add("【"+prePayment.PreRPNO+"】");
+                            unconfirmedBillNos.Add("【" + prePayment.PreRPNO + "】");
                         }
                     }
 
@@ -2040,6 +2040,26 @@ namespace RUINORERP.Business
 
         #endregion
 
+
+
+        /// <summary>
+        /// 查找可抵扣的预收付款单
+        /// </summary>
+        /// <param name="receivablePayable"></param>
+        /// <returns></returns>
+        public async Task<List<tb_FM_PreReceivedPayment>> FindAvailableAdvances(tb_FM_ReceivablePayable receivablePayable)
+        {
+            var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                         .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.IsAvailable == true)
+                         .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                         .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
+                         .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType)
+                         .Where(p => p.LocalBalanceAmount != 0)
+                         .OrderBy(c => c.PrePayDate)
+                         .ToListAsync();
+            return prePayment;
+        }
+
         /// <summary>
         /// 查找可抵扣的预收付款单
         /// 批量处理
@@ -2144,23 +2164,6 @@ namespace RUINORERP.Business
             return prePayment;
         }
 
-        /// <summary>
-        /// 查找可抵扣的预收付款单
-        /// </summary>
-        /// <param name="receivablePayable"></param>
-        /// <returns></returns>
-        public async Task<List<tb_FM_PreReceivedPayment>> FindAvailableAdvances(tb_FM_ReceivablePayable receivablePayable)
-        {
-            var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                         .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.IsAvailable == true)
-                         .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
-                         .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
-                         .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType)
-                         //.Where(p => p.LocalBalanceAmount > 0)
-                         .OrderBy(c => c.PrePayDate)
-                         .ToListAsync();
-            return prePayment;
-        }
 
         /// <summary>
         /// 创建应收款单，并且自动审核，因为后面还会自动去冲预收款单

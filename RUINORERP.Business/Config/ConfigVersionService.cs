@@ -1,5 +1,4 @@
-using RUINORERP.IServices;
-using RUINORERP.Model.ConfigModel;
+﻿using RUINORERP.Model.ConfigModel;
 using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
@@ -13,7 +12,7 @@ using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
-namespace RUINORERP.Services
+namespace RUINORERP.Business.Config
 {
     /// <summary>
     /// 配置版本控制服务实现

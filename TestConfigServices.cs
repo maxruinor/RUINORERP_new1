@@ -1,5 +1,6 @@
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Services;
+using RUINORERP.Business.Validator;
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
@@ -86,6 +87,11 @@ namespace RUINORERP.Test
         {
             Console.WriteLine("\n===== 测试配置验证功能 =====");
             
+            // 创建所有必要的验证器实例
+            var serverConfigValidator = new ServerConfigValidator();
+            var systemGlobalconfigValidator = new SystemGlobalconfigValidator();
+            var globalValidatorConfigValidator = new GlobalValidatorConfigValidator();
+            
             // 测试服务器配置验证
             var serverConfig = new ServerConfig
             {
@@ -100,7 +106,12 @@ namespace RUINORERP.Test
                 ValidationTimeoutSeconds = 500 // 超出范围
             };
             
-            var validationService = new ConfigValidationService(null); // 实际使用时需要提供日志记录器
+            // 正确创建验证服务并提供所有必要的依赖项
+            var validationService = new ConfigValidationService(
+                null, // 实际使用时需要提供日志记录器
+                serverConfigValidator,
+                systemGlobalconfigValidator,
+                globalValidatorConfigValidator);
             
             // 测试服务器配置
             var serverValidationResult = validationService.ValidateConfig(serverConfig);

@@ -37,11 +37,9 @@ namespace RUINORERP.Server.Controls
             tsbtnHistory = new System.Windows.Forms.ToolStripButton();
             splitContainer2 = new System.Windows.Forms.SplitContainer();
             treeView2 = new System.Windows.Forms.TreeView();
-            propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             groupBoxConfigEdit = new System.Windows.Forms.GroupBox();
             splitContainer1 = new System.Windows.Forms.SplitContainer();
-            textBox1 = new System.Windows.Forms.TextBox();
-            label2 = new System.Windows.Forms.Label();
+            propertyGrid1 = new System.Windows.Forms.PropertyGrid();
             toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer2).BeginInit();
             splitContainer2.Panel1.SuspendLayout();
@@ -50,7 +48,6 @@ namespace RUINORERP.Server.Controls
             groupBoxConfigEdit.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
-            splitContainer1.Panel2.SuspendLayout();
             splitContainer1.SuspendLayout();
             SuspendLayout();
             // 
@@ -135,15 +132,6 @@ namespace RUINORERP.Server.Controls
             treeView2.TabIndex = 0;
             treeView2.AfterSelect += treeView2_AfterSelect;
             // 
-            // propertyGrid1
-            // 
-            propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
-            propertyGrid1.Location = new System.Drawing.Point(0, 0);
-            propertyGrid1.Name = "propertyGrid1";
-            propertyGrid1.Size = new System.Drawing.Size(477, 576);
-            propertyGrid1.TabIndex = 0;
-            propertyGrid1.PropertyValueChanged += propertyGrid1_PropertyValueChanged;
-            // 
             // groupBoxConfigEdit
             // 
             groupBoxConfigEdit.Controls.Add(splitContainer1);
@@ -166,30 +154,18 @@ namespace RUINORERP.Server.Controls
             // splitContainer1.Panel1
             // 
             splitContainer1.Panel1.Controls.Add(propertyGrid1);
-            // 
-            // splitContainer1.Panel2
-            // 
-            splitContainer1.Panel2.Controls.Add(textBox1);
-            splitContainer1.Panel2.Controls.Add(label2);
             splitContainer1.Size = new System.Drawing.Size(718, 576);
             splitContainer1.SplitterDistance = 477;
             splitContainer1.TabIndex = 1;
             // 
-            // textBox1
+            // propertyGrid1
             // 
-            textBox1.Location = new System.Drawing.Point(12, 90);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new System.Drawing.Size(196, 23);
-            textBox1.TabIndex = 1;
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new System.Drawing.Point(12, 64);
-            label2.Name = "label2";
-            label2.Size = new System.Drawing.Size(56, 17);
-            label2.TabIndex = 0;
-            label2.Text = "属性值：";
+            propertyGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
+            propertyGrid1.Location = new System.Drawing.Point(0, 0);
+            propertyGrid1.Name = "propertyGrid1";
+            propertyGrid1.Size = new System.Drawing.Size(477, 576);
+            propertyGrid1.TabIndex = 0;
+            propertyGrid1.PropertyValueChanged += propertyGrid1_PropertyValueChanged;
             // 
             // GlobalConfigControl
             // 
@@ -210,8 +186,6 @@ namespace RUINORERP.Server.Controls
             splitContainer2.ResumeLayout(false);
             groupBoxConfigEdit.ResumeLayout(false);
             splitContainer1.Panel1.ResumeLayout(false);
-            splitContainer1.Panel2.ResumeLayout(false);
-            splitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
             splitContainer1.ResumeLayout(false);
             ResumeLayout(false);
@@ -232,7 +206,5 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.PropertyGrid propertyGrid1;
         private System.Windows.Forms.GroupBox groupBoxConfigEdit;
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.Label label2;
     }
 }

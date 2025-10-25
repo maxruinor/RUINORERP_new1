@@ -82,6 +82,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
     <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
   </ItemGroup>
 

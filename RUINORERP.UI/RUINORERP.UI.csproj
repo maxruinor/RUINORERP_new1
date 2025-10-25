@@ -897,7 +897,6 @@
     <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlExtensions.cs" />
     <Compile Include="Common\HardwareHelper.cs" />
-    <Compile Include="Common\ImageManagementHelper.cs" />
     <Compile Include="Common\UIBizService.cs" />
     <Compile Include="HelpSystem\ControlHelpDemoForm.cs">
       <SubType>Form</SubType>
@@ -2294,6 +2293,7 @@
     <Compile Include="Network\Services\Cache\CacheResponseProcessor.cs" />
     <Compile Include="Network\Services\Cache\CacheUtility.cs" />
     <Compile Include="Network\Services\Cache\UICacheSubscriptionManager.cs" />
+    <Compile Include="Network\Services\FileManagementController.cs" />
     <Compile Include="Network\Services\FileManagementService.cs" />
     <Compile Include="Network\Services\MessageService.cs" />
     <Compile Include="Network\Services\MessageServiceUsageExample.cs" />

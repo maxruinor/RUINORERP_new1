@@ -166,7 +166,8 @@ namespace RUINORERP.Business.DI
             // 注册行级权限服务
             RegisterRowLevelAuthServices(builder);
 
-            //
+           
+ 
             AddBizMapperService(builder);
         }
 

@@ -301,23 +301,23 @@ namespace RUINORERP.UI.FM
                 {
                     // 单图片模式
                     magicPictureBox1.MultiImageSupport = false;
-                    // 使用ImageManagementHelper替代HttpWebService
-                    try
-                    {
-                        var image = await UI.Common.ImageManagementHelper.DownloadImageAsync(
-                            CloseCaseImagePath, 
-                            MainForm.Instance.AppContext);
+                    
+                    //try
+                    //{
+                    //    var image = await DownloadImageAsync(
+                    //        CloseCaseImagePath, 
+                    //        MainForm.Instance.AppContext);
                         
-                        if (image != null)
-                        {
-                            magicPictureBox1.Image = image;
-                            magicPictureBox1.Visible = true;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
-                    }
+                    //    if (image != null)
+                    //    {
+                    //        magicPictureBox1.Image = image;
+                    //        magicPictureBox1.Visible = true;
+                    //    }
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                    //}
                 }
             }
             else
@@ -649,7 +649,7 @@ namespace RUINORERP.UI.FM
                 if (NeedValidated && magicPictureBox1.Image != null)
                 {
                     string fileName = $"CloseCase_{EditEntity.ClaimNo}_{DateTime.Now:yyyyMMddHHmmss}.png";
-                    string fileId = await UploadCloseCaseImage(magicPictureBox1.Image, fileName);
+                    string fileId = "";// await UploadCloseCaseImage(magicPictureBox1.Image, fileName);
                     if (!string.IsNullOrEmpty(fileId))
                     {
                         EditEntity.CloseCaseImagePath = fileId;
@@ -735,28 +735,28 @@ namespace RUINORERP.UI.FM
 
             #region 删除主图的结案图。一般没有结案是没有的。结案就不会有结案图了。也有特殊情况。
 
-            if (!string.IsNullOrEmpty(EditEntity.CloseCaseImagePath))
-            {
-                // 检查是否为多图片路径
-                if (EditEntity.CloseCaseImagePath.Contains(";"))
-                {
-                    // 多图片路径处理
-                    var fileIds = EditEntity.CloseCaseImagePath.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-                    bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImagesAsync(
-                        fileIds, 
-                        MainForm.Instance.AppContext);
-                    MainForm.Instance.PrintInfoLog($"批量删除图片: {(deleteResult ? "Success" : "Failed")}");
-                }
-                else
-                {
-                    // 单图片路径处理
-                    // 使用ImageManagementHelper替代HttpWebService
-                    bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImageAsync(
-                        EditEntity.CloseCaseImagePath, 
-                        MainForm.Instance.AppContext);
-                    MainForm.Instance.PrintInfoLog($"删除图片: {(deleteResult ? "Success" : "Failed")}");
-                }
-            }
+            //if (!string.IsNullOrEmpty(EditEntity.CloseCaseImagePath))
+            //{
+            //    // 检查是否为多图片路径
+            //    if (EditEntity.CloseCaseImagePath.Contains(";"))
+            //    {
+            //        // 多图片路径处理
+            //        var fileIds = EditEntity.CloseCaseImagePath.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            //        bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImagesAsync(
+            //            fileIds, 
+            //            MainForm.Instance.AppContext);
+            //        MainForm.Instance.PrintInfoLog($"批量删除图片: {(deleteResult ? "Success" : "Failed")}");
+            //    }
+            //    else
+            //    {
+            //        // 单图片路径处理
+            //        // 使用ImageManagementHelper替代HttpWebService
+            //        bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImageAsync(
+            //            EditEntity.CloseCaseImagePath, 
+            //            MainForm.Instance.AppContext);
+            //        MainForm.Instance.PrintInfoLog($"删除图片: {(deleteResult ? "Success" : "Failed")}");
+            //    }
+            //}
             #endregion
 
             bool result = true;
@@ -789,10 +789,10 @@ namespace RUINORERP.UI.FM
                                 }
                                 //上传到服务器，删除本地
                                 // 使用ImageManagementHelper替代HttpWebService
-                                bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImageAsync(
-                                    newfileName, 
-                                    MainForm.Instance.AppContext);
-                                MainForm.Instance.PrintInfoLog(deleteResult ? "Success" : "Failed");
+                                //bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImageAsync(
+                                //    newfileName, 
+                                //    MainForm.Instance.AppContext);
+                                //MainForm.Instance.PrintInfoLog(deleteResult ? "Success" : "Failed");
                             }
                         }
                     }
@@ -947,21 +947,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-        /// <summary>
-        /// 上传结案凭证图片
-        /// </summary>
-        /// <param name="image">要上传的图片</param>
-        /// <param name="fileName">文件名</param>
-        /// <returns>上传结果</returns>
-        private async Task<string> UploadCloseCaseImage(System.Drawing.Image image, string fileName)
-        {
-            // 使用ImageManagementHelper简化图片上传
-            return await UI.Common.ImageManagementHelper.UploadImageAsync(
-                image, 
-                fileName, 
-                "PaymentVoucher", 
-                MainForm.Instance.AppContext);
-        }
+      
     }
 }
 

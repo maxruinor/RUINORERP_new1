@@ -49,6 +49,10 @@ using RUINORERP.UI.Monitoring.Auditing;
 using NPOI.SS.Formula.Functions;
 using System.Text.RegularExpressions;
 using RUINORERP.Extensions.Middlewares;
+using RUINOR.WinFormsUI.CustomPictureBox;
+using AutoUpdateTools;
+using LiveChartsCore.Geo;
+using static RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -216,7 +220,7 @@ namespace RUINORERP.UI.PSI.SAL
             base.LoadRelatedDataToDropDownItemsAsync();
         }
 
-        public override void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
+        public override async void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
         {
             tb_SaleOrder entity = entityPara as tb_SaleOrder;
 
@@ -594,78 +598,100 @@ namespace RUINORERP.UI.PSI.SAL
             }
             base.BindData(entity);
 
-            /*
-            #region 状态管理
-         
-            // 初始化
-            var notificationService = new WorkflowNotificationService();
-            var statusMachine = new StatusMachine(
-                (DataStatus)entity.DataStatus,
-                (ApprovalStatus)entity.ApprovalStatus,
-                entity.ApprovalResults ?? false,//这里是如果有值则显示他的值，如果没有则false。要修复
-                notificationService);
-
-
-            // 创建带自定义规则的UI绑定器
-            var binder = new UIStateBinder(statusMachine, BaseToolStrip, MainForm.Instance.AppContext.workflowHost,
-                (data, approval, result, op) =>
-            {
-                // 示例：增加财务专属操作
-                if (op == MenuItemEnums.数据特殊修正)
-                {
-                    return new ControlState
-                    {
-                        Visible = data == DataStatus.确认 || true,
-                        Enabled = MainForm.Instance.AppContext.IsSuperUser
-                    };
-                }
-                return StatusEvaluator.GetControlState(data, approval, result, op);
-            });
-
-
-            // 手动注册特殊按钮
-            // binder.RegisterControl(btnFinanceApprove, MenuItemEnums.财务审核);
-         
-            #endregion
-            */
-
-
-
-
-
-            /*
-             * 
-             * // 初始化状态机和UI绑定
-var workflowHost = new WorkflowHost();
-var statusMachine = new StatusMachine(...);
-var mainForm = Application.OpenForms[0];
-
-using var binder = new UIStateBinder(
-    statusMachine,
-    mainForm.Controls["toolStrip1"], // 传入实际的ToolStrip控件
-    workflowHost);
-
-// 手动注册特殊控件
-binder.RegisterControl(btnSpecialOperation, MenuItemEnums.数据特殊修正);
-
-
-             var customEvaluator = (DataStatus ds, ApprovalStatus aps, bool result, MenuItemEnums op) =>
-{
-    if (op == MenuItemEnums.数据特殊修正)
-    {
-        return new ControlState
-        {
-            Visible = ds == DataStatus.确认,
-            Enabled = aps == ApprovalStatus.已审核 && result
-        };
-    }
-    return StatusEvaluator.GetControlState(ds, aps, result, op);
-};
-
-using var binder = new UIStateBinder(..., customEvaluator);
-             
-             */
+            await DownloadVoucherImageAsync(entity, magicPictureBox订金付款凭证);
         }
+
+
+        /// <summary>
+        /// 下载并显示凭证图片
+        /// </summary>
+        /// <param name="imageUrl">图片URL</param>
+        /// <param name="magicPicBox">用于展示的MagicPictureBox控件</param>
+        private async Task DownloadVoucherImageAsync(tb_SaleOrder entity, MagicPictureBox magicPicBox)
+        {
+            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            try
+            {
+                var list = await ctrpay.DownloadImageAsync(entity);
+                magicPicBox.MultiImageSupport = list.Count > 0;
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    for (int f = 0; f < list[i].FileStorageInfos.Count; f++)
+                    {
+                        var fileStorageInfo = list[i].FileStorageInfos[f];
+                        //加载显示图片
+                        magicPicBox.LoadImageFromBytes(fileStorageInfo.FileData);
+                        ImageInfo imageInfo = new ImageInfo();
+                        imageInfo.CreateTime = fileStorageInfo.Created_at.Value;
+                        imageInfo.FileName = fileStorageInfo.OriginalFileName;
+                        magicPicBox.SetImageInfo(i, imageInfo);
+                    }
+                   
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("下载凭证图片异常", ex);
+                MainForm.Instance.uclog.AddLog($"下载凭证图片出错：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 上传凭证图片
+        /// </summary>
+        /// <param name="entity">销售订单实体</param>
+        /// <param name="magicPicBox">用于获取图片数据的MagicPictureBox控件</param>
+        /// <param name="category">文件分类，默认为"VoucherImage"</param>
+        /// <returns>上传是否成功</returns>
+        private async Task<bool> UploadVoucherImageAsync(tb_SaleOrder entity, MagicPictureBox magicPicBox)
+        {
+            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            try
+            {
+                if (magicPicBox.Image != null)
+                {
+                    // 使用GetAllImageBytesWithInfo获取所有图片数据和信息
+                    var imageBytesWithInfoList = magicPicBox.GetAllImageBytesWithInfo();
+                    
+                    if (imageBytesWithInfoList != null && imageBytesWithInfoList.Count > 0)
+                    {
+                        bool allSuccess = true;
+                        
+                        // 遍历上传所有图片
+                        foreach (var imageDataWithInfo in imageBytesWithInfoList)
+                        {
+                            byte[] imageData = imageDataWithInfo.Item1;
+                            ImageInfo imageInfo = imageDataWithInfo.Item2;
+                            
+                            // 上传图片
+                            var response = await ctrpay.UploadImageAsync(entity, imageInfo.FileName, imageData);
+                            
+                            if (response.IsSuccess)
+                            {
+                                MainForm.Instance.uclog.AddLog($"凭证图片上传成功：{imageInfo.FileName}");
+                            }
+                            else
+                            {
+                                MainForm.Instance.uclog.AddLog($"凭证图片上传失败：{imageInfo.FileName}，原因：{response.Message}");
+                                allSuccess = false;
+                            }
+                        }
+                        
+                        return allSuccess;
+                    }
+                }
+                return true; // 没有图片需要上传，也视为成功
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("上传凭证图片异常", ex);
+                MainForm.Instance.uclog.AddLog($"上传凭证图片出错：{ex.Message}");
+                return false;
+            }
+        }
+
+
 
 
         // 忽略属性配置
@@ -1339,6 +1365,12 @@ using var binder = new UIStateBinder(..., customEvaluator);
                     if (SaveResult.Succeeded)
                     {
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
+
+                        // 保存成功后上传凭证图片
+                        if (magicPictureBox订金付款凭证 != null)
+                        {
+                            await UploadVoucherImageAsync(EditEntity, magicPictureBox订金付款凭证);
+                        }
                     }
                     else
                     {

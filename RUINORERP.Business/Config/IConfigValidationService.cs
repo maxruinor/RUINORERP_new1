@@ -1,17 +1,19 @@
+using FluentValidation;
 using RUINORERP.Model.ConfigModel;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace RUINORERP.IServices
+namespace RUINORERP.Business.Config
 {
     /// <summary>
     /// 配置验证服务接口
     /// 提供配置验证和错误处理功能
+    /// 集成FluentValidation验证器以提供更强大的验证能力
     /// </summary>
     public interface IConfigValidationService
     {
         /// <summary>
-        /// 验证配置对象
+        /// 验证配置对象（集成FluentValidation验证器）
         /// </summary>
         /// <typeparam name="T">配置类型</typeparam>
         /// <param name="config">配置对象</param>
@@ -19,7 +21,7 @@ namespace RUINORERP.IServices
         ConfigValidationResult ValidateConfig<T>(T config) where T : BaseConfig;
 
         /// <summary>
-        /// 异步验证配置对象
+        /// 异步验证配置对象（集成FluentValidation验证器）
         /// </summary>
         /// <typeparam name="T">配置类型</typeparam>
         /// <param name="config">配置对象</param>
@@ -57,5 +59,17 @@ namespace RUINORERP.IServices
         /// <param name="config">配置对象</param>
         /// <returns>验证结果</returns>
         ConfigValidationResult ValidateConfigApplication<T>(T config) where T : BaseConfig;
+        
+        /// <summary>
+        /// 初始化服务器配置的验证规则
+        /// </summary>
+        void InitializeServerConfigValidationRules();
+        
+        /// <summary>
+        /// 获取指定配置类型的FluentValidation验证器
+        /// </summary>
+        /// <typeparam name="T">配置类型</typeparam>
+        /// <returns>FluentValidation验证器实例</returns>
+        IValidator<T> GetValidator<T>() where T : BaseConfig;
     }
 }

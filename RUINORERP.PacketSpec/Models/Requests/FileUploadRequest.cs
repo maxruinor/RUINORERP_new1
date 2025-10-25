@@ -1,88 +1,73 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using RUINORERP.Model;
-using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Models.Core;
-using Newtonsoft.Json;
+using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
     /// <summary>
-    /// 文件上传请求 - 用于处理文件上传操作
+    /// 通用文件操作结果类
+    /// 用于统一处理单文件和多文件操作的结果
     /// </summary>
-    [JsonObject]
+    /// <typeparam name="T">结果数据类型</typeparam>
+    public class FileOperationResult<T>
+    {
+        /// <summary>
+        /// 操作目标标识（文件名或ID）
+        /// </summary>
+        public string TargetId { get; set; }
+
+        /// <summary>
+        /// 是否操作成功
+        /// </summary>
+        public bool IsSuccess { get; set; }
+
+        /// <summary>
+        /// 错误消息（仅在失败时有值）
+        /// </summary>
+        public string ErrorMessage { get; set; }
+    }
+    /// <summary>
+    /// 文件上传请求 - 支持单文件和多文件上传
+    /// 多文件是指一个单据下有多个文件
+    /// </summary>
     public class FileUploadRequest : RequestBase
     {
         /// <summary>
-        /// 文件名
+        /// 文件存储信息
         /// </summary>
-        [JsonProperty(Order=10)]
-        public string FileName { get; set; }
+        public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
 
+        public int? BusinessType { get; set; }
         /// <summary>
-        /// 文件分类: PaymentVoucher/ProductImage/BOMManual等
+        /// 唯一的业务编号，如订单编号、合同编号，产品SKU码
         /// </summary>
-        [JsonProperty(Order=11)]
-        public string Category { get; set; }
+        public string BusinessNo { get; set; }
 
-        /// <summary>
-        /// 文件大小
-        /// </summary>
-        [JsonProperty(Order=12)]
-        public long FileSize { get; set; }
+        public long? Created_by { get; set; }
 
-        /// <summary>
-        /// 文件数据
-        /// </summary>
-        [JsonProperty(Order=13)]
-        public byte[] Data { get; set; }
-
-        /// <summary>
-        /// 分块索引
-        /// </summary>
-        [JsonProperty(Order=14)]
-        public int ChunkIndex { get; set; }
-
-        /// <summary>
-        /// 总分块数
-        /// </summary>
-        [JsonProperty(Order=15)]
-        public int TotalChunks { get; set; }
-
-        /// <summary>
-        /// 目标路径
-        /// </summary>
-        [JsonProperty(Order=16)]
-        public string TargetPath { get; set; }
-
-        /// <summary>
-        /// 上传用户
-        /// </summary>
-        [JsonProperty(Order=17)]
-        public string UploadedBy { get; set; }
-
-        /// <summary>
-        /// 上传时间
-        /// </summary>
-        [JsonProperty(Order=18)]
-        public DateTime UploadTime { get; set; } = DateTime.Now;
-        
-        /// <summary>
-        /// 业务关联ID（如订单ID、产品ID等）
-        /// </summary>
-        [JsonProperty(Order=19)]
-        public string BusinessId { get; set; }
     }
+
+
 
     /// <summary>
     /// 文件上传响应 - 使用统一的ApiResponse模式
+    /// 与FileDownloadResponse结构保持一致
     /// </summary>
-    [JsonObject]
-    public class FileUploadResponse : ResponseBase<FileUploadResponseData>
+    public class FileUploadResponse : ResponseBase
     {
+        /// <summary>
+        /// 文件存储信息列表
+        /// </summary>
+        public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
+
+        /// <summary>
+        /// 多文件模式下的上传结果列表
+        /// </summary>
+        public List<FileOperationResult<tb_FS_FileStorageInfo>> OperationResults { get; set; } = new List<FileOperationResult<tb_FS_FileStorageInfo>>();
+
         /// <summary>
         /// 默认构造函数
         /// </summary>
@@ -91,123 +76,109 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 带参数的构造函数
         /// </summary>
-        public FileUploadResponse(bool success, string message, FileUploadResponseData data = null, int code = 200) 
+        public FileUploadResponse(bool success, string message, List<tb_FS_FileStorageInfo> fileStorageInfos = null)
         {
             this.IsSuccess = success;
             this.Message = message;
-            this.Data = data;
+            this.FileStorageInfos = fileStorageInfos ?? new List<tb_FS_FileStorageInfo>();
             this.Timestamp = DateTime.Now;
         }
 
         /// <summary>
-        /// 创建成功结果
+        /// 创建单文件成功结果
         /// </summary>
-        public static FileUploadResponse CreateSuccess(string fileId, string message = "文件上传成功")
+        public static FileUploadResponse CreateSuccess(tb_FS_FileStorageInfo fileStorageInfo, string message = "文件上传成功")
         {
-            return new FileUploadResponse(true, message, new FileUploadResponseData
-            {
-                FileId = fileId
-            }, 200);
+            return new FileUploadResponse(true, message, new List<tb_FS_FileStorageInfo> { fileStorageInfo });
         }
 
-        /// <summary>
-        /// 创建失败结果
-        /// </summary>
-        public static FileUploadResponse CreateFailure(string message, int code = 500)
-        {
-            return new FileUploadResponse(false, message, null, code);
-        }
+
+
     }
+
+
+
 
     /// <summary>
-    /// 文件上传响应数据
+    /// 文件删除请求 - 支持单文件和多文件删除
+    /// 整合tb_FS_FileStorageInfo实体
     /// </summary>
-    [JsonObject]
-    public class FileUploadResponseData
-    {
-        /// <summary>
-        /// 文件唯一标识符
-        /// </summary>
-        [JsonProperty(Order=0)]
-        public string FileId { get; set; }
-        
-        /// <summary>
-        /// 文件存储路径
-        /// </summary>
-        [JsonProperty(Order=1)]
-        public string FilePath { get; set; }
-        
-        /// <summary>
-        /// 文件URL（用于Web访问）
-        /// </summary>
-        [JsonProperty(Order=2)]
-        public string FileUrl { get; set; }
-    }
-
-
-    // 文件信息类
-    [JsonObject]
-    public class FileStorageInfo
-    {
-        private string filePath;
-
-        public FileStorageInfo(string filePath)
-        {
-            this.filePath = filePath;
-        }
-
-        [JsonProperty(Order=0)]
-        public string FileId { get; set; }
-        
-        [JsonProperty(Order=1)]
-        public string OriginalName { get; set; }
-        
-        [JsonProperty(Order=2)]
-        public string Category { get; set; }
-        
-        [JsonProperty(Order=3)]
-        public long Size { get; set; }
-        
-        [JsonProperty(Order=4)]
-        public DateTime UploadTime { get; set; }
-        
-        [JsonProperty(Order=5)]
-        public DateTime LastModified { get; set; }
-        
-        [JsonProperty(Order=6)]
-        public string Version { get; set; }
-
-        [JsonProperty(Order=7)]
-        public string UploadedBy { get; set; }
-
-        [JsonProperty(Order=8)]
-        public string MimeType { get; set; }
-
-        [JsonProperty(Order=9)]
-        public string FilePath { get; set; }
-        
-        [JsonProperty(Order=10)]
-        public string BusinessId { get; set; }
-
-    }
-
-    // 请求和响应类
-    [JsonObject]
     public class FileDeleteRequest : RequestBase
     {
-        [JsonProperty(Order=10)]
-        public string FileId { get; set; }
-        
-        [JsonProperty(Order=11)]
+        /// <summary>
+        /// 是否为多文件删除
+        /// </summary>
+        public bool IsMultiFile { get; set; } = false;
+
+        /// <summary>
+        /// 文件存储信息（单文件模式）
+        /// </summary>
+        public tb_FS_FileStorageInfo FileStorageInfo { get; set; }
+
+        /// <summary>
+        /// 文件分类
+        /// </summary>
         public string Category { get; set; }
+
+        /// <summary>
+        /// 多文件模式下的文件存储信息列表
+        /// </summary>
+        public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
+
+        /// <summary>
+        /// 文件ID（单文件模式）- 向后兼容
+        /// </summary>
+        public string FileId
+        {
+            get => FileStorageInfo?.FileId.ToString();
+            set
+            {
+                if (string.IsNullOrEmpty(value)) return;
+                if (FileStorageInfo == null) FileStorageInfo = new tb_FS_FileStorageInfo();
+                if (long.TryParse(value, out long fileId)) FileStorageInfo.FileId = fileId;
+            }
+        }
+
+        /// <summary>
+        /// 多文件模式下的文件ID列表（向后兼容）
+        /// </summary>
+        public List<string> FileIds
+        {
+            get => FileOperationCompatibilityHelper.ConvertStorageInfosToFileIds(FileStorageInfos);
+            set
+            {
+                if (value != null)
+                {
+                    FileStorageInfos = FileOperationCompatibilityHelper.ConvertFileIdsToStorageInfos(value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 初始化兼容数据结构
+        /// 确保新旧API都能正常工作
+        /// </summary>
+        public void InitializeCompatibility()
+        {
+            if (FileStorageInfo == null)
+                FileStorageInfo = new tb_FS_FileStorageInfo();
+
+            if (FileStorageInfos == null)
+                FileStorageInfos = new List<tb_FS_FileStorageInfo>();
+        }
     }
 
     /// <summary>
     /// 文件删除响应 - 使用统一的ApiResponse模式
+    /// 与FileDownloadResponse结构保持一致
     /// </summary>
-    [JsonObject]
     public class FileDeleteResponse : ResponseBase
     {
+        /// <summary>
+        /// 多文件模式下的删除结果列表
+        /// </summary>
+        public List<FileOperationResult<string>> OperationResults { get; set; } = new List<FileOperationResult<string>>();
+
         /// <summary>
         /// 默认构造函数
         /// </summary>
@@ -216,18 +187,29 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 带参数的构造函数
         /// </summary>
-        public FileDeleteResponse(bool success, string message, int code = 200) 
+        public FileDeleteResponse(bool success, string message, int code = 200)
         {
             IsSuccess = success;
             Message = message;
+            Timestamp = DateTime.Now;
         }
 
         /// <summary>
-        /// 创建成功结果
+        /// 创建单文件成功结果
         /// </summary>
         public static FileDeleteResponse CreateSuccess(string message = "文件删除成功")
         {
             return new FileDeleteResponse(true, message, 200);
+        }
+
+        /// <summary>
+        /// 创建多文件成功结果
+        /// </summary>
+        public static FileDeleteResponse CreateMultiFileSuccess(List<FileOperationResult<string>> results, string message = "文件删除成功")
+        {
+            var response = new FileDeleteResponse(true, message, 200);
+            response.OperationResults = results;
+            return response;
         }
 
         /// <summary>
@@ -239,22 +221,63 @@ namespace RUINORERP.PacketSpec.Models.Requests
         }
     }
 
-    [JsonObject]
+
+
+    /// <summary>
+    /// 文件信息查询请求 - 支持单文件和多文件查询
+    /// 整合tb_FS_FileStorageInfo实体
+    /// </summary>
     public class FileInfoRequest : RequestBase
     {
-        [JsonProperty(Order=10)]
-        public string FileId { get; set; }
-        
-        [JsonProperty(Order=11)]
-        public string Category { get; set; }
+        /// <summary>
+        /// 是否为多文件查询
+        /// </summary>
+        public bool IsMultiFile { get; set; } = false;
+
+        /// <summary>
+        /// 文件存储信息（单文件模式）
+        /// </summary>
+        public tb_FS_FileStorageInfo FileStorageInfo { get; set; }
+
+
+
+        /// <summary>
+        /// 多文件模式下的文件存储信息列表
+        /// </summary>
+        public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
+
+
+
+        /// <summary>
+        /// 初始化兼容数据结构
+        /// 确保新旧API都能正常工作
+        /// </summary>
+        public void InitializeCompatibility()
+        {
+            if (FileStorageInfo == null)
+                FileStorageInfo = new tb_FS_FileStorageInfo();
+
+            if (FileStorageInfos == null)
+                FileStorageInfos = new List<tb_FS_FileStorageInfo>();
+        }
     }
 
     /// <summary>
     /// 文件信息响应 - 使用统一的ApiResponse模式
+    /// 与FileDownloadResponse结构保持一致
     /// </summary>
-    [JsonObject]
-    public class FileInfoResponse : ResponseBase<FileStorageInfo>
+    public class FileInfoResponse : ResponseBase
     {
+        /// <summary>
+        /// 文件存储信息列表
+        /// </summary>
+        public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
+
+        /// <summary>
+        /// 多文件模式下的查询结果列表
+        /// </summary>
+        public List<FileOperationResult<tb_FS_FileStorageInfo>> OperationResults { get; set; } = new List<FileOperationResult<tb_FS_FileStorageInfo>>();
+
         /// <summary>
         /// 默认构造函数
         /// </summary>
@@ -263,21 +286,23 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 带参数的构造函数
         /// </summary>
-        public FileInfoResponse(bool success, string message, FileStorageInfo data = null, int code = 200) 
+        public FileInfoResponse(bool success, string message, List<tb_FS_FileStorageInfo> fileStorageInfos = null, int code = 200)
         {
             this.IsSuccess = success;
             this.Message = message;
-            this.Data = data;
+            this.FileStorageInfos = fileStorageInfos ?? new List<tb_FS_FileStorageInfo>();
             this.Timestamp = DateTime.Now;
         }
 
         /// <summary>
-        /// 创建成功结果
+        /// 创建单文件信息成功结果
         /// </summary>
-        public static FileInfoResponse CreateSuccess(FileStorageInfo fileInfo, string message = "获取文件信息成功")
+        public static FileInfoResponse CreateSuccess(tb_FS_FileStorageInfo fileInfo, string message = "获取文件信息成功")
         {
-            return new FileInfoResponse(true, message, fileInfo, 200);
+            return new FileInfoResponse(true, message, new List<tb_FS_FileStorageInfo> { fileInfo }, 200);
         }
+
+
 
         /// <summary>
         /// 创建失败结果
@@ -288,57 +313,54 @@ namespace RUINORERP.PacketSpec.Models.Requests
         }
     }
 
-    [JsonObject]
+    /// <summary>
+    /// 文件列表请求 - 保持与原接口兼容
+    /// </summary>
     public class FileListRequest : RequestBase
     {
-        [JsonProperty(Order=10)]
         public string Category { get; set; }
-        
-        [JsonProperty(Order=11)]
-        public string Pattern { get; set; } // 文件名模式匹配
-        
-        [JsonProperty(Order=12)]
+
+        public string BusinessId { get; set; }
+
+        public int PageSize { get; set; } = 10;
+
         public int PageIndex { get; set; } = 1;
-        
-        [JsonProperty(Order=13)]
-        public int PageSize { get; set; } = 20;
     }
 
     /// <summary>
-    /// 文件列表响应数据类
+    /// 文件列表响应数据
     /// </summary>
-    [JsonObject]
     public class FileListResponseData
     {
         /// <summary>
-        /// 文件列表
+        /// 文件存储信息列表
         /// </summary>
-        [JsonProperty(Order=0)]
-        public List<FileStorageInfo> Files { get; set; }
+        public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
 
         /// <summary>
-        /// 总记录数
+        /// 总数
         /// </summary>
-        [JsonProperty(Order=1)]
         public int TotalCount { get; set; }
+
+        /// <summary>
+        /// 总页数
+        /// </summary>
+        public int TotalPages { get; set; }
 
         /// <summary>
         /// 当前页码
         /// </summary>
-        [JsonProperty(Order=2)]
         public int PageIndex { get; set; }
 
         /// <summary>
-        /// 每页大小
+        /// 每页条数
         /// </summary>
-        [JsonProperty(Order=3)]
         public int PageSize { get; set; }
     }
 
     /// <summary>
     /// 文件列表响应 - 使用统一的ApiResponse模式
     /// </summary>
-    [JsonObject]
     public class FileListResponse : ResponseBase<FileListResponseData>
     {
         /// <summary>
@@ -349,7 +371,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 带参数的构造函数
         /// </summary>
-        public FileListResponse(bool success, string message, FileListResponseData data = null, int code = 200) 
+        public FileListResponse(bool success, string message, FileListResponseData data = null, int code = 200)
         {
             this.IsSuccess = success;
             this.Message = message;
@@ -360,15 +382,8 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 创建成功结果
         /// </summary>
-        public static FileListResponse CreateSuccess(List<FileStorageInfo> files, int totalCount, int pageIndex, int pageSize, string message = "获取文件列表成功")
+        public static FileListResponse CreateSuccess(FileListResponseData data, string message = "获取文件列表成功")
         {
-            var data = new FileListResponseData
-            {
-                Files = files,
-                TotalCount = totalCount,
-                PageIndex = pageIndex,
-                PageSize = pageSize
-            };
             return new FileListResponse(true, message, data, 200);
         }
 
@@ -379,6 +394,92 @@ namespace RUINORERP.PacketSpec.Models.Requests
         {
             return new FileListResponse(false, message, null, code);
         }
+    }
+
+    /// <summary>
+    /// 向后兼容性辅助类
+    /// 用于在系统升级过程中处理旧版本请求和确保新旧API兼容
+    /// </summary>
+    public static class FileOperationCompatibilityHelper
+    {
+        /// <summary>
+        /// 将旧版多文件操作结果转换为新版通用结果类
+        /// </summary>
+        /// <typeparam name="T">结果数据类型</typeparam>
+        /// <param name="targetId">目标标识</param>
+        /// <param name="isSuccess">是否成功</param>
+        /// <param name="data">结果数据</param>
+        /// <param name="errorMessage">错误消息</param>
+        /// <returns>通用文件操作结果</returns>
+        public static FileOperationResult<T> CreateOperationResult<T>(string targetId, bool isSuccess, T data = default, string errorMessage = null)
+        {
+            return new FileOperationResult<T>
+            {
+                TargetId = targetId,
+                IsSuccess = isSuccess,
+                ErrorMessage = errorMessage
+            };
+        }
+
+        /// <summary>
+        /// 检查请求是否为多文件操作
+        /// </summary>
+        /// <param name="fileCount">文件数量</param>
+        /// <returns>是否为多文件操作</returns>
+        public static bool IsMultiFileOperation(int fileCount)
+        {
+            return fileCount > 1;
+        }
+
+        /// <summary>
+        /// 将文件ID列表转换为文件存储信息列表
+        /// 用于从旧版API兼容到新版API
+        /// </summary>
+        /// <param name="fileIds">文件ID列表</param>
+        /// <returns>文件存储信息列表</returns>
+        public static List<tb_FS_FileStorageInfo> ConvertFileIdsToStorageInfos(List<string> fileIds)
+        {
+            var storageInfos = new List<tb_FS_FileStorageInfo>();
+            if (fileIds != null)
+            {
+                foreach (var fileId in fileIds)
+                {
+                    if (long.TryParse(fileId, out long id))
+                    {
+                        storageInfos.Add(new tb_FS_FileStorageInfo { FileId = id });
+                    }
+                }
+            }
+            return storageInfos;
+        }
+
+        /// <summary>
+        /// 将文件存储信息列表转换为文件ID列表
+        /// 用于从新版API兼容到旧版API
+        /// </summary>
+        /// <param name="storageInfos">文件存储信息列表</param>
+        /// <returns>文件ID列表</returns>
+        public static List<string> ConvertStorageInfosToFileIds(List<tb_FS_FileStorageInfo> storageInfos)
+        {
+            if (storageInfos == null)
+                return new List<string>();
+
+            return storageInfos.Select(s => s.FileId.ToString()).ToList();
+        }
+
+        /// <summary>
+        /// 创建单文件上传成功结果（向后兼容）
+        /// </summary>
+        /// <param name="fileId">文件ID</param>
+        /// <param name="message">消息</param>
+        /// <returns>文件上传响应</returns>
+        public static FileUploadResponse CreateLegacySuccess(long fileId, string message = "文件上传成功")
+        {
+            var fileInfo = new tb_FS_FileStorageInfo { FileId = fileId };
+            return FileUploadResponse.CreateSuccess(fileInfo, message);
+        }
+
+
     }
 
 }

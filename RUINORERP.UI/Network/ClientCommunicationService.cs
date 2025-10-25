@@ -1730,7 +1730,7 @@ namespace RUINORERP.UI.Network
                         else if (task.Result != null && task.Result.Response != null)
                             responseTcs.TrySetResult(task.Result.Response as TResponse);
                         else
-                            responseTcs.TrySetResult(ResponseBase.CreateError("未收到有效响应数据") as TResponse);
+                            responseTcs.TrySetResult(ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到有效响应数据") as TResponse);
                     });
 
                     // 将请求加入队列

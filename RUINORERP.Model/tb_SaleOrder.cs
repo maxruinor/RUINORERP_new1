@@ -98,6 +98,23 @@ namespace RUINORERP.Model
             }
         }
 
+
+        private string _VoucherImage;
+        /// <summary>
+        /// 凭证图片
+        /// </summary>
+        [AdvQueryAttribute(ColName = "VoucherImage", ColDesc = "凭证图片")]
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType = "String", ColumnName = "VoucherImage", Length = 2000, IsNullable = true, ColumnDescription = "收货地址")]
+        public string VoucherImage
+        {
+            get { return _VoucherImage; }
+            set
+            {
+                SetProperty(ref _VoucherImage, value);
+            }
+        }
+
+
         private long _CustomerVendor_ID;
         /// <summary>
         /// 客户

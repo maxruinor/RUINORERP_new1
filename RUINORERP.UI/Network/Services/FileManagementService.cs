@@ -12,6 +12,7 @@ using RUINORERP.UI.Network.Exceptions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -53,11 +54,8 @@ namespace RUINORERP.UI.Network.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            if (string.IsNullOrEmpty(request.FileName))
-                throw new ArgumentException("文件名不能为空", nameof(request.FileName));
-
-            if (request.Data == null || request.Data.Length == 0)
-                throw new ArgumentException("文件数据不能为空", nameof(request.Data));
+            if (request.FileStorageInfos == null || request.FileStorageInfos.Count == 0)
+                throw new ArgumentException("文件数据不能为空");
 
             // 使用信号量确保同一时间只有一个文件操作请求
             await _fileOperationLock.WaitAsync(ct);
@@ -67,7 +65,7 @@ namespace RUINORERP.UI.Network.Services
                 if (!_communicationService.IsConnected)
                 {
                     _log?.LogWarning("文件上传失败：未连接到服务器");
-                    return FileUploadResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("未连接到服务器，请检查网络连接后重试");
                 }
 
                 // 只记录关键信息，移除详细的文件名日志
@@ -81,14 +79,14 @@ namespace RUINORERP.UI.Network.Services
                 if (response == null)
                 {
                     _log?.LogError("文件上传失败：服务器返回了空的响应数据");
-                    return FileUploadResponse.CreateFailure("服务器返回了空的响应数据，请联系系统管理员");
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回了空的响应数据，请联系系统管理员");
                 }
 
                 // 检查响应是否成功
                 if (!response.IsSuccess)
                 {
                     _log?.LogWarning("文件上传失败: {ErrorMessage}", response.ErrorMessage);
-                    return FileUploadResponse.CreateFailure($"文件上传失败: {response.ErrorMessage}");
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件上传失败: {response.ErrorMessage}");
                 }
 
                 // 只记录关键信息，简化日志内容
@@ -96,12 +94,12 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (OperationCanceledException ex)
             {
-                return FileUploadResponse.CreateFailure("文件上传操作已取消");
+                return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("文件上传操作已取消");
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "文件上传过程中发生未预期的异常");
-                return FileUploadResponse.CreateFailure("文件上传过程中发生错误，请稍后重试");
+                return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("文件上传过程中发生错误，请稍后重试");
             }
             finally
             {
@@ -121,8 +119,8 @@ namespace RUINORERP.UI.Network.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            if (string.IsNullOrEmpty(request.FileId))
-                throw new ArgumentException("文件ID不能为空", nameof(request.FileId));
+            if (request.FileStorageInfo.FileId==0)
+                throw new ArgumentException("文件ID不能为空", nameof(request.FileStorageInfo));
 
             // 使用信号量确保同一时间只有一个文件操作请求
             await _fileOperationLock.WaitAsync(ct);
@@ -250,8 +248,8 @@ namespace RUINORERP.UI.Network.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            if (string.IsNullOrEmpty(request.FileId))
-                throw new ArgumentException("文件ID不能为空", nameof(request.FileId));
+            if (request.FileStorageInfo.FileId==0)
+                throw new ArgumentException("文件ID不能为空", nameof(request.FileStorageInfo.FileId));
 
             // 使用信号量确保同一时间只有一个文件操作请求
             await _fileOperationLock.WaitAsync(ct);
@@ -365,65 +363,12 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-        /// <summary>
-        /// 上传付款凭证文件
-        /// </summary>
-        /// <param name="fileName">文件名</param>
-        /// <param name="fileData">文件数据</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>文件上传响应</returns>
-        public async Task<FileUploadResponse> UploadPaymentVoucherAsync(string fileName, byte[] fileData, CancellationToken ct = default)
-        {
-            var request = new FileUploadRequest
-            {
-                FileName = fileName,
-                Category = "PaymentVoucher",
-                FileSize = fileData.Length,
-                Data = fileData
-            };
-            
-            return await UploadFileAsync(request, ct);
-        }
 
-        /// <summary>
-        /// 上传产品图片文件
-        /// </summary>
-        /// <param name="fileName">文件名</param>
-        /// <param name="fileData">文件数据</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>文件上传响应</returns>
-        public async Task<FileUploadResponse> UploadProductImageAsync(string fileName, byte[] fileData, CancellationToken ct = default)
-        {
-            var request = new FileUploadRequest
-            {
-                FileName = fileName,
-                Category = "ProductImage",
-                FileSize = fileData.Length,
-                Data = fileData
-            };
-            
-            return await UploadFileAsync(request, ct);
-        }
+       
 
-        /// <summary>
-        /// 上传BOM配方手册文件
-        /// </summary>
-        /// <param name="fileName">文件名</param>
-        /// <param name="fileData">文件数据</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>文件上传响应</returns>
-        public async Task<FileUploadResponse> UploadBOMManualAsync(string fileName, byte[] fileData, CancellationToken ct = default)
-        {
-            var request = new FileUploadRequest
-            {
-                FileName = fileName,
-                Category = "BOMManual",
-                FileSize = fileData.Length,
-                Data = fileData
-            };
-            
-            return await UploadFileAsync(request, ct);
-        }
+       
+
+      
 
         /// <summary>
         /// 释放资源

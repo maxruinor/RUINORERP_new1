@@ -1,7 +1,7 @@
-using RUINORERP.Model.ConfigModel;
+﻿using RUINORERP.Model.ConfigModel;
 using System.Threading.Tasks;
 
-namespace RUINORERP.IServices
+namespace RUINORERP.Business.Config
 {
     /// <summary>
     /// 配置管理服务接口

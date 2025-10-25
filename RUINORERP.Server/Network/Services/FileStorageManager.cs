@@ -12,6 +12,7 @@ using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.Server.Network.Interfaces.Services;
 using StackExchange.Redis;
 using RUINORERP.PacketSpec.Models;
+using RUINORERP.Model;
 
 namespace RUINORERP.Server.Network.Services
 {
@@ -68,23 +69,23 @@ namespace RUINORERP.Server.Network.Services
 
                 foreach (var file in files)
                 {
-                    var fileInfo = new FileStorageInfo(file);
-                    if (fileInfo.LastModified < cutoffDate)
-                    {
-                        try
-                        {
-                            File.Delete(file);
-                            deletedCount++;
+                    //var fileInfo = new FileStorageInfo(file);
+                    //if (fileInfo.LastModified < cutoffDate)
+                    //{
+                    //    try
+                    //    {
+                    //        File.Delete(file);
+                    //        deletedCount++;
 
-                            // 从Redis中删除文件信息
-                            var fileId = Path.GetFileName(file);
-                            await _redisDb.KeyDeleteAsync($"file:{fileId}");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "删除临时文件失败: {FileName}", file);
-                        }
-                    }
+                    //        // 从Redis中删除文件信息
+                    //        var fileId = Path.GetFileName(file);
+                    //        await _redisDb.KeyDeleteAsync($"file:{fileId}");
+                    //    }
+                    //    catch (Exception ex)
+                    //    {
+                    //        _logger.LogWarning(ex, "删除临时文件失败: {FileName}", file);
+                    //    }
+                    //}
                 }
 
             }
@@ -141,7 +142,7 @@ namespace RUINORERP.Server.Network.Services
                             orphanedFiles++;
 
                             // 尝试重建记录
-                            await RebuildFileRecordAsync(fileId, category);
+                            //await RebuildFileRecordAsync(fileId, category);
                         }
                     }
                 }
@@ -154,42 +155,42 @@ namespace RUINORERP.Server.Network.Services
             }
         }
 
-        /// <summary>
-        /// 重建文件记录
-        /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="category">文件分类</param>
-        /// <returns>重建任务</returns>
-        private async Task RebuildFileRecordAsync(string fileId, string category)
-        {
-            try
-            {
-                var filePath = Path.Combine(_storageRoot, GetCategoryPath(category), fileId);
-                var fileInfo = new FileStorageInfo(filePath);
+        ///// <summary>
+        ///// 重建文件记录
+        ///// </summary>
+        ///// <param name="fileId">文件ID</param>
+        ///// <param name="category">文件分类</param>
+        ///// <returns>重建任务</returns>
+        //private async Task RebuildFileRecordAsync(string fileId, string category)
+        //{
+        //    try
+        //    {
+        //        var filePath = Path.Combine(_storageRoot, GetCategoryPath(category), fileId);
+        //        var fileInfo = new tb_FS_FileStorageInfo(filePath);
 
-                var fileInfoObj = new FileStorageInfo(filePath)
-                {
-                    FileId = fileId,
-                    OriginalName = fileId, // 无法恢复原始名称
-                    Category = category,
-                    Size = fileInfo.Size,
-                    UploadTime = fileInfo.UploadTime,
-                    LastModified = fileInfo.LastModified
-                };
+        //        var fileInfoObj = new tb_FS_FileStorageInfo(filePath)
+        //        {
+        //            FileId = fileId,
+        //            OriginalName = fileId, // 无法恢复原始名称
+        //            Category = category,
+        //            Size = fileInfo.Size,
+        //            UploadTime = fileInfo.UploadTime,
+        //            LastModified = fileInfo.LastModified
+        //        };
 
-                // 重新缓存文件信息
-                await _redisDb.StringSetAsync($"file:{fileId}", JsonConvert.SerializeObject(fileInfoObj));
+        //        // 重新缓存文件信息
+        //        await _redisDb.StringSetAsync($"file:{fileId}", JsonConvert.SerializeObject(fileInfoObj));
 
-                // 添加到分类文件列表
-                var categoryKey = $"files:{category}";
-                await _redisDb.SetAddAsync(categoryKey, fileId);
+        //        // 添加到分类文件列表
+        //        var categoryKey = $"files:{category}";
+        //        await _redisDb.SetAddAsync(categoryKey, fileId);
 
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "重建文件记录失败: {FileId}", fileId);
-            }
-        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "重建文件记录失败: {FileId}", fileId);
+        //    }
+        //}
 
         /// <summary>
         /// 获取分类路径
@@ -209,63 +210,63 @@ namespace RUINORERP.Server.Network.Services
             };
         }
 
-        /// <summary>
-        /// 获取存储使用情况统计
-        /// </summary>
-        /// <returns>存储使用信息</returns>
-        public async Task<StorageUsageInfo> GetStorageUsageAsync()
-        {
-            // 初始化响应数据
-            var data = new StorageUsageInfoData
-            {
-                CategoryUsage = new Dictionary<string, CategoryUsage>(),
-                TotalSize = 0,
-                TotalFileCount = 0
-            };
+        ///// <summary>
+        ///// 获取存储使用情况统计
+        ///// </summary>
+        ///// <returns>存储使用信息</returns>
+        //public async Task<StorageUsageInfo> GetStorageUsageAsync()
+        //{
+        //    // 初始化响应数据
+        //    var data = new StorageUsageInfoData
+        //    {
+        //        CategoryUsage = new Dictionary<string, CategoryUsage>(),
+        //        TotalSize = 0,
+        //        TotalFileCount = 0
+        //    };
             
-            var usageInfo = new StorageUsageInfo(true, "获取存储使用信息成功", data);
+        //    var usageInfo = new StorageUsageInfo(true, "获取存储使用信息成功", data);
             
-            try
-            {
-                var categories = new[] { "Expenses", "Products", "Payments", "Manuals", "Templates", "Temp" };
+        //    try
+        //    {
+        //        var categories = new[] { "Expenses", "Products", "Payments", "Manuals", "Templates", "Temp" };
 
-                foreach (var category in categories)
-                {
-                    var categoryPath = GetCategoryPath(category);
-                    var fullPath = Path.Combine(_storageRoot, categoryPath);
+        //        foreach (var category in categories)
+        //        {
+        //            var categoryPath = GetCategoryPath(category);
+        //            var fullPath = Path.Combine(_storageRoot, categoryPath);
 
-                    if (Directory.Exists(fullPath))
-                    {
-                        var files = Directory.GetFiles(fullPath, "*.*", SearchOption.AllDirectories);
-                        var totalSize = files.Sum(file => new FileStorageInfo(file).Size);
+        //            if (Directory.Exists(fullPath))
+        //            {
+        //                var files = Directory.GetFiles(fullPath, "*.*", SearchOption.AllDirectories);
+        //                var totalSize = files.Sum(file => new FileStorageInfo(file).Size);
 
-                        usageInfo.Data.CategoryUsage[category] = new CategoryUsage
-                        {
-                            FileCount = files.Length,
-                            TotalSize = totalSize
-                        };
+        //                usageInfo.Data.CategoryUsage[category] = new CategoryUsage
+        //                {
+        //                    FileCount = files.Length,
+        //                    TotalSize = totalSize
+        //                };
 
-                        usageInfo.Data.TotalFileCount += files.Length;
-                        usageInfo.Data.TotalSize += totalSize;
-                    }
-                    else
-                    {
-                        usageInfo.Data.CategoryUsage[category] = new CategoryUsage
-                        {
-                            FileCount = 0,
-                            TotalSize = 0
-                        };
-                    }
-                }
+        //                usageInfo.Data.TotalFileCount += files.Length;
+        //                usageInfo.Data.TotalSize += totalSize;
+        //            }
+        //            else
+        //            {
+        //                usageInfo.Data.CategoryUsage[category] = new CategoryUsage
+        //                {
+        //                    FileCount = 0,
+        //                    TotalSize = 0
+        //                };
+        //            }
+        //        }
 
-                return usageInfo;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "获取存储使用统计失败");
-                return usageInfo;
-            }
-        }
+        //        return usageInfo;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "获取存储使用统计失败");
+        //        return usageInfo;
+        //    }
+        //}
 
         /// <summary>
         /// 备份文件存储

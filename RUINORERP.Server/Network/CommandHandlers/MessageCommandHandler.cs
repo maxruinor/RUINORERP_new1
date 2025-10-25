@@ -69,19 +69,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             await HandleBroadcastMessageAsync(messageRequest, cmd.Packet.ExecutionContext, cancellationToken),
                         var id when id == MessageCommands.SendSystemNotification =>
                             await HandleSendSystemNotificationAsync(messageRequest, cmd.Packet.ExecutionContext, cancellationToken),
-                        _ => ResponseBase.CreateError($"不支持的消息命令: {commandId.Name}")
-                                    .WithMetadata("ErrorCode", "UNSUPPORTED_MESSAGE_COMMAND")
+                        _ => ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, $"不支持的消息命令: {commandId.Name}")
+                                    
                     };
                 }
                 else
                 {
-                        return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet,  "消息请求格式错误  ");
+                    return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "消息请求格式错误  ");
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理消息命令时出错");
-                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext,ex, "处理消息命令时出错  ");
+                return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, "处理消息命令时出错  ");
             }
         }
 
@@ -506,6 +506,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
-      
+
     }
 }

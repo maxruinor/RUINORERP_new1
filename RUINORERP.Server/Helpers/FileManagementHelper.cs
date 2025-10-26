@@ -40,6 +40,7 @@ namespace RUINORERP.Server.Helpers
                 BusinessType = businessType,
                 FileType = fileType,
                 FileSize = fileSize,
+                HashCode = GenerateHashCode(fileName, fileSize, fileType),
                 StorageProvider = "Local",
                 StoragePath = storagePath,
                 CurrentVersion = 1,
@@ -53,6 +54,25 @@ namespace RUINORERP.Server.Helpers
 
             return fileStorageInfo;
         }
+
+
+        /// <summary>
+        /// 生成文件哈希值（基于文件名、大小、类型）
+        /// </summary>
+        /// <param name="fileName">文件名</param>
+        /// <param name="fileSize">文件大小</param>
+        /// <param name="fileType">文件类型</param>
+        /// <returns>哈希字符串</returns>
+        public static string GenerateHashCode(string fileName, long fileSize, string fileType)
+        {
+            var raw = $"{fileName}|{fileSize}|{fileType}";
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                var bytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(raw));
+                return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+            }
+        }
+
 
         /// <summary>
         /// 创建业务关联实体

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SqlSugar;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ namespace RUINORERP.Model
         /// <summary>
         /// 图片数据
         /// </summary>
+        [SugarColumn(IsIgnore = true, ColumnDescription = "文件数据")]
         public byte[] FileData { get; set; }
     }
 }

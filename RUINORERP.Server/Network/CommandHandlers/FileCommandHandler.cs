@@ -19,6 +19,7 @@ using RUINORERP.Business;
 using RUINORERP.IServices;
 using Azure;
 using SqlSugar;
+using RUINORERP.Business.Config;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {
@@ -37,6 +38,28 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly tb_FS_BusinessRelationController<tb_FS_BusinessRelation> _businessRelationController;
         private readonly tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> _fileStorageVersionController;
 
+        /// <summary>
+        /// 解析路径中的环境变量
+        /// 支持 %ENV_VAR% 的格式
+        /// </summary>
+        /// <param name="path">包含环境变量的路径</param>
+        /// <returns>解析后的实际路径</returns>
+        private string ResolveEnvironmentVariables(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return path;
+
+            try
+            {
+                return Environment.ExpandEnvironmentVariables(path);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "解析环境变量失败，使用原始路径: {Path}", path);
+                return path;
+            }
+        }
+
 
         public FileCommandHandler(
             SessionService sessionService,
@@ -48,9 +71,27 @@ namespace RUINORERP.Server.Network.CommandHandlers
             _sessionService = sessionService;
             _logger = logger;
 
-            // 从配置管理器获取服务器配置
-            _serverConfig = Startup.GetFromFac<ServerConfig>() ?? new ServerConfig();
-            _fileStoragePath = _serverConfig.FileStoragePath;
+            // 从配置管理器服务获取服务器配置
+            try
+            {
+                _serverConfig = Startup.GetFromFac<ServerConfig>();
+                // 处理环境变量并验证路径
+                _fileStoragePath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
+
+                // 确保存储目录存在
+                if (!string.IsNullOrEmpty(_fileStoragePath) && !Directory.Exists(_fileStoragePath))
+                {
+                    Directory.CreateDirectory(_fileStoragePath);
+                }
+
+                _logger.LogInformation("文件存储路径已设置为: {FileStoragePath}", _fileStoragePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取服务器配置失败，使用默认路径");
+                _serverConfig = new ServerConfig();
+                _fileStoragePath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
+            }
 
             // 注入业务控制器
             _fileStorageInfoController = fileStorageInfoController;
@@ -146,6 +187,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 生成唯一文件名
                     var fileId = Guid.NewGuid().ToString();
                     var fileExtension = Path.GetExtension(FileStorageInfo.OriginalFileName);
+                    //扩展名。看如何取好。原来名有没有带？
                     var savedFileName = $"{fileId}{fileExtension}";
 
                     // 根据分类确定存储路径
@@ -315,6 +357,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
         }
 
-      
+
     }
 }

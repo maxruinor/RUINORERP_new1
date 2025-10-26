@@ -336,9 +336,9 @@ namespace RUINORERP.Server
                 // 注意：详细的路径验证（包括环境变量解析、路径可访问性检查等）
                 // 已经在ServerConfigValidator中实现，这里保留一些额外的确保逻辑
                 PrintInfoLog("正在执行额外的文件存储路径验证...");
-                
+                IConfigManagerService configManagerService = Startup.GetFromFac<IConfigManagerService>();
                 // 解析环境变量路径（作为额外的验证保障）
-                string resolvedPath = ResolveEnvironmentVariables(serverConfig.FileStoragePath);
+                string resolvedPath = configManagerService.ResolveEnvironmentVariables(serverConfig.FileStoragePath);
                 
                 if (!string.IsNullOrEmpty(resolvedPath))
                 {
@@ -376,15 +376,24 @@ namespace RUINORERP.Server
 
         /// <summary>
         /// 获取服务器配置实例
-        /// 使用ConfigManagerService从配置文件加载配置
+        /// 使用依赖注入容器中的ServerConfig单例或通过ConfigManagerService加载配置
         /// </summary>
         private RUINORERP.Model.ConfigModel.ServerConfig GetServerConfig()
         {
             try
             {
-                // 从依赖注入容器获取配置管理服务
-                var configManager = Program.ServiceProvider.GetRequiredService<IConfigManagerService>();
-                var serverConfig = configManager.GetConfig<ServerConfig>("ServerConfig");
+                // 优先使用DI容器中的ServerConfig单例（已通过Startup.cs配置）
+                var serverConfig = Startup.GetFromFac<ServerConfig>();
+                
+                // 如果需要进行环境变量解析或其他后处理，可以使用ConfigManagerService
+                if (serverConfig != null && !string.IsNullOrEmpty(serverConfig.FileStoragePath))
+                {
+                    var configManager = Startup.GetFromFac<RUINORERP.Business.Config.IConfigManagerService>();
+                    if (configManager != null)
+                    {
+                        serverConfig.FileStoragePath = configManager.ResolveEnvironmentVariables(serverConfig.FileStoragePath);
+                    }
+                }
                 
                 PrintInfoLog("服务器配置加载成功");
                 return serverConfig;
@@ -392,22 +401,6 @@ namespace RUINORERP.Server
             catch (Exception ex)
             {
                 PrintErrorLog($"加载服务器配置失败: {ex.Message}");
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 解析路径中的环境变量
-        /// </summary>
-        private string ResolveEnvironmentVariables(string path)
-        {
-            try
-            {
-                // 使用Environment.ExpandEnvironmentVariables解析路径中的环境变量
-                return Environment.ExpandEnvironmentVariables(path);
-            }
-            catch
-            {
                 return null;
             }
         }
@@ -607,8 +600,6 @@ namespace RUINORERP.Server
                         {
                             tabControlMain.TabPages.RemoveAt(i);
                         }
-
-                        MessageBox.Show("所有Tab页已关闭", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
                 else
@@ -950,11 +941,10 @@ namespace RUINORERP.Server
             {
                 var _logger = Startup.GetFromFac<ILogger<frmMainNew>>();
 
-                // 创建NetworkServer实例
+                // 从DI容器获取NetworkServer实例
                 if (_networkServer == null)
                 {
-                    var networkLogger = Startup.GetFromFac<ILogger<NetworkServer>>();
-                    _networkServer = new NetworkServer(Startup.services, networkLogger);
+                    _networkServer = Startup.GetFromFac<NetworkServer>();
                 }
 
                 // 启动网络服务器

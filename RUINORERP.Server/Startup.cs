@@ -79,6 +79,7 @@ using CacheManager.Core;
 using RUINORERP.Business.Cache;
 using RUINORERP.Server.Services;
 using RUINORERP.Server.Network.Monitoring;
+using RUINORERP.Server.Network.Core;
 
 namespace RUINORERP.Server
 {
@@ -354,21 +355,34 @@ namespace RUINORERP.Server
                 .AddJsonFile(nameof(SystemGlobalconfig) + ".json", optional: false, reloadOnChange: true)
                 .AddJsonFile(nameof(GlobalValidatorConfig) + ".json", optional: false, reloadOnChange: true)
                 .AddJsonFile(nameof(ServerConfig) + ".json", optional: false, reloadOnChange: true)
+                // 添加环境变量支持，提高配置灵活性
+                .AddEnvironmentVariables(prefix: "RUINOR_")
                 .Build();
 
+            // 将IConfiguration注册到服务容器，供ConfigManagerService使用
+            services.AddSingleton<IConfiguration>(builder);
+            
+            // 配置Options模式，支持依赖注入IOptions<T>接口
             services.Configure<SystemGlobalconfig>(builder.GetSection(nameof(SystemGlobalconfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
             services.Configure<ServerConfig>(builder.GetSection(nameof(ServerConfig)));
             
-
-            // 注册ServerConfig单例实例，便于在应用中直接获取
+            // 注册ServerConfig单例实例，包含环境变量解析
             services.AddSingleton<ServerConfig>(provider =>
             {
-                var config = provider.GetRequiredService<IConfiguration>();
                 var serverConfig = new ServerConfig();
-                config.GetSection(nameof(ServerConfig)).Bind(serverConfig);
+                builder.GetSection(nameof(ServerConfig)).Bind(serverConfig);
+                
+                // 解析路径中的环境变量，确保路径正确
+                if (!string.IsNullOrEmpty(serverConfig.FileStoragePath))
+                {
+                    serverConfig.FileStoragePath = Environment.ExpandEnvironmentVariables(serverConfig.FileStoragePath);
+                }
+                
                 return serverConfig;
             });
+            
+            // 确保ConfigManagerService正确注册，使用新的构造函数
 
             services.AddSingleton(typeof(frmMainNew));//MDI最大。才开一次才能单例
 
@@ -433,6 +447,9 @@ namespace RUINORERP.Server
             services.AddSingleton<DiagnosticsService>();
             services.AddSingleton<PerformanceMonitoringService>();
             services.AddSingleton<ErrorAnalysisService>();
+            
+            // 注册NetworkServer类，使用依赖注入方式
+            services.AddSingleton<NetworkServer>();
 
         }
         #endregion

@@ -55,6 +55,22 @@ namespace RUINORERP.Server.Network.Core
         /// </summary>
         public bool IsRunning => _host != null;
 
+        /// <summary>
+        /// 主构造函数，支持完整的依赖注入
+        /// </summary>
+        /// <param name="logger">日志记录器</param>
+        /// <param name="sessionManager">会话管理器</param>
+        /// <param name="commandDispatcher">命令调度器</param>
+        public NetworkServer(ILogger<NetworkServer> logger, ISessionService sessionManager, CommandDispatcher commandDispatcher)
+        {
+            _logger = logger;
+            _sessionManager = sessionManager;
+            _commandDispatcher = commandDispatcher;
+        }
+
+        /// <summary>
+        /// 兼容构造函数，使用全局服务提供者（保留以支持现有代码）
+        /// </summary>
         public NetworkServer(ILogger<NetworkServer> logger = null)
         {
             _logger = logger;
@@ -80,10 +96,6 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
-
-               
-    
-               
                 // 扫描RUINORERP.PacketSpec程序集以及其他相关程序集
                 var packetSpecAssembly = Assembly.GetAssembly(typeof(PacketSpec.Commands.ICommandDispatcher));
                 var serverAssembly = Assembly.GetExecutingAssembly();

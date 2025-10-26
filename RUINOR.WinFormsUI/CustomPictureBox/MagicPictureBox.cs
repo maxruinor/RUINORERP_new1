@@ -125,6 +125,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// </summary>
         public class ImageInfo
         {
+            /// <summary>
+            /// 如果是上传的图片，则FileName为原始文件名
+            /// </summary>
             public string FileName { get; set; }
             public long FileSize { get; set; }
             public DateTime CreateTime { get; set; }
@@ -152,7 +155,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// 从字节数组加载多张图片
         /// </summary>
         /// <param name="imageBytesList">图片字节数组列表</param>
-        public void LoadImagesFromBytes(List<byte[]> imageBytesList)
+        /// <param name="fileNamesList">原始文件名列表，包含后缀名</param>
+        public void LoadImagesFromBytes(List<byte[]> imageBytesList, List<string> fileNamesList = null)
         {
             if (!MultiImageSupport)
             {
@@ -168,24 +172,36 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 return;
             }
             
-            foreach (var imageBytes in imageBytesList)
+            for (int i = 0; i < imageBytesList.Count; i++)
             {
                 try
                 {
-                    using (var ms = new MemoryStream(imageBytes))
+                    using (var ms = new MemoryStream(imageBytesList[i]))
                     {
                         images.Add(Image.FromStream(ms));
                         // 添加默认的图片信息
+                        string fileName = string.Empty;
+                        // 如果提供了文件名列表且索引有效，则使用原始文件名
+                        if (fileNamesList != null && i < fileNamesList.Count && !string.IsNullOrEmpty(fileNamesList[i]))
+                        {
+                            fileName = fileNamesList[i];
+                        }
+                        else
+                        {
+                            // 否则使用默认命名
+                            fileName = $"图片{i + 1}";
+                        }
+                        
                         imageInfos.Add(new ImageInfo
                         {
-                            FileName = $"图片{imageInfos.Count + 1}",
-                            FileSize = imageBytes.Length,
+                            FileName = fileName,
+                            FileSize = imageBytesList[i].Length,
                             CreateTime = DateTime.Now,
                             FilePath = "",
                             Description = "",
                             FileId = 0,
                             BusinessType = 0,
-                            FileType = "",
+                            FileType = string.IsNullOrEmpty(fileName) ? "" : Path.GetExtension(fileName).TrimStart('.'),
                             HashValue = "",
                             StorageProvider = "",
                             StoragePath = "",
@@ -216,7 +232,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// 从字节数组加载单张图片
         /// </summary>
         /// <param name="imageBytes">图片字节数组</param>
-        public void LoadImageFromBytes(byte[] imageBytes)
+        /// <param name="fileName">原始文件名，包含后缀名</param>
+        public void LoadImageFromBytes(byte[] imageBytes, string fileName = null)
         {
             if (imageBytes == null || imageBytes.Length == 0)
             {
@@ -234,16 +251,17 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         imageInfos.Clear();
                         images.Add(Image.FromStream(ms));
                         // 添加默认的图片信息
+                        string originalFileName = string.IsNullOrEmpty(fileName) ? "图片1" : fileName;
                         imageInfos.Add(new ImageInfo
                         {
-                            FileName = "图片1",
+                            FileName = originalFileName,
                             FileSize = imageBytes.Length,
                             CreateTime = DateTime.Now,
                             FilePath = "",
                             Description = "",
                             FileId = 0,
                             BusinessType = 0,
-                            FileType = "",
+                            FileType = string.IsNullOrEmpty(originalFileName) ? "" : Path.GetExtension(originalFileName).TrimStart('.'),
                             HashValue = "",
                             StorageProvider = "",
                             StoragePath = "",

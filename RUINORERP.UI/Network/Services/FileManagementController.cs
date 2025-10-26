@@ -72,7 +72,8 @@ namespace RUINORERP.Business
 
                 tb_FS_FileStorageInfo  storageInfo= new tb_FS_FileStorageInfo();
                 storageInfo.OriginalFileName = OriginalFileName;
-                storageInfo.BusinessType = (int)entityInfo.BizType;;
+                storageInfo.BusinessType = (int)entityInfo.BizType;
+                storageInfo.FileData= fileData;
                 // 准备上传请求
                 var uploadRequest = new FileUploadRequest();
                 uploadRequest.FileStorageInfos.Add(storageInfo);

@@ -1,10 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using RUINORERP.Server.SmartReminder.InvReminder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data.SqlClient;
+using StackExchange.Redis;
 
 namespace RUINORERP.Server.SmartReminder
 {
@@ -53,7 +55,7 @@ namespace RUINORERP.Server.SmartReminder
             {
                 _logger.LogError(ex, "库存检查出错");
                 // 根据错误类型决定是否进入降级模式
-                if (ex.IsCritical())
+                if (ex is SqlException || ex is RedisConnectionException)
                 {
                     EnterDegradedMode(monitor);
                 }

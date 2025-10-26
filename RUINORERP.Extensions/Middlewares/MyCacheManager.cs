@@ -20,7 +20,7 @@ namespace RUINORERP.Extensions.Middlewares
     /// <summary>
     /// 企业级缓存管理器（100% 兼容旧调用，同时支持并发、版本、LRU、统计）
     /// </summary>
-    [Obsolete("此缓存管理器已过时，请使用 RUINORERP.Business.CommService.OptimizedCacheManager")]
+    [Obsolete("此缓存管理器已过时，请使用RUINORERP.Business.Cache.IEntityCacheManager, RUINORERP.Business.Cache.EntityCacheManager")]
     public class MyCacheManager
     {
 

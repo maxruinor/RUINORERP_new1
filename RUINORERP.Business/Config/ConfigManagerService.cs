@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace RUINORERP.Business.Config
 {
@@ -16,6 +17,7 @@ namespace RUINORERP.Business.Config
     {
         private readonly IConfigEncryptionService _encryptionService;
         private readonly ILogger<ConfigManagerService> _logger;
+        private readonly IConfiguration _configuration;
         private readonly string _configDirectory;
 
         /// <summary>
@@ -23,11 +25,13 @@ namespace RUINORERP.Business.Config
         /// </summary>
         /// <param name="encryptionService">加密服务</param>
         /// <param name="logger">日志记录器</param>
-        public ConfigManagerService(IConfigEncryptionService encryptionService, ILogger<ConfigManagerService> logger)
+        /// <param name="configuration">配置对象</param>
+        public ConfigManagerService(IConfigEncryptionService encryptionService, ILogger<ConfigManagerService> logger, IConfiguration configuration)
         {
             _encryptionService = encryptionService;
             _logger = logger;
-            // 设置配置目录路径
+            _configuration = configuration;
+            // 设置配置目录路径（仅用于保存配置文件）
             _configDirectory = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles");
             
             // 确保配置目录存在
@@ -44,36 +48,102 @@ namespace RUINORERP.Business.Config
 
         /// <summary>
         /// 加载配置文件
+        /// 优先使用IConfiguration进行配置加载，提高性能并支持热重载
         /// </summary>
         public T LoadConfig<T>(string configType) where T : BaseConfig
         {
             try
             {
-                string filePath = GetConfigFilePath(configType);
+                _logger.LogInformation("从IConfiguration加载配置: {ConfigType}", configType);
                 
-                if (File.Exists(filePath))
+                // 从IConfiguration中获取配置节
+                var configSection = _configuration.GetSection(configType);
+                if (configSection != null && configSection.Exists())
                 {
-                    _logger.LogInformation("加载配置文件: {FilePath}", filePath);
-                    string jsonContent = File.ReadAllText(filePath);
+                    T config = Activator.CreateInstance<T>();
+                    configSection.Bind(config);
+                    
+                    // 解密配置中的敏感字段
+                    config = _encryptionService.DecryptConfig(config);
+                    
+                    // 解析环境变量
+                    if (config is ServerConfig serverConfig)
+                    {
+                        serverConfig.FileStoragePath = ResolveEnvironmentVariables(serverConfig.FileStoragePath);
+                    }
+                    
+                    _logger.LogInformation("配置加载成功: {ConfigType}", configType);
+                    return config;
+                }
+                
+                // 如果IConfiguration中没有找到配置，尝试从文件加载（作为后备）
+                _logger.LogWarning("IConfiguration中未找到配置，尝试从文件加载: {ConfigType}", configType);
+                return LoadConfigFromFile<T>(configType);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "加载配置失败: {ConfigType}", configType);
+                // 加载失败，返回默认配置
+                return CreateAndSaveDefaultConfig<T>(configType);
+            }
+        }
+        
+        /// <summary>
+        /// 从文件加载配置（作为后备方案）
+        /// </summary>
+        private T LoadConfigFromFile<T>(string configType) where T : BaseConfig
+        {
+            string filePath = GetConfigFilePath(configType);
+            
+            if (File.Exists(filePath))
+            {
+                _logger.LogInformation("从文件加载配置: {FilePath}", filePath);
+                string jsonContent = File.ReadAllText(filePath);
+                
+                try
+                {
+                    // 尝试直接反序列化
                     T config = JsonConvert.DeserializeObject<T>(jsonContent);
                     
                     // 解密配置中的敏感字段
                     config = _encryptionService.DecryptConfig(config);
                     
+                    // 解析环境变量
+                    if (config is ServerConfig serverConfig)
+                    {
+                        serverConfig.FileStoragePath = ResolveEnvironmentVariables(serverConfig.FileStoragePath);
+                    }
+                    
                     return config;
                 }
-                else
+                catch (Exception ex)
                 {
-                    _logger.LogWarning("配置文件不存在，创建默认配置: {ConfigType}", configType);
-                    // 配置文件不存在，创建默认配置
-                    return CreateAndSaveDefaultConfig<T>(configType);
+                    _logger.LogError(ex, "文件反序列化失败: {FilePath}", filePath);
                 }
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// 解析路径中的环境变量
+        /// </summary>
+        /// <param name="path">包含环境变量的路径</param>
+        /// <returns>解析后的实际路径</returns>
+        public string ResolveEnvironmentVariables(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return path;
+                
+            try
+            {
+                // 使用环境变量展开路径中的%ENV_VAR%格式变量
+                return Environment.ExpandEnvironmentVariables(path);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "加载配置文件失败: {ConfigType}", configType);
-                // 加载失败，返回默认配置
-                return CreateAndSaveDefaultConfig<T>(configType);
+                _logger.LogError(ex, "解析环境变量失败: {Path}", path);
+                return path; // 解析失败时返回原始路径
             }
         }
 

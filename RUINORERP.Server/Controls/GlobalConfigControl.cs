@@ -854,22 +854,7 @@ namespace RUINORERP.Server.Controls
                 return false;
             }
         }
-        
-        /// <summary>
-        /// 通用配置验证方法（兼容旧代码调用）
-        /// </summary>
-        /// <param name="configObject">配置对象</param>
-        /// <returns>验证结果</returns>
-        private bool ValidateConfiguration(object configObject)
-        {
-            if (configObject is BaseConfig config)
-            {
-                return ValidateConfiguration(config);
-            }
-            
-            _logger?.LogWarning("尝试验证非BaseConfig类型的配置对象");
-            return false;
-        } 
+      
 
         /// <summary>
         /// 创建详细配置节点结构

@@ -1,255 +1,198 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.VisualBasic.ApplicationServices;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Pipelines.Sockets.Unofficial;
-using RUINORERP.Business.CommService;
-using RUINORERP.Extensions.Middlewares;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.Model;
 using RUINORERP.Model.Context;
-using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model.ReminderModel.ReminderRules;
 using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Server.BizService;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.ServerSession;
-using SqlSugar;
-using SuperSocket.Server.Abstractions;
+using RUINORERP.PacketSpec.Commands.Message;
+using RUINORERP.PacketSpec.Models.Requests.Message;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using RUINORERP.Model;
+using RUINORERP.Server.Network.CommandHandlers;
 
 namespace RUINORERP.Server.SmartReminder
 {
     /// <summary>
-    /// 通知服务将来是不是数据库只放到一个类中去操作。这里是回写提醒结果日志等
+    /// 通知服务 - 使用新的消息系统发送智能提醒
     /// </summary>
     public class NotificationService : INotificationService
     {
-        public readonly IUnitOfWorkManage _unitOfWorkManage;
-        private readonly ApplicationContext _appContext;
         private readonly ILogger<NotificationService> _logger;
+        private readonly ApplicationContext _appContext;
+        private readonly IUnitOfWorkManage _unitOfWorkManage;
         private readonly ISessionService _sessionService;
-        //private readonly IRealtimeNotifier _realtimeNotifier;
-        // 添加邮件和短信服务依赖
-        //private readonly IEmailService _emailService;
-        //private readonly ISmsService _smsService;
-        public NotificationService()
-        {
+        private readonly MessageCommandHandler _messageCommandHandler;
 
-
-        }
-        //private readonly IEmailService _email;
-
-        //public NotificationService(ISqlSugarClient db, SocketServer socket, IEmailService email)
-        //{
         public NotificationService(ILogger<NotificationService> logger,
-            ApplicationContext _AppContextData,
-            IUnitOfWorkManage unitOfWorkManage
-            //IRealtimeNotifier realtimeNotifier
-            )
+            ApplicationContext appContext,
+            IUnitOfWorkManage unitOfWorkManage,
+            ISessionService sessionService = null,
+            MessageCommandHandler messageCommandHandler = null)
         {
-            //_email = email;
             _logger = logger;
-            _appContext = _AppContextData;
+            _appContext = appContext;
             _unitOfWorkManage = unitOfWorkManage;
-            _sessionService = Startup.GetFromFac<ISessionService>();
-            //_realtimeNotifier = realtimeNotifier;
+            _sessionService = sessionService ?? Startup.GetFromFac<ISessionService>();
+            _messageCommandHandler = messageCommandHandler ?? Startup.GetFromFac<MessageCommandHandler>();
         }
 
         public async Task SendNotificationAsync(IReminderRule rule, string message, object contextData)
         {
             try
             {
-                // 记录到数据库
-                // 记录到数据库
-                //var alert = new tb_ReminderAlert
-                //{
-                //    RuleId = rule.RuleId,
-                //    AlertTime = DateTime.Now,
-                //    Message = message,
-                //    //后面补一个属性
-                //    //ContextData = JsonConvert.SerializeObject(contextData)
-                //};
-                //await _unitOfWorkManage.GetDbClient().Insertable(alert).ExecuteCommandAsync();
-
-                await Task.FromResult(0);
-
-                //获取接收人员集合
-                var Recipients = rule.NotifyRecipients;
-                if (Recipients == null || Recipients.Count == 0)
+                // 获取接收人员集合
+                var recipients = rule.NotifyRecipients;
+                if (recipients == null || recipients.Count == 0)
                     return;
 
-                frmMainNew.Instance.PrintInfoLog($"智能提醒：{message}");
-                // 获取通知渠道
-                List<NotifyChannel> channels = SmartReminderHelper.ParseChannels(rule.NotifyChannels);
+                _logger.LogInformation("准备发送智能提醒：{Message} 给 {Count} 个用户", message, recipients.Count);
 
-                foreach (var channel in channels)
+                // 构建消息数据
+                var messageData = new Dictionary<string, object>
                 {
-                    if (channel == NotifyChannel.Realtime)
+                    { "Message", message },
+                    { "RuleId", rule.RuleId },
+                    { "Timestamp", DateTime.Now },
+                    { "ContextData", contextData },
+                    { "NotificationType", "Reminder" },
+                    { "TargetUserIds", recipients.Select(id => id.ToString()).ToList() }
+                };
+
+                // 根据通知类型选择合适的消息命令
+                uint commandType = MessageCommands.SendSystemNotification.OperationCode;
+                
+                // 如果是特定用户的提醒，使用用户消息
+                if (recipients.Count <= 10) // 少于10个用户使用定向消息
+                {
+                    foreach (var userId in recipients)
                     {
-                        foreach (var item in Recipients)
+                        var userMessageData = new Dictionary<string, object>(messageData)
                         {
-                            var sessions = _sessionService.GetAllUserSessions();
-                            
-                            var session = sessions.FirstOrDefault(c => c.UserInfo.UserID == item);
-                            if (session != null)
-                            {
-                                // 构建通知消息
-                                var notificationData = new
-                                {
-                                    Message = message,
-                                    RuleId = rule.RuleId,
-                                    Timestamp = DateTime.Now,
-                                    ContextData = contextData
-                                };
-                                
-                                var messageJson = System.Text.Json.JsonSerializer.Serialize(notificationData);
-                                
-                                // 发送实时通知命令
-                                var success = _sessionService.SendCommandToSession(
-                                    session.SessionID, 
-                                    "REALTIME_NOTIFICATION", 
-                                    messageJson
-                                );
-                                
-                                if (!success)
-                                {
-                                    _logger.LogWarning($"发送实时通知到用户 {session.UserName} 失败");
-                                }
-                            }
-                        }
+                            { "TargetUserId", userId.ToString() }
+                        };
+                        
+                        await SendUserMessageAsync(userMessageData, userId.ToString());
                     }
                 }
+                else // 大量用户使用系统通知
+                {
+                    await SendSystemNotificationAsync(messageData);
+                }
 
+                _logger.LogInformation("智能提醒发送完成");
+            }
+            catch (Exception ex)
+            {   
+                _logger.LogError(ex, "发送智能提醒失败：{Message}", message);
+            }
+        }
 
+        /// <summary>
+        /// 发送用户消息
+        /// </summary>
+        private async Task SendUserMessageAsync(Dictionary<string, object> messageData, string targetUserId)
+        {
+            try
+            {
+                // 使用消息系统发送给特定用户
+                var messageRequest = new MessageRequest
+                {
+                    CommandType = MessageCommands.SendMessageToUser.OperationCode,
+                    Data = messageData
+                };
 
-                //// 发送邮件
-                //if (policy.NotificationTypes.Contains("Email"))
-                //{
-                //    var emails = await _db.Queryable<User>()
-                //                        .Where(u => u.IsInventoryManager)
-                //                        .Select(u => u.Email)
-                //                        .ToListAsync();
-                //    await _email.SendBatchAsync(emails, "库存预警通知", message);
-                //}
+                // 通过SessionService发送给指定用户
+                var targetSessions = _sessionService.GetUserSessions(targetUserId);
+                foreach (var session in targetSessions)
+                {
+                    _logger.LogDebug("向用户 {UserId} 的会话 {SessionId} 发送智能提醒", targetUserId, session.SessionID);
+                    // 通过现有的会话服务发送消息
+                    var success = _sessionService.SendCommandToSession(
+                        session.SessionID, 
+                        "MessageCommandHandler",
+                        System.Text.Json.JsonSerializer.Serialize(messageRequest)
+                    );
+                    
+                    if (!success)
+                    {
+                        _logger.LogWarning("向用户 {UserId} 发送智能提醒失败", targetUserId);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "发送提醒失败：{Message}", message);
-                // 这里可以添加重试逻辑
+                _logger.LogError(ex, "发送用户消息失败 - 用户ID: {UserId}", targetUserId);
             }
-        }
-
-
-
-        /// <summary>
-        /// long类型的userid，用逗号隔开 
-        /// </summary>
-        /// <param name="NotifyRecipients"></param>
-        /// <returns></returns>
-        public List<tb_UserInfo> GetNotifyRecipients(string NotifyRecipients)
-        {
-            List<tb_UserInfo> recipients = new List<tb_UserInfo>();
-
-            List<string> UserIDList = NotifyRecipients.Split(',')
-                                         .Select(UserID => UserID.Trim())  // 去除每个元素的前后空格
-                                         .ToList();
-            for (int i = 0; i < UserIDList.Count; i++)
-            {
-                tb_UserInfo userInfo = MyCacheManager.Instance.GetEntity<tb_UserInfo>(Convert.ToInt64(UserIDList[i]));
-                if (userInfo != null)
-                {
-                    recipients.Add(userInfo);
-                }
-
-            }
-
-            return recipients;
         }
 
         /// <summary>
-        /// long类型的userid，用逗号隔开 
+        /// 发送系统通知
         /// </summary>
-        /// <param name="NotifyRecipients"></param>
-        /// <returns></returns>
-        public List<long> GetNotifyRecipientIds(string NotifyRecipients)
+        private async Task SendSystemNotificationAsync(Dictionary<string, object> messageData)
         {
-            List<long> recipients = new List<long>();
-
-            List<string> UserIDList = NotifyRecipients.Split(',')
-                                         .Select(UserID => UserID.Trim())  // 去除每个元素的前后空格
-                                         .ToList();
-            for (int i = 0; i < UserIDList.Count; i++)
+            try
             {
-                var UserID = Convert.ToInt64(UserIDList[i]);
-                recipients.Add(UserID);
-            }
-
-            return recipients;
-        }
-
-        /*
-
-        #region 每个发送渠道的具体方法实现
-        private async Task SendRealtimeNotification(tb_ReminderRule policy, string message)
-        {
-            var recipients = await GetRecipientsForChannel(policy, NotificationChannel.Realtime);
-            foreach (var session in recipients)
-            {
-                MessageModel msb = new MessageModel
+                var messageRequest = new MessageRequest
                 {
-                    msg = message,
+                    CommandType = MessageCommands.SendSystemNotification.OperationCode,
+                    Data = messageData
                 };
-                UserService.给客户端发消息实体(session, msb, true);
+
+                // 广播给所有用户
+                _logger.LogInformation("发送系统通知广播");
+                //_sessionService.BroadcastCommand(
+                //    "MessageCommandHandler",
+                //    System.Text.Json.JsonSerializer.Serialize(messageRequest)
+                //);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "发送系统通知失败");
             }
         }
 
-        private async Task SendEmailNotification(tb_ReminderRule policy, string message)
+        // 通知类型枚举 - 用于在消息系统中标识通知类型
+        public enum ReminderNotificationType
         {
-            var emails = await GetRecipientsForChannel(policy, NotificationChannel.Email);
-            await _emailService.SendBatchAsync(emails, "库存预警通知", message);
+            /// <summary>
+            /// 普通提醒
+            /// </summary>
+            Normal = 0,
+            /// <summary>
+            /// 警告提醒
+            /// </summary>
+            Warning = 1,
+            /// <summary>
+            /// 紧急提醒
+            /// </summary>
+            Urgent = 2,
+            /// <summary>
+            /// 库存预警
+            /// </summary>
+            InventoryAlert = 3,
+            /// <summary>
+            /// 任务提醒
+            /// </summary>
+            TaskReminder = 4
         }
-
-        private async Task SendSmsNotification(tb_ReminderRule policy, string message)
+        
+        /// <summary>
+        /// 获取通知枚举值对应的消息系统通知类型
+        /// </summary>
+        private string GetNotificationTypeString(ReminderNotificationType type)
         {
-            var phoneNumbers = await GetRecipientsForChannel(policy, NotificationChannel.SMS);
-            foreach (var number in phoneNumbers)
+            return type switch
             {
-                await _smsService.SendAsync(number, message);
-            }
+                ReminderNotificationType.Normal => "Reminder_Normal",
+                ReminderNotificationType.Warning => "Reminder_Warning",
+                ReminderNotificationType.Urgent => "Reminder_Urgent",
+                ReminderNotificationType.InventoryAlert => "Reminder_Inventory",
+                ReminderNotificationType.TaskReminder => "Reminder_Task",
+                _ => "Reminder_Normal"
+            };
         }
-
-        private async Task SendWorkflowNotification(tb_ReminderRule policy, string message)
-        {
-            // 触发工作流提醒
-            var workflowReminder = _appContext.Services.GetRequiredService<WorkflowReminderService>();
-            workflowReminder.Trigger(new ReminderRequest
-            {
-                Type = "InventoryAlert",
-                Context = new { Policy = policy, Message = message }
-            });
-        }
-
-        private async Task<List<string>> GetRecipientsForChannel(
-            tb_ReminderRule policy,
-            NotificationChannel channel)
-        {
-            // 根据通道类型从数据库获取收件人列表
-            var query = from target in policy.tb_InventoryAlertTargets
-                        join user in _unitOfWorkManage.GetDbClient().Queryable<User>()
-                            on target.tb_userinfo.User_ID equals user.UserID
-                        where target.NotificationChannels.HasFlag(channel)
-                        select user.GetRecipientForChannel(channel);
-
-            return await query.ToListAsync();
-        }
-        #endregion
-
-        */
     }
 }

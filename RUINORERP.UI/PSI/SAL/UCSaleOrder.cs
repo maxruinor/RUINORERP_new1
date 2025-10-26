@@ -53,6 +53,7 @@ using RUINOR.WinFormsUI.CustomPictureBox;
 using AutoUpdateTools;
 using LiveChartsCore.Geo;
 using static RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox;
+using RUINORERP.Business.Cache;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -69,7 +70,7 @@ namespace RUINORERP.UI.PSI.SAL
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
             AddPublicEntityObject(typeof(ProductSharePart));
         }
-
+        IEntityCacheManager cacheManager = Startup.GetFromFac<IEntityCacheManager>();
 
         internal override void LoadDataToUI(object Entity)
         {
@@ -433,9 +434,6 @@ namespace RUINORERP.UI.PSI.SAL
                     //根据币别如果是外币才显示外币相关的字段
                     if (s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.Currency_ID) && entity.Currency_ID > 0)
                     {
-                        // var obj = MyCacheManager.Instance.GetEntity<tb_Currency>(entity.Currency_ID);
-                        //if (obj != null && obj.ToString() != "System.Object")
-                        //{
                         if (cmbCurrency_ID.SelectedItem is tb_Currency cv)
                         {
                             if (entity.Account_id.HasValue && entity.Account_id.Value > 0)
@@ -518,7 +516,7 @@ namespace RUINORERP.UI.PSI.SAL
                 //如果客户有变化，带出对应有业务员
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOrder>(c => c.CustomerVendor_ID))
                 {
-                    var obj = MyCacheManager.Instance.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                    var obj = cacheManager.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
                     if (obj != null && obj.ToString() != "System.Object")
                     {
                         if (obj is tb_CustomerVendor cv)
@@ -621,13 +619,13 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         var fileStorageInfo = list[i].FileStorageInfos[f];
                         //加载显示图片
-                        magicPicBox.LoadImageFromBytes(fileStorageInfo.FileData);
+                        magicPicBox.LoadImageFromBytes(fileStorageInfo.FileData,fileStorageInfo.OriginalFileName);
                         ImageInfo imageInfo = new ImageInfo();
                         imageInfo.CreateTime = fileStorageInfo.Created_at.Value;
                         imageInfo.FileName = fileStorageInfo.OriginalFileName;
                         magicPicBox.SetImageInfo(i, imageInfo);
                     }
-                   
+
                 }
             }
             catch (Exception ex)
@@ -653,20 +651,20 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     // 使用GetAllImageBytesWithInfo获取所有图片数据和信息
                     var imageBytesWithInfoList = magicPicBox.GetAllImageBytesWithInfo();
-                    
+
                     if (imageBytesWithInfoList != null && imageBytesWithInfoList.Count > 0)
                     {
                         bool allSuccess = true;
-                        
+
                         // 遍历上传所有图片
                         foreach (var imageDataWithInfo in imageBytesWithInfoList)
                         {
                             byte[] imageData = imageDataWithInfo.Item1;
                             ImageInfo imageInfo = imageDataWithInfo.Item2;
-                            
+
                             // 上传图片
                             var response = await ctrpay.UploadImageAsync(entity, imageInfo.FileName, imageData);
-                            
+
                             if (response.IsSuccess)
                             {
                                 MainForm.Instance.uclog.AddLog($"凭证图片上传成功：{imageInfo.FileName}");
@@ -677,7 +675,7 @@ namespace RUINORERP.UI.PSI.SAL
                                 allSuccess = false;
                             }
                         }
-                        
+
                         return allSuccess;
                     }
                 }
@@ -1044,7 +1042,7 @@ namespace RUINORERP.UI.PSI.SAL
                 if (EditEntity.Paytype_ID > 0)
                 {
                     var paytype = EditEntity.Paytype_ID;
-                    var paymethod = MyCacheManager.Instance.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID);
+                    var paymethod = cacheManager.GetEntity<tb_PaymentMethod>(EditEntity.Paytype_ID);
                     if (paymethod != null && paymethod.ToString() != "System.Object")
                     {
                         if (paymethod is tb_PaymentMethod pm)
@@ -1234,7 +1232,7 @@ namespace RUINORERP.UI.PSI.SAL
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
-
+               
 
                 if (NeedValidated && AppContext.GlobalVariableConfig.OpenProdTypeForSaleCheck)
                 {
@@ -1250,9 +1248,9 @@ namespace RUINORERP.UI.PSI.SAL
                        {
                            if (prodView.tb_producttype == null)
                            {
-                               prodView.tb_producttype = MyCacheManager.Instance.GetEntity<tb_ProductType>(prodView.Type_ID);
+                               prodView.tb_producttype = cacheManager.GetEntity<tb_ProductType>(prodView.Type_ID);
                            }
-                           if (!prodView.tb_producttype.ForSale)
+                           if (prodView.tb_producttype != null && !prodView.tb_producttype.ForSale)
                            {
                                forSaleTips.AppendLine($"{prodView.CNName}{prodView.SKU}的产品类型为【非待销】的{prodView.tb_producttype.TypeName}。");
                            }
@@ -1369,7 +1367,7 @@ namespace RUINORERP.UI.PSI.SAL
                         // 保存成功后上传凭证图片
                         if (magicPictureBox订金付款凭证 != null)
                         {
-                            await UploadVoucherImageAsync(EditEntity, magicPictureBox订金付款凭证);
+                           bool uploadResult= await UploadVoucherImageAsync(EditEntity, magicPictureBox订金付款凭证);
                         }
                     }
                     else
@@ -1380,79 +1378,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 return SaveResult.Succeeded;
 
-                /*
-                if (EditEntity.SOrder_ID > 0)
-                {
-                    //如果是超级管理员，提供一个保存方式 就是在基本明细数据行不变时。只更新部分字段
-                    if (NeedValidated && MainForm.Instance.AppContext.IsSuperUser)
-                    {
-                        if (MessageBox.Show("确定是部分数据更新吗？\r\n如有删除增加明细！请点【否】", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
-                        {
-                            ReturnMainSubResults<tb_SaleOrder> UpdateResult = await base.UpdateSave(EditEntity);
-                            if (UpdateResult.Succeeded)
-                            {
-                                MainForm.Instance.PrintInfoLog($"更新成功，{EditEntity.SOrderNo}。");
-                                return true;
-                            }
-                            else
-                            {
-                                MainForm.Instance.PrintInfoLog($"更新失败，{UpdateResult.ErrorMsg}。", Color.Red);
-                                return false;
-                            }
-                        }
-                        else
-                        {
-                            //更新式  要先删除前面的数据相关的数据
-                            var SaveResult1 = await base.Save(EditEntity);
-                            if (SaveResult1.Succeeded)
-                            {
-                                MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
-                            }
-                            else
-                            {
-                                MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult1.ErrorMsg}。", Color.Red);
-                            }
-                            return SaveResult1.Succeeded;
-                        }
-                    }
-                    else
-                    {
-                        //更新式  要先删除前面的数据相关的数据
-                        ReturnMainSubResults<tb_SaleOrder> SaveResult = new ReturnMainSubResults<tb_SaleOrder>();
-                        if (NeedValidated)
-                        {
-                            SaveResult = await base.Save(EditEntity);
-                            if (SaveResult.Succeeded)
-                            {
-                                MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
-                            }
-                            else
-                            {
-                                MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
-                            }
-                        }
-                        return SaveResult.Succeeded;
-                    }
-                }
-                else
-                {
-
-                    ReturnMainSubResults<tb_SaleOrder> SaveResult = new ReturnMainSubResults<tb_SaleOrder>();
-                    if (NeedValidated)
-                    {
-                        SaveResult = await base.Save(EditEntity);
-                        if (SaveResult.Succeeded)
-                        {
-                            MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
-                        }
-                        else
-                        {
-                            MainForm.Instance.PrintInfoLog($"保存失败,{SaveResult.ErrorMsg}。", Color.Red);
-                        }
-                    }
-                    return SaveResult.Succeeded;
-                }
-                */
+              
             }
             return false;
         }

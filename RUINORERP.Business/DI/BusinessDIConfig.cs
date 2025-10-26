@@ -138,6 +138,7 @@ namespace RUINORERP.Business.DI
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
+ 
 
             // 注册审计日志服务
             builder.RegisterType<AuditLogService>()

@@ -1,4 +1,4 @@
-﻿using RUINORERP.Model.ConfigModel;
+using RUINORERP.Model.ConfigModel;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Business.Config
@@ -9,7 +9,6 @@ namespace RUINORERP.Business.Config
     /// </summary>
     public interface IConfigManagerService
     {
-
         /// <summary>
         /// 获取配置对象
         /// </summary>
@@ -17,7 +16,6 @@ namespace RUINORERP.Business.Config
         /// <param name="configType">配置类型名称</param>
         /// <returns>配置对象</returns>
         T GetConfig<T>(string configType) where T : BaseConfig;
-
 
         /// <summary>
         /// 加载配置文件
@@ -81,5 +79,12 @@ namespace RUINORERP.Business.Config
         /// <param name="configType">配置类型名称</param>
         /// <returns>重置后的配置对象</returns>
         T ResetToDefault<T>(string configType) where T : BaseConfig;
+        
+        /// <summary>
+        /// 解析路径中的环境变量
+        /// </summary>
+        /// <param name="path">包含环境变量的路径</param>
+        /// <returns>解析后的实际路径</returns>
+        string ResolveEnvironmentVariables(string path);
     }
 }

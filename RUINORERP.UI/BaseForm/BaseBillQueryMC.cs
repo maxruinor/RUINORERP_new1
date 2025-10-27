@@ -422,10 +422,10 @@ namespace RUINORERP.UI.BaseForm
 
         private async void button设置查询条件_Click(object sender, EventArgs e)
         {
-            bool rs = await UIBizService.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDto as BaseEntity);
+            bool rs = await UIBizService.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDtoProxy as BaseEntity);
             if (rs)
             {
-                QueryDto = LoadQueryConditionToUI();
+                QueryDtoProxy = LoadQueryConditionToUI();
             }
         }
 
@@ -523,7 +523,7 @@ namespace RUINORERP.UI.BaseForm
             {
 
                 case MenuItemEnums.查询:
-                    Query(QueryDto);
+                    Query(QueryDtoProxy);
                     toolStripSplitButtonPrint.Enabled = true;
                     break;
                 case MenuItemEnums.复制性新增:
@@ -957,7 +957,7 @@ namespace RUINORERP.UI.BaseForm
                 if (rmr.Succeeded)
                 {
                     //ToolBarEnabledControl(MenuItemEnums.反审);
-                    Query(QueryDto);
+                    Query(QueryDtoProxy);
                     //这里推送到审核，启动工作流
                 }
                 else
@@ -1980,7 +1980,7 @@ namespace RUINORERP.UI.BaseForm
         {
             if (QueryParameters != null)
             {
-                QueryDto = QueryParameters;
+                QueryDtoProxy = QueryParameters;
             }
             if (nodeParameter != null)
             {
@@ -2009,7 +2009,7 @@ namespace RUINORERP.UI.BaseForm
                     if (item.FieldPropertyInfo.PropertyType.Name == "DateTime")
                     {
                         //因为查询UI生成时。自动 转换成代理类如：tb_SaleOutProxy，并且时间是区间型式,将起为null即可
-                        QueryDto.SetPropertyValue(item.FieldName + "_Start", null);
+                        QueryDtoProxy.SetPropertyValue(item.FieldName + "_Start", null);
                         var fieldNameControl = kryptonPanelQuery.Controls.Find(item.FieldName, true);
                         if (fieldNameControl != null && fieldNameControl.Count() > 0)
                         {
@@ -2033,19 +2033,19 @@ namespace RUINORERP.UI.BaseForm
                 {
                     if (item.FKTableName.IsNotEmptyOrNull() && item.IsRelated)
                     {
-                        QueryDto.SetPropertyValue(item.FieldName, -1L);
+                        QueryDtoProxy.SetPropertyValue(item.FieldName, -1L);
                         continue;
                     }
                     if (item.FieldPropertyInfo.PropertyType.IsGenericType && item.FieldPropertyInfo.PropertyType.GetBaseType().Name == "DateTime")
                     {
-                        QueryDto.SetPropertyValue(item.FieldName, null);
-                        if (QueryDto.ContainsProperty(item.FieldName + "_Start"))
+                        QueryDtoProxy.SetPropertyValue(item.FieldName, null);
+                        if (QueryDtoProxy.ContainsProperty(item.FieldName + "_Start"))
                         {
-                            QueryDto.SetPropertyValue(item.FieldName + "_Start", null);
+                            QueryDtoProxy.SetPropertyValue(item.FieldName + "_Start", null);
                         }
-                        if (QueryDto.ContainsProperty(item.FieldName + "_End"))
+                        if (QueryDtoProxy.ContainsProperty(item.FieldName + "_End"))
                         {
-                            QueryDto.SetPropertyValue(item.FieldName + "_End", null);
+                            QueryDtoProxy.SetPropertyValue(item.FieldName + "_End", null);
                         }
                         continue;
                     }
@@ -2073,16 +2073,16 @@ namespace RUINORERP.UI.BaseForm
                                         switch (item.CSharpTypeName)
                                         {
                                             case "int":
-                                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
+                                                QueryDtoProxy.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
                                                 break;
                                             case "long":
-                                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
+                                                QueryDtoProxy.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
                                                 break;
                                             case "bool":
-                                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
+                                                QueryDtoProxy.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
                                                 break;
                                             default:
-                                                QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
+                                                QueryDtoProxy.SetPropertyValue(item.FieldName, item.FieldValue);
                                                 break;
                                         }
                                     }
@@ -2110,16 +2110,16 @@ namespace RUINORERP.UI.BaseForm
                                 switch (item.CSharpTypeName)
                                 {
                                     case "int":
-                                        QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
+                                        QueryDtoProxy.SetPropertyValue(item.FieldName, item.FieldValue.ToInt());
                                         break;
                                     case "long":
-                                        QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
+                                        QueryDtoProxy.SetPropertyValue(item.FieldName, item.FieldValue.ToLong());
                                         break;
                                     case "bool":
-                                        QueryDto.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
+                                        QueryDtoProxy.SetPropertyValue(item.FieldName, item.FieldValue.ToBool());
                                         break;
                                     default:
-                                        QueryDto.SetPropertyValue(item.FieldName, item.FieldValue);
+                                        QueryDtoProxy.SetPropertyValue(item.FieldName, item.FieldValue);
                                         break;
                                 }
                             }
@@ -2133,7 +2133,7 @@ namespace RUINORERP.UI.BaseForm
 
             }
 
-            Query(QueryDto, false);
+            Query(QueryDtoProxy, false);
 
         }
 
@@ -2441,7 +2441,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                         return true;
                     case Keys.Enter:
-                        Query(QueryDto);
+                        Query(QueryDtoProxy);
                         toolStripSplitButtonPrint.Enabled = true;
                         break;
                 }
@@ -2486,7 +2486,7 @@ namespace RUINORERP.UI.BaseForm
                     MessageBox.Show(this.ToString() + "A菜单不能为空，请联系管理员。");
                     return;
                 }
-                QueryDto = LoadQueryConditionToUI();
+                QueryDtoProxy = LoadQueryConditionToUI();
 
             }
 
@@ -2567,12 +2567,9 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        private object _queryDto = new BaseEntity();
-
-
-
-        [Obsolete("//生成 加载查询条件时 LoadQueryConditionToUI 时 为什么 一会用这个。一会用 QueryDtoProxy TODO有问题哦。")]
-        public object QueryDto { get => _queryDto; set => _queryDto = value; }
+        //private object _queryDto = new BaseEntity();
+        //[Obsolete("//生成 加载查询条件时 LoadQueryConditionToUI 时 为什么 一会用这个。一会用 QueryDtoProxy TODO有问题哦。")]
+        //public object QueryDtoProxy { get => _queryDto; set => _queryDto = value; }
 
 
         private async void _UCBillMasterQuery_OnSelectDataRow(object entity, object bizKey)
@@ -2697,7 +2694,7 @@ namespace RUINORERP.UI.BaseForm
             kryptonPanel条件生成容器.SuspendLayout();
             if (MainForm.Instance.AppContext.CurrentUser_Role == null && MainForm.Instance.AppContext.IsSuperUser)
             {
-                QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+                base.QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
             }
             else
             {
@@ -2714,11 +2711,11 @@ namespace RUINORERP.UI.BaseForm
                     tb_UIMenuPersonalization menuSetting = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.tb_UIMenuPersonalizations.FirstOrDefault(c => c.MenuID == CurMenuInfo.MenuID);
                     if (menuSetting != null)
                     {
-                        QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, menuSetting);
+                        base.QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, menuSetting);
                     }
                     else
                     {
-                        QueryDto = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
+                        QueryDtoProxy = UIGenerateHelper.CreateQueryUI(typeof(M), true, kryptonPanel条件生成容器, QueryConditionFilter, QueryConditionShowColQty);
                     }
                 }
 
@@ -2727,7 +2724,7 @@ namespace RUINORERP.UI.BaseForm
 
             kryptonPanel条件生成容器.ResumeLayout();
             kryptonPanel条件生成容器.Visible = true;
-            return QueryDto;
+            return QueryDtoProxy;
         }
 
 

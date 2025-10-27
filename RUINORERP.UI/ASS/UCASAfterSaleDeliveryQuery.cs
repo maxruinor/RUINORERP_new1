@@ -132,7 +132,7 @@ namespace RUINORERP.UI.ASS
             {
                 MainForm.Instance.PrintInfoLog($"结案操作成功！", Color.Red);
                 MainForm.Instance.logger.LogInformation($"结案操作成功！");
-                base.Query(QueryDto);
+                base.Query(QueryDtoProxy);
             }
             else
             {

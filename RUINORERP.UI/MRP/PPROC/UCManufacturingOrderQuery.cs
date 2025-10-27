@@ -256,7 +256,7 @@ namespace RUINORERP.UI.MRP.MP
                 //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                 //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                 //MainForm.Instance.ecs.AddSendData(od);
-                base.Query(QueryDto);
+                base.Query(QueryDtoProxy);
             }
             else
             {

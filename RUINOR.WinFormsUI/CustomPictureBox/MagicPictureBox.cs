@@ -426,27 +426,71 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         }
 
         /// <summary>
-        /// 从字节数组加载多张图片
+        /// 统一的图片加载方法，自动处理单张和多张图片
         /// </summary>
         /// <param name="imageBytesList">图片字节数组列表</param>
         /// <param name="fileNamesList">原始文件名列表，包含后缀名</param>
         /// <param name="isFromServer">是否从服务器加载，影响IsUpdated初始值</param>
-        public void LoadImagesFromBytes(List<byte[]> imageBytesList, List<string> fileNamesList = null, bool isFromServer = false)
+        public void LoadImage(List<byte[]> imageBytesList, List<string> fileNamesList = null, bool isFromServer = false)
         {
-            if (!MultiImageSupport)
+            LoadImagesInternal(imageBytesList, fileNamesList, isFromServer);
+        }
+        
+        /// <summary>
+        /// 加载单张图片
+        /// </summary>
+        /// <param name="imageBytes">图片字节数组</param>
+        /// <param name="fileName">原始文件名，包含后缀名</param>
+        /// <param name="isFromServer">是否从服务器加载，影响IsUpdated初始值</param>
+        public void LoadImage(byte[] imageBytes, string fileName = null, bool isFromServer = false)
+        {
+            if (imageBytes == null)
             {
-                throw new InvalidOperationException("多图片支持未启用");
+                this.Image = null;
+                return;
             }
-
+            
+            var imageList = new List<byte[]> { imageBytes };
+            var fileNameList = fileName != null ? new List<string> { fileName } : null;
+            LoadImagesInternal(imageList, fileNameList, isFromServer);
+        }
+        
+        /// <summary>
+        /// 从FileStorageInfo加载单张图片
+        /// </summary>
+        /// <param name="fileStorageInfo">文件存储信息</param>
+        /// <param name="imageBytes">图片字节数据</param>
+        public void LoadImage(ImageInfo fileStorageInfo, byte[] imageBytes)
+        {
+            if (fileStorageInfo == null || imageBytes == null)
+            {
+                throw new ArgumentException("文件信息或图片数据不能为空");
+            }
+            
+            // 调用内部加载方法
+            LoadImagesInternal(new List<byte[]> { imageBytes }, 
+                              fileStorageInfo.OriginalFileName != null ? 
+                              new List<string> { fileStorageInfo.OriginalFileName } : null, 
+                              false);
+        }
+        
+        /// <summary>
+        /// 内部统一的图片加载实现方法
+        /// </summary>
+        private void LoadImagesInternal(List<byte[]> imageBytesList, List<string> fileNamesList = null, bool isFromServer = false)
+        {
             images.Clear();
             imageInfos.Clear();
+            
+            // 自动启用多图片支持
+            MultiImageSupport = imageBytesList != null && imageBytesList.Count > 1;
 
             if (imageBytesList == null || imageBytesList.Count == 0)
             {
                 this.Image = null;
                 return;
             }
-
+            
             // 收集加载失败的图片信息
             List<int> failedImages = new List<int>();
             List<string> errorMessages = new List<string>();
@@ -466,7 +510,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
                     if (cachedImage != null)
                     {
-                        System.Diagnostics.Debug.WriteLine($"从缓存加载多张图片中的第{i + 1}张: {hashValue}");
+                        System.Diagnostics.Debug.WriteLine($"从缓存加载图片中的第{i + 1}张: {hashValue}");
                         // 创建图片副本，避免修改原始缓存图片
                         using (var ms = new MemoryStream())
                         {
@@ -487,6 +531,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         AddToCache(hashValue, new Bitmap(loadedImage));
                     }
 
+                    // 保存图片引用
                     images.Add(loadedImage);
 
                     // 添加图片信息，优先使用原始文件名
@@ -517,41 +562,51 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 }
                 catch (Exception ex)
                 {
-                    // 加载失败，记录错误信息并继续处理其他图片
-                    int imageIndex = i + 1;
-                    failedImages.Add(imageIndex);
-                    string errorMsg = $"图片{imageIndex}: {ex.Message}";
-                    errorMessages.Add(errorMsg);
-                    System.Diagnostics.Debug.WriteLine($"加载图片{imageIndex}失败: {ex.Message}");
-                    // 记录完整的异常堆栈，方便调试
-                    System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                    failedImages.Add(i);
+                    errorMessages.Add(ex.Message);
+                    System.Diagnostics.Debug.WriteLine($"加载图片失败 (索引 {i}): {ex.Message}");
                 }
             }
 
-            // 如果有图片加载失败，显示用户友好的错误提示
-            if (failedImages.Count > 0)
-            {
-                // 构建错误消息
-                string errorSummary = $"图片加载完成，但有{failedImages.Count}张图片加载失败：\n\n";
-                foreach (string errorMsg in errorMessages)
-                {
-                    errorSummary += $"- {errorMsg}\n";
-                }
-
-                // 只显示错误摘要，完整详情已记录到调试输出
-                MessageBox.Show(errorSummary, "图片加载状态", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-
-            // 即使有部分图片加载失败，也显示已成功加载的图片
+            // 处理加载结果
             if (images.Count > 0)
             {
-                currentImageIndex = 0;
-                ShowCurrentImage();
-                CreateNavigationControls();
+                // 如果是单张图片，直接设置Image属性
+                if (images.Count == 1)
+                {
+                    this.Image = images[0];
+                    // 确保图片信息正确设置
+                    if (imageInfos.Count > 0)
+                    {
+                        imageInfos[0].Width = this.Image.Width;
+                        imageInfos[0].Height = this.Image.Height;
+                    }
+                }
+                else
+                {
+                    // 多张图片，显示第一张并创建导航控件
+                    currentImageIndex = 0;
+                    ShowCurrentImage();
+                    CreateNavigationControls();
+                }
+                
+                // 创建信息面板
                 CreateInfoPanel();
+                UpdateInfoPanel();
+            }
+            else
+            {
+                this.Image = null;
+            }
+            
+            // 如果有加载失败的图片，记录日志
+            if (failedImages.Count > 0)
+            {
+                System.Diagnostics.Debug.WriteLine($"部分图片加载失败，共 {failedImages.Count} 张");
             }
         }
 
+        
 
 
         /// <summary>
@@ -2269,7 +2324,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// </summary>
         /// <param name="fileStorageInfos">文件存储信息列表</param>
         /// <param name="imageBytesList">对应的图片字节数据列表</param>
-        public void LoadImagesFromFileStorageInfos(List<ImageInfo> fileStorageInfos, List<byte[]> imageBytesList)
+        /// <summary>
+        /// 内部使用的多图片加载方法，用于从FileStorageInfos加载多张图片（私有方法）
+        /// </summary>
+        private void LoadImagesFromFileStorageInfos(List<ImageInfo> fileStorageInfos, List<byte[]> imageBytesList)
         {
             if (!MultiImageSupport)
             {
@@ -2326,88 +2384,20 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// </summary>
         /// <param name="fileStorageInfo">文件存储信息</param>
         /// <param name="imageBytes">图片字节数据</param>
-        public void LoadImageFromFileStorageInfo(ImageInfo fileStorageInfo, byte[] imageBytes)
+        /// <summary>
+        /// 内部使用的单图片加载方法，用于从FileStorageInfo加载单张图片（私有方法）
+        /// </summary>
+        private void LoadImageFromFileStorageInfo(ImageInfo fileStorageInfo, byte[] imageBytes)
         {
             if (fileStorageInfo == null || imageBytes == null)
             {
                 throw new ArgumentException("文件信息或图片数据不能为空");
             }
 
-            try
-            {
-                // 计算哈希值
-                string hashValue = CalculateImageHash(imageBytes);
-
-                using (var ms = new MemoryStream(imageBytes))
-                {
-                    if (MultiImageSupport)
-                    {
-                        images.Clear();
-                        imageInfos.Clear();
-                        images.Add(Image.FromStream(ms));
-
-                        // 如果没有图片信息，创建一个新的
-                        ImageInfo newInfo = new ImageInfo
-                        {
-                            OriginalFileName = fileStorageInfo.OriginalFileName,
-                            FileSize = imageBytes.Length,
-                            CreateTime = fileStorageInfo.CreateTime,
-                            FileType = fileStorageInfo.FileType,
-                            FileExtension = fileStorageInfo.FileExtension,
-                            HashValue = hashValue, // 设置哈希值
-                            Metadata = fileStorageInfo.Metadata,
-                            ModifiedAt = fileStorageInfo.ModifiedAt,
-                            Width = this.Image?.Width ?? 0,
-                            Height = this.Image?.Height ?? 0
-                        };
-
-                        imageInfos.Add(newInfo);
-                        currentImageIndex = 0;
-                        ShowCurrentImage();
-                        CreateNavigationControls();
-                        CreateInfoPanel();
-                    }
-                    else
-                    {
-                        this.Image = Image.FromStream(ms);
-
-                        // 在单图片模式下更新图片信息
-                        if (imageInfos.Count > 0)
-                        {
-                            imageInfos[0].OriginalFileName = fileStorageInfo.OriginalFileName;
-                            imageInfos[0].FileSize = imageBytes.Length;
-                            imageInfos[0].CreateTime = fileStorageInfo.CreateTime;
-                            imageInfos[0].Metadata = fileStorageInfo.Metadata;
-                            imageInfos[0].FileType = fileStorageInfo.FileType;
-                            imageInfos[0].HashValue = hashValue; // 设置哈希值
-                            imageInfos[0].ModifiedAt = fileStorageInfo.ModifiedAt;
-                        }
-                        else
-                        {
-                            // 如果没有图片信息，创建一个新的
-                            ImageInfo newInfo = new ImageInfo
-                            {
-                                OriginalFileName = fileStorageInfo.OriginalFileName,
-                                FileSize = imageBytes.Length,
-                                CreateTime = fileStorageInfo.CreateTime,
-                                FileType = fileStorageInfo.FileType,
-                                FileExtension = fileStorageInfo.FileExtension,
-                                HashValue = hashValue, // 设置哈希值
-                                Metadata = fileStorageInfo.Metadata,
-                                ModifiedAt = fileStorageInfo.ModifiedAt,
-                                Width = images[images.Count - 1]?.Width ?? 0,
-                                Height = images[images.Count - 1]?.Height ?? 0
-                            };
-                            imageInfos.Add(newInfo);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // 加载失败
-                MessageBox.Show($"加载图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            // 调用统一的内部加载方法
+            LoadImagesInternal(new List<byte[]> { imageBytes }, 
+                              new List<string> { fileStorageInfo.OriginalFileName }, 
+                              false); // ImageInfo类没有IsFromServer属性，使用默认值false
         }
 
         /// <summary>

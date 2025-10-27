@@ -646,37 +646,16 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (imageDataList.Count > 0)
                 {
-                    if (imageDataList.Count == 1)
+                    try
                     {
-                        // 单张图片时直接使用Image属性
-                        try
-                        {
-                            using (var ms = new MemoryStream(imageDataList[0]))
-                            {
-                                magicPicBox.Image = Image.FromStream(ms);
-                                MainForm.Instance.uclog.AddLog($"成功加载1张凭证图片: {imageNames[0]}");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex, "加载单张图片失败");
-                            MainForm.Instance.uclog.AddLog($"加载图片失败: {ex.Message}");
-                        }
+                        // 使用统一的LoadImages方法，自动处理单张和多张图片
+                        magicPicBox.LoadImages(imageDataList, imageNames, isFromServer: true);
+                        MainForm.Instance.uclog.AddLog($"成功加载 {imageDataList.Count} 张凭证图片");
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        // 多张图片时启用多图片支持
-                        try
-                        {
-                            magicPicBox.MultiImageSupport = true;
-                            magicPicBox.LoadImagesFromBytes(imageDataList, imageNames, isFromServer: true);
-                            MainForm.Instance.uclog.AddLog($"成功加载 {imageDataList.Count} 张凭证图片");
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex, "加载多张图片失败");
-                            MainForm.Instance.uclog.AddLog($"加载多张图片失败: {ex.Message}");
-                        }
+                        logger.LogError(ex, "加载图片失败");
+                        MainForm.Instance.uclog.AddLog($"加载图片失败: {ex.Message}");
                     }
                 }
                 else

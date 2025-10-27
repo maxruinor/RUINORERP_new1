@@ -43,6 +43,7 @@ using MySqlX.XDevAPI.Common;
 using RUINORERP.UI.AdvancedUIModule;
 using FastReport.DevComponents.DotNetBar.Controls;
 using RUINORERP.UI.CommonUI;
+using RUINOR.WinFormsUI.CustomPictureBox;
 
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.Monitoring.Auditing;
@@ -617,8 +618,10 @@ namespace RUINORERP.UI.PSI.SAL
                     return;
                 }
 
-                var allImageBytes = new List<byte[]>();
-                var allFileNames = new List<string>();
+                // 简化处理逻辑，直接处理文件存储信息
+                List<byte[]> imageDataList = new List<byte[]>();
+                List<string> imageNames = new List<string>();
+                List<ImageInfo> imageInfos = new List<ImageInfo>();
 
                 foreach (var downloadResponse in list)
                 {
@@ -628,8 +631,9 @@ namespace RUINORERP.UI.PSI.SAL
                         {
                             if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
                             {
-                                allImageBytes.Add(fileStorageInfo.FileData);
-                                allFileNames.Add(fileStorageInfo.OriginalFileName);
+                                imageDataList.Add(fileStorageInfo.FileData);
+                                imageNames.Add(fileStorageInfo.OriginalFileName);
+                                imageInfos.Add(fileStorageInfo);
                             }
                         }
                     }
@@ -640,11 +644,40 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
-                if (allImageBytes.Count > 0)
+                if (imageDataList.Count > 0)
                 {
-                    magicPicBox.MultiImageSupport = allImageBytes.Count > 1;
-                    magicPicBox.LoadImagesFromBytes(allImageBytes, allFileNames, isFromServer: true);
-                    MainForm.Instance.uclog.AddLog($"成功加载 {allImageBytes.Count} 张凭证图片");
+                    if (imageDataList.Count == 1)
+                    {
+                        // 单张图片时直接使用Image属性
+                        try
+                        {
+                            using (var ms = new MemoryStream(imageDataList[0]))
+                            {
+                                magicPicBox.Image = Image.FromStream(ms);
+                                MainForm.Instance.uclog.AddLog($"成功加载1张凭证图片: {imageNames[0]}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "加载单张图片失败");
+                            MainForm.Instance.uclog.AddLog($"加载图片失败: {ex.Message}");
+                        }
+                    }
+                    else
+                    {
+                        // 多张图片时启用多图片支持
+                        try
+                        {
+                            magicPicBox.MultiImageSupport = true;
+                            magicPicBox.LoadImagesFromBytes(imageDataList, imageNames, isFromServer: true);
+                            MainForm.Instance.uclog.AddLog($"成功加载 {imageDataList.Count} 张凭证图片");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "加载多张图片失败");
+                            MainForm.Instance.uclog.AddLog($"加载多张图片失败: {ex.Message}");
+                        }
+                    }
                 }
                 else
                 {

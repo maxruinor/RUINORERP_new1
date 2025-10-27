@@ -338,7 +338,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     _logger?.LogWarning("文件不存在或无法访问");
                     return FileDownloadResponse.CreateFailure("文件不存在或无法访问");
                 }
-
                 _logger?.LogInformation("文件找到，开始读取文件数据: {FilePath}", filePath);
                 var fileData = await File.ReadAllBytesAsync(filePath, cancellationToken);
                 downloadRequest.FileStorageInfo.FileData = fileData;

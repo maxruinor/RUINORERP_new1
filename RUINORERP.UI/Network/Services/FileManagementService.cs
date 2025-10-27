@@ -57,8 +57,14 @@ namespace RUINORERP.UI.Network.Services
             if (request.FileStorageInfos == null || request.FileStorageInfos.Count == 0)
                 throw new ArgumentException("文件数据不能为空");
 
-            // 使用信号量确保同一时间只有一个文件操作请求
-            await _fileOperationLock.WaitAsync(ct);
+            // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            {
+                _log?.LogWarning("获取文件操作锁超时");
+                return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("系统繁忙，请稍后重试");
+            }
+            
+            bool lockAcquired = true;
             try
             {
                 // 检查连接状态
@@ -96,6 +102,11 @@ namespace RUINORERP.UI.Network.Services
             {
                 return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("文件上传操作已取消");
             }
+            catch (TimeoutException ex)
+            {
+                _log?.LogWarning(ex, "文件上传请求超时");
+                return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("文件上传请求超时，请检查网络连接后重试");
+            }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "文件上传过程中发生未预期的异常");
@@ -103,7 +114,12 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                _fileOperationLock.Release();
+                // 检查信号量是否被占用，避免重复释放
+                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                {
+                    _fileOperationLock.Release();
+                    lockAcquired = false;
+                }
             }
         }
 
@@ -122,8 +138,14 @@ namespace RUINORERP.UI.Network.Services
             if (request.FileStorageInfo.FileId==0)
                 throw new ArgumentException("文件ID不能为空", nameof(request.FileStorageInfo));
 
-            // 使用信号量确保同一时间只有一个文件操作请求
-            await _fileOperationLock.WaitAsync(ct);
+            // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            {
+                _log?.LogWarning("获取文件操作锁超时");
+                return FileDownloadResponse.CreateFailure("系统繁忙，请稍后重试");
+            }
+            
+            bool lockAcquired = true;
             try
             {
                 // 检查连接状态
@@ -160,6 +182,11 @@ namespace RUINORERP.UI.Network.Services
             {
                 return FileDownloadResponse.CreateFailure("文件下载操作已取消");
             }
+            catch (TimeoutException ex)
+            {
+                _log?.LogWarning(ex, "文件下载请求超时");
+                return FileDownloadResponse.CreateFailure("文件下载请求超时，请检查网络连接后重试");
+            }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "文件下载过程中发生未预期的异常");
@@ -167,7 +194,12 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                _fileOperationLock.Release();
+                // 检查信号量是否被占用，避免重复释放
+                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                {
+                    _fileOperationLock.Release();
+                    lockAcquired = false;
+                }
             }
         }
 
@@ -186,8 +218,14 @@ namespace RUINORERP.UI.Network.Services
             if (string.IsNullOrEmpty(request.FileId))
                 throw new ArgumentException("文件ID不能为空", nameof(request.FileId));
 
-            // 使用信号量确保同一时间只有一个文件操作请求
-            await _fileOperationLock.WaitAsync(ct);
+            // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            {
+                _log?.LogWarning("获取文件操作锁超时");
+                return FileDeleteResponse.CreateFailure("系统繁忙，请稍后重试");
+            }
+            
+            bool lockAcquired = true;
             try
             {
                 // 检查连接状态
@@ -225,6 +263,11 @@ namespace RUINORERP.UI.Network.Services
             {
                 return FileDeleteResponse.CreateFailure("文件删除操作已取消");
             }
+            catch (TimeoutException ex)
+            {
+                _log?.LogWarning(ex, "文件删除请求超时");
+                return FileDeleteResponse.CreateFailure("文件删除请求超时，请检查网络连接后重试");
+            }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "文件删除过程中发生未预期的异常");
@@ -232,7 +275,12 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                _fileOperationLock.Release();
+                // 检查信号量是否被占用，避免重复释放
+                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                {
+                    _fileOperationLock.Release();
+                    lockAcquired = false;
+                }
             }
         }
 
@@ -251,10 +299,17 @@ namespace RUINORERP.UI.Network.Services
             if (request.FileStorageInfo.FileId==0)
                 throw new ArgumentException("文件ID不能为空", nameof(request.FileStorageInfo.FileId));
 
-            // 使用信号量确保同一时间只有一个文件操作请求
-            await _fileOperationLock.WaitAsync(ct);
+            // 使用信号量确保同一时间只有一个文件操作请求，带30秒超时
+            bool lockAcquired = false;
             try
             {
+                if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+                {
+                    _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
+                    return FileInfoResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
+                }
+                lockAcquired = true;
+
                 // 检查连接状态
                 if (!_communicationService.IsConnected)
                 {
@@ -290,6 +345,11 @@ namespace RUINORERP.UI.Network.Services
             {
                 return FileInfoResponse.CreateFailure("获取文件信息操作已取消");
             }
+            catch (TimeoutException ex)
+            {
+                _log?.LogWarning("获取文件信息过程中发生超时异常");
+                return FileInfoResponse.CreateFailure("文件操作超时，请稍后重试");
+            }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "获取文件信息过程中发生未预期的异常");
@@ -297,7 +357,18 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                _fileOperationLock.Release();
+                // 确保只在成功获取锁的情况下才尝试释放，避免重复释放
+                if (lockAcquired && _fileOperationLock.CurrentCount >= 0)
+                {
+                    try
+                    {
+                        _fileOperationLock.Release();
+                    }
+                    catch (Exception ex)
+                    {
+                        _log?.LogError(ex, "释放文件操作锁时发生异常");
+                    }
+                }
             }
         }
 
@@ -313,10 +384,17 @@ namespace RUINORERP.UI.Network.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            // 使用信号量确保同一时间只有一个文件操作请求
-            await _fileOperationLock.WaitAsync(ct);
+            // 使用信号量确保同一时间只有一个文件操作请求，带30秒超时
+            bool lockAcquired = false;
             try
             {
+                if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+                {
+                    _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
+                    return FileListResponse.CreateFailure("文件操作队列繁忙，请稍后重试");
+                }
+                lockAcquired = true;
+
                 // 检查连接状态
                 if (!_communicationService.IsConnected)
                 {
@@ -352,6 +430,11 @@ namespace RUINORERP.UI.Network.Services
             {
                 return FileListResponse.CreateFailure("获取文件列表操作已取消");
             }
+            catch (TimeoutException ex)
+            {
+                _log?.LogWarning("获取文件列表过程中发生超时异常");
+                return FileListResponse.CreateFailure("文件操作超时，请稍后重试");
+            }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "获取文件列表过程中发生未预期的异常");
@@ -359,7 +442,18 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                _fileOperationLock.Release();
+                // 确保只在成功获取锁的情况下才尝试释放，避免重复释放
+                if (lockAcquired && _fileOperationLock.CurrentCount >= 0)
+                {
+                    try
+                    {
+                        _fileOperationLock.Release();
+                    }
+                    catch (Exception ex)
+                    {
+                        _log?.LogError(ex, "释放文件操作锁时发生异常");
+                    }
+                }
             }
         }
 

@@ -411,7 +411,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             // 初始化右键菜单，添加所有需要的菜单项
             contextMenuStrip.Items.Add("粘贴图片", null, PasteImage);
             this.ContextMenuStrip = contextMenuStrip;
-            
+
             // 调用方法添加所有其他菜单项，确保右键菜单显示统一
             AddContextMenuItems();
 
@@ -655,6 +655,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             if (imageInfoList != null && imageInfoList.Count > 0)
             {
                 imageInfos = new List<ImageInfo>(imageInfoList);
+
+                // 确保ImageUpdateManager中的更新状态与imageInfos同步
+                foreach (var imageInfo in imageInfos)
+                {
+                    if (imageInfo.IsUpdated)
+                    {
+                        _updateManager.MarkImageAsUpdated(imageInfo);
+                    }
+                }
+
                 UpdateInfoPanel();
             }
         }
@@ -1638,7 +1648,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     {
                         images.Add(image);
                         // 添加图片信息，优先使用从剪贴板获取的文件名
-                        imageInfos.Add(new ImageInfo
+                        ImageInfo newImageInfo = new ImageInfo
                         {
                             OriginalFileName = fileName,
                             FileSize = GetImageFileSize(image), // 尝试获取图片大小
@@ -1646,8 +1656,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             FileType = GetImageFormatExtension(image),
                             FileExtension = GetImageFormatExtension(image),
                             Width = image?.Width ?? 0,
-                            Height = image?.Height ?? 0
-                        });
+                            Height = image?.Height ?? 0,
+                            IsUpdated = true // 标记为需要更新
+                        };
+                        imageInfos.Add(newImageInfo);
+                        _updateManager.MarkImageAsUpdated(newImageInfo); // 标记为需要更新
                         currentImageIndex = images.Count - 1;
                         CreateNavigationControls();
                         UpdatePageInfo();
@@ -1664,11 +1677,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             imageInfos[0].CreateTime = DateTime.Now;
                             imageInfos[0].FileType = GetImageFormatExtension(image);
                             imageInfos[0].FileExtension = GetImageFormatExtension(image);
+                            imageInfos[0].IsUpdated = true; // 标记为需要更新
+                            _updateManager.MarkImageAsUpdated(imageInfos[0]); // 标记为需要更新
                         }
                         else
                         {
                             // 如果没有信息列表，创建一个
-                            imageInfos.Add(new ImageInfo
+                            ImageInfo newImageInfo = new ImageInfo
                             {
                                 OriginalFileName = fileName,
                                 FileExtension = GetImageFormatExtension(image),
@@ -1676,8 +1691,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 CreateTime = DateTime.Now,
                                 FileType = GetImageFormatExtension(image),
                                 Width = image?.Width ?? 0,
-                                Height = image?.Height ?? 0
-                            });
+                                Height = image?.Height ?? 0,
+                                IsUpdated = true // 标记为需要更新
+                            };
+                            imageInfos.Add(newImageInfo);
+                            _updateManager.MarkImageAsUpdated(newImageInfo); // 标记为需要更新
                         }
                         UpdateInfoPanel();
                     }
@@ -1834,7 +1852,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         if (MultiImageSupport)
                         {
                             images.Add(this.Image);
-                            imageInfos.Add(new ImageInfo
+                            ImageInfo newImageInfo = new ImageInfo
                             {
                                 OriginalFileName = fileInfo.Name,
                                 FileSize = fileInfo.Length,
@@ -1842,9 +1860,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
                                 HashValue = CalculateImageHash(this.Image),
                                 Width = this.Image?.Width ?? 0,
-                                Height = this.Image?.Height ?? 0
-
-                            });
+                                Height = this.Image?.Height ?? 0,
+                                IsUpdated = true // 标记为已更新
+                            };
+                            imageInfos.Add(newImageInfo);
+                            // 标记图片需要更新
+                            _updateManager.MarkImageAsUpdated(newImageInfo);
                             currentImageIndex = images.Count - 1;
                             CreateNavigationControls();
                             UpdatePageInfo();
@@ -1854,16 +1875,20 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         else
                         {
                             images.Add(this.Image);
-                            imageInfos.Add(new ImageInfo
+                            ImageInfo newImageInfo = new ImageInfo
                             {
                                 OriginalFileName = fileInfo.Name,
                                 FileSize = fileInfo.Length,
+                                IsUpdated = true, // 标记为已更新
                                 CreateTime = fileInfo.CreationTime,
                                 FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
                                 HashValue = CalculateImageHash(this.Image),
                                 Width = this.Image?.Width ?? 0,
                                 Height = this.Image?.Height ?? 0
-                            });
+                            };
+                            imageInfos.Add(newImageInfo);
+                            // 标记图片需要更新
+                            _updateManager.MarkImageAsUpdated(newImageInfo);
                             currentImageIndex = images.Count - 1;
                             UpdateInfoPanel();
                         }
@@ -2442,7 +2467,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         string hashValue = CalculateImageHash(imageBytes);
 
                         // 创建ImageInfo对象
-                        imageInfos.Add(new ImageInfo
+                        ImageInfo newImageInfo = new ImageInfo
                         {
                             OriginalFileName = $"图片{i + 1}",
                             FileSize = imageBytes.Length,
@@ -2452,7 +2477,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             IsUpdated = true, // 标记为已更新
                             Width = imageList[i]?.Width ?? 0,
                             Height = imageList[i]?.Height ?? 0
-                        });
+                        };
+                        imageInfos.Add(newImageInfo);
+                        _updateManager.MarkImageAsUpdated(newImageInfo); // 标记为需要更新
                     }
                     catch (Exception ex)
                     {
@@ -2985,7 +3012,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// <summary>
         /// 检查图片是否需要更新
         /// </summary>
-        /// <param name="index">图片索引</param>
+        /// <param name="index">图片索引，从0开始</param>
         /// <returns>如果需要更新返回true，否则返回false</returns>
         public bool IsImageNeedingUpdate(int index)
         {

@@ -603,111 +603,166 @@ namespace RUINORERP.UI.PSI.SAL
 
 
         /// <summary>
-        /// 下载并显示凭证图片
+        /// 下载并显示凭证图片 - 增强版本
         /// </summary>
-        /// <param name="imageUrl">图片URL</param>
-        /// <param name="magicPicBox">用于展示的MagicPictureBox控件</param>
         private async Task DownloadVoucherImageAsync(tb_SaleOrder entity, MagicPictureBox magicPicBox)
         {
             var ctrpay = Startup.GetFromFac<FileManagementController>();
             try
             {
                 var list = await ctrpay.DownloadImageAsync(entity);
-                magicPicBox.MultiImageSupport = list.Count > 0;
 
-                for (int i = 0; i < list.Count; i++)
+                if (list == null || list.Count == 0)
+                {
+                    logger.LogInformation("未找到关联的凭证图片");
+                    return;
+                }
+
+                var allImageBytes = new List<byte[]>();
+                var allFileNames = new List<string>();
+
+                foreach (var downloadResponse in list)
+                {
+                    if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+                    {
+                        foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
                         {
-                            for (int f = 0; f < list[i].FileStorageInfos.Count; f++)
+                            if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
                             {
-                                var fileStorageInfo = list[i].FileStorageInfos[f];
-                                //加载显示图片
-                                magicPicBox.LoadImagesFromBytes(list[i].FileStorageInfos.Select(c => c.FileData).ToList(), list[i].FileStorageInfos.Select(c => c.OriginalFileName).ToList(), isFromServer: true);
-
+                                allImageBytes.Add(fileStorageInfo.FileData);
+                                allFileNames.Add(fileStorageInfo.OriginalFileName);
                             }
-
                         }
+                    }
+                    else
+                    {
+                        logger.LogWarning("图片下载失败: {ErrorMessage}",
+                            downloadResponse.ErrorMessage ?? "未知错误");
+                    }
+                }
+
+                if (allImageBytes.Count > 0)
+                {
+                    magicPicBox.MultiImageSupport = allImageBytes.Count > 1;
+                    magicPicBox.LoadImagesFromBytes(allImageBytes, allFileNames, isFromServer: true);
+                    MainForm.Instance.uclog.AddLog($"成功加载 {allImageBytes.Count} 张凭证图片");
+                }
+                else
+                {
+                    logger.LogInformation("未找到有效的图片数据");
+                }
             }
             catch (Exception ex)
             {
-                logger.LogError("下载凭证图片异常", ex);
+                MainForm.Instance.logger.LogError(ex, "下载凭证图片异常");
                 MainForm.Instance.uclog.AddLog($"下载凭证图片出错：{ex.Message}");
             }
         }
 
         /// <summary>
-        /// 上传凭证图片
+        /// 上传凭证图片 - 增强版本
         /// </summary>
-        /// <param name="entity">销售订单实体</param>
-        /// <param name="magicPicBox">用于获取图片数据的MagicPictureBox控件</param>
-        /// <param name="category">文件分类，默认为"VoucherImage"</param>
-        /// <param name="onlyUpdated">是否只上传变更的图片</param>
-        /// <returns>上传是否成功</returns>
-        private async Task<bool> UploadVoucherImageAsync(tb_SaleOrder entity, MagicPictureBox magicPicBox, bool onlyUpdated = true, bool useVersionControl = false)
+        private async Task<bool> UploadVoucherImageAsync(tb_SaleOrder entity, MagicPictureBox magicPicBox,
+            bool onlyUpdated = true, bool useVersionControl = false)
         {
             var ctrpay = Startup.GetFromFac<FileManagementController>();
             try
             {
-                if (magicPicBox.Image != null)
+                // 检查是否有图片需要上传
+                // 对于单个MagicPictureBox控件，直接检查Image属性即可
+                if (magicPicBox.Image == null)
                 {
-                    // 根据onlyUpdated参数决定获取所有图片还是仅变更的图片
-                    var imageBytesWithInfoList = onlyUpdated ?
-                        magicPicBox.GetUpdatedImageBytesWithInfo() :
-                        magicPicBox.GetAllImageBytesWithInfo();
+                    logger.LogInformation("没有需要上传的图片");
+                    return true;
+                }
 
-                    if (imageBytesWithInfoList != null && imageBytesWithInfoList.Count > 0)
+                // 根据onlyUpdated参数决定获取所有图片还是仅变更的图片
+                var imageBytesWithInfoList = onlyUpdated ?
+                    magicPicBox.GetUpdatedImageBytesWithInfo() :
+                    magicPicBox.GetAllImageBytesWithInfo();
+
+                if (imageBytesWithInfoList == null || imageBytesWithInfoList.Count == 0)
+                {
+                    logger.LogInformation("没有需要上传的图片数据");
+                    return true;
+                }
+
+                bool allSuccess = true;
+                int successCount = 0;
+
+                // 遍历上传所有图片
+                foreach (var imageDataWithInfo in imageBytesWithInfoList)
+                {
+                    byte[] imageData = imageDataWithInfo.Item1;
+                    ImageInfo imageInfo = imageDataWithInfo.Item2;
+
+                    if (imageData == null || imageData.Length == 0)
                     {
-                        bool allSuccess = true;
+                        logger.LogWarning("跳过空图片数据: {FileName}", imageInfo.OriginalFileName);
+                        continue;
+                    }
 
-                        // 遍历上传所有图片
-                        foreach (var imageDataWithInfo in imageBytesWithInfoList)
+                    // 检查文件大小限制
+                    if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
+                    {
+                        logger.LogWarning("图片文件过大: {FileName}, Size: {Size}MB",
+                            imageInfo.OriginalFileName, imageData.Length / 1024 / 1024);
+                        MainForm.Instance.uclog.AddLog($"图片 {imageInfo.OriginalFileName} 超过大小限制(10MB)");
+                        allSuccess = false;
+                        continue;
+                    }
+
+                    // 准备版本控制参数
+                    long? existingFileId = null;
+                    string updateReason = null;
+
+                    if (imageInfo.FileId > 0 && imageInfo.IsUpdated)
+                    {
+                        existingFileId = imageInfo.FileId;
+                        updateReason = "图片更新";
+                    }
+
+                    // 上传图片
+                    var response = await ctrpay.UploadImageAsync(entity, imageInfo.OriginalFileName,
+                        imageData, existingFileId, updateReason, useVersionControl);
+
+                    if (response.IsSuccess)
+                    {
+                        successCount++;
+                        MainForm.Instance.uclog.AddLog($"凭证图片上传成功：{imageInfo.OriginalFileName}");
+
+                        // 上传成功后，将图片标记为未更新
+                        if (imageInfo.IsUpdated)
                         {
-                            byte[] imageData = imageDataWithInfo.Item1;
-                            ImageInfo imageInfo = imageDataWithInfo.Item2;
-
-                            // 检查是否为更新操作，准备版本控制参数
-                            long? existingFileId = null;
-                            string updateReason = null;
-                            
-                            // 如果图片信息包含文件ID且图片已更新
-                            if (imageInfo.FileId > 0 && imageInfo.IsUpdated)
-                            {
-                                existingFileId = imageInfo.FileId;
-                            }
-
-                            // 上传图片，传递版本控制开关参数
-                            var response = await ctrpay.UploadImageAsync(entity, imageInfo.OriginalFileName, imageData, existingFileId, updateReason, useVersionControl);
-
-                            if (response.IsSuccess)
-                            {
-                                MainForm.Instance.uclog.AddLog($"凭证图片上传成功：{imageInfo.OriginalFileName}");
-                                // 上传成功后，将图片标记为未更新
-                                if (imageInfo.IsUpdated)
-                                {
-                                    imageInfo.IsUpdated = false;
-                                }
-                            }
-                            else
-                            {
-                                MainForm.Instance.uclog.AddLog($"凭证图片上传失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
-                                allSuccess = false;
-                            }
+                            imageInfo.IsUpdated = false;
                         }
-
-                        return allSuccess;
+                    }
+                    else
+                    {
+                        allSuccess = false;
+                        MainForm.Instance.uclog.AddLog($"凭证图片上传失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
+                        logger.LogError("图片上传失败: {FileName}, Error: {Error}",
+                            imageInfo.OriginalFileName, response.Message);
                     }
                 }
-                return true; // 没有图片需要上传，也视为成功
+
+                if (successCount > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"成功上传 {successCount} 张凭证图片");
+                }
+
+                return allSuccess;
             }
             catch (Exception ex)
             {
-                logger.LogError("上传凭证图片异常", ex);
+                MainForm.Instance.logger.LogError(ex, "上传凭证图片异常");
                 MainForm.Instance.uclog.AddLog($"上传凭证图片出错：{ex.Message}");
                 return false;
             }
         }
 
         /// <summary>
-        /// 专门处理已更新图片的上传
+        /// 专门处理已更新图片的上传 - 增强版本
         /// </summary>
         /// <param name="entity">销售订单实体</param>
         /// <param name="updatedImages">需要更新的图片列表</param>
@@ -719,10 +774,12 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 if (updatedImages == null || updatedImages.Count == 0)
                 {
-                    return true; // 没有需要更新的图片
+                    logger.LogInformation("没有需要更新的图片");
+                    return true;
                 }
 
                 bool allSuccess = true;
+                int successCount = 0;
 
                 // 遍历上传所有需要更新的图片
                 foreach (var imageDataWithInfo in updatedImages)
@@ -730,10 +787,26 @@ namespace RUINORERP.UI.PSI.SAL
                     byte[] imageData = imageDataWithInfo.Item1;
                     ImageInfo imageInfo = imageDataWithInfo.Item2;
 
+                    if (imageData == null || imageData.Length == 0)
+                    {
+                        logger.LogWarning("跳过空图片数据: {FileName}", imageInfo.OriginalFileName);
+                        continue;
+                    }
+
+                    // 检查文件大小限制
+                    if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
+                    {
+                        logger.LogWarning("图片文件过大: {FileName}, Size: {Size}MB",
+                            imageInfo.OriginalFileName, imageData.Length / 1024 / 1024);
+                        MainForm.Instance.uclog.AddLog($"图片 {imageInfo.OriginalFileName} 超过大小限制(10MB)");
+                        allSuccess = false;
+                        continue;
+                    }
+
                     // 检查是否为更新操作，准备版本控制参数
                     long? existingFileId = null;
-                    string updateReason = null;
-                    
+                    string updateReason = "图片更新";
+
                     // 如果图片信息包含文件ID且图片已更新
                     if (imageInfo.FileId > 0 && imageInfo.IsUpdated)
                     {
@@ -745,22 +818,30 @@ namespace RUINORERP.UI.PSI.SAL
 
                     if (response.IsSuccess)
                     {
+                        successCount++;
                         MainForm.Instance.uclog.AddLog($"凭证图片更新成功：{imageInfo.OriginalFileName}");
                         // 上传成功后，将图片标记为未更新
                         imageInfo.IsUpdated = false;
                     }
                     else
                     {
-                        MainForm.Instance.uclog.AddLog($"凭证图片更新失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
                         allSuccess = false;
+                        MainForm.Instance.uclog.AddLog($"凭证图片更新失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
+                        logger.LogError("图片更新失败: {FileName}, Error: {Error}",
+                            imageInfo.OriginalFileName, response.Message);
                     }
+                }
+
+                if (successCount > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"成功更新 {successCount} 张凭证图片");
                 }
 
                 return allSuccess;
             }
             catch (Exception ex)
             {
-                logger.LogError("更新凭证图片异常", ex);
+                logger.LogError(ex, "更新凭证图片异常");
                 MainForm.Instance.uclog.AddLog($"更新凭证图片出错：{ex.Message}");
                 return false;
             }

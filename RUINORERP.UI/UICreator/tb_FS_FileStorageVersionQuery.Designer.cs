@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2025 15:32:20
+// 时间：10/27/2025 17:49:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -54,16 +54,13 @@ namespace RUINORERP.UI
 this.cmbFileId = new ComponentFactory.Krypton.Toolkit.KryptonComboBox();
 
 
-this.lblStorageFileName = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtStorageFileName = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-this.txtStorageFileName.Multiline = true;
-
 this.lblUpdateReason = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtUpdateReason = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.txtUpdateReason.Multiline = true;
 
-this.lblHashValue = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
-this.txtHashValue = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
+this.lblCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.dtpCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
+
 
 this.lblModified_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
@@ -92,47 +89,38 @@ this.Controls.Add(this.cmbFileId);
            //#####VersionNo###Int32
 //属性测试50VersionNo
 
-           //#####255StorageFileName###String
-this.lblStorageFileName.AutoSize = true;
-this.lblStorageFileName.Location = new System.Drawing.Point(100,75);
-this.lblStorageFileName.Name = "lblStorageFileName";
-this.lblStorageFileName.Size = new System.Drawing.Size(41, 12);
-this.lblStorageFileName.TabIndex = 3;
-this.lblStorageFileName.Text = "存储文件名";
-this.txtStorageFileName.Location = new System.Drawing.Point(173,71);
-this.txtStorageFileName.Name = "txtStorageFileName";
-this.txtStorageFileName.Size = new System.Drawing.Size(100, 21);
-this.txtStorageFileName.TabIndex = 3;
-this.Controls.Add(this.lblStorageFileName);
-this.Controls.Add(this.txtStorageFileName);
-
            //#####300UpdateReason###String
 this.lblUpdateReason.AutoSize = true;
-this.lblUpdateReason.Location = new System.Drawing.Point(100,100);
+this.lblUpdateReason.Location = new System.Drawing.Point(100,75);
 this.lblUpdateReason.Name = "lblUpdateReason";
 this.lblUpdateReason.Size = new System.Drawing.Size(41, 12);
-this.lblUpdateReason.TabIndex = 4;
+this.lblUpdateReason.TabIndex = 3;
 this.lblUpdateReason.Text = "存储路径";
-this.txtUpdateReason.Location = new System.Drawing.Point(173,96);
+this.txtUpdateReason.Location = new System.Drawing.Point(173,71);
 this.txtUpdateReason.Name = "txtUpdateReason";
 this.txtUpdateReason.Size = new System.Drawing.Size(100, 21);
-this.txtUpdateReason.TabIndex = 4;
+this.txtUpdateReason.TabIndex = 3;
 this.Controls.Add(this.lblUpdateReason);
 this.Controls.Add(this.txtUpdateReason);
 
-           //#####64HashValue###String
-this.lblHashValue.AutoSize = true;
-this.lblHashValue.Location = new System.Drawing.Point(100,125);
-this.lblHashValue.Name = "lblHashValue";
-this.lblHashValue.Size = new System.Drawing.Size(41, 12);
-this.lblHashValue.TabIndex = 5;
-this.lblHashValue.Text = "文件哈希值";
-this.txtHashValue.Location = new System.Drawing.Point(173,121);
-this.txtHashValue.Name = "txtHashValue";
-this.txtHashValue.Size = new System.Drawing.Size(100, 21);
-this.txtHashValue.TabIndex = 5;
-this.Controls.Add(this.lblHashValue);
-this.Controls.Add(this.txtHashValue);
+           //#####Created_at###DateTime
+this.lblCreated_at.AutoSize = true;
+this.lblCreated_at.Location = new System.Drawing.Point(100,100);
+this.lblCreated_at.Name = "lblCreated_at";
+this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_at.TabIndex = 4;
+this.lblCreated_at.Text = "创建时间";
+//111======100
+this.dtpCreated_at.Location = new System.Drawing.Point(173,96);
+this.dtpCreated_at.Name ="dtpCreated_at";
+this.dtpCreated_at.ShowCheckBox =true;
+this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
+this.dtpCreated_at.TabIndex = 4;
+this.Controls.Add(this.lblCreated_at);
+this.Controls.Add(this.dtpCreated_at);
+
+           //#####Created_by###Int64
+//属性测试125Created_by
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
@@ -144,7 +132,6 @@ this.lblModified_at.Text = "修改时间";
 //111======150
 this.dtpModified_at.Location = new System.Drawing.Point(173,146);
 this.dtpModified_at.Name ="dtpModified_at";
-this.dtpModified_at.ShowCheckBox =true;
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
 this.dtpModified_at.TabIndex = 6;
 this.Controls.Add(this.lblModified_at);
@@ -165,15 +152,13 @@ this.Controls.Add(this.dtpModified_at);
 this.Controls.Add(this.cmbFileId );
 
                 
-                this.Controls.Add(this.lblStorageFileName );
-this.Controls.Add(this.txtStorageFileName );
-
                 this.Controls.Add(this.lblUpdateReason );
 this.Controls.Add(this.txtUpdateReason );
 
-                this.Controls.Add(this.lblHashValue );
-this.Controls.Add(this.txtHashValue );
+                this.Controls.Add(this.lblCreated_at );
+this.Controls.Add(this.dtpCreated_at );
 
+                
                 this.Controls.Add(this.lblModified_at );
 this.Controls.Add(this.dtpModified_at );
 
@@ -198,19 +183,17 @@ private ComponentFactory.Krypton.Toolkit.KryptonComboBox cmbFileId;
               
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblStorageFileName;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtStorageFileName;
-
-    
-        
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblUpdateReason;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtUpdateReason;
 
     
         
-              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblHashValue;
-private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtHashValue;
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblCreated_at;
+private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
 
+    
+        
+              
     
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblModified_at;

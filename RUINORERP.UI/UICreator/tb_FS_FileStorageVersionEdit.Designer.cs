@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2025 15:32:20
+// 时间：10/27/2025 17:49:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -58,16 +58,15 @@ this.cmbFileId = new Krypton.Toolkit.KryptonComboBox();
 this.lblVersionNo = new Krypton.Toolkit.KryptonLabel();
 this.txtVersionNo = new Krypton.Toolkit.KryptonTextBox();
 
-this.lblStorageFileName = new Krypton.Toolkit.KryptonLabel();
-this.txtStorageFileName = new Krypton.Toolkit.KryptonTextBox();
-this.txtStorageFileName.Multiline = true;
-
 this.lblUpdateReason = new Krypton.Toolkit.KryptonLabel();
 this.txtUpdateReason = new Krypton.Toolkit.KryptonTextBox();
 this.txtUpdateReason.Multiline = true;
 
-this.lblHashValue = new Krypton.Toolkit.KryptonLabel();
-this.txtHashValue = new Krypton.Toolkit.KryptonTextBox();
+this.lblCreated_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
+
+this.lblCreated_by = new Krypton.Toolkit.KryptonLabel();
+this.txtCreated_by = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblModified_at = new Krypton.Toolkit.KryptonLabel();
 this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
@@ -133,47 +132,50 @@ this.txtVersionNo.TabIndex = 2;
 this.Controls.Add(this.lblVersionNo);
 this.Controls.Add(this.txtVersionNo);
 
-           //#####255StorageFileName###String
-this.lblStorageFileName.AutoSize = true;
-this.lblStorageFileName.Location = new System.Drawing.Point(100,75);
-this.lblStorageFileName.Name = "lblStorageFileName";
-this.lblStorageFileName.Size = new System.Drawing.Size(41, 12);
-this.lblStorageFileName.TabIndex = 3;
-this.lblStorageFileName.Text = "存储文件名";
-this.txtStorageFileName.Location = new System.Drawing.Point(173,71);
-this.txtStorageFileName.Name = "txtStorageFileName";
-this.txtStorageFileName.Size = new System.Drawing.Size(100, 21);
-this.txtStorageFileName.TabIndex = 3;
-this.Controls.Add(this.lblStorageFileName);
-this.Controls.Add(this.txtStorageFileName);
-
            //#####300UpdateReason###String
 this.lblUpdateReason.AutoSize = true;
-this.lblUpdateReason.Location = new System.Drawing.Point(100,100);
+this.lblUpdateReason.Location = new System.Drawing.Point(100,75);
 this.lblUpdateReason.Name = "lblUpdateReason";
 this.lblUpdateReason.Size = new System.Drawing.Size(41, 12);
-this.lblUpdateReason.TabIndex = 4;
+this.lblUpdateReason.TabIndex = 3;
 this.lblUpdateReason.Text = "存储路径";
-this.txtUpdateReason.Location = new System.Drawing.Point(173,96);
+this.txtUpdateReason.Location = new System.Drawing.Point(173,71);
 this.txtUpdateReason.Name = "txtUpdateReason";
 this.txtUpdateReason.Size = new System.Drawing.Size(100, 21);
-this.txtUpdateReason.TabIndex = 4;
+this.txtUpdateReason.TabIndex = 3;
 this.Controls.Add(this.lblUpdateReason);
 this.Controls.Add(this.txtUpdateReason);
 
-           //#####64HashValue###String
-this.lblHashValue.AutoSize = true;
-this.lblHashValue.Location = new System.Drawing.Point(100,125);
-this.lblHashValue.Name = "lblHashValue";
-this.lblHashValue.Size = new System.Drawing.Size(41, 12);
-this.lblHashValue.TabIndex = 5;
-this.lblHashValue.Text = "文件哈希值";
-this.txtHashValue.Location = new System.Drawing.Point(173,121);
-this.txtHashValue.Name = "txtHashValue";
-this.txtHashValue.Size = new System.Drawing.Size(100, 21);
-this.txtHashValue.TabIndex = 5;
-this.Controls.Add(this.lblHashValue);
-this.Controls.Add(this.txtHashValue);
+           //#####Created_at###DateTime
+this.lblCreated_at.AutoSize = true;
+this.lblCreated_at.Location = new System.Drawing.Point(100,100);
+this.lblCreated_at.Name = "lblCreated_at";
+this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_at.TabIndex = 4;
+this.lblCreated_at.Text = "创建时间";
+//111======100
+this.dtpCreated_at.Location = new System.Drawing.Point(173,96);
+this.dtpCreated_at.Name ="dtpCreated_at";
+this.dtpCreated_at.ShowCheckBox =true;
+this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
+this.dtpCreated_at.TabIndex = 4;
+this.Controls.Add(this.lblCreated_at);
+this.Controls.Add(this.dtpCreated_at);
+
+           //#####Created_by###Int64
+//属性测试125Created_by
+this.lblCreated_by.AutoSize = true;
+this.lblCreated_by.Location = new System.Drawing.Point(100,125);
+this.lblCreated_by.Name = "lblCreated_by";
+this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_by.TabIndex = 5;
+this.lblCreated_by.Text = "创建人";
+this.txtCreated_by.Location = new System.Drawing.Point(173,121);
+this.txtCreated_by.Name = "txtCreated_by";
+this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
+this.txtCreated_by.TabIndex = 5;
+this.Controls.Add(this.lblCreated_by);
+this.Controls.Add(this.txtCreated_by);
 
            //#####Modified_at###DateTime
 this.lblModified_at.AutoSize = true;
@@ -185,7 +187,6 @@ this.lblModified_at.Text = "修改时间";
 //111======150
 this.dtpModified_at.Location = new System.Drawing.Point(173,146);
 this.dtpModified_at.Name ="dtpModified_at";
-this.dtpModified_at.ShowCheckBox =true;
 this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
 this.dtpModified_at.TabIndex = 6;
 this.Controls.Add(this.lblModified_at);
@@ -230,14 +231,14 @@ this.Controls.Add(this.cmbFileId );
                 this.Controls.Add(this.lblVersionNo );
 this.Controls.Add(this.txtVersionNo );
 
-                this.Controls.Add(this.lblStorageFileName );
-this.Controls.Add(this.txtStorageFileName );
-
                 this.Controls.Add(this.lblUpdateReason );
 this.Controls.Add(this.txtUpdateReason );
 
-                this.Controls.Add(this.lblHashValue );
-this.Controls.Add(this.txtHashValue );
+                this.Controls.Add(this.lblCreated_at );
+this.Controls.Add(this.dtpCreated_at );
+
+                this.Controls.Add(this.lblCreated_by );
+this.Controls.Add(this.txtCreated_by );
 
                 this.Controls.Add(this.lblModified_at );
 this.Controls.Add(this.dtpModified_at );
@@ -279,18 +280,18 @@ private Krypton.Toolkit.KryptonTextBox txtVersionNo;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblStorageFileName;
-private Krypton.Toolkit.KryptonTextBox txtStorageFileName;
-
-    
-        
               private Krypton.Toolkit.KryptonLabel lblUpdateReason;
 private Krypton.Toolkit.KryptonTextBox txtUpdateReason;
 
     
         
-              private Krypton.Toolkit.KryptonLabel lblHashValue;
-private Krypton.Toolkit.KryptonTextBox txtHashValue;
+              private Krypton.Toolkit.KryptonLabel lblCreated_at;
+private Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblCreated_by;
+private Krypton.Toolkit.KryptonTextBox txtCreated_by;
 
     
         

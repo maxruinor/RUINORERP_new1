@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +12,9 @@ using RUINORERP.Global.Model;
 using System.IO;
 using System.ComponentModel;
 using System.Threading;
+using System.Collections.Concurrent;
+using System.Collections.Specialized;
+using RUINOR.WinFormsUI.CustomPictureBox.Implementations;
 
 namespace RUINOR.WinFormsUI.CustomPictureBox
 {
@@ -21,6 +24,14 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
     /// </summary>
     public class MagicPictureBox : PictureBox
     {
+        // 图片处理相关的组件
+        private readonly ImageProcessor _imageProcessor;
+        private readonly SHA256HashCalculator _hashCalculator;
+        private readonly LRUImageCache _imageCache;
+        private readonly ImageUpdateManager _updateManager;
+        private readonly OptimizedImageLoader _imageLoader;
+
+
         private bool isPanning = false;
         private Point panOffset;
         private float rotationAngle = 0f;
@@ -42,27 +53,282 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         private DataRowImage _RowImage = new DataRowImage();
         public DataRowImage RowImage { get => _RowImage; set => _RowImage = value; }
-        
+
         // 多图片支持
         private List<Image> images = new List<Image>();
         private int currentImageIndex = 0;
         private string imagePaths = ""; // 存储图片路径，用;分隔
-        
+
         // 导航控件
         private Panel navigationPanel;
         private Button prevButton;
         private Button nextButton;
         private Label pageInfoLabel;
-        
+
         // 信息显示面板
         private Panel infoPanel;
         private Label fileNameLabel;
         private Label fileSizeLabel;
         private Label createTimeLabel;
         private System.Windows.Forms.Timer infoPanelTimer;
-        
-        // 图片信息
+
+        // 图片信息列表
         private List<ImageInfo> imageInfos = new List<ImageInfo>();
+
+        // 更新标记常量
+        private const string UPDATE_MARKER = "UPDATE"; // 标记需要更新的图片
+
+        #region 图片哈希计算功能
+
+        /// <summary>
+        // 已移除重复的私有CalculateImageHash方法，使用下面的公有方法替代
+
+        /// <summary>
+        /// 比较两张图片是否相同（基于哈希值）
+        /// </summary>
+        /// <param name="hash1">第一张图片的哈希值</param>
+        /// <param name="hash2">第二张图片的哈希值</param>
+        /// <returns>如果相同返回true，否则返回false</returns>
+        private bool AreImagesEqual(string hash1, string hash2)
+        {
+            if (string.IsNullOrEmpty(hash1) || string.IsNullOrEmpty(hash2))
+                return false;
+
+            return string.Equals(hash1, hash2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        #endregion
+
+        #region 图片更新管理功能
+
+        /// <summary>
+        /// 重置图片的更新状态
+        /// </summary>
+        /// <param name="imageIndex">图片索引</param>
+        private void ResetImageUpdateStatus(int imageIndex)
+        {
+            if (MultiImageSupport && imageIndex >= 0 && imageIndex < imageInfos.Count)
+            {
+                imageInfos[imageIndex].IsUpdated = false;
+                // 清除更新标记
+                if (imageInfos[imageIndex].Metadata.ContainsKey("UpdateMarker"))
+                {
+                    imageInfos[imageIndex].Metadata["UpdateMarker"] = "";
+                }
+            }
+        }
+
+        /// <summary>
+        /// 重置所有图片的更新状态
+        /// </summary>
+        private void ResetAllImageUpdateStatuses()
+        {
+            if (MultiImageSupport)
+            {
+                foreach (var info in imageInfos)
+                {
+                    if (info != null)
+                    {
+                        info.IsUpdated = false;
+                        // 清除更新标记
+                        if (info.Metadata.ContainsKey("UpdateMarker"))
+                        {
+                            info.Metadata["UpdateMarker"] = "";
+                        }
+                        info.Metadata.Clear();
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region 图片处理功能
+
+        /// <summary>
+        /// 将Image对象转换为字节数组
+        /// </summary>
+        /// <param name="image">Image对象</param>
+        /// <returns>字节数组</returns>
+        private byte[] ImageToBytes(Image image)
+        {
+            if (image == null) return null;
+
+            using (var ms = new MemoryStream())
+            {
+                try
+                {
+                    image.Save(ms, image.RawFormat);
+                    return ms.ToArray();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"ImageToBytes 错误: {ex.Message}");
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将字节数组转换为Image对象
+        /// </summary>
+        /// <param name="bytes">字节数组</param>
+        /// <returns>Image对象</returns>
+        // 已移除重复的私有BytesToImage方法，使用下面的公有方法替代
+
+
+        #endregion
+
+        #region 图片缓存功能
+
+        // 图片缓存 - 使用哈希值作为键
+        private ConcurrentDictionary<string, CachedImage> imageCache = new ConcurrentDictionary<string, CachedImage>();
+
+        // 缓存访问顺序队列，用于LRU策略
+        private Queue<string> cacheAccessQueue = new Queue<string>();
+
+        // 缓存锁，确保线程安全
+        private object cacheLock = new object();
+
+        // 缓存最大容量
+        private int maxCacheSize = 100;
+
+
+        /// <summary>
+        /// 图片缓存的最大容量
+        /// </summary>
+        [Category("缓存设置")]
+        [Description("设置图片缓存的最大容量，超过容量时将根据LRU策略移除最少使用的图片")]
+        [DefaultValue(100)]
+        public int MaxCacheSize
+        {
+            get { return maxCacheSize; }
+            set
+            {
+                if (value > 0)
+                {
+                    maxCacheSize = value;
+                    // 调整缓存大小
+                    TrimCache();
+                }
+            }
+        }
+
+
+
+        /// <summary>
+        /// 添加图片到缓存
+        /// </summary>
+        /// <param name="hashValue">图片哈希值</param>
+        /// <param name="image">Image对象</param>
+        /// <param name="imageBytes">图片字节数组</param>
+        private void AddToCache(string hashValue, Image image, byte[] imageBytes = null)
+        {
+            if (string.IsNullOrEmpty(hashValue) || image == null)
+                return;
+
+            lock (cacheLock)
+            {
+                // 更新访问顺序
+                if (cacheAccessQueue.Contains(hashValue))
+                {
+                    // 移除旧的访问记录
+                    var tempQueue = new Queue<string>(cacheAccessQueue.Where(h => h != hashValue));
+                    cacheAccessQueue = tempQueue;
+                }
+                // 添加到队列末尾（最近使用）
+                cacheAccessQueue.Enqueue(hashValue);
+
+                // 添加或更新缓存
+                imageCache[hashValue] = new CachedImage
+                {
+                    Image = image,
+                    ImageBytes = imageBytes,
+                    LastAccessTime = DateTime.Now
+                };
+
+                // 检查并调整缓存大小
+                TrimCache();
+            }
+        }
+
+        /// <summary>
+        /// 从缓存中获取图片
+        /// </summary>
+        /// <param name="hashValue">图片哈希值</param>
+        /// <returns>缓存的CachedImage对象，如果不存在则返回null</returns>
+        private CachedImage GetFromCache(string hashValue)
+        {
+            if (string.IsNullOrEmpty(hashValue))
+                return null;
+
+            if (imageCache.TryGetValue(hashValue, out var cachedImage))
+            {
+                lock (cacheLock)
+                {
+                    // 更新访问顺序
+                    if (cacheAccessQueue.Contains(hashValue))
+                    {
+                        var tempQueue = new Queue<string>(cacheAccessQueue.Where(h => h != hashValue));
+                        cacheAccessQueue = tempQueue;
+                    }
+                    cacheAccessQueue.Enqueue(hashValue);
+
+                    // 更新最后访问时间
+                    cachedImage.LastAccessTime = DateTime.Now;
+                }
+                return cachedImage;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 调整缓存大小，移除最少使用的图片
+        /// </summary>
+        private void TrimCache()
+        {
+            lock (cacheLock)
+            {
+                while (imageCache.Count > maxCacheSize && cacheAccessQueue.Count > 0)
+                {
+                    string oldestHash = cacheAccessQueue.Dequeue();
+                    if (imageCache.TryRemove(oldestHash, out var removedImage))
+                    {
+                        // 释放图片资源
+                        // 使用ImageUtils工具类安全释放图片资源
+                        var tempImage = removedImage.Image;
+                        ImageUtils.SafeDispose(ref tempImage);
+                        removedImage.Image = null; // 确保原对象引用被清除
+                        System.Diagnostics.Debug.WriteLine($"缓存清理: 移除图片 {oldestHash}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 清空缓存
+        /// </summary>
+        public void ClearCache()
+        {
+            lock (cacheLock)
+            {
+                // 释放所有图片资源
+                foreach (var cachedImage in imageCache.Values)
+                {
+                    // 使用ImageUtils工具类安全释放图片资源
+                    var tempImage = cachedImage.Image;
+                    ImageUtils.SafeDispose(ref tempImage);
+                    cachedImage.Image = null; // 确保原对象引用被清除
+                }
+
+                imageCache.Clear();
+                cacheAccessQueue.Clear();
+                System.Diagnostics.Debug.WriteLine("缓存已清空");
+            }
+        }
+
+        #endregion
 
         [Browsable(true)]
         [Category("自定义属性")]
@@ -75,8 +341,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         public string ImagePaths
         {
             get { return imagePaths; }
-            set 
-            { 
+            set
+            {
                 imagePaths = value;
                 if (MultiImageSupport)
                 {
@@ -84,6 +350,144 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 }
             }
         }
+        /// <summary>
+        /// 获取所有已更新图片及其对应信息的组合
+        /// </summary>
+        /// <param name="format">图片格式，默认为JPEG</param>
+        /// <returns>已更新图片和信息的组合列表</returns>
+        public List<Tuple<byte[], ImageInfo>> GetUpdatedImageBytesWithInfo(ImageFormat format = null)
+        {
+            List<Tuple<byte[], ImageInfo>> imageBytesWithInfoList = new List<Tuple<byte[], ImageInfo>>();
+
+            // 如果没有指定格式，默认使用JPEG格式
+            if (format == null)
+                format = ImageFormat.Jpeg;
+
+            // 检查图片和信息数量是否匹配
+            if (MultiImageSupport && images.Count > 0)
+            {
+                for (int i = 0; i < images.Count; i++)
+                {
+                    try
+                    {
+                        // 只处理已更新的图片
+                        if (i < imageInfos.Count && imageInfos[i] != null && !imageInfos[i].IsUpdated)
+                        {
+                            continue;
+                        }
+
+                        // 转换图片为byte[]
+                        byte[] imageBytes = null;
+                        using (var ms = new MemoryStream())
+                        {
+                            images[i].Save(ms, format);
+                            imageBytes = ms.ToArray();
+                        }
+
+                        // 获取对应的图片信息
+                        ImageInfo imageInfo = null;
+                        if (i < imageInfos.Count)
+                        {
+                            imageInfo = imageInfos[i];
+                            // 确保文件大小正确更新
+                            if (imageInfo != null)
+                            {
+                                imageInfo.FileSize = imageBytes?.Length ?? 0;
+                                // 更新哈希值
+                                imageInfo.HashValue = CalculateImageHash(imageBytes);
+                            }
+                            else
+                            {
+                                // 如果没有对应的信息，创建更有意义的默认信息
+                                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                                string formatExtension = ImageUtils.GetFormatExtension(format).TrimStart('.'); // 获取不含点号的扩展名
+                                string defaultFileName = $"图片_{timestamp}_{i + 1}.{formatExtension}";
+
+                                imageInfo = new ImageInfo
+                                {
+                                    OriginalFileName = defaultFileName,
+                                    FileSize = imageBytes?.Length ?? 0,
+                                    CreateTime = DateTime.Now,
+                                    Metadata = new Dictionary<string, string> { { "Description", "自动生成的图片信息" } },
+                                    FileExtension = formatExtension,
+                                    FileType = formatExtension,
+                                    HashValue = CalculateImageHash(imageBytes),
+                                    IsUpdated = true,
+                                    Width = images[i]?.Width ?? 0,
+                                    Height = images[i]?.Height ?? 0
+                                };
+                            }
+
+                            imageBytesWithInfoList.Add(new Tuple<byte[], ImageInfo>(imageBytes, imageInfo));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 转换失败，记录错误并跳过该图片
+                        System.Diagnostics.Debug.WriteLine($"获取图片数据失败 (索引 {i}): {ex.Message}");
+                        continue;
+                    }
+                }
+            }
+            else if (this.Image != null && (imageInfos.Count == 0 || (imageInfos.Count > 0 && imageInfos[0].IsUpdated)))
+            {
+                try
+                {
+                    // 转换单张图片为byte[]
+                    byte[] imageBytes = null;
+                    using (var ms = new MemoryStream())
+                    {
+                        this.Image.Save(ms, format);
+                        imageBytes = ms.ToArray();
+                    }
+
+                    // 获取图片信息
+                    ImageInfo imageInfo = null;
+                    if (imageInfos.Count > 0)
+                    {
+                        imageInfo = imageInfos[0];
+                        // 确保文件大小正确更新
+                        if (imageInfo != null)
+                        {
+                            imageInfo.FileSize = imageBytes?.Length ?? 0;
+                            // 更新哈希值
+                            imageInfo.HashValue = CalculateImageHash(imageBytes);
+                        }
+                    }
+                    else
+                    {
+                        // 如果没有信息，创建更有意义的默认信息
+                        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                        string formatExtension = ImageUtils.GetFormatExtension(format).TrimStart('.'); // 获取不含点号的扩展名
+                        string defaultFileName = $"图片_{timestamp}.{formatExtension}";
+
+                        imageInfo = new ImageInfo
+                        {
+                            OriginalFileName = defaultFileName,
+                            FileSize = imageBytes?.Length ?? 0,
+                            CreateTime = DateTime.Now,
+                            Metadata = new Dictionary<string, string> { { "Description", "自动生成的图片信息" } },
+                            FileType = formatExtension,
+                            FileExtension = formatExtension,
+                            HashValue = CalculateImageHash(imageBytes),
+                            IsUpdated = true,
+                            Width = this.Image?.Width ?? 0,
+                            Height = this.Image?.Height ?? 0
+                        };
+                    }
+
+                    imageBytesWithInfoList.Add(new Tuple<byte[], ImageInfo>(imageBytes, imageInfo));
+                }
+                catch (Exception ex)
+                {
+                    // 转换失败，记录错误
+                    System.Diagnostics.Debug.WriteLine($"获取单张图片数据失败: {ex.Message}");
+                }
+            }
+
+            return imageBytesWithInfoList;
+        }
+
 
         [Browsable(true)]
         [Category("自定义属性")]
@@ -97,6 +501,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         public MagicPictureBox() : base()
         {
+            // 初始化图片处理相关组件
+            _imageProcessor = new ImageProcessor();
+            _hashCalculator = new SHA256HashCalculator(_imageProcessor);
+            _imageCache = new LRUImageCache(100); // 默认缓存大小100
+            _updateManager = new ImageUpdateManager(_hashCalculator, _imageProcessor);
+            _imageLoader = new OptimizedImageLoader(_imageCache, _imageProcessor);
+
             // 设置允许拖拽
             this.AllowDrop = true;
             this.BorderStyle = BorderStyle.FixedSingle;
@@ -121,205 +532,223 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         }
 
         /// <summary>
-        /// 图片信息类
-        /// </summary>
-        public class ImageInfo
-        {
-            /// <summary>
-            /// 如果是上传的图片，则FileName为原始文件名
-            /// </summary>
-            public string FileName { get; set; }
-            public long FileSize { get; set; }
-            public DateTime CreateTime { get; set; }
-            public string FilePath { get; set; }
-            public string Description { get; set; }
-            
-            // 添加来自tb_FS_FileStorageInfo表的字段
-            public long FileId { get; set; }
-            public int BusinessType { get; set; }
-            public string FileType { get; set; }
-            public string HashValue { get; set; }
-            public string StorageProvider { get; set; }
-            public string StoragePath { get; set; }
-            public int CurrentVersion { get; set; }
-            public int Status { get; set; }
-            public DateTime ExpireTime { get; set; }
-            public bool IsRegistered { get; set; }
-            public string Metadata { get; set; }
-            public long? CreatedBy { get; set; }
-            public DateTime? ModifiedAt { get; set; }
-            public long? ModifiedBy { get; set; }
-        }
-
-        /// <summary>
         /// 从字节数组加载多张图片
         /// </summary>
         /// <param name="imageBytesList">图片字节数组列表</param>
         /// <param name="fileNamesList">原始文件名列表，包含后缀名</param>
-        public void LoadImagesFromBytes(List<byte[]> imageBytesList, List<string> fileNamesList = null)
+        /// <param name="isFromServer">是否从服务器加载，影响IsUpdated初始值</param>
+        public void LoadImagesFromBytes(List<byte[]> imageBytesList, List<string> fileNamesList = null, bool isFromServer = false)
         {
             if (!MultiImageSupport)
             {
                 throw new InvalidOperationException("多图片支持未启用");
             }
-            
+
             images.Clear();
             imageInfos.Clear();
-            
+
             if (imageBytesList == null || imageBytesList.Count == 0)
             {
                 this.Image = null;
                 return;
             }
-            
+
+            // 收集加载失败的图片信息
+            List<int> failedImages = new List<int>();
+            List<string> errorMessages = new List<string>();
+
             for (int i = 0; i < imageBytesList.Count; i++)
             {
                 try
                 {
-                    using (var ms = new MemoryStream(imageBytesList[i]))
-                    {
-                        images.Add(Image.FromStream(ms));
-                        // 添加图片信息，优先使用原始文件名
-                        string fileName = "";
-                        
-                        // 如果提供了文件名列表且索引有效且不为空，则使用原始文件名
-                        if (fileNamesList != null && fileNamesList.Count > i && !string.IsNullOrWhiteSpace(fileNamesList[i]))
-                        {
-                            fileName = fileNamesList[i];
-                        }
-                        else
-                        {
-                            // 否则使用默认命名
-                            fileName = $"图片{i + 1}";
-                        }
-                        
-                        imageInfos.Add(new ImageInfo
-                        {
-                            FileName = fileName, // 确保使用原始文件名
-                            FileSize = imageBytesList[i].Length,
-                            CreateTime = DateTime.Now,
-                            FilePath = "",
-                            Description = "",
-                            FileId = 0,
-                            BusinessType = 0,
-                            FileType = string.IsNullOrEmpty(fileName) ? "" : Path.GetExtension(fileName).TrimStart('.'),
-                            HashValue = "",
-                            StorageProvider = "",
-                            StoragePath = "",
-                            CurrentVersion = 1,
-                            Status = 0,
-                            ExpireTime = DateTime.MaxValue,
-                            IsRegistered = false,
-                            Metadata = "",
-                            CreatedBy = null,
-                            ModifiedAt = null,
-                            ModifiedBy = null
-                        });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // 加载失败，记录错误但继续处理其他图片
-                    System.Diagnostics.Debug.WriteLine($"加载图片{i + 1}失败: {ex.Message}");
-                }
-            }
-            
-            currentImageIndex = 0;
-            ShowCurrentImage();
-            CreateNavigationControls();
-            CreateInfoPanel();
-        }
+                    byte[] imageBytes = imageBytesList[i];
 
-        /// <summary>
-        /// 从字节数组加载单张图片
-        /// </summary>
-        /// <param name="imageBytes">图片字节数组</param>
-        /// <param name="fileName">原始文件名，包含后缀名</param>
-        public void LoadImageFromBytes(byte[] imageBytes, string fileName = null)
-        {
-            if (imageBytes == null || imageBytes.Length == 0)
-            {
-                this.Image = null;
-                // 清空图片信息
-                if (MultiImageSupport)
-                {
-                    imageInfos.Clear();
-                }
-                return;
-            }
-            
-            try
-            {
-                using (var ms = new MemoryStream(imageBytes))
-                {
-                    if (MultiImageSupport)
+                    // 计算哈希值，用于缓存查找
+                    string hashValue = CalculateImageHash(imageBytes);
+
+                    // 尝试从缓存中获取图片
+                    CachedImage cachedImage = GetFromCache(hashValue);
+                    Image loadedImage;
+
+                    if (cachedImage != null)
                     {
-                        images.Clear();
-                        imageInfos.Clear();
-                        images.Add(Image.FromStream(ms));
-                        // 确保使用提供的原始文件名
-                        string originalFileName = !string.IsNullOrWhiteSpace(fileName) ? fileName : "图片1";
-                        imageInfos.Add(new ImageInfo
+                        System.Diagnostics.Debug.WriteLine($"从缓存加载多张图片中的第{i + 1}张: {hashValue}");
+                        // 创建图片副本
+                        using (var ms = new MemoryStream())
                         {
-                            FileName = originalFileName, // 确保使用原始文件名
-                            FileSize = imageBytes.Length,
-                            CreateTime = DateTime.Now,
-                            FilePath = "",
-                            Description = "",
-                            FileId = 0,
-                            BusinessType = 0,
-                            FileType = string.IsNullOrEmpty(originalFileName) ? "" : Path.GetExtension(originalFileName).TrimStart('.'),
-                            HashValue = "",
-                            StorageProvider = "",
-                            StoragePath = "",
-                            CurrentVersion = 1,
-                            Status = 0,
-                            ExpireTime = DateTime.MaxValue,
-                            IsRegistered = false,
-                            Metadata = "",
-                            CreatedBy = null,
-                            ModifiedAt = null,
-                            ModifiedBy = null
-                        });
-                        currentImageIndex = 0;
-                        ShowCurrentImage();
-                        CreateNavigationControls();
-                        CreateInfoPanel();
+                            cachedImage.Image.Save(ms, ImageFormat.Png);
+                            loadedImage = Image.FromStream(ms);
+                        }
                     }
                     else
                     {
-                        this.Image = Image.FromStream(ms);
-                        // 在单图片模式下也保存文件名信息
-                        if (imageInfos.Count > 0)
+                        System.Diagnostics.Debug.WriteLine($"缓存未命中，加载新图片: {hashValue}");
+                        // 缓存未命中，从字节数组加载
+                        using (var ms = new MemoryStream(imageBytes))
                         {
-                            imageInfos[0].FileName = !string.IsNullOrWhiteSpace(fileName) ? fileName : "图片1";
-                            imageInfos[0].FileSize = imageBytes.Length;
-                            imageInfos[0].CreateTime = DateTime.Now;
-                            if (!string.IsNullOrWhiteSpace(fileName))
-                            {
-                                imageInfos[0].FileType = Path.GetExtension(fileName).TrimStart('.');
-                            }
+                            loadedImage = Image.FromStream(ms);
                         }
-                        else
-                        {
-                            // 如果没有信息列表，创建一个
-                            imageInfos.Add(new ImageInfo
-                            {
-                                FileName = !string.IsNullOrWhiteSpace(fileName) ? fileName : "图片1",
-                                FileSize = imageBytes.Length,
-                                CreateTime = DateTime.Now,
-                                FileType = !string.IsNullOrWhiteSpace(fileName) ? Path.GetExtension(fileName).TrimStart('.') : ""
-                            });
-                        }
-                        UpdateInfoPanel();
+
+                        // 添加到缓存
+                        AddToCache(hashValue, new Bitmap(loadedImage), imageBytes);
                     }
+
+                    images.Add(loadedImage);
+
+                    // 添加图片信息，优先使用原始文件名
+                    string fileName = "";
+
+                    // 如果提供了文件名列表且索引有效且不为空，则使用原始文件名
+                    if (fileNamesList != null && fileNamesList.Count > i && !string.IsNullOrWhiteSpace(fileNamesList[i]))
+                    {
+                        fileName = fileNamesList[i];
+                    }
+                    else
+                    {
+                        // 否则使用默认命名
+                        fileName = $"图片{i + 1}";
+                    }
+
+                    imageInfos.Add(new ImageInfo
+                    {
+                        OriginalFileName = fileName, // 确保使用原始文件名
+                        FileSize = imageBytes.Length,
+                        CreateTime = DateTime.Now,
+                        HashValue = hashValue, // 设置哈希值
+                        Metadata = new Dictionary<string, string>(),
+                        FileType = string.IsNullOrEmpty(fileName) ? "" : Path.GetExtension(fileName).TrimStart('.'),
+                        ModifiedAt = null,
+                        IsUpdated = !isFromServer // 如果是从服务器加载，标记为未更新
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // 加载失败，记录错误信息并继续处理其他图片
+                    int imageIndex = i + 1;
+                    failedImages.Add(imageIndex);
+                    string errorMsg = $"图片{imageIndex}: {ex.Message}";
+                    errorMessages.Add(errorMsg);
+                    System.Diagnostics.Debug.WriteLine($"加载图片{imageIndex}失败: {ex.Message}");
+                    // 记录完整的异常堆栈，方便调试
+                    System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                }
+            }
+
+            // 如果有图片加载失败，显示用户友好的错误提示
+            if (failedImages.Count > 0)
+            {
+                // 构建错误消息
+                string errorSummary = $"图片加载完成，但有{failedImages.Count}张图片加载失败：\n\n";
+                foreach (string errorMsg in errorMessages)
+                {
+                    errorSummary += $"- {errorMsg}\n";
+                }
+
+                // 只显示错误摘要，完整详情已记录到调试输出
+                MessageBox.Show(errorSummary, "图片加载状态", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
+            // 即使有部分图片加载失败，也显示已成功加载的图片
+            if (images.Count > 0)
+            {
+                currentImageIndex = 0;
+                ShowCurrentImage();
+                CreateNavigationControls();
+                CreateInfoPanel();
+            }
+        }
+
+
+
+        /// <summary>
+        /// 处理已加载的图片
+        /// </summary>
+        /// <summary>
+        /// 处理已加载的图片
+        /// </summary>
+        /// <param name="image">已加载的Image对象</param>
+        /// <param name="hashValue">图片哈希值</param>
+        /// <param name="imageBytes">图片字节数组</param>
+        /// <param name="fileName">文件名</param>
+        /// <param name="isFromServer">是否从服务器加载</param>
+        private void ProcessLoadedImage(Image image, string hashValue, byte[] imageBytes, string fileName = null, bool isFromServer = false)
+        {
+            if (image == null || string.IsNullOrEmpty(hashValue))
+                return;
+
+            try
+            {
+                // 确保使用提供的原始文件名
+                string originalFileName = !string.IsNullOrWhiteSpace(fileName) ? fileName : "图片1";
+
+                if (MultiImageSupport)
+                {
+                    images.Clear();
+                    imageInfos.Clear();
+                    images.Add(image);
+
+                    imageInfos.Add(new ImageInfo
+                    {
+                        OriginalFileName = originalFileName,
+                        FileSize = imageBytes?.Length ?? 0,
+                        CreateTime = DateTime.Now,
+                        FileType = string.IsNullOrEmpty(originalFileName) ? "" : Path.GetExtension(originalFileName).TrimStart('.'),
+                        HashValue = hashValue,
+                        Metadata = new Dictionary<string, string>(),
+                        ModifiedAt = null,
+                        IsUpdated = !isFromServer,
+                        Width = image?.Width ?? 0,
+                        Height = image?.Height ?? 0
+                    });
+
+                    currentImageIndex = 0;
+                    ShowCurrentImage();
+                    CreateNavigationControls();
+                    CreateInfoPanel();
+                }
+                else
+                {
+                    this.Image = image;
+
+                    // 在单图片模式下也保存文件名信息
+                    if (imageInfos.Count > 0)
+                    {
+                        imageInfos[0].OriginalFileName = originalFileName;
+                        imageInfos[0].FileSize = imageBytes?.Length ?? 0;
+                        imageInfos[0].CreateTime = DateTime.Now;
+                        imageInfos[0].HashValue = hashValue;
+                        imageInfos[0].IsUpdated = !isFromServer;
+                        if (!string.IsNullOrWhiteSpace(originalFileName))
+                        {
+                            imageInfos[0].FileType = Path.GetExtension(originalFileName).TrimStart('.');
+                        }
+                    }
+                    else
+                    {
+                        // 如果没有信息列表，创建一个
+                        imageInfos.Add(new ImageInfo
+                        {
+                            OriginalFileName = originalFileName,
+                            FileSize = imageBytes?.Length ?? 0,
+                            CreateTime = DateTime.Now,
+                            FileType = !string.IsNullOrWhiteSpace(originalFileName) ? Path.GetExtension(originalFileName).TrimStart('.') : "",
+                            HashValue = hashValue,
+                            IsUpdated = !isFromServer,
+                            Width = image?.Width ?? 0,
+                            Height = image?.Height ?? 0
+                        });
+                    }
+
+                    UpdateInfoPanel();
                 }
             }
             catch (Exception ex)
             {
-                // 加载失败
-                MessageBox.Show($"加载图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                System.Diagnostics.Debug.WriteLine($"图片加载错误: {ex.ToString()}");
+                // 处理失败，释放图片资源
+                // 使用ImageUtils工具类安全释放图片资源
+                ImageUtils.SafeDispose(ref image);
+                System.Diagnostics.Debug.WriteLine($"处理图片失败: {ex.Message}");
+                throw;
             }
         }
 
@@ -386,51 +815,90 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             images.Clear();
             imageInfos.Clear();
-            
+
             if (string.IsNullOrEmpty(imagePaths))
                 return;
 
             var paths = imagePaths.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            
+
             foreach (var path in paths)
             {
                 if (File.Exists(path))
                 {
                     try
                     {
-                        images.Add(Image.FromFile(path));
+                        // 读取图片字节数组，用于计算哈希值
+                        byte[] imageBytes = File.ReadAllBytes(path);
+                        images.Add(Image.FromStream(new MemoryStream(imageBytes)));
+
                         // 获取文件信息
                         var fileInfo = new FileInfo(path);
-                        imageInfos.Add(new ImageInfo
+
+                        // 计算哈希值
+                        string hashValue = CalculateImageHash(imageBytes);
+
+                        if (MultiImageSupport)
                         {
-                            FileName = fileInfo.Name,
-                            FileSize = fileInfo.Length,
-                            CreateTime = fileInfo.CreationTime,
-                            FilePath = path,
-                            Description = "",
-                            FileId = 0,
-                            BusinessType = 0,
-                            FileType = Path.GetExtension(path).TrimStart('.'),
-                            HashValue = "",
-                            StorageProvider = "",
-                            StoragePath = path,
-                            CurrentVersion = 1,
-                            Status = 0,
-                            ExpireTime = DateTime.MaxValue,
-                            IsRegistered = false,
-                            Metadata = "",
-                            CreatedBy = null,
-                            ModifiedAt = null,
-                            ModifiedBy = null
-                        });
+                            imageInfos.Add(new ImageInfo
+                            {
+                                OriginalFileName = fileInfo.Name,
+                                FileSize = imageBytes.Length, // 使用字节数组长度作为文件大小
+                                CreateTime = fileInfo.CreationTime,
+                                FileType = Path.GetExtension(path).TrimStart('.'),
+                                HashValue = hashValue,
+                                Metadata = new Dictionary<string, string>(),
+                                ModifiedAt = null,
+                                IsUpdated = true // 标记为已更新
+                            });
+                        }
+                        else
+                        {
+                            // 单图片模式下也保存文件名信息
+                            if (imageInfos.Count > 0)
+                            {
+                                imageInfos[0].OriginalFileName = fileInfo.Name;
+                                imageInfos[0].FileSize = imageBytes.Length;
+                                imageInfos[0].CreateTime = fileInfo.CreationTime;
+                                imageInfos[0].FileType = Path.GetExtension(path).TrimStart('.');
+                                imageInfos[0].HashValue = hashValue;
+                                imageInfos[0].Metadata = new Dictionary<string, string>();
+                                imageInfos[0].ModifiedAt = null;
+                                imageInfos[0].IsUpdated = true;
+                                // 添加Width和Height属性
+                                if (images.Count > 0)
+                                {
+                                    imageInfos[0].Width = images[0]?.Width ?? 0;
+                                    imageInfos[0].Height = images[0]?.Height ?? 0;
+                                }
+                            }
+                            else
+                            {
+                                // 如果没有信息列表，创建一个
+                                imageInfos.Add(new ImageInfo
+                                {
+                                    OriginalFileName = fileInfo.Name,
+                                    FileSize = imageBytes.Length, // 使用字节数组长度作为文件大小
+                                    CreateTime = fileInfo.CreationTime,
+                                    FileType = Path.GetExtension(path).TrimStart('.'),
+                                    HashValue = hashValue,
+                                    Metadata = new Dictionary<string, string>(),
+                                    ModifiedAt = null,
+                                    IsUpdated = true, // 标记为已更新
+                                    Width = images[images.Count - 1]?.Width ?? 0,
+                                    Height = images[images.Count - 1]?.Height ?? 0
+                                });
+                            }
+                            UpdateInfoPanel();
+                        }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // 加载失败，跳过
+                        // 加载失败，记录错误信息
+                        System.Diagnostics.Debug.WriteLine($"加载图片失败: {ex.Message}");
                     }
                 }
             }
-            
+
             currentImageIndex = 0;
             ShowCurrentImage();
             CreateNavigationControls();
@@ -450,7 +918,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 this.Image = null;
             }
-            
+
             UpdatePageInfo();
             UpdateInfoPanel();
         }
@@ -550,7 +1018,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
             // 添加到当前控件中
             this.Controls.Add(navigationPanel);
-            
+
             UpdatePageInfo();
         }
 
@@ -661,47 +1129,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             UpdateInfoPanel();
         }
 
-        /// <summary>
-        /// 根据业务类型获取描述信息
-        /// </summary>
-        /// <param name="businessType">业务类型</param>
-        /// <returns>业务类型描述</returns>
-        private string GetBusinessTypeDescription(int businessType)
-        {
-            // 这里可以根据实际的业务类型定义返回相应的描述
-            switch (businessType)
-            {
-                case 1:
-                    return "付款凭证";
-                case 2:
-                    return "产品图片";
-                case 3:
-                    return "BOM手册";
-                default:
-                    return $"业务类型 {businessType}";
-            }
-        }
-        
-        /// <summary>
-        /// 根据状态值获取状态描述
-        /// </summary>
-        /// <param name="status">状态值</param>
-        /// <returns>状态描述</returns>
-        private string GetStatusDescription(int status)
-        {
-            switch (status)
-            {
-                case 0:
-                    return "正常";
-                case 1:
-                    return "已删除";
-                case 2:
-                    return "已过期";
-                default:
-                    return $"状态 {status}";
-            }
-        }
-        
+
+
         /// <summary>
         /// 更新信息面板
         /// </summary>
@@ -713,38 +1142,33 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             if (imageInfos.Count > 0 && currentImageIndex < imageInfos.Count)
             {
                 var imageInfo = imageInfos[currentImageIndex];
-                
+
                 if (fileNameLabel != null)
                 {
-                    fileNameLabel.Text = imageInfo.FileName;
+                    fileNameLabel.Text = imageInfo.OriginalFileName;
                 }
-                
+
                 if (fileSizeLabel != null)
                 {
                     fileSizeLabel.Text = $"大小: {FormatFileSize(imageInfo.FileSize)}";
                 }
-                
+
                 if (createTimeLabel != null)
                 {
                     createTimeLabel.Text = $"创建时间: {imageInfo.CreateTime:yyyy-MM-dd HH:mm:ss}";
                 }
-                
+
                 // 更新文件类型信息
                 var fileTypeLabel = infoPanel.Controls.Cast<Control>().FirstOrDefault(c => c is Label && c.Location.Y == 45 && c.Location.X == 5) as Label;
                 if (fileTypeLabel != null)
                 {
                     fileTypeLabel.Text = $"类型: {imageInfo.FileType}";
                 }
-                
-                // 更新业务类型信息
-                var businessTypeLabel = infoPanel.Controls.Cast<Control>().FirstOrDefault(c => c is Label && c.Location.Y == 45 && c.Location.X == 150) as Label;
-                if (businessTypeLabel != null)
-                {
-                    businessTypeLabel.Text = $"业务类型: {GetBusinessTypeDescription(imageInfo.BusinessType)}";
-                }
-                
+
+
+
                 infoPanel.Visible = true;
-                
+
                 // 如果设置了显示时间，启动计时器
                 if (infoPanelTimer != null)
                 {
@@ -783,12 +1207,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 pageInfoLabel.Text = $"{currentImageIndex + 1}/{images.Count}";
             }
-            
+
             if (prevButton != null)
             {
                 prevButton.Enabled = currentImageIndex > 0;
             }
-            
+
             if (nextButton != null)
             {
                 nextButton.Enabled = currentImageIndex < images.Count - 1;
@@ -865,13 +1289,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 // 删除当前图片
                 images.RemoveAt(currentImageIndex);
                 imageInfos.RemoveAt(currentImageIndex);
-                
+
                 // 调整当前索引
                 if (currentImageIndex >= images.Count && images.Count > 0)
                 {
                     currentImageIndex = images.Count - 1;
                 }
-                
+
                 // 显示新图片或清空
                 if (images.Count > 0)
                 {
@@ -882,7 +1306,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     this.Image = null;
                     imagePaths = "";
                 }
-                
+
                 // 更新导航控件
                 CreateNavigationControls();
                 UpdatePageInfo();
@@ -914,34 +1338,71 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 openFileDialog.Title = "选择图片";
                 openFileDialog.Filter = "图片文件|*.bmp;*.jpg;*.jpeg;*.png;*.gif";
                 openFileDialog.Multiselect = true; // 允许多选
-                
+
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     foreach (var fileName in openFileDialog.FileNames)
                     {
                         try
                         {
-                            var image = Image.FromFile(fileName);
+                            // 读取图片字节数组，用于计算哈希值
+                            byte[] imageBytes = File.ReadAllBytes(fileName);
+                            var image = Image.FromStream(new MemoryStream(imageBytes));
                             images.Add(image);
-                            
+
                             // 获取文件信息
                             var fileInfo = new FileInfo(fileName);
-                            imageInfos.Add(new ImageInfo
+
+                            // 计算哈希值
+                            string hashValue = CalculateImageHash(imageBytes);
+
+                            if (MultiImageSupport)
                             {
-                                FileName = fileInfo.Name,
-                                FileSize = fileInfo.Length,
-                                CreateTime = fileInfo.CreationTime,
-                                FilePath = fileName,
-                                Description = ""
-                            });
-                            
-                            // 如果是第一张图片，显示它
-                            if (images.Count == 1)
+                                imageInfos.Add(new ImageInfo
+                                {
+                                    OriginalFileName = fileInfo.Name,
+                                    FileSize = imageBytes.Length, // 使用字节数组长度作为文件大小
+                                    CreateTime = fileInfo.CreationTime,
+                                    FileType = Path.GetExtension(fileName).TrimStart('.'),
+                                    HashValue = hashValue,
+                                    IsUpdated = true // 标记为已更新
+                                });
+
+                                // 如果是第一张图片，显示它
+                                if (images.Count == 1)
+                                {
+                                    currentImageIndex = 0;
+                                    ShowCurrentImage();
+                                    CreateNavigationControls();
+                                    CreateInfoPanel();
+                                }
+                            }
+                            else
                             {
-                                currentImageIndex = 0;
-                                ShowCurrentImage();
-                                CreateNavigationControls();
-                                CreateInfoPanel();
+                                // 单图片模式下也保存文件名信息
+                                if (imageInfos.Count > 0)
+                                {
+                                    imageInfos[0].OriginalFileName = fileInfo.Name;
+                                    imageInfos[0].FileSize = imageBytes.Length;
+                                    imageInfos[0].CreateTime = fileInfo.CreationTime;
+                                    imageInfos[0].FileType = Path.GetExtension(fileName).TrimStart('.');
+                                    imageInfos[0].HashValue = hashValue;
+                                    imageInfos[0].IsUpdated = true;
+                                }
+                                else
+                                {
+                                    // 如果没有信息列表，创建一个
+                                    imageInfos.Add(new ImageInfo
+                                    {
+                                        OriginalFileName = fileInfo.Name,
+                                        FileSize = imageBytes.Length,
+                                        CreateTime = fileInfo.CreationTime,
+                                        FileType = Path.GetExtension(fileName).TrimStart('.'),
+                                        HashValue = hashValue,
+                                        IsUpdated = true
+                                    });
+                                }
+                                UpdateInfoPanel();
                             }
                         }
                         catch (Exception ex)
@@ -949,7 +1410,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             MessageBox.Show($"加载图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
-                    
+
                     UpdatePageInfo();
                     UpdateImagePathsFromImages(); // 更新图片路径
                 }
@@ -1012,7 +1473,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 }
                 this.Visible = true;
                 this.imageCroppingBox1.Visible = false;
-                
+
                 // 保存原始图片信息
                 ImageInfo originalInfo = null;
                 if (MultiImageSupport && currentImageIndex < imageInfos.Count)
@@ -1023,56 +1484,90 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 {
                     originalInfo = imageInfos[0];
                 }
-                
+
                 // 获取裁剪后的图片
                 this.Image = this.imageCroppingBox1.GetSelectedImage();
-                
+
                 // 更新多图片列表中的当前图片
                 if (MultiImageSupport && currentImageIndex < images.Count)
                 {
                     images[currentImageIndex] = this.Image;
-                    
+
                     // 更新图片信息，保留原始文件名
                     if (currentImageIndex < imageInfos.Count && originalInfo != null)
                     {
                         imageInfos[currentImageIndex] = new ImageInfo
                         {
-                            FileName = originalInfo.FileName, // 保留原始文件名
+                            OriginalFileName = originalInfo.OriginalFileName, // 保留原始文件名
                             FileSize = GetImageFileSize(this.Image), // 更新文件大小
                             CreateTime = originalInfo.CreateTime, // 保留创建时间
-                            FilePath = originalInfo.FilePath, // 保留原始路径
-                            Description = originalInfo.Description, // 保留描述
+                            Metadata = originalInfo.Metadata, // 保留元数据
                             FileType = originalInfo.FileType, // 保留文件类型
-                            Status = originalInfo.Status // 保留状态
+                            FileExtension = originalInfo.FileExtension, // 保留文件扩展名
+                            HashValue = CalculateImageHash(this.Image), // 更新哈希值
+                            Width = this.Image?.Width ?? 0,
+                            Height = this.Image?.Height ?? 0
                         };
                     }
                     else if (originalInfo != null) // 如果列表中没有对应的信息，则添加
                     {
                         imageInfos.Add(new ImageInfo
                         {
-                            FileName = originalInfo.FileName,
+                            OriginalFileName = originalInfo.OriginalFileName,
                             FileSize = GetImageFileSize(this.Image),
                             CreateTime = originalInfo.CreateTime,
-                            FilePath = originalInfo.FilePath,
-                            Description = originalInfo.Description,
+                            Metadata = originalInfo.Metadata,
                             FileType = originalInfo.FileType,
-                            Status = originalInfo.Status
+                            FileExtension = originalInfo.FileExtension,
+                            HashValue = CalculateImageHash(this.Image), // 添加哈希值
+                            Width = this.Image?.Width ?? 0,
+                            Height = this.Image?.Height ?? 0
                         });
                     }
                 }
                 else if (originalInfo != null) // 单图片模式
                 {
-                    // 更新单图片信息，保留原始文件名
-                    imageInfos[0] = new ImageInfo
+                    // 在单图片模式下，我们也使用UpdateImageWithOriginalInfo，但需要特殊处理
+                    try
                     {
-                        FileName = originalInfo.FileName,
-                        FileSize = GetImageFileSize(this.Image),
-                        CreateTime = originalInfo.CreateTime,
-                        FilePath = originalInfo.FilePath,
-                        Description = originalInfo.Description,
-                        FileType = originalInfo.FileType,
-                        Status = originalInfo.Status
-                    };
+                        // 保存原始图片信息
+                        ImageInfo tempInfo = imageInfos.Count > 0 ? imageInfos[0] : null;
+
+                        // 为单图片模式临时启用多图片支持以便使用更新方法
+                        bool wasMultiImageSupported = MultiImageSupport;
+                        MultiImageSupport = true;
+
+                        // 确保图片列表不为空
+                        if (images == null || images.Count == 0)
+                        {
+                            images = new List<Image> { this.Image };
+                            currentImageIndex = 0;
+                        }
+                        else if (images.Count > 0)
+                        {
+                            images[0] = this.Image;
+                            currentImageIndex = 0;
+                        }
+
+                        // 更新图片信息
+                        UpdateImageWithOriginalInfo(0, this.Image, "旋转图片");
+
+                        // 标记为已更新
+                        MarkImageAsUpdated(0);
+
+                        // 恢复多图片支持设置
+                        MultiImageSupport = wasMultiImageSupported;
+
+                        // 确保单图片模式下的Image属性也被更新
+                        if (!wasMultiImageSupported && images.Count > 0)
+                        {
+                            this.Image = images[0];
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"单图片模式下更新图片信息失败: {ex.Message}");
+                    }
                 }
             }
         }
@@ -1105,20 +1600,46 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     {
                         try
                         {
-                            var image = Image.FromFile(file);
+                            // 读取图片字节数组，用于计算哈希值
+                            byte[] imageBytes = File.ReadAllBytes(file);
+                            var image = Image.FromStream(new MemoryStream(imageBytes));
                             images.Add(image);
-                            
+
                             // 获取文件信息
                             var fileInfo = new FileInfo(file);
-                            imageInfos.Add(new ImageInfo
+
+                            // 创建ImageInfo并设置哈希值
+                            string hashValue = CalculateImageHash(imageBytes);
+                            if (imageInfos != null)
                             {
-                                FileName = fileInfo.Name,
-                                FileSize = fileInfo.Length,
-                                CreateTime = fileInfo.CreationTime,
-                                FilePath = file,
-                                Description = ""
-                            });
-                            
+                                imageInfos.Add(new ImageInfo
+                                {
+                                    OriginalFileName = fileInfo.Name,
+                                    FileSize = imageBytes.Length,
+                                    CreateTime = fileInfo.CreationTime,
+                                    FileType = Path.GetExtension(fileInfo.Name).TrimStart('.'),
+                                    HashValue = hashValue,
+                                    IsUpdated = true,
+                                    Width = image?.Width ?? 0,
+                                    Height = image?.Height ?? 0
+                                });
+                            }
+                            else
+                            {
+                                // 如果没有信息列表，创建一个
+                                imageInfos.Add(new ImageInfo
+                                {
+                                    OriginalFileName = fileInfo.Name,
+                                    FileSize = imageBytes.Length,
+                                    CreateTime = fileInfo.CreationTime,
+                                    FileType = Path.GetExtension(fileInfo.Name).TrimStart('.'),
+                                    HashValue = hashValue,
+                                    IsUpdated = true,
+                                    Width = image?.Width ?? 0,
+                                    Height = image?.Height ?? 0
+                                });
+                            }
+
                             // 如果是第一张图片，显示它
                             if (images.Count == 1)
                             {
@@ -1133,17 +1654,55 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             MessageBox.Show($"加载图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
-                    
+
                     UpdatePageInfo();
                     UpdateImagePathsFromImages(); // 更新图片路径
                 }
                 else
                 {
                     // 单图片模式，只加载第一张
-                    Image image = Image.FromFile(files[0]);
-                    string newhash = ImageHelper.GetImageHash(this.Image);
+                    byte[] imageBytes = File.ReadAllBytes(files[0]);
+                    Image image = Image.FromStream(new MemoryStream(imageBytes));
+
+                    // 计算哈希值
+                    string newhash = CalculateImageHash(imageBytes);
                     RowImage.SetImageNewHash(newhash);
                     this.Image = image;
+
+                    // 获取文件信息并更新ImageInfo
+                    var fileInfo = new FileInfo(files[0]);
+                    if (imageInfos.Count > 0)
+                    {
+                        imageInfos[0] = new ImageInfo
+                        {
+                            OriginalFileName = fileInfo.Name,
+                            FileSize = imageBytes.Length,
+                            CreateTime = fileInfo.CreationTime,
+                            Metadata = new Dictionary<string, string>(),
+                            FileExtension = Path.GetExtension(fileInfo.Name).TrimStart('.').ToLower(),
+                            HashValue = newhash,
+                            IsUpdated = true,
+                            Width = image?.Width ?? 0,
+                            Height = image?.Height ?? 0
+                        };
+                    }
+                    else
+                    {
+                        imageInfos.Add(new ImageInfo
+                        {
+                            OriginalFileName = fileInfo.Name,
+                            FileSize = imageBytes.Length,
+                            CreateTime = fileInfo.CreationTime,
+                            Metadata = new Dictionary<string, string>(),
+                            FileExtension = Path.GetExtension(fileInfo.Name).TrimStart('.').ToLower(),
+                            HashValue = newhash,
+                            IsUpdated = true,
+                            Width = image?.Width ?? 0,
+                            Height = image?.Height ?? 0
+                        });
+                    }
+
+                    UpdateInfoPanel();
                 }
             }
             base.OnDragDrop(e);
@@ -1159,7 +1718,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 if (Clipboard.ContainsImage())
                 {
                     Image image = Clipboard.GetImage();
-                    string newhash = ImageHelper.GetImageHash(image);
+
+                    // 转换为字节数组以计算哈希值
+                    byte[] imageBytes;
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        image.Save(ms, ImageFormat.Jpeg);
+                        imageBytes = ms.ToArray();
+                    }
+
+                    string newhash = CalculateImageHash(imageBytes);
                     RowImage.SetImageNewHash(newhash);
                     this.Image = image;
 
@@ -1178,12 +1746,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         // 添加图片信息，优先使用从剪贴板获取的文件名
                         imageInfos.Add(new ImageInfo
                         {
-                            FileName = fileName,
+                            OriginalFileName = fileName,
                             FileSize = GetImageFileSize(image), // 尝试获取图片大小
                             CreateTime = DateTime.Now,
-                            FilePath = "",
-                            Description = "",
-                            FileType = GetImageFormatExtension(image)
+                            FileType = GetImageFormatExtension(image),
+                            FileExtension = GetImageFormatExtension(image),
+                            Width = image?.Width ?? 0,
+                            Height = image?.Height ?? 0
                         });
                         currentImageIndex = images.Count - 1;
                         CreateNavigationControls();
@@ -1196,20 +1765,24 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         // 单图片模式下也保存文件名信息
                         if (imageInfos.Count > 0)
                         {
-                            imageInfos[0].FileName = fileName;
+                            imageInfos[0].OriginalFileName = fileName;
                             imageInfos[0].FileSize = GetImageFileSize(image);
                             imageInfos[0].CreateTime = DateTime.Now;
                             imageInfos[0].FileType = GetImageFormatExtension(image);
+                            imageInfos[0].FileExtension = GetImageFormatExtension(image);
                         }
                         else
                         {
                             // 如果没有信息列表，创建一个
                             imageInfos.Add(new ImageInfo
                             {
-                                FileName = fileName,
+                                OriginalFileName = fileName,
+                                FileExtension = GetImageFormatExtension(image),
                                 FileSize = GetImageFileSize(image),
                                 CreateTime = DateTime.Now,
-                                FileType = GetImageFormatExtension(image)
+                                FileType = GetImageFormatExtension(image),
+                                Width = image?.Width ?? 0,
+                                Height = image?.Height ?? 0
                             });
                         }
                         UpdateInfoPanel();
@@ -1247,7 +1820,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         }
                     }
                 }
-                
+
                 // 如果没有文件列表，尝试从DataObject中获取其他可能的文件名信息
                 IDataObject dataObject = Clipboard.GetDataObject();
                 if (dataObject != null)
@@ -1288,7 +1861,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 // 忽略剪贴板操作的错误
             }
-            
+
             return null; // 无法获取文件名
         }
 
@@ -1322,20 +1895,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             try
             {
-                if (image.RawFormat.Equals(ImageFormat.Jpeg))
-                    return "jpg";
-                else if (image.RawFormat.Equals(ImageFormat.Png))
-                    return "png";
-                else if (image.RawFormat.Equals(ImageFormat.Bmp))
-                    return "bmp";
-                else if (image.RawFormat.Equals(ImageFormat.Gif))
-                    return "gif";
-                else if (image.RawFormat.Equals(ImageFormat.Tiff))
-                    return "tiff";
-                else if (image.RawFormat.Equals(ImageFormat.Icon))
-                    return "ico";
-                else
+                if (image == null)
                     return "";
+
+                // 使用ImageUtils工具类获取格式扩展名，并去掉前面的点号
+                string extensionWithDot = ImageUtils.GetFormatExtension(image.RawFormat);
+                return extensionWithDot.TrimStart('.');
             }
             catch (Exception)
             {
@@ -1367,20 +1932,24 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         this.Image = Image.FromFile(openFileDialog.FileName);
                         string newhash = ImageHelper.GetImageHash(this.Image);
                         RowImage.SetImageNewHash(newhash);
-                        
+
+                        // 获取文件信息
+                        var fileInfo = new FileInfo(openFileDialog.FileName);
+
                         // 如果是多图片模式，添加到列表中
                         if (MultiImageSupport)
                         {
                             images.Add(this.Image);
-                            // 获取文件信息
-                            var fileInfo = new FileInfo(openFileDialog.FileName);
                             imageInfos.Add(new ImageInfo
                             {
-                                FileName = fileInfo.Name,
+                                OriginalFileName = fileInfo.Name,
                                 FileSize = fileInfo.Length,
                                 CreateTime = fileInfo.CreationTime,
-                                FilePath = openFileDialog.FileName,
-                                Description = ""
+                                FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
+                                HashValue = CalculateImageHash(this.Image),
+                                Width = this.Image?.Width ?? 0,
+                                Height = this.Image?.Height ?? 0
+
                             });
                             currentImageIndex = images.Count - 1;
                             CreateNavigationControls();
@@ -1388,15 +1957,29 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             UpdateImagePathsFromImages(); // 更新图片路径
                             CreateInfoPanel();
                         }
+                        else
+                        {
+                            images.Add(this.Image);
+                            imageInfos.Add(new ImageInfo
+                            {
+                                OriginalFileName = fileInfo.Name,
+                                FileSize = fileInfo.Length,
+                                CreateTime = fileInfo.CreationTime,
+                                FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
+                                HashValue = CalculateImageHash(this.Image),
+                                Width = this.Image?.Width ?? 0,
+                                Height = this.Image?.Height ?? 0
+                            });
+                            currentImageIndex = images.Count - 1;
+                            UpdateInfoPanel();
+                        }
                     }
-                }
-            }
-            else
-            {
-                // 显示图片，这里只是简单地在PictureBox中显示，你可以根据需要实现更复杂的显示逻辑
-                AddContextMenuItems();
-                //如果是裁剪状态，则不显示大图。双击将截取的图片替换到控件中。并退出裁剪状态
-                if (isCropping)
+                    else
+                    {
+                        // 显示图片，这里只是简单地在PictureBox中显示，你可以根据需要实现更复杂的显示逻辑
+                        AddContextMenuItems();
+                        //如果是裁剪状态，则不显示大图。双击将截取的图片替换到控件中。并退出裁剪状态
+                        if (isCropping)
                         {
                             // 保存原始图片信息
                             ImageInfo originalInfo = null;
@@ -1408,69 +1991,79 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             {
                                 originalInfo = imageInfos[0];
                             }
-                            
+
                             this.Image = CropImage(this.Image, cropRectangle);
                             string newhash = ImageHelper.GetImageHash(this.Image);
                             RowImage.SetImageNewHash(newhash);
-                            
+
                             // 更新多图片列表中的当前图片
                             if (MultiImageSupport && currentImageIndex < images.Count)
                             {
                                 images[currentImageIndex] = this.Image;
                                 UpdateImagePathsFromImages(); // 更新图片路径
-                                
-                                // 更新图片信息，保留原始文件名
-                                if (currentImageIndex < imageInfos.Count && originalInfo != null)
-                                {
-                                    imageInfos[currentImageIndex] = new ImageInfo
-                                    {
-                                        FileName = originalInfo.FileName, // 保留原始文件名
-                                        FileSize = GetImageFileSize(this.Image), // 更新文件大小
-                                        CreateTime = originalInfo.CreateTime,
-                                        FilePath = originalInfo.FilePath,
-                                        Description = originalInfo.Description,
-                                        FileType = originalInfo.FileType,
-                                        Status = originalInfo.Status
-                                    };
-                                }
-                                else if (originalInfo != null)
-                                {
-                                    imageInfos.Add(new ImageInfo
-                                    {
-                                        FileName = originalInfo.FileName,
-                                        FileSize = GetImageFileSize(this.Image),
-                                        CreateTime = originalInfo.CreateTime,
-                                        FilePath = originalInfo.FilePath,
-                                        Description = originalInfo.Description,
-                                        FileType = originalInfo.FileType,
-                                        Status = originalInfo.Status
-                                    });
-                                }
+
+                                // 使用新方法更新图片及其信息，自动处理哈希值比较和版本管理
+                                UpdateImageWithOriginalInfo(currentImageIndex, this.Image, "旋转图片");
+
+                                // 标记图片为已更新，以便业务层处理时能识别出需要上传的图片
+                                MarkImageAsUpdated(currentImageIndex);
                             }
                             else if (originalInfo != null) // 单图片模式
                             {
-                                // 更新单图片信息，保留原始文件名
-                                imageInfos[0] = new ImageInfo
+                                // 在单图片模式下，我们也使用UpdateImageWithOriginalInfo，但需要特殊处理
+                                try
                                 {
-                                    FileName = originalInfo.FileName,
-                                    FileSize = GetImageFileSize(this.Image),
-                                    CreateTime = originalInfo.CreateTime,
-                                    FilePath = originalInfo.FilePath,
-                                    Description = originalInfo.Description,
-                                    FileType = originalInfo.FileType,
-                                    Status = originalInfo.Status
-                                };
+                                    // 为单图片模式临时启用多图片支持以便使用更新方法
+                                    bool wasMultiImageSupported = MultiImageSupport;
+                                    MultiImageSupport = true;
+
+                                    // 确保图片列表不为空
+                                    if (images == null || images.Count == 0)
+                                    {
+                                        images = new List<Image> { this.Image };
+                                        currentImageIndex = 0;
+                                    }
+                                    else if (images.Count > 0)
+                                    {
+                                        images[0] = this.Image;
+                                        currentImageIndex = 0;
+                                    }
+
+                                    // 更新图片信息
+                                    UpdateImageWithOriginalInfo(0, this.Image, "裁剪图片");
+
+                                    // 标记为已更新
+                                    MarkImageAsUpdated(0);
+
+                                    // 恢复多图片支持设置
+                                    MultiImageSupport = wasMultiImageSupported;
+
+                                    // 确保单图片模式下的Image属性也被更新
+                                    if (!wasMultiImageSupported && images.Count > 0)
+                                    {
+                                        this.Image = images[0];
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"单图片模式下更新图片信息失败: {ex.Message}");
+                                }
                             }
-                            
+
                             isCropping = false;
                         }
-                else
-                {
-                    ViewLargeImage(sender, e);
-                }
+                        else
+                        {
+                            ViewLargeImage(sender, e);
+                        }
 
+                    }
+                }
             }
         }
+
+
+
 
         /// <summary>
         /// 鼠标进入控件事件
@@ -1578,77 +2171,55 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 isPanning = false;
             }
             else if (isCropping && e.Button == MouseButtons.Left)
+            {
+                isCropping = false;
+                this.Cursor = Cursors.Default;
+                if (cropRectangle.Width > 0 && cropRectangle.Height > 0)
+                {
+                    // 保存原始图片信息
+                    ImageInfo originalInfo = null;
+                    if (MultiImageSupport && currentImageIndex < imageInfos.Count)
                     {
-                        isCropping = false;
-                        this.Cursor = Cursors.Default;
-                        if (cropRectangle.Width > 0 && cropRectangle.Height > 0)
-                        {
-                            // 保存原始图片信息
-                            ImageInfo originalInfo = null;
-                            if (MultiImageSupport && currentImageIndex < imageInfos.Count)
-                            {
-                                originalInfo = imageInfos[currentImageIndex];
-                            }
-                            else if (imageInfos.Count > 0)
-                            {
-                                originalInfo = imageInfos[0];
-                            }
-                            
-                            this.Image = CropImage(this.Image, cropRectangle);
-                            string newhash = ImageHelper.GetImageHash(this.Image);
-                            RowImage.SetImageNewHash(newhash);
-                            
-                            // 更新多图片列表中的当前图片
-                            if (MultiImageSupport && currentImageIndex < images.Count)
-                            {
-                                images[currentImageIndex] = this.Image;
-                                
-                                // 更新图片信息，保留原始文件名
-                                if (currentImageIndex < imageInfos.Count && originalInfo != null)
-                                {
-                                    imageInfos[currentImageIndex] = new ImageInfo
-                                    {
-                                        FileName = originalInfo.FileName, // 保留原始文件名
-                                        FileSize = GetImageFileSize(this.Image), // 更新文件大小
-                                        CreateTime = originalInfo.CreateTime,
-                                        FilePath = originalInfo.FilePath,
-                                        Description = originalInfo.Description,
-                                        FileType = originalInfo.FileType,
-                                        Status = originalInfo.Status
-                                    };
-                                }
-                                else if (originalInfo != null)
-                                {
-                                    imageInfos.Add(new ImageInfo
-                                    {
-                                        FileName = originalInfo.FileName,
-                                        FileSize = GetImageFileSize(this.Image),
-                                        CreateTime = originalInfo.CreateTime,
-                                        FilePath = originalInfo.FilePath,
-                                        Description = originalInfo.Description,
-                                        FileType = originalInfo.FileType,
-                                        Status = originalInfo.Status
-                                    });
-                                }
-                            }
-                            else if (originalInfo != null) // 单图片模式
-                            {
-                                // 更新单图片信息，保留原始文件名
-                                imageInfos[0] = new ImageInfo
-                                {
-                                    FileName = originalInfo.FileName,
-                                    FileSize = GetImageFileSize(this.Image),
-                                    CreateTime = originalInfo.CreateTime,
-                                    FilePath = originalInfo.FilePath,
-                                    Description = originalInfo.Description,
-                                    FileType = originalInfo.FileType,
-                                    Status = originalInfo.Status
-                                };
-                            }
-                            
-                            cropRectangle = Rectangle.Empty;
-                        }
+                        originalInfo = imageInfos[currentImageIndex];
                     }
+                    else if (imageInfos.Count > 0)
+                    {
+                        originalInfo = imageInfos[0];
+                    }
+
+                    this.Image = CropImage(this.Image, cropRectangle);
+                    string newhash = ImageHelper.GetImageHash(this.Image);
+                    RowImage.SetImageNewHash(newhash);
+
+                    // 更新多图片列表中的当前图片
+                    if (MultiImageSupport && currentImageIndex < images.Count)
+                    {
+                        images[currentImageIndex] = this.Image;
+
+                        // 使用新方法更新图片及其信息，自动处理哈希值比较和版本管理
+                        UpdateImageWithOriginalInfo(currentImageIndex, this.Image, "裁剪图片");
+
+                        // 标记图片为已更新，以便业务层处理时能识别出需要上传的图片
+                        MarkImageAsUpdated(currentImageIndex);
+                    }
+                    else if (originalInfo != null) // 单图片模式
+                    {
+                        // 更新单图片信息，保留原始文件名
+                        imageInfos[0] = new ImageInfo
+                        {
+                            OriginalFileName = originalInfo.OriginalFileName,
+                            FileSize = GetImageFileSize(this.Image),
+                            CreateTime = originalInfo.CreateTime,
+                            Metadata = originalInfo.Metadata,
+                            FileType = originalInfo.FileType,
+                            FileExtension = originalInfo.FileExtension,
+
+                        };
+                    }
+
+                    cropRectangle = Rectangle.Empty;
+                }
+            }
         }
 
         /// <summary>
@@ -1694,40 +2265,39 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 {
                     originalInfo = imageInfos[0];
                 }
-                
+
                 rotationAngle += 90;
                 this.Image = RotateImage(this.Image, rotationAngle);
-                
+
                 // 更新多图片列表中的当前图片
                 if (MultiImageSupport && currentImageIndex < images.Count)
                 {
                     images[currentImageIndex] = this.Image;
-                    
+
                     // 更新图片信息，保留原始文件名
                     if (currentImageIndex < imageInfos.Count && originalInfo != null)
                     {
                         imageInfos[currentImageIndex] = new ImageInfo
                         {
-                            FileName = originalInfo.FileName, // 保留原始文件名
+                            OriginalFileName = originalInfo.OriginalFileName, // 保留原始文件名
                             FileSize = GetImageFileSize(this.Image), // 更新文件大小
                             CreateTime = originalInfo.CreateTime,
-                            FilePath = originalInfo.FilePath,
-                            Description = originalInfo.Description,
+                            Metadata = originalInfo.Metadata,
                             FileType = originalInfo.FileType,
-                            Status = originalInfo.Status
+
                         };
                     }
                     else if (originalInfo != null)
                     {
                         imageInfos.Add(new ImageInfo
                         {
-                            FileName = originalInfo.FileName,
+                            OriginalFileName = originalInfo.OriginalFileName,
                             FileSize = GetImageFileSize(this.Image),
                             CreateTime = originalInfo.CreateTime,
-                            FilePath = originalInfo.FilePath,
-                            Description = originalInfo.Description,
+                            Metadata = originalInfo.Metadata,
                             FileType = originalInfo.FileType,
-                            Status = originalInfo.Status
+                            FileExtension = originalInfo.FileExtension,
+
                         });
                     }
                 }
@@ -1736,13 +2306,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     // 更新单图片信息，保留原始文件名
                     imageInfos[0] = new ImageInfo
                     {
-                        FileName = originalInfo.FileName,
+                        OriginalFileName = originalInfo.OriginalFileName,
                         FileSize = GetImageFileSize(this.Image),
                         CreateTime = originalInfo.CreateTime,
-                        FilePath = originalInfo.FilePath,
-                        Description = originalInfo.Description,
+                        Metadata = originalInfo.Metadata,
                         FileType = originalInfo.FileType,
-                        Status = originalInfo.Status
+                        FileExtension = originalInfo.FileExtension,
+
                     };
                 }
             }
@@ -1751,23 +2321,30 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// <summary>
         /// 旋转图像
         /// </summary>
-        /// <param name="img"></param>
-        /// <param name="angle"></param>
-        /// <returns></returns>
+        /// <param name="img">原始图像</param>
+        /// <param name="angle">旋转角度</param>
+        /// <returns>旋转后的图像</returns>
         private Image RotateImage(Image img, float angle)
         {
-            // Rotate the image around its center
-            using (var graphics = Graphics.FromImage(img))
+            // 创建一个新的位图用于旋转，避免修改原图
+            Bitmap bmp = new Bitmap(img.Width, img.Height);
+            using (Graphics graphics = Graphics.FromImage(bmp))
             {
+                // 设置高质量渲染
+                graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+
+                // 旋转图像
                 graphics.TranslateTransform(img.Width / 2, img.Height / 2);
                 graphics.RotateTransform(angle);
                 graphics.TranslateTransform(-img.Width / 2, -img.Height / 2);
-                var bmp = new Bitmap(img.Width, img.Height);
                 graphics.DrawImage(img, new Point(0, 0));
-                return bmp;
             }
+            return bmp;
         }
-        
+
         /// <summary>
         /// 从文件存储信息加载图片
         /// </summary>
@@ -1779,24 +2356,38 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 throw new InvalidOperationException("多图片支持未启用");
             }
-            
-            if (fileStorageInfos == null || imageBytesList == null || 
+
+            if (fileStorageInfos == null || imageBytesList == null ||
                 fileStorageInfos.Count != imageBytesList.Count)
             {
                 throw new ArgumentException("文件信息和图片数据数量不匹配");
             }
-            
+
             images.Clear();
             imageInfos.Clear();
-            
+
             for (int i = 0; i < fileStorageInfos.Count; i++)
             {
                 try
                 {
-                    using (var ms = new MemoryStream(imageBytesList[i]))
+                    byte[] imageBytes = imageBytesList[i];
+                    using (var ms = new MemoryStream(imageBytes))
                     {
                         images.Add(Image.FromStream(ms));
-                        imageInfos.Add(fileStorageInfos[i]);
+
+                        // 创建一个新的ImageInfo实例，复制原始信息
+                        ImageInfo newInfo = new ImageInfo
+                        {
+                            OriginalFileName = fileStorageInfos[i].OriginalFileName,
+                            FileSize = imageBytes.Length,
+                            CreateTime = fileStorageInfos[i].CreateTime,
+                            Metadata = fileStorageInfos[i].Metadata,
+                            FileType = fileStorageInfos[i].FileType,
+                            HashValue = CalculateImageHash(imageBytes), // 计算并设置哈希值
+                            ModifiedAt = fileStorageInfos[i].ModifiedAt,
+                        };
+
+                        imageInfos.Add(newInfo);
                     }
                 }
                 catch
@@ -1804,13 +2395,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     // 加载失败，跳过
                 }
             }
-            
+
             currentImageIndex = 0;
             ShowCurrentImage();
             CreateNavigationControls();
             CreateInfoPanel();
         }
-        
+
         /// <summary>
         /// 从文件存储信息加载单张图片
         /// </summary>
@@ -1822,9 +2413,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 throw new ArgumentException("文件信息或图片数据不能为空");
             }
-            
+
             try
             {
+                // 计算哈希值
+                string hashValue = CalculateImageHash(imageBytes);
+
                 using (var ms = new MemoryStream(imageBytes))
                 {
                     if (MultiImageSupport)
@@ -1832,7 +2426,23 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         images.Clear();
                         imageInfos.Clear();
                         images.Add(Image.FromStream(ms));
-                        imageInfos.Add(fileStorageInfo);
+
+                        // 如果没有图片信息，创建一个新的
+                        ImageInfo newInfo = new ImageInfo
+                        {
+                            OriginalFileName = fileStorageInfo.OriginalFileName,
+                            FileSize = imageBytes.Length,
+                            CreateTime = fileStorageInfo.CreateTime,
+                            FileType = fileStorageInfo.FileType,
+                            FileExtension = fileStorageInfo.FileExtension,
+                            HashValue = hashValue, // 设置哈希值
+                            Metadata = fileStorageInfo.Metadata,
+                            ModifiedAt = fileStorageInfo.ModifiedAt,
+                            Width = this.Image?.Width ?? 0,
+                            Height = this.Image?.Height ?? 0
+                        };
+
+                        imageInfos.Add(newInfo);
                         currentImageIndex = 0;
                         ShowCurrentImage();
                         CreateNavigationControls();
@@ -1841,6 +2451,36 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     else
                     {
                         this.Image = Image.FromStream(ms);
+
+                        // 在单图片模式下更新图片信息
+                        if (imageInfos.Count > 0)
+                        {
+                            imageInfos[0].OriginalFileName = fileStorageInfo.OriginalFileName;
+                            imageInfos[0].FileSize = imageBytes.Length;
+                            imageInfos[0].CreateTime = fileStorageInfo.CreateTime;
+                            imageInfos[0].Metadata = fileStorageInfo.Metadata;
+                            imageInfos[0].FileType = fileStorageInfo.FileType;
+                            imageInfos[0].HashValue = hashValue; // 设置哈希值
+                            imageInfos[0].ModifiedAt = fileStorageInfo.ModifiedAt;
+                        }
+                        else
+                        {
+                            // 如果没有图片信息，创建一个新的
+                            ImageInfo newInfo = new ImageInfo
+                            {
+                                OriginalFileName = fileStorageInfo.OriginalFileName,
+                                FileSize = imageBytes.Length,
+                                CreateTime = fileStorageInfo.CreateTime,
+                                FileType = fileStorageInfo.FileType,
+                                FileExtension = fileStorageInfo.FileExtension,
+                                HashValue = hashValue, // 设置哈希值
+                                Metadata = fileStorageInfo.Metadata,
+                                ModifiedAt = fileStorageInfo.ModifiedAt,
+                                Width = images[images.Count - 1]?.Width ?? 0,
+                                Height = images[images.Count - 1]?.Height ?? 0
+                            };
+                            imageInfos.Add(newInfo);
+                        }
                     }
                 }
             }
@@ -1850,7 +2490,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 MessageBox.Show($"加载图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
         /// 获取当前图片路径
         /// </summary>
@@ -1870,7 +2510,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
             return "";
         }
-        
+
         /// <summary>
         /// 获取所有图片
         /// </summary>
@@ -1879,23 +2519,74 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             return new List<Image>(images);
         }
-        
+
         /// <summary>
         /// 设置图片列表
         /// </summary>
         /// <param name="imageList">图片列表</param>
         public void SetImages(List<Image> imageList)
         {
-            if (MultiImageSupport)
+            if (MultiImageSupport && imageList != null)
             {
                 images = new List<Image>(imageList);
+                imageInfos.Clear(); // 清空旧的图片信息
+
+                // 为每个图片创建ImageInfo对象并计算哈希值
+                for (int i = 0; i < imageList.Count; i++)
+                {
+                    try
+                    {
+                        // 将图片转换为字节数组
+                        byte[] imageBytes;
+                        using (MemoryStream ms = new MemoryStream())
+                        {
+                            imageList[i].Save(ms, ImageFormat.Jpeg);
+                            imageBytes = ms.ToArray();
+                        }
+
+                        // 计算哈希值
+                        string hashValue = CalculateImageHash(imageBytes);
+
+                        // 创建ImageInfo对象
+                        imageInfos.Add(new ImageInfo
+                        {
+                            OriginalFileName = $"图片{i + 1}",
+                            FileSize = imageBytes.Length,
+                            CreateTime = DateTime.Now,
+                            Metadata = new Dictionary<string, string>(),
+                            HashValue = hashValue,
+                            IsUpdated = true, // 标记为已更新
+                            Width = imageList[i]?.Width ?? 0,
+                            Height = imageList[i]?.Height ?? 0
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        // 处理异常，记录错误信息
+                        System.Diagnostics.Debug.WriteLine($"处理图片{i + 1}时出错: {ex.Message}");
+                        // 为出错的图片创建一个基本的ImageInfo对象
+                        imageInfos.Add(new ImageInfo
+                        {
+                            OriginalFileName = $"图片{i + 1}",
+                            FileSize = 0,
+                            CreateTime = DateTime.Now,
+                            Metadata = new Dictionary<string, string> { { "Error", "加载失败" } },
+                            HashValue = "",
+                            IsUpdated = false,
+                            Width = 0,
+                            Height = 0
+                        });
+                    }
+                }
+
                 currentImageIndex = 0;
                 ShowCurrentImage();
                 CreateNavigationControls();
+                CreateInfoPanel(); // 创建信息面板
                 UpdateImagePathsFromImages(); // 更新图片路径
             }
         }
-        
+
         /// <summary>
         /// 将当前图片转换为byte[]
         /// </summary>
@@ -1906,7 +2597,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             // 如果没有指定格式，默认使用JPEG格式
             if (format == null)
                 format = ImageFormat.Jpeg;
-                
+
             // 获取当前显示的图片
             Image currentImage = null;
             if (MultiImageSupport && images.Count > 0 && currentImageIndex < images.Count)
@@ -1917,11 +2608,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 currentImage = this.Image;
             }
-            
+
             // 如果没有图片，返回null
             if (currentImage == null)
                 return null;
-                
+
             try
             {
                 using (var ms = new MemoryStream())
@@ -1936,7 +2627,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 将所有图片转换为byte[]数组列表
         /// </summary>
@@ -1945,11 +2636,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         public List<byte[]> GetAllImageBytes(ImageFormat format = null)
         {
             List<byte[]> imageBytesList = new List<byte[]>();
-            
+
             // 如果没有指定格式，默认使用JPEG格式
             if (format == null)
                 format = ImageFormat.Jpeg;
-                
+
             // 获取所有图片
             List<Image> allImages = new List<Image>();
             if (MultiImageSupport && images.Count > 0)
@@ -1960,7 +2651,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 allImages.Add(this.Image);
             }
-            
+
             // 转换每张图片为byte[]
             foreach (var image in allImages)
             {
@@ -1978,10 +2669,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     imageBytesList.Add(null);
                 }
             }
-            
+
             return imageBytesList;
         }
-        
+
         /// <summary>
         /// 获取所有图片及其对应信息的组合
         /// </summary>
@@ -1990,11 +2681,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         public List<Tuple<byte[], ImageInfo>> GetAllImageBytesWithInfo(ImageFormat format = null)
         {
             List<Tuple<byte[], ImageInfo>> imageBytesWithInfoList = new List<Tuple<byte[], ImageInfo>>();
-            
+
             // 如果没有指定格式，默认使用JPEG格式
             if (format == null)
                 format = ImageFormat.Jpeg;
-                
+
             // 检查图片和信息数量是否匹配
             if (MultiImageSupport && images.Count > 0)
             {
@@ -2009,7 +2700,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             images[i].Save(ms, format);
                             imageBytes = ms.ToArray();
                         }
-                        
+
                         // 获取对应的图片信息
                         ImageInfo imageInfo = null;
                         if (i < imageInfos.Count)
@@ -2025,21 +2716,21 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         {
                             // 如果没有对应的信息，创建更有意义的默认信息
                             string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                            string formatExtension = GetFormatExtension(format);
+                            string formatExtension = ImageUtils.GetFormatExtension(format);
                             string defaultFileName = $"图片_{timestamp}_{i + 1}.{formatExtension}";
-                            
+
                             imageInfo = new ImageInfo
                             {
-                                FileName = defaultFileName,
+                                OriginalFileName = defaultFileName,
                                 FileSize = imageBytes?.Length ?? 0,
                                 CreateTime = DateTime.Now,
-                                FilePath = "",
-                                Description = "自动生成的图片信息",
+                                Metadata = new Dictionary<string, string> { { "Description", "自动生成的图片信息" } },
                                 FileType = formatExtension,
-                                Status = 1 // 1表示有效状态
+                                Width = this.Image?.Width ?? 0,
+                                Height = this.Image?.Height ?? 0
                             };
                         }
-                        
+
                         imageBytesWithInfoList.Add(new Tuple<byte[], ImageInfo>(imageBytes, imageInfo));
                     }
                     catch (Exception ex)
@@ -2061,7 +2752,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         this.Image.Save(ms, format);
                         imageBytes = ms.ToArray();
                     }
-                    
+
                     // 获取图片信息
                     ImageInfo imageInfo = null;
                     if (imageInfos.Count > 0)
@@ -2077,21 +2768,19 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     {
                         // 如果没有信息，创建更有意义的默认信息
                         string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                        string formatExtension = GetFormatExtension(format);
+                        string formatExtension = ImageUtils.GetFormatExtension(format);
                         string defaultFileName = $"图片_{timestamp}.{formatExtension}";
-                        
+
                         imageInfo = new ImageInfo
                         {
-                            FileName = defaultFileName,
+                            OriginalFileName = defaultFileName,
                             FileSize = imageBytes?.Length ?? 0,
                             CreateTime = DateTime.Now,
-                            FilePath = "",
-                            Description = "自动生成的图片信息",
+                            Metadata = new Dictionary<string, string> { { "Description", "自动生成的图片信息" } },
                             FileType = formatExtension,
-                            Status = 1 // 1表示有效状态
                         };
                     }
-                    
+
                     imageBytesWithInfoList.Add(new Tuple<byte[], ImageInfo>(imageBytes, imageInfo));
                 }
                 catch (Exception ex)
@@ -2100,32 +2789,419 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     System.Diagnostics.Debug.WriteLine($"获取单张图片数据失败: {ex.Message}");
                 }
             }
-            
+
             return imageBytesWithInfoList;
         }
-        
+
         /// <summary>
-        /// 获取图像格式对应的文件扩展名
+        /// 计算图片内容的哈希值
         /// </summary>
-        /// <param name="format">图像格式</param>
-        /// <returns>扩展名（不含点号）</returns>
-        private string GetFormatExtension(ImageFormat format)
+        #region 图片处理功能
+
+        /// <summary>
+        /// 将Image对象转换为字节数组
+        /// </summary>
+        /// <param name="image">Image对象</param>
+        /// <param name="format">图片格式，如果为null则默认使用JPEG</param>
+        /// <returns>转换后的字节数组</returns>
+        public byte[] ImageToBytes(Image image, ImageFormat format = null)
         {
-            if (format == ImageFormat.Jpeg)
-                return "jpg";
-            else if (format == ImageFormat.Png)
-                return "png";
-            else if (format == ImageFormat.Bmp)
-                return "bmp";
-            else if (format == ImageFormat.Gif)
-                return "gif";
-            else if (format == ImageFormat.Tiff)
-                return "tiff";
-            else if (format == ImageFormat.Icon)
-                return "ico";
-            else
-                return "jpg"; // 默认返回jpg
+            if (image == null)
+            {
+                throw new ArgumentNullException(nameof(image), "Image对象不能为空");
+            }
+
+            // 如果未指定格式，默认使用JPEG
+            var outputFormat = format ?? ImageFormat.Jpeg;
+
+            using (var memoryStream = new MemoryStream())
+            {
+                image.Save(memoryStream, outputFormat);
+                return memoryStream.ToArray();
+            }
         }
+
+        /// <summary>
+        /// 将字节数组转换为Image对象
+        /// </summary>
+        /// <param name="bytes">图片字节数组</param>
+        /// <returns>转换后的Image对象</returns>
+        public Image BytesToImage(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0)
+            {
+                throw new ArgumentNullException(nameof(bytes), "图片字节数组不能为空");
+            }
+
+            try
+            {
+                using (var memoryStream = new MemoryStream(bytes))
+                {
+                    return Image.FromStream(memoryStream);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"BytesToImage 错误: {ex.Message}");
+                throw;
+            }
+        }
+
+
+
+        /// <summary>
+        /// 调整图片尺寸
+        /// </summary>
+        /// <param name="image">原始图片</param>
+        /// <param name="newWidth">新宽度</param>
+        /// <param name="newHeight">新高度</param>
+        /// <returns>调整尺寸后的图片</returns>
+        public Image ResizeImage(Image image, int newWidth, int newHeight)
+        {
+            try
+            {
+                if (image == null)
+                {
+                    throw new ArgumentNullException("image", "图片对象不能为空");
+                }
+
+                // 验证尺寸参数
+                if (newWidth <= 0 || newHeight <= 0)
+                {
+                    throw new ArgumentOutOfRangeException("newWidth, newHeight", "图片尺寸必须大于0");
+                }
+
+                // 使用ImageProcessor组件处理图片缩放
+                return _imageProcessor.ResizeImage(image, newWidth, newHeight);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误并返回null，避免影响后续操作
+                System.Diagnostics.Debug.WriteLine($"调整图片尺寸失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                MessageBox.Show($"图片缩放失败: {ex.Message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取图片编码器
+        /// </summary>
+        /// <param name="format">图片格式</param>
+        /// <returns>对应的图片编码器</returns>
+        private ImageCodecInfo GetEncoder(ImageFormat format)
+        {
+            var codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (var codec in codecs)
+            {
+                if (codec.FormatID == format.Guid)
+                {
+                    return codec;
+                }
+            }
+            return null;
+        }
+
+        #region 哈希计算功能
+
+        /// <summary>
+        /// 计算图片字节数据的哈希值
+        /// </summary>
+        /// <param name="imageBytes">图片字节数据</param>
+        /// <returns>哈希值字符串</returns>
+        public string CalculateImageHash(byte[] imageBytes)
+        {
+            try
+            {
+                if (imageBytes == null || imageBytes.Length == 0)
+                {
+                    throw new ArgumentException("图片字节数组不能为空");
+                }
+                return _hashCalculator.CalculateHash(imageBytes);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误并返回空字符串，避免影响后续操作
+                System.Diagnostics.Debug.WriteLine($"计算图片哈希值失败: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 计算Image对象的哈希值
+        /// </summary>
+        /// <param name="image">Image对象</param>
+        /// <returns>哈希值字符串</returns>
+        public string CalculateImageHash(Image image)
+        {
+            try
+            {
+                if (image == null)
+                {
+                    throw new ArgumentNullException("image", "图片对象不能为空");
+                }
+                return _hashCalculator.CalculateHash(image);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误并返回空字符串，避免影响后续操作
+                System.Diagnostics.Debug.WriteLine($"计算图片哈希值失败: {ex.Message}");
+                return string.Empty;
+            }
+        }
+
+        #endregion
+
+        #endregion
+
+        /// <summary>
+        /// 比较两张图片是否相同（基于哈希值）
+        /// </summary>
+        /// <param name="imageBytes1">第一张图片的字节数据</param>
+        /// <param name="imageBytes2">第二张图片的字节数据</param>
+        /// <returns>如果相同返回true，否则返回false</returns>
+        public bool AreImagesEqual(byte[] imageBytes1, byte[] imageBytes2)
+        {
+            try
+            {
+                // 验证参数
+                if (imageBytes1 == null || imageBytes2 == null)
+                {
+                    // 两个都是null视为相等，只有一个是null视为不相等
+                    return imageBytes1 == imageBytes2;
+                }
+
+                if (imageBytes1.Length == 0 || imageBytes2.Length == 0)
+                {
+                    // 两个都是空数组视为相等，只有一个是空数组视为不相等
+                    return imageBytes1.Length == imageBytes2.Length;
+                }
+
+                // 使用哈希计算器组件比较图片
+                return _hashCalculator.AreImagesEqual(imageBytes1, imageBytes2);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误并返回false，避免影响后续操作
+                System.Diagnostics.Debug.WriteLine($"比较图片失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 比较两个Image对象是否相同（基于哈希值）
+        /// </summary>
+        /// <param name="image1">第一个Image对象</param>
+        /// <param name="image2">第二个Image对象</param>
+        /// <returns>如果相同返回true，否则返回false</returns>
+        public bool AreImagesEqual(Image image1, Image image2)
+        {
+            try
+            {
+                // 验证参数
+                if (image1 == null || image2 == null)
+                {
+                    // 两个都是null视为相等，只有一个是null视为不相等
+                    return image1 == image2;
+                }
+
+                // 使用哈希计算器组件比较图片
+                return _hashCalculator.AreImagesEqual(image1, image2);
+            }
+            catch (Exception ex)
+            {
+                // 记录错误并返回false，避免影响后续操作
+                System.Diagnostics.Debug.WriteLine($"比较图片失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 更新图片时保留原始信息
+        /// </summary>
+        /// <param name="index">图片索引</param>
+        /// <param name="newImage">新图片</param>
+        /// <param name="updateReason">更新原因</param>
+        public void UpdateImageWithOriginalInfo(int index, Image newImage, string updateReason = "")
+        {
+            try
+            {
+                if (MultiImageSupport && index >= 0 && index < images.Count)
+                {
+                    // 保存原始信息
+                    ImageInfo originalInfo = index < imageInfos.Count ? imageInfos[index] : null;
+
+                    // 检查图片是否有变化
+                    bool hasChanged = true;
+                    byte[] oldImageBytes = null;
+                    byte[] newImageBytes = null;
+
+                    using (var ms = new MemoryStream())
+                    {
+                        newImage.Save(ms, ImageFormat.Jpeg);
+                        newImageBytes = ms.ToArray();
+                    }
+
+                    if (originalInfo != null && !string.IsNullOrEmpty(originalInfo.HashValue))
+                    {
+                        // 计算新图片的哈希值并与原始哈希值比较
+                        string newHash = CalculateImageHash(newImageBytes);
+                        hasChanged = newHash != originalInfo.HashValue;
+                    }
+                    else if (images[index] != null)
+                    {
+                        // 如果没有原始哈希值，比较两个图片的内容
+                        using (var ms = new MemoryStream())
+                        {
+                            images[index].Save(ms, ImageFormat.Jpeg);
+                            oldImageBytes = ms.ToArray();
+                        }
+                        hasChanged = !AreImagesEqual(oldImageBytes, newImageBytes);
+                    }
+
+                    // 更新图片
+                    images[index] = newImage;
+
+                    // 如果图片内容有变化或没有原始信息，更新信息
+                    if (hasChanged || originalInfo == null)
+                        if (hasChanged || originalInfo == null)
+                        {
+                            if (originalInfo != null)
+                            {
+                                // 保留原始信息但更新文件大小和哈希值
+                                imageInfos[index] = new ImageInfo
+                                {
+                                    OriginalFileName = originalInfo.OriginalFileName, // 保留原始文件名
+                                    FileSize = GetImageFileSize(newImage), // 更新文件大小
+                                    CreateTime = originalInfo.CreateTime, // 保留创建时间
+                                    Metadata = originalInfo.Metadata,
+                                    FileType = originalInfo.FileType,
+                                    HashValue = CalculateImageHash(newImageBytes), // 更新哈希值
+                                    ModifiedAt = DateTime.Now, // 更新修改时间
+                                    Width = newImage?.Width ?? 0,
+                                    Height = newImage?.Height ?? 0
+                                };
+                            }
+                            else
+                            {
+                                // 创建新的信息
+                                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                                string defaultFileName = $"图片_{timestamp}_{index + 1}.jpg";
+
+                                imageInfos[index] = new ImageInfo
+                                {
+                                    OriginalFileName = defaultFileName,
+                                    FileSize = GetImageFileSize(newImage),
+                                    CreateTime = DateTime.Now,
+                                    Metadata = new Dictionary<string, string>(),
+                                    FileType = "jpg",
+                                    HashValue = CalculateImageHash(newImageBytes),
+
+                                    ModifiedAt = DateTime.Now,
+                                    Width = newImage?.Width ?? 0,
+                                    Height = newImage?.Height ?? 0
+                                };
+                            }
+                        }
+
+                    ShowCurrentImage();
+                    UpdateInfoPanel();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"更新图片信息失败: {ex.Message}");
+                MessageBox.Show($"更新图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 标记图片为已更新（用于在业务层处理时识别需要上传的图片）
+        /// </summary>
+        /// <param name="index">图片索引</param>
+        public void MarkImageAsUpdated(int index)
+        {
+            if (index >= 0 && index < imageInfos.Count)
+            {
+                // 标记图片为需要更新
+                imageInfos[index].Metadata["UpdateMarker"] = "UPDATE_REQUIRED";
+                imageInfos[index].ModifiedAt = DateTime.Now;
+            }
+        }
+
+        /// <summary>
+        /// 检查图片是否需要更新
+        /// </summary>
+        /// <param name="index">图片索引</param>
+        /// <returns>如果需要更新返回true，否则返回false</returns>
+        public bool IsImageNeedingUpdate(int index)
+        {
+            if (index >= 0 && index < imageInfos.Count)
+            {
+                // 如果图片元数据标记为需要更新，或者哈希值不为空，则需要更新
+                return (imageInfos[index].Metadata.ContainsKey("UpdateMarker") && imageInfos[index].Metadata["UpdateMarker"] == "UPDATE_REQUIRED") ||
+                       (!string.IsNullOrEmpty(imageInfos[index].HashValue));
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 获取需要更新的图片及其信息
+        /// </summary>
+        /// <returns>需要更新的图片和信息列表</returns>
+        public List<Tuple<byte[], ImageInfo>> GetImagesNeedingUpdate()
+        {
+            List<Tuple<byte[], ImageInfo>> updateList = new List<Tuple<byte[], ImageInfo>>();
+
+            if (MultiImageSupport && images.Count > 0)
+            {
+                for (int i = 0; i < images.Count; i++)
+                {
+                    if (IsImageNeedingUpdate(i))
+                    {
+                        try
+                        {
+                            byte[] imageBytes = null;
+                            using (var ms = new MemoryStream())
+                            {
+                                images[i].Save(ms, ImageFormat.Jpeg);
+                                imageBytes = ms.ToArray();
+                            }
+
+                            updateList.Add(new Tuple<byte[], ImageInfo>(imageBytes, imageInfos[i]));
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"获取待更新图片数据失败 (索引 {i}): {ex.Message}");
+                        }
+                    }
+                }
+            }
+            else if (this.Image != null && imageInfos.Count > 0 && IsImageNeedingUpdate(0))
+            {
+                try
+                {
+                    byte[] imageBytes = null;
+                    using (var ms = new MemoryStream())
+                    {
+                        this.Image.Save(ms, ImageFormat.Jpeg);
+                        imageBytes = ms.ToArray();
+                    }
+
+                    updateList.Add(new Tuple<byte[], ImageInfo>(imageBytes, imageInfos[0]));
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"获取待更新单张图片数据失败: {ex.Message}");
+                }
+            }
+
+            return updateList;
+        }
+
+
+
+
 
         /// <summary>
         /// 释放资源
@@ -2141,6 +3217,22 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     infoPanelTimer.Stop();
                     infoPanelTimer.Dispose();
                     infoPanelTimer = null;
+                }
+
+                // 清空图片缓存，释放所有缓存的图片资源
+                ClearCache();
+
+                // 释放图片列表中的所有图片资源
+                if (MultiImageSupport && images != null)
+                {
+                    foreach (var image in images)
+                    {
+                        // 使用临时变量避免foreach迭代变量作为ref参数
+                        var tempImage = image;
+                        // 使用ImageUtils工具类安全释放图片资源
+                        ImageUtils.SafeDispose(ref tempImage);
+                    }
+                    images.Clear();
                 }
             }
             base.Dispose(disposing);

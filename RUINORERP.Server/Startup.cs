@@ -389,6 +389,9 @@ namespace RUINORERP.Server
             #region 工作流服务配置
             // 这是新增加工作流的服务
             services.AddWorkflowCoreServicesNew();
+            
+            // 注册临时图片清理工作流
+            TempImageCleanupWorkflowConfig.RegisterWorkflow(services);
 
             // 添加新的SuperSocket服务
             IConfigurationBuilder configurationBuilder2 = new ConfigurationBuilder();
@@ -811,13 +814,53 @@ namespace RUINORERP.Server
                     dlls.Add(file);
                 }
             }
-            var referencedAssemblies = getFiles.Select(Assembly.LoadFrom).ToList();
-            var ss = referencedAssemblies.SelectMany(o => o.GetTypes());
-            var types = referencedAssemblies
-                .SelectMany(a => a.DefinedTypes)
-                .Select(type => type.AsType())
-                .Where(x => x != baseType && baseType.IsAssignableFrom(x))
-                .ToList();
+            var referencedAssemblies = new List<Assembly>();
+            foreach (var file in getFiles)
+            {
+                try
+                {
+                    referencedAssemblies.Add(Assembly.LoadFrom(file));
+                }
+                catch (Exception ex)
+                {
+                    // 记录无法加载的程序集
+                    Console.WriteLine($"无法加载程序集 {file}: {ex.Message}");
+                    // 可以选择继续或抛出异常
+                }
+            }
+
+            var types = new List<Type>();
+            foreach (var assembly in referencedAssemblies)
+            {
+                try
+                {
+                    var assemblyTypes = assembly.GetTypes()
+                        .Where(x => x != baseType && baseType.IsAssignableFrom(x))
+                        .ToList();
+                    types.AddRange(assemblyTypes);
+                }
+                catch (ReflectionTypeLoadException ex)
+                {
+                    // 记录加载类型时的错误
+                    Console.WriteLine($"无法从程序集 {assembly.FullName} 加载所有类型:");
+                    foreach (var loaderException in ex.LoaderExceptions)
+                    {
+                        if (loaderException != null)
+                            Console.WriteLine($"  - {loaderException.Message}");
+                    }
+                    
+                    // 添加成功加载的类型
+                    var loadedTypes = ex.Types.Where(t => t != null).ToList();
+                    var filteredTypes = loadedTypes
+                        .Where(x => x != baseType && baseType.IsAssignableFrom(x))
+                        .ToList();
+                    types.AddRange(filteredTypes);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"处理程序集 {assembly.FullName} 时发生错误: {ex.Message}");
+                }
+            }
 
             var implementTypes = types.Where(x => x.IsClass).ToList();
             var interfaceTypes = types.Where(x => x.IsInterface).ToList();

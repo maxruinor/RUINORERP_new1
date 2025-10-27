@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2025 15:32:20
+// 时间：10/27/2025 17:49:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -51,14 +51,14 @@ namespace RUINORERP.Model
             }
         }
 
-        private long? _FileId;
+        private long _FileId;
         /// <summary>
         /// 文件ID
         /// </summary>
         [AdvQueryAttribute(ColName = "FileId",ColDesc = "文件ID")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "FileId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "文件ID" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "FileId" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "文件ID" )]
         [FKRelationAttribute("tb_FS_FileStorageInfo","FileId")]
-        public long? FileId
+        public long FileId
         { 
             get{return _FileId;}
             set{
@@ -80,20 +80,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _StorageFileName;
-        /// <summary>
-        /// 存储文件名
-        /// </summary>
-        [AdvQueryAttribute(ColName = "StorageFileName",ColDesc = "存储文件名")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "StorageFileName" ,Length=255,IsNullable = false,ColumnDescription = "存储文件名" )]
-        public string StorageFileName
-        { 
-            get{return _StorageFileName;}
-            set{
-            SetProperty(ref _StorageFileName, value);
-                        }
-        }
-
         private string _UpdateReason;
         /// <summary>
         /// 存储路径
@@ -108,27 +94,41 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _HashValue;
+        private DateTime? _Created_at;
         /// <summary>
-        /// 文件哈希值
+        /// 创建时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "HashValue",ColDesc = "文件哈希值")] 
-        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "HashValue" ,Length=64,IsNullable = true,ColumnDescription = "文件哈希值" )]
-        public string HashValue
+        [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Created_at" ,IsNullable = true,ColumnDescription = "创建时间" )]
+        public DateTime? Created_at
         { 
-            get{return _HashValue;}
+            get{return _Created_at;}
             set{
-            SetProperty(ref _HashValue, value);
+            SetProperty(ref _Created_at, value);
                         }
         }
 
-        private DateTime? _Modified_at;
+        private long? _Created_by;
+        /// <summary>
+        /// 创建人
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Created_by",ColDesc = "创建人")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Created_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "创建人" )]
+        public long? Created_by
+        { 
+            get{return _Created_by;}
+            set{
+            SetProperty(ref _Created_by, value);
+                        }
+        }
+
+        private DateTime _Modified_at;
         /// <summary>
         /// 修改时间
         /// </summary>
         [AdvQueryAttribute(ColName = "Modified_at",ColDesc = "修改时间")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Modified_at" ,IsNullable = true,ColumnDescription = "修改时间" )]
-        public DateTime? Modified_at
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Modified_at" ,IsNullable = false,ColumnDescription = "修改时间" )]
+        public DateTime Modified_at
         { 
             get{return _Modified_at;}
             set{

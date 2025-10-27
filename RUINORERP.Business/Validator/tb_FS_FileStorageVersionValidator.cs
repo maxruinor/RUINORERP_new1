@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2025 15:32:20
+// 时间：10/27/2025 17:49:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -38,19 +38,16 @@ namespace RUINORERP.Business
  
         
      
- RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.FileId).Must(CheckForeignKeyValueCanNull).WithMessage("文件ID:下拉选择值不正确。");
- RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.FileId).NotEmpty().When(x => x.FileId.HasValue);
+ RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.FileId).Must(CheckForeignKeyValue).WithMessage("文件ID:下拉选择值不正确。");
 
 //***** 
  RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.VersionNo).NotNull().WithMessage("版本号:不能为空。");
 
- RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.StorageFileName).MaximumMixedLength(255).WithMessage("存储文件名:不能超过最大长度,255.");
- RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.StorageFileName).NotEmpty().WithMessage("存储文件名:不能为空。");
-
  RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.UpdateReason).MaximumMixedLength(300).WithMessage("存储路径:不能超过最大长度,300.");
  RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.UpdateReason).NotEmpty().WithMessage("存储路径:不能为空。");
 
- RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.HashValue).MaximumMixedLength(64).WithMessage("文件哈希值:不能超过最大长度,64.");
+
+ RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
 
 
  RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);

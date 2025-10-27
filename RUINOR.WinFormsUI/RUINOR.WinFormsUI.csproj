@@ -102,6 +102,13 @@
     <Compile Include="CustomPictureBox\ImageCroppingBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="CustomPictureBox\ImageInfo.cs" />
+    <Compile Include="CustomPictureBox\Implementations\ImageProcessor.cs" />
+    <Compile Include="CustomPictureBox\Implementations\ImageUpdateManager.cs" />
+    <Compile Include="CustomPictureBox\Implementations\ImageUtils.cs" />
+    <Compile Include="CustomPictureBox\Implementations\LRUImageCache.cs" />
+    <Compile Include="CustomPictureBox\Implementations\OptimizedImageLoader.cs" />
+    <Compile Include="CustomPictureBox\Implementations\SHA256HashCalculator.cs" />
     <Compile Include="CustomPictureBox\MagicPictureBox.cs">
       <SubType>Component</SubType>
     </Compile>

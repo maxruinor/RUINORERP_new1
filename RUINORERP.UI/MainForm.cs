@@ -176,12 +176,12 @@ namespace RUINORERP.UI
             try
             {
                 logger?.LogWarning("客户端重连失败，检查当前登录状态");
-                
+
                 // 只有在已登录状态下才进入锁定状态，避免登录失败后重复弹出登录窗口
                 if (CurrentLoginStatus == LoginStatus.LoggedIn)
                 {
                     logger?.LogWarning("当前为已登录状态，自动进入注销锁定状态");
-                    
+
                     // 在UI线程上执行注销操作
                     if (InvokeRequired)
                     {
@@ -194,7 +194,7 @@ namespace RUINORERP.UI
                 }
                 else
                 {
-                    
+
                     // 如果当前不是登录中状态且已连接，则断开连接
                     if (CurrentLoginStatus != LoginStatus.LoggingIn && communicationService != null && communicationService.IsConnected)
                     {
@@ -311,12 +311,12 @@ namespace RUINORERP.UI
                 {
                     _loginStatus = value;
                 }
-                
+
                 // 更新状态栏显示
                 UpdateStatusBarDisplay();
             }
         }
-        
+
         /// <summary>
         /// 更新状态栏显示
         /// </summary>
@@ -327,7 +327,7 @@ namespace RUINORERP.UI
                 Invoke(new Action(UpdateStatusBarDisplay));
                 return;
             }
-            
+
             switch (CurrentLoginStatus)
             {
                 case LoginStatus.LoggedIn:
@@ -957,7 +957,7 @@ namespace RUINORERP.UI
                     .ToExpression();//注意 这一句 不能少
                                     //list = await dc.BaseQueryByWhereAsync(exp);
                                     //list = MainForm.Instance.list;
-                 //   TryRequestCache(nameof(View_ProdDetail), typeof(View_ProdDetail));
+                                    //   TryRequestCache(nameof(View_ProdDetail), typeof(View_ProdDetail));
 
                 }
             }
@@ -1014,6 +1014,7 @@ namespace RUINORERP.UI
 
             MainForm.Instance.kryptonDockingManager1.DockspaceRemoved += KryptonDockingManager1_DockspaceRemoved;
 
+            await UIBizService.RequestCache<tb_Currency>();
 
             // 异步延迟3秒执行本位币别查询事件，不会阻止UI线程
             _ = Task.Run(async () =>
@@ -1694,141 +1695,141 @@ namespace RUINORERP.UI
                 logger?.LogWarning("当前已经在登录过程中或已登录，忽略重复登录请求");
                 return CurrentLoginStatus == LoginStatus.LoggedIn;
             }
-            
+
             // 设置登录状态为登录中
             CurrentLoginStatus = LoginStatus.LoggingIn;
-            
+
             bool rs = false;
             RUINORERP.Business.Security.PTPrincipal.Logout(AppContext);
-            
+
             try
-            {   
+            {
                 FrmLogin loginForm = new FrmLogin();
                 if (loginForm.ShowDialog(this) == DialogResult.OK)
                 {
-                tb_SystemConfigController<tb_SystemConfig> ctr = Startup.GetFromFac<tb_SystemConfigController<tb_SystemConfig>>();
-                List<tb_SystemConfig> config = ctr.Query();
-                if (config.Count > 0)
-                {
-                    AppContext.SysConfig = config[0];
-                    try
+                    tb_SystemConfigController<tb_SystemConfig> ctr = Startup.GetFromFac<tb_SystemConfigController<tb_SystemConfig>>();
+                    List<tb_SystemConfig> config = ctr.Query();
+                    if (config.Count > 0)
                     {
-                        AppContext.FMConfig = JsonConvert.DeserializeObject<FMConfiguration>(config[0].FMConfig);
-                    }
-                    catch (Exception)
-                    {
-                        logger.LogError("请对财务模块参数进行正确的配置。");
-                    }
-                }
-                var ctrBillNoRule = Startup.GetFromFac<tb_sys_BillNoRuleController<tb_sys_BillNoRule>>();
-                List<tb_sys_BillNoRule> BillNoRules = ctrBillNoRule.Query();
-                AppContext.BillNoRules = BillNoRules;
-
-                // 登录成功，重置状态
-                IsLoggingOut = false;
-                CurrentLoginStatus = LoginStatus.LoggedIn;
-                rs = true;
-                if (AppContext.CurUserInfo != null)
-                {
-                    if (AppContext.CurUserInfo.UserInfo != null && AppContext.CurUserInfo.UserInfo.tb_employee != null)
-                    {
-                        this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole.RoleName}】";
-                    }
-                    else
-                    {
-                        this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}【{AppContext.CurrentRole.RoleName}】";
-                    }
-                }
-
-                //加载角色
-                //toolStripDropDownBtnRoles.DropDownItems.Clear();
-                //超级管理员没有权限组
-                if (AppContext.Roles != null)
-                {
-                    if (toolStripDropDownBtnRoles.DropDownItems[0] is ToolStripComboBox comboBoxRoles)
-                    {
-                        foreach (var item in AppContext.Roles)
+                        AppContext.SysConfig = config[0];
+                        try
                         {
-                            comboBoxRoles.Items.Add(item.RoleName);
+                            AppContext.FMConfig = JsonConvert.DeserializeObject<FMConfiguration>(config[0].FMConfig);
                         }
-                        comboBoxRoles.SelectedItem = AppContext.Roles[0].RoleName;
+                        catch (Exception)
+                        {
+                            logger.LogError("请对财务模块参数进行正确的配置。");
+                        }
                     }
-                    this.cmbRoles.SelectedIndexChanged += new System.EventHandler(this.cmbRoles_SelectedIndexChanged);
-                }
+                    var ctrBillNoRule = Startup.GetFromFac<tb_sys_BillNoRuleController<tb_sys_BillNoRule>>();
+                    List<tb_sys_BillNoRule> BillNoRules = ctrBillNoRule.Query();
+                    AppContext.BillNoRules = BillNoRules;
 
-                //记入审计日志
-                //MainForm.Instance.AuditLogHelper.CreateAuditLog("登陆", $"{System.Environment.MachineName}-成功登陆服务器");
-                if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
-                {
-                    try
+                    // 登录成功，重置状态
+                    IsLoggingOut = false;
+                    CurrentLoginStatus = LoginStatus.LoggedIn;
+                    rs = true;
+                    if (AppContext.CurUserInfo != null)
                     {
-                        MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
-                        await MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
+                        if (AppContext.CurUserInfo.UserInfo != null && AppContext.CurUserInfo.UserInfo.tb_employee != null)
+                        {
+                            this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole.RoleName}】";
+                        }
+                        else
+                        {
+                            this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}【{AppContext.CurrentRole.RoleName}】";
+                        }
                     }
-                    catch (Exception ex)
+
+                    //加载角色
+                    //toolStripDropDownBtnRoles.DropDownItems.Clear();
+                    //超级管理员没有权限组
+                    if (AppContext.Roles != null)
                     {
-                        logger.LogError("更新最后登陆时间出错。", ex);
+                        if (toolStripDropDownBtnRoles.DropDownItems[0] is ToolStripComboBox comboBoxRoles)
+                        {
+                            foreach (var item in AppContext.Roles)
+                            {
+                                comboBoxRoles.Items.Add(item.RoleName);
+                            }
+                            comboBoxRoles.SelectedItem = AppContext.Roles[0].RoleName;
+                        }
+                        this.cmbRoles.SelectedIndexChanged += new System.EventHandler(this.cmbRoles_SelectedIndexChanged);
                     }
 
-                }
-
-                //登陆时已经获取了 登陆人所在部门对应的公司。特殊情况才会进入这个查询
-                if (MainForm.Instance.AppContext.CompanyInfo == null)
-                {
-                    List<tb_Company> Companylist = await MainForm.Instance.AppContext.Db.Queryable<tb_Company>().ToListAsync();
-                    if (Companylist.Count > 0)
+                    //记入审计日志
+                    //MainForm.Instance.AuditLogHelper.CreateAuditLog("登陆", $"{System.Environment.MachineName}-成功登陆服务器");
+                    if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                     {
-                        MainForm.Instance.AppContext.CompanyInfo = Companylist[0];
+                        try
+                        {
+                            MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
+                            await MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError("更新最后登陆时间出错。", ex);
+                        }
+
                     }
-                }
-                if (AppContext.CompanyInfo != null)
-                {
-                    this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v2.0" + "-" + Program.ERPVersion;
-                }
 
-                UIBizService.RequestCache(nameof(tb_RoleInfo));
+                    //登陆时已经获取了 登陆人所在部门对应的公司。特殊情况才会进入这个查询
+                    if (MainForm.Instance.AppContext.CompanyInfo == null)
+                    {
+                        List<tb_Company> Companylist = await MainForm.Instance.AppContext.Db.Queryable<tb_Company>().ToListAsync();
+                        if (Companylist.Count > 0)
+                        {
+                            MainForm.Instance.AppContext.CompanyInfo = Companylist[0];
+                        }
+                    }
+                    if (AppContext.CompanyInfo != null)
+                    {
+                        this.Text = AppContext.CompanyInfo.ShortName + "企业数字化集成ERP v2.0" + "-" + Program.ERPVersion;
+                    }
 
-                if (loginForm.IsInitPassword)
-                {
-                    MessageBox.Show("初始密码【123456】有风险，请及时修改！\r\n修改路径：【系统设置】->【个性化设置】->【密码修改】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
+                    UIBizService.RequestCache(nameof(tb_RoleInfo));
 
-                LoginWebServer();
+                    if (loginForm.IsInitPassword)
+                    {
+                        MessageBox.Show("初始密码【123456】有风险，请及时修改！\r\n修改路径：【系统设置】->【个性化设置】->【密码修改】", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+
+                    LoginWebServer();
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
 
-                //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
-                //cmd.lockCmd = LockCmd.Broadcast;
-                //MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-                //cmd.LockChanged += (sender, e) =>
-                //{
-                //    //使用事件模式来查询某一个单据被谁锁定
-                //};
-            }
-            else
-            {
-                // 登录失败，设置状态为未登录
-                CurrentLoginStatus = LoginStatus.None;
-                
-                // 检查是否与服务器连接，如果连接则断开
-                if (communicationService != null && communicationService.IsConnected)
-                {
-                    communicationService.Disconnect();
+                    //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
+                    //cmd.lockCmd = LockCmd.Broadcast;
+                    //MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
+                    //cmd.LockChanged += (sender, e) =>
+                    //{
+                    //    //使用事件模式来查询某一个单据被谁锁定
+                    //};
                 }
-                
-                Application.Exit();
-            }
-            UserGlobalConfig.Instance.Serialize();
-            // reset menus, etc.
-            ApplyAuthorizationRules();
-            // notify all documents
-            //加载uc
-            return rs;
+                else
+                {
+                    // 登录失败，设置状态为未登录
+                    CurrentLoginStatus = LoginStatus.None;
+
+                    // 检查是否与服务器连接，如果连接则断开
+                    if (communicationService != null && communicationService.IsConnected)
+                    {
+                        communicationService.Disconnect();
+                    }
+
+                    Application.Exit();
+                }
+                UserGlobalConfig.Instance.Serialize();
+                // reset menus, etc.
+                ApplyAuthorizationRules();
+                // notify all documents
+                //加载uc
+                return rs;
             }
             catch (Exception ex)
             {
                 logger?.LogError(ex, "登录过程中发生异常");
                 CurrentLoginStatus = LoginStatus.None;
-                
+
                 // 异常情况下断开连接
                 if (communicationService != null && communicationService.IsConnected)
                 {
@@ -1845,7 +1846,7 @@ namespace RUINORERP.UI
             {
                 // 设置状态为登出中
                 CurrentLoginStatus = LoginStatus.LoggingOut;
-                
+
                 MainForm.Instance.AuditLogHelper.CreateAuditLog("登出", "开始登出服务器");
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
@@ -1857,16 +1858,16 @@ namespace RUINORERP.UI
                 ClearUI();
                 ClearData();
                 Application.DoEvents();
-                
+
                 // 登出完成，断开与服务器的连接
                 if (communicationService != null && communicationService.IsConnected)
                 {
                     communicationService.Disconnect();
                 }
-                
+
                 // 设置状态为未登录
                 CurrentLoginStatus = LoginStatus.None;
-                
+
                 MainForm.Instance.AuditLogHelper.CreateAuditLog("登出", "成功登出服务器并断开连接");
 
             }
@@ -1899,20 +1900,20 @@ namespace RUINORERP.UI
                     Program.AppContextData.IsOnline = false;
                     MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
                     MainForm.Instance.AppContext.CurrentUser.在线状态 = false;
-                    
+
                     // 记录锁定审计日志
                     MainForm.Instance.AuditLogHelper.CreateAuditLog("锁定", "系统锁定并进入重新登录状态");
-                    
+
                     // 断开与服务器的连接，避免继续发送心跳
                     if (communicationService != null && communicationService.IsConnected)
                     {
                         communicationService.Disconnect();
                     }
-                    
+
                     ClearUI();
                     ClearRoles();
                     System.GC.Collect();
-                    
+
                     // 尝试重新登录
                     bool islogin = await Login();
                     if (!islogin)
@@ -1922,7 +1923,7 @@ namespace RUINORERP.UI
                         CurrentLoginStatus = LoginStatus.None;
                         return;
                     }
-                    
+
                     // 登录成功后加载界面
                     LoadUIMenus();
                     LoadUIForIM_LogPages();

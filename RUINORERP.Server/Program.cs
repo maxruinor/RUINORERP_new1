@@ -84,24 +84,28 @@ namespace RUINORERP.Server
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static async Task Main()
         {
             if (SingleInstanceChecker.IsAlreadyRunning())
             {
                 // 已有实例运行则退出
-                BringExistingInstanceToFront();
+                Process instance = RunningInstance();
+                if (instance != null)
+                {
+                    HandleRunningInstance(instance);
+                }
                 return;
             }
             try
             {
                 // 启动服务UI
-                StartServerUI();
-
-
+                await StartServerUI();
             }
             catch (Exception ex)
             {
-
+                // 记录异常信息
+                Console.Error.WriteLine($"启动服务时发生未处理异常: {ex}");
+                // 可以添加日志记录
             }
             finally
             {
@@ -109,7 +113,7 @@ namespace RUINORERP.Server
             }
         }
 
-        static async void StartServerUI()
+        static async Task StartServerUI()
         {
 
             Application.SetHighDpiMode(HighDpiMode.SystemAware);
@@ -169,6 +173,7 @@ namespace RUINORERP.Server
 
                     await SafetyStockWorkflowConfig.ScheduleDailySafetyStockCalculation(host);
                     await InventorySnapshotWorkflowConfig.ScheduleInventorySnapshot(host);
+                    await TempImageCleanupWorkflowConfig.ScheduleTempImageCleanup(host);
 
                     // 启动host服务，避免重复启动
                     if (!serviceStarted)
@@ -235,7 +240,9 @@ namespace RUINORERP.Server
             }
             catch (Exception ex)
             {
-
+                // 记录异常信息
+                Console.Error.WriteLine($"启动服务UI时发生未处理异常: {ex}");
+                // 可以添加日志记录
             }
 #pragma warning restore CS0168 // 声明了变量但从未使用
 
@@ -246,16 +253,7 @@ namespace RUINORERP.Server
 
 
 
-        private static void BringExistingInstanceToFront()
-        {
-            Process current = Process.GetCurrentProcess();
-            foreach (Process process in Process.GetProcessesByName(current.ProcessName))
-            {
-                if (process.Id == current.Id) continue;
-                SetForegroundWindow(process.MainWindowHandle);
-                break;
-            }
-        }
+        
 
 
 

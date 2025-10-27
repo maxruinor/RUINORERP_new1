@@ -199,23 +199,24 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                     var filePath = Path.Combine(categoryPath, savedFileName);
 
+                    // 直接计算文件内容哈希值，无需保存后再计算
+                    var contentHash = FileManagementHelper.CalculateContentHash(FileStorageInfo.FileData);
+
                     // 保存文件
                     await File.WriteAllBytesAsync(filePath, FileStorageInfo.FileData, cancellationToken);
 
-                    // 计算文件哈希值
-                    var hashValue = FileManagementHelper.CalculateFileHash(filePath);
-
                     // 创建文件信息实体并保存到数据库
                     var fileStorageInfo = FileManagementHelper.CreateFileStorageInfo(
-                        FileStorageInfo.OriginalFileName,
-                        FileStorageInfo.FileData.Length,
-                        fileExtension,
-                        filePath,
-                        FileStorageInfo.BusinessType != null ? FileStorageInfo.BusinessType.GetHashCode() : 0,
-                        executionContext.UserId);
+                        FileStorageInfo.OriginalFileName,  // fileName
+                        FileStorageInfo.FileData.Length,   // fileSize
+                        fileExtension.TrimStart('.'),     // fileType
+                        filePath,                          // storagePath
+                        FileStorageInfo.BusinessType != null ? FileStorageInfo.BusinessType.GetHashCode() : 0, // businessType
+                        executionContext.UserId,          // userId
+                        contentHash);                     // contentHash (可选)
 
-                    // 设置哈希值
-                    fileStorageInfo.HashValue = hashValue;
+                    // 设置哈希值（保持与旧代码兼容）
+                    fileStorageInfo.HashValue = contentHash;
 
                     // 保存文件信息到数据库
 
@@ -269,7 +270,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 根据分类确定存储路径
                 var categoryPath = GetCategoryPath(downloadRequest.FileStorageInfo.BusinessType.Value.ToString());
 
-                var files = Directory.GetFiles(categoryPath, $"{downloadRequest.FileStorageInfo.FileId}.*");
+                var files = Directory.GetFiles(categoryPath, $"{downloadRequest.FileStorageInfo.StorageFileName}.*");
 
                 // 如果在分类目录中找不到，尝试在根目录查找
                 if (files.Length == 0 && downloadRequest.FileStorageInfo.BusinessType.HasValue)

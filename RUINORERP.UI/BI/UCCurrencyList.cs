@@ -37,7 +37,7 @@ namespace RUINORERP.UI.BI
         {
             InitializeComponent();
             base.EditForm = typeof(UCCurrencyEdit);
-           
+
         }
         protected override async Task Add()
         {
@@ -57,7 +57,7 @@ namespace RUINORERP.UI.BI
                     switch (defaultCurrency)
                     {
                         case DefaultCurrency.RMB:
-                            currency.Country="中国";
+                            currency.Country = "中国";
                             currency.CurrencyName = "人民币";
                             currency.CurrencySymbol = "￥";
                             currency.Is_BaseCurrency = true;
@@ -75,13 +75,13 @@ namespace RUINORERP.UI.BI
                 }
                 List<long> ids = await MainForm.Instance.AppContext.Db.Insertable<tb_Currency>(list).ExecuteReturnSnowflakeIdListAsync();
                 Query();
-             await   base.Add();
+                await base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
             else
             {
                 //非第一次添加付款方式时。正常处理
-             await   base.Add();
+                await base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
         }
@@ -111,17 +111,7 @@ namespace RUINORERP.UI.BI
                         {
                             currency = rr.ReturnObject;
                             ToolBarEnabledControl(MenuItemEnums.保存);
-                            //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            //只处理需要缓存的表
-                            if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_Currency).Name, out pair))
-                            {
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                                //如果有更新变动就上传到服务器再分发到所有客户端
-                                //OriginalData odforCache = ActionForClient.更新缓存<tb_Currency>(rr.ReturnObject);
-                                //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                //MainForm.Instance.ecs.client.Send(buffer);
-                            }
+                            await UIBizService.RequestCache<tb_Currency>();
                         }
                         else
                         {

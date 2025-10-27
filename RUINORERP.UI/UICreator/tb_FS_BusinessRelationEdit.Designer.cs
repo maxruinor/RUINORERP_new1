@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2025 15:32:17
+// 时间：10/27/2025 17:49:26
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -61,9 +61,31 @@ this.txtBusinessType = new Krypton.Toolkit.KryptonTextBox();
 this.lblBusinessNo = new Krypton.Toolkit.KryptonLabel();
 this.txtBusinessNo = new Krypton.Toolkit.KryptonTextBox();
 
+this.lblRelatedField = new Krypton.Toolkit.KryptonLabel();
+this.txtRelatedField = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblIsActive = new Krypton.Toolkit.KryptonLabel();
+this.chkIsActive = new Krypton.Toolkit.KryptonCheckBox();
+this.chkIsActive.Values.Text ="";
+
+this.lblVersionNo = new Krypton.Toolkit.KryptonLabel();
+this.txtVersionNo = new Krypton.Toolkit.KryptonTextBox();
+
 this.lblIsMainFile = new Krypton.Toolkit.KryptonLabel();
 this.chkIsMainFile = new Krypton.Toolkit.KryptonCheckBox();
 this.chkIsMainFile.Values.Text ="";
+
+this.lblCreated_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpCreated_at = new Krypton.Toolkit.KryptonDateTimePicker();
+
+this.lblCreated_by = new Krypton.Toolkit.KryptonLabel();
+this.txtCreated_by = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblModified_at = new Krypton.Toolkit.KryptonLabel();
+this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
+
+this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
+this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
 
     
     //for end
@@ -137,19 +159,124 @@ this.txtBusinessNo.TabIndex = 3;
 this.Controls.Add(this.lblBusinessNo);
 this.Controls.Add(this.txtBusinessNo);
 
+           //#####50RelatedField###String
+this.lblRelatedField.AutoSize = true;
+this.lblRelatedField.Location = new System.Drawing.Point(100,100);
+this.lblRelatedField.Name = "lblRelatedField";
+this.lblRelatedField.Size = new System.Drawing.Size(41, 12);
+this.lblRelatedField.TabIndex = 4;
+this.lblRelatedField.Text = "关联字段";
+this.txtRelatedField.Location = new System.Drawing.Point(173,96);
+this.txtRelatedField.Name = "txtRelatedField";
+this.txtRelatedField.Size = new System.Drawing.Size(100, 21);
+this.txtRelatedField.TabIndex = 4;
+this.Controls.Add(this.lblRelatedField);
+this.Controls.Add(this.txtRelatedField);
+
+           //#####IsActive###Boolean
+this.lblIsActive.AutoSize = true;
+this.lblIsActive.Location = new System.Drawing.Point(100,125);
+this.lblIsActive.Name = "lblIsActive";
+this.lblIsActive.Size = new System.Drawing.Size(41, 12);
+this.lblIsActive.TabIndex = 5;
+this.lblIsActive.Text = "活跃";
+this.chkIsActive.Location = new System.Drawing.Point(173,121);
+this.chkIsActive.Name = "chkIsActive";
+this.chkIsActive.Size = new System.Drawing.Size(100, 21);
+this.chkIsActive.TabIndex = 5;
+this.Controls.Add(this.lblIsActive);
+this.Controls.Add(this.chkIsActive);
+
+           //#####VersionNo###Int32
+//属性测试150VersionNo
+this.lblVersionNo.AutoSize = true;
+this.lblVersionNo.Location = new System.Drawing.Point(100,150);
+this.lblVersionNo.Name = "lblVersionNo";
+this.lblVersionNo.Size = new System.Drawing.Size(41, 12);
+this.lblVersionNo.TabIndex = 6;
+this.lblVersionNo.Text = "关联版本号";
+this.txtVersionNo.Location = new System.Drawing.Point(173,146);
+this.txtVersionNo.Name = "txtVersionNo";
+this.txtVersionNo.Size = new System.Drawing.Size(100, 21);
+this.txtVersionNo.TabIndex = 6;
+this.Controls.Add(this.lblVersionNo);
+this.Controls.Add(this.txtVersionNo);
+
            //#####IsMainFile###Boolean
 this.lblIsMainFile.AutoSize = true;
-this.lblIsMainFile.Location = new System.Drawing.Point(100,100);
+this.lblIsMainFile.Location = new System.Drawing.Point(100,175);
 this.lblIsMainFile.Name = "lblIsMainFile";
 this.lblIsMainFile.Size = new System.Drawing.Size(41, 12);
-this.lblIsMainFile.TabIndex = 4;
-this.lblIsMainFile.Text = "已注册";
-this.chkIsMainFile.Location = new System.Drawing.Point(173,96);
+this.lblIsMainFile.TabIndex = 7;
+this.lblIsMainFile.Text = "主文件";
+this.chkIsMainFile.Location = new System.Drawing.Point(173,171);
 this.chkIsMainFile.Name = "chkIsMainFile";
 this.chkIsMainFile.Size = new System.Drawing.Size(100, 21);
-this.chkIsMainFile.TabIndex = 4;
+this.chkIsMainFile.TabIndex = 7;
 this.Controls.Add(this.lblIsMainFile);
 this.Controls.Add(this.chkIsMainFile);
+
+           //#####Created_at###DateTime
+this.lblCreated_at.AutoSize = true;
+this.lblCreated_at.Location = new System.Drawing.Point(100,200);
+this.lblCreated_at.Name = "lblCreated_at";
+this.lblCreated_at.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_at.TabIndex = 8;
+this.lblCreated_at.Text = "创建时间";
+//111======200
+this.dtpCreated_at.Location = new System.Drawing.Point(173,196);
+this.dtpCreated_at.Name ="dtpCreated_at";
+this.dtpCreated_at.ShowCheckBox =true;
+this.dtpCreated_at.Size = new System.Drawing.Size(100, 21);
+this.dtpCreated_at.TabIndex = 8;
+this.Controls.Add(this.lblCreated_at);
+this.Controls.Add(this.dtpCreated_at);
+
+           //#####Created_by###Int64
+//属性测试225Created_by
+this.lblCreated_by.AutoSize = true;
+this.lblCreated_by.Location = new System.Drawing.Point(100,225);
+this.lblCreated_by.Name = "lblCreated_by";
+this.lblCreated_by.Size = new System.Drawing.Size(41, 12);
+this.lblCreated_by.TabIndex = 9;
+this.lblCreated_by.Text = "创建人";
+this.txtCreated_by.Location = new System.Drawing.Point(173,221);
+this.txtCreated_by.Name = "txtCreated_by";
+this.txtCreated_by.Size = new System.Drawing.Size(100, 21);
+this.txtCreated_by.TabIndex = 9;
+this.Controls.Add(this.lblCreated_by);
+this.Controls.Add(this.txtCreated_by);
+
+           //#####Modified_at###DateTime
+this.lblModified_at.AutoSize = true;
+this.lblModified_at.Location = new System.Drawing.Point(100,250);
+this.lblModified_at.Name = "lblModified_at";
+this.lblModified_at.Size = new System.Drawing.Size(41, 12);
+this.lblModified_at.TabIndex = 10;
+this.lblModified_at.Text = "修改时间";
+//111======250
+this.dtpModified_at.Location = new System.Drawing.Point(173,246);
+this.dtpModified_at.Name ="dtpModified_at";
+this.dtpModified_at.ShowCheckBox =true;
+this.dtpModified_at.Size = new System.Drawing.Size(100, 21);
+this.dtpModified_at.TabIndex = 10;
+this.Controls.Add(this.lblModified_at);
+this.Controls.Add(this.dtpModified_at);
+
+           //#####Modified_by###Int64
+//属性测试275Modified_by
+this.lblModified_by.AutoSize = true;
+this.lblModified_by.Location = new System.Drawing.Point(100,275);
+this.lblModified_by.Name = "lblModified_by";
+this.lblModified_by.Size = new System.Drawing.Size(41, 12);
+this.lblModified_by.TabIndex = 11;
+this.lblModified_by.Text = "修改人";
+this.txtModified_by.Location = new System.Drawing.Point(173,271);
+this.txtModified_by.Name = "txtModified_by";
+this.txtModified_by.Size = new System.Drawing.Size(100, 21);
+this.txtModified_by.TabIndex = 11;
+this.Controls.Add(this.lblModified_by);
+this.Controls.Add(this.txtModified_by);
 
         //for 加入到容器
             //components = new System.ComponentModel.Container();
@@ -165,7 +292,7 @@ this.Controls.Add(this.chkIsMainFile);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 4;
+           // this.kryptonPanel1.TabIndex = 11;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -178,8 +305,29 @@ this.Controls.Add(this.txtBusinessType );
                 this.Controls.Add(this.lblBusinessNo );
 this.Controls.Add(this.txtBusinessNo );
 
+                this.Controls.Add(this.lblRelatedField );
+this.Controls.Add(this.txtRelatedField );
+
+                this.Controls.Add(this.lblIsActive );
+this.Controls.Add(this.chkIsActive );
+
+                this.Controls.Add(this.lblVersionNo );
+this.Controls.Add(this.txtVersionNo );
+
                 this.Controls.Add(this.lblIsMainFile );
 this.Controls.Add(this.chkIsMainFile );
+
+                this.Controls.Add(this.lblCreated_at );
+this.Controls.Add(this.dtpCreated_at );
+
+                this.Controls.Add(this.lblCreated_by );
+this.Controls.Add(this.txtCreated_by );
+
+                this.Controls.Add(this.lblModified_at );
+this.Controls.Add(this.dtpModified_at );
+
+                this.Controls.Add(this.lblModified_by );
+this.Controls.Add(this.txtModified_by );
 
                             // 
             // "tb_FS_BusinessRelationEdit"
@@ -220,8 +368,43 @@ private Krypton.Toolkit.KryptonTextBox txtBusinessNo;
 
     
         
+              private Krypton.Toolkit.KryptonLabel lblRelatedField;
+private Krypton.Toolkit.KryptonTextBox txtRelatedField;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblIsActive;
+private Krypton.Toolkit.KryptonCheckBox chkIsActive;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblVersionNo;
+private Krypton.Toolkit.KryptonTextBox txtVersionNo;
+
+    
+        
               private Krypton.Toolkit.KryptonLabel lblIsMainFile;
 private Krypton.Toolkit.KryptonCheckBox chkIsMainFile;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblCreated_at;
+private Krypton.Toolkit.KryptonDateTimePicker dtpCreated_at;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblCreated_by;
+private Krypton.Toolkit.KryptonTextBox txtCreated_by;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblModified_at;
+private Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblModified_by;
+private Krypton.Toolkit.KryptonTextBox txtModified_by;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

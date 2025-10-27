@@ -8,6 +8,8 @@ namespace RUINORERP.PacketSpec.Models.Responses
 {
     /// <summary>
     /// 响应基类 - 提供所有响应的公共属性和方法
+    /// Message: 用于传达操作结果的通用信息，无论成功还是失败都应该有值
+    /// ErrorMessage: 专门用于存储详细的错误信息，只有在失败时才有意义，成功时应为null
     /// </summary>
     public class ResponseBase : IResponse
     {
@@ -17,7 +19,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         public int ErrorCode { get; set; }
 
         /// <summary>
-        /// 人类可读错误消息；Success 时可为空
+        /// 详细的错误信息；仅在操作失败时设置，成功时为null
         /// </summary>
         public string ErrorMessage { get; set; }
 
@@ -27,7 +29,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         public bool IsSuccess { get; set; }
 
         /// <summary>
-        /// 响应消息
+        /// 操作结果的通用描述信息；成功或失败时都应提供有意义的描述
         /// </summary>
         public string Message { get; set; }
 
@@ -94,6 +96,8 @@ namespace RUINORERP.PacketSpec.Models.Responses
     /// <summary>
     /// 泛型响应基类 - 提供所有响应的公共属性和方法，包含数据部分
     /// 专门用于承载业务实体数据，支持复杂查询和CRUD操作结果
+    /// Message: 用于传达操作结果的通用信息，无论成功还是失败都应该有值
+    /// ErrorMessage: 专门用于存储详细的错误信息，只有在失败时才有意义，成功时应为null
     /// </summary>
     /// <typeparam name="TEntity">业务实体数据类型</typeparam>
     public class ResponseBase<TEntity> : ResponseBase

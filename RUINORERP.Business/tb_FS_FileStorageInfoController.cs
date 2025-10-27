@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2025 15:32:19
+// 时间：10/27/2025 17:49:29
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -247,15 +247,15 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FS_FileStorageInfo>(entity as tb_FS_FileStorageInfo)
-                        .Include(m => m.tb_FS_FileStorageVersions)
-                    .Include(m => m.tb_FS_BusinessRelations)
+                        .Include(m => m.tb_FS_BusinessRelations)
+                    .Include(m => m.tb_FS_FileStorageVersions)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FS_FileStorageInfo>(entity as tb_FS_FileStorageInfo)
-                .Include(m => m.tb_FS_FileStorageVersions)
                 .Include(m => m.tb_FS_BusinessRelations)
+                .Include(m => m.tb_FS_FileStorageVersions)
          
                 .ExecuteCommandAsync();
                                           
@@ -289,8 +289,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FS_FileStorageInfo>()
-                                .Includes(m => m.tb_FS_FileStorageVersions)
-                        .Includes(m => m.tb_FS_BusinessRelations)
+                                .Includes(m => m.tb_FS_BusinessRelations)
+                        .Includes(m => m.tb_FS_FileStorageVersions)
                                         .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -300,8 +300,8 @@ namespace RUINORERP.Business
         {
             tb_FS_FileStorageInfo entity = model as tb_FS_FileStorageInfo;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FS_FileStorageInfo>(m => m.FileId== entity.FileId)
-                                .Include(m => m.tb_FS_FileStorageVersions)
-                        .Include(m => m.tb_FS_BusinessRelations)
+                                .Include(m => m.tb_FS_BusinessRelations)
+                        .Include(m => m.tb_FS_FileStorageVersions)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -464,8 +464,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FS_FileStorageInfo>> QueryByNavAsync()
         {
             List<tb_FS_FileStorageInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FS_FileStorageInfo>()
-                                            .Includes(t => t.tb_FS_FileStorageVersions )
-                                .Includes(t => t.tb_FS_BusinessRelations )
+                                            .Includes(t => t.tb_FS_BusinessRelations )
+                                .Includes(t => t.tb_FS_FileStorageVersions )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -485,8 +485,8 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_FS_FileStorageInfo>> QueryByNavAsync(Expression<Func<tb_FS_FileStorageInfo, bool>> exp)
         {
             List<tb_FS_FileStorageInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FS_FileStorageInfo>().Where(exp)
-                                            .Includes(t => t.tb_FS_FileStorageVersions )
-                                .Includes(t => t.tb_FS_BusinessRelations )
+                                            .Includes(t => t.tb_FS_BusinessRelations )
+                                .Includes(t => t.tb_FS_FileStorageVersions )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -506,8 +506,8 @@ namespace RUINORERP.Business
          public virtual List<tb_FS_FileStorageInfo> QueryByNav(Expression<Func<tb_FS_FileStorageInfo, bool>> exp)
         {
             List<tb_FS_FileStorageInfo> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FS_FileStorageInfo>().Where(exp)
-                                        .Includes(t => t.tb_FS_FileStorageVersions )
-                            .Includes(t => t.tb_FS_BusinessRelations )
+                                        .Includes(t => t.tb_FS_BusinessRelations )
+                            .Includes(t => t.tb_FS_FileStorageVersions )
                         .ToList();
             
             foreach (var item in list)
@@ -546,8 +546,8 @@ namespace RUINORERP.Business
             tb_FS_FileStorageInfo entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_FS_FileStorageInfo>().Where(w => w.FileId == (long)id)
                          
 
-                                            .Includes(t => t.tb_FS_FileStorageVersions )
                                             .Includes(t => t.tb_FS_BusinessRelations )
+                                            .Includes(t => t.tb_FS_FileStorageVersions )
                                 .FirstAsync();
             if(entity!=null)
             {

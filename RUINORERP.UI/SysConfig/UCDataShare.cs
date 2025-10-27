@@ -315,13 +315,7 @@ namespace RUINORERP.UI.SysConfig
             if (listBoxTableList.SelectedItem is SuperValue kv)
             {
                 string tableName = kv.superDataTypeName;
-                MyCacheManager.Instance.CacheEntityList.Remove(tableName);
-                CacheInfo lastCacheInfo = new CacheInfo(tableName, 0);
-                lastCacheInfo.HasExpire = false;
-                //看是更新好。还是移除好。主要看后面的更新机制。
-                MyCacheManager.Instance.CacheInfoList.AddOrUpdate(tableName, lastCacheInfo, c => lastCacheInfo);
-
-
+                RUINORERP.UI.Common.CacheManager.DeleteEntityList(tableName);
             }
         }
 

@@ -85,10 +85,11 @@ namespace RUINORERP.UI.UserPersonalized
                         DefaultCmb.Text = "";
                         DefaultCmb.Width = 150;
                         //只处理需要缓存的表
-                        KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
                         if (queryField.FKTableName.IsNotEmptyOrNull())
                         {
-                            if (MyCacheManager.Instance.NewTableList.TryGetValue(queryField.SubQueryTargetType.Name, out pair))
+                            var schemaInfo = Business.Cache.TableSchemaManager.Instance.GetSchemaInfo(queryField.SubQueryTargetType.Name);
+
+                            if (schemaInfo!= null)
                             {
                                 //关联要绑定的类型
                                 Type mytype = queryField.SubQueryTargetType;
@@ -99,7 +100,7 @@ namespace RUINORERP.UI.UserPersonalized
                                     if (mytype != null)
                                     {
                                         MethodInfo mf = dbh.GetType().GetMethod("BindData4CmbRef").MakeGenericMethod(new Type[] { mytype });
-                                        object[] args = new object[5] { QueryDto, pair.Key, pair.Value, queryField.FKTableName, DefaultCmb };
+                                        object[] args = new object[5] { QueryDto, schemaInfo.PrimaryKeyField, schemaInfo.DisplayField, queryField.FKTableName, DefaultCmb };
                                         mf.Invoke(dbh, args);
                                     }
                                     else
@@ -118,27 +119,24 @@ namespace RUINORERP.UI.UserPersonalized
                                     #region 
                                     //绑定下拉
 
-                                    if (pair.Key == queryField.FieldName)
+                                    if (schemaInfo.PrimaryKeyField == queryField.FieldName)
                                     {
                                         MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimited").MakeGenericMethod(new Type[] { mytype });
-                                        object[] args1 = new object[6] { QueryDto, pair.Key, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
+                                        object[] args1 = new object[6] { QueryDto, schemaInfo.PrimaryKeyField, schemaInfo.DisplayField, queryField.FKTableName, DefaultCmb, whereExp };
                                         mf1.Invoke(dbh, args1);
                                     }
                                     else
                                     {
                                         MethodInfo mf1 = dbh.GetType().GetMethod("BindData4CmbRefWithLimitedByAlias").MakeGenericMethod(new Type[] { mytype });
                                         //注意这样
-                                        object[] args1 = new object[7] { QueryDto, pair.Key, queryField.FieldName, pair.Value, queryField.FKTableName, DefaultCmb, whereExp };
+                                        object[] args1 = new object[7] { QueryDto, schemaInfo.PrimaryKeyField, queryField.FieldName, schemaInfo.DisplayField, queryField.FKTableName, DefaultCmb, whereExp };
                                         mf1.Invoke(dbh, args1);
                                     }
 
                                     #endregion
                                 }
 
-                                ////注意这样调用不能用同名重载的方法名
-                                //MethodInfo mf22 = dbh.GetType().GetMethod("InitFilterForControlRef").MakeGenericMethod(new Type[] { mytype });
-                                //object[] args22 = new object[7] { QueryDto, DefaultCmb, pair.Value, queryField.SubFilter, null, null, false };
-                                //mf22.Invoke(dbh, args22);
+                              
                             }
                         }
 
@@ -185,7 +183,7 @@ namespace RUINORERP.UI.UserPersonalized
 
                 if (queryField.SugarCol != null)
                 {
-                    if (queryField.SugarCol.SqlParameterDbType!=null)
+                    if (queryField.SugarCol.SqlParameterDbType != null)
                     {
                         //字符串才启用模糊查询
                         if (queryField.SugarCol.SqlParameterDbType.ToString() == "String")
@@ -217,7 +215,7 @@ namespace RUINORERP.UI.UserPersonalized
                     {
                         #region 用其它方式判断
                         //字符串才启用模糊查询
-                        if (queryField.FieldPropertyInfo!=null && queryField.FieldPropertyInfo.PropertyType.ToString() == "System.String")
+                        if (queryField.FieldPropertyInfo != null && queryField.FieldPropertyInfo.PropertyType.ToString() == "System.String")
                         {
                             lblUselike.Visible = true;
                             chkUseLike.Visible = true;

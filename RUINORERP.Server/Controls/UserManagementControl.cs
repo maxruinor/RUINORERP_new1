@@ -21,6 +21,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.Model.Base;
 
 namespace RUINORERP.Server.Controls
 {
@@ -981,7 +982,7 @@ namespace RUINORERP.Server.Controls
                     if (session != null)
                     {
                         // 发送缓存数据推送通知
-                        foreach (var tableName in MyCacheManager.Instance.NewTableList.Keys)
+                        foreach (var tableName in Business.Cache.TableSchemaManager.Instance.GetAllTableNames())
                         {
                             // 发送缓存数据列表
                             // MessageService.SendCacheDataList(session, tableName);

@@ -36,11 +36,12 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <summary>
         /// 创建错误响应
         /// </summary>
-        /// <param name="message">错误消息</param>
+        /// <param name="message">错误消息（通用描述）</param>
         /// <param name="errorCode">错误代码</param>
+        /// <param name="errorMessage">详细错误信息（可选）</param>
         /// <param name="requestId">请求ID（可选）</param>
         /// <returns>错误响应实例</returns>
-        public static ResponseBase Error(string message, int errorCode = 500, string requestId = null)
+        public static ResponseBase Error(string message, int errorCode = 500, string errorMessage = null, string requestId = null)
         {
             return new ResponseBase
             {
@@ -49,7 +50,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 Timestamp = DateTime.Now,
                 RequestId = requestId,
                 ErrorCode = errorCode,
-                ErrorMessage = message
+                ErrorMessage = errorMessage
             };
         }
 
@@ -66,7 +67,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             if (ex == null)
                 throw new ArgumentNullException(nameof(ex));
                 
-            var response = Error(ex.Message, errorCode, requestId);
+            var response = Error("操作失败", errorCode, ex.Message, requestId);
             
             if (includeStackTrace)
             {
@@ -88,12 +89,12 @@ namespace RUINORERP.PacketSpec.Models.Responses
         public static ResponseBase ValidationError(FluentValidation.Results.ValidationResult validationResult, int errorCode = 400, string requestId = null)
         {
             if (validationResult == null || validationResult.IsValid)
-                return Error("验证失败", errorCode, requestId);
+                return Error("验证失败", errorCode, "验证结果为空或有效", requestId);
 
             var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
             var message = string.Join("；", errorMessages);
             
-            var response = Error(message, errorCode, requestId);
+            var response = Error("请求验证失败", errorCode, message, requestId);
 
             // 添加详细的验证错误信息到元数据
             response.WithMetadata("ValidationErrors", validationResult.Errors.Select(e => new 
@@ -137,12 +138,13 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// 创建错误的泛型响应
         /// </summary>
         /// <typeparam name="TData">数据类型</typeparam>
-        /// <param name="message">错误消息</param>
+        /// <param name="message">错误消息（通用描述）</param>
         /// <param name="errorCode">错误代码</param>
+        /// <param name="errorMessage">详细错误信息（可选）</param>
         /// <param name="requestId">请求ID（可选）</param>
         /// <param name="extraData">额外错误信息</param>
         /// <returns>错误的泛型响应实例</returns>
-        public static ResponseBase<TData> Error<TData>(string message, int errorCode = 500, string requestId = null, Dictionary<string, object> extraData = null)
+        public static ResponseBase<TData> Error<TData>(string message, int errorCode = 500, string errorMessage = null, string requestId = null, Dictionary<string, object> extraData = null)
         {
             return new ResponseBase<TData>
             {
@@ -151,7 +153,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 Timestamp = DateTime.Now,
                 RequestId = requestId,
                 ErrorCode = errorCode,
-                ErrorMessage = message,
+                ErrorMessage = errorMessage,
                 ExtraData = extraData ?? new Dictionary<string, object>()
             };
         }
@@ -180,7 +182,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 extraData["StackTrace"] = ex.StackTrace;
             }
             
-            return Error<TData>(ex.Message, errorCode, requestId, extraData);
+            return Error<TData>("操作失败", errorCode, ex.Message, requestId, extraData);
         }
 
         /// <summary>
@@ -194,7 +196,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         public static ResponseBase<TData> ValidationError<TData>(FluentValidation.Results.ValidationResult validationResult, int errorCode = 400, string requestId = null)
         {
             if (validationResult == null || validationResult.IsValid)
-                return Error<TData>("验证失败", errorCode, requestId);
+                return Error<TData>("验证失败", errorCode, "验证结果为空或有效", requestId);
 
             var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
             var message = string.Join("；", errorMessages);
@@ -209,7 +211,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 }).ToList()
             };
 
-            return Error<TData>(message, errorCode, requestId, extraData);
+            return Error<TData>("请求验证失败", errorCode, message, requestId, extraData);
         }
 
         /// <summary>

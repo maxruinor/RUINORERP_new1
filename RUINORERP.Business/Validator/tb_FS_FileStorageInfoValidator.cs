@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2025 15:32:20
+// 时间：10/27/2025 17:49:30
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,6 +44,9 @@ namespace RUINORERP.Business
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.StorageFileName).MaximumMixedLength(255).WithMessage("存储文件名:不能超过最大长度,255.");
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.StorageFileName).NotEmpty().WithMessage("存储文件名:不能为空。");
 
+ RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.FileExtension).MaximumMixedLength(255).WithMessage("文件扩展名:不能超过最大长度,255.");
+ RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.FileExtension).NotEmpty().WithMessage("文件扩展名:不能为空。");
+
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.BusinessType).NotEmpty().When(x => x.BusinessType.HasValue);
 
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.FileType).MaximumMixedLength(200).WithMessage("文件类型:不能超过最大长度,200.");
@@ -65,7 +68,6 @@ namespace RUINORERP.Business
 
 //***** 
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.Status).NotNull().WithMessage("文件状态:不能为空。");
-
 
 
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.Description).MaximumMixedLength(200).WithMessage("文件描述:不能超过最大长度,200.");

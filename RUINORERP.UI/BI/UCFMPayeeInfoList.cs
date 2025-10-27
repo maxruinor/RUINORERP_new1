@@ -107,17 +107,6 @@ namespace RUINORERP.UI.BI
                         {
                             currency = rr.ReturnObject;
                             ToolBarEnabledControl(MenuItemEnums.保存);
-                            //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                            KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                            //只处理需要缓存的表
-                            if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_FM_PayeeInfo).Name, out pair))
-                            {
-                                //如果有更新变动就上传到服务器再分发到所有客户端
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                                //OriginalData odforCache = ActionForClient.更新缓存<tb_FM_PayeeInfo>(rr.ReturnObject);
-                                //byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                                //MainForm.Instance.ecs.client.Send(buffer);
-                            }
                         }
                         else
                         {
@@ -153,21 +142,12 @@ namespace RUINORERP.UI.BI
                 await MainForm.Instance.AppContext.Db.Updateable<tb_FM_PayeeInfo>(customersPayeeInfo)
                       .UpdateColumns(it => new { it.IsDefault })
                     .ExecuteCommandHasChangeAsync();
-                for (int i = 0; i < customersPayeeInfo.Count; i++)
-                {
-                    //根据要缓存的列表集合来判断是否需要上传到服务器。让服务器分发到其他客户端
-                    KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
-                    //只处理需要缓存的表
-                    if (MyCacheManager.Instance.NewTableList.TryGetValue(typeof(tb_FM_PayeeInfo).Name, out pair))
-                    {
-                        //如果有更新变动就上传到服务器再分发到所有客户端
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-                        /*
-                        OriginalData odforCache = ActionForClient.更新缓存<tb_FM_PayeeInfo>(customersPayeeInfo[i]);
-                        byte[] buffer = CryptoProtocol.EncryptClientPackToServer(odforCache);
-                        MainForm.Instance.ecs.client.Send(buffer);*/
-                    }
-                }
+                
+                ////这里更新了数据。如何更新缓存？
+                //for (int i = 0; i < customersPayeeInfo.Count; i++)
+                //{
+                //    await UIBizService.RequestCache<tb_FM_PayeeInfo>();
+                //}
             }
 
             return list;

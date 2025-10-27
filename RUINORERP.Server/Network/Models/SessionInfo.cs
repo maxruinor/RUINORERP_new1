@@ -143,15 +143,24 @@ namespace RUINORERP.Server.Network.Models
                 // 如果有数据要发送
                 if (dataBytes != null && dataBytes.Length > 0)
                 {
-                    // 直接发送数据
-                    await ((IAppSession)this).SendAsync(dataBytes, cancellationToken);
-                    
-                    // 更新发送统计
-                    Interlocked.Increment(ref _sentPacketsCount);
-                    Interlocked.Add(ref _totalBytesSent, dataBytes.Length);
-                    
-                    // 更新会话活动时间
-                    UpdateActivity();
+                    if(this.IsConnected)
+                    {
+                        // 直接发送数据
+                        await ((IAppSession)this).SendAsync(dataBytes, cancellationToken);
+
+                        // 更新发送统计
+                        Interlocked.Increment(ref _sentPacketsCount);
+                        Interlocked.Add(ref _totalBytesSent, dataBytes.Length);
+
+                        // 更新会话活动时间
+                        UpdateActivity();
+                    }
+                    else
+                    {
+
+                    }
+                   
+             
                 }
             }
             catch (TaskCanceledException ex)

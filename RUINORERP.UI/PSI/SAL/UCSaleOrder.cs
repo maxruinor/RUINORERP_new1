@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -54,6 +54,7 @@ using AutoUpdateTools;
 using LiveChartsCore.Geo;
 using static RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox;
 using RUINORERP.Business.Cache;
+using MathNet.Numerics;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -619,11 +620,8 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         var fileStorageInfo = list[i].FileStorageInfos[f];
                         //加载显示图片
-                        magicPicBox.LoadImageFromBytes(fileStorageInfo.FileData,fileStorageInfo.OriginalFileName);
-                        ImageInfo imageInfo = new ImageInfo();
-                        imageInfo.CreateTime = fileStorageInfo.Created_at.Value;
-                        imageInfo.FileName = fileStorageInfo.OriginalFileName;
-                        magicPicBox.SetImageInfo(i, imageInfo);
+                        magicPicBox.LoadImagesFromBytes(list[i].FileStorageInfos.Select(c => c.FileData).ToList(), list[i].FileStorageInfos.Select(c => c.OriginalFileName).ToList());
+
                     }
 
                 }
@@ -641,16 +639,19 @@ namespace RUINORERP.UI.PSI.SAL
         /// <param name="entity">销售订单实体</param>
         /// <param name="magicPicBox">用于获取图片数据的MagicPictureBox控件</param>
         /// <param name="category">文件分类，默认为"VoucherImage"</param>
+        /// <param name="onlyUpdated">是否只上传变更的图片</param>
         /// <returns>上传是否成功</returns>
-        private async Task<bool> UploadVoucherImageAsync(tb_SaleOrder entity, MagicPictureBox magicPicBox)
+        private async Task<bool> UploadVoucherImageAsync(tb_SaleOrder entity, MagicPictureBox magicPicBox, bool onlyUpdated = true, bool useVersionControl = false)
         {
             var ctrpay = Startup.GetFromFac<FileManagementController>();
             try
             {
                 if (magicPicBox.Image != null)
                 {
-                    // 使用GetAllImageBytesWithInfo获取所有图片数据和信息
-                    var imageBytesWithInfoList = magicPicBox.GetAllImageBytesWithInfo();
+                    // 根据onlyUpdated参数决定获取所有图片还是仅变更的图片
+                    var imageBytesWithInfoList = onlyUpdated ?
+                        magicPicBox.GetUpdatedImageBytesWithInfo() :
+                        magicPicBox.GetAllImageBytesWithInfo();
 
                     if (imageBytesWithInfoList != null && imageBytesWithInfoList.Count > 0)
                     {
@@ -662,16 +663,31 @@ namespace RUINORERP.UI.PSI.SAL
                             byte[] imageData = imageDataWithInfo.Item1;
                             ImageInfo imageInfo = imageDataWithInfo.Item2;
 
-                            // 上传图片
-                            var response = await ctrpay.UploadImageAsync(entity, imageInfo.FileName, imageData);
+                            // 检查是否为更新操作，准备版本控制参数
+                            long? existingFileId = null;
+                            string updateReason = null;
+                            
+                            // 如果图片信息包含文件ID且图片已更新
+                            if (imageInfo.FileId > 0 && imageInfo.IsUpdated)
+                            {
+                                existingFileId = imageInfo.FileId;
+                            }
+
+                            // 上传图片，传递版本控制开关参数
+                            var response = await ctrpay.UploadImageAsync(entity, imageInfo.OriginalFileName, imageData, existingFileId, updateReason, useVersionControl);
 
                             if (response.IsSuccess)
                             {
-                                MainForm.Instance.uclog.AddLog($"凭证图片上传成功：{imageInfo.FileName}");
+                                MainForm.Instance.uclog.AddLog($"凭证图片上传成功：{imageInfo.OriginalFileName}");
+                                // 上传成功后，将图片标记为未更新
+                                if (imageInfo.IsUpdated)
+                                {
+                                    imageInfo.IsUpdated = false;
+                                }
                             }
                             else
                             {
-                                MainForm.Instance.uclog.AddLog($"凭证图片上传失败：{imageInfo.FileName}，原因：{response.Message}");
+                                MainForm.Instance.uclog.AddLog($"凭证图片上传失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
                                 allSuccess = false;
                             }
                         }
@@ -1232,7 +1248,7 @@ namespace RUINORERP.UI.PSI.SAL
                     MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
-               
+
 
                 if (NeedValidated && AppContext.GlobalVariableConfig.OpenProdTypeForSaleCheck)
                 {
@@ -1364,10 +1380,10 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
 
-                        // 保存成功后上传凭证图片
+                        // 保存成功后上传凭证图片（只上传变更的图片）
                         if (magicPictureBox订金付款凭证 != null)
                         {
-                           bool uploadResult= await UploadVoucherImageAsync(EditEntity, magicPictureBox订金付款凭证);
+                            bool uploadResult = await UploadVoucherImageAsync(EditEntity, magicPictureBox订金付款凭证, onlyUpdated: true);
                         }
                     }
                     else
@@ -1378,7 +1394,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 return SaveResult.Succeeded;
 
-              
+
             }
             return false;
         }

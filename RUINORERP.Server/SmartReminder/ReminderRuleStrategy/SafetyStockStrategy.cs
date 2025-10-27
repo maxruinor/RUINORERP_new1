@@ -1,5 +1,7 @@
+using CacheManager.Core;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Global.EnumExt;
@@ -23,14 +25,17 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
         public int Priority => 0;
         private readonly INotificationService _notification;
         //private readonly RuleEngineCenter _ruleCenter;
+        private readonly IEntityCacheManager  _cacheManager;
         private readonly StockCacheService _stockCache;
         private readonly ILogger<SafetyStockStrategy> _logger;
         public SafetyStockStrategy(
+            IEntityCacheManager cacheManager,
         //RuleEngineCenter ruleCenter,
         INotificationService notification,
         StockCacheService stockCache,
         ILogger<SafetyStockStrategy> logger)
         {
+            _cacheManager = cacheManager;
             //_ruleCenter = ruleCenter;
             _notification = notification;
             _stockCache = stockCache;
@@ -105,7 +110,7 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
                 var stock = inventories[i];
                 if (stock.Quantity < stockPolicy.MinStock || stock.Quantity > stockPolicy.MaxStock)
                 {
-                    var product = GetProductInfoAsync(stock.ProdDetailID);
+                    var product = _cacheManager.GetEntity<View_ProdInfo>(stock.ProdDetailID);
                     if (product != null)
                     {
                         //这里要从缓存中获取产品的详情
@@ -133,20 +138,7 @@ namespace RUINORERP.Server.SmartReminder.ReminderRuleStrategy
         }
 
 
-
-        private View_ProdInfo GetProductInfoAsync(long productId)
-        {
-            // 实现产品信息获取...
-            View_ProdInfo obj = MyCacheManager.Instance.GetEntity<View_ProdInfo>(productId);
-            if (obj != null && obj is View_ProdInfo prodDetail)
-            {
-                return prodDetail;
-            }
-            else
-            {
-                return null;
-            }
-        }
+ 
 
     }
 }

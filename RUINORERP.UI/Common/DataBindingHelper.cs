@@ -3598,6 +3598,7 @@ namespace RUINORERP.UI.Common
                     }
                     else
                     {
+                        //缓存数据源 就是强类型了不用转换。调试确认！toDO by watson
                         Type listType = cachelist.GetType();
                         if (TypeHelper.IsGenericList(listType))
                         {
@@ -3609,15 +3610,15 @@ namespace RUINORERP.UI.Common
                             convertedList = cachelist as List<object>;
                             if (convertedList != null)
                             {
-                                // Type elementType = TypeHelper.GetFirstArgumentType(listType);
                                 Type elementType = null;
-                                if (MyCacheManager.Instance.NewTableTypeList.TryGetValue(tableName, out elementType))
+                                var schemaInfo = Business.Cache.TableSchemaManager.Instance.GetSchemaInfo(tableName);
+                                if (schemaInfo != null)
                                 {
                                     foreach (var item in convertedList)
                                     {
                                         try
                                         {
-                                            var convertedItem = Convert.ChangeType(item, elementType);
+                                            var convertedItem = Convert.ChangeType(item, schemaInfo.EntityType);
                                             tlist.Add(convertedItem as T);
                                         }
                                         catch (InvalidCastException)
@@ -3625,9 +3626,7 @@ namespace RUINORERP.UI.Common
                                             // 处理类型转换失败的情况
                                         }
                                     }
-                                    //var newInstance = Activator.CreateInstance(elementType);
-                                    //// 这里需要根据具体情况实现属性值的复制 这个方法也可以。但是还要处理赋值，麻烦一些
-                                    //tlist.Add(newInstance as T);
+                        
 
                                     #region  强类型 转换失败
                                     //var lastlist = ((IEnumerable<dynamic>)convertedList).Select(item => Activator.CreateInstance(elementType)).ToList();

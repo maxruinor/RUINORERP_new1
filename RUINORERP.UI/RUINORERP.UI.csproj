@@ -893,6 +893,7 @@
     <Compile Include="CommonUI\frmGenericOpinion.Designer.cs">
       <DependentUpon>frmGenericOpinion.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\CacheManager.cs" />
     <Compile Include="Common\CheckedListBoxHelper.cs" />
     <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlExtensions.cs" />

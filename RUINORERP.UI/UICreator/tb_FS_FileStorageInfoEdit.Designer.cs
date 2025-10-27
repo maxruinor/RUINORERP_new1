@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2025 15:32:19
+// 时间：10/27/2025 17:49:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -60,6 +60,10 @@ this.lblStorageFileName = new Krypton.Toolkit.KryptonLabel();
 this.txtStorageFileName = new Krypton.Toolkit.KryptonTextBox();
 this.txtStorageFileName.Multiline = true;
 
+this.lblFileExtension = new Krypton.Toolkit.KryptonLabel();
+this.txtFileExtension = new Krypton.Toolkit.KryptonTextBox();
+this.txtFileExtension.Multiline = true;
+
 this.lblBusinessType = new Krypton.Toolkit.KryptonLabel();
 this.txtBusinessType = new Krypton.Toolkit.KryptonTextBox();
 
@@ -87,10 +91,6 @@ this.txtStatus = new Krypton.Toolkit.KryptonTextBox();
 
 this.lblExpireTime = new Krypton.Toolkit.KryptonLabel();
 this.dtpExpireTime = new Krypton.Toolkit.KryptonDateTimePicker();
-
-this.lblIsRegistered = new Krypton.Toolkit.KryptonLabel();
-this.chkIsRegistered = new Krypton.Toolkit.KryptonCheckBox();
-this.chkIsRegistered.Values.Text ="";
 
 this.lblDescription = new Krypton.Toolkit.KryptonLabel();
 this.txtDescription = new Krypton.Toolkit.KryptonTextBox();
@@ -166,146 +166,146 @@ this.txtStorageFileName.TabIndex = 2;
 this.Controls.Add(this.lblStorageFileName);
 this.Controls.Add(this.txtStorageFileName);
 
+           //#####255FileExtension###String
+this.lblFileExtension.AutoSize = true;
+this.lblFileExtension.Location = new System.Drawing.Point(100,75);
+this.lblFileExtension.Name = "lblFileExtension";
+this.lblFileExtension.Size = new System.Drawing.Size(41, 12);
+this.lblFileExtension.TabIndex = 3;
+this.lblFileExtension.Text = "文件扩展名";
+this.txtFileExtension.Location = new System.Drawing.Point(173,71);
+this.txtFileExtension.Name = "txtFileExtension";
+this.txtFileExtension.Size = new System.Drawing.Size(100, 21);
+this.txtFileExtension.TabIndex = 3;
+this.Controls.Add(this.lblFileExtension);
+this.Controls.Add(this.txtFileExtension);
+
            //#####BusinessType###Int32
 this.lblBusinessType.AutoSize = true;
-this.lblBusinessType.Location = new System.Drawing.Point(100,75);
+this.lblBusinessType.Location = new System.Drawing.Point(100,100);
 this.lblBusinessType.Name = "lblBusinessType";
 this.lblBusinessType.Size = new System.Drawing.Size(41, 12);
-this.lblBusinessType.TabIndex = 3;
+this.lblBusinessType.TabIndex = 4;
 this.lblBusinessType.Text = "业务类型";
-this.txtBusinessType.Location = new System.Drawing.Point(173,71);
+this.txtBusinessType.Location = new System.Drawing.Point(173,96);
 this.txtBusinessType.Name = "txtBusinessType";
 this.txtBusinessType.Size = new System.Drawing.Size(100, 21);
-this.txtBusinessType.TabIndex = 3;
+this.txtBusinessType.TabIndex = 4;
 this.Controls.Add(this.lblBusinessType);
 this.Controls.Add(this.txtBusinessType);
 
            //#####200FileType###String
 this.lblFileType.AutoSize = true;
-this.lblFileType.Location = new System.Drawing.Point(100,100);
+this.lblFileType.Location = new System.Drawing.Point(100,125);
 this.lblFileType.Name = "lblFileType";
 this.lblFileType.Size = new System.Drawing.Size(41, 12);
-this.lblFileType.TabIndex = 4;
+this.lblFileType.TabIndex = 5;
 this.lblFileType.Text = "文件类型";
-this.txtFileType.Location = new System.Drawing.Point(173,96);
+this.txtFileType.Location = new System.Drawing.Point(173,121);
 this.txtFileType.Name = "txtFileType";
 this.txtFileType.Size = new System.Drawing.Size(100, 21);
-this.txtFileType.TabIndex = 4;
+this.txtFileType.TabIndex = 5;
 this.Controls.Add(this.lblFileType);
 this.Controls.Add(this.txtFileType);
 
            //#####FileSize###Int64
 this.lblFileSize.AutoSize = true;
-this.lblFileSize.Location = new System.Drawing.Point(100,125);
+this.lblFileSize.Location = new System.Drawing.Point(100,150);
 this.lblFileSize.Name = "lblFileSize";
 this.lblFileSize.Size = new System.Drawing.Size(41, 12);
-this.lblFileSize.TabIndex = 5;
+this.lblFileSize.TabIndex = 6;
 this.lblFileSize.Text = "文件大小（字节）";
-this.txtFileSize.Location = new System.Drawing.Point(173,121);
+this.txtFileSize.Location = new System.Drawing.Point(173,146);
 this.txtFileSize.Name = "txtFileSize";
 this.txtFileSize.Size = new System.Drawing.Size(100, 21);
-this.txtFileSize.TabIndex = 5;
+this.txtFileSize.TabIndex = 6;
 this.Controls.Add(this.lblFileSize);
 this.Controls.Add(this.txtFileSize);
 
            //#####64HashValue###String
 this.lblHashValue.AutoSize = true;
-this.lblHashValue.Location = new System.Drawing.Point(100,150);
+this.lblHashValue.Location = new System.Drawing.Point(100,175);
 this.lblHashValue.Name = "lblHashValue";
 this.lblHashValue.Size = new System.Drawing.Size(41, 12);
-this.lblHashValue.TabIndex = 6;
+this.lblHashValue.TabIndex = 7;
 this.lblHashValue.Text = "文件哈希值";
-this.txtHashValue.Location = new System.Drawing.Point(173,146);
+this.txtHashValue.Location = new System.Drawing.Point(173,171);
 this.txtHashValue.Name = "txtHashValue";
 this.txtHashValue.Size = new System.Drawing.Size(100, 21);
-this.txtHashValue.TabIndex = 6;
+this.txtHashValue.TabIndex = 7;
 this.Controls.Add(this.lblHashValue);
 this.Controls.Add(this.txtHashValue);
 
            //#####50StorageProvider###String
 this.lblStorageProvider.AutoSize = true;
-this.lblStorageProvider.Location = new System.Drawing.Point(100,175);
+this.lblStorageProvider.Location = new System.Drawing.Point(100,200);
 this.lblStorageProvider.Name = "lblStorageProvider";
 this.lblStorageProvider.Size = new System.Drawing.Size(41, 12);
-this.lblStorageProvider.TabIndex = 7;
+this.lblStorageProvider.TabIndex = 8;
 this.lblStorageProvider.Text = "存储引擎";
-this.txtStorageProvider.Location = new System.Drawing.Point(173,171);
+this.txtStorageProvider.Location = new System.Drawing.Point(173,196);
 this.txtStorageProvider.Name = "txtStorageProvider";
 this.txtStorageProvider.Size = new System.Drawing.Size(100, 21);
-this.txtStorageProvider.TabIndex = 7;
+this.txtStorageProvider.TabIndex = 8;
 this.Controls.Add(this.lblStorageProvider);
 this.Controls.Add(this.txtStorageProvider);
 
            //#####300StoragePath###String
 this.lblStoragePath.AutoSize = true;
-this.lblStoragePath.Location = new System.Drawing.Point(100,200);
+this.lblStoragePath.Location = new System.Drawing.Point(100,225);
 this.lblStoragePath.Name = "lblStoragePath";
 this.lblStoragePath.Size = new System.Drawing.Size(41, 12);
-this.lblStoragePath.TabIndex = 8;
+this.lblStoragePath.TabIndex = 9;
 this.lblStoragePath.Text = "存储路径";
-this.txtStoragePath.Location = new System.Drawing.Point(173,196);
+this.txtStoragePath.Location = new System.Drawing.Point(173,221);
 this.txtStoragePath.Name = "txtStoragePath";
 this.txtStoragePath.Size = new System.Drawing.Size(100, 21);
-this.txtStoragePath.TabIndex = 8;
+this.txtStoragePath.TabIndex = 9;
 this.Controls.Add(this.lblStoragePath);
 this.Controls.Add(this.txtStoragePath);
 
            //#####CurrentVersion###Int32
 this.lblCurrentVersion.AutoSize = true;
-this.lblCurrentVersion.Location = new System.Drawing.Point(100,225);
+this.lblCurrentVersion.Location = new System.Drawing.Point(100,250);
 this.lblCurrentVersion.Name = "lblCurrentVersion";
 this.lblCurrentVersion.Size = new System.Drawing.Size(41, 12);
-this.lblCurrentVersion.TabIndex = 9;
+this.lblCurrentVersion.TabIndex = 10;
 this.lblCurrentVersion.Text = "版本号";
-this.txtCurrentVersion.Location = new System.Drawing.Point(173,221);
+this.txtCurrentVersion.Location = new System.Drawing.Point(173,246);
 this.txtCurrentVersion.Name = "txtCurrentVersion";
 this.txtCurrentVersion.Size = new System.Drawing.Size(100, 21);
-this.txtCurrentVersion.TabIndex = 9;
+this.txtCurrentVersion.TabIndex = 10;
 this.Controls.Add(this.lblCurrentVersion);
 this.Controls.Add(this.txtCurrentVersion);
 
            //#####Status###Int32
 this.lblStatus.AutoSize = true;
-this.lblStatus.Location = new System.Drawing.Point(100,250);
+this.lblStatus.Location = new System.Drawing.Point(100,275);
 this.lblStatus.Name = "lblStatus";
 this.lblStatus.Size = new System.Drawing.Size(41, 12);
-this.lblStatus.TabIndex = 10;
+this.lblStatus.TabIndex = 11;
 this.lblStatus.Text = "文件状态";
-this.txtStatus.Location = new System.Drawing.Point(173,246);
+this.txtStatus.Location = new System.Drawing.Point(173,271);
 this.txtStatus.Name = "txtStatus";
 this.txtStatus.Size = new System.Drawing.Size(100, 21);
-this.txtStatus.TabIndex = 10;
+this.txtStatus.TabIndex = 11;
 this.Controls.Add(this.lblStatus);
 this.Controls.Add(this.txtStatus);
 
            //#####ExpireTime###DateTime
 this.lblExpireTime.AutoSize = true;
-this.lblExpireTime.Location = new System.Drawing.Point(100,275);
+this.lblExpireTime.Location = new System.Drawing.Point(100,300);
 this.lblExpireTime.Name = "lblExpireTime";
 this.lblExpireTime.Size = new System.Drawing.Size(41, 12);
-this.lblExpireTime.TabIndex = 11;
+this.lblExpireTime.TabIndex = 12;
 this.lblExpireTime.Text = "过期时间";
-//111======275
-this.dtpExpireTime.Location = new System.Drawing.Point(173,271);
+//111======300
+this.dtpExpireTime.Location = new System.Drawing.Point(173,296);
 this.dtpExpireTime.Name ="dtpExpireTime";
 this.dtpExpireTime.Size = new System.Drawing.Size(100, 21);
-this.dtpExpireTime.TabIndex = 11;
+this.dtpExpireTime.TabIndex = 12;
 this.Controls.Add(this.lblExpireTime);
 this.Controls.Add(this.dtpExpireTime);
-
-           //#####IsRegistered###Boolean
-this.lblIsRegistered.AutoSize = true;
-this.lblIsRegistered.Location = new System.Drawing.Point(100,300);
-this.lblIsRegistered.Name = "lblIsRegistered";
-this.lblIsRegistered.Size = new System.Drawing.Size(41, 12);
-this.lblIsRegistered.TabIndex = 12;
-this.lblIsRegistered.Text = "已注册";
-this.chkIsRegistered.Location = new System.Drawing.Point(173,296);
-this.chkIsRegistered.Name = "chkIsRegistered";
-this.chkIsRegistered.Size = new System.Drawing.Size(100, 21);
-this.chkIsRegistered.TabIndex = 12;
-this.Controls.Add(this.lblIsRegistered);
-this.Controls.Add(this.chkIsRegistered);
 
            //#####200Description###String
 this.lblDescription.AutoSize = true;
@@ -420,6 +420,9 @@ this.Controls.Add(this.txtOriginalFileName );
                 this.Controls.Add(this.lblStorageFileName );
 this.Controls.Add(this.txtStorageFileName );
 
+                this.Controls.Add(this.lblFileExtension );
+this.Controls.Add(this.txtFileExtension );
+
                 this.Controls.Add(this.lblBusinessType );
 this.Controls.Add(this.txtBusinessType );
 
@@ -446,9 +449,6 @@ this.Controls.Add(this.txtStatus );
 
                 this.Controls.Add(this.lblExpireTime );
 this.Controls.Add(this.dtpExpireTime );
-
-                this.Controls.Add(this.lblIsRegistered );
-this.Controls.Add(this.chkIsRegistered );
 
                 this.Controls.Add(this.lblDescription );
 this.Controls.Add(this.txtDescription );
@@ -502,6 +502,11 @@ private Krypton.Toolkit.KryptonTextBox txtStorageFileName;
 
     
         
+              private Krypton.Toolkit.KryptonLabel lblFileExtension;
+private Krypton.Toolkit.KryptonTextBox txtFileExtension;
+
+    
+        
               private Krypton.Toolkit.KryptonLabel lblBusinessType;
 private Krypton.Toolkit.KryptonTextBox txtBusinessType;
 
@@ -544,11 +549,6 @@ private Krypton.Toolkit.KryptonTextBox txtStatus;
         
               private Krypton.Toolkit.KryptonLabel lblExpireTime;
 private Krypton.Toolkit.KryptonDateTimePicker dtpExpireTime;
-
-    
-        
-              private Krypton.Toolkit.KryptonLabel lblIsRegistered;
-private Krypton.Toolkit.KryptonCheckBox chkIsRegistered;
 
     
         

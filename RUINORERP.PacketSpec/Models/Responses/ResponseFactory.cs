@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Responses.Authentication;
 using Polly;
+using RUINORERP.PacketSpec.Errors; // 添加统一错误代码的引用
 
 namespace RUINORERP.PacketSpec.Models.Responses
 {
@@ -369,15 +370,136 @@ namespace RUINORERP.PacketSpec.Models.Responses
             return response;
         }
 
+        #region 基于统一错误代码的响应创建方法
 
+        /// <summary>
+        /// 创建基于统一错误代码的特定类型错误响应
+        /// </summary>
+        /// <param name="context">命令上下文</param>
+        /// <param name="errorCode">统一错误代码</param>
+        /// <param name="customMessage">自定义消息（可选）</param>
+        /// <param name="additionalMetadata">额外的元数据</param>
+        /// <returns>特定类型的错误响应</returns>
+        public static IResponse CreateSpecificErrorResponse(
+            CommandContext context,
+            ErrorCode errorCode,
+            string customMessage = null,
+            Dictionary<string, object> additionalMetadata = null)
+        {
+            string finalMessage = customMessage ?? errorCode.Message;
+            
+            IResponse response = null;
+            string responseTypeName = context?.ExpectedResponseTypeName ?? string.Empty;
+            
+            if (!string.IsNullOrEmpty(responseTypeName))
+            {
+                try
+                {
+                    var instance = _defaultRegistry?.CreateResponseInstance(context);
+                    if (instance is IResponse newResponse)
+                    {
+                        // 初始化错误响应
+                        newResponse.IsSuccess = false;
+                        newResponse.ErrorMessage = errorCode.Message; // 详细错误信息使用统一错误代码的消息
+                        newResponse.Message = finalMessage; // 通用消息可以使用自定义消息或统一错误代码消息
+                        newResponse.ErrorCode = errorCode.Code; // 设置统一错误代码
 
+                        // 设置元数据
+                        if (newResponse.Metadata == null)
+                        {
+                            newResponse.Metadata = new Dictionary<string, object>();
+                        }
 
+                        // 添加错误相关的元数据
+                        newResponse.Metadata["ErrorSource"] = "Client";
+                        newResponse.Metadata["ErrorTime"] = DateTime.Now;
+                        newResponse.Metadata["UnifiedErrorCode"] = errorCode.Code;
 
+                        // 添加额外的元数据
+                        if (additionalMetadata != null)
+                        {
+                            foreach (var kvp in additionalMetadata)
+                            {
+                                newResponse.Metadata[kvp.Key] = kvp.Value;
+                            }
+                        }
+                        response = newResponse;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 记录错误但继续尝试其他方法
+                    _logger.LogWarning(ex, "使用解析的类型名称创建响应失败: {ResponseTypeName}", responseTypeName);
+                }
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// 创建基于统一错误代码的特定类型错误响应（泛型版本）
+        /// </summary>
+        /// <typeparam name="TResponse">响应类型</typeparam>
+        /// <param name="errorCode">统一错误代码</param>
+        /// <param name="customMessage">自定义消息（可选）</param>
+        /// <param name="additionalMetadata">额外的元数据</param>
+        /// <returns>特定类型的错误响应</returns>
+        public static TResponse CreateSpecificErrorResponse<TResponse>(
+            ErrorCode errorCode,
+            string customMessage = null,
+            Dictionary<string, object> additionalMetadata = null) 
+            where TResponse : class, IResponse
+        {
+            string finalMessage = customMessage ?? errorCode.Message;
+            
+            TResponse response = null;
+            string responseTypeName = typeof(TResponse).Name;
+            
+            if (!string.IsNullOrEmpty(responseTypeName))
+            {
+                try
+                {
+                    var instance = _defaultRegistry?.CreateInstance(typeof(TResponse));
+                    if (instance is TResponse newResponse)
+                    {
+                        // 初始化错误响应
+                        newResponse.IsSuccess = false;
+                        newResponse.ErrorMessage = errorCode.Message; // 详细错误信息使用统一错误代码的消息
+                        newResponse.Message = finalMessage; // 通用消息可以使用自定义消息或统一错误代码消息
+                        newResponse.ErrorCode = errorCode.Code; // 设置统一错误代码
+
+                        // 设置元数据
+                        if (newResponse.Metadata == null)
+                        {
+                            newResponse.Metadata = new Dictionary<string, object>();
+                        }
+
+                        // 添加错误相关的元数据
+                        newResponse.Metadata["ErrorSource"] = "Client";
+                        newResponse.Metadata["ErrorTime"] = DateTime.Now;
+                        newResponse.Metadata["UnifiedErrorCode"] = errorCode.Code;
+
+                        // 添加额外的元数据
+                        if (additionalMetadata != null)
+                        {
+                            foreach (var kvp in additionalMetadata)
+                            {
+                                newResponse.Metadata[kvp.Key] = kvp.Value;
+                            }
+                        }
+                        response = newResponse;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 记录错误但继续尝试其他方法
+                    _logger.LogWarning(ex, "使用解析的类型名称创建响应失败: {ResponseTypeName}", responseTypeName);
+                }
+            }
+
+            return response;
+        }
+
+        #endregion
     }
-
-
-
-
-
-
 }

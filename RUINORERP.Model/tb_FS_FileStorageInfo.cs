@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2025 15:32:20
+// 时间：10/27/2025 17:49:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -76,6 +76,20 @@ namespace RUINORERP.Model
             get{return _StorageFileName;}
             set{
             SetProperty(ref _StorageFileName, value);
+                        }
+        }
+
+        private string _FileExtension;
+        /// <summary>
+        /// 文件扩展名
+        /// </summary>
+        [AdvQueryAttribute(ColName = "FileExtension",ColDesc = "文件扩展名")] 
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "FileExtension" ,Length=255,IsNullable = false,ColumnDescription = "文件扩展名" )]
+        public string FileExtension
+        { 
+            get{return _FileExtension;}
+            set{
+            SetProperty(ref _FileExtension, value);
                         }
         }
 
@@ -205,8 +219,6 @@ namespace RUINORERP.Model
                         }
         }
 
-       
-
         private string _Description;
         /// <summary>
         /// 文件描述
@@ -221,7 +233,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime? _Created_at = System.DateTime.Now;
+        private DateTime? _Created_at;
         /// <summary>
         /// 创建时间
         /// </summary>
@@ -249,7 +261,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private DateTime? _Modified_at= System.DateTime.Now;
+        private DateTime? _Modified_at;
         /// <summary>
         /// 修改时间
         /// </summary>
@@ -297,18 +309,18 @@ namespace RUINORERP.Model
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_FS_FileStorageVersion.FileId))]
-        public virtual List<tb_FS_FileStorageVersion> tb_FS_FileStorageVersions { get; set; }
-        //tb_FS_FileStorageVersion.FileId)
-        //FileId.FK_TB_FS_FI_REFERENCE_TB_FS_FI)
-        //tb_FS_FileStorageInfo.FileId)
-
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FS_BusinessRelation.FileId))]
         public virtual List<tb_FS_BusinessRelation> tb_FS_BusinessRelations { get; set; }
         //tb_FS_BusinessRelation.FileId)
         //FileId.FK_TB_FS_BU_REFERENCE_TB_FS_FI)
+        //tb_FS_FileStorageInfo.FileId)
+
+        //[Browsable(false)]打印报表时的数据源会不显示
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_FS_FileStorageVersion.FileId))]
+        public virtual List<tb_FS_FileStorageVersion> tb_FS_FileStorageVersions { get; set; }
+        //tb_FS_FileStorageVersion.FileId)
+        //FileId.FK_TB_FS_FI_REFERENCE_TB_FS_FI)
         //tb_FS_FileStorageInfo.FileId)
 
 

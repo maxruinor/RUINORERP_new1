@@ -36,14 +36,16 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 上传图片文件
+        /// 上传文件（图片或其他类型文件）
         /// </summary>
         /// <param name="entity">业务实体</param>
         /// <param name="OriginalFileName">文件名</param>
         /// <param name="fileData">文件数据</param>
-        /// <param name="category">文件分类</param>
+        /// <param name="fileId">文件ID（可选），用于更新现有文件</param>
+        /// <param name="updateReason">更新原因（可选），用于版本控制</param>
+        /// <param name="useVersionControl">是否使用版本控制（可选），默认为false</param>
         /// <returns>上传结果，包含文件ID</returns>
-        public async Task<FileUploadResponse> UploadImageAsync(BaseEntity entity, string OriginalFileName, byte[] fileData)
+        public async Task<FileUploadResponse> UploadImageAsync(BaseEntity entity, string OriginalFileName, byte[] fileData, long? fileId = null, string updateReason = null, bool useVersionControl = false)
         {
             // 参数验证
             if (entity == null)
@@ -70,10 +72,22 @@ namespace RUINORERP.Business
                 // 获取业务编号
                 string businessNo = entity.GetPropertyValue<string>(entityInfo.NoField).ToString();
 
-                tb_FS_FileStorageInfo  storageInfo= new tb_FS_FileStorageInfo();
+                tb_FS_FileStorageInfo storageInfo = new tb_FS_FileStorageInfo();
                 storageInfo.OriginalFileName = OriginalFileName;
                 storageInfo.BusinessType = (int)entityInfo.BizType;
-                storageInfo.FileData= fileData;
+                storageInfo.FileData = fileData;
+                
+                // 如果提供了文件ID
+                if (fileId.HasValue)
+                {
+                    storageInfo.FileId = fileId.Value;
+                    
+                    // 根据版本控制开关决定是否启用版本控制
+                    // 注意：tb_FS_FileStorageInfo类中没有IsUpdate和UpdateReason属性
+                    // 版本控制逻辑将在服务器端处理
+                    // 不使用版本控制时，仍然设置FileId，但不启用版本控制标志
+                }
+                
                 // 准备上传请求
                 var uploadRequest = new FileUploadRequest();
                 uploadRequest.FileStorageInfos.Add(storageInfo);

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/25/2025 15:32:19
+// 时间：10/27/2025 17:49:29
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -56,6 +56,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _StorageFileName;}
             set{SetProperty(ref _StorageFileName, value);}
+        }
+     
+
+        private string _FileExtension;
+        /// <summary>
+        /// 文件扩展名
+        /// </summary>
+        [AdvQueryAttribute(ColName = "FileExtension",ColDesc = "文件扩展名")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "FileExtension",Length=255,IsNullable = false,ColumnDescription = "文件扩展名" )]
+        public string FileExtension 
+        { 
+            get{return _FileExtension;}
+            set{SetProperty(ref _FileExtension, value);}
         }
      
 
@@ -176,19 +189,6 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private bool _IsRegistered;
-        /// <summary>
-        /// 已注册
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsRegistered",ColDesc = "已注册")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsRegistered",IsNullable = false,ColumnDescription = "已注册" )]
-        public bool IsRegistered 
-        { 
-            get{return _IsRegistered;}
-            set{SetProperty(ref _IsRegistered, value);}
-        }
-     
-
         private string _Description;
         /// <summary>
         /// 文件描述
@@ -202,7 +202,7 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private DateTime? _Created_at= '(getdate())';
+        private DateTime? _Created_at;
         /// <summary>
         /// 创建时间
         /// </summary>
@@ -228,7 +228,7 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private DateTime? _Modified_at= '(getdate())';
+        private DateTime? _Modified_at;
         /// <summary>
         /// 修改时间
         /// </summary>

@@ -104,40 +104,7 @@ namespace RUINORERP.Server.Helpers
         }
 
 
-        /// <summary>
-        /// 创建业务关联实体
-        /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="businessType">业务类型</param>
-        /// <param name="businessNo">业务编号</param>
-        /// <param name="isMainFile">是否为主文件</param>
-        /// <param name="relatedField">关联字段名（可选）</param>
-        /// <param name="description">描述信息（可选）</param>
-        /// <param name="userId">用户ID（可选）</param>
-        /// <returns>业务关联实体</returns>
-        public static tb_FS_BusinessRelation CreateBusinessRelation(
-            long fileId, 
-            int businessType, 
-            string businessNo, 
-            bool isMainFile = true,
-            string relatedField = null,
-            string description = null,
-            long userId = 0)
-        {
-            var businessRelation = new tb_FS_BusinessRelation
-            {
-                FileId = fileId,
-                BusinessType = businessType,
-                BusinessNo = businessNo,
-                IsMainFile = isMainFile,
-                RelatedField = relatedField,
-                Created_by = userId,
-                Created_at = DateTime.Now,
-                IsActive = true // 默认为激活状态
-            };
-
-            return businessRelation;
-        }
+        
 
         /// <summary>
         /// 检查业务关联是否已存在

@@ -24,6 +24,10 @@ namespace RUINORERP.Business.BizMapperService
         public string TableName { get; internal set; }
         public string TableDescription { get; internal set; }
         public string IdField { get; internal set; }
+
+        /// <summary>
+        /// 单据编号字段
+        /// </summary>
         public string NoField { get; internal set; }
         public string DescriptionField { get; internal set; }
         public string DetailProperty { get; internal set; }

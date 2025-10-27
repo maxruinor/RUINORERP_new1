@@ -41,6 +41,18 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
 
         public int? BusinessType { get; set; }
+        /*
+        ## 结论与建议
+                从当前代码实现来看，RelatedField字段确实存在冗余 。在现有业务流程中，它几乎总是被设置为固定值"MainFile"，并且没有基于此字段的特殊业务逻辑处理。理论上可以只保留BusinessNo字段来完成文件与业务的关联。
+
+        然而，在进行实际修改时需要考虑以下因素：
+
+        1. 修改范围 ：删除或合并字段需要修改实体类、DTO、UI界面、验证器等多个地方
+        2. 未来扩展性 ：RelatedField可能是为了将来支持在同一业务记录下关联不同类型的文件（如主文件、附件、说明文档等）而预留的字段
+        3. 兼容性问题 ：需要考虑对现有数据的影响，可能需要数据迁移
+        如果当前业务需求确实简单，且未来短期内没有扩展计划，可以考虑合并这两个字段，简化数据模型。否则，建议保留当前结构，以支持未来可能的业务扩展*/
+        public string RelatedField { get; set; }
+
         /// <summary>
         /// 唯一的业务编号，如订单编号、合同编号，产品SKU码
         /// </summary>

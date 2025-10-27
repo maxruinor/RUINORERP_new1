@@ -256,6 +256,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             BusinessNo = uploadRequest.BusinessNo,
                             FileId = fileStorageInfo.FileId,
                             IsMainFile = (i == 0), // 第一个文件为主文件
+                            RelatedField = uploadRequest.RelatedField, // 设置关联字段，必填项
                             Created_at = DateTime.Now,
                             Created_by = uploadRequest.Created_by ?? executionContext.UserId
                         };

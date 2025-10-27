@@ -46,7 +46,7 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="updateReason">更新原因（可选），用于版本控制</param>
         /// <param name="useVersionControl">是否使用版本控制（可选），默认为false</param>
         /// <returns>上传结果，包含文件ID</returns>
-        public async Task<FileUploadResponse> UploadImageAsync(BaseEntity entity, string OriginalFileName, byte[] fileData, long? fileId = null, string updateReason = null, bool useVersionControl = false)
+        public async Task<FileUploadResponse> UploadImageAsync(BaseEntity entity, string OriginalFileName, byte[] fileData, string RelatedField, long? fileId = null, string updateReason = null, bool useVersionControl = false)
         {
             // 参数验证
             if (entity == null)
@@ -77,25 +77,26 @@ namespace RUINORERP.UI.Network.Services
                 storageInfo.OriginalFileName = OriginalFileName;
                 storageInfo.BusinessType = (int)entityInfo.BizType;
                 storageInfo.FileData = fileData;
-                
+
                 // 如果提供了文件ID
                 if (fileId.HasValue)
                 {
                     storageInfo.FileId = fileId.Value;
-                    
+
                     // 根据版本控制开关决定是否启用版本控制
                     // 注意：tb_FS_FileStorageInfo类中没有IsUpdate和UpdateReason属性
                     // 版本控制逻辑将在服务器端处理
                     // 不使用版本控制时，仍然设置FileId，但不启用版本控制标志
                 }
-                
+
                 // 准备上传请求
                 var uploadRequest = new FileUploadRequest();
                 uploadRequest.FileStorageInfos.Add(storageInfo);
                 uploadRequest.BusinessNo = businessNo;
                 uploadRequest.BusinessType = (int)entityInfo.BizType;
-                 // 执行上传
-                 var response = await fileService.UploadFileAsync(uploadRequest);
+                uploadRequest.RelatedField = RelatedField;
+                // 执行上传
+                var response = await fileService.UploadFileAsync(uploadRequest);
 
                 // 如果上传成功，创建业务关联
                 if (response.IsSuccess && response.FileStorageInfos.Count > 0)

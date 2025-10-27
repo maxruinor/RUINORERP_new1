@@ -614,7 +614,6 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (list == null || list.Count == 0)
                 {
-                    logger.LogInformation("未找到关联的凭证图片");
                     return;
                 }
 
@@ -723,8 +722,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
 
                     // 上传图片
-                    var response = await ctrpay.UploadImageAsync(entity, imageInfo.OriginalFileName,
-                        imageData, existingFileId, updateReason, useVersionControl);
+                    var response = await ctrpay.UploadImageAsync(entity, imageInfo.OriginalFileName, imageData,"预付凭证", existingFileId, updateReason, useVersionControl);
 
                     if (response.IsSuccess)
                     {
@@ -814,7 +812,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
 
                     // 上传图片，启用版本控制
-                    var response = await ctrpay.UploadImageAsync(entity, imageInfo.OriginalFileName, imageData, existingFileId, updateReason, true);
+                    var response = await ctrpay.UploadImageAsync(entity, imageInfo.OriginalFileName, imageData, "预付凭证", existingFileId, updateReason, true);
 
                     if (response.IsSuccess)
                     {

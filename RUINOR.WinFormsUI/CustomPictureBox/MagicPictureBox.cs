@@ -75,13 +75,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         // 图片信息列表
         private List<ImageInfo> imageInfos = new List<ImageInfo>();
 
-        // 更新标记常量
-        private const string UPDATE_MARKER = "UPDATE"; // 标记需要更新的图片
+        // 使用ImageUpdateManager中的UPDATE_MARKER常量
 
         #region 图片哈希计算功能
-
-        /// <summary>
-        // 已移除重复的私有CalculateImageHash方法，使用下面的公有方法替代
 
         /// <summary>
         /// 比较两张图片是否相同（基于哈希值）
@@ -143,56 +139,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         #endregion
 
-        #region 图片处理功能
-
-        /// <summary>
-        /// 将Image对象转换为字节数组
-        /// </summary>
-        /// <param name="image">Image对象</param>
-        /// <returns>字节数组</returns>
-        private byte[] ImageToBytes(Image image)
-        {
-            if (image == null) return null;
-
-            using (var ms = new MemoryStream())
-            {
-                try
-                {
-                    image.Save(ms, image.RawFormat);
-                    return ms.ToArray();
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"ImageToBytes 错误: {ex.Message}");
-                    return null;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 将字节数组转换为Image对象
-        /// </summary>
-        /// <param name="bytes">字节数组</param>
-        /// <returns>Image对象</returns>
-        // 已移除重复的私有BytesToImage方法，使用下面的公有方法替代
-
-
-        #endregion
-
         #region 图片缓存功能
-
-        // 图片缓存 - 使用哈希值作为键
-        private ConcurrentDictionary<string, CachedImage> imageCache = new ConcurrentDictionary<string, CachedImage>();
-
-        // 缓存访问顺序队列，用于LRU策略
-        private Queue<string> cacheAccessQueue = new Queue<string>();
-
-        // 缓存锁，确保线程安全
-        private object cacheLock = new object();
-
-        // 缓存最大容量
-        private int maxCacheSize = 100;
-
 
         /// <summary>
         /// 图片缓存的最大容量
@@ -202,14 +149,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         [DefaultValue(100)]
         public int MaxCacheSize
         {
-            get { return maxCacheSize; }
+            get { return _imageCache.MaxCapacity; }
             set
             {
                 if (value > 0)
                 {
-                    maxCacheSize = value;
-                    // 调整缓存大小
-                    TrimCache();
+                    _imageCache.MaxCapacity = value;
                 }
             }
         }
@@ -221,34 +166,18 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// </summary>
         /// <param name="hashValue">图片哈希值</param>
         /// <param name="image">Image对象</param>
-        /// <param name="imageBytes">图片字节数组</param>
-        private void AddToCache(string hashValue, Image image, byte[] imageBytes = null)
+        private void AddToCache(string hashValue, Image image)
         {
             if (string.IsNullOrEmpty(hashValue) || image == null)
                 return;
 
-            lock (cacheLock)
+            try
             {
-                // 更新访问顺序
-                if (cacheAccessQueue.Contains(hashValue))
-                {
-                    // 移除旧的访问记录
-                    var tempQueue = new Queue<string>(cacheAccessQueue.Where(h => h != hashValue));
-                    cacheAccessQueue = tempQueue;
-                }
-                // 添加到队列末尾（最近使用）
-                cacheAccessQueue.Enqueue(hashValue);
-
-                // 添加或更新缓存
-                imageCache[hashValue] = new CachedImage
-                {
-                    Image = image,
-                    ImageBytes = imageBytes,
-                    LastAccessTime = DateTime.Now
-                };
-
-                // 检查并调整缓存大小
-                TrimCache();
+                _imageCache.Add(hashValue, image);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"添加图片到缓存失败: {ex.Message}");
             }
         }
 
@@ -256,75 +185,38 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// 从缓存中获取图片
         /// </summary>
         /// <param name="hashValue">图片哈希值</param>
-        /// <returns>缓存的CachedImage对象，如果不存在则返回null</returns>
-        private CachedImage GetFromCache(string hashValue)
+        /// <returns>缓存的Image对象，如果不存在则返回null</returns>
+        private Image GetFromCache(string hashValue)
         {
             if (string.IsNullOrEmpty(hashValue))
                 return null;
 
-            if (imageCache.TryGetValue(hashValue, out var cachedImage))
+            try
             {
-                lock (cacheLock)
-                {
-                    // 更新访问顺序
-                    if (cacheAccessQueue.Contains(hashValue))
-                    {
-                        var tempQueue = new Queue<string>(cacheAccessQueue.Where(h => h != hashValue));
-                        cacheAccessQueue = tempQueue;
-                    }
-                    cacheAccessQueue.Enqueue(hashValue);
-
-                    // 更新最后访问时间
-                    cachedImage.LastAccessTime = DateTime.Now;
-                }
-                return cachedImage;
+                return _imageCache.Get(hashValue);
             }
-
-            return null;
-        }
-
-        /// <summary>
-        /// 调整缓存大小，移除最少使用的图片
-        /// </summary>
-        private void TrimCache()
-        {
-            lock (cacheLock)
+            catch (Exception ex)
             {
-                while (imageCache.Count > maxCacheSize && cacheAccessQueue.Count > 0)
-                {
-                    string oldestHash = cacheAccessQueue.Dequeue();
-                    if (imageCache.TryRemove(oldestHash, out var removedImage))
-                    {
-                        // 释放图片资源
-                        // 使用ImageUtils工具类安全释放图片资源
-                        var tempImage = removedImage.Image;
-                        ImageUtils.SafeDispose(ref tempImage);
-                        removedImage.Image = null; // 确保原对象引用被清除
-                        System.Diagnostics.Debug.WriteLine($"缓存清理: 移除图片 {oldestHash}");
-                    }
-                }
+                System.Diagnostics.Debug.WriteLine($"从缓存获取图片失败: {ex.Message}");
+                return null;
             }
         }
+
+        // TrimCache方法已由LRUImageCache内部实现，不再需要
 
         /// <summary>
         /// 清空缓存
         /// </summary>
         public void ClearCache()
         {
-            lock (cacheLock)
+            try
             {
-                // 释放所有图片资源
-                foreach (var cachedImage in imageCache.Values)
-                {
-                    // 使用ImageUtils工具类安全释放图片资源
-                    var tempImage = cachedImage.Image;
-                    ImageUtils.SafeDispose(ref tempImage);
-                    cachedImage.Image = null; // 确保原对象引用被清除
-                }
-
-                imageCache.Clear();
-                cacheAccessQueue.Clear();
+                _imageCache.Clear();
                 System.Diagnostics.Debug.WriteLine("缓存已清空");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"清空缓存失败: {ex.Message}");
             }
         }
 
@@ -370,8 +262,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 {
                     try
                     {
-                        // 只处理已更新的图片
-                        if (i < imageInfos.Count && imageInfos[i] != null && !imageInfos[i].IsUpdated)
+                        // 只处理已更新的图片，使用统一的判断方法
+                        if (i < imageInfos.Count && imageInfos[i] != null && !IsImageNeedingUpdate(i))
                         {
                             continue;
                         }
@@ -516,10 +408,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             // 设置双击事件
             this.DoubleClick += CustomPictureBox_DoubleClick;
 
+            // 初始化右键菜单，添加所有需要的菜单项
             contextMenuStrip.Items.Add("粘贴图片", null, PasteImage);
-
             this.ContextMenuStrip = contextMenuStrip;
-
+            
+            // 调用方法添加所有其他菜单项，确保右键菜单显示统一
+            AddContextMenuItems();
 
             this.Paint += new PaintEventHandler(PictureBoxViewer_Paint);
 
@@ -567,16 +461,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     string hashValue = CalculateImageHash(imageBytes);
 
                     // 尝试从缓存中获取图片
-                    CachedImage cachedImage = GetFromCache(hashValue);
+                    Image cachedImage = GetFromCache(hashValue);
                     Image loadedImage;
 
                     if (cachedImage != null)
                     {
                         System.Diagnostics.Debug.WriteLine($"从缓存加载多张图片中的第{i + 1}张: {hashValue}");
-                        // 创建图片副本
+                        // 创建图片副本，避免修改原始缓存图片
                         using (var ms = new MemoryStream())
                         {
-                            cachedImage.Image.Save(ms, ImageFormat.Png);
+                            cachedImage.Save(ms, ImageFormat.Png);
                             loadedImage = Image.FromStream(ms);
                         }
                     }
@@ -590,7 +484,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         }
 
                         // 添加到缓存
-                        AddToCache(hashValue, new Bitmap(loadedImage), imageBytes);
+                        AddToCache(hashValue, new Bitmap(loadedImage));
                     }
 
                     images.Add(loadedImage);
@@ -2811,14 +2705,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 throw new ArgumentNullException(nameof(image), "Image对象不能为空");
             }
 
-            // 如果未指定格式，默认使用JPEG
-            var outputFormat = format ?? ImageFormat.Jpeg;
-
-            using (var memoryStream = new MemoryStream())
-            {
-                image.Save(memoryStream, outputFormat);
-                return memoryStream.ToArray();
-            }
+            // 使用ImageProcessor组件处理图片转换
+            return _imageProcessor.ImageToBytes(image);
         }
 
         /// <summary>
@@ -2833,56 +2721,20 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 throw new ArgumentNullException(nameof(bytes), "图片字节数组不能为空");
             }
 
-            try
-            {
-                using (var memoryStream = new MemoryStream(bytes))
-                {
-                    return Image.FromStream(memoryStream);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"BytesToImage 错误: {ex.Message}");
-                throw;
-            }
+            // 使用ImageProcessor组件处理图片转换
+            return _imageProcessor.BytesToImage(bytes);
         }
-
-
 
         /// <summary>
-        /// 调整图片尺寸
+        /// 将字节数组转换为Image对象
         /// </summary>
-        /// <param name="image">原始图片</param>
-        /// <param name="newWidth">新宽度</param>
-        /// <param name="newHeight">新高度</param>
-        /// <returns>调整尺寸后的图片</returns>
-        public Image ResizeImage(Image image, int newWidth, int newHeight)
-        {
-            try
-            {
-                if (image == null)
-                {
-                    throw new ArgumentNullException("image", "图片对象不能为空");
-                }
+        /// <param name="bytes">字节数组</param>
+        /// <returns>Image对象</returns>
+        // 已移除重复的私有BytesToImage方法，使用下面的公有方法替代
 
-                // 验证尺寸参数
-                if (newWidth <= 0 || newHeight <= 0)
-                {
-                    throw new ArgumentOutOfRangeException("newWidth, newHeight", "图片尺寸必须大于0");
-                }
+        #endregion
 
-                // 使用ImageProcessor组件处理图片缩放
-                return _imageProcessor.ResizeImage(image, newWidth, newHeight);
-            }
-            catch (Exception ex)
-            {
-                // 记录错误并返回null，避免影响后续操作
-                System.Diagnostics.Debug.WriteLine($"调整图片尺寸失败: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
-                MessageBox.Show($"图片缩放失败: {ex.Message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return null;
-            }
-        }
+        #region 图片缓存功能
 
         /// <summary>
         /// 获取图片编码器
@@ -3123,9 +2975,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             if (index >= 0 && index < imageInfos.Count)
             {
-                // 标记图片为需要更新
-                imageInfos[index].Metadata["UpdateMarker"] = "UPDATE_REQUIRED";
+                // 使用UpdateManager标记图片为需要更新，确保与ImageUpdateManager中的实现保持一致
+                _updateManager.MarkImageAsUpdated(imageInfos[index]);
                 imageInfos[index].ModifiedAt = DateTime.Now;
+                imageInfos[index].IsUpdated = true; // 确保同时设置IsUpdated为true
             }
         }
 
@@ -3138,9 +2991,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             if (index >= 0 && index < imageInfos.Count)
             {
-                // 如果图片元数据标记为需要更新，或者哈希值不为空，则需要更新
-                return (imageInfos[index].Metadata.ContainsKey("UpdateMarker") && imageInfos[index].Metadata["UpdateMarker"] == "UPDATE_REQUIRED") ||
-                       (!string.IsNullOrEmpty(imageInfos[index].HashValue));
+                // 统一使用ImageUpdateManager的判断逻辑
+                return _updateManager.IsImageNeedingUpdate(imageInfos[index]);
             }
             return false;
         }

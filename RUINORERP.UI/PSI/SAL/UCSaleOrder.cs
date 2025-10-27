@@ -55,6 +55,7 @@ using LiveChartsCore.Geo;
 using static RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox;
 using RUINORERP.Business.Cache;
 using MathNet.Numerics;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -615,16 +616,16 @@ namespace RUINORERP.UI.PSI.SAL
                 magicPicBox.MultiImageSupport = list.Count > 0;
 
                 for (int i = 0; i < list.Count; i++)
-                {
-                    for (int f = 0; f < list[i].FileStorageInfos.Count; f++)
-                    {
-                        var fileStorageInfo = list[i].FileStorageInfos[f];
-                        //加载显示图片
-                        magicPicBox.LoadImagesFromBytes(list[i].FileStorageInfos.Select(c => c.FileData).ToList(), list[i].FileStorageInfos.Select(c => c.OriginalFileName).ToList());
+                        {
+                            for (int f = 0; f < list[i].FileStorageInfos.Count; f++)
+                            {
+                                var fileStorageInfo = list[i].FileStorageInfos[f];
+                                //加载显示图片
+                                magicPicBox.LoadImagesFromBytes(list[i].FileStorageInfos.Select(c => c.FileData).ToList(), list[i].FileStorageInfos.Select(c => c.OriginalFileName).ToList(), isFromServer: true);
 
-                    }
+                            }
 
-                }
+                        }
             }
             catch (Exception ex)
             {
@@ -701,6 +702,66 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 logger.LogError("上传凭证图片异常", ex);
                 MainForm.Instance.uclog.AddLog($"上传凭证图片出错：{ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 专门处理已更新图片的上传
+        /// </summary>
+        /// <param name="entity">销售订单实体</param>
+        /// <param name="updatedImages">需要更新的图片列表</param>
+        /// <returns>上传是否成功</returns>
+        private async Task<bool> UploadUpdatedImagesAsync(tb_SaleOrder entity, List<Tuple<byte[], ImageInfo>> updatedImages)
+        {
+            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            try
+            {
+                if (updatedImages == null || updatedImages.Count == 0)
+                {
+                    return true; // 没有需要更新的图片
+                }
+
+                bool allSuccess = true;
+
+                // 遍历上传所有需要更新的图片
+                foreach (var imageDataWithInfo in updatedImages)
+                {
+                    byte[] imageData = imageDataWithInfo.Item1;
+                    ImageInfo imageInfo = imageDataWithInfo.Item2;
+
+                    // 检查是否为更新操作，准备版本控制参数
+                    long? existingFileId = null;
+                    string updateReason = null;
+                    
+                    // 如果图片信息包含文件ID且图片已更新
+                    if (imageInfo.FileId > 0 && imageInfo.IsUpdated)
+                    {
+                        existingFileId = imageInfo.FileId;
+                    }
+
+                    // 上传图片，启用版本控制
+                    var response = await ctrpay.UploadImageAsync(entity, imageInfo.OriginalFileName, imageData, existingFileId, updateReason, true);
+
+                    if (response.IsSuccess)
+                    {
+                        MainForm.Instance.uclog.AddLog($"凭证图片更新成功：{imageInfo.OriginalFileName}");
+                        // 上传成功后，将图片标记为未更新
+                        imageInfo.IsUpdated = false;
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog($"凭证图片更新失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
+                        allSuccess = false;
+                    }
+                }
+
+                return allSuccess;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("更新凭证图片异常", ex);
+                MainForm.Instance.uclog.AddLog($"更新凭证图片出错：{ex.Message}");
                 return false;
             }
         }
@@ -1383,7 +1444,13 @@ namespace RUINORERP.UI.PSI.SAL
                         // 保存成功后上传凭证图片（只上传变更的图片）
                         if (magicPictureBox订金付款凭证 != null)
                         {
-                            bool uploadResult = await UploadVoucherImageAsync(EditEntity, magicPictureBox订金付款凭证, onlyUpdated: true);
+                            // 明确区分处理逻辑
+                            var updatedImages = magicPictureBox订金付款凭证.GetImagesNeedingUpdate();
+                            if (updatedImages.Count > 0)
+                            {
+                                // 只处理更新的图片
+                                await UploadUpdatedImagesAsync(EditEntity, updatedImages);
+                            }
                         }
                     }
                     else

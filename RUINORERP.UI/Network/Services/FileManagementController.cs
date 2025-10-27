@@ -15,7 +15,7 @@ using RUINORERP.Common.Extensions;
 using LiveChartsCore.Geo;
 using RUINORERP.UI.Network.Services;
 
-namespace RUINORERP.Business
+namespace RUINORERP.UI.Network.Services
 {
     /// <summary>
     /// 文件管理服务实现类

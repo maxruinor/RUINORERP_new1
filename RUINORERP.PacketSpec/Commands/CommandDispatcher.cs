@@ -15,6 +15,7 @@ using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Responses.Authentication;
+using RUINORERP.PacketSpec.Commands.System;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -96,14 +97,19 @@ namespace RUINORERP.PacketSpec.Commands
             // 使用传入的熔断器策略，如果未提供则使用默认策略
             // 熔断器的核心参数
             /*
-            - 触发条件 ：当响应不为空且 IsSuccess=false 时，认为是一次失败
+            -(旧) 触发条件 ：当响应不为空且 IsSuccess=false 时，认为是一次失败
+            - 触发条件 ：当响应为空，或发生异常时，认为是系统故障
             - 失败阈值 ：连续10次失败后触发熔断
             - 熔断持续时间 ：熔断器打开后，持续1分钟
             - 错误码 ：熔断器打开时返回503错误
             */
+            // 注意：不将业务层面的失败(IsSuccess=false)作为熔断触发条件，因为这是正常的业务逻辑
+            // 熔断器应该只对系统级错误(如连接超时、服务器内部错误等)做出反应
             _defaultCircuitBreakerPolicy = circuitBreakerPolicy ?? Policy
-                .HandleResult<IResponse>(r => r != null && !r.IsSuccess)
-                .OrResult(r => r == null) // 处理空响应情况
+                //.HandleResult<IResponse>(r => r != null && !r.IsSuccess)
+                //.OrResult(r => r == null) // 处理空响应情况
+                .Handle<Exception>()
+                .OrResult<IResponse>(r => r == null) // 只处理空响应情况
                 .CircuitBreakerAsync<IResponse>(
                     handledEventsAllowedBeforeBreaking: 10,
                     durationOfBreak: TimeSpan.FromMinutes(1),
@@ -289,6 +295,11 @@ namespace RUINORERP.PacketSpec.Commands
             if (cmd == null || cmd.Packet == null)
             {
                 return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, errorMessage: "命令对象不能为空");
+            }
+
+            if (cmd.Packet.CommandId!= SystemCommands.Heartbeat)
+            {
+
             }
 
             if (!_isInitialized)
@@ -980,7 +991,7 @@ namespace RUINORERP.PacketSpec.Commands
                 }
 
                 _disposed = true;
-            }
+                 }
 
             GC.SuppressFinalize(this);
         }
@@ -992,3 +1003,4 @@ namespace RUINORERP.PacketSpec.Commands
 
 
 }
+

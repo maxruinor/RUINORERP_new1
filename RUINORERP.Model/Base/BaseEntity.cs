@@ -746,6 +746,19 @@ namespace RUINORERP.Model
         [Browsable(false)]
         public DataRowImage RowImage { get => _RowImage; set => _RowImage = value; }
 
+        /// <summary>
+        /// 图片ID
+        /// 删除时根据这个ID删除图片
+        /// </summary>
+        public List<tb_FS_FileStorageInfo> FileStorageInfoList= new List<tb_FS_FileStorageInfo>();
+        public void AddFileStorageInfo(tb_FS_FileStorageInfo FileStorageInfo)
+        {
+            if (FileStorageInfo.FileId <= 0)
+                return;
+            if (FileStorageInfoList.Contains(FileStorageInfo))
+                return;
+            FileStorageInfoList.Add(FileStorageInfo);
+        }
 
 
         private bool? _selected = false;

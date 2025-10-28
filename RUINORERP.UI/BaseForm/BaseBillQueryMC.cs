@@ -34,6 +34,7 @@ using RUINORERP.UI.Common;
 using RUINORERP.UI.FormProperty;
 using RUINORERP.UI.HelpSystem;
 using RUINORERP.UI.Monitoring.Auditing;
+using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.PSI.PUR;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.UControls;
@@ -705,10 +706,20 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async virtual Task<bool> DeleteRemoteImages(M EditEntity)
+        public async virtual Task<bool> DeleteImages(M EditEntity)
         {
+            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            try
+            {
+                var list = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity,true);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
             await Task.Delay(0);
-            return false;
+            return true;
 
         }
 
@@ -739,7 +750,7 @@ namespace RUINORERP.UI.BaseForm
                         if (rs)
                         {
                             //删除远程图片及本地图片
-                            //await DeleteRemoteImages();
+                            await DeleteImages(item as M);
                             MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("删除", item);
                             counter++;
 
@@ -872,7 +883,7 @@ namespace RUINORERP.UI.BaseForm
             ae.bizType = cbd.BizType;
             ae.bizName = cbd.BizName;
 
-             
+
 
 
             ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
@@ -2133,7 +2144,9 @@ namespace RUINORERP.UI.BaseForm
 
             }
 
-            Query(QueryDtoProxy, false);
+            // 确保在执行查询前，参数已经正确加载到UI控件并与QueryDtoProxy同步
+            // 这里UIQuery设置为true，让Query方法执行UI验证，确保控件与数据模型的一致性
+            Query(QueryDtoProxy, true);
 
         }
 

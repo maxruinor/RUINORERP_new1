@@ -16,6 +16,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.Model;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -44,22 +45,23 @@ namespace RUINORERP.UI.Network.Services
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _log = logger;
         }
+
         /// <summary>
         /// 删除图片文件
         /// </summary>
         /// <param name="fileId">图片文件ID</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>文件删除响应</returns>
-        public async Task<FileDeleteResponse> DeleteImageAsync(ImageInfo imageInfo, CancellationToken ct = default)
+        public async Task<FileDeleteResponse> DeleteImageAsync(tb_FS_FileStorageInfo fileStorageInfo, int BizType, string BizNo, CancellationToken ct = default)
         {
-            if (imageInfo == null)
+            if (fileStorageInfo == null)
             {
-                throw new ArgumentNullException(nameof(imageInfo));
+                throw new ArgumentNullException(nameof(fileStorageInfo));
             }
 
             // 验证参数
-            if (imageInfo.FileId <= 0)
-                throw new ArgumentException("文件ID必须大于0", nameof(imageInfo.FileId));
+            if (fileStorageInfo.FileId <= 0)
+                throw new ArgumentException("文件ID必须大于0", nameof(fileStorageInfo.FileId));
 
             // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
             if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
@@ -78,29 +80,18 @@ namespace RUINORERP.UI.Network.Services
                     return FileDeleteResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
                 }
 
-                // 创建文件信息请求以验证文件类型
-                var fileInfoRequest = new FileInfoRequest();
-                fileInfoRequest.FileStorageInfo = new RUINORERP.Model.tb_FS_FileStorageInfo { FileId = imageInfo.FileId };
-
-                // 获取文件信息
-                var fileInfoResponse = await GetFileInfoAsync(fileInfoRequest, ct);
-
-                if (!fileInfoResponse.IsSuccess)
-                {
-                    _log?.LogWarning("获取文件信息失败，无法验证图片类型: {ErrorMessage}", fileInfoResponse.ErrorMessage);
-                    return FileDeleteResponse.CreateFailure("获取文件信息失败，无法验证图片类型");
-                }
+             
 
                 // 验证是否为图片文件 - 基于文件扩展名
                 string[] imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp" };
-               
+
 
                 // 验证是否为图片文件
-                bool isImageFile = imageExtensions.Contains(imageInfo.FileExtension) ||
-                                    imageExtensions.Contains(imageInfo.FileType) ||
-                                  imageInfo.FileType.Contains("image/") ||
-                                  imageInfo.FileType.Contains("图片") ||
-                                  imageInfo.FileType.Contains("image");
+                bool isImageFile = imageExtensions.Contains(fileStorageInfo.FileExtension) ||
+                                    imageExtensions.Contains(fileStorageInfo.FileType) ||
+                                  fileStorageInfo.FileType.Contains("image/") ||
+                                  fileStorageInfo.FileType.Contains("图片") ||
+                                  fileStorageInfo.FileType.Contains("image");
 
                 if (!isImageFile)
                 {
@@ -110,7 +101,9 @@ namespace RUINORERP.UI.Network.Services
                 // 创建文件删除请求
                 var deleteRequest = new FileDeleteRequest();
                 deleteRequest.InitializeCompatibility();
-                deleteRequest.FileStorageInfos.Add(new RUINORERP.Model.tb_FS_FileStorageInfo { FileId = imageInfo.FileId });
+                deleteRequest.BusinessNo = BizNo;
+                deleteRequest.BusinessType = BizType;
+                deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
 
                 // 发送文件删除命令并获取响应
                 var response = await _communicationService.SendCommandWithResponseAsync<FileDeleteResponse>(
@@ -331,9 +324,6 @@ namespace RUINORERP.UI.Network.Services
             // 验证参数
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
-
-            //if (string.IsNullOrEmpty(request.FileId))
-            //    throw new ArgumentException("文件ID不能为空", nameof(request.FileId));
 
             // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
             if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))

@@ -17,6 +17,9 @@ using RUINORERP.UI.Network.Services;
 using RUINORERP.Business;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using System.Linq;
+using static NPOI.HSSF.UserModel.HeaderFooter;
+using FastReport.DevComponents.DotNetBar;
+using FastReport.Data;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -136,9 +139,8 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 下载图片文件
         /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="appContext">应用程序上下文</param>
-        /// <returns>图片对象，如果下载失败则返回null</returns>
+        /// <param name="entity">业务实体</param>
+        /// <returns>文件下载响应列表</returns>
         public async Task<List<FileDownloadResponse>> DownloadImageAsync(BaseEntity entity)
         {
             List<FileDownloadResponse> fileDownloadResponses = new List<FileDownloadResponse>();
@@ -149,34 +151,52 @@ namespace RUINORERP.UI.Network.Services
                 var entityInfo = _mapper.GetEntityInfo(entity.GetType());
                 if (entityInfo != null && entityInfo.Fields != null)
                 {
-
                     // 获取文件关联服务
                     var BusinessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
                     string BusinessNo = entity.GetPropertyValue<string>(entityInfo.NoField).ToString();
 
+                    // 获取业务关联列表 - 确保在异步上下文中完全加载所有必要数据
                     var BusinessRelationList = await BusinessRelationService.QueryByNavAsync(c => c.BusinessType == (int)entityInfo.BizType && c.BusinessNo == BusinessNo);
+                    
+                    // 预加载文件存储信息到内存中，避免异步操作后数据库连接关闭导致的延迟加载问题
+                    var fileStorageInfosToDownload = new List<tb_FS_FileStorageInfo>();
                     foreach (var item in BusinessRelationList)
                     {
                         if (item.tb_fs_filestorageinfo != null)
                         {
-                            // 创建下载请求
-                            var request = new FileDownloadRequest
+                            // 创建一个新的对象并复制所有必要的属性，确保数据完全加载到内存中
+                            var fileInfo = new tb_FS_FileStorageInfo
                             {
-                                FileStorageInfo = item.tb_fs_filestorageinfo
+                                FileId = item.tb_fs_filestorageinfo.FileId,
+                                FileSize = item.tb_fs_filestorageinfo.FileSize,
+                                FileType = item.tb_fs_filestorageinfo.FileType,
+                                FileExtension = item.tb_fs_filestorageinfo.FileExtension,
+                                // 复制其他必要属性...
+                                FileData = item.tb_fs_filestorageinfo.FileData // 如果文件数据已加载，直接复制
                             };
-                            // 下载文件
-                            #region
-                            var response = await fileService.DownloadFileAsync(request);
-                            if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
-                            {
-                                fileDownloadResponses.Add(FileDownloadResponse.CreateSuccess(response.FileStorageInfos, "文件下载成功"));
-                            }
-                            else
-                            {
-                                // 记录错误日志
-                                System.Diagnostics.Debug.WriteLine($"图片下载失败: {response.ErrorMessage}");
-                            }
-                            #endregion
+                            fileStorageInfosToDownload.Add(fileInfo);
+                        }
+                    }
+                    
+                    // 现在使用完全加载到内存中的文件信息进行下载操作
+                    foreach (var fileInfo in fileStorageInfosToDownload)
+                    {
+                        // 创建下载请求
+                        var request = new FileDownloadRequest
+                        {
+                            FileStorageInfo = fileInfo
+                        };
+                        
+                        // 下载文件
+                        var response = await fileService.DownloadFileAsync(request);
+                        if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
+                        {
+                            fileDownloadResponses.Add(FileDownloadResponse.CreateSuccess(response.FileStorageInfos, "文件下载成功"));
+                        }
+                        else
+                        {
+                            // 记录错误日志
+                            System.Diagnostics.Debug.WriteLine($"图片下载失败: {response.ErrorMessage}");
                         }
                     }
                 }
@@ -184,14 +204,19 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 // 记录异常日志
-                System.Diagnostics.Debug.WriteLine($"图片下载异常: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"图片下载异常: {ex.Message}\n{ex.StackTrace}");
+                // 如果是阅读器关闭错误，提供更详细的错误信息
+                if (ex.Message.Contains("阅读器关闭") || ex.Message.Contains("FieldCount"))
+                {
+                    System.Diagnostics.Debug.WriteLine("错误原因：数据库连接已关闭但仍尝试访问数据。请检查异步操作中的数据加载方式。");
+                }
             }
             return fileDownloadResponses;
         }
 
 
 
-    
+
 
         /// <summary>
         /// 将tb_FS_FileStorageInfo实体转换为ImageInfo类
@@ -213,10 +238,10 @@ namespace RUINORERP.UI.Network.Services
                 FileExtension = fileStorageInfo.FileExtension,
                 HashValue = fileStorageInfo.HashValue,
                 ModifiedAt = fileStorageInfo.Modified_at,
-                
+
                 // 设置创建时间，如果没有则使用当前时间
                 CreateTime = fileStorageInfo.Created_at ?? DateTime.Now,
-                
+
                 // 初始化元数据字典
                 Metadata = new Dictionary<string, string>()
             };
@@ -294,7 +319,7 @@ namespace RUINORERP.UI.Network.Services
                 HashValue = imageInfo.HashValue,
                 Created_at = imageInfo.CreateTime,
                 Modified_at = imageInfo.ModifiedAt,
-                
+
                 // 设置默认值
                 StorageProvider = "Local", // 默认本地存储
                 CurrentVersion = 1,         // 初始版本
@@ -382,9 +407,69 @@ namespace RUINORERP.UI.Network.Services
             {
                 extension = Path.GetExtension(originalFileName);
             }
-            
+
             // 使用文件ID和时间戳生成唯一的存储文件名
             return $"{fileId}_{DateTime.Now:yyyyMMddHHmmssfff}{extension}";
+        }
+
+
+
+        /// <summary>
+        /// 删除与业务实体关联的所有图片
+        /// </summary>
+        /// <param name="entity">业务实体</param>
+        /// <param name="physicalDelete">是否物理删除文件（true:物理删除，false:逻辑删除）</param>
+        /// <returns>删除结果</returns>
+        public async Task<FileDeleteResponse> DeleteImagesAsync(BaseEntity entity, bool physicalDelete = false)
+        {
+            FileDeleteResponse deleteResponse = new FileDeleteResponse();
+
+            // 参数验证
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            try
+            {
+                // 获取文件管理服务
+                var fileService = _appContext.GetRequiredService<FileManagementService>();
+                // 获取实体信息
+                var entityInfo = _mapper.GetEntityInfo(entity.GetType());
+                if (entityInfo == null || string.IsNullOrEmpty(entityInfo.NoField))
+                {
+                    throw new ArgumentException("无效的业务实体类型");
+                }
+
+                // 获取业务编号
+                string businessNo = entity.GetPropertyValue<string>(entityInfo.NoField).ToString();
+                int businessType = (int)entityInfo.BizType;
+
+                // 创建删除请求
+                FileDeleteRequest deleteRequest = new FileDeleteRequest();
+                deleteRequest.BusinessNo = businessNo;
+                deleteRequest.BusinessType = businessType;
+                deleteRequest.PhysicalDelete = physicalDelete;
+
+                if (entity.FileStorageInfoList != null && entity.FileStorageInfoList.Count > 0)
+                {
+                    deleteRequest.AddDeleteFileStorageInfo(entity.FileStorageInfoList);
+                }
+                else
+                {  // 获取文件关联服务
+                    var businessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
+                    // 获取当前业务实体关联的所有文件关系
+                    var businessRelationList = await businessRelationService.QueryByNavAsync(c =>
+                        c.BusinessType == businessType && c.BusinessNo == businessNo);
+                    deleteRequest.AddDeleteFileStorageInfo(businessRelationList.Select(x => x.tb_fs_filestorageinfo).ToList());
+                }
+                // 执行删除
+                deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
+                return deleteResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "批量删除图片失败");
+                return ResponseFactory.CreateSpecificErrorResponse<FileDeleteResponse>("批量删除图片失败");
+            }
         }
 
     }

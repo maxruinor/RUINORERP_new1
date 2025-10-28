@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using RUINORERP.Model;
@@ -86,14 +86,60 @@ namespace RUINORERP.PacketSpec.Models.Requests
 
     /// <summary>
     /// 文件删除请求 - 支持单文件和多文件删除
-    /// 整合tb_FS_FileStorageInfo实体
+    /// 删除的图片是来自一个单据下的文件
     /// </summary>
     public class FileDeleteRequest : RequestBase
     {
         /// <summary>
+        /// 唯一的业务编号，如订单编号、合同编号，产品SKU码
+        /// </summary>
+        public string BusinessNo { get; set; }
+
+        public int? BusinessType { get; set; }
+
+        /// <summary>
         /// 多文件模式下的文件存储信息列表
+        /// 有显示就查询出来了，如果是列表中删除则为空。去服务器来填充这个值
         /// </summary>
         public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
+        
+        /// <summary>
+        /// 是否物理删除文件
+        /// true: 物理删除（删除实际文件和文件元数据）
+        /// false: 逻辑删除（仅标记文件状态为删除）
+        /// 默认值：false（使用逻辑删除）
+        /// </summary>
+        public bool PhysicalDelete { get; set; } = false;
+        
+
+
+
+        public void AddDeleteFileStorageInfo(List<tb_FS_FileStorageInfo> FileStorageInfo)
+        {
+            foreach (var fileId in FileStorageInfo)
+            {
+                AddDeleteFileStorageInfo(fileId);
+            }
+        }
+
+            /// <summary>
+            /// 添加要删除的文件ID
+            /// </summary>
+            /// <param name="FileStorageInfo"></param>
+            public void AddDeleteFileStorageInfo(tb_FS_FileStorageInfo FileStorageInfo)
+        {
+
+            if (FileStorageInfos == null)
+                FileStorageInfos = new List<tb_FS_FileStorageInfo>();
+
+            if (FileStorageInfo.FileId <= 0)
+                return;
+
+            if (FileStorageInfos.Contains(FileStorageInfo))
+                return;
+
+            FileStorageInfos.Add(FileStorageInfo);
+        }
 
         /// <summary>
         /// 初始化兼容数据结构

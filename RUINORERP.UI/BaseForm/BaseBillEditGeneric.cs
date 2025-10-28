@@ -4078,6 +4078,16 @@ namespace RUINORERP.UI.BaseForm
             return false;
         }
 
+        /// <summary>
+        /// 删除远程的图片
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async virtual Task<bool> DeleteRemoteImages(List<long> FileIds)
+        {
+            await Task.Delay(0);
+            return false;
+        }
 
         protected async virtual Task<ReturnResults<T>> Delete()
         {
@@ -4127,13 +4137,12 @@ namespace RUINORERP.UI.BaseForm
                         {
                             //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
                         }
-                        bindingSourceSub.Clear();
 
+                        bindingSourceSub.Clear();
 
                         await DeleteImages(editEntity);
                         //删除远程图片及本地图片
                         await DeleteRemoteImages();
-
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
 

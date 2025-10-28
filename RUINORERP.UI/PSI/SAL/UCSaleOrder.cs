@@ -50,7 +50,6 @@ using RUINORERP.UI.Monitoring.Auditing;
 using NPOI.SS.Formula.Functions;
 using System.Text.RegularExpressions;
 using RUINORERP.Extensions.Middlewares;
-using RUINOR.WinFormsUI.CustomPictureBox;
 using AutoUpdateTools;
 using LiveChartsCore.Geo;
 using static RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox;
@@ -634,6 +633,7 @@ namespace RUINORERP.UI.PSI.SAL
                             {
                                 imageDataList.Add(fileStorageInfo.FileData);
                                 imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
+                                EditEntity.AddFileStorageInfo(fileStorageInfo);
                             }
                         }
                     }

@@ -372,7 +372,7 @@ namespace RUINORERP.UI
             // 通过依赖注入获取缓存管理器
             _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
             _tableSchemaManager = TableSchemaManager.Instance;
-            _messageService= Startup.GetFromFac<MessageService>();
+            _messageService = Startup.GetFromFac<MessageService>();
 
             lblStatusGlobal.Text = string.Empty;
             auditLogHelper = _auditLogHelper;
@@ -3284,11 +3284,10 @@ namespace RUINORERP.UI
             this.lblStatusGlobal.Visible = false;
         }
 
-        private void btntsbRefresh_Click(object sender, EventArgs e)
+        private async void btntsbRefresh_Click(object sender, EventArgs e)
         {
-
+            await UI.Common.UIBizService.RequestCache<tb_UserInfo>(true);
             MainForm.Instance.logger.LogError("LoginWebServer" + System.DateTime.Now.ToString());
-
 
             Process[] allProcess = Process.GetProcesses();
             foreach (Process p in allProcess)

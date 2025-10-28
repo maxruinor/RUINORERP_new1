@@ -1447,19 +1447,19 @@ namespace RUINORERP.UI.Common
         }
 
 
-        public static async Task RequestCache<T>()
+        public static async Task RequestCache<T>(bool forceRefresh = false)
         {
-            await RequestCache(typeof(T).Name, typeof(T));
+            await RequestCache(typeof(T).Name, typeof(T), forceRefresh);
         }
 
-        public static async Task RequestCache(Type type)
+        public static async Task RequestCache(Type type, bool forceRefresh = false)
         {
-            await RequestCache(type.Name, type);
+            await RequestCache(type.Name, type, forceRefresh);
         }
 
-        public static async Task RequestCache(BaseEntity entity)
+        public static async Task RequestCache(BaseEntity entity, bool forceRefresh = false)
         {
-            await RequestCache(entity.GetType().Name, entity.GetType());
+            await RequestCache(entity.GetType().Name, entity.GetType(), forceRefresh);
         }
 
         /// <summary>
@@ -1481,7 +1481,8 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="type">实体类型，如果提供则使用实体的FKRelations属性获取外键关系</param>
-        public static async Task RequestCache(string tableName, Type type = null)
+        /// <param name="forceRefresh">是否强制刷新缓存，默认为false</param>
+        public static async Task RequestCache(string tableName, Type type = null, bool forceRefresh = false)
         {
             // 获取新的缓存管理器实例
             var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
@@ -1495,8 +1496,8 @@ namespace RUINORERP.UI.Common
                 // 获取本地缓存数据
                 var entityList = cacheManager.GetEntityList<object>(tableName);
 
-                // 简化的判断逻辑：如果本地没有缓存数据，则请求
-                if (entityList == null || entityList.Count == 0)
+                // 判断逻辑：如果强制刷新缓存，或者本地没有缓存数据，则请求
+                if (forceRefresh || entityList == null || entityList.Count == 0)
                 {
                     await cacheClient.RequestCacheAsync(tableName);
                 }

@@ -12,6 +12,11 @@ using System.Threading.Tasks;
 
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
+using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.PacketSpec.Commands.Message;
+using RUINORERP.PacketSpec.Models.Responses.Message;
+using RUINORERP.Model.TransModel;
+
 namespace RUINORERP.Server.Workflow.WFApproval.Steps
 {
 
@@ -65,12 +70,18 @@ namespace RUINORERP.Server.Workflow.WFApproval.Steps
                     
                     var messageJson = System.Text.Json.JsonSerializer.Serialize(notificationData);
                     
-                    // 发送审批完成通知命令
-                    var success = _sessionService.SendCommandToSession(
+                    // 发送审批完成通知命令 - 使用新的发送方法
+                    var messageData = new
+                    {
+                        Command = "APPROVAL_COMPLETED_NOTIFICATION",
+                        Data = messageJson
+                    };
+
+                    var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                    var success = _sessionService.SendCommandAsync(
                         session.SessionID, 
-                        "APPROVAL_COMPLETED_NOTIFICATION", 
-                        messageJson
-                    );
+                        MessageCommands.SendMessageToUser, 
+                        request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
                     
                     if (!success)
                     {

@@ -8,6 +8,10 @@ using RUINORERP.Server.Network.Interfaces.Services;
 
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
+using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.PacketSpec.Commands.Message;
+using RUINORERP.PacketSpec.Models.Responses.Message;
+using RUINORERP.Model.TransModel;
 
 namespace RUINORERP.Server.Workflow.WFPush
 {
@@ -39,12 +43,18 @@ namespace RUINORERP.Server.Workflow.WFPush
                     
                     var messageJson = System.Text.Json.JsonSerializer.Serialize(messageData);
                     
-                    // 发送工作流数据推送命令
-                    var success = _sessionService.SendCommandToSession(
+                    // 发送工作流数据推送命令 - 使用新的发送方法
+                    var messageObject = new
+                    {
+                        Command = "WORKFLOW_DATA_PUSH",
+                        Data = messageJson
+                    };
+
+                    var request = new MessageRequest(MessageCmdType.Unknown, messageObject);
+                    var success = _sessionService.SendCommandAsync(
                         session.SessionID, 
-                        "WORKFLOW_DATA_PUSH", 
-                        messageJson
-                    );
+                        MessageCommands.SendMessageToUser, 
+                        request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
                     
                     if (success)
                     {

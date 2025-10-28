@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Message;
 using RUINORERP.PacketSpec.Models.Core;
@@ -252,7 +253,7 @@ namespace RUINORERP.UI.Network.Services
                     MessageType = "Popup"
                 };
 
-                var request = new MessageRequest(MessageCommandType.DeleteFile, messageData);
+                var request = new MessageRequest(Model.TransModel.MessageCmdType.Message, messageData);
                 var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendPopupMessage, request, ct);
 
@@ -272,7 +273,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送弹窗消息时发生异常");
-                return MessageResponse.Fail(MessageCommands.SendPopupMessage.OperationCode, 500, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageCmdType.Message,  $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -317,7 +318,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "转发弹窗消息时发生异常");
-                return MessageResponse.Fail(MessageCommands.ForwardPopupMessage.OperationCode, 500, $"转发消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageCmdType.Message,  $"转发消息失败: {ex.Message}");
             }
         }
 
@@ -364,7 +365,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送用户消息时发生异常");
-                return MessageResponse.Fail(MessageCommands.SendMessageToUser.OperationCode, 500, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageCmdType.Message,  $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -411,7 +412,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送部门消息时发生异常");
-                return MessageResponse.Fail(MessageCommands.SendMessageToDepartment.OperationCode, 500, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageCmdType.Message,  $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -454,7 +455,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "广播消息时发生异常");
-                return MessageResponse.Fail(MessageCommands.BroadcastMessage.OperationCode, 500, $"广播消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageCmdType.Message,  $"广播消息失败: {ex.Message}");
             }
         }
 
@@ -497,7 +498,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送系统通知时发生异常");
-                return MessageResponse.Fail(MessageCommands.SendSystemNotification.OperationCode, 500, $"发送通知失败: {ex.Message}");
+                return MessageResponse.Fail(MessageCmdType.Message,  $"发送通知失败: {ex.Message}");
             }
         }
     }

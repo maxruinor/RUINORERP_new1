@@ -18,6 +18,9 @@ using RUINORERP.Server.BizService;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.PacketSpec.Commands.Message;
+using RUINORERP.PacketSpec.Models.Responses.Message;
 
 namespace RUINORERP.Server.Workflow.WFReminder
 {
@@ -123,12 +126,18 @@ namespace RUINORERP.Server.Workflow.WFReminder
                                         ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
                                     });
                                 
-                                // 发送工作流提醒命令
-                                var success = _sessionService.SendCommandToSession(
+                                // 发送工作流提醒命令 - 使用新的发送方法
+                                var messageData = new
+                                {
+                                    Command = "WORKFLOW_REMINDER",
+                                    Data = messageJson
+                                };
+
+                                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                                var success = _sessionService.SendCommandAsync(
                                     session.SessionID, 
-                                    "WORKFLOW_REMINDER", 
-                                    messageJson
-                                );
+                                    MessageCommands.SendMessageToUser, 
+                                    request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
                                 
                                 if (success)
                                 {

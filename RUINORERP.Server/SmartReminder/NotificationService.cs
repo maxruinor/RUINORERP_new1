@@ -12,6 +12,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using RUINORERP.Model;
 using RUINORERP.Server.Network.CommandHandlers;
+using RUINORERP.PacketSpec.Models.Responses.Message;
+using RUINORERP.Model.TransModel;
 
 namespace RUINORERP.Server.SmartReminder
 {
@@ -100,7 +102,7 @@ namespace RUINORERP.Server.SmartReminder
                 // 使用消息系统发送给特定用户
                 var messageRequest = new MessageRequest
                 {
-                    CommandType = MessageCommands.SendMessageToUser.OperationCode,
+                    CommandType =MessageCmdType.Message ,
                     Data = messageData
                 };
 
@@ -109,12 +111,11 @@ namespace RUINORERP.Server.SmartReminder
                 foreach (var session in targetSessions)
                 {
                     _logger.LogDebug("向用户 {UserId} 的会话 {SessionId} 发送智能提醒", targetUserId, session.SessionID);
-                    // 通过现有的会话服务发送消息
-                    var success = _sessionService.SendCommandToSession(
+                    // 通过现有的会话服务发送消息 - 使用新的发送方法
+                    var success = await _sessionService.SendCommandAsync(
                         session.SessionID, 
-                        "MessageCommandHandler",
-                        System.Text.Json.JsonSerializer.Serialize(messageRequest)
-                    );
+                        MessageCommands.SendMessageToUser, 
+                        messageRequest);
                     
                     if (!success)
                     {
@@ -137,7 +138,7 @@ namespace RUINORERP.Server.SmartReminder
             {
                 var messageRequest = new MessageRequest
                 {
-                    CommandType = MessageCommands.SendSystemNotification.OperationCode,
+                    CommandType = MessageCmdType.Notice,
                     Data = messageData
                 };
 

@@ -17,6 +17,9 @@ using RUINORERP.Model.TransModel;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Helper;
 using RUINORERP.PacketSpec.Enums;
+using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.PacketSpec.Commands.Message;
+using RUINORERP.PacketSpec.Models.Responses.Message;
 
 namespace RUINORERP.Server
 {
@@ -146,13 +149,24 @@ namespace RUINORERP.Server
                         {
                             try
                             {
-                                // 发送提醒命令
+                                // 发送提醒命令 - 使用新的发送方法
                                 var reminderJson = JsonConvert.SerializeObject(exData, new JsonSerializerSettings
                                 {
                                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                                 });
                                 
-                                var success = _sessionService.SendCommandToSession(session.SessionID, "SEND_REMINDER", reminderJson);
+                                var messageData = new
+                                {
+                                    Command = "SEND_REMINDER",
+                                    Data = reminderJson
+                                };
+
+                                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                                var success = _sessionService.SendCommandAsync(
+                                    session.SessionID, 
+                                    MessageCommands.SendMessageToUser, 
+                                    request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                                
                                 if (success)
                                 {
                                     exData.RemindTimes++;

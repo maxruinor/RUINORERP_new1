@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -49,7 +50,6 @@ namespace RUINORERP.Server.Network.SuperSocket
         private readonly ILogger<SuperSocketCommandAdapter> _logger;
         private ISessionService SessionService => Program.ServiceProvider.GetRequiredService<ISessionService>();
 
-
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -63,8 +63,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             _commandDispatcher = commandDispatcher;
             _logger = logger;
         }
-
-
 
         /// <summary>
         /// 执行命令
@@ -85,10 +83,17 @@ namespace RUINORERP.Server.Network.SuperSocket
 
             try
             {
+                // 检查是否是响应包（带有RequestId的响应包）
+                if (IsResponsePacket(package.Packet))
+                {
+                    // 处理响应包
+                    await HandleResponsePacketAsync(package.Packet);
+                    return;
+                }
 
                 if (package.Packet.CommandId == AuthenticationCommands.Login)
                 {
-                    // 如果命令ID为0，则表示是心跳包
+                    // 如果命令ID为登录命令，设置会话ID
                     package.Packet.SessionId = session.SessionID;
                     package.Packet.ExecutionContext.SessionId = session.SessionID;
                 }
@@ -166,9 +171,39 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
         }
 
+        /// <summary>
+        /// 判断是否为响应数据包
+        /// </summary>
+        /// <param name="packet">数据包</param>
+        /// <returns>是否为响应数据包</returns>
+        private bool IsResponsePacket(PacketModel packet)
+        {
+            // 响应包通常包含请求ID，并且是客户端对服务器请求的响应
+            return !string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId) &&
+                   packet.Direction == PacketDirection.Response;
+        }
 
-
-
+        /// <summary>
+        /// 处理响应数据包
+        /// </summary>
+        /// <param name="packet">响应数据包</param>
+        private async Task HandleResponsePacketAsync(PacketModel packet)
+        {
+            try
+            {
+                // 如果SessionService是SessionService类型，则调用其HandleClientResponse方法
+                if (SessionService is SessionService sessionService)
+                {
+                    sessionService.HandleClientResponse(packet);
+                }
+                
+                _logger?.LogDebug("处理响应包完成，请求ID: {RequestId}", packet?.ExecutionContext?.RequestId);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理响应包时发生错误");
+            }
+        }
 
         /// <summary>
         /// 处理命令执行结果
@@ -204,8 +239,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                 await SendEnhancedErrorResponseAsync(session, requestPackage, response, UnifiedErrorCodes.Biz_DataNotFound, CancellationToken.None);
             }
         }
-
-
 
         /// <summary>
         /// 附加响应数据到数据包发回客户端
@@ -250,8 +283,6 @@ namespace RUINORERP.Server.Network.SuperSocket
 
             return package;
         }
-
-
 
         /// <summary>
         /// 发送响应
@@ -321,11 +352,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             }
         }
 
-
-
-
-
-
         /// <summary>
         /// 发送错误响应（兼容旧版调用的方法）
         /// </summary>
@@ -343,8 +369,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             // 调用增强版本的错误响应方法，传入null作为result参数
             await SendEnhancedErrorResponseAsync(session, requestPackage, null, errorCode, cancellationToken);
         }
-
-
 
         /// <summary>
         /// 从响应结果中提取错误代码信息
@@ -466,12 +490,6 @@ namespace RUINORERP.Server.Network.SuperSocket
             // 发送响应
             await SendResponseAsync(session, errorResponse, cancellationToken);
         }
-
-
-
-
-
-
     }
 
     /// <summary>
@@ -486,5 +504,4 @@ namespace RUINORERP.Server.Network.SuperSocket
             : base(commandDispatcher, logger)
         { }
     }
-
 }

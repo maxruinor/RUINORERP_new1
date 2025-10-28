@@ -41,6 +41,13 @@ namespace RUINORERP.Server.Network.DI
             services.AddSingleton<SessionService>();
             services.AddSingleton<ISessionService, SessionService>();
 
+            // 注册服务器消息服务
+            services.AddSingleton<ServerMessageService>();
+            
+            // 注册服务器消息服务使用示例
+            services.AddSingleton<ServerMessageServiceUsageExample>();
+            services.AddSingleton<MessageServiceUsageExample>();
+
             // 注册缓存订阅管理器
             services.AddSingleton<CacheSubscriptionManager>(provider =>
                 new CacheSubscriptionManager(provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>(), true));
@@ -115,6 +122,9 @@ namespace RUINORERP.Server.Network.DI
             //  services.AddSingleton<IFileStorageService, FileStorageService>();
             builder.RegisterType<SessionService>().AsSelf().SingleInstance();
             builder.RegisterType<SessionService>().As<ISessionService>().SingleInstance();
+            builder.RegisterType<ServerMessageService>().AsSelf().SingleInstance();
+            builder.RegisterType<ServerMessageServiceUsageExample>().AsSelf().SingleInstance();
+            builder.RegisterType<MessageServiceUsageExample>().AsSelf().SingleInstance();
             //    builder.RegisterType<UserService>().As<IUserService>().AsSelf().SingleInstance();
             //builder.RegisterType<SuperSocketAdapter>().AsSelf().SingleInstance();
             //  builder.RegisterType<FileStorageManager>().AsSelf().SingleInstance();
@@ -196,7 +206,7 @@ namespace RUINORERP.Server.Network.DI
         public static string GetNetworkServicesStatistics()
         {
             return $"网络服务依赖注入配置完成。\n" +
-                   $"已注册服务: 15个核心服务\n" +
+                   $"已注册服务: 18个核心服务\n" +
                    $"已注册接口: 3个服务接口\n" +
                    $"生命周期: 单例模式\n" +
                    $"AOP支持: 已启用接口拦截器";

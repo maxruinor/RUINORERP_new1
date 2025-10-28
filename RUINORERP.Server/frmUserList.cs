@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿using Microsoft.VisualBasic.ApplicationServices;
+﻿﻿using Microsoft.VisualBasic.ApplicationServices;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
@@ -21,6 +21,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.Extensions.Middlewares;
+using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.PacketSpec.Commands.Message;
+using RUINORERP.PacketSpec.Models.Responses.Message;
 
 namespace RUINORERP.Server
 {
@@ -610,39 +613,44 @@ namespace RUINORERP.Server
 
         private void HandleSwitchServer(List<UserInfo> users)
         {
-            frmInput frmInput = new frmInput();
-            frmInput.Text = "请输入服务器IP和端口，格式为 IP:端口";
-            frmInput.txtInputContent.Text = "192.168.0.254:3001";
-            if (frmInput.ShowDialog() == DialogResult.OK)
+            foreach (var user in users)
             {
-                foreach (var user in users)
+                try
                 {
-                    try
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
                     {
-                        // 使用新的SessionService获取会话信息
-                        var session = _sessionService.GetSession(user.SessionId);
-                        if (session != null)
+                        // 发送切换服务器命令 - 使用新的发送方法
+                        var messageData = new
                         {
-                            // 发送切换服务器命令
-                            var success = _sessionService.SendCommandToSession(session.SessionID, "SWITCH_SERVER", frmInput.InputContent);
-                            if (success)
-                            {
-                                frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送切换服务器命令: {frmInput.InputContent}");
-                            }
-                            else
-                            {
-                                frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送切换服务器命令失败");
-                            }
+                            Command = "SWITCH_SERVER",
+                            ServerAddress = frmInput.InputContent
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID, 
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
+                        if (success)
+                        {
+                            frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送切换服务器命令: {frmInput.InputContent}");
                         }
                         else
                         {
-                            frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                            frmMain.Instance.PrintErrorLog($"向用户 {user.用户名} 发送切换服务器命令失败");
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        frmMain.Instance.PrintErrorLog($"切换用户 {user.用户名} 服务器失败: {ex.Message}");
+                        frmMain.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
                     }
+                }
+                catch (Exception ex)
+                {
+                    frmMain.Instance.PrintErrorLog($"切换用户 {user.用户名} 服务器失败: {ex.Message}");
                 }
             }
         }
@@ -675,8 +683,18 @@ namespace RUINORERP.Server
                     var session = _sessionService.GetSession(user.SessionId);
                     if (session != null)
                     {
-                        // 发送强制退出命令
-                        var success = _sessionService.SendCommandToSession(session.SessionID, "FORCE_LOGOUT", null);
+                        // 发送强制退出命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "FORCE_LOGOUT"
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID, 
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
                         if (success)
                         {
                             frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送强制退出命令");
@@ -709,8 +727,18 @@ namespace RUINORERP.Server
                     var session = _sessionService.GetSession(user.SessionId);
                     if (session != null)
                     {
-                        // 发送删除配置文件命令
-                        var success = _sessionService.SendCommandToSession(session.SessionID, "DELETE_CONFIG", null);
+                        // 发送删除配置文件命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "DELETE_CONFIG"
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID, 
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
                         if (success)
                         {
                             frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送删除配置文件命令");
@@ -773,8 +801,18 @@ namespace RUINORERP.Server
                     var session = _sessionService.GetSession(user.SessionId);
                     if (session != null)
                     {
-                        // 发送更新推送命令
-                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_UPDATE", null);
+                        // 发送更新推送命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "PUSH_UPDATE"
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID, 
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
                         if (success)
                         {
                             frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送更新推送命令");
@@ -796,7 +834,6 @@ namespace RUINORERP.Server
             }
         }
 
-
         private void HandlePushUpdateSysConfig(List<UserInfo> users)
         {
             foreach (var user in users)
@@ -807,8 +844,18 @@ namespace RUINORERP.Server
                     var session = _sessionService.GetSession(user.SessionId);
                     if (session != null)
                     {
-                        // 发送系统配置推送命令
-                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_SYS_CONFIG", null);
+                        // 发送系统配置推送命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "PUSH_SYS_CONFIG"
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID, 
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
                         if (success)
                         {
                             frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送系统配置推送命令");
@@ -856,8 +903,18 @@ namespace RUINORERP.Server
                     var result = MessageBox.Show($"确定要向用户 {userInfo.用户名} 推送缓存数据吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     if (result == DialogResult.Yes)
                     {
-                        // 发送推送缓存命令
-                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_CACHE", null);
+                        // 发送推送缓存命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "PUSH_CACHE"
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID, 
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
                         if (success)
                         {
                             frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送缓存数据");
@@ -920,8 +977,18 @@ namespace RUINORERP.Server
                     var session = _sessionService.GetSession(user.SessionId);
                     if (session != null)
                     {
-                        // 发送关机命令
-                        var success = _sessionService.SendCommandToSession(session.SessionID, "SHUTDOWN", null);
+                        // 发送关机命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "SHUTDOWN"
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID, 
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
                         if (success)
                         {
                             frmMain.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送关机命令");
@@ -1109,8 +1176,18 @@ namespace RUINORERP.Server
                     var result = MessageBox.Show($"确定要向用户 {userInfo.用户名} 推送更新吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     if (result == DialogResult.Yes)
                     {
-                        // 发送推送更新命令
-                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_UPDATE", null);
+                        // 发送推送更新命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "PUSH_UPDATE"
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID, 
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
                         if (success)
                         {
                             frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送更新");
@@ -1155,8 +1232,18 @@ namespace RUINORERP.Server
                     var result = MessageBox.Show($"确定要向用户 {userInfo.用户名} 推送系统配置吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                     if (result == DialogResult.Yes)
                     {
-                        // 发送推送系统配置命令
-                        var success = _sessionService.SendCommandToSession(session.SessionID, "PUSH_SYS_CONFIG", null);
+                        // 发送推送系统配置命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "PUSH_SYS_CONFIG"
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID, 
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
                         if (success)
                         {
                             frmMain.Instance.PrintInfoLog($"已向用户 {userInfo.用户名} 推送系统配置");

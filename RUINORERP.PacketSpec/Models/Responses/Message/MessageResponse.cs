@@ -1,6 +1,10 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Requests.Message;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
+using System.Data;
 
 namespace RUINORERP.PacketSpec.Models.Responses.Message
 {
@@ -12,7 +16,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Message
         /// <summary>
         /// 命令类型
         /// </summary>
-        public uint CommandType { get; set; }
+        public MessageCmdType CommandType { get; set; }
 
         /// <summary>
         /// 响应数据
@@ -31,7 +35,7 @@ namespace RUINORERP.PacketSpec.Models.Responses.Message
         /// <param name="commandType">命令类型</param>
         /// <param name="data">响应数据</param>
         /// <returns>成功的响应实例</returns>
-        public static MessageResponse Success(uint commandType, object data)
+        public static MessageResponse Success(MessageCmdType commandType, object data)
         {
             return new MessageResponse
             {
@@ -50,16 +54,54 @@ namespace RUINORERP.PacketSpec.Models.Responses.Message
         /// <param name="errorCode">错误码</param>
         /// <param name="errorMessage">错误消息</param>
         /// <returns>失败的响应实</returns>
-        public static MessageResponse Fail(uint commandType, int errorCode, string errorMessage)
+        public static MessageResponse Fail(Model.TransModel.MessageCmdType  commandType, string errorMessage)
         {
             return new MessageResponse
             {
                 IsSuccess = false,
-                ErrorCode = errorCode,
                 ErrorMessage = errorMessage,
                 Message = "消息处理失败",
                 CommandType = commandType
             };
         }
     }
+
+    /// <summary>
+    /// 消息响应事件参数
+    /// </summary>
+    public class MessageResponseEventArgs : EventArgs
+    {
+        /// <summary>
+        /// 会话ID
+        /// </summary>
+        public string SessionId { get; set; }
+
+        /// <summary>
+        /// 命令ID
+        /// </summary>
+        public CommandId CommandId { get; set; }
+
+        /// <summary>
+        /// 响应数据
+        /// </summary>
+        public object ResponseData { get; set; }
+
+        /// <summary>
+        /// 是否成功
+        /// </summary>
+        public bool IsSuccess { get; set; }
+
+        /// <summary>
+        /// 错误消息
+        /// </summary>
+        public string ErrorMessage { get; set; }
+
+        /// <summary>
+        /// 时间戳
+        /// </summary>
+        public DateTime Timestamp { get; set; }
+
+
+    }
+
 }

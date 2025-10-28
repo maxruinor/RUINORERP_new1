@@ -15,7 +15,14 @@ using SuperSocket.Server;
 using SuperSocket.Channel;
 using SuperSocket.Connection;
 using RUINORERP.Business.CommService;
-using RUINORERP.Business.Cache; // 使用统一的订阅管理器
+using RUINORERP.Business.Cache;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Serialization;
+using RUINORERP.PacketSpec.Security;
+using RUINORERP.PacketSpec.Models.Responses.Message;
 
 namespace RUINORERP.Server.Network.Services
 {
@@ -36,31 +43,44 @@ namespace RUINORERP.Server.Network.Services
         private bool _disposed = false;
         private readonly ILogger<SessionService> _logger;
         private readonly CacheSubscriptionManager _subscriptionManager; // 使用统一的订阅管理器
+        
+        // 存储待处理的请求任务，用于匹配响应
+        private static readonly ConcurrentDictionary<string, TaskCompletionSource<PacketModel>> _pendingRequests = 
+            new ConcurrentDictionary<string, TaskCompletionSource<PacketModel>>();
+
+        #endregion
+
+        #region 事件定义
 
         /// <summary>
-        /// 活动会话数量
+        /// 消息响应事件 - 当从客户端接收到响应时触发
         /// </summary>
-        public int ActiveSessionCount => _sessions.Count;
+        public event EventHandler<MessageResponseEventArgs> MessageResponseReceived;
 
         /// <summary>
-        /// 最大会话数量
+        /// 弹窗消息响应事件
         /// </summary>
-        public int MaxSessionCount { get; set; } = 1000;
+        public event EventHandler<MessageResponseEventArgs> PopupMessageResponseReceived;
 
         /// <summary>
-        /// 会话连接事件
+        /// 用户消息响应事件
         /// </summary>
-        public event Action<SessionInfo> SessionConnected;
+        public event EventHandler<MessageResponseEventArgs> UserMessageResponseReceived;
 
         /// <summary>
-        /// 会话断开事件
+        /// 部门消息响应事件
         /// </summary>
-        public event Action<SessionInfo> SessionDisconnected;
+        public event EventHandler<MessageResponseEventArgs> DepartmentMessageResponseReceived;
 
         /// <summary>
-        /// 会话更新事件
+        /// 广播消息响应事件
         /// </summary>
-        public event Action<SessionInfo> SessionUpdated;
+        public event EventHandler<MessageResponseEventArgs> BroadcastMessageResponseReceived;
+
+        /// <summary>
+        /// 系统通知响应事件
+        /// </summary>
+        public event EventHandler<MessageResponseEventArgs> SystemNotificationResponseReceived;
 
         #endregion
 
@@ -87,6 +107,31 @@ namespace RUINORERP.Server.Network.Services
         #endregion
 
         #region ISessionManager 实现 - 基础会话管理
+
+        /// <summary>
+        /// 活动会话数量
+        /// </summary>
+        public int ActiveSessionCount => _sessions.Count;
+
+        /// <summary>
+        /// 最大会话数量
+        /// </summary>
+        public int MaxSessionCount { get; set; } = 1000;
+
+        /// <summary>
+        /// 会话连接事件
+        /// </summary>
+        public event Action<SessionInfo> SessionConnected;
+
+        /// <summary>
+        /// 会话断开事件
+        /// </summary>
+        public event Action<SessionInfo> SessionDisconnected;
+
+        /// <summary>
+        /// 会话更新事件
+        /// </summary>
+        public event Action<SessionInfo> SessionUpdated;
 
         /// <summary>
         /// 创建新会话
@@ -533,7 +578,7 @@ namespace RUINORERP.Server.Network.Services
 
         #endregion
 
-        #region ISessionService 实现 - SuperSocket集成
+        #region SuperSocket集成功能
 
         /// <summary>
         /// 添加SuperSocket会话
@@ -574,8 +619,6 @@ namespace RUINORERP.Server.Network.Services
             _sessions.TryGetValue(sessionId, out var sessionInfo);
             return sessionInfo;
         }
-
-
 
         /// <summary>
         /// 更新会话活动时间
@@ -739,14 +782,168 @@ namespace RUINORERP.Server.Network.Services
             }
         }
 
+        #endregion
+
+        #region 服务器主动发送命令
         /// <summary>
-        /// 向指定会话发送命令
+        /// 发送数据包的核心私有方法
+        /// 封装了构建数据包、序列化、加密和发送的公共逻辑
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="request">要发送的请求数据</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <param name="responseTypeName">期望的响应类型名称</param>
+        /// <exception cref="OperationCanceledException">当操作被取消时抛出</exception>
+        /// <exception cref="TimeoutException">当请求超时时抛出</exception>
+        public async Task SendPacketCoreAsync<TRequest>(
+            SessionInfo sessionInfo,
+            CommandId commandId,
+            TRequest request,
+            int timeoutMs,
+            CancellationToken ct,
+            string responseTypeName = null)
+            where TRequest : class, IRequest
+        {
+            ct.ThrowIfCancellationRequested();
+            
+            try
+            {
+                // 构建数据包
+                var packet = PacketBuilder.Create()
+                    .WithDirection(PacketDirection.Request)
+                    .WithTimeout(timeoutMs)
+                    .WithRequest(request)
+                    .Build();
+
+                // 设置执行上下文
+                if (packet.ExecutionContext == null)
+                {
+                    packet.ExecutionContext = new CommandContext();
+                }
+
+                // 确保必要的上下文属性被设置
+                packet.ExecutionContext.RequestId = request.RequestId;
+                packet.CommandId = commandId;
+                packet.ExecutionContext.SessionId = sessionInfo.SessionID;
+                packet.ExecutionContext.UserId = sessionInfo.UserId ?? 0;
+                
+                // 设置期望的响应类型信息
+                if (!string.IsNullOrEmpty(responseTypeName))
+                {
+                    packet.ExecutionContext.ExpectedResponseTypeName = responseTypeName;
+                }
+
+                // 序列化和加密数据包
+                var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
+                var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, payload);
+                var encrypted = UnifiedEncryptionProtocol.EncryptServerDataToClient(original);
+                
+                // 发送数据
+                await sessionInfo.SendAsync(encrypted.ToArray(), ct);
+                
+                _logger?.LogDebug("数据包发送成功: SessionID={SessionID}, CommandId={CommandId}, RequestId={RequestId}",
+                    sessionInfo.SessionID, commandId, request.RequestId);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"发送数据包时发生错误: SessionID={sessionInfo?.SessionID}, CommandId={commandId}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 向指定会话发送命令并等待响应
         /// </summary>
         /// <param name="sessionID">会话ID</param>
-        /// <param name="command">命令名称</param>
-        /// <param name="data">命令数据</param>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="request">请求数据</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>响应数据包</returns>
+        public async Task<PacketModel> SendCommandAndWaitForResponseAsync<TRequest>(
+            string sessionID, 
+            CommandId commandId, 
+            TRequest request, 
+            int timeoutMs = 30000, 
+            CancellationToken ct = default)
+            where TRequest : class, IRequest
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(sessionID))
+                {
+                    _logger.LogWarning("发送命令失败：会话ID为空");
+                    throw new ArgumentException("会话ID不能为空", nameof(sessionID));
+                }
+
+                // 获取会话信息
+                if (!_sessions.TryGetValue(sessionID, out var sessionInfo))
+                {
+                    _logger.LogWarning($"发送命令失败：会话不存在，SessionID={sessionID}");
+                    throw new InvalidOperationException($"会话不存在: {sessionID}");
+                }
+
+                // 创建任务完成源
+                var tcs = new TaskCompletionSource<PacketModel>();
+                var requestId = request.RequestId;
+                
+                // 注册待处理请求
+                _pendingRequests.TryAdd(requestId, tcs);
+                
+                try
+                {
+                    // 发送命令
+                    await SendPacketCoreAsync(sessionInfo, commandId, request, timeoutMs, ct);
+                    
+                    // 等待响应或超时
+                    using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                    cts.CancelAfter(timeoutMs);
+                    
+                    var timeoutTask = Task.Delay(timeoutMs, cts.Token);
+                    var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+                    
+                    // 从待处理请求中移除
+                    _pendingRequests.TryRemove(requestId, out _);
+                    
+                    if (completedTask == timeoutTask)
+                    {
+                        throw new TimeoutException($"请求超时（{timeoutMs}ms），指令类型：{commandId.ToString()}，请求ID: {requestId}");
+                    }
+                    
+                    ct.ThrowIfCancellationRequested();
+                    
+                    return await tcs.Task;
+                }
+                catch (Exception)
+                {
+                    // 从待处理请求中移除
+                    _pendingRequests.TryRemove(requestId, out _);
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"发送命令并等待响应时发生异常: SessionID={sessionID}, CommandId={commandId}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 向指定会话发送命令（单向，不等待响应）
+        /// </summary>
+        /// <param name="sessionID">会话ID</param>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="request">请求数据</param>
+        /// <param name="ct">取消令牌</param>
         /// <returns>发送是否成功</returns>
-        public bool SendCommandToSession(string sessionID, string command, object data)
+        public async Task<bool> SendCommandAsync<TRequest>(
+            string sessionID, 
+            CommandId commandId, 
+            TRequest request, 
+            CancellationToken ct = default)
+            where TRequest : class, IRequest
         {
             try
             {
@@ -756,7 +953,7 @@ namespace RUINORERP.Server.Network.Services
                     return false;
                 }
 
-                if (string.IsNullOrEmpty(command))
+                if (commandId == null)
                 {
                     _logger.LogWarning("发送命令失败：命令为空");
                     return false;
@@ -769,52 +966,97 @@ namespace RUINORERP.Server.Network.Services
                     return false;
                 }
 
-                try
+                // 发送命令（不等待响应）
+                await SendPacketCoreAsync(sessionInfo, commandId, request, 5000, ct);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"发送命令时发生异常: SessionID={sessionID}, CommandId={commandId}");
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 处理从客户端接收到的响应包
+        /// </summary>
+        /// <param name="packet">响应数据包</param>
+        public void HandleClientResponse(PacketModel packet)
+        {
+            try
+            {
+                var requestId = packet?.ExecutionContext?.RequestId;
+                if (string.IsNullOrEmpty(requestId))
+                    return;
+
+                // 查找匹配的待处理请求
+                if (_pendingRequests.TryRemove(requestId, out var pendingRequest))
                 {
-                    // 这里需要根据实际的命令发送机制来实现
-                    // 可能需要将命令和数据序列化为特定格式，然后通过SuperSocket发送
-                    // 以下是一个示例实现，实际实现可能需要根据项目的通信协议进行调整
-
-                    // 创建命令包
-                    var commandPackage = new
-                    {
-                        Command = command,
-                        Data = data,
-                        Timestamp = DateTime.Now
-                    };
-
-                    // 将命令包序列化为JSON字符串
-                    var commandJson = System.Text.Json.JsonSerializer.Serialize(commandPackage);
-
-                    // 通过SuperSocket发送命令
-                    //////////  var result = sessionInfo.AddSendData(System.Text.Encoding.UTF8.GetBytes(commandJson));
-
-                    //if (result.IsCompletedSuccessfully)
-                    //{
-                    //    _logger.LogInformation($"命令发送成功: SessionID={sessionID}, 用户={sessionInfo.UserName}, 命令={command}");
-                    //    return true;
-                    //}
-                    //else
-                    //{
-                    //    _logger.LogWarning($"命令发送失败: SessionID={sessionID}, 用户={sessionInfo.UserName}, 命令={command}");
-                    //    return false;
-                    //}
-                    return true;
+                    // 完成任务
+                    pendingRequest.TrySetResult(packet);
+                    _logger?.LogDebug("处理客户端响应完成，请求ID: {RequestId}", requestId);
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogError(ex, $"发送命令时发生异常: SessionID={sessionID}, 命令={command}");
-                    return false;
+                    // 如果没有等待任务，则触发事件
+                    TriggerResponseEvents(packet);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"发送命令时发生异常: SessionID={sessionID}");
-                return false;
+                _logger?.LogError(ex, "处理客户端响应时发生错误");
             }
         }
+        
+        /// <summary>
+        /// 触发响应事件
+        /// </summary>
+        /// <param name="packet">响应数据包</param>
+        private void TriggerResponseEvents(PacketModel packet)
+        {
+            try
+            {
+                var eventArgs = new MessageResponseEventArgs
+                {
+                    SessionId = packet.ExecutionContext?.SessionId,
+                    CommandId = packet.CommandId,
+                    ResponseData = packet.Response,
+                    IsSuccess = packet.Response?.IsSuccess ?? false,
+                    ErrorMessage = packet.Response?.ErrorMessage,
+                    Timestamp = DateTime.Now
+                };
 
+                // 触发通用响应事件
+                MessageResponseReceived?.Invoke(this, eventArgs);
+
+                // 根据命令类型触发特定事件
+                switch (packet.CommandId.FullCode)
+                {
+                    case var code when code == PacketSpec.Commands.Message.MessageCommands.SendPopupMessage.FullCode:
+                        PopupMessageResponseReceived?.Invoke(this, eventArgs);
+                        break;
+                    case var code when code == PacketSpec.Commands.Message.MessageCommands.SendMessageToUser.FullCode:
+                        UserMessageResponseReceived?.Invoke(this, eventArgs);
+                        break;
+                    case var code when code == PacketSpec.Commands.Message.MessageCommands.SendMessageToDepartment.FullCode:
+                        DepartmentMessageResponseReceived?.Invoke(this, eventArgs);
+                        break;
+                    case var code when code == PacketSpec.Commands.Message.MessageCommands.BroadcastMessage.FullCode:
+                        BroadcastMessageResponseReceived?.Invoke(this, eventArgs);
+                        break;
+                    case var code when code == PacketSpec.Commands.Message.MessageCommands.SendSystemNotification.FullCode:
+                        SystemNotificationResponseReceived?.Invoke(this, eventArgs);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "触发响应事件时发生错误");
+            }
+        }
         #endregion
+
+    
 
         #region ISessionManager 实现 - 统计和监控
 
@@ -909,7 +1151,6 @@ namespace RUINORERP.Server.Network.Services
 
         #region 私有方法
 
-
         /// <summary>
         /// 清理和心跳检查回调
         /// 合并清理超时会话和心跳检查到一个定时器中，减少系统开销
@@ -978,5 +1219,13 @@ namespace RUINORERP.Server.Network.Services
         #endregion
     }
 }
+
+
+
+
+
+
+
+
 
 

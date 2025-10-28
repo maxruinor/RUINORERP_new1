@@ -27,6 +27,9 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Enums;
+using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.PacketSpec.Commands.Message;
+using RUINORERP.PacketSpec.Models.Responses.Message;
 
 namespace RUINORERP.Server.CommandService
 {
@@ -187,8 +190,20 @@ namespace RUINORERP.Server.CommandService
                             // 有指定目标时，其它人就不发了
                             if (ToSession != null && session.SessionID == ToSession.SessionID)
                             {
-                                var result = _sessionService.SendCommandToSession(session.SessionID, "LOCK_MANAGEMENT", requestData);
-                                if (result.IsSuccess)
+                                // 使用新的发送方法
+                                var messageData = new
+                                {
+                                    Command = "LOCK_MANAGEMENT",
+                                    Data = requestData
+                                };
+
+                                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                                var result = _sessionService.SendCommandAsync(
+                                    session.SessionID, 
+                                    MessageCommands.SendMessageToUser, 
+                                    request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                                
+                                if (result)
                                 {
                                     sentSuccessfully = true;
                                 }
@@ -198,15 +213,27 @@ namespace RUINORERP.Server.CommandService
                             // 向锁定的人发送消息 请求解锁
                             if (session.UserID == requestUnLockInfo.LockedUserID)
                             {
-                                var result = _sessionService.SendCommandToSession(session.SessionID, "LOCK_MANAGEMENT", requestData);
-                                if (result.IsSuccess)
+                                // 使用新的发送方法
+                                var messageData = new
+                                {
+                                    Command = "LOCK_MANAGEMENT",
+                                    Data = requestData
+                                };
+
+                                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                                var result = _sessionService.SendCommandAsync(
+                                    session.SessionID, 
+                                    MessageCommands.SendMessageToUser, 
+                                    request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                                
+                                if (result)
                                 {
                                     sentSuccessfully = true;
                                     frmMainNew.Instance.PrintInfoLog($"已向用户 {session.UserName} 发送解锁请求");
                                 }
                                 else
                                 {
-                                    frmMainNew.Instance.PrintInfoLog($"向用户 {session.UserName} 发送解锁请求失败: {result.ErrorMessage}");
+                                    frmMainNew.Instance.PrintInfoLog($"向用户 {session.UserName} 发送解锁请求失败");
                                 }
                                 break;
                             }
@@ -250,8 +277,20 @@ namespace RUINORERP.Server.CommandService
                             // 有指定目标时，其它人就不发了
                             if (ToSession != null && session.SessionID == ToSession.SessionID)
                             {
-                                var result = _sessionService.SendCommandToSession(session.SessionID, "LOCK_MANAGEMENT", refuseData);
-                                if (result.IsSuccess)
+                                // 使用新的发送方法
+                                var messageData = new
+                                {
+                                    Command = "LOCK_MANAGEMENT",
+                                    Data = refuseData
+                                };
+
+                                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                                var result = _sessionService.SendCommandAsync(
+                                    session.SessionID, 
+                                    MessageCommands.SendMessageToUser, 
+                                    request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                                
+                                if (result)
                                 {
                                     refuseSentSuccessfully = true;
                                 }
@@ -261,15 +300,27 @@ namespace RUINORERP.Server.CommandService
                             // 向请求的人发送拒绝消息
                             if (session.UserID == refuseUnLockInfo.RequestUserID)
                             {
-                                var result = _sessionService.SendCommandToSession(session.SessionID, "LOCK_MANAGEMENT", refuseData);
-                                if (result.IsSuccess)
+                                // 使用新的发送方法
+                                var messageData = new
+                                {
+                                    Command = "LOCK_MANAGEMENT",
+                                    Data = refuseData
+                                };
+
+                                var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                                var result = _sessionService.SendCommandAsync(
+                                    session.SessionID, 
+                                    MessageCommands.SendMessageToUser, 
+                                    request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                                
+                                if (result)
                                 {
                                     refuseSentSuccessfully = true;
                                     frmMainNew.Instance.PrintInfoLog($"已向用户 {session.UserName} 发送拒绝解锁通知");
                                 }
                                 else
                                 {
-                                    frmMainNew.Instance.PrintInfoLog($"向用户 {session.UserName} 发送拒绝解锁通知失败: {result.ErrorMessage}");
+                                    frmMainNew.Instance.PrintInfoLog($"向用户 {session.UserName} 发送拒绝解锁通知失败");
                                 }
                                 break;
                             }

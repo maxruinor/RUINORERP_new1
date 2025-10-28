@@ -11,6 +11,9 @@ using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Commands.Business;
 using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.PacketSpec.Commands.Message;
+using RUINORERP.PacketSpec.Models.Responses.Message;
 
 namespace RUINORERP.Server.Commands
 {
@@ -238,12 +241,18 @@ namespace RUINORERP.Server.Commands
                 {
                     try
                     {
-                        // 发送异常报告给管理员
-                        var success = _sessionService.SendCommandToSession(
+                        // 发送异常报告给管理员 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "EXCEPTION_REPORT",
+                            Data = Convert.ToBase64String(forwardMessage)
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
                             adminSession.SessionID, 
-                            "EXCEPTION_REPORT", 
-                            Convert.ToBase64String(forwardMessage)
-                        );
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
                         
                         if (!success)
                         {
@@ -338,7 +347,7 @@ namespace RUINORERP.Server.Commands
             {
                 try
                 {
-                    // 发送紧急通知
+                    // 发送紧急通知 - 使用新的发送方法
                     var messageJson = System.Text.Json.JsonSerializer.Serialize(new
                     {
                         MessageType = "SystemMessage",
@@ -346,13 +355,19 @@ namespace RUINORERP.Server.Commands
                         PromptType = "确认窗口",
                         Timestamp = DateTime.Now
                     });
-                    
-                    var success = _sessionService.SendCommandToSession(
+                        
+                    var messageData = new
+                    {
+                        Command = "URGENT_NOTIFICATION",
+                        Data = messageJson
+                    };
+
+                    var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                    var success = _sessionService.SendCommandAsync(
                         session.SessionID, 
-                        "URGENT_NOTIFICATION", 
-                        messageJson
-                    );
-                    
+                        MessageCommands.SendMessageToUser, 
+                        request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+                        
                     if (!success)
                     {
                         Console.WriteLine($"发送紧急通知给管理员 {session.UserName} 失败");

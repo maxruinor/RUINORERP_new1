@@ -19,6 +19,9 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Protocol;
 using RUINORERP.PacketSpec.Enums;
+using RUINORERP.PacketSpec.Models.Requests.Message;
+using RUINORERP.PacketSpec.Commands.Message;
+using RUINORERP.PacketSpec.Models.Responses.Message;
 
 namespace RUINORERP.Server.ServerService
 {
@@ -102,12 +105,18 @@ namespace RUINORERP.Server.ServerService
                         
                         var messageJson = System.Text.Json.JsonSerializer.Serialize(requestData);
                         
-                        // 发送协助请求命令
-                        var success = sessionService.SendCommandToSession(
+                        // 发送协助请求命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "ASSISTANCE_REQUEST",
+                            Data = messageJson
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = sessionService.SendCommandAsync(
                             session.SessionID, 
-                            "ASSISTANCE_REQUEST", 
-                            messageJson
-                        );
+                            MessageCommands.SendMessageToUser, 
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
                         
                         if (success)
                         {

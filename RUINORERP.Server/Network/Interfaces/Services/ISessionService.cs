@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Server.Network.Models;
 using SuperSocket.Server.Abstractions.Session;
 
@@ -142,8 +145,6 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <returns>SuperSocket会话</returns>
         IAppSession GetAppSession(string sessionId);
 
- 
-
         /// <summary>
         /// 更新会话活动时间
         /// </summary>
@@ -176,10 +177,42 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <returns>成功断开的会话数量</returns>
         Task<int> DisconnectUserSessionsAsync(string username, string reason = "服务器强制断开");
 
-        bool SendCommandToSession(string sessionID, string v, object value);
+        #endregion
+
+        #region 服务器主动发送命令
+
+        /// <summary>
+        /// 向指定会话发送命令并等待响应
+        /// </summary>
+        /// <param name="sessionID">会话ID</param>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="request">请求数据</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>响应数据包</returns>
+        Task<PacketModel> SendCommandAndWaitForResponseAsync<TRequest>(
+            string sessionID, 
+            CommandId commandId, 
+            TRequest request, 
+            int timeoutMs = 30000, 
+            CancellationToken ct = default)
+            where TRequest : class, IRequest;
+
+        /// <summary>
+        /// 向指定会话发送命令（单向，不等待响应）
+        /// </summary>
+        /// <param name="sessionID">会话ID</param>
+        /// <param name="commandId">命令ID</param>
+        /// <param name="request">请求数据</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>发送是否成功</returns>
+        Task<bool> SendCommandAsync<TRequest>(
+            string sessionID, 
+            CommandId commandId, 
+            TRequest request, 
+            CancellationToken ct = default)
+            where TRequest : class, IRequest;
 
         #endregion
     }
-
- 
 }

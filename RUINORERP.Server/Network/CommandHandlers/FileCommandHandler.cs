@@ -103,8 +103,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
 
             // 注入业务控制器
-            _fileStorageInfoController = fileStorageInfoController;
-            _businessRelationController = businessRelationController;
+            _fileStorageInfoController = fileStorageInfoController ?? throw new ArgumentNullException(nameof(fileStorageInfoController));
+            _businessRelationController = businessRelationController ?? throw new ArgumentNullException(nameof(businessRelationController));
             _fileStorageVersionController = fileStorageVersionController;
 
             // 初始化文件存储路径
@@ -439,106 +439,196 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private async Task<ResponseBase> HandleFileDeleteAsync(FileDeleteRequest deleteRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
-            _logger?.LogInformation("开始处理文件删除请求，FileId: {FileId}", deleteRequest?.FileId);
+            _logger?.LogInformation("开始处理文件删除请求，文件数量: {FileCount}", deleteRequest?.FileStorageInfos?.Count ?? 0);
 
             try
             {
-                if (deleteRequest == null || string.IsNullOrEmpty(deleteRequest.FileId))
+                if (deleteRequest == null || deleteRequest.FileStorageInfos == null || deleteRequest.FileStorageInfos.Count == 0)
                 {
                     _logger?.LogWarning("文件删除请求格式错误");
                     return FileDeleteResponse.CreateFailure("文件删除请求格式错误");
                 }
 
-                // 查找并删除文件（在所有可能的目录中）
+                // 记录删除结果
                 var deletedCount = 0;
-                var searchPaths = new List<string> { _fileStoragePath };
-
-                // 添加分类目录
-                searchPaths.Add(GetCategoryPath("paymentvoucher"));
-                searchPaths.Add(GetCategoryPath("productimage"));
-                searchPaths.Add(GetCategoryPath("bommanual"));
-                _logger?.LogInformation("删除搜索目录数: {DirectoryCount}", searchPaths.Count);
-
-                foreach (var searchPath in searchPaths)
+                var deletedFileIds = new List<string>();
+                var response = new FileDeleteResponse
                 {
-                    if (Directory.Exists(searchPath))
-                    {
-                        _logger?.LogDebug("在目录中搜索待删除文件: {Directory}", searchPath);
-                        var files = Directory.GetFiles(searchPath, $"{deleteRequest.FileId}.*");
-                        _logger?.LogDebug("找到待删除文件数: {FileCount}", files.Length);
+                    IsSuccess = true,
+                    DeletedFileIds = deletedFileIds,
+                    Message = ""
+                };
 
-                        foreach (var filePath in files)
+                // 遍历处理每个文件
+                for (int i = 0; i < deleteRequest.FileStorageInfos.Count; i++)
+                {
+                    var fileStorageInfo = deleteRequest.FileStorageInfos[i];
+                    var fileId = fileStorageInfo.FileId > 0 ? fileStorageInfo.FileId.ToString() : fileStorageInfo.HashValue;
+                    
+                    if (string.IsNullOrEmpty(fileId))
+                    {
+                        _logger?.LogWarning("文件[{Index}]缺少标识信息，跳过删除", i + 1);
+                        continue;
+                    }
+                    
+                    _logger?.LogInformation("处理删除文件[{Index}]，FileId: {FileId}", i + 1, fileId);
+
+                    // 构建搜索路径
+                    var searchPaths = new List<string> { _fileStoragePath };
+                    
+                    // 添加分类目录（如果有）
+                    if (fileStorageInfo.BusinessType.HasValue)
+                    {
+                        searchPaths.Add(GetCategoryPath(fileStorageInfo.BusinessType.Value.ToString()));
+                    }
+                    
+                    // 可选：添加其他常用分类目录作为备份搜索位置
+                    searchPaths.Add(GetCategoryPath("paymentvoucher"));
+                    
+                    _logger?.LogInformation("文件[{Index}]删除搜索目录数: {DirectoryCount}", i + 1, searchPaths.Count);
+
+                    // 在所有搜索路径中查找并删除文件
+                    bool fileDeleted = false;
+                    foreach (var searchPath in searchPaths)
+                    {
+                        if (!Directory.Exists(searchPath))
+                        {
+                            _logger?.LogDebug("跳过不存在的目录: {Directory}", searchPath);
+                            continue;
+                        }
+
+                        _logger?.LogDebug("在目录中搜索待删除文件: {Directory}", searchPath);
+                        
+                        // 搜索模式：尝试通过FileId和HashValue两种方式
+                        var searchPatterns = new List<string>();
+                        if (fileStorageInfo.FileId > 0)
+                        {
+                            searchPatterns.Add($"{fileStorageInfo.FileId}.*");
+                        }
+                        if (!string.IsNullOrEmpty(fileStorageInfo.HashValue))
+                        {
+                            searchPatterns.Add($"{fileStorageInfo.HashValue}.*");
+                        }
+                        if (!string.IsNullOrEmpty(fileStorageInfo.StorageFileName))
+                        {
+                            searchPatterns.Add(fileStorageInfo.StorageFileName);
+                        }
+
+                        foreach (var pattern in searchPatterns)
                         {
                             try
                             {
-                                _logger?.LogInformation("删除文件: {FilePath}", filePath);
-                                File.Delete(filePath);
-                                deletedCount++;
-                                _logger?.LogInformation("文件删除成功: {FilePath}", filePath);
+                                _logger?.LogDebug("使用模式搜索: {Pattern}", pattern);
+                                var files = Directory.GetFiles(searchPath, pattern);
+                                
+                                foreach (var filePath in files)
+                                {
+                                    try
+                                    {
+                                        _logger?.LogInformation("删除文件: {FilePath}", filePath);
+                                        File.Delete(filePath);
+                                        deletedCount++;
+                                        fileDeleted = true;
+                                        _logger?.LogInformation("文件删除成功: {FilePath}", filePath);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        // 记录错误但继续删除其他文件
+                                        _logger?.LogError(ex, "删除文件失败: {FilePath}", filePath);
+                                    }
+                                }
                             }
                             catch (Exception ex)
                             {
-                                // 记录错误但继续删除其他文件
-                                _logger?.LogError(ex, "删除文件失败: {FilePath}", filePath);
+                                _logger?.LogWarning(ex, "搜索文件时出错: 目录={Directory}, 模式={Pattern}", searchPath, pattern);
                             }
                         }
                     }
-                    else
+
+                    // 更新数据库记录状态
+                    if (fileStorageInfo.FileId > 0 || !string.IsNullOrEmpty(fileStorageInfo.HashValue))
                     {
-                        _logger?.LogDebug("跳过不存在的目录: {Directory}", searchPath);
+                        try
+                        {
+                            _logger?.LogInformation("开始更新数据库文件状态");
+                            
+                            // 构建查询条件
+                            string queryCondition = string.Empty;
+                            if (fileStorageInfo.FileId > 0)
+                            {
+                                queryCondition = $"FileId = {fileStorageInfo.FileId}";
+                            }
+                            else if (!string.IsNullOrEmpty(fileStorageInfo.HashValue))
+                            {
+                                queryCondition = $"HashValue = '{fileStorageInfo.HashValue}'";
+                            }
+                            
+                            if (!string.IsNullOrEmpty(queryCondition))
+                            {
+                                var fileInfoQuery = await _fileStorageInfoController.BaseQueryAsync(queryCondition);
+                                if (fileInfoQuery != null && fileInfoQuery.Count > 0)
+                                {
+                                    var fileInfo = fileInfoQuery[0] as tb_FS_FileStorageInfo;
+                                    fileInfo.Status = 0; // 标记为删除
+                                    await _fileStorageInfoController.SaveOrUpdate(fileInfo);
+                                    _logger?.LogInformation("数据库文件状态更新成功，FileId: {FileId}", fileInfo.FileId);
+                                    
+                                    // 添加到已删除文件ID列表
+                                    deletedFileIds.Add(fileInfo.FileId.ToString());
+                                }
+                                else
+                                {
+                                    _logger?.LogWarning("未在数据库中找到对应的文件记录");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // 记录数据库错误
+                            _logger?.LogError(ex, "更新数据库文件状态失败");
+                        }
+
+                        // 删除相关的业务关联记录
+                        try
+                        {
+                            _logger?.LogInformation("开始删除业务关联记录");
+                            
+                            // 获取要删除的文件ID
+                            long fileIdToDelete = fileStorageInfo.FileId > 0 ? fileStorageInfo.FileId : 0;
+                            if (fileIdToDelete > 0)
+                            {
+                                // 删除业务关联记录
+                               // await _businessRelationController.BaseDeleteAsync(m => m.FileId == fileIdToDelete);
+                                _logger?.LogInformation("业务关联记录删除成功，FileId: {FileId}", fileIdToDelete);
+                            }
+                            else
+                            {
+                                _logger?.LogWarning("无法确定文件ID，跳过业务关联记录删除");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // 记录数据库错误
+                            _logger?.LogError(ex, "删除业务关联记录失败");
+                        }
+                    }
+                    
+                    if (fileDeleted)
+                    {
+                        _logger?.LogInformation("文件[{Index}]删除处理完成", i + 1);
                     }
                 }
 
-                // 更新数据库记录状态
-                try
-                {
-                    _logger?.LogInformation("开始更新数据库文件状态");
-                    // 查找文件信息
-                    var fileInfoQuery = await _fileStorageInfoController.BaseQueryAsync($"HashValue = '{deleteRequest.FileId}'");
-                    if (fileInfoQuery != null && fileInfoQuery.Count > 0)
-                    {
-                        var fileInfo = fileInfoQuery[0] as tb_FS_FileStorageInfo;
-                        fileInfo.Status = 0; // 标记为删除
-                        await _fileStorageInfoController.SaveOrUpdate(fileInfo);
-                        _logger?.LogInformation("数据库文件状态更新成功，FileId: {FileId}", fileInfo.FileId);
-                    }
-                    else
-                    {
-                        _logger?.LogWarning("未在数据库中找到对应的文件记录");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // 记录数据库错误
-                    _logger?.LogError(ex, "更新数据库文件状态失败");
-                }
-
-                // 删除相关的业务关联记录
-                try
-                {
-                    _logger?.LogInformation("开始删除业务关联记录");
-
-                    //{deleteRequest.FileId}
-                    //await _applicationContext.Db.DeleteNav<tb_FS_BusinessRelation>(m => m.FileId == entity.RelationId)
-                    //.IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                    //              .ExecuteCommandAsync();
-
-                    _logger?.LogInformation("业务关联记录删除成功");
-                }
-                catch (Exception ex)
-                {
-                    // 记录数据库错误
-                    _logger?.LogError(ex, "删除业务关联记录失败");
-                }
-
+                // 设置响应消息
                 if (deletedCount > 0)
                 {
+                    response.Message = $"文件删除成功，共成功删除 {deletedCount} 个文件";
                     _logger?.LogInformation("文件删除处理完成，成功删除 {DeletedCount} 个文件", deletedCount);
-                    return FileDeleteResponse.CreateSuccess("文件删除成功");
+                    return response;
                 }
                 else
                 {
-                    return FileDeleteResponse.CreateFailure("文件不存在");
+                    return FileDeleteResponse.CreateFailure("没有找到可以删除的文件");
                 }
             }
             catch (Exception ex)

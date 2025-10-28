@@ -4059,6 +4059,14 @@ namespace RUINORERP.UI.BaseForm
             return rmr;
         }
 
+
+        public async Task<bool> DeleteImages(T entity)
+        {
+            await Task.Delay(0);
+            return true;
+        }
+
+
         /// <summary>
         /// 删除远程的图片
         /// </summary>
@@ -4121,6 +4129,8 @@ namespace RUINORERP.UI.BaseForm
                         }
                         bindingSourceSub.Clear();
 
+
+                        await DeleteImages(editEntity);
                         //删除远程图片及本地图片
                         await DeleteRemoteImages();
 

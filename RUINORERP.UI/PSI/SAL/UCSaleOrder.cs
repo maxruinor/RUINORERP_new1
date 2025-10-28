@@ -608,6 +608,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         private async Task DownloadVoucherImageAsync(tb_SaleOrder entity, MagicPictureBox magicPicBox)
         {
+            magicPicBox.MultiImageSupport = true;
             var ctrpay = Startup.GetFromFac<FileManagementController>();
             try
             {
@@ -633,7 +634,6 @@ namespace RUINORERP.UI.PSI.SAL
                             {
                                 imageDataList.Add(fileStorageInfo.FileData);
                                 imageNames.Add(fileStorageInfo.OriginalFileName);
-                                imageInfos.Add(fileStorageInfo);
                             }
                         }
                     }
@@ -649,7 +649,7 @@ namespace RUINORERP.UI.PSI.SAL
                     try
                     {
                         // 使用统一的LoadImages方法，自动处理单张和多张图片
-                        magicPicBox.LoadImages(imageDataList, imageNames, isFromServer: true);
+                        magicPicBox.LoadImage(imageDataList, imageNames, isFromServer: true);
                         MainForm.Instance.uclog.AddLog($"成功加载 {imageDataList.Count} 张凭证图片");
                     }
                     catch (Exception ex)

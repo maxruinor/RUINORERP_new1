@@ -1202,39 +1202,65 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
         }
 
-        //动态添加右键菜单
+        //动态添加右键菜单，根据是否有图片智能显示不同菜单项
         private void AddContextMenuItems()
         {
-            if (!contextMenuStrip.Items.ContainsKey("查看大图"))
+            // 首先清空现有菜单项，以实现动态更新
+            contextMenuStrip.Items.Clear();
+            
+            // 检查是否有图片
+            bool hasImages = this.Image != null || (MultiImageSupport && images.Count > 0);
+            
+            // 根据是否有图片显示不同菜单项
+            if (hasImages)
             {
+                // 有图片时显示的菜单项
                 contextMenuStrip.Items.Add(new ToolStripMenuItem("查看大图", null, new EventHandler(ViewLargeImage), "查看大图"));
-            }
-            if (!contextMenuStrip.Items.ContainsKey("清除图片"))
-            {
-                contextMenuStrip.Items.Add(new ToolStripMenuItem("清除图片", null, new EventHandler(ClearImage), "清除图片"));
-            }
-            if (MultiImageSupport && !contextMenuStrip.Items.ContainsKey("添加图片"))
-            {
+                contextMenuStrip.Items.Add(new ToolStripMenuItem("裁剪图片", null, new EventHandler(StartCrop), "裁剪图片"));
+                
+                // 添加添加图片选项，方便用户随时添加新图片
                 contextMenuStrip.Items.Add(new ToolStripMenuItem("添加图片", null, new EventHandler(AddImage), "添加图片"));
-            }
-            if (MultiImageSupport && !contextMenuStrip.Items.ContainsKey("删除当前图片"))
-            {
-                contextMenuStrip.Items.Add(new ToolStripMenuItem("删除当前图片", null, new EventHandler(DeleteCurrentImage), "删除当前图片"));
-            }
-            if (!contextMenuStrip.Items.ContainsKey("裁剪图片"))
-            {
+                
+                // 确保裁剪控件已初始化
+                if (imageCroppingBox1 == null)
+                {
+                    imageCroppingBox1 = new ImageCroppingBox();
+                }
                 imageCroppingBox1.Size = this.Size;
-                //imageCroppingBox1.Location = this.Location;
                 imageCroppingBox1.Visible = false;
                 imageCroppingBox1.ContextMenuStrip = contextMenuStripForCrop;
                 imageCroppingBox1.DoubleClick += new EventHandler(SaveCrop);
-                this.Controls.Add(imageCroppingBox1);
-                this.imageCroppingBox1.TabIndex = 3;
-                contextMenuStrip.Items.Add(new ToolStripMenuItem("裁剪图片", null, new EventHandler(StartCrop), "裁剪图片"));
+                if (!this.Controls.Contains(imageCroppingBox1))
+                {
+                    this.Controls.Add(imageCroppingBox1);
+                    this.imageCroppingBox1.TabIndex = 3;
+                }
+                
+                // 确保裁剪上下文菜单有取消裁剪选项
+                if (!contextMenuStripForCrop.Items.ContainsKey("取消裁剪"))
+                {
+                    contextMenuStripForCrop.Items.Add(new ToolStripMenuItem("取消裁剪", null, new EventHandler(StopCrop), "取消裁剪"));
+                }
+                
+                // 添加分隔线
+                contextMenuStrip.Items.Add(new ToolStripSeparator());
+                
+                // 清除和删除选项
+                contextMenuStrip.Items.Add(new ToolStripMenuItem("清除图片", null, new EventHandler(ClearImage), "清除图片"));
+                
+                // 多图片模式下显示删除当前图片选项
+                if (MultiImageSupport && images.Count > 1)
+                {
+                    contextMenuStrip.Items.Add(new ToolStripMenuItem("删除当前图片", null, new EventHandler(DeleteCurrentImage), "删除当前图片"));
+                }
             }
-            if (!contextMenuStripForCrop.Items.ContainsKey("取消裁剪"))
+            else
             {
-                contextMenuStripForCrop.Items.Add(new ToolStripMenuItem("取消裁剪", null, new EventHandler(StopCrop), "取消裁剪"));
+                // 没有图片时显示的菜单项
+                contextMenuStrip.Items.Add(new ToolStripMenuItem("粘贴图片", null, new EventHandler(PasteImage), "粘贴图片"));
+                
+                // 无论是否多图片模式都显示添加图片选项
+                contextMenuStrip.Items.Add(new ToolStripMenuItem("添加图片", null, new EventHandler(AddImage), "添加图片"));
             }
         }
 
@@ -1278,11 +1304,27 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             this.Image = null;
             if (MultiImageSupport)
             {
+                // 在多图片模式下，清除所有图片
                 images.Clear();
                 imageInfos.Clear();
                 currentImageIndex = 0;
                 imagePaths = "";
+                
+                // 更新导航控件和页面信息
+                CreateNavigationControls();
+                UpdatePageInfo();
+                UpdateImagePathsFromImages();
             }
+            else
+            {
+                // 单图片模式下也需要清空imageInfos
+                if (imageInfos.Count > 0)
+                {
+                    imageInfos.Clear();
+                }
+            }
+            // 更新信息面板，确保清空
+            UpdateInfoPanel();
             // 重绘 PictureBox
             this.Invalidate();
         }
@@ -1701,22 +1743,46 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     // 如果是多图片模式，添加到列表中
                     if (MultiImageSupport)
                     {
-                        images.Add(image);
-                        // 添加图片信息，优先使用从剪贴板获取的文件名
-                        ImageInfo newImageInfo = new ImageInfo
+                        // 列表不为空时，将粘贴的图片添加到列表末尾，实现第二张、第三张依次递增
+                        if (images.Count > 0)
                         {
-                            OriginalFileName = fileName,
-                            FileSize = GetImageFileSize(image), // 尝试获取图片大小
-                            CreateTime = DateTime.Now,
-                            FileType = GetImageFormatExtension(image),
-                            FileExtension = GetImageFormatExtension(image),
-                            Width = image?.Width ?? 0,
-                            Height = image?.Height ?? 0,
-                            IsUpdated = true // 标记为需要更新
-                        };
-                        imageInfos.Add(newImageInfo);
-                        _updateManager.MarkImageAsUpdated(newImageInfo); // 标记为需要更新
-                        currentImageIndex = images.Count - 1;
+                            images.Add(image);
+                            // 添加图片信息，优先使用从剪贴板获取的文件名
+                            ImageInfo newImageInfo = new ImageInfo
+                            {
+                                OriginalFileName = fileName,
+                                FileSize = GetImageFileSize(image), // 尝试获取图片大小
+                                CreateTime = DateTime.Now,
+                                FileType = GetImageFormatExtension(image),
+                                FileExtension = GetImageFormatExtension(image),
+                                Width = image?.Width ?? 0,
+                                Height = image?.Height ?? 0,
+                                IsUpdated = true // 标记为需要更新
+                            };
+                            imageInfos.Add(newImageInfo);
+                            _updateManager.MarkImageAsUpdated(newImageInfo); // 标记为需要更新
+                            currentImageIndex = images.Count - 1; // 设置为新添加的图片
+                        }
+                        else
+                        {
+                            // 列表为空时，正常添加到末尾
+                            images.Add(image);
+                            // 添加图片信息，优先使用从剪贴板获取的文件名
+                            ImageInfo newImageInfo = new ImageInfo
+                            {
+                                OriginalFileName = fileName,
+                                FileSize = GetImageFileSize(image), // 尝试获取图片大小
+                                CreateTime = DateTime.Now,
+                                FileType = GetImageFormatExtension(image),
+                                FileExtension = GetImageFormatExtension(image),
+                                Width = image?.Width ?? 0,
+                                Height = image?.Height ?? 0,
+                                IsUpdated = true // 标记为需要更新
+                            };
+                            imageInfos.Add(newImageInfo);
+                            _updateManager.MarkImageAsUpdated(newImageInfo); // 标记为需要更新
+                            currentImageIndex = 0;
+                        }
                         CreateNavigationControls();
                         UpdatePageInfo();
                         UpdateImagePathsFromImages(); // 更新图片路径
@@ -1888,150 +1954,168 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         // 双击事件
         private void CustomPictureBox_DoubleClick(object sender, EventArgs e)
         {
+            // 如果处于裁剪状态，处理裁剪操作
+            if (isCropping)
+            {
+                ProcessCropOperation();
+                return;
+            }
+            
+            // 根据控件是否有图片执行不同操作
             if (this.Image == null)
             {
-                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                // 控件为空时，添加图片
+                AddImageFromFileDialog();
+            }
+            else
+            {
+                // 控件有图片时，查看当前图片
+                ViewLargeImage(sender, e);
+            }
+        }
+        
+        /// <summary>
+        /// 处理裁剪操作
+        /// </summary>
+        private void ProcessCropOperation()
+        {
+            // 保存原始图片信息
+            ImageInfo originalInfo = null;
+            if (MultiImageSupport && currentImageIndex < imageInfos.Count)
+            {
+                originalInfo = imageInfos[currentImageIndex];
+            }
+            else if (imageInfos.Count > 0)
+            {
+                originalInfo = imageInfos[0];
+            }
+
+            this.Image = CropImage(this.Image, cropRectangle);
+            string newhash = ImageHelper.GetImageHash(this.Image);
+            RowImage.SetImageNewHash(newhash);
+
+            // 更新多图片列表中的当前图片
+            if (MultiImageSupport && currentImageIndex < images.Count)
+            {
+                images[currentImageIndex] = this.Image;
+                UpdateImagePathsFromImages(); // 更新图片路径
+
+                // 使用新方法更新图片及其信息，自动处理哈希值比较和版本管理
+                UpdateImageWithOriginalInfo(currentImageIndex, this.Image, "旋转图片");
+
+                // 标记图片为已更新，以便业务层处理时能识别出需要上传的图片
+                MarkImageAsUpdated(currentImageIndex);
+            }
+            else if (originalInfo != null) // 单图片模式
+            {
+                // 在单图片模式下，我们也使用UpdateImageWithOriginalInfo，但需要特殊处理
+                try
                 {
-                    openFileDialog.Title = "选择图片";
-                    openFileDialog.Filter = "图片文件|*.bmp;*.jpg;*.jpeg;*.png;*.gif";
-                    if (openFileDialog.ShowDialog() == DialogResult.OK)
+                    // 为单图片模式临时启用多图片支持以便使用更新方法
+                    bool wasMultiImageSupported = MultiImageSupport;
+                    MultiImageSupport = true;
+
+                    // 确保图片列表不为空
+                    if (images == null || images.Count == 0)
                     {
-                        this.Image = Image.FromFile(openFileDialog.FileName);
-                        string newhash = ImageHelper.GetImageHash(this.Image);
-                        RowImage.SetImageNewHash(newhash);
+                        images = new List<Image> { this.Image };
+                        currentImageIndex = 0;
+                    }
+                    else if (images.Count > 0)
+                    {
+                        images[0] = this.Image;
+                        currentImageIndex = 0;
+                    }
 
-                        // 获取文件信息
-                        var fileInfo = new FileInfo(openFileDialog.FileName);
+                    // 更新图片信息
+                    UpdateImageWithOriginalInfo(0, this.Image, "裁剪图片");
 
-                        // 如果是多图片模式，添加到列表中
-                        if (MultiImageSupport)
+                    // 标记为已更新
+                    MarkImageAsUpdated(0);
+
+                    // 恢复多图片支持设置
+                    MultiImageSupport = wasMultiImageSupported;
+
+                    // 确保单图片模式下的Image属性也被更新
+                    if (!wasMultiImageSupported && images.Count > 0)
+                    {
+                        this.Image = images[0];
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"单图片模式下更新图片信息失败: {ex.Message}");
+                }
+            }
+
+            isCropping = false;
+        }
+        
+        /// <summary>
+        /// 从文件对话框添加图片
+        /// </summary>
+        private void AddImageFromFileDialog()
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Title = "选择图片";
+                openFileDialog.Filter = "图片文件|*.bmp;*.jpg;*.jpeg;*.png;*.gif";
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    this.Image = Image.FromFile(openFileDialog.FileName);
+                    string newhash = ImageHelper.GetImageHash(this.Image);
+                    RowImage.SetImageNewHash(newhash);
+
+                    // 获取文件信息
+                    var fileInfo = new FileInfo(openFileDialog.FileName);
+
+                    // 如果是多图片模式，添加到列表中
+                    if (MultiImageSupport)
+                    {
+                        images.Add(this.Image);
+                        ImageInfo newImageInfo = new ImageInfo
                         {
-                            images.Add(this.Image);
-                            ImageInfo newImageInfo = new ImageInfo
-                            {
-                                OriginalFileName = fileInfo.Name,
-                                FileSize = fileInfo.Length,
-                                CreateTime = fileInfo.CreationTime,
-                                FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
-                                HashValue = CalculateImageHash(this.Image),
-                                Width = this.Image?.Width ?? 0,
-                                Height = this.Image?.Height ?? 0,
-                                IsUpdated = true // 标记为已更新
-                            };
-                            imageInfos.Add(newImageInfo);
-                            // 标记图片需要更新
-                            _updateManager.MarkImageAsUpdated(newImageInfo);
-                            currentImageIndex = images.Count - 1;
-                            CreateNavigationControls();
-                            UpdatePageInfo();
-                            UpdateImagePathsFromImages(); // 更新图片路径
-                            CreateInfoPanel();
-                        }
-                        else
-                        {
-                            images.Add(this.Image);
-                            ImageInfo newImageInfo = new ImageInfo
-                            {
-                                OriginalFileName = fileInfo.Name,
-                                FileSize = fileInfo.Length,
-                                IsUpdated = true, // 标记为已更新
-                                CreateTime = fileInfo.CreationTime,
-                                FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
-                                HashValue = CalculateImageHash(this.Image),
-                                Width = this.Image?.Width ?? 0,
-                                Height = this.Image?.Height ?? 0
-                            };
-                            imageInfos.Add(newImageInfo);
-                            // 标记图片需要更新
-                            _updateManager.MarkImageAsUpdated(newImageInfo);
-                            currentImageIndex = images.Count - 1;
-                            UpdateInfoPanel();
-                        }
+                            OriginalFileName = fileInfo.Name,
+                            FileSize = fileInfo.Length,
+                            CreateTime = fileInfo.CreationTime,
+                            FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
+                            HashValue = CalculateImageHash(this.Image),
+                            Width = this.Image?.Width ?? 0,
+                            Height = this.Image?.Height ?? 0,
+                            IsUpdated = true // 标记为已更新
+                        };
+                        imageInfos.Add(newImageInfo);
+                        // 标记图片需要更新
+                        _updateManager.MarkImageAsUpdated(newImageInfo);
+                        currentImageIndex = images.Count - 1;
+                        CreateNavigationControls();
+                        UpdatePageInfo();
+                        UpdateImagePathsFromImages(); // 更新图片路径
+                        CreateInfoPanel();
                     }
                     else
                     {
-                        // 显示图片，这里只是简单地在PictureBox中显示，你可以根据需要实现更复杂的显示逻辑
-                        AddContextMenuItems();
-                        //如果是裁剪状态，则不显示大图。双击将截取的图片替换到控件中。并退出裁剪状态
-                        if (isCropping)
+                        images.Add(this.Image);
+                        ImageInfo newImageInfo = new ImageInfo
                         {
-                            // 保存原始图片信息
-                            ImageInfo originalInfo = null;
-                            if (MultiImageSupport && currentImageIndex < imageInfos.Count)
-                            {
-                                originalInfo = imageInfos[currentImageIndex];
-                            }
-                            else if (imageInfos.Count > 0)
-                            {
-                                originalInfo = imageInfos[0];
-                            }
-
-                            this.Image = CropImage(this.Image, cropRectangle);
-                            string newhash = ImageHelper.GetImageHash(this.Image);
-                            RowImage.SetImageNewHash(newhash);
-
-                            // 更新多图片列表中的当前图片
-                            if (MultiImageSupport && currentImageIndex < images.Count)
-                            {
-                                images[currentImageIndex] = this.Image;
-                                UpdateImagePathsFromImages(); // 更新图片路径
-
-                                // 使用新方法更新图片及其信息，自动处理哈希值比较和版本管理
-                                UpdateImageWithOriginalInfo(currentImageIndex, this.Image, "旋转图片");
-
-                                // 标记图片为已更新，以便业务层处理时能识别出需要上传的图片
-                                MarkImageAsUpdated(currentImageIndex);
-                            }
-                            else if (originalInfo != null) // 单图片模式
-                            {
-                                // 在单图片模式下，我们也使用UpdateImageWithOriginalInfo，但需要特殊处理
-                                try
-                                {
-                                    // 为单图片模式临时启用多图片支持以便使用更新方法
-                                    bool wasMultiImageSupported = MultiImageSupport;
-                                    MultiImageSupport = true;
-
-                                    // 确保图片列表不为空
-                                    if (images == null || images.Count == 0)
-                                    {
-                                        images = new List<Image> { this.Image };
-                                        currentImageIndex = 0;
-                                    }
-                                    else if (images.Count > 0)
-                                    {
-                                        images[0] = this.Image;
-                                        currentImageIndex = 0;
-                                    }
-
-                                    // 更新图片信息
-                                    UpdateImageWithOriginalInfo(0, this.Image, "裁剪图片");
-
-                                    // 标记为已更新
-                                    MarkImageAsUpdated(0);
-
-                                    // 恢复多图片支持设置
-                                    MultiImageSupport = wasMultiImageSupported;
-
-                                    // 确保单图片模式下的Image属性也被更新
-                                    if (!wasMultiImageSupported && images.Count > 0)
-                                    {
-                                        this.Image = images[0];
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"单图片模式下更新图片信息失败: {ex.Message}");
-                                }
-                            }
-
-                            isCropping = false;
-                        }
-                        else
-                        {
-                            ViewLargeImage(sender, e);
-                        }
-
+                            OriginalFileName = fileInfo.Name,
+                            FileSize = fileInfo.Length,
+                            IsUpdated = true, // 标记为已更新
+                            CreateTime = fileInfo.CreationTime,
+                            FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
+                            HashValue = CalculateImageHash(this.Image),
+                            Width = this.Image?.Width ?? 0,
+                            Height = this.Image?.Height ?? 0
+                        };
+                        imageInfos.Add(newImageInfo);
+                        // 标记图片需要更新
+                        _updateManager.MarkImageAsUpdated(newImageInfo);
+                        currentImageIndex = images.Count - 1;
+                        UpdateInfoPanel();
                     }
+                    
+                    // 添加右键菜单项
+                    AddContextMenuItems();
                 }
             }
         }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RUINORERP.Model;
@@ -7,28 +7,6 @@ using RUINORERP.PacketSpec.Models.Responses;
 
 namespace RUINORERP.PacketSpec.Models.Requests
 {
-    /// <summary>
-    /// 通用文件操作结果类
-    /// 用于统一处理单文件和多文件操作的结果
-    /// </summary>
-    /// <typeparam name="T">结果数据类型</typeparam>
-    public class FileOperationResult<T>
-    {
-        /// <summary>
-        /// 操作目标标识（文件名或ID）
-        /// </summary>
-        public string TargetId { get; set; }
-
-        /// <summary>
-        /// 是否操作成功
-        /// </summary>
-        public bool IsSuccess { get; set; }
-
-        /// <summary>
-        /// 错误消息（仅在失败时有值）
-        /// </summary>
-        public string ErrorMessage { get; set; }
-    }
     /// <summary>
     /// 文件上传请求 - 支持单文件和多文件上传
     /// 多文件是指一个单据下有多个文件
@@ -76,11 +54,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
 
         /// <summary>
-        /// 多文件模式下的上传结果列表
-        /// </summary>
-        public List<FileOperationResult<tb_FS_FileStorageInfo>> OperationResults { get; set; } = new List<FileOperationResult<tb_FS_FileStorageInfo>>();
-
-        /// <summary>
         /// 默认构造函数
         /// </summary>
         public FileUploadResponse() : base() { }
@@ -118,53 +91,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
     public class FileDeleteRequest : RequestBase
     {
         /// <summary>
-        /// 是否为多文件删除
-        /// </summary>
-        public bool IsMultiFile { get; set; } = false;
-
-        /// <summary>
-        /// 文件存储信息（单文件模式）
-        /// </summary>
-        public tb_FS_FileStorageInfo FileStorageInfo { get; set; }
-
-        /// <summary>
-        /// 文件分类
-        /// </summary>
-        public string Category { get; set; }
-
-        /// <summary>
         /// 多文件模式下的文件存储信息列表
         /// </summary>
         public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
-
-        /// <summary>
-        /// 文件ID（单文件模式）- 向后兼容
-        /// </summary>
-        public string FileId
-        {
-            get => FileStorageInfo?.FileId.ToString();
-            set
-            {
-                if (string.IsNullOrEmpty(value)) return;
-                if (FileStorageInfo == null) FileStorageInfo = new tb_FS_FileStorageInfo();
-                if (long.TryParse(value, out long fileId)) FileStorageInfo.FileId = fileId;
-            }
-        }
-
-        /// <summary>
-        /// 多文件模式下的文件ID列表（向后兼容）
-        /// </summary>
-        public List<string> FileIds
-        {
-            get => FileOperationCompatibilityHelper.ConvertStorageInfosToFileIds(FileStorageInfos);
-            set
-            {
-                if (value != null)
-                {
-                    FileStorageInfos = FileOperationCompatibilityHelper.ConvertFileIdsToStorageInfos(value);
-                }
-            }
-        }
 
         /// <summary>
         /// 初始化兼容数据结构
@@ -172,8 +101,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// </summary>
         public void InitializeCompatibility()
         {
-            if (FileStorageInfo == null)
-                FileStorageInfo = new tb_FS_FileStorageInfo();
+           
 
             if (FileStorageInfos == null)
                 FileStorageInfos = new List<tb_FS_FileStorageInfo>();
@@ -187,9 +115,9 @@ namespace RUINORERP.PacketSpec.Models.Requests
     public class FileDeleteResponse : ResponseBase
     {
         /// <summary>
-        /// 多文件模式下的删除结果列表
+        /// 成功删除的文件ID列表
         /// </summary>
-        public List<FileOperationResult<string>> OperationResults { get; set; } = new List<FileOperationResult<string>>();
+        public List<string> DeletedFileIds { get; set; } = new List<string>();
 
         /// <summary>
         /// 默认构造函数
@@ -217,10 +145,10 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 创建多文件成功结果
         /// </summary>
-        public static FileDeleteResponse CreateMultiFileSuccess(List<FileOperationResult<string>> results, string message = "文件删除成功")
+        public static FileDeleteResponse CreateMultiFileSuccess(List<string> deletedFileIds, string message = "文件删除成功")
         {
             var response = new FileDeleteResponse(true, message, 200);
-            response.OperationResults = results;
+            response.DeletedFileIds = deletedFileIds;
             return response;
         }
 
@@ -284,11 +212,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 文件存储信息列表
         /// </summary>
         public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
-
-        /// <summary>
-        /// 多文件模式下的查询结果列表
-        /// </summary>
-        public List<FileOperationResult<tb_FS_FileStorageInfo>> OperationResults { get; set; } = new List<FileOperationResult<tb_FS_FileStorageInfo>>();
 
         /// <summary>
         /// 默认构造函数
@@ -415,25 +338,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
     public static class FileOperationCompatibilityHelper
     {
         /// <summary>
-        /// 将旧版多文件操作结果转换为新版通用结果类
-        /// </summary>
-        /// <typeparam name="T">结果数据类型</typeparam>
-        /// <param name="targetId">目标标识</param>
-        /// <param name="isSuccess">是否成功</param>
-        /// <param name="data">结果数据</param>
-        /// <param name="errorMessage">错误消息</param>
-        /// <returns>通用文件操作结果</returns>
-        public static FileOperationResult<T> CreateOperationResult<T>(string targetId, bool isSuccess, T data = default, string errorMessage = null)
-        {
-            return new FileOperationResult<T>
-            {
-                TargetId = targetId,
-                IsSuccess = isSuccess,
-                ErrorMessage = errorMessage
-            };
-        }
-
-        /// <summary>
         /// 检查请求是否为多文件操作
         /// </summary>
         /// <param name="fileCount">文件数量</param>
@@ -490,8 +394,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
             var fileInfo = new tb_FS_FileStorageInfo { FileId = fileId };
             return FileUploadResponse.CreateSuccess(fileInfo, message);
         }
-
-
     }
 
 }

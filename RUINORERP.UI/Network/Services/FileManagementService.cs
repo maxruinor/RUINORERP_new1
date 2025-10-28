@@ -41,6 +41,136 @@ namespace RUINORERP.UI.Network.Services
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
             _log = logger;
         }
+        /// <summary>
+        /// 删除图片文件
+        /// </summary>
+        /// <param name="fileId">图片文件ID</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>文件删除响应</returns>
+        public async Task<FileDeleteResponse> DeleteImageAsync(long fileId, CancellationToken ct = default)
+        {
+            // 验证参数
+            if (fileId <= 0)
+                throw new ArgumentException("文件ID必须大于0", nameof(fileId));
+
+            // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
+            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+            {
+                _log?.LogWarning("获取文件操作锁超时");
+                return FileDeleteResponse.CreateFailure("系统繁忙，请稍后重试");
+            }
+            
+            bool lockAcquired = true;
+            try
+            {
+                // 检查连接状态
+                if (!_communicationService.IsConnected)
+                {
+                    _log?.LogWarning("图片删除失败：未连接到服务器");
+                    return FileDeleteResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
+                }
+
+                // 只记录关键信息
+                _log?.LogDebug("开始图片删除请求，文件ID: {FileId}", fileId);
+
+                // 创建文件信息请求以验证文件类型
+                var fileInfoRequest = new FileInfoRequest();
+                fileInfoRequest.FileStorageInfo = new RUINORERP.Model.tb_FS_FileStorageInfo { FileId = fileId };
+                
+                // 获取文件信息
+                var fileInfoResponse = await GetFileInfoAsync(fileInfoRequest, ct);
+                
+                if (!fileInfoResponse.IsSuccess)
+                {
+                    _log?.LogWarning("获取文件信息失败，无法验证图片类型: {ErrorMessage}", fileInfoResponse.ErrorMessage);
+                    return FileDeleteResponse.CreateFailure("获取文件信息失败，无法验证图片类型");
+                }
+                
+                // 验证是否为图片文件 - 基于文件扩展名
+                string[] imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp" };
+                string fileExtension = string.Empty;
+                string fileType = string.Empty;
+                
+                // 尝试从文件扩展名或文件类型验证
+                if (!string.IsNullOrEmpty(fileInfoResponse.FileInfo?.FileExtension))
+                {
+                    fileExtension = "." + fileInfoResponse.FileInfo.FileExtension.ToLower();
+                }
+                else if (!string.IsNullOrEmpty(fileInfoResponse.FileInfo?.OriginalFileName))
+                {
+                    fileExtension = Path.GetExtension(fileInfoResponse.FileInfo.OriginalFileName)?.ToLower();
+                }
+                
+                // 也可以检查文件类型
+                if (!string.IsNullOrEmpty(fileInfoResponse.FileInfo?.FileType))
+                {
+                    fileType = fileInfoResponse.FileInfo.FileType.ToLower();
+                }
+                
+                // 验证是否为图片文件
+                bool isImageFile = imageExtensions.Contains(fileExtension) || 
+                                  fileType.Contains("image/") || 
+                                  fileType.Contains("图片") ||
+                                  fileType.Contains("image");
+                
+                if (!isImageFile)
+                {
+                    _log?.LogWarning("尝试删除非图片文件，文件ID: {FileId}, 文件类型: {FileType}, 文件扩展名: {FileExtension}", 
+                                    fileId, fileType, fileExtension);
+                    return FileDeleteResponse.CreateFailure("只能删除图片文件");
+                }
+
+                // 创建文件删除请求
+                var deleteRequest = new FileDeleteRequest();
+                deleteRequest.InitializeCompatibility();
+                deleteRequest.FileStorageInfos.Add(new RUINORERP.Model.tb_FS_FileStorageInfo { FileId = fileId });
+
+                // 发送文件删除命令并获取响应
+                var response = await _communicationService.SendCommandWithResponseAsync<FileDeleteResponse>(
+                    FileCommands.FileDelete, deleteRequest, ct);
+
+                // 检查响应数据是否为空
+                if (response == null)
+                {
+                    _log?.LogError("图片删除失败：服务器返回了空的响应数据");
+                    return FileDeleteResponse.CreateFailure("服务器返回了空的响应数据，请联系系统管理员");
+                }
+
+                // 检查响应是否成功
+                if (!response.IsSuccess)
+                {
+                    _log?.LogWarning("图片删除失败: {ErrorMessage}", response.ErrorMessage);
+                    return FileDeleteResponse.CreateFailure($"图片删除失败: {response.ErrorMessage}");
+                }
+
+                return response;
+            }
+            catch (OperationCanceledException ex)
+            {
+                return FileDeleteResponse.CreateFailure("图片删除操作已取消");
+            }
+            catch (TimeoutException ex)
+            {
+                _log?.LogWarning(ex, "图片删除请求超时");
+                return FileDeleteResponse.CreateFailure("图片删除请求超时，请检查网络连接后重试");
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "图片删除过程中发生未预期的异常");
+                return FileDeleteResponse.CreateFailure("图片删除过程中发生错误，请稍后重试");
+            }
+            finally
+            {
+                // 检查信号量是否被占用，避免重复释放
+                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                {
+                    _fileOperationLock.Release();
+                    lockAcquired = false;
+                }
+            }
+        }
+
+     
 
         /// <summary>
         /// 文件上传
@@ -215,8 +345,8 @@ namespace RUINORERP.UI.Network.Services
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            if (string.IsNullOrEmpty(request.FileId))
-                throw new ArgumentException("文件ID不能为空", nameof(request.FileId));
+            //if (string.IsNullOrEmpty(request.FileId))
+            //    throw new ArgumentException("文件ID不能为空", nameof(request.FileId));
 
             // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
             if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))

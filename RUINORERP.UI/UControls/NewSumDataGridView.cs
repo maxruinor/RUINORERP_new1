@@ -1250,8 +1250,15 @@ namespace RUINORERP.UI.UControls
             this.CellValueChanged += NewSumDataGridView_CellValueChanged;
             this.CurrentCellChanged += NewSumDataGridView_CurrentCellChanged;
             this.CurrentCellDirtyStateChanged += NewSumDataGridView_CurrentCellDirtyStateChanged;
+            
+            
+            this.DataBindingComplete -= NewSumDataGridView_DataBindingComplete;
             this.DataBindingComplete += NewSumDataGridView_DataBindingComplete;
+
+            this.ColumnDisplayIndexChanged -= NewSumDataGridView_ColumnDisplayIndexChanged;
             this.ColumnDisplayIndexChanged += NewSumDataGridView_ColumnDisplayIndexChanged;
+
+
             this.MouseDown += NewSumDataGridView_MouseDown;
             this.CellClick += NewSumDataGridView_CellClick;
             this.CellStateChanged += dataGridView1_CellStateChanged;

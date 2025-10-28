@@ -45,11 +45,83 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         private Point dragOffset; // 拖动偏移量
         private Point lastMousePosition; // 上一次鼠标位置
 
-        // 设置右键菜单
-        ContextMenuStrip contextMenuStrip = new ContextMenuStrip();
-        ImageCroppingBox imageCroppingBox1 = new ImageCroppingBox();
+        // 菜单相关字段
+        private ContextMenuStrip _mainContextMenu; // 主上下文菜单
+        private ContextMenuStrip _cropContextMenu;  // 裁剪模式上下文菜单
+        private ImageCroppingBox _imageCroppingBox; // 裁剪框控件
 
-        ContextMenuStrip contextMenuStripForCrop = new ContextMenuStrip();
+        // 菜单项ID常量定义
+        private const string MENU_VIEW_LARGE = "查看大图";
+        private const string MENU_CROP = "裁剪图片";
+        private const string MENU_ADD_IMAGE = "添加图片";
+        private const string MENU_PASTE_IMAGE = "粘贴图片";
+        private const string MENU_CLEAR_IMAGE = "清除图片";
+        private const string MENU_DELETE_CURRENT = "删除当前图片";
+        private const string MENU_CANCEL_CROP = "取消裁剪";
+
+        #region 菜单配置属性
+        /// <summary>
+        /// 菜单配置属性区域
+        /// 这些属性允许用户在设计时或运行时自定义上下文菜单中显示的功能
+        /// 更改这些属性后，需要调用UpdateContextMenu方法使更改生效
+        /// </summary>
+
+        /// <summary>
+        /// 是否显示"查看大图"菜单项
+        /// 启用此选项允许用户在新窗口中查看图片的原始大小
+        /// </summary>
+        [Browsable(true)]
+        [Category("菜单配置")]
+        [Description("控制是否显示查看大图菜单项")]
+        [DefaultValue(true)]
+        public bool ShowViewLargeImageMenuItem { get; set; } = true;
+
+        /// <summary>
+        /// 是否显示"裁剪图片"菜单项
+        /// </summary>
+        [Browsable(true)]
+        [Category("菜单配置")]
+        [Description("控制是否显示裁剪图片菜单项")]
+        [DefaultValue(true)]
+        public bool ShowCropImageMenuItem { get; set; } = true;
+
+        /// <summary>
+        /// 是否显示"添加图片"菜单项
+        /// </summary>
+        [Browsable(true)]
+        [Category("菜单配置")]
+        [Description("控制是否显示添加图片菜单项")]
+        [DefaultValue(true)]
+        public bool ShowAddImageMenuItem { get; set; } = true;
+
+        /// <summary>
+        /// 是否显示"粘贴图片"菜单项
+        /// </summary>
+        [Browsable(true)]
+        [Category("菜单配置")]
+        [Description("控制是否显示粘贴图片菜单项")]
+        [DefaultValue(true)]
+        public bool ShowPasteImageMenuItem { get; set; } = true;
+
+        /// <summary>
+        /// 是否显示"清除图片"菜单项
+        /// </summary>
+        [Browsable(true)]
+        [Category("菜单配置")]
+        [Description("控制是否显示清除图片菜单项")]
+        [DefaultValue(true)]
+        public bool ShowClearImageMenuItem { get; set; } = true;
+
+        /// <summary>
+        /// 是否显示"删除当前图片"菜单项
+        /// </summary>
+        [Browsable(true)]
+        [Category("菜单配置")]
+        [Description("控制是否显示删除当前图片菜单项")]
+        [DefaultValue(true)]
+        public bool ShowDeleteCurrentImageMenuItem { get; set; } = true;
+
+        #endregion
 
         private DataRowImage _RowImage = new DataRowImage();
         public DataRowImage RowImage { get => _RowImage; set => _RowImage = value; }
@@ -405,24 +477,153 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             this.BorderStyle = BorderStyle.FixedSingle;
             this.SizeMode = PictureBoxSizeMode.Normal; // 确保图片可以移动
 
-            // 设置双击事件
+            // 初始化菜单系统
+            InitializeMenuSystem();
+
+            // 设置事件处理
             this.DoubleClick += CustomPictureBox_DoubleClick;
-
-            // 初始化右键菜单，添加所有需要的菜单项
-            contextMenuStrip.Items.Add("粘贴图片", null, PasteImage);
-            this.ContextMenuStrip = contextMenuStrip;
-
-            // 调用方法添加所有其他菜单项，确保右键菜单显示统一
-            AddContextMenuItems();
-
             this.Paint += new PaintEventHandler(PictureBoxViewer_Paint);
-
             this.MouseDown += CustomPictureBox_MouseDown;
             this.MouseMove += CustomPictureBox_MouseMove;
             this.MouseUp += CustomPictureBox_MouseUp;
             this.MouseWheel += CustomPictureBox_MouseWheel;
             this.MouseEnter += MagicPictureBox_MouseEnter;
             this.MouseLeave += MagicPictureBox_MouseLeave;
+        }
+
+        /// <summary>
+        /// 初始化菜单系统
+        /// </summary>
+        private void InitializeMenuSystem()
+        {
+            // 创建菜单实例
+            _mainContextMenu = new ContextMenuStrip();
+            _cropContextMenu = new ContextMenuStrip();
+            _imageCroppingBox = new ImageCroppingBox();
+
+            // 配置裁剪框控件
+            _imageCroppingBox.Size = this.Size;
+            _imageCroppingBox.Visible = false;
+            _imageCroppingBox.ContextMenuStrip = _cropContextMenu;
+            _imageCroppingBox.DoubleClick += new EventHandler(SaveCrop);
+            
+            if (!this.Controls.Contains(_imageCroppingBox))
+            {
+                this.Controls.Add(_imageCroppingBox);
+                this._imageCroppingBox.TabIndex = 3;
+            }
+
+            // 初始化裁剪菜单
+            InitializeCropContextMenu();
+
+            // 设置主上下文菜单
+            this.ContextMenuStrip = _mainContextMenu;
+
+            // 初始更新菜单内容
+            // 在构造函数中调用一次，后续状态变化时需手动调用
+            UpdateContextMenu();
+        }
+
+        /// <summary>
+        /// 初始化裁剪上下文菜单
+        /// 创建并配置裁剪操作专用的上下文菜单
+        /// 此方法应在InitializeMenuSystem中调用，仅需初始化一次
+        /// </summary>
+        private void InitializeCropContextMenu()
+        {
+            _cropContextMenu.Items.Clear();
+            _cropContextMenu.Items.Add(new ToolStripMenuItem(MENU_CANCEL_CROP, null, new EventHandler(StopCrop), MENU_CANCEL_CROP));
+        }
+
+        /// <summary>
+        /// 更新主上下文菜单内容
+        /// 根据当前控件状态（有无图片）动态生成相应的菜单项
+        /// 此方法应在以下情况调用：
+        /// 1. 图片加载完成后
+        /// 2. 图片被清除或删除后
+        /// 3. 菜单配置属性更改后
+        /// 4. 构造函数初始化时
+        /// </summary>
+        private void UpdateContextMenu()
+        {
+            _mainContextMenu.Items.Clear();
+            
+            bool hasImages = this.Image != null || (MultiImageSupport && images.Count > 0);
+            
+            if (hasImages)
+            {
+                AddImageAvailableMenuItems();
+            }
+            else
+            {
+                AddEmptyStateMenuItems();
+            }
+        }
+
+        /// <summary>
+        /// 添加有图片时的菜单项
+        /// 根据配置属性动态添加适用于有图片状态的菜单项
+        /// 包括查看、编辑、添加和删除等功能选项
+        /// </summary>
+        private void AddImageAvailableMenuItems()
+        {
+            bool hasAddedMenuItem = false;
+            
+            // 查看和编辑相关菜单项
+            if (ShowViewLargeImageMenuItem)
+            {
+                _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_VIEW_LARGE, null, new EventHandler(ViewLargeImage), MENU_VIEW_LARGE));
+                hasAddedMenuItem = true;
+            }
+            
+            if (ShowCropImageMenuItem)
+            {
+                _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_CROP, null, new EventHandler(StartCrop), MENU_CROP));
+                hasAddedMenuItem = true;
+            }
+            
+            // 添加图片选项
+            if (ShowAddImageMenuItem)
+            {
+                _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_ADD_IMAGE, null, new EventHandler(AddImage), MENU_ADD_IMAGE));
+                hasAddedMenuItem = true;
+            }
+            
+            // 如果添加了菜单项，则添加分隔线
+            if (hasAddedMenuItem && (ShowClearImageMenuItem || (MultiImageSupport && images.Count > 1 && ShowDeleteCurrentImageMenuItem)))
+            {
+                _mainContextMenu.Items.Add(new ToolStripSeparator());
+            }
+            
+            // 清除选项
+            if (ShowClearImageMenuItem)
+            {
+                _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_CLEAR_IMAGE, null, new EventHandler(ClearImage), MENU_CLEAR_IMAGE));
+            }
+            
+            // 多图片模式下的额外选项
+            if (MultiImageSupport && images.Count > 1 && ShowDeleteCurrentImageMenuItem)
+            {
+                _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_DELETE_CURRENT, null, new EventHandler(DeleteCurrentImage), MENU_DELETE_CURRENT));
+            }
+        }
+
+        /// <summary>
+        /// 添加无图片时的菜单项
+        /// 根据配置属性动态添加适用于无图片状态的菜单项
+        /// 主要包括添加和粘贴图片的选项
+        /// </summary>
+        private void AddEmptyStateMenuItems()
+        {
+            if (ShowPasteImageMenuItem)
+            {
+                _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_PASTE_IMAGE, null, new EventHandler(PasteImage), MENU_PASTE_IMAGE));
+            }
+            
+            if (ShowAddImageMenuItem)
+            {
+                _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_ADD_IMAGE, null, new EventHandler(AddImage), MENU_ADD_IMAGE));
+            }
         }
 
 
@@ -1250,66 +1451,14 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
         }
 
-        //动态添加右键菜单，根据是否有图片智能显示不同菜单项
+        /// <summary>
+        /// 动态添加右键菜单，根据是否有图片智能显示不同菜单项
+        /// 保留此方法以向后兼容，内部调用新的UpdateContextMenu方法
+        /// </summary>
         private void AddContextMenuItems()
         {
-            // 首先清空现有菜单项，以实现动态更新
-            contextMenuStrip.Items.Clear();
-            
-            // 检查是否有图片
-            bool hasImages = this.Image != null || (MultiImageSupport && images.Count > 0);
-            
-            // 根据是否有图片显示不同菜单项
-            if (hasImages)
-            {
-                // 有图片时显示的菜单项
-                contextMenuStrip.Items.Add(new ToolStripMenuItem("查看大图", null, new EventHandler(ViewLargeImage), "查看大图"));
-                contextMenuStrip.Items.Add(new ToolStripMenuItem("裁剪图片", null, new EventHandler(StartCrop), "裁剪图片"));
-                
-                // 添加添加图片选项，方便用户随时添加新图片
-                contextMenuStrip.Items.Add(new ToolStripMenuItem("添加图片", null, new EventHandler(AddImage), "添加图片"));
-                
-                // 确保裁剪控件已初始化
-                if (imageCroppingBox1 == null)
-                {
-                    imageCroppingBox1 = new ImageCroppingBox();
-                }
-                imageCroppingBox1.Size = this.Size;
-                imageCroppingBox1.Visible = false;
-                imageCroppingBox1.ContextMenuStrip = contextMenuStripForCrop;
-                imageCroppingBox1.DoubleClick += new EventHandler(SaveCrop);
-                if (!this.Controls.Contains(imageCroppingBox1))
-                {
-                    this.Controls.Add(imageCroppingBox1);
-                    this.imageCroppingBox1.TabIndex = 3;
-                }
-                
-                // 确保裁剪上下文菜单有取消裁剪选项
-                if (!contextMenuStripForCrop.Items.ContainsKey("取消裁剪"))
-                {
-                    contextMenuStripForCrop.Items.Add(new ToolStripMenuItem("取消裁剪", null, new EventHandler(StopCrop), "取消裁剪"));
-                }
-                
-                // 添加分隔线
-                contextMenuStrip.Items.Add(new ToolStripSeparator());
-                
-                // 清除和删除选项
-                contextMenuStrip.Items.Add(new ToolStripMenuItem("清除图片", null, new EventHandler(ClearImage), "清除图片"));
-                
-                // 多图片模式下显示删除当前图片选项
-                if (MultiImageSupport && images.Count > 1)
-                {
-                    contextMenuStrip.Items.Add(new ToolStripMenuItem("删除当前图片", null, new EventHandler(DeleteCurrentImage), "删除当前图片"));
-                }
-            }
-            else
-            {
-                // 没有图片时显示的菜单项
-                contextMenuStrip.Items.Add(new ToolStripMenuItem("粘贴图片", null, new EventHandler(PasteImage), "粘贴图片"));
-                
-                // 无论是否多图片模式都显示添加图片选项
-                contextMenuStrip.Items.Add(new ToolStripMenuItem("添加图片", null, new EventHandler(AddImage), "添加图片"));
-            }
+            // 调用新的菜单更新方法
+            UpdateContextMenu();
         }
 
         /// <summary>
@@ -1513,9 +1662,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 isCropping = true;
                 cropRectangle = new Rectangle(new Point(0, 0), new Size(this.Image.Width, this.Image.Height));
                 this.Cursor = cropCursor;
-                this.imageCroppingBox1.Visible = true;
-                this.imageCroppingBox1.TabIndex = this.TabIndex + 1;
-                this.imageCroppingBox1.Image = this.Image;
+                _imageCroppingBox.Visible = true;
+            _imageCroppingBox.TabIndex = this.TabIndex + 1;
+            _imageCroppingBox.Image = this.Image;
             }
         }
 
@@ -1532,7 +1681,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     cropRectangle = Rectangle.Empty;
                 }
                 this.Visible = true;
-                this.imageCroppingBox1.Visible = false;
+                _imageCroppingBox.Visible = false;
 
                 // 保存原始图片信息
                 ImageInfo originalInfo = null;
@@ -1546,7 +1695,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 }
 
                 // 获取裁剪后的图片
-                this.Image = this.imageCroppingBox1.GetSelectedImage();
+                this.Image = _imageCroppingBox.GetSelectedImage();
 
                 // 更新多图片列表中的当前图片
                 if (MultiImageSupport && currentImageIndex < images.Count)
@@ -1644,7 +1793,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     cropRectangle = Rectangle.Empty;
                 }
                 this.Visible = true;
-                this.imageCroppingBox1.Visible = false;
+                this._imageCroppingBox.Visible = false;
             }
         }
         // 拖拽事件
@@ -1884,7 +2033,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         UpdateInfoPanel();
                     }
 
-                    AddContextMenuItems();
+                    UpdateContextMenu();
                 }
             }
             catch (Exception ex)
@@ -2204,7 +2353,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     }
                     
                     // 添加右键菜单项
-                    AddContextMenuItems();
+                    UpdateContextMenu();
                 }
             }
         }

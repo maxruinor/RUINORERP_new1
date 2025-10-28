@@ -87,10 +87,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 if (!string.IsNullOrEmpty(_fileStoragePath) && !Directory.Exists(_fileStoragePath))
                 {
                     Directory.CreateDirectory(_fileStoragePath);
-                    _logger.LogInformation("创建文件存储目录: {FileStoragePath}", _fileStoragePath);
+                    _logger.Debug("创建文件存储目录: {FileStoragePath}", _fileStoragePath);
                 }
 
-                _logger.LogInformation("文件存储路径已设置为: {FileStoragePath}", _fileStoragePath);
+                _logger.Debug("文件存储路径已设置为: {FileStoragePath}", _fileStoragePath);
             }
             catch (Exception ex)
             {
@@ -125,7 +125,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
-            _logger?.LogInformation("接收到文件命令: {CommandId}", cmd.Packet.CommandId);
+            _logger?.Debug("接收到文件命令: {CommandId}", cmd.Packet.CommandId);
 
             try
             {
@@ -166,13 +166,25 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 获取文件存储路径
+        /// 实现按业务类型和时间（YYMM）分目录的策略
+        /// </summary>
+        private string GetCategoryPath(string BizCategory, DateTime? dateTime = null)
+        {
+            // 使用传入的时间或当前时间
+            var now = dateTime ?? DateTime.Now;
+            // 格式化为YYMM
+            var timeFolder = now.ToString("yyyyMM");
+
+            // 构建路径：基础路径/业务类型/YYMM
+            return Path.Combine(_fileStoragePath, BizCategory, timeFolder);
+        }
+
+        /// <summary>
+        /// 获取文件存储路径（兼容旧版本调用）
         /// </summary>
         private string GetCategoryPath(string BizCategory)
         {
-            return Path.Combine(_fileStoragePath, BizCategory);
-
-
-
+            return GetCategoryPath(BizCategory, null);
         }
 
         /// <summary>
@@ -180,7 +192,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private async Task<IResponse> HandleFileUploadAsync(FileUploadRequest uploadRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
-            _logger?.LogInformation("开始处理文件上传请求，文件数量: {FileCount}", uploadRequest.FileStorageInfos?.Count ?? 0);
+            _logger?.Debug("开始处理文件上传请求，文件数量: {FileCount}", uploadRequest.FileStorageInfos?.Count ?? 0);
 
             var responseData = new FileUploadResponse();
             try
@@ -195,7 +207,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     var FileStorageInfo = uploadRequest.FileStorageInfos[i];
                     #region 保存单文件 
-                    _logger?.LogInformation("处理文件[{Index}]：{FileName}", i + 1, FileStorageInfo.OriginalFileName);
+                    _logger?.Debug("处理文件[{Index}]：{FileName}", i + 1, FileStorageInfo.OriginalFileName);
 
                     // 生成唯一文件名
                     var fileId = Guid.NewGuid().ToString();
@@ -203,24 +215,25 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     //扩展名。看如何取好。原来名有没有带？
                     var savedFileName = $"{fileId}{fileExtension}";
 
-                    // 根据分类确定存储路径
-                    var categoryPath = GetCategoryPath(FileStorageInfo.BusinessType.ToString());
+                    // 根据分类和当前时间确定存储路径（按YYMM分目录）
+                    var fileCreateTime = DateTime.Now;
+                    var categoryPath = GetCategoryPath(FileStorageInfo.BusinessType.ToString(), fileCreateTime);
                     if (!Directory.Exists(categoryPath))
                     {
                         Directory.CreateDirectory(categoryPath);
-                        _logger?.LogInformation("创建分类存储目录: {CategoryPath}", categoryPath);
+                        _logger?.Debug("创建分类存储目录: {CategoryPath}", categoryPath);
                     }
 
                     var filePath = Path.Combine(categoryPath, savedFileName);
-                    _logger?.LogInformation("文件将保存至: {FilePath}", filePath);
+                    _logger?.Debug("文件将保存至: {FilePath}", filePath);
 
                     // 直接计算文件内容哈希值，无需保存后再计算
                     var contentHash = FileManagementHelper.CalculateContentHash(FileStorageInfo.FileData);
-                    _logger?.LogInformation("文件哈希计算完成: {ContentHash}, 文件大小: {FileSize} bytes", contentHash, FileStorageInfo.FileData.Length);
+                    _logger?.Debug("文件哈希计算完成: {ContentHash}, 文件大小: {FileSize} bytes", contentHash, FileStorageInfo.FileData.Length);
 
                     // 保存文件
                     await File.WriteAllBytesAsync(filePath, FileStorageInfo.FileData, cancellationToken);
-                    _logger?.LogInformation("文件物理保存成功");
+                    _logger?.Debug("文件物理保存成功");
 
                     // 创建文件信息实体并保存到数据库
                     var fileStorageInfo = FileManagementHelper.CreateFileStorageInfo(
@@ -245,7 +258,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     }
 
                     responseData.FileStorageInfos.Add(saveResult.ReturnObject);
-                    _logger?.LogInformation("文件信息保存到数据库成功，FileId: {FileId}", fileStorageInfo.FileId);
+                    _logger?.Debug("文件信息保存到数据库成功，FileId: {FileId}", fileStorageInfo.FileId);
 
                     // 在服务器端创建业务关联
                     if (!string.IsNullOrEmpty(uploadRequest.BusinessNo) && uploadRequest.BusinessType.HasValue)
@@ -270,7 +283,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         }
                         else
                         {
-                            _logger?.LogInformation("业务关联创建成功: FileId={FileId}, BusinessNo={BusinessNo}, BusinessType={BusinessType}",
+                            _logger?.Debug("业务关联创建成功: FileId={FileId}, BusinessNo={BusinessNo}, BusinessType={BusinessType}",
                                 fileStorageInfo.FileId, uploadRequest.BusinessNo, uploadRequest.BusinessType.Value);
                         }
                     }
@@ -278,7 +291,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     #endregion
                 }
                 responseData.Message = $"文件上传成功，共成功上传 {responseData.FileStorageInfos.Count} 个文件";
-                _logger?.LogInformation("文件上传处理完成，成功上传 {SuccessCount} 个文件", responseData.FileStorageInfos.Count);
+                _logger?.Debug("文件上传处理完成，成功上传 {SuccessCount} 个文件", responseData.FileStorageInfos.Count);
                 responseData.IsSuccess = true;
                 return responseData;
             }
@@ -294,9 +307,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private async Task<FileDownloadResponse> HandleFileDownloadAsync(FileDownloadRequest downloadRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
-            _logger?.LogInformation("开始处理文件下载请求，FileId: {FileId}",
-                downloadRequest?.FileStorageInfo?.FileId);
-
             try
             {
                 if (downloadRequest == null || downloadRequest.FileStorageInfo == null)
@@ -309,16 +319,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 string filePath = null;
                 if (downloadRequest.FileStorageInfo.FileId > 0)
                 {
-                    _logger?.LogInformation("从数据库查询文件信息，FileId: {FileId}", downloadRequest.FileStorageInfo.FileId);
                     var fileInfos = await _fileStorageInfoController.BaseQueryAsync(
                         $"FileId = {downloadRequest.FileStorageInfo.FileId} AND Status = 1");
                     if (fileInfos != null && fileInfos.Count > 0)
                     {
                         var fileInfo = fileInfos[0] as tb_FS_FileStorageInfo;
+                        downloadRequest.FileStorageInfo = fileInfo;
                         if (fileInfo != null && !string.IsNullOrEmpty(fileInfo.StoragePath))
                         {
                             filePath = fileInfo.StoragePath;
-                            _logger?.LogInformation("从数据库获取到文件路径: {FilePath}", filePath);
                         }
                     }
                     else
@@ -330,7 +339,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 如果数据库中没有路径，尝试根据存储文件名查找
                 if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
                 {
-                    _logger?.LogInformation("尝试在文件系统中查找文件");
+                    _logger?.Debug("尝试在文件系统中查找文件");
                     filePath = await FindPhysicalFileAsync(downloadRequest.FileStorageInfo);
                 }
 
@@ -339,10 +348,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     _logger?.LogWarning("文件不存在或无法访问");
                     return FileDownloadResponse.CreateFailure("文件不存在或无法访问");
                 }
-                _logger?.LogInformation("文件找到，开始读取文件数据: {FilePath}", filePath);
                 var fileData = await File.ReadAllBytesAsync(filePath, cancellationToken);
                 downloadRequest.FileStorageInfo.FileData = fileData;
-                _logger?.LogInformation("文件数据读取成功，大小: {FileSize} bytes", fileData.Length);
 
                 // 创建响应数据
                 var response = new FileDownloadResponse
@@ -351,7 +358,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     Message = "文件下载成功",
                     IsSuccess = true
                 };
-                _logger?.LogInformation("文件下载处理完成，FileId: {FileId}", downloadRequest.FileStorageInfo.FileId);
                 return response;
             }
             catch (IOException ioEx)
@@ -379,31 +385,87 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <returns>找到的文件路径，找不到返回null</returns>
         private async Task<string> FindPhysicalFileAsync(tb_FS_FileStorageInfo fileInfo)
         {
-            _logger?.LogInformation("开始执行文件查找策略，FileId: {FileId}", fileInfo?.FileId);
+            _logger?.Debug("开始执行文件查找策略，FileId: {FileId}", fileInfo?.FileId);
             // 搜索策略：1. 分类目录 2. 根目录
 
+            // 优化搜索模式，提高性能
             var searchPatterns = new List<string>();
-
-            // 根据存储文件名搜索（带扩展名）
+            
+            // 优先使用精确匹配
+            // 从StoragePath中提取文件名（如果有）
+            if (!string.IsNullOrEmpty(fileInfo.StoragePath))
+            {
+                var fileNameFromPath = Path.GetFileName(fileInfo.StoragePath);
+                if (!string.IsNullOrEmpty(fileNameFromPath))
+                {
+                    searchPatterns.Add(fileNameFromPath);
+                    _logger?.LogDebug("添加StoragePath中的文件名到搜索模式: {FileName}", fileNameFromPath);
+                }
+            }
+            
+            // 其次是存储文件名（如果有）
             if (!string.IsNullOrEmpty(fileInfo.StorageFileName))
             {
-                searchPatterns.Add($"{fileInfo.StorageFileName}.*");
+                searchPatterns.Add(fileInfo.StorageFileName);
+                // 仅在必要时使用通配符
+                if (!fileInfo.StorageFileName.Contains('.'))
+                {
+                    searchPatterns.Add($"{fileInfo.StorageFileName}.*");
+                }
             }
-
-            // 根据文件ID搜索
+            
+            // 根据文件ID搜索（作为备用方案）
             searchPatterns.Add($"{fileInfo.FileId}.*");
+            
+            // 如果有哈希值，也作为搜索条件
+            if (!string.IsNullOrEmpty(fileInfo.HashValue))
+            {
+                searchPatterns.Add($"{fileInfo.HashValue}.*");
+            }
 
             // 搜索目录列表
             var searchDirectories = new List<string>();
 
-            // 分类目录
-            if (fileInfo.BusinessType.HasValue)
+            // 首先尝试从StoragePath中提取目录信息（如果有）
+            if (!string.IsNullOrEmpty(fileInfo.StoragePath))
             {
-                searchDirectories.Add(GetCategoryPath(fileInfo.BusinessType.Value.ToString()));
+                var directoryFromPath = Path.GetDirectoryName(fileInfo.StoragePath);
+                if (!string.IsNullOrEmpty(directoryFromPath) && Directory.Exists(directoryFromPath))
+                {
+                    searchDirectories.Add(directoryFromPath);
+                    _logger?.LogDebug("添加StoragePath中的目录到搜索路径: {Directory}", directoryFromPath);
+                }
             }
 
-            // 根目录
+            // 分类目录（包括YYMM子目录）
+            if (fileInfo.BusinessType.HasValue)
+            {
+                var baseBusinessPath = Path.Combine(_fileStoragePath, fileInfo.BusinessType.Value.ToString());
+                if (Directory.Exists(baseBusinessPath))
+                {
+                    searchDirectories.Add(baseBusinessPath);
+
+                    // 获取并添加YYMM子目录（按时间倒序）
+                    try
+                    {
+                        var subDirs = Directory.GetDirectories(baseBusinessPath)
+                                             .Where(dir => Directory.Exists(dir))
+                                             .OrderByDescending(dir => dir)
+                                             .Take(6); // 只搜索最近6个月的目录
+                        searchDirectories.AddRange(subDirs);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "获取业务目录子目录失败: {Directory}", baseBusinessPath);
+                    }
+                }
+            }
+
+            // 最后添加根目录作为兜底
             searchDirectories.Add(_fileStoragePath);
+
+            // 去重
+            searchDirectories = searchDirectories.Distinct().ToList();
 
             // 搜索所有可能的目录和模式
             foreach (var directory in searchDirectories)
@@ -419,7 +481,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         var files = Directory.GetFiles(directory, pattern);
                         if (files.Length > 0)
                         {
-                            _logger?.LogInformation("找到匹配的文件: {FilePath}", files[0]);
+                            _logger?.Debug("找到匹配的文件: {FilePath}", files[0]);
                             return files[0];
                         }
                     }
@@ -535,28 +597,98 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         bool fileDeleted = false;
                         if (isPhysicalDelete)
                         {
-
-
-                            // 构建搜索路径
-                            var searchPaths = new List<string> { _fileStoragePath };
-
-                            // 添加分类目录（如果有）
-                            if (fileStorageInfo.BusinessType.HasValue)
+                            // 优先使用StoragePath直接删除文件
+                            if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath) && File.Exists(fileStorageInfo.StoragePath))
                             {
-                                searchPaths.Add(GetCategoryPath(fileStorageInfo.BusinessType.Value.ToString()));
+                                try
+                                {
+                                    _logger?.LogDebug("直接使用StoragePath删除文件: {FilePath}", fileStorageInfo.StoragePath);
+                                    File.Delete(fileStorageInfo.StoragePath);
+                                    fileDeleted = true;
+                                    _logger?.LogDebug("使用StoragePath删除文件成功: {FilePath}", fileStorageInfo.StoragePath);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger?.LogError(ex, "使用StoragePath删除文件失败: {FilePath}", fileStorageInfo.StoragePath);
+                                    // 即使直接删除失败，也继续尝试搜索删除作为备用方案
+                                }
+                            }
+                            else
+                            {
+                                _logger?.LogDebug("StoragePath不存在或文件不存在，尝试通过搜索模式查找并删除");
                             }
 
-                            // 在所有搜索路径中查找并删除文件
-                            foreach (var searchPath in searchPaths)
+                            // 如果通过StoragePath删除失败或不存在，则使用搜索模式作为备用方案
+                            if (!fileDeleted)
                             {
-                                if (!Directory.Exists(searchPath))
+                                // 优化搜索策略：优先从StoragePath中提取路径信息
+                                var searchPaths = new List<string>();
+
+                                // 首先尝试从StoragePath中提取目录信息（最精确）
+                                if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath))
                                 {
-                                    _logger?.LogDebug("跳过不存在的目录: {Directory}", searchPath);
-                                    continue;
+                                    var directoryFromPath = Path.GetDirectoryName(fileStorageInfo.StoragePath);
+                                    if (!string.IsNullOrEmpty(directoryFromPath))
+                                    {
+                                        searchPaths.Add(directoryFromPath);
+                                        _logger?.LogDebug("添加StoragePath中的目录到搜索路径: {Directory}", directoryFromPath);
+                                    }
                                 }
 
-                                // 搜索模式：尝试通过FileId和HashValue两种方式
+                                // 添加业务类型目录（如果有）
+                                if (fileStorageInfo.BusinessType.HasValue)
+                                {
+                                    // 获取基础业务目录
+                                    var baseBusinessPath = Path.Combine(_fileStoragePath, fileStorageInfo.BusinessType.Value.ToString());
+                                    searchPaths.Add(baseBusinessPath);
+
+                                    // 如果是较新的文件结构，可能存在于YYMM子目录中
+                                    if (Directory.Exists(baseBusinessPath))
+                                    {
+                                        try
+                                        {
+                                            // 获取业务目录下的所有YYMM子目录（按时间倒序排列，优先搜索较新的目录）
+                                            var subDirs = Directory.GetDirectories(baseBusinessPath)
+                                                                 .Where(dir => Directory.Exists(dir))
+                                                                 .OrderByDescending(dir => dir)
+                                                                 .Take(6); // 只搜索最近6个月的目录
+                                            searchPaths.AddRange(subDirs);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _logger?.LogWarning(ex, "获取业务目录子目录失败: {Directory}", baseBusinessPath);
+                                        }
+                                    }
+                                }
+
+                                // 最后才添加根目录作为兜底
+                                if (!searchPaths.Contains(_fileStoragePath))
+                                {
+                                    searchPaths.Add(_fileStoragePath);
+                                }
+
+                                // 精简搜索模式，提高性能
                                 var searchPatterns = new List<string>();
+
+                                // 最精确的搜索模式：完整文件名（如果有）
+                                if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath))
+                                {
+                                    var fileNameFromPath = Path.GetFileName(fileStorageInfo.StoragePath);
+                                    if (!string.IsNullOrEmpty(fileNameFromPath))
+                                    {
+                                        searchPatterns.Add(fileNameFromPath);
+                                        _logger?.LogDebug("添加StoragePath中的文件名到搜索模式: {FileName}", fileNameFromPath);
+                                    }
+                                }
+
+                                // 其次是存储文件名（如果有）
+                                if (!string.IsNullOrEmpty(fileStorageInfo.StorageFileName))
+                                {
+                                    // 优先搜索精确的文件名
+                                    searchPatterns.Add(fileStorageInfo.StorageFileName);
+                                }
+
+                                // 只在必要时使用通配符搜索
                                 if (fileStorageInfo.FileId > 0)
                                 {
                                     searchPatterns.Add($"{fileStorageInfo.FileId}.*");
@@ -565,67 +697,76 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 {
                                     searchPatterns.Add($"{fileStorageInfo.HashValue}.*");
                                 }
-                                if (!string.IsNullOrEmpty(fileStorageInfo.StorageFileName))
-                                {
-                                    searchPatterns.Add(fileStorageInfo.StorageFileName);
-                                }
 
-                                foreach (var pattern in searchPatterns)
+                                // 在所有搜索路径中查找并删除文件，一旦找到并删除就停止搜索
+                                foreach (var searchPath in searchPaths)
                                 {
-                                    try
+                                    if (!Directory.Exists(searchPath))
                                     {
-                                        _logger?.LogDebug("使用模式搜索: {Pattern}", pattern);
-                                        var files = Directory.GetFiles(searchPath, pattern);
-                                        // 物理删除：删除实际文件
-                                        _logger?.LogInformation($"准备执行物理删除文件{files.Count()}个");
-                                        foreach (var filePath in files)
+                                        continue; // 静默跳过不存在的目录，减少日志输出
+                                    }
+
+                                    foreach (var pattern in searchPatterns)
+                                    {
+                                        try
                                         {
-                                            try
+                                            _logger?.LogDebug("在目录{Directory}中使用模式{Pattern}搜索文件", searchPath, pattern);
+                                            var files = Directory.GetFiles(searchPath, pattern);
+                                            if (files.Length > 0)
                                             {
-                                                _logger?.LogInformation("物理删除文件: {FilePath}", filePath);
-                                                File.Delete(filePath);
-                                                fileDeleted = true;
-                                                _logger?.LogInformation("物理删除文件成功: {FilePath}", filePath);
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                // 记录错误但继续删除其他文件
-                                                _logger?.LogError(ex, "物理删除文件失败: {FilePath}", filePath);
+                                                _logger?.LogDebug("在目录{Directory}中找到匹配模式{Pattern}的文件", searchPath, pattern);
+
+                                                // 物理删除：删除实际文件
+                                                foreach (var filePath in files)
+                                                {
+                                                    try
+                                                    {
+                                                        _logger?.LogDebug("物理删除文件: {FilePath}", filePath);
+                                                        File.Delete(filePath);
+                                                        fileDeleted = true;
+                                                        _logger?.LogDebug("物理删除文件成功: {FilePath}", filePath);
+                                                    }
+                                                    catch (Exception ex)
+                                                    {
+                                                        // 记录错误但继续删除其他文件
+                                                        _logger?.LogError(ex, "物理删除文件失败: {FilePath}", filePath);
+                                                    }
+                                                }
+
+                                                // 删除成功后可以提前退出，减少不必要的搜索
+                                                if (fileDeleted) break;
                                             }
                                         }
+                                        catch (Exception ex)
+                                        {
+                                            _logger?.LogWarning(ex, "搜索文件时出错: 目录={Directory}, 模式={Pattern}", searchPath, pattern);
+                                        }
                                     }
-                                    catch (Exception ex)
-                                    {
-                                        _logger?.LogWarning(ex, "搜索文件时出错: 目录={Directory}, 模式={Pattern}", searchPath, pattern);
-                                    }
+
+                                    // 如果已找到并删除文件，提前退出目录搜索
+                                    if (fileDeleted) break;
                                 }
                             }
                         }
-
-                        // 更新数据库文件状态为已删除（逻辑删除）
-                        try
-                        {
-                            fileStorageInfo.Status = 0; // 标记为删除
-                            await _fileStorageInfoController.SaveOrUpdate(fileStorageInfo);
-                            _logger?.LogInformation("数据库文件状态更新成功，FileId: {FileId}, 删除类型: {DeleteType}",
-                                fileStorageInfo.FileId, isPhysicalDelete ? "物理删除" : "逻辑删除");
-
-                            deletedCount++;
-                            deletedFileIds.Add(fileStorageInfo.FileId.ToString());
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "更新数据库文件状态失败，FileId: {FileId}", fileStorageInfo.FileId);
-                        }
                     }
-                    else
-                    {
-                        _logger?.LogInformation("仅删除业务关联，保留文件和元数据，FileId: {FileId}, 原因: {Reason}", currentFileId, "文件被其他业务引用");
 
-                        // 虽然只删除关联，但仍将文件ID添加到已删除列表中（表示处理完成）
-                        deletedFileIds.Add(currentFileId.ToString());
+                    // 更新数据库文件状态为已删除（逻辑删除）
+                    try
+                    {
+                        fileStorageInfo.Status = 0; // 标记为删除
+                        await _fileStorageInfoController.SaveOrUpdate(fileStorageInfo);
+                        _logger?.LogDebug("数据库文件状态更新成功，FileId: {FileId}, 删除类型: {DeleteType}",
+                            fileStorageInfo.FileId, isPhysicalDelete ? "物理删除" : "逻辑删除");
+
+                        deletedCount++;
+                        deletedFileIds.Add(fileStorageInfo.FileId.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "更新数据库文件状态失败，FileId: {FileId}", fileStorageInfo.FileId);
                     }
                 }
+
                 response.DeletedFileIds = deletedFileIds;
                 // 设置响应消息
                 if (relationDeletedCount > 0)

@@ -279,6 +279,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 responseData.Message = $"文件上传成功，共成功上传 {responseData.FileStorageInfos.Count} 个文件";
                 _logger?.LogInformation("文件上传处理完成，成功上传 {SuccessCount} 个文件", responseData.FileStorageInfos.Count);
+                responseData.IsSuccess = true;
                 return responseData;
             }
             catch (Exception ex)

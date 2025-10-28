@@ -954,8 +954,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 Height = 30,
                 Dock = DockStyle.Bottom,
-                BackColor = Color.LightGray,
-                Visible = true
+                BackColor = Color.FromArgb(64, 128, 128, 255), // 半透明蓝色背景
+                Visible = true,
+                BorderStyle = BorderStyle.FixedSingle // 添加边框
             };
 
             // 上一张按钮
@@ -965,7 +966,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 Width = 30,
                 Height = 25,
                 Location = new Point(10, 2),
-                Enabled = currentImageIndex > 0
+                Enabled = currentImageIndex > 0,
+                BackColor = Color.FromArgb(100, 150, 255), // 蓝色背景
+                ForeColor = Color.White, // 白色文字
+                FlatStyle = FlatStyle.Flat
             };
             prevButton.Click += PrevButton_Click;
 
@@ -976,7 +980,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 Width = 30,
                 Height = 25,
                 Location = new Point(70, 2),
-                Enabled = currentImageIndex < images.Count - 1
+                Enabled = currentImageIndex < images.Count - 1,
+                BackColor = Color.FromArgb(100, 150, 255), // 蓝色背景
+                ForeColor = Color.White, // 白色文字
+                FlatStyle = FlatStyle.Flat
             };
             nextButton.Click += NextButton_Click;
 
@@ -985,7 +992,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 Text = "1/1",
                 AutoSize = true,
-                Location = new Point(110, 7)
+                Location = new Point(110, 7),
+                Font = new Font(this.Font.FontFamily, 9, FontStyle.Bold), // 粗体字体
+                ForeColor = Color.FromArgb(0, 64, 128) // 深蓝色文字
             };
 
             navigationPanel.Controls.Add(prevButton);
@@ -1025,9 +1034,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 Height = 80, // 增加高度以容纳更多信息
                 Dock = DockStyle.Top,
-                BackColor = Color.FromArgb(200, 240, 240, 240), // 半透明背景
+                BackColor = Color.FromArgb(200, 230, 240, 255), // 更美观的半透明蓝色背景
                 Visible = true,
-                Padding = new Padding(5)
+                Padding = new Padding(5),
+                BorderStyle = BorderStyle.FixedSingle // 添加边框
             };
 
             // 文件名标签
@@ -1036,7 +1046,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 AutoSize = true,
                 Location = new Point(5, 5),
                 Font = new Font(this.Font.FontFamily, 9, FontStyle.Bold),
-                ForeColor = Color.Black,
+                ForeColor = Color.FromArgb(0, 64, 128), // 深蓝色文字
                 MaximumSize = new Size(300, 0),
                 AutoEllipsis = true
             };
@@ -1047,7 +1057,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 AutoSize = true,
                 Location = new Point(5, 25),
                 Font = new Font(this.Font.FontFamily, 8),
-                ForeColor = Color.Gray
+                ForeColor = Color.FromArgb(64, 64, 64) // 深灰色文字
             };
 
             // 创建时间标签
@@ -1056,7 +1066,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 AutoSize = true,
                 Location = new Point(150, 25),
                 Font = new Font(this.Font.FontFamily, 8),
-                ForeColor = Color.Gray
+                ForeColor = Color.FromArgb(64, 64, 64) // 深灰色文字
             };
 
             // 文件类型标签
@@ -1065,7 +1075,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 AutoSize = true,
                 Location = new Point(5, 45),
                 Font = new Font(this.Font.FontFamily, 8),
-                ForeColor = Color.Gray
+                ForeColor = Color.FromArgb(64, 64, 64) // 深灰色文字
             };
 
             // 业务类型标签
@@ -1074,7 +1084,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 AutoSize = true,
                 Location = new Point(150, 45),
                 Font = new Font(this.Font.FontFamily, 8),
-                ForeColor = Color.Gray
+                ForeColor = Color.FromArgb(64, 64, 64) // 深灰色文字
             };
 
             infoPanel.Controls.Add(fileNameLabel);
@@ -1141,8 +1151,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     fileTypeLabel.Text = $"类型: {imageInfo.FileType}";
                 }
 
-
-
                 infoPanel.Visible = true;
 
                 // 如果设置了显示时间，启动计时器
@@ -1154,6 +1162,29 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
             else
             {
+                // 没有图片时，清空所有标签的文本内容
+                if (fileNameLabel != null)
+                {
+                    fileNameLabel.Text = "";
+                }
+
+                if (fileSizeLabel != null)
+                {
+                    fileSizeLabel.Text = "";
+                }
+
+                if (createTimeLabel != null)
+                {
+                    createTimeLabel.Text = "";
+                }
+
+                // 清空文件类型信息
+                var fileTypeLabel = infoPanel.Controls.Cast<Control>().FirstOrDefault(c => c is Label && c.Location.Y == 45 && c.Location.X == 5) as Label;
+                if (fileTypeLabel != null)
+                {
+                    fileTypeLabel.Text = "";
+                }
+
                 infoPanel.Visible = false;
             }
         }
@@ -1307,6 +1338,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 {
                     this.Image = null;
                     imagePaths = "";
+                    // 确保信息面板被正确更新
+                    UpdateInfoPanel();
                 }
 
                 // 更新导航控件
@@ -1334,6 +1367,26 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 // 更新导航控件和页面信息
                 CreateNavigationControls();
                 UpdatePageInfo();
+                UpdateImagePathsFromImages();
+            }
+            else
+            {
+                // 单图片模式下也需要清空imageInfos
+                if (imageInfos.Count > 0)
+                {
+                    imageInfos.Clear();
+                }
+            }
+            // 更新信息面板，确保清空
+            UpdateInfoPanel();
+            // 隐藏信息面板
+            if (infoPanel != null)
+            {
+                infoPanel.Visible = false;
+            }
+            // 重绘 PictureBox
+            this.Invalidate();
+        }
                 UpdateImagePathsFromImages();
             }
             else
@@ -1991,8 +2044,19 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 return;
             }
             
-            // 双击始终添加新图片
-            AddImageFromFileDialog();
+            // 检查是否已有图片
+            bool hasImage = (this.Image != null) || (MultiImageSupport && images.Count > 0);
+            
+            if (hasImage)
+            {
+                // 如果已有图片，双击显示大图
+                ViewLargeImage(sender, e);
+            }
+            else
+            {
+                // 如果没有图片，双击添加新图片
+                AddImageFromFileDialog();
+            }
         }
         
         /// <summary>

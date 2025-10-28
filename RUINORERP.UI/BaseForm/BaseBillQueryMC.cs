@@ -2146,9 +2146,17 @@ namespace RUINORERP.UI.BaseForm
 
             }
 
-            // 确保在执行查询前，参数已经正确加载到UI控件并与QueryDtoProxy同步
-            // 这里UIQuery设置为true，让Query方法执行UI验证，确保控件与数据模型的一致性
-            Query(QueryDtoProxy, true);
+            // 延迟查询执行，确保从工作台导航过来时所有条件都已设置完成
+            // 特别是确保OnSetQueryConditionsDelegate已经执行完毕再进行查询
+            Task.Delay(100).ContinueWith(_ =>
+            {
+                this.Invoke(new Action(() =>
+                {
+                    // 确保在执行查询前，参数已经正确加载到UI控件并与QueryDtoProxy同步
+                    // 这里UIQuery设置为true，让Query方法执行UI验证，确保控件与数据模型的一致性
+                    Query(QueryDtoProxy, true);
+                }));
+            });
 
         }
 

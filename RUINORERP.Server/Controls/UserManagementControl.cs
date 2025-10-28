@@ -661,7 +661,7 @@ namespace RUINORERP.Server.Controls
         private async void contextMenuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             var users = SelectUser();
-            if (UserInfos.Count == 0)
+            if (users.Count == 0)
             {
                 MessageBox.Show("请先选中一个用户！");
                 return;
@@ -698,7 +698,7 @@ namespace RUINORERP.Server.Controls
                     HandleSwitchServer(users);
                     break;
                 case "全部切换服务器":
-                    HandleSwitchServer(users);
+                    HandleSwitchAllServers(users);
                     break;
                 default:
                     break;
@@ -739,7 +739,67 @@ namespace RUINORERP.Server.Controls
 
                         if (success)
                         {
-                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送切换服务器命令: {frmInput.InputContent}");
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送切换服务器命令: {newServerAddress}");
+                        }
+                        else
+                        {
+                            frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送切换服务器命令失败");
+                        }
+                    }
+                    else
+                    {
+                        frmMainNew.Instance.PrintErrorLog($"用户 {user.用户名} 的会话不存在");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    frmMainNew.Instance.PrintErrorLog($"切换用户 {user.用户名} 服务器失败: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理全部切换服务器命令
+        /// </summary>
+        /// <param name="users">用户列表</param>
+        private void HandleSwitchAllServers(List<UserInfo> users)
+        {
+            string newServerAddress = string.Empty;
+            var frmInput = new frmInput();
+            frmInput.Text = "请输入新的服务器地址";
+            if (frmInput.ShowDialog() == DialogResult.OK)
+            {
+                // 获取输入的内容
+                newServerAddress = frmInput.InputContent;
+            }
+
+            // 对所有在线用户执行切换服务器操作，而不仅仅是选中的用户
+            var allUsers = UserInfos.ToList();
+            
+            foreach (var user in allUsers)
+            {
+                try
+                {
+                    // 使用新的SessionService获取会话信息
+                    var session = _sessionService.GetSession(user.SessionId);
+                    if (session != null)
+                    {
+                        // 发送切换服务器命令 - 使用新的发送方法
+                        var messageData = new
+                        {
+                            Command = "SWITCH_SERVER",
+                            ServerAddress = newServerAddress
+                        };
+
+                        var request = new MessageRequest(MessageCmdType.Unknown, messageData);
+                        var success = _sessionService.SendCommandAsync(
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
+                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
+
+                        if (success)
+                        {
+                            frmMainNew.Instance.PrintInfoLog($"已向用户 {user.用户名} 发送切换服务器命令: {newServerAddress}");
                         }
                         else
                         {

@@ -425,59 +425,63 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             this.MouseLeave += MagicPictureBox_MouseLeave;
         }
 
-        /// <summary>
-        /// 统一的图片加载方法，自动处理单张和多张图片
-        /// </summary>
-        /// <param name="imageBytesList">图片字节数组列表</param>
-        /// <param name="fileNamesList">原始文件名列表，包含后缀名</param>
-        /// <param name="isFromServer">是否从服务器加载，影响IsUpdated初始值</param>
-        public void LoadImage(List<byte[]> imageBytesList, List<string> fileNamesList = null, bool isFromServer = false)
-        {
-            LoadImagesInternal(imageBytesList, fileNamesList, isFromServer);
-        }
+
+        
+
+
+        
+   
         
         /// <summary>
-        /// 加载单张图片
+        /// 优化的单张图片加载方法，支持byte[]和可选的ImageInfo
         /// </summary>
-        /// <param name="imageBytes">图片字节数组</param>
-        /// <param name="fileName">原始文件名，包含后缀名</param>
-        /// <param name="isFromServer">是否从服务器加载，影响IsUpdated初始值</param>
-        public void LoadImage(byte[] imageBytes, string fileName = null, bool isFromServer = false)
+        /// <param name="imageBytes">图片字节数据</param>
+        /// <param name="imageInfo">可选的图片信息对象</param>
+        /// <param name="isFromServer">是否从服务器加载</param>
+        public void LoadImage(byte[] imageBytes, ImageInfo imageInfo = null, bool isFromServer = false)
         {
-            if (imageBytes == null)
+            if (imageBytes == null || imageBytes.Length == 0)
             {
                 this.Image = null;
                 return;
             }
             
-            var imageList = new List<byte[]> { imageBytes };
-            var fileNameList = fileName != null ? new List<string> { fileName } : null;
-            LoadImagesInternal(imageList, fileNameList, isFromServer);
+            // 处理ImageInfo参数
+            List<ImageInfo> imageInfosList = null;
+            if (imageInfo != null)
+            {
+                imageInfosList = new List<ImageInfo> { imageInfo };
+            }
+            
+            // 调用内部统一加载方法
+            LoadImagesInternal(new List<byte[]> { imageBytes }, imageInfosList, isFromServer);
         }
         
         /// <summary>
-        /// 从FileStorageInfo加载单张图片
+        /// 优化的多张图片加载方法，支持byte[]列表和可选的ImageInfo列表
         /// </summary>
-        /// <param name="fileStorageInfo">文件存储信息</param>
-        /// <param name="imageBytes">图片字节数据</param>
-        public void LoadImage(ImageInfo fileStorageInfo, byte[] imageBytes)
+        /// <param name="imageBytesList">图片字节数据列表</param>
+        /// <param name="imageInfosList">可选的图片信息对象列表</param>
+        /// <param name="isFromServer">是否从服务器加载</param>
+        public void LoadImages(List<byte[]> imageBytesList, List<ImageInfo> imageInfosList = null, bool isFromServer = false)
         {
-            if (fileStorageInfo == null || imageBytes == null)
+            if (imageBytesList == null || imageBytesList.Count == 0)
             {
-                throw new ArgumentException("文件信息或图片数据不能为空");
+                this.Image = null;
+                return;
             }
             
-            // 调用内部加载方法
-            LoadImagesInternal(new List<byte[]> { imageBytes }, 
-                              fileStorageInfo.OriginalFileName != null ? 
-                              new List<string> { fileStorageInfo.OriginalFileName } : null, 
-                              false);
+            // 调用内部统一加载方法
+            LoadImagesInternal(imageBytesList, imageInfosList, isFromServer);
         }
         
         /// <summary>
         /// 内部统一的图片加载实现方法
         /// </summary>
-        private void LoadImagesInternal(List<byte[]> imageBytesList, List<string> fileNamesList = null, bool isFromServer = false)
+        /// <param name="imageBytesList">图片字节数组列表</param>
+        /// <param name="imageInfosList">图片信息列表，包含原始文件名等详细信息</param>
+        /// <param name="isFromServer">是否从服务器加载，影响IsUpdated初始值</param>
+        private void LoadImagesInternal(List<byte[]> imageBytesList, List<ImageInfo> imageInfosList = null, bool isFromServer = false)
         {
             images.Clear();
             imageInfos.Clear();
@@ -534,31 +538,46 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     // 保存图片引用
                     images.Add(loadedImage);
 
-                    // 添加图片信息，优先使用原始文件名
-                    string fileName = "";
+                    // 创建ImageInfo对象，优先使用传入的图片信息
+                    ImageInfo newImageInfo;
 
-                    // 如果提供了文件名列表且索引有效且不为空，则使用原始文件名
-                    if (fileNamesList != null && fileNamesList.Count > i && !string.IsNullOrWhiteSpace(fileNamesList[i]))
+                    // 如果提供了图片信息列表且索引有效，则使用传入的ImageInfo对象并更新相关属性
+                    if (imageInfosList != null && imageInfosList.Count > i && imageInfosList[i] != null)
                     {
-                        fileName = fileNamesList[i];
+                        // 创建一个新的ImageInfo实例，复制传入的所有属性
+                        newImageInfo = new ImageInfo
+                        {
+                            FileId = imageInfosList[i].FileId,
+                            OriginalFileName = imageInfosList[i].OriginalFileName,
+                            FileSize = imageBytes.Length, // 更新为实际加载的字节大小
+                            CreateTime = imageInfosList[i].CreateTime, // 保留原始创建时间
+                            ModifiedAt = imageInfosList[i].ModifiedAt,
+                            FileType = imageInfosList[i].FileType,
+                            FileExtension = imageInfosList[i].FileExtension,
+                            HashValue = hashValue, // 更新哈希值
+                            Metadata = imageInfosList[i].Metadata != null ? new Dictionary<string, string>(imageInfosList[i].Metadata) : new Dictionary<string, string>(),
+                            IsUpdated = !isFromServer // 如果是从服务器加载，标记为未更新
+                        };
                     }
                     else
                     {
-                        // 否则使用默认命名
-                        fileName = $"图片{i + 1}";
+                        // 否则创建新的ImageInfo对象，使用默认命名
+                        string fileName = $"图片{i + 1}";
+                        newImageInfo = new ImageInfo
+                        {
+                            OriginalFileName = fileName, // 使用默认文件名
+                            FileSize = imageBytes.Length,
+                            CreateTime = DateTime.Now,
+                            HashValue = hashValue, // 设置哈希值
+                            Metadata = new Dictionary<string, string>(),
+                            FileType = "",
+                            ModifiedAt = null,
+                            IsUpdated = !isFromServer // 如果是从服务器加载，标记为未更新
+                        };
                     }
 
-                    imageInfos.Add(new ImageInfo
-                    {
-                        OriginalFileName = fileName, // 确保使用原始文件名
-                        FileSize = imageBytes.Length,
-                        CreateTime = DateTime.Now,
-                        HashValue = hashValue, // 设置哈希值
-                        Metadata = new Dictionary<string, string>(),
-                        FileType = string.IsNullOrEmpty(fileName) ? "" : Path.GetExtension(fileName).TrimStart('.'),
-                        ModifiedAt = null,
-                        IsUpdated = !isFromServer // 如果是从服务器加载，标记为未更新
-                    });
+                    // 添加到图片信息列表
+                    imageInfos.Add(newImageInfo);
                 }
                 catch (Exception ex)
                 {
@@ -2403,87 +2422,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             return bmp;
         }
 
-        /// <summary>
-        /// 从文件存储信息加载图片
-        /// </summary>
-        /// <param name="fileStorageInfos">文件存储信息列表</param>
-        /// <param name="imageBytesList">对应的图片字节数据列表</param>
-        /// <summary>
-        /// 内部使用的多图片加载方法，用于从FileStorageInfos加载多张图片（私有方法）
-        /// </summary>
-        private void LoadImagesFromFileStorageInfos(List<ImageInfo> fileStorageInfos, List<byte[]> imageBytesList)
-        {
-            if (!MultiImageSupport)
-            {
-                throw new InvalidOperationException("多图片支持未启用");
-            }
-
-            if (fileStorageInfos == null || imageBytesList == null ||
-                fileStorageInfos.Count != imageBytesList.Count)
-            {
-                throw new ArgumentException("文件信息和图片数据数量不匹配");
-            }
-
-            images.Clear();
-            imageInfos.Clear();
-
-            for (int i = 0; i < fileStorageInfos.Count; i++)
-            {
-                try
-                {
-                    byte[] imageBytes = imageBytesList[i];
-                    using (var ms = new MemoryStream(imageBytes))
-                    {
-                        images.Add(Image.FromStream(ms));
-
-                        // 创建一个新的ImageInfo实例，复制原始信息
-                        ImageInfo newInfo = new ImageInfo
-                        {
-                            OriginalFileName = fileStorageInfos[i].OriginalFileName,
-                            FileSize = imageBytes.Length,
-                            CreateTime = fileStorageInfos[i].CreateTime,
-                            Metadata = fileStorageInfos[i].Metadata,
-                            FileType = fileStorageInfos[i].FileType,
-                            HashValue = CalculateImageHash(imageBytes), // 计算并设置哈希值
-                            ModifiedAt = fileStorageInfos[i].ModifiedAt,
-                        };
-
-                        imageInfos.Add(newInfo);
-                    }
-                }
-                catch
-                {
-                    // 加载失败，跳过
-                }
-            }
-
-            currentImageIndex = 0;
-            ShowCurrentImage();
-            CreateNavigationControls();
-            CreateInfoPanel();
-        }
-
-        /// <summary>
-        /// 从文件存储信息加载单张图片
-        /// </summary>
-        /// <param name="fileStorageInfo">文件存储信息</param>
-        /// <param name="imageBytes">图片字节数据</param>
-        /// <summary>
-        /// 内部使用的单图片加载方法，用于从FileStorageInfo加载单张图片（私有方法）
-        /// </summary>
-        private void LoadImageFromFileStorageInfo(ImageInfo fileStorageInfo, byte[] imageBytes)
-        {
-            if (fileStorageInfo == null || imageBytes == null)
-            {
-                throw new ArgumentException("文件信息或图片数据不能为空");
-            }
-
-            // 调用统一的内部加载方法
-            LoadImagesInternal(new List<byte[]> { imageBytes }, 
-                              new List<string> { fileStorageInfo.OriginalFileName }, 
-                              false); // ImageInfo类没有IsFromServer属性，使用默认值false
-        }
-
+      
+        
+       
         /// <summary>
         /// 获取当前图片路径
         /// </summary>

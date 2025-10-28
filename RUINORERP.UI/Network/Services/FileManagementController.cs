@@ -15,6 +15,8 @@ using RUINORERP.Common.Extensions;
 using LiveChartsCore.Geo;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.Business;
+using RUINOR.WinFormsUI.CustomPictureBox;
+using System.Linq;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -189,10 +191,201 @@ namespace RUINORERP.UI.Network.Services
 
 
 
-        
-        
-       
+    
 
-        
+        /// <summary>
+        /// 将tb_FS_FileStorageInfo实体转换为ImageInfo类
+        /// </summary>
+        /// <param name="fileStorageInfo">文件存储信息实体</param>
+        /// <returns>转换后的ImageInfo对象</returns>
+        public ImageInfo ConvertToImageInfo(tb_FS_FileStorageInfo fileStorageInfo)
+        {
+            if (fileStorageInfo == null)
+                return null;
+
+            ImageInfo imageInfo = new ImageInfo
+            {
+                // 基本信息映射
+                FileId = fileStorageInfo.FileId,
+                OriginalFileName = fileStorageInfo.OriginalFileName,
+                FileSize = fileStorageInfo.FileSize,
+                FileType = fileStorageInfo.FileType,
+                FileExtension = fileStorageInfo.FileExtension,
+                HashValue = fileStorageInfo.HashValue,
+                ModifiedAt = fileStorageInfo.Modified_at,
+                
+                // 设置创建时间，如果没有则使用当前时间
+                CreateTime = fileStorageInfo.Created_at ?? DateTime.Now,
+                
+                // 初始化元数据字典
+                Metadata = new Dictionary<string, string>()
+            };
+
+            // 尝试解析Metadata字符串到字典
+            if (!string.IsNullOrEmpty(fileStorageInfo.Metadata))
+            {
+                try
+                {
+                    // 这里可以根据实际的Metadata格式进行解析
+                    // 如果是JSON格式，可以使用Newtonsoft.Json进行解析
+                    // 暂时作为简单字符串存储
+                    imageInfo.Metadata["OriginalMetadata"] = fileStorageInfo.Metadata;
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "解析文件元数据失败");
+                }
+            }
+
+            // 添加额外的元数据信息
+            if (fileStorageInfo.StorageProvider != null)
+            {
+                imageInfo.Metadata["StorageProvider"] = fileStorageInfo.StorageProvider;
+            }
+
+            if (fileStorageInfo.StoragePath != null)
+            {
+                imageInfo.Metadata["StoragePath"] = fileStorageInfo.StoragePath;
+            }
+
+            return imageInfo;
+        }
+
+        /// <summary>
+        /// 将tb_FS_FileStorageInfo实体列表转换为ImageInfo列表
+        /// </summary>
+        /// <param name="fileStorageInfos">文件存储信息实体列表</param>
+        /// <returns>转换后的ImageInfo对象列表</returns>
+        public List<ImageInfo> ConvertToImageInfoList(List<tb_FS_FileStorageInfo> fileStorageInfos)
+        {
+            if (fileStorageInfos == null || fileStorageInfos.Count == 0)
+                return new List<ImageInfo>();
+
+            List<ImageInfo> imageInfos = new List<ImageInfo>();
+            foreach (var fileStorageInfo in fileStorageInfos)
+            {
+                var imageInfo = ConvertToImageInfo(fileStorageInfo);
+                if (imageInfo != null)
+                {
+                    imageInfos.Add(imageInfo);
+                }
+            }
+            return imageInfos;
+        }
+
+        /// <summary>
+        /// 将ImageInfo对象转换为tb_FS_FileStorageInfo实体
+        /// </summary>
+        /// <param name="imageInfo">图片信息对象</param>
+        /// <returns>转换后的tb_FS_FileStorageInfo实体</returns>
+        public tb_FS_FileStorageInfo ConvertToFileStorageInfo(ImageInfo imageInfo)
+        {
+            if (imageInfo == null)
+                return null;
+
+            tb_FS_FileStorageInfo fileStorageInfo = new tb_FS_FileStorageInfo
+            {
+                // 基本信息映射
+                FileId = imageInfo.FileId,
+                OriginalFileName = imageInfo.OriginalFileName,
+                FileSize = imageInfo.FileSize,
+                FileType = imageInfo.FileType,
+                FileExtension = imageInfo.FileExtension,
+                HashValue = imageInfo.HashValue,
+                Created_at = imageInfo.CreateTime,
+                Modified_at = imageInfo.ModifiedAt,
+                
+                // 设置默认值
+                StorageProvider = "Local", // 默认本地存储
+                CurrentVersion = 1,         // 初始版本
+                Status = 0,                 // 正常状态
+                ExpireTime = DateTime.MaxValue, // 永不过期
+                StoragePath = string.Empty
+            };
+
+            // 处理元数据
+            if (imageInfo.Metadata != null && imageInfo.Metadata.Count > 0)
+            {
+                try
+                {
+                    // 检查是否有原始元数据
+                    if (imageInfo.Metadata.TryGetValue("OriginalMetadata", out string originalMetadata))
+                    {
+                        fileStorageInfo.Metadata = originalMetadata;
+                    }
+                    else
+                    {
+                        // 可以根据实际需要将字典转换为JSON格式或其他格式
+                        // 这里简单地存储一些关键信息
+                        fileStorageInfo.Metadata = string.Join(";", imageInfo.Metadata.Select(kv => $"{kv.Key}={kv.Value}"));
+                    }
+
+                    // 从元数据中提取存储信息
+                    if (imageInfo.Metadata.TryGetValue("StorageProvider", out string storageProvider))
+                    {
+                        fileStorageInfo.StorageProvider = storageProvider;
+                    }
+
+                    if (imageInfo.Metadata.TryGetValue("StoragePath", out string storagePath))
+                    {
+                        fileStorageInfo.StoragePath = storagePath;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "处理图片元数据失败");
+                    fileStorageInfo.Metadata = string.Empty;
+                }
+            }
+
+            // 生成存储文件名（如果未提供）
+            if (string.IsNullOrEmpty(fileStorageInfo.StorageFileName))
+            {
+                fileStorageInfo.StorageFileName = GenerateStorageFileName(imageInfo.OriginalFileName, imageInfo.FileId);
+            }
+
+            return fileStorageInfo;
+        }
+
+        /// <summary>
+        /// 将ImageInfo列表转换为tb_FS_FileStorageInfo实体列表
+        /// </summary>
+        /// <param name="imageInfos">图片信息对象列表</param>
+        /// <returns>转换后的tb_FS_FileStorageInfo实体列表</returns>
+        public List<tb_FS_FileStorageInfo> ConvertToFileStorageInfoList(List<ImageInfo> imageInfos)
+        {
+            if (imageInfos == null || imageInfos.Count == 0)
+                return new List<tb_FS_FileStorageInfo>();
+
+            List<tb_FS_FileStorageInfo> fileStorageInfos = new List<tb_FS_FileStorageInfo>();
+            foreach (var imageInfo in imageInfos)
+            {
+                var fileStorageInfo = ConvertToFileStorageInfo(imageInfo);
+                if (fileStorageInfo != null)
+                {
+                    fileStorageInfos.Add(fileStorageInfo);
+                }
+            }
+            return fileStorageInfos;
+        }
+
+        /// <summary>
+        /// 生成存储文件名
+        /// </summary>
+        /// <param name="originalFileName">原始文件名</param>
+        /// <param name="fileId">文件ID</param>
+        /// <returns>生成的存储文件名</returns>
+        private string GenerateStorageFileName(string originalFileName, long fileId)
+        {
+            string extension = string.Empty;
+            if (!string.IsNullOrEmpty(originalFileName))
+            {
+                extension = Path.GetExtension(originalFileName);
+            }
+            
+            // 使用文件ID和时间戳生成唯一的存储文件名
+            return $"{fileId}_{DateTime.Now:yyyyMMddHHmmssfff}{extension}";
+        }
+
     }
 }

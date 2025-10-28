@@ -69,27 +69,27 @@ namespace RUINORERP.UI.Network.Services
         {
             // 订阅弹窗消息
             _communicationService.SubscribeCommand(
-                MessageCommands.SendPopupMessage, 
+                MessageCommands.SendPopupMessage,
                 (packet, data) => HandlePopupMessageReceived(packet, data));
 
             // 订阅用户消息
             _communicationService.SubscribeCommand(
-                MessageCommands.SendMessageToUser, 
+                MessageCommands.SendMessageToUser,
                 (packet, data) => HandleUserMessageReceived(packet, data));
 
             // 订阅部门消息
             _communicationService.SubscribeCommand(
-                MessageCommands.SendMessageToDepartment, 
+                MessageCommands.SendMessageToDepartment,
                 (packet, data) => HandleDepartmentMessageReceived(packet, data));
 
             // 订阅广播消息
             _communicationService.SubscribeCommand(
-                MessageCommands.BroadcastMessage, 
+                MessageCommands.BroadcastMessage,
                 (packet, data) => HandleBroadcastMessageReceived(packet, data));
 
             // 订阅系统通知
             _communicationService.SubscribeCommand(
-                MessageCommands.SendSystemNotification, 
+                MessageCommands.SendSystemNotification,
                 (packet, data) => HandleSystemNotificationReceived(packet, data));
         }
 
@@ -237,9 +237,9 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>消息响应</returns>
         public async Task<MessageResponse> SendPopupMessageAsync(
-            string targetUserId, 
-            string message, 
-            string title = "系统消息", 
+            string targetUserId,
+            string message,
+            string title = "系统消息",
             CancellationToken ct = default)
         {
             try
@@ -252,7 +252,7 @@ namespace RUINORERP.UI.Network.Services
                     MessageType = "Popup"
                 };
 
-                var request = new MessageRequest(MessageCommands.SendPopupMessage.OperationCode, messageData);
+                var request = new MessageRequest(MessageCommandType.DeleteFile, messageData);
                 var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendPopupMessage, request, ct);
 
@@ -263,7 +263,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 else
                 {
-                    _logger?.LogWarning("弹窗消息发送失败 - 目标用户: {TargetUserId}, 错误: {ErrorMessage}", 
+                    _logger?.LogWarning("弹窗消息发送失败 - 目标用户: {TargetUserId}, 错误: {ErrorMessage}",
                         targetUserId, response?.ErrorMessage ?? "未知错误");
                 }
 
@@ -284,8 +284,8 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>消息响应</returns>
         public async Task<MessageResponse> ForwardPopupMessageAsync(
-            string originalMessageId, 
-            string[] targetUserIds, 
+            string originalMessageId,
+            string[] targetUserIds,
             CancellationToken ct = default)
         {
             try
@@ -297,7 +297,7 @@ namespace RUINORERP.UI.Network.Services
                     MessageType = "ForwardPopup"
                 };
 
-                var request = new MessageRequest(MessageCommands.ForwardPopupMessage.OperationCode, messageData);
+                var request = new MessageRequest(messageData);
                 var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.ForwardPopupMessage, request, ct);
 
@@ -308,7 +308,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 else
                 {
-                    _logger?.LogWarning("转发弹窗消息失败 - 原始消息: {OriginalMessageId}, 错误: {ErrorMessage}", 
+                    _logger?.LogWarning("转发弹窗消息失败 - 原始消息: {OriginalMessageId}, 错误: {ErrorMessage}",
                         originalMessageId, response?.ErrorMessage ?? "未知错误");
                 }
 
@@ -330,9 +330,9 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>消息响应</returns>
         public async Task<MessageResponse> SendMessageToUserAsync(
-            string targetUserId, 
-            string message, 
-            string messageType = "Text", 
+            string targetUserId,
+            string message,
+            string messageType = "Text",
             CancellationToken ct = default)
         {
             try
@@ -344,7 +344,7 @@ namespace RUINORERP.UI.Network.Services
                     MessageType = messageType
                 };
 
-                var request = new MessageRequest(MessageCommands.SendMessageToUser.OperationCode, messageData);
+                var request = new MessageRequest(messageData);
                 var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendMessageToUser, request, ct);
 
@@ -355,7 +355,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 else
                 {
-                    _logger?.LogWarning("用户消息发送失败 - 目标用户: {TargetUserId}, 错误: {ErrorMessage}", 
+                    _logger?.LogWarning("用户消息发送失败 - 目标用户: {TargetUserId}, 错误: {ErrorMessage}",
                         targetUserId, response?.ErrorMessage ?? "未知错误");
                 }
 
@@ -377,9 +377,9 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>消息响应</returns>
         public async Task<MessageResponse> SendMessageToDepartmentAsync(
-            string departmentId, 
-            string message, 
-            string messageType = "Text", 
+            string departmentId,
+            string message,
+            string messageType = "Text",
             CancellationToken ct = default)
         {
             try
@@ -391,7 +391,7 @@ namespace RUINORERP.UI.Network.Services
                     MessageType = messageType
                 };
 
-                var request = new MessageRequest(MessageCommands.SendMessageToDepartment.OperationCode, messageData);
+                var request = new MessageRequest(messageData);
                 var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendMessageToDepartment, request, ct);
 
@@ -402,7 +402,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 else
                 {
-                    _logger?.LogWarning("部门消息发送失败 - 部门: {DepartmentId}, 错误: {ErrorMessage}", 
+                    _logger?.LogWarning("部门消息发送失败 - 部门: {DepartmentId}, 错误: {ErrorMessage}",
                         departmentId, response?.ErrorMessage ?? "未知错误");
                 }
 
@@ -423,8 +423,8 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>消息响应</returns>
         public async Task<MessageResponse> BroadcastMessageAsync(
-            string message, 
-            string messageType = "Text", 
+            string message,
+            string messageType = "Text",
             CancellationToken ct = default)
         {
             try
@@ -435,7 +435,7 @@ namespace RUINORERP.UI.Network.Services
                     MessageType = messageType
                 };
 
-                var request = new MessageRequest(MessageCommands.BroadcastMessage.OperationCode, messageData);
+                var request = new MessageRequest(messageData);
                 var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.BroadcastMessage, request, ct);
 
@@ -466,8 +466,8 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>消息响应</returns>
         public async Task<MessageResponse> SendSystemNotificationAsync(
-            string message, 
-            string notificationType = "Info", 
+            string message,
+            string notificationType = "Info",
             CancellationToken ct = default)
         {
             try
@@ -478,7 +478,7 @@ namespace RUINORERP.UI.Network.Services
                     NotificationType = notificationType
                 };
 
-                var request = new MessageRequest(MessageCommands.SendSystemNotification.OperationCode, messageData);
+                var request = new MessageRequest(messageData);
                 var response = await _communicationService.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendSystemNotification, request, ct);
 

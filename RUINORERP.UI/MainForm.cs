@@ -101,6 +101,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Business.Cache;
 using RUINORERP.PacketSpec.Serialization;
+using RUINORERP.UI.Network.Services;
 
 
 
@@ -142,6 +143,7 @@ namespace RUINORERP.UI
         public UILogManager logManager;
         private readonly IEntityCacheManager _cacheManager;
         private readonly TableSchemaManager _tableSchemaManager;
+        private readonly MessageService _messageService;
         /// <summary>
         /// 菜单跟踪器菜单推荐器
         /// </summary>
@@ -370,7 +372,7 @@ namespace RUINORERP.UI
             // 通过依赖注入获取缓存管理器
             _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
             _tableSchemaManager = TableSchemaManager.Instance;
-
+            _messageService= Startup.GetFromFac<MessageService>();
 
             lblStatusGlobal.Text = string.Empty;
             auditLogHelper = _auditLogHelper;

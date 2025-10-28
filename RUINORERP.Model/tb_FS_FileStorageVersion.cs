@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/27/2025 17:49:30
+// 时间：10/28/2025 17:14:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -147,6 +147,21 @@ namespace RUINORERP.Model
             get{return _Modified_by;}
             set{
             SetProperty(ref _Modified_by, value);
+                        }
+        }
+
+        private bool _isdeleted= false;
+        /// <summary>
+        /// 逻辑删除
+        /// </summary>
+        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "逻辑删除")] 
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "isdeleted" ,IsNullable = false,ColumnDescription = "逻辑删除" )]
+        [Browsable(false)]
+        public bool isdeleted
+        { 
+            get{return _isdeleted;}
+            set{
+            SetProperty(ref _isdeleted, value);
                         }
         }
 

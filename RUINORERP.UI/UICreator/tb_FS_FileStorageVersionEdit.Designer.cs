@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/27/2025 17:49:30
+// 时间：10/28/2025 17:14:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -73,6 +73,10 @@ this.dtpModified_at = new Krypton.Toolkit.KryptonDateTimePicker();
 
 this.lblModified_by = new Krypton.Toolkit.KryptonLabel();
 this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
+
+this.lblisdeleted = new Krypton.Toolkit.KryptonLabel();
+this.chkisdeleted = new Krypton.Toolkit.KryptonCheckBox();
+this.chkisdeleted.Values.Text ="";
 
     
     //for end
@@ -207,6 +211,20 @@ this.txtModified_by.TabIndex = 7;
 this.Controls.Add(this.lblModified_by);
 this.Controls.Add(this.txtModified_by);
 
+           //#####isdeleted###Boolean
+this.lblisdeleted.AutoSize = true;
+this.lblisdeleted.Location = new System.Drawing.Point(100,200);
+this.lblisdeleted.Name = "lblisdeleted";
+this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
+this.lblisdeleted.TabIndex = 8;
+this.lblisdeleted.Text = "逻辑删除";
+this.chkisdeleted.Location = new System.Drawing.Point(173,196);
+this.chkisdeleted.Name = "chkisdeleted";
+this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
+this.chkisdeleted.TabIndex = 8;
+this.Controls.Add(this.lblisdeleted);
+this.Controls.Add(this.chkisdeleted);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -221,7 +239,7 @@ this.Controls.Add(this.txtModified_by);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 7;
+           // this.kryptonPanel1.TabIndex = 8;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -245,6 +263,9 @@ this.Controls.Add(this.dtpModified_at );
 
                 this.Controls.Add(this.lblModified_by );
 this.Controls.Add(this.txtModified_by );
+
+                this.Controls.Add(this.lblisdeleted );
+this.Controls.Add(this.chkisdeleted );
 
                             // 
             // "tb_FS_FileStorageVersionEdit"
@@ -302,6 +323,11 @@ private Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
         
               private Krypton.Toolkit.KryptonLabel lblModified_by;
 private Krypton.Toolkit.KryptonTextBox txtModified_by;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblisdeleted;
+private Krypton.Toolkit.KryptonCheckBox chkisdeleted;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

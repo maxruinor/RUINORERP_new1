@@ -135,45 +135,7 @@ namespace RUINORERP.UI.BaseForm
         private void InitializeStateManagement()
         {
 
-            //if (_UIStateBinder == null && editEntity != null)
-            //{
-            //    BaseEntity baseEntity = editEntity as BaseEntity;
-            //    evaluator = baseEntity.StatusEvaluator;
-            //    _UIStateBinder = new UIStateBinder<DataStatus>(baseEntity, this.BaseToolStrip, evaluator);
-            //}
-
-            /*
-            // 初始化
-            var notificationService = new WorkflowNotificationService();
-            StatusMachine = new StatusMachine(
-              DataStatus.草稿,
-              ApprovalStatus.未审核,
-              false,//这里是如果有值则显示他的值，如果没有则false。要修复
-              notificationService);
-            //var statusMachine = new StatusMachine(
-            //    (DataStatus)editEntity.DataStatus,
-            //    (ApprovalStatus)editEntity.ApprovalStatus,
-            //    editEntity.ApprovalResults ?? false,//这里是如果有值则显示他的值，如果没有则false。要修复
-            //    notificationService);
-
-            // 创建带自定义规则的UI绑定器
-            StatusBinder = new UIStateBinder(StatusMachine, BaseToolStrip, MainForm.Instance.AppContext.workflowHost,
-              (data, approval, result, op, actionStatus) =>
-              {
-                  // 示例：增加财务专属操作
-                  if (op == MenuItemEnums.数据特殊修正)
-                  {
-                      return new ControlState
-                      {
-                          Visible = data == DataStatus.确认 || true,
-                          Enabled = MainForm.Instance.AppContext.IsSuperUser
-                      };
-                  }
-                  return StatusEvaluator.GetControlState(data, approval, result, op, actionStatus);
-              });
-            
-            // 初始状态更新
-            StatusBinder.UpdateAllControls();*/
+           
         }
 
         #endregion
@@ -3765,7 +3727,17 @@ namespace RUINORERP.UI.BaseForm
             var type = entity.GetType();
             var entityName = type.Name;
 
-
+            // 清空特定的关联查询结果（导航属性）
+            // 清空销售订单的销售出库记录
+            if (entity is RUINORERP.Model.tb_SaleOrder saleOrder && saleOrder.tb_SaleOuts != null)
+            {
+                saleOrder.tb_SaleOuts.Clear();
+            }
+            // 清空采购订单的采购入库记录
+            else if (entity is RUINORERP.Model.tb_PurOrder purOrder && purOrder.tb_PurEntries != null)
+            {
+                purOrder.tb_PurEntries.Clear();
+            }
 
             // 获取主实体的主键值，用于更新明细的外键
             long parentPKValue = (long)ReflectionHelper.GetPropertyValue(entity, parentPKCol);
@@ -3814,6 +3786,22 @@ namespace RUINORERP.UI.BaseForm
                             ReflectionHelper.SetPropertyValue(item, fkProperty.Name, 0);
                             // 重置需要忽略的属性
                             ResetIgnoredProperties(item, ignoreConfig);
+
+                            // 重置明细的状态性字段
+                            // 重置销售订单明细的出库数量
+                            if (item is RUINORERP.Model.tb_SaleOrderDetail saleDetail)
+                            {
+                                saleDetail.TotalDeliveredQty = 0;
+                            }
+                            // 重置采购订单明细的已交数量、退回数量和未交数量
+                            else if (item is RUINORERP.Model.tb_PurOrderDetail purDetail)
+                            {
+                                purDetail.DeliveredQuantity = 0;
+                                purDetail.TotalReturnedQty = 0;
+                                // 根据数量重新计算未交数量
+                                purDetail.UndeliveredQty = purDetail.Quantity - purDetail.DeliveredQuantity;
+                            }
+
                             // 处理明细的子明细（第二级）
                             ProcessSecondLevelDetails(item, detailPKCol, detailType.Name, ignoreConfig);
                         }

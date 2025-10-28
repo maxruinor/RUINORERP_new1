@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/27/2025 17:49:29
+// 时间：10/28/2025 17:14:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -62,7 +62,6 @@ this.txtStorageFileName.Multiline = true;
 
 this.lblFileExtension = new Krypton.Toolkit.KryptonLabel();
 this.txtFileExtension = new Krypton.Toolkit.KryptonTextBox();
-this.txtFileExtension.Multiline = true;
 
 this.lblBusinessType = new Krypton.Toolkit.KryptonLabel();
 this.txtBusinessType = new Krypton.Toolkit.KryptonTextBox();
@@ -110,6 +109,10 @@ this.txtModified_by = new Krypton.Toolkit.KryptonTextBox();
 this.lblMetadata = new Krypton.Toolkit.KryptonLabel();
 this.txtMetadata = new Krypton.Toolkit.KryptonTextBox();
 this.txtMetadata.Multiline = true;
+
+this.lblisdeleted = new Krypton.Toolkit.KryptonLabel();
+this.chkisdeleted = new Krypton.Toolkit.KryptonCheckBox();
+this.chkisdeleted.Values.Text ="";
 
     
     //for end
@@ -166,7 +169,7 @@ this.txtStorageFileName.TabIndex = 2;
 this.Controls.Add(this.lblStorageFileName);
 this.Controls.Add(this.txtStorageFileName);
 
-           //#####255FileExtension###String
+           //#####50FileExtension###String
 this.lblFileExtension.AutoSize = true;
 this.lblFileExtension.Location = new System.Drawing.Point(100,75);
 this.lblFileExtension.Name = "lblFileExtension";
@@ -396,6 +399,20 @@ this.txtMetadata.Multiline = true;
 this.Controls.Add(this.lblMetadata);
 this.Controls.Add(this.txtMetadata);
 
+           //#####isdeleted###Boolean
+this.lblisdeleted.AutoSize = true;
+this.lblisdeleted.Location = new System.Drawing.Point(100,475);
+this.lblisdeleted.Name = "lblisdeleted";
+this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
+this.lblisdeleted.TabIndex = 19;
+this.lblisdeleted.Text = "逻辑删除";
+this.chkisdeleted.Location = new System.Drawing.Point(173,471);
+this.chkisdeleted.Name = "chkisdeleted";
+this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
+this.chkisdeleted.TabIndex = 19;
+this.Controls.Add(this.lblisdeleted);
+this.Controls.Add(this.chkisdeleted);
+
         //for 加入到容器
             //components = new System.ComponentModel.Container();
            
@@ -410,7 +427,7 @@ this.Controls.Add(this.txtMetadata);
             //this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
            // this.kryptonPanel1.Name = "kryptonPanel1";
            // this.kryptonPanel1.Size = new System.Drawing.Size(404, 300);
-           // this.kryptonPanel1.TabIndex = 18;
+           // this.kryptonPanel1.TabIndex = 19;
 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -467,6 +484,9 @@ this.Controls.Add(this.txtModified_by );
 
                 this.Controls.Add(this.lblMetadata );
 this.Controls.Add(this.txtMetadata );
+
+                this.Controls.Add(this.lblisdeleted );
+this.Controls.Add(this.chkisdeleted );
 
                             // 
             // "tb_FS_FileStorageInfoEdit"
@@ -579,6 +599,11 @@ private Krypton.Toolkit.KryptonTextBox txtModified_by;
         
               private Krypton.Toolkit.KryptonLabel lblMetadata;
 private Krypton.Toolkit.KryptonTextBox txtMetadata;
+
+    
+        
+              private Krypton.Toolkit.KryptonLabel lblisdeleted;
+private Krypton.Toolkit.KryptonCheckBox chkisdeleted;
 
     
             //private ComponentFactory.Krypton.Toolkit.KryptonButton btnOk;

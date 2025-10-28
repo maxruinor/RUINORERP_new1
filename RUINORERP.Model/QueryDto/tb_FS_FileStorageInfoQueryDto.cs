@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/27/2025 17:49:29
+// 时间：10/28/2025 17:14:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -64,7 +64,7 @@ namespace RUINORERP.Model.QueryDto
         /// 文件扩展名
         /// </summary>
         [AdvQueryAttribute(ColName = "FileExtension",ColDesc = "文件扩展名")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "FileExtension",Length=255,IsNullable = false,ColumnDescription = "文件扩展名" )]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "FileExtension",Length=50,IsNullable = false,ColumnDescription = "文件扩展名" )]
         public string FileExtension 
         { 
             get{return _FileExtension;}
@@ -264,6 +264,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Metadata;}
             set{SetProperty(ref _Metadata, value);}
+        }
+     
+
+        private bool _isdeleted= false;
+        /// <summary>
+        /// 逻辑删除
+        /// </summary>
+        [AdvQueryAttribute(ColName = "isdeleted",ColDesc = "逻辑删除")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "isdeleted",IsNullable = false,ColumnDescription = "逻辑删除" )]
+        public bool isdeleted 
+        { 
+            get{return _isdeleted;}
+            set{SetProperty(ref _isdeleted, value);}
         }
 
 

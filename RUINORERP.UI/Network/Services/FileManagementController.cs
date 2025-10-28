@@ -151,12 +151,15 @@ namespace RUINORERP.UI.Network.Services
                 var entityInfo = _mapper.GetEntityInfo(entity.GetType());
                 if (entityInfo != null && entityInfo.Fields != null)
                 {
-                    // 获取文件关联服务
-                    var BusinessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
                     string BusinessNo = entity.GetPropertyValue<string>(entityInfo.NoField).ToString();
 
-                    // 获取业务关联列表 - 确保在异步上下文中完全加载所有必要数据
-                    var BusinessRelationList = await BusinessRelationService.QueryByNavAsync(c => c.BusinessType == (int)entityInfo.BizType && c.BusinessNo == BusinessNo);
+                    // 使用db.CopyNew()创建独立的数据库连接上下文，避免连接共享导致的关闭问题
+                    var db = _unitOfWorkManage.GetDbClient().CopyNew();
+                    // 使用新的数据库连接上下文获取业务关联列表
+                    var BusinessRelationList = await db.Queryable<tb_FS_BusinessRelation>()
+                        .Where(c => c.BusinessType == (int)entityInfo.BizType && c.BusinessNo == BusinessNo)
+                        .Includes(t => t.tb_fs_filestorageinfo)
+                        .ToListAsync();
                     
                     // 预加载文件存储信息到内存中，避免异步操作后数据库连接关闭导致的延迟加载问题
                     var fileStorageInfosToDownload = new List<tb_FS_FileStorageInfo>();

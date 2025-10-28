@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/27/2025 17:49:29
+// 时间：10/28/2025 17:14:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -60,7 +60,6 @@ this.txtStorageFileName.Multiline = true;
 
 this.lblFileExtension = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtFileExtension = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-this.txtFileExtension.Multiline = true;
 
 
 this.lblFileType = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
@@ -97,6 +96,10 @@ this.lblMetadata = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.txtMetadata = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
 this.txtMetadata.Multiline = true;
 
+this.lblisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.chkisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.chkisdeleted.Values.Text ="";
+
     //for end
     this.SuspendLayout();
     
@@ -129,7 +132,7 @@ this.txtStorageFileName.TabIndex = 2;
 this.Controls.Add(this.lblStorageFileName);
 this.Controls.Add(this.txtStorageFileName);
 
-           //#####255FileExtension###String
+           //#####50FileExtension###String
 this.lblFileExtension.AutoSize = true;
 this.lblFileExtension.Location = new System.Drawing.Point(100,75);
 this.lblFileExtension.Name = "lblFileExtension";
@@ -287,6 +290,20 @@ this.txtMetadata.Multiline = true;
 this.Controls.Add(this.lblMetadata);
 this.Controls.Add(this.txtMetadata);
 
+           //#####isdeleted###Boolean
+this.lblisdeleted.AutoSize = true;
+this.lblisdeleted.Location = new System.Drawing.Point(100,475);
+this.lblisdeleted.Name = "lblisdeleted";
+this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
+this.lblisdeleted.TabIndex = 19;
+this.lblisdeleted.Text = "逻辑删除";
+this.chkisdeleted.Location = new System.Drawing.Point(173,471);
+this.chkisdeleted.Name = "chkisdeleted";
+this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
+this.chkisdeleted.TabIndex = 19;
+this.Controls.Add(this.lblisdeleted);
+this.Controls.Add(this.chkisdeleted);
+
           
     //for end
 
@@ -336,6 +353,9 @@ this.Controls.Add(this.dtpModified_at );
                 
                 this.Controls.Add(this.lblMetadata );
 this.Controls.Add(this.txtMetadata );
+
+                this.Controls.Add(this.lblisdeleted );
+this.Controls.Add(this.chkisdeleted );
 
                     
             this.Name = "tb_FS_FileStorageInfoQuery";
@@ -424,6 +444,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
         
               private ComponentFactory.Krypton.Toolkit.KryptonLabel lblMetadata;
 private ComponentFactory.Krypton.Toolkit.KryptonTextBox txtMetadata;
+
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblisdeleted;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkisdeleted;
 
     
     

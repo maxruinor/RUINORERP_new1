@@ -651,8 +651,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
                 if (MultiImageSupport)
                 {
-                    images.Clear();
-                    imageInfos.Clear();
                     images.Add(image);
 
                     imageInfos.Add(new ImageInfo
@@ -669,7 +667,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         Height = image?.Height ?? 0
                     });
 
-                    currentImageIndex = 0;
+                    currentImageIndex = images.Count - 1;
                     ShowCurrentImage();
                     CreateNavigationControls();
                     CreateInfoPanel();
@@ -1344,6 +1342,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
             // 更新信息面板，确保清空
             UpdateInfoPanel();
+            // 隐藏信息面板
+            if (infoPanel != null)
+            {
+                infoPanel.Visible = false;
+            }
             // 重绘 PictureBox
             this.Invalidate();
         }
@@ -1680,7 +1683,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 }
                 else
                 {
-                    // 单图片模式，只加载第一张
+                    // 单图片模式，替换第一张图片
                     byte[] imageBytes = File.ReadAllBytes(files[0]);
                     Image image = Image.FromStream(new MemoryStream(imageBytes));
 
@@ -1691,8 +1694,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
                     // 获取文件信息并更新ImageInfo
                     var fileInfo = new FileInfo(files[0]);
-                    if (imageInfos.Count > 0)
+                    if (images.Count > 0)
                     {
+                        // 替换现有图片
+                        images[0] = image;
                         imageInfos[0] = new ImageInfo
                         {
                             OriginalFileName = fileInfo.Name,
@@ -1708,6 +1713,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     }
                     else
                     {
+                        // 如果还没有图片，添加新图片
+                        images.Add(image);
                         imageInfos.Add(new ImageInfo
                         {
                             OriginalFileName = fileInfo.Name,
@@ -1980,17 +1987,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 return;
             }
             
-            // 根据控件是否有图片执行不同操作
-            if (this.Image == null)
-            {
-                // 控件为空时，添加图片
-                AddImageFromFileDialog();
-            }
-            else
-            {
-                // 控件有图片时，查看当前图片
-                ViewLargeImage(sender, e);
-            }
+            // 双击始终添加新图片
+            AddImageFromFileDialog();
         }
         
         /// <summary>
@@ -2114,22 +2112,46 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     }
                     else
                     {
-                        images.Add(this.Image);
-                        ImageInfo newImageInfo = new ImageInfo
+                        // 单图片模式，替换第一张图片
+                        if (images.Count > 0)
                         {
-                            OriginalFileName = fileInfo.Name,
-                            FileSize = fileInfo.Length,
-                            IsUpdated = true, // 标记为已更新
-                            CreateTime = fileInfo.CreationTime,
-                            FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
-                            HashValue = CalculateImageHash(this.Image),
-                            Width = this.Image?.Width ?? 0,
-                            Height = this.Image?.Height ?? 0
-                        };
-                        imageInfos.Add(newImageInfo);
-                        // 标记图片需要更新
-                        _updateManager.MarkImageAsUpdated(newImageInfo);
-                        currentImageIndex = images.Count - 1;
+                            // 替换现有图片
+                            images[0] = this.Image;
+                            imageInfos[0] = new ImageInfo
+                            {
+                                OriginalFileName = fileInfo.Name,
+                                FileSize = fileInfo.Length,
+                                IsUpdated = true, // 标记为已更新
+                                CreateTime = fileInfo.CreationTime,
+                                FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
+                                HashValue = CalculateImageHash(this.Image),
+                                Width = this.Image?.Width ?? 0,
+                                Height = this.Image?.Height ?? 0
+                            };
+                            // 标记图片需要更新
+                            _updateManager.MarkImageAsUpdated(imageInfos[0]);
+                            currentImageIndex = 0;
+                        }
+                        else
+                        {
+                            // 如果还没有图片，添加新图片
+                            images.Add(this.Image);
+                            ImageInfo newImageInfo = new ImageInfo
+                            {
+                                OriginalFileName = fileInfo.Name,
+                                FileSize = fileInfo.Length,
+                                IsUpdated = true, // 标记为已更新
+                                CreateTime = fileInfo.CreationTime,
+                                FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
+                                HashValue = CalculateImageHash(this.Image),
+                                Width = this.Image?.Width ?? 0,
+                                Height = this.Image?.Height ?? 0
+                            };
+                            imageInfos.Add(newImageInfo);
+                            // 标记图片需要更新
+                            _updateManager.MarkImageAsUpdated(newImageInfo);
+                            currentImageIndex = 0;
+                        }
                         UpdateInfoPanel();
                     }
                     

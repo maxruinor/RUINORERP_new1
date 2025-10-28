@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/27/2025 17:49:29
+// 时间：10/28/2025 17:14:16
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -52,6 +52,7 @@ namespace RUINORERP.UI
         
         
         
+        
 
          }
 /*
@@ -77,7 +78,8 @@ namespace RUINORERP.UI
                         entity.Modified_at = DateTime.Parse(txtModified_at.Text);
                         entity.Modified_by = Int64.Parse(txtModified_by.Text);
                         entity.Metadata = txtMetadata.Text ;
-                               return entity;
+                       entity.isdeleted = Boolean.Parse(txtisdeleted.Text);
+                                return entity;
 }
         */
 
@@ -105,6 +107,7 @@ namespace RUINORERP.UI
            DataBindingHelper.BindData4DataTime<tb_FS_FileStorageInfo>(entity, t => t.Modified_at, dtpModified_at,false);
            DataBindingHelper.BindData4TextBox<tb_FS_FileStorageInfo>(entity, t => t.Modified_by, txtModified_by, BindDataType4TextBox.Qty,false);
            DataBindingHelper.BindData4TextBox<tb_FS_FileStorageInfo>(entity, t => t.Metadata, txtMetadata, BindDataType4TextBox.Text,false);
+           DataBindingHelper.BindData4CheckBox<tb_FS_FileStorageInfo>(entity, t => t.isdeleted, chkisdeleted, false);
 }
 
 

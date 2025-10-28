@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/27/2025 17:49:30
+// 时间：10/28/2025 17:14:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -44,7 +44,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.StorageFileName).MaximumMixedLength(255).WithMessage("存储文件名:不能超过最大长度,255.");
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.StorageFileName).NotEmpty().WithMessage("存储文件名:不能为空。");
 
- RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.FileExtension).MaximumMixedLength(255).WithMessage("文件扩展名:不能超过最大长度,255.");
+ RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.FileExtension).MaximumMixedLength(50).WithMessage("文件扩展名:不能超过最大长度,50.");
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.FileExtension).NotEmpty().WithMessage("文件扩展名:不能为空。");
 
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.BusinessType).NotEmpty().When(x => x.BusinessType.HasValue);
@@ -77,6 +77,7 @@ namespace RUINORERP.Business
 
 
  RuleFor(tb_FS_FileStorageInfo =>tb_FS_FileStorageInfo.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
+
 
 
            	        Initialize();

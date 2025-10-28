@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/27/2025 17:49:30
+// 时间：10/28/2025 17:14:17
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -65,6 +65,10 @@ this.dtpCreated_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker(
 this.lblModified_at = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
 this.dtpModified_at = new ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker();
 
+
+this.lblisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonLabel();
+this.chkisdeleted = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+this.chkisdeleted.Values.Text ="";
 
     //for end
     this.SuspendLayout();
@@ -140,6 +144,20 @@ this.Controls.Add(this.dtpModified_at);
            //#####Modified_by###Int64
 //属性测试175Modified_by
 
+           //#####isdeleted###Boolean
+this.lblisdeleted.AutoSize = true;
+this.lblisdeleted.Location = new System.Drawing.Point(100,200);
+this.lblisdeleted.Name = "lblisdeleted";
+this.lblisdeleted.Size = new System.Drawing.Size(41, 12);
+this.lblisdeleted.TabIndex = 8;
+this.lblisdeleted.Text = "逻辑删除";
+this.chkisdeleted.Location = new System.Drawing.Point(173,196);
+this.chkisdeleted.Name = "chkisdeleted";
+this.chkisdeleted.Size = new System.Drawing.Size(100, 21);
+this.chkisdeleted.TabIndex = 8;
+this.Controls.Add(this.lblisdeleted);
+this.Controls.Add(this.chkisdeleted);
+
           
     //for end
 
@@ -163,6 +181,9 @@ this.Controls.Add(this.dtpCreated_at );
 this.Controls.Add(this.dtpModified_at );
 
                 
+                this.Controls.Add(this.lblisdeleted );
+this.Controls.Add(this.chkisdeleted );
+
                     
             this.Name = "tb_FS_FileStorageVersionQuery";
             this.Size = new System.Drawing.Size(911, 490);
@@ -202,6 +223,11 @@ private ComponentFactory.Krypton.Toolkit.KryptonDateTimePicker dtpModified_at;
     
         
               
+    
+        
+              private ComponentFactory.Krypton.Toolkit.KryptonLabel lblisdeleted;
+private ComponentFactory.Krypton.Toolkit.KryptonCheckBox chkisdeleted;
+
     
     
    

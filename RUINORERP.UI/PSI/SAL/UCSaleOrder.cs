@@ -220,7 +220,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         public override async void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)

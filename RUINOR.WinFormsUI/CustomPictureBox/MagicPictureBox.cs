@@ -1387,27 +1387,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             // 重绘 PictureBox
             this.Invalidate();
         }
-                UpdateImagePathsFromImages();
-            }
-            else
-            {
-                // 单图片模式下也需要清空imageInfos
-                if (imageInfos.Count > 0)
-                {
-                    imageInfos.Clear();
-                }
-            }
-            // 更新信息面板，确保清空
-            UpdateInfoPanel();
-            // 隐藏信息面板
-            if (infoPanel != null)
-            {
-                infoPanel.Visible = false;
-            }
-            // 重绘 PictureBox
-            this.Invalidate();
-        }
-
+              
         /// <summary>
         /// 添加图片
         /// </summary>

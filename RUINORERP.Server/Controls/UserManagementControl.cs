@@ -395,7 +395,8 @@ namespace RUINORERP.Server.Controls
             item.SubItems[12].Text = user.在线状态 ? "在线" : "离线";
             item.SubItems[13].Text = user.授权状态 ? "已授权" : "未授权";
 
-            SetItemColorByStatus(item, user.授权状态);
+            // 根据在线状态设置颜色
+            SetItemColorByStatus(item, user.在线状态);
         }
 
         private void SetItemColorByStatus(ListViewItem item, bool isOnline)
@@ -497,6 +498,47 @@ namespace RUINORERP.Server.Controls
                 //FullRefreshListView();
                 CleanupInactiveUsers();
             }
+
+            // 每5秒检查一次用户状态更新
+            if (DateTime.Now.Second % 5 == 0)
+            {
+                UpdateUserStatuses();
+            }
+        }
+
+        /// <summary>
+        /// 更新所有用户的状态信息
+        /// </summary>
+        private void UpdateUserStatuses()
+        {
+            try
+            {
+                // 获取所有当前会话的最新状态
+                var currentSessions = _sessionService.GetAllUserSessions().ToList();
+                var currentSessionDict = currentSessions.ToDictionary(s => s.SessionID, s => s);
+
+                // 更新现有用户的显示状态
+                foreach (var userInfo in UserInfos.ToList())
+                {
+                    if (currentSessionDict.TryGetValue(userInfo.SessionId, out var sessionInfo))
+                    {
+                        // 会话仍然存在，更新状态
+                        var updatedUserInfo = ConvertSessionInfoToUserInfo(sessionInfo);
+                        AddOrUpdateUser(updatedUserInfo);
+                    }
+                    else
+                    {
+                        // 会话已不存在，标记为离线
+                        userInfo.在线状态 = false;
+                        userInfo.授权状态 = false;
+                        AddOrUpdateUser(userInfo);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"更新用户状态时出错: {ex.Message}");
+            }
         }
 
         #region 会话事件处理
@@ -536,8 +578,9 @@ namespace RUINORERP.Server.Controls
             if (sessionInfo != null)
             {
                 var userInfo = ConvertSessionInfoToUserInfo(sessionInfo);
-                // 直接从UI中移除用户
-                RemoveUser(userInfo);
+                // 更新用户状态为离线而不是直接移除
+                userInfo.在线状态 = false;
+                AddOrUpdateUser(userInfo);
             }
         }
 
@@ -579,13 +622,17 @@ namespace RUINORERP.Server.Controls
                 当前模块 = sessionInfo.Properties?.ContainsKey("CurrentModule") == true ?
                          sessionInfo.Properties["CurrentModule"]?.ToString() : "未知",
                 客户端版本 = sessionInfo.ClientVersion ?? "未知",
-                在线状态 = sessionInfo.IsConnected
+                在线状态 = sessionInfo.IsConnected, // 使用会话的连接状态
+                授权状态 = sessionInfo.IsAuthenticated // 使用会话的认证状态
             };
 
             // 如果有用户详细信息，则填充
             if (sessionInfo.UserInfo != null)
             {
                 userInfo.姓名 = sessionInfo.UserInfo.姓名;
+                userInfo.超级用户 = sessionInfo.UserInfo.超级用户;
+                userInfo.UserID = sessionInfo.UserInfo.UserID;
+                userInfo.Employee_ID = sessionInfo.UserInfo.Employee_ID;
             }
 
             return userInfo;
@@ -707,13 +754,13 @@ namespace RUINORERP.Server.Controls
 
         private void HandleSwitchServer(List<UserInfo> users)
         {
-            string newServerAddress=string.Empty;
+            string newServerAddress = string.Empty;
             var frmInput = new frmInput();
             frmInput.Text = "请输入新的服务器地址";
             if (frmInput.ShowDialog() == DialogResult.OK)
             {
                 // 获取输入的内容
-                 newServerAddress = frmInput.InputContent;
+                newServerAddress = frmInput.InputContent;
             }
 
             foreach (var user in users)
@@ -733,8 +780,8 @@ namespace RUINORERP.Server.Controls
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
                             request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
 
                         if (success)
@@ -775,7 +822,7 @@ namespace RUINORERP.Server.Controls
 
             // 对所有在线用户执行切换服务器操作，而不仅仅是选中的用户
             var allUsers = UserInfos.ToList();
-            
+
             foreach (var user in allUsers)
             {
                 try
@@ -854,8 +901,8 @@ namespace RUINORERP.Server.Controls
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
                             request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
 
                         if (success)
@@ -898,8 +945,8 @@ namespace RUINORERP.Server.Controls
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
                             request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
 
                         if (success)
@@ -980,8 +1027,8 @@ namespace RUINORERP.Server.Controls
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
                             request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
 
                         if (success)
@@ -1023,8 +1070,8 @@ namespace RUINORERP.Server.Controls
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
                             request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
 
                         if (success)
@@ -1066,8 +1113,8 @@ namespace RUINORERP.Server.Controls
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
                             request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
 
                         if (success)
@@ -1125,8 +1172,8 @@ namespace RUINORERP.Server.Controls
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
                             request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
 
                         if (success)
@@ -1147,7 +1194,7 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show($"推送缓存数据时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
- 
+
 
         private void HandleShutdown(List<UserInfo> users)
         {
@@ -1167,8 +1214,8 @@ namespace RUINORERP.Server.Controls
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
                             request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
 
                         if (success)
@@ -1343,8 +1390,8 @@ namespace RUINORERP.Server.Controls
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
                             request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
 
                         if (success)
@@ -1400,8 +1447,8 @@ namespace RUINORERP.Server.Controls
 
                         var request = new MessageRequest(MessageCmdType.Unknown, messageData);
                         var success = _sessionService.SendCommandAsync(
-                            session.SessionID, 
-                            MessageCommands.SendMessageToUser, 
+                            session.SessionID,
+                            MessageCommands.SendMessageToUser,
                             request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
 
                         if (success)

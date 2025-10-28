@@ -466,13 +466,22 @@ namespace RUINORERP.Server.Network.Services
                 // 获取会话信息
                 _sessions.TryGetValue(session.SessionID, out var sessionInfo);
 
-                await RemoveSessionAsync(session.SessionID);
-
-                // 如果存在会话信息，调用IServerSessionEventHandler接口的会话断开方法
+                // 如果会话信息存在，先触发断开事件再移除会话
                 if (sessionInfo != null)
                 {
+                    // 更新会话状态
+                    sessionInfo.IsConnected = false;
+                    sessionInfo.DisconnectTime = DateTime.Now;
+                    
+                    // 触发会话断开事件
+                    SessionDisconnected?.Invoke(sessionInfo);
+                    
+                    // 调用IServerSessionEventHandler接口的会话断开方法
                     await OnSessionDisconnectedAsync(sessionInfo, closeReason.Reason.ToString());
                 }
+
+                // 移除会话
+                await RemoveSessionAsync(session.SessionID);
 
                 _logger.LogInformation($"SuperSocket会话已断开: SessionID={session.SessionID}, 原因={closeReason.Reason}");
             }
@@ -635,6 +644,10 @@ namespace RUINORERP.Server.Network.Services
                 {
                     // 使用专门的UpdateActivity方法更新活动时间和心跳计数
                     sessionInfo.UpdateActivity();
+                    
+                    // 触发会话更新事件，通知UI更新状态
+                    SessionUpdated?.Invoke(sessionInfo);
+                    
                     return true;
                 }
                 return false;
@@ -1219,6 +1232,10 @@ namespace RUINORERP.Server.Network.Services
         #endregion
     }
 }
+
+
+
+
 
 
 

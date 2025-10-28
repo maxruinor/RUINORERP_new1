@@ -535,8 +535,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         bool fileDeleted = false;
                         if (isPhysicalDelete)
                         {
-                            // 物理删除：删除实际文件
-                            _logger?.LogInformation("执行物理删除，FileId: {FileId}", currentFileId);
+
 
                             // 构建搜索路径
                             var searchPaths = new List<string> { _fileStoragePath };
@@ -577,7 +576,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                     {
                                         _logger?.LogDebug("使用模式搜索: {Pattern}", pattern);
                                         var files = Directory.GetFiles(searchPath, pattern);
-
+                                        // 物理删除：删除实际文件
+                                        _logger?.LogInformation($"准备执行物理删除文件{files.Count()}个");
                                         foreach (var filePath in files)
                                         {
                                             try

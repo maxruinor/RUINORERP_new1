@@ -54,7 +54,7 @@ namespace RUINORERP.Business.Config
         {
             try
             {
-                _logger.LogInformation("从IConfiguration加载配置: {ConfigType}", configType);
+                _logger.Debug("从IConfiguration加载配置: {ConfigType}", configType);
                 
                 // 从IConfiguration中获取配置节
                 var configSection = _configuration.GetSection(configType);
@@ -72,7 +72,7 @@ namespace RUINORERP.Business.Config
                         serverConfig.FileStoragePath = ResolveEnvironmentVariables(serverConfig.FileStoragePath);
                     }
                     
-                    _logger.LogInformation("配置加载成功: {ConfigType}", configType);
+                    _logger.Debug("配置加载成功: {ConfigType}", configType);
                     return config;
                 }
                 
@@ -97,7 +97,7 @@ namespace RUINORERP.Business.Config
             
             if (File.Exists(filePath))
             {
-                _logger.LogInformation("从文件加载配置: {FilePath}", filePath);
+                _logger.Debug("从文件加载配置: {FilePath}", filePath);
                 string jsonContent = File.ReadAllText(filePath);
                 
                 try
@@ -179,7 +179,7 @@ namespace RUINORERP.Business.Config
                 string jsonContent = JsonConvert.SerializeObject(encryptedConfig, Formatting.Indented);
                 File.WriteAllText(filePath, jsonContent);
                 
-                _logger.LogInformation("配置保存成功: {ConfigType}", configType);
+                _logger.Debug("配置保存成功: {ConfigType}", configType);
                 return true;
             }
             catch (Exception ex)
@@ -216,7 +216,7 @@ namespace RUINORERP.Business.Config
                     initMethod.Invoke(config, null);
                 }
                 
-                _logger.LogInformation("创建默认配置: {ConfigType}", typeof(T).Name);
+                _logger.Debug("创建默认配置: {ConfigType}", typeof(T).Name);
                 return config;
             }
             catch (Exception ex)

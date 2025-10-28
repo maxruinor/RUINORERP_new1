@@ -33,7 +33,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
             lock (_registryLock)
             {
                 _defaultRegistry = registry;
-                _logger?.LogInformation("响应工厂默认命令处理器注册表已设置");
+                _logger?.Debug("响应工厂默认命令处理器注册表已设置");
             }
         }
 
@@ -53,7 +53,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 if (registry != null)
                 {
                     SetDefaultCommandHandlerRegistry(registry);
-                    _logger?.LogInformation("响应工厂已从服务容器初始化默认命令处理器注册表");
+                    _logger?.Debug("响应工厂已从服务容器初始化默认命令处理器注册表");
                 }
                 else
                 {

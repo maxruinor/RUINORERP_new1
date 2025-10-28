@@ -104,7 +104,7 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     if (IsInitialized)
                     {
-                        _logger?.LogInformation("命令处理器注册表已经初始化，跳过重复初始化");
+                        _logger?.Debug("命令处理器注册表已经初始化，跳过重复初始化");
                         return true;
                     }
 
@@ -112,7 +112,7 @@ namespace RUINORERP.PacketSpec.Commands
                     if (assemblies == null || assemblies.Length == 0)
                     {
                         assemblies = new[] { Assembly.GetExecutingAssembly() };
-                        _logger?.LogInformation("未指定程序集，使用当前执行程序集: {AssemblyName}", assemblies[0].FullName);
+                        _logger?.Debug("未指定程序集，使用当前执行程序集: {AssemblyName}", assemblies[0].FullName);
                     }
 
                     // 扫描并注册命令处理器
@@ -121,7 +121,7 @@ namespace RUINORERP.PacketSpec.Commands
                    
 
                     IsInitialized = true;
-                    _logger?.LogInformation("命令处理器注册表初始化成功: 已注册 {HandlerCount} 个处理器，{CommandCount} 个命令映射",
+                    _logger?.Debug("命令处理器注册表初始化成功: 已注册 {HandlerCount} 个处理器，{CommandCount} 个命令映射",
                         HandlerCount, CommandHandlerMapCount);
                     return true;
                 }
@@ -239,7 +239,7 @@ namespace RUINORERP.PacketSpec.Commands
                 // 注册处理器
                 if (_handlersById.TryAdd(handler.HandlerId, handler))
                 {
-                    _logger?.LogInformation("成功注册命令处理器: {HandlerName}({HandlerId})", handler.Name, handler.HandlerId);
+                    _logger?.Debug("成功注册命令处理器: {HandlerName}({HandlerId})", handler.Name, handler.HandlerId);
 
                     // 建立命令ID到处理器的映射
                     UpdateCommandHandlerMap(handler, add: true);
@@ -454,7 +454,7 @@ namespace RUINORERP.PacketSpec.Commands
                     // 更新命令处理器映射
                     UpdateCommandHandlerMap(handler, add: true);
 
-                    _logger?.LogInformation("手动注册命令处理器成功: {HandlerName}({HandlerId})", handler.Name, handler.HandlerId);
+                    _logger?.Debug("手动注册命令处理器成功: {HandlerName}({HandlerId})", handler.Name, handler.HandlerId);
                     return true;
                 }
 
@@ -496,7 +496,7 @@ namespace RUINORERP.PacketSpec.Commands
 
                
                 IsInitialized = false;
-                _logger?.LogInformation("命令处理器注册表已清理");
+                _logger?.Debug("命令处理器注册表已清理");
             }
             finally
             {

@@ -207,7 +207,7 @@ namespace RUINORERP.Business.Config
             }
             
             // 如果没有找到对应的验证器，返回null
-            _logger.LogInformation("未找到类型 {ConfigType} 的验证器", configType.Name);
+            _logger.Debug("未找到类型 {ConfigType} 的验证器", configType.Name);
             return null;
         }
 
@@ -283,7 +283,7 @@ namespace RUINORERP.Business.Config
             }
             
             _customRules[typeKey].Add(rule);
-            _logger.LogInformation("注册自定义验证规则: {RuleName} 用于 {ConfigType}.{PropertyName}", 
+            _logger.Debug("注册自定义验证规则: {RuleName} 用于 {ConfigType}.{PropertyName}", 
                 rule.RuleName, typeof(T).Name, rule.PropertyName);
         }
 

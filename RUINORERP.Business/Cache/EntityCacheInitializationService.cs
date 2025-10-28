@@ -47,7 +47,7 @@ namespace RUINORERP.Business.Cache
         {
             try
             {
-                _logger.LogInformation("开始初始化缓存服务");
+                _logger.Debug("开始初始化缓存服务");
                 
                 // 初始化所有表结构信息
                 InitializeAllTableSchemas();
@@ -67,7 +67,7 @@ namespace RUINORERP.Business.Cache
                         // 直接使用同步方法初始化，避免复杂的异步嵌套
                         InitializeCacheForTable(tableName);
                         successCount++;
-                        _logger.LogInformation($"表 {tableName} 缓存初始化成功 ({successCount}/{tableNames.Count})");
+                        _logger.Debug($"表 {tableName} 缓存初始化成功 ({successCount}/{tableNames.Count})");
                            // 短暂延迟，减少数据库压力
                         await Task.Delay(123);
                     }
@@ -94,7 +94,7 @@ namespace RUINORERP.Business.Cache
         {
             try
             {
-                _logger.LogInformation("开始初始化表结构信息");
+                _logger.Debug("开始初始化表结构信息");
                 
                 // 注册所有需要缓存的表结构信息
                 // 基础数据表
@@ -169,7 +169,7 @@ namespace RUINORERP.Business.Cache
                 // 补充缺失的表
                 RegistInformation<tb_FieldInfo>(k => k.FieldInfo_ID, v => v.FieldName, tableType: TableType.Base);
                 
-                _logger.LogInformation("表结构信息初始化完成");
+                _logger.Debug("表结构信息初始化完成");
             }
             catch (Exception ex)
             {
@@ -413,7 +413,7 @@ namespace RUINORERP.Business.Cache
         {
             try
             {
-                _logger.LogInformation($"开始初始化类型为 {tableType} 的表缓存");
+                _logger.Debug($"开始初始化类型为 {tableType} 的表缓存");
                 var tables = TableSchemaManager.Instance.GetCacheableTableNamesByType(tableType);
                 
                 int successCount = 0;
@@ -425,7 +425,7 @@ namespace RUINORERP.Business.Cache
                     {
                         InitializeCacheForTable(tableName);
                         successCount++;
-                        _logger.LogInformation($"表 {tableName} 缓存初始化成功 ({successCount}/{tables.Count})");
+                        _logger.Debug($"表 {tableName} 缓存初始化成功 ({successCount}/{tables.Count})");
                         // 短暂延迟，减少数据库压力
                         await Task.Delay(123);
                     }
@@ -436,7 +436,7 @@ namespace RUINORERP.Business.Cache
                     }
                 }
                 
-                _logger.LogInformation($"类型 {tableType} 的表缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
+                _logger.Debug($"类型 {tableType} 的表缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
             }
             catch (Exception ex)
             {
@@ -451,7 +451,7 @@ namespace RUINORERP.Business.Cache
         {
             try
             {
-                _logger.LogInformation("开始初始化基础业务表缓存");
+                _logger.Debug("开始初始化基础业务表缓存");
                 var tables = TableSchemaManager.Instance.GetBaseBusinessTableNames();
                 
                 int successCount = 0;
@@ -463,7 +463,7 @@ namespace RUINORERP.Business.Cache
                     {
                         InitializeCacheForTable(tableName);
                         successCount++;
-                        _logger.LogInformation($"基础业务表 {tableName} 缓存初始化成功 ({successCount}/{tables.Count})");
+                        _logger.Debug($"基础业务表 {tableName} 缓存初始化成功 ({successCount}/{tables.Count})");
                         // 短暂延迟，减少数据库压力
                         await Task.Delay(123);
                     }
@@ -474,7 +474,7 @@ namespace RUINORERP.Business.Cache
                     }
                 }
                 
-                _logger.LogInformation($"基础业务表缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
+                _logger.Debug($"基础业务表缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
             }
             catch (Exception ex)
             {

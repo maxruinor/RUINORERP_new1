@@ -102,7 +102,7 @@ namespace RUINORERP.Extensions.AOP
         {
             if (_unitOfWorkManage.TranCount <= 0)
             {
-                _logger.LogInformation($"[{method.Name}] 开启新事务 (Required)");
+                _logger.Debug($"[{method.Name}] 开启新事务 (Required)");
                 _unitOfWorkManage.BeginTran();
                 _isTransactionStartedByThisMethod = true;
             }
@@ -123,7 +123,7 @@ namespace RUINORERP.Extensions.AOP
 
         private void HandleNestedPropagation(MethodInfo method)
         {
-            _logger.LogInformation($"[{method.Name}] 开启嵌套事务 (Nested)");
+            _logger.Debug($"[{method.Name}] 开启嵌套事务 (Nested)");
             _unitOfWorkManage.BeginTran();
             _isTransactionStartedByThisMethod = true;
         }
@@ -134,7 +134,7 @@ namespace RUINORERP.Extensions.AOP
             var currentState = _unitOfWorkManage.GetTransactionState();
 
             // 开启新事务
-            _logger.LogInformation($"[{method.Name}] 开启全新事务 (RequiresNew)");
+            _logger.Debug($"[{method.Name}] 开启全新事务 (RequiresNew)");
             _unitOfWorkManage.BeginTran();
             _isTransactionStartedByThisMethod = true;
 
@@ -165,7 +165,7 @@ namespace RUINORERP.Extensions.AOP
         {
             if (_isTransactionStartedByThisMethod)
             {
-                _logger.LogInformation($"[{method.Name}] 提交事务");
+                _logger.Debug($"[{method.Name}] 提交事务");
                 _unitOfWorkManage.CommitTran();
             }
         }

@@ -200,10 +200,10 @@ namespace RUINORERP.Server
                 // 设置日志级别过滤规则
                 logBuilder.AddFilter((provider, category, logLevel) =>
                 {
-                    // 所有RUINORERP开头的命名空间使用Error级别
+                    // RUINORERP命名空间使用Information级别
                     if (category.StartsWith("RUINORERP"))
                     {
-                        return logLevel >= LogLevel.Error;
+                        return logLevel >= LogLevel.Information;
                     }
                     if (category.StartsWith("WorkflowCore"))
                     {

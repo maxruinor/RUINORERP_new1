@@ -110,7 +110,7 @@ namespace RUINORERP.Business.Config
                 }
                 
                 // 移除审计日志调用
-                _logger.LogInformation("配置版本创建成功: {ConfigType}, v{VersionNumber}", 
+                _logger.Debug("配置版本创建成功: {ConfigType}, v{VersionNumber}", 
                     configType, newVersionNumber);
                 
                 return newVersion;
@@ -211,7 +211,7 @@ namespace RUINORERP.Business.Config
                 }
                 
                 // 移除审计日志调用
-                _logger.LogInformation("配置回滚成功: {ConfigType}, 回滚到 v{VersionNumber}", 
+                _logger.Debug("配置回滚成功: {ConfigType}, 回滚到 v{VersionNumber}", 
                     configType, version.VersionNumber);
                 
                 return true;
@@ -397,7 +397,7 @@ namespace RUINORERP.Business.Config
                     SaveVersions(configType, allVersions);
                 }
                 
-                _logger.LogInformation("配置版本删除成功: {ConfigType}, v{VersionNumber}", 
+                _logger.Debug("配置版本删除成功: {ConfigType}, v{VersionNumber}", 
                     configType, version.VersionNumber);
                 
                 return true;

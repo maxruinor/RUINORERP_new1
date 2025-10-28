@@ -15,6 +15,8 @@ using System.Threading;
 using RUINORERP.Server.Network.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Castle.Core.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.Server.Controls
 {
@@ -26,7 +28,7 @@ namespace RUINORERP.Server.Controls
         private readonly DiagnosticsService _diagnosticsService;
         private readonly PerformanceMonitoringService _performanceMonitoringService;
         private readonly ErrorAnalysisService _errorAnalysisService;
-        private readonly CircuitBreakerMetrics _circuitBreakerMetrics;
+        // 不再使用独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
         private readonly System.Windows.Forms.Timer _refreshTimer;
 
         // 用于控制刷新频率的字段
@@ -49,7 +51,7 @@ namespace RUINORERP.Server.Controls
             _diagnosticsService = Startup.GetFromFac<DiagnosticsService>();
             _performanceMonitoringService = Startup.GetFromFac<PerformanceMonitoringService>();
             _errorAnalysisService = Startup.GetFromFac<ErrorAnalysisService>();
-            _circuitBreakerMetrics = Startup.GetFromFac<CircuitBreakerMetrics>();
+            // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
             // 初始化定时器
             _refreshTimer = new System.Windows.Forms.Timer();
@@ -80,7 +82,7 @@ namespace RUINORERP.Server.Controls
             _diagnosticsService = Startup.GetFromFac<DiagnosticsService>();
             _performanceMonitoringService = Startup.GetFromFac<PerformanceMonitoringService>();
             _errorAnalysisService = Startup.GetFromFac<ErrorAnalysisService>();
-            _circuitBreakerMetrics = Startup.GetFromFac<CircuitBreakerMetrics>();
+            // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
             // 初始化定时器
             _refreshTimer = new System.Windows.Forms.Timer();
@@ -603,6 +605,9 @@ namespace RUINORERP.Server.Controls
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             RefreshData();
+            ILogger<ServerMonitorControl> logger = Startup.GetFromFac<ILogger<ServerMonitorControl>>();
+            logger.LogInformation("刷新数据1");
+            logger.Info("刷新数据2");
         }
 
         private void btnResetStats_Click(object sender, EventArgs e)
@@ -696,7 +701,10 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                if (_circuitBreakerMetrics == null)
+                // 使用CommandDispatcher的Metrics属性获取熔断器指标
+                var circuitBreakerMetrics = _commandDispatcher?.Metrics;
+                
+                if (circuitBreakerMetrics == null)
                 {
                     // 如果熔断器指标对象为null，显示默认值
                     cbLblStatusValue.Text = "未初始化";
@@ -709,10 +717,10 @@ namespace RUINORERP.Server.Controls
                 }
 
                 // 获取全局熔断器指标
-                var globalMetrics = _circuitBreakerMetrics.GlobalMetrics;
+                var globalMetrics = circuitBreakerMetrics.GlobalMetrics;
 
-                // 直接从_circuitBreakerMetrics获取状态
-                string circuitState = _circuitBreakerMetrics.CurrentState.ToString();
+                // 直接从circuitBreakerMetrics获取状态
+                string circuitState = circuitBreakerMetrics.CurrentState.ToString();
                 cbLblStatusValue.Text = circuitState;
 
                 // 根据状态设置颜色
@@ -763,6 +771,15 @@ namespace RUINORERP.Server.Controls
                 else
                 {
                     cbLblAvgResponseTimeValue.Text = "0ms";
+                }
+                
+                // 显示熔断器开关次数
+                cbLblStateChangesValue.Text = globalMetrics.StateChanges.ToString();
+                
+                // 显示熔断器开关次数的详情
+                if (globalMetrics.StateChanges > 0)
+                {
+                    // 可以在这里添加更多详细信息的显示，如开关历史记录等
                 }
             }
             catch (Exception ex)

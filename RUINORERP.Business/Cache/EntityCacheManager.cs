@@ -1598,7 +1598,7 @@ namespace RUINORERP.Business.Cache
                 // 执行缓存清理（移除最少使用的项目）
                 CleanCacheByLeastRecentlyUsed();
 
-                _logger.LogInformation("缓存清理完成。清理后大小：{NewSize}MB", EstimatedCacheSize / (1024 * 1024));
+                _logger.Debug("缓存清理完成。清理后大小：{NewSize}MB", EstimatedCacheSize / (1024 * 1024));
             }
         }
 

@@ -357,7 +357,7 @@ namespace RUINORERP.PacketSpec.Commands
                     return true;
 
 
-                LogInfo($"启动处理器: {Name}");
+                LogDebug($"启动处理器: {Name}");
 
                 var result = await OnStartAsync(cancellationToken);
                 if (result)
@@ -365,7 +365,7 @@ namespace RUINORERP.PacketSpec.Commands
                     Status = HandlerStatus.Running;
                     _statistics.StartTimeUtc = DateTime.UtcNow;
 
-                    LogInfo($"处理器启动成功: {Name}");
+                    LogDebug($"处理器启动成功: {Name}");
                 }
                 else
                 {

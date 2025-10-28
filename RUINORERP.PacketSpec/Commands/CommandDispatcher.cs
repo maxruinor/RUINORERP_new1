@@ -95,6 +95,7 @@ namespace RUINORERP.PacketSpec.Commands
             MaxConcurrencyPerCommand = maxConcurrencyPerCommand > 0 ? maxConcurrencyPerCommand : Environment.ProcessorCount;
 
             // 使用传入的熔断器策略，如果未提供则使用默认策略
+            // 熔断器策略实际上是按命令类别分组应用的，同一类别的命令共享一个熔断器，而不是所有命令或单个命令ID独立使用一个熔断器。这种设计既能有效保护系统，又避免了过度熔断的问题。
             // 熔断器的核心参数
             /*
             -(旧) 触发条件 ：当响应不为空且 IsSuccess=false 时，认为是一次失败

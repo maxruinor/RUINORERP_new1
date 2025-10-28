@@ -558,7 +558,7 @@ namespace RUINORERP.PacketSpec.Commands
                     // 释放处理器资源
                     handler.Dispose();
 
-                    _logger?.LogInformation("命令处理器已移除: {HandlerId}", handlerId);
+                    _logger?.Debug("命令处理器已移除: {HandlerId}", handlerId);
                     return true;
                 }
 

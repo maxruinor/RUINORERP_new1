@@ -376,7 +376,7 @@ namespace RUINORERP.Server.Network.Core
                     if (handler.SupportedCommands != null)
                     {
                         var commandCodes = string.Join(", ", handler.SupportedCommands);
-                        _logger.LogInformation($"  支持的命令类型: [{commandCodes}]");
+                        _logger.Debug($"  支持的命令类型: [{commandCodes}]");
                     }
                 }
  

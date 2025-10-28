@@ -194,16 +194,13 @@ namespace RUINORERP.Server.SmartReminder
                     return resultContext; // 返回空上下文
                 }
                 
-                // 使用using确保db客户端被正确释放
-                using (var db = _unitOfWorkManage.GetDbClient())
-                {
-                    var stocks = await db.Queryable<tb_Inventory>()
-                        .Where(s => productIds.Contains(s.ProdDetailID))
-                        .ToListAsync();
-                    
-                    resultContext = new InventoryContext(stocks);
-                }
+                // 移除using块，让SqlSugar自己管理连接生命周期
+                var db = _unitOfWorkManage.GetDbClient();
+                var stocks = await db.Queryable<tb_Inventory>()
+                    .Where(s => productIds.Contains(s.ProdDetailID))
+                    .ToListAsync();
                 
+                resultContext = new InventoryContext(stocks);
                 return resultContext;
             }
             catch (Exception ex)
@@ -230,29 +227,28 @@ namespace RUINORERP.Server.SmartReminder
 
             try
             {
-                // 缓存未命中，从数据库异步查询，使用using块正确管理数据库连接
-                using (var db = _unitOfWorkManage.GetDbClient())
-                {
-                    policies = await db.Queryable<tb_ReminderRule>()
-                        .Where(p => p.IsEnabled)
-                        .ToListAsync();
+                // 缓存未命中，从数据库异步查询
+                // 移除using块，让SqlSugar自己管理连接生命周期
+                var db = _unitOfWorkManage.GetDbClient();
+                policies = await db.Queryable<tb_ReminderRule>()
+                    .Where(p => p.IsEnabled)
+                    .ToListAsync();
 
-                    _logger.LogDebug("从数据库获取活跃规则，数量: {Count}", policies.Count);
-                    
-                    // 将结果存入缓存，设置5分钟过期和滑动过期
-                    var cacheOptions = new MemoryCacheEntryOptions()
-                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
-                        .SetSlidingExpiration(TimeSpan.FromMinutes(2))
-                        .RegisterPostEvictionCallback((key, value, reason, state) =>
-                        {
-                            _logger.LogDebug("规则缓存已过期或被移除，原因: {Reason}", reason);
-                        });
-                    
-                    _cache.Set(cacheKey, policies, cacheOptions);
-                    
-                    // 显式转换为接口列表
-                    return policies.Select(p => p as IReminderRule).ToList();
-                }
+                _logger.LogDebug("从数据库获取活跃规则，数量: {Count}", policies.Count);
+                
+                // 将结果存入缓存，设置5分钟过期和滑动过期
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(5))
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(2))
+                    .RegisterPostEvictionCallback((key, value, reason, state) =>
+                    {
+                        _logger.LogDebug("规则缓存已过期或被移除，原因: {Reason}", reason);
+                    });
+                
+                _cache.Set(cacheKey, policies, cacheOptions);
+                
+                // 显式转换为接口列表
+                return policies.Select(p => p as IReminderRule).ToList();
             }
             catch (Exception ex)
             {

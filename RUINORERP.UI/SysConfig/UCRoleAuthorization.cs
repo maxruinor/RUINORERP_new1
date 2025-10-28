@@ -251,12 +251,10 @@ namespace RUINORERP.UI.SysConfig
                 bindingSourceRowAuthPolicy.Remove(selectedPolicy);
 
                 // 从数据库中删除
-                using (var db = MainForm.Instance.AppContext.Db.CopyNew())
-                {
-                    await db.Deleteable<tb_P4RowAuthPolicyByRole>()
-                          .Where(p => p.Policy_Role_RID == selectedPolicy.Policy_Role_RID)
-                          .ExecuteCommandAsync();
-                }
+                var db = MainForm.Instance.AppContext.Db.CopyNew();
+                await db.Deleteable<tb_P4RowAuthPolicyByRole>()
+                      .Where(p => p.Policy_Role_RID == selectedPolicy.Policy_Role_RID)
+                      .ExecuteCommandAsync();
 
                 // 更新缓存（节点的tag）
                 if (TreeView1.SelectedNode != null && TreeView1.SelectedNode.Tag is tb_MenuInfo selectMenu)
@@ -2716,7 +2714,7 @@ namespace RUINORERP.UI.SysConfig
                     OriginalData beatDataDel = ClientDataBuilder.BaseInfoChangeBuilder(typeof(T).Name);
                     //MainForm.Instance.ecs.AddSendData(beatDataDel);
                     RUINORERP.UI.Common.CacheManager.DeleteEntity(typeof(T).Name, PKValue.ToLong());
-                    
+
                 }
 
             }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -125,31 +125,29 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
             if (ProductIds == null || !ProductIds.Any())
             {
                 ISqlSugarClient sugarScope = Startup.GetFromFac<ISqlSugarClient>();
-                // 记录工作流完成日志
-                using (var db = sugarScope)
+                // 移除using块，让SqlSugar自己管理连接生命周期
+                var db = sugarScope;
+                var policies = db.Queryable<tb_ReminderRule>()
+                             .Where(p => p.IsEnabled)
+                             .Where(c => c.ReminderBizType == (int)ReminderBizType.安全库存提醒)
+                             .ToList();
+                foreach (var item in policies)
                 {
-                    var policies = db.Queryable<tb_ReminderRule>()
-                                 .Where(p => p.IsEnabled)
-                                 .Where(c => c.ReminderBizType == (int)ReminderBizType.安全库存提醒)
-                                 .ToList();
-                    foreach (var item in policies)
-                    {
-                        // 使用示例
-                        JObject obj = SafeParseJson(item.JsonConfig);
-                        SafetyStockConfig safetyStockConfig = obj.ToObject<SafetyStockConfig>();
+                    // 使用示例
+                    JObject obj = SafeParseJson(item.JsonConfig);
+                    SafetyStockConfig safetyStockConfig = obj.ToObject<SafetyStockConfig>();
 
-                        ProductIds.AddRange(safetyStockConfig.ProductIds); // safetyStockConfig.ProductIds
-                    }
-                    // 批量查询所有产品信息
-                    var products = db.Queryable<View_Inventory>()
-                        .Where(p => ProductIds.Contains(p.ProdDetailID.Value))
-                        .ToList();
+                    ProductIds.AddRange(safetyStockConfig.ProductIds); // safetyStockConfig.ProductIds
+                }
+                // 批量查询所有产品信息
+                var products = db.Queryable<View_Inventory>()
+                    .Where(p => ProductIds.Contains(p.ProdDetailID.Value))
+                    .ToList();
 
-                    // 存入缓存字典
-                    foreach (var product in products)
-                    {
-                        (context.Workflow.Data as SafetyStockData).ProductInfoCache[product.ProdDetailID.Value] = product;
-                    }
+                // 存入缓存字典
+                foreach (var product in products)
+                {
+                    (context.Workflow.Data as SafetyStockData).ProductInfoCache[product.ProdDetailID.Value] = product;
                 }
 
             }
@@ -191,25 +189,24 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
             int days = data.Config.CalculationPeriodDays;
 
             ISqlSugarClient sugarScope = Startup.GetFromFac<ISqlSugarClient>();
-            using (var db = sugarScope)
-            {
-                var endDate = DateTime.Now.Date;
-                var startDate = endDate.AddDays(-days);
+            // 移除using块，让SqlSugar自己管理连接生命周期
+            var db = sugarScope;
+            var endDate = DateTime.Now.Date;
+            var startDate = endDate.AddDays(-days);
 
-                data.CurrentSalesData = await db.Queryable<View_SaleOutItems>()
-                    .Where(i => i.ProdDetailID == ProductId
-                                && i.OutDate.Value >= startDate
-                                && i.OutDate.Value < endDate)
-                                                                       // .GroupBy(i => (i.OutDate.Value.ToShortDateString()) // 分组键
-                                                                       .GroupBy(i => i.OutDate.Value.Date) // 分组键
-                    .Select(g => new SalesHistory  // 使用 g 代表分组结果
-                    {
-                        Date = g.OutDate.Value.Date, // 使用分组键作为日期
-                        Quantity = (decimal)SqlFunc.AggregateSum(g.Quantity)
-                    })
-                    .OrderBy(i => i.Date)
-                    .ToListAsync();
-            }
+            data.CurrentSalesData = await db.Queryable<View_SaleOutItems>()
+                .Where(i => i.ProdDetailID == ProductId
+                            && i.OutDate.Value >= startDate
+                            && i.OutDate.Value < endDate)
+                                                                   // .GroupBy(i => (i.OutDate.Value.ToShortDateString()) // 分组键
+                                                                   .GroupBy(i => i.OutDate.Value.Date) // 分组键
+                .Select(g => new SalesHistory  // 使用 g 代表分组结果
+                {
+                    Date = g.OutDate.Value.Date, // 使用分组键作为日期
+                    Quantity = (decimal)SqlFunc.AggregateSum(g.Quantity)
+                })
+                .OrderBy(i => i.Date)
+                .ToListAsync();
             logger.Error($"GetSalesHistory：{ProductId}");
             return ExecutionResult.Next();
         }
@@ -240,21 +237,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
 
             Result = new SafetyStockResult { ProductId = ProductId };
 
-            //logger.Error($"CalculateSafetyStock：{ProductId}");
-
-            //ISqlSugarClient sugarScope = Startup.GetFromFac<ISqlSugarClient>();
-            //// 获取产品信息和当前库存
-            //using (var db = sugarScope)
-            //{
-            //    var product = db.Queryable<View_Inventory>().First(p => p.ProdDetailID == ProductId);
-            //    if (product != null)
-            //    {
-            //        Result.ProductName = product.CNName;
-            //    }
-
-            //    // 获取当前库存
-            //    Result.CurrentStock = product?.Quantity ?? 0;
-            //}
+            
 
             // === 从缓存获取产品信息 ===
             if ((context.Workflow.Data as SafetyStockData).ProductInfoCache.TryGetValue(
@@ -360,19 +343,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
             var alertCount = Results?.Count(r => r.Value.NeedAlert) ?? 0;
             frmMainNew.Instance.PrintInfoLog($"安全库存计算完成，共检查 {Results?.Count ?? 0} 个产品，需要提醒的产品有 {alertCount} 个");
 
-            //ISqlSugarClient sugarScope = Startup.GetFromFac<ISqlSugarClient>();
-            //// 记录工作流完成日志
-            //using (var db = sugarScope)
-            //{
-            //    db.Insertable(new WorkflowLog
-            //    {
-            //        WorkflowType = "SafetyStockCalculation",
-            //        WorkflowId = context.Workflow.Id,
-            //        Status = "完成",
-            //        Message = $"安全库存计算完成，共检查 {Results?.Count ?? 0} 个产品，需要提醒的产品有 {alertCount} 个",
-            //        CreateTime = DateTime.Now
-            //    }).ExecuteCommand();
-            //}
+             
             return ExecutionResult.Next();
         }
     }

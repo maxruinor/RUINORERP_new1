@@ -44,11 +44,10 @@ namespace RUINORERP.Business.Cache
             {
                 _logger?.LogDebug($"从数据库加载表 {tableName} 的实体列表数据");
                 
-                using (var db = _unitOfWorkManage.GetDbClient())
-                {
-                    // 直接使用SqlSugar查询表数据
-                    return db.Queryable<T>(tableName).ToList();
-                }
+                // 移除using块，让SqlSugar自己管理连接生命周期
+                var db = _unitOfWorkManage.GetDbClient();
+                // 直接使用SqlSugar查询表数据
+                return db.Queryable<T>(tableName).ToList();
             }
             catch (Exception ex)
             {
@@ -78,13 +77,12 @@ namespace RUINORERP.Business.Cache
                     return null;
                 }
 
-                using (var db = _unitOfWorkManage.GetDbClient())
-                {
-                    // 根据主键字段查询实体
-                    return db.Queryable<T>(tableName)
-                        .Where($"{schemaInfo.PrimaryKeyField} = @id", new { id = idValue })
-                        .First();
-                }
+                // 移除using块，让SqlSugar自己管理连接生命周期
+                var db = _unitOfWorkManage.GetDbClient();
+                // 根据主键字段查询实体
+                return db.Queryable<T>(tableName)
+                    .Where($"{schemaInfo.PrimaryKeyField} = @id", new { id = idValue })
+                    .First();
             }
             catch (Exception ex)
             {
@@ -112,19 +110,18 @@ namespace RUINORERP.Business.Cache
                     return null;
                 }
 
-                using (var db = _unitOfWorkManage.GetDbClient())
+                // 移除using块，让SqlSugar自己管理连接生命周期
+                var db = _unitOfWorkManage.GetDbClient();
+                // 只查询显示字段
+                var result = db.Ado.GetDataTable($"SELECT {schemaInfo.DisplayField} FROM {tableName} WHERE {schemaInfo.PrimaryKeyField} = @id", 
+                    new { id = idValue });
+                
+                if (result != null && result.Rows.Count > 0 && result.Rows[0][0] != DBNull.Value)
                 {
-                    // 只查询显示字段
-                    var result = db.Ado.GetDataTable($"SELECT {schemaInfo.DisplayField} FROM {tableName} WHERE {schemaInfo.PrimaryKeyField} = @id", 
-                        new { id = idValue });
-                    
-                    if (result != null && result.Rows.Count > 0 && result.Rows[0][0] != DBNull.Value)
-                    {
-                        return result.Rows[0][0].ToString();
-                    }
-                    
-                    return null;
+                    return result.Rows[0][0].ToString();
                 }
+                
+                return null;
             }
             catch (Exception ex)
             {

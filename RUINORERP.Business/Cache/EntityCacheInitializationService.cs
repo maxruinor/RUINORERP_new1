@@ -225,12 +225,10 @@ namespace RUINORERP.Business.Cache
                     return;
                 }
 
-                // 直接使用_unitOfWorkManage获取的数据库连接
-                using (var db = _unitOfWorkManage.GetDbClient())
-                {
-                    // 简单直接地加载数据
-                    LoadDataAndUpdateCache(entityType, tableName, db);
-                }
+                // 移除using块，让SqlSugar自己管理连接生命周期
+                var db = _unitOfWorkManage.GetDbClient();
+                // 简单直接地加载数据
+                LoadDataAndUpdateCache(entityType, tableName, db);
             }
             catch (Exception ex)
             {
